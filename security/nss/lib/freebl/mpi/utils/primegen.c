@@ -46,7 +46,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: primegen.c,v 1.7 2004/04/27 23:04:37 gerv%gerv.net Exp $ */
+/* $Id: primegen.c,v 1.8 2010/07/20 01:26:03 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,12 +57,6 @@
 #include "mpi.h"
 #include "mplogic.h"
 #include "mpprime.h"
-
-#undef MACOS		/* define if running on a Macintosh */
-
-#ifdef MACOS
-#include <console.h>
-#endif
 
 #define NUM_TESTS 5  /* Number of Rabin-Miller iterations to test with */
 
@@ -82,10 +76,6 @@ int main(int argc, char *argv[])
   mp_int	testval;
   mp_err	res;
   clock_t	start, end;
-
-#ifdef MACOS
-  argc = ccommand(&argv);
-#endif
 
   /* We'll just use the C library's rand() for now, although this
      won't be good enough for cryptographic purposes */

@@ -111,7 +111,6 @@ endif
 
 tier_platform_dirs	+= \
 		modules/libjar \
-		db \
 		storage \
 		$(NULL)
 

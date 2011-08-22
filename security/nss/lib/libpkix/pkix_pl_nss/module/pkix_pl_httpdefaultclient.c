@@ -1350,6 +1350,7 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
         PKIX_UInt32 postLen = 0;
         PRPollDesc *pollDesc = NULL;
         char *sendbuf = NULL;
+        char portstr[16];
 
         PKIX_ENTER
                 (HTTPDEFAULTCLIENT,
@@ -1393,13 +1394,19 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
                 client->rcv_http_data = http_response_data;
 
                 /* prepare the message */
+                portstr[0] = '\0';
+                if (client->portnum != 80) {
+                        PR_snprintf(portstr, sizeof(portstr), ":%d", 
+                                    client->portnum);
+                }
+                
                 if (client->send_http_method == HTTP_POST_METHOD) {
                         sendbuf = PR_smprintf
-                            ("POST %s HTTP/1.0\r\nHost: %s:%d\r\n"
+                            ("POST %s HTTP/1.0\r\nHost: %s%s\r\n"
                             "Content-Type: %s\r\nContent-Length: %u\r\n\r\n",
                             client->path,
                             client->host,
-                            client->portnum,
+                            portstr,
                             client->send_http_content_type,
                             client->send_http_data_len);
                         postLen = PORT_Strlen(sendbuf);
@@ -1427,10 +1434,10 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
                         
                 } else if (client->send_http_method == HTTP_GET_METHOD) {
                         client->GETBuf = PR_smprintf
-                            ("GET %s HTTP/1.1\r\nHost: %s:%d\r\n\r\n",
+                            ("GET %s HTTP/1.0\r\nHost: %s%s\r\n\r\n",
                             client->path,
                             client->host,
-                            client->portnum);
+                            portstr);
                         client->GETLen = PORT_Strlen(client->GETBuf);
                 }
 

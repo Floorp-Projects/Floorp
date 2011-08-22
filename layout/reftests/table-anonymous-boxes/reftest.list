@@ -1,7 +1,7 @@
 == 121142-1a.html 121142-1-ref.html
 == 121142-1b.html 121142-1-ref.html
 == 121142-2.html 121142-2-ref.html
-fails == 156888-1.html 156888-1-ref.html # bug 484825
+== 156888-1.html 156888-1-ref.html
 == 156888-2.html 156888-2-ref.html
 == 162063-1.xhtml about:blank
 == 203923-1.html white-space-ref.html

@@ -38,7 +38,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.15.54.1 2011/01/28 23:08:27 rrelyea%redhat.com Exp $
+ * $Id: cmsutil.c,v 1.16 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"

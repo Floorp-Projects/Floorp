@@ -39,7 +39,6 @@
 # This file contains makefiles that will be generated for every XUL app.
 
 MAKEFILES_db="
-  db/Makefile
   db/sqlite3/src/Makefile
 "
 

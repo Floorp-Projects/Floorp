@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.67.2.10 $ $Date: 2011/08/01 06:40:03 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.67.2.10 $ $Date: 2011/08/01 06:40:03 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.78 $ $Date: 2011/08/01 06:33:46 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.78 $ $Date: 2011/08/01 06:33:46 $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -47,12 +47,12 @@ static const CK_BBOOL ck_true = CK_TRUE;
 static const CK_CERTIFICATE_TYPE ckc_x_509 = CKC_X_509;
 static const CK_OBJECT_CLASS cko_certificate = CKO_CERTIFICATE;
 static const CK_OBJECT_CLASS cko_data = CKO_DATA;
-static const CK_OBJECT_CLASS cko_netscape_builtin_root_list = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
-static const CK_OBJECT_CLASS cko_netscape_trust = CKO_NETSCAPE_TRUST;
-static const CK_TRUST ckt_netscape_trust_unknown = CKT_NETSCAPE_TRUST_UNKNOWN;
-static const CK_TRUST ckt_netscape_trusted_delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-static const CK_TRUST ckt_netscape_untrusted = CKT_NETSCAPE_UNTRUSTED;
-static const CK_TRUST ckt_netscape_valid = CKT_NETSCAPE_VALID;
+static const CK_OBJECT_CLASS cko_nss_builtin_root_list = CKO_NSS_BUILTIN_ROOT_LIST;
+static const CK_OBJECT_CLASS cko_nss_trust = CKO_NSS_TRUST;
+static const CK_TRUST ckt_nss_must_verify_trust = CKT_NSS_MUST_VERIFY_TRUST;
+static const CK_TRUST ckt_nss_not_trusted = CKT_NSS_NOT_TRUSTED;
+static const CK_TRUST ckt_nss_trust_unknown = CKT_NSS_TRUST_UNKNOWN;
+static const CK_TRUST ckt_nss_trusted_delegator = CKT_NSS_TRUSTED_DELEGATOR;
 #ifdef DEBUG
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_0 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_APPLICATION,  CKA_VALUE
@@ -1053,11 +1053,11 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.67.2.10 $ $Date: 2011/08/01 06:40:03 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.67.2.10 $ $Date: 2011/08/01 06:40:03 $", (PRUint32)164 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.78 $ $Date: 2011/08/01 06:33:46 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.78 $ $Date: 2011/08/01 06:33:46 $", (PRUint32)160 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
-  { (void *)&cko_netscape_builtin_root_list, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_builtin_root_list, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1132,7 +1132,7 @@ static const NSSItem nss_builtins_items_2 [] = {
 , (PRUint32)606 }
 };
 static const NSSItem nss_builtins_items_3 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1153,9 +1153,9 @@ static const NSSItem nss_builtins_items_3 [] = {
 , (PRUint32)119 },
   { (void *)"\002\002\001\245"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_4 [] = {
@@ -1249,7 +1249,7 @@ static const NSSItem nss_builtins_items_4 [] = {
 , (PRUint32)791 }
 };
 static const NSSItem nss_builtins_items_5 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1275,9 +1275,9 @@ static const NSSItem nss_builtins_items_5 [] = {
 , (PRUint32)199 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_6 [] = {
@@ -1374,7 +1374,7 @@ static const NSSItem nss_builtins_items_6 [] = {
 , (PRUint32)811 }
 };
 static const NSSItem nss_builtins_items_7 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1401,9 +1401,9 @@ static const NSSItem nss_builtins_items_7 [] = {
 , (PRUint32)209 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_8 [] = {
@@ -1482,7 +1482,7 @@ static const NSSItem nss_builtins_items_8 [] = {
 , (PRUint32)804 }
 };
 static const NSSItem nss_builtins_items_9 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1500,9 +1500,9 @@ static const NSSItem nss_builtins_items_9 [] = {
 , (PRUint32)80 },
   { (void *)"\002\004\065\336\364\317"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_10 [] = {
@@ -1581,7 +1581,7 @@ static const NSSItem nss_builtins_items_10 [] = {
 , (PRUint32)813 }
 };
 static const NSSItem nss_builtins_items_11 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1599,9 +1599,9 @@ static const NSSItem nss_builtins_items_11 [] = {
 , (PRUint32)72 },
   { (void *)"\002\004\066\160\025\226"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_12 [] = {
@@ -1680,7 +1680,7 @@ static const NSSItem nss_builtins_items_12 [] = {
 , (PRUint32)813 }
 };
 static const NSSItem nss_builtins_items_13 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1698,9 +1698,9 @@ static const NSSItem nss_builtins_items_13 [] = {
 , (PRUint32)72 },
   { (void *)"\002\004\066\156\323\316"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_14 [] = {
@@ -1770,7 +1770,7 @@ static const NSSItem nss_builtins_items_14 [] = {
 , (PRUint32)577 }
 };
 static const NSSItem nss_builtins_items_15 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1791,9 +1791,9 @@ static const NSSItem nss_builtins_items_15 [] = {
   { (void *)"\002\021\000\315\272\177\126\360\337\344\274\124\376\042\254\263"
 "\162\252\125"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_16 [] = {
@@ -1862,7 +1862,7 @@ static const NSSItem nss_builtins_items_16 [] = {
 , (PRUint32)576 }
 };
 static const NSSItem nss_builtins_items_17 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1883,9 +1883,9 @@ static const NSSItem nss_builtins_items_17 [] = {
   { (void *)"\002\020\055\033\374\112\027\215\243\221\353\347\377\365\213\105"
 "\276\013"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_18 [] = {
@@ -1954,7 +1954,7 @@ static const NSSItem nss_builtins_items_18 [] = {
 , (PRUint32)576 }
 };
 static const NSSItem nss_builtins_items_19 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -1975,9 +1975,9 @@ static const NSSItem nss_builtins_items_19 [] = {
   { (void *)"\002\020\160\272\344\035\020\331\051\064\266\070\312\173\003\314"
 "\272\277"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_20 [] = {
@@ -2071,7 +2071,7 @@ static const NSSItem nss_builtins_items_20 [] = {
 , (PRUint32)774 }
 };
 static const NSSItem nss_builtins_items_21 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2098,9 +2098,9 @@ static const NSSItem nss_builtins_items_21 [] = {
   { (void *)"\002\020\114\307\352\252\230\076\161\323\223\020\370\075\072\211"
 "\221\222"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_22 [] = {
@@ -2194,7 +2194,7 @@ static const NSSItem nss_builtins_items_22 [] = {
 , (PRUint32)775 }
 };
 static const NSSItem nss_builtins_items_23 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2221,9 +2221,9 @@ static const NSSItem nss_builtins_items_23 [] = {
   { (void *)"\002\021\000\271\057\140\314\210\237\241\172\106\011\270\133\160"
 "\154\212\257"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_24 [] = {
@@ -2317,7 +2317,7 @@ static const NSSItem nss_builtins_items_24 [] = {
 , (PRUint32)774 }
 };
 static const NSSItem nss_builtins_items_25 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2344,9 +2344,9 @@ static const NSSItem nss_builtins_items_25 [] = {
   { (void *)"\002\020\175\331\376\007\317\250\036\267\020\171\147\373\247\211"
 "\064\306"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_26 [] = {
@@ -2440,7 +2440,7 @@ static const NSSItem nss_builtins_items_26 [] = {
 , (PRUint32)774 }
 };
 static const NSSItem nss_builtins_items_27 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2467,9 +2467,9 @@ static const NSSItem nss_builtins_items_27 [] = {
   { (void *)"\002\020\062\210\216\232\322\365\353\023\107\370\177\304\040\067"
 "\045\370"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_28 [] = {
@@ -2555,7 +2555,7 @@ static const NSSItem nss_builtins_items_28 [] = {
 , (PRUint32)889 }
 };
 static const NSSItem nss_builtins_items_29 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2574,9 +2574,9 @@ static const NSSItem nss_builtins_items_29 [] = {
 , (PRUint32)89 },
   { (void *)"\002\013\004\000\000\000\000\001\025\113\132\303\224"
 , (PRUint32)13 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_30 [] = {
@@ -2664,7 +2664,7 @@ static const NSSItem nss_builtins_items_30 [] = {
 , (PRUint32)958 }
 };
 static const NSSItem nss_builtins_items_31 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2682,9 +2682,9 @@ static const NSSItem nss_builtins_items_31 [] = {
 , (PRUint32)78 },
   { (void *)"\002\013\004\000\000\000\000\001\017\206\046\346\015"
 , (PRUint32)13 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_32 [] = {
@@ -2773,7 +2773,7 @@ static const NSSItem nss_builtins_items_32 [] = {
 , (PRUint32)747 }
 };
 static const NSSItem nss_builtins_items_33 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2798,9 +2798,9 @@ static const NSSItem nss_builtins_items_33 [] = {
 , (PRUint32)190 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_34 [] = {
@@ -2889,7 +2889,7 @@ static const NSSItem nss_builtins_items_34 [] = {
 , (PRUint32)747 }
 };
 static const NSSItem nss_builtins_items_35 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -2914,9 +2914,9 @@ static const NSSItem nss_builtins_items_35 [] = {
 , (PRUint32)190 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_36 [] = {
@@ -3005,7 +3005,7 @@ static const NSSItem nss_builtins_items_36 [] = {
 , (PRUint32)747 }
 };
 static const NSSItem nss_builtins_items_37 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3030,9 +3030,9 @@ static const NSSItem nss_builtins_items_37 [] = {
 , (PRUint32)190 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_38 [] = {
@@ -3143,7 +3143,7 @@ static const NSSItem nss_builtins_items_38 [] = {
 , (PRUint32)1054 }
 };
 static const NSSItem nss_builtins_items_39 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3170,9 +3170,9 @@ static const NSSItem nss_builtins_items_39 [] = {
   { (void *)"\002\021\000\213\133\165\126\204\124\205\013\000\317\257\070\110"
 "\316\261\244"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_40 [] = {
@@ -3283,7 +3283,7 @@ static const NSSItem nss_builtins_items_40 [] = {
 , (PRUint32)1053 }
 };
 static const NSSItem nss_builtins_items_41 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3310,9 +3310,9 @@ static const NSSItem nss_builtins_items_41 [] = {
   { (void *)"\002\020\141\160\313\111\214\137\230\105\051\347\260\246\331\120"
 "\133\172"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_42 [] = {
@@ -3423,7 +3423,7 @@ static const NSSItem nss_builtins_items_42 [] = {
 , (PRUint32)1054 }
 };
 static const NSSItem nss_builtins_items_43 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3450,9 +3450,9 @@ static const NSSItem nss_builtins_items_43 [] = {
   { (void *)"\002\021\000\233\176\006\111\243\076\142\271\325\356\220\110\161"
 "\051\357\127"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_44 [] = {
@@ -3563,7 +3563,7 @@ static const NSSItem nss_builtins_items_44 [] = {
 , (PRUint32)1054 }
 };
 static const NSSItem nss_builtins_items_45 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3590,9 +3590,9 @@ static const NSSItem nss_builtins_items_45 [] = {
   { (void *)"\002\021\000\354\240\247\213\156\165\152\001\317\304\174\314\057"
 "\224\136\327"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_46 [] = {
@@ -3714,7 +3714,7 @@ static const NSSItem nss_builtins_items_46 [] = {
 , (PRUint32)1244 }
 };
 static const NSSItem nss_builtins_items_47 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3740,9 +3740,9 @@ static const NSSItem nss_builtins_items_47 [] = {
 , (PRUint32)198 },
   { (void *)"\002\004\067\112\322\103"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_48 [] = {
@@ -3854,7 +3854,7 @@ static const NSSItem nss_builtins_items_48 [] = {
 , (PRUint32)1120 }
 };
 static const NSSItem nss_builtins_items_49 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3879,9 +3879,9 @@ static const NSSItem nss_builtins_items_49 [] = {
 , (PRUint32)183 },
   { (void *)"\002\004\070\143\271\146"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_50 [] = {
@@ -3967,7 +3967,7 @@ static const NSSItem nss_builtins_items_50 [] = {
 , (PRUint32)891 }
 };
 static const NSSItem nss_builtins_items_51 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -3986,9 +3986,9 @@ static const NSSItem nss_builtins_items_51 [] = {
 , (PRUint32)92 },
   { (void *)"\002\004\002\000\000\271"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_52 [] = {
@@ -4060,7 +4060,7 @@ static const NSSItem nss_builtins_items_52 [] = {
 , (PRUint32)660 }
 };
 static const NSSItem nss_builtins_items_53 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4079,9 +4079,9 @@ static const NSSItem nss_builtins_items_53 [] = {
 , (PRUint32)92 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_54 [] = {
@@ -4152,7 +4152,7 @@ static const NSSItem nss_builtins_items_54 [] = {
 , (PRUint32)646 }
 };
 static const NSSItem nss_builtins_items_55 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4171,9 +4171,9 @@ static const NSSItem nss_builtins_items_55 [] = {
 , (PRUint32)85 },
   { (void *)"\002\001\004"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_56 [] = {
@@ -4252,7 +4252,7 @@ static const NSSItem nss_builtins_items_56 [] = {
 , (PRUint32)804 }
 };
 static const NSSItem nss_builtins_items_57 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4270,9 +4270,9 @@ static const NSSItem nss_builtins_items_57 [] = {
 , (PRUint32)80 },
   { (void *)"\002\004\067\160\317\265"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_58 [] = {
@@ -4370,7 +4370,7 @@ static const NSSItem nss_builtins_items_58 [] = {
 , (PRUint32)1052 }
 };
 static const NSSItem nss_builtins_items_59 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4390,9 +4390,9 @@ static const NSSItem nss_builtins_items_59 [] = {
 , (PRUint32)103 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_60 [] = {
@@ -4494,7 +4494,7 @@ static const NSSItem nss_builtins_items_60 [] = {
 , (PRUint32)1082 }
 };
 static const NSSItem nss_builtins_items_61 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4515,9 +4515,9 @@ static const NSSItem nss_builtins_items_61 [] = {
 , (PRUint32)113 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_62 [] = {
@@ -4615,7 +4615,7 @@ static const NSSItem nss_builtins_items_62 [] = {
 , (PRUint32)1049 }
 };
 static const NSSItem nss_builtins_items_63 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4635,9 +4635,9 @@ static const NSSItem nss_builtins_items_63 [] = {
 , (PRUint32)102 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_64 [] = {
@@ -4736,7 +4736,7 @@ static const NSSItem nss_builtins_items_64 [] = {
 , (PRUint32)1058 }
 };
 static const NSSItem nss_builtins_items_65 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4756,9 +4756,9 @@ static const NSSItem nss_builtins_items_65 [] = {
 , (PRUint32)105 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_66 [] = {
@@ -4874,7 +4874,7 @@ static const NSSItem nss_builtins_items_66 [] = {
 , (PRUint32)1173 }
 };
 static const NSSItem nss_builtins_items_67 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -4899,9 +4899,9 @@ static const NSSItem nss_builtins_items_67 [] = {
 , (PRUint32)179 },
   { (void *)"\002\004\105\153\120\124"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_68 [] = {
@@ -4983,7 +4983,7 @@ static const NSSItem nss_builtins_items_68 [] = {
 , (PRUint32)869 }
 };
 static const NSSItem nss_builtins_items_69 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5001,9 +5001,9 @@ static const NSSItem nss_builtins_items_69 [] = {
   { (void *)"\002\020\012\001\001\001\000\000\002\174\000\000\000\012\000\000"
 "\000\002"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_70 [] = {
@@ -5085,7 +5085,7 @@ static const NSSItem nss_builtins_items_70 [] = {
 , (PRUint32)856 }
 };
 static const NSSItem nss_builtins_items_71 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5103,9 +5103,9 @@ static const NSSItem nss_builtins_items_71 [] = {
 , (PRUint32)68 },
   { (void *)"\002\003\002\064\126"
 , (PRUint32)5 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_72 [] = {
@@ -5188,7 +5188,7 @@ static const NSSItem nss_builtins_items_72 [] = {
 , (PRUint32)874 }
 };
 static const NSSItem nss_builtins_items_73 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5206,9 +5206,9 @@ static const NSSItem nss_builtins_items_73 [] = {
 , (PRUint32)70 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_74 [] = {
@@ -5323,7 +5323,7 @@ static const NSSItem nss_builtins_items_74 [] = {
 , (PRUint32)1388 }
 };
 static const NSSItem nss_builtins_items_75 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5341,9 +5341,9 @@ static const NSSItem nss_builtins_items_75 [] = {
 , (PRUint32)71 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_76 [] = {
@@ -5458,7 +5458,7 @@ static const NSSItem nss_builtins_items_76 [] = {
 , (PRUint32)1392 }
 };
 static const NSSItem nss_builtins_items_77 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5476,9 +5476,9 @@ static const NSSItem nss_builtins_items_77 [] = {
 , (PRUint32)73 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_78 [] = {
@@ -5590,7 +5590,7 @@ static const NSSItem nss_builtins_items_78 [] = {
 , (PRUint32)1128 }
 };
 static const NSSItem nss_builtins_items_79 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5615,9 +5615,9 @@ static const NSSItem nss_builtins_items_79 [] = {
   { (void *)"\002\020\104\276\014\213\120\000\044\264\021\323\066\060\113\300"
 "\063\167"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_80 [] = {
@@ -5708,7 +5708,7 @@ static const NSSItem nss_builtins_items_80 [] = {
 , (PRUint32)936 }
 };
 static const NSSItem nss_builtins_items_81 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5728,9 +5728,9 @@ static const NSSItem nss_builtins_items_81 [] = {
 , (PRUint32)101 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_82 [] = {
@@ -5853,7 +5853,7 @@ static const NSSItem nss_builtins_items_82 [] = {
 , (PRUint32)1448 }
 };
 static const NSSItem nss_builtins_items_83 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5873,9 +5873,9 @@ static const NSSItem nss_builtins_items_83 [] = {
 , (PRUint32)101 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_84 [] = {
@@ -5967,7 +5967,7 @@ static const NSSItem nss_builtins_items_84 [] = {
 , (PRUint32)934 }
 };
 static const NSSItem nss_builtins_items_85 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -5988,9 +5988,9 @@ static const NSSItem nss_builtins_items_85 [] = {
   { (void *)"\002\020\023\206\065\115\035\077\006\362\301\371\145\005\325\220"
 "\034\142"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_86 [] = {
@@ -6086,7 +6086,7 @@ static const NSSItem nss_builtins_items_86 [] = {
 , (PRUint32)864 }
 };
 static const NSSItem nss_builtins_items_87 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6111,9 +6111,9 @@ static const NSSItem nss_builtins_items_87 [] = {
 , (PRUint32)191 },
   { (void *)"\002\002\003\352"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_88 [] = {
@@ -6209,7 +6209,7 @@ static const NSSItem nss_builtins_items_88 [] = {
 , (PRUint32)864 }
 };
 static const NSSItem nss_builtins_items_89 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6234,9 +6234,9 @@ static const NSSItem nss_builtins_items_89 [] = {
 , (PRUint32)191 },
   { (void *)"\002\002\003\353"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_90 [] = {
@@ -6311,7 +6311,7 @@ static const NSSItem nss_builtins_items_90 [] = {
 , (PRUint32)784 }
 };
 static const NSSItem nss_builtins_items_91 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6328,9 +6328,9 @@ static const NSSItem nss_builtins_items_91 [] = {
 , (PRUint32)64 },
   { (void *)"\002\003\001\000\040"
 , (PRUint32)5 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_92 [] = {
@@ -6432,7 +6432,7 @@ static const NSSItem nss_builtins_items_92 [] = {
 , (PRUint32)1078 }
 };
 static const NSSItem nss_builtins_items_93 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6453,9 +6453,9 @@ static const NSSItem nss_builtins_items_93 [] = {
 , (PRUint32)125 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_94 [] = {
@@ -6558,7 +6558,7 @@ static const NSSItem nss_builtins_items_94 [] = {
 , (PRUint32)1091 }
 };
 static const NSSItem nss_builtins_items_95 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6579,9 +6579,9 @@ static const NSSItem nss_builtins_items_95 [] = {
 , (PRUint32)128 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_96 [] = {
@@ -6686,7 +6686,7 @@ static const NSSItem nss_builtins_items_96 [] = {
 , (PRUint32)1095 }
 };
 static const NSSItem nss_builtins_items_97 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6708,9 +6708,9 @@ static const NSSItem nss_builtins_items_97 [] = {
 , (PRUint32)129 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_98 [] = {
@@ -6840,7 +6840,7 @@ static const NSSItem nss_builtins_items_98 [] = {
 , (PRUint32)1492 }
 };
 static const NSSItem nss_builtins_items_99 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -6862,9 +6862,9 @@ static const NSSItem nss_builtins_items_99 [] = {
 , (PRUint32)129 },
   { (void *)"\002\004\072\266\120\213"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_100 [] = {
@@ -6984,7 +6984,7 @@ static const NSSItem nss_builtins_items_100 [] = {
 , (PRUint32)1467 }
 };
 static const NSSItem nss_builtins_items_101 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7002,9 +7002,9 @@ static const NSSItem nss_builtins_items_101 [] = {
 , (PRUint32)71 },
   { (void *)"\002\002\005\011"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_102 [] = {
@@ -7139,7 +7139,7 @@ static const NSSItem nss_builtins_items_102 [] = {
 , (PRUint32)1697 }
 };
 static const NSSItem nss_builtins_items_103 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7157,9 +7157,9 @@ static const NSSItem nss_builtins_items_103 [] = {
 , (PRUint32)71 },
   { (void *)"\002\002\005\306"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_104 [] = {
@@ -7243,7 +7243,7 @@ static const NSSItem nss_builtins_items_104 [] = {
 , (PRUint32)862 }
 };
 static const NSSItem nss_builtins_items_105 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7262,9 +7262,9 @@ static const NSSItem nss_builtins_items_105 [] = {
 , (PRUint32)82 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_106 [] = {
@@ -7341,7 +7341,7 @@ static const NSSItem nss_builtins_items_106 [] = {
 , (PRUint32)804 }
 };
 static const NSSItem nss_builtins_items_107 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7358,9 +7358,9 @@ static const NSSItem nss_builtins_items_107 [] = {
 , (PRUint32)59 },
   { (void *)"\002\001\044"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_108 [] = {
@@ -7437,7 +7437,7 @@ static const NSSItem nss_builtins_items_108 [] = {
 , (PRUint32)804 }
 };
 static const NSSItem nss_builtins_items_109 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7454,9 +7454,9 @@ static const NSSItem nss_builtins_items_109 [] = {
 , (PRUint32)59 },
   { (void *)"\002\001\035"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_110 [] = {
@@ -7546,7 +7546,7 @@ static const NSSItem nss_builtins_items_110 [] = {
 , (PRUint32)958 }
 };
 static const NSSItem nss_builtins_items_111 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7565,9 +7565,9 @@ static const NSSItem nss_builtins_items_111 [] = {
 , (PRUint32)87 },
   { (void *)"\002\004\000\230\226\212"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_112 [] = {
@@ -7662,7 +7662,7 @@ static const NSSItem nss_builtins_items_112 [] = {
 , (PRUint32)1071 }
 };
 static const NSSItem nss_builtins_items_113 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7680,9 +7680,9 @@ static const NSSItem nss_builtins_items_113 [] = {
 , (PRUint32)69 },
   { (void *)"\002\004\072\314\245\114"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_114 [] = {
@@ -7790,7 +7790,7 @@ static const NSSItem nss_builtins_items_114 [] = {
 , (PRUint32)1309 }
 };
 static const NSSItem nss_builtins_items_115 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7807,9 +7807,9 @@ static const NSSItem nss_builtins_items_115 [] = {
 , (PRUint32)51 },
   { (void *)"\002\004\076\110\275\304"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_116 [] = {
@@ -7919,7 +7919,7 @@ static const NSSItem nss_builtins_items_116 [] = {
 , (PRUint32)1122 }
 };
 static const NSSItem nss_builtins_items_117 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -7943,9 +7943,9 @@ static const NSSItem nss_builtins_items_117 [] = {
   { (void *)"\002\020\104\276\014\213\120\000\041\264\021\323\052\150\006\251"
 "\255\151"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_118 [] = {
@@ -8063,7 +8063,7 @@ static const NSSItem nss_builtins_items_118 [] = {
 , (PRUint32)1190 }
 };
 static const NSSItem nss_builtins_items_119 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8089,9 +8089,9 @@ static const NSSItem nss_builtins_items_119 [] = {
   { (void *)"\002\020\104\276\014\213\120\000\044\264\021\323\066\045\045\147"
 "\311\211"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_120 [] = {
@@ -8202,7 +8202,7 @@ static const NSSItem nss_builtins_items_120 [] = {
 , (PRUint32)1144 }
 };
 static const NSSItem nss_builtins_items_121 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8226,9 +8226,9 @@ static const NSSItem nss_builtins_items_121 [] = {
   { (void *)"\002\020\104\276\014\213\120\000\044\264\021\323\066\052\376\145"
 "\012\375"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_122 [] = {
@@ -8338,7 +8338,7 @@ static const NSSItem nss_builtins_items_122 [] = {
 , (PRUint32)1130 }
 };
 static const NSSItem nss_builtins_items_123 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8362,9 +8362,9 @@ static const NSSItem nss_builtins_items_123 [] = {
   { (void *)"\002\020\104\276\014\213\120\000\044\264\021\323\066\055\340\263"
 "\137\033"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_124 [] = {
@@ -8477,7 +8477,7 @@ static const NSSItem nss_builtins_items_124 [] = {
 , (PRUint32)1217 }
 };
 static const NSSItem nss_builtins_items_125 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8499,9 +8499,9 @@ static const NSSItem nss_builtins_items_125 [] = {
 , (PRUint32)129 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_126 [] = {
@@ -8612,7 +8612,7 @@ static const NSSItem nss_builtins_items_126 [] = {
 , (PRUint32)1225 }
 };
 static const NSSItem nss_builtins_items_127 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8633,9 +8633,9 @@ static const NSSItem nss_builtins_items_127 [] = {
 , (PRUint32)127 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_128 [] = {
@@ -8789,7 +8789,7 @@ static const NSSItem nss_builtins_items_128 [] = {
 , (PRUint32)1749 }
 };
 static const NSSItem nss_builtins_items_129 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8815,9 +8815,9 @@ static const NSSItem nss_builtins_items_129 [] = {
 , (PRUint32)204 },
   { (void *)"\002\001\173"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_130 [] = {
@@ -8964,7 +8964,7 @@ static const NSSItem nss_builtins_items_130 [] = {
 , (PRUint32)1665 }
 };
 static const NSSItem nss_builtins_items_131 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -8989,9 +8989,9 @@ static const NSSItem nss_builtins_items_131 [] = {
 , (PRUint32)178 },
   { (void *)"\002\002\001\003"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_132 [] = {
@@ -9114,7 +9114,7 @@ static const NSSItem nss_builtins_items_132 [] = {
 , (PRUint32)1359 }
 };
 static const NSSItem nss_builtins_items_133 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9137,9 +9137,9 @@ static const NSSItem nss_builtins_items_133 [] = {
 , (PRUint32)156 },
   { (void *)"\002\001\151"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_134 [] = {
@@ -9263,7 +9263,7 @@ static const NSSItem nss_builtins_items_134 [] = {
 , (PRUint32)1363 }
 };
 static const NSSItem nss_builtins_items_135 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9286,9 +9286,9 @@ static const NSSItem nss_builtins_items_135 [] = {
 , (PRUint32)158 },
   { (void *)"\002\001\150"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_136 [] = {
@@ -9393,7 +9393,7 @@ static const NSSItem nss_builtins_items_136 [] = {
 , (PRUint32)1076 }
 };
 static const NSSItem nss_builtins_items_137 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9416,9 +9416,9 @@ static const NSSItem nss_builtins_items_137 [] = {
   { (void *)"\002\020\120\224\154\354\030\352\325\234\115\325\227\357\165\217"
 "\240\255"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_138 [] = {
@@ -9515,7 +9515,7 @@ static const NSSItem nss_builtins_items_138 [] = {
 , (PRUint32)1028 }
 };
 static const NSSItem nss_builtins_items_139 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9535,9 +9535,9 @@ static const NSSItem nss_builtins_items_139 [] = {
 , (PRUint32)101 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_140 [] = {
@@ -9635,7 +9635,7 @@ static const NSSItem nss_builtins_items_140 [] = {
 , (PRUint32)1043 }
 };
 static const NSSItem nss_builtins_items_141 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9655,9 +9655,9 @@ static const NSSItem nss_builtins_items_141 [] = {
 , (PRUint32)106 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_142 [] = {
@@ -9816,7 +9816,7 @@ static const NSSItem nss_builtins_items_142 [] = {
 , (PRUint32)1997 }
 };
 static const NSSItem nss_builtins_items_143 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9837,9 +9837,9 @@ static const NSSItem nss_builtins_items_143 [] = {
 , (PRUint32)127 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_144 [] = {
@@ -9956,7 +9956,7 @@ static const NSSItem nss_builtins_items_144 [] = {
 , (PRUint32)1398 }
 };
 static const NSSItem nss_builtins_items_145 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -9975,9 +9975,9 @@ static const NSSItem nss_builtins_items_145 [] = {
   { (void *)"\002\020\037\235\131\132\327\057\302\006\104\245\200\010\151\343"
 "\136\366"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_146 [] = {
@@ -10085,7 +10085,7 @@ static const NSSItem nss_builtins_items_146 [] = {
 , (PRUint32)1115 }
 };
 static const NSSItem nss_builtins_items_147 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10108,9 +10108,9 @@ static const NSSItem nss_builtins_items_147 [] = {
 , (PRUint32)160 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_148 [] = {
@@ -10209,7 +10209,7 @@ static const NSSItem nss_builtins_items_148 [] = {
 , (PRUint32)1001 }
 };
 static const NSSItem nss_builtins_items_149 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10231,9 +10231,9 @@ static const NSSItem nss_builtins_items_149 [] = {
 , (PRUint32)133 },
   { (void *)"\002\004\071\344\227\236"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_150 [] = {
@@ -10360,7 +10360,7 @@ static const NSSItem nss_builtins_items_150 [] = {
 , (PRUint32)1501 }
 };
 static const NSSItem nss_builtins_items_151 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10381,9 +10381,9 @@ static const NSSItem nss_builtins_items_151 [] = {
   { (void *)"\002\020\134\013\205\134\013\347\131\101\337\127\314\077\177\235"
 "\250\066"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_152 [] = {
@@ -10476,7 +10476,7 @@ static const NSSItem nss_builtins_items_152 [] = {
 , (PRUint32)955 }
 };
 static const NSSItem nss_builtins_items_153 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10497,9 +10497,9 @@ static const NSSItem nss_builtins_items_153 [] = {
   { (void *)"\002\020\014\347\340\345\027\330\106\376\217\345\140\374\033\360"
 "\060\071"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_154 [] = {
@@ -10592,7 +10592,7 @@ static const NSSItem nss_builtins_items_154 [] = {
 , (PRUint32)947 }
 };
 static const NSSItem nss_builtins_items_155 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10613,9 +10613,9 @@ static const NSSItem nss_builtins_items_155 [] = {
   { (void *)"\002\020\010\073\340\126\220\102\106\261\241\165\152\311\131\221"
 "\307\112"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_156 [] = {
@@ -10709,7 +10709,7 @@ static const NSSItem nss_builtins_items_156 [] = {
 , (PRUint32)969 }
 };
 static const NSSItem nss_builtins_items_157 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10730,9 +10730,9 @@ static const NSSItem nss_builtins_items_157 [] = {
   { (void *)"\002\020\002\254\134\046\152\013\100\233\217\013\171\362\256\106"
 "\045\167"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_158 [] = {
@@ -10817,7 +10817,7 @@ static const NSSItem nss_builtins_items_158 [] = {
 , (PRUint32)918 }
 };
 static const NSSItem nss_builtins_items_159 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10835,9 +10835,9 @@ static const NSSItem nss_builtins_items_159 [] = {
   { (void *)"\002\021\000\205\275\113\363\330\332\343\151\366\224\327\137\303"
 "\245\104\043"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_160 [] = {
@@ -10919,7 +10919,7 @@ static const NSSItem nss_builtins_items_160 [] = {
 , (PRUint32)846 }
 };
 static const NSSItem nss_builtins_items_161 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -10938,9 +10938,9 @@ static const NSSItem nss_builtins_items_161 [] = {
   { (void *)"\002\020\104\257\260\200\326\243\047\272\211\060\071\206\056\370"
 "\100\153"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_162 [] = {
@@ -11036,7 +11036,7 @@ static const NSSItem nss_builtins_items_162 [] = {
 , (PRUint32)1037 }
 };
 static const NSSItem nss_builtins_items_163 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11056,9 +11056,9 @@ static const NSSItem nss_builtins_items_163 [] = {
   { (void *)"\002\020\015\136\231\012\326\235\267\170\354\330\007\126\073\206"
 "\025\331"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_164 [] = {
@@ -11164,7 +11164,7 @@ static const NSSItem nss_builtins_items_164 [] = {
 , (PRUint32)1023 }
 };
 static const NSSItem nss_builtins_items_165 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11189,9 +11189,9 @@ static const NSSItem nss_builtins_items_165 [] = {
 , (PRUint32)186 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_166 [] = {
@@ -11303,7 +11303,7 @@ static const NSSItem nss_builtins_items_166 [] = {
 , (PRUint32)1088 }
 };
 static const NSSItem nss_builtins_items_167 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11329,9 +11329,9 @@ static const NSSItem nss_builtins_items_167 [] = {
 , (PRUint32)193 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_168 [] = {
@@ -11452,7 +11452,7 @@ static const NSSItem nss_builtins_items_168 [] = {
 , (PRUint32)1477 }
 };
 static const NSSItem nss_builtins_items_169 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11470,9 +11470,9 @@ static const NSSItem nss_builtins_items_169 [] = {
 , (PRUint32)75 },
   { (void *)"\002\010\116\262\000\147\014\003\135\117"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_170 [] = {
@@ -11592,7 +11592,7 @@ static const NSSItem nss_builtins_items_170 [] = {
 , (PRUint32)1470 }
 };
 static const NSSItem nss_builtins_items_171 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11610,9 +11610,9 @@ static const NSSItem nss_builtins_items_171 [] = {
 , (PRUint32)71 },
   { (void *)"\002\011\000\273\100\034\103\365\136\117\260"
 , (PRUint32)11 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_172 [] = {
@@ -11733,7 +11733,7 @@ static const NSSItem nss_builtins_items_172 [] = {
 , (PRUint32)1473 }
 };
 static const NSSItem nss_builtins_items_173 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11751,9 +11751,9 @@ static const NSSItem nss_builtins_items_173 [] = {
 , (PRUint32)73 },
   { (void *)"\002\010\117\033\324\057\124\273\057\113"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_174 [] = {
@@ -11840,7 +11840,7 @@ static const NSSItem nss_builtins_items_174 [] = {
 , (PRUint32)896 }
 };
 static const NSSItem nss_builtins_items_175 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11860,9 +11860,9 @@ static const NSSItem nss_builtins_items_175 [] = {
   { (void *)"\002\020\030\254\265\152\375\151\266\025\072\143\154\257\332\372"
 "\304\241"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_176 [] = {
@@ -11970,7 +11970,7 @@ static const NSSItem nss_builtins_items_176 [] = {
 , (PRUint32)1060 }
 };
 static const NSSItem nss_builtins_items_177 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -11995,9 +11995,9 @@ static const NSSItem nss_builtins_items_177 [] = {
   { (void *)"\002\020\064\116\325\127\040\325\355\354\111\364\057\316\067\333"
 "\053\155"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_178 [] = {
@@ -12120,7 +12120,7 @@ static const NSSItem nss_builtins_items_178 [] = {
 , (PRUint32)1239 }
 };
 static const NSSItem nss_builtins_items_179 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12147,9 +12147,9 @@ static const NSSItem nss_builtins_items_179 [] = {
   { (void *)"\002\020\030\332\321\236\046\175\350\273\112\041\130\315\314\153"
 "\073\112"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_180 [] = {
@@ -12238,7 +12238,7 @@ static const NSSItem nss_builtins_items_180 [] = {
 , (PRUint32)956 }
 };
 static const NSSItem nss_builtins_items_181 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12257,9 +12257,9 @@ static const NSSItem nss_builtins_items_181 [] = {
   { (void *)"\002\020\014\360\216\134\010\026\245\255\102\177\360\353\047\030"
 "\131\320"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_182 [] = {
@@ -12348,7 +12348,7 @@ static const NSSItem nss_builtins_items_182 [] = {
 , (PRUint32)960 }
 };
 static const NSSItem nss_builtins_items_183 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12367,9 +12367,9 @@ static const NSSItem nss_builtins_items_183 [] = {
   { (void *)"\002\020\007\126\042\244\350\324\212\211\115\364\023\310\360\370"
 "\352\245"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_184 [] = {
@@ -12473,7 +12473,7 @@ static const NSSItem nss_builtins_items_184 [] = {
 , (PRUint32)1057 }
 };
 static const NSSItem nss_builtins_items_185 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12496,9 +12496,9 @@ static const NSSItem nss_builtins_items_185 [] = {
   { (void *)"\002\020\116\201\055\212\202\145\340\013\002\356\076\065\002\106"
 "\345\075"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_186 [] = {
@@ -12620,7 +12620,7 @@ static const NSSItem nss_builtins_items_186 [] = {
 , (PRUint32)1422 }
 };
 static const NSSItem nss_builtins_items_187 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12641,9 +12641,9 @@ static const NSSItem nss_builtins_items_187 [] = {
   { (void *)"\002\020\014\166\332\234\221\014\116\054\236\376\025\320\130\223"
 "\074\114"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_188 [] = {
@@ -12739,7 +12739,7 @@ static const NSSItem nss_builtins_items_188 [] = {
 , (PRUint32)1002 }
 };
 static const NSSItem nss_builtins_items_189 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12760,9 +12760,9 @@ static const NSSItem nss_builtins_items_189 [] = {
   { (void *)"\002\020\127\313\063\157\302\134\026\346\107\026\027\343\220\061"
 "\150\340"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_190 [] = {
@@ -12875,7 +12875,7 @@ static const NSSItem nss_builtins_items_190 [] = {
 , (PRUint32)1217 }
 };
 static const NSSItem nss_builtins_items_191 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -12897,9 +12897,9 @@ static const NSSItem nss_builtins_items_191 [] = {
 , (PRUint32)136 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_192 [] = {
@@ -12977,7 +12977,7 @@ static const NSSItem nss_builtins_items_192 [] = {
 , (PRUint32)653 }
 };
 static const NSSItem nss_builtins_items_193 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13000,9 +13000,9 @@ static const NSSItem nss_builtins_items_193 [] = {
   { (void *)"\002\020\037\107\257\252\142\000\160\120\124\114\001\236\233\143"
 "\231\052"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_194 [] = {
@@ -13098,7 +13098,7 @@ static const NSSItem nss_builtins_items_194 [] = {
 , (PRUint32)1078 }
 };
 static const NSSItem nss_builtins_items_195 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13117,9 +13117,9 @@ static const NSSItem nss_builtins_items_195 [] = {
 , (PRUint32)92 },
   { (void *)"\002\001\102"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_untrusted, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_untrusted, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_untrusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_196 [] = {
@@ -13220,7 +13220,7 @@ static const NSSItem nss_builtins_items_196 [] = {
 , (PRUint32)1030 }
 };
 static const NSSItem nss_builtins_items_197 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13242,9 +13242,9 @@ static const NSSItem nss_builtins_items_197 [] = {
 , (PRUint32)136 },
   { (void *)"\002\005\071\021\105\020\224"
 , (PRUint32)7 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_198 [] = {
@@ -13333,7 +13333,7 @@ static const NSSItem nss_builtins_items_198 [] = {
 , (PRUint32)897 }
 };
 static const NSSItem nss_builtins_items_199 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13353,9 +13353,9 @@ static const NSSItem nss_builtins_items_199 [] = {
 , (PRUint32)98 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_200 [] = {
@@ -13456,7 +13456,7 @@ static const NSSItem nss_builtins_items_200 [] = {
 , (PRUint32)1013 }
 };
 static const NSSItem nss_builtins_items_201 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13479,9 +13479,9 @@ static const NSSItem nss_builtins_items_201 [] = {
   { (void *)"\002\020\101\075\162\307\364\153\037\201\103\175\361\322\050\124"
 "\337\232"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_202 [] = {
@@ -13596,7 +13596,7 @@ static const NSSItem nss_builtins_items_202 [] = {
 , (PRUint32)1151 }
 };
 static const NSSItem nss_builtins_items_203 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13622,9 +13622,9 @@ static const NSSItem nss_builtins_items_203 [] = {
   { (void *)"\002\020\067\031\030\346\123\124\174\032\265\270\313\131\132\333"
 "\065\267"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_204 [] = {
@@ -13782,7 +13782,7 @@ static const NSSItem nss_builtins_items_204 [] = {
 , (PRUint32)1964 }
 };
 static const NSSItem nss_builtins_items_205 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13804,9 +13804,9 @@ static const NSSItem nss_builtins_items_205 [] = {
   { (void *)"\002\021\000\314\270\347\277\116\051\032\375\242\334\146\245\034"
 "\054\017\021"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_206 [] = {
@@ -13891,7 +13891,7 @@ static const NSSItem nss_builtins_items_206 [] = {
 , (PRUint32)940 }
 };
 static const NSSItem nss_builtins_items_207 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -13908,9 +13908,9 @@ static const NSSItem nss_builtins_items_207 [] = {
 , (PRUint32)54 },
   { (void *)"\002\011\000\376\334\343\001\017\311\110\377"
 , (PRUint32)11 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_208 [] = {
@@ -14048,7 +14048,7 @@ static const NSSItem nss_builtins_items_208 [] = {
 , (PRUint32)1642 }
 };
 static const NSSItem nss_builtins_items_209 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14070,9 +14070,9 @@ static const NSSItem nss_builtins_items_209 [] = {
   { (void *)"\002\017\007\176\122\223\173\340\025\343\127\360\151\214\313\354"
 "\014"
 , (PRUint32)17 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_210 [] = {
@@ -14181,7 +14181,7 @@ static const NSSItem nss_builtins_items_210 [] = {
 , (PRUint32)1198 }
 };
 static const NSSItem nss_builtins_items_211 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14202,9 +14202,9 @@ static const NSSItem nss_builtins_items_211 [] = {
 , (PRUint32)120 },
   { (void *)"\002\016\056\152\000\001\000\002\037\327\122\041\054\021\134\073"
 , (PRUint32)16 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_212 [] = {
@@ -14313,7 +14313,7 @@ static const NSSItem nss_builtins_items_212 [] = {
 , (PRUint32)1198 }
 };
 static const NSSItem nss_builtins_items_213 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14334,9 +14334,9 @@ static const NSSItem nss_builtins_items_213 [] = {
 , (PRUint32)120 },
   { (void *)"\002\016\112\107\000\001\000\002\345\240\135\326\077\000\121\277"
 , (PRUint32)16 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_214 [] = {
@@ -14433,7 +14433,7 @@ static const NSSItem nss_builtins_items_214 [] = {
 , (PRUint32)993 }
 };
 static const NSSItem nss_builtins_items_215 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14454,9 +14454,9 @@ static const NSSItem nss_builtins_items_215 [] = {
 , (PRUint32)123 },
   { (void *)"\002\016\035\242\000\001\000\002\354\267\140\200\170\215\266\006"
 , (PRUint32)16 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_216 [] = {
@@ -14549,7 +14549,7 @@ static const NSSItem nss_builtins_items_216 [] = {
 , (PRUint32)931 }
 };
 static const NSSItem nss_builtins_items_217 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14570,9 +14570,9 @@ static const NSSItem nss_builtins_items_217 [] = {
 , (PRUint32)115 },
   { (void *)"\002\001\046"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_218 [] = {
@@ -14657,7 +14657,7 @@ static const NSSItem nss_builtins_items_218 [] = {
 , (PRUint32)919 }
 };
 static const NSSItem nss_builtins_items_219 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14675,9 +14675,9 @@ static const NSSItem nss_builtins_items_219 [] = {
   { (void *)"\002\020\024\023\226\203\024\125\214\352\173\143\345\374\064\207"
 "\167\104"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_220 [] = {
@@ -14763,7 +14763,7 @@ static const NSSItem nss_builtins_items_220 [] = {
 , (PRUint32)943 }
 };
 static const NSSItem nss_builtins_items_221 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14781,9 +14781,9 @@ static const NSSItem nss_builtins_items_221 [] = {
   { (void *)"\002\021\000\307\050\107\011\263\270\154\105\214\035\372\044\365"
 "\066\116\351"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_222 [] = {
@@ -14868,7 +14868,7 @@ static const NSSItem nss_builtins_items_222 [] = {
 , (PRUint32)933 }
 };
 static const NSSItem nss_builtins_items_223 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -14885,9 +14885,9 @@ static const NSSItem nss_builtins_items_223 [] = {
 , (PRUint32)61 },
   { (void *)"\002\013\004\000\000\000\000\001\017\205\252\055\110"
 , (PRUint32)13 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_224 [] = {
@@ -15010,7 +15010,7 @@ static const NSSItem nss_builtins_items_224 [] = {
 , (PRUint32)1460 }
 };
 static const NSSItem nss_builtins_items_225 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15030,9 +15030,9 @@ static const NSSItem nss_builtins_items_225 [] = {
   { (void *)"\002\020\025\310\275\145\107\134\257\270\227\000\136\344\006\322"
 "\274\235"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_226 [] = {
@@ -15170,7 +15170,7 @@ static const NSSItem nss_builtins_items_226 [] = {
 , (PRUint32)1307 }
 };
 static const NSSItem nss_builtins_items_227 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15202,9 +15202,9 @@ static const NSSItem nss_builtins_items_227 [] = {
 , (PRUint32)303 },
   { (void *)"\002\001\021"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_228 [] = {
@@ -15286,7 +15286,7 @@ static const NSSItem nss_builtins_items_228 [] = {
 , (PRUint32)855 }
 };
 static const NSSItem nss_builtins_items_229 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15304,9 +15304,9 @@ static const NSSItem nss_builtins_items_229 [] = {
 , (PRUint32)77 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_230 [] = {
@@ -15388,7 +15388,7 @@ static const NSSItem nss_builtins_items_230 [] = {
 , (PRUint32)855 }
 };
 static const NSSItem nss_builtins_items_231 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15406,9 +15406,9 @@ static const NSSItem nss_builtins_items_231 [] = {
 , (PRUint32)77 },
   { (void *)"\002\001\002"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_232 [] = {
@@ -15539,7 +15539,7 @@ static const NSSItem nss_builtins_items_232 [] = {
 , (PRUint32)1515 }
 };
 static const NSSItem nss_builtins_items_233 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15561,9 +15561,9 @@ static const NSSItem nss_builtins_items_233 [] = {
 , (PRUint32)131 },
   { (void *)"\002\010\114\257\163\102\034\216\164\002"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_234 [] = {
@@ -15641,7 +15641,7 @@ static const NSSItem nss_builtins_items_234 [] = {
 , (PRUint32)828 }
 };
 static const NSSItem nss_builtins_items_235 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15658,9 +15658,9 @@ static const NSSItem nss_builtins_items_235 [] = {
 , (PRUint32)61 },
   { (void *)"\002\006\040\006\005\026\160\002"
 , (PRUint32)8 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_236 [] = {
@@ -15740,7 +15740,7 @@ static const NSSItem nss_builtins_items_236 [] = {
 , (PRUint32)857 }
 };
 static const NSSItem nss_builtins_items_237 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15757,9 +15757,9 @@ static const NSSItem nss_builtins_items_237 [] = {
 , (PRUint32)52 },
   { (void *)"\002\004\111\063\000\001"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_238 [] = {
@@ -15846,7 +15846,7 @@ static const NSSItem nss_builtins_items_238 [] = {
 , (PRUint32)932 }
 };
 static const NSSItem nss_builtins_items_239 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15864,9 +15864,9 @@ static const NSSItem nss_builtins_items_239 [] = {
 , (PRUint32)69 },
   { (void *)"\002\001\061"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_240 [] = {
@@ -15970,7 +15970,7 @@ static const NSSItem nss_builtins_items_240 [] = {
 , (PRUint32)1026 }
 };
 static const NSSItem nss_builtins_items_241 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -15994,9 +15994,9 @@ static const NSSItem nss_builtins_items_241 [] = {
   { (void *)"\002\020\025\254\156\224\031\262\171\113\101\366\047\251\303\030"
 "\017\037"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_242 [] = {
@@ -16074,7 +16074,7 @@ static const NSSItem nss_builtins_items_242 [] = {
 , (PRUint32)652 }
 };
 static const NSSItem nss_builtins_items_243 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16097,9 +16097,9 @@ static const NSSItem nss_builtins_items_243 [] = {
   { (void *)"\002\020\065\374\046\134\331\204\117\311\075\046\075\127\233\256"
 "\327\126"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_244 [] = {
@@ -16209,7 +16209,7 @@ static const NSSItem nss_builtins_items_244 [] = {
 , (PRUint32)1070 }
 };
 static const NSSItem nss_builtins_items_245 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16235,9 +16235,9 @@ static const NSSItem nss_builtins_items_245 [] = {
   { (void *)"\002\020\140\001\227\267\106\247\352\264\264\232\326\113\057\367"
 "\220\373"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_246 [] = {
@@ -16320,7 +16320,7 @@ static const NSSItem nss_builtins_items_246 [] = {
 , (PRUint32)690 }
 };
 static const NSSItem nss_builtins_items_247 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16344,9 +16344,9 @@ static const NSSItem nss_builtins_items_247 [] = {
   { (void *)"\002\020\074\262\364\110\012\000\342\376\353\044\073\136\140\076"
 "\303\153"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_248 [] = {
@@ -16465,7 +16465,7 @@ static const NSSItem nss_builtins_items_248 [] = {
 , (PRUint32)1213 }
 };
 static const NSSItem nss_builtins_items_249 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16491,9 +16491,9 @@ static const NSSItem nss_builtins_items_249 [] = {
   { (void *)"\002\020\100\032\304\144\041\263\023\041\003\016\273\344\022\032"
 "\305\035"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_250 [] = {
@@ -16595,7 +16595,7 @@ static const NSSItem nss_builtins_items_250 [] = {
 , (PRUint32)904 }
 };
 static const NSSItem nss_builtins_items_251 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16622,9 +16622,9 @@ static const NSSItem nss_builtins_items_251 [] = {
   { (void *)"\002\020\057\200\376\043\214\016\042\017\110\147\022\050\221\207"
 "\254\263"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_252 [] = {
@@ -16730,7 +16730,7 @@ static const NSSItem nss_builtins_items_252 [] = {
 , (PRUint32)1049 }
 };
 static const NSSItem nss_builtins_items_253 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16754,9 +16754,9 @@ static const NSSItem nss_builtins_items_253 [] = {
 , (PRUint32)170 },
   { (void *)"\002\006\111\101\054\344\000\020"
 , (PRUint32)8 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_254 [] = {
@@ -16879,7 +16879,7 @@ static const NSSItem nss_builtins_items_254 [] = {
 , (PRUint32)1486 }
 };
 static const NSSItem nss_builtins_items_255 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -16898,9 +16898,9 @@ static const NSSItem nss_builtins_items_255 [] = {
 , (PRUint32)92 },
   { (void *)"\002\004\000\230\226\214"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_256 [] = {
@@ -16994,7 +16994,7 @@ static const NSSItem nss_builtins_items_256 [] = {
 , (PRUint32)1043 }
 };
 static const NSSItem nss_builtins_items_257 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17012,9 +17012,9 @@ static const NSSItem nss_builtins_items_257 [] = {
 , (PRUint32)76 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_258 [] = {
@@ -17123,7 +17123,7 @@ static const NSSItem nss_builtins_items_258 [] = {
 , (PRUint32)1258 }
 };
 static const NSSItem nss_builtins_items_259 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17142,9 +17142,9 @@ static const NSSItem nss_builtins_items_259 [] = {
 , (PRUint32)95 },
   { (void *)"\002\004\073\216\113\374"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_260 [] = {
@@ -17224,7 +17224,7 @@ static const NSSItem nss_builtins_items_260 [] = {
 , (PRUint32)820 }
 };
 static const NSSItem nss_builtins_items_261 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17242,9 +17242,9 @@ static const NSSItem nss_builtins_items_261 [] = {
 , (PRUint32)73 },
   { (void *)"\002\002\003\350"
 , (PRUint32)4 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_262 [] = {
@@ -17330,7 +17330,7 @@ static const NSSItem nss_builtins_items_262 [] = {
 , (PRUint32)881 }
 };
 static const NSSItem nss_builtins_items_263 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17349,9 +17349,9 @@ static const NSSItem nss_builtins_items_263 [] = {
 , (PRUint32)90 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_264 [] = {
@@ -17471,7 +17471,7 @@ static const NSSItem nss_builtins_items_264 [] = {
 , (PRUint32)1465 }
 };
 static const NSSItem nss_builtins_items_265 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17489,9 +17489,9 @@ static const NSSItem nss_builtins_items_265 [] = {
 , (PRUint32)70 },
   { (void *)"\002\010\141\215\307\206\073\001\202\005"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_266 [] = {
@@ -17560,7 +17560,7 @@ static const NSSItem nss_builtins_items_266 [] = {
 , (PRUint32)576 }
 };
 static const NSSItem nss_builtins_items_267 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17581,9 +17581,9 @@ static const NSSItem nss_builtins_items_267 [] = {
   { (void *)"\002\020\077\151\036\201\234\360\232\112\363\163\377\271\110\242"
 "\344\335"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_268 [] = {
@@ -17652,7 +17652,7 @@ static const NSSItem nss_builtins_items_268 [] = {
 , (PRUint32)576 }
 };
 static const NSSItem nss_builtins_items_269 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17673,9 +17673,9 @@ static const NSSItem nss_builtins_items_269 [] = {
   { (void *)"\002\020\074\221\061\313\037\366\320\033\016\232\270\320\104\277"
 "\022\276"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_270 [] = {
@@ -17776,7 +17776,7 @@ static const NSSItem nss_builtins_items_270 [] = {
 , (PRUint32)1038 }
 };
 static const NSSItem nss_builtins_items_271 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17798,9 +17798,9 @@ static const NSSItem nss_builtins_items_271 [] = {
 , (PRUint32)133 },
   { (void *)"\002\011\000\302\176\103\004\116\107\077\031"
 , (PRUint32)11 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_272 [] = {
@@ -17895,7 +17895,7 @@ static const NSSItem nss_builtins_items_272 [] = {
 , (PRUint32)954 }
 };
 static const NSSItem nss_builtins_items_273 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -17917,9 +17917,9 @@ static const NSSItem nss_builtins_items_273 [] = {
   { (void *)"\002\020\104\231\215\074\300\003\047\275\234\166\225\271\352\333"
 "\254\265"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_274 [] = {
@@ -18002,7 +18002,7 @@ static const NSSItem nss_builtins_items_274 [] = {
 , (PRUint32)867 }
 };
 static const NSSItem nss_builtins_items_275 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18020,9 +18020,9 @@ static const NSSItem nss_builtins_items_275 [] = {
 , (PRUint32)78 },
   { (void *)"\002\013\004\000\000\000\000\001\041\130\123\010\242"
 , (PRUint32)13 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_276 [] = {
@@ -18119,7 +18119,7 @@ static const NSSItem nss_builtins_items_276 [] = {
 , (PRUint32)997 }
 };
 static const NSSItem nss_builtins_items_277 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18140,9 +18140,9 @@ static const NSSItem nss_builtins_items_277 [] = {
 , (PRUint32)125 },
   { (void *)"\002\016\143\045\000\001\000\002\024\215\063\025\002\344\154\364"
 , (PRUint32)16 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_278 [] = {
@@ -18270,7 +18270,7 @@ static const NSSItem nss_builtins_items_278 [] = {
 , (PRUint32)1560 }
 };
 static const NSSItem nss_builtins_items_279 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18289,9 +18289,9 @@ static const NSSItem nss_builtins_items_279 [] = {
 , (PRUint32)83 },
   { (void *)"\002\010\123\354\073\356\373\262\110\137"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_280 [] = {
@@ -18414,7 +18414,7 @@ static const NSSItem nss_builtins_items_280 [] = {
 , (PRUint32)1525 }
 };
 static const NSSItem nss_builtins_items_281 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18432,9 +18432,9 @@ static const NSSItem nss_builtins_items_281 [] = {
   { (void *)"\002\020\000\260\267\132\026\110\137\277\341\313\365\213\327\031"
 "\346\175"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_282 [] = {
@@ -18594,7 +18594,7 @@ static const NSSItem nss_builtins_items_282 [] = {
 , (PRUint32)1875 }
 };
 static const NSSItem nss_builtins_items_283 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18619,9 +18619,9 @@ static const NSSItem nss_builtins_items_283 [] = {
 , (PRUint32)177 },
   { (void *)"\002\011\000\243\332\102\176\244\261\256\332"
 , (PRUint32)11 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_284 [] = {
@@ -18778,7 +18778,7 @@ static const NSSItem nss_builtins_items_284 [] = {
 , (PRUint32)1869 }
 };
 static const NSSItem nss_builtins_items_285 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18802,9 +18802,9 @@ static const NSSItem nss_builtins_items_285 [] = {
 , (PRUint32)175 },
   { (void *)"\002\011\000\311\315\323\351\325\175\043\316"
 , (PRUint32)11 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_286 [] = {
@@ -18944,7 +18944,7 @@ static const NSSItem nss_builtins_items_286 [] = {
 , (PRUint32)1532 }
 };
 static const NSSItem nss_builtins_items_287 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -18968,9 +18968,9 @@ static const NSSItem nss_builtins_items_287 [] = {
   { (void *)"\002\021\000\222\071\325\064\217\100\321\151\132\164\124\160\341"
 "\362\077\103"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_288 [] = {
@@ -19125,7 +19125,7 @@ static const NSSItem nss_builtins_items_288 [] = {
 , (PRUint32)1761 }
 };
 static const NSSItem nss_builtins_items_289 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -19149,9 +19149,9 @@ static const NSSItem nss_builtins_items_289 [] = {
   { (void *)"\002\021\000\330\363\137\116\267\207\053\055\253\006\222\343\025"
 "\070\057\260"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_290 [] = {
@@ -19291,7 +19291,7 @@ static const NSSItem nss_builtins_items_290 [] = {
 , (PRUint32)1522 }
 };
 static const NSSItem nss_builtins_items_291 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -19315,9 +19315,9 @@ static const NSSItem nss_builtins_items_291 [] = {
   { (void *)"\002\020\004\176\313\351\374\245\137\173\320\236\256\066\341\014"
 "\256\036"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_292 [] = {
@@ -19456,7 +19456,7 @@ static const NSSItem nss_builtins_items_292 [] = {
 , (PRUint32)1512 }
 };
 static const NSSItem nss_builtins_items_293 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -19480,9 +19480,9 @@ static const NSSItem nss_builtins_items_293 [] = {
   { (void *)"\002\021\000\365\310\152\363\141\142\361\072\144\365\117\155\311"
 "\130\174\006"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_294 [] = {
@@ -19622,7 +19622,7 @@ static const NSSItem nss_builtins_items_294 [] = {
 , (PRUint32)1523 }
 };
 static const NSSItem nss_builtins_items_295 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -19646,9 +19646,9 @@ static const NSSItem nss_builtins_items_295 [] = {
   { (void *)"\002\021\000\351\002\213\225\170\344\025\334\032\161\012\053\210"
 "\025\104\107"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_296 [] = {
@@ -19788,7 +19788,7 @@ static const NSSItem nss_builtins_items_296 [] = {
 , (PRUint32)1523 }
 };
 static const NSSItem nss_builtins_items_297 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -19812,9 +19812,9 @@ static const NSSItem nss_builtins_items_297 [] = {
   { (void *)"\002\021\000\327\125\217\332\365\361\020\133\262\023\050\053\160"
 "\167\051\243"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_298 [] = {
@@ -19952,7 +19952,7 @@ static const NSSItem nss_builtins_items_298 [] = {
 , (PRUint32)1501 }
 };
 static const NSSItem nss_builtins_items_299 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -19976,9 +19976,9 @@ static const NSSItem nss_builtins_items_299 [] = {
   { (void *)"\002\020\071\052\103\117\016\007\337\037\212\243\005\336\064\340"
 "\302\051"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_300 [] = {
@@ -20116,7 +20116,7 @@ static const NSSItem nss_builtins_items_300 [] = {
 , (PRUint32)1501 }
 };
 static const NSSItem nss_builtins_items_301 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20140,9 +20140,9 @@ static const NSSItem nss_builtins_items_301 [] = {
   { (void *)"\002\020\076\165\316\324\153\151\060\041\041\210\060\256\206\250"
 "\052\161"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_302 [] = {
@@ -20281,7 +20281,7 @@ static const NSSItem nss_builtins_items_302 [] = {
 , (PRUint32)1520 }
 };
 static const NSSItem nss_builtins_items_303 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20305,9 +20305,9 @@ static const NSSItem nss_builtins_items_303 [] = {
   { (void *)"\002\021\000\260\267\023\076\320\226\371\265\157\256\221\310\164"
 "\275\072\300"
 , (PRUint32)19 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_304 [] = {
@@ -20439,7 +20439,7 @@ static const NSSItem nss_builtins_items_304 [] = {
 , (PRUint32)1392 }
 };
 static const NSSItem nss_builtins_items_305 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20463,9 +20463,9 @@ static const NSSItem nss_builtins_items_305 [] = {
   { (void *)"\002\020\162\003\041\005\305\014\010\127\075\216\245\060\116\376"
 "\350\260"
 , (PRUint32)18 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_306 [] = {
@@ -20562,7 +20562,7 @@ static const NSSItem nss_builtins_items_306 [] = {
 , (PRUint32)969 }
 };
 static const NSSItem nss_builtins_items_307 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20584,9 +20584,9 @@ static const NSSItem nss_builtins_items_307 [] = {
 , (PRUint32)134 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_308 [] = {
@@ -20687,7 +20687,7 @@ static const NSSItem nss_builtins_items_308 [] = {
 , (PRUint32)993 }
 };
 static const NSSItem nss_builtins_items_309 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20710,9 +20710,9 @@ static const NSSItem nss_builtins_items_309 [] = {
 , (PRUint32)146 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_310 [] = {
@@ -20814,7 +20814,7 @@ static const NSSItem nss_builtins_items_310 [] = {
 , (PRUint32)1011 }
 };
 static const NSSItem nss_builtins_items_311 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20837,9 +20837,9 @@ static const NSSItem nss_builtins_items_311 [] = {
 , (PRUint32)155 },
   { (void *)"\002\001\000"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_312 [] = {
@@ -20920,7 +20920,7 @@ static const NSSItem nss_builtins_items_312 [] = {
 , (PRUint32)848 }
 };
 static const NSSItem nss_builtins_items_313 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -20938,9 +20938,9 @@ static const NSSItem nss_builtins_items_313 [] = {
 , (PRUint32)70 },
   { (void *)"\002\010\167\167\006\047\046\251\261\174"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_314 [] = {
@@ -21021,7 +21021,7 @@ static const NSSItem nss_builtins_items_314 [] = {
 , (PRUint32)848 }
 };
 static const NSSItem nss_builtins_items_315 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21039,9 +21039,9 @@ static const NSSItem nss_builtins_items_315 [] = {
 , (PRUint32)70 },
   { (void *)"\002\010\174\117\004\071\034\324\231\055"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_316 [] = {
@@ -21154,7 +21154,7 @@ static const NSSItem nss_builtins_items_316 [] = {
 , (PRUint32)1354 }
 };
 static const NSSItem nss_builtins_items_317 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21172,9 +21172,9 @@ static const NSSItem nss_builtins_items_317 [] = {
 , (PRUint32)67 },
   { (void *)"\002\010\155\214\024\106\261\246\012\356"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_318 [] = {
@@ -21235,7 +21235,7 @@ static const NSSItem nss_builtins_items_318 [] = {
 , (PRUint32)514 }
 };
 static const NSSItem nss_builtins_items_319 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21253,9 +21253,9 @@ static const NSSItem nss_builtins_items_319 [] = {
 , (PRUint32)71 },
   { (void *)"\002\010\164\227\045\212\307\077\172\124"
 , (PRUint32)10 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_320 [] = {
@@ -21349,7 +21349,7 @@ static const NSSItem nss_builtins_items_320 [] = {
 , (PRUint32)959 }
 };
 static const NSSItem nss_builtins_items_321 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21370,9 +21370,9 @@ static const NSSItem nss_builtins_items_321 [] = {
 , (PRUint32)128 },
   { (void *)"\002\003\004\104\300"
 , (PRUint32)5 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_322 [] = {
@@ -21494,7 +21494,7 @@ static const NSSItem nss_builtins_items_322 [] = {
 , (PRUint32)1440 }
 };
 static const NSSItem nss_builtins_items_323 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21514,9 +21514,9 @@ static const NSSItem nss_builtins_items_323 [] = {
 , (PRUint32)101 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_must_verify_trust, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_must_verify_trust, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_324 [] = {
@@ -21653,7 +21653,7 @@ static const NSSItem nss_builtins_items_324 [] = {
 , (PRUint32)1679 }
 };
 static const NSSItem nss_builtins_items_325 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21673,9 +21673,9 @@ static const NSSItem nss_builtins_items_325 [] = {
 , (PRUint32)106 },
   { (void *)"\002\004\073\105\345\150"
 , (PRUint32)6 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_326 [] = {
@@ -21773,7 +21773,7 @@ static const NSSItem nss_builtins_items_326 [] = {
 , (PRUint32)979 }
 };
 static const NSSItem nss_builtins_items_327 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21795,9 +21795,9 @@ static const NSSItem nss_builtins_items_327 [] = {
 , (PRUint32)144 },
   { (void *)"\002\003\001\154\036"
 , (PRUint32)5 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_must_verify_trust, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_must_verify_trust, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 static const NSSItem nss_builtins_items_328 [] = {
@@ -21885,7 +21885,7 @@ static const NSSItem nss_builtins_items_328 [] = {
 , (PRUint32)895 }
 };
 static const NSSItem nss_builtins_items_329 [] = {
-  { (void *)&cko_netscape_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
@@ -21905,9 +21905,9 @@ static const NSSItem nss_builtins_items_329 [] = {
 , (PRUint32)97 },
   { (void *)"\002\001\001"
 , (PRUint32)3 },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_trust_unknown, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_must_verify_trust, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
 
