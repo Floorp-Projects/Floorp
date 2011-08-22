@@ -43,7 +43,6 @@ USE_AUTOCONF 	= 1
 MOZILLA_CLIENT	= 1
 target          = @target@
 ac_configure_args = @ac_configure_args@
-BUILD_MODULES	= @BUILD_MODULES@
 MOZILLA_VERSION = @MOZILLA_VERSION@
 FIREFOX_VERSION	= @FIREFOX_VERSION@
 
