@@ -221,7 +221,6 @@ net_ParseFileURL(const nsACString &inURL,
     // invoke the parser to extract filepath from the path
     rv = parser->ParsePath(url + pathPos, pathLen,
                            &filepathPos, &filepathLen,
-                           nsnull, nsnull,  // don't care about param
                            nsnull, nsnull,  // don't care about query
                            nsnull, nsnull); // don't care about ref
     if (NS_FAILED(rv)) return rv;
@@ -451,7 +450,6 @@ net_ResolveRelativePath(const nsACString &relativePath,
         switch (c) {
           case '\0':
           case '#':
-          case ';':
           case '?':
             stop = PR_TRUE;
             // fall through...
