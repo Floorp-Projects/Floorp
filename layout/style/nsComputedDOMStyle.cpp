@@ -2449,19 +2449,35 @@ nsComputedDOMStyle::DoGetTextIndent()
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextOverflow()
 {
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   const nsStyleTextReset *style = GetStyleTextReset();
-
-  if (style->mTextOverflow.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+  nsROCSSPrimitiveValue *left = GetROCSSPrimitiveValue();
+  if (style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
     nsString str;
-    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mString, str);
-    val->SetString(str);
+    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mLeft.mString, str);
+    left->SetString(str);
   } else {
-    val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mType,
+    left->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mLeft.mType,
                                      nsCSSProps::kTextOverflowKTable));
   }
-  return val;
+  if (style->mTextOverflow.mLeft == style->mTextOverflow.mRight) {
+    return left;
+  }
+  nsROCSSPrimitiveValue *right = GetROCSSPrimitiveValue();
+  if (style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_STRING) {
+    nsString str;
+    nsStyleUtil::AppendEscapedCSSString(style->mTextOverflow.mRight.mString, str);
+    right->SetString(str);
+  } else {
+    right->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(style->mTextOverflow.mRight.mType,
+                                     nsCSSProps::kTextOverflowKTable));
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  valueList->AppendCSSValue(left);
+  valueList->AppendCSSValue(right);
+  return valueList;
 }
 
 nsIDOMCSSValue*

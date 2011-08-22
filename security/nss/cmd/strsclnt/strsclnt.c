@@ -280,7 +280,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 static SECStatus
 myBadCertHandler( void *arg, PRFileDesc *fd)
 {
-    int err = PR_GetError();
+    PRErrorCode err = PR_GetError();
     if (!MakeCertOK)
 	fprintf(stderr, 
 	    "strsclnt: -- SSL: Server Certificate Invalid, err %d.\n%s\n", 
@@ -360,7 +360,7 @@ printSecurityInfo(PRFileDesc *fd)
 
 #define MAX_THREADS 128
 
-typedef int startFn(void *a, void *b, int c, int d);
+typedef int startFn(void *a, void *b, int c);
 
 
 static PRInt32     numConnected;
@@ -374,7 +374,6 @@ typedef struct perThreadStr {
     startFn  *  startFunc;
     PRThread *  prThread;
     PRBool	inUse;
-    PRInt32     socketDomain;
 } perThread;
 
 perThread threads[MAX_THREADS];
@@ -430,8 +429,7 @@ thread_wrapper(void * arg)
         }
         PR_Unlock(threadLock);
         if (doop) {
-            slot->rv = (* slot->startFunc)(slot->a, slot->b, slot->tid,
-                                           slot->socketDomain);
+            slot->rv = (* slot->startFunc)(slot->a, slot->b, slot->tid);
             PRINTF("strsclnt: Thread in slot %d returned %d\n", 
                    slot->tid, slot->rv);
         }
@@ -446,8 +444,7 @@ launch_thread(
     startFn *	startFunc,
     void *	a,
     void *	b,
-    int         tid,
-    int         sockDom)
+    int         tid)
 {
     PRUint32 i;
     perThread * slot;
@@ -465,8 +462,7 @@ launch_thread(
     slot->a = a;
     slot->b = b;
     slot->tid = tid;
-    slot->socketDomain = sockDom;
-    
+
     slot->startFunc = startFunc;
 
     slot->prThread      = PR_CreateThread(PR_USER_THREAD,
@@ -589,8 +585,7 @@ int
 do_writes(
     void *       a,
     void *       b,
-    int          c,
-    int          d)
+    int          c)
 {
     PRFileDesc *	ssl_sock	= (PRFileDesc *)a;
     lockedVars *	lv 		= (lockedVars *)b;
@@ -632,7 +627,7 @@ handle_fdx_connection( PRFileDesc * ssl_sock, int connection)
     lockedVars_AddToCount(&lv, 1);
 
     /* Attempt to launch the writer thread. */
-    result = launch_thread(do_writes, ssl_sock, &lv, connection, -1 /*not used*/);
+    result = launch_thread(do_writes, ssl_sock, &lv, connection);
 
     if (result != SECSuccess) 
     	goto cleanup;
@@ -751,8 +746,7 @@ int
 do_connects(
     void *	a,
     void *	b,
-    int         tid,
-    PRInt32     socketDomain)
+    int         tid)
 {
     PRNetAddr  *        addr		= (PRNetAddr *)  a;
     PRFileDesc *        model_sock	= (PRFileDesc *) b;
@@ -766,7 +760,7 @@ do_connects(
 
 retry:
 
-    tcp_sock = PR_OpenTCPSocket(socketDomain);
+    tcp_sock = PR_OpenTCPSocket(addr->raw.family);
     if (tcp_sock == NULL) {
 	errExit("PR_OpenTCPSocket");
     }
@@ -1094,7 +1088,6 @@ client_main(
     int         rv;
     PRStatus    status;
     PRNetAddr   addr;
-    PRInt32    socketDomain;
 
     status = PR_StringToNetAddr(hostName, &addr);
     if (status == PR_SUCCESS) {
@@ -1120,13 +1113,6 @@ client_main(
 	    SECU_PrintError(progName, "error looking up host address");
 	    return;
 	}
-    }
-
-    /* check if SDP is going to be used */
-    if (!PR_GetEnv("NSS_USE_SDP")) {
-        socketDomain = addr.raw.family;
-    } else {
-        socketDomain = PR_AF_INET_SDP;
     }
 
     /* all suites except RSA_NULL_MD5 are enabled by Domestic Policy */
@@ -1185,8 +1171,8 @@ client_main(
     }
 
     /* configure model SSL socket. */
-    
-    model_sock = PR_OpenTCPSocket(socketDomain);
+
+    model_sock = PR_OpenTCPSocket(addr.raw.family);
     if (model_sock == NULL) {
 	errExit("PR_OpenTCPSocket for model socket");
     }
@@ -1290,7 +1276,7 @@ client_main(
 
     if (!NoReuse) {
         remaining_connections = 1;
-	rv = launch_thread(do_connects, &addr, model_sock, 0, socketDomain);
+	rv = launch_thread(do_connects, &addr, model_sock, 0);
 	/* wait for the first connection to terminate, then launch the rest. */
 	reap_threads();
         remaining_connections = total_connections - 1 ;
@@ -1299,7 +1285,7 @@ client_main(
         active_threads  = PR_MIN(active_threads, remaining_connections);
 	/* Start up the threads */
 	for (i=0;i<active_threads;i++) {
-	    rv = launch_thread(do_connects, &addr, model_sock, i, socketDomain);
+	    rv = launch_thread(do_connects, &addr, model_sock, i);
 	}
 	reap_threads();
     }

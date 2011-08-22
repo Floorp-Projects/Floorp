@@ -503,7 +503,7 @@ nsXPCComponents_InterfacesByID::GetContractID(char * *aContractID)
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_InterfacesByID";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1075,7 +1075,7 @@ nsXPCComponents_ClassesByID::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_ClassesByID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_ClassesByID";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1346,7 +1346,7 @@ nsXPCComponents_Results::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_Results::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_Results";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1575,7 +1575,7 @@ nsXPCComponents_ID::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_ID::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_ID";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1803,7 +1803,7 @@ nsXPCComponents_Exception::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_Exception::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_Exception";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -2098,7 +2098,7 @@ nsXPCConstructor::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCConstructor::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCConstructor";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -2364,7 +2364,7 @@ nsXPCComponents_Constructor::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXPCComponents_Constructor::GetClassDescription(char * *aClassDescription)
 {
-    static const char classDescription[] = "XPCComponents_Interfaces";
+    static const char classDescription[] = "XPCComponents_Constructor";
     *aClassDescription = (char*)nsMemory::Clone(classDescription, sizeof(classDescription));
     return *aClassDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

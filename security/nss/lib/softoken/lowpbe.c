@@ -81,7 +81,7 @@ static const SEC_ASN1Template NSSPKCS5PKCS12V2PBEParameterTemplate[] =
 
 struct nsspkcs5V2PBEParameterStr {
     SECAlgorithmID keyParams;  /* parameters of the key generation */
-    SECAlgorithmID algParams;  /* paramters for the encryption or mac op */
+    SECAlgorithmID algParams;  /* parameters for the encryption or mac op */
 };
 
 typedef struct nsspkcs5V2PBEParameterStr nsspkcs5V2PBEParameter;

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.25 $ $Date: 2008/09/30 04:09:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.26 $ $Date: 2010/09/09 21:14:24 $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -85,39 +85,41 @@ nssSlot_CreateSession
 )
 {
     nssSession *rvSession;
+
+    if (!readWrite) {
+	/* nss3hack version only returns rw swssions */
+	return NULL;
+    }
     rvSession = nss_ZNEW(arenaOpt, nssSession);
     if (!rvSession) {
 	return (nssSession *)NULL;
     }
-    if (readWrite) {
-	rvSession->handle = PK11_GetRWSession(slot->pk11slot);
-	if (rvSession->handle == CK_INVALID_HANDLE) {
+
+    rvSession->handle = PK11_GetRWSession(slot->pk11slot);
+    if (rvSession->handle == CK_INVALID_HANDLE) {
 	    nss_ZFreeIf(rvSession);
 	    return NULL;
-	}
-	rvSession->isRW = PR_TRUE;
-	rvSession->slot = slot;
-        /*
-         * The session doesn't need its own lock.  Here's why.
-         * 1. If we are reusing the default RW session of the slot,
-         *    the slot lock is already locked to protect the session.
-         * 2. If the module is not thread safe, the slot (or rather
-         *    module) lock is already locked.
-         * 3. If the module is thread safe and we are using a new
-         *    session, no higher-level lock has been locked and we
-         *    would need a lock for the new session.  However, the
-         *    current usage of the session is that it is always
-         *    used and destroyed within the same function and never
-         *    shared with another thread.
-         * So the session is either already protected by another
-         * lock or only used by one thread.
-         */
-        rvSession->lock = NULL;
-        rvSession->ownLock = PR_FALSE;
-	return rvSession;
-    } else {
-	return NULL;
     }
+    rvSession->isRW = PR_TRUE;
+    rvSession->slot = slot;
+    /*
+     * The session doesn't need its own lock.  Here's why.
+     * 1. If we are reusing the default RW session of the slot,
+     *    the slot lock is already locked to protect the session.
+     * 2. If the module is not thread safe, the slot (or rather
+     *    module) lock is already locked.
+     * 3. If the module is thread safe and we are using a new
+     *    session, no higher-level lock has been locked and we
+     *    would need a lock for the new session.  However, the
+     *    current usage of the session is that it is always
+     *    used and destroyed within the same function and never
+     *    shared with another thread.
+     * So the session is either already protected by another
+     * lock or only used by one thread.
+     */
+    rvSession->lock = NULL;
+    rvSession->ownLock = PR_FALSE;
+    return rvSession;
 }
 
 NSS_IMPLEMENT PRStatus

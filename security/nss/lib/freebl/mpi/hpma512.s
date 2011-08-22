@@ -331,7 +331,7 @@
 multacc512
         .PROC
         .CALLINFO
-        .ENTER
+        .ENTRY
     fldd    0(pM),M                 ; multiplier double word
     ldo     ST_SZ(sp),sp            ; push stack
 
@@ -636,8 +636,10 @@ $L0
 /*      end of module                                                       */
 /*  ======================================================================  */
 
-                .LEAVE
 
+        bve (rp)
+        .EXIT
+        nop
                 .PROCEND
                 .SPACE         $TEXT$
                 .SUBSPA        $CODE$
