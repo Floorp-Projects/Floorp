@@ -1194,19 +1194,26 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
             loadPayload(address, reg);
 
+            Jump notSingleton = branchTest32(Assembler::Zero,
+                                             Address(reg, offsetof(JSObject, flags)),
+                                             Imm32(JSObject::SINGLETON_TYPE));
+
             for (unsigned i = 0; i < count; i++) {
-                JSObject *object = types->getSingleObject(i);
-                if (object) {
+                if (JSObject *object = types->getSingleObject(i)) {
                     if (!matches.append(branchPtr(Assembler::Equal, reg, ImmPtr(object))))
                         return false;
                 }
             }
 
+            if (!mismatches->append(jump()))
+                return false;
+
+            notSingleton.linkTo(label(), this);
+
             loadPtr(Address(reg, JSObject::offsetOfType()), reg);
 
             for (unsigned i = 0; i < count; i++) {
-                types::TypeObject *object = types->getTypeObject(i);
-                if (object) {
+                if (types::TypeObject *object = types->getTypeObject(i)) {
                     if (!matches.append(branchPtr(Assembler::Equal, reg, ImmPtr(object))))
                         return false;
                 }
