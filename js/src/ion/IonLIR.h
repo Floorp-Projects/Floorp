@@ -589,10 +589,7 @@ class LInstruction : public TempObject,
     LSnapshot *snapshot() const {
         return snapshot_;
     }
-    void assignSnapshot(LSnapshot *snapshot) {
-        JS_ASSERT(!snapshot_);
-        snapshot_ = snapshot;
-    }
+    void assignSnapshot(LSnapshot *snapshot);
 
     virtual void print(FILE *fp);
     virtual void printName(FILE *fp);
