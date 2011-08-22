@@ -59,6 +59,9 @@ public:
 
   nsDOMSettableTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
 
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
+
 protected:
   virtual ~nsDOMSettableTokenList();
 };
