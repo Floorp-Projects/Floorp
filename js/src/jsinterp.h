@@ -345,12 +345,11 @@ class InterpreterFrames {
             enabler.enableInterrupts();
     }
 
-    InterpreterFrames *older;
-
   private:
     JSContext *context;
     FrameRegs *regs;
     const InterruptEnablerBase &enabler;
+    InterpreterFrames *older;
 };
 
 } /* namespace js */
