@@ -429,7 +429,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
 
 /* Implementation file */
 
-static PRIntn
+static PRBool
 TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -439,7 +439,7 @@ TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
   return kHashEnumerateNext;
 }
 
-static PRIntn
+static PRBool
 UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
@@ -453,7 +453,7 @@ struct ProtoTracer
   void *mClosure;
 };
 
-static PRIntn
+static PRBool
 TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);

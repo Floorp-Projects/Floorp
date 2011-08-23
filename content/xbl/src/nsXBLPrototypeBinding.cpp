@@ -328,7 +328,7 @@ PRBool nsXBLPrototypeBinding::CompareBindingURI(nsIURI* aURI) const
   return equal;
 }
 
-static PRIntn
+static PRBool
 TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 

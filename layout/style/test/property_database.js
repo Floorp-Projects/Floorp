@@ -472,6 +472,16 @@ var gCSSProperties = {
 		other_values: [ "border-box", "padding-box" ],
 		invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
 	},
+	"-moz-columns": {
+		domProp: "MozColumns",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-column-count", "-moz-column-width" ],
+		initial_values: [ "auto", "auto auto" ],
+		other_values: [ "3", "20px", "2 10px", "10px 2", "2 auto", "auto 2", "auto 50px", "50px auto" ],
+		invalid_values: [ "5%", "-1px", "-1", "3 5", "10px 4px", "10 2px 5in", "30px -1",
+		                  "auto 3 5px", "5 auto 20px", "auto auto auto" ]
+	},
 	"-moz-column-count": {
 		domProp: "MozColumnCount",
 		inherited: false,
