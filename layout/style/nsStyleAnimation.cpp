@@ -1926,65 +1926,13 @@ LookupStyleContext(dom::Element* aElement)
   return nsComputedDOMStyle::GetStyleContextForElement(aElement, nsnull, shell);
 }
 
-
-/**
- * Helper function: StyleWithDeclarationAdded
- * Creates a nsStyleRule with the specified property set to the specified
- * value, and returns a nsStyleContext for this rule, as a sibling of the
- * given element's nsStyleContext.
- *
- * If we fail to parse |aSpecifiedValue| for |aProperty|, this method will
- * return nsnull.
- *
- * @param aProperty       The property whose value we're customizing in the
- *                        custom style context.
- * @param aTargetElement  The element whose style context we'll use as a
- *                        sibling for our custom style context.
- * @param aSpecifiedValue The value for |aProperty| in our custom style
- *                        context.
- * @param aUseSVGMode     A flag to indicate whether we should parse
- *                        |aSpecifiedValue| in SVG mode.
- * @return The generated custom nsStyleContext, or nsnull on failure.
- */
-already_AddRefed<nsStyleContext>
-StyleWithDeclarationAdded(nsCSSProperty aProperty,
-                          dom::Element* aTargetElement,
-                          const nsAString& aSpecifiedValue,
-                          PRBool aUseSVGMode)
-{
-  NS_ABORT_IF_FALSE(aTargetElement, "null target element");
-  NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
-                    "element needs to be in a document "
-                    "if we're going to look up its style context");
-
-  // Look up style context for our target element
-  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
-  if (!styleContext) {
-    return nsnull;
-  }
-
-  // Parse specified value into a temporary StyleRule
-  nsRefPtr<css::StyleRule> styleRule =
-    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
-  if (!styleRule) {
-    return nsnull;
-  }
-
-  styleRule->RuleMatched();
-
-  // Create a temporary nsStyleContext for the style rule
-  nsCOMArray<nsIStyleRule> ruleArray;
-  ruleArray.AppendObject(styleRule);
-  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
-  return styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
-}
-
 PRBool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                dom::Element* aTargetElement,
                                const nsAString& aSpecifiedValue,
                                PRBool aUseSVGMode,
-                               Value& aComputedValue)
+                               Value& aComputedValue,
+                               PRBool* aIsContextSensitive)
 {
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
@@ -1995,19 +1943,72 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
     nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_REPORT_OTHER_NAME)
       ? nsCSSProps::OtherNameFor(aProperty) : aProperty;
 
-  nsRefPtr<nsStyleContext> tmpStyleContext =
-    StyleWithDeclarationAdded(propToParse, aTargetElement,
-                              aSpecifiedValue, aUseSVGMode);
-  if (!tmpStyleContext) {
+  // Parse specified value into a temporary css::StyleRule
+  nsRefPtr<css::StyleRule> styleRule =
+    BuildStyleRule(propToParse, aTargetElement, aSpecifiedValue, aUseSVGMode);
+  if (!styleRule) {
     return PR_FALSE;
   }
 
- if (nsCSSProps::IsShorthand(aProperty) ||
-     nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
+  if (nsCSSProps::IsShorthand(aProperty) ||
+      nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
     // Just capture the specified value
     aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
+    if (aIsContextSensitive) {
+      // Since we're just returning the string as-is, aComputedValue isn't going
+      // to change depending on the context
+      *aIsContextSensitive = PR_FALSE;
+    }
     return PR_TRUE;
   }
+
+  // Look up style context for our target element
+  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
+  if (!styleContext) {
+    return PR_FALSE;
+  }
+  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
+
+  nsRefPtr<nsStyleContext> tmpStyleContext;
+  if (aIsContextSensitive) {
+    nsCOMArray<nsIStyleRule> ruleArray;
+    ruleArray.AppendObject(styleSet->InitialStyleRule());
+    ruleArray.AppendObject(styleRule);
+    styleRule->RuleMatched();
+    tmpStyleContext =
+      styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
+    if (!tmpStyleContext) {
+      return PR_FALSE;
+    }
+
+    // Force walk of rule tree
+    nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
+    tmpStyleContext->GetStyleData(sid);
+
+    // If the rule node will have cached style data if the value is not
+    // context-sensitive. So if there's nothing cached, it's not context
+    // sensitive.
+    *aIsContextSensitive =
+      !tmpStyleContext->GetRuleNode()->NodeHasCachedData(sid);
+  }
+
+  // If we're not concerned whether the property is context sensitive then just
+  // add the rule to a new temporary style context alongside the target
+  // element's style context.
+  // Also, if we previously discovered that this property IS context-sensitive
+  // then we need to throw the temporary style context out since the property's
+  // value may have been biased by the 'initial' values supplied.
+  if (!aIsContextSensitive || *aIsContextSensitive) {
+    nsCOMArray<nsIStyleRule> ruleArray;
+    ruleArray.AppendObject(styleRule);
+    styleRule->RuleMatched();
+    tmpStyleContext =
+      styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
+    if (!tmpStyleContext) {
+      return PR_FALSE;
+    }
+  }
+
   // Extract computed value of our property from the temporary style rule
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }

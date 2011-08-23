@@ -1050,6 +1050,10 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     } else {
         int drawType = sview.BeginDrawing();
 
+        if (drawType == AndroidGeckoSurfaceView::DRAW_DISABLED) {
+            return;
+        }
+
         if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
             ALOG("##### BeginDrawing failed!");
             return;

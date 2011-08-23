@@ -162,6 +162,7 @@ HistoryStore.prototype = {
 
   get _visitStm() {
     return this._getStmt(
+      "/* do not warn (bug 599936) */ " +
       "SELECT visit_type type, visit_date date " +
       "FROM moz_historyvisits " +
       "WHERE place_id = (SELECT id FROM moz_places WHERE url = :url) " +
