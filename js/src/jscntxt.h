@@ -226,6 +226,12 @@ struct ThreadData {
 
     /* This must be called with the GC lock held. */
     void triggerOperationCallback(JSRuntime *rt);
+
+    /*
+     * Frames currently running in js::Interpret. See InterpreterFrames for
+     * details.
+     */
+    InterpreterFrames *interpreterFrames;
 };
 
 } /* namespace js */
