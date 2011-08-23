@@ -1380,6 +1380,9 @@
       <xul:hbox class="remotetabs-throbber-box" flex="1" align="center" pack="center">
         <xul:image src="chrome://browser/skin/images/throbber.png" />
       </xul:hbox>
+      <xul:hbox class="remotetabs-message-box" flex="1" align="center" pack="center">
+        <xul:label xbl:inherits="value=message" align="center" crop="center" flex="1"/>
+      </xul:hbox>
       <xul:richlistbox anonid="child-items" class="remotetabs-list-children" flex="1" batch="25"/>
     </content>
     <implementation>
