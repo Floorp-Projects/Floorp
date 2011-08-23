@@ -74,6 +74,15 @@ class nsEmptyStyleRule : public nsIStyleRule
 #endif
 };
 
+class nsInitialStyleRule : public nsIStyleRule
+{
+  NS_DECL_ISUPPORTS
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+};
+
 // The style set object is created by the document viewer and ownership is
 // then handed off to the PresShell.  Only the PresShell should delete a
 // style set.
@@ -309,6 +318,8 @@ class nsStyleSet
 
   nsCSSStyleSheet::EnsureUniqueInnerResult EnsureUniqueInnerOnCSSSheets();
 
+  nsIStyleRule* InitialStyleRule();
+
  private:
   // Not to be implemented
   nsStyleSet(const nsStyleSet& aCopy);
@@ -399,6 +410,10 @@ class nsStyleSet
   // Empty style rules to force things that restrict which properties
   // apply into different branches of the rule tree.
   nsRefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule;
+
+  // Style rule which sets all properties to their initial values for
+  // determining when context-sensitive values are in use.
+  nsRefPtr<nsInitialStyleRule> mInitialStyleRule;
 
   PRUint16 mBatching;
 

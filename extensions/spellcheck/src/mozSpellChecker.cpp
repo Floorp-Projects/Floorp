@@ -41,10 +41,6 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 
-// The number 130 more or less comes out of thin air.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=355178#c78 for a pseudo-rationale.
-#define UNREASONABLE_WORD_LENGTH 130
-
 #define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozSpellChecker)
@@ -148,12 +144,6 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArr
   PRBool correct;
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
-
-  // don't bother to check crazy words
-  if (aWord.Length() > UNREASONABLE_WORD_LENGTH) {
-    *aIsMisspelled = PR_TRUE;
-    return NS_OK;
-  }
 
   *aIsMisspelled = PR_FALSE;
   result = mSpellCheckingEngine->Check(PromiseFlatString(aWord).get(), &correct);

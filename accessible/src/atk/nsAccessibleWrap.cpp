@@ -976,9 +976,11 @@ refRelationSetCB(AtkObject *aAtkObj)
     while ((tempAcc = rel.Next()))
       targets.AppendElement(nsAccessibleWrap::GetAtkObject(tempAcc));
 
-    atkRelation = atk_relation_new(targets.Elements(), targets.Length(), atkType);
-    atk_relation_set_add(relation_set, atkRelation);
-    g_object_unref(atkRelation);
+    if (targets.Length()) {
+      atkRelation = atk_relation_new(targets.Elements(), targets.Length(), atkType);
+      atk_relation_set_add(relation_set, atkRelation);
+      g_object_unref(atkRelation);
+    }
   }
 
   return relation_set;

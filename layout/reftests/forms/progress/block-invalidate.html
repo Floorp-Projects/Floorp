@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    progress { display: block; }
+  </style>
+  <script>
+    function loadHandler() {
+      setTimeout(function() {
+        var p = document.getElementsByTagName('progress')[0];
+        p.value = '0.5';
+        document.documentElement.className = '';
+      }, 0);
+    }
+  </script>
+  <body onload="loadHandler();">
+    <progress value='0'></progress>
+  </body>
+</html>

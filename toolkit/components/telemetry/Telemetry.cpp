@@ -259,7 +259,7 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
 }
 
 TelemetryImpl::TelemetryImpl():
-mCanRecord(true)
+mCanRecord(XRE_GetProcessType() == GeckoProcessType_Default)
 {
   mHistogramMap.Init(Telemetry::HistogramCount);
 }
