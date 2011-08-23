@@ -60,15 +60,13 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
-#ifdef MOZ_MEMORY
 #ifdef WIN32_OLD_STYLE_JEMALLOC
 @BINPATH@/mozcrt19.dll
 @BINPATH@/mozcpp19.dll
 #else
+#ifdef MOZ_MEMORY
 @BINPATH@/jemalloc.dll
 #endif
-#endif
-#else
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
@@ -82,6 +80,7 @@
 #elif _MSC_VER == 1600
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
+#endif
 #endif
 
 #endif
