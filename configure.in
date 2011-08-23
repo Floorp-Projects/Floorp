@@ -5162,7 +5162,7 @@ incorrect])
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
     else
-       AC_CHECK_LIB(QtSensors QtFeedback QtLocation, main, [
+       AC_CHECK_LIB(QtSensors, main, [
           MOZ_ENABLE_QTMOBILITY=1
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtMobility"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtSensors"
