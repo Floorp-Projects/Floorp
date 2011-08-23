@@ -128,9 +128,18 @@ CodeGeneratorX86Shared::visitCompareI(LCompareI *comp)
     const LAllocation *right = comp->getOperand(1);
     const LDefinition *def = comp->getDef(0);
 
+    // If the register we're defining is a single byte register,
+    // take advantage of the setCC instruction
+    if (GeneralRegisterSet(Registers::SingleByteRegs).has(ToRegister(def))) {
+        masm.xorl(ToRegister(def), ToRegister(def));
+        masm.cmpl(ToRegister(left), ToOperand(right));
+        masm.setCC(comp->condition(), ToRegister(def));
+        return true;
+    }
+
     Label ifTrue;
-    masm.cmpl(ToRegister(left), ToOperand(right));
     masm.movl(Imm32(1), ToRegister(def));
+    masm.cmpl(ToRegister(left), ToOperand(right));
     masm.j(comp->condition(), &ifTrue);
     masm.movl(Imm32(0), ToRegister(def));
     masm.bind(&ifTrue);
