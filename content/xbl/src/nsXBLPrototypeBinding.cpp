@@ -1213,7 +1213,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   PRInt32 i;
   for (i = 0; i < count; i++) {
     nsIContent* child = childrenElements[i];
-    nsIContent* parent = child->GetParent(); 
+    nsCOMPtr<nsIContent> parent = child->GetParent(); 
 
     // Create an XBL insertion point entry.
     nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
