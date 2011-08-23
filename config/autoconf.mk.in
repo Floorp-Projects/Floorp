@@ -636,9 +636,7 @@ MOZ_CRT_CPU_ARCH = @MOZ_CRT_CPU_ARCH@
 
 # This is for custom CRT building
 ifdef MOZ_MEMORY
-ifdef WIN32_CRT_SRC_DIR
 DLLFLAGS = @DLLFLAGS@
-endif
 endif
 
 # Codesighs tools option, enables win32 mapfiles.
