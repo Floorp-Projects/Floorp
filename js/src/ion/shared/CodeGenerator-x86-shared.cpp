@@ -365,6 +365,53 @@ CodeGeneratorX86Shared::visitBitOp(LBitOp *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitShiftOp(LShiftOp *ins)
+{
+    const LAllocation *lhs = ins->getOperand(0);
+    const LAllocation *rhs = ins->getOperand(1);
+
+    switch (ins->bitop()) {
+        case JSOP_LSH:
+            if (rhs->isConstant())
+                masm.shll(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs));
+            else
+                masm.shll_cl(ToRegister(lhs));
+            break;
+        case JSOP_RSH:
+            if (rhs->isConstant())
+                masm.sarl(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs));
+            else
+                masm.sarl_cl(ToRegister(lhs));
+            break;
+        case JSOP_URSH: {
+            MUrsh *ursh = ins->mir()->toUrsh(); 
+            if (rhs->isConstant())
+                masm.shrl(Imm32(ToInt32(rhs) & 0x1F), ToRegister(lhs));
+            else
+                masm.shrl_cl(ToRegister(lhs));
+ 
+            // Note: this is an unsigned operation.
+            // We don't have a UINT32 type, so we will emulate this with INT32
+            // The bit representation of an integer from ToInt32 and ToUint32 are the same.
+            // So the inputs are ok.
+            // But we need to bring the output back again from UINT32 to INT32.
+            // Both representation overlap each other in the positive numbers. (in INT32)
+            // So there is only a problem when solution (in INT32) is negative.
+            if (ursh->canOverflow()) {
+                masm.cmpl(ToOperand(lhs), Imm32(0));
+                if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
+                    return false;
+            }
+            break;
+        }
+        default:
+            JS_NOT_REACHED("unexpected shift opcode");
+    }
+
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitInteger(LInteger *ins)
 {
     const LDefinition *def = ins->getDef(0);

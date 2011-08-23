@@ -97,6 +97,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitMulI(LMulI *ins);
     virtual bool visitBitNot(LBitNot *ins);
     virtual bool visitBitOp(LBitOp *ins);
+    virtual bool visitShiftOp(LShiftOp *ins);
     virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitInteger(LInteger *ins);
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);

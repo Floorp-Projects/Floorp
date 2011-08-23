@@ -364,6 +364,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_BITAND:
       case JSOP_BITOR:
       case JSOP_BITXOR:
+      case JSOP_LSH:
+      case JSOP_RSH:
+      case JSOP_URSH:
         return jsop_bitop(op);
 
       case JSOP_ADD:
@@ -1521,6 +1524,18 @@ IonBuilder::jsop_bitop(JSOp op)
         ins = MBitXor::New(left, right);
         break;
         
+      case JSOP_LSH:
+        ins = MLsh::New(left, right);
+        break;
+        
+      case JSOP_RSH:
+        ins = MRsh::New(left, right);
+        break;
+        
+      case JSOP_URSH:
+        ins = MUrsh::New(left, right);
+        break;
+
       default:
         JS_NOT_REACHED("unexpected bitop");
         return false;

@@ -53,6 +53,7 @@
     _(Goto)                         \
     _(BitNot)                       \
     _(BitOp)                        \
+    _(ShiftOp)                      \
     _(Return)                       \
     _(Phi)                          \
     _(TestIAndBranch)               \

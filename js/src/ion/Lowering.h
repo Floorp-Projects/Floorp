@@ -71,6 +71,7 @@ class LIRGenerator : public LIRGeneratorSpecific
 
   private:
     bool lowerBitOp(JSOp op, MInstruction *ins);
+    bool lowerShiftOp(JSOp op, MInstruction *ins);
     bool precreatePhi(LBlock *block, MPhi *phi);
     bool definePhis();
 
@@ -89,6 +90,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBitAnd(MBitAnd *ins);
     bool visitBitOr(MBitOr *ins);
     bool visitBitXor(MBitXor *ins);
+    bool visitLsh(MLsh *ins);
+    bool visitRsh(MRsh *ins);
+    bool visitUrsh(MUrsh *ins);
     bool visitAdd(MAdd *ins);
     bool visitMul(MMul *ins);
     bool visitStart(MStart *start);
