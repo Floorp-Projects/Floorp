@@ -42,6 +42,8 @@ function runTests()
     selection.collapseToEnd();
   }
 
+  /* TestCase #1
+   */
   const kTestCase1 =
     "<p id=\"editor1\" contenteditable=\"true\">editor1</p>" +
     "<p id=\"editor2\" contenteditable=\"true\">editor2</p>" +
@@ -50,10 +52,18 @@ function runTests()
     "non-editable text" +
     "<p id=\"editor5\" contenteditable=\"true\">editor5</p>";
 
-  const kTestCase1_editor3_specialcase =
+  const kTestCase1_editor3_deleteAtStart =
     "<p id=\"editor1\" contenteditable=\"true\">editor1</p>" +
     "<p id=\"editor2\" contenteditable=\"true\">editor2</p>" +
     "<div id=\"editor3\" contenteditable=\"true\"><div>ditor3</div></div>" +
+    "<p id=\"editor4\" contenteditable=\"true\">editor4</p>" +
+    "non-editable text" +
+    "<p id=\"editor5\" contenteditable=\"true\">editor5</p>";
+
+  const kTestCase1_editor3_backspaceAtEnd =
+    "<p id=\"editor1\" contenteditable=\"true\">editor1</p>" +
+    "<p id=\"editor2\" contenteditable=\"true\">editor2</p>" +
+    "<div id=\"editor3\" contenteditable=\"true\"><div>editor</div></div>" +
     "<p id=\"editor4\" contenteditable=\"true\">editor4</p>" +
     "non-editable text" +
     "<p id=\"editor5\" contenteditable=\"true\">editor5</p>";
@@ -66,6 +76,9 @@ function runTests()
   var editor4 = document.getElementById("editor4");
   var editor5 = document.getElementById("editor5");
 
+  /* TestCase #1:
+   * pressing backspace key at start should not change the content.
+   */
   editor2.focus();
   moveCaretToStartOf(editor2);
   synthesizeKey("VK_BACK_SPACE", { });
@@ -94,6 +107,9 @@ function runTests()
      "Pressing backspace key at start of editor5 changes the content");
   reset();
 
+  /* TestCase #1:
+   * pressing delete key at end should not change the content.
+   */
   editor1.focus();
   moveCaretToEndOf(editor1);
   synthesizeKey("VK_DELETE", { });
@@ -127,14 +143,28 @@ function runTests()
      "Pressing delete key at end of editor4 changes the content");
   reset();
 
-  // Cases when the caret is not on text node.
+  /* TestCase #1: cases when the caret is not on text node.
+   *   - pressing delete key at start should remove the first character
+   *   - pressing backspace key at end should remove the first character
+   * and the adjacent blocks should not be changed.
+   */
   editor3.focus();
   moveCaretToStartOf(editor3);
   synthesizeKey("VK_DELETE", { });
-  is(container.innerHTML, kTestCase1_editor3_specialcase,
-     "Pressing delete key at end of editor3 changes the content");
+  is(container.innerHTML, kTestCase1_editor3_deleteAtStart,
+     "Pressing delete key at start of editor3 changes adjacent elements"
+     + " and/or does not remove the first character.");
   reset();
 
+  // Backspace doesn't work here yet.
+  editor3.focus();
+  moveCaretToEndOf(editor3);
+  synthesizeKey("VK_BACK_SPACE", { });
+  todo_is(container.innerHTML, kTestCase1_editor3_backspaceAtEnd,
+          "Pressing backspace key at end of editor3 changes adjacent elements"
+          + " and/or does not remove the last character.");
+  reset();
+  //  We can still check that adjacent elements are not affected.
   editor3.focus();
   moveCaretToEndOf(editor3);
   synthesizeKey("VK_BACK_SPACE", { });
@@ -142,6 +172,9 @@ function runTests()
      "Pressing backspace key at end of editor3 changes the content");
   reset();
 
+  /* TestCase #2:
+   * two adjacent editable <span> in a table cell.
+   */
   const kTestCase2 = "<table><tbody><tr><td><span id=\"editor1\" contenteditable=\"true\">test</span>" +
     "<span id=\"editor2\" contenteditable=\"true\">test</span></td></tr></tbody></table>";
 
@@ -163,6 +196,9 @@ function runTests()
      "Pressing delete key at the end of editor1 changes the content for kTestCase2");
   reset();
 
+  /* TestCase #3:
+   * editable <span> in two adjacent table cells.
+   */
   const kTestCase3 = "<table><tbody><tr><td><span id=\"editor1\" contenteditable=\"true\">test</span></td>" +
     "<td><span id=\"editor2\" contenteditable=\"true\">test</span></td></tr></tbody></table>";
 
@@ -184,6 +220,9 @@ function runTests()
      "Pressing delete key at the end of editor1 changes the content for kTestCase3");
   reset();
 
+  /* TestCase #4:
+   * editable <div> in two adjacent table cells.
+   */
   const kTestCase4 = "<table><tbody><tr><td><div id=\"editor1\" contenteditable=\"true\">test</div></td>" +
     "<td><div id=\"editor2\" contenteditable=\"true\">test</div></td></tr></tbody></table>";
 
