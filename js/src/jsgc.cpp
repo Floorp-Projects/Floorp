@@ -1784,12 +1784,6 @@ AutoGCRooter::trace(JSTracer *trc)
         static_cast<js::AutoBindingsRooter *>(this)->bindings.trace(trc);
         return;
       }
-
-      case OBJVECTOR: {
-        AutoObjectVector::VectorImpl &vector = static_cast<AutoObjectVector *>(this)->vector;
-        MarkObjectRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
-        return;
-      }
     }
 
     JS_ASSERT(tag >= 0);
