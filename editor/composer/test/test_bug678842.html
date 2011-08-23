@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=678842
+-->
+<head>
+  <title>Test for Bug 678842</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678842">Mozilla Bug 678842</a>
+<p id="display"></p>
+<iframe id="content"></iframe>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 678842 **/
+SimpleTest.waitForExplicitFinish();
+var content = document.getElementById('content');
+// load a subframe containing an editor with a defined unknown lang. At first
+// load, it will set dictionary to en-US. At second load, it will return current
+// dictionary. So, we can check, dictionary is correctly remembered between
+// loads.
+
+var firstLoad = true;
+
+var loadListener = function(evt) {
+  var doc = evt.target.contentDocument;
+  var elem = doc.getElementById('textarea');
+  var editor = elem.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  editor.setSpellcheckUserOverride(true);
+  var inlineSpellChecker = editor.getInlineSpellChecker(true);
+  var spellchecker = inlineSpellChecker.spellChecker;
+  var currentDictonary = "";
+  try {
+    currentDictonary = spellchecker.GetCurrentDictionary();
+  } catch(e) {}
+
+  if (!currentDictonary) {
+    spellchecker.SetCurrentDictionary('en-US');
+  }
+
+  if (firstLoad) {
+    firstLoad = false;
+    is (currentDictonary, "", "unexpected lang " + currentDictonary);
+    content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug678842_subframe.html?firstload=false';
+  } else {
+    is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
+    content.removeEventListener('load', loadListener, false);
+    SimpleTest.finish();
+  }
+}
+
+content.addEventListener('load', loadListener, false);
+
+content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug678842_subframe.html?firstload=true';
+
+</script>
+</pre>
+</body>
+</html>
