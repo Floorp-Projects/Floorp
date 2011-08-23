@@ -289,11 +289,11 @@ JITInhibitingHookChange(JSRuntime *rt, bool wasInhibited)
     if (wasInhibited) {
         if (!rt->debuggerInhibitsJIT()) {
             for (JSCList *cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next)
-                JSContext::fromLinkField(cl)->updateJITEnabled();
+                js_ContextFromLinkField(cl)->updateJITEnabled();
         }
     } else if (rt->debuggerInhibitsJIT()) {
         for (JSCList *cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next)
-            JSContext::fromLinkField(cl)->traceJitEnabled = false;
+            js_ContextFromLinkField(cl)->traceJitEnabled = false;
     }
 }
 #endif
