@@ -3730,7 +3730,11 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
       else {
         if (!curQuote)
         {
+          // First, check that our element can contain a div.
           NS_NAMED_LITERAL_STRING(divquoteType, "div");
+          if (!mEditor->CanContainTag(curParent, divquoteType))
+            return NS_OK; // cancelled
+
           res = SplitAsNeeded(&divquoteType, address_of(curParent), &offset);
           NS_ENSURE_SUCCESS(res, res);
           res = mHTMLEditor->CreateNode(divquoteType, curParent, offset, getter_AddRefs(curQuote));
@@ -3957,6 +3961,10 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
         
         if (!curQuote) 
         {
+          // First, check that our element can contain a blockquote.
+          if (!mEditor->CanContainTag(curParent, quoteType))
+            return NS_OK; // cancelled
+
           res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
           NS_ENSURE_SUCCESS(res, res);
           res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
@@ -4089,10 +4097,10 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       nsCOMPtr<nsIDOMNode> n = curNode;
       nsCOMPtr<nsIDOMNode> tmp;
       curBlockQuoteIsIndentedWithCSS = PR_FALSE;
-      // keep looking up the hierarchy as long as we don't hit the body or a table element
-      // (other than an entire table)
-      while (!nsTextEditUtils::IsBody(n) &&   
-             (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
+      // keep looking up the hierarchy as long as we don't hit the body or the
+      // active editing host or a table element (other than an entire table)
+      while (!nsTextEditUtils::IsBody(n) && mHTMLEditor->IsNodeInActiveEditor(n)
+          && (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
       {
         n->GetParentNode(getter_AddRefs(tmp));
         if (!tmp) {
@@ -4785,7 +4793,11 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     // or if this node doesn't go in div we used earlier.
     if (!curDiv || transitionList[i])
     {
+      // First, check that our element can contain a div.
       NS_NAMED_LITERAL_STRING(divType, "div");
+      if (!mEditor->CanContainTag(curParent, divType))
+        return NS_OK; // cancelled
+
       res = SplitAsNeeded(&divType, address_of(curParent), &offset);
       NS_ENSURE_SUCCESS(res, res);
       res = mHTMLEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
@@ -4795,9 +4807,9 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       // set up the alignment on the div
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curDiv);
       res = AlignBlock(divElem, alignType, PR_TRUE);
-//      nsAutoString attr(NS_LITERAL_STRING("align"));
-//      res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
-//      NS_ENSURE_SUCCESS(res, res);
+      //nsAutoString attr(NS_LITERAL_STRING("align"));
+      //res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
+      //NS_ENSURE_SUCCESS(res, res);
       // curDiv is now the correct thing to put curNode in
     }
 
@@ -5598,9 +5610,13 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
       // Don't walk past the editable section. Note that we need to check
       // before walking up to a parent because we need to return the parent
       // object, so the parent itself might not be in the editable area, but
-      // it's OK.
-      if (!mHTMLEditor->IsNodeInActiveEditor(node) &&
-          !mHTMLEditor->IsNodeInActiveEditor(parent)) {
+      // it's OK if we're not performing a block-level action.
+      PRBool blockLevelAction = (actionID == nsHTMLEditor::kOpIndent)
+                             || (actionID == nsHTMLEditor::kOpOutdent)
+                             || (actionID == nsHTMLEditor::kOpAlign)
+                             || (actionID == nsHTMLEditor::kOpMakeBasicBlock);
+      if (!mHTMLEditor->IsNodeInActiveEditor(parent) &&
+          (blockLevelAction || !mHTMLEditor->IsNodeInActiveEditor(node))) {
         break;
       }
 
@@ -8935,8 +8951,17 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
     }
     else {
       mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, marginProperty, value, PR_FALSE);
-      if (nsHTMLEditUtils::IsDiv(aNode)) {
-        // we deal with a DIV ; let's see if it is useless and if we can remove it
+      // remove unnecessary DIV blocks:
+      // we could skip this section but that would cause a FAIL in
+      // editor/libeditor/html/tests/browserscope/richtext.html, which expects
+      // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
+      // removing the DIV container instead of just removing the CSS property.
+      nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+      if (nsHTMLEditUtils::IsDiv(aNode)
+          && (node != mHTMLEditor->GetActiveEditingHost())
+          && mHTMLEditor->IsNodeInActiveEditor(aNode)) {
+        // we deal with an editable DIV;
+        // let's see if it is useless and if we can remove it
         nsCOMPtr<nsIDOMNamedNodeMap> attributeList;
         res = element->GetAttributes(getter_AddRefs(attributeList));
         NS_ENSURE_SUCCESS(res, res);
