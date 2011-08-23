@@ -4315,7 +4315,7 @@ xpc_GetJSPrivate(JSObject *obj)
 // and used.
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
-                        JSObject *proto, bool preferXray);
+                        JSObject *proto, bool preferXray, const nsACString &sandboxName);
 
 // Helper for evaluating scripts in a sandbox object created with
 // xpc_CreateSandboxObject(). The caller is responsible of ensuring
@@ -4396,6 +4396,7 @@ struct CompartmentPrivate
     JSObject2JSObjectMap *waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
     nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> *expandoMap;
+    nsCString location;
 
     bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
         if (!expandoMap) {

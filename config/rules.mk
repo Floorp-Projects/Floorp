@@ -153,6 +153,20 @@ xpcshell-tests:
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
+xpcshell-tests-remote: DM_TRANS?=adb
+xpcshell-tests-remote:
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
+	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  $(EXTRA_TEST_ARGS) \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
+
 # Execute a single test, specified in $(SOLO_FILE), but don't automatically
 # start the test. Instead, present the xpcshell prompt so the user can
 # attach a debugger and then start the test.
@@ -182,6 +196,23 @@ check-one:
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
+check-one-remote: DM_TRANS?=adb
+check-one-remote:
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(testxpcsrcdir)/remotexpcshelltests.py \
+	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  --test-path=$(SOLO_FILE) \
+	  --profile-name=$(MOZ_APP_NAME) \
+	  --verbose \
+	  $(EXTRA_TEST_ARGS) \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+          --noSetup \
+	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 endif # XPCSHELL_TESTS
 
 ifdef CPP_UNIT_TESTS
@@ -1122,8 +1153,9 @@ ifdef HAVE_DTRACE
 ifndef XP_MACOSX
 ifdef DTRACE_PROBE_OBJ
 ifndef DTRACE_LIB_DEPENDENT
-$(DTRACE_PROBE_OBJ):
-	dtrace -G -C -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ)
+NON_DTRACE_OBJS := $(filter-out $(DTRACE_PROBE_OBJ),$(OBJS))
+$(DTRACE_PROBE_OBJ): $(NON_DTRACE_OBJS)
+	dtrace -G -C -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ) $(NON_DTRACE_OBJS)
 endif
 endif
 endif
@@ -1519,9 +1551,6 @@ export:: FORCE
 	@echo; sleep 2; false
 endif
 
-$(IDL_DIR)::
-	$(NSINSTALL) -D $@
-
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
 # warn against overriding existing .h file. 
 $(XPIDL_GEN_DIR)/.done:
@@ -1592,14 +1621,8 @@ endif # XPIDLSRCS
 
 
 
-#
 # General rules for exporting idl files.
-#
-# WORK-AROUND ONLY, for mozilla/tools/module-deps/bootstrap.pl build.
-# Bug to fix idl dependency problems w/o this extra build pass is
-#   http://bugzilla.mozilla.org/show_bug.cgi?id=145777
-#
-$(IDL_DIR)::
+$(IDL_DIR):
 	$(NSINSTALL) -D $@
 
 export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
@@ -2066,7 +2089,6 @@ showhost:
 	@echo "HOST_LIBRARY       = $(HOST_LIBRARY)"
 
 showbuildmods::
-	@echo "Build Modules	= $(BUILD_MODULES)"
 	@echo "Module dirs	= $(BUILD_MODULE_DIRS)"
 
 documentation:

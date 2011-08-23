@@ -42,6 +42,9 @@
  *    HISTOGRAM(id, minimum, maximum, bucket count, histogram kind,
  *              human-readable description for about:telemetry)
  *
+ * This file is the master list of telemetry histograms reported to Mozilla servers.
+ * The other data reported by telemetry is listed on https://wiki.mozilla.org/Privacy/Reviews/Telemetry/Measurements
+ *
  */
 
 /**
