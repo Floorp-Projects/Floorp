@@ -97,6 +97,7 @@ let WeaveGlue = {
     // Services.io.offline is lying to us, so we use the NetworkLinkService instead
     let nls = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     if (!nls.isLinkUp) {
+      Services.obs.notifyObservers(null, "browser:sync:setup:networkerror", "");
       Services.prompt.alert(window,
                              this._bundle.GetStringFromName("sync.setup.error.title"),
                              this._bundle.GetStringFromName("sync.setup.error.network"));
