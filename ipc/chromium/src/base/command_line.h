@@ -65,11 +65,9 @@ class CommandLine {
     return current_process_commandline_;
   }
 
-#ifdef CHROMIUM_MOZILLA_BUILD
   static bool IsInitialized() {
     return !!current_process_commandline_;
   }
-#endif
 
   // Returns true if this command line contains the given switch.
   // (Switch names are case-insensitive.)

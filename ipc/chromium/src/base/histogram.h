@@ -45,11 +45,7 @@
 #include <string>
 #include <vector>
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
 #define BASE_API
-#else
-#include "base/base_api.h"
-#endif
 #include "testing/gtest/include/gtest/gtest_prod.h"
 #include "base/time.h"
 #include "base/lock.h"
