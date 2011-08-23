@@ -1415,8 +1415,14 @@
           while (children.lastChild)
             children.removeChild(children.lastChild);
 
-          let items = this._getRemoteTabs();
-          children.setItems(items.map(this.createItem));
+          let engine = this._getWeaveEngine();
+
+          // Only load items if the tabs engine is ready
+          if (engine) {
+            let items = this._getRemoteTabs(engine);
+            children.setItems(items.map(this.createItem));
+          }
+
           this.removeAttribute("loading");
         ]]></body>
       </method>
@@ -1440,25 +1446,21 @@
       </method>
 
       <method name="_getRemoteTabs">
+        <parameter name="aEngine"/>
         <body><![CDATA[
-          // Don't do anything if the tabs engine isn't ready
-          let engine = this._getWeaveEngine();
-          if (!engine)
-            return [];
-
           // Don't bother refetching tabs if we already did so recently
           let lastFetch = Weave.Svc.Prefs.get("lastTabFetch", 0);
           let now = Math.floor(Date.now() / 1000);
           if (now - lastFetch >= Services.prefs.getIntPref("browser.display.remotetabs.timeout")) {
             // Force a sync only for the tabs engine
-            engine.lastModified = null;
-            engine.sync();
+            aEngine.lastModified = null;
+            aEngine.sync();
             Weave.Svc.Prefs.set("lastTabFetch", now);
           };
 
           // Generate the list of tabs
           let tabs = [];
-          for (let [guid, client] in Iterator(engine.getAllClients())) {
+          for (let [guid, client] in Iterator(aEngine.getAllClients())) {
             if (!client.tabs.length)
               continue;
 
