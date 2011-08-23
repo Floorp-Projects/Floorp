@@ -370,3 +370,4 @@ MSG_DEF(JSMSG_DEBUG_BAD_LINE,         283, 0, JSEXN_TYPEERR, "invalid line numbe
 MSG_DEF(JSMSG_DEBUG_NOT_DEBUGGING,    284, 0, JSEXN_ERR, "can't set breakpoint: script global is not a debuggee")
 MSG_DEF(JSMSG_DEBUG_COMPARTMENT_MISMATCH, 285, 2, JSEXN_TYPEERR, "{0}: descriptor .{1} property is an object in a different compartment than the target object")
 MSG_DEF(JSMSG_NOT_CALLABLE_OR_UNDEFINED, 286, 0, JSEXN_TYPEERR, "value is not a function or undefined")
+MSG_DEF(JSMSG_DEBUG_NOT_SCRIPT_FRAME, 287, 0, JSEXN_ERR, "stack frame is not running JavaScript code")
