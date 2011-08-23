@@ -315,7 +315,6 @@ void MessageLoop::RunTask(Task* task) {
   // Execute the task and assume the worst: It is probably not reentrant.
   nestable_tasks_allowed_ = false;
 
-  HistogramEvent(kTaskRunEvent);
   task->Run();
   delete task;
 
@@ -506,36 +505,6 @@ bool MessageLoop::PendingTask::operator<(const PendingTask& other) const {
   // Compare the difference to support integer roll-over.
   return (sequence_num - other.sequence_num) > 0;
 }
-
-//------------------------------------------------------------------------------
-// Method and data for histogramming events and actions taken by each instance
-// on each thread.
-
-// static
-void MessageLoop::EnableHistogrammer(bool enable) {
-}
-
-void MessageLoop::StartHistogrammer() {
-}
-
-void MessageLoop::HistogramEvent(int event) {
-}
-
-// Provide a macro that takes an expression (such as a constant, or macro
-// constant) and creates a pair to initalize an array of pairs.  In this case,
-// our pair consists of the expressions value, and the "stringized" version
-// of the expression (i.e., the exrpression put in quotes).  For example, if
-// we have:
-//    #define FOO 2
-//    #define BAR 5
-// then the following:
-//    VALUE_TO_NUMBER_AND_NAME(FOO + BAR)
-// will expand to:
-//   {7, "FOO + BAR"}
-// We use the resulting array as an argument to our histogram, which reads the
-// number as a bucket identifier, and proceeds to use the corresponding name
-// in the pair (i.e., the quoted string) when printing out a histogram.
-#define VALUE_TO_NUMBER_AND_NAME(name) {name, #name},
 
 //------------------------------------------------------------------------------
 // MessageLoopForUI
