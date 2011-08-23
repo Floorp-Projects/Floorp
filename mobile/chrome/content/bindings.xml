@@ -1390,6 +1390,7 @@
         <body><![CDATA[
           let self = this;
           this.setAttribute("loading", "true");
+          this.removeAttribute("message");
 
           if (Weave.Service.isLoggedIn) {
             setTimeout(function() self._loadChildren(), 0);
@@ -1417,10 +1418,19 @@
 
           let engine = this._getWeaveEngine();
 
-          // Only load items if the tabs engine is ready
+          // Only load items if the tabs engine is ready. In case
+          // sync fails, WeaveGlue will show an error dialog. If sync
+          // succeeds but has no data to display, a message is presented
+          // in the panel (see "message" attribute).
           if (engine) {
             let items = this._getRemoteTabs(engine);
-            children.setItems(items.map(this.createItem));
+
+            if (items.length) {
+              children.setItems(items.map(this.createItem));
+            } else {
+              let bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
+              this.setAttribute("message", bundle.GetStringFromName("sync.message.notabs"));
+            }
           }
 
           this.removeAttribute("loading");
