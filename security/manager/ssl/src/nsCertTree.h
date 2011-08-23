@@ -155,6 +155,7 @@ private:
   PLDHashTable mCompareCache;
   nsCOMPtr<nsINSSComponent> mNSSComponent;
   nsCOMPtr<nsICertOverrideService> mOverrideService;
+  nsRefPtr<nsCertOverrideService> mOriginalOverrideService;
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
   already_AddRefed<nsIX509Cert> 
