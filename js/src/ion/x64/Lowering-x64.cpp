@@ -165,6 +165,21 @@ LIRGeneratorX64::assignSnapshot(LInstruction *ins)
 }
 
 bool
+LIRGeneratorX64::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+{
+    ins->setOperand(0, useRegister(lhs));
+
+    // shift operator should be constant or in register rcx
+    // x86 can't shift a non-ecx register
+    if (rhs->isConstant())
+        ins->setOperand(1, useOrConstant(rhs));
+    else
+        ins->setOperand(1, useFixed(rhs, rcx));
+
+    return defineReuseInput(ins, mir);
+}
+
+bool
 LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
 {
     ins->setOperand(0, useRegister(input));

@@ -1089,6 +1089,92 @@ class MBitXor : public MBinaryBitwiseInstruction
     }
 };
 
+class MLsh : public MBinaryBitwiseInstruction
+{
+    MLsh(MDefinition *left, MDefinition *right)
+      : MBinaryBitwiseInstruction(left, right)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(Lsh);
+    static MLsh *New(MDefinition *left, MDefinition *right);
+
+    MDefinition *foldIfZero(size_t operand) {
+        // 0 << x => 0
+        // x << 0 => x
+        return getOperand(0);
+    }
+
+    MDefinition *foldIfEqual() {
+        return this;
+    }
+};
+
+class MRsh : public MBinaryBitwiseInstruction
+{
+    MRsh(MDefinition *left, MDefinition *right)
+      : MBinaryBitwiseInstruction(left, right)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(Rsh);
+    static MRsh *New(MDefinition *left, MDefinition *right);
+
+    MDefinition *foldIfZero(size_t operand) {
+        // 0 >> x => 0
+        // x >> 0 => x
+        return getOperand(0);
+    }
+
+    MDefinition *foldIfEqual() {
+        return this;
+    }
+};
+
+class MUrsh : public MBinaryBitwiseInstruction
+{
+    bool canOverflow_;
+
+    MUrsh(MDefinition *left, MDefinition *right)
+      : MBinaryBitwiseInstruction(left, right),
+        canOverflow_(true)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(Ursh);
+    static MUrsh *New(MDefinition *left, MDefinition *right);
+
+    MDefinition *foldIfZero(size_t operand) {
+        // 0 >>> x => 0
+        if (operand == 0)
+            return getOperand(0);
+
+        return this;
+    }
+
+    MDefinition *foldIfEqual() {
+        return this;
+    }
+
+    bool canOverflow() {
+        // solution is only negative when lhs < 0 and rhs & 0x1f == 0
+        MDefinition *lhs = getOperand(0);
+        MDefinition *rhs = getOperand(1);
+
+        if (lhs->isConstant() && lhs->toConstant()->value().toInt32() >= 0)
+            return false;
+
+        if (rhs->isConstant() && (rhs->toConstant()->value().toInt32() & 0x1F) != 0)
+            return false;
+
+        return canOverflow_;
+    }
+
+    bool fallible() {
+        return canOverflow();
+    }
+};
+
 class MBinaryArithInstruction
   : public MBinaryInstruction,
     public BinaryArithPolicy

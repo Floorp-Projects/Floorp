@@ -369,6 +369,30 @@ class LBitOp : public LInstructionHelper<1, 2, 0>
     }
 };
 
+// Shift operation, taking two 32-bit integers as inputs and returning
+// a 32-bit integer result as an output.
+class LShiftOp : public LInstructionHelper<1, 2, 0>
+{
+    MInstruction *mir_;
+    JSOp op_;
+
+  public:
+    LIR_HEADER(ShiftOp);
+
+    LShiftOp(MInstruction *mir, JSOp op)
+      : mir_(mir),
+        op_(op)
+    { }
+
+    JSOp bitop() {
+        return op_;
+    }
+
+    MInstruction *mir() {
+        return mir_;
+    }
+};
+
 // Returns from the function being compiled (not used in inlined frames). The
 // input must be a box.
 class LReturn : public LInstructionHelper<0, BOX_PIECES, 0>

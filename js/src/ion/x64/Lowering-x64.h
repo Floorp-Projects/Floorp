@@ -63,6 +63,9 @@ class LIRGeneratorX64 : public LIRGeneratorShared
     bool useBox(LInstruction *lir, size_t n, MDefinition *mir,
                 LUse::Policy policy = LUse::REGISTER);
 
+    bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
+                       MDefinition *rhs);
+
     bool lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
     bool lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
                      MDefinition *rhs);

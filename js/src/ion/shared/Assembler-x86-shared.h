@@ -543,6 +543,18 @@ class AssemblerX86Shared
     void shll(const Imm32 imm, const Register &dest) {
         masm.shll_i8r(imm.value, dest.code());
     }
+    void sarl(const Imm32 imm, const Register &dest) {
+        masm.sarl_i8r(imm.value, dest.code());
+    }
+    void shrl_cl(const Register &dest) {
+        masm.shrl_CLr(dest.code());
+    }
+    void shll_cl(const Register &dest) {
+        masm.shll_CLr(dest.code());
+    }
+    void sarl_cl(const Register &dest) {
+        masm.sarl_CLr(dest.code());
+    }
 
     void push(const Imm32 imm) {
         masm.push_i32(imm.value);

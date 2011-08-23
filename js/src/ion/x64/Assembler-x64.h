@@ -420,6 +420,7 @@ class Assembler : public AssemblerX86Shared
     void cvttsd2s(const FloatRegister &src, const Register &dest) {
         cvttsd2sq(src, dest);
     }
+
 };
 
 #ifdef _WIN64
