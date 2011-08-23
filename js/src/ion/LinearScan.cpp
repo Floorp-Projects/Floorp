@@ -402,6 +402,19 @@ LinearScanAllocator::createDataStructures()
 }
 
 /*
+ * Allocates a bogus interval at the output of the given instruction, such that
+ * the given requirement is met for that interval, but unused.
+ */
+void
+LinearScanAllocator::addSpillInterval(LInstruction *ins, const Requirement &req)
+{
+    LiveInterval *bogus = new LiveInterval(NULL, 0);
+    bogus->addRange(outputOf(ins), outputOf(ins));
+    bogus->setRequirement(req);
+    unhandled.enqueue(bogus); 
+}
+
+/*
  * This function builds up liveness intervals for all virtual registers
  * defined in the function. Additionally, it populates the liveIn array with
  * information about which registers are live at the beginning of a block, to
@@ -467,6 +480,14 @@ LinearScanAllocator::buildLivenessInfo()
         // Shorten the front end of live intervals for live variables to their
         // point of definition, if found.
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
+            // Calls may clobber registers, so force a spill and reload around the callsite.
+            if (ins->isCallGeneric()) {
+                GeneralRegisterSet genset(Registers::JSCallClobberMask);
+                FloatRegisterSet floatset(FloatRegisters::JSCallClobberMask);
+                for (AnyRegisterIterator iter(genset, floatset); iter.more(); iter++)
+                    addSpillInterval(*ins, Requirement(LAllocation(*iter)));
+            }
+
             for (size_t i = 0; i < ins->numDefs(); i++) {
                 if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
                     LDefinition *def = ins->getDef(i);
@@ -508,12 +529,8 @@ LinearScanAllocator::buildLivenessInfo()
                     }
                     live->insert(use->virtualRegister());
 
-                    if (use->policy() == LUse::COPY) {
-                        LiveInterval *bogus = new LiveInterval(NULL, 0);
-                        bogus->addRange(outputOf(*ins), outputOf(*ins));
-                        bogus->setRequirement(Requirement(use->virtualRegister(), inputOf(*ins)));
-                        unhandled.enqueue(bogus);
-                    }
+                    if (use->policy() == LUse::COPY)
+                        addSpillInterval(*ins, Requirement(use->virtualRegister(), inputOf(*ins)));
                 }
             }
         }
