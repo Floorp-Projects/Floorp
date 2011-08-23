@@ -201,6 +201,29 @@ xpcshell-tests:
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
 	  $(LIBXUL_DIST)/bin/xpcshell
 
+REMOTE_XPCSHELL = \
+	rm -f ./$@.log && \
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
+	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  --no-logfiles \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+	  $(SYMBOLS_PATH) \
+	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
+xpcshell-tests-remote: DM_TRANS?=adb
+xpcshell-tests-remote:
+	@if [ "${TEST_DEVICE}" != "" -o "$(DM_TRANS)" = "adb" ]; \
+          then $(call REMOTE_XPCSHELL); $(CHECK_TEST_ERROR); \
+        else \
+          echo "please prepare your host with environment variables for TEST_DEVICE"; \
+        fi
+
 # install and run the mozmill tests
 $(DEPTH)/_tests/mozmill:
 	$(MAKE) -C $(DEPTH)/testing/mozmill install-develop PKG_STAGE=../../_tests
