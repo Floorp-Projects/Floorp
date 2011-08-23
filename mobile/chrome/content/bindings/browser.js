@@ -145,11 +145,13 @@ let WebNavigation =  {
   },
 
   goBack: function() {
-    this._webNavigation.goBack();
+    if (this._webNavigation.canGoBack)
+      this._webNavigation.goBack();
   },
 
   goForward: function() {
-    this._webNavigation.goForward();
+    if (this._webNavigation.canGoForward)
+      this._webNavigation.goForward();
   },
 
   gotoIndex: function(message) {
