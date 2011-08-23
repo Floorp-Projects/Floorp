@@ -463,6 +463,15 @@ struct JSScript {
     size_t          callCount_; /* Number of times the script has been called. */
 
     /*
+     * When non-zero, compile script in single-step mode. The top bit is set and
+     * cleared by setStepMode, as used by JSD. The lower bits are a count,
+     * adjusted by changeStepModeCount, used by the Debugger object. Only
+     * when the bit is clear and the count is zero may we compile the script
+     * without single-step support.
+     */
+    uint32          stepMode;
+
+    /*
      * Offsets to various array structures from the end of this script, or
      * JSScript::INVALID_OFFSET if the array has length 0.
      */
@@ -492,7 +501,6 @@ struct JSScript {
     bool            hasSingletons:1;  /* script has singleton objects */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
-    bool            singleStepMode:1; /* compile script in single-step mode */
 #endif
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
@@ -679,6 +687,42 @@ struct JSScript {
     }
 
     void copyClosedSlotsTo(JSScript *other);
+
+  private:
+    static const uint32 stepFlagMask = 0x80000000U;
+    static const uint32 stepCountMask = 0x7fffffffU;
+
+    /*
+     * Attempt to recompile with or without single-stepping support, as directed
+     * by stepModeEnabled().
+     */
+    bool recompileForStepMode(JSContext *cx);
+
+    /* Attempt to change this->stepMode to |newValue|. */
+    bool tryNewStepMode(JSContext *cx, uint32 newValue);
+
+  public:
+    /*
+     * Set or clear the single-step flag. If the flag is set or the count
+     * (adjusted by changeStepModeCount) is non-zero, then the script is in
+     * single-step mode. (JSD uses an on/off-style interface; Debugger uses a
+     * count-style interface.)
+     */
+    bool setStepModeFlag(JSContext *cx, bool step);
+    
+    /*
+     * Increment or decrement the single-step count. If the count is non-zero or
+     * the flag (set by setStepModeFlag) is set, then the script is in
+     * single-step mode. (JSD uses an on/off-style interface; Debugger uses a
+     * count-style interface.)
+     */
+    bool changeStepModeCount(JSContext *cx, int delta);
+
+    bool stepModeEnabled() { return !!stepMode; }
+
+#ifdef DEBUG
+    uint32 stepModeCount() { return stepMode & stepCountMask; }
+#endif
 };
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script

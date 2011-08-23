@@ -69,6 +69,7 @@
 #include "jsxdrapi.h"
 #endif
 #include "methodjit/MethodJIT.h"
+#include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
 
 #include "jsobjinlines.h"
@@ -1828,4 +1829,59 @@ void
 JSScript::copyClosedSlotsTo(JSScript *other)
 {
     memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
+}
+
+bool
+JSScript::recompileForStepMode(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    js::mjit::JITScript *jit = jitNormal ? jitNormal : jitCtor;
+    if (jit && stepModeEnabled() != jit->singleStepMode) {
+        js::mjit::Recompiler recompiler(cx, this);
+        return recompiler.recompile();
+    }
+#endif
+    return true;
+}
+
+bool
+JSScript::tryNewStepMode(JSContext *cx, uint32 newValue)
+{
+    uint32 prior = stepMode;
+    stepMode = newValue;
+
+    if (!prior != !newValue) {
+        /* Step mode has been enabled or disabled. Alert the methodjit. */
+        if (!recompileForStepMode(cx)) {
+            stepMode = prior;
+            return false;
+        }
+
+        if (newValue) {
+            /* Step mode has been enabled. Alert the interpreter. */
+            InterpreterFrames *frames;
+            for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
+                frames->enableInterruptsIfRunning(this);
+        }
+    }
+    return true;
+}
+
+bool
+JSScript::setStepModeFlag(JSContext *cx, bool step)
+{
+    return tryNewStepMode(cx, (stepMode & stepCountMask) | (step ? stepFlagMask : 0));
+}
+
+bool
+JSScript::changeStepModeCount(JSContext *cx, int delta)
+{
+    assertSameCompartment(cx, this);
+    JS_ASSERT_IF(delta > 0, cx->compartment->debugMode());
+
+    uint32 count = stepMode & stepCountMask;
+    JS_ASSERT(((count + delta) & stepCountMask) == count + delta);
+    return tryNewStepMode(cx, 
+                          (stepMode & stepFlagMask) |
+                          ((count + delta) & stepCountMask));
 }
