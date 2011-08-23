@@ -795,26 +795,9 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
         if (!freeRegs.hasReg(reg))
             relocateReg(reg, alloc, uses);
 
-        /*
-         * It is possible that the fe is known to be a double currently but is not
-         * known to be a double at the join point (it may have non-double values
-         * assigned elsewhere in the script). It is *not* possible for the fe to
-         * be a non-double currently but a double at the join point --- the Compiler
-         * must have called fixDoubleTypes before branching.
-         */
-        if (reg.isReg() && fe->isType(JSVAL_TYPE_DOUBLE)) {
-            syncFe(fe);
-            forgetAllRegs(fe);
-            fe->resetSynced();
-        }
-        if (!reg.isReg()) {
-            JS_ASSERT(!fe->isNotType(JSVAL_TYPE_DOUBLE));
-            if (!fe->isTypeKnown())
-                learnType(fe, JSVAL_TYPE_DOUBLE, false);
-        }
-
         if (reg.isReg()) {
             RegisterID nreg = reg.reg();
+            JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
             if (fe->data.inMemory()) {
                 masm.loadPayload(addressOf(fe), nreg);
             } else if (fe->isConstant()) {
@@ -828,6 +811,9 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
             fe->data.setRegister(nreg);
         } else {
             FPRegisterID nreg = reg.fpreg();
+            JS_ASSERT(!fe->isNotType(JSVAL_TYPE_DOUBLE));
+            if (!fe->isTypeKnown())
+                learnType(fe, JSVAL_TYPE_DOUBLE, false);
             if (fe->data.inMemory()) {
                 masm.loadDouble(addressOf(fe), nreg);
             } else if (fe->isConstant()) {

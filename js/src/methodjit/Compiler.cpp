@@ -117,7 +117,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     callPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())),
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
-    fixedDoubleEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
+    fixedIntToDoubleEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
+    fixedDoubleToAnyEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -1462,22 +1463,27 @@ mjit::Compiler::generateMethod()
             /*
              * If there is fallthrough from the previous opcode and we changed
              * any entries into doubles for a branch at that previous op,
-             * revert those entries into integers. Maintain an invariant that
-             * for any variables inferred to be integers, the compiler
-             * maintains them as integers, both for faster code inside
-             * basic blocks and for fewer conversions needed when branching.
+             * revert those entries into integers. Similarly, if we forgot that
+             * an entry is a double then make it a double again, as the frame
+             * may have assigned it a normal register.
              */
-            for (unsigned i = 0; i < fixedDoubleEntries.length(); i++) {
-                FrameEntry *fe = frame.getSlotEntry(fixedDoubleEntries[i]);
+            for (unsigned i = 0; i < fixedIntToDoubleEntries.length(); i++) {
+                FrameEntry *fe = frame.getSlotEntry(fixedIntToDoubleEntries[i]);
                 frame.ensureInteger(fe);
             }
+            for (unsigned i = 0; i < fixedDoubleToAnyEntries.length(); i++) {
+                FrameEntry *fe = frame.getSlotEntry(fixedDoubleToAnyEntries[i]);
+                frame.syncAndForgetFe(fe);
+            }
         }
-        fixedDoubleEntries.clear();
+        fixedIntToDoubleEntries.clear();
+        fixedDoubleToAnyEntries.clear();
 
         if (opinfo->jumpTarget || trap) {
             if (fallthrough) {
                 fixDoubleTypes(PC);
-                fixedDoubleEntries.clear();
+                fixedIntToDoubleEntries.clear();
+                fixedDoubleToAnyEntries.clear();
 
                 /*
                  * Watch for fallthrough to the head of a 'do while' loop.
@@ -6894,41 +6900,47 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
         return;
 
     /*
-     * Fill fixedDoubleEntries with all variables that are known to be an int
-     * here and a double at the branch target. Per prepareInferenceTypes, the
-     * target state consists of the current state plus any phi nodes or other
-     * new values introduced at the target.
+     * Fill fixedIntToDoubleEntries with all variables that are known to be an
+     * int here and a double at the branch target, and fixedDoubleToAnyEntries
+     * with all variables that are known to be a double here but not at the
+     * branch target.
+     *
+     * Per prepareInferenceTypes, the target state consists of the current
+     * state plus any phi nodes or other new values introduced at the target.
      */
-    JS_ASSERT(fixedDoubleEntries.empty());
+    JS_ASSERT(fixedIntToDoubleEntries.empty());
+    JS_ASSERT(fixedDoubleToAnyEntries.empty());
     const SlotValue *newv = analysis->newValues(target);
     if (newv) {
         while (newv->slot) {
             if (newv->value.kind() != SSAValue::PHI ||
-                newv->value.phiOffset() != uint32(target - script->code)) {
+                newv->value.phiOffset() != uint32(target - script->code) ||
+                !analysis->trackSlot(newv->slot)) {
                 newv++;
                 continue;
             }
-            if (newv->slot < TotalSlots(script)) {
-                types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
-                VarType &vt = a->varTypes[newv->slot];
-                if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
-                    analysis->trackSlot(newv->slot)) {
-                    FrameEntry *fe = frame.getSlotEntry(newv->slot);
-                    if (vt.type == JSVAL_TYPE_INT32) {
-                        fixedDoubleEntries.append(newv->slot);
-                        frame.ensureDouble(fe);
-                    } else if (vt.type == JSVAL_TYPE_UNKNOWN) {
-                        /*
-                         * Unknown here but a double at the target. The type
-                         * set for the existing value must be empty, so this
-                         * code is doomed and we can just mark the value as
-                         * a double.
-                         */
-                        frame.ensureDouble(fe);
-                    } else {
-                        JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
-                    }
+            JS_ASSERT(newv->slot < TotalSlots(script));
+            types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
+            FrameEntry *fe = frame.getSlotEntry(newv->slot);
+            VarType &vt = a->varTypes[newv->slot];
+            if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
+                if (vt.type == JSVAL_TYPE_INT32) {
+                    fixedIntToDoubleEntries.append(newv->slot);
+                    frame.ensureDouble(fe);
+                } else if (vt.type == JSVAL_TYPE_UNKNOWN) {
+                    /*
+                     * Unknown here but a double at the target. The type
+                     * set for the existing value must be empty, so this
+                     * code is doomed and we can just mark the value as
+                     * a double.
+                     */
+                    frame.ensureDouble(fe);
+                } else {
+                    JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
                 }
+            } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+                fixedDoubleToAnyEntries.append(newv->slot);
+                frame.syncAndForgetFe(fe);
             }
             newv++;
         }
