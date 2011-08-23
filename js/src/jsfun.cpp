@@ -2482,6 +2482,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment != cx->compartment);
             JS_OPT_ASSERT(script->ownerObject == fun);
 
+            cfun->u.i.script = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
