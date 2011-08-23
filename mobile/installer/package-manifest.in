@@ -58,7 +58,13 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
-#ifndef MOZ_MEMORY
+#ifdef WIN32_OLD_STYLE_JEMALLOC
+@BINPATH@/mozcrt19.dll
+@BINPATH@/mozcpp19.dll
+#else
+#ifdef MOZ_MEMORY
+@BINPATH@/jemalloc.dll
+#endif
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
@@ -73,11 +79,10 @@
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
 #endif
-#else
-@BINPATH@/mozcrt19.dll
-@BINPATH@/mozcpp19.dll
 #endif
+
 #endif
+
 #ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc

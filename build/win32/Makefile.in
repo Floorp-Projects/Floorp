@@ -64,7 +64,7 @@ endif # ENABLE_TESTS
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MEMORY
+ifndef WIN32_OLD_STYLE_JEMALLOC
 ifdef WIN32_REDIST_DIR
 ifndef MOZ_DEBUG
 
