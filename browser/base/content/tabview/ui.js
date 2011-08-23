@@ -1623,11 +1623,15 @@ let UI = {
   getFavIconUrlForTab: function UI_getFavIconUrlForTab(tab) {
     let url;
 
-    // use the tab image if it doesn't start with http e.g. data:image/png, chrome://
-    if (tab.image && !(/^https?:/.test(tab.image)))
-      url = tab.image;
-    else
+    if (tab.image) {
+      // if starts with http/https, fetch icon from favicon service via the moz-anno protocal
+      if (/^https?:/.test(tab.image))
+        url = gFavIconService.getFaviconLinkForIcon(gWindow.makeURI(tab.image)).spec;
+      else
+        url = tab.image;
+    } else {
       url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
+    }
 
     return url;
   },
