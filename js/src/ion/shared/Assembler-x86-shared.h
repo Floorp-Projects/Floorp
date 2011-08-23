@@ -343,6 +343,9 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void setCC(Condition cond, const Register &r) {
+        masm.setCC_r(static_cast<JSC::X86Assembler::Condition>(cond), r.code());
+    }
     void testl(const Register &lhs, const Register &rhs) {
         masm.testl_rr(rhs.code(), lhs.code());
     }
@@ -412,6 +415,9 @@ class AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
+    }
+    void xorl(const Register &src, const Register &dest) {
+        masm.xorl_rr(src.code(), dest.code());
     }
     void xorl(Imm32 imm, const Register &reg) {
         masm.xorl_ir(imm.value, reg.code());
