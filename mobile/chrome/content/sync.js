@@ -382,8 +382,6 @@ let WeaveGlue = {
   },
 
   observe: function observe(aSubject, aTopic, aData) {
-    let loggedIn = Weave.Service.isLoggedIn;
-
     // Make sure we're online when connecting/syncing
     Util.forceOnline();
 
@@ -400,7 +398,13 @@ let WeaveGlue = {
     let disconnect = this._elements.disconnect;
     let sync = this._elements.sync;
 
-    let syncEnabled = this._elements.autosync.value;
+    let syncEnabled = autosync.value;
+    let loggedIn = Weave.Service.isLoggedIn;
+
+    // Sync may successfully log in after it was temporarily disabled by a
+    // canceled master password entry.  If so, then re-enable it.
+    if (loggedIn && !syncEnabled)
+      syncEnabled = autosync.value = true;
 
     // If Sync is not enabled, hide the connection row visibility
     if (syncEnabled) {
@@ -451,10 +455,18 @@ let WeaveGlue = {
     }
 
     // Show what went wrong with login if necessary
-    if (aTopic == "weave:service:login:error")
-      connect.setAttribute("desc", Weave.Utils.getErrorString(Weave.Status.login));
-    else
+    if (aTopic == "weave:service:login:error") {
+      if (Weave.Status.login == "service.master_password_locked") {
+        // Disable sync temporarily. Sync will try again after a set interval,
+        // or if the user presses the button to enable it again.
+        autosync.value = false;
+        this.toggleSyncEnabled();
+      } else {
+        connect.setAttribute("desc", Weave.Utils.getErrorString(Weave.Status.login));
+      }
+    } else {
       connect.removeAttribute("desc");
+    }
 
     // Init the setup data if we just logged in
     if (!this.setupData && aTopic == "weave:service:login:finish")
