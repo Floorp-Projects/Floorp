@@ -75,8 +75,9 @@ function electrolify(service) {
       // messages. The whitelist contains only those settings that
       // are not at risk for either.
       // We currently whitelist saving/reading the last directory of file
-      // uploads, which is so far the only need we have identified.
-      const NAME_WHITELIST = ["browser.upload.lastDir"];
+      // uploads, and the last current spellchecker dictionary which are so far
+      // the only need we have identified.
+      const NAME_WHITELIST = ["browser.upload.lastDir", "spellcheck.lang"];
       if (NAME_WHITELIST.indexOf(json.name) == -1)
         return { succeeded: false };
 
