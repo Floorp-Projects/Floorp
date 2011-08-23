@@ -205,10 +205,10 @@ public:
         position_(at)
     { }
 
-    Requirement(uint32 reg, CodePosition where)
+    Requirement(uint32 vreg, CodePosition at)
       : kind_(SAME_AS_OTHER),
-        allocation_(LUse(reg, LUse::ANY)),
-        position_(where)
+        allocation_(LUse(vreg, LUse::ANY)),
+        position_(at)
     { }
 
     Kind kind() {
@@ -561,6 +561,7 @@ class LinearScanAllocator
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
+    void addSpillInterval(LInstruction *ins, const Requirement &req);
 
 #ifdef DEBUG
     void validateIntervals();
