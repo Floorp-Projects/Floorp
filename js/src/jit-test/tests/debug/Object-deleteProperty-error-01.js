@@ -4,9 +4,9 @@ var g = newGlobal('new-compartment');
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     try {
-	frame.arguments[0].deleteProperty("x");
+        frame.arguments[0].deleteProperty("x");
     } catch (exc) {
-	return;
+        return;
     }
     throw new Error("deleteProperty should throw");
 };

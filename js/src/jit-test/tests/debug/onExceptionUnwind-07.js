@@ -6,9 +6,9 @@ var hits = 0;
 dbg.onExceptionUnwind = function (frame, value) { hits = 'BAD'; };
 dbg.onDebuggerStatement = function (frame) {
     if (hits++ === 0)
-	assertEq(frame.eval("debugger;"), null);
+        assertEq(frame.eval("debugger;"), null);
     else
-	return null;
+        return null;
 }
 
 assertEq(g.eval("debugger; 2"), 2);
