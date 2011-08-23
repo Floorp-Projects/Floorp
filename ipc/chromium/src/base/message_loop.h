@@ -10,12 +10,8 @@
 #include <string>
 #include <vector>
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
 #include <map>
 #include "base/lock.h"
-#else
-#include "base/histogram.h"
-#endif
 #include "base/message_pump.h"
 #include "base/observer_list.h"
 #include "base/ref_counted.h"
@@ -31,7 +27,6 @@
 #include "base/message_pump_libevent.h"
 #endif
 
-#ifdef CHROMIUM_MOZILLA_BUILD
 namespace mozilla {
 namespace ipc {
 
@@ -39,7 +34,6 @@ class DoWorkRunnable;
 
 } /* namespace ipc */
 } /* namespace mozilla */
-#endif
 
 // A MessageLoop is used to process events for a particular thread.  There is
 // at most one MessageLoop instance per thread.
@@ -73,9 +67,7 @@ class DoWorkRunnable;
 //
 class MessageLoop : public base::MessagePump::Delegate {
 
-#ifdef CHROMIUM_MOZILLA_BUILD
   friend class mozilla::ipc::DoWorkRunnable;
-#endif
 
 public:
   static void EnableHistogrammer(bool enable_histogrammer);
@@ -212,11 +204,9 @@ public:
   enum Type {
     TYPE_DEFAULT,
     TYPE_UI,
-    TYPE_IO
-#ifdef CHROMIUM_MOZILLA_BUILD
-    , TYPE_MOZILLA_CHILD
-    , TYPE_MOZILLA_UI
-#endif
+    TYPE_IO,
+    TYPE_MOZILLA_CHILD,
+    TYPE_MOZILLA_UI
   };
 
   // Normally, it is not necessary to instantiate a MessageLoop.  Instead, it
@@ -390,11 +380,6 @@ public:
   // If message_histogram_ is NULL, this is a no-op.
   void HistogramEvent(int event);
 
-#if !defined(CHROMIUM_MOZILLA_BUILD)
-  static const base::LinearHistogram::DescriptionPair event_descriptions_[];
-  static bool enable_histogrammer_;
-#endif
-
   Type type_;
 
   // A list of tasks that need to be processed by this instance.  Note that
@@ -420,10 +405,7 @@ public:
   bool exception_restoration_;
 
   std::string thread_name_;
-#if !defined(CHROMIUM_MOZILLA_BUILD)
-  // A profiling histogram showing the counts of various messages and events.
-  scoped_ptr<base::LinearHistogram> message_histogram_;
-#endif
+
   // A null terminated list which creates an incoming_queue of tasks that are
   // aquired under a mutex for processing on this instance's thread. These tasks
   // have not yet been sorted out into items for our work_queue_ vs items that
@@ -463,14 +445,10 @@ class MessageLoopForUI : public MessageLoop {
     MessageLoop* loop = MessageLoop::current();
     if (!loop)
       return NULL;
-#ifdef CHROMIUM_MOZILLA_BUILD
     Type type = loop->type();
     DCHECK(type == MessageLoop::TYPE_UI ||
            type == MessageLoop::TYPE_MOZILLA_UI ||
            type == MessageLoop::TYPE_MOZILLA_CHILD);
-#else
-    DCHECK_EQ(MessageLoop::TYPE_UI, loop->type());
-#endif
     return static_cast<MessageLoopForUI*>(loop);
   }
 
@@ -551,13 +529,11 @@ class MessageLoopForIO : public MessageLoop {
                            FileDescriptorWatcher *controller,
                            Watcher *delegate);
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
   typedef base::MessagePumpLibevent::SignalEvent SignalEvent;
   typedef base::MessagePumpLibevent::SignalWatcher SignalWatcher;
   bool CatchSignal(int sig,
                    SignalEvent* sigevent,
                    SignalWatcher* delegate);
-#endif  // defined(CHROMIUM_MOZILLA_BUILD)
 
 #endif  // defined(OS_POSIX)
 };

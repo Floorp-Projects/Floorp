@@ -70,17 +70,11 @@ SharedMemoryHandle SharedMemory::NULLHandle() {
   return SharedMemoryHandle();
 }
 
-#ifdef CHROMIUM_MOZILLA_BUILD
 bool SharedMemory::Create(const std::string &cname, bool read_only,
-#else
-bool SharedMemory::Create(const std::wstring &name, bool read_only,
-#endif
                           bool open_existing, size_t size) {
   read_only_ = read_only;
 
-#ifdef CHROMIUM_MOZILLA_BUILD
   std::wstring name = UTF8ToWide(cname);
-#endif
 
   int posix_flags = 0;
   posix_flags |= read_only ? O_RDONLY : O_RDWR;
