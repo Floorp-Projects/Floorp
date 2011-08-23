@@ -474,7 +474,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->invokeEntry = result;
-    jit->singleStepMode = script->singleStepMode;
+    jit->singleStepMode = script->stepModeEnabled();
     if (fun) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
@@ -903,7 +903,7 @@ mjit::Compiler::generateMethod()
             op = JSOp(*PC);
             trap |= stubs::JSTRAP_TRAP;
         }
-        if (script->singleStepMode && scanner.firstOpInLine(PC - script->code))
+        if (script->stepModeEnabled() && scanner.firstOpInLine(PC - script->code))
             trap |= stubs::JSTRAP_SINGLESTEP;
 
         if (cx->hasRunOption(JSOPTION_PCCOUNT) && script->pcCounters) {

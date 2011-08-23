@@ -131,10 +131,6 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug);
 JS_FRIEND_API(JSBool)
 JS_SetDebugMode(JSContext *cx, JSBool debug);
 
-/* Turn on single step mode. Requires debug mode. */
-extern JS_FRIEND_API(JSBool)
-js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep);
-
 /* Turn on single step mode. */
 extern JS_PUBLIC_API(JSBool)
 JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep);
