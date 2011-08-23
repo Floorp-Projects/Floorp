@@ -7,7 +7,7 @@
 #ifndef BASE_BASE_SWITCHES_H_
 #define BASE_BASE_SWITCHES_H_
 
-#if defined(CHROMIUM_MOZILLA_BUILD) && defined(COMPILER_MSVC)
+#if defined(COMPILER_MSVC)
 #include <string.h>
 #endif
 
