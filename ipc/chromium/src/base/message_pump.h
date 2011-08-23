@@ -111,7 +111,6 @@ class MessagePump : public RefCountedThreadSafe<MessagePump> {
   // until it returns a value of false.
   virtual void ScheduleWork() = 0;
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
   // This method may only called from the thread that called Run.
   //
   // Ensure that DoWork will be called if a nested loop is entered.
@@ -119,7 +118,6 @@ class MessagePump : public RefCountedThreadSafe<MessagePump> {
   // "reasonably soon", this method can be a no-op to avoid expensive
   // atomic tests and/or syscalls required for ScheduleWork().
   virtual void ScheduleWorkForNestedLoop() { ScheduleWork(); };
-#endif  // defined(CHROMIUM_MOZILLA_BUILD)
 
   // Schedule a DoDelayedWork callback to happen at the specified time,
   // cancelling any pending DoDelayedWork callback.  This method may only be

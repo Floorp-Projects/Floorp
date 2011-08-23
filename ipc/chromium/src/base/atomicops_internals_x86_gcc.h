@@ -196,7 +196,6 @@ inline void NoBarrier_Store(volatile Atomic64* ptr, Atomic64 value) {
   *ptr = value;
 }
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
 inline Atomic64 Acquire_CompareAndSwap(volatile Atomic64* ptr,
                                        Atomic64 old_value,
                                        Atomic64 new_value) {
@@ -207,7 +206,6 @@ inline Atomic64 Acquire_CompareAndSwap(volatile Atomic64* ptr,
   }
   return x;
 }
-#endif
 
 inline void Acquire_Store(volatile Atomic64* ptr, Atomic64 value) {
   *ptr = value;

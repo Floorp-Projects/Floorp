@@ -40,12 +40,7 @@
 //     ViewHostMsg_SyncMessageName::WriteReplyParams(reply_msg, out1, out2);
 //     Send(reply_msg);
 
-#ifndef CHROMIUM_MOZILLA_BUILD
-#include "IPC/IPCMessageUtils.h"
-#else
 #include "chrome/common/ipc_message_utils.h"
-#endif
-
 
 #ifndef MESSAGES_INTERNAL_FILE
 #error This file should only be included by X_messages.h, which needs to define MESSAGES_INTERNAL_FILE first.
