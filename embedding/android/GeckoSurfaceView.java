@@ -282,7 +282,12 @@ class GeckoSurfaceView
         mSoftwareBufferCopy = null;
         mSoftwareBitmap = null;
         GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_DESTROYED);
-        GeckoAppShell.sendEventToGecko(e);
+        if (mDrawMode == DRAW_GLES_2) {
+            // Ensure GL cleanup occurs before we return.
+            GeckoAppShell.sendEventToGeckoSync(e);
+        } else {
+            GeckoAppShell.sendEventToGecko(e);
+        }
     }
 
     public Bitmap getSoftwareDrawBitmap() {
