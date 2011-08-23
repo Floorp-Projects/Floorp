@@ -203,17 +203,9 @@
 
 #ifdef MOZ_MEMORY_WINDOWS
 
-/* XXXkhuey switch to not patching the CRT for jemalloc all the time */
-/* We use ifndef NEW_STYLE here because when we're build as part of the CRT
-   we don't have access to AC_DEFINEs */
-#ifndef WIN32_NEW_STYLE_JEMALLOC
-#include <cruntime.h>
-#include <internal.h>
-#else
 /* Some defines from the CRT internal headers that we need here. */
 #define _CRT_SPINCOUNT 5000
 #define __crtInitCritSecAndSpinCount InitializeCriticalSectionAndSpinCount
-#endif
 #include <io.h>
 #include <windows.h>
 
@@ -5849,10 +5841,10 @@ malloc_shutdown()
  * Mangle standard interfaces, in order to avoid linking problems.
  */
 #if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_ANDROID) || \
-    defined(WRAP_MALLOC) || defined(WIN32_NEW_STYLE_JEMALLOC)
+    defined(WRAP_MALLOC) || defined(MOZ_MEMORY_WINDOWS)
 inline void sys_free(void* ptr) {return free(ptr);}
 #define	malloc(a)               je_malloc(a)
-#if defined(WIN32_NEW_STYLE_JEMALLOC) || defined(MOZ_MEMORY_DARWIN)
+#if defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_DARWIN)
 #define	memalign(a, b)          je_memalign(a, b)
 #endif
 #define	posix_memalign(a, b, c) je_posix_memalign(a, b, c)
@@ -6795,7 +6787,7 @@ void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
 #  error "Interposing malloc is unsafe on this system without libc malloc hooks."
 #endif
 
-#ifdef WIN32_NEW_STYLE_JEMALLOC
+#ifdef MOZ_MEMORY_WINDOWS
 /*
  * In the new style jemalloc integration jemalloc is built as a separate
  * shared library.  Since we're no longer hooking into the CRT binary,
