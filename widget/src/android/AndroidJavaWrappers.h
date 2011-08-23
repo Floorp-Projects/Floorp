@@ -163,7 +163,9 @@ public:
 
     enum {
         DRAW_ERROR = 0,
-        DRAW_GLES_2 = 1
+        DRAW_GLES_2 = 1,
+        DRAW_2D = 2,
+        DRAW_DISABLED = 3
     };
 
     int BeginDrawing();
@@ -492,6 +494,7 @@ public:
         SURFACE_DESTROYED = 14,
         GECKO_EVENT_SYNC = 15,
         FORCED_RESIZE = 16,
+        ACTIVITY_START = 17,
         dummy_java_enum_list_end
     };
 

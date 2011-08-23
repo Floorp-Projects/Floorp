@@ -169,8 +169,30 @@ class GeckoSurfaceView
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+        // Force exactly one frame to render
+        // because the surface change is only seen after we
+        // have swapped the back buffer.
+        // The buffer size only changes after the next swap buffer.
+        // We need to make sure the Gecko's view resize when Android's 
+        // buffer resizes.
+        if (mDrawMode == DRAW_GLES_2) {
+            // When we get a surfaceChange event, we have 0 to n paint events 
+            // waiting in the Gecko event queue. We will make the first
+            // succeed and the abort the others.
+            mDrawSingleFrame = true;
+            if (!mInDrawing) { 
+                // Queue at least one paint event in case none are queued.
+                GeckoAppShell.scheduleRedraw();
+            }
+            GeckoAppShell.geckoEventSync();
+            mDrawSingleFrame = false;
+            mAbortDraw = false;
+        }
+
         if (mShowingSplashScreen)
             drawSplashScreen(holder, width, height);
+
         mSurfaceLock.lock();
 
         try {
@@ -221,6 +243,12 @@ class GeckoSurfaceView
             }
         } finally {
             mSurfaceLock.unlock();
+            if (mDrawMode == DRAW_GLES_2) {
+                // Force a frame to be drawn before the surfaceChange returns,
+                // otherwise we get artifacts.
+                GeckoAppShell.scheduleRedraw();
+                GeckoAppShell.geckoEventSync();
+            }
         }
 
         Object syncDrawObject = null;
@@ -293,11 +321,21 @@ class GeckoSurfaceView
     public static final int DRAW_ERROR = 0;
     public static final int DRAW_GLES_2 = 1;
     public static final int DRAW_2D = 2;
+    // Drawing is disable when the surface buffer
+    // has changed size but we haven't yet processed the
+    // resize event.
+    public static final int DRAW_DISABLED = 3;
 
     public int beginDrawing() {
         if (mInDrawing) {
             Log.e(LOG_FILE_NAME, "Recursive beginDrawing call!");
             return DRAW_ERROR;
+        }
+
+        // Once we drawn our first frame after resize we can ignore
+        // the other draw events until we handle the resize events.
+        if (mAbortDraw) {
+            return DRAW_DISABLED;
         }
 
         /* Grab the lock, which we'll hold while we're drawing.
@@ -329,6 +367,9 @@ class GeckoSurfaceView
             Log.e(LOG_FILE_NAME, "endDrawing without beginDrawing!");
             return;
         }
+
+       if (mDrawSingleFrame)
+            mAbortDraw = true;
 
         try {
             if (!mSurfaceValid) {
@@ -656,6 +697,10 @@ class GeckoSurfaceView
 
     // Are we actively between beginDrawing/endDrawing?
     boolean mInDrawing;
+
+    // Used to finish the current buffer before changing the surface size
+    boolean mDrawSingleFrame = false;
+    boolean mAbortDraw = false;
 
     // Are we waiting for a buffer to draw in surfaceChanged?
     boolean mSyncDraw;

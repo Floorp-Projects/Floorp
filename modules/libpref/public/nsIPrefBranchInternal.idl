@@ -44,7 +44,7 @@
  * @status NON-FROZEN interface WHICH WILL PROBABLY GO AWAY.
  */
 
-[scriptable, uuid(d1d412d9-15d6-4a6a-9533-b949dc175ff5)]
+[scriptable, uuid(355bd1e9-248a-438b-809d-e0db1b287882)]
 interface nsIPrefBranchInternal : nsIPrefBranch2
 {
 };

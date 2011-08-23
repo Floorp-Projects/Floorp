@@ -148,8 +148,7 @@
   </deck>
 
   <hbox id="footer" align="center">
-    <label id="footer-label">&footer.label;</label>
-    <spacer flex="1"/>
+    <label id="footer-label" flex="1">&footer.label;</label>
     <button id="cancel" label="&cancel.label;" oncommand="window.close()"/>
     <button id="back" label="&back.label;" oncommand="gView.back()" hidden="true"/>
     <button id="next" label="&next.label;" oncommand="gView.next()" hidden="true"/>
