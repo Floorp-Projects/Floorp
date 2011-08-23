@@ -423,17 +423,31 @@ toolbarbutton.choice-remotetabs {
 .history-throbber-box,
 .remotetabs-throbber-box {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+.remotetabs-message-box {
+  font-size: @font_small@ !important;
+  font-weight: normal;
+  text-align: center;
+  color: grey;
+}
+
+.history-throbber-box,
+.remotetabs-throbber-box,
+.remotetabs-message-box {
   display: none;
 }
 
 historylist[loading="true"] > .history-throbber-box,
-remotetabslist[loading="true"] > .remotetabs-throbber-box {
+remotetabslist[loading="true"] > .remotetabs-throbber-box,
+remotetabslist[message] > .remotetabs-message-box {
   background-color: white;
   display: -moz-box;
 }
 
 historylist[loading="true"] > .history-list-children,
-remotetabslist[loading="true"] > .remotetabs-list-children {
+remotetabslist[loading="true"] > .remotetabs-list-children,
+remotetabslist[message] > .remotetabs-list-children {
   visibility: collapse;
 }
 
