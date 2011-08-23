@@ -104,12 +104,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     Condition testInt32(Condition cond, const ValueOperand &value) {
         JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(ImmType(JSVAL_TYPE_INT32), value.typeReg());
+        cmpl(value.type(), ImmType(JSVAL_TYPE_INT32));
         return cond;
     }
     Condition testBoolean(Condition cond, const ValueOperand &value) {
         JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(ImmType(JSVAL_TYPE_BOOLEAN), value.typeReg());
+        cmpl(value.type(), ImmType(JSVAL_TYPE_BOOLEAN));
         return cond;
     }
     Condition testDouble(Condition cond, const ValueOperand &value) {
@@ -117,17 +117,17 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         Condition actual = (cond == Assembler::Equal)
                            ? Assembler::Below
                            : Assembler::AboveOrEqual;
-        cmpl(ImmTag(JSVAL_TAG_CLEAR), value.typeReg());
+        cmpl(value.type(), ImmTag(JSVAL_TAG_CLEAR));
         return actual;
     }
     Condition testNull(Condition cond, const ValueOperand &value) {
         JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(ImmType(JSVAL_TYPE_NULL), value.typeReg());
+        cmpl(value.type(), ImmType(JSVAL_TYPE_NULL));
         return cond;
     }
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(ImmType(JSVAL_TYPE_UNDEFINED), value.typeReg());
+        cmpl(value.type(), ImmType(JSVAL_TYPE_UNDEFINED));
         return cond;
     }
 

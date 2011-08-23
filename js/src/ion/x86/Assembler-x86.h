@@ -176,8 +176,14 @@ class ValueOperand
       : type_(type), payload_(payload)
     { }
 
+    Operand type() const {
+        return Operand(type_);
+    }
     Register typeReg() const {
         return type_;
+    }
+    Operand payload() const {
+        return Operand(payload_);
     }
     Register payloadReg() const {
         return payload_;
