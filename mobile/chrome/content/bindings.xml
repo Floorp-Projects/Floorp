@@ -1398,6 +1398,7 @@
             // Wait until login or setup finishes before loading items.
             let topics = [
               "browser:sync:setup:userabort",
+              "browser:sync:setup:networkerror",
               "weave:service:login:finish",
               "weave:service:login:error"
             ];
