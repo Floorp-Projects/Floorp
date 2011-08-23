@@ -10,4 +10,6 @@ fi
 CC="$CC -arch i386"
 CXX="$CXX -arch i386"
 
+# Note, the version (10) is used by libffi's configure.
+ac_add_options --target=i386-apple-darwin10
 ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
