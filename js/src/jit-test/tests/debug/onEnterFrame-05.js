@@ -1,17 +1,15 @@
-// We detect and stop the runaway recursion caused by making onEnterFrame a wrapper of a debuggee function.
+// The tracejit does not prevent onEnterFrame from being called.
 
 var g = newGlobal('new-compartment');
-g.n = 0;
-g.eval("function f(frame) { n++; return 42; }");
-print('ok');
+g.eval("function f() { return 1; }\n");
+var N = g.N = RUNLOOP + 2;
+g.eval("function h() {\n" +
+       "    for (var i = 0; i < N; i += f()) {}\n" +
+       "}");
+g.h(); // record loop
+
 var dbg = Debugger(g);
-dbg.onEnterFrame = g.f;
-
-// Since enterFrame cannot throw, the InternalError is reported and execution proceeds.
-var x = g.f();
-assertEq(x, 42);
-assertEq(g.n > 20, true);
-
-// When an error is reported, the shell usually exits with a nonzero exit
-// code. If we get here, the test passed, so override that behavior.
-quit(0);
+var log = '';
+dbg.onEnterFrame = function (frame) { log += frame.callee.name; };
+g.h();
+assertEq(log, 'h' + Array(N + 1).join('f'));
