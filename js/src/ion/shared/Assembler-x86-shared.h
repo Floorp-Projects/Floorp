@@ -316,9 +316,6 @@ class AssemblerX86Shared
     void cmpl(const Register &lhs, const Register &rhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
-    void cmpl(Imm32 imm, const Register &reg) {
-        masm.cmpl_ir(imm.value, reg.code());
-    }
     void cmpl(const Register &lhs, const Operand &rhs) {
         switch (rhs.kind()) {
           case Operand::REG:

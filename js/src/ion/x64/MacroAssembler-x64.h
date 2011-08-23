@@ -125,7 +125,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void cmpTag(const ValueOperand &operand, ImmTag tag) {
         movq(operand.value(), ScratchReg);
         shrq(Imm32(JSVAL_TAG_SHIFT), ScratchReg);
-        cmpl(tag, ScratchReg);
+        cmpl(Operand(ScratchReg), tag);
     }
 
     // Type-testing instructions on x64 will clobber ScratchReg.
