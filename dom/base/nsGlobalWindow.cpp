@@ -8220,19 +8220,21 @@ NS_IMETHODIMP
 nsGlobalWindow::GetMozIndexedDB(nsIIDBFactory** _retval)
 {
   if (!mIndexedDB) {
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID);
-    NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (!IsChromeWindow()) {
+      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID);
+      NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    PRBool isThirdParty;
-    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(this, nsnull,
-                                                     &isThirdParty);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      PRBool isThirdParty;
+      nsresult rv = thirdPartyUtil->IsThirdPartyWindow(this, nsnull,
+                                                       &isThirdParty);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    if (isThirdParty) {
-      NS_WARNING("IndexedDB is not permitted in a third-party window.");
-      *_retval = nsnull;
-      return NS_OK;
+      if (isThirdParty) {
+        NS_WARNING("IndexedDB is not permitted in a third-party window.");
+        *_retval = nsnull;
+        return NS_OK;
+      }
     }
 
     mIndexedDB = indexedDB::IDBFactory::Create(this);

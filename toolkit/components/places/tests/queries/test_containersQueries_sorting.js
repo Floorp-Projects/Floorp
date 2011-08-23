@@ -439,9 +439,4 @@ function run_test()
   populateDB(visits);
 
   cartProd([resultTypes, sortingModes], test_query_callback);
-
-  // Cleanup.
-  pages.forEach(function(aPageUrl) tagging.untagURI(uri(aPageUrl), tags));
-  remove_all_bookmarks();
-  bh.removeAllPages();
 }

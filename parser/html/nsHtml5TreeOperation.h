@@ -317,12 +317,12 @@ class nsHtml5TreeOperation {
   private:
 
     nsresult AppendTextToTextNode(const PRUnichar* aBuffer,
-                                  PRInt32 aLength,
+                                  PRUint32 aLength,
                                   nsIContent* aTextNode,
                                   nsHtml5TreeOpExecutor* aBuilder);
 
     nsresult AppendText(const PRUnichar* aBuffer,
-                        PRInt32 aLength,
+                        PRUint32 aLength,
                         nsIContent* aParent,
                         nsHtml5TreeOpExecutor* aBuilder);
 

@@ -42,34 +42,21 @@ function test() {
   // initialization
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
-  let bhist = Cc["@mozilla.org/browser/global-history;2"].
-              getService(Ci.nsIBrowserHistory);
-  let histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService).
-                QueryInterface(Ci.nsPIPlacesDatabase);
   let cm = Cc["@mozilla.org/cookiemanager;1"].
            getService(Ci.nsICookieManager);
   waitForExplicitFinish();
 
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/title.sjs";
 
-  function cleanup() {
-    // delete all history items
-    bhist.removeAllPages();
+  function waitForCleanup(aCallback) {
     // delete all cookies
     cm.removeAll();
+    // delete all history items
+    waitForClearHistory(aCallback);
   }
-  cleanup();
 
   let observer = {
     pass: 1,
-    onBeginUpdateBatch: function() {
-    },
-    onEndUpdateBatch: function() {
-    },
-    onVisit: function(aURI, aVisitID, aTime, aSessionId, aReferringId,
-                      aTransitionType, _added) {
-    },
     onTitleChanged: function(aURI, aPageTitle) {
       if (aURI.spec != TEST_URL)
         return;
@@ -80,8 +67,9 @@ function test() {
         break;
       case 2: // the second time that the page is loaded
         is(aPageTitle, "Cookie", "The page should be loaded with a cookie for the second time");
-        cleanup();
-        gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+        waitForCleanup(function () {
+          gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+        });
         break;
       case 3: // before entering the private browsing mode
         is(aPageTitle, "No Cookie", "The page should be loaded without any cookie again");
@@ -89,37 +77,33 @@ function test() {
         pb.privateBrowsingEnabled = true;
         gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
         executeSoon(function() {
-          histsvc.removeObserver(observer);
+          PlacesUtils.history.removeObserver(observer);
           pb.privateBrowsingEnabled = false;
-          while (gBrowser.browsers.length > 1)
+          while (gBrowser.browsers.length > 1) {
             gBrowser.removeCurrentTab();
-          cleanup();
-          finish();
+          }
+          waitForCleanup(finish);
         });
         break;
       default:
         ok(false, "Unexpected pass: " + (this.pass - 1));
       }
     },
-    onBeforeDeleteURI: function(aURI) {
-    },
-    onDeleteURI: function(aURI) {
-    },
-    onClearHistory: function() {
-    },
-    onPageChanged: function(aURI, aWhat, aValue) {
-    },
-    onDeleteVisits: function() {
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsINavHistoryObserver) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-  histsvc.addObserver(observer, false);
 
-  gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+    onBeginUpdateBatch: function () {},
+    onEndUpdateBatch: function () {},
+    onVisit: function () {},
+    onBeforeDeleteURI: function () {},
+    onDeleteURI: function () {},
+    onClearHistory: function () {},
+    onPageChanged: function () {},
+    onDeleteVisits: function() {},
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+  };
+  PlacesUtils.history.addObserver(observer, false);
+
+  waitForCleanup(function () {
+    gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+  });
 }

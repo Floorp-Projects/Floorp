@@ -163,7 +163,9 @@ public:
 
     enum {
         DRAW_ERROR = 0,
-        DRAW_GLES_2 = 1
+        DRAW_GLES_2 = 1,
+        DRAW_2D = 2,
+        DRAW_DISABLED = 3
     };
 
     int BeginDrawing();
