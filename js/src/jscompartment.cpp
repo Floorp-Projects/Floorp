@@ -667,7 +667,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 
     debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
-    if (enabledBefore != enabledAfter && !onStack)
+    if (enabledBefore != enabledAfter)
         updateForDebugMode(cx);
     return true;
 }
@@ -675,6 +675,12 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 void
 JSCompartment::updateForDebugMode(JSContext *cx)
 {
+    for (ThreadContextRange r(cx); !r.empty(); r.popFront()) {
+        JSContext *cx = r.front();
+        if (cx->compartment == this) 
+            cx->updateJITEnabled();
+    }
+
 #ifdef JS_METHODJIT
     bool enabled = debugMode();
 
