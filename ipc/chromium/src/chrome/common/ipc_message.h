@@ -18,8 +18,6 @@
 #include "base/ref_counted.h"
 #endif
 
-#define IPC_MESSAGE_ENABLE_RPC
-
 namespace base {
 class FileDescriptor;
 }
@@ -82,12 +80,10 @@ class Message : public Pickle {
     return (header()->flags & SYNC_BIT) != 0;
   }
 
-#if defined(IPC_MESSAGE_ENABLE_RPC)
   // True if this is a synchronous message.
   bool is_rpc() const {
     return (header()->flags & RPC_BIT) != 0;
   }
-#endif
 
   // Set this on a reply to a synchronous message.
   void set_reply() {
@@ -250,11 +246,9 @@ class Message : public Pickle {
     header()->flags |= SYNC_BIT;
   }
 
-#if defined(IPC_MESSAGE_ENABLE_RPC)
   void set_rpc() {
     header()->flags |= RPC_BIT;
   }
-#endif
 
 #if !defined(OS_MACOSX)
  protected:
@@ -269,9 +263,7 @@ class Message : public Pickle {
     UNBLOCK_BIT     = 0x0020,
     PUMPING_MSGS_BIT= 0x0040,
     HAS_SENT_TIME_BIT = 0x0080,
-#if defined(IPC_MESSAGE_ENABLE_RPC)
     RPC_BIT        = 0x0100,
-#endif
   };
 
 #pragma pack(push, 2)
