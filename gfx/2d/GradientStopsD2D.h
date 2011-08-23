@@ -40,7 +40,7 @@
 
 #include "2D.h"
 
-#include <D2D1.h>
+#include <d2d1.h>
 
 namespace mozilla {
 namespace gfx {
