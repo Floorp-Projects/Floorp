@@ -122,7 +122,6 @@
 #include "nsRefreshDriver.h"
 
 #include "nsHyphenationManager.h"
-#include "nsEditorSpellCheck.h"
 #include "nsDOMMemoryReporter.h"
 
 extern void NS_ShutdownChainItemPool();
@@ -359,5 +358,4 @@ nsLayoutStatics::Shutdown()
   nsLayoutUtils::Shutdown();
 
   nsHyphenationManager::Shutdown();
-  nsEditorSpellCheck::ShutDown();
 }

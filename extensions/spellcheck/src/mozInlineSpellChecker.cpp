@@ -1765,7 +1765,8 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
     previousDictionary.Truncate();
   }
 
-  nsresult rv = mSpellCheck->UpdateCurrentDictionary();
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  nsresult rv = mSpellCheck->UpdateCurrentDictionary(editor);
 
   nsAutoString currentDictionary;
   if (NS_FAILED(mSpellCheck->GetCurrentDictionary(currentDictionary))) {

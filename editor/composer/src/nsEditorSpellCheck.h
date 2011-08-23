@@ -43,20 +43,14 @@
 
 #include "nsIEditorSpellCheck.h"
 #include "nsISpellChecker.h"
-#include "nsIObserver.h"
-#include "nsIURI.h"
-#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
 
 #define NS_EDITORSPELLCHECK_CID                     \
 { /* {75656ad9-bd13-4c5d-939a-ec6351eea0cc} */        \
     0x75656ad9, 0xbd13, 0x4c5d,                       \
     { 0x93, 0x9a, 0xec, 0x63, 0x51, 0xee, 0xa0, 0xcc }\
 }
-
-class LastDictionary;
 
 class nsEditorSpellCheck : public nsIEditorSpellCheck
 {
@@ -69,10 +63,6 @@ public:
 
   /* Declare all methods in the nsIEditorSpellCheck interface */
   NS_DECL_NSIEDITORSPELLCHECK
-
-  static LastDictionary* gDictionaryStore;
-
-  static void ShutDown();
 
 protected:
   nsCOMPtr<nsISpellChecker> mSpellChecker;
@@ -88,11 +78,9 @@ protected:
   nsresult       DeleteSuggestedWordList();
 
   nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
-  nsCOMPtr<nsIEditor> mEditor;
-
-  nsString mPreferredLang;
 
   PRPackedBool mUpdateDictionaryRunning;
+  PRPackedBool mDictWasSetManually;
 
 public:
   void BeginUpdateDictionary() { mUpdateDictionaryRunning = PR_TRUE ;}
