@@ -67,11 +67,7 @@ class SharedMemory {
   // opens the existing shared memory and ignores the size parameter.
   // If name is the empty string, use a unique name.
   // Returns true on success, false on failure.
-#ifdef CHROMIUM_MOZILLA_BUILD
   bool Create(const std::string& name, bool read_only, bool open_existing,
-#else
-  bool Create(const std::wstring& name, bool read_only, bool open_existing,
-#endif
               size_t size);
 
   // Deletes resources associated with a shared memory segment based on name.

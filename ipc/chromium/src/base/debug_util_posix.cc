@@ -144,25 +144,5 @@ void StackTrace::PrintBacktrace() {
 }
 
 void StackTrace::OutputToStream(std::ostream* os) {
-#ifdef CHROMIUM_MOZILLA_BUILD
   return;
-#else
-  scoped_ptr_malloc<char*> trace_symbols(
-      backtrace_symbols(&trace_[0], trace_.size()));
-
-  // If we can't retrieve the symbols, print an error and just dump the raw
-  // addresses.
-  if (trace_symbols.get() == NULL) {
-    (*os) << "Unable get symbols for backtrace (" << strerror(errno)
-          << "). Dumping raw addresses in trace:\n";
-    for (size_t i = 0; i < trace_.size(); ++i) {
-      (*os) << "\t" << trace_[i] << "\n";
-    }
-  } else {
-    (*os) << "Backtrace:\n";
-    for (size_t i = 0; i < trace_.size(); ++i) {
-      (*os) << "\t" << trace_symbols.get()[i] << "\n";
-    }
-  }
-#endif
 }

@@ -6,9 +6,7 @@
 
 #include "base/logging.h"
 #include "base/win_util.h"
-#ifdef CHROMIUM_MOZILLA_BUILD
-#  include "base/string_util.h"
-#endif
+#include "base/string_util.h"
 
 namespace base {
 
@@ -58,18 +56,10 @@ SharedMemoryHandle SharedMemory::NULLHandle() {
   return NULL;
 }
 
-#ifdef CHROMIUM_MOZILLA_BUILD
 bool SharedMemory::Create(const std::string &cname, bool read_only,
-#else
-bool SharedMemory::Create(const std::wstring &name, bool read_only,
-#endif
                           bool open_existing, size_t size) {
   DCHECK(mapped_file_ == NULL);
-
-#ifdef CHROMIUM_MOZILLA_BUILD
   std::wstring name = UTF8ToWide(cname);
-#endif
-
   name_ = name;
   read_only_ = read_only;
   mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
