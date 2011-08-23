@@ -306,6 +306,7 @@ class Debugger {
                                    NewScriptKind kind);
     static inline void onDestroyScript(JSScript *script);
     static JSTrapStatus onTrap(JSContext *cx, Value *vp);
+    static JSTrapStatus onSingleStep(JSContext *cx, Value *vp);
 
     /************************************* Functions for use by Debugger.cpp. */
 
