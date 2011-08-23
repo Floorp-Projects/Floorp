@@ -2,3 +2,14 @@ README.txt
 #if MOZ_UPDATE_CHANNEL != beta
 extensions/feedback@mobile.mozilla.org.xpi
 #endif
+#ifdef XP_WIN
+  #ifdef WIN32_OLD_STYLE_JEMALLOC
+    Microsoft.VC80.CRT.manifest
+    msvcm80.dll
+    msvcp80.dll
+    msvcr80.dll
+  #else
+    mozcrt19.dll
+    mozcpp19.dll
+  #endif
+#endif
