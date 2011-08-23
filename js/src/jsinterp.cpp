@@ -1886,13 +1886,12 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
-        SET_SCRIPT(regs.fp()->script());                                      \
+        script = regs.fp()->script();                                         \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
         if (cx->isExceptionPending())                                         \
             goto error;                                                       \
-        CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
 
 #define MONITOR_BRANCH()                                                      \
@@ -1975,13 +1974,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         DO_OP();                                                              \
     JS_END_MACRO
 
-#define SET_SCRIPT(s)                                                         \
-    JS_BEGIN_MACRO                                                            \
-        script = (s);                                                         \
-        if (script->stepModeEnabled())                                        \
-            ENABLE_INTERRUPTS();                                              \
-    JS_END_MACRO
-
 #define CHECK_INTERRUPT_HANDLER()                                             \
     JS_BEGIN_MACRO                                                            \
         if (cx->debugHooks->interruptHook)                                    \
@@ -2014,8 +2006,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
-    JSScript *script;
-    SET_SCRIPT(regs.fp()->script());
+    JSScript *script = regs.fp()->script();
     int *pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
@@ -2160,24 +2151,18 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     {
         bool moreInterrupts = false;
         JSInterruptHook hook = cx->debugHooks->interruptHook;
-        if (hook || script->stepModeEnabled()) {
+        if (hook) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "interrupt hook or singleStepMode");
+                AbortRecording(cx, "interrupt hook");
 #ifdef JS_METHODJIT
             if (TRACE_PROFILER(cx))
                 AbortProfiling(cx);
 #endif
 #endif
             Value rval;
-            JSTrapStatus status = JSTRAP_CONTINUE;
-            if (hook) {
-                status = hook(cx, script, regs.pc, Jsvalify(&rval),
-                              cx->debugHooks->interruptHookData);
-            }
-            if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
-                status = Debugger::onSingleStep(cx, &rval);
-            switch (status) {
+            switch (hook(cx, script, regs.pc, Jsvalify(&rval),
+                         cx->debugHooks->interruptHookData)) {
               case JSTRAP_ERROR:
                 goto error;
               case JSTRAP_CONTINUE:
@@ -2396,6 +2381,7 @@ BEGIN_CASE(JSOP_STOP)
         JS_ASSERT(!regs.fp()->hasImacropc());
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, &regs.fp()->scopeChain(), 0));
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
+        CHECK_INTERRUPT_HANDLER();
 
         /* The JIT inlines ScriptEpilogue. */
 #ifdef JS_METHODJIT
@@ -2404,11 +2390,10 @@ BEGIN_CASE(JSOP_STOP)
         cx->stack.popInlineFrame(regs);
 
         /* Sync interpreter locals. */
-        SET_SCRIPT(regs.fp()->script());
+        script = regs.fp()->script();
         pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
         argv = regs.fp()->maybeFormalArgs();
         atoms = FrameAtomBase(cx, regs.fp());
-        CHECK_INTERRUPT_HANDLER();
 
         JS_ASSERT(*regs.pc == JSOP_TRAP || *regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
                   *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
@@ -4075,7 +4060,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         goto error;
 
     /* Refresh local js::Interpret state. */
-    SET_SCRIPT(newScript);
+    script = newScript;
     pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
     argv = regs.fp()->formalArgsEnd() - fun->nargs;
     atoms = script->atomMap.vector;
@@ -4098,6 +4083,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
             goto error;
         if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
             interpReturnOK = mjit::JaegerShot(cx);
+            CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
     }
