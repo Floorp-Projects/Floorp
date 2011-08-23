@@ -12,13 +12,13 @@
       function test() {
         document.querySelector("div").focus();
         // type a character, then press backspace to delete it
-        sendKey("X", "div1");
-        sendKey("BACK_SPACE", "div1");
+        sendKey("X", window);
+        sendKey("BACK_SPACE", window);
         document.documentElement.removeAttribute("class");
       }
     </script>
   </head>
   <body onload="test()">
-    <div id="div1" contenteditable></div>
+    <div contenteditable></div>
   </body>
 </html>
