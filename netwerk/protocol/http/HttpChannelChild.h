@@ -173,6 +173,8 @@ private:
   bool mKeptAlive;
   ChannelEventQueue mEventQ;
 
+  void AssociateApplicationCache(const nsCString &groupID,
+                                 const nsCString &clientID);
   void OnStartRequest(const nsHttpResponseHead& responseHead,
                       const PRBool& useResponseHead,
                       const RequestHeaderTuples& requestHeaders,
@@ -204,6 +206,7 @@ private:
   // Called asynchronously from Resume: continues any pending calls into client.
   void CompleteResume();
 
+  friend class AssociateApplicationCacheEvent;
   friend class StartRequestEvent;
   friend class StopRequestEvent;
   friend class TransportAndDataEvent;

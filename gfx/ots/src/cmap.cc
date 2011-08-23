@@ -488,7 +488,7 @@ bool Parse0514(ots::OpenTypeFile *file,
           return OTS_FAILURE();
         }
         const uint32_t check_value =
-            ranges[j].unicode_value + ranges[i].additional_count;
+            ranges[j].unicode_value + ranges[j].additional_count;
         if (ranges[j].unicode_value == 0 ||
             ranges[j].unicode_value > kUnicodeUpperLimit ||
             check_value > kUVSUpperLimit ||

@@ -46,6 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
+	head.js \
 	browser_bug399606.js \
 	browser_visituri.js \
 	browser_visituri_nohistory.js \

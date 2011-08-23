@@ -64,11 +64,9 @@ void AtExitManager::ProcessCallbacksNow() {
   }
 }
 
-#ifdef CHROMIUM_MOZILLA_BUILD
 // static
 bool AtExitManager::AlreadyRegistered() {
   return !!g_top_manager;
 }
-#endif
 
 }  // namespace base
