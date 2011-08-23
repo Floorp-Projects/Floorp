@@ -41,7 +41,7 @@
 interface nsIEditor;
 interface nsITextServicesFilter;
 
-[scriptable, uuid(af84da62-588f-409f-847d-feecc991bd93)]
+[scriptable, uuid(3da0ce96-7d3a-48d0-80b7-2d90dab09747)]
 interface nsIEditorSpellCheck : nsISupports
 {
 
@@ -151,6 +151,14 @@ interface nsIEditorSpellCheck : nsISupports
   void          SetCurrentDictionary(in AString dictionary);
 
   /**
+   * Call to save the currently selected dictionary as the default. The
+   * function UninitSpellChecker will also do this, but that function may not
+   * be called in some situations. This function allows the caller to force the
+   * default right now.
+   */
+  void          saveDefaultDictionary();
+
+  /**
    * Call this to free up the spell checking object. It will also save the
    * current selected language as the default for future use.
    *
@@ -184,6 +192,6 @@ interface nsIEditorSpellCheck : nsISupports
    * Update the dictionary in use to be sure it corresponds to what the editor
    * needs.
    */
-  void          UpdateCurrentDictionary();
+  void          UpdateCurrentDictionary(in nsIEditor editor);
 
 };

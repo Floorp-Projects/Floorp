@@ -260,6 +260,7 @@ InlineSpellChecker.prototype = {
       return;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
     spellchecker.SetCurrentDictionary(this.mDictionaryNames[index]);
+    spellchecker.saveDefaultDictionary();
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
   },
 
