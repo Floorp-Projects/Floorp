@@ -2,6 +2,7 @@ import subprocess
 from devicemanager import DeviceManager, DMError
 import re
 import os
+import sys
 
 class DeviceManagerADB(DeviceManager):
 
@@ -11,6 +12,7 @@ class DeviceManagerADB(DeviceManager):
     self.retrylimit = retrylimit
     self.retries = 0
     self._sock = None
+    self.useRunAs = False
     if packageName == None:
       if os.getenv('USER'):
         packageName = 'org.mozilla.fennec_' + os.getenv('USER')
@@ -22,14 +24,11 @@ class DeviceManagerADB(DeviceManager):
     # Initialization code that may fail: Catch exceptions here to allow
     # successful initialization even if, for example, adb is not installed.
     try:
-      root = self.getDeviceRoot()
-      self.verifyPackage(packageName)
-      self.tmpDir = root + "/tmp"
-      if (not self.dirExists(self.tmpDir)):
-        self.mkDir(self.tmpDir)
+      self.verifyADB()
+      self.verifyRunAs(packageName)
     except:
+      self.useRunAs = False
       self.packageName = None
-      self.tmpDir = None
     try:
       # a test to see if we have root privs
       files = self.listFiles("/data/data")
@@ -51,7 +50,7 @@ class DeviceManagerADB(DeviceManager):
     try:
       if (os.name == "nt"):
         destname = destname.replace('\\', '/')
-      if (self.packageName):
+      if (self.useRunAs):
         remoteTmpFile = self.tmpDir + "/" + os.path.basename(localname)
         self.checkCmd(["push", os.path.realpath(localname), remoteTmpFile])
         self.checkCmdAs(["shell", "cp", remoteTmpFile, destname])
@@ -498,7 +497,7 @@ class DeviceManagerADB(DeviceManager):
     return subprocess.check_call(args)
 
   def checkCmdAs(self, args):
-    if (self.packageName):
+    if (self.useRunAs):
       args.insert(1, "run-as")
       args.insert(2, self.packageName)
     return self.checkCmd(args)
@@ -518,13 +517,44 @@ class DeviceManagerADB(DeviceManager):
       self.checkCmdAs(["shell", "chmod", "777", remoteDir.strip()])
       print "chmod " + remoteDir.strip()
 
-  def verifyPackage(self, packageName):
-    # If a valid package name is specified, it will be used for certain
-    # file operations, so that pushed files and directories are created
-    # by the uid associated with the package.
-    self.packageName = None
-    if (packageName):
-      data = self.runCmd(["shell", "run-as", packageName, "pwd"]).stdout.read()
-      if (not re.search('is unknown', data)):
+  def verifyADB(self):
+    # Check to see if adb itself can be executed.
+    try:
+      self.runCmd(["version"])
+    except Exception as (ex):
+      print "unable to execute ADB: ensure Android SDK is installed and adb is in your $PATH"
+    
+  def isCpAvailable(self):
+    # Some Android systems may not have a cp command installed,
+    # or it may not be executable by the user. 
+    data = self.runCmd(["shell", "cp"]).stdout.read()
+    if (re.search('Usage', data)):
+      return True
+    else:
+      print "unable to execute 'cp' on device; consider installing busybox from Android Market"
+      return False
+
+  def verifyRunAs(self, packageName):
+    # If a valid package name is available, and certain other
+    # conditions are met, devicemanagerADB can execute file operations
+    # via the "run-as" command, so that pushed files and directories 
+    # are created by the uid associated with the package, more closely
+    # echoing conditions encountered by Fennec at run time.
+    # Check to see if run-as can be used here, by verifying a 
+    # file copy via run-as.
+    self.useRunAs = False
+    devroot = self.getDeviceRoot()
+    if (packageName and self.isCpAvailable() and devroot):
+      self.tmpDir = devroot + "/tmp"
+      if (not self.dirExists(self.tmpDir)):
+        self.mkDir(self.tmpDir)
+      self.checkCmd(["shell", "run-as", packageName, "mkdir", devroot + "/sanity"])
+      self.checkCmd(["push", os.path.abspath(sys.argv[0]), self.tmpDir + "/tmpfile"])
+      self.checkCmd(["shell", "run-as", packageName, "cp", self.tmpDir + "/tmpfile", devroot + "/sanity"])
+      if (self.fileExists(devroot + "/sanity/tmpfile")):
+        print "will execute commands via run-as " + packageName
         self.packageName = packageName
-        print "package set: " + self.packageName
+        self.useRunAs = True
+      self.checkCmd(["shell", "rm", devroot + "/tmp/tmpfile"])
+      self.checkCmd(["shell", "run-as", packageName, "rm", "-r", devroot + "/sanity"])
+      
