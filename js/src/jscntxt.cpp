@@ -111,8 +111,7 @@ ThreadData::ThreadData()
     waiveGCQuota(false),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
-    pendingProxyOperation(NULL),
-    interpreterFrames(NULL)
+    pendingProxyOperation(NULL)
 {
 }
 
