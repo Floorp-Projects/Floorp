@@ -1026,9 +1026,9 @@
 #define ENABLE_JIT 0
 #endif
 
-/* The JIT is enabled by default on all x86, x64-64, ARM & MIPS platforms. */
+/* The JIT is enabled by default on all x86, x64-64, ARM platforms. */
 #if !defined(ENABLE_JIT) \
-    && (WTF_CPU_X86 || WTF_CPU_X86_64 || WTF_CPU_ARM || WTF_CPU_MIPS || WTF_CPU_SPARC32) \
+    && (WTF_CPU_X86 || WTF_CPU_X86_64 || WTF_CPU_ARM || WTF_CPU_SPARC32) \
     && (WTF_OS_DARWIN || !WTF_COMPILER_GCC || GCC_VERSION_AT_LEAST(4, 1, 0)) \
     && !WTF_OS_WINCE
 #define ENABLE_JIT 1
