@@ -8,7 +8,10 @@
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=533291">Mozilla Bug 533291</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<!-- Bug 628848: The following should be display: none but we currently don't
+     handle percentage lengths properly when the whole fragment is display: none
+     -->
+<div id="content" style="visibility: hidden">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
      onload="this.pauseAnimations()">
   <g id="circleParent">
@@ -19,73 +22,116 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 <![CDATA[
-/** Test for SMIL fill modes **/
+/** Test for SMIL values that are context-sensitive **/
+
+/* See bugs 533291 and 562815.
+   
+   The format of each test is basically:
+   1) create some animated and frozen state
+   2) test the animated values
+   3) change the context
+   4) test that context-sensitive animation values have changed
+
+   Ideally, after changing the context (3), the animated state would instantly
+   update. However, this is not currently the case for many situations.
+
+     For CSS properties we have bug 545282 - In animations involving 'inherit'
+     / 'currentColor', changes to inherited value / 'color' don't show up in
+     animated value immediately
+
+     For SVG lengths we have bug 508206 - Relative units used in
+     animation don't update immediately
+
+     (There are a few of todo_is's in the following tests so that if those bugs
+     are ever resolved we'll know to update this test case accordingly.)
+
+   So in between (3) and (4) we force a sample. This is currently done by
+   calling SVGSVGElement.setCurrentTime with the same current time which has the
+   side effect of forcing a sample.
+
+   What we *are* testing is that we're not too zealous with caching animation
+   values whilst in the frozen state. Normally we'd say, "Hey, we're frozen,
+   let's just use the same animation result as last time" but for some
+   context-sensitive animation values that doesn't work.
+*/
 
 /* Global Variables */
 const SVGNS = "http://www.w3.org/2000/svg";
+
+// Animation parameters -- not used for <set> animation
 const ANIM_DUR = "4s";
 const TIME_ANIM_END = "4";
 const TIME_AFTER_ANIM_END = "5";
 
-// SETTIMEOUT_INTERVAL: This value just needs to be at least as large as
-// nsSMILAnimationController::kTimerInterval, so we can queue up a callback
-// for this far in the future and be assured that an animation sample will
-// have happened before the callback fires (because we presumably already
-// have an animation sample in the setTimeout queue, with a lower timeout
-// value than this).
-// NOTE: We only need to use timeouts here because of Bug 545282.
-const SETTIMEOUT_INTERVAL = 60;
-
-const gTestArray =
-  [ testBaseValueChange,
-    testCurrentColorChange,
-    testCurrentColorChangeUsingStyle,
-    testInheritChange,
-    testInheritChangeUsingStyle
-   ];
-
-// Index of current test in gTestArray
-var gNextTestIndex = 0;
-
 const gSvg = document.getElementById("svg");
 const gCircle = document.getElementById("circle");
 const gCircleParent = document.getElementById("circleParent");
-
 
 SimpleTest.waitForExplicitFinish();
 
 // MAIN FUNCTION
 // -------------
 
-function main() {
+function main()
+{
   ok(gSvg.animationsPaused(), "should be paused by <svg> load handler");
   is(gSvg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
-  if (gNextTestIndex != 0) {
-    ok(false, "expecting to start at first test in array.");
+  const tests =
+    [ testBaseValueChange,
+      testCurrentColorChange,
+      testCurrentColorChangeUsingStyle,
+      testCurrentColorChangeOnFallback,
+      testInheritChange,
+      testInheritChangeUsingStyle,
+      testEmUnitChangeOnProp,
+      testEmUnitChangeOnPropBase,
+      testEmUnitChangeOnLength,
+      testPercentUnitChangeOnProp,
+      testPercentUnitChangeOnLength,
+      testRelativeFontSize,
+      testRelativeFontWeight,
+      testRelativeFont,
+      testCalcFontSize,
+      testDashArray,
+      testClip
+     ];
+
+  while (tests.length) {
+    tests.shift()();
   }
-  // Kick off first test.  (It will kick off the one after it, and so on.)
-  runNextTest();
+  SimpleTest.finish();
 }
 
 // HELPER FUNCTIONS
 // ----------------
-function createAnimFromTo(attrName, fromVal, toVal) {
-  var anim = document.createElementNS(SVGNS,"animate");
+function createAnimSetTo(attrName, toVal)
+{
+  var anim = document.createElementNS(SVGNS,"set");
   anim.setAttribute("attributeName", attrName);
-  anim.setAttribute("dur", ANIM_DUR);
-  anim.setAttribute("begin", "0s");
-  anim.setAttribute("from", fromVal);
   anim.setAttribute("to", toVal);
-  anim.setAttribute("fill", "freeze");
   return gCircle.appendChild(anim);
 }
-function createAnimBy(attrName, byVal) {
+
+function createAnimBy(attrName, byVal)
+{
   var anim = document.createElementNS(SVGNS,"animate");
   anim.setAttribute("attributeName", attrName);
   anim.setAttribute("dur", ANIM_DUR);
   anim.setAttribute("begin","0s");
   anim.setAttribute("by", byVal);
+  anim.setAttribute("fill", "freeze");
+  return gCircle.appendChild(anim);
+}
+
+function createAnimFromTo(attrName, fromVal, toVal)
+{
+  var anim = document.createElementNS(SVGNS,"animate");
+  anim.setAttribute("attributeName", attrName);
+  anim.setAttribute("dur", ANIM_DUR);
+  anim.setAttribute("begin","0s");
+  anim.setAttribute("from", fromVal);
+  anim.setAttribute("to", toVal);
   anim.setAttribute("fill", "freeze");
   return gCircle.appendChild(anim);
 }
@@ -97,17 +143,6 @@ function setupTest() {
   if (gCircle.firstChild) {
     ok(false, "Previous test didn't clean up after itself.");
   }
-}
-
-function runNextTest() {
-  if (gNextTestIndex == gTestArray.length) {
-    // No tests left! we're done.
-    SimpleTest.finish();
-    return;
-  }
-
-  // Call next test (and increment next-test index)
-  gTestArray[gNextTestIndex++]();
 }
 
 // THE TESTS
@@ -130,106 +165,400 @@ function testBaseValueChange()
      "Checking animated cx after anim ends & after changing base val");
 
   anim.parentNode.removeChild(anim); // clean up
-  runNextTest();
 }
 
 function testCurrentColorChange()
 {
   gCircle.setAttribute("color", "red"); // At first: currentColor=red
-  var anim = createAnimFromTo("fill", "yellow", "currentColor");
+  var anim = createAnimSetTo("fill", "currentColor");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0); // trigger synchronous sample
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=currentColor after anim ends");
+     "Checking animated fill=currentColor after animating");
 
   gCircle.setAttribute("color", "lime"); // Change: currentColor=lime
-  setTimeout(testCurrentColorChange_final, SETTIMEOUT_INTERVAL);
-}
-
-function testCurrentColorChange_final()
-{
+  // Bug 545282: We should really detect this change and update immediately but
+  // currently we don't until we get sampled again
+  todo_is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
+     "Checking animated fill=currentColor after updating context but before " +
+     "sampling");
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=currentColor after anim ends and 'color' changes");
+     "Checking animated fill=currentColor after updating context");
 
   // Clean up
   gCircle.removeAttribute("color");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-
-  // Kick off next test
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 function testCurrentColorChangeUsingStyle()
 {
   setupTest();
   gCircle.setAttribute("style", "color: red"); // At first: currentColor=red
-  var anim = createAnimFromTo("fill", "yellow", "currentColor");
+  var anim = createAnimSetTo("fill", "currentColor");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=currentColor after anim ends (using style attr)");
+     "Checking animated fill=currentColor after animating (using style attr)");
 
   gCircle.setAttribute("style", "color: lime"); // Change: currentColor=lime
-  setTimeout(testCurrentColorChangeUsingStyle_final, SETTIMEOUT_INTERVAL);
-}
-
-function testCurrentColorChangeUsingStyle_final()
-{
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=currentColor after anim ends and 'color' changes "
+     "Checking animated fill=currentColor after updating context "
      + "(using style attr)");
 
   // Clean up
   gCircle.removeAttribute("style");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function getFallbackColor(pServerStr)
+{
+  return pServerStr.substr(pServerStr.indexOf(" ")+1);
+}
+
+function testCurrentColorChangeOnFallback()
+{
+  setupTest();
+  gCircle.setAttribute("color", "red"); // At first: currentColor=red
+  var anim = createAnimSetTo("fill", "url(#missingGrad) currentColor");
+
+  gSvg.setCurrentTime(0);
+  var fallback =
+    getFallbackColor(SMILUtil.getComputedStyleSimple(gCircle, "fill"));
+  is(fallback, "rgb(255, 0, 0)",
+     "Checking animated fallback fill=currentColor after animating");
+
+  gCircle.setAttribute("color", "lime"); // Change: currentColor=lime
+  gSvg.setCurrentTime(0);
+  fallback = getFallbackColor(SMILUtil.getComputedStyleSimple(gCircle, "fill"));
+  is(fallback, "rgb(0, 255, 0)",
+     "Checking animated fallback fill=currentColor after updating context");
+
+  gCircle.removeAttribute("style");
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 function testInheritChange()
 {
   setupTest();
   gCircleParent.setAttribute("fill", "red"); // At first: inherit=red
-  var anim = createAnimFromTo("fill", "yellow", "inherit");
+  var anim = createAnimSetTo("fill", "inherit");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=inherit after anim ends");
+     "Checking animated fill=inherit after animating");
 
   gCircleParent.setAttribute("fill", "lime"); // Change: inherit=lime
-  setTimeout(testInheritChange_final, SETTIMEOUT_INTERVAL);
-}
-
-function testInheritChange_final() {
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=inherit after anim ends and parent val changes");
+     "Checking animated fill=inherit after updating context");
 
   gCircleParent.removeAttribute("fill");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
 }
 
 function testInheritChangeUsingStyle()
 {
   setupTest();
   gCircleParent.setAttribute("style", "fill: red"); // At first: inherit=red
-  var anim = createAnimFromTo("fill", "yellow", "inherit");
+  var anim = createAnimSetTo("fill", "inherit");
 
-  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(255, 0, 0)",
-     "Checking animated fill=inherit after anim ends (using style attr)");
+     "Checking animated fill=inherit after animating (using style attr)");
 
   gCircleParent.setAttribute("style", "fill: lime"); // Change: inherit=lime
-  setTimeout(testInheritChangeUsingStyle_final, SETTIMEOUT_INTERVAL);
-}
-
-function testInheritChangeUsingStyle_final() {
+  gSvg.setCurrentTime(0);
   is(SMILUtil.getComputedStyleSimple(gCircle, "fill"), "rgb(0, 255, 0)",
-     "Checking animated fill=inherit after anim ends and parent val changes "
+     "Checking animated fill=inherit after updating context "
      + "(using style attr)");
 
   gCircleParent.removeAttribute("style");
-  gCircle.firstChild.parentNode.removeChild(gCircle.firstChild);
-  runNextTest();
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testEmUnitChangeOnProp()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "2em");
+
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "20px",
+     "Checking animated font-size=2em after animating ends");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "40px",
+     "Checking animated font-size=2em after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testEmUnitChangeOnPropBase()
+{
+  // Test the case where the base value for our animation sandwich is
+  // context-sensitive.
+  // Currently, this is taken care of by the compositor which keeps a cached
+  // base value and compares it with the current base value. This test then just
+  // serves as a regression test in case the compositor's behaviour changes.
+  setupTest();
+  gSvg.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  gCircleParent.setAttribute("font-size", "1em"); // Base: 10px
+  var anim = createAnimBy("font-size", "10px");
+
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "20px",
+     "Checking animated font-size=20px after anim ends");
+
+  gSvg.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "30px",
+     "Checking animated font-size=30px after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testEmUnitChangeOnLength()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("cx", "2em");
+
+  gSvg.setCurrentTime(0);
+  is(gCircle.cx.animVal.value, 20,
+     "Checking animated length=2em after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  // Bug 508206: We should really detect this change and update immediately but
+  // currently we don't until we get sampled again
+  todo_is(gCircle.cx.animVal.value, 40,
+     "Checking animated length=2em after updating context but before sampling");
+
+  gSvg.setCurrentTime(0);
+  is(gCircle.cx.animVal.value, 40,
+     "Checking animated length=2em after updating context and after " +
+     "resampling");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testPercentUnitChangeOnProp()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "150%");
+
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "15px",
+     "Checking animated font-size=150% after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "font-size"), "30px",
+     "Checking animated font-size=150% after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testPercentUnitChangeOnLength()
+{
+  setupTest();
+  var oldHeight = gSvg.getAttribute("height");
+  gSvg.setAttribute("height", "100px"); // At first: viewport height: 100px
+  var anim = createAnimSetTo("cy", "100%");
+
+  gSvg.setCurrentTime(0); // Force synchronous sample so animation takes effect
+  // Due to bug 627594 (SVGLength.value for percent value lengths doesn't
+  // reflect updated viewport until reflow) the following will fail.
+  // Check that it does indeed fail so that when that bug is fixed this test
+  // can be updated.
+  todo_is(gCircle.cy.animVal.value, 100,
+     "Checking animated length=100% after animating but before reflow");
+  gSvg.forceRedraw();
+  // Even after doing a reflow though we'll still fail due to bug 508206
+  // (Relative units used in animation don't update immediately)
+  todo_is(gCircle.cy.animVal.value, 100,
+     "Checking animated length=100% after animating but before resampling");
+  gSvg.setCurrentTime(0);
+  // Now we should be up to date
+  is(gCircle.cy.animVal.value, 100,
+     "Checking animated length=100% after animating");
+
+  gSvg.setAttribute("height", "50px"); // Change: height: 50px
+  gSvg.forceRedraw(); // Bug 627594
+  gSvg.setCurrentTime(0); // Bug 508206
+  is(gCircle.cy.animVal.value, 50,
+     "Checking animated length=100% after updating context");
+
+  gSvg.setAttribute("height", oldHeight);
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testRelativeFontSize()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "larger");
+
+  gSvg.setCurrentTime(0);
+  var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  // CSS 2 suggests a scaling factor of 1.2 so we should be looking at something
+  // around about 12 or so
+  ok(fsize > 10 && fsize < 20,
+    "Checking animated font-size > 10px after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  ok(fsize > 20, "Checking animated font-size > 20px after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testRelativeFontWeight()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-weight", "100"); // At first: font-weight 100
+  var anim = createAnimSetTo("font-weight", "bolder");
+  // CSS 2: 'bolder': Specifies the next weight that is assigned to a font
+  // that is darker than the inherited one. If there is no such weight, it
+  // simply results in the next darker numerical value (and the font remains
+  // unchanged), unless the inherited value was '900', in which case the
+  // resulting weight is also '900'.
+
+  gSvg.setCurrentTime(0);
+  var weight =
+    parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-weight"));
+  ok(weight > 100, "Checking animated font-weight > 100 after animating");
+
+  gCircleParent.setAttribute("font-weight", "800"); // Change: font-weight 800
+  gSvg.setCurrentTime(0);
+  weight = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-weight"));
+  is(weight, 900,
+     "Checking animated font-weight = 900 after updating context");
+
+  gCircleParent.removeAttribute("font-weight");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testRelativeFont()
+{
+  // Test a relative font-size as part of a 'font' spec since the code path
+  // is different in this case
+  // It turns out that, due to the way we store shorthand font properties, we
+  // don't need to worry about marking such values as context-sensitive since we
+  // seem to store them in their relative form. If, however, we change the way
+  // we store shorthand font properties in the future, this will serve as
+  // a useful regression test.
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  // We must be sure to set every part of the shorthand property to some
+  // non-context sensitive value because we want to test that even if only the
+  // font-size is relative we will update it appropriately.
+  var anim =
+    createAnimSetTo("font", "normal normal bold larger/normal sans-serif");
+
+  gSvg.setCurrentTime(0);
+  var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  ok(fsize > 10 && fsize < 20,
+    "Checking size of shorthand 'font' > 10px after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  fsize  = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  ok(fsize > 20,
+     "Checking size of shorthand 'font' > 20px after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testCalcFontSize()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
+  var anim = createAnimSetTo("font-size", "-moz-calc(110% + 0.1em)");
+
+  gSvg.setCurrentTime(0);
+  var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  // Font size should be 1.1 * 10px + 0.1 * 10px = 12
+  is(fsize, 12, "Checking animated calc font-size == 12px after animating");
+
+  gCircleParent.setAttribute("font-size", "20px"); // Change: font-size: 20px
+  gSvg.setCurrentTime(0);
+  fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));
+  is(fsize, 24, "Checking animated calc font-size == 24px after updating " +
+                "context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testDashArray()
+{
+  // stroke dasharrays don't currently convert units--but if someone ever fixes
+  // that, hopefully this test will fail and remind us not to cache percentage
+  // values in that case
+  setupTest();
+  var oldHeight = gSvg.getAttribute("height");
+  var oldWidth  = gSvg.getAttribute("width");
+  gSvg.setAttribute("height", "100px"); // At first: viewport: 100x100px
+  gSvg.setAttribute("width",  "100px");
+  var anim = createAnimFromTo("stroke-dasharray", "0 5", "0 50%");
+
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+
+  // Now we should be up to date
+  is(SMILUtil.getComputedStyleSimple(gCircle, "stroke-dasharray"), "0, 50%",
+     "Checking animated stroke-dasharray after animating");
+
+  gSvg.setAttribute("height", "50px"); // Change viewport: 50x50px
+  gSvg.setAttribute("width",  "50px");
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(gCircle, "stroke-dasharray"), "0, 50%",
+     "Checking animated stroke-dasharray after updating context");
+
+  gSvg.setAttribute("height", oldHeight);
+  gSvg.setAttribute("width",  oldWidth);
+  gCircle.removeChild(gCircle.firstChild);
+}
+
+function testClip()
+{
+  setupTest();
+  gCircleParent.setAttribute("font-size", "20px"); // At first: font-size: 20px
+
+  // The clip property only applies to elements that establish a new
+  // viewport so we need to create a nested svg and add animation to that
+  var nestedSVG = document.createElementNS(SVGNS, "svg");
+  nestedSVG.setAttribute("clip", "rect(0px 0px 0px 0px)");
+  gCircleParent.appendChild(nestedSVG);
+
+  var anim = createAnimSetTo("clip", "rect(1em 1em 1em 1em)");
+  // createAnimSetTo will make the animation a child of gCircle so we need to
+  // move it so it targets nestedSVG instead
+  nestedSVG.appendChild(anim);
+
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(nestedSVG, "clip"),
+     "rect(20px, 20px, 20px, 20px)",
+     "Checking animated clip rect after animating");
+
+  gCircleParent.setAttribute("font-size", "10px"); // Change: font-size: 10px
+  gSvg.setCurrentTime(TIME_AFTER_ANIM_END);
+  is(SMILUtil.getComputedStyleSimple(nestedSVG, "clip"),
+     "rect(10px, 10px, 10px, 10px)",
+     "Checking animated clip rect after updating context");
+
+  gCircleParent.removeAttribute("font-size");
+  gCircleParent.removeChild(nestedSVG);
 }
 
 window.addEventListener("load", main, false);
