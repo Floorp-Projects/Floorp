@@ -93,6 +93,19 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         case MDefinition::Op_BitXor:
             ret = Int32Value(lhs.toInt32() ^ rhs.toInt32());
             break;
+        case MDefinition::Op_Lsh:
+            ret = Int32Value(lhs.toInt32() << (rhs.toInt32() & 0x1F));
+            break;
+        case MDefinition::Op_Rsh:
+            ret = Int32Value(lhs.toInt32() >> (rhs.toInt32() & 0x1F));
+            break;
+        case MDefinition::Op_Ursh: {
+            if (lhs.toInt32() < 0 && rhs.toInt32() == 0)
+                return NULL;
+            uint32 unsignedLhs = (uint32_t)lhs.toInt32();
+            ret = Int32Value(uint32(unsignedLhs >> (rhs.toInt32() & 0x1F)));
+            break;
+        }
         case MDefinition::Op_Add:
             ret.setNumber(lhs.toNumber() + rhs.toNumber());
             break;
@@ -616,6 +629,24 @@ MBitXor *
 MBitXor::New(MDefinition *left, MDefinition *right)
 {
     return new MBitXor(left, right);
+}
+
+MLsh *
+MLsh::New(MDefinition *left, MDefinition *right)
+{
+    return new MLsh(left, right);
+}
+
+MRsh *
+MRsh::New(MDefinition *left, MDefinition *right)
+{
+    return new MRsh(left, right);
+}
+
+MUrsh *
+MUrsh::New(MDefinition *left, MDefinition *right)
+{
+    return new MUrsh(left, right);
 }
 
 MSnapshot *
