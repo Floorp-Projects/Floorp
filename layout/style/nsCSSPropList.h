@@ -1239,6 +1239,11 @@ CSS_PROP_COLOR(
     nsnull,
     offsetof(nsStyleColor, mColor),
     eStyleAnimType_Color)
+CSS_PROP_SHORTHAND(
+    -moz-columns,
+    _moz_columns,
+    CSS_PROP_DOMPROP_PREFIXED(Columns),
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_COLUMN(
     -moz-column-count,
     _moz_column_count,

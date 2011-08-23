@@ -45,7 +45,10 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *parent, const nsAString& title, 
                                  PRInt16 mode)
 {
-    return nsIFilePicker::modeOpen == mode ? NS_OK : NS_ERROR_NOT_IMPLEMENTED;
+    return (mode == nsIFilePicker::modeOpen ||
+            mode == nsIFilePicker::modeOpenMultiple)
+        ? NS_OK
+        : NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsFilePicker::AppendFilter(const nsAString& /*title*/,

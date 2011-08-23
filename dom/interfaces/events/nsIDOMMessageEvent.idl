@@ -45,7 +45,7 @@
  * For more information on this interface, please see
  * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
-[scriptable, uuid(dc8ec5c6-ebf2-4f95-be99-cd13e3c0d0c6)]
+[scriptable, uuid(9ac4fa26-4d19-4f4e-807e-b30cd0dbe56a)]
 interface nsIDOMMessageEvent : nsIDOMEvent
 {
   /**

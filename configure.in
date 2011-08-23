@@ -970,7 +970,6 @@ if test -n "$_WIN32_MSVC"; then
     AC_DEFINE(HAVE_IO_H)
     AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
-    AC_DEFINE(HAVE_STDCALL)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2482,6 +2481,8 @@ ia64*-hpux*)
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign"
             CXXFLAGS="$CXXFLAGS -mstackrealign"
+        else
+            AC_DEFINE(HAVE_STDCALL)
         fi
 
         MOZ_CHECK_HEADERS(mmintrin.h)

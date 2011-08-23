@@ -156,10 +156,9 @@ Sanitizer.prototype = {
         }
 
         // Clear plugin data.
-        let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
         const phInterface = Ci.nsIPluginHost;
         const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
-        ph.QueryInterface(phInterface);
+        let ph = Cc["@mozilla.org/plugin/host;1"].getService(phInterface);
 
         // Determine age range in seconds. (-1 means clear all.) We don't know
         // that this.range[1] is actually now, so we compute age range based
@@ -195,13 +194,13 @@ Sanitizer.prototype = {
         } catch (e) {}
 
       },
-      
+
       get canClear()
       {
         return true;
       }
     },
-    
+
     offlineApps: {
       clear: function ()
       {
