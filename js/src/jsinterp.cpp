@@ -1518,6 +1518,30 @@ CanIncDecWithoutOverflow(int32_t i)
 # endif
 #endif
 
+template<typename T>
+class GenericInterruptEnabler : public InterpreterFrames::InterruptEnablerBase {
+  public:
+    GenericInterruptEnabler(T *variable, T value) : variable(variable), value(value) { }
+    void enableInterrupts() const { *variable = value; }
+
+  private:
+    T *variable;
+    T value;
+};
+
+inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs, 
+                                            const InterruptEnablerBase &enabler)
+  : context(cx), regs(regs), enabler(enabler)
+{
+    older = JS_THREAD_DATA(cx)->interpreterFrames;
+    JS_THREAD_DATA(cx)->interpreterFrames = this;
+}
+ 
+inline InterpreterFrames::~InterpreterFrames()
+{
+    JS_THREAD_DATA(context)->interpreterFrames = older;
+}
+
 /*
  * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
  * single-thread DEBUG js shell testing to verify property cache hits.
@@ -1705,7 +1729,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     register void * const *jumpTable = normalJumpTable;
 
-# define ENABLE_INTERRUPTS() ((void) (jumpTable = interruptJumpTable))
+    typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
+    InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()                                                    \
@@ -1738,8 +1763,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     register intN switchMask = 0;
     intN switchOp;
-
-# define ENABLE_INTERRUPTS() ((void) (switchMask = -1))
+    typedef GenericInterruptEnabler<intN> InterruptEnabler;
+    InterruptEnabler interruptEnabler(&switchMask, -1);
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()                                                    \
@@ -1773,6 +1798,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
 
 #endif /* !JS_THREADED_INTERP */
+
+#define ENABLE_INTERRUPTS() (interruptEnabler.enableInterrupts())
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -1954,6 +1981,12 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_END_MACRO
 
     FrameRegs regs = cx->regs();
+
+    /*
+     * Help Debugger find frames running scripts that it has put in
+     * single-step mode.
+     */
+    InterpreterFrames interpreterFrame(cx, &regs, interruptEnabler);
 
     /* Repoint cx->regs to a local variable for faster access. */
     struct InterpExitGuard {
