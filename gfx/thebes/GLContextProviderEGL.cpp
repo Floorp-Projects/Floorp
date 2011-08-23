@@ -695,7 +695,9 @@ public:
 #endif
 
         sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        if (mSurface) {
+            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        }
     }
 
     GLContextType GetContextType() {
@@ -783,7 +785,7 @@ public:
         // Assume that EGL has the same problem as WGL does,
         // where MakeCurrent with an already-current context is
         // still expensive.
-        if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+        if (!mSurface || aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
             if (mGLWidget) {
 #ifdef MOZ_WIDGET_QT
                 static_cast<QGLWidget*>(mGLWidget)->makeCurrent();
@@ -791,6 +793,12 @@ public:
                 succeeded = PR_FALSE;
 #endif
             } else {
+#ifndef MOZ_WIDGET_QT
+                if (!mSurface) {
+                    EGLConfig config = CreateConfig();
+                    mSurface = CreateSurfaceForWindow(NULL, config);
+                }
+#endif
                 succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                      mSurface, mSurface,
                                                      mContext);
@@ -810,14 +818,25 @@ public:
 #else
     virtual PRBool
     RenewSurface() {
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
-
+        ReleaseSurface();
         EGLConfig config = CreateConfig();
         mSurface = CreateSurfaceForWindow(NULL, config);
 
         return sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                         mSurface, mSurface,
                                         mContext);
+    }
+#endif
+
+#ifndef MOZ_WIDGET_QT
+    virtual void
+    ReleaseSurface() {
+        if (mSurface) {
+            sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                     EGL_NO_CONTEXT);
+            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+            mSurface = NULL;
+        }
     }
 #endif
 
@@ -840,7 +859,11 @@ public:
 
     PRBool SwapBuffers()
     {
-        return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
+        if (mSurface) {
+            return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
+        } else {
+            return PR_FALSE;
+        }
     }
     // GLContext interface - returns Tiled Texture Image in our case
     virtual already_AddRefed<TextureImage>
@@ -1043,7 +1066,9 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         SetOffscreenSize(aNewSize, pbsize);
 
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        if (mSurface) {
+            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        }
 
         mSurface = surface;
 
