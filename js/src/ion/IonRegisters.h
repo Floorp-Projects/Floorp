@@ -191,11 +191,11 @@ class TypedRegisterSet
 {
     uint32 bits_;
 
+  public:
     explicit TypedRegisterSet(uint32 bits)
       : bits_(bits)
     { }
 
-  public:
     TypedRegisterSet() : bits_(0)
     { }
     static inline TypedRegisterSet All() {
