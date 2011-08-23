@@ -132,16 +132,11 @@ var resultObserver = {
 
 var testURI = uri("http://mozilla.com");
 
-// main
 function run_test() {
-  check_history_query();
-  resultObserver.reset();
-  check_bookmarks_query();
-  resultObserver.reset();
-  check_mixed_query();
+  run_next_test();
 }
 
-function check_history_query() {
+add_test(function check_history_query() {
   var options = histsvc.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.resultType = options.RESULTS_AS_VISIT;
@@ -209,9 +204,11 @@ function check_history_query() {
   root.containerOpen = false;
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
-}
+  resultObserver.reset();
+  waitForAsyncUpdates(run_next_test);
+});
 
-function check_bookmarks_query() {
+add_test(function check_bookmarks_query() {
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
   query.setFolders([bmsvc.bookmarksMenuFolder], 1);
@@ -276,9 +273,11 @@ function check_bookmarks_query() {
   root.containerOpen = false;
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
-}
+  resultObserver.reset();
+  waitForAsyncUpdates(run_next_test);
+});
 
-function check_mixed_query() {
+add_test(function check_mixed_query() {
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
   query.onlyBookmarked = true;
@@ -309,4 +308,6 @@ function check_mixed_query() {
   root.containerOpen = false;
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
-}
+  resultObserver.reset();
+  waitForAsyncUpdates(run_next_test);
+});

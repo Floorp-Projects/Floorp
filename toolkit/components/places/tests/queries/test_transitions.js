@@ -151,8 +151,6 @@ function run_test() {
                 Ci.nsINavHistoryService.TRANSITION_DOWNLOAD, false, 0);
   do_check_eq(testDataDownload.length + 1, root.childCount);
   root.containerOpen = false;
-
-  PlacesUtils.bhistory.removeAllPages();
 }
 
 /*
