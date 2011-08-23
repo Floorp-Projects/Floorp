@@ -70,8 +70,6 @@ class MessageLoop : public base::MessagePump::Delegate {
   friend class mozilla::ipc::DoWorkRunnable;
 
 public:
-  static void EnableHistogrammer(bool enable_histogrammer);
-
   // A DestructionObserver is notified when the current MessageLoop is being
   // destroyed.  These obsevers are notified prior to MessageLoop::current()
   // being changed to return NULL.  This gives interested parties the chance to
@@ -370,15 +368,6 @@ public:
   virtual bool DoWork();
   virtual bool DoDelayedWork(base::Time* next_delayed_work_time);
   virtual bool DoIdleWork();
-
-  // Start recording histogram info about events and action IF it was enabled
-  // and IF the statistics recorder can accept a registration of our histogram.
-  void StartHistogrammer();
-
-  // Add occurence of event to our histogram, so that we can see what is being
-  // done in a specific MessageLoop instance (i.e., specific thread).
-  // If message_histogram_ is NULL, this is a no-op.
-  void HistogramEvent(int event);
 
   Type type_;
 
