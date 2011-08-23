@@ -620,7 +620,7 @@ nsINode::Normalize()
     }
 
     // Remove node
-    nsINode* parent = node->GetNodeParent();
+    nsCOMPtr<nsINode> parent = node->GetNodeParent();
     NS_ASSERTION(parent || hasRemoveListeners,
                  "Should always have a parent unless "
                  "mutation events messed us up");
@@ -3945,7 +3945,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   }
 
   // Remove the new child from the old parent if one exists
-  nsINode* oldParent = newContent->GetNodeParent();
+  nsCOMPtr<nsINode> oldParent = newContent->GetNodeParent();
   if (oldParent) {
     PRInt32 removeIndex = oldParent->IndexOf(newContent);
     if (removeIndex < 0) {
