@@ -124,10 +124,10 @@ let WebNavigation =  {
   receiveMessage: function(message) {
     switch (message.name) {
       case "WebNavigation:GoBack":
-        this.goBack(message);
+        this.goBack();
         break;
       case "WebNavigation:GoForward":
-        this.goForward(message);
+        this.goForward();
         break;
       case "WebNavigation:GotoIndex":
         this.gotoIndex(message);
