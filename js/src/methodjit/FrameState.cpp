@@ -797,7 +797,12 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
 
         if (reg.isReg()) {
             RegisterID nreg = reg.reg();
-            JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
+            if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+                JS_ASSERT(!a->analysis->trackSlot(entrySlot(fe)));
+                syncFe(fe);
+                forgetAllRegs(fe);
+                fe->resetSynced();
+            }
             if (fe->data.inMemory()) {
                 masm.loadPayload(addressOf(fe), nreg);
             } else if (fe->isConstant()) {
