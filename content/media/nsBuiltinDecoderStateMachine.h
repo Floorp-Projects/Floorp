@@ -278,6 +278,9 @@ public:
   // Timer function to implement ScheduleStateMachine(aUsecs).
   void TimeoutExpired();
 
+  // Set the media fragment end time. aEndTime is in microseconds.
+  void SetFragmentEndTime(PRInt64 aEndTime);
+
 protected:
 
   // Returns PR_TRUE if we've got less than aAudioUsecs microseconds of decoded
@@ -510,6 +513,9 @@ protected:
   // The decoder monitor lock must be obtained before reading or writing
   // this value. Accessed on main and decode thread.
   PRInt64 mSeekTime;
+
+  // Media Fragment end time in microseconds. Access controlled by decoder monitor.
+  PRInt64 mFragmentEndTime;
 
   // The audio stream resource. Used on the state machine, and audio threads.
   // This is created and destroyed on the audio thread, while holding the
