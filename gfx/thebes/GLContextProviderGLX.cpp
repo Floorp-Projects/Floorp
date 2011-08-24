@@ -124,6 +124,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xQueryVersionInternal, { "glXQueryVersion", NULL } },
         { (PRFuncPtr*) &xGetCurrentContextInternal, { "glXGetCurrentContext", NULL } },
         { (PRFuncPtr*) &xWaitGLInternal, { "glXWaitGL", NULL } },
+        { (PRFuncPtr*) &xWaitXInternal, { "glXWaitX", NULL } },
         /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsStringInternal, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xGetClientStringInternal, { "glXGetClientString", NULL } },
@@ -330,7 +331,7 @@ GLXLibrary::BindTexImage(GLXPixmap aPixmap)
 
     Display *display = DefaultXDisplay();
     // Make sure all X drawing to the surface has finished before binding to a texture.
-    XSync(DefaultXDisplay(), False);
+    xWaitX();
     xBindTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT, NULL);
 }
 
@@ -617,6 +618,14 @@ GLXLibrary::xWaitGL()
 {
     BEFORE_GLX_CALL;
     xWaitGLInternal();
+    AFTER_GLX_CALL;
+}
+
+void
+GLXLibrary::xWaitX()
+{
+    BEFORE_GLX_CALL;
+    xWaitXInternal();
     AFTER_GLX_CALL;
 }
 
