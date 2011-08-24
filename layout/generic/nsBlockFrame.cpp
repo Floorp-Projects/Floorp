@@ -467,32 +467,23 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fputs(">\n", out);
   }
 
-  nsIAtom* listName = nsnull;
-  PRInt32 listIndex = 0;
-  for (;;) {
-    listName = GetAdditionalChildListName(listIndex++);
-    if (nsGkAtoms::overflowList == listName) {
-      continue; // skip the overflow list - we printed the overflow lines above
+  // skip the principal list - we printed the lines above
+  // skip the overflow list - we printed the overflow lines above
+  ChildListIterator lists(this);
+  ChildListIDs skip(kPrincipalList | kOverflowList);
+  for (; !lists.IsDone(); lists.Next()) {
+    if (skip.Contains(lists.CurrentID())) {
+      continue;
     }
-    if (nsnull == listName) {
-      break;
+    IndentBy(out, aIndent);
+    fprintf(out, "%s<\n", mozilla::layout::ChildListName(lists.CurrentID()));
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* kid = childFrames.get();
+      kid->List(out, aIndent + 1);
     }
-    nsIFrame* kid = GetFirstChild(listName);
-    if (kid) {
-      IndentBy(out, aIndent);
-      nsAutoString tmp;
-      if (nsnull != listName) {
-        listName->ToString(tmp);
-        fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-      }
-      fputs("<\n", out);
-      while (kid) {
-        kid->List(out, aIndent + 1);
-        kid = kid->GetNextSibling();
-      }
-      IndentBy(out, aIndent);
-      fputs(">\n", out);
-    }
+    IndentBy(out, aIndent);
+    fputs(">\n", out);
   }
 
   aIndent--;

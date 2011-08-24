@@ -2532,7 +2532,7 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
 nsresult 
 nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
                                            nsRenderingContext& aRC,
-                                           nsIAtom*        aList,
+                                           nsFrameList::Enumerator& aChildFrames,
                                            nsIFrame *      aParentFrame,
                                            nsRect&         aRect,
                                            nsIFrame *&     aStartFrame,
@@ -2543,9 +2543,9 @@ nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
   NS_ASSERTION(aPresContext, "Pointer is null!");
   NS_ASSERTION(aParentFrame, "Pointer is null!");
 
-  nsIFrame* child = aParentFrame->GetFirstChild(aList);
   aRect += aParentFrame->GetPosition();
-  while (child) {
+  for (; !aChildFrames.AtEnd(); aChildFrames.Next()) {
+    nsIFrame* child = aChildFrames.get();
     // only leaf frames have this bit flipped
     // then check the hard way
     PRBool isSelected = (child->GetStateBits() & NS_FRAME_SELECTED_CONTENT)
@@ -2587,13 +2587,12 @@ nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
   NS_ASSERTION(aParentFrame, "Pointer is null!");
 
   // loop through named child lists
-  nsIAtom* childListName = nsnull;
-  PRInt32  childListIndex = 0;
-  do {
-    nsresult rv = FindSelectionBoundsWithList(aPresContext, aRC, childListName, aParentFrame, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
+  nsIFrame::ChildListIterator lists(aParentFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    nsresult rv = FindSelectionBoundsWithList(aPresContext, aRC, childFrames, aParentFrame, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
     NS_ENSURE_SUCCESS(rv, rv);
-    childListName = aParentFrame->GetAdditionalChildListName(childListIndex++);
-  } while (childListName);
+  }
   return NS_OK;
 }
 

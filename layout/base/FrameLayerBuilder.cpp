@@ -1903,25 +1903,27 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
     foundContainerLayer = PR_TRUE;
   }
 
-  PRInt32 listIndex = 0;
-  nsIAtom* childList = nsnull;
-  do {
-    nsIFrame* child = aFrame->GetFirstChild(childList);
-    if (!child && !childList) {
-      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(aFrame);
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    nsIFrame::ChildListIterator lists(frame);
+    for (; !lists.IsDone(); lists.Next()) {
+      nsFrameList::Enumerator childFrames(lists.CurrentList());
+      for (; !childFrames.AtEnd(); childFrames.Next()) {
+        if (InternalInvalidateThebesLayersInSubtree(childFrames.get())) {
+          foundContainerLayer = PR_TRUE;
+        }
+      }
+    }
+    if (frame == aFrame && !frame->GetFirstPrincipalChild()) {
+      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(frame);
       if (subdocumentFrame) {
         // Descend into the subdocument
-        child = subdocumentFrame->GetSubdocumentRootFrame();
+        frame = subdocumentFrame->GetSubdocumentRootFrame();
+        continue;
       }
     }
-    while (child) {
-      if (InternalInvalidateThebesLayersInSubtree(child)) {
-        foundContainerLayer = PR_TRUE;
-      }
-      child = child->GetNextSibling();
-    }
-    childList = aFrame->GetAdditionalChildListName(listIndex++);
-  } while (childList);
+    break;
+  }
 
   if (!foundContainerLayer) {
     aFrame->RemoveStateBits(NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT);
