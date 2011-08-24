@@ -61,14 +61,8 @@
 #endif
 #ifdef XP_WIN32
 #ifdef MOZ_MEMORY
-#ifdef WIN32_OLD_STYLE_JEMALLOC
-@BINPATH@/mozcrt19.dll
-@BINPATH@/mozcpp19.dll
-#else
 @BINPATH@/jemalloc.dll
 #endif
-#endif
-#else
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
