@@ -331,7 +331,7 @@ LIRGenerator::visitMul(MMul *ins)
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
         LMulI *lir = new LMulI(ins);
-        if (!assignSnapshot(lir))
+        if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return lowerForALU(lir, ins, lhs, rhs);
     }

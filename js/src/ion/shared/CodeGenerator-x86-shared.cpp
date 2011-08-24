@@ -294,9 +294,9 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
         // Bailout on -0.0
         int32 constant = ToInt32(rhs);
         if (mul->canBeNegativeZero() && constant <= 0) {
-            Assembler::Condition bailoutCond = (constant == 0) ? Assembler::LessThan : Assembler::Equal;
-            masm.cmpl(ToOperand(lhs), Imm32(0));
-            if (bailoutIf(bailoutCond, ins->snapshot()))
+            Assembler::Condition bailoutCond = (constant == 0) ? Assembler::Signed : Assembler::Equal;
+            masm.testl(ToRegister(lhs), ToRegister(lhs));
+            if (!bailoutIf(bailoutCond, ins->snapshot()))
                     return false;
         }
 
@@ -337,7 +337,7 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 
         // Bailout on 0 (could be -0.0)
         if (mul->canBeNegativeZero()) {
-            masm.cmpl(ToOperand(lhs), Imm32(0));
+            masm.testl(ToRegister(lhs), ToRegister(lhs));
             if (!bailoutIf(Assembler::Equal, ins->snapshot()))
                 return false;
         }
