@@ -901,6 +901,11 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
     mTextureState = Allocated;
 }
 
+PRUint32 TiledTextureImage::GetTileCount()
+{
+    return mImages.Length();
+}
+
 PRBool
 GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
 {
