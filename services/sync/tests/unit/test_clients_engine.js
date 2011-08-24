@@ -449,6 +449,87 @@ add_test(function test_command_sync() {
   }
 });
 
+add_test(function test_send_uri_to_client_for_display() {
+  _("Ensure sendURIToClientForDisplay() sends command properly.");
+
+  let tracker = Clients._tracker;
+  let store = Clients._store;
+
+  let remoteId = Utils.makeGUID();
+  let rec = new ClientsRec("clients", remoteId);
+  rec.name = "remote";
+  store.create(rec);
+  let remoteRecord = store.createRecord(remoteId, "clients");
+
+  tracker.clearChangedIDs();
+  let initialScore = tracker.score;
+
+  let uri = "http://www.mozilla.org/";
+  Clients.sendURIToClientForDisplay(uri, remoteId);
+
+  let newRecord = store._remoteClients[remoteId];
+
+  do_check_neq(newRecord, undefined);
+  do_check_eq(newRecord.commands.length, 1);
+
+  let command = newRecord.commands[0];
+  do_check_eq(command.command, "displayURI");
+  do_check_eq(command.args.length, 2);
+  do_check_eq(command.args[0], uri);
+
+  do_check_true(tracker.score > initialScore);
+  do_check_true(tracker.score - initialScore >= SCORE_INCREMENT_XLARGE);
+
+  _("Ensure unknown client IDs result in exception.");
+  let unknownId = Utils.makeGUID();
+  let error;
+
+  try {
+    Clients.sendURIToClientForDisplay(uri, unknownId);
+  } catch (ex) {
+    error = ex;
+  }
+
+  do_check_eq(error.message.indexOf("Unknown remote client ID: "), 0);
+
+  run_next_test();
+});
+
+add_test(function test_receive_display_uri() {
+  _("Ensure processing of received 'displayURI' commands works.");
+
+  // We don't set up WBOs and perform syncing because other tests verify
+  // the command API works as advertised. This saves us a little work.
+
+  let uri = "http://www.mozilla.org/";
+  let remoteId = Utils.makeGUID();
+
+  let command = {
+    command: "displayURI",
+    args: [uri, remoteId],
+  };
+
+  Clients.localCommands = [command];
+
+  // Received 'displayURI' command should result in the topic defined below
+  // being called.
+  let ev = "weave:engine:clients:display-uri";
+
+  let handler = function(subject, data) {
+    Svc.Obs.remove(ev, handler);
+
+    do_check_eq(subject.uri, uri);
+    do_check_eq(subject.client, remoteId);
+    do_check_eq(data, null);
+
+    run_next_test();
+  };
+
+  Svc.Obs.add(ev, handler);
+
+  do_check_true(Clients.processIncomingCommands());
+});
+
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.Engine.Clients").level = Log4Moz.Level.Trace;

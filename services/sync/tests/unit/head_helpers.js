@@ -204,6 +204,14 @@ function generateNewKeys(collections) {
   CollectionKeys.setContents(wbo.cleartext, modified);
 }
 
+function do_check_empty(obj) {
+  do_check_attribute_count(obj, 0);
+}
+
+function do_check_attribute_count(obj, c) {
+  do_check_eq(c, Object.keys(obj).length);
+}
+
 function do_check_throws(aFunc, aResult, aStack)
 {
   if (!aStack) {

@@ -36,7 +36,7 @@ function run_test() {
 
     _("The GUID corresponds to XUL App ID.");
     let allIDs = store.getAllIDs();
-    let ids = [id for (id in allIDs)];
+    let ids = Object.keys(allIDs);
     do_check_eq(ids.length, 1);
     do_check_eq(ids[0], PREFS_GUID);
     do_check_true(allIDs[PREFS_GUID], true);
