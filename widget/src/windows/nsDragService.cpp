@@ -298,11 +298,11 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   // XXX not sure why we bother to cache this, it can change during
   // the drag
   mDragAction = aActionType;
-  mDoingDrag  = PR_TRUE;
   mSentLocalDropEvent = PR_FALSE;
 
   // Start dragging
   StartDragSession();
+  OpenDragPopup();
 
   nsRefPtr<IAsyncOperation> pAsyncOp;
   // Offer to do an async drag

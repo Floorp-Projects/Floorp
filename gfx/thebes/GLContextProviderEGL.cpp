@@ -695,7 +695,9 @@ public:
 #endif
 
         sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        if (mSurface) {
+            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        }
     }
 
     GLContextType GetContextType() {
@@ -783,7 +785,7 @@ public:
         // Assume that EGL has the same problem as WGL does,
         // where MakeCurrent with an already-current context is
         // still expensive.
-        if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+        if (!mSurface || aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
             if (mGLWidget) {
 #ifdef MOZ_WIDGET_QT
                 static_cast<QGLWidget*>(mGLWidget)->makeCurrent();
@@ -791,6 +793,12 @@ public:
                 succeeded = PR_FALSE;
 #endif
             } else {
+#ifndef MOZ_WIDGET_QT
+                if (!mSurface) {
+                    EGLConfig config = CreateConfig();
+                    mSurface = CreateSurfaceForWindow(NULL, config);
+                }
+#endif
                 succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                      mSurface, mSurface,
                                                      mContext);
@@ -810,14 +818,25 @@ public:
 #else
     virtual PRBool
     RenewSurface() {
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
-
+        ReleaseSurface();
         EGLConfig config = CreateConfig();
         mSurface = CreateSurfaceForWindow(NULL, config);
 
         return sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                         mSurface, mSurface,
                                         mContext);
+    }
+#endif
+
+#ifndef MOZ_WIDGET_QT
+    virtual void
+    ReleaseSurface() {
+        if (mSurface) {
+            sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                     EGL_NO_CONTEXT);
+            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+            mSurface = NULL;
+        }
     }
 #endif
 
@@ -840,7 +859,11 @@ public:
 
     PRBool SwapBuffers()
     {
-        return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
+        if (mSurface) {
+            return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
+        } else {
+            return PR_FALSE;
+        }
     }
     // GLContext interface - returns Tiled Texture Image in our case
     virtual already_AddRefed<TextureImage>
@@ -1043,7 +1066,9 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         SetOffscreenSize(aNewSize, pbsize);
 
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        if (mSurface) {
+            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+        }
 
         mSurface = surface;
 
@@ -1207,28 +1232,27 @@ public:
         }
     }
 
-    virtual void GetUpdateRegion(nsIntRegion& aForRegion)
-    {
-        if (mTextureState != Valid) {
-            // if the texture hasn't been initialized yet, force the
-            // client to paint everything
-            aForRegion = nsIntRect(nsIntPoint(0, 0), mSize);
-        } else if (!mBackingSurface) {
-            // We can only draw a rectangle, not subregions due to
-            // the way that our texture upload functions work.  If
-            // needed, we /could/ do multiple texture uploads if we have
-            // non-overlapping rects, but that's a tradeoff.
-            aForRegion = nsIntRegion(mUpdateRect);
-        }
-    }
-
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion)
     {
         NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
         // determine the region the client will need to repaint
-        GetUpdateRegion(aRegion);
-        mUpdateRect = aRegion.GetBounds();
+        if (mTextureState != Valid) {
+            // if the texture hasn't been initialized yet, force the
+            // client to paint everything
+            mUpdateRect = nsIntRect(nsIntPoint(0, 0), mSize);
+            //printf_stderr("v Forcing full paint\n");
+            aRegion = nsIntRegion(mUpdateRect);
+        } else {
+            mUpdateRect = aRegion.GetBounds();
+            if (!mBackingSurface) {
+                // We can only draw a rectangle, not subregions due to
+                // the way that our texture upload functions work.  If
+                // needed, we /could/ do multiple texture uploads if we have
+                // non-overlapping rects, but that's a tradeoff.
+                aRegion = nsIntRegion(mUpdateRect);
+            }
+        }
 
         //printf_stderr("BeginUpdate with updateRect [%d %d %d %d]\n", mUpdateRect.x, mUpdateRect.y, mUpdateRect.width, mUpdateRect.height);
         if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
