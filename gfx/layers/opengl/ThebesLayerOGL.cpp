@@ -847,6 +847,18 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
   nsIntPoint visTopLeft = mLayer->GetVisibleRegion().GetBounds().TopLeft();
   destRegion.MoveBy(-visTopLeft);
 
+  // Correct for rotation
+  destRegion.MoveBy(aRotation);
+  nsIntRect destBounds = destRegion.GetBounds();
+  destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
+                    (destBounds.y >= size.height) ? -size.height : 0);
+
+  // There's code to make sure that updated regions don't cross rotation
+  // boundaries, so assert here that this is the case
+  NS_ASSERTION(((destBounds.x % size.width) + destBounds.width <= size.width) &&
+               ((destBounds.y % size.height) + destBounds.height <= size.height),
+               "Updated region lies across rotation boundaries!");
+
   // NB: this gfxContext must not escape EndUpdate() below
   mTexImage->DirectUpdate(aUpdate, destRegion);
 
