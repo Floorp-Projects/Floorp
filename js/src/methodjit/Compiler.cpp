@@ -7307,7 +7307,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
         if (!analysis->getCode(PC).monitoredTypesReturn)
             return state;
     } else if (!hasTypeBarriers(PC)) {
-        if (testUndefined)
+        if (testUndefined && !types->hasType(types::Type::UndefinedType()))
             state.jump.setJump(masm.testUndefined(Assembler::Equal, typeReg));
         return state;
     }
