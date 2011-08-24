@@ -387,7 +387,7 @@ Debugger::getHook(Hook hook) const
 }
 
 bool
-Debugger::hasAnyLiveHooks() const
+Debugger::hasAnyLiveHooks(JSContext *cx) const
 {
     if (!enabled)
         return false;
@@ -396,10 +396,21 @@ Debugger::hasAnyLiveHooks() const
         getHook(OnExceptionUnwind) ||
         getHook(OnNewScript) ||
         getHook(OnEnterFrame))
+    {
         return true;
+    }
 
-    if (!JS_CLIST_IS_EMPTY(&breakpoints))
-        return true;
+    /* If any breakpoints are in live scripts, return true. */
+    for (Breakpoint *bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
+        /*
+         * If holder is non-null, examine it to see if the script will be
+         * collected. If holder is null, then bp->site->script is an eval
+         * script on the stack, so it is definitely live.
+         */
+        JSObject *holder = bp->site->getScriptObject();
+        if (!holder || !IsAboutToBeFinalized(cx, holder))
+            return true;
+    }
 
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
         if (!r.front().value->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
@@ -1076,21 +1087,22 @@ Debugger::markAllIteratively(GCMarker *trc, JSGCInvocationKind gckind)
     bool markedAny = false;
 
     /*
-     * We must find all Debugger objects in danger of GC. This code is a little
+     * Find all Debugger objects in danger of GC. This code is a little
      * convoluted since the easiest way to find them is via their debuggees.
      */
-    JSRuntime *rt = trc->context->runtime;
+    JSContext *cx = trc->context;
+    JSRuntime *rt = cx->runtime;
     JSCompartment *comp = rt->gcCurrentCompartment;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
         JSCompartment *dc = *c;
 
-        /* If dc is being collected, mark breakpoint handlers in it. */
+        /* If dc is being collected, mark jsdbgapi.h trap closures in it. */
         if (!comp || dc == comp)
-            markedAny = markedAny | dc->markBreakpointsIteratively(trc);
+            markedAny = markedAny | dc->markTrapClosuresIteratively(trc);
 
         /*
          * If this is a single-compartment GC, no compartment can debug itself, so skip
-         * |comp|. If it's a global GC, then search every live compartment.
+         * |comp|. If it's a global GC, then search every compartment.
          */
         if (comp && dc == comp)
             continue;
@@ -1107,22 +1119,44 @@ Debugger::markAllIteratively(GCMarker *trc, JSGCInvocationKind gckind)
             JS_ASSERT(debuggers);
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
-                JSObject *obj = dbg->toJSObject();
 
                 /*
                  * dbg is a Debugger with at least one debuggee. Check three things:
                  *   - dbg is actually in a compartment being GC'd
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
-                 * IsAboutToBeFinalized covers the first two criteria.
                  */
-                if (IsAboutToBeFinalized(trc->context, obj) && dbg->hasAnyLiveHooks()) {
+                JSObject *dbgobj = dbg->toJSObject();
+                if (comp && comp != dbgobj->compartment())
+                    continue;
+
+                bool dbgMarked = !IsAboutToBeFinalized(cx, dbgobj);
+                if (!dbgMarked && dbg->hasAnyLiveHooks(cx)) {
                     /*
                      * obj could be reachable only via its live, enabled
                      * debugger hooks, which may yet be called.
                      */
-                    MarkObject(trc, *obj, "enabled Debugger");
+                    MarkObject(trc, *dbgobj, "enabled Debugger");
                     markedAny = true;
+                    dbgMarked = true;
+                }
+
+                if (dbgMarked) {
+                    /* Search for breakpoints to mark. */
+                    for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
+                        JSObject *scriptObject = bp->site->getScriptObject();
+                        if (!scriptObject || !IsAboutToBeFinalized(cx, scriptObject)) {
+                            /*
+                             * The debugger and the script are both live.
+                             * Therefore the breakpoint handler is live.
+                             */
+                            JSObject *handler = bp->getHandler();
+                            if (IsAboutToBeFinalized(cx, handler)) {
+                                MarkObject(trc, *bp->getHandler(), "breakpoint handler");
+                                markedAny = true;
+                            }
+                        }
+                    }
                 }
             }
         }
