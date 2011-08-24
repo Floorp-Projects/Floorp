@@ -78,14 +78,14 @@ function run_test() {
 
 add_test(function test_store() {
   _("Verify that we've got an empty store to work with.");
-  do_check_eq([id for (id in store.getAllIDs())].length, 0);
+  do_check_empty(store.getAllIDs());
 
   _("Let's create an entry in the database.");
   fxuri = Utils.makeURI("http://getfirefox.com/");
    PlacesUtils.history.addPageWithDetails(fxuri, "Get Firefox!", TIMESTAMP1);
 
   _("Verify that the entry exists.");
-  let ids = [id for (id in store.getAllIDs())];
+  let ids = Object.keys(store.getAllIDs());
   do_check_eq(ids.length, 1);
   fxguid = ids[0];
   do_check_true(store.itemExists(fxguid));
@@ -127,7 +127,7 @@ add_test(function test_store_create() {
   tbguid = Utils.makeGUID();
   tburi = Utils.makeURI("http://getthunderbird.com");
   onNextTitleChanged(ensureThrows(function() {
-    do_check_eq([id for (id in store.getAllIDs())].length, 2);
+    do_check_attribute_count(store.getAllIDs(), 2);
     let queryres = queryHistoryVisits(tburi);
     do_check_eq(queryres.length, 1);
     do_check_eq(queryres[0].time, TIMESTAMP3);
@@ -154,7 +154,7 @@ add_test(function test_null_title() {
      visits: [{date: TIMESTAMP3,
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
-  do_check_eq([id for (id in store.getAllIDs())].length, 3);
+  do_check_attribute_count(store.getAllIDs(), 3);
   let queryres = queryHistoryVisits(resuri);
   do_check_eq(queryres.length, 1);
   do_check_eq(queryres[0].time, TIMESTAMP3);
@@ -168,7 +168,7 @@ add_test(function test_invalid_records() {
     + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
   let stmt = PlacesUtils.history.DBConnection.createAsyncStatement(query);
   let result = Async.querySpinningly(stmt);
-  do_check_eq([id for (id in store.getAllIDs())].length, 4);
+  do_check_attribute_count(store.getAllIDs(), 4);
 
   _("Make sure we report records with invalid URIs.");
   let invalid_uri_guid = Utils.makeGUID();
@@ -255,7 +255,7 @@ add_test(function test_remove() {
 
   _("Make sure wipe works.");
   store.wipe();
-  do_check_eq([id for (id in store.getAllIDs())].length, 0);
+  do_check_empty(store.getAllIDs());
   queryres = queryHistoryVisits(fxuri);
   do_check_eq(queryres.length, 0);
   queryres = queryHistoryVisits(tburi);

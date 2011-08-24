@@ -402,7 +402,7 @@ add_test(function test_processIncoming_mobile_batchSize() {
     _("On a mobile client, we get new records from the server in batches of 50.");
     engine._syncStartup();
     engine._processIncoming();
-    do_check_eq([id for (id in engine._store.items)].length, 234);
+    do_check_attribute_count(engine._store.items, 234);
     do_check_true('record-no-0' in engine._store.items);
     do_check_true('record-no-49' in engine._store.items);
     do_check_true('record-no-50' in engine._store.items);
@@ -473,7 +473,7 @@ add_test(function test_processIncoming_store_toFetch() {
 
     // Confirm initial environment
     do_check_eq(engine.lastSync, 0);
-    do_check_eq([id for (id in engine._store.items)].length, 0);
+    do_check_empty(engine._store.items);
 
     let error;
     try {
@@ -484,7 +484,7 @@ add_test(function test_processIncoming_store_toFetch() {
     do_check_true(!!error);
 
     // Only the first two batches have been applied.
-    do_check_eq([id for (id in engine._store.items)].length,
+    do_check_eq(Object.keys(engine._store.items).length,
                 MOBILE_BATCH_SIZE * 2);
 
     // The third batch is stuck in toFetch. lastSync has been moved forward to
@@ -602,14 +602,13 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
   try {
 
     // Confirm initial environment
-    do_check_eq([id for (id in engine._store.items)].length, 0);
+    do_check_empty(engine._store.items);
 
     engine._syncStartup();
     engine._processIncoming();
 
     // Records have been applied and the expected failures have failed.
-    do_check_eq([id for (id in engine._store.items)].length,
-                APPLY_BATCH_SIZE - 1 - 2);
+    do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE - 1 - 2);
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 2);
     do_check_eq(engine.previousFailed[0], "record-no-0");
@@ -658,15 +657,14 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
   try {
 
     // Confirm initial environment
-    do_check_eq([id for (id in engine._store.items)].length, 0);
+    do_check_empty(engine._store.items);
 
     engine._syncStartup();
     engine._processIncoming();
 
     // Records have been applied in 3 batches.
     do_check_eq(batchCalls, 3);
-    do_check_eq([id for (id in engine._store.items)].length,
-                APPLY_BATCH_SIZE * 3);
+    do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE * 3);
 
   } finally {
     cleanAndGo(server);
@@ -712,7 +710,7 @@ add_test(function test_processIncoming_notify_count() {
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 0);
-    do_check_eq([id for (id in engine._store.items)].length, 0);
+    do_check_empty(engine._store.items);
 
     let called = 0;
     let counts;
@@ -728,7 +726,7 @@ add_test(function test_processIncoming_notify_count() {
     engine._processIncoming();
     
     // Confirm failures.
-    do_check_eq([id for (id in engine._store.items)].length, 12);
+    do_check_attribute_count(engine._store.items, 12);
     do_check_eq(engine.previousFailed.length, 3);
     do_check_eq(engine.previousFailed[0], "record-no-0");
     do_check_eq(engine.previousFailed[1], "record-no-5");
@@ -744,7 +742,7 @@ add_test(function test_processIncoming_notify_count() {
     engine._processIncoming();
     
     // Confirming removed failures.
-    do_check_eq([id for (id in engine._store.items)].length, 14);
+    do_check_attribute_count(engine._store.items, 14);
     do_check_eq(engine.previousFailed.length, 1);
     do_check_eq(engine.previousFailed[0], "record-no-0");
 
@@ -799,7 +797,7 @@ add_test(function test_processIncoming_previousFailed() {
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 0);
-    do_check_eq([id for (id in engine._store.items)].length, 0);
+    do_check_empty(engine._store.items);
 
     // Initial failed items in previousFailed to be reset.
     let previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
@@ -811,7 +809,7 @@ add_test(function test_processIncoming_previousFailed() {
     engine._processIncoming();
 
     // Expected result: 4 sync batches with 2 failures each => 8 failures
-    do_check_eq([id for (id in engine._store.items)].length, 6);
+    do_check_attribute_count(engine._store.items, 6);
     do_check_eq(engine.previousFailed.length, 8);
     do_check_eq(engine.previousFailed[0], "record-no-0");
     do_check_eq(engine.previousFailed[1], "record-no-1");
@@ -827,7 +825,7 @@ add_test(function test_processIncoming_previousFailed() {
 
     // A second sync with the same failed items should not add the same items again.
     // Items that did not fail a second time should no longer be in previousFailed.
-    do_check_eq([id for (id in engine._store.items)].length, 10);
+    do_check_attribute_count(engine._store.items, 10);
     do_check_eq(engine.previousFailed.length, 4);
     do_check_eq(engine.previousFailed[0], "record-no-0");
     do_check_eq(engine.previousFailed[1], "record-no-1");
@@ -854,7 +852,7 @@ add_test(function test_processIncoming_failed_records() {
   // Let's create three and a bit batches worth of server side records.
   let collection = new ServerCollection();
   const NUMBER_OF_RECORDS = MOBILE_BATCH_SIZE * 3 + 5;
-  for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
+  for (let i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
     let payload = encryptPayload({id: id, denomination: "Record No. " + id});
     let wbo = new ServerWBO(id, payload);
@@ -916,7 +914,7 @@ add_test(function test_processIncoming_failed_records() {
     do_check_eq(engine.lastSync, 0);
     do_check_eq(engine.toFetch.length, 0);
     do_check_eq(engine.previousFailed.length, 0);
-    do_check_eq([id for (id in engine._store.items)].length, 0);
+    do_check_empty(engine._store.items);
 
     let observerSubject;
     let observerData;
@@ -930,8 +928,8 @@ add_test(function test_processIncoming_failed_records() {
     engine._processIncoming();
 
     // Ensure that all records but the bogus 4 have been applied.
-    do_check_eq([id for (id in engine._store.items)].length,
-                NUMBER_OF_RECORDS - BOGUS_RECORDS.length);
+    do_check_attribute_count(engine._store.items,
+                             NUMBER_OF_RECORDS - BOGUS_RECORDS.length);
 
     // Ensure that the bogus records will be fetched again on the next sync.
     do_check_eq(engine.previousFailed.length, BOGUS_RECORDS.length);
@@ -1530,7 +1528,7 @@ add_test(function test_syncapplied_observer() {
     engine._syncStartup();
     engine._processIncoming();
 
-    do_check_eq([id for (id in engine._store.items)].length, 10);
+    do_check_attribute_count(engine._store.items, 10);
 
     do_check_eq(numApplyCalls, 1);
     do_check_eq(engine_name, "rotary");

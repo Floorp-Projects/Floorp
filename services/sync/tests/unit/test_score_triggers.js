@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
 
@@ -93,5 +94,27 @@ add_test(function test_sync_triggered() {
   });
 
   tracker.score += SCORE_INCREMENT_XLARGE;
+});
+
+add_test(function test_clients_engine_sync_triggered() {
+  _("Ensure that client engine score changes trigger a sync.");
+
+  // The clients engine is not registered like other engines. Therefore,
+  // it needs special treatment throughout the code. Here, we verify the
+  // global score tracker gives it that treatment. See bug 676042 for more.
+
+  let server = sync_httpd_setup();
+  setUp();
+  Service.login();
+
+  const TOPIC = "weave:service:sync:finish";
+  Svc.Obs.add(TOPIC, function onSyncFinish() {
+    Svc.Obs.remove(TOPIC, onSyncFinish);
+    _("Sync due to clients engine change completed.");
+    server.stop(run_next_test);
+  });
+
+  SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
+  Clients._tracker.score += SCORE_INCREMENT_XLARGE;
 });
 
