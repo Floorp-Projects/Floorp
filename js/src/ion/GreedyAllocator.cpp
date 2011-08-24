@@ -568,6 +568,18 @@ GreedyAllocator::allocateInputs(LInstruction *ins)
 }
 
 bool
+GreedyAllocator::spillForCall(LInstruction *ins)
+{
+    GeneralRegisterSet genset(Registers::JSCallClobberMask);
+    FloatRegisterSet floatset(FloatRegisters::JSCallClobberMask);
+    for (AnyRegisterIterator iter(genset, floatset); iter.more(); iter++) {
+        if (!maybeEvict(*iter))
+            return false;
+    }
+    return true;
+}
+
+bool
 GreedyAllocator::informSnapshot(LSnapshot *snapshot)
 {
     for (size_t i = 0; i < snapshot->numEntries(); i++) {
@@ -617,25 +629,29 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
     reset();
     assertValidRegisterState();
 
-    // Step 1. Find all fixed writable registers, adding them to the
+    // Step 1. Around a call, save all registers used downstream.
+    if (ins->isCallGeneric() && !spillForCall(ins))
+        return false;
+
+    // Step 2. Find all fixed writable registers, adding them to the
     // disallow set.
     if (!prescanDefinitions(ins))
         return false;
 
-    // Step 2. For each use, add fixed policies to the disallow set and
+    // Step 3. For each use, add fixed policies to the disallow set and
     // already allocated registers to the discouraged set.
     if (!prescanUses(ins))
         return false;
 
-    // Step 3. Allocate registers for each definition.
+    // Step 4. Allocate registers for each definition.
     if (!allocateDefinitions(ins))
         return false;
 
-    // Step 4. Allocate inputs and temporaries.
+    // Step 5. Allocate inputs and temporaries.
     if (!allocateInputs(ins))
         return false;
 
-    // Step 5. Assign fields of a snapshot.
+    // Step 6. Assign fields of a snapshot.
     if (ins->snapshot() && !informSnapshot(ins->snapshot()))
         return false;
 
