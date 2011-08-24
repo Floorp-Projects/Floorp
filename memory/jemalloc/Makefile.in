@@ -76,17 +76,17 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 FORCE_SHARED_LIB= 1
 else
+# On Android, we're going to link jemalloc into mozutils, and that only works
+# properly if we only build a fakelib, which won't happen if we DIST_INSTALL
+ifneq ($(OS_TARGET),Android)
 DIST_INSTALL = 1
+endif
 FORCE_STATIC_LIB= 1
 endif
 
 #XXX: PGO on Linux causes problems here
 # See bug 419470
 NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-
-ifdef WRAP_MALLOC_CFLAGS
-DEFINES += -DWRAP_MALLOC
 endif
 
 include $(topsrcdir)/config/rules.mk
