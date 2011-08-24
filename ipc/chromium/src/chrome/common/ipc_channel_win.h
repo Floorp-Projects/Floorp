@@ -29,17 +29,12 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   }
   bool Connect();
   void Close();
-#ifdef CHROMIUM_MOZILLA_BUILD
   HANDLE GetServerPipeHandle() const;
-
   Listener* set_listener(Listener* listener) {
     Listener* old = listener_;
     listener_ = listener;
     return old;
   }
-#else
-  void set_listener(Listener* listener) { listener_ = listener; }
-#endif
   bool Send(Message* message);
  private:
   void Init(Mode mode, Listener* listener);

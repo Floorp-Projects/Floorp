@@ -40,10 +40,10 @@
 
 static bool patched_func_called = false;
 
-static BOOL (WINAPI *orig_GetVersionExA)(__inout LPOSVERSIONINFO);
+static BOOL (WINAPI *orig_GetVersionExA)(LPOSVERSIONINFO);
 
 static BOOL WINAPI
-patched_GetVersionExA(__inout LPOSVERSIONINFO lpVersionInfo)
+patched_GetVersionExA(LPOSVERSIONINFO lpVersionInfo)
 {
   patched_func_called = true;
   return orig_GetVersionExA(lpVersionInfo);
@@ -58,7 +58,7 @@ bool osvi_equal(OSVERSIONINFO &info0, OSVERSIONINFO &info1)
           !strncmp(info0.szCSDVersion, info1.szCSDVersion, sizeof(info0.szCSDVersion)));
 }
 
-int wmain()
+int main()
 {
   OSVERSIONINFO info0, info1;
   ZeroMemory(&info0, sizeof(OSVERSIONINFO));

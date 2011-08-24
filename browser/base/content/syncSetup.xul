@@ -196,17 +196,17 @@
     </grid>
   </wizardpage>
 
-  <wizardpage label="&setup.newSyncKeyPage.title.label;"
+  <wizardpage label="&setup.newRecoveryKeyPage.title.label;"
               onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow();">
     <description>
-      &setup.newSyncKeyPage.description.label;
+      &setup.newRecoveryKeyPage.description.label;
     </description>
     <spacer/>
 
     <groupbox>
-      <label value="&syncKeyEntry.label;"
-             accesskey="&syncKeyEntry.accesskey;"
+      <label value="&recoveryKeyEntry.label;"
+             accesskey="&recoveryKeyEntry.accesskey;"
              control="weavePassphrase"/>
       <textbox id="weavePassphrase"
                readonly="true"
@@ -214,7 +214,7 @@
     </groupbox>
 
     <groupbox align="center">
-      <description>&syncKeyBackup.description;</description>
+      <description>&recoveryKeyBackup.description;</description>
       <hbox>
         <button id="printSyncKeyButton"
                 label="&button.syncKeyBackup.print.label;"
@@ -351,8 +351,8 @@
 
     <groupbox>
       <label id="existingPassphraseLabel"
-             value="&signIn.syncKey.label;"
-             accesskey="&signIn.syncKey.accesskey;"
+             value="&signIn.recoveryKey.label;"
+             accesskey="&signIn.recoveryKey.accesskey;"
              control="existingPassphrase"/>
       <textbox id="existingPassphrase"
                oninput="gSyncSetup.checkFields()"/>
@@ -370,7 +370,7 @@
 
     <vbox id="passphraseHelpBox">
       <description>
-        &existingSyncKey.description;
+        &existingRecoveryKey.description;
         <label class="text-link"
                href="https://services.mozilla.com/sync/help/manual-setup">
           &addDevice.showMeHow.label;

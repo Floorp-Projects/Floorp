@@ -28,23 +28,17 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   ~ChannelImpl() { Close(); }
   bool Connect();
   void Close();
-#ifdef CHROMIUM_MOZILLA_BUILD
   Listener* set_listener(Listener* listener) {
     Listener* old = listener_;
     listener_ = listener;
     return old;
   }
-#else
-  void set_listener(Listener* listener) { listener_ = listener; }
-#endif
   bool Send(Message* message);
   void GetClientFileDescriptorMapping(int *src_fd, int *dest_fd) const;
-#ifdef CHROMIUM_MOZILLA_BUILD
   int GetServerFileDescriptor() const {
     DCHECK(mode_ == MODE_SERVER);
     return pipe_;
   }
-#endif
 
  private:
   void Init(Mode mode, Listener* listener);

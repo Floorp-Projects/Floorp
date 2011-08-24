@@ -55,8 +55,6 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].
 
 const dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
-const bhist = Cc["@mozilla.org/browser/global-history;2"].
-              getService(Ci.nsIBrowserHistory);
 const formhist = Cc["@mozilla.org/satchel/form-history;1"].
                  getService(Ci.nsIFormHistory2);
 
@@ -502,10 +500,11 @@ function addFormEntryWithMinutesAgo(aMinutesAgo) {
  */
 function addHistoryWithMinutesAgo(aMinutesAgo) {
   let pURI = makeURI("http://" + aMinutesAgo + "-minutes-ago.com/");
-  bhist.addPageWithDetails(pURI,
-                           aMinutesAgo + " minutes ago",
-                           now_uSec - (aMinutesAgo * 60 * 1000 * 1000));
-  is(bhist.isVisited(pURI), true,
+  PlacesUtils.bhistory
+             .addPageWithDetails(pURI,
+                                 aMinutesAgo + " minutes ago",
+                                 now_uSec - (aMinutesAgo * 60 * 1000 * 1000));
+  is(PlacesUtils.bhistory.isVisited(pURI), true,
      "Sanity check: history visit " + pURI.spec +
      " should exist after creating it");
   return pURI;
@@ -515,9 +514,43 @@ function addHistoryWithMinutesAgo(aMinutesAgo) {
  * Removes all history visits, downloads, and form entries.
  */
 function blankSlate() {
-  bhist.removeAllPages();
+  PlacesUtils.bhistory.removeAllPages();
   dm.cleanUp();
   formhist.removeAllEntries();
+}
+
+/**
+ * Waits for all pending async statements on the default connection, before
+ * proceeding with aCallback.
+ *
+ * @param aCallback
+ *        Function to be called when done.
+ * @param aScope
+ *        Scope for the callback.
+ * @param aArguments
+ *        Arguments array for the callback.
+ *
+ * @note The result is achieved by asynchronously executing a query requiring
+ *       a write lock.  Since all statements on the same connection are
+ *       serialized, the end of this write operation means that all writes are
+ *       complete.  Note that WAL makes so that writers don't block readers, but
+ *       this is a problem only across different connections.
+ */
+function waitForAsyncUpdates(aCallback, aScope, aArguments)
+{
+  let scope = aScope || this;
+  let args = aArguments || [];
+  let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                              .DBConnection;
+  db.createAsyncStatement("BEGIN EXCLUSIVE").executeAsync();
+  db.createAsyncStatement("COMMIT").executeAsync({
+    handleResult: function() {},
+    handleError: function() {},
+    handleCompletion: function(aReason)
+    {
+      aCallback.apply(scope, args);
+    }
+  });
 }
 
 /**
@@ -548,7 +581,7 @@ function downloadExists(aID)
 function doNextTest() {
   if (gAllTests.length <= gCurrTest) {
     blankSlate();
-    finish();
+    waitForAsyncUpdates(finish);
   }
   else {
     let ct = gCurrTest;
@@ -600,7 +633,7 @@ function ensureFormEntriesClearedState(aFormEntries, aShouldBeCleared) {
 function ensureHistoryClearedState(aURIs, aShouldBeCleared) {
   let niceStr = aShouldBeCleared ? "no longer" : "still";
   aURIs.forEach(function (aURI) {
-    is(bhist.isVisited(aURI), !aShouldBeCleared,
+    is(PlacesUtils.bhistory.isVisited(aURI), !aShouldBeCleared,
        "history visit " + aURI.spec + " should " + niceStr + " exist");
   });
 }
@@ -625,7 +658,7 @@ function openWindow(aOnloadCallback) {
         // ok()/is() do...
         try {
           aOnloadCallback(win);
-          doNextTest();
+          waitForAsyncUpdates(doNextTest);
         }
         catch (exc) {
           win.close();
@@ -649,5 +682,5 @@ function test() {
   blankSlate();
   waitForExplicitFinish();
   // Kick off all the tests in the gAllTests array.
-  doNextTest();
+  waitForAsyncUpdates(doNextTest);
 }

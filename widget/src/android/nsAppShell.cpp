@@ -446,9 +446,28 @@ nsAppShell::PeekNextEvent()
 void
 nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 {
+    if (ae->Type() == AndroidGeckoEvent::ACTIVITY_STOPPING) {
+        PostEvent(new AndroidGeckoEvent(AndroidGeckoEvent::SURFACE_DESTROYED));
+    }
+
     {
         MutexAutoLock lock(mQueueLock);
-        mEventQueue.AppendElement(ae);
+        if (ae->Type() == AndroidGeckoEvent::SURFACE_DESTROYED) {
+            // Give priority to this event, and discard any pending
+            // SURFACE_CREATED events.
+            mEventQueue.InsertElementAt(0, ae);
+            AndroidGeckoEvent *event;
+            for (int i = mEventQueue.Length()-1; i >=1; i--) {
+                event = mEventQueue[i];
+                if (event->Type() == AndroidGeckoEvent::SURFACE_CREATED) {
+                    mEventQueue.RemoveElementAt(i);
+                    delete event;
+                }
+            }
+        } else {
+            mEventQueue.AppendElement(ae);
+        }
+
         if (ae->Type() == AndroidGeckoEvent::DRAW) {
             mNumDraws++;
         }

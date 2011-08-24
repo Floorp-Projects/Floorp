@@ -37,7 +37,7 @@
 
 #include "QTMLocationProvider.h"
 #include "nsGeoPosition.h"
-#include <QFeedbackEffect>
+
 using namespace QtMobility;
 
 using namespace mozilla;

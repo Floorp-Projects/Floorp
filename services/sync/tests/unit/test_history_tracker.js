@@ -34,7 +34,7 @@ function run_test() {
 
 add_test(function test_empty() {
   _("Verify we've got an empty tracker to work with.");
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
   run_next_test();
 });
@@ -43,7 +43,7 @@ add_test(function test_not_tracking(next) {
   _("Create history item. Won't show because we haven't started tracking yet");
   addVisit();
   Utils.nextTick(function() {
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
     run_next_test();
   });
@@ -52,7 +52,7 @@ add_test(function test_not_tracking(next) {
 add_test(function test_start_tracking() {
   _("Tell the tracker to start tracking changes.");
   onScoreUpdated(function() {
-    do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+    do_check_attribute_count(tracker.changedIDs, 1);
     do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
     run_next_test();
   });
@@ -63,7 +63,7 @@ add_test(function test_start_tracking() {
 add_test(function test_start_tracking_twice() {
   _("Notifying twice won't do any harm.");
   onScoreUpdated(function() {
-    do_check_eq([id for (id in tracker.changedIDs)].length, 2);
+    do_check_attribute_count(tracker.changedIDs, 2);
     do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
     run_next_test();
   });
@@ -79,7 +79,7 @@ add_test(function test_track_delete() {
 
   onScoreUpdated(function() {
     do_check_true(guid in tracker.changedIDs);
-    do_check_eq([id for (id in tracker.changedIDs)].length, 3);
+    do_check_attribute_count(tracker.changedIDs, 3);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE + 2 * SCORE_INCREMENT_SMALL);
     run_next_test();
   });
@@ -101,7 +101,7 @@ add_test(function test_dont_track_expiration() {
   onScoreUpdated(function() {
     do_check_false(guidToExpire in tracker.changedIDs);
     do_check_true(guidToRemove in tracker.changedIDs);
-    do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+    do_check_attribute_count(tracker.changedIDs, 1);
     run_next_test();
   });
 
@@ -125,7 +125,7 @@ add_test(function test_stop_tracking() {
   Svc.Obs.notify("weave:engine:stop-tracking");
   addVisit();
   Utils.nextTick(function() {
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     run_next_test();
   });
 });
@@ -135,7 +135,7 @@ add_test(function test_stop_tracking_twice() {
   Svc.Obs.notify("weave:engine:stop-tracking");
   addVisit();
   Utils.nextTick(function() {
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     run_next_test();
   });
 });

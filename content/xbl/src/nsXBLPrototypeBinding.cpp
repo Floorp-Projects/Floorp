@@ -328,7 +328,7 @@ PRBool nsXBLPrototypeBinding::CompareBindingURI(nsIURI* aURI) const
   return equal;
 }
 
-static PRIntn
+static PRBool
 TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 
@@ -1213,7 +1213,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   PRInt32 i;
   for (i = 0; i < count; i++) {
     nsIContent* child = childrenElements[i];
-    nsIContent* parent = child->GetParent(); 
+    nsCOMPtr<nsIContent> parent = child->GetParent(); 
 
     // Create an XBL insertion point entry.
     nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
