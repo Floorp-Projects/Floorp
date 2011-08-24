@@ -814,7 +814,7 @@ JSCompartment::markBreakpointsIteratively(JSTracer *trc)
         // Mark jsdbgapi state if any. But if we know the scriptObject, put off
         // marking trap state until we know the scriptObject is live.
         if (site->trapHandler &&
-            (!site->scriptObject || IsAboutToBeFinalized(cx, site->scriptObject)))
+            (!site->scriptObject || !IsAboutToBeFinalized(cx, site->scriptObject)))
         {
             if (site->trapClosure.isMarkable() &&
                 IsAboutToBeFinalized(cx, site->trapClosure.toGCThing()))
