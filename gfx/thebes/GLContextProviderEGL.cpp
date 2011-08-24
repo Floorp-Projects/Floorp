@@ -1221,27 +1221,28 @@ public:
         }
     }
 
+    virtual void GetUpdateRegion(nsIntRegion& aForRegion)
+    {
+        if (mTextureState != Valid) {
+            // if the texture hasn't been initialized yet, force the
+            // client to paint everything
+            aForRegion = nsIntRect(nsIntPoint(0, 0), mSize);
+        } else if (!mBackingSurface) {
+            // We can only draw a rectangle, not subregions due to
+            // the way that our texture upload functions work.  If
+            // needed, we /could/ do multiple texture uploads if we have
+            // non-overlapping rects, but that's a tradeoff.
+            aForRegion = nsIntRegion(aForRegion.GetBounds());
+        }
+    }
+
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion)
     {
         NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
         // determine the region the client will need to repaint
-        if (mTextureState != Valid) {
-            // if the texture hasn't been initialized yet, force the
-            // client to paint everything
-            mUpdateRect = nsIntRect(nsIntPoint(0, 0), mSize);
-            //printf_stderr("v Forcing full paint\n");
-            aRegion = nsIntRegion(mUpdateRect);
-        } else {
-            mUpdateRect = aRegion.GetBounds();
-            if (!mBackingSurface) {
-                // We can only draw a rectangle, not subregions due to
-                // the way that our texture upload functions work.  If
-                // needed, we /could/ do multiple texture uploads if we have
-                // non-overlapping rects, but that's a tradeoff.
-                aRegion = nsIntRegion(mUpdateRect);
-            }
-        }
+        GetUpdateRegion(aRegion);
+        mUpdateRect = aRegion.GetBounds();
 
         //printf_stderr("BeginUpdate with updateRect [%d %d %d %d]\n", mUpdateRect.x, mUpdateRect.y, mUpdateRect.width, mUpdateRect.height);
         if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
