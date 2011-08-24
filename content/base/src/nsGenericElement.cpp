@@ -2150,6 +2150,17 @@ nsNodeSelectorTearoff::QuerySelectorAll(const nsAString& aSelector,
 }
 
 //----------------------------------------------------------------------
+
+NS_IMPL_CYCLE_COLLECTION_1(nsTouchEventReceiverTearoff, mElement)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTouchEventReceiverTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsITouchEventReceiver)
+NS_INTERFACE_MAP_END_AGGREGATED(mElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTouchEventReceiverTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTouchEventReceiverTearoff)
+
+//----------------------------------------------------------------------
 nsGenericElement::nsDOMSlots::nsDOMSlots()
   : nsINode::nsSlots(),
     mDataset(nsnull),
@@ -4265,6 +4276,8 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
                                  new nsNodeSelectorTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsITouchEventReceiver,
+                                 new nsTouchEventReceiverTearoff(this))
   // nsNodeSH::PreCreate() depends on the identity pointer being the
   // same as nsINode (which nsIContent inherits), so if you change the
   // below line, make sure nsNodeSH::PreCreate() still does the right
