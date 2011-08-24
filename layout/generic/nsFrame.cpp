@@ -591,6 +591,28 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 }
 
+// MSVC fails with link error "one or more multiply defined symbols found",
+// gcc fails with "hidden symbol `nsIFrame::kPrincipalList' isn't defined"
+// etc if they are not defined.
+#ifndef _MSC_VER
+// static nsIFrame constants; initialized in the header file.
+const nsIFrame::ChildListID nsIFrame::kPrincipalList;
+const nsIFrame::ChildListID nsIFrame::kAbsoluteList;
+const nsIFrame::ChildListID nsIFrame::kBulletList;
+const nsIFrame::ChildListID nsIFrame::kCaptionList;
+const nsIFrame::ChildListID nsIFrame::kColGroupList;
+const nsIFrame::ChildListID nsIFrame::kExcessOverflowContainersList;
+const nsIFrame::ChildListID nsIFrame::kFixedList;
+const nsIFrame::ChildListID nsIFrame::kFloatList;
+const nsIFrame::ChildListID nsIFrame::kOverflowContainersList;
+const nsIFrame::ChildListID nsIFrame::kOverflowList;
+const nsIFrame::ChildListID nsIFrame::kOverflowOutOfFlowList;
+const nsIFrame::ChildListID nsIFrame::kPopupList;
+const nsIFrame::ChildListID nsIFrame::kPushedFloatsList;
+const nsIFrame::ChildListID nsIFrame::kSelectPopupList;
+const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
+#endif
+
 /* virtual */ nsMargin
 nsIFrame::GetUsedMargin() const
 {
@@ -916,21 +938,6 @@ nsFrame::GetBaseline() const
   // Default to the bottom margin edge, per CSS2.1's definition of the
   // 'baseline' value of 'vertical-align'.
   return mRect.height + GetUsedMargin().bottom;
-}
-
-// Child frame enumeration
-
-nsIAtom*
-nsFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-  NS_PRECONDITION(aIndex >= 0, "invalid index number");
-  return nsnull;
-}
-
-nsFrameList
-nsFrame::GetChildList(nsIAtom* aListName) const
-{
-  return nsFrameList::EmptyList();
 }
 
 static nsIFrame*

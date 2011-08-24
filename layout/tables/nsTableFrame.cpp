@@ -1067,26 +1067,19 @@ nsTableFrame::InsertRowGroups(const nsFrameList::Slice& aRowGroups)
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-nsFrameList
-nsTableFrame::GetChildList(nsIAtom* aListName) const
+nsTableFrame::GetChildList(ChildListID aListID) const
 {
-  if (aListName == nsGkAtoms::colGroupList) {
+  if (aListID == kColGroupList) {
     return mColGroups;
   }
-
-  return nsHTMLContainerFrame::GetChildList(aListName);
+  return nsHTMLContainerFrame::GetChildList(aListID);
 }
 
-nsIAtom*
-nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
+void
+nsTableFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
-  if (aIndex == NS_TABLE_FRAME_COLGROUP_LIST_INDEX) {
-    return nsGkAtoms::colGroupList;
-  }
-  if (aIndex == NS_TABLE_FRAME_OVERFLOW_LIST_INDEX) {
-    return nsGkAtoms::overflowList;
-  }
-  return nsnull;
+  nsHTMLContainerFrame::GetChildLists(aLists);
+  mColGroups.AppendIfNonempty(aLists, kColGroupList);
 }
 
 nsRect

@@ -294,52 +294,57 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
 // Child frame enumeration
 
 nsFrameList
-nsContainerFrame::GetChildList(nsIAtom* aListName) const
+nsContainerFrame::GetChildList(ChildListID aListID) const
 {
-  // We only know about the unnamed principal child list and the overflow
-  // lists
-  if (nsnull == aListName) {
-    return mFrames;
+  // We only know about the principal child list and the overflow lists.
+  switch (aListID) {
+    case kPrincipalList:
+      return mFrames;
+    case kOverflowList: {
+      nsFrameList* list = GetOverflowFrames();
+      return list ? *list : nsFrameList::EmptyList();
+    }
+    case kOverflowContainersList: {
+      nsFrameList* list =
+        GetPropTableFrames(PresContext(), OverflowContainersProperty());
+      return list ? *list : nsFrameList::EmptyList();
+    }
+    case kExcessOverflowContainersList: {
+      nsFrameList* list =
+        GetPropTableFrames(PresContext(), ExcessOverflowContainersProperty());
+      return list ? *list : nsFrameList::EmptyList();
+    }
+    default:
+      return nsSplittableFrame::GetChildList(aListID);
   }
-
-  if (nsGkAtoms::overflowList == aListName) {
-    nsFrameList* frameList = GetOverflowFrames();
-    return frameList ? *frameList : nsFrameList::EmptyList();
-  }
-
-  if (nsGkAtoms::overflowContainersList == aListName) {
-    nsFrameList* list = GetPropTableFrames(PresContext(),
-                                           OverflowContainersProperty());
-    return list ? *list : nsFrameList::EmptyList();
-  }
-
-  if (nsGkAtoms::excessOverflowContainersList == aListName) {
-    nsFrameList* list = GetPropTableFrames(PresContext(),
-                                           ExcessOverflowContainersProperty());
-    return list ? *list : nsFrameList::EmptyList();
-  }
-
-  return nsFrameList::EmptyList();
 }
 
-#define NS_CONTAINER_FRAME_OVERFLOW_LIST_INDEX                   0
-#define NS_CONTAINER_FRAME_OVERFLOW_CONTAINERS_LIST_INDEX        1
-#define NS_CONTAINER_FRAME_EXCESS_OVERFLOW_CONTAINERS_LIST_INDEX 2
-// If adding/removing lists, don't forget to update count in .h file
-
-
-nsIAtom*
-nsContainerFrame::GetAdditionalChildListName(PRInt32 aIndex) const
+static void AppendIfNonempty(const nsIFrame* aFrame,
+                            FramePropertyTable* aPropTable,
+                            const FramePropertyDescriptor* aProperty,
+                            nsTArray<nsIFrame::ChildList>* aLists,
+                            nsIFrame::ChildListID aListID)
 {
-  if (NS_CONTAINER_FRAME_OVERFLOW_LIST_INDEX == aIndex)
-    return nsGkAtoms::overflowList;
-  else if (IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
-    if (NS_CONTAINER_FRAME_OVERFLOW_CONTAINERS_LIST_INDEX == aIndex)
-      return nsGkAtoms::overflowContainersList;
-    else if (NS_CONTAINER_FRAME_EXCESS_OVERFLOW_CONTAINERS_LIST_INDEX == aIndex)
-      return nsGkAtoms::excessOverflowContainersList;
+  nsFrameList* list = static_cast<nsFrameList*>(
+    aPropTable->Get(aFrame, aProperty));
+  if (list) {
+    list->AppendIfNonempty(aLists, aListID);
   }
-  return nsnull;
+}
+
+void
+nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  mFrames.AppendIfNonempty(aLists, kPrincipalList);
+  FramePropertyTable* propTable = PresContext()->PropertyTable();
+  ::AppendIfNonempty(this, propTable, OverflowProperty(),
+                     aLists, kOverflowList);
+  if (IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
+    ::AppendIfNonempty(this, propTable, OverflowContainersProperty(),
+                       aLists, kOverflowContainersList);
+    ::AppendIfNonempty(this, propTable, ExcessOverflowContainersProperty(),
+                       aLists, kExcessOverflowContainersList);
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////

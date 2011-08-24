@@ -170,25 +170,20 @@ ViewportFrame::RemoveFrame(nsIAtom*        aListName,
   return rv;
 }
 
-nsIAtom*
-ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-  NS_PRECONDITION(aIndex >= 0, "illegal index");
-
-  if (0 == aIndex) {
-    return nsGkAtoms::fixedList;
-  }
-
-  return nsnull;
-}
-
 nsFrameList
-ViewportFrame::GetChildList(nsIAtom* aListName) const
+ViewportFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::fixedList == aListName)
+  if (kFixedList == aListID)
     return mFixedContainer.GetChildList();
 
-  return nsContainerFrame::GetChildList(aListName);
+  return nsContainerFrame::GetChildList(aListID);
+}
+
+void
+ViewportFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  nsContainerFrame::GetChildLists(aLists);
+  mFixedContainer.AppendChildList(aLists, kFixedList);
 }
 
 /* virtual */ nscoord

@@ -1207,22 +1207,20 @@ nsPositionedInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
-nsIAtom*
-nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-  if (0 == aIndex) {
-    return nsGkAtoms::absoluteList;
-  }
-  return nsnull;
-}
-
 nsFrameList
-nsPositionedInlineFrame::GetChildList(nsIAtom* aListName) const
+nsPositionedInlineFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::absoluteList == aListName)
+  if (kAbsoluteList == aListID)
     return mAbsoluteContainer.GetChildList();
 
-  return nsInlineFrame::GetChildList(aListName);
+  return nsInlineFrame::GetChildList(aListID);
+}
+
+void
+nsPositionedInlineFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  nsInlineFrame::GetChildLists(aLists);
+  mAbsoluteContainer.AppendChildList(aLists, kAbsoluteList);
 }
 
 nsIAtom*
