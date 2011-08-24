@@ -503,7 +503,7 @@ typedef PRBool nsDidReflowStatus;
  * A frame in the layout model. This interface is supported by all frame
  * objects.
  *
- * Frames can have multiple child lists: the default unnamed child list
+ * Frames can have multiple child lists: the default child list
  * (referred to as the <i>principal</i> child list, and additional named
  * child lists. There is an ordering of frames within a child list, but
  * there is no order defined between frames in different child lists of
@@ -586,8 +586,7 @@ public:
    * This is only called once for a given child list, and won't be called
    * at all for child lists with no initial list of frames.
    *
-   * @param   aListName the name of the child list. A NULL pointer for the atom
-   *            name means the unnamed principal child list
+   * @param   aListID the child list identifier.
    * @param   aChildList list of child frames. Each of the frames has its
    *            NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
@@ -599,7 +598,7 @@ public:
    *            child list.
    * @see     #Init()
    */
-  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
+  NS_IMETHOD  SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList) = 0;
 
   /**
@@ -607,8 +606,7 @@ public:
    * list.  The implementation should append the frames to the specified
    * child list and then generate a reflow command.
    *
-   * @param   aListName the name of the child list. A NULL pointer for the atom
-   *            name means the unnamed principal child list
+   * @param   aListID the child list identifier.
    * @param   aFrameList list of child frames to append. Each of the frames has
    *            its NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
@@ -618,7 +616,7 @@ public:
    *            aChildList in the process of moving the frames over to its own
    *            child list.
    */
-  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList) = 0;
 
   /**
@@ -626,8 +624,7 @@ public:
    * list.  The implementation should insert the new frames into the specified
    * child list and then generate a reflow command.
    *
-   * @param   aListName the name of the child list. A NULL pointer for the atom
-   *            name means the unnamed principal child list
+   * @param   aListID the child list identifier.
    * @param   aPrevFrame the frame to insert frames <b>after</b>
    * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame.
    *            Each of the frames has its NS_FRAME_IS_DIRTY bit set
@@ -638,7 +635,7 @@ public:
    *            aChildList in the process of moving the frames over to its own
    *            child list.
    */
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList) = 0;
 
@@ -648,8 +645,7 @@ public:
    * and then generate a reflow command. The implementation is responsible
    * for destroying aOldFrame (the caller mustn't destroy aOldFrame).
    *
-   * @param   aListName the name of the child list. A NULL pointer for the atom
-   *            name means the unnamed principal child list
+   * @param   aListID the child list identifier.
    * @param   aOldFrame the frame to remove
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
@@ -658,7 +654,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame) = 0;
 
   /**
@@ -2597,7 +2593,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   {
     // box layout ends at box-wrapped frames, so don't allow these frames
     // to report child boxes.
-    return IsBoxFrame() ? GetFirstChild(nsnull) : nsnull;
+    return IsBoxFrame() ? GetFirstPrincipalChild() : nsnull;
   }
   nsIBox* GetNextBox() const
   {

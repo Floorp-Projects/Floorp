@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -1449,7 +1449,7 @@ nsGenericHTMLElement::GetFormControlFrame(PRBool aFlushFrames)
 
     // If we have generated content, the primary frame will be a
     // wrapper frame..  out real frame will be in its child list.
-    for (frame = frame->GetFirstChild(nsnull);
+    for (frame = frame->GetFirstPrincipalChild();
          frame;
          frame = frame->GetNextSibling()) {
       form_frame = do_QueryFrame(frame);

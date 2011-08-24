@@ -473,7 +473,7 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 
 nsresult
 nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
-                             nsIAtom*        aListName,
+                             ChildListID     aListID,
                              nsIFrame*       aPrevFrame,
                              nsFrameList&    aFrameList)
 {
@@ -482,11 +482,11 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
                   && !IS_TRUE_OVERFLOW_CONTAINER(aPrevFrame),
                   "aPrevFrame must be the last continuation in its chain!");
 
-  return aParentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
+  return aParentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
 nsresult
-nsFrameManager::RemoveFrame(nsIAtom*        aListName,
+nsFrameManager::RemoveFrame(ChildListID     aListID,
                             nsIFrame*       aOldFrame)
 {
   PRBool wasDestroyingFrames = mIsDestroyingFrames;
@@ -507,7 +507,7 @@ nsFrameManager::RemoveFrame(nsIAtom*        aListName,
   NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
                  GetPlaceholderFrameFor(aOldFrame)),
                "Must call RemoveFrame on placeholder for out-of-flows.");
-  nsresult rv = aOldFrame->GetParent()->RemoveFrame(aListName, aOldFrame);
+  nsresult rv = aOldFrame->GetParent()->RemoveFrame(aListID, aOldFrame);
 
   mIsDestroyingFrames = wasDestroyingFrames;
 

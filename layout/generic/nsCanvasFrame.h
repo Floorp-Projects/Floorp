@@ -65,7 +65,7 @@ public:
   : nsHTMLContainerFrame(aContext),
     mDoPaintFocus(PR_FALSE),
     mAddedScrollPositionListener(PR_FALSE),
-    mAbsoluteContainer(nsGkAtoms::absoluteList) {}
+    mAbsoluteContainer(kAbsoluteList) {}
 
   NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
@@ -74,14 +74,14 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
-  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
   virtual nsFrameList GetChildList(ChildListID aListID) const;

@@ -266,7 +266,7 @@ nsMenuPopupFrame::EnsureWidget()
 {
   nsIView* ourView = GetView();
   if (!ourView->HasWidget()) {
-    NS_ASSERTION(!mGeneratedChildren && !GetFirstChild(nsnull),
+    NS_ASSERTION(!mGeneratedChildren && !GetFirstPrincipalChild(),
                  "Creating widget for MenuPopupFrame with children");
     CreateWidgetForView(ourView);
   }
@@ -385,13 +385,13 @@ private:
 };
 
 NS_IMETHODIMP
-nsMenuPopupFrame::SetInitialChildList(nsIAtom* aListName,
+nsMenuPopupFrame::SetInitialChildList(ChildListID  aListID,
                                       nsFrameList& aChildList)
 {
   // unless the list is empty, indicate that children have been generated.
   if (aChildList.NotEmpty())
     mGeneratedChildren = PR_TRUE;
-  return nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  return nsBoxFrame::SetInitialChildList(aListID, aChildList);
 }
 
 PRBool
@@ -1483,7 +1483,7 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
   // try children
   currFrame = aStart;
   do {
-    nsIFrame* childFrame = currFrame->GetFirstChild(nsnull);
+    nsIFrame* childFrame = currFrame->GetFirstPrincipalChild();
     nsIScrollableFrame* sf = GetScrollFrame(childFrame);
     if (sf)
       return sf;
@@ -1656,7 +1656,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
   //       been destroyed already.  One strategy would be to 
   //       setTimeout(<func>,0) as detailed in:
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
-  currFrame = immediateParent->GetFirstChild(nsnull);
+  currFrame = immediateParent->GetFirstPrincipalChild();
 
   PRInt32 menuAccessKey = -1;
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);

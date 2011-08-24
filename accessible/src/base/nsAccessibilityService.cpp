@@ -384,7 +384,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
 
   // 3) for images and imagemaps, or anything else with a child frame
   // we have the object frame, get the image frame
-  nsIFrame* frame = aFrame->GetFirstChild(nsnull);
+  nsIFrame* frame = aFrame->GetFirstPrincipalChild();
   return frame ? frame->CreateAccessible() : nsnull;
 }
 
