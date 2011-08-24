@@ -970,7 +970,6 @@ if test -n "$_WIN32_MSVC"; then
     AC_DEFINE(HAVE_IO_H)
     AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
-    AC_DEFINE(HAVE_STDCALL)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -2492,6 +2491,8 @@ ia64*-hpux*)
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign"
             CXXFLAGS="$CXXFLAGS -mstackrealign"
+        else
+            AC_DEFINE(HAVE_STDCALL)
         fi
 
         MOZ_CHECK_HEADERS(mmintrin.h)
@@ -5185,7 +5186,7 @@ incorrect])
        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
        MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
     else
-       AC_CHECK_LIB(QtSensors QtFeedback QtLocation, main, [
+       AC_CHECK_LIB(QtSensors, main, [
           MOZ_ENABLE_QTMOBILITY=1
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtMobility"
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtSensors"

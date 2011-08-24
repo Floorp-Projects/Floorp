@@ -100,13 +100,20 @@ public:
    * @param       aString         The string to be parsed as a CSS value.
    * @param [out] aValue          The nsSMILValue to be populated. Should
    *                              initially be null-typed.
+   * @param [out] aIsContextSensitive Set to PR_TRUE if |aString| may produce
+   *                                  a different |aValue| depending on other
+   *                                  CSS properties on |aTargetElement|
+   *                                  or its ancestors (e.g. 'inherit).
+   *                                  PR_FALSE otherwise. May be nsnull.
+   *                                  Not set if the method fails.
    * @pre  aValue.IsNull()
    * @post aValue.IsNull() || aValue.mType == nsSMILCSSValueType::sSingleton
    */
   static void ValueFromString(nsCSSProperty aPropID,
                               Element* aTargetElement,
                               const nsAString& aString,
-                              nsSMILValue& aValue);
+                              nsSMILValue& aValue,
+                              PRBool* aIsContextSensitive);
 
   /**
    * Creates a string representation of the given nsSMILValue.

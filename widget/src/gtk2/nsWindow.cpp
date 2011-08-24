@@ -4059,16 +4059,21 @@ nsWindow::Create(nsIWidget        *aParent,
             }
 
             GdkWindowTypeHint gtkTypeHint;
-            switch (aInitData->mPopupHint) {
-                case ePopupTypeMenu:
-                    gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
-                    break;
-                case ePopupTypeTooltip:
-                    gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
-                    break;
-                default:
-                    gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
-                    break;
+            if (aInitData->mIsDragPopup) {
+                gtkTypeHint = GDK_WINDOW_TYPE_HINT_DND;
+            }
+            else {
+                switch (aInitData->mPopupHint) {
+                    case ePopupTypeMenu:
+                        gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+                        break;
+                    case ePopupTypeTooltip:
+                        gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
+                        break;
+                    default:
+                        gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
+                        break;
+                }
             }
             gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
 

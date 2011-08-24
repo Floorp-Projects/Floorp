@@ -556,10 +556,6 @@ let Utils = {
     return T.slice(0, len);
   },
 
-  byteArrayToString: function byteArrayToString(bytes) {
-    return [String.fromCharCode(byte) for each (byte in bytes)].join("");
-  },
-  
   /**
    * PBKDF2 implementation in Javascript.
    * 

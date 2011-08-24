@@ -193,8 +193,8 @@ let gSyncUtils = {
    * @param elid : ID of the form element containing the passphrase.
    */
   passphraseSave: function(elid) {
-    let dialogTitle = this.bundle.GetStringFromName("save.synckey.title");
-    let defaultSaveName = this.bundle.GetStringFromName("save.default.label");
+    let dialogTitle = this.bundle.GetStringFromName("save.recoverykey.title");
+    let defaultSaveName = this.bundle.GetStringFromName("save.recoverykey.defaultfilename");
     this._preparePPiframe(elid, function(iframe) {
       let filepicker = Cc["@mozilla.org/filepicker;1"]
                          .createInstance(Ci.nsIFilePicker);
@@ -243,7 +243,7 @@ let gSyncUtils = {
     else if (val1 && val1 == Weave.Service.password)
       error = "change.password.pwSameAsPassword";
     else if (val1 && val1 == Weave.Service.passphrase)
-      error = "change.password.pwSameAsSyncKey";
+      error = "change.password.pwSameAsRecoveryKey";
     else if (val1 && val2) {
       if (val1 == val2 && val1.length >= Weave.MIN_PASS_LENGTH)
         valid = true;
