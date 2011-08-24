@@ -713,7 +713,6 @@ let UI = {
         if (data == "enter" || data == "exit") {
           hideSearch();
           self._privateBrowsing.transitionMode = data;
-          self.storageBusy();
         }
       } else if (topic == "private-browsing-transition-complete") {
         // We use .transitionMode here, as aData is empty.
@@ -722,7 +721,6 @@ let UI = {
           self.showTabView(false);
 
         self._privateBrowsing.transitionMode = "";
-        self.storageReady();
       }
     }
 
@@ -869,8 +867,12 @@ let UI = {
     this._currentTab = tab;
 
     if (this.isTabViewVisible()) {
-      if (!this.restoredClosedTab && this._lastOpenedTab == tab && 
-        tab._tabViewTabItem) {
+      // We want to zoom in if:
+      // 1) we didn't just restore a tab via Ctrl+Shift+T
+      // 2) we're not in the middle of switching from/to private browsing
+      // 3) the currently selected tab is the last created tab and has a tabItem
+      if (!this.restoredClosedTab && !this._privateBrowsing.transitionMode &&
+          this._lastOpenedTab == tab && tab._tabViewTabItem) {
         tab._tabViewTabItem.zoomIn(true);
         this._lastOpenedTab = null;
         return;
