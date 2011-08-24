@@ -12,7 +12,7 @@ store.wipe();
 function test_tracking() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_empty(tracker.changedIDs);
 
   let folder = PlacesUtils.bookmarks.createFolder(
     PlacesUtils.bookmarks.bookmarksMenuFolder,
@@ -26,7 +26,7 @@ function test_tracking() {
   try {
     _("Create bookmark. Won't show because we haven't started tracking yet");
     createBmk();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
 
     _("Tell the tracker to start tracking changes.");
@@ -34,13 +34,13 @@ function test_tracking() {
     createBmk();
     // We expect two changed items because the containing folder
     // changed as well (new child).
-    do_check_eq([id for (id in tracker.changedIDs)].length, 2);
+    do_check_attribute_count(tracker.changedIDs, 2);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:start-tracking");
     createBmk();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 3);
+    do_check_attribute_count(tracker.changedIDs, 3);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
 
     _("Let's stop tracking again.");
@@ -48,13 +48,13 @@ function test_tracking() {
     tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
     createBmk();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     createBmk();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
 
   } finally {
@@ -72,7 +72,7 @@ function test_onItemChanged() {
 
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
 
   try {
@@ -107,7 +107,7 @@ function test_onItemChanged() {
 function test_onItemMoved() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
 
   try {

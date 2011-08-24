@@ -47,7 +47,7 @@ function run_test() {
   _("We assume that tabs have changed at startup.");
   let tracker = engine._tracker;
   do_check_true(tracker.modified);
-  do_check_true(Utils.deepEquals([id for (id in engine.getChangedIDs())],
+  do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                  [Clients.localID]));
 
   let logs;
@@ -91,7 +91,7 @@ function run_test() {
     // Send a fake tab event
     tracker.onTab({type: evttype , originalTarget: evttype});
     do_check_true(tracker.modified);
-    do_check_true(Utils.deepEquals([id for (id in engine.getChangedIDs())],
+    do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                    [Clients.localID]));
     do_check_eq(logs.length, idx+1);
     do_check_eq(logs[idx].target, evttype);
@@ -105,7 +105,7 @@ function run_test() {
   do_check_false(tracker.modified);
 
   tracker.onTab({type: "pageshow", originalTarget: "pageshow"});
-  do_check_true(Utils.deepEquals([id for (id in engine.getChangedIDs())],
+  do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                  [Clients.localID]));
   do_check_eq(logs.length, idx); // test that setTabValue isn't called
 }

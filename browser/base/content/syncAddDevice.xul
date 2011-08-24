@@ -120,20 +120,20 @@
               label=" "
               onpageshow="gSyncAddDevice.onPageShow();">
     <description>
-      &addDevice.dialog.syncKey.label;
+      &addDevice.dialog.recoveryKey.label;
     </description>
     <spacer/>
 
     <groupbox>
-      <label value="&syncKeyEntry.label;"
-             accesskey="&syncKeyEntry.accesskey;"
+      <label value="&recoveryKeyEntry.label;"
+             accesskey="&recoveryKeyEntry.accesskey;"
              control="weavePassphrase"/>
       <textbox id="weavePassphrase"
                readonly="true"/>
     </groupbox>
 
     <groupbox align="center">
-      <description>&syncKeyBackup.description;</description>
+      <description>&recoveryKeyBackup.description;</description>
       <hbox>
         <button id="printSyncKeyButton"
                 label="&button.syncKeyBackup.print.label;"

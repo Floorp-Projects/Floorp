@@ -122,7 +122,7 @@ interface mozIPlaceInfo : nsISupports
 /**
  * @status EXPERIMENTAL
  */
-[scriptable, uuid(eb0b406f-8f57-4f2b-b0da-8883684b138a)]
+[scriptable, uuid(1f266877-2859-418b-a11b-ec3ae4f4f93d)]
 interface mozIVisitInfoCallback : nsISupports
 {
   /**
@@ -146,6 +146,12 @@ interface mozIVisitInfoCallback : nsISupports
    *        The information that was being entered into the database.
    */
   void handleResult(in mozIPlaceInfo aPlaceInfo);
+
+  /**
+   * Called when the mozIAsyncHistory::updatePlaces has finished processing
+   * all mozIPlaceInfo records.
+   */
+  void handleCompletion();
 
 };
 

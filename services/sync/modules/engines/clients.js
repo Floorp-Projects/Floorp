@@ -199,7 +199,8 @@ ClientEngine.prototype = {
     resetEngine: { args: 1, desc: "Clear temporary local data for engine" },
     wipeAll:     { args: 0, desc: "Delete all client data for all engines" },
     wipeEngine:  { args: 1, desc: "Delete all client data for engine" },
-    logout:      { args: 0, desc: "Log out client" }
+    logout:      { args: 0, desc: "Log out client" },
+    displayURI:  { args: 2, desc: "Instruct a client to display a URI" }
   },
 
   /**
@@ -284,6 +285,9 @@ ClientEngine.prototype = {
           case "logout":
             Weave.Service.logout();
             return false;
+          case "displayURI":
+            this._handleDisplayURI(args[0], args[1]);
+            break;
           default:
             this._log.debug("Received an unknown command: " + command);
             break;
@@ -330,6 +334,52 @@ ClientEngine.prototype = {
         this._sendCommandToClient(command, args, id);
       }
     }
+  },
+
+  /**
+   * Send a URI to another client for display.
+   *
+   * A side effect is the score is increased dramatically to incur an
+   * immediate sync.
+   *
+   * If an unknown client ID is specified, sendCommand() will throw an
+   * Error object.
+   *
+   * @param uri
+   *        URI (as a string) to send and display on the remote client
+   * @param clientId
+   *        ID of client to send the command to. If not defined, will be sent
+   *        to all remote clients.
+   */
+  sendURIToClientForDisplay: function sendURIToClientForDisplay(uri, clientId) {
+    this._log.info("Sending URI to client: " + uri + " -> " + clientId);
+    this.sendCommand("displayURI", [uri, this.syncID], clientId);
+
+    Clients._tracker.score += SCORE_INCREMENT_XLARGE;
+  },
+
+  /**
+   * Handle a single received 'displayURI' command.
+   *
+   * Interested parties should observe the "weave:engine:clients:display-uri"
+   * topic. The callback will receive an object as the subject parameter with
+   * the following keys:
+   *
+   *   uri       URI (string) that is requested for display
+   *   clientId  ID of client that sent the command
+   *
+   * The 'data' parameter to the callback will not be defined.
+   *
+   * @param uri
+   *        String URI that was received
+   * @param clientId
+   *        ID of client that sent URI
+   */
+  _handleDisplayURI: function _handleDisplayURI(uri, clientId) {
+    this._log.info("Received a URI for display: " + uri + " from " + clientId);
+
+    let subject = { uri: uri, client: clientId };
+    Svc.Obs.notify("weave:engine:clients:display-uri", subject);
   }
 };
 
