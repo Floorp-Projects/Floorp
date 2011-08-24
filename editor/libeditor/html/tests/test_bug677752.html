@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=677752
+-->
+<head>
+  <title>Test for Bug 677752</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=677752">Mozilla Bug 677752</a>
+<p id="display"></p>
+<div id="content">
+  <section contenteditable> foo bar </section>
+  <div contenteditable> foo bar </div>
+  <p contenteditable> foo bar </p>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 677752 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function selectEditor(aEditor) {
+  aEditor.focus();
+  var selection = window.getSelection();
+  selection.selectAllChildren(aEditor);
+  selection.collapseToStart();
+}
+
+function runTests() {
+  var editor, node, initialHTML;
+  document.execCommand('styleWithCSS', false, true);
+
+  // editable <section>
+  editor = document.querySelector("section[contenteditable]");
+  initialHTML = editor.innerHTML;
+  selectEditor(editor);
+  // editable <section>: justify
+  document.execCommand("justifyright", false, null);
+  node = editor.querySelector("*");
+  is(node.nodeName.toLowerCase(), "div", "'justifyright' should create a <div> in the editable <section>.");
+  is(node.style.textAlign,      "right", "'justifyright' should create a 'text-align: right' CSS rule.");
+  document.execCommand("undo", false, null);
+  // editable <section>: indent
+  document.execCommand("indent", false, null);
+  node = editor.querySelector("*");
+  is(node.nodeName.toLowerCase(), "div", "'indent' should create a <div> in the editable <section>.");
+  is(node.style.marginLeft,      "40px", "'indent' should create a 'margin-left: 40px' CSS rule.");
+  // editable <section>: undo with outdent
+  // this should remove the whole <div> but only removing the CSS rule would be acceptable, too
+  document.execCommand("outdent", false, null);
+  is(editor.innerHTML, initialHTML, "'outdent' should undo the 'indent' action.");
+  // editable <section>: outdent again
+  document.execCommand("outdent", false, null);
+  is(editor.innerHTML, initialHTML, "another 'outdent' should not modify the <section> element.");
+
+  // editable <div>
+  editor = document.querySelector("div[contenteditable]");
+  initialHTML = editor.innerHTML;
+  selectEditor(editor);
+  // editable <div>: justify
+  document.execCommand("justifyright", false, null);
+  node = editor.querySelector("*");
+  is(node.nodeName.toLowerCase(), "div", "'justifyright' should create a <div> in the editable <div>.");
+  is(node.style.textAlign,      "right", "'justifyright' should create a 'text-align: right' CSS rule.");
+  document.execCommand("undo", false, null);
+  // editable <div>: indent
+  document.execCommand("indent", false, null);
+  node = editor.querySelector("*");
+  is(node.nodeName.toLowerCase(), "div", "'indent' should create a <div> in the editable <div>.");
+  is(node.style.marginLeft,      "40px", "'indent' should create a 'margin-left: 40px' CSS rule.");
+  // editable <div>: undo with outdent
+  // this should remove the whole <div> but only removing the CSS rule would be acceptable, too
+  document.execCommand("outdent", false, null);
+  is(editor.innerHTML, initialHTML, "'outdent' should undo the 'indent' action.");
+  // editable <div>: outdent again
+  document.execCommand("outdent", false, null);
+  is(editor.innerHTML, initialHTML, "another 'outdent' should not modify the <div> element.");
+
+  // editable <p>
+  // all block-level commands should be ignored (<p><div/></p> is not valid)
+  editor = document.querySelector("p[contenteditable]");
+  initialHTML = editor.innerHTML;
+  selectEditor(editor);
+  // editable <p>: justify
+  document.execCommand("justifyright", false, null);
+  is(editor.innerHTML, initialHTML, "'justifyright' should have no effect on <p>.");
+  // editable <p>: indent
+  document.execCommand("indent", false, null);
+  is(editor.innerHTML, initialHTML, "'indent' should have no effect on <p>.");
+  // editable <p>: outdent
+  document.execCommand("outdent", false, null);
+  is(editor.innerHTML, initialHTML, "'outdent' should have no effect on <p>.");
+
+  // done
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -2025,6 +2025,7 @@ namespace nanojit
             next = patch+6;
         } else if ((patch[0] == 0xFF) && (patch[1] == 0x25)) {
             // jmp 64bit target
+            // This uses RIP-relative addressing, the 4 bytes after FF 25 is an offset of 0.
             next = patch+6;
             ((int64_t*)next)[0] = int64_t(target);
             return;
