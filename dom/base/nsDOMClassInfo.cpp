@@ -2262,39 +2262,17 @@ nsDOMClassInfo::Init()
   rv = stack->GetSafeJSContext(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsGlobalWindow::HasIndexedDBSupport()) {
-    if (nsGlobalWindow::HasPerformanceSupport()) {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
-      DOM_CLASSINFO_MAP_END
-    } else {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
-      DOM_CLASSINFO_MAP_END
-    }
-  } else {
-    if (nsGlobalWindow::HasPerformanceSupport()) {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)
-      DOM_CLASSINFO_MAP_END
-    } else {
-      DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-        DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-      DOM_CLASSINFO_MAP_END
-    }
-  }
+  DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMStorageIndexedDB,
+                                        nsGlobalWindow::HasIndexedDBSupport())
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMWindowPerformance,
+                                        nsGlobalWindow::HasPerformanceSupport())
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,
+                                        nsDOMTouchEvent::PrefEnabled())
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowUtils)
@@ -2308,20 +2286,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCaretPosition)
   DOM_CLASSINFO_MAP_END
 
-  if (nsNavigator::HasDesktopNotificationSupport()) {
-    DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
-    DOM_CLASSINFO_MAP_END
-  } else {
-    DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
-    DOM_CLASSINFO_MAP_END
-  }
+  DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMNavigatorDesktopNotification,
+                                        nsNavigator::HasDesktopNotificationSupport())
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPlugin)
@@ -2984,6 +2955,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
+  // FIXME: bug 680903. Should ChromeWindow really not have touch,
+  // performance apis?
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
@@ -3866,6 +3839,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringMap)
   DOM_CLASSINFO_MAP_END
 
+  // FIXME: Bug 680903.  Should ModalContentWindow really not have
+  // touch, performance apis and have unconditional indexeddb??
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
