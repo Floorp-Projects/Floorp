@@ -1604,24 +1604,18 @@ static void AdjustViews(nsIFrame* aFrame)
     return;
   }
 
-  nsIAtom* childListName = nsnull;
-  PRInt32  childListIndex = 0;
-  do {
-    // Recursively walk aFrame's child frames
-    nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
-    while (childFrame) {
-      AdjustViews(childFrame);
-
-      // Get the next sibling child frame
-      childFrame = childFrame->GetNextSibling();
+  // Call AdjustViews recursively for all child frames except the popup list as
+  // the views for popups are not scrolled.
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    if (lists.CurrentID() == nsIFrame::kPopupList) {
+      continue;
     }
-
-    // also process the additional child lists, but skip the popup list as the
-    // views for popups are not scrolled.
-    do {
-      childListName = aFrame->GetAdditionalChildListName(childListIndex++);
-    } while (childListName == nsGkAtoms::popupList);
-  } while (childListName);
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      AdjustViews(childFrames.get());
+    }
+  }
 }
 
 static PRBool

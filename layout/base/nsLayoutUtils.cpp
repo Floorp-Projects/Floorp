@@ -3179,31 +3179,28 @@ nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
   // We want scrollable overflow rather than visual because this
   // calculation is intended to affect layout.
   if (aFrame->GetScrollableOverflowRect().height > contentBottom) {
+    nsIFrame::ChildListIDs skip(nsIFrame::kOverflowList |
+                                nsIFrame::kExcessOverflowContainersList |
+                                nsIFrame::kOverflowOutOfFlowList);
     nsBlockFrame* blockFrame = GetAsBlock(aFrame);
-    nsIAtom* childList = nsnull;
-    PRIntn nextListID = 0;
-    do {
-      if (childList == nsnull && blockFrame) {
-        contentBottom = NS_MAX(contentBottom, CalculateBlockContentBottom(blockFrame));
-      }
-      else if (childList != nsGkAtoms::overflowList &&
-               childList != nsGkAtoms::excessOverflowContainersList &&
-               childList != nsGkAtoms::overflowOutOfFlowList)
-      {
-        for (nsIFrame* child = aFrame->GetFirstChild(childList);
-            child; child = child->GetNextSibling())
-        {
+    if (blockFrame) {
+      contentBottom =
+        NS_MAX(contentBottom, CalculateBlockContentBottom(blockFrame));
+      skip |= nsIFrame::kPrincipalList;
+    }
+    nsIFrame::ChildListIterator lists(aFrame);
+    for (; !lists.IsDone(); lists.Next()) {
+      if (!skip.Contains(lists.CurrentID())) {
+        nsFrameList::Enumerator childFrames(lists.CurrentList()); 
+        for (; !childFrames.AtEnd(); childFrames.Next()) {
+          nsIFrame* child = childFrames.get();
           nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
           contentBottom = NS_MAX(contentBottom,
                                  CalculateContentBottom(child) + offset);
         }
       }
-
-      childList = aFrame->GetAdditionalChildListName(nextListID);
-      nextListID++;
-    } while (childList);
+    }
   }
-
   return contentBottom;
 }
 
@@ -4214,15 +4211,13 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
   NS_ASSERTION(start == end || IsInLetterFrame(aSubtreeRoot),
                "frame tree not empty, but caller reported complete status");
 
-  PRInt32 listIndex = 0;
-  nsIAtom* childList = nsnull;
-  do {
-    for (nsIFrame* child = aSubtreeRoot->GetFirstChild(childList); child;
-         child = child->GetNextSibling()) {
-      nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(child);
+  nsIFrame::ChildListIterator lists(aSubtreeRoot);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(childFrames.get());
     }
-    childList = aSubtreeRoot->GetAdditionalChildListName(listIndex++);
-  } while (childList);
+  }
 }
 #endif
 
@@ -4239,7 +4234,8 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
   }
 
   while (aFrame) {
-    nsIAtom* childLists[] = { nsnull, nsGkAtoms::popupList };
+    nsIFrame::ChildListID childLists[] = { nsIFrame::kPrincipalList,
+                                           nsIFrame::kPopupList };
     for (int i = 0; i < NS_ARRAY_LENGTH(childLists); ++i) {
       nsFrameList children(aFrame->GetChildList(childLists[i]));
       for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {

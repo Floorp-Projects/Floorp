@@ -3481,16 +3481,14 @@ nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
   }
 
   nsRect r(0, 0, 0, 0);
-  PRInt32 listIndex = 0;
-  nsIAtom* childList = nsnull;
-  do {
-    nsIFrame* child = GetFirstChild(childList);
-    while (child) {
-       r.UnionRect(r, child->ComputeTightBounds(aContext) + child->GetPosition());
-       child = child->GetNextSibling();
+  ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      r.UnionRect(r, child->ComputeTightBounds(aContext) + child->GetPosition());
     }
-    childList = GetAdditionalChildListName(listIndex++);
-  } while (childList);
+  }
   return r;
 }
 
@@ -4942,35 +4940,25 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
           mRect.x, mRect.y, mRect.width, mRect.height);
 
   // Now dump all of the children on all of the child lists
-  nsIFrame* kid;
-  nsIAtom* list = nsnull;
-  PRInt32 listIndex = 0;
-  do {
-    kid = GetFirstChild(list);
-    if (kid) {
-      IndentBy(out, aIndent);
-      if (nsnull != list) {
-        nsAutoString listName;
-        list->ToString(listName);
-        fprintf(out, "<child-list name=\"");
-        XMLQuote(listName);
-        fputs(NS_LossyConvertUTF16toASCII(listName).get(), out);
-        fprintf(out, "\">\n");
-      }
-      else {
-        fprintf(out, "<child-list>\n");
-      }
-      aIndent++;
-      while (kid) {
-        kid->DumpRegressionData(aPresContext, out, aIndent);
-        kid = kid->GetNextSibling();
-      }
-      aIndent--;
-      IndentBy(out, aIndent);
-      fprintf(out, "</child-list>\n");
+  ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    IndentBy(out, aIndent);
+    if (lists.CurrentID() != kPrincipalList) {
+      fprintf(out, "<child-list name=\"%s\">\n", mozilla::layout::ChildListName(lists.CurrentID()));
     }
-    list = GetAdditionalChildListName(listIndex++);
-  } while (nsnull != list);
+    else {
+      fprintf(out, "<child-list>\n");
+    }
+    aIndent++;
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* kid = childFrames.get();
+      kid->DumpRegressionData(aPresContext, out, aIndent);
+    }
+    aIndent--;
+    IndentBy(out, aIndent);
+    fprintf(out, "</child-list>\n");
+  }
 }
 #endif
 
