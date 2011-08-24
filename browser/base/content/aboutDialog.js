@@ -86,11 +86,11 @@ function init(aEvent)
 
 #ifdef MOZ_UPDATER
   gAppUpdater = new appUpdater();
-#endif
 
   let defaults = Services.prefs.getDefaultBranch("");
   let channelLabel = document.getElementById("currentChannel");
   channelLabel.value = defaults.getCharPref("app.update.channel");
+#endif
 
 #ifdef XP_MACOSX
   // it may not be sized at this point, and we need its width to calculate its position
