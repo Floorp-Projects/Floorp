@@ -49,6 +49,30 @@
 using namespace js;
 using namespace js::ion;
 
+class DeferredJumpTable : public DeferredData
+{
+    LTableSwitch *lswitch;
+
+  public:
+    DeferredJumpTable(LTableSwitch *lswitch)
+      : lswitch(lswitch)
+    { }
+    
+    void copy(IonCode *code, uint8 *buffer) const {
+        void **jumpData = (void **)buffer;
+
+        // For every case write the pointer to the start in the table
+        for (uint j = 0; j < lswitch->mir()->numCases(); j++) { 
+            LBlock *caseblock = lswitch->mir()->getCase(j)->lir();
+            Label *caseheader = caseblock->label();
+
+            uint32 offset = caseheader->offset();
+            *jumpData = (void *)(code->raw() + offset);
+            jumpData++;
+        }
+    }
+};
+
 CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph)
   : CodeGeneratorShared(gen, graph),
     deoptLabel_(NULL)
@@ -487,34 +511,19 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
     int32 cases = mir->numCases();
     masm.cmpl(ToOperand(index), Imm32(cases));
     masm.j(AssemblerX86Shared::AboveOrEqual, defaultcase->label());
- 
-    // Create a label pointing to the jumptable
-    // This gets patched after linking
-    CodeLabel *label = new CodeLabel();
-    if (!masm.addCodeLabel(label))
+
+    // Create a JumpTable that during linking will get written.
+    DeferredJumpTable *d = new DeferredJumpTable(ins);
+    if (!masm.addDeferredData(d, (1 << ScalePointer) * cases))
         return false;
-  
-    // Compute the pointer to the right case in the second temp. register
+   
+    // Compute the position where a pointer to the right case stands.
     LDefinition *base = ins->getTemp(1);
-    masm.mov(label->dest(), ToRegister(base));
-    Operand pointer = Operand(ToRegister(base), ToRegister(index), TimesEight);
-    masm.lea(pointer, ToRegister(base));
+    masm.mov(d->label(), ToRegister(base));
+    Operand pointer = Operand(ToRegister(base), ToRegister(index), ScalePointer);
 
     // Jump to the right case
-    masm.jmp(ToOperand(base));
-
-    // Create the jumptable,
-    // Every jump statements get aligned on pointersize
-    // That way there is always 2*pointersize between each jump statement.
-    masm.align(1 << TimesFour);
-    masm.bind(label->src());
-
-    for (uint j=0; j<ins->mir()->numCases(); j++) { 
-        LBlock *caseblock = ins->mir()->getCase(j)->lir();
-
-        masm.jmp(caseblock->label());
-        masm.align(1 << TimesFour);
-    }
+    masm.jmp(pointer);
 
     return true;
 }
