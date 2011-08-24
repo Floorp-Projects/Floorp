@@ -261,6 +261,7 @@
                     </hbox>
                   </hbox>
                   <toolbarbutton id="tool-star2" class="tool-star button-actionbar" command="cmd_star"/>
+                  <toolbarbutton id="tool-menu" class="button-actionbar" command="cmd_menu"/>
                   <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
 #ifndef ANDROID
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
@@ -388,6 +389,10 @@
         </hbox>
       </dialog>
     </box>
+
+    <arrowbox id="appmenu-popup" hidden="true">
+      <richlistbox id="appmenu-popup-commands"/>
+    </arrowbox>
 
     <box id="panel-container" hidden="true" class="window-width window-height panel-dark"
          style="-moz-stack-sizing: ignore" left="10000">
