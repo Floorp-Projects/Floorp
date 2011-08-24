@@ -58,6 +58,7 @@
 #include "prmjtime.h"
 
 #include "ds/LifoAlloc.h"
+#include "gc/Statistics.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/StackSpace.h"
@@ -430,6 +431,10 @@ struct JSRuntime {
     JSGCMode            gcMode;
     volatile jsuword    gcIsNeeded;
     js::WeakMapBase     *gcWeakMapList;
+    js::gcstats::Statistics gcStats;
+
+    /* The reason that an interrupt-triggered GC should be called. */
+    js::gcstats::Reason gcTriggerReason;
 
     /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
     void                *gcMarkStackObjs[js::OBJECT_MARK_STACK_SIZE / sizeof(void *)];
@@ -673,58 +678,12 @@ struct JSRuntime {
      */
     int32               inOOMReport;
 
-#if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
-    struct GCData {
-        GCData()
-          : firstEnter(0),
-            firstEnterValid(false)
-#ifdef JSGC_TESTPILOT
-            , infoEnabled(false),
-            start(0),
-            count(0)
-#endif
-        { }
-
-        /*
-         * Timestamp of the first GCTimer -- application runtime is determined
-         * relative to this value.
-         */
-        uint64      firstEnter;
-        bool        firstEnterValid;
-
-        void setFirstEnter(uint64 v) {
-            JS_ASSERT(!firstEnterValid);
-            firstEnter = v;
-            firstEnterValid = true;
-        }
-
-#ifdef JSGC_TESTPILOT
-        bool        infoEnabled;
-
-        bool isTimerEnabled() {
-            return infoEnabled;
-        }
-
-        /*
-         * Circular buffer with GC data.
-         * count may grow >= INFO_LIMIT, which would indicate data loss.
-         */
-        static const size_t INFO_LIMIT = 64;
-        JSGCInfo    info[INFO_LIMIT];
-        size_t      start;
-        size_t      count;
-#else /* defined(MOZ_GCTIMER) */
-        bool isTimerEnabled() {
-            return true;
-        }
-#endif
-    } gcData;
-#endif
-
     JSRuntime();
     ~JSRuntime();
 
     bool init(uint32 maxbytes);
+
+    JSRuntime *thisFromCtor() { return this; }
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(uint32 amount);

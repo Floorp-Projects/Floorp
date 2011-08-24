@@ -100,6 +100,7 @@ VPATH		= \
 		$(srcdir)/builtin \
 		$(srcdir)/ds \
 		$(srcdir)/frontend \
+		$(srcdir)/gc \
 		$(srcdir)/vm \
 		$(NULL)
 
@@ -169,6 +170,7 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		Statistics.cpp \
 		Unicode.cpp \
 		$(NULL)
 
@@ -233,7 +235,7 @@ INSTALLED_HEADERS = \
 # BEGIN exported headers that are only exported
 #       because of inclusion by an INSTALLED_HEADER
 #
-EXPORTS_NAMESPACES += vm ds
+EXPORTS_NAMESPACES += vm ds gc
 
 EXPORTS_vm = \
 		String.h \
@@ -243,6 +245,10 @@ EXPORTS_vm = \
 
 EXPORTS_ds = \
 		LifoAlloc.h \
+		$(NULL)
+
+EXPORTS_gc = \
+		Statistics.h \
 		$(NULL)
 
 ######################################################
