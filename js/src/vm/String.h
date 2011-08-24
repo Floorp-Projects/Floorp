@@ -655,24 +655,35 @@ class JSExternalString : public JSFixedString
 
 JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
 
+#if !defined(__ia64__)
+/*
+ * Don't use static strings on ia64 since the compiler may put the static
+ * memory out of the acceptable 47-bit jsval pointer range.
+ */
+# define JS_HAS_STATIC_STRINGS
+#endif
+
 class JSAtom : public JSFixedString
 {
   public:
     /* Exposed only for jits. */
 
+#ifdef JS_HAS_STATIC_STRINGS
     static const size_t UNIT_STATIC_LIMIT   = 256U;
     static const size_t SMALL_CHAR_LIMIT    = 128U; /* Bigger chars cannot be in a length-2 string. */
     static const size_t NUM_SMALL_CHARS     = 64U;
     static const size_t INT_STATIC_LIMIT    = 256U;
     static const size_t NUM_HUNDRED_STATICS = 156U;
 
-#ifdef __SUNPRO_CC
-# pragma align 8 (__1cGJSAtomPunitStaticTable_, __1cGJSAtomSlength2StaticTable_, __1cGJSAtomShundredStaticTable_)
-#endif
+# ifdef __SUNPRO_CC
+#  pragma align 8 (__1cGJSAtomPunitStaticTable_, __1cGJSAtomSlength2StaticTable_, __1cGJSAtomShundredStaticTable_)
+# endif
+
     static const JSString::Data unitStaticTable[];
     static const JSString::Data length2StaticTable[];
     static const JSString::Data hundredStaticTable[];
     static const JSString::Data *const intStaticTable[];
+#endif
 
   private:
     /* Defined in jsgcinlines.h */
