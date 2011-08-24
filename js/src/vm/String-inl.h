@@ -193,6 +193,7 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN t
     return str;
 }
 
+#ifdef JS_HAS_STATIC_STRINGS
 inline bool
 JSAtom::fitsInSmallChar(jschar c)
 {
@@ -303,6 +304,82 @@ JSAtom::lookupStatic(const jschar *chars, size_t length)
 
     return NULL;
 }
+
+#else  /* defined(JS_HAS_STATIC_STRINGS) */
+
+inline bool
+JSAtom::fitsInSmallChar(jschar c)
+{
+    return false;
+}
+
+inline bool
+JSAtom::hasUnitStatic(jschar c)
+{
+    return false;
+}
+
+inline JSStaticAtom &
+JSAtom::unitStatic(jschar c)
+{
+    JS_NOT_REACHED("no static strings");
+    return *(JSStaticAtom *)NULL;
+}
+
+inline bool
+JSAtom::hasUintStatic(uint32 u)
+{
+    return false;
+}
+
+inline JSStaticAtom &
+JSAtom::uintStatic(uint32 u)
+{
+    JS_NOT_REACHED("no static strings");
+    return *(JSStaticAtom *)NULL;
+}
+
+inline bool
+JSAtom::hasIntStatic(int32 i)
+{
+    return false;
+}
+
+inline JSStaticAtom &
+JSAtom::intStatic(jsint i)
+{
+    JS_NOT_REACHED("no static strings");
+    return *(JSStaticAtom *)NULL;
+}
+
+inline JSLinearString *
+JSAtom::getUnitStringForElement(JSContext *cx, JSString *str, size_t index)
+{
+    JS_ASSERT(index < str->length());
+    return js_NewDependentString(cx, str, index, 1);
+}
+
+inline JSStaticAtom &
+JSAtom::length2Static(jschar c1, jschar c2)
+{
+    JS_NOT_REACHED("no static strings");
+    return *(JSStaticAtom *)NULL;
+}
+
+inline JSStaticAtom &
+JSAtom::length2Static(uint32 i)
+{
+    JS_NOT_REACHED("no static strings");
+    return *(JSStaticAtom *)NULL;
+}
+
+/* Get a static atomized string for chars if possible. */
+inline JSStaticAtom *
+JSAtom::lookupStatic(const jschar *chars, size_t length)
+{
+    return NULL;
+}
+#endif /* defined(JS_HAS_STATIC_STRINGS) */
 
 JS_ALWAYS_INLINE void
 JSString::finalize(JSContext *cx)
