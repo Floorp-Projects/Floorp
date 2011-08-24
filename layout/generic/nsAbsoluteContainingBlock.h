@@ -85,6 +85,12 @@ public:
 #endif
 
   const nsFrameList& GetChildList() const { return mAbsoluteFrames; }
+  void AppendChildList(nsTArray<nsIFrame::ChildList>* aLists,
+                       ChildListID aListID) const
+  {
+    NS_ASSERTION(aListID == GetChildListID(), "wrong list ID");
+    GetChildList().AppendIfNonempty(aLists, aListID);
+  }
 
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                nsIAtom*        aListName,

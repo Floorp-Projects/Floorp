@@ -227,12 +227,19 @@ nsCanvasFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 }
 
 nsFrameList
-nsCanvasFrame::GetChildList(nsIAtom* aListName) const
+nsCanvasFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::absoluteList == aListName)
+  if (kAbsoluteList == aListID)
     return mAbsoluteContainer.GetChildList();
 
-  return nsHTMLContainerFrame::GetChildList(aListName);
+  return nsHTMLContainerFrame::GetChildList(aListID);
+}
+
+void
+nsCanvasFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  nsHTMLContainerFrame::GetChildLists(aLists);
+  mAbsoluteContainer.AppendChildList(aLists, kAbsoluteList);
 }
 
 nsRect nsCanvasFrame::CanvasArea() const

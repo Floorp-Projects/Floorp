@@ -582,66 +582,62 @@ nsBlockFrame::GetCaretBaseline() const
 // Child frame enumeration
 
 nsFrameList
-nsBlockFrame::GetChildList(nsIAtom* aListName) const
+nsBlockFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::absoluteList == aListName) {
-    return mAbsoluteContainer.GetChildList();
+  switch (aListID) {
+    case kPrincipalList:
+      return mFrames;
+    case kOverflowList: {
+      // XXXbz once we start using nsFrameList for our overflow list, we
+      // could switch GetChildList to returning a |const nsFrameList&|.
+      nsLineList* overflowLines = GetOverflowLines();
+      return overflowLines ? nsFrameList(overflowLines->front()->mFirstChild,
+                                         overflowLines->back()->LastChild())
+                           : nsFrameList::EmptyList();
+    }
+    case kAbsoluteList:
+      return mAbsoluteContainer.GetChildList();
+    case kFloatList:
+      return mFloats;
+    case kOverflowOutOfFlowList: {
+      const nsFrameList* list = GetOverflowOutOfFlows();
+      return list ? *list : nsFrameList::EmptyList();
+    }
+    case kPushedFloatsList: {
+      const nsFrameList* list = GetPushedFloats();
+      return list ? *list : nsFrameList::EmptyList();
+    }
+    case kBulletList:
+      return HaveOutsideBullet() ? nsFrameList(mBullet, mBullet)
+                                 : nsFrameList::EmptyList();
+    default:
+      return nsContainerFrame::GetChildList(aListID);
   }
-  else if (nsnull == aListName) {
-    return mFrames;
-  }
-  else if (aListName == nsGkAtoms::overflowList) {
-    // XXXbz once we start using nsFrameList for our overflow list, we
-    // could switch GetChildList to returning a |const nsFrameList&|.
-    nsLineList* overflowLines = GetOverflowLines();
-    return overflowLines ? nsFrameList(overflowLines->front()->mFirstChild,
-                                       overflowLines->back()->LastChild())
-                         : nsFrameList::EmptyList();
-  }
-  else if (aListName == nsGkAtoms::overflowOutOfFlowList) {
-    const nsFrameList* list = GetOverflowOutOfFlows();
-    return list ? *list : nsFrameList::EmptyList();
-  }
-  else if (aListName == nsGkAtoms::pushedFloatsList) {
-    const nsFrameList* list = GetPushedFloats();
-    return list ? *list : nsFrameList::EmptyList();
-  }
-  else if (aListName == nsGkAtoms::floatList) {
-    return mFloats;
-  }
-  else if (aListName == nsGkAtoms::bulletList) {
-    return HaveOutsideBullet() ? nsFrameList(mBullet, mBullet)
-                               : nsFrameList::EmptyList();
-  }
-  return nsContainerFrame::GetChildList(aListName);
 }
 
-#define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  (NS_CONTAINER_LIST_COUNT_INCL_OC + 0)
-#define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         (NS_CONTAINER_LIST_COUNT_INCL_OC + 1)
-#define NS_BLOCK_FRAME_BULLET_LIST_INDEX        (NS_CONTAINER_LIST_COUNT_INCL_OC + 2)
-#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      (NS_CONTAINER_LIST_COUNT_INCL_OC + 3)
-#define NS_BLOCK_FRAME_PUSHED_FLOATS_LIST_INDEX (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
-// If adding/removing lists, don't forget to update the count in nsBlockFrame.h
-
-nsIAtom*
-nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
+void
+nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
-  if (aIndex < NS_CONTAINER_LIST_COUNT_INCL_OC)
-    return nsContainerFrame::GetAdditionalChildListName(aIndex);
-
-  switch (aIndex) {
-  case NS_BLOCK_FRAME_FLOAT_LIST_INDEX:
-    return nsGkAtoms::floatList;
-  case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
-    return nsGkAtoms::bulletList;
-  case NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX:
-    return nsGkAtoms::overflowOutOfFlowList;
-  case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
-    return nsGkAtoms::absoluteList;
-  case NS_BLOCK_FRAME_PUSHED_FLOATS_LIST_INDEX:
-    return nsGkAtoms::pushedFloatsList;
-  default:
-    return nsnull;
+  nsContainerFrame::GetChildLists(aLists);
+  nsLineList* overflowLines = GetOverflowLines();
+  if (overflowLines && overflowLines->front()->mFirstChild) {
+    nsFrameList overflowList(overflowLines->front()->mFirstChild,
+                             overflowLines->back()->LastChild());
+    overflowList.AppendIfNonempty(aLists, kOverflowList);
+  }
+  const nsFrameList* list = GetOverflowOutOfFlows();
+  if (list) {
+    list->AppendIfNonempty(aLists, kOverflowOutOfFlowList);
+  }
+  mFloats.AppendIfNonempty(aLists, kFloatList);
+  if (HaveOutsideBullet()) {
+    nsFrameList bullet(mBullet, mBullet);
+    bullet.AppendIfNonempty(aLists, kBulletList);
+  }
+  mAbsoluteContainer.AppendChildList(aLists, kAbsoluteList);
+  list = GetPushedFloats();
+  if (list) {
+    list->AppendIfNonempty(aLists, kPushedFloatsList);
   }
 }
 
