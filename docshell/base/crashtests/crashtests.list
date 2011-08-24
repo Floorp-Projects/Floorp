@@ -10,3 +10,4 @@ asserts(0-2) load 436900-2.html # bug 566159
 load 500328-1.html
 load 514779-1.xhtml
 load 614499-1.html
+load 678872-1.html
