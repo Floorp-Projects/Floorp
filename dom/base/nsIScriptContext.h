@@ -72,10 +72,9 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
-// a7139c0e-962c-44b6-bec3-e4166bfe84eb
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xa7139c0e, 0x962c, 0x44b6, \
-  { 0xbe, 0xc3, 0xe4, 0x16, 0x6b, 0xfe, 0x84, 0xeb } }
+  { 0xad76079b, 0xd408, 0x4159, \
+    {0xb7, 0x3f, 0x41, 0x08, 0x77, 0xff, 0x9b, 0x47 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -233,41 +232,30 @@ public:
                                     nsIArray *argv, nsIVariant **rval) = 0;
 
   /**
-   * Bind an already-compiled event handler function to a name in the given
-   * scope object.  The same restrictions on aName (lowercase ASCII, not too
-   * long) applies here as for CompileEventHandler.  Scripting languages with
-   * static scoping must re-bind the scope chain for aHandler to begin (after
-   * the activation scope for aHandler itself, typically) with aTarget's scope.
+   * Bind an already-compiled event handler function to the given
+   * target.  Scripting languages with static scoping must re-bind the
+   * scope chain for aHandler to begin (after the activation scope for
+   * aHandler itself, typically) with aTarget's scope.
    *
-   * Logically, this 'bind' operation is more of a 'copy' - it simply
-   * stashes/associates the event handler function with the event target, so
-   * it can be fetched later with GetBoundEventHandler().
+   * The result of the bind operation is a new handler object, with
+   * principals now set and scope set as above.  This is returned in
+   * aBoundHandler.  When this function is called, aBoundHandler is
+   * expected to not be holding an object.
    *
    * @param aTarget an object telling the scope in which to bind the compiled
    *        event handler function.  The context will presumably associate
    *        this nsISupports with a native script object.
-   * @param aName an nsIAtom pointer naming the function; it must be lowercase
-   *        and ASCII, and should not be longer than 63 chars.  This bound on
-   *        length is enforced only by assertions, so caveat caller!
-   * @param aHandler the function object to name, created by an earlier call to
+   * @param aScope the scope in which the script object for aTarget should be
+   *        looked for.
+   * @param aHandler the function object to bind, created by an earlier call to
    *        CompileEventHandler
-   * @return NS_OK if the function was successfully bound to the name
-   *
-   * XXXmarkh - fold this in with SetProperty?  Exactly the same concept!
+   * @param aBoundHandler [out] the result of the bind operation.
+   * @return NS_OK if the function was successfully bound
    */
-  virtual nsresult BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
-                                            nsIAtom* aName,
-                                            void* aHandler) = 0;
-
-  /**
-   * Lookup a previously bound event handler for the specified target.  This
-   * will return an object equivilent to the one passed to
-   * BindCompiledEventHandler (although the pointer may not be the same).
-   *
-   */
-  virtual nsresult GetBoundEventHandler(nsISupports* aTarget, void *aScope,
-                                        nsIAtom* aName,
-                                        nsScriptObjectHolder &aHandler) = 0;
+  virtual nsresult BindCompiledEventHandler(nsISupports* aTarget,
+                                            void *aScope,
+                                            void* aHandler,
+                                            nsScriptObjectHolder& aBoundHandler) = 0;
 
   /**
    * Compile a function that isn't used as an event handler.

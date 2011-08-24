@@ -1367,6 +1367,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowPerformance)
   NS_INTERFACE_MAP_ENTRY(nsITouchEventReceiver)
+  NS_INTERFACE_MAP_ENTRY(nsIInlineEventHandlers)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
   OUTER_WINDOW_ONLY
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -11355,6 +11356,37 @@ NS_IMETHODIMP nsNavigator::GetMozNotification(nsIDOMDesktopNotificationCenter **
   NS_ADDREF(*aRetVal = mNotification);    
   return NS_OK; 
 }
+
+#define EVENT(name_, id_, type_, struct_)                                    \
+  NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
+                                             jsval *vp) {                    \
+    nsEventListenerManager *elm = GetListenerManager(PR_FALSE);              \
+    if (elm) {                                                               \
+      elm->GetJSEventListener(nsGkAtoms::on##name_, vp);                     \
+    } else {                                                                 \
+      *vp = JSVAL_NULL;                                                      \
+    }                                                                        \
+    return NS_OK;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
+                                             const jsval &v) {               \
+    nsEventListenerManager *elm = GetListenerManager(PR_TRUE);               \
+    if (!elm) {                                                              \
+      return NS_ERROR_OUT_OF_MEMORY;                                         \
+    }                                                                        \
+                                                                             \
+    JSObject *obj = mJSObject;                                               \
+    if (!obj) {                                                              \
+      return NS_ERROR_UNEXPECTED;                                            \
+    }                                                                        \
+    return elm->SetJSEventListenerToJsval(nsGkAtoms::on##name_, cx, obj, v); \
+  }
+#define WINDOW_ONLY_EVENT EVENT
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef WINDOW_ONLY_EVENT
+#undef EVENT
 
 PRInt64
 nsNavigator::SizeOf() const
