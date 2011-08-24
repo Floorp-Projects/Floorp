@@ -301,15 +301,21 @@ nsMenuFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-// The following methods are all overridden to ensure that the menupopup frame
-// is placed in the appropriate list.
 nsFrameList
-nsMenuFrame::GetChildList(nsIAtom* aListName) const
+nsMenuFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::popupList == aListName) {
+  if (kPopupList == aListID) {
     return nsFrameList(mPopupFrame, mPopupFrame);
   }
-  return nsBoxFrame::GetChildList(aListName);
+  return nsBoxFrame::GetChildList(aListID);
+}
+
+void
+nsMenuFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  nsBoxFrame::GetChildLists(aLists);
+  nsFrameList popupList(mPopupFrame, mPopupFrame);
+  popupList.AppendIfNonempty(aLists, kPopupList);
 }
 
 void
@@ -333,15 +339,6 @@ nsMenuFrame::SetInitialChildList(nsIAtom*        aListName,
   if (!aListName || aListName == nsGkAtoms::popupList)
     SetPopupFrame(aChildList);
   return nsBoxFrame::SetInitialChildList(aListName, aChildList);
-}
-
-nsIAtom*
-nsMenuFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-  if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
-    return nsGkAtoms::popupList;
-  }
-  return nsnull;
 }
 
 void

@@ -191,7 +191,11 @@ public:
   virtual void SetParent(nsIFrame* aParent);
   virtual nscoord GetBaseline() const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(ChildListID aListID) const {
+    return nsFrameList::EmptyList();
+  }
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const {}
+
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);

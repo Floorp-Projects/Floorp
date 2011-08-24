@@ -219,24 +219,23 @@ nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nsFrameList
-nsTableOuterFrame::GetChildList(nsIAtom* aListName) const
+nsTableOuterFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::captionList == aListName) {
-    return mCaptionFrames;
+  switch (aListID) {
+    case kPrincipalList:
+      return mFrames;
+    case kCaptionList:
+      return mCaptionFrames;
+    default:
+      return nsFrameList::EmptyList();
   }
-  if (!aListName) {
-    return mFrames;
-  }
-  return nsFrameList::EmptyList();
 }
 
-nsIAtom*
-nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
+void
+nsTableOuterFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
-  if (aIndex == NS_TABLE_FRAME_CAPTION_LIST_INDEX) {
-    return nsGkAtoms::captionList;
-  }
-  return nsnull;
+  mFrames.AppendIfNonempty(aLists, kPrincipalList);
+  mCaptionFrames.AppendIfNonempty(aLists, kCaptionList);
 }
 
 NS_IMETHODIMP 
