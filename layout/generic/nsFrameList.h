@@ -42,8 +42,34 @@
 #include "nsTraceRefcnt.h"
 #include <stdio.h> /* for FILE* */
 #include "nsDebug.h"
+#include "nsTArray.h"
 
 class nsIFrame;
+namespace mozilla {
+namespace layout {
+  class FrameChildList;
+  enum FrameChildListID {
+      // The individual concrete child lists.
+      kPrincipalList                = 0x1,
+      kPopupList                    = 0x2,
+      kCaptionList                  = 0x4,
+      kColGroupList                 = 0x8,
+      kSelectPopupList              = 0x10,
+      kAbsoluteList                 = 0x20,
+      kFixedList                    = 0x40,
+      kOverflowList                 = 0x80,
+      kOverflowContainersList       = 0x100,
+      kExcessOverflowContainersList = 0x200,
+      kOverflowOutOfFlowList        = 0x400,
+      kFloatList                    = 0x800,
+      kBulletList                   = 0x1000,
+      kPushedFloatsList             = 0x2000,
+      // A special alias for kPrincipalList that suppress the reflow request that
+      // is normally done when manipulating child lists.
+      kNoReflowPrincipalList        = 0x4000
+  };
+}
+}
 
 // Uncomment this to enable expensive frame-list integrity checking
 // #define DEBUG_FRAME_LIST
@@ -255,6 +281,14 @@ public:
    * @param aParent the new parent frame, must be non-null
    */
   void ApplySetParent(nsIFrame* aParent) const;
+
+  /**
+   * If this frame list is non-empty then append it to aLists as the
+   * aListID child list.
+   * (this method is implemented in FrameChildList.h for dependency reasons)
+   */
+  inline void AppendIfNonempty(nsTArray<mozilla::layout::FrameChildList>* aLists,
+                               mozilla::layout::FrameChildListID aListID) const;
 
 #ifdef IBMBIDI
   /**
