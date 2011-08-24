@@ -2171,9 +2171,27 @@ nsDOMClassInfo::RegisterExternalClasses()
 #define DOM_CLASSINFO_MAP_ENTRY(_if)                                          \
       &NS_GET_IID(_if),
 
+#define DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(_if, _cond)                       \
+      (_cond) ? &NS_GET_IID(_if) : nsnull,
+
 #define DOM_CLASSINFO_MAP_END                                                 \
       nsnull                                                                  \
     };                                                                        \
+                                                                              \
+    /* Compact the interface list */                                          \
+    size_t count = NS_ARRAY_LENGTH(interface_list);                           \
+    /* count is the number of array entries, which is one greater than the */ \
+    /* number of interfaces due to the terminating null */                    \
+    for (size_t i = 0; i < count - 1; ++i) {                                  \
+      if (!interface_list[i]) {                                               \
+        memmove(&interface_list[i], &interface_list[i+1],                     \
+                sizeof(nsIID*) * (count - i));                                \
+        /* Make sure to examine the new pointer we ended up with at this */   \
+        /* slot, since it may be null too */                                  \
+        --i;                                                                  \
+        --count;                                                              \
+      }                                                                       \
+    }                                                                         \
                                                                               \
     d.mInterfaces = interface_list;                                           \
   }
@@ -2182,7 +2200,9 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)                             \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                               \
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMDocumentTouch,                  \
+                                        nsDOMTouchEvent::PrefEnabled())
 
 
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
@@ -2354,20 +2374,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
-  if (nsDOMTouchEvent::PrefEnabled()) {
-    DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTouch)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  } else {
-    DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  }
+  DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DocumentType, nsIDOMDocumentType)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentType)
@@ -2519,18 +2530,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  if (nsDOMTouchEvent::PrefEnabled()) {
-    DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTouch)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  } else {
-    DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  }
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLOptionsCollection, nsIDOMHTMLOptionsCollection)
     // Order is significant.  nsIDOMHTMLOptionsCollection.length shadows
@@ -2929,20 +2932,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_XUL
-  if (nsDOMTouchEvent::PrefEnabled()) {
-    DOM_CLASSINFO_MAP_BEGIN(XULDocument, nsIDOMXULDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTouch)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  } else {
-    DOM_CLASSINFO_MAP_BEGIN(XULDocument, nsIDOMXULDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END  
-  }
+  DOM_CLASSINFO_MAP_BEGIN(XULDocument, nsIDOMXULDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XULElement, nsIDOMXULElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
@@ -3071,24 +3065,13 @@ nsDOMClassInfo::Init()
 
   // The SVG document
 
-  if (nsDOMTouchEvent::PrefEnabled()) {
-    DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
-      // Order is significant.  nsIDOMDocument.title shadows
-      // nsIDOMSVGDocument.title, which is readonly.
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTouch)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  } else {
-    DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
-      // Order is significant.  nsIDOMDocument.title shadows
-      // nsIDOMSVGDocument.title, which is readonly.
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
-      DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
-    DOM_CLASSINFO_MAP_END
-  }
+  DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
+    // Order is significant.  nsIDOMDocument.title shadows
+    // nsIDOMSVGDocument.title, which is readonly.
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
+    DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
 
   // SVG element classes
 

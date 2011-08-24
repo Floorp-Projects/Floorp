@@ -781,6 +781,9 @@ public:
   // nsIApplicationCacheContainer
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
 
+  // nsITouchEventReceiver
+  NS_DECL_NSITOUCHEVENTRECEIVER
+
   // nsIDOMDocumentTouch
   NS_DECL_NSIDOMDOCUMENTTOUCH
 
