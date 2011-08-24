@@ -75,8 +75,10 @@ static EventListenerCounter sEventListenerCounter;
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
                                      void *aScopeObject,
                                      nsISupports *aTarget,
-                                     nsIAtom* aType)
-  : nsIJSEventListener(aContext, aScopeObject, aTarget), mEventName(aType)
+                                     nsIAtom* aType,
+                                     void *aHandler)
+  : nsIJSEventListener(aContext, aScopeObject, aTarget, aHandler),
+    mEventName(aType)
 {
   // aScopeObject is the inner window's JS object, which we need to lock
   // until we are done with it.
@@ -85,13 +87,18 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(), this,
                                    &NS_CYCLE_COLLECTION_NAME(nsJSEventListener),
                                    aScopeObject, PR_FALSE);
+  if (aHandler) {
+    nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(), this,
+                                     &NS_CYCLE_COLLECTION_NAME(nsJSEventListener),
+                                     aHandler, PR_TRUE);
+  }
 }
 
 nsJSEventListener::~nsJSEventListener() 
 {
   if (mContext)
     nsContentUtils::DropScriptObjects(mContext->GetScriptTypeID(), this,
-                                &NS_CYCLE_COLLECTION_NAME(nsJSEventListener));
+                                      &NS_CYCLE_COLLECTION_NAME(nsJSEventListener));
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
@@ -118,48 +125,28 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(tmp->mContext->GetScriptTypeID(),
                                                  mScopeObject)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(tmp->mContext->GetScriptTypeID(),
+                                                 mHandler)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIJSEventListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSEventListener)
 
 nsresult
-nsJSEventListener::GetJSVal(const nsAString& aEventName, jsval* aJSVal)
-{
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
-  if (target && mContext) {
-    nsAutoString eventString = NS_LITERAL_STRING("on") + aEventName;
-    nsCOMPtr<nsIAtom> atomName = do_GetAtom(eventString);
-    nsScriptObjectHolder funcval(mContext);
-    nsresult rv = mContext->GetBoundEventHandler(mTarget, mScopeObject,
-                                                 atomName, funcval);
-    NS_ENSURE_SUCCESS(rv, rv);
-    jsval funval =
-      OBJECT_TO_JSVAL(static_cast<JSObject*>(static_cast<void*>(funcval)));
-    *aJSVal = funval;
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
+  if (!target || !mContext || !mHandler)
+    return NS_ERROR_FAILURE;
+
   nsresult rv;
   nsCOMPtr<nsIMutableArray> iargv;
-
-  nsScriptObjectHolder funcval(mContext);
-  rv = mContext->GetBoundEventHandler(mTarget, mScopeObject, mEventName,
-                                      funcval);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!funcval)
-    return NS_OK;
 
   PRBool handledScriptError = PR_FALSE;
   if (mEventName == nsGkAtoms::onerror) {
@@ -220,7 +207,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
                "JSEventListener has wrong script context?");
 #endif
   nsCOMPtr<nsIVariant> vrv;
-  rv = mContext->CallEventHandler(mTarget, mScopeObject, funcval, iargv,
+  rv = mContext->CallEventHandler(mTarget, mScopeObject, mHandler, iargv,
                                   getter_AddRefs(vrv));
 
   if (NS_SUCCEEDED(rv)) {
@@ -268,6 +255,18 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   return rv;
 }
 
+/* virtual */ void
+nsJSEventListener::SetHandler(void *aHandler)
+{
+  // Technically we should drop the old mHandler and hold the new
+  // one... except for JS this is a no-op, and we're really not
+  // pretending very hard to support anything else.  And since we
+  // can't in fact only drop one script object (we'd have to drop
+  // mScope too, and then re-hold it), let's just not worry about it
+  // all.
+  mHandler = aHandler;
+}
+
 /*
  * Factory functions
  */
@@ -275,11 +274,12 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 NS_NewJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
                       nsISupports*aTarget, nsIAtom* aEventType,
-                      nsIDOMEventListener ** aReturn)
+                      void *aHandler, nsIDOMEventListener ** aReturn)
 {
   NS_ENSURE_ARG(aEventType);
   nsJSEventListener* it =
-    new nsJSEventListener(aContext, aScopeObject, aTarget, aEventType);
+    new nsJSEventListener(aContext, aScopeObject, aTarget, aEventType,
+                          aHandler);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
