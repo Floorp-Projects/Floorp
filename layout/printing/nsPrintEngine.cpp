@@ -46,6 +46,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
+#include "nsIFrame.h"
 #include "nsIURI.h"
 #include "nsITextToSubURI.h"
 #include "nsContentErrors.h"
@@ -393,7 +394,7 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
 
   // first count the total number of pages
   aCount = 0;
-  nsIFrame* pageFrame = aSeqFrame->GetFirstChild(nsnull);
+  nsIFrame* pageFrame = aSeqFrame->GetFirstPrincipalChild();
   while (pageFrame != nsnull) {
     aCount++;
     pageFrame = pageFrame->GetNextSibling();
@@ -2093,7 +2094,7 @@ nsPrintEngine::CalcNumPrintablePages(PRInt32& aNumPages)
       nsIPageSequenceFrame* pageSequence = po->mPresShell->GetPageSequenceFrame();
       nsIFrame * seqFrame = do_QueryFrame(pageSequence);
       if (seqFrame) {
-        nsIFrame* frame = seqFrame->GetFirstChild(nsnull);
+        nsIFrame* frame = seqFrame->GetFirstPrincipalChild();
         while (frame) {
           aNumPages++;
           frame = frame->GetNextSibling();
@@ -2680,7 +2681,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   // dump all the pages and their pointers
   {
   PRInt32 pageNum = 1;
-  nsIFrame* child = seqFrame->GetFirstChild(nsnull);
+  nsIFrame* child = seqFrame->GetFirstPrincipalChild();
   while (child != nsnull) {
     printf("Page: %d - %p\n", pageNum, child);
     pageNum++;
@@ -2692,7 +2693,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   // Now that we have the page frames
   // find out what the page numbers are for each frame
   PRInt32 pageNum = 1;
-  nsIFrame* page = seqFrame->GetFirstChild(nsnull);
+  nsIFrame* page = seqFrame->GetFirstPrincipalChild();
   while (page != nsnull) {
     if (page == startPageFrame) {
       aStartPageNum = pageNum;
@@ -3467,7 +3468,7 @@ static void DumpFrames(FILE*                 out,
   NS_ASSERTION(aRendContext, "Pointer is null!");
   NS_ASSERTION(aFrame, "Pointer is null!");
 
-  nsIFrame* child = aFrame->GetFirstChild(nsnull);
+  nsIFrame* child = aFrame->GetFirstPrincipalChild();
   while (child != nsnull) {
     for (PRInt32 i=0;i<aLevel;i++) {
      fprintf(out, "  ");
@@ -3609,7 +3610,7 @@ static void DumpPrintObjectsList(nsTArray<nsPrintObject*> * aDocList)
         if (sqf) {
           break;
         }
-        rootFrame = rootFrame->GetFirstChild(nsnull);
+        rootFrame = rootFrame->GetFirstPrincipalChild();
       }
     }
 

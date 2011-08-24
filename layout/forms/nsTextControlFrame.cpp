@@ -268,7 +268,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
     // been reflowed yet, so we can't get its used padding, but it shouldn't be
     // using percentage padding anyway.
     nsMargin childPadding;
-    nsIFrame* firstChild = GetFirstChild(nsnull);
+    nsIFrame* firstChild = GetFirstPrincipalChild();
     if (firstChild && firstChild->GetStylePadding()->GetPadding(childPadding)) {
       aIntrinsicSize.width += childPadding.LeftRight();
     } else {
@@ -293,7 +293,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
 
   // Add in the size of the scrollbars for textarea
   if (IsTextArea()) {
-    nsIFrame* first = GetFirstChild(nsnull);
+    nsIFrame* first = GetFirstPrincipalChild();
 
     nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
@@ -1416,12 +1416,12 @@ nsTextControlFrame::CheckFireOnChange()
 // END IMPLEMENTING NS_IFORMCONTROLFRAME
 
 NS_IMETHODIMP
-nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
+nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
                                         nsFrameList&    aChildList)
 {
-  nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  nsresult rv = nsBoxFrame::SetInitialChildList(aListID, aChildList);
 
-  nsIFrame* first = GetFirstChild(nsnull);
+  nsIFrame* first = GetFirstPrincipalChild();
 
   // Mark the scroll frame as being a reflow root. This will allow
   // incremental reflows to be initiated at the scroll frame, rather

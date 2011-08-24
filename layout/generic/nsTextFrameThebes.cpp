@@ -1067,8 +1067,9 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
     }
   } else {
     if (continuesTextRun) {
-      result.mFrameToScan = aFrame->GetFirstChild(nsnull);
-      result.mOverflowFrameToScan = aFrame->GetFirstChild(nsGkAtoms::overflowList);
+      result.mFrameToScan = aFrame->GetFirstPrincipalChild();
+      result.mOverflowFrameToScan =
+        aFrame->GetFirstChild(nsIFrame::kOverflowList);
       NS_WARN_IF_FALSE(!result.mOverflowFrameToScan,
                        "Scanning overflow inline frames is something we should avoid");
       result.mScanSiblings = PR_TRUE;
@@ -1194,7 +1195,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     // just one line
     scanner.SetAtStartOfLine();
     scanner.SetCommonAncestorWithLastFrame(nsnull);
-    nsIFrame* child = aLineContainer->GetFirstChild(nsnull);
+    nsIFrame* child = aLineContainer->GetFirstPrincipalChild();
     while (child) {
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
@@ -6719,7 +6720,7 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
       if (NS_SUCCEEDED(rv)) {
         nsTextFrame* next = static_cast<nsTextFrame*>(newFrame);
         nsFrameList temp(next, next);
-        GetParent()->InsertFrames(nsGkAtoms::nextBidi, this, temp);
+        GetParent()->InsertFrames(kNoReflowPrincipalList, this, temp);
         f = next;
       }
     }
@@ -6761,7 +6762,7 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
       // since the bidi resolver may try to handle the destroyed frame later
       // and crash
       nsSplittableFrame::RemoveFromFlow(f);
-      f->GetParent()->RemoveFrame(nsGkAtoms::nextBidi, f);
+      f->GetParent()->RemoveFrame(kNoReflowPrincipalList, f);
     }
     f = next;
   }

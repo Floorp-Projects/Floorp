@@ -1707,7 +1707,7 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
       break;
 
     // Add lines for the sibling frames before the caret
-    nsIFrame *sibling = parentFrame->GetFirstChild(nsnull);
+    nsIFrame *sibling = parentFrame->GetFirstPrincipalChild();
     while (sibling && sibling != caretFrame) {
       nsAutoLineIterator lineIterForSibling = sibling->GetLineIterator();
       if (lineIterForSibling) {

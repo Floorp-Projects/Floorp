@@ -1873,7 +1873,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
     if (!weakFrame.IsAlive()) {
       return;
     }
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(mBoundFrame->GetFirstChild(nsnull));
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(mBoundFrame->GetFirstPrincipalChild());
     if (scrollableFrame)
     {
       // Scroll the upper left corner of the text control's
@@ -1926,7 +1926,7 @@ nsTextEditorState::InitializeKeyboardEventListeners()
                                     NS_EVENT_FLAG_SYSTEM_EVENT);
   }
 
-  mSelCon->SetScrollableFrame(do_QueryFrame(mBoundFrame->GetFirstChild(nsnull)));
+  mSelCon->SetScrollableFrame(do_QueryFrame(mBoundFrame->GetFirstPrincipalChild()));
 }
 
 /* static */ void

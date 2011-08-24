@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -313,7 +313,7 @@ nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
 // frames into a separate child list, bug 343048.
 NS_IMETHODIMP
-nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
+nsTableFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
 
@@ -323,8 +323,8 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
     NS_NOTREACHED("unexpected second call to SetInitialChildList");
     return NS_ERROR_UNEXPECTED;
   }
-  if (aListName) {
-    // All we know about is the unnamed principal child list
+  if (aListID != kPrincipalList) {
+    // All we know about is the principal child list.
     NS_NOTREACHED("unknown frame list");
     return NS_ERROR_INVALID_ARG;
   }
@@ -535,7 +535,7 @@ void nsTableFrame::ResetRowIndices(const nsFrameList::Slice& aRowGroupsToExclude
   for (PRUint32 rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     if (!excludeRowGroups.GetEntry(rgFrame)) {
-      const nsFrameList& rowFrames = rgFrame->GetChildList(nsnull);
+      const nsFrameList& rowFrames = rgFrame->PrincipalChildList();
       for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd(); rows.Next()) {
         if (NS_STYLE_DISPLAY_TABLE_ROW==rows.get()->GetStyleDisplay()->mDisplay) {
           ((nsTableRowFrame *)rows.get())->SetRowIndex(rowIndex);
@@ -564,7 +564,7 @@ void nsTableFrame::InsertColGroups(PRInt32                   aStartColIndex,
     // to the first-after-next frame?  Will involve making nsFrameList friend
     // of nsIFrame, but it's time for that anyway.
     cgFrame->AddColsToTable(colIndex, PR_FALSE,
-                              colGroups.get()->GetChildList(nsnull));
+                              colGroups.get()->PrincipalChildList());
     PRInt32 numCols = cgFrame->GetColCount();
     colIndex += numCols;
   }
@@ -990,7 +990,7 @@ nsTableFrame::CollectRows(nsIFrame*                   aFrame,
 {
   NS_PRECONDITION(aFrame, "null frame");
   PRInt32 numRows = 0;
-  nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
+  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
   while (childFrame) {
     aCollection.AppendElement(static_cast<nsTableRowFrame*>(childFrame));
     numRows++;
@@ -1172,7 +1172,7 @@ nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   // stacking context, in which case the child won't use its passed-in
   // BorderBackground list anyway. It does affect cell borders though; this
   // lets us get cell borders into the nsTableFrame's BorderBackground list.
-  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
   while (kid) {
     nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1278,7 +1278,7 @@ AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
     if (cellFrame)
       continue;
 
-    if (AnyTablePartHasBorderOrBackground(f->GetChildList(nsnull).FirstChild(), nsnull))
+    if (AnyTablePartHasBorderOrBackground(f->PrincipalChildList().FirstChild(), nsnull))
       return PR_TRUE;
   }
 
@@ -1443,7 +1443,7 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
   for (PRUint32 rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     NS_ASSERTION(rgFrame, "Must have rgFrame here");
-    nsIFrame* childFrame = rgFrame->GetFirstChild(nsnull);
+    nsIFrame* childFrame = rgFrame->GetFirstPrincipalChild();
     // find the row that was inserted first
     while (childFrame) {
       nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
@@ -1828,7 +1828,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   else {
     // Calculate the overflow area contribution from our children.
-    for (nsIFrame* kid = GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
+    for (nsIFrame* kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
       ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kid);
     }
   }
@@ -2083,10 +2083,10 @@ nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
 
 NS_IMETHODIMP
-nsTableFrame::AppendFrames(nsIAtom*        aListName,
+nsTableFrame::AppendFrames(ChildListID     aListID,
                            nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
+  NS_ASSERTION(aListID == kPrincipalList || aListID == kColGroupList,
                "unexpected child list");
 
   // Because we actually have two child lists, one for col group frames and one
@@ -2134,7 +2134,7 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsTableFrame::InsertFrames(nsIAtom*        aListName,
+nsTableFrame::InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
                            nsFrameList&    aFrameList)
 {
@@ -2148,9 +2148,9 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
                "inserting after sibling frame with different parent");
 
   if ((aPrevFrame && !aPrevFrame->GetNextSibling()) ||
-      (!aPrevFrame && GetChildList(aListName).IsEmpty())) {
+      (!aPrevFrame && GetChildList(aListID).IsEmpty())) {
     // Treat this like an append; still a workaround for bug 343048.
-    return AppendFrames(aListName, aFrameList);
+    return AppendFrames(aListID, aFrameList);
   }
 
   // See what kind of frame we have
@@ -2178,7 +2178,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
       aPrevFrame = nsnull;
       while (pseudoFrame  && (parentContent ==
                               (content = pseudoFrame->GetContent()))) {
-        pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
+        pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
       if (NS_LIKELY(container)) { // XXX need this null-check, see bug 411823.
@@ -2206,7 +2206,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
           pseudoFrame = kidFrame;
           while (pseudoFrame  && (parentContent ==
                                   (content = pseudoFrame->GetContent()))) {
-            pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
+            pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
           }
           PRInt32 index = container->IndexOf(content);
           if (index > lastIndex && index < newIndex) {
@@ -2219,7 +2219,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     }
   }
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-    NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
+    NS_ASSERTION(aListID == kPrincipalList || aListID == kColGroupList,
                  "unexpected child list");
     // Insert the column group frames
     const nsFrameList::Slice& newColgroups =
@@ -2236,14 +2236,14 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     }
     InsertColGroups(startColIndex, newColgroups);
   } else if (IsRowGroup(display->mDisplay)) {
-    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
     // Insert the frames in the sibling chain
     const nsFrameList::Slice& newRowGroups =
       mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
     InsertRowGroups(newRowGroups);
   } else {
-    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
     NS_NOTREACHED("How did we even get here?");
     // Just insert the frame and don't worry about reflowing it
     mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
@@ -2261,14 +2261,14 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsTableFrame::RemoveFrame(nsIAtom*        aListName,
+nsTableFrame::RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(aListName == nsGkAtoms::colGroupList ||
+  NS_ASSERTION(aListID == kColGroupList ||
                NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP !=
                  aOldFrame->GetStyleDisplay()->mDisplay,
-               "Wrong list name; use nsGkAtoms::colGroupList iff colgroup");
-  if (aListName == nsGkAtoms::colGroupList) {
+               "Wrong list name; use kColGroupList iff colgroup");
+  if (aListID == kColGroupList) {
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     PRInt32 firstColIndex = colGroup->GetStartColumnIndex();
@@ -2291,7 +2291,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     }
 
   } else {
-    NS_ASSERTION(!aListName, "unexpected child list");
+    NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
     nsTableRowGroupFrame* rgFrame =
       static_cast<nsTableRowGroupFrame*>(aOldFrame);
     // remove the row group from the cell map
@@ -3444,7 +3444,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
   // aPriorChildFrame is not of type aChildType, so we need start from
   // the beginnng and find the closest one
   nsIFrame* lastMatchingFrame = nsnull;
-  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
+  nsIFrame* childFrame = aParentFrame->GetFirstPrincipalChild();
   while (childFrame && (childFrame != aPriorChildFrame)) {
     if (aChildType == childFrame->GetType()) {
       lastMatchingFrame = childFrame;
@@ -3461,13 +3461,13 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
   if (!aKidFrame)
     return;
 
-  nsIFrame* cFrame = aKidFrame->GetFirstChild(nsnull);
+  nsIFrame* cFrame = aKidFrame->GetFirstPrincipalChild();
   while (cFrame) {
     nsTableRowFrame *rowFrame = do_QueryFrame(cFrame);
     if (rowFrame) {
       printf("row(%d)=%p ", rowFrame->GetRowIndex(),
              static_cast<void*>(rowFrame));
-      nsIFrame* childFrame = cFrame->GetFirstChild(nsnull);
+      nsIFrame* childFrame = cFrame->GetFirstPrincipalChild();
       while (childFrame) {
         nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
         if (cellFrame) {
@@ -3559,7 +3559,7 @@ nsTableFrame::Dump(PRBool          aDumpRows,
 // nsTableIterator
 nsTableIterator::nsTableIterator(nsIFrame& aSource)
 {
-  nsIFrame* firstChild = aSource.GetFirstChild(nsnull);
+  nsIFrame* firstChild = aSource.GetFirstPrincipalChild();
   Init(firstChild);
 }
 

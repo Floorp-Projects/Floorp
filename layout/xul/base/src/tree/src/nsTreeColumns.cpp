@@ -645,7 +645,7 @@ nsTreeColumns::EnsureColumns()
     if (!colFrame)
       return;
 
-    colFrame = colFrame->GetFirstChild(nsnull);
+    colFrame = colFrame->GetFirstPrincipalChild();
     if (!colFrame)
       return;
 

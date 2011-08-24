@@ -246,10 +246,10 @@ nsMathMLmactionFrame::GetSelectedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::SetInitialChildList(nsIAtom*        aListName,
+nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
                                           nsFrameList&    aChildList)
 {
-  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListName, aChildList);
+  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListID, aChildList);
 
   // This very first call to GetSelectedFrame() will cause us to be marked as an
   // embellished operator if the selected child is an embellished operator
