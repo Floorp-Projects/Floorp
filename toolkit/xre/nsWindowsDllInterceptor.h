@@ -189,7 +189,6 @@ protected:
 
     int nBytes = 0;
 #if defined(_M_IX86)
-    int nJmp32 = -1;
     while (nBytes < 5) {
       // Understand some simple instructions that might be found in a
       // prologue; we might need to extend this as necessary.
@@ -217,11 +216,6 @@ protected:
       } else if (origBytes[nBytes] == 0x6A) {
         // PUSH imm8
         nBytes += 2;
-      } else if (origBytes[nBytes] == 0xe9) {
-        // JMP rel32
-        nJmp32 = nBytes;
-        // jmp 32bit offset
-        nBytes += 5;
       } else {
         //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nBytes]);
         return 0;
@@ -355,16 +349,8 @@ protected:
     byteptr_t trampDest = origBytes + nBytes;
 
 #if defined(_M_IX86)
-    if (nJmp32 >= 0) {
-      // Function entry has JMP rel32.  We replace with correct target address.
-      byteptr_t targetAddress =
-        origBytes + nJmp32 + 5 + (*((LONG*)(origBytes+nJmp32+1)));
-      *((intptr_t*)(tramp+nJmp32+1)) =
-        (intptr_t)targetAddress - (intptr_t)(tramp+nJmp32+5);
-    } else {
-      tramp[nBytes] = 0xE9; // jmp
-      *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
-    }
+    tramp[nBytes] = 0xE9; // jmp
+    *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
 #elif defined(_M_X64)
     // If JMP32 opcode found, we don't insert to trampoline jump 
     if (pJmp32 >= 0) {

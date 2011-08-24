@@ -723,11 +723,11 @@ nsDocShell::nsDocShell():
     mChildOffset(0),
     mBusyFlags(BUSY_FLAGS_NONE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
+    mLoadType(0),
     mMarginWidth(-1),
     mMarginHeight(-1),
     mItemType(typeContent),
     mPreviousTransIndex(-1),
-    mLoadType(0),
     mLoadedTransIndex(-1),
     mCreated(PR_FALSE),
     mAllowSubframes(PR_TRUE),
@@ -8452,13 +8452,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             GetCurScrollPos(ScrollOrientation_X, &cx);
             GetCurScrollPos(ScrollOrientation_Y, &cy);
 
-            // We scroll whenever we're not doing a history load.  Note that
-            // sometimes we might scroll even if we don't fire a hashchange
-            // event!  See bug 653741.
-            if (!aSHEntry) {
-                rv = ScrollToAnchor(curHash, newHash, aLoadType);
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
+            // ScrollToAnchor doesn't necessarily cause us to scroll the window;
+            // the function decides whether a scroll is appropriate based on the
+            // arguments it receives.  But even if we don't end up scrolling,
+            // ScrollToAnchor performs other important tasks, such as informing
+            // the presShell that we have a new hash.  See bug 680257.
+            rv = ScrollToAnchor(curHash, newHash, aLoadType);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             mLoadType = aLoadType;
             mURIResultedInDocument = PR_TRUE;

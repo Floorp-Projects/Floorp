@@ -572,7 +572,7 @@
             <separator/>
             <textbox id="syncsetup-account" class="prompt-edit" placeholder="&sync.account;" oninput="WeaveGlue.canConnect();"/>
             <textbox id="syncsetup-password" class="prompt-edit" placeholder="&sync.password;" type="password" oninput="WeaveGlue.canConnect();"/>
-            <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.syncKey;" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.recoveryKey;" oninput="WeaveGlue.canConnect();"/>
             <separator class="thin"/>
             <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
               <image class="button-image-icon"/>

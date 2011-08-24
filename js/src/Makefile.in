@@ -77,6 +77,36 @@ GRE_MODULE	    = 1
 
 LIBS		= $(NSPR_LIBS) 
 
+ifdef GNU_CXX
+ifdef INTEL_CXX
+# icc gets special optimize flags
+ifdef MOZ_PROFILE_GENERATE
+MODULE_OPTIMIZE_FLAGS = -O0
+else
+MODULE_OPTIMIZE_FLAGS = -O2 -ip
+endif
+else # not INTEL_CXX
+
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fno-stack-protector
+
+# We normally want -fomit-frame-pointer, but we want an explicit
+# -fno-omit-frame-pointer if we're using a sampling profiler.
+ifndef MOZ_PROFILING
+MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
+else
+MODULE_OPTIMIZE_FLAGS += -fno-omit-frame-pointer
+endif
+
+endif
+else # not GNU_CXX
+ifeq ($(OS_ARCH),SunOS)
+MODULE_OPTIMIZE_FLAGS = -xO4
+endif
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
@@ -408,6 +438,9 @@ else
 ###############################################
 # BEGIN include sources for the Nitro assembler
 #
+
+ENABLE_YARR_JIT = 1
+
 VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
 		$(srcdir)/assembler/jit \
@@ -1051,7 +1084,11 @@ endif
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just
 # the code in js/src/assembler.
-CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
+CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
+
+ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_TRACEJIT)$(ENABLE_METHODJIT))
+CXXFLAGS +=  -DENABLE_JIT=1
+endif
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 

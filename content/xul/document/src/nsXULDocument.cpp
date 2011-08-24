@@ -4047,7 +4047,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (attr == nsGkAtoms::removeelement &&
             value.EqualsLiteral("true")) {
 
-            rv = RemoveElement(aTargetNode->GetParent(), aTargetNode);
+            nsCOMPtr<nsIContent> parent = aTargetNode->GetParent();
+            rv = RemoveElement(parent, aTargetNode);
             if (NS_FAILED(rv)) return rv;
 
             return NS_OK;

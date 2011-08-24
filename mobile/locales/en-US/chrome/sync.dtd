@@ -14,7 +14,7 @@
 <!ENTITY sync.setup.manual          "Enter your Sync account information">
 <!ENTITY sync.account               "Account Name">
 <!ENTITY sync.password              "Password">
-<!ENTITY sync.syncKey               "Sync Key">
+<!ENTITY sync.recoveryKey           "Recovery Key">
 <!ENTITY sync.customServer          "Use custom server">
 <!ENTITY sync.serverURL             "Server URL">
 <!ENTITY sync.setup.connect         "Connect">

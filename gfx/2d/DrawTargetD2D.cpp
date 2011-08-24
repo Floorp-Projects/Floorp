@@ -50,19 +50,19 @@
 #endif
 
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
-    __in D2D1_FACTORY_TYPE factoryType,
-    __in REFIID iid,
-    __in_opt CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
-    __out void **factory
+    D2D1_FACTORY_TYPE factoryType,
+    REFIID iid,
+    CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    void **factory
 );
 
 typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
-  __in   void *pData,
-  __in   SIZE_T DataLength,
-  __in   UINT FXFlags,
-  __in   ID3D10Device *pDevice,
-  __in   ID3D10EffectPool *pEffectPool,
-  __out  ID3D10Effect **ppEffect
+    void *pData,
+    SIZE_T DataLength,
+    UINT FXFlags,
+    ID3D10Device *pDevice,
+    ID3D10EffectPool *pEffectPool,
+    ID3D10Effect **ppEffect
 );
 
 using namespace std;

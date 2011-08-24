@@ -55,7 +55,7 @@
  * @see nsIPrefService
  */
 
-[scriptable, uuid(e0b6e170-691b-11e0-ae3e-0800200c9a66)]
+[scriptable, uuid(e162bfa0-01bd-4e9f-9843-8fb2efcd6d1f)]
 interface nsIPrefBranch : nsISupports
 {
 
@@ -107,7 +107,7 @@ interface nsIPrefBranch : nsISupports
    *
    * @see getBoolPref
    */
-  void setBoolPref(in string aPrefName, in long aValue);
+  void setBoolPref(in string aPrefName, in boolean aValue);
 
   /**
    * Called to get the state of an individual string preference.
