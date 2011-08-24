@@ -6,9 +6,30 @@ if test -z "$CXX" ; then
    CXX=g++-4.2
 fi
 
+# Mac builds don't nomally have to be handled as cross
+# compilation, but some of the libraries on the bots
+# (IDL for example) are built only for one arch.
+
+HOST_CC=$CC
+HOST_CXX=$CXX
+
+# These must be set for cross builds, and don't hurt straight builds.
+RANLIB=ranlib
+AR=ar
+AS=$CC
+LD=ld
+STRIP="strip -x -S"
+
 # We do 32 bit builds for leopard
-CC="$CC -arch i386"
-CXX="$CXX -arch i386"
+TARGET_CPU=i386
+CC="$CC -arch $TARGET_CPU"
+CXX="$CXX -arch $TARGET_CPU"
+
+NATIVE_CPU=`$topsrcdir/build/autoconf/config.guess | cut -f1 -d-`
+
+if test "$NATIVE_CPU" != "$TARGET_CPU" ; then
+  CROSS_COMPILE=1
+fi
 
 # Note, the version (10) is used by libffi's configure.
 ac_add_options --target=i386-apple-darwin10
