@@ -533,21 +533,18 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
-            GCREASON(LASTCONTEXT);
-            js_GC(cx, NULL, GC_LAST_CONTEXT);
+            js_GC(cx, NULL, GC_LAST_CONTEXT, gcstats::LASTCONTEXT);
 
             /* Take the runtime down, now that it has no contexts or atoms. */
             JS_LOCK_GC(rt);
             rt->state = JSRTS_DOWN;
             JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
         } else {
-            if (mode == JSDCM_FORCE_GC) {
-                GCREASON(DESTROYCONTEXT);
-                js_GC(cx, NULL, GC_NORMAL);
-            } else if (mode == JSDCM_MAYBE_GC) {
-                GCREASON(DESTROYCONTEXT);
+            if (mode == JSDCM_FORCE_GC)
+                js_GC(cx, NULL, GC_NORMAL, gcstats::DESTROYCONTEXT);
+            else if (mode == JSDCM_MAYBE_GC)
                 JS_MaybeGC(cx);
-            }
+
             JS_LOCK_GC(rt);
             js_WaitForGC(rt);
         }
@@ -1165,7 +1162,7 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_UNLOCK_GC(rt);
 
     if (rt->gcIsNeeded) {
-        js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL);
+        js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
 
         /*
          * On trace we can exceed the GC quota, see comments in NewGCArena. So
@@ -1514,8 +1511,7 @@ JSRuntime::onTooMuchMalloc()
      */
     js_WaitForGC(this);
 #endif
-    GCREASON(TOOMUCHMALLOC);
-    TriggerGC(this);
+    TriggerGC(this, gcstats::TOOMUCHMALLOC);
 }
 
 JS_FRIEND_API(void *)
