@@ -133,7 +133,7 @@ Decoder::Finish()
          NS_ConvertUTF8toUTF16(mImage->GetURIString()).get(),
          nsnull,
          0, 0, nsIScriptError::errorFlag,
-         "Image", mImage->WindowID()
+         "Image", mImage->InnerWindowID()
          );
   
       nsCOMPtr<nsIScriptError> error = do_QueryInterface(errorObject);
