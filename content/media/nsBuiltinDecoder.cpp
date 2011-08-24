@@ -939,6 +939,15 @@ nsresult nsBuiltinDecoder::GetSeekable(nsTimeRanges* aSeekable)
   return GetBuffered(aSeekable);
 }
 
+void nsBuiltinDecoder::SetEndTime(double aTime)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  if (mDecoderStateMachine) {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mDecoderStateMachine->SetFragmentEndTime(static_cast<PRInt64>(aTime * USECS_PER_S));
+  }
+}
+
 void nsBuiltinDecoder::Suspend()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
