@@ -276,6 +276,7 @@ class GreedyAllocator
     bool prescanDefinition(LDefinition *def);
     bool prescanDefinitions(LInstruction *ins);
     bool prescanUses(LInstruction *ins);
+    bool spillForCall(LInstruction *ins);
     bool informSnapshot(LSnapshot *snapshot);
     bool allocateSameAsInput(LDefinition *def, LAllocation *a, AnyRegister *out);
     bool allocateDefinitions(LInstruction *ins);
