@@ -163,12 +163,12 @@ nsJSUtils::GetDynamicScriptContext(JSContext *aContext)
 }
 
 PRUint64
-nsJSUtils::GetCurrentlyRunningCodeWindowID(JSContext *aContext)
+nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
 {
   if (!aContext)
     return 0;
 
-  PRUint64 windowID = 0;
+  PRUint64 innerWindowID = 0;
 
   JSObject *jsGlobal = JS_GetGlobalForScopeChain(aContext);
   if (jsGlobal) {
@@ -177,10 +177,10 @@ nsJSUtils::GetCurrentlyRunningCodeWindowID(JSContext *aContext)
     if (scriptGlobal) {
       nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(scriptGlobal);
       if (win)
-        windowID = win->GetOuterWindow()->WindowID();
+        innerWindowID = win->WindowID();
     }
   }
 
-  return windowID;
+  return innerWindowID;
 }
 

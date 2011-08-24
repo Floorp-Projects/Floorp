@@ -1252,12 +1252,12 @@ nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
   }
 }
 
-/* virtual */ PRUint64
-nsCSSStyleSheet::FindOwningWindowID() const
+PRUint64
+nsCSSStyleSheet::FindOwningWindowInnerID() const
 {
   PRUint64 windowID = 0;
   if (mDocument) {
-    windowID = mDocument->OuterWindowID();
+    windowID = mDocument->InnerWindowID();
   }
 
   if (windowID == 0 && mOwningNode) {
@@ -1265,7 +1265,7 @@ nsCSSStyleSheet::FindOwningWindowID() const
     if (node) {
       nsIDocument* doc = node->GetOwnerDoc();
       if (doc) {
-        windowID = doc->OuterWindowID();
+        windowID = doc->InnerWindowID();
       }
     }
   }
@@ -1275,13 +1275,13 @@ nsCSSStyleSheet::FindOwningWindowID() const
     if (sheet) {
       nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheet);
       if (cssSheet) {
-        windowID = cssSheet->FindOwningWindowID();
+        windowID = cssSheet->FindOwningWindowInnerID();
       }
     }
   }
 
   if (windowID == 0 && mParent) {
-    windowID = mParent->FindOwningWindowID();
+    windowID = mParent->FindOwningWindowInnerID();
   }
 
   return windowID;
