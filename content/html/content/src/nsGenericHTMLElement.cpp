@@ -1245,7 +1245,8 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(PRBool* aDefer)
     // FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
     // nsDocument::GetInnerWindow can return an outer window in some cases,
     // we don't want to stick an event listener on an outer window, so
-    // bail if it does.
+    // bail if it does.  See similar code in nsHTMLBodyElement and
+    // nsHTMLFramesetElement
     *aDefer = PR_FALSE;
     if (document &&
         (win = document->GetInnerWindow()) && win->IsInnerWindow()) {

@@ -57,6 +57,7 @@
 #include "nsIEditorDocShell.h"
 #include "nsCOMPtr.h"
 #include "nsRuleWalker.h"
+#include "jsapi.h"
 
 //----------------------------------------------------------------------
 
@@ -104,6 +105,16 @@ public:
 
   // nsIDOMHTMLBodyElement
   NS_DECL_NSIDOMHTMLBODYELEMENT
+
+  // Event listener stuff; we need to declare only the ones we need to
+  // forward to window that don't come from nsIDOMHTMLBodyElement.
+#define EVENT(name_, id_, type_, struct_) /* nothing; handled by the shim */
+#define FORWARDED_EVENT(name_, id_, type_, struct_)               \
+    NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);            \
+    NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+#include "nsEventNameList.h"
+#undef FORWARDED_EVENT
+#undef EVENT
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -488,3 +499,54 @@ nsHTMLBodyElement::GetAssociatedEditor()
   editorDocShell->GetEditor(&editor);
   return editor;
 }
+
+// Event listener stuff
+// FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
+// nsDocument::GetInnerWindow can return an outer window in some
+// cases.  We don't want to stick an event listener on an outer
+// window, so bail if it does.  See also similar code in
+// nsGenericHTMLElement::GetEventListenerManagerForAttr.
+#define EVENT(name_, id_, type_, struct_) /* nothing; handled by the superclass */
+#define FORWARDED_EVENT(name_, id_, type_, struct_)                 \
+  NS_IMETHODIMP nsHTMLBodyElement::GetOn##name_(JSContext *cx,      \
+                                           jsval *vp) {             \
+    /* XXXbz note to self: add tests for this! */                   \
+    nsPIDOMWindow* win = GetOwnerDoc()->GetInnerWindow();           \
+    if (win && win->IsInnerWindow()) {                              \
+      nsCOMPtr<nsIInlineEventHandlers> ev = do_QueryInterface(win); \
+      return ev->GetOn##name_(cx, vp);                              \
+    }                                                               \
+    *vp = JSVAL_NULL;                                               \
+    return NS_OK;                                                   \
+  }                                                                 \
+  NS_IMETHODIMP nsHTMLBodyElement::SetOn##name_(JSContext *cx,      \
+                                           const jsval &v) {        \
+    nsPIDOMWindow* win = GetOwnerDoc()->GetInnerWindow();           \
+    if (win && win->IsInnerWindow()) {                              \
+      nsCOMPtr<nsIInlineEventHandlers> ev = do_QueryInterface(win); \
+      return ev->SetOn##name_(cx, v);                               \
+    }                                                               \
+    return NS_OK;                                                   \
+  }
+#define WINDOW_EVENT(name_, id_, type_, struct_)                  \
+  NS_IMETHODIMP nsHTMLBodyElement::GetOn##name_(JSContext *cx,    \
+                                                jsval *vp) {      \
+    nsPIDOMWindow* win = GetOwnerDoc()->GetInnerWindow();         \
+    if (win && win->IsInnerWindow()) {                            \
+      return win->GetOn##name_(cx, vp);                           \
+    }                                                             \
+    *vp = JSVAL_NULL;                                             \
+    return NS_OK;                                                 \
+  }                                                               \
+  NS_IMETHODIMP nsHTMLBodyElement::SetOn##name_(JSContext *cx,    \
+                                                const jsval &v) { \
+    nsPIDOMWindow* win = GetOwnerDoc()->GetInnerWindow();         \
+    if (win && win->IsInnerWindow()) {                            \
+      return win->SetOn##name_(cx, v);                            \
+    }                                                             \
+    return NS_OK;                                                 \
+  }
+#include "nsEventNameList.h"
+#undef WINDOW_EVENT
+#undef FORWARDED_EVENT
+#undef EVENT
