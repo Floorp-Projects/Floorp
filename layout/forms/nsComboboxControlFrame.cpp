@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1204,7 +1204,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   mDisplayContent->SetPrimaryFrame(textFrame);
 
   nsFrameList textList(textFrame, textFrame);
-  mDisplayFrame->SetInitialChildList(nsnull, textList);
+  mDisplayFrame->SetInitialChildList(kPrincipalList, textList);
   return mDisplayFrame;
 }
 
@@ -1254,11 +1254,11 @@ nsComboboxControlFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
+nsComboboxControlFrame::SetInitialChildList(ChildListID     aListID,
                                             nsFrameList&    aChildList)
 {
   nsresult rv = NS_OK;
-  if (nsGkAtoms::selectPopupList == aListName) {
+  if (kSelectPopupList == aListID) {
     mPopupFrames.SetFrames(aChildList);
   } else {
     for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
@@ -1270,7 +1270,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
       }
     }
     NS_ASSERTION(mButtonFrame, "missing button frame in initial child list");
-    rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
+    rv = nsBlockFrame::SetInitialChildList(aListID, aChildList);
   }
   return rv;
 }

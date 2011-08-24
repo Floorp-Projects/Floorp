@@ -82,53 +82,53 @@ nsPopupSetFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::AppendFrames(nsIAtom*        aListName,
+nsPopupSetFrame::AppendFrames(ChildListID     aListID,
                               nsFrameList&    aFrameList)
 {
-  if (aListName == nsGkAtoms::popupList) {
+  if (aListID == kPopupList) {
     AddPopupFrameList(aFrameList);
     return NS_OK;
   }
-  return nsBoxFrame::AppendFrames(aListName, aFrameList);
+  return nsBoxFrame::AppendFrames(aListID, aFrameList);
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::RemoveFrame(nsIAtom*        aListName,
+nsPopupSetFrame::RemoveFrame(ChildListID     aListID,
                              nsIFrame*       aOldFrame)
 {
-  if (aListName == nsGkAtoms::popupList) {
+  if (aListID == kPopupList) {
     RemovePopupFrame(aOldFrame);
     return NS_OK;
   }
-  return nsBoxFrame::RemoveFrame(aListName, aOldFrame);
+  return nsBoxFrame::RemoveFrame(aListID, aOldFrame);
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::InsertFrames(nsIAtom*        aListName,
+nsPopupSetFrame::InsertFrames(ChildListID     aListID,
                               nsIFrame*       aPrevFrame,
                               nsFrameList&    aFrameList)
 {
-  if (aListName == nsGkAtoms::popupList) {
+  if (aListID == kPopupList) {
     AddPopupFrameList(aFrameList);
     return NS_OK;
   }
-  return nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+  return nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::SetInitialChildList(nsIAtom*        aListName,
+nsPopupSetFrame::SetInitialChildList(ChildListID     aListID,
                                      nsFrameList&    aChildList)
 {
-  if (aListName == nsGkAtoms::popupList) {
+  if (aListID == kPopupList) {
     // XXXmats this asserts because we don't implement
-    // GetChildList(nsGkAtoms::popupList) so nsCSSFrameConstructor
+    // GetChildList(kPopupList) so nsCSSFrameConstructor
     // believes it's empty and calls us multiple times.
     //NS_ASSERTION(mPopupList.IsEmpty(),
     //             "SetInitialChildList on non-empty child list");
     AddPopupFrameList(aChildList);
     return NS_OK;
   }
-  return nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  return nsBoxFrame::SetInitialChildList(aListID, aChildList);
 }
 
 void

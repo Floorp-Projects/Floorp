@@ -7981,7 +7981,7 @@ static nsCanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
         return canvasFrame;
     }
 
-    nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+    nsIFrame* kid = aFrame->GetFirstPrincipalChild();
     while (kid) {
         canvasFrame = FindCanvasFrame(kid);
         if (canvasFrame) {

@@ -2545,7 +2545,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
 nsIObjectFrame *
 nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 {
-  nsIFrame* child = aRoot->GetFirstChild(nsnull);
+  nsIFrame* child = aRoot->GetFirstPrincipalChild();
 
   while (child) {
     nsIObjectFrame* outFrame = do_QueryFrame(child);

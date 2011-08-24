@@ -56,10 +56,10 @@
 
 nsresult
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                                               nsIAtom*        aListName,
+                                               ChildListID     aListID,
                                                nsFrameList&    aChildList)
 {
-  NS_PRECONDITION(GetChildListName() == aListName, "unexpected child list name");
+  NS_PRECONDITION(GetChildListID() == aListID, "unexpected child list name");
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
@@ -69,10 +69,10 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
-                                        nsIAtom*       aListName,
+                                        ChildListID    aListID,
                                         nsFrameList&   aFrameList)
 {
-  NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+  NS_ASSERTION(GetChildListID() == aListID, "unexpected child list");
 
   // Append the frames to our list of absolutely positioned frames
 #ifdef NS_DEBUG
@@ -91,11 +91,11 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
-                                        nsIAtom*       aListName,
+                                        ChildListID    aListID,
                                         nsIFrame*      aPrevFrame,
                                         nsFrameList&   aFrameList)
 {
-  NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+  NS_ASSERTION(GetChildListID() == aListID, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == aDelegatingFrame,
                "inserting after sibling frame with different parent");
 
@@ -115,10 +115,10 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
 
 void
 nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
-                                       nsIAtom*        aListName,
+                                       ChildListID     aListID,
                                        nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+  NS_ASSERTION(GetChildListID() == aListID, "unexpected child list");
   nsIFrame* nif = aOldFrame->GetNextInFlow();
   if (nif) {
     static_cast<nsContainerFrame*>(nif->GetParent())
@@ -361,7 +361,7 @@ nsAbsoluteContainingBlock::DoMarkFramesDirty(PRBool aMarkAllDirty)
 // reflow...
 
 // When bug 154892 is checked in, make sure that when 
-// GetChildListName() == nsGkAtoms::fixedList, the height is unconstrained.
+// GetChildListID() == kFixedList, the height is unconstrained.
 // since we don't allow replicated frames to split.
 
 nsresult

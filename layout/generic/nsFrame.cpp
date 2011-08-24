@@ -370,7 +370,7 @@ nsFrame::Init(nsIContent*      aContent,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
+NS_IMETHODIMP nsFrame::SetInitialChildList(ChildListID     aListID,
                                            nsFrameList&    aChildList)
 {
   // XXX This shouldn't be getting called at all, but currently is for backwards
@@ -385,7 +385,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsFrame::AppendFrames(nsIAtom*        aListName,
+nsFrame::AppendFrames(ChildListID     aListID,
                       nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
@@ -393,7 +393,7 @@ nsFrame::AppendFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsFrame::InsertFrames(nsIAtom*        aListName,
+nsFrame::InsertFrames(ChildListID     aListID,
                       nsIFrame*       aPrevFrame,
                       nsFrameList&    aFrameList)
 {
@@ -402,7 +402,7 @@ nsFrame::InsertFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsFrame::RemoveFrame(nsIAtom*        aListName,
+nsFrame::RemoveFrame(ChildListID     aListID,
                      nsIFrame*       aOldFrame)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
@@ -2741,7 +2741,7 @@ static FrameTarget DrillDownToSelectionFrame(nsIFrame* aFrame,
                                              PRBool aEndFrame) {
   if (SelectionDescendToKids(aFrame)) {
     nsIFrame* result = nsnull;
-    nsIFrame *frame = aFrame->GetFirstChild(nsnull);
+    nsIFrame *frame = aFrame->GetFirstPrincipalChild();
     if (!aEndFrame) {
       while (frame && (!SelfIsSelectable(frame) ||
                         frame->IsEmpty()))
@@ -2910,7 +2910,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
       return target;
   }
 
-  nsIFrame *kid = aFrame->GetFirstChild(nsnull);
+  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
 
   if (kid) {
     // Go through all the child frames to find the closest one
@@ -5360,13 +5360,13 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 
   // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
-    nsIFrame* child = aFrame->GetChildList(nsnull).LastChild();
+    nsIFrame* child = aFrame->GetLastChild(nsIFrame::kPrincipalList);
     while(child && !result.mContent) {
       result = FindBlockFrameOrBR(child, aDirection);
       child = child->GetPrevSibling();
     }
   } else { // eDirNext
-    nsIFrame* child = aFrame->GetFirstChild(nsnull);
+    nsIFrame* child = aFrame->GetFirstPrincipalChild();
     while(child && !result.mContent) {
       result = FindBlockFrameOrBR(child, aDirection);
       child = child->GetNextSibling();
@@ -5659,7 +5659,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
             if (aPos->mResultFrame->GetType() == nsGkAtoms::tableOuterFrame ||
                 aPos->mResultFrame->GetType() == nsGkAtoms::tableCellFrame)
             {
-              nsIFrame *frame = aPos->mResultFrame->GetFirstChild(nsnull);
+              nsIFrame *frame = aPos->mResultFrame->GetFirstPrincipalChild();
               //got the table frame now
               while(frame) //ok time to drill down to find iterator
               {
@@ -5672,7 +5672,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
                   break; //while(frame)
                 }
                 result = NS_ERROR_FAILURE;
-                frame = frame->GetFirstChild(nsnull);
+                frame = frame->GetFirstPrincipalChild();
               }
             }
 
@@ -6394,8 +6394,8 @@ GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
     // table, that actually means its the _inner_ table that wants to
     // know its parent.  So get the pseudo of the inner in that case.
     if (pseudo == nsCSSAnonBoxes::tableOuter) {
-      pseudo =
-        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudo();
+      pseudo = aFrame->GetFirstPrincipalChild()
+                         ->GetStyleContext()->GetPseudo();
     }
     *aSpecialParent = nsFrame::CorrectStyleParentFrame(parent, pseudo);
   }
@@ -6531,7 +6531,7 @@ nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
   nsIFrame *child = *aFrame;
   //if we are a block frame then go for the last line of 'this'
   while (1){
-    child = child->GetFirstChild(nsnull);
+    child = child->GetFirstPrincipalChild();
     if (!child)
       return;//nothing to do
     nsIFrame* siblingFrame;
@@ -6553,7 +6553,7 @@ nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
     return;
   nsIFrame *child = *aFrame;
   while (1){
-    child = child->GetFirstChild(nsnull);
+    child = child->GetFirstPrincipalChild();
     if (!child)
       return;//nothing to do
     *aFrame = child;
