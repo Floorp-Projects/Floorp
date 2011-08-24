@@ -203,17 +203,9 @@
 
 #ifdef MOZ_MEMORY_WINDOWS
 
-/* XXXkhuey switch to not patching the CRT for jemalloc all the time */
-/* We use ifndef NEW_STYLE here because when we're build as part of the CRT
-   we don't have access to AC_DEFINEs */
-#ifndef WIN32_NEW_STYLE_JEMALLOC
-#include <cruntime.h>
-#include <internal.h>
-#else
 /* Some defines from the CRT internal headers that we need here. */
 #define _CRT_SPINCOUNT 5000
 #define __crtInitCritSecAndSpinCount InitializeCriticalSectionAndSpinCount
-#endif
 #include <io.h>
 #include <windows.h>
 
@@ -5848,30 +5840,54 @@ malloc_shutdown()
 /*
  * Mangle standard interfaces, in order to avoid linking problems.
  */
-#if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_ANDROID) || \
-    defined(WRAP_MALLOC) || defined(WIN32_NEW_STYLE_JEMALLOC)
-inline void sys_free(void* ptr) {return free(ptr);}
-#define	malloc(a)               je_malloc(a)
-#if defined(WIN32_NEW_STYLE_JEMALLOC) || defined(MOZ_MEMORY_DARWIN)
-#define	memalign(a, b)          je_memalign(a, b)
-#endif
-#define	posix_memalign(a, b, c) je_posix_memalign(a, b, c)
-#define	valloc(a)               je_valloc(a)
-#define	calloc(a, b)            je_calloc(a, b)
-#define	realloc(a, b)           je_realloc(a, b)
-#define	free(a)                 je_free(a)
-#define	malloc_usable_size(a)   je_malloc_usable_size(a)
- 
+#if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_WINDOWS) || \
+    defined(MOZ_MEMORY_ANDROID)
 
-char    *je_strndup(const char *src, size_t len) {
-  char* dst = (char*)je_malloc(len + 1);
-  if(dst)
-    strncpy(dst, src, len + 1);
-  return dst;
+#ifdef MOZ_MEMORY_ANDROID
+/*
+ * On Android, we use __wrap_* instead of je_* to accomodate with the
+ * linker's --wrap option we use. That option prefixes the function
+ * names it is given with __wrap_.
+ */
+#define wrap(a) __wrap_ ## a
+
+/* Extra wrappers for NSPR alloc functions */
+void *
+__wrap_PR_Malloc(size_t size) __attribute__((alias("__wrap_malloc")));
+void *
+__wrap_PR_Calloc(size_t num, size_t size) __attribute__((alias("__wrap_calloc")));
+void *
+__wrap_PR_Realloc(void *ptr, size_t size) __attribute__((alias("__wrap_realloc")));
+void
+__wrap_PR_Free(void *ptr) __attribute__((alias("__wrap_free")));
+
+#else
+#define wrap(a) je_ ## a
+#endif
+
+#define malloc(a)               wrap(malloc)(a)
+#define memalign(a, b)          wrap(memalign)(a, b)
+#define posix_memalign(a, b, c) wrap(posix_memalign)(a, b, c)
+#define valloc(a)               wrap(valloc)(a)
+#define calloc(a, b)            wrap(calloc)(a, b)
+#define realloc(a, b)           wrap(realloc)(a, b)
+#define free(a)                 wrap(free)(a)
+#define malloc_usable_size(a)   wrap(malloc_usable_size)(a)
+
+void *malloc(size_t size);
+
+char *
+wrap(strndup)(const char *src, size_t len) {
+	char* dst = (char*) malloc(len + 1);
+	if (dst)
+		strncpy(dst, src, len + 1);
+	return dst;
 }
-char    *je_strdup(const char *src) {
-  size_t len = strlen(src);
-  return je_strndup(src, len );
+
+char *
+wrap(strdup)(const char *src) {
+	size_t len = strlen(src);
+	return wrap(strndup)(src, len);
 }
 #endif
 
@@ -6020,9 +6036,8 @@ RETURN:
 }
 
 #ifdef MOZ_MEMORY_ELF
-extern __typeof(memalign_internal)
-        memalign __attribute__((alias ("memalign_internal"),
-				visibility ("default")));
+extern void *
+memalign(size_t alignment, size_t size) __attribute__((alias ("memalign_internal"), visibility ("default")));
 #endif
 
 int
@@ -6779,12 +6794,10 @@ jemalloc_darwin_init(void)
  * passed an extra argument for the caller return address, which will be
  * ignored.
  */
-#ifndef WRAP_MALLOC
 void (*__free_hook)(void *ptr) = free;
 void *(*__malloc_hook)(size_t size) = malloc;
 void *(*__realloc_hook)(void *ptr, size_t size) = realloc;
 void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
-#endif
 
 #elif defined(RTLD_DEEPBIND)
 /*
@@ -6795,7 +6808,7 @@ void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
 #  error "Interposing malloc is unsafe on this system without libc malloc hooks."
 #endif
 
-#ifdef WIN32_NEW_STYLE_JEMALLOC
+#ifdef MOZ_MEMORY_WINDOWS
 /*
  * In the new style jemalloc integration jemalloc is built as a separate
  * shared library.  Since we're no longer hooking into the CRT binary,

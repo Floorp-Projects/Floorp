@@ -61,7 +61,7 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include "prenv.h"
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #include <CoreServices/CoreServices.h>
 #include <Carbon/Carbon.h>
 #endif
@@ -78,7 +78,7 @@
 // For Windows platform, We are choosing Appdata folder as HOME
 #if defined (XP_WIN)
 #define HOME_DIR NS_WIN_APPDATA_DIR
-#elif defined (XP_MACOSX)
+#elif defined (MOZ_WIDGET_COCOA)
 #define HOME_DIR NS_OSX_HOME_DIR
 #elif defined (XP_UNIX)
 #define HOME_DIR NS_UNIX_HOME_DIR
@@ -139,7 +139,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         return NS_OK;
     }
 
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
     // Works even if we're not bundled.
     CFBundleRef appBundle = CFBundleGetMainBundle();
     if (appBundle != nsnull)
@@ -615,7 +615,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         rv = GetSpecialSystemDirectory(OS_CurrentWorkingDirectory, getter_AddRefs(localFile)); 
     }
        
-#if defined(XP_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
     else if (inAtom == nsDirectoryService::sDirectory)
     {
         rv = GetOSXFolderType(kClassicDomain, kSystemFolderType, getter_AddRefs(localFile));

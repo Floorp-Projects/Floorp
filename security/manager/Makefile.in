@@ -144,6 +144,8 @@ ifneq (,$(filter mingw%,$(host_os)))
 ABS_DIST := $(shell cd $(DIST) && pwd -W)
 endif
 endif
+# For all variables such as DLLFLAGS, that may contain $(DIST)
+DIST := $(ABS_DIST)
 NSPR_INCLUDE_DIR = $(firstword $(filter -I%,$(NSPR_CFLAGS)))
 ifneq (,$(strip $(NSPR_INCLUDE_DIR)))
 NSPR_INCLUDE_DIR := $(subst -I,,$(subst -I$(DIST),-I$(ABS_DIST),$(NSPR_INCLUDE_DIR)))
