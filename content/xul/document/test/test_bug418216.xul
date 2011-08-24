@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418216
 
     /** Test for Bug 418216 **/
   SimpleTest.waitForExplicitFinish();
-  function onload() {
+  window.onload = function onload() {
     var element = $("item");
     $("container").removeChild($("item"));
     $("broadcaster").removeAttribute("disabled");
