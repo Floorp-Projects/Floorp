@@ -1728,6 +1728,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mResponseBody.Truncate();
   mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   mResponseBlob = nsnull;
+  mResultArrayBuffer = nsnull;
 
   // Set up responseXML
   PRBool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
