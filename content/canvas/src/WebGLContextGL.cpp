@@ -3167,8 +3167,8 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
     if (target != LOCAL_GL_RENDERBUFFER)
         return ErrorInvalidEnumInfo("renderbufferStorage: target", target);
 
-    if (width <= 0 || height <= 0)
-        return ErrorInvalidValue("renderbufferStorage: width and height must be > 0");
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("renderbufferStorage: width and height must be >= 0");
 
     if (!mBoundRenderbuffer || !mBoundRenderbuffer->GLName())
         return ErrorInvalidOperation("renderbufferStorage called on renderbuffer 0");
