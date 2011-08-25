@@ -565,7 +565,13 @@ class Interface(object):
         return "".join(l)
 
     def getConst(self, name, location):
-        c = self.namemap.get(name, location)
+        # The constant may be in a base class
+        iface = self
+        while name not in iface.namemap and iface is not None:
+            iface = self.idl.getName(self.base, self.location)
+        if iface is None:
+            raise IDLError("cannot find symbol '%s'" % name, c.location)
+        c = iface.namemap.get(name, location)
         if c.kind != 'const':
             raise IDLError("symbol '%s' is not a constant", c.location)
 
