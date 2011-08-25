@@ -262,7 +262,7 @@
                     </hbox>
                   </hbox>
                   <toolbarbutton id="tool-star2" class="tool-star button-actionbar" command="cmd_star"/>
-                  <spacer flex="1"/>
+                  <spacer class="spacer-actionbar" flex="1"/>
                   <toolbarbutton id="tool-menu" class="button-actionbar" command="cmd_menu"/>
 #ifndef ANDROID
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
