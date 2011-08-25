@@ -11,9 +11,6 @@
 /* Define if the c++ compiler supports a 2-byte wchar_t */
 #undef HAVE_CPP_2BYTE_WCHAR_T
 
-/* Define if the c++ compiler supports changing access with |using| */
-#undef HAVE_CPP_ACCESS_CHANGING_USING
-
 /* Define if the c++ compiler can resolve ambiguity with |using| */
 #undef HAVE_CPP_AMBIGUITY_RESOLVING_USING
 
@@ -26,19 +23,10 @@
 /* Define if a dyanmic_cast to void* gives the most derived object */
 #undef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 
-/* Define if the c++ compiler supports the |explicit| keyword */
-#undef HAVE_CPP_EXPLICIT
-
 /* Define if the c++ compiler supports the modern template 
  * specialization syntax 
  */
 #undef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
-
-/* Define if the c++ compiler supports the |std| namespace */
-#undef HAVE_CPP_NAMESPACE_STD
-
-/* Define if the c++ compiler supports reinterpret_cast */
-#undef HAVE_CPP_NEW_CASTS
 
 /* Define if the c++ compiler supports partial template specialization */
 #undef HAVE_CPP_PARTIAL_SPECIALIZATION
@@ -47,12 +35,6 @@
  * reference to a templatized class to zero
  */
 #undef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
-
-/* Define if the c++ compiler supports the |typename| keyword */
-#undef HAVE_CPP_TYPENAME
-
-/* Define if the stanard template operator!=() is ambiguous */
-#undef HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 
 /* Define if statvfs() is available */
 #undef HAVE_STATVFS

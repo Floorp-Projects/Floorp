@@ -3741,42 +3741,6 @@ if test "$GNU_CC"; then
 fi
 AC_SUBST(HAVE_GCC3_ABI)
 
-
-AC_CACHE_CHECK(for C++ \"explicit\" keyword,
-               ac_cv_cpp_explicit,
-               [AC_TRY_COMPILE(class X {
-                               public: explicit X(int i) : i_(i) {}
-                               private: int i_;
-                               };,
-                               X x(3);,
-                               ac_cv_cpp_explicit=yes,
-                               ac_cv_cpp_explicit=no)])
-if test "$ac_cv_cpp_explicit" = yes ; then
-   AC_DEFINE(HAVE_CPP_EXPLICIT)
-fi
-
-AC_CACHE_CHECK(for C++ \"typename\" keyword,
-               ac_cv_cpp_typename,
-               [AC_TRY_COMPILE(class param {
-                               public:
-                                   typedef unsigned long num_type;
-                               };
-
-                               template <class T> class tplt {
-                               public:
-                                   typedef typename T::num_type t_num_type;
-                                   t_num_type foo(typename T::num_type num) {
-                                       return num;
-                                   }
-                               };,
-                               tplt<param> A;
-                               A.foo(0);,
-                               ac_cv_cpp_typename=yes,
-                               ac_cv_cpp_typename=no)])
-if test "$ac_cv_cpp_typename" = yes ; then
-   AC_DEFINE(HAVE_CPP_TYPENAME)
-fi
-
 dnl Check for support of modern template specialization syntax
 dnl Test code and requirement from scc@netscape.com.
 dnl Autoconf cut-and-paste job by waterson@netscape.com
@@ -3806,40 +3770,6 @@ if test "$ac_cv_cpp_partial_specialization" = yes ; then
   AC_DEFINE(HAVE_CPP_PARTIAL_SPECIALIZATION)
 fi
 
-dnl Some compilers have limited support for operators with templates;
-dnl specifically, it is necessary to define derived operators when a base
-dnl class's operator declaration should suffice.
-AC_CACHE_CHECK(whether operators must be re-defined for templates derived from templates,
-               ac_cv_need_derived_template_operators,
-               [AC_TRY_COMPILE([template <class T> class Base { };
-                                template <class T>
-                                Base<T> operator+(const Base<T>& lhs, const Base<T>& rhs) { return lhs; }
-                                template <class T> class Derived : public Base<T> { };],
-                               [Derived<char> a, b;
-                                Base<char> c = a + b;
-                                return 0;],
-                               ac_cv_need_derived_template_operators=no,
-                               ac_cv_need_derived_template_operators=yes)])
-if test "$ac_cv_need_derived_template_operators" = yes ; then
-  AC_DEFINE(NEED_CPP_DERIVED_TEMPLATE_OPERATORS)
-fi
-
-
-dnl Some compilers have trouble detecting that a template class
-dnl that derives from another template is actually an instance
-dnl of the base class. This test checks for that.
-AC_CACHE_CHECK(whether we need to cast a derived template to pass as its base class,
-               ac_cv_need_cpp_template_cast_to_base,
-               [AC_TRY_COMPILE([template <class T> class Base { };
-                                template <class T> class Derived : public Base<T> { };
-                                template <class T> int foo(const Base<T>&) { return 0; }],
-                               [Derived<char> bar; return foo(bar);],
-                               ac_cv_need_cpp_template_cast_to_base=no,
-                               ac_cv_need_cpp_template_cast_to_base=yes)])
-if test "$ac_cv_need_cpp_template_cast_to_base" = yes ; then
-  AC_DEFINE(NEED_CPP_TEMPLATE_CAST_TO_BASE)
-fi
-
 dnl Some compilers have trouble resolving the ambiguity between two
 dnl functions whose arguments differ only by cv-qualifications.
 AC_CACHE_CHECK(whether the compiler can resolve const ambiguities for templates,
@@ -3866,49 +3796,6 @@ if test "$ac_cv_can_resolve_const_ambiguity" = no ; then
   AC_DEFINE(CANT_RESOLVE_CPP_CONST_AMBIGUITY)
 fi
 
-dnl
-dnl We don't do exceptions on unix.  The only reason this used to be here
-dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 
-dnl exceptions.  But, we turn exceptions off by default and this test breaks.
-dnl So im commenting this out until someone writes some artificial 
-dnl intelligence to detect not only if the compiler has exceptions, but if 
-dnl they are enabled as well.
-dnl 
-dnl AC_CACHE_CHECK(for C++ \"exceptions\",
-dnl                ac_cv_cpp_exceptions,
-dnl                [AC_TRY_COMPILE(class X { public: X() {} };
-dnl                                static void F() { throw X(); },
-dnl                                try { F(); } catch(X & e) { },
-dnl                                ac_cv_cpp_exceptions=yes,
-dnl                                ac_cv_cpp_exceptions=no)])
-dnl if test $ac_cv_cpp_exceptions = yes ; then
-dnl    AC_DEFINE(HAVE_CPP_EXCEPTIONS)
-dnl fi
-
-dnl Some compilers have marginal |using| support; for example, gcc-2.7.2.3
-dnl supports it well enough to allow us to use it to change access, but not
-dnl to resolve ambiguity. The next two tests determine how well the |using|
-dnl keyword is supported.
-dnl
-dnl Check to see if we can change access with |using|.  Test both a
-dnl legal and an illegal example.
-AC_CACHE_CHECK(whether the C++ \"using\" keyword can change access,
-               ac_cv_cpp_access_changing_using2,
-               [AC_TRY_COMPILE(
-                   class A { protected: int foo() { return 0; } };
-                   class B : public A { public: using A::foo; };,
-                   B b; return b.foo();,
-                   [AC_TRY_COMPILE(
-                       class A { public: int foo() { return 1; } };
-                       class B : public A { private: using A::foo; };,
-                       B b; return b.foo();,
-                       ac_cv_cpp_access_changing_using2=no,
-                       ac_cv_cpp_access_changing_using2=yes)],
-                   ac_cv_cpp_access_changing_using2=no)])
-if test "$ac_cv_cpp_access_changing_using2" = yes ; then
-   AC_DEFINE(HAVE_CPP_ACCESS_CHANGING_USING)
-fi
-
 dnl Check to see if we can resolve ambiguity with |using|.
 AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
                ac_cv_cpp_ambiguity_resolving_using,
@@ -3927,48 +3814,6 @@ AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
                                ac_cv_cpp_ambiguity_resolving_using=no)])
 if test "$ac_cv_cpp_ambiguity_resolving_using" = yes ; then
    AC_DEFINE(HAVE_CPP_AMBIGUITY_RESOLVING_USING)
-fi
-
-dnl Check to see if the |std| namespace is supported. If so, we'll want
-dnl to qualify any standard library calls with "std::" to ensure that
-dnl those functions can be resolved.
-AC_CACHE_CHECK(for \"std::\" namespace,
-               ac_cv_cpp_namespace_std,
-               [AC_TRY_COMPILE([#include <algorithm>],
-                               [return std::min(0, 1);],
-                               ac_cv_cpp_namespace_std=yes,
-                               ac_cv_cpp_namespace_std=no)])
-if test "$ac_cv_cpp_namespace_std" = yes ; then
-   AC_DEFINE(HAVE_CPP_NAMESPACE_STD)
-fi
-
-dnl Older compilers are overly ambitious with respect to using the standard
-dnl template library's |operator!=()| when |operator==()| is defined. In
-dnl which case, defining |operator!=()| in addition to |operator==()| causes
-dnl ambiguity at compile-time. This test checks for that case.
-AC_CACHE_CHECK(whether standard template operator!=() is ambiguous,
-               ac_cv_cpp_unambiguous_std_notequal,
-               [AC_TRY_COMPILE([#include <algorithm>
-                                struct T1 {};
-                                int operator==(const T1&, const T1&) { return 0; }
-                                int operator!=(const T1&, const T1&) { return 0; }],
-                               [T1 a,b; return a != b;],
-                               ac_cv_cpp_unambiguous_std_notequal=unambiguous,
-                               ac_cv_cpp_unambiguous_std_notequal=ambiguous)])
-if test "$ac_cv_cpp_unambiguous_std_notequal" = unambiguous ; then
-  AC_DEFINE(HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL)
-fi
-
-
-AC_CACHE_CHECK(for C++ reinterpret_cast,
-               ac_cv_cpp_reinterpret_cast,
-               [AC_TRY_COMPILE(struct X { int i; };
-                               struct Y { int i; };,
-                               X x; X*const z = &x;Y*y = reinterpret_cast<Y*>(z);,
-                               ac_cv_cpp_reinterpret_cast=yes,
-                               ac_cv_cpp_reinterpret_cast=no)])
-if test "$ac_cv_cpp_reinterpret_cast" = yes ; then
-   AC_DEFINE(HAVE_CPP_NEW_CASTS)
 fi
 
 dnl See if a dynamic_cast to void* gives the most derived object.
@@ -5172,36 +5017,6 @@ if test "$_PEDANTIC"; then
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
         ;;
     esac
-fi
-
-dnl ========================================================
-dnl Test for correct temporary object destruction order
-dnl ========================================================
-dnl We want to make sure the compiler follows the C++ spec here as 
-dnl xpcom and the string classes depend on it (bug 235381).
-AC_MSG_CHECKING([for correct temporary object destruction order])
-AC_TRY_RUN([ class A {
-             public:  A(int& x) : mValue(x) {}
-                      ~A() { mValue--; }
-                      operator char**() { return 0; }
-             private:  int& mValue;
-             };
-             void func(char **arg) {}
-             int m=2;
-             void test() {
-                  func(A(m));
-                  if (m==1) m = 0;
-             }
-             int main() {
-                 test();
-                 return(m);
-             }
-             ],
-     result="yes", result="no", result="maybe")
-AC_MSG_RESULT([$result])
-
-if test "$result" = "no"; then
-    AC_MSG_ERROR([Your compiler does not follow the C++ specification for temporary object destruction order.])
 fi
 
 dnl ========================================================
