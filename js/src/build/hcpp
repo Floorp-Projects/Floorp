@@ -101,11 +101,6 @@ do
 			CPP_SRC="$i"
 			if [ "${PLATFORM}" = "SCO_SV" ]; then
 				OPTS="${OPTS} +.cpp $i"
-			elif [ "${PLATFORM}" = "IRIX" ]; then
-				NEW_i=`basename ${CPP_SRC} .cpp`.C
-				rm -f ${NEW_i}
-				cp $i ${NEW_i}
-				OPTS="${OPTS} ${NEW_i}"
 			else
 				OPTS="${OPTS} $i"
 			fi
@@ -134,11 +129,6 @@ done
 
 ${CXX} ${OPTS} || exit $?
 rm -f ${NEW_i}
-
-# Really only needed for NSPR now.
-if [ "${PLATFORM}" = "IRIX" -a "$OBJ" != "$OBJECT" ]; then
-	OBJ=$OBJECT
-fi
 
 # LAME!!!
 if [ -f -O ]; then

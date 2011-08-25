@@ -72,13 +72,6 @@ CPPSRCS = \
   FTPChannelChild.cpp \
   $(NULL)
 
-# Use -g for Irix mipspro builds as workaround for bug 92099
-ifneq (,$(filter IRIX IRIX64,$(OS_ARCH)))
-ifndef GNU_CC
-MODULE_OPTIMIZE_FLAGS=-O -g
-endif
-endif
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/xpcom/ds \

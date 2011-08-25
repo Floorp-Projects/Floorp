@@ -572,9 +572,6 @@ endif
 
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
-ifeq ($(OS_ARCH),IRIX)
-STRIP_FLAGS	= -f
-endif
 ifeq ($(OS_ARCH),OS2)
 STRIP		= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/strip.cmd
 endif
