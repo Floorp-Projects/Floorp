@@ -42,3 +42,7 @@ include generic/reftest.list
 
 # Color management test
 include color-management/reftest.list
+
+# Lossless encoders
+include encoders-lossless/reftest.list
+
