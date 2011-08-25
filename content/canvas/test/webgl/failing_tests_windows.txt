@@ -1,8 +1,15 @@
+conformance/buffer-offscreen-test.html
+conformance/drawingbuffer-static-canvas-test.html
+conformance/drawingbuffer-test.html
+conformance/framebuffer-object-attachment.html
 conformance/gl-getshadersource.html
 conformance/glsl-conformance.html
+conformance/glsl-long-variable-names.html
 conformance/invalid-passed-params.html
 conformance/object-deletion-behaviour.html
+conformance/premultiplyalpha-test.html
 conformance/read-pixels-test.html
+conformance/webgl-specific.html
 conformance/more/conformance/quickCheckAPI.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html

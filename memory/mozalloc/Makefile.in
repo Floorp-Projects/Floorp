@@ -55,16 +55,6 @@ FORCE_SHARED_LIB= 1
 DIST_INSTALL 	= 1
 
 ifdef MOZ_MEMORY
-ifneq (,$(findstring mozalloc,$(WRAP_MALLOC_LIB)))
-EXTRA_DSO_LDOPTS += $(DIST)/lib/libjemalloc.a
-WRAP_MALLOC_LIB=
-WRAP_MALLOC_CFLAGS=
-DEFINES += -DWRAP_MALLOC_WITH_JEMALLOC
-CSRCS = ld_malloc_wrappers.c
-ifeq (,$(filter-out Linux,$(OS_TARGET)))
-EXTRA_DSO_LDOPTS += -lpthread
-endif
-endif
 ifeq ($(OS_ARCH),Darwin)
 EXTRA_DSO_LDOPTS += -L$(DIST)/lib -ljemalloc
 endif

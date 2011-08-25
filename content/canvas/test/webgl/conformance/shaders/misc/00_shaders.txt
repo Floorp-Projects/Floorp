@@ -1,3 +1,5 @@
 non-ascii.vert
 non-ascii-comments.vert
+shared.vert shared-a.frag
+shared.vert shared-b.frag
 
