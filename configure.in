@@ -4797,9 +4797,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             xulrunner
                             content/xslt (Standalone Transformiix XSLT)
                             netwerk (Standalone Necko)
-                            tools/update-packaging (AUS-related packaging tools)
-                            standalone (use this for standalone
-                              xpcom/xpconnect or to manually drive a build)],
+                            tools/update-packaging (AUS-related packaging tools)],
 [ MOZ_BUILD_APP=$enableval ] )
 
 MOZ_ARG_WITH_STRING(xulrunner-stub-name,
@@ -4875,12 +4873,6 @@ xulrunner)
 
 content/xslt)
   AC_DEFINE(TX_EXE)
-  ;;
-
-standalone) 
-  MOZ_APP_NAME=mozilla
-  MOZ_APP_DISPLAYNAME=Mozilla
-  MOZ_APP_VERSION=$MOZILLA_VERSION
   ;;
 
 esac
