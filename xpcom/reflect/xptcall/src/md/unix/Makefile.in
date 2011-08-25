@@ -283,24 +283,6 @@ CPPSRCS		:= xptcinvoke_linux_m68k.cpp xptcstubs_linux_m68k.cpp
 endif
 endif
 
-######################################################################
-# MIPS
-######################################################################
-#
-# IRIX/MIPS
-#
-ifeq ($(OS_ARCH),IRIX)
-ifneq ($(basename $(OS_RELEASE)),5)
-CPPSRCS		:= xptcinvoke_irix.cpp xptcstubs_irix.cpp
-ASFILES		:= xptcinvoke_asm_irix.s xptcstubs_asm_irix.s
-ifdef GNU_CC
-ASFLAGS		+= -Wa,-D__GNUC__
-else
-CXXFLAGS	:= $(shell echo $(CXXFLAGS) | sed 's/-O\(3\|fast\)/-O2/g')
-endif
-endif
-endif
-
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring mips, $(OS_TEST)))
 ifneq (,$(findstring mips64, $(OS_TEST)))
@@ -517,18 +499,6 @@ xptcstubs_asm_ppc_aix.o: xptcstubs_asm_ppc_aix.s.m4 $(DIST)/include/xptcstubsdef
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_ppc_aix.s
 	$(RM) ./xptcstubs_asm_ppc_aix.s
 endif
-endif
-
-ifeq ($(OS_ARCH),IRIX)
-# The assembler on IRIX (6.3 only?) seems to have trouble with the default command,
-# but works fine if we first copy the header and source file into the current dir.
-xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
-	@rm -f ./xptcstubsdef.inc
-	@cp $(DIST)/include/xptcstubsdef.inc .
-	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; cp $(srcdir)/xptcstubs_asm_irix.s .; else true; fi
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_irix.s
-	@rm -f ./xptcstubsdef.inc
-	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; else true; fi
 endif
 
 ifeq ($(OS_ARCH),SunOS)
