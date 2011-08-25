@@ -1704,10 +1704,16 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-#define COUNT_OP()         JS_BEGIN_MACRO                                     \
-                               if (pcCounts && !regs.fp()->hasImacropc())     \
-                                   ++pcCounts[regs.pc - script->code];        \
-                           JS_END_MACRO
+#define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
+                                            if (pcCounts)                     \
+                                                ENABLE_INTERRUPTS();          \
+                                        JS_END_MACRO
+
+#if JS_THREADED_INTERP
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, jumpTable == interruptJumpTable)
+#else
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, switchMask == -1)
+#endif
 
     /*
      * Macros for threaded interpreter loop
@@ -1741,7 +1747,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
-                                COUNT_OP();                                   \
+                                CHECK_PCCOUNT_INTERRUPTS();                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -2017,6 +2023,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSScript *script;
     SET_SCRIPT(regs.fp()->script());
     int *pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
+    ENABLE_PCCOUNT_INTERRUPTS();
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -2119,11 +2126,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_CHECK_RECURSION(cx, goto error);
 #endif
 
-#if JS_THREADED_INTERP
     DO_NEXT_OP(len);
-#else
-    DO_NEXT_OP(len);
-#endif
 
 #if JS_THREADED_INTERP
     /*
@@ -2146,6 +2149,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
       do_op:
         CHECK_RECORDER();
+        CHECK_PCCOUNT_INTERRUPTS();
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -2159,6 +2163,13 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif /* !JS_THREADED_INTERP */
     {
         bool moreInterrupts = false;
+
+        if (pcCounts) {
+            if (!regs.fp()->hasImacropc())
+                ++pcCounts[regs.pc - script->code];
+            moreInterrupts = true;
+        }
+
         JSInterruptHook hook = cx->debugHooks->interruptHook;
         if (hook || script->stepModeEnabled()) {
 #ifdef JS_TRACER
@@ -2406,6 +2417,7 @@ BEGIN_CASE(JSOP_STOP)
         /* Sync interpreter locals. */
         SET_SCRIPT(regs.fp()->script());
         pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
+        ENABLE_PCCOUNT_INTERRUPTS();
         argv = regs.fp()->maybeFormalArgs();
         atoms = FrameAtomBase(cx, regs.fp());
         CHECK_INTERRUPT_HANDLER();
@@ -4077,6 +4089,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     /* Refresh local js::Interpret state. */
     SET_SCRIPT(newScript);
     pcCounts = script->pcCounters.get(JSRUNMODE_INTERP);
+    ENABLE_PCCOUNT_INTERRUPTS();
     argv = regs.fp()->formalArgsEnd() - fun->nargs;
     atoms = script->atomMap.vector;
 
