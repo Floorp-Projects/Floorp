@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Neil Rashbrook <neil@parkwaycc.co.uk>
  *   Bobby Holley <bobbyholley@gmail.com>
+ *   Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -70,13 +71,73 @@ nsBMPDecoder::nsBMPDecoder()
     mState = eRLEStateInitial;
     mStateData = 0;
     mLOH = WIN_HEADER_LENGTH;
+    mUseAlphaData = PR_FALSE;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
 {
   delete[] mColors;
-  if (mRow)
-      free(mRow);
+  if (mRow) {
+      moz_free(mRow);
+  }
+}
+
+// Sets whether or not the BMP will use alpha data
+void 
+nsBMPDecoder::SetUseAlphaData(PRBool useAlphaData) 
+{
+  mUseAlphaData = useAlphaData;
+}
+
+// Obtains the bits per pixel from the internal BIH header
+PRInt32 
+nsBMPDecoder::GetBitsPerPixel() const
+{
+  return mBIH.bpp;
+}
+
+// Obtains the width from the internal BIH header
+PRInt32 
+nsBMPDecoder::GetWidth() const
+{
+  return mBIH.width; 
+}
+
+// Obtains the height from the internal BIH header
+PRInt32 
+nsBMPDecoder::GetHeight() const
+{
+  return mBIH.height; 
+}
+
+// Obtains the internal output image buffer
+PRUint32* 
+nsBMPDecoder::GetImageData() 
+{
+  return mImageData;
+}
+
+// Obtains the size of the compressed image resource
+PRInt32 
+nsBMPDecoder::GetCompressedImageSize() const
+{
+  // For everything except BI_RGB the header field must be defined
+  if (mBIH.compression != BI_RGB) {
+    return mBIH.image_size;
+  }
+
+  // mBIH.image_size isn't always filled for BI_RGB so calculate it manually
+  // The pixel array size is calculated based on extra 4 byte boundary padding
+  PRUint32 rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // + 7 to round up
+  // Pad to DWORD Boundary
+  if (rowSize % 4) {
+    rowSize += (4 - (rowSize % 4));
+  }
+
+  // The height should be the absolute value of what the height is in the BIH.
+  // If positive the bitmap is stored bottom to top, otherwise top to bottom
+  PRInt32 pixelArraySize = rowSize * abs(mBIH.height); 
+  return pixelArraySize;
 }
 
 void
@@ -90,6 +151,11 @@ nsBMPDecoder::FinishInternal()
 
     // Send notifications if appropriate
     if (!IsSizeDecode() && (GetFrameCount() == 1)) {
+
+        // Invalidate
+        nsIntRect r(0, 0, mBIH.width, mBIH.height);
+        PostInvalidation(r);
+
         PostFrameStop();
         PostDecodeDone();
     }
@@ -145,8 +211,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         return;
 
     nsresult rv;
-    if (mPos < BFH_LENGTH) { /* In BITMAPFILEHEADER */
-        PRUint32 toCopy = BFH_LENGTH - mPos;
+    if (mPos < BFH_INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
+        PRUint32 toCopy = BFH_INTERNAL_LENGTH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
         memcpy(mRawBuf + mPos, aBuffer, toCopy);
@@ -154,7 +220,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         aCount -= toCopy;
         aBuffer += toCopy;
     }
-    if (mPos == BFH_LENGTH) {
+    if (mPos == BFH_INTERNAL_LENGTH) {
         ProcessFileHeader();
         if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M') {
             PostDataError();
@@ -163,19 +229,23 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         if (mBFH.bihsize == OS2_BIH_LENGTH)
             mLOH = OS2_HEADER_LENGTH;
     }
-    if (mPos >= BFH_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
+    if (mPos >= BFH_INTERNAL_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
         PRUint32 toCopy = mLOH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        memcpy(mRawBuf + (mPos - BFH_LENGTH), aBuffer, toCopy);
+        memcpy(mRawBuf + (mPos - BFH_INTERNAL_LENGTH), aBuffer, toCopy);
         mPos += toCopy;
         aCount -= toCopy;
         aBuffer += toCopy;
     }
-    if (mPos == mLOH) {
+
+    // GetNumFrames is called to ensure that if at this point mPos == mLOH but
+    // we have no data left to process, the next time WriteInternal is called
+    // we won't enter this condition again.
+    if (mPos == mLOH && GetFrameCount() == 0) {
         ProcessInfoHeader();
-        PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP image is %lix%lix%lu. compression=%lu\n",
-            mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
+        PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP is %lix%lix%lu. compression=%lu\n",
+               mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
         // Verify we support this bit depth
         if (mBIH.bpp != 1 && mBIH.bpp != 4 && mBIH.bpp != 8 &&
             mBIH.bpp != 16 && mBIH.bpp != 24 && mBIH.bpp != 32) {
@@ -226,36 +296,70 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             CalcBitShift();
         }
 
+        // Make sure we have a valid value for our supported compression modes
+        // before adding the frame
+        if (mBIH.compression != BI_RGB && mBIH.compression != BI_RLE8 && 
+            mBIH.compression != BI_RLE4 && mBIH.compression != BI_BITFIELDS) {
+          PostDataError();
+          return;
+        }
+
+        // If we have RLE4 or RLE8 or BI_ALPHABITFIELDS, then ensure we
+        // have valid BPP values before adding the frame
+        if (mBIH.compression == BI_RLE8 && mBIH.bpp != 8) {
+          PR_LOG(gBMPLog, PR_LOG_DEBUG, 
+                 ("BMP RLE8 compression only supports 8 bits per pixel\n"));
+          PostDataError();
+          return;
+        }
+        if (mBIH.compression == BI_RLE4 && mBIH.bpp != 4) {
+          PR_LOG(gBMPLog, PR_LOG_DEBUG, 
+                 ("BMP RLE4 compression only supports 4 bits per pixel\n"));
+          PostDataError();
+          return;
+        }
+        if (mBIH.compression == BI_ALPHABITFIELDS && 
+            mBIH.bpp != 16 && mBIH.bpp != 32) {
+          PR_LOG(gBMPLog, PR_LOG_DEBUG, 
+                 ("BMP ALPHABITFIELDS only supports 16 or 32 bits per pixel\n"));
+          PostDataError();
+          return;
+        }
+
         PRUint32 imageLength;
-        if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
-            rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, gfxASurface::ImageFormatARGB32,
+        if (mBIH.compression == BI_RLE8 || mBIH.compression == BI_RLE4 || 
+            mBIH.compression == BI_ALPHABITFIELDS) {
+            rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, 
+                                     gfxASurface::ImageFormatARGB32,
                                      (PRUint8**)&mImageData, &imageLength);
         } else {
             // mRow is not used for RLE encoded images
-            mRow = (PRUint8*)moz_malloc((mBIH.width * mBIH.bpp)/8 + 4);
-            // +4 because the line is padded to a 4 bit boundary, but I don't want
+            mRow = (PRUint8*)moz_malloc((mBIH.width * mBIH.bpp) / 8 + 4);
+            // + 4 because the line is padded to a 4 bit boundary, but I don't want
             // to make exact calculations here, that's unnecessary.
             // Also, it compensates rounding error.
             if (!mRow) {
                 PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
                 return;
             }
-            rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, gfxASurface::ImageFormatRGB24,
-                                     (PRUint8**)&mImageData, &imageLength);
+
+            if (mUseAlphaData) {
+              rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, 
+                                       gfxASurface::ImageFormatARGB32,
+                                       (PRUint8**)&mImageData, &imageLength);
+            } else {
+              rv = mImage->EnsureFrame(0, 0, 0, mBIH.width, real_height, 
+                                       gfxASurface::ImageFormatRGB24,
+                                       (PRUint8**)&mImageData, &imageLength);
+            }
         }
         if (NS_FAILED(rv) || !mImageData) {
             PostDecoderError(NS_ERROR_FAILURE);
             return;
         }
 
-        // Prepare for transparancy
+        // Prepare for transparency
         if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
-            if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) 
-             || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
-                PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
-                PostDataError();
-                return;
-            }
             // Clear the image, as the RLE may jump over areas
             memset(mImageData, 0, imageLength);
         }
@@ -314,9 +418,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         // Need to increment mPos, else we might get to mPos==mLOH again
         // From now on, mPos is irrelevant
         if (!mBIH.compression || mBIH.compression == BI_BITFIELDS) {
-            PRUint32 rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // +7 to round up
-            if (rowSize % 4)
+            PRUint32 rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // + 7 to round up
+            if (rowSize % 4) {
                 rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
+            }
             PRUint32 toCopy;
             do {
                 toCopy = rowSize - mRowBytes;
@@ -370,15 +475,24 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                           p+=2;
                         }
                         break;
-                      case 32:
                       case 24:
                         while (lpos > 0) {
                           SetPixel(d, p[2], p[1], p[0]);
                           p += 2;
                           --lpos;
-                          if (mBIH.bpp == 32)
-                            p++; // Padding byte
                           ++p;
+                        }
+                        break;
+                      case 32:
+                        while (lpos > 0) {
+                          if (mUseAlphaData) {
+                            SetPixel(d, p[2], p[1], p[0], p[3]);
+                          }
+                          else {
+                            SetPixel(d, p[2], p[1], p[0]);
+                          }
+                          p += 4;
+                          --lpos;
                         }
                         break;
                       default:
@@ -386,19 +500,19 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                     }
                     mCurLine --;
                     if (mCurLine == 0) { // Finished last line
-                        break;
+                      break;
                     }
                     mRowBytes = 0;
 
                 }
             } while (aCount > 0);
-        } 
+        }
         else if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
-            if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) 
-             || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
-                PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
-                PostDataError();
-                return;
+            if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) || 
+                ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
+              PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
+              PostDataError();
+              return;
             }
 
             while (aCount > 0) {
@@ -562,7 +676,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             }
         }
     }
-    
+
     const PRUint32 rows = mOldLine - mCurLine;
     if (rows) {
 
