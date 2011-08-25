@@ -42,6 +42,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS += png \
 	jpeg \
+	bmp \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
