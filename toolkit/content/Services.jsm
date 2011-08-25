@@ -86,6 +86,7 @@ let initTable = [
   ["vc", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator"],
   ["wm", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
   ["ww", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
+  ["startup", "@mozilla.org/toolkit/app-startup;1", "nsIAppStartup"],
 ];
 
 initTable.forEach(function ([name, contract, intf])
