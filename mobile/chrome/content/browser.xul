@@ -219,7 +219,7 @@
             <!-- Main Toolbar -->
             <box id="toolbar-container" class="panel-dark toolbar-height">
               <box id="toolbar-moveable-container" observes="bcast_uidiscovery">
-                <toolbar id="toolbar-main" class="panel-dark window-width" observes="bcast_urlbarState">
+                <toolbar id="toolbar-main" class="panel-dark viewable-width" observes="bcast_urlbarState">
                   <toolbarbutton id="tool-back2" class="tool-back button-actionbar" command="cmd_back"/>
                   <toolbarbutton id="tool-forward2" class="tool-forward button-actionbar" command="cmd_forward"/>
                   <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
