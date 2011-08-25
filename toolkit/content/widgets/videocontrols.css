@@ -53,3 +53,23 @@
 .statusOverlay[fadeout] {
   opacity: 0;
 }
+
+.controlBar[sizemode="hidden"],
+.controlBar[sizemode="small"] .durationBox,
+.controlBar[sizemode="small"] .durationLabel,
+.controlBar[sizemode="small"] .positionLabel {
+  visibility: collapse;
+}
+
+.controlBar[sizemode="small"] .scrubberStack {
+  visibility: hidden;
+}
+
+.controlBar[sizemode="small"] .scrubberStack > * {
+  min-width: 0;
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
