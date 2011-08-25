@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Bobby Holley <bobbyholley@gmail.com>
+ *   Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,11 +57,16 @@ struct BMPFILEHEADER {
 
     PRUint32 bihsize;
 };
-#define BFH_LENGTH 18 // Note: For our purposes, we include bihsize in the BFH
+
+// The length of the bitmap file header as defined in the BMP spec.
+#define BFH_LENGTH 14 
+// Internally we store the bitmap file header with an additional 4 bytes which
+// is used to store the bitmap information header size.
+#define BFH_INTERNAL_LENGTH 18
 
 #define OS2_BIH_LENGTH 12 // This is the real BIH size (as contained in the bihsize field of BMPFILEHEADER)
-#define OS2_HEADER_LENGTH (BFH_LENGTH + 8)
-#define WIN_HEADER_LENGTH (BFH_LENGTH + 36)
+#define OS2_HEADER_LENGTH (BFH_INTERNAL_LENGTH + 8)
+#define WIN_HEADER_LENGTH (BFH_INTERNAL_LENGTH + 36)
 
 struct BMPINFOHEADER {
     PRInt32 width; // Uint16 in OS/2 BMPs
@@ -106,17 +112,34 @@ struct bitFields {
                                (((((PRUint32) x) >> 8) & 0xFF) << 16) | \
                                (((((PRUint32) x) >> 16) & 0xFF) << 8) | \
                                (((PRUint32) x) >> 24))
+
+#define NATIVE32_TO_LITTLE LITTLE_TO_NATIVE32
+
 #else
 #define LITTLE_TO_NATIVE16(x) x
 #define LITTLE_TO_NATIVE32(x) x
+#define NATIVE32_TO_LITTLE(x) x
+
 #endif
 
 #define USE_RGB
 
 // BMPINFOHEADER.compression defines
+#ifndef BI_RGB
+#define BI_RGB 0
+#endif
+#ifndef BI_RLE8
 #define BI_RLE8 1
+#endif
+#ifndef BI_RLE4
 #define BI_RLE4 2
+#endif
+#ifndef BI_BITFIELDS
 #define BI_BITFIELDS 3
+#endif
+// BI_ALPHABITFIELDS  means no compression and specifies alpha bits
+// valid only for 32bpp and 16bpp
+#define BI_ALPHABITFIELDS 4
 
 // RLE Escape codes
 #define RLE_ESCAPE       0
@@ -145,6 +168,21 @@ public:
 
     nsBMPDecoder();
     ~nsBMPDecoder();
+
+    // Specifies whether or not the BMP file will contain alpha data
+    // If set to true and the BMP is 32BPP, the alpha data will be
+    // retrieved from the 4th byte of image data per pixel 
+    void SetUseAlphaData(PRBool useAlphaData);
+    // Obtains the bits per pixel from the internal BIH header
+    PRInt32 GetBitsPerPixel() const;
+    // Obtains the width from the internal BIH header
+    PRInt32 GetWidth() const;
+    // Obtains the height from the internal BIH header
+    PRInt32 GetHeight() const;
+    // Obtains the internal output image buffer
+    PRUint32* GetImageData();
+    // Obtains the size of the compressed image resource
+    PRInt32 GetCompressedImageSize() const;
 
     virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
     virtual void FinishInternal();
@@ -184,6 +222,16 @@ private:
     /** Set mBIH from the raw data in mRawBuf, converting from little-endian
      * data to native data as necessary */
     void ProcessInfoHeader();
+
+    // Stores whether the image data stores alpha data, or if
+    // the alpha data is unspecified and filled with a 
+    // padding byte of 0.
+    // When a 32BPP bitmap is stored in an ICO or CUR file, its 4th byte
+    // is used for alpha transparency.  When it is stored in a BMP, its
+    // 4th byte is reserved and is always 0.
+    // Reference: 
+    // http://en.wikipedia.org/wiki/ICO_(file_format)#cite_note-9
+    PRPackedBool mUseAlphaData;
 };
 
 /** Sets the pixel data in aDecoded to the given values.
