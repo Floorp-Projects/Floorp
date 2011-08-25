@@ -815,11 +815,6 @@ endif # WINNT
 ifeq ($(OS_ARCH),FreeBSD)
 EXTRA_LIBS	+= -pthread
 endif
-ifeq ($(OS_ARCH),IRIX)
-ifdef USE_N32
-DASH_R		+= -n32
-endif
-endif
 ifeq ($(OS_ARCH),Linux)
 EXTRA_LIBS	+= -ldl
 endif
@@ -878,16 +873,6 @@ else
 endif # sparcv9
 endif # sparc
 endif # SOLARIS_SUNPRO_CXX
-
-ifeq ($(OS_ARCH),IRIX)
-ifndef GNU_CC
-_COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
-jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsreflect.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.cpp Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(CXX) -o $@ -c $(_COMPILE_CFLAGS) $<
-endif
-endif
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
