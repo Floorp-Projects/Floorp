@@ -1230,23 +1230,20 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   return rv;
 }
 
-nsresult
-nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
+already_AddRefed<nsILoadGroup>
+nsXMLHttpRequest::GetLoadGroup() const
 {
-  NS_ENSURE_ARG_POINTER(aLoadGroup);
-  *aLoadGroup = nsnull;
-
   if (mState & XML_HTTP_REQUEST_BACKGROUND) {
-    return NS_OK;
+    return nsnull;
   }
 
   nsCOMPtr<nsIDocument> doc =
     nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
-    *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
+    return doc->GetDocumentLoadGroup();
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult
@@ -1493,8 +1490,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
   // When we are called from JS we can find the load group for the page,
   // and add ourselves to it. This way any pending requests
   // will be automatically aborted if the user leaves the page.
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  GetLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
 
   // get Content Security Policy from principal to pass into channel
   nsCOMPtr<nsIChannelPolicy> channelPolicy;
@@ -1728,6 +1724,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mResponseBody.Truncate();
   mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   mResponseBlob = nsnull;
+  mResultArrayBuffer = nsnull;
 
   // Set up responseXML
   PRBool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
@@ -2075,7 +2072,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     // nsIInputStream?
     nsCOMPtr<nsIInputStream> stream = do_QueryInterface(supports);
     if (stream) {
-      *aResult = stream.forget().get();
+      stream.forget(aResult);
       aCharset.Truncate();
 
       return NS_OK;
