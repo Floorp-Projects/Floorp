@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -15,12 +14,13 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#
+#   Brian R. Bondy <netzen@gmail.com>
+# 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -35,40 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
-LIBRARY_NAME	= imglib2
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsImageLib2Module
-GRE_MODULE	= 1
+MODULE		= imgbmpe
+LIBRARY_NAME	= imgbmpe_s
+FORCE_STATIC_LIB = 1
+MODULE_NAME	= imgEncoderBMPModule
 LIBXUL_LIBRARY = 1
 
-CPPSRCS = \
-		nsImageModule.cpp \
-		$(NULL)
+# Decoders need RasterImage.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
-LOCAL_INCLUDES	= \
-		-I. \
-		-I$(srcdir)/../src \
-		-I$(srcdir)/../encoders/png \
-		-I$(srcdir)/../encoders/jpeg \
-		-I$(srcdir)/../encoders/bmp \
-		$(NULL)
-
-SHARED_LIBRARY_LIBS = \
-		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
-		../decoders/$(LIB_PREFIX)imgdecoders_s.$(LIB_SUFFIX) \
-		../encoders/png/$(LIB_PREFIX)imgpnge_s.$(LIB_SUFFIX) \
-		../encoders/jpeg/$(LIB_PREFIX)imgjpege_s.$(LIB_SUFFIX) \
-		../encoders/bmp/$(LIB_PREFIX)imgbmpe_s.$(LIB_SUFFIX) \
-		$(NULL)
+CPPSRCS		= nsBMPEncoder.cpp
 
 include $(topsrcdir)/config/rules.mk
+
 
