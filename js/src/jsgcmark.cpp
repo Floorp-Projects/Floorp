@@ -205,8 +205,8 @@ MarkXML(JSTracer *trc, JSXML *xml, const char *name)
 void
 PushMarkStack(GCMarker *gcmarker, JSXML *thing)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushXML(thing);
@@ -215,8 +215,8 @@ PushMarkStack(GCMarker *gcmarker, JSXML *thing)
 void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -225,8 +225,8 @@ PushMarkStack(GCMarker *gcmarker, JSObject *thing)
 void
 PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -235,8 +235,8 @@ PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
 void
 PushMarkStack(GCMarker *gcmarker, JSShortString *thing)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     (void) thing->markIfUnmarked(gcmarker->getMarkColor());
 }
@@ -247,8 +247,8 @@ ScanShape(GCMarker *gcmarker, const Shape *shape);
 void
 PushMarkStack(GCMarker *gcmarker, const Shape *thing)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     /* We mark shapes directly rather than pushing on the stack. */
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
@@ -562,9 +562,9 @@ restart:
 static inline void
 ScanRope(GCMarker *gcmarker, JSRope *rope)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 rope->compartment() == gcmarker->context->runtime->gcCurrentCompartment
-                 || rope->compartment() == gcmarker->context->runtime->atomsCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     rope->compartment() == gcmarker->context->runtime->gcCurrentCompartment
+                     || rope->compartment() == gcmarker->context->runtime->atomsCompartment);
     JS_ASSERT(rope->isMarked());
 
     JSString *leftChild = NULL;
@@ -590,9 +590,9 @@ ScanRope(GCMarker *gcmarker, JSRope *rope)
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *str)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 str->compartment() == gcmarker->context->runtime->gcCurrentCompartment
-                 || str->compartment() == gcmarker->context->runtime->atomsCompartment);
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     str->compartment() == gcmarker->context->runtime->gcCurrentCompartment
+                     || str->compartment() == gcmarker->context->runtime->atomsCompartment);
 
     if (str->isLinear()) {
         str->asLinear().mark(gcmarker);
