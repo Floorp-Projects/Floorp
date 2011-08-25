@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414907
   <script type="application/javascript"><![CDATA[
 
   SimpleTest.waitForExplicitFinish();
-  function onload() {
+  window.onload = function onload() {
     is($("box").palette.getAttribute("label"), $("command").getAttribute("label"));
     SimpleTest.finish();
   }

@@ -58,18 +58,18 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGDisplayContainerFrame)
 
 NS_IMETHODIMP
-nsSVGContainerFrame::AppendFrames(nsIAtom* aListName,
+nsSVGContainerFrame::AppendFrames(ChildListID  aListID,
                                   nsFrameList& aFrameList)
 {
-  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
+  return InsertFrames(aListID, mFrames.LastChild(), aFrameList);  
 }
 
 NS_IMETHODIMP
-nsSVGContainerFrame::InsertFrames(nsIAtom* aListName,
+nsSVGContainerFrame::InsertFrames(ChildListID aListID,
                                   nsIFrame* aPrevFrame,
                                   nsFrameList& aFrameList)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
@@ -79,10 +79,10 @@ nsSVGContainerFrame::InsertFrames(nsIAtom* aListName,
 }
 
 NS_IMETHODIMP
-nsSVGContainerFrame::RemoveFrame(nsIAtom* aListName,
+nsSVGContainerFrame::RemoveFrame(ChildListID aListID,
                                  nsIFrame* aOldFrame)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   mFrames.DestroyFrame(aOldFrame);
   return NS_OK;
@@ -112,7 +112,7 @@ nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsSVGDisplayContainerFrame::InsertFrames(nsIAtom* aListName,
+nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
                                          nsIFrame* aPrevFrame,
                                          nsFrameList& aFrameList)
 {
@@ -120,11 +120,11 @@ nsSVGDisplayContainerFrame::InsertFrames(nsIAtom* aListName,
   // XXXbz once again, this would work a lot better if the nsIFrame
   // methods returned framelist iterators....
   nsIFrame* firstOldFrame = aPrevFrame ?
-    aPrevFrame->GetNextSibling() : GetChildList(aListName).FirstChild();
+    aPrevFrame->GetNextSibling() : GetChildList(aListID).FirstChild();
   nsIFrame* firstNewFrame = aFrameList.FirstChild();
   
   // Insert the new frames
-  nsSVGContainerFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+  nsSVGContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 
   // Call InitialUpdate on the new frames ONLY if our nsSVGOuterSVGFrame has had
   // its initial reflow (our NS_FRAME_FIRST_REFLOW bit is clear) - bug 399863.
@@ -142,12 +142,12 @@ nsSVGDisplayContainerFrame::InsertFrames(nsIAtom* aListName,
 }
 
 NS_IMETHODIMP
-nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
+nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame)
 {
   nsSVGUtils::InvalidateCoveredRegion(aOldFrame);
 
-  nsresult rv = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
+  nsresult rv = nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
 
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);

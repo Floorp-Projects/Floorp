@@ -47,8 +47,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379120
     var transformedDocument = processor.transformToDocument (originalDoc);
     is(transformedDocument.documentElement.getAttribute("onload"),
        "var i = 1");
-    ok(transformedDocument.documentElement.onload === undefined,
-       "Shouldn't have onload handler");
+    ok(transformedDocument.documentElement.onload === null,
+       "Shouldn't have onload handler",
+       "got " + repr(transformedDocument.documentElement.onload) +
+       ", expected null");;
 </script>
 </pre>
 </body>

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1204,7 +1204,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   mDisplayContent->SetPrimaryFrame(textFrame);
 
   nsFrameList textList(textFrame, textFrame);
-  mDisplayFrame->SetInitialChildList(nsnull, textList);
+  mDisplayFrame->SetInitialChildList(kPrincipalList, textList);
   return mDisplayFrame;
 }
 
@@ -1237,22 +1237,28 @@ nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
-
 nsFrameList
-nsComboboxControlFrame::GetChildList(nsIAtom* aListName) const
+nsComboboxControlFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::selectPopupList == aListName) {
+  if (kSelectPopupList == aListID) {
     return mPopupFrames;
   }
-  return nsBlockFrame::GetChildList(aListName);
+  return nsBlockFrame::GetChildList(aListID);
+}
+
+void
+nsComboboxControlFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  nsBlockFrame::GetChildLists(aLists);
+  mPopupFrames.AppendIfNonempty(aLists, kSelectPopupList);
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
+nsComboboxControlFrame::SetInitialChildList(ChildListID     aListID,
                                             nsFrameList&    aChildList)
 {
   nsresult rv = NS_OK;
-  if (nsGkAtoms::selectPopupList == aListName) {
+  if (kSelectPopupList == aListID) {
     mPopupFrames.SetFrames(aChildList);
   } else {
     for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
@@ -1264,28 +1270,9 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
       }
     }
     NS_ASSERTION(mButtonFrame, "missing button frame in initial child list");
-    rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
+    rv = nsBlockFrame::SetInitialChildList(aListID, aChildList);
   }
   return rv;
-}
-
-#define NS_COMBO_FRAME_POPUP_LIST_INDEX   (NS_BLOCK_LIST_COUNT)
-
-nsIAtom*
-nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-   // Maintain a separate child list for the dropdown list (i.e. popup listbox)
-   // This is necessary because we don't want the listbox to be included in the layout
-   // of the combox's children because it would take up space, when it is suppose to
-   // be floating above the display.
-  if (aIndex < NS_BLOCK_LIST_COUNT) {
-    return nsBlockFrame::GetAdditionalChildListName(aIndex);
-  }
-  
-  if (NS_COMBO_FRAME_POPUP_LIST_INDEX == aIndex) {
-    return nsGkAtoms::selectPopupList;
-  }
-  return nsnull;
 }
 
 //----------------------------------------------------------------------
