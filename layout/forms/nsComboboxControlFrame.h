@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Dean Tessman <dean_tessman@hotmail.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -72,12 +72,6 @@ class nsIView;
 class nsStyleContext;
 class nsIListControlFrame;
 class nsComboboxDisplayFrame;
-
-/**
- * Child list name indices
- * @see #GetAdditionalChildListName()
- */
-#define NS_COMBO_LIST_COUNT   (NS_BLOCK_LIST_COUNT + 1)
 
 class nsComboboxControlFrame : public nsBlockFrame,
                                public nsIFormControlFrame,
@@ -145,10 +139,10 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
+  virtual nsFrameList GetChildList(ChildListID aListID) const;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
 
   virtual nsIFrame* GetContentInsertionFrame();
 

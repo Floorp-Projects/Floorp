@@ -290,7 +290,9 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
+ifdef MOZ_X11
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
+endif
 ifdef MOZ_PANGO
 CPPSRCS += gfxPangoFonts.cpp
 else

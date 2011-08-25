@@ -412,7 +412,7 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
   if (!aFrame)
     return PR_FALSE;
 
-  nsIFrame* first = aFrame->GetParent()->GetFirstChild(nsnull);
+  nsIFrame* first = aFrame->GetParent()->GetFirstPrincipalChild();
   while (first) {
     if (first->GetRect().width > 0 && first->GetContent()->Tag() == nsWidgetAtoms::tab)
       return (first == aFrame);
@@ -443,7 +443,7 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
 
   PRInt32 thisTabIndex = -1, selectedTabIndex = -1;
 
-  nsIFrame* currentTab = aFrame->GetParent()->GetFirstChild(NULL);
+  nsIFrame* currentTab = aFrame->GetParent()->GetFirstPrincipalChild();
   for (PRInt32 i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
     if (currentTab->GetRect().width == 0)
       continue;

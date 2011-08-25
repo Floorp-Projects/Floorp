@@ -70,7 +70,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(972cb379-6bdc-4544-8b46-8d721e12e906)]
+[scriptable, uuid(3f5b2af2-604e-4253-8d25-6d3cafc13a69)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -434,6 +434,34 @@ interface nsIDOMWindow : nsISupports
    * Global storage, accessible by domain.
    */
   readonly attribute nsIDOMStorageList globalStorage;
+
+  /**
+   * HTML5 event attributes that only apply to windows and <body>/<frameset>
+   */
+  [implicit_jscontext] attribute jsval onafterprint;
+  [implicit_jscontext] attribute jsval onbeforeprint;
+  [implicit_jscontext] attribute jsval onbeforeunload;
+  [implicit_jscontext] attribute jsval onhashchange;
+  [implicit_jscontext] attribute jsval onmessage;
+  [implicit_jscontext] attribute jsval onoffline;
+  [implicit_jscontext] attribute jsval ononline;
+  [implicit_jscontext] attribute jsval onpopstate;
+  [implicit_jscontext] attribute jsval onpagehide;
+  [implicit_jscontext] attribute jsval onpageshow;
+  // Not supported yet
+  // [implicit_jscontext] attribute jsval onredo;
+  [implicit_jscontext] attribute jsval onresize;
+  // Not supported yet
+  // [implicit_jscontext] attribute jsval onstorage;
+  // Not supported yet
+  // [implicit_jscontext] attribute jsval onundo;
+  [implicit_jscontext] attribute jsval onunload;
+
+  /**
+   * Non-HTML5 window-specific event attributes
+   */
+  [implicit_jscontext] attribute jsval ondevicemotion;
+  [implicit_jscontext] attribute jsval ondeviceorientation;
 };
 
 [scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]

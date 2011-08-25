@@ -945,7 +945,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
                                         nsAccessibilityAtoms::inlineFrame)) {
       // Only do deeper bounds search if we're on an inline frame
       // Inline frames can contain larger frames inside of them
-      iterNextFrame = iterFrame->GetFirstChild(nsnull);
+      iterNextFrame = iterFrame->GetFirstPrincipalChild();
     }
 
     if (iterNextFrame) 

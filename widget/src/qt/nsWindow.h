@@ -349,8 +349,6 @@ private:
     nsEventStatus      DispatchContentCommandEvent(PRInt32 aMsg);
     MozQWidget*        createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData);
 
-    PRBool             IsAcceleratedQView(QGraphicsView* aView);
-
     MozQWidget*        mWidget;
 
     PRUint32           mIsVisible : 1,
