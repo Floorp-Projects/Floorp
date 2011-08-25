@@ -313,9 +313,35 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
     }
   }
 
+  // If we haven't parsed the params check for proprietary options.
+  // The proprietary option -moz-parse-options will take a image lib encoder
+  // parse options string as is and pass it to the encoder.
+  PRBool usingCustomParseOptions = PR_FALSE;
+  if (params.Length() == 0) {
+    NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
+    nsAutoString paramString;
+    if (NS_SUCCEEDED(aEncoderOptions->GetAsAString(paramString)) && 
+        StringBeginsWith(paramString, mozParseOptions)) {
+      nsDependentSubstring parseOptions = Substring(paramString, 
+                                                    mozParseOptions.Length(), 
+                                                    paramString.Length() - 
+                                                    mozParseOptions.Length());
+      params.Append(parseOptions);
+      usingCustomParseOptions = PR_TRUE;
+    }
+  }
+
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = ExtractData(type, params, getter_AddRefs(stream),
                             fallbackToPNG);
+
+  // If there are unrecognized custom parse options, we should fall back to 
+  // the default values for the encoder without any options at all.
+  if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
+    fallbackToPNG = false;
+    rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   // build data URL string
