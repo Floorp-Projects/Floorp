@@ -138,7 +138,7 @@
     <vbox id="passphraseHelpBox"
           hidden="true">
       <description>
-        &existingSyncKey.description;
+        &existingRecoveryKey.description;
         <label class="text-link"
                href="https://services.mozilla.com/sync/help/manual-setup">
           &addDevice.showMeHow.label;

@@ -723,7 +723,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock)
       break;
     // If we're done, we really want it and all its later siblings.
-    frameForArea = frameForArea->GetFirstChild(nsnull);
+    frameForArea = frameForArea->GetFirstPrincipalChild();
     NS_ASSERTION(frameForArea, "anonymous block with no children?");
   } while (frameForArea);
   nsRect innerRect; // relative to aBorderArea.TopLeft()
@@ -2571,7 +2571,7 @@ PrepareBackgroundLayer(nsPresContext* aPresContext,
       break;
     }
   } else if (frameType == nsGkAtoms::canvasFrame) {
-    geometryFrame = aForFrame->GetFirstChild(nsnull);
+    geometryFrame = aForFrame->GetFirstPrincipalChild();
     // geometryFrame might be null if this canvas is a page created
     // as an overflow container (e.g. the in-flow content has already
     // finished and this page only displays the continuations of

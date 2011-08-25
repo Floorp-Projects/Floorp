@@ -234,7 +234,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
   // Find a most preferred accesskey which should be returned.
   nsIFrame* foundMenu = nsnull;
   PRUint32 foundIndex = accessKeys.NoIndex;
-  nsIFrame* currFrame = immediateParent->GetFirstChild(nsnull);
+  nsIFrame* currFrame = immediateParent->GetFirstPrincipalChild();
 
   while (currFrame) {
     nsIContent* current = currFrame->GetContent();

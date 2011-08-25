@@ -77,7 +77,7 @@ static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
 {
   nsIAtom* type = aFrame->GetType();
   if (type == nsGkAtoms::columnSetFrame)
-    return DescendIntoBlockLevelFrame(aFrame->GetFirstChild(nsnull));
+    return DescendIntoBlockLevelFrame(aFrame->GetFirstPrincipalChild());
   return aFrame;
 }
 

@@ -255,7 +255,7 @@ nsSVGClipPathFrame::IsValid()
     nsIAtom *type = kid->GetType();
 
     if (type == nsGkAtoms::svgUseFrame) {
-      for (nsIFrame* grandKid = kid->GetFirstChild(nsnull); grandKid;
+      for (nsIFrame* grandKid = kid->GetFirstPrincipalChild(); grandKid;
            grandKid = grandKid->GetNextSibling()) {
 
         nsIAtom *type = grandKid->GetType();

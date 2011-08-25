@@ -94,9 +94,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectOwner,
 class nsIAtom;
 
 #define NS_ISCRIPTEVENTHANDLEROWNER_IID \
-{ /* 2ad54ae0-a839-11d3-ba97-00104ba02d3d */ \
-0x2ad54ae0, 0xa839, 0x11d3, \
-  {0xba, 0x97, 0x00, 0x10, 0x4b, 0xa0, 0x2d, 0x3d} }
+{ 0x1e2be5d2, 0x381a, 0x46dc, \
+ { 0xae, 0x97, 0xa5, 0x5f, 0x45, 0xfd, 0x36, 0x63 } }
 
 /**
  * Associate a compiled event handler with its target object, which owns it
@@ -110,19 +109,17 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTEVENTHANDLEROWNER_IID)
 
   /**
-   * Compile the specified event handler, and bind it to aTarget using
-   * aContext.
+   * Compile the specified event handler.  This does NOT bind it to
+   * anything.  That's the caller's responsibility.
    *
    * @param aContext the context to use when creating event handler
-   * @param aTarget the object to which to bind the event handler
    * @param aName the name of the handler
    * @param aBody the handler script body
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
-   * @param aHandler the holder for the compiled, bound handler object
+   * @param aHandler the holder for the compiled handler object
    */
   virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
-                                       nsISupports* aTarget,
                                        nsIAtom *aName,
                                        const nsAString& aBody,
                                        const char* aURL,

@@ -321,36 +321,6 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
     return false;
   }
 
-#ifndef CHROMIUM_MOZILLA_BUILD
-  // All other exit codes indicate crashes.
-
-  // TODO(jar): Remove histogramming code when UMA stats are consistent with
-  // other crash metrics.
-  // Histogram the low order 3 nibbles for UMA
-  const int kLeastValue = 0;
-  const int kMaxValue = 0xFFF;
-  const int kBucketCount = kMaxValue - kLeastValue + 1;
-  static LinearHistogram least_significant_histogram("ExitCodes.LSNibbles",
-      kLeastValue + 1, kMaxValue, kBucketCount);
-  least_significant_histogram.SetFlags(kUmaTargetedHistogramFlag |
-                                       LinearHistogram::kHexRangePrintingFlag);
-  least_significant_histogram.Add(exitcode & 0xFFF);
-
-  // Histogram the high order 3 nibbles
-  static LinearHistogram most_significant_histogram("ExitCodes.MSNibbles",
-      kLeastValue + 1, kMaxValue, kBucketCount);
-  most_significant_histogram.SetFlags(kUmaTargetedHistogramFlag |
-                                      LinearHistogram::kHexRangePrintingFlag);
-  // Avoid passing in negative numbers by shifting data into low end of dword.
-  most_significant_histogram.Add((exitcode >> 20) & 0xFFF);
-
-  // Histogram the middle order 2 nibbles
-  static LinearHistogram mid_significant_histogram("ExitCodes.MidNibbles",
-      1, 0xFF, 0x100);
-  mid_significant_histogram.SetFlags(kUmaTargetedHistogramFlag |
-                                      LinearHistogram::kHexRangePrintingFlag);
-  mid_significant_histogram.Add((exitcode >> 12) & 0xFF);
-#endif
   return true;
 }
 
