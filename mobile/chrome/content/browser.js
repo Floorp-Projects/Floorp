@@ -724,6 +724,9 @@ var Browser = {
     newTab.chromeTab.dispatchEvent(event);
     newTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
 
+    let cmd = document.getElementById("cmd_showTabs");
+    cmd.setAttribute("label", this._tabs.length - 1);
+
     return newTab;
   },
 
@@ -738,6 +741,9 @@ var Browser = {
     }
 
     tab.browser.messageManager.sendAsyncMessage("Browser:CanUnload", {});
+
+    let cmd = document.getElementById("cmd_showTabs");
+    cmd.setAttribute("label", this._tabs.length - 1);
   },
 
   _doCloseTab: function _doCloseTab(aTab) {
