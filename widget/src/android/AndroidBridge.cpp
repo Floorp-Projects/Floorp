@@ -539,7 +539,7 @@ AndroidBridge::SetClipboardText(const nsAString& aText)
     AutoLocalJNIFrame jniFrame;
     jstring jstr = mJNIEnv->NewString(nsPromiseFlatString(aText).get(),
                                       aText.Length());
-    mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
 }
 
 bool
@@ -560,7 +560,7 @@ void
 AndroidBridge::EmptyClipboard()
 {
     ALOG_BRIDGE("AndroidBridge::EmptyClipboard");
-    mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
 }
 
 void
