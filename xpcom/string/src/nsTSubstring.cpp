@@ -735,13 +735,24 @@ nsTSubstring_CharT::StripChars( const char_type* aChars, PRUint32 aOffset )
     mLength = to - mData;
   }
 
-void nsTSubstring_CharT::AppendPrintf( const char* format, ...)
+void nsTSubstring_CharT::AppendPrintf31( const char* format, ...)
   {
     char buf[32];
     va_list ap;
     va_start(ap, format);
     PRUint32 len = PR_vsnprintf(buf, sizeof(buf), format, ap);
     AppendASCII(buf, len);
+    va_end(ap);
+  }
+
+void nsTSubstring_CharT::AppendPrintf( const char* format, ...)
+  {
+    char *buf;
+    va_list ap;
+    va_start(ap, format);
+    buf = PR_vsmprintf(format, ap);
+    AppendASCII(buf);
+    PR_smprintf_free(buf);
     va_end(ap);
   }
 
