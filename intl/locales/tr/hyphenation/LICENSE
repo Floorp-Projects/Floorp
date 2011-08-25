@@ -1,0 +1,91 @@
+License information for hyph_tr.dic:
+
+This file is based on the TeX hyphenation patterns distributed under the
+LaTeX Project Public License (LPPL) as part of the hyph-utf8 package.
+
+***** BEGIN LICENSE BLOCK *****
+Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+The contents of this file are subject to the Mozilla Public License Version 
+1.1 (the "License"); you may not use this file except in compliance with 
+the License. You may obtain a copy of the License at 
+http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the
+License.
+
+The Original Code is Mozilla hyphenation service.
+
+The Initial Developer of the Original Code is
+Mozilla Foundation.
+Portions created by the Initial Developer are Copyright (C) 2011
+the Initial Developer. All Rights Reserved.
+
+Contributor(s):
+  Jonathan Kew <jfkthame@gmail.com>
+
+Alternatively, the contents of this file may be used under the terms of
+either the GNU General Public License Version 2 or later (the "GPL"), or
+the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+in which case the provisions of the GPL or the LGPL are applicable instead
+of those above. If you wish to allow use of your version of this file only
+under the terms of either the GPL or the LGPL, and not to allow others to
+use your version of this file under the terms of the MPL, indicate your
+decision by deleting the provisions above and replace them with the notice
+and other provisions required by the GPL or the LGPL. If you do not delete
+the provisions above, a recipient may use your version of this file under
+the terms of any one of the MPL, the GPL or the LGPL.
+
+***** END LICENSE BLOCK *****
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+At the time this file was first modified, a complete, unmodified copy of
+the LPPL Work was available from:
+http://tug.org/svn/texhyphen/trunk/hyph-utf8/tex/generic/hyph-utf8/patterns/?pathrev=580
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Portions of this file were originally made available under the following license
+(copied verbatim from hyph-tr.lic.txt in the original work):
+
+Turkish hyphenation patterns
+
+(more info about the licence to be added later)
+
+% hyph-tr.tex
+%
+% Turkish hyphenation patterns
+%
+% This file is auto-generated from source/generic/hyph-utf8/languages/tr/generate_patterns_tr.rb that is part of hyph-utf8.
+% Please don't modify this file; modify the generating script instead.
+%
+% Copyright (C) 1987 Pierre A. MacKay
+%               2008, 2011 TUG
+%
+% This program can redistributed and/or modified under the terms
+% of the LaTeX Project Public License Distributed from CTAN
+% archives in directory macros/latex/base/lppl.txt; either
+% version 1 of the License, or (at your option) any later version.
+%
+% Credits:
+% - algorithm developed by P. A. MacKay for the Ottoman Texts Project in 1987
+% - rules adapted for modern Turkish by H. Turgut Uyar <uyar at itu.edu.tr>
+% - initiative to improve Turkish patterns by S. Ekin Kocabas <kocabas at stanford.edu>
+% - script written by Mojca Miklavec <mojca.miklavec.lists at gmail.com> in June 2008
+%
+% See also:
+% - http://www.ctan.org/tex-archive/language/turkish/hyphen/turk_hyf.c
+% - http://www.tug.org/TUGboat/Articles/tb09-1/tb20mackay.pdf
+%
+% Differences with Ottoman patterns:
+% - adapted for the use on modern TeX engines, using UTF-8 charactes
+% - only letters for Modern Turkish + âîû (the first one often needed, the other two don't hurt)
+% - (if needed, support for Ottoman Turkish might be provided separately under language code 'ota')
+%
+% Changes:
+% - 2008-06-25/27/28 - create this file by adapting Ottoman rules for modern Turkish
+% - 2011-08-10 - add LPPL licence with permission of Pierre A. MacKay
+% 
