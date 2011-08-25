@@ -4,6 +4,7 @@
 
 #include "tests.h"
 #include "jsdbgapi.h"
+#include "jscntxt.h"
 
 static int callCount[2] = {0, 0};
 
@@ -252,3 +253,42 @@ bool testIndirectEval(JSObject *scope, JSObject *g, const char *code, int expect
     return true;
 }
 END_TEST(testDebugger_newScriptHook)
+
+BEGIN_TEST(testDebugger_singleStepThrow)
+    {
+        CHECK(JS_SetDebugModeForCompartment(cx, cx->compartment, true));
+        CHECK(JS_SetInterrupt(rt, onStep, NULL));
+
+        uint32 opts = JS_GetOptions(cx);
+        opts |= JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
+        opts &= ~JSOPTION_JIT;
+        JS_SetOptions(cx, opts);
+
+        CHECK(JS_DefineFunction(cx, global, "setStepMode", setStepMode, 0, 0));
+        EXEC("var e;\n"
+             "setStepMode();\n"
+             "function f() { throw 0; }\n"
+             "try { f(); }\n"
+             "catch (x) { e = x; }\n");
+        return true;
+    }
+
+    static JSBool
+    setStepMode(JSContext *cx, uintN argc, jsval *vp)
+    {
+        JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+        JS_ASSERT(fp);
+        JSScript *script = JS_GetFrameScript(cx, fp);
+        JS_ASSERT(script);
+        if (!JS_SetSingleStepMode(cx, script, true))
+            return false;
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return true;
+    }
+
+    static JSTrapStatus
+    onStep(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval, void *closure)
+    {
+        return JSTRAP_CONTINUE;
+    }
+END_TEST(testDebugger_singleStepThrow)

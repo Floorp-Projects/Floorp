@@ -59,7 +59,6 @@
 #include "nsThreadUtils.h"
 #include "nsIThreadInternal.h"
 #include "nsContentUtils.h"
-
 #include "nsFrameManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
@@ -91,6 +90,7 @@
 
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNotifyAudioAvailableEvent.h"
+#include "nsMediaFragmentURIParser.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -429,18 +429,8 @@ NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
 NS_IMETHODIMP nsHTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
 {
   nsCAutoString src;
-
-  if (mDecoder) {
-    nsMediaStream* stream = mDecoder->GetCurrentStream();
-    if (stream) {
-      stream->URI()->GetSpec(src);
-    }
-  } else if (mLoadingSrc) {
-    mLoadingSrc->GetSpec(src);
-  }
-
+  GetCurrentSpec(src);
   aCurrentSrc = NS_ConvertUTF8toUTF16(src);
-
   return NS_OK;
 }
 
@@ -1292,6 +1282,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mPreloadAction(PRELOAD_UNDEFINED),
     mMediaSize(-1,-1),
     mLastCurrentTime(0.0),
+    mFragmentStart(-1.0),
+    mFragmentEnd(-1.0),
     mAllowAudioData(PR_FALSE),
     mBegun(PR_FALSE),
     mLoadedFirstFrame(PR_FALSE),
@@ -1952,6 +1944,29 @@ nsresult nsHTMLMediaElement::NewURIFromString(const nsAutoString& aURISpec, nsIU
   return NS_OK;
 }
 
+void nsHTMLMediaElement::ProcessMediaFragmentURI()
+{
+  nsCAutoString ref;
+  GetCurrentSpec(ref);
+  nsMediaFragmentURIParser parser(ref);
+  parser.Parse();
+  double start = parser.GetStartTime();
+  if (mDecoder) {
+    double end = parser.GetEndTime();
+    if (end < 0.0 || end > start) {
+      mFragmentEnd = end;
+    }
+    else {
+      start = -1.0;
+      end = -1.0;
+    }
+  }
+  if (start > 0.0) {
+    SetCurrentTime(start);
+    mFragmentStart = start;
+  }
+}
+
 void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
 {
   mChannels = aChannels;
@@ -1959,6 +1974,10 @@ void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
+  if (mDecoder && mDecoder->IsSeekable()) {
+    ProcessMediaFragmentURI();
+    mDecoder->SetEndTime(mFragmentEnd);
+  }
 }
 
 void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
@@ -2644,4 +2663,51 @@ void nsHTMLMediaElement::FireTimeUpdate(PRBool aPeriodic)
     mTimeUpdateTime = now;
     mLastCurrentTime = time;
   }
+  if (mFragmentEnd >= 0.0 && time >= mFragmentEnd) {
+    Pause();
+    mFragmentEnd = -1.0;
+    mFragmentStart = -1.0;
+    mDecoder->SetEndTime(mFragmentEnd);
+  }
+}
+
+void nsHTMLMediaElement::GetCurrentSpec(nsCString& aString)
+{
+  if (mDecoder) {
+    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    if (stream) {
+      stream->URI()->GetSpec(aString);
+    }
+  } else if (mLoadingSrc) {
+    mLoadingSrc->GetSpec(aString);
+  }
+}
+
+/* attribute double initialTime; */
+NS_IMETHODIMP nsHTMLMediaElement::GetInitialTime(double *aTime)
+{
+  // If there is no start fragment then the initalTime is zero.
+  // Clamp to duration if it is greater than duration.
+  double duration = 0.0;
+  nsresult rv = GetDuration(&duration);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aTime = mFragmentStart < 0.0 ? 0.0 : mFragmentStart;
+  if (*aTime > duration) {
+    *aTime = duration;
+  }
+  return NS_OK;
+}
+
+/* attribute double mozFragmentEnd; */
+NS_IMETHODIMP nsHTMLMediaElement::GetMozFragmentEnd(double *aTime)
+{
+  double duration = 0.0;
+  nsresult rv = GetDuration(&duration);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there is no end fragment, or the fragment end is greater than the
+  // duration, return the duration.
+  *aTime = (mFragmentEnd < 0.0 || mFragmentEnd > duration) ? duration : mFragmentEnd;
+  return NS_OK;
 }

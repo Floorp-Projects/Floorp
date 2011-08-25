@@ -202,6 +202,7 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mStartTime(-1),
   mEndTime(-1),
   mSeekTime(0),
+  mFragmentEndTime(-1),
   mReader(aReader),
   mCurrentFrameTime(0),
   mAudioStartTime(-1),
@@ -853,7 +854,8 @@ void nsBuiltinDecoderStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
 {
   UpdatePlaybackPositionInternal(aTime);
 
-  if (!mPositionChangeQueued) {
+  PRBool fragmentEnded = mFragmentEndTime >= 0 && GetMediaTime() >= mFragmentEndTime;
+  if (!mPositionChangeQueued || fragmentEnded) {
     mPositionChangeQueued = PR_TRUE;
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::PlaybackPositionChanged);
@@ -862,6 +864,10 @@ void nsBuiltinDecoderStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
 
   // Notify DOM of any queued up audioavailable events
   mEventManager.DispatchPendingEvents(GetMediaTime());
+
+  if (fragmentEnded) {
+    StopPlayback();
+  }
 }
 
 void nsBuiltinDecoderStateMachine::ClearPositionChangeFlag()
@@ -933,6 +939,13 @@ void nsBuiltinDecoderStateMachine::SetEndTime(PRInt64 aEndTime)
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
   mEndTime = aEndTime;
+}
+
+void nsBuiltinDecoderStateMachine::SetFragmentEndTime(PRInt64 aEndTime)
+{
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+
+  mFragmentEndTime = aEndTime < 0 ? aEndTime : aEndTime + mStartTime;
 }
 
 void nsBuiltinDecoderStateMachine::SetSeekable(PRBool aSeekable)
@@ -1706,7 +1719,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
 
   // We've got enough data to keep playing until at least the next frame.
   // Start playing now if need be.
-  if (!IsPlaying()) {
+  if (!IsPlaying() && ((mFragmentEndTime >= 0 && clock_time < mFragmentEndTime) || mFragmentEndTime < 0)) {
     StartPlayback();
   }
 

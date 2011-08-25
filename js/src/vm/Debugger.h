@@ -226,7 +226,7 @@ class Debugger {
     static JSFunctionSpec methods[];
 
     JSObject *getHook(Hook hook) const;
-    bool hasAnyLiveHooks() const;
+    bool hasAnyLiveHooks(JSContext *cx) const;
 
     static void slowPathOnEnterFrame(JSContext *cx);
     static void slowPathOnLeaveFrame(JSContext *cx);
@@ -288,9 +288,9 @@ class Debugger {
      *       - it has a breakpoint set on a live script
      *       - it has a watchpoint set on a live object.
      *
-     * Debugger::mark handles the last case. If it finds any Debugger objects
-     * that are definitely live but not yet marked, it marks them and returns
-     * true. If not, it returns false.
+     * Debugger::markAllIteratively handles the last case. If it finds any
+     * Debugger objects that are definitely live but not yet marked, it marks
+     * them and returns true. If not, it returns false.
      */
     static void markCrossCompartmentDebuggerObjectReferents(JSTracer *tracer);
     static bool markAllIteratively(GCMarker *trc, JSGCInvocationKind gckind);
@@ -306,6 +306,7 @@ class Debugger {
                                    NewScriptKind kind);
     static inline void onDestroyScript(JSScript *script);
     static JSTrapStatus onTrap(JSContext *cx, Value *vp);
+    static JSTrapStatus onSingleStep(JSContext *cx, Value *vp);
 
     /************************************* Functions for use by Debugger.cpp. */
 
@@ -430,6 +431,7 @@ class BreakpointSite {
     Breakpoint *firstBreakpoint() const;
     bool hasBreakpoint(Breakpoint *bp);
     bool hasTrap() const { return !!trapHandler; }
+    JSObject *getScriptObject() const { return scriptObject; }
 
     bool inc(JSContext *cx);
     void dec(JSContext *cx);
@@ -439,6 +441,24 @@ class BreakpointSite {
     void destroyIfEmpty(JSRuntime *rt, BreakpointSiteMap::Enum *e);
 };
 
+/*
+ * Each Breakpoint is a member of two linked lists: its debugger's list and its
+ * site's list.
+ *
+ * GC rules:
+ *   - script is live, breakpoint exists, and debugger is enabled
+ *      ==> debugger is live
+ *   - script is live, breakpoint exists, and debugger is live
+ *      ==> retain the breakpoint and the handler object is live
+ *
+ * Debugger::markAllIteratively implements these two rules. It uses
+ * Debugger::hasAnyLiveHooks to check for rule 1.
+ *
+ * Nothing else causes a breakpoint to be retained, so if its script or
+ * debugger is collected, the breakpoint is destroyed during GC sweep phase,
+ * even if the debugger compartment isn't being GC'd. This is implemented in
+ * JSCompartment::sweepBreakpoints.
+ */
 class Breakpoint {
     friend class ::JSCompartment;
     friend class js::Debugger;
