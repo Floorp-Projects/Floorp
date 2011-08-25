@@ -85,7 +85,6 @@ class MessagePumpLibevent : public MessagePump {
                            Watcher *delegate);
 
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
   // This is analagous to FileDescriptorWatcher above, which really is
   // just a wrapper around libevent's |struct event|.  This class acts
   // as a sort of "scoped event watcher" in that it guarantees that
@@ -129,7 +128,6 @@ class MessagePumpLibevent : public MessagePump {
   bool CatchSignal(int sig,
                    SignalEvent* sigevent,
                    SignalWatcher* delegate);
-#endif  // defined(CHROMIUM_MOZILLA_BUILD)
 
 
   // MessagePump methods:
@@ -160,11 +158,9 @@ class MessagePumpLibevent : public MessagePump {
   static void OnLibeventNotification(int fd, short flags,
                                      void* context);
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
   // Called by libevent upon receiving a signal
   static void OnLibeventSignalNotification(int sig, short flags,
                                            void* context);
-#endif
 
   // Unix pipe used to implement ScheduleWork()
   // ... callback; called by libevent inside Run() when pipe is ready to read

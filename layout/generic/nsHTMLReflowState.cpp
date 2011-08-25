@@ -865,7 +865,7 @@ static PRBool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
     *aFound = PR_FALSE;
     return PR_FALSE;
   }
-  for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling()) {
+  for (nsIFrame* f = aFrame->GetFirstPrincipalChild(); f; f = f->GetNextSibling()) {
     PRBool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
     if (*aFound || !allEmpty) {
       return allEmpty;

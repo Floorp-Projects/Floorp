@@ -215,7 +215,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (FAILED(result))
     {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+      ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL);
 
         ERR("Could not create additional swap chains or offscreen surfaces: %08lX", result);
         release();
@@ -231,7 +231,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (FAILED(result))
     {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL);
 
         ERR("Could not create depthstencil surface for new swap chain: %08lX", result);
         release();

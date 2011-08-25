@@ -10,19 +10,12 @@
 #include "base/process_util.h"
 #include "base/singleton.h"
 #include "base/waitable_event.h"
-#ifdef CHROMIUM_MOZILLA_BUILD
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
-#else
-#include "chrome/browser/chrome_thread.h"
-#endif
 #include "chrome/common/ipc_logging.h"
 #include "chrome/common/notification_service.h"
 #include "chrome/common/notification_type.h"
-#ifndef CHROMIUM_MOZILLA_BUILD
-#include "chrome/common/plugin_messages.h"
-#endif
 #include "chrome/common/process_watcher.h"
 #include "chrome/common/result_codes.h"
 
@@ -57,11 +50,7 @@ class ChildNotificationTask : public Task {
 ChildProcessHost::ChildProcessHost(
     ProcessType type, ResourceDispatcherHost* resource_dispatcher_host)
     :
-#ifdef CHROMIUM_MOZILLA_BUILD
       ChildProcessInfo(type),
-#else
-      Receiver(type),
-#endif
       ALLOW_THIS_IN_INITIALIZER_LIST(listener_(this)),
       resource_dispatcher_host_(resource_dispatcher_host),
       opening_channel_(false),
@@ -120,16 +109,12 @@ bool ChildProcessHost::Send(IPC::Message* msg) {
 }
 
 void ChildProcessHost::Notify(NotificationType type) {
-#ifdef CHROMIUM_MOZILLA_BUILD
   MessageLoop* loop = ChromeThread::GetMessageLoop(ChromeThread::IO);
   if (!loop)
       loop = mozilla::ipc::ProcessChild::message_loop();
   if (!loop)
       loop = MessageLoop::current();
   loop->PostTask(
-#else
-  resource_dispatcher_host_->ui_loop()->PostTask(
-#endif
       FROM_HERE, new ChildNotificationTask(type, this));
 }
 
@@ -146,10 +131,6 @@ void ChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event) {
   }
   // Notify in the main loop of the disconnection.
   Notify(NotificationType::CHILD_PROCESS_HOST_DISCONNECTED);
-#endif
-
-#ifndef CHROMIUM_MOZILLA_BUILD
-  delete this;
 #endif
 }
 
@@ -171,27 +152,10 @@ void ChildProcessHost::ListenerHook::OnMessageReceived(
 #endif
 
   bool msg_is_ok = true;
-#ifdef CHROMIUM_MOZILLA_BUILD
   bool handled = false;
-#else
-  bool handled = host_->resource_dispatcher_host_->OnMessageReceived(
-      msg, host_, &msg_is_ok);
-#endif
 
   if (!handled) {
-#ifdef CHROMIUM_MOZILLA_BUILD
-    if (0) {
-#else
-    if (msg.type() == PluginProcessHostMsg_ShutdownRequest::ID) {
-      // Must remove the process from the list now, in case it gets used for a
-      // new instance before our watcher tells us that the process terminated.
-      Singleton<ChildProcessList>::get()->remove(host_);
-      if (host_->CanShutdown())
-        host_->Send(new PluginProcessMsg_Shutdown());
-#endif
-    } else {
       host_->OnMessageReceived(msg);
-    }
   }
 
   if (!msg_is_ok)
@@ -206,9 +170,6 @@ void ChildProcessHost::ListenerHook::OnMessageReceived(
 void ChildProcessHost::ListenerHook::OnChannelConnected(int32 peer_pid) {
   host_->opening_channel_ = false;
   host_->OnChannelConnected(peer_pid);
-#ifndef CHROMIUM_MOZILLA_BUILD
-  host_->Send(new PluginProcessMsg_AskBeforeShutdown());
-#endif
 
   // Notify in the main loop of the connection.
   host_->Notify(NotificationType::CHILD_PROCESS_HOST_CONNECTED);
@@ -221,21 +182,11 @@ void ChildProcessHost::ListenerHook::OnChannelError() {
 
 
 ChildProcessHost::Iterator::Iterator() : all_(true) {
-#ifndef CHROMIUM_MOZILLA_BUILD
-  DCHECK(MessageLoop::current() ==
-      ChromeThread::GetMessageLoop(ChromeThread::IO)) <<
-          "ChildProcessInfo::Iterator must be used on the IO thread.";
-#endif
   iterator_ = Singleton<ChildProcessList>::get()->begin();
 }
 
 ChildProcessHost::Iterator::Iterator(ProcessType type)
     : all_(false), type_(type) {
-#ifndef CHROMIUM_MOZILLA_BUILD
-  DCHECK(MessageLoop::current() ==
-      ChromeThread::GetMessageLoop(ChromeThread::IO)) <<
-          "ChildProcessInfo::Iterator must be used on the IO thread.";
-#endif
   iterator_ = Singleton<ChildProcessList>::get()->begin();
   if (!Done() && (*iterator_)->type() != type_)
     ++(*this);

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -165,8 +165,8 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
     if (shell->FrameManager() &&
         ((GetStateBits() & PLACEHOLDER_FOR_POPUP) ||
          !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof))) {
-      nsIAtom* listName = nsLayoutUtils::GetChildListNameFor(oof);
-      shell->FrameManager()->RemoveFrame(listName, oof);
+      ChildListID listId = nsLayoutUtils::GetChildListNameFor(oof);
+      shell->FrameManager()->RemoveFrame(listId, oof);
     }
     // else oof will be destroyed by its parent
   }

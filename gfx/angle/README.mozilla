@@ -16,6 +16,7 @@ In this order:
   angle-r707.patch - this is ANGLE r707 for Win64 bug fix
   angle-r719.patch - this is ANGLE r719
   angle-r711.patch - this is ANGLE r711
+  fix-angle-surface-assert.patch - this is ANGLE r739
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

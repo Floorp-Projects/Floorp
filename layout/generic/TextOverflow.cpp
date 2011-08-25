@@ -340,7 +340,7 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     return;
   }
 
-  nsIFrame* child = aFrame->GetFirstChild(nsnull);
+  nsIFrame* child = aFrame->GetFirstPrincipalChild();
   while (child) {
     ExamineFrameSubtree(child, aContentArea, aInsideMarkersArea,
                         aFramesToHide, aAlignmentEdges);

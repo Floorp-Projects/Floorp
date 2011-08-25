@@ -30,7 +30,7 @@ with (c) {
 is(c.onmouseover, testFunc, "Event handler should have been set on node");
 ok(c.fooExpando === undefined, "Expando should not have been set on node",
    "got " + repr(c.fooExpando) + ", expected undefined");
-ok(window.onmouseover === undefined,
+ok(window.onmouseover === null,
    "Event handler should not have been set on window",
    "got " + repr(window.onmouseover) + ", expected undefined");
 is(window.fooExpando, testFunc, "Expando should have been set on window");
