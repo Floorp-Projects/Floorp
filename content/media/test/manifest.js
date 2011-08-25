@@ -266,6 +266,12 @@ var gDecodeErrorTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// These are files that are used for media fragments tests
+var gFragmentTests = [
+  { name:"big.wav", type:"audio/x-wav", duration:9.28, size:102444 }
+];
+
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");

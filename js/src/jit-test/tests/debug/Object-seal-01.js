@@ -27,14 +27,14 @@ function test(code) {
     var xw = gw.getOwnPropertyDescriptor("x").value;
 
     function check() {
-	// The Debugger.Object seal/freeze/preventExtensions methods
-	// had the same effect as the corresponding ES5 Object methods.
-	g.compareObjects();
+        // The Debugger.Object seal/freeze/preventExtensions methods
+        // had the same effect as the corresponding ES5 Object methods.
+        g.compareObjects();
 
-	// The Debugger.Object introspection methods agree with the ES5 Object methods.
-	assertEq(xw.isExtensible(), g.Object.isExtensible(g.x), code + ' isExtensible');
-	assertEq(xw.isSealed(), g.Object.isSealed(g.x), code + ' isSealed');
-	assertEq(xw.isFrozen(), g.Object.isFrozen(g.x), code + ' isFrozen');
+        // The Debugger.Object introspection methods agree with the ES5 Object methods.
+        assertEq(xw.isExtensible(), g.Object.isExtensible(g.x), code + ' isExtensible');
+        assertEq(xw.isSealed(), g.Object.isSealed(g.x), code + ' isSealed');
+        assertEq(xw.isFrozen(), g.Object.isFrozen(g.x), code + ' isFrozen');
     }
 
     check();
