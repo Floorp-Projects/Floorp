@@ -410,9 +410,9 @@ class WebSocketServer(object):
 
 class Mochitest(object):
   # Path to the test script on the server
-  TEST_PATH = "/tests/"
-  CHROME_PATH = "/redirect.html";
-  PLAIN_LOOP_PATH = "/plain-loop.html";
+  TEST_PATH = "tests"
+  CHROME_PATH = "redirect.html"
+  PLAIN_LOOP_PATH = "plain-loop.html"
   urlOpts = []
   runSSLTunnel = True
   vmwareHelper = None
@@ -440,15 +440,15 @@ class Mochitest(object):
   def buildTestPath(self, options):
     """ Build the url path to the specific test harness and test file or directory """
     testHost = "http://mochi.test:8888"
-    testURL = testHost + self.TEST_PATH + options.testPath
-    if os.path.isfile(self.oldcwd + self.TEST_PATH + options.testPath) and options.loops > 0:
-       testURL = testHost + self.PLAIN_LOOP_PATH
+    testURL = ("/").join([testHost, self.TEST_PATH, options.testPath])
+    if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.loops > 0:
+       testURL = ("/").join([testHost, self.PLAIN_LOOP_PATH])
     if options.chrome or options.a11y:
-       testURL = testHost + self.CHROME_PATH
+       testURL = ("/").join([testHost, self.CHROME_PATH])
     elif options.browserChrome:
       testURL = "about:blank"
     elif options.ipcplugins:
-      testURL = testHost + self.TEST_PATH + "dom/plugins/test"
+      testURL = ("/").join([testHost, self.TEST_PATH, "dom/plugins/test"])
     return testURL
 
   def startWebSocketServer(self, options, debuggerInfo):
@@ -579,8 +579,8 @@ class Mochitest(object):
         self.urlOpts.append("hideResultsTable=1")
       if options.loops:
         self.urlOpts.append("loops=%d" % options.loops)
-      if os.path.isfile(self.oldcwd + self.TEST_PATH + options.testPath) and options.loops > 0:
-        self.urlOpts.append("testname=%s" % (self.TEST_PATH + options.testPath))
+      if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.loops > 0:
+        self.urlOpts.append("testname=%s" % ("/").join([self.TEST_PATH, options.testPath]))
 
   def cleanup(self, manifest, options):
     """ remove temporary files and profile """
