@@ -84,6 +84,7 @@ private:
   PRPackedBool mShuttingDown;   // Quit method reentrancy check
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
   PRPackedBool mRestart;        // Quit(eRestart)
+  PRPackedBool mInterrupted;    // Was startup interrupted by an interactive prompt?
 };
 
 #endif // nsAppStartup_h__
