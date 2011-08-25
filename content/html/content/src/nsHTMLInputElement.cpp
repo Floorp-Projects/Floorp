@@ -1707,7 +1707,7 @@ nsHTMLInputElement::Focus()
     // for file inputs, focus the button instead
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
-      nsIFrame* childFrame = frame->GetFirstChild(nsnull);
+      nsIFrame* childFrame = frame->GetFirstPrincipalChild();
       while (childFrame) {
         // see if the child is a button control
         nsCOMPtr<nsIFormControl> formCtrl =

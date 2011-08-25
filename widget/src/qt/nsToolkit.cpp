@@ -135,5 +135,9 @@ Qt::HANDLE
 nsToolkit::GetSharedGC(void)
 {
     // FIXME Not sure
+#ifdef MOZ_X11
     return mSharedGC->handle();
+#else
+    return 0;
+#endif
 }

@@ -1036,7 +1036,7 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransf
   nsSVGTextPathFrame *textPath = FindTextPathParent();
   // In a textPath, the 'y' attribute has no effect, so we reset 'y' here
   // to use aPosition.y for dy only
-  if (textPath && textPath->GetFirstChild(nsnull) == this) {
+  if (textPath && textPath->GetFirstPrincipalChild() == this) {
     aPosition->y = 0.0;
   }
 
@@ -1307,7 +1307,7 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
     }
     if ((frame->GetType() == nsGkAtoms::svgTextFrame ||
          frame->GetType() == nsGkAtoms::svgTextPathFrame) &&
-        frame->GetFirstChild(nsnull) == this) {
+        frame->GetFirstPrincipalChild() == this) {
         return PR_TRUE;
     }
 

@@ -64,7 +64,7 @@ public:
   InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
-  SetInitialChildList(nsIAtom*        aListName,
+  SetInitialChildList(ChildListID     aListID,
                       nsFrameList&    aChildList);
 
   NS_IMETHOD

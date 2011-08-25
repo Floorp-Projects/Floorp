@@ -46,36 +46,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589696
 
 /** Test for Bug 589696 **/
 
-function checkFormNoValidateAttribute(aElementName)
-{
-  var element = document.createElement(aElementName);
-
-  ok("formNoValidate" in element, "formNoValidate should be a " + aElementName +
-                              " element IDL attribute");
-
-  ok(!element.formNoValidate, "formnovalidate attribute should be disabled");
-  is(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be disabled");
-
-  element.formNoValidate = true;
-  ok(element.formNoValidate, "formnovalidate attribute should be enabled");
-  isnot(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be enabled");
-
-  element.removeAttribute('formnovalidate');
-  element.setAttribute('formnovalidate', '');
-  ok(element.formNoValidate, "formnovalidate attribute should be enabled");
-  isnot(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be enabled");
-
-  element.removeAttribute('formnovalidate');
-  ok(!element.formNoValidate, "formnovalidate attribute should be disabled");
-  is(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be disabled");
-}
-
-checkFormNoValidateAttribute('button');
-
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 var os = Components.classes['@mozilla.org/observer-service;1']
                    .getService(Components.interfaces.nsIObserverService);

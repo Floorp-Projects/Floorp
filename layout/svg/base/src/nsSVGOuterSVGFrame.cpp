@@ -116,7 +116,7 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
 void
 nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
 {
-  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
   while (kid) {
     if (kid->GetType() == nsGkAtoms::svgTextFrame) {
       nsSVGTextFrame* textFrame = static_cast<nsSVGTextFrame*>(kid);

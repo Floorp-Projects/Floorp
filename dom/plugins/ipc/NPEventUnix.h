@@ -37,12 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_plugins_NPEventX11_h
-#define mozilla_dom_plugins_NPEventX11_h 1
+#ifndef mozilla_dom_plugins_NPEventUnix_h
+#define mozilla_dom_plugins_NPEventUnix_h 1
 
 #include "npapi.h"
 
+#ifdef MOZ_X11
 #include "mozilla/X11Util.h"
+#endif
 
 namespace mozilla {
 
@@ -95,7 +97,10 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
         }
 
         memcpy(aResult, bytes, sizeof(paramType));
+
+#ifdef MOZ_X11
         SetXDisplay(aResult->event);
+#endif
         return true;
     }
 
@@ -105,6 +110,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
         aLog->append(L"(XEvent)");
     }
 
+#ifdef MOZ_X11
 private:
     static void SetXDisplay(XEvent& ev)
     {
@@ -118,6 +124,7 @@ private:
             ev.xerror.display = display;
         }
     }
+#endif
 };
 
 } // namespace IPC
