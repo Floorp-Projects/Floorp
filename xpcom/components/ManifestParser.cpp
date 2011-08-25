@@ -44,7 +44,7 @@
 #include "prprf.h"
 #if defined(XP_WIN)
 #include <windows.h>
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
 #include <CoreServices/CoreServices.h>
 #elif defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
@@ -486,7 +486,7 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
                                          info.dwMajorVersion,
                                          info.dwMinorVersion);
   }
-#elif defined(XP_MACOSX)
+#elif defined(MOZ_WIDGET_COCOA)
   SInt32 majorVersion, minorVersion;
   if ((Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
       (Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {

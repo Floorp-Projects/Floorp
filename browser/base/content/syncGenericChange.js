@@ -115,7 +115,7 @@ let Change = {
           introText.textContent = this._str("change.synckey.introText2");
           warningText.textContent = this._str("change.recoverykey.warningText");
           this._dialog.getButton("finish").label
-            = this._str("change.recovery.acceptButton");
+            = this._str("change.recoverykey.acceptButton");
           if (this._duringSetup) {
             this._dialog.getButton("finish").disabled = false;
           }
