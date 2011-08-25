@@ -19,6 +19,12 @@ include pngsuite-palettes/reftest.list
 include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
 
+# BMP tests
+include bmp/reftest.list
+
+# ICO tests
+include ico/reftest.list
+
 # JPEG tests
 include jpeg/reftest.list
 
