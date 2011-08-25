@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is an implementation of a bitmap encoder.
+ * The Original Code is an implementation of an icon encoder.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
@@ -36,24 +36,28 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "imgIEncoder.h"
-#include "BMPFileHeaders.h"
 
 #include "mozilla/ReentrantMonitor.h"
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "ICOFileHeaders.h"
 
-#define NS_BMPENCODER_CID \
-{ /* 13a5320c-4c91-4FA4-bd16-b081a3ba8c0b */         \
-     0x13a5320c,                                     \
-     0x4c91,                                         \
-     0x4fa4,                                         \
-    {0xbd, 0x16, 0xb0, 0x81, 0xa3, 0Xba, 0x8c, 0x0b} \
+class nsBMPEncoder;
+class nsPNGEncoder;
+
+#define NS_ICOENCODER_CID \
+{ /*92AE3AB2-8968-41B1-8709-B6123BCEAF21 */          \
+     0x92ae3ab2,                                     \
+     0x8968,                                         \
+     0x41b1,                                         \
+    {0x87, 0x09, 0xb6, 0x12, 0x3b, 0Xce, 0xaf, 0x21} \
 }
 
-// Provides BMP encoding functionality. Use InitFromData() to do the
+// Provides ICO encoding functionality. Use InitFromData() to do the
 // encoding. See that function definition for encoding options.
 
-class nsBMPEncoder : public imgIEncoder
+class nsICOEncoder : public imgIEncoder
 {
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 public:
@@ -62,43 +66,35 @@ public:
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
 
-  nsBMPEncoder();
-  ~nsBMPEncoder();
+  nsICOEncoder();
+  ~nsICOEncoder();
 
 protected:
-  // See InitData in the cpp for valid parse options
-  nsresult ParseOptions(const nsAString& aOptions, PRUint32* bpp);
-  // Obtains data with no alpha in machine-independent byte order
-  void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
-                          PRUint32 aPixelWidth);
-  // Strips the alpha from aSrc and puts it in aDest
-  void StripAlpha(const PRUint8* aSrc, PRUint8* aDest,
-                  PRUint32 aPixelWidth);
-  // Thread safe notify listener
+  nsresult ParseOptions(const nsAString& aOptions, PRUint32* bpp, 
+                        PRBool *usePNG);
   void NotifyListener();
 
-  // Initializes the bitmap file header member mBMPFileHeader
-  void InitFileHeader(PRUint32 aBPP, PRUint32 aWidth, PRUint32 aHeight);
-  // Initializes the bitmap info header member mBMPInfoHeader
-  void InitInfoHeader(PRUint32 aBPP, PRUint32 aWidth, PRUint32 aHeight);
-  // Encodes the bitmap file header member mBMPFileHeader
+  // Initializes the icon file header mICOFileHeader
+  void InitFileHeader();
+  // Initializes the icon directory info header mICODirEntry
+  void InitInfoHeader(PRUint32 aBPP, PRUint8 aWidth, PRUint8 aHeight);
+  // Encodes the icon file header mICOFileHeader
   void EncodeFileHeader();
-  // Encodes the bitmap info header member mBMPInfoHeader
+  // Encodes the icon directory info header mICODirEntry
   void EncodeInfoHeader();
-  // Encodes a row of image data which does not have alpha data
-  void EncodeImageDataRow24(const PRUint8* aData);
-  // Encodes a row of image data which does have alpha data
-  void EncodeImageDataRow32(const PRUint8* aData);
   // Obtains the current offset filled up to for the image buffer
   inline PRInt32 GetCurrentImageBufferOffset()
   {
     return static_cast<PRInt32>(mImageBufferCurr - mImageBufferStart);
   }
 
+  // Holds either a PNG or a BMP depending on the encoding options specified
+  // or if no encoding options specified will use the default (PNG)
+  nsCOMPtr<imgIEncoder> mContainedEncoder;
+
   // These headers will always contain endian independent stuff 
-  // They store the BMP headers which will be encoded
-  mozilla::imagelib::BMPFILEHEADER mBMPFileHeader;
-  mozilla::imagelib::BMPINFOHEADER mBMPInfoHeader;
+  mozilla::imagelib::IconFileHeader mICOFileHeader;
+  mozilla::imagelib::IconDirEntry mICODirEntry;
 
   // Keeps track of the start of the image buffer
   PRUint8* mImageBufferStart;
@@ -108,8 +104,10 @@ protected:
   PRUint32 mImageBufferSize;
   // Keeps track of the number of bytes in the image buffer which are read
   PRUint32 mImageBufferReadPoint;
-  // Stores PR_TRUE if the image is done being encoded
+  // Stores PR_TRUE if the image is done being encoded  
   PRPackedBool mFinished;
+  // Stores PR_TRUE if the contained image is a PNG
+  PRPackedBool mUsePNG;
 
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;

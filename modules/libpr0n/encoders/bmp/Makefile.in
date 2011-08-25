@@ -48,7 +48,6 @@ FORCE_STATIC_LIB = 1
 MODULE_NAME	= imgEncoderBMPModule
 LIBXUL_LIBRARY = 1
 
-# Decoders need RasterImage.h
 LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
 
 CPPSRCS		= nsBMPEncoder.cpp

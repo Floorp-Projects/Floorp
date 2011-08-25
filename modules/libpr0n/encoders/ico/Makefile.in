@@ -13,12 +13,14 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is Mozilla Foundation
-# Portions created by the Initial Developer are Copyright (C) 2005
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#
+#   Brian R. Bondy <netzen@gmail.com>
+# 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -40,19 +42,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imgpnge
-LIBRARY_NAME	= imgpnge_s
+MODULE		= imgicoe
+LIBRARY_NAME	= imgicoe_s
 FORCE_STATIC_LIB = 1
-MODULE_NAME	= imgEncoderPNGModule
+MODULE_NAME	= imgEncoderICOModule
 LIBXUL_LIBRARY = 1
 
-DEFINES		+= -DMOZ_PNG_WRITE \
-	-DMOZ_PNG_READ \
-	$(NULL)
-
+# Decoders need RasterImage.h
 LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/encoders/bmp/
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/encoders/png/
 
-CPPSRCS		= nsPNGEncoder.cpp
+CPPSRCS		= nsICOEncoder.cpp
 
 include $(topsrcdir)/config/rules.mk
 
