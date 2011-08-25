@@ -6285,13 +6285,14 @@ var IndexedDBPromptHelper = {
     var contentDocument = contentWindow.document;
     var browserWindow =
       OfflineApps._getBrowserWindowForContentWindow(contentWindow);
-    var browser =
-      OfflineApps._getBrowserForContentWindow(browserWindow, contentWindow);
 
-    if (!browser) {
+    if (browserWindow != window) {
       // Must belong to some other window.
       return;
     }
+
+    var browser =
+      OfflineApps._getBrowserForContentWindow(browserWindow, contentWindow);
 
     var host = contentDocument.documentURIObject.asciiHost;
 
