@@ -61,9 +61,9 @@ function checkTooLongValidity(element)
   todo(!element.validity.valid,
        "Element should not be valid when it is too long");
 
-  todo(element.validationMessage,
-       "Please shorten this text to 2 characters or less (you are currently using 3 characters).",
-       "The validation message text is not correct");
+  todo_is(element.validationMessage,
+          "Please shorten this text to 2 characters or less (you are currently using 3 characters).",
+          "The validation message text is not correct");
   todo(!element.checkValidity(), "The element should not be valid");
   element.setCustomValidity("custom message");
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
