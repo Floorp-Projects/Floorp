@@ -2106,7 +2106,17 @@ case "$target" in
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
-    MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
+    _SAVE_LDFLAGS=$LDFLAGS
+     AC_MSG_CHECKING([for -framework ExceptionHandling])
+    LDFLAGS="$LDFLAGS -framework ExceptionHandling"
+    AC_TRY_LINK(,[return 0;],
+                ac_cv_have_framework_exceptionhandling="yes",
+                ac_cv_have_framework_exceptionhandling="no")
+    AC_MSG_RESULT([$ac_cv_have_framework_exceptionhandling])
+    if test "$ac_cv_have_framework_exceptionhandling" = "yes"; then
+      MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
+    fi
+    LDFLAGS=$_SAVE_LDFLAGS
     # Debug builds should always have frame pointers
     MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
 
@@ -3273,7 +3283,7 @@ dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
-MOZ_CHECK_HEADERS(sys/quota.h)
+MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
 MOZ_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
@@ -4997,13 +5007,27 @@ cairo-os2)
     ;;
 
 cairo-cocoa)
-    MOZ_WIDGET_TOOLKIT=cocoa
-    AC_DEFINE(MOZ_WIDGET_COCOA)
+    # Check if we have the Cocoa framework, or if we're targeting Cocoa Touch
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -framework Cocoa"
+    AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_COCOA=1,_HAVE_FRAMEWORK_COCOA=)
+    if test -z "$_HAVE_FRAMEWORK_COCOA"; then
+        LDFLAGS="$_SAVE_LDFLAGS -framework UIKit";
+        AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_UIKIT=1,
+                    AC_MSG_ERROR([Neither Cocoa nor UIKit frameworks were found. Are you using the correct SDK?]))
+        MOZ_WIDGET_TOOLKIT=uikit
+      AC_DEFINE(MOZ_WIDGET_UIKIT)
+      TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
+    else
+      MOZ_WIDGET_TOOLKIT=cocoa
+      AC_DEFINE(MOZ_WIDGET_COCOA)
+      TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
+    fi
     MOZ_USER_DIR="Mozilla"
     AC_DEFINE(XP_MACOSX)
-    TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
+
     TK_CFLAGS="-DNO_X11"
-    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
+    LDFLAGS="$LDFLAGS -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
@@ -7380,7 +7404,7 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
-    export WRAP_MALLOC_LIB="-L$_objdir/dist/lib -lmozalloc -lmozutils"
+    export WRAP_MALLOC_LIB="-L$_objdir/dist/lib -lmozutils"
     WRAP_MALLOC_CFLAGS="-Wl,--wrap=dlopen -Wl,--wrap=dlclose -Wl,--wrap=dlerror -Wl,--wrap=dlsym -Wl,--wrap=dladdr"
     ;;
   *-*linux*)
@@ -7394,54 +7418,20 @@ else
     ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    AC_MSG_CHECKING([for VC2005/2008++ CRT source])
-    if test "$CC_VERSION" == "14.00.50727.762" -o "$CC_VERSION" == "15.00.30729.01"; then
-      if test -z "$WIN32_CRT_SRC_DIR" -a -n "$VCINSTALLDIR"; then
-        WIN32_CRT_SRC_DIR="$VCINSTALLDIR\crt\src"
-      fi
-      if test -n "$WIN32_CRT_SRC_DIR" -a -d "$WIN32_CRT_SRC_DIR"; then
-        AC_MSG_RESULT([yes])
-        dnl cpu check
-        case "${target_cpu}" in
-        i*86)
-          MOZ_CRT_CPU_ARCH=intel
-          ;;
-        x86_64)
-          MOZ_CRT_CPU_ARCH=amd64
-          ;;
-        *)
-          AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
-          ;;
-        esac
-        AC_SUBST(MOZ_CRT_CPU_ARCH)
-        WIN32_OLD_STYLE_JEMALLOC=1
-        AC_DEFINE(WIN32_OLD_STYLE_JEMALLOC)
-        WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
-        _objdir_win=`pwd -W`
-        WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/$MOZ_CRT_CPU_ARCH"
-        MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
-      fi
+    if test -z "$MOZ_DEBUG"; then
+      WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
+    else
+      WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
     fi
-    if test -z "$WIN32_OLD_STYLE_JEMALLOC"; then
-      AC_MSG_RESULT([no])
-      WIN32_NEW_STYLE_JEMALLOC=1
-      AC_DEFINE(WIN32_NEW_STYLE_JEMALLOC)
-      WIN32_CRT_SRC_DIR=
-      if test -z "$MOZ_DEBUG"; then
-        WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
-      else
-        WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
-      fi
-      dnl Look for a broken crtdll.obj
-      WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
-      lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
-      if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-        MOZ_MEMORY_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
-      else
-        MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
-      fi
-      rm crtdll.obj
+    dnl Look for a broken crtdll.obj
+    WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
+    lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
+    if grep -q '__imp__\{0,1\}free' crtdll.obj; then
+      MOZ_MEMORY_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+    else
+      MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
     fi
+    rm crtdll.obj
 
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
@@ -7461,9 +7451,7 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
-AC_SUBST(WIN32_OLD_STYLE_JEMALLOC)
 AC_SUBST(WIN32_CRT_LIBS)
-AC_SUBST(WIN32_CRT_SRC_DIR)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
 
@@ -7477,7 +7465,7 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} ${WRAP_MALLOC_CFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign"
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} ${WRAP_MALLOC_CFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign -Wl,--wrap,malloc_usable_size"
     MKSHLIB="$MKSHLIB"' $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB)'
     MKCSHLIB="$MKCSHLIB"' $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB)'
     fi
@@ -8018,6 +8006,7 @@ dnl Test for correct temporary object destruction order
 dnl ========================================================
 dnl We want to make sure the compiler follows the C++ spec here as 
 dnl xpcom and the string classes depend on it (bug 235381).
+if test -z "$CROSS_COMPILE"; then
 AC_MSG_CHECKING([for correct temporary object destruction order])
 AC_TRY_RUN([ class A {
              public:  A(int& x) : mValue(x) {}
@@ -8041,6 +8030,7 @@ AC_MSG_RESULT([$result])
 
 if test "$result" = "no"; then
     AC_MSG_ERROR([Your compiler does not follow the C++ specification for temporary object destruction order.])
+fi
 fi
 
 dnl ========================================================
@@ -8525,7 +8515,7 @@ if test "$MOZ_TREE_CAIRO"; then
       qt)
         QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
         ;;
-      cocoa)
+      cocoa | uikit)
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"

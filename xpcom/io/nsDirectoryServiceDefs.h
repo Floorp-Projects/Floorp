@@ -86,11 +86,11 @@
 
 /* Platform Specific Locations */
 
-#if !defined (XP_UNIX) || defined(XP_MACOSX)
+#if !defined (XP_UNIX) || defined(MOZ_WIDGET_COCOA)
     #define NS_OS_SYSTEM_DIR                    "SysD"
 #endif
 
-#if defined (XP_MACOSX)
+#if defined (MOZ_WIDGET_COCOA)
     #define NS_MAC_DESKTOP_DIR                  NS_OS_DESKTOP_DIR
     #define NS_MAC_TRASH_DIR                    "Trsh"
     #define NS_MAC_STARTUP_DIR                  "Strt"
