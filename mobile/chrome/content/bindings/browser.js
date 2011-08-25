@@ -31,6 +31,8 @@ let WebProgressListener = {
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
   },
 
+  _firstPaint: false,
+
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
     if (content != aWebProgress.DOMWindow)
       return;
@@ -51,10 +53,14 @@ let WebProgressListener = {
 
     sendAsyncMessage("Content:LocationChange", json);
 
+    this._firstPaint = false;
+    let self = this;
+
     // When a new page is loaded fire a message for the first paint
     addEventListener("MozAfterPaint", function(aEvent) {
       removeEventListener("MozAfterPaint", arguments.callee, true);
 
+      self._firstPaint = true;
       let scrollOffset = ContentScroll.getScrollOffset(content);
       sendAsyncMessage("Browser:FirstPaint", scrollOffset);
     }, true);
@@ -542,8 +548,11 @@ let ContentScroll =  {
       case "Content:SetCacheViewport": {
         // Set resolution for root view
         let rootCwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        if (json.id == 1)
+        if (json.id == 1) {
           rootCwu.setResolution(json.scale, json.scale);
+          if (!WebProgressListener._firstPaint)
+            break;
+        }
 
         let displayport = new Rect(json.x, json.y, json.w, json.h);
         if (displayport.isEmpty())
@@ -586,7 +595,6 @@ let ContentScroll =  {
         let win = element.ownerDocument.defaultView;
         let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         winCwu.setDisplayPortForElement(x, y, displayport.width, displayport.height, element);
-
         break;
       }
 

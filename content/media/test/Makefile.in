@@ -74,6 +74,8 @@ _TEST_FILES = \
 		cancellable_request.sjs \
 		dynamic_redirect.sjs \
 		file_access_controls.html \
+		fragment_play.js \
+		fragment_noplay.js \
 		manifest.js \
 		reactivate_helper.html \
 		redirect.sjs \
@@ -288,6 +290,8 @@ endif
 ifdef MOZ_WAVE
 _TEST_FILES += \
 		test_can_play_type_wave.html \
+		test_fragment_play.html \
+		test_fragment_noplay.html \
 		test_wave_data_u8.html \
 		test_wave_data_s16.html \
 		$(NULL)

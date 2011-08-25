@@ -120,6 +120,7 @@ CPPSRCS		+= \
 		nsHTMLAudioElement.cpp \
 		nsHTMLMediaElement.cpp \
 		nsMediaError.cpp \
+		nsMediaFragmentURIParser.cpp \
 		nsHTMLSourceElement.cpp \
 		nsTimeRanges.cpp \
 		nsHTMLVideoElement.cpp \

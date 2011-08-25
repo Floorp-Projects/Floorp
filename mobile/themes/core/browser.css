@@ -374,6 +374,10 @@ toolbarbutton.urlbar-button {
   list-style-image: url("chrome://browser/skin/images/settings-default-hdpi.png");
 }
 
+#tool-menu {
+  list-style-image: url("chrome://browser/skin/images/menu-hdpi.png");
+}
+
 %ifndef ANDROID
 /* MAEMO (and desktop) only */
 .panel-close {
