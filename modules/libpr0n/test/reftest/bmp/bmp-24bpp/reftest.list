@@ -1,0 +1,20 @@
+# BMP 24BPP tests
+
+# Images of various sizes
+== bmp-size-1x1-24bpp.bmp   bmp-size-1x1-24bpp.png
+== bmp-size-2x2-24bpp.bmp   bmp-size-2x2-24bpp.png
+== bmp-size-3x3-24bpp.bmp   bmp-size-3x3-24bpp.png
+== bmp-size-4x4-24bpp.bmp   bmp-size-4x4-24bpp.png
+== bmp-size-5x5-24bpp.bmp   bmp-size-5x5-24bpp.png
+== bmp-size-6x6-24bpp.bmp   bmp-size-6x6-24bpp.png
+== bmp-size-7x7-24bpp.bmp   bmp-size-7x7-24bpp.png
+== bmp-size-8x8-24bpp.bmp   bmp-size-8x8-24bpp.png
+== bmp-size-9x9-24bpp.bmp   bmp-size-9x9-24bpp.png
+== bmp-size-15x15-24bpp.bmp bmp-size-15x15-24bpp.png
+== bmp-size-16x16-24bpp.bmp bmp-size-16x16-24bpp.png
+== bmp-size-17x17-24bpp.bmp bmp-size-17x17-24bpp.png
+== bmp-size-31x31-24bpp.bmp bmp-size-31x31-24bpp.png
+== bmp-size-32x32-24bpp.bmp bmp-size-32x32-24bpp.png
+== bmp-size-33x33-24bpp.bmp bmp-size-33x33-24bpp.png
+== bmp-not-square-24bpp.bmp bmp-not-square-24bpp.png
+

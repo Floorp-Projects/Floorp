@@ -1,0 +1,20 @@
+# BMP 8BPP tests
+
+# Images of various sizes
+== bmp-size-1x1-8bpp.bmp   bmp-size-1x1-8bpp.png
+== bmp-size-2x2-8bpp.bmp   bmp-size-2x2-8bpp.png
+== bmp-size-3x3-8bpp.bmp   bmp-size-3x3-8bpp.png
+== bmp-size-4x4-8bpp.bmp   bmp-size-4x4-8bpp.png
+== bmp-size-5x5-8bpp.bmp   bmp-size-5x5-8bpp.png
+== bmp-size-6x6-8bpp.bmp   bmp-size-6x6-8bpp.png
+== bmp-size-7x7-8bpp.bmp   bmp-size-7x7-8bpp.png
+== bmp-size-8x8-8bpp.bmp   bmp-size-8x8-8bpp.png
+== bmp-size-9x9-8bpp.bmp   bmp-size-9x9-8bpp.png
+== bmp-size-15x15-8bpp.bmp bmp-size-15x15-8bpp.png
+== bmp-size-16x16-8bpp.bmp bmp-size-16x16-8bpp.png
+== bmp-size-17x17-8bpp.bmp bmp-size-17x17-8bpp.png
+== bmp-size-31x31-8bpp.bmp bmp-size-31x31-8bpp.png
+== bmp-size-32x32-8bpp.bmp bmp-size-32x32-8bpp.png
+== bmp-size-33x33-8bpp.bmp bmp-size-33x33-8bpp.png
+== bmp-not-square-8bpp.bmp bmp-not-square-8bpp.png
+
