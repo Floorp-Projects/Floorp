@@ -14,9 +14,6 @@
 /* Define if the c++ compiler can resolve ambiguity with |using| */
 #undef HAVE_CPP_AMBIGUITY_RESOLVING_USING
 
-/* Define if the c++ compiler has builtin Bool type */
-#undef HAVE_CPP_BOOL
-
 /* Define if the c++ compiler supports char16_t */
 #undef HAVE_CPP_CHAR16_T
 
