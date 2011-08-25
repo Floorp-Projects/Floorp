@@ -65,13 +65,15 @@ tier_base_dirs = \
 	$(NULL)
 
 ifndef LIBXUL_SDK
-tier_base_dirs += \
-	memory \
-	$(NULL)
+ifdef MOZ_MEMORY
+tier_base_dirs += memory/jemalloc
+endif
+
 ifeq ($(OS_TARGET),Android)
 tier_base_dirs += other-licenses/android
 endif
 
+tier_base_dirs += memory/mozalloc
 endif
 
 ifdef COMPILE_ENVIRONMENT

@@ -112,7 +112,9 @@ using namespace QtMobility;
 #include "nsAutoPtr.h"
 
 #include "gfxQtPlatform.h"
+#ifdef MOZ_X11
 #include "gfxXlibSurface.h"
+#endif
 #include "gfxQPainterSurface.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -130,6 +132,7 @@ using namespace QtMobility;
 #endif //MOZ_X11
 
 #include <QtOpenGL/QGLWidget>
+#include <QtOpenGL/QGLContext>
 #define GLdouble_defined 1
 #include "Layers.h"
 #include "LayerManagerOGL.h"
@@ -793,8 +796,12 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 
     case NS_NATIVE_DISPLAY:
         {
+#ifdef MOZ_X11
             QWidget *widget = GetViewWidget();
             return widget ? widget->x11Info().display() : nsnull;
+#else
+            return nsnull;
+#endif
         }
         break;
 
@@ -1135,6 +1142,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
 
     // Handle buffered painting mode
     if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
+#ifdef MOZ_X11
         if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
             // Paint offscreen pixmap to QPainter
             static QPixmap gBufferPixmap;
@@ -1145,7 +1153,9 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
             aPainter->drawPixmap(QPoint(rect.x, rect.y), gBufferPixmap,
                                  QRect(0, 0, rect.width, rect.height));
 
-        } else if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        } else
+#endif
+        if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeImage) {
             // in raster mode we can just wrap gBufferImage as QImage and paint directly
             gfxImageSurface *imgs = static_cast<gfxImageSurface*>(gBufferSurface.get());
             QImage img(imgs->Data(),
@@ -1158,6 +1168,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
         }
     } else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
         QRect trans = aPainter->transform().mapRect(r).toRect();
+#ifdef MOZ_X11
         if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
             nsRefPtr<gfxASurface> widgetSurface = GetSurfaceForQWidget(aWidget);
             nsRefPtr<gfxContext> ctx = new gfxContext(widgetSurface);
@@ -1165,19 +1176,23 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
             ctx->Rectangle(gfxRect(trans.x(), trans.y(), trans.width(), trans.height()), PR_TRUE);
             ctx->Clip();
             ctx->Fill();
-        } else if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        } else
+#endif
+        if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeImage) {
 #ifdef MOZ_HAVE_SHMIMAGE
             if (gShmImage) {
                 gShmImage->Put(aWidget, trans);
             } else
 #endif
-            if (gBufferSurface) {
-                nsRefPtr<gfxASurface> widgetSurface = GetSurfaceForQWidget(aWidget);
-                nsRefPtr<gfxContext> ctx = new gfxContext(widgetSurface);
-                ctx->SetSource(gBufferSurface);
-                ctx->Rectangle(gfxRect(trans.x(), trans.y(), trans.width(), trans.height()), PR_TRUE);
-                ctx->Clip();
-                ctx->Fill();
+            {
+                // Qt should take care about optimized rendering on QImage into painter device (gl/fb/image et.c.)
+                gfxImageSurface *imgs = static_cast<gfxImageSurface*>(gBufferSurface.get());
+                QImage img(imgs->Data(),
+                           imgs->Width(),
+                           imgs->Height(),
+                           imgs->Stride(),
+                          _gfximage_to_qformat(imgs->Format()));
+                aPainter->drawImage(trans, img, trans);
             }
         }
     }
@@ -1663,7 +1678,6 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
             return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
     }
 
-#ifdef MOZ_X11
     // Qt::Key_Redo and Qt::Key_Undo are not available yet.
     if (aEvent->nativeVirtualKey() == 0xff66) {
         return DispatchContentCommandEvent(NS_CONTENT_COMMAND_REDO);
@@ -1671,7 +1685,6 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     if (aEvent->nativeVirtualKey() == 0xff65) {
         return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
     }
-#endif // MOZ_X11
 
     nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
     InitKeyEvent(event, aEvent);
@@ -1867,7 +1880,6 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 
     // send the key press event
     return DispatchEvent(&event);
- }
 #endif
 }
 
@@ -2302,6 +2314,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     nsXPIDLString brandName;
     GetBrandName(brandName);
 
+#ifdef MOZ_X11
     XClassHint *class_hint = XAllocClassHint();
     if (!class_hint)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2343,6 +2356,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     nsMemory::Free(class_hint->res_class);
     nsMemory::Free(class_hint->res_name);
     XFree(class_hint);
+#endif
 
     return NS_OK;
 }
@@ -2525,7 +2539,9 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // and GetWindowPos is called)
     QWidget *widget = GetViewWidget();
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+#ifdef MOZ_X11
     XSync(widget->x11Info().display(), False);
+#endif
 
     return NS_OK;
 }
@@ -2664,13 +2680,17 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
             newView->setWindowModality(Qt::WindowModal);
         }
 
-        if (!IsAcceleratedQView(newView) && GetShouldAccelerate()) {
+#ifdef MOZ_PLATFORM_MAEMO
+        if (GetShouldAccelerate()) {
             newView->setViewport(new QGLWidget());
         }
+#endif
 
         if (gfxQtPlatform::GetPlatform()->GetRenderMode() == gfxQtPlatform::RENDER_DIRECT) {
             // Disable double buffer and system background rendering
+#ifdef MOZ_X11
             newView->viewport()->setAttribute(Qt::WA_PaintOnScreen, true);
+#endif
             newView->viewport()->setAttribute(Qt::WA_NoSystemBackground, true);
         }
         // Enable gestures:
@@ -2710,16 +2730,6 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 #endif
 
     return widget;
-}
-
-PRBool
-nsWindow::IsAcceleratedQView(QGraphicsView *view)
-{
-    if (view && view->viewport()) {
-        QPaintEngine::Type type = view->viewport()->paintEngine()->type();
-        return (type == QPaintEngine::OpenGL || type == QPaintEngine::OpenGL2);
-    }
-    return PR_FALSE;
 }
 
 // return the gfxASurface for rendering to this widget

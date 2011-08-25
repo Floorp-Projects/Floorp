@@ -73,7 +73,7 @@ public:
   /** Initialize the colgroup frame with a set of children.
     * @see nsIFrame::SetInitialChildList
     */
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
 
   /**
@@ -113,12 +113,12 @@ public:
 
   /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
     */
-  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
   /** remove the column aChild from the column group, if requested renumber

@@ -76,26 +76,19 @@
 #define UNLIKELY(x)  (x)
 #endif
 
-#if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_ANDROID) || \
-    defined(WRAP_MALLOC_WITH_JEMALLOC)
+#ifdef MOZ_MEMORY_DARWIN
 #include "jemalloc.h"
 #define malloc(a)               je_malloc(a)
 #define posix_memalign(a, b, c) je_posix_memalign(a, b, c)
 #define valloc(a)               je_valloc(a)
 #define calloc(a, b)            je_calloc(a, b)
-#ifndef MOZ_MEMORY_DARWIN
-   // These functions could be passed a memory region that was not allocated by
-   // jemalloc, so use the system-provided functions, which will in turn call
-   // the jemalloc versions when appropriate.
-#  define realloc(a, b)         je_realloc(a, b)
-#  define free(a)               je_free(a)
-#  define malloc_usable_size(a) je_malloc_usable_size(a)
-#endif
-#ifndef MOZ_MEMORY_ANDROID
 #define memalign(a, b)          je_memalign(a, b)
-#endif
 #define strdup(a)               je_strdup(a)
 #define strndup(a, b)           je_strndup(a, b)
+/* We omit functions which could be passed a memory region that was not
+ * allocated by jemalloc (realloc, free and malloc_usable_size). Instead,
+ * we use the system-provided functions, which will in turn call the
+ * jemalloc versions when appropriate */
 #endif
 
 void

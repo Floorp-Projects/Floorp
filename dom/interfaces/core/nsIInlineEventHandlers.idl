@@ -1,0 +1,110 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *     Boris Zbarsky <bzbarsky@mit.edu>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+#include "domstubs.idl"
+
+%{ C++
+#include "jspubtd.h"
+%}
+
+[scriptable, uuid(c3cc4504-1eaf-42e9-8b1b-a3020f6d3a28)]
+interface nsIInlineEventHandlers : nsISupports
+{
+  [implicit_jscontext] attribute jsval onabort;
+  [implicit_jscontext] attribute jsval onblur;
+  [implicit_jscontext] attribute jsval oncanplay;
+  [implicit_jscontext] attribute jsval oncanplaythrough;
+  [implicit_jscontext] attribute jsval onchange;
+  [implicit_jscontext] attribute jsval onclick;
+  [implicit_jscontext] attribute jsval oncontextmenu;
+  // Not supported yet
+  // [implicit_jscontext] attribute jsval oncuechange;
+  [implicit_jscontext] attribute jsval ondblclick;
+  [implicit_jscontext] attribute jsval ondrag;
+  [implicit_jscontext] attribute jsval ondragend;
+  [implicit_jscontext] attribute jsval ondragenter;
+  [implicit_jscontext] attribute jsval ondragleave;
+  [implicit_jscontext] attribute jsval ondragover;
+  [implicit_jscontext] attribute jsval ondragstart;
+  [implicit_jscontext] attribute jsval ondrop;
+  [implicit_jscontext] attribute jsval ondurationchange;
+  [implicit_jscontext] attribute jsval onemptied;
+  [implicit_jscontext] attribute jsval onended;
+  [implicit_jscontext] attribute jsval onerror;
+  [implicit_jscontext] attribute jsval onfocus;
+  [implicit_jscontext] attribute jsval oninput;
+  [implicit_jscontext] attribute jsval oninvalid;
+  [implicit_jscontext] attribute jsval onkeydown;
+  [implicit_jscontext] attribute jsval onkeypress;
+  [implicit_jscontext] attribute jsval onkeyup;
+  [implicit_jscontext] attribute jsval onload;
+  [implicit_jscontext] attribute jsval onloadeddata;
+  [implicit_jscontext] attribute jsval onloadedmetadata;
+  [implicit_jscontext] attribute jsval onloadstart;
+  [implicit_jscontext] attribute jsval onmousedown;
+  [implicit_jscontext] attribute jsval onmousemove;
+  [implicit_jscontext] attribute jsval onmouseout;
+  [implicit_jscontext] attribute jsval onmouseover;
+  [implicit_jscontext] attribute jsval onmouseup;
+  // Not supported yet
+  // [implicit_jscontext] attribute jsval onmousewheel;
+  [implicit_jscontext] attribute jsval onpause;
+  [implicit_jscontext] attribute jsval onplay;
+  [implicit_jscontext] attribute jsval onplaying;
+  [implicit_jscontext] attribute jsval onprogress;
+  [implicit_jscontext] attribute jsval onratechange;
+  [implicit_jscontext] attribute jsval onreadystatechange;
+  [implicit_jscontext] attribute jsval onreset;
+  [implicit_jscontext] attribute jsval onscroll;
+  [implicit_jscontext] attribute jsval onseeked;
+  [implicit_jscontext] attribute jsval onseeking;
+  [implicit_jscontext] attribute jsval onselect;
+  [implicit_jscontext] attribute jsval onshow;
+  [implicit_jscontext] attribute jsval onstalled;
+  [implicit_jscontext] attribute jsval onsubmit;
+  [implicit_jscontext] attribute jsval onsuspend;
+  [implicit_jscontext] attribute jsval ontimeupdate;
+  [implicit_jscontext] attribute jsval onvolumechange;
+  [implicit_jscontext] attribute jsval onwaiting;
+
+  /**
+   * Non-HTML5 event attributes
+   */
+  [implicit_jscontext] attribute jsval oncopy;
+  [implicit_jscontext] attribute jsval oncut;
+  [implicit_jscontext] attribute jsval onpaste;
+  [implicit_jscontext] attribute jsval onbeforescriptexecute;
+  [implicit_jscontext] attribute jsval onafterscriptexecute;  
+};

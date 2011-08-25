@@ -59,7 +59,7 @@ EXPORTS_mozilla/plugins = \
   ChildTimer.h \
   NPEventOSX.h \
   NPEventWindows.h \
-  NPEventX11.h \
+  NPEventUnix.h \
   NPEventAndroid.h \
   PluginIdentifierChild.h \
   PluginIdentifierParent.h \

@@ -12,12 +12,12 @@
         d.appendChild(document.createTextNode(""));
         d.focus();
       }
-      function onfocus() {
+      function focusTriggered() {
         document.documentElement.removeAttribute("class");
       }
     </script>
   </head>
   <body onload="test()">
-    <div contenteditable onfocus="onfocus()"></div>
+    <div contenteditable onfocus="focusTriggered()"></div>
   </body>
 </html>

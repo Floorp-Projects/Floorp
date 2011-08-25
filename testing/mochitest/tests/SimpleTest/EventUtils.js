@@ -638,7 +638,7 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
   try {
     // need to use real mouse action
     aWindow.addEventListener("dragstart", trapDrag, true);
-    synthesizeMouse(srcElement, 2, 2, { type: "mousedown" }, aWindow);
+    synthesizeMouseAtCenter(srcElement, { type: "mousedown" }, aWindow);
     synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
     synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
     aWindow.removeEventListener("dragstart", trapDrag, true);

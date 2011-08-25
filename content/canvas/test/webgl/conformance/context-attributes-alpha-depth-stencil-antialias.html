@@ -1,10 +1,12 @@
 <!--
-Copyright (c) 2010 The Chromium Authors. All rights reserved.
+Copyright (c) 2011 The Chromium Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/js-test-pre.js"></script>
 <script src="resources/webgl-test.js"></script>
@@ -21,9 +23,8 @@ void main()
 </script>
 
 <script id="fshader" type="x-shader/x-fragment">
-#ifdef GL_ES
-precision highp float;
-#endif
+precision mediump float;
+
 varying vec4 color;
 
 void main()
@@ -40,6 +41,7 @@ var webGL = null;
 var contextAttribs = null;
 var pixel = [0, 0, 0, 1];
 var correctColor = null;
+var value;
 
 function init()
 {
@@ -52,15 +54,33 @@ function init()
     runTest();
 }
 
-function getWebGL(canvasName, contextAttribs, clearColor, clearDepth, clearStencil)
+function getWebGL(canvasWidth, canvasHeight, contextAttribs, clearColor, clearDepth, clearStencil)
 {
-    var context = initWebGL(canvasName, "vshader", "fshader", ["pos", "colorIn"], clearColor, clearDepth, contextAttribs);
-    if (context) {
-        context.clearStencil(clearStencil);
-        context.enable(context.STENCIL_TEST);
-        context.disable(context.BLEND);
-        context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
-    }
+    var canvas = document.createElement("canvas");
+    if (!canvas)
+        return null;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    var context = create3DContext(canvas, contextAttribs);
+    if (!context)
+        return null;
+
+    context.program = createProgram(context, "vshader", "fshader", ["pos", "colorIn"]);
+    if (!context.program)
+        return null;
+
+    context.useProgram(context.program);
+
+    context.enable(context.DEPTH_TEST);
+    context.enable(context.STENCIL_TEST);
+    context.disable(context.BLEND);
+
+    context.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+    context.clearDepth(clearDepth);
+    context.clearStencil(clearStencil);
+    context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
+
     return context;
 }
 
@@ -90,10 +110,11 @@ function testAlpha(alpha)
 {
     debug("Testing alpha = " + alpha);
     if (alpha)
-        shouldBeNonNull("webGL = getWebGL('alphaOn', { alpha: true, depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 0 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(1, 1, { alpha: true, depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 0 ], 1, 0)");
     else
-        shouldBeNonNull("webGL = getWebGL('alphaOff', { alpha: false, depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 0 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(1, 1, { alpha: false, depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 0 ], 1, 0)");
     shouldBeNonNull("contextAttribs = webGL.getContextAttributes()");
+    shouldBeTrue("contextAttribs.alpha == " + alpha);
 
     var buf = new Uint8Array(1 * 1 * 4);
     webGL.readPixels(0, 0, 1, 1, webGL.RGBA, webGL.UNSIGNED_BYTE, buf);
@@ -109,9 +130,9 @@ function testDepth(depth)
 {
     debug("Testing depth = " + depth);
     if (depth)
-        shouldBeNonNull("webGL = getWebGL('depthOn', { stencil: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(1, 1, { stencil: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
     else
-        shouldBeNonNull("webGL = getWebGL('depthOff', { depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(1, 1, { depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
     shouldBeNonNull("contextAttribs = webGL.getContextAttributes()");
 
     webGL.depthFunc(webGL.NEVER);
@@ -144,9 +165,9 @@ function testStencil(stencil)
 {
     debug("Testing stencil = " + stencil);
     if (stencil)
-        shouldBeNonNull("webGL = getWebGL('stencilOn', { depth: false, stencil: true, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(1, 1, { depth: false, stencil: true, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
     else
-        shouldBeNonNull("webGL = getWebGL('stencilOff', { depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(1, 1, { depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
     shouldBeNonNull("contextAttribs = webGL.getContextAttributes()");
 
     webGL.depthFunc(webGL.ALWAYS);
@@ -182,9 +203,9 @@ function testAntialias(antialias)
 {
     debug("Testing antialias = " + antialias);
     if (antialias)
-        shouldBeNonNull("webGL = getWebGL('antialiasOn', { depth: false, stencil: false, alpha: false, antialias: true }, [ 0, 0, 0, 1 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(2, 2, { depth: false, stencil: false, alpha: false, antialias: true }, [ 0, 0, 0, 1 ], 1, 0)");
     else
-        shouldBeNonNull("webGL = getWebGL('antialiasOff', { depth: false, stencil: false, alpha: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
+        shouldBeNonNull("webGL = getWebGL(2, 2, { depth: false, stencil: false, alpha: false, antialias: false }, [ 0, 0, 0, 1 ], 1, 0)");
     shouldBeNonNull("contextAttribs = webGL.getContextAttributes()");
 
     var vertices = new Float32Array([
@@ -218,14 +239,6 @@ function runTest()
 </script>
 </head>
 <body onload="init()">
-<canvas id="alphaOn" width="1px" height="1px"></canvas>
-<canvas id="alphaOff" width="1px" height="1px"></canvas>
-<canvas id="depthOn" width="1px" height="1px"></canvas>
-<canvas id="depthOff" width="1px" height="1px"></canvas>
-<canvas id="stencilOn" width="1px" height="1px"></canvas>
-<canvas id="stencilOff" width="1px" height="1px"></canvas>
-<canvas id="antialiasOn" width="2px" height="2px"></canvas>
-<canvas id="antialiasOff" width="2px" height="2px"></canvas>
 <div id="description"></div>
 <div id="console"></div>
 </body>

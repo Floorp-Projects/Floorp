@@ -147,10 +147,10 @@ ENGINE_SUCCEEDED:                      "success.engine",
 // login failure status codes:
 LOGIN_FAILED_NO_USERNAME:              "error.login.reason.no_username",
 LOGIN_FAILED_NO_PASSWORD:              "error.login.reason.no_password2",
-LOGIN_FAILED_NO_PASSPHRASE:            "error.login.reason.no_synckey",
+LOGIN_FAILED_NO_PASSPHRASE:            "error.login.reason.no_recoverykey",
 LOGIN_FAILED_NETWORK_ERROR:            "error.login.reason.network",
 LOGIN_FAILED_SERVER_ERROR:             "error.login.reason.server",
-LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.synckey",
+LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.recoverykey",
 LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.account",
 
 // sync failure status codes

@@ -300,7 +300,7 @@ let Async = {
       let row;
       while ((row = results.getNextRow()) != null) {
         let item = {};
-        for each (name in this.names) {
+        for each (let name in this.names) {
           item[name] = row.getResultByName(name);
         }
         this.results.push(item);

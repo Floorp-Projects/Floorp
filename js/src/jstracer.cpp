@@ -7625,6 +7625,12 @@ arm_check_vfp()
     return arm_has_vfp;
 }
 
+#elif defined(__APPLE__)
+// Hardcoded for now, revisit in the future
+static unsigned int
+arm_check_arch() { return 6; }
+static bool
+arm_check_vfp() { return true; }
 #else
 #warning Not sure how to check for architecture variant on your platform. Assuming ARMv4.
 static unsigned int

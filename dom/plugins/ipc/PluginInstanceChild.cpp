@@ -1092,6 +1092,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 
 #elif defined(ANDROID)
 #  warning Need Android impl
+#elif defined(MOZ_WIDGET_QT)
+#  warning Need QT-nonX impl
 #else
 #  error Implement me for your OS
 #endif
@@ -2389,6 +2391,7 @@ PluginInstanceChild::CreateOptSurface(void)
         (mIsTransparent && !mBackground) ? gfxASurface::ImageFormatARGB32 :
                                            gfxASurface::ImageFormatRGB24;
 
+#ifdef MOZ_X11
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // On Maemo 5, we must send the Visibility event to activate the plugin
     if (mMaemoImageRendering) {
@@ -2400,7 +2403,6 @@ PluginInstanceChild::CreateOptSurface(void)
         mPluginIface->event(&mData, reinterpret_cast<void*>(&pluginEvent));
     }
 #endif
-#ifdef MOZ_X11
     Display* dpy = mWsInfo.display;
     Screen* screen = DefaultScreenOfDisplay(dpy);
     if (format == gfxASurface::ImageFormatRGB24 &&

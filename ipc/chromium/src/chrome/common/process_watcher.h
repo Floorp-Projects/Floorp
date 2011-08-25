@@ -24,9 +24,7 @@ class ProcessWatcher {
   // and SYNCHRONIZE permissions.
   //
   static void EnsureProcessTerminated(base::ProcessHandle process_handle
-#if defined(CHROMIUM_MOZILLA_BUILD)
                                       , bool force=true
-#endif
   );
 
  private:

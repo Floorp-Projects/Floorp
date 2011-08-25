@@ -3359,7 +3359,7 @@ nsIPresShell::GetRootScrollFrame() const
   // Ensure root frame is a viewport frame
   if (!rootFrame || nsGkAtoms::viewportFrame != rootFrame->GetType())
     return nsnull;
-  nsIFrame* theFrame = rootFrame->GetFirstChild(nsnull);
+  nsIFrame* theFrame = rootFrame->GetFirstPrincipalChild();
   if (!theFrame || nsGkAtoms::scrollFrame != theFrame->GetType())
     return nsnull;
   return theFrame;
@@ -3599,16 +3599,15 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
           }
         }
 
-        PRInt32 childListIndex = 0;
-        nsIAtom *childListName;
-        do {
-          childListName = f->GetAdditionalChildListName(childListIndex++);
-          for (nsIFrame *kid = f->GetFirstChild(childListName); kid;
-               kid = kid->GetNextSibling()) {
+        nsIFrame::ChildListIterator lists(f);
+        for (; !lists.IsDone(); lists.Next()) {
+          nsFrameList::Enumerator childFrames(lists.CurrentList());
+          for (; !childFrames.AtEnd(); childFrames.Next()) {
+            nsIFrame* kid = childFrames.get();
             kid->MarkIntrinsicWidthsDirty();
             stack.AppendElement(kid);
           }
-        } while (childListName);
+        }
       } while (stack.Length() != 0);
     }
 
@@ -4813,16 +4812,6 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       if (rootPresContext) {
         rootPresContext->UpdatePluginGeometry();
       }
-#ifdef DEBUG
-      if (!mIsDestroying) {
-        nsIView* rootView = mViewManager->GetRootView();
-        if (rootView) {
-          nsRect bounds = rootView->GetBounds();
-          NS_ASSERTION(bounds.Size() == mPresContext->GetVisibleArea().Size(),
-                       "root view / pres context visible size mismatch");
-        }
-      }
-#endif
     }
 
     PRUint32 updateFlags = NS_VMREFRESH_NO_SYNC;
@@ -6092,21 +6081,6 @@ PresShell::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
   }
 }
 
-static void DrawThebesLayer(ThebesLayer* aLayer,
-                            gfxContext* aContext,
-                            const nsIntRegion& aRegionToDraw,
-                            const nsIntRegion& aRegionToInvalidate,
-                            void* aCallbackData)
-{
-  PaintParams* params = static_cast<PaintParams*>(aCallbackData);
-  aContext->NewPath();
-  aContext->SetColor(gfxRGBA(params->mBackgroundColor));
-  nsIntRect dirtyRect = aRegionToDraw.GetBounds();
-  aContext->Rectangle(
-    gfxRect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
-  aContext->Fill();
-}
-
 NS_IMETHODIMP
 PresShell::Paint(nsIView*           aViewToPaint,
                  nsIWidget*         aWidgetToPaint,
@@ -6153,11 +6127,9 @@ PresShell::Paint(nsIView*           aViewToPaint,
       if (layerManager->EndEmptyTransaction()) {
         frame->UpdatePaintCountForPaintedPresShells();
         presContext->NotifyDidPaintForSubtree();
-        
         return NS_OK;
       }
     }
-    
 
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
@@ -6187,14 +6159,17 @@ PresShell::Paint(nsIView*           aViewToPaint,
     return NS_OK;
   }
 
-  nsRefPtr<ThebesLayer> root = layerManager->CreateThebesLayer();
+  nsRefPtr<ColorLayer> root = layerManager->CreateColorLayer();
   if (root) {
-    root->SetVisibleRegion(aIntDirtyRegion);
+    nsPresContext* pc = GetPresContext();
+    nsIntRect bounds =
+      pc->GetVisibleArea().ToOutsidePixels(pc->AppUnitsPerDevPixel());
+    bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
+    root->SetColor(bgcolor);
+    root->SetVisibleRegion(bounds);
     layerManager->SetRoot(root);
   }
-  bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
-  PaintParams params = { bgcolor };
-  layerManager->EndTransaction(DrawThebesLayer, &params);
+  layerManager->EndTransaction(NULL, NULL);
 
   presContext->NotifyDidPaintForSubtree();
   return NS_OK;
@@ -6630,7 +6605,7 @@ PresShell::HandleEvent(nsIView         *aView,
                 capturingContent->IsHTML()) {
               // a dropdown <select> has a child in its selectPopupList and we should
               // capture on that instead.
-              nsIFrame* childFrame = captureFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();
+              nsIFrame* childFrame = captureFrame->GetChildList(nsIFrame::kSelectPopupList).FirstChild();
               if (childFrame) {
                 captureFrame = childFrame;
               }
@@ -8163,12 +8138,11 @@ WalkFramesThroughPlaceholders(nsPresContext *aPresContext, nsIFrame *aFrame,
   if (!walkChildren)
     return;
 
-  PRInt32 listIndex = 0;
-  nsIAtom* childList = nsnull;
-
-  do {
-    nsIFrame *child = aFrame->GetFirstChild(childList);
-    while (child) {
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow, and recur through the
         // out-of-flows of placeholders.
@@ -8176,11 +8150,8 @@ WalkFramesThroughPlaceholders(nsPresContext *aPresContext, nsIFrame *aFrame,
                                       nsPlaceholderFrame::GetRealFrameFor(child),
                                       aFunc, aClosure);
       }
-      child = child->GetNextSibling();
     }
-
-    childList = aFrame->GetAdditionalChildListName(listIndex++);
-  } while (childList);
+  }
 }
 #endif
 
@@ -8371,11 +8342,11 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
   //if (aFirstFrame->GetType() == nsGkAtoms::scrollbarFrame)
   //  return PR_TRUE;
   PRBool ok = PR_TRUE;
-  nsIAtom* listName = nsnull;
-  PRInt32 listIndex = 0;
+  nsIFrame::ChildListIterator lists1(aFirstFrame);
+  nsIFrame::ChildListIterator lists2(aSecondFrame);
   do {
-    const nsFrameList& kids1 = aFirstFrame->GetChildList(listName);
-    const nsFrameList& kids2 = aSecondFrame->GetChildList(listName);
+    const nsFrameList& kids1 = !lists1.IsDone() ? lists1.CurrentList() : nsFrameList();
+    const nsFrameList& kids2 = !lists2.IsDone() ? lists2.CurrentList() : nsFrameList();
     PRInt32 l1 = kids1.GetLength();
     PRInt32 l2 = kids2.GetLength();;
     if (l1 != l2) {
@@ -8461,34 +8432,21 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       break;
     }
 
-    nsIAtom* listName1 = aFirstFrame->GetAdditionalChildListName(listIndex);
-    nsIAtom* listName2 = aSecondFrame->GetAdditionalChildListName(listIndex);
-    listIndex++;
-    if (listName1 != listName2) {
+    lists1.Next();
+    lists2.Next();
+    if (lists1.IsDone() != lists2.IsDone() ||
+        (!lists1.IsDone() && lists1.CurrentID() != lists2.CurrentID())) {
       if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
         ok = PR_FALSE;
       }
       LogVerifyMessage(kids1.FirstChild(), kids2.FirstChild(),
                        "child list names are not matched: ");
-      nsAutoString tmp;
-      if (nsnull != listName1) {
-        listName1->ToString(tmp);
-        fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
-      }
-      else
-        fputs("(null)", stdout);
-      printf(" != ");
-      if (nsnull != listName2) {
-        listName2->ToString(tmp);
-        fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
-      }
-      else
-        fputs("(null)", stdout);
-      printf("\n");
+      fprintf(stdout, "%s != %s\n",
+              !lists1.IsDone() ? mozilla::layout::ChildListName(lists1.CurrentID()) : "(null)",
+              !lists2.IsDone() ? mozilla::layout::ChildListName(lists2.CurrentID()) : "(null)");
       break;
     }
-    listName = listName1;
-  } while (ok && (listName != nsnull));
+  } while (ok && !lists1.IsDone());
 
   return ok;
 }
@@ -8510,7 +8468,7 @@ FindTopFrame(nsIFrame* aRoot)
     }
 
     // Try one of the children
-    nsIFrame* kid = aRoot->GetFirstChild(nsnull);
+    nsIFrame* kid = aRoot->GetFirstPrincipalChild();
     while (nsnull != kid) {
       nsIFrame* result = FindTopFrame(kid);
       if (nsnull != result) {
@@ -9144,7 +9102,7 @@ static void RecurseIndiTotals(nsPresContext* aPresContext,
     nsMemory::Free(name);
   }
 
-  nsIFrame* child = aParentFrame->GetFirstChild(nsnull);
+  nsIFrame* child = aParentFrame->GetFirstPrincipalChild();
   while (child) {
     RecurseIndiTotals(aPresContext, aHT, child, aLevel+1);
     child = child->GetNextSibling();

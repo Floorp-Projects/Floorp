@@ -21,13 +21,11 @@
 
 namespace base {
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
 #define DVLOG(x) LOG(ERROR)
 #define CHECK_GT DCHECK_GT
 #define CHECK_LT DCHECK_LT
 typedef ::Lock Lock;
 typedef ::AutoLock AutoLock;
-#endif
 
 // Static table of checksums for all possible 8 bit bytes.
 const uint32 Histogram::kCrcTable[256] = {0x0, 0x77073096L, 0xee0e612cL,
