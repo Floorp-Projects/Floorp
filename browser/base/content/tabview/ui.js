@@ -1502,7 +1502,7 @@ let UI = {
         matches[0].zoomIn();
         zoomedIn = true;
       }
-      hideSearch(null);
+      hideSearch();
     }
 
     if (!zoomedIn) {
