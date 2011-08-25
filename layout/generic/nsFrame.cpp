@@ -441,6 +441,20 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
+  // If we have an IB split special sibling, clear its reference to us.
+  // (Note: This has to happen before we call shell->NotifyDestroyingFrame,
+  // because that clears our Properties() table.)
+  if (mState & NS_FRAME_IS_SPECIAL) {
+    nsIFrame* nextSib = static_cast<nsIFrame*>
+      (Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+    if (nextSib) {
+      NS_WARN_IF_FALSE(this ==
+         nextSib->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()),
+         "Next-sibling / prev-sibling chain is inconsistent");
+      nextSib->Properties().Delete(nsIFrame::IBSplitSpecialPrevSibling());
+    }
+  }
+
   shell->NotifyDestroyingFrame(this);
 
   if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||

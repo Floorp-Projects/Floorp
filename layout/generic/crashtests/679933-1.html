@@ -1,0 +1,13 @@
+<html class="reftest-wait">
+<head>
+  <script>
+    function tweak() {
+      document.body.removeAttribute('style');
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</head>
+<body style="display: inline;  mask: url(#a);" onload="setTimeout(tweak, 50)">
+<input id="g" style="display: block; mask: url(#g);">
+</body>
+</html>
