@@ -47,33 +47,12 @@
 #include "imgIDecoderObserver.h"
 #include "nsBMPDecoder.h"
 #include "nsPNGDecoder.h"
+#include "ICOFileHeaders.h"
 
 namespace mozilla {
 namespace imagelib {
 
-#define ICODIRENTRYSIZE 16
-#define PNGSIGNATURESIZE 8
-#define BMPFILEHEADERSIZE 14
-
 class RasterImage;
-
-struct IconDirEntry
-{
-  PRUint8   mWidth;
-  PRUint8   mHeight;
-  PRUint8   mColorCount;
-  PRUint8   mReserved;
-  union {
-    PRUint16 mPlanes;   // ICO
-    PRUint16 mXHotspot; // CUR
-  };
-  union {
-    PRUint16 mBitCount; // ICO
-    PRUint16 mYHotspot; // CUR
-  };
-  PRUint32  mBytesInRes;
-  PRUint32  mImageOffset;
-};
 
 class nsICODecoder : public Decoder
 {
