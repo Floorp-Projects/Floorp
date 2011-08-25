@@ -3850,32 +3850,6 @@ if test "$ac_cv_cpp_partial_specialization" = yes ; then
   AC_DEFINE(HAVE_CPP_PARTIAL_SPECIALIZATION)
 fi
 
-dnl Some compilers have trouble resolving the ambiguity between two
-dnl functions whose arguments differ only by cv-qualifications.
-AC_CACHE_CHECK(whether the compiler can resolve const ambiguities for templates,
-               ac_cv_can_resolve_const_ambiguity,
-               [AC_TRY_COMPILE([
-                                template <class T> class ptrClass {
-                                  public: T* ptr;
-                                };
-
-                                template <class T> T* a(ptrClass<T> *arg) {
-                                  return arg->ptr;
-                                }
-
-                                template <class T>
-                                const T* a(const ptrClass<T> *arg) {
-                                  return arg->ptr;
-                                }
-                               ],
-                               [ ptrClass<int> i;
-                                 a(&i); ],
-                               ac_cv_can_resolve_const_ambiguity=yes,
-                               ac_cv_can_resolve_const_ambiguity=no)])
-if test "$ac_cv_can_resolve_const_ambiguity" = no ; then
-  AC_DEFINE(CANT_RESOLVE_CPP_CONST_AMBIGUITY)
-fi
-
 dnl Check to see if we can resolve ambiguity with |using|.
 AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
                ac_cv_cpp_ambiguity_resolving_using,
@@ -8963,7 +8937,6 @@ _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
 CPP_THROW_NEW
 HAVE_CPP_2BYTE_WCHAR_T
 HAVE_CPP_AMBIGUITY_RESOLVING_USING
-HAVE_CPP_BOOL
 HAVE_CPP_CHAR16_T
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
