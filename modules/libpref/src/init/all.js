@@ -2107,15 +2107,15 @@ pref("font.name-list.monospace.x-central-euro", "Courier");
 pref("font.name-list.cursive.x-central-euro", "Apple Chancery");
 pref("font.name-list.fantasy.x-central-euro", "Papyrus");
 
-pref("font.name.serif.x-cyrillic", "Times CY");
-pref("font.name.sans-serif.x-cyrillic", "Helvetica CY");
-pref("font.name.monospace.x-cyrillic", "Monaco CY");
-pref("font.name.cursive.x-cyrillic", "Geneva CY");
+pref("font.name.serif.x-cyrillic", "Times");
+pref("font.name.sans-serif.x-cyrillic", "Helvetica");
+pref("font.name.monospace.x-cyrillic", "Monaco");
+pref("font.name.cursive.x-cyrillic", "Geneva");
 pref("font.name.fantasy.x-cyrillic", "Charcoal CY");
-pref("font.name-list.serif.x-cyrillic", "Times CY");
-pref("font.name-list.sans-serif.x-cyrillic", "Helvetica CY");
-pref("font.name-list.monospace.x-cyrillic", "Monaco CY");
-pref("font.name-list.cursive.x-cyrillic", "Geneva CY");
+pref("font.name-list.serif.x-cyrillic", "Times");
+pref("font.name-list.sans-serif.x-cyrillic", "Helvetica");
+pref("font.name-list.monospace.x-cyrillic", "Monaco");
+pref("font.name-list.cursive.x-cyrillic", "Geneva");
 pref("font.name-list.fantasy.x-cyrillic", "Charcoal CY");
 
 pref("font.name.serif.x-devanagari", "Devanagari MT");
