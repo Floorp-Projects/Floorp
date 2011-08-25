@@ -377,20 +377,22 @@ class TypeSet
     /* Whether this set contains a specific type. */
     inline bool hasType(Type type);
 
-    TypeFlags baseFlags() { return flags & TYPE_FLAG_BASE_MASK; }
-    bool unknown() { return !!(flags & TYPE_FLAG_UNKNOWN); }
-    bool unknownObject() { return !!(flags & (TYPE_FLAG_UNKNOWN | TYPE_FLAG_ANYOBJECT)); }
+    TypeFlags baseFlags() const { return flags & TYPE_FLAG_BASE_MASK; }
+    bool unknown() const { return !!(flags & TYPE_FLAG_UNKNOWN); }
+    bool unknownObject() const { return !!(flags & (TYPE_FLAG_UNKNOWN | TYPE_FLAG_ANYOBJECT)); }
 
-    bool hasAnyFlag(TypeFlags flags) {
+    bool empty() const { return !baseFlags() && !baseObjectCount(); }
+
+    bool hasAnyFlag(TypeFlags flags) const {
         JS_ASSERT((flags & TYPE_FLAG_BASE_MASK) == flags);
         return !!(baseFlags() & flags);
     }
 
-    bool isOwnProperty(bool configurable) {
+    bool isOwnProperty(bool configurable) const {
         return flags & (configurable ? TYPE_FLAG_CONFIGURED_PROPERTY : TYPE_FLAG_OWN_PROPERTY);
     }
-    bool isDefiniteProperty() { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
-    unsigned definiteSlot() {
+    bool isDefiniteProperty() const { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
+    unsigned definiteSlot() const {
         JS_ASSERT(isDefiniteProperty());
         return flags >> TYPE_FLAG_DEFINITE_SHIFT;
     }
@@ -501,7 +503,9 @@ class TypeSet
     inline void clearObjects();
 
   private:
-    inline uint32 baseObjectCount() const;
+    uint32 baseObjectCount() const {
+        return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
+    }
     inline void setBaseObjectCount(uint32 count);
 };
 
@@ -594,8 +598,16 @@ struct TypeBarrier
      */
     Type type;
 
-    TypeBarrier(TypeSet *target, Type type)
-        : next(NULL), target(target), type(type)
+    /*
+     * If specified, this barrier can be removed if object has a non-undefined
+     * value in property id.
+     */
+    JSObject *singleton;
+    jsid singletonId;
+
+    TypeBarrier(TypeSet *target, Type type, JSObject *singleton, jsid singletonId)
+        : next(NULL), target(target), type(type),
+          singleton(singleton), singletonId(singletonId)
     {}
 };
 
@@ -751,14 +763,20 @@ struct TypeObject : gc::Cell
      * specialized getter hook) and the elements of dense arrays. For accesses
      * on such properties, the correspondence is as follows:
      *
-     * - If the type has unknownProperties(), the possible properties and value
-     *   types for associated JSObjects are unknown.
+     * 1. If the type has unknownProperties(), the possible properties and
+     *    value types for associated JSObjects are unknown.
      *
-     * - Otherwise, for any JSObject obj with TypeObject type, and any jsid id
-     *   which is a property in obj, before obj->getProperty(id) the property in
-     *   type for id must reflect the result of the getProperty. The result is
-     *   additionally allowed to be undefined for properties of global objects
-     *   defined with 'var' but not yet written.
+     * 2. Otherwise, for any JSObject obj with TypeObject type, and any jsid id
+     *    which is a property in obj, before obj->getProperty(id) the property
+     *    in type for id must reflect the result of the getProperty.
+     *
+     *    There is an exception for properties of singleton JS objects which
+     *    are undefined at the point where the property was (lazily) generated.
+     *    In such cases the property type set will remain empty, and the
+     *    'undefined' type will only be added after a subsequent assignment or
+     *    deletion. After these properties have been assigned a defined value,
+     *    the only way they can become undefined again is after such an assign
+     *    or deletion.
      *
      * We establish these by using write barriers on calls to setProperty and
      * defineProperty which are on native properties, and by using the inference
