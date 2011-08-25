@@ -259,7 +259,7 @@ endif # WINNT && !GNU_CC
 #
 _ENABLE_PIC=1
 
-# Determine if module being compiled is destined 
+# Determine if module being compiled is destined
 # to be merged into libxul
 
 ifdef LIBXUL_LIBRARY
@@ -415,7 +415,7 @@ INCLUDES = \
   -I$(DIST)/include -I$(DIST)/include/nsprpub \
   $(if $(LIBXUL_SDK),-I$(LIBXUL_SDK)/include -I$(LIBXUL_SDK)/include/nsprpub) \
   $(OS_INCLUDES) \
-  $(NULL) 
+  $(NULL)
 
 include $(topsrcdir)/config/static-checking-config.mk
 
@@ -513,7 +513,7 @@ RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 ifndef MOZ_NO_DEBUG_RTL
 RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
-endif 
+endif
 endif # MOZ_DEBUG || NS_TRACE_MALLOC
 endif # USE_STATIC_LIBS
 endif # WINNT && !GNU_CC
