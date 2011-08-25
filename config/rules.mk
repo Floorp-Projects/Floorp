@@ -681,6 +681,12 @@ else
 OUTOPTION = -o # eol
 endif # WINNT && !GNU_CC
 
+ifneq (,$(filter ml%,$(AS)))
+ASOUTOPTION = -Fo# eol
+else
+ASOUTOPTION = -o # eol
+endif
+
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
 else
@@ -1286,7 +1292,7 @@ ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 %.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) $(GLOBAL_DEPS)
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
+	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
 %.$(OBJ_SUFFIX): %.S $(GLOBAL_DEPS)
