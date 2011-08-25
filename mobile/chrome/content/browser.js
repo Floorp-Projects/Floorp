@@ -1092,7 +1092,7 @@ var Browser = {
   /** Rect should be in browser coordinates. */
   _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
     const margin = 15;
-    return this.selectedTab.clampZoomLevel(window.innerWidth / (rect.width + margin * 2));
+    return this.selectedTab.clampZoomLevel(ViewableAreaObserver.width / (rect.width + margin * 2));
   },
 
   /**
@@ -1964,7 +1964,7 @@ const ContentTouchHandler = {
     if (!tab.allowZoom)
       return;
 
-    let width = window.innerWidth / Browser.getScaleRatio();
+    let width = ViewableAreaObserver.width / Browser.getScaleRatio();
     this._dispatchMouseEvent("Browser:ZoomToPoint", aX, aY, { width: width });
   },
 
