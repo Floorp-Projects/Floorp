@@ -264,8 +264,8 @@ gfxFontconfigUtils::NewPattern(const nsTArray<nsString>& aFamilies,
             for (PRUint32 g = 0;
                  g < NS_ARRAY_LENGTH(sFontconfigGenerics);
                  ++g) {
-                if (FcStrCmpIgnoreCase(ToFcChar8(sFontconfigGenerics[g]),
-                                       ToFcChar8(family.get()))) {
+                if (0 == FcStrCmpIgnoreCase(ToFcChar8(sFontconfigGenerics[g]),
+                                            ToFcChar8(family.get()))) {
                     useWeakBinding = PR_TRUE;
                     break;
                 }
