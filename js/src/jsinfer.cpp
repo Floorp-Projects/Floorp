@@ -744,9 +744,27 @@ ScriptAnalysis::pruneTypeBarriers(uint32 offset)
         if (barrier->target->hasType(barrier->type)) {
             /* Barrier is now obsolete, it can be removed. */
             *pbarrier = barrier->next;
-        } else {
-            pbarrier = &barrier->next;
+            continue;
         }
+        if (barrier->singleton) {
+            JS_ASSERT(barrier->type.isPrimitive(JSVAL_TYPE_UNDEFINED));
+            const Shape *shape = barrier->singleton->nativeLookup(barrier->singletonId);
+            if (shape && shape->hasDefaultGetterOrIsMethod() &&
+                !barrier->singleton->nativeGetSlot(shape->slot).isUndefined()) {
+                /*
+                 * When we analyzed the script the singleton had an 'own'
+                 * property which was undefined (probably a 'var' variable
+                 * added to a global object), but now it is defined. The only
+                 * way it can become undefined again is if an explicit assign
+                 * or deletion on the property occurs, which will update the
+                 * type set for the property directly and trigger construction
+                 * of a normal type barrier.
+                 */
+                *pbarrier = barrier->next;
+                continue;
+            }
+        }
+        pbarrier = &barrier->next;
     }
 }
 
@@ -943,10 +961,20 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
     } else {
         if (!types->hasPropagatedProperty())
             object->getFromPrototypes(cx, id, types);
-        if (UsePropertyTypeBarrier(pc))
+        if (UsePropertyTypeBarrier(pc)) {
             types->addSubsetBarrier(cx, script, pc, target);
-        else
+            if (object->singleton && !JSID_IS_VOID(id) && types->empty()) {
+                /*
+                 * Undefined property on a singleton JS object. Add a singleton
+                 * type barrier, which we'll be able to remove after the
+                 * property becomes defined, even if no undefined value is
+                 * observed at pc.
+                 */
+                script->analysis()->addSingletonTypeBarrier(cx, pc, target, object->singleton, id);
+            }
+        } else {
             types->addSubset(cx, target);
+        }
     }
 }
 
@@ -2248,7 +2276,35 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
               InferSpewColor(target), target, InferSpewColorReset(),
               TypeString(type));
 
-    barrier = ArenaNew<TypeBarrier>(cx->compartment->pool, target, type);
+    barrier = ArenaNew<TypeBarrier>(cx->compartment->pool, target, type,
+                                    (JSObject *) NULL, JSID_VOID);
+
+    barrier->next = code.typeBarriers;
+    code.typeBarriers = barrier;
+}
+
+void
+ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *target, JSObject *singleton, jsid singletonId)
+{
+    JS_ASSERT(singletonId == MakeTypeId(cx, singletonId) && !JSID_IS_VOID(singletonId));
+
+    Bytecode &code = getCode(pc);
+
+    if (!code.typeBarriers) {
+        /* Trigger recompilation as for normal type barriers. */
+        cx->compartment->types.addPendingRecompile(cx, script);
+        if (script->hasFunction && !script->function()->hasLazyType())
+            ObjectStateChange(cx, script->function()->type(), false, true);
+    }
+
+    InferSpew(ISpewOps, "singletonTypeBarrier: #%u:%05u: %sT%p%s %p %s",
+              script->id(), pc - script->code,
+              InferSpewColor(target), target, InferSpewColorReset(),
+              (void *) singleton, TypeIdString(singletonId));
+
+    TypeBarrier *barrier =
+        ArenaNew<TypeBarrier>(cx->compartment->pool, target, Type::UndefinedType(),
+                              singleton, singletonId);
 
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;
@@ -2616,13 +2672,21 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
 }
 
 static inline void
-UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *shape)
+UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *shape, bool force)
 {
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
         types->addType(cx, Type::UnknownType());
-    } else if (shape->slot != SHAPE_INVALID_SLOT &&
-               (shape->hasDefaultGetter() || shape->isMethod())) {
-        Type type = GetValueType(cx, obj->nativeGetSlot(shape->slot));
+    } else if (shape->hasDefaultGetterOrIsMethod()) {
+        const Value &value = obj->nativeGetSlot(shape->slot);
+
+        /*
+         * Don't add initial undefined types for singleton properties that are
+         * not collated into the JSID_VOID property (see propertySet comment).
+         */
+        if (!force && value.isUndefined())
+            return;
+
+        Type type = GetValueType(cx, value);
         types->addType(cx, type);
     }
 }
@@ -2651,13 +2715,13 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
             const Shape *shape = singleton->lastProperty();
             while (!JSID_IS_EMPTY(shape->propid)) {
                 if (JSID_IS_VOID(MakeTypeId(cx, shape->propid)))
-                    UpdatePropertyType(cx, &base->types, singleton, shape);
+                    UpdatePropertyType(cx, &base->types, singleton, shape, true);
                 shape = shape->previous();
             }
         } else {
             const Shape *shape = singleton->nativeLookup(id);
             if (shape)
-                UpdatePropertyType(cx, &base->types, singleton, shape);
+                UpdatePropertyType(cx, &base->types, singleton, shape, false);
         }
     }
 

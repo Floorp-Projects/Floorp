@@ -895,12 +895,6 @@ HashSetLookup(U **values, unsigned count, T key)
     return NULL;
 }
 
-inline uint32
-TypeSet::baseObjectCount() const
-{
-    return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
-}
-
 inline bool
 TypeSet::hasType(Type type)
 {
