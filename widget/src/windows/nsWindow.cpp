@@ -156,6 +156,7 @@
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
 #include "Layers.h"
+#include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
