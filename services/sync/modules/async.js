@@ -49,7 +49,7 @@ const CB_FAIL = {};
 
 const REASON_ERROR = Ci.mozIStorageStatementCallback.REASON_ERROR;
 
-Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 /*
  * Helpers for various async operations.
@@ -97,7 +97,7 @@ let Async = {
     let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
     // Keep waiting until our callback is triggered (unless the app is quitting).
-    while (Utils.checkAppReady() && callback.state == CB_READY) {
+    while (Async.checkAppReady() && callback.state == CB_READY) {
       thread.processNextEvent(true);
     }
 
@@ -112,6 +112,21 @@ let Async = {
 
     // Return the value passed to the callback.
     return callback.value;
+  },
+
+  /**
+   * Check if the app is still ready (not quitting).
+   */
+  checkAppReady: function checkAppReady() {
+    // Watch for app-quit notification to stop any sync calls
+    Services.obs.addObserver(function onQuitApplication() {
+      Services.obs.removeObserver(onQuitApplication, "quit-application");
+      Async.checkAppReady = function() {
+        throw Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
+      };
+    }, "quit-application", false);
+    // In the common case, checkAppReady just returns true
+    return (Async.checkAppReady = function() { return true; })();
   },
 
   /**
