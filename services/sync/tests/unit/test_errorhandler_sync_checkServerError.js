@@ -81,6 +81,7 @@ add_test(function test_backoff500() {
     Service.login();
     Service.sync();
     do_check_true(Status.enforceBackoff);
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
     do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   } finally {
     Status.resetBackoff();
@@ -116,8 +117,10 @@ add_test(function test_backoff503() {
     do_check_true(Status.enforceBackoff);
     do_check_eq(backoffInterval, BACKOFF);
     do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
   } finally {
     Status.resetBackoff();
+    Status.resetSync();
     Service.startOver();
   }
   server.stop(run_next_test);
