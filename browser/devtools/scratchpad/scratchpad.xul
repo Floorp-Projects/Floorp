@@ -274,10 +274,9 @@
                 command="sp-cmd-contentContext"
                 checked="true"
                 type="radio"/>
-      <menuitem id="sp-menu-browser" disabled="true"
+      <menuitem id="sp-menu-browser" hidden="true"
                 command="sp-cmd-browserContext"
                 label="&browserContext.label;"
-                tooltiptext="&browserContext.tooltiptext;"
                 accesskey="&browserContext.accesskey;"
                 type="radio"/>
       <menuseparator/>
@@ -292,7 +291,7 @@
         label="&toolsMenu.label;"
         accesskey="&toolsMenu.accesskey;">
     <menupopup id="sp-menu-tools">
-      <menuitem id="sp-menu-errorConsole" disabled="true"
+      <menuitem id="sp-menu-errorConsole" hidden="true"
                 label="&errorConsoleCmd.label;"
                 accesskey="&errorConsoleCmd.accesskey;"
                 key="sp-key-errorConsole"
@@ -333,8 +332,12 @@
   </menupopup>
 </popupset>
 
-<notificationbox id="scratchpad-notificationbox" flex="1">
-  <hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
-</notificationbox>
+<hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
 
+<statusbar id="scratchpad-statusbar" align="end">
+  <statusbarpanel id="scratchpad-status"
+                  label="&contentContext.label;"
+                  class="statusbarpanel-iconic-text"/>
+  <spacer flex="1"/>
+</statusbar>
 </window>

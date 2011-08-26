@@ -84,10 +84,10 @@ var Scratchpad = {
   executionContext: SCRATCHPAD_CONTEXT_CONTENT,
 
   /**
-   * Retrieve the xul:notificationbox DOM element. It notifies the user when
-   * the current code execution context is SCRATCHPAD_CONTEXT_BROWSER.
+   * Retrieve the xul:statusbarpanel DOM element. The status bar tells the
+   * current code execution context.
    */
-  get notificationBox() document.getElementById("scratchpad-notificationbox"),
+  get statusbarStatus() document.getElementById("scratchpad-status"),
 
   /**
    * Get the selected text from the editor.
@@ -599,15 +599,11 @@ var Scratchpad = {
    */
   setContentContext: function SP_setContentContext()
   {
-    if (this.executionContext == SCRATCHPAD_CONTEXT_CONTENT) {
-      return;
-    }
-
     let content = document.getElementById("sp-menu-content");
     document.getElementById("sp-menu-browser").removeAttribute("checked");
     content.setAttribute("checked", true);
     this.executionContext = SCRATCHPAD_CONTEXT_CONTENT;
-    this.notificationBox.removeAllNotifications(false);
+    this.statusbarStatus.label = content.getAttribute("label");
     this.resetContext();
   },
 
@@ -616,20 +612,11 @@ var Scratchpad = {
    */
   setBrowserContext: function SP_setBrowserContext()
   {
-    if (this.executionContext == SCRATCHPAD_CONTEXT_BROWSER) {
-      return;
-    }
-
     let browser = document.getElementById("sp-menu-browser");
     document.getElementById("sp-menu-content").removeAttribute("checked");
     browser.setAttribute("checked", true);
     this.executionContext = SCRATCHPAD_CONTEXT_BROWSER;
-    this.notificationBox.appendNotification(
-      this.strings.GetStringFromName("browserContext.notification"),
-      SCRATCHPAD_CONTEXT_BROWSER,
-      null,
-      this.notificationBox.PRIORITY_WARNING_HIGH,
-      null);
+    this.statusbarStatus.label = browser.getAttribute("label");
     this.resetContext();
   },
 
@@ -677,9 +664,8 @@ var Scratchpad = {
 
     let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
     if (chrome) {
-      chromeContextMenu.removeAttribute("disabled");
-      chromeContextMenu.removeAttribute("tooltiptext");
-      errorConsoleMenu.removeAttribute("disabled");
+      chromeContextMenu.removeAttribute("hidden");
+      errorConsoleMenu.removeAttribute("hidden");
       errorConsoleCommand.removeAttribute("disabled");
       chromeContextCommand.removeAttribute("disabled");
     }
