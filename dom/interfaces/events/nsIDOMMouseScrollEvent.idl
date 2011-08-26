@@ -38,7 +38,7 @@
 
 #include "nsIDOMMouseEvent.idl"
 
-[scriptable, uuid(af08bce0-6821-4bac-8964-0fcee4be549a)]
+[scriptable, uuid(196cb2ff-7a20-4226-9e14-00ef201d1b0c)]
 interface nsIDOMMouseScrollEvent : nsIDOMMouseEvent
 {
   const long HORIZONTAL_AXIS = 1;

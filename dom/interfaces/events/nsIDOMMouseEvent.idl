@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, uuid(73558605-f479-493e-86d1-9794cd117fef)]
+[scriptable, uuid(260c32cb-d709-46d4-8889-00de1ab091c6)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
