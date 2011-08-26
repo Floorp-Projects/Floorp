@@ -202,25 +202,6 @@ let Utils = {
     }
   },
 
-
-  /*
-   * Partition the input array into an array of arrays. Return a generator.
-   */
-  slices: function slices(arr, sliceSize) {
-    if (!sliceSize || sliceSize <= 0)
-      throw "Invalid slice size.";
-
-    if (sliceSize > arr.length) {
-      yield arr;
-    } else {
-      let offset = 0;
-      while (arr.length > offset) {
-        yield arr.slice(offset, offset + sliceSize);
-        offset += sliceSize;
-      }
-    }
-  },
-
   byteArrayToString: function byteArrayToString(bytes) {
     return [String.fromCharCode(byte) for each (byte in bytes)].join("");
   },
