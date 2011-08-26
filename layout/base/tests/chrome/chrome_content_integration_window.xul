@@ -20,15 +20,16 @@
 
   <script type="application/javascript">
     <![CDATA[
-    var imports = [ "SimpleTest", "is", "isnot", "ok" ];
+    //we need SpecialPowers for WindowSnapshot.snapshotWindow()
+    var imports = [ "SimpleTest", "is", "isnot", "ok", "SpecialPowers"];
     for each (var name in imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
     
     function runTests() {
-      var testCanvas = window.opener.SpecialPowers.snapshotWindow(window);
+      var testCanvas = snapshotWindow(window);
 
-      var refCanvas = window.opener.SpecialPowers.snapshotWindow(window);
+      var refCanvas = snapshotWindow(window);
       var ctx = refCanvas.getContext('2d');
       ctx.fillStyle = "black";
       ctx.fillRect(0, 0, refCanvas.width, refCanvas.height);

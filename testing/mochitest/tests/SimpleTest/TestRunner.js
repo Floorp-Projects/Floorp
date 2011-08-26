@@ -311,6 +311,8 @@ TestRunner.runNextTest = function() {
           indicator.style.backgroundColor = "red";
         }
 
+        SpecialPowers.unregisterProcessCrashObservers();
+
         TestRunner.log("TEST-START | Shutdown"); // used by automation.py
         TestRunner.log("Passed: " + $("pass-count").innerHTML);
         TestRunner.log("Failed: " + $("fail-count").innerHTML);
