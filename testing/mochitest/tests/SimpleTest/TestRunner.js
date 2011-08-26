@@ -243,27 +243,36 @@ TestRunner.resetTests = function(listURLs) {
 /*
  * Used to run a single test in a loop and update the UI with the results
  */
-TestRunner.loopTest = function(testPath){
- var numLoops = TestRunner.loops;
-  while(numLoops >= 0){
-    //must set the following line so that TestHarness.updateUI finds the right div to update
-    $("current-test-path").innerHTML = testPath;
-    function checkComplete() {
-      var testWindow = window.open(testPath, 'test window');
-      if (testWindow.document.readyState == "complete") {
-        TestRunner.currentTestURL = testPath;
-        TestRunner.updateUI(testWindow.SimpleTest._tests);
-        testWindow.close();
-      } else {
-        setTimeout(checkComplete, 1000);
+TestRunner.loopTest = function(testPath) {
+  //must set the following line so that TestHarness.updateUI finds the right div to update
+  document.getElementById("current-test-path").innerHTML = testPath;
+  var numLoops = TestRunner.loops;
+  var completed = 0; // keep track of how many tests have finished
+
+  // function to kick off the test and to check when the test is complete
+  function checkComplete() {
+    var testWindow = window.open(testPath, 'test window'); // kick off the test or find the active window
+    if (testWindow.document.readyState == "complete") {
+      // the test is complete -> mark as complete
+      TestRunner.currentTestURL = testPath;
+      TestRunner.updateUI(testWindow.SimpleTest._tests);
+      testWindow.close();
+      if (TestRunner.loops == completed  && TestRunner.onComplete) {
+        TestRunner.onComplete();
       }
+      completed++;
     }
+    else {
+      // wait and check later
+      setTimeout(checkComplete, 1000);
+    }
+  }
+  while (numLoops >= 0) {
     checkComplete();
     numLoops--;
   }
 }
 
-/**
 /**
  * Run the next test. If no test remains, calls onComplete().
  **/

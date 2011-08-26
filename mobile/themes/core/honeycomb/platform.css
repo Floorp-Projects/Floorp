@@ -1,0 +1,772 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Mobile Browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Finkle <mfinkle@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* global skin ------------------------------------------------------------- */
+@import url(chrome://global/skin/);
+
+%filter substitution
+%include defines.inc
+
+/* general stuff ------------------------------------------------------------ */
+:root {
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  font-size: @font_normal@ !important;
+  background-color: @color_background_default_window@; /* force */
+  color: @color_text_default@; /* force */
+}
+
+::-moz-selection {
+  background-color: @color_selection@;
+  color: @color_text_highlight@;
+}
+
+menu,
+menuitem {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+description,
+label {
+  /* force mac to use the same margins as windows and linux */
+  -moz-margin-start: @margin_snormal@;
+  -moz-margin-end: @margin_snormal@;
+}
+
+/* Override any OS inverse themes */
+textbox {
+  color: @color_text_textbox@;
+  background-color: @color_background_textbox@;
+}
+
+/* textboxes --------------------------------------------------------------- */
+textbox:not([type="number"]) {
+  min-height: @textbox_height@;
+  border: @border_width_small@ solid @color_button_border@;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-right-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+}
+
+textbox[isempty="true"] {
+  color: @color_text_placeholder@;
+}
+
+textbox.search-bar {
+  border: @border_width_small@ solid rgba(0,0,0,0.4);
+  background-color: #f9f9f9;
+  background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
+  background-size: 100% 100%; 
+}
+
+textbox[disabled="true"] {
+  background-color: lightgray;
+}
+
+.link {
+  color: @color_text_as_link@;
+  text-decoration: underline;
+}
+
+/* sidebars spacer --------------------------------------------------------- */
+.sidebar-spacer {
+  background-color: #767973;
+}
+
+/* prompt dialogs ---------------------------------------------------------- */
+.context-block,
+.modal-block,
+.perm-modal-block {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: rgba(0,0,0,.6);
+}
+
+.context-block {
+  padding: @margin_context_popup@;
+}
+
+.dialog-dark,
+.panel-arrowcontent {
+  background-color: @color_background_dialog@;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@, black 0 -@border_radius_tiny@ @border_radius_tiny@;
+  padding: 0;
+}
+
+@media (max-width: 499px) {
+  .context-block {
+    padding: @padding_xlarge@;
+  }
+}
+
+dialog > .prompt-header > .prompt-message {
+  white-space: pre-wrap;
+}
+
+dialog > .prompt-header > .button-checkbox {
+  margin-left: @margin_large@;
+}
+
+/* buttons ----------------------------------------------------------------- */
+.button-text,
+.toolbarbutton-text {
+  font-weight: normal;
+  font-size: @font_snormal@ !important;
+}
+
+button {
+  -moz-appearance: none;
+  min-width: @touch_button_minwidth@ !important;
+  min-height: @touch_button_small@ !important; /* button size */
+  color: @color_text_button@;
+  margin: @margin_normal@;
+  padding: @padding_xnormal@;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border: @border_width_tiny@ solid @color_button_border@;
+}
+
+button[disabled="true"] {
+  color: @color_text_disabled@ !important;
+  border: @border_width_tiny@ solid @color_button_border@ !important;
+}
+
+button:focus > .button-box {
+  border: @border_width_tiny@ solid transparent;
+}
+
+button:not([disabled]):hover:active,
+button:not([disabled])[checked="true"] {
+  background-image: url("chrome://browser/skin/images/toggle-off.png");
+}
+
+/* Override GTK2 system setting */
+.button-icon {
+  display: -moz-initial !important;
+}
+
+/* spinbuttons ------------------------------------------------------------- */
+spinbuttons {
+  border: none !important;
+}
+
+.numberbox-input-box {
+  border: @border_width_small@ solid @color_button_border@;
+  border-right: 0 solid transparent;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+}
+
+.numberbox-input-box:-moz-locale-dir(rtl) {
+  border-right: @border_width_small@ solid @color_button_border@;
+  border-left: 0 solid transparent;
+}
+
+.spinbuttons-box {
+  border: none !important;
+  -moz-box-orient: horizontal !important;
+  -moz-box-direction: reverse !important;
+}
+
+.spinbuttons-up .button-icon,
+.spinbuttons-down .button-icon {
+  display: block;
+}
+
+.spinbuttons-up,
+.spinbuttons-down {
+  -moz-appearance: none !important;
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
+  color: @color_text_button@;
+  margin: @margin_normal@;
+  padding: @padding_xnormal@;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border: @border_width_tiny@ solid @color_button_border@;
+  list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
+}
+
+.spinbuttons-up:hover:active:not([disabled=true]),
+.spinbuttons-down:hover:active:not([disabled=true]) {
+  background-image: url("chrome://browser/skin/images/toggle-on.png");
+}
+
+.spinbuttons-up {
+  list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
+}
+
+/* toolbar buttons --------------------------------------------------------- */
+toolbar {
+  -moz-appearance: none;
+  background-color: @color_background_default@;
+  max-height: @touch_button_large@;
+}
+
+toolbarbutton {
+  min-width: @touch_button_xlarge@ !important; /* primary button size */
+  min-height: @touch_button_xlarge@ !important; /* primary button size */
+  -moz-appearance: none !important;
+  padding: @padding_xsmall@;
+  -moz-margin-end: @margin_xxxnormal@;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-text {
+  display: none;
+}
+
+.toolbarbutton-icon[label]:not([label=""]),
+.toolbarbutton-icon[type="menu"] {
+  -moz-margin-end: @margin_tiny@;
+}
+
+toolbarbutton:not(.show-text) .toolbarbutton-icon,
+toolbarbutton:not([image]) .toolbarbutton-icon,
+toolbarbutton[image=''] .toolbarbutton-icon {
+  -moz-margin-end: 0;
+}
+
+toolbarbutton:hover,
+toolbarbutton:hover:active,
+toolbarbutton[open="true"] {
+  border-color: transparent;
+}
+
+toolbarbutton:not([disabled="true"]):active,
+toolbarbutton:not([disabled="true"])[open="true"] {
+  background-color: @color_background_highlight@;
+}
+
+/* checkbox buttons ----------------------------------------------------------- */
+.button-checkbox {
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  -moz-border-image: none !important;
+  color: @color_text_default@;
+  -moz-box-align: center;
+  font-size: @font_small@;
+  -moz-box-align: center;
+}
+
+.prompt-checkbox-label {
+  text-align: left;
+}
+
+.button-checkbox > .button-image-icon {
+  -moz-margin-end: @margin_normal@;
+  list-style-image: url("chrome://browser/skin/images/check-unselected-hdpi.png");
+}
+
+.button-checkbox[checked="true"] > .button-image-icon {
+  list-style-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
+}
+
+.button-checkbox > .button-box,
+.button-checkbox:hover:active > .button-box,
+.button-checkbox[checked="true"] > .button-box {
+  padding-top: @padding_tiny@;
+  padding-bottom: @padding_xsmall@;
+  -moz-padding-start: @padding_small@;
+  -moz-padding-end: @padding_small@;
+}
+
+/* radio buttons ----------------------------------------------------------- */
+radiogroup {
+  -moz-box-orient: horizontal;
+}
+
+.radio-label {
+  font-weight: normal;
+  font-size: @font_snormal@ !important;
+}
+
+radio {
+  -moz-appearance: none;
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
+  color: @color_text_button@;
+  padding: @padding_xnormal@;
+  margin: 0;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border-top: @border_width_tiny@ solid @color_button_border@;
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+}
+
+radio .radio-icon, radio .radio-check {
+  display: none;
+}
+
+radio:not([disabled=true]):hover:active,
+radio[selected] {
+  color: white;
+  background-image: url("chrome://browser/skin/images/toggle-on.png");
+}
+
+radio:first-child {
+  border-left: @border_width_tiny@ solid @color_button_border@;
+}
+
+radio:first-child:-moz-locale-dir(rtl) {
+  border-left: none;
+  border-right: @border_width_tiny@ solid @color_button_border@;
+}
+
+radio:last-child {
+  border-right: @border_width_tiny@ solid @color_button_border@;
+}
+
+radio:last-child:-moz-locale-dir(rtl) {
+  border-right: none;
+  border-left: @border_width_tiny@ solid @color_button_border@;
+}
+
+radio[focused="true"] > .radio-label-box {
+  border: @border_width_tiny@ solid transparent;
+}
+
+/* checkbox  --------------------------------------------------------------- */
+checkbox {
+  margin: @margin_tiny@ @margin_small@ @margin_tiny@ @margin_small@; /* match platform style for buttons */
+  -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox-with-spacing") !important;
+}
+
+/* stop the focus from moving/showing the border around the label, which we don't use */
+checkbox:focus > .checkbox-label-center-box > .checkbox-label-box {
+  border: 1px solid transparent;
+}
+
+.checkbox-check {
+  border: 2px transparent;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-right-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+  width: 46px;
+  height: 46px;
+  background: url("chrome://browser/skin/images/check-unselected-hdpi.png") no-repeat 50% 50%;
+}
+
+checkbox[checked="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
+}
+
+checkbox[checked="true"][disabled="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/check-selected-hdpi.png");
+}
+
+/* richlistbox ------------------------------------------------------------- */
+richlistbox {
+  color: @color_text_default@;
+  background-color: @color_background_default@;
+  -moz-user-focus: ignore;
+  margin: 0;
+}
+
+richlistitem {
+  -moz-user-focus: ignore;
+  min-height: @touch_row@; /* row size */
+  padding: @padding_small@;
+  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+}
+
+richlistitem label.title,
+richlistitem description.title {
+  font-size: @font_normal@ !important;
+}
+
+richlistitem label.normal,
+richlistitem description.normal {
+  color: @color_subtext_default@;
+  font-size: @font_small@ !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+richlistitem label.normal-black,
+richlistitem description.normal-black {
+  font-size: @font_small@  !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+richlistitem label.normal-bold,
+richlistitem description.normal-bold {
+  font-weight: bold;
+  font-size: @font_small@  !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+richlistitem[selected="true"] {
+  color: @color_text_default@;
+  background-color: @color_background_default@;
+}
+
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]),
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) label.normal,
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) description.normal {
+  background-color: @color_background_highlight@;
+  color: @color_text_highlight@;
+}
+
+richlistitem.section-header,
+richlistitem[selected="true"].section-header {
+  font-weight: bold;
+  color: @color_text_header@;
+  background-color: @color_background_header@;
+}
+
+richlistitem .show-on-select {
+  visibility: collapse;
+}
+
+richlistitem[selected="true"] .show-on-select {
+  visibility: visible;
+}
+
+richlistitem .hide-on-select {
+  visibility: visible;
+}
+
+richlistitem[selected="true"] .hide-on-select {
+  visibility: collapse;
+}
+
+richlistitem[typeName="message"] {
+  border-bottom: 0;
+}
+
+/* colorpicker ------------------------------------------------------------- */
+colorpicker > panel {
+  background-color: #767973;
+}
+
+colorpicker > vbox {
+  background-color: #767973;
+}
+
+/* textbox ----------------------------------------------------------------- */
+.textbox-search-icon {
+  list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
+  -moz-image-region: auto;
+}
+
+.textbox-search-clear {
+  list-style-image: url("chrome://browser/skin/images/search-clear-30.png");
+  -moz-image-region: auto;
+}
+
+/* menulist ---------------------------------------------------------------- */
+.menulist-label {
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  font-weight: normal;
+  font-size: @font_snormal@  !important;
+  background-color: transparent !important;
+}
+
+menulist {
+  -moz-appearance: none !important;
+  -moz-user-focus: ignore;
+  min-width: @touch_button_minwidth@ !important;
+  min-height: @touch_button_small@ !important; /* button size */
+  color: @color_text_button@ !important;
+  margin: @margin_normal@;
+  padding: @padding_small@ @padding_xnormal@;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border: @border_width_tiny@ solid @color_button_border@;
+}
+
+menulist[disabled="true"] {
+  color: @color_text_disabled@ !important;
+  border: @border_width_tiny@ solid @color_button_border@ !important;
+}
+
+menulist:not([disabled="true"]):hover:active {
+  background-image: url("chrome://browser/skin/images/toggle-off.png");
+}
+
+menulist > dropmarker {
+  height: 32px;
+  width: 32px;
+  margin-left: @margin_snormal@;
+  background-color: transparent; /* for windows */
+  border: none;                  /* for windows */
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  list-style-image: url("chrome://browser/skin/images/dropmarker-hdpi.png");
+  -moz-image-region: auto;
+  display: block;
+}
+
+menulist[disabled="true"] > dropmarker {
+  opacity: 0.5;
+}
+
+/* progressmeter ----------------------------------------------------------- */
+progressmeter {
+  background-color: #fff;
+  padding: @padding_small@;
+  height: @textbox_height@;
+  border: @border_width_large@ solid #aaa;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-right-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+}
+
+.progress-bar {
+  background-color: @color_background_highlight@;
+}
+
+/* panels / arrowboxes------------------------------------------------------ */
+arrowbox {
+  -moz-appearance: none;
+  background: transparent !important;
+  border: none;
+}
+
+.arrowbox-dark .panel-arrowcontent {
+  padding: @padding_normal@; /* core spacing */
+}
+
+dialog,
+.arrowbox-dark .panel-arrowcontent,
+.panel-dark {
+  color: @color_text_default@;
+  background: @color_background_default@;
+}
+
+dialog,
+.arrowbox-dark .panel-arrowcontent {
+  border: @border_width_small@ solid @color_dialog_border@;
+  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
+}
+
+dialog {
+  margin: @margin_xxxnormal@ !important;
+  max-width: @dialog_width@;
+}
+
+.prompt-message {
+  -moz-box-pack: center;
+  font-size: @font_snormal@;
+  margin: @padding_normal@;
+}
+
+.prompt-title {
+  font-size: @font_xnormal@;
+  padding-top: @padding_xnormal@;
+  padding-left: @padding_normal@;
+}
+
+/* Authentication dialogs do not have a title */
+.prompt-title:empty,
+.prompt-title:empty + .prompt-line {
+  display: none;
+}
+
+.prompt-line {
+  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+  margin: @margin_small@ 0 0 0;
+  height: @padding_normal@ !important;
+}
+
+.prompt-buttons {
+  font-size: @font_snormal@;
+  background-color: @color_background_dlgbuttons@;
+  display: inline-block;
+  text-align: center;
+}
+
+.prompt-edit {
+  margin: @margin_xnormal@;
+  font-size: @font_normal@;
+  text-align: start;
+}
+
+.panel-arrow[side="top"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
+  margin-bottom: -@margin_snormal@;
+}
+
+.panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
+  margin-top: -@margin_snormal@;
+}
+
+.panel-arrow[side="left"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-right: -@margin_snormal@;
+  -moz-transform: scaleX(-1);
+}
+
+.panel-arrow[side="right"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-left: -@margin_snormal@;
+}
+
+/*.panel-row-header ------------------------------------------------------------ */
+.panel-row-header {
+  border-bottom: @border_width_xxlarge@ solid @color_background_active@;
+  background-color: @color_background_header@ !important;
+  color: @color_text_header@;
+  padding: 0 !important;
+}
+
+.panel-row-button {
+  color: @color_text_header@;
+  -moz-appearance: none;
+  background-size: 100% 100%;
+  border: 0 solid transparent !important;
+  -moz-border-start: @border_width_tiny@ solid rgba(255,255,255,0.2) !important;
+  -moz-border-end: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
+  padding-top: @padding_xsmall@ !important;
+  padding-bottom: @padding_xsmall@ !important;
+  -moz-padding-start: @padding_xsmall@ !important;
+  -moz-padding-end: @padding_xsmall@ !important;
+  -moz-box-flex: 1;
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+}
+
+.panel-row-button:hover:active {
+  background: @color_background_active@;
+  color: @color_text_active@;
+  background-size: 100% 100%;
+}
+
+.panel-row-button:first-child {
+  -moz-border-start-width: 0 !important;
+}
+
+.panel-row-button:last-child {
+  -moz-border-end-width: 0 !important;
+}
+
+@media (@orientation@: portrait) {
+  .panel-row-button {
+    -moz-box-orient: vertical;
+  }
+
+  .panel-row-button .toolbarbutton-text {
+    font-size: @font_xsmall@ !important;
+  }
+}
+
+.panel-row-button .toolbarbutton-text {
+  text-align: left;
+}
+
+.panel-row-button .toolbarbutton-text:-moz-locale-dir(rtl) {
+  text-align: right;
+}
+
+.panel-row-button[disabled="true"] {
+  pointer-events: none;
+}
+
+.panel-row-button[disabled="true"] .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+.panel-row-button[disabled="true"] .toolbarbutton-text {
+  color: @color_text_disabled@;
+}
+
+.panel-row-button[checked="true"] {
+  background: @color_background_active@;
+  color: @color_text_active@;
+  background-size: 100% 100% !important;
+}
+
+.panel-row-button[checked="true"],
+.panel-row-button[disabled="true"] {
+  pointer-events: none;
+}
+
+#panel-container-inner {
+  -moz-box-orient: vertical;
+}
+
+#panel-controls {
+  -moz-box-orient: horizontal;
+}
+
+@media (min-width: @tablet_panel_minwidth@) {
+  #panel-container-inner {
+    -moz-box-orient: horizontal;
+    -moz-box-pack: center;
+  }
+
+  #panel-items {
+    max-width: @tablet_panel_minwidth@;
+    min-width: 0px !important;
+  }
+  
+  /* This will affect the prefs screen, but not the awesome screen */
+  #panel-controls {
+    -moz-box-orient: vertical !important;
+    -moz-box-align: start;
+  }
+  
+  #panel-controls > .panel-row-button {
+    -moz-box-orient: horizontal;
+    -moz-box-flex: 0;
+    min-width: @tablet_panel_controls@ !important;
+  }
+
+  #panel-controls .toolbarbutton-text {
+    display: -moz-box !important;
+    -moz-box-flex: 1;
+  }
+  
+  #panel-container {
+    -moz-box-pack: center;
+    padding: @padding_xlarge@ 0px;
+  }
+}
+
+/* because the buttons can wrap, we need to use the margin to create inter-button
+  spacing and a bottom margin for the notification */
+notification > button {
+  margin-bottom: @margin_normal@;
+}

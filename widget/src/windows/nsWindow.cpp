@@ -663,8 +663,8 @@ nsWindow::Create(nsIWidget *aParent,
 // Close this nsWindow
 NS_METHOD nsWindow::Destroy()
 {
-  // WM_DESTROY has already fired, we're done.
-  if (nsnull == mWnd)
+  // WM_DESTROY has already fired, avoid calling it twice
+  if (mOnDestroyCalled)
     return NS_OK;
 
   // During the destruction of all of our children, make sure we don't get deleted.
