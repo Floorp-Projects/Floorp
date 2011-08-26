@@ -2024,8 +2024,6 @@ case "$target" in
       MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
     fi
     LDFLAGS=$_SAVE_LDFLAGS
-    # Debug builds should always have frame pointers
-    MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
 
     if test "x$lto_is_enabled" = "xyes"; then
         echo "Skipping -dead_strip because lto is enabled."
@@ -2174,8 +2172,6 @@ ia64*-hpux*)
     fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
-    # Debug builds should always have frame pointers
-    MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
     ;;
 
 *-*linux*)
@@ -2201,8 +2197,7 @@ ia64*-hpux*)
         fi
         MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
-        # Debug builds should always have frame pointers
-        MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
+        MOZ_DEBUG_FLAGS="-g"
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -2318,8 +2313,7 @@ ia64*-hpux*)
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
-        # Debug builds should always have frame pointers
-        MOZ_DEBUG_FLAGS='-Zi -Oy-'
+        MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
         # If we're building with --enable-profiling, we need -Oy-, which forces a frame pointer.
