@@ -38,11 +38,11 @@ function runTests()
 
   let contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
   let browserMenu = gScratchpadWindow.document.getElementById("sp-menu-browser");
-  let statusbar = sp.statusbarStatus;
+  let notificationBox = sp.notificationBox;
 
   ok(contentMenu, "found #sp-menu-content");
   ok(browserMenu, "found #sp-menu-browser");
-  ok(statusbar, "found Scratchpad.statusbarStatus");
+  ok(notificationBox, "found Scratchpad.notificationBox");
 
   sp.setContentContext();
 
@@ -55,8 +55,8 @@ function runTests()
   ok(!browserMenu.hasAttribute("checked"),
      "chrome menuitem is not checked");
 
-  is(statusbar.getAttribute("label"), contentMenu.getAttribute("label"),
-     "statusbar label is correct");
+  ok(!notificationBox,
+     "there is no notification in content context");
 
   sp.setText("window.foosbug653108 = 'aloha';");
 
