@@ -486,6 +486,27 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
         MarkValue(trc, e.front().key, "cross-compartment wrapper");
 }
 
+struct MarkSingletonObjectOp
+{
+    JSTracer *trc;
+    MarkSingletonObjectOp(JSTracer *trc) : trc(trc) {}
+    void operator()(Cell *cell) {
+        JSObject *object = static_cast<JSObject *>(cell);
+        if (!object->isNewborn() && object->hasSingletonType())
+            MarkObject(trc, *object, "mark_types_singleton");
+    }
+};
+
+struct MarkTypeObjectOp
+{
+    JSTracer *trc;
+    MarkTypeObjectOp(JSTracer *trc) : trc(trc) {}
+    void operator()(Cell *cell) {
+        types::TypeObject *object = static_cast<types::TypeObject *>(cell);
+        MarkTypeObject(trc, object, "mark_types_scan");
+    }
+};
+
 void
 JSCompartment::markTypes(JSTracer *trc)
 {
@@ -501,41 +522,15 @@ JSCompartment::markTypes(JSTracer *trc)
         js_TraceScript(trc, script, NULL);
     }
 
-    JS_STATIC_ASSERT(FINALIZE_FUNCTION_AND_OBJECT_LAST < FINALIZE_TYPE_OBJECT);
-
+    MarkSingletonObjectOp objectCellOp(trc);
     for (unsigned thingKind = FINALIZE_OBJECT0;
-         thingKind < FINALIZE_TYPE_OBJECT;
+         thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
          thingKind++) {
-        bool isObjectKind = thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
-        if (!isObjectKind)
-            thingKind = FINALIZE_TYPE_OBJECT;
-
-        size_t thingSize = GCThingSizeMap[thingKind];
-        ArenaHeader *aheader = arenas[thingKind].getHead();
-
-        for (; aheader; aheader = aheader->next) {
-            Arena *arena = aheader->getArena();
-            FreeSpan firstSpan(aheader->getFirstFreeSpan());
-            const FreeSpan *span = &firstSpan;
-
-            for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
-                JS_ASSERT(thing <= arena->thingsEnd());
-                if (thing == span->first) {
-                    if (!span->hasNext())
-                        break;
-                    thing = span->last;
-                    span = span->nextSpan();
-                } else if (isObjectKind) {
-                    JSObject *object = reinterpret_cast<JSObject *>(thing);
-                    if (object->lastProp && object->hasSingletonType())
-                        MarkObject(trc, *object, "mark_types_singleton");
-                } else {
-                    types::TypeObject *object = reinterpret_cast<types::TypeObject *>(thing);
-                    MarkTypeObject(trc, object, "object_root");
-                }
-            }
-        }
+        gc::ForEachArenaAndCell(this, (FinalizeKind) thingKind, EmptyArenaOp, objectCellOp);
     }
+
+    MarkTypeObjectOp typeCellOp(trc);
+    gc::ForEachArenaAndCell(this, FINALIZE_TYPE_OBJECT, EmptyArenaOp, typeCellOp);
 }
 
 void

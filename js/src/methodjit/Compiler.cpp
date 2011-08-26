@@ -7240,8 +7240,8 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 
         /*
          * Test for a singleton objects first. If singletons have lazy types
-         * then they may share their gctype() with another type object in the
-         * observed set and we can get a spurious match.
+         * then they may share their raw type pointer with another type object
+         * in the observed set and we can get a spurious match.
          */
         Jump notSingleton = masm.branchTest32(Assembler::Zero,
                                               Address(dataReg, offsetof(JSObject, flags)),

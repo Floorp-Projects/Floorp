@@ -213,8 +213,13 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
         return;
     Mark(trc, type);
 
+    /*
+     * Mark parts of a type object skipped by ScanTypeObject. ScanTypeObject is
+     * only used for marking tracers; for tracers with a callback, if we
+     * reenter through JS_TraceChildren then MarkChildren will *not* skip these
+     * members, and we don't need to handle them here.
+     */
     if (IS_GC_MARKING_TRACER(trc)) {
-        /* Mark parts of a type object skipped by ScanTypeObject. */
         if (type->singleton)
             MarkObject(trc, *type->singleton, "type_singleton");
         if (type->functionScript)
@@ -661,7 +666,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
     if (obj->isNewborn())
         return;
 
-    types::TypeObject *type = obj->gctype();
+    types::TypeObject *type = obj->typeFromGC();
     if (type != &types::emptyTypeObject)
         PushMarkStack(gcmarker, type);
 
@@ -751,7 +756,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     if (obj->isNewborn())
         return;
 
-    MarkTypeObject(trc, obj->gctype(), "type");
+    MarkTypeObject(trc, obj->typeFromGC(), "type");
 
     /* Trace universal (ops-independent) members. */
     if (!obj->isDenseArray() && obj->newType)

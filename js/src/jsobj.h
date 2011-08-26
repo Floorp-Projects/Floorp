@@ -845,7 +845,7 @@ struct JSObject : js::gc::Cell {
         return type_;
     }
 
-    js::types::TypeObject *gctype() const {
+    js::types::TypeObject *typeFromGC() const {
         /* Direct field access for use by GC. */
         return type_;
     }

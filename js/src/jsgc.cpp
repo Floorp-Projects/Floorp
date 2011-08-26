@@ -2842,6 +2842,34 @@ TraceRuntime(JSTracer *trc)
     MarkRuntime(trc);
 }
 
+struct IterateArenaCallbackOp
+{
+    JSContext *cx;
+    void *data;
+    IterateArenaCallback callback;
+    size_t traceKind;
+    size_t thingSize;
+    IterateArenaCallbackOp(JSContext *cx, void *data, IterateArenaCallback callback,
+                           size_t traceKind, size_t thingSize)
+        : cx(cx), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
+    {}
+    void operator()(Arena *arena) { (*callback)(cx, data, arena, traceKind, thingSize); }
+};
+
+struct IterateCellCallbackOp
+{
+    JSContext *cx;
+    void *data;
+    IterateCellCallback callback;
+    size_t traceKind;
+    size_t thingSize;
+    IterateCellCallbackOp(JSContext *cx, void *data, IterateCellCallback callback,
+                          size_t traceKind, size_t thingSize)
+        : cx(cx), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
+    {}
+    void operator()(Cell *cell) { (*callback)(cx, data, cell, traceKind, thingSize); }
+};
+
 void
 IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                IterateCompartmentCallback compartmentCallback,
@@ -2869,27 +2897,10 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
         for (unsigned thingKind = 0; thingKind < FINALIZE_LIMIT; thingKind++) {
             size_t traceKind = GetFinalizableTraceKind(thingKind);
             size_t thingSize = GCThingSizeMap[thingKind];
-            ArenaHeader *aheader = compartment->arenas[thingKind].getHead();
+            IterateArenaCallbackOp arenaOp(cx, data, arenaCallback, traceKind, thingSize);
+            IterateCellCallbackOp cellOp(cx, data, cellCallback, traceKind, thingSize);
 
-            for (; aheader; aheader = aheader->next) {
-                Arena *arena = aheader->getArena();
-                (*arenaCallback)(cx, data, arena, traceKind, thingSize);
-                FreeSpan firstSpan(aheader->getFirstFreeSpan());
-                const FreeSpan *span = &firstSpan;
-
-                for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
-                    JS_ASSERT(thing <= arena->thingsEnd());
-                    if (thing == span->first) {
-                        if (!span->hasNext())
-                            break;
-                        thing = span->last;
-                        span = span->nextSpan();
-                    } else {
-                        void *t = reinterpret_cast<void *>(thing);
-                        (*cellCallback)(cx, data, t, traceKind, thingSize);
-                    }
-                }
-            }
+            ForEachArenaAndCell(compartment, (FinalizeKind) thingKind, arenaOp, cellOp);
         }
     }
 }
@@ -2917,26 +2928,9 @@ IterateCells(JSContext *cx, JSCompartment *compartment, FinalizeKind thingKind,
 
     size_t traceKind = GetFinalizableTraceKind(thingKind);
     size_t thingSize = GCThingSizeMap[thingKind];
-    ArenaHeader *aheader = compartment->arenas[thingKind].getHead();
+    IterateCellCallbackOp cellOp(cx, data, cellCallback, traceKind, thingSize);
 
-    for (; aheader; aheader = aheader->next) {
-        Arena *arena = aheader->getArena();
-        FreeSpan firstSpan(aheader->getFirstFreeSpan());
-        const FreeSpan *span = &firstSpan;
-
-        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
-            JS_ASSERT(thing <= arena->thingsEnd());
-            if (thing == span->first) {
-                if (!span->hasNext())
-                    break;
-                thing = span->last;
-                span = span->nextSpan();
-            } else {
-                (*cellCallback)(cx, data, reinterpret_cast<void *>(thing), traceKind,
-                                thingSize);
-            }
-        }
-    }
+    ForEachArenaAndCell(compartment, thingKind, EmptyArenaOp, cellOp);
 }
 
 namespace gc {

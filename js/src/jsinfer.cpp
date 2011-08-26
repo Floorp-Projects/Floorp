@@ -5414,32 +5414,24 @@ TypeObject::sweep(JSContext *cx)
         flags |= OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
 }
 
+struct SweepTypeObjectOp
+{
+    JSContext *cx;
+    SweepTypeObjectOp(JSContext *cx) : cx(cx) {}
+    void operator()(gc::Cell *cell) {
+        TypeObject *object = static_cast<TypeObject *>(cell);
+        object->sweep(cx);
+    }
+};
+
 void
 SweepTypeObjects(JSContext *cx, JSCompartment *compartment)
 {
     JS_ASSERT(!emptyTypeObject.emptyShapes);
     JS_ASSERT(!emptyTypeObject.newScript);
 
-    gc::ArenaHeader *aheader = compartment->arenas[gc::FINALIZE_TYPE_OBJECT].getHead();
-    size_t thingSize = sizeof(TypeObject);
-
-    for (; aheader; aheader = aheader->next) {
-        gc::Arena *arena = aheader->getArena();
-        gc::FreeSpan firstSpan(aheader->getFirstFreeSpan());
-        const gc::FreeSpan *span = &firstSpan;
-
-        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
-            JS_ASSERT(thing <= arena->thingsEnd());
-            if (thing == span->first) {
-                if (!span->hasNext())
-                    break;
-                thing = span->last;
-                span = span->nextSpan();
-            } else {
-                reinterpret_cast<TypeObject *>(thing)->sweep(cx);
-            }
-        }
-    }
+    SweepTypeObjectOp op(cx);
+    gc::ForEachArenaAndCell(compartment, gc::FINALIZE_TYPE_OBJECT, gc::EmptyArenaOp, op);
 }
 
 void
