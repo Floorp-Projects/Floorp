@@ -119,7 +119,6 @@ DOMCI_DATA(UIEvent, nsDOMUIEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMUIEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSUIEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(UIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
@@ -249,10 +248,7 @@ nsDOMUIEvent::GetPageY(PRInt32* aPageY)
 NS_IMETHODIMP
 nsDOMUIEvent::GetWhich(PRUint32* aWhich)
 {
-  NS_ENSURE_ARG_POINTER(aWhich);
-  // Usually we never reach here, as this is reimplemented for mouse and keyboard events.
-  *aWhich = 0;
-  return NS_OK;
+  return Which(aWhich);
 }
 
 NS_IMETHODIMP

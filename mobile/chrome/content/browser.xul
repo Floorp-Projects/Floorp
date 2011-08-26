@@ -102,7 +102,7 @@
     <command id="cmd_openLocation" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
-    <command id="cmd_showTabs" label="&showTabs.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_showTabs" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
@@ -222,6 +222,7 @@
                 <toolbar id="toolbar-main" class="panel-dark window-width" observes="bcast_urlbarState">
                   <toolbarbutton id="tool-back2" class="tool-back button-actionbar" command="cmd_back"/>
                   <toolbarbutton id="tool-forward2" class="tool-forward button-actionbar" command="cmd_forward"/>
+                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
 #ifdef MOZ_PLATFORM_MAEMO
 #if MOZ_PLATFORM_MAEMO != 6
                   <toolbarbutton id="tool-app-switch" oncommand="BrowserUI.switchTask();"/>
@@ -261,8 +262,8 @@
                     </hbox>
                   </hbox>
                   <toolbarbutton id="tool-star2" class="tool-star button-actionbar" command="cmd_star"/>
+                  <spacer class="spacer-actionbar" flex="1"/>
                   <toolbarbutton id="tool-menu" class="button-actionbar" command="cmd_menu"/>
-                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
 #ifndef ANDROID
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
 #endif
