@@ -40,18 +40,17 @@
 
 // gSyncUI handles updating the tools menu
 let gSyncUI = {
-  _obs: ["weave:engine:sync:error",
-         "weave:service:sync:start",
-         "weave:service:sync:finish",
-         "weave:service:sync:error",
+  _obs: ["weave:service:sync:start",
          "weave:service:sync:delayed",
          "weave:service:quota:remaining",
          "weave:service:setup-complete",
          "weave:service:login:start",
          "weave:service:login:finish",
-         "weave:service:login:error",
          "weave:service:logout:finish",
-         "weave:service:start-over"],
+         "weave:service:start-over",
+         "weave:ui:login:error",
+         "weave:ui:sync:error",
+         "weave:ui:sync:finish"],
 
   _unloaded: false,
 
@@ -190,14 +189,6 @@ let gSyncUI = {
     button.setAttribute("status", "active");
   },
 
-  onSyncFinish: function SUI_onSyncFinish() {
-    this._onSyncEnd(true);
-  },
-
-  onSyncError: function SUI_onSyncError() {
-    this._onSyncEnd(false);
-  },
-
   onSyncDelay: function SUI_onSyncDelay() {
     // basically, we want to just inform users that stuff is going to take a while
     let title = this._stringBundle.GetStringFromName("error.sync.no_node_found.title");
@@ -226,15 +217,26 @@ let gSyncUI = {
     Weave.Notifications.removeAll();
 
     // if we haven't set up the client, don't show errors
-    if (this._needsSetup() || Weave.ErrorHandler.shouldIgnoreError()) {
+    if (this._needsSetup()) {
       this.updateUI();
       return;
     }
 
     let title = this._stringBundle.GetStringFromName("error.login.title");
-    let reason = Weave.Utils.getErrorString(Weave.Status.login);
-    let description =
-      this._stringBundle.formatStringFromName("error.login.description", [reason], 1);
+
+    let description;
+    if (Weave.Status.sync == Weave.PROLONGED_SYNC_FAILURE) {
+      // Convert to days
+      let lastSync =
+        Services.prefs.getIntPref("services.sync.errorhandler.networkFailureReportTimeout") / 86400;
+      description =
+        this._stringBundle.formatStringFromName("error.sync.prolonged_failure", [lastSync], 1);
+    } else {
+      let reason = Weave.Utils.getErrorString(Weave.Status.login);
+      description =
+        this._stringBundle.formatStringFromName("error.sync.description", [reason], 1);
+    }
+
     let buttons = [];
     buttons.push(new Weave.NotificationButton(
       this._stringBundle.GetStringFromName("error.login.prefs.label"),
@@ -279,7 +281,7 @@ let gSyncUI = {
 
   // Commands
   doSync: function SUI_doSync() {
-    setTimeout(function() Weave.Service.sync(), 0);
+    setTimeout(function() Weave.ErrorHandler.syncAndReportErrors(), 0);
   },
 
   handleToolbarButton: function SUI_handleStatusbarButton() {
@@ -343,78 +345,89 @@ let gSyncUI = {
     syncButton.setAttribute("tooltiptext", lastSyncLabel);
   },
 
-  _onSyncEnd: function SUI__onSyncEnd(success) {
+  onSyncFinish: function SUI_onSyncFinish() {
     let title = this._stringBundle.GetStringFromName("error.sync.title");
-    if (!success) {
-      if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
-        this.onLoginError();
-        return;
-      }
 
-      // Ignore network related errors unless we haven't been able to
-      // sync for a while.
-      if (Weave.ErrorHandler.shouldIgnoreError()) {
-        this.updateUI();
-        return;
-      }
+    // Clear out sync failures on a successful sync
+    Weave.Notifications.removeAll(title);
 
+    if (this._wasDelayed && Weave.Status.sync != Weave.NO_SYNC_NODE_FOUND) {
+      title = this._stringBundle.GetStringFromName("error.sync.no_node_found.title");
+      Weave.Notifications.removeAll(title);
+      this._wasDelayed = false;
+    }
+
+    this.updateUI();
+  },
+
+  onSyncError: function SUI_onSyncError() {
+    let title = this._stringBundle.GetStringFromName("error.sync.title");
+
+    if (Weave.Status.login != Weave.LOGIN_SUCCEEDED) {
+      this.onLoginError();
+      return;
+    }
+
+    let description;
+    if (Weave.Status.sync == Weave.PROLONGED_SYNC_FAILURE) {
+      // Convert to days
+      let lastSync =
+        Services.prefs.getIntPref("services.sync.errorhandler.networkFailureReportTimeout") / 86400;
+      description =
+        this._stringBundle.formatStringFromName("error.sync.prolonged_failure", [lastSync], 1);
+    } else {
       let error = Weave.Utils.getErrorString(Weave.Status.sync);
-      let description =
+      description =
         this._stringBundle.formatStringFromName("error.sync.description", [error], 1);
+    }
+    let priority = Weave.Notifications.PRIORITY_WARNING;
+    let buttons = [];
 
-      let priority = Weave.Notifications.PRIORITY_WARNING;
-      let buttons = [];
+    // Check if the client is outdated in some way
+    let outdated = Weave.Status.sync == Weave.VERSION_OUT_OF_DATE;
+    for (let [engine, reason] in Iterator(Weave.Status.engines))
+      outdated = outdated || reason == Weave.VERSION_OUT_OF_DATE;
 
-      // Check if the client is outdated in some way
-      let outdated = Weave.Status.sync == Weave.VERSION_OUT_OF_DATE;
-      for (let [engine, reason] in Iterator(Weave.Status.engines))
-        outdated = outdated || reason == Weave.VERSION_OUT_OF_DATE;
-
-      if (outdated) {
-        description = this._stringBundle.GetStringFromName(
-          "error.sync.needUpdate.description");
-        buttons.push(new Weave.NotificationButton(
-          this._stringBundle.GetStringFromName("error.sync.needUpdate.label"),
-          this._stringBundle.GetStringFromName("error.sync.needUpdate.accesskey"),
-          function() { window.openUILinkIn("https://services.mozilla.com/update/", "tab"); return true; }
-        ));
-      }
-      else if (Weave.Status.sync == Weave.OVER_QUOTA) {
-        description = this._stringBundle.GetStringFromName(
-          "error.sync.quota.description");
-        buttons.push(new Weave.NotificationButton(
-          this._stringBundle.GetStringFromName(
-            "error.sync.viewQuotaButton.label"),
-          this._stringBundle.GetStringFromName(
-            "error.sync.viewQuotaButton.accesskey"),
-          function() { gSyncUI.openQuotaDialog(); return true; } )
-        );
-      }
-      else if (Weave.Status.enforceBackoff) {
-        priority = Weave.Notifications.PRIORITY_INFO;
-        buttons.push(new Weave.NotificationButton(
-          this._stringBundle.GetStringFromName("error.sync.serverStatusButton.label"),
-          this._stringBundle.GetStringFromName("error.sync.serverStatusButton.accesskey"),
-          function() { gSyncUI.openServerStatus(); return true; }
-        ));
-      }
-      else {
-        priority = Weave.Notifications.PRIORITY_INFO;
-        buttons.push(new Weave.NotificationButton(
-          this._stringBundle.GetStringFromName("error.sync.tryAgainButton.label"),
-          this._stringBundle.GetStringFromName("error.sync.tryAgainButton.accesskey"),
-          function() { gSyncUI.doSync(); return true; }
-        ));
-      }
-
-      let notification =
-        new Weave.Notification(title, description, null, priority, buttons);
-      Weave.Notifications.replaceTitle(notification);
+    if (outdated) {
+      description = this._stringBundle.GetStringFromName(
+        "error.sync.needUpdate.description");
+      buttons.push(new Weave.NotificationButton(
+        this._stringBundle.GetStringFromName("error.sync.needUpdate.label"),
+        this._stringBundle.GetStringFromName("error.sync.needUpdate.accesskey"),
+        function() { window.openUILinkIn("https://services.mozilla.com/update/", "tab"); return true; }
+      ));
+    }
+    else if (Weave.Status.sync == Weave.OVER_QUOTA) {
+      description = this._stringBundle.GetStringFromName(
+        "error.sync.quota.description");
+      buttons.push(new Weave.NotificationButton(
+        this._stringBundle.GetStringFromName(
+          "error.sync.viewQuotaButton.label"),
+        this._stringBundle.GetStringFromName(
+          "error.sync.viewQuotaButton.accesskey"),
+        function() { gSyncUI.openQuotaDialog(); return true; } )
+      );
+    }
+    else if (Weave.Status.enforceBackoff) {
+      priority = Weave.Notifications.PRIORITY_INFO;
+      buttons.push(new Weave.NotificationButton(
+        this._stringBundle.GetStringFromName("error.sync.serverStatusButton.label"),
+        this._stringBundle.GetStringFromName("error.sync.serverStatusButton.accesskey"),
+        function() { gSyncUI.openServerStatus(); return true; }
+      ));
     }
     else {
-      // Clear out sync failures on a successful sync
-      Weave.Notifications.removeAll(title);
+      priority = Weave.Notifications.PRIORITY_INFO;
+      buttons.push(new Weave.NotificationButton(
+        this._stringBundle.GetStringFromName("error.sync.tryAgainButton.label"),
+        this._stringBundle.GetStringFromName("error.sync.tryAgainButton.accesskey"),
+        function() { gSyncUI.doSync(); return true; }
+      ));
     }
+
+    let notification =
+      new Weave.Notification(title, description, null, priority, buttons);
+    Weave.Notifications.replaceTitle(notification);
 
     if (this._wasDelayed && Weave.Status.sync != Weave.NO_SYNC_NODE_FOUND) {
       title = this._stringBundle.GetStringFromName("error.sync.no_node_found.title");
@@ -435,11 +448,10 @@ let gSyncUI = {
       case "weave:service:sync:start":
         this.onActivityStart();
         break;
-      case "weave:service:sync:finish":
+      case "weave:ui:sync:finish":
         this.onSyncFinish();
         break;
-      case "weave:engine:sync:error":
-      case "weave:service:sync:error":
+      case "weave:ui:sync:error":
         this.onSyncError();
         break;
       case "weave:service:sync:delayed":
@@ -457,7 +469,7 @@ let gSyncUI = {
       case "weave:service:login:finish":
         this.onLoginFinish();
         break;
-      case "weave:service:login:error":
+      case "weave:ui:login:error":
         this.onLoginError();
         break;
       case "weave:service:logout:finish":
