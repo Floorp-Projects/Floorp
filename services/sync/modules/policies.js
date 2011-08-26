@@ -37,9 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-const EXPORTED_SYMBOLS = ["SyncScheduler"];
+const EXPORTED_SYMBOLS = ["SyncScheduler", "ErrorHandler"];
 
-const Cu = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/log4moz.js");
@@ -412,4 +412,186 @@ let SyncScheduler = {
       this.syncTimer.clear();
   }
 
+};
+
+const LOG_PREFIX_SUCCESS = "success-";
+const LOG_PREFIX_ERROR   = "error-";
+
+let ErrorHandler = {
+
+  init: function init() {
+    Svc.Obs.add("weave:service:login:error", this);
+    Svc.Obs.add("weave:service:sync:error", this);
+    Svc.Obs.add("weave:service:sync:finish", this);
+
+    this.initLogs();
+  },
+
+  initLogs: function initLogs() {
+    this._log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+		this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+
+    let root = Log4Moz.repository.getLogger("Sync");
+    root.level = Log4Moz.Level[Svc.Prefs.get("log.rootLogger")];
+
+    let formatter = new Log4Moz.BasicFormatter();
+    let capp = new Log4Moz.ConsoleAppender(formatter);
+    capp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.console")];
+    root.addAppender(capp);
+
+    let dapp = new Log4Moz.DumpAppender(formatter);
+    dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
+    root.addAppender(dapp);
+
+    let fapp = this._logAppender = new Log4Moz.StorageStreamAppender(formatter);
+    fapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.file.level")];
+    root.addAppender(fapp);
+  },
+
+  observe: function observe(subject, topic, data) {
+    switch(topic) {
+      case "weave:service:login:error":
+        if (Status.login == LOGIN_FAILED_NETWORK_ERROR &&
+            !Services.io.offline) {
+          this._ignorableErrorCount += 1;
+        } else {
+          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                            LOG_PREFIX_ERROR);
+        }
+        break;
+      case "weave:service:sync:error":
+        switch (Status.sync) {
+          case LOGIN_FAILED_NETWORK_ERROR:
+            if (!Services.io.offline) {
+              this._ignorableErrorCount += 1;
+            }
+            break;
+          case CREDENTIALS_CHANGED:
+            Weave.Service.logout();
+            break;
+          default:
+            this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                              LOG_PREFIX_ERROR);
+            break;
+        }
+        break;
+      case "weave:service:sync:finish":
+        this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"),
+                          LOG_PREFIX_SUCCESS);
+        this._ignorableErrorCount = 0;
+        break;
+    }
+  },
+
+  /**
+   * Generate a log file for the sync that just completed
+   * and refresh the input & output streams.
+   * 
+   * @param flushToFile
+   *        the log file to be flushed/reset
+   *
+   * @param filenamePrefix
+   *        a value of either LOG_PREFIX_SUCCESS or LOG_PREFIX_ERROR
+   *        to be used as the log filename prefix
+   */
+  resetFileLog: function resetFileLog(flushToFile, filenamePrefix) {
+    let inStream = this._logAppender.getInputStream();
+    this._logAppender.reset();
+    if (flushToFile && inStream) {
+      try {
+        let filename = filenamePrefix + Date.now() + ".txt";
+        let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
+        let outStream = FileUtils.openFileOutputStream(file);
+        NetUtil.asyncCopy(inStream, outStream, function () {
+          Svc.Obs.notify("weave:service:reset-file-log");
+        });
+      } catch (ex) {
+        Svc.Obs.notify("weave:service:reset-file-log");
+      }
+    } else {
+      Svc.Obs.notify("weave:service:reset-file-log");
+    }
+  },
+
+  /**
+   * Translates server error codes to meaningful strings.
+   * 
+   * @param code
+   *        server error code as an integer
+   */
+  errorStr: function errorStr(code) {
+    switch (code.toString()) {
+    case "1":
+      return "illegal-method";
+    case "2":
+      return "invalid-captcha";
+    case "3":
+      return "invalid-username";
+    case "4":
+      return "cannot-overwrite-resource";
+    case "5":
+      return "userid-mismatch";
+    case "6":
+      return "json-parse-failure";
+    case "7":
+      return "invalid-password";
+    case "8":
+      return "invalid-record";
+    case "9":
+      return "weak-password";
+    default:
+      return "generic-server-error";
+    }
+  },
+
+  _ignorableErrorCount: 0,
+  shouldIgnoreError: function shouldIgnoreError() {
+    // Never show an error bar for a locked master password.
+    return (Status.login == MASTER_PASSWORD_LOCKED) ||
+           ([Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) != -1
+            && this._ignorableErrorCount < MAX_IGNORE_ERROR_COUNT);
+  },
+
+  /**
+   * Handle HTTP response results or exceptions and set the appropriate
+   * Status.* bits.
+   */
+  checkServerError: function checkServerError(resp) {
+    switch (resp.status) {
+      case 400:
+        if (resp == RESPONSE_OVER_QUOTA) {
+          Status.sync = OVER_QUOTA;
+        }
+        break;
+
+      case 401:
+        Weave.Service.logout();
+        Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+        break;
+
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        Status.enforceBackoff = true;
+        if (resp.status == 503 && resp.headers["retry-after"]) {
+          Svc.Obs.notify("weave:service:backoff:interval",
+                         parseInt(resp.headers["retry-after"], 10));
+        }
+        break;
+    }
+
+    switch (resp.result) {
+      case Cr.NS_ERROR_UNKNOWN_HOST:
+      case Cr.NS_ERROR_CONNECTION_REFUSED:
+      case Cr.NS_ERROR_NET_TIMEOUT:
+      case Cr.NS_ERROR_NET_RESET:
+      case Cr.NS_ERROR_NET_INTERRUPT:
+      case Cr.NS_ERROR_PROXY_CONNECTION_REFUSED:
+        // The constant says it's about login, but in fact it just
+        // indicates general network error.
+        Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+        break;
+    }
+  },
 };
