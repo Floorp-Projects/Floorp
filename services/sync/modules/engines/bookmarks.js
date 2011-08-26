@@ -689,7 +689,7 @@ BookmarksStore.prototype = {
           PlacesUtils.annotations.EXPIRE_NEVER);
       }
 
-      if (Utils.isArray(record.tags)) {
+      if (Array.isArray(record.tags)) {
         this._tagURI(uri, record.tags);
       }
       PlacesUtils.bookmarks.setKeywordForBookmark(newId, record.keyword);
@@ -837,7 +837,7 @@ BookmarksStore.prototype = {
         PlacesUtils.bookmarks.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
       case "tags":
-        if (Utils.isArray(val)) {
+        if (Array.isArray(val)) {
           this._tagURI(PlacesUtils.bookmarks.getBookmarkURI(itemId), val);
         }
         break;

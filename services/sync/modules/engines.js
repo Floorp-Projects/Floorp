@@ -285,7 +285,7 @@ function EngineManagerSvc() {
 EngineManagerSvc.prototype = {
   get: function EngMgr_get(name) {
     // Return an array of engines if we have an array of names
-    if (Utils.isArray(name)) {
+    if (Array.isArray(name)) {
       let engines = [];
       name.forEach(function(name) {
         let engine = this.get(name);
@@ -319,7 +319,7 @@ EngineManagerSvc.prototype = {
    * @return The engine object if anything failed
    */
   register: function EngMgr_register(engineObject) {
-    if (Utils.isArray(engineObject))
+    if (Array.isArray(engineObject))
       return engineObject.map(this.register, this);
 
     try {
