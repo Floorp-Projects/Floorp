@@ -10203,8 +10203,15 @@ nsGlobalWindow::SizeOf() const
 {
   PRInt64 size = sizeof(*this);
 
-  if (IsInnerWindow() && mDoc) {
-    size += mDoc->SizeOf();
+  if (IsInnerWindow()) {
+    nsEventListenerManager* elm =
+      const_cast<nsGlobalWindow*>(this)->GetListenerManager(PR_FALSE);
+    if (elm) {
+      size += elm->SizeOf();
+    }
+    if (mDoc) {
+      size += mDoc->SizeOf();
+    }
   }
 
   size += mNavigator ? mNavigator->SizeOf() : 0;
