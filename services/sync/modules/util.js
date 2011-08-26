@@ -36,13 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
-                          "FileUtils", "Utils", "Svc", "Str"];
+                          "FileUtils", "Utils", "Async", "Svc", "Str"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
@@ -1179,20 +1180,6 @@ let Utils = {
     return false;
   },
   
-  /**
-   * Check if the app is ready (not quitting)
-   */
-  checkAppReady: function checkAppReady() {
-    // Watch for app-quit notification to stop any sync calls
-    Svc.Obs.add("quit-application", function() {
-      Utils.checkAppReady = function() {
-        throw Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
-      };
-    });
-    // In the common case, checkAppReady just returns true
-    return (Utils.checkAppReady = function() true)();
-  },
-
   /**
    * Return a value for a backoff interval.  Maximum is eight hours, unless
    * Status.backoffInterval is higher.
