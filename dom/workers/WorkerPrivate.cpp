@@ -3227,18 +3227,21 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
   bool retval = true;
 
-  TimeStamp now = TimeStamp::Now();
+  AutoPtrComparator<TimeoutInfo> comparator = GetAutoPtrComparator(mTimeouts);
+  JSObject* global = JS_GetGlobalObject(aCx);
+  JSPrincipals* principal = GetWorkerPrincipal();
 
   // We want to make sure to run *something*, even if the timer fired a little
   // early. Fudge the value of now to at least include the first timeout.
-  now = NS_MAX(now, mTimeouts[0]->mTargetTime);
+  const TimeStamp now = NS_MAX(TimeStamp::Now(), mTimeouts[0]->mTargetTime);
 
   nsAutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (PRUint32 index = 0; index < mTimeouts.Length(); index++) {
     nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
-    if (info->mTargetTime <= now || info->mCanceled) {
-      expiredTimeouts.AppendElement(info);
+    if (info->mTargetTime > now) {
+      break;
     }
+    expiredTimeouts.AppendElement(info);
   }
 
   // Guard against recursion.
@@ -3252,7 +3255,9 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       continue;
     }
 
-    JSObject* global = JS_GetGlobalObject(aCx);
+    // Always call JS_ReportPendingException if something fails, and if
+    // JS_ReportPendingException returns false (i.e. uncatchable exception) then
+    // break out of the loop.
 
     if (JSVAL_IS_STRING(info->mTimeoutVal)) {
       JSString* expression = JSVAL_TO_STRING(info->mTimeoutVal);
@@ -3260,62 +3265,56 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       size_t stringLength;
       const jschar* string = JS_GetStringCharsAndLength(aCx, expression,
                                                         &stringLength);
-      if (!string) {
-        if (!JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
-        }
-        continue;
-      }
 
-      if (!JS_EvaluateUCScriptForPrincipals(aCx, global, GetWorkerPrincipal(),
-                                            string, stringLength,
-                                            info->mFilename.get(),
-                                            info->mLineNumber, nsnull)) {
-        if (!JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
-        }
-        continue;
+      if ((!string ||
+           !JS_EvaluateUCScriptForPrincipals(aCx, global, principal, string,
+                                             stringLength,
+                                             info->mFilename.get(),
+                                             info->mLineNumber, nsnull)) &&
+          !JS_ReportPendingException(aCx)) {
+        retval = false;
+        break;
       }
     }
     else {
       jsval rval;
       if (!JS_CallFunctionValue(aCx, global, info->mTimeoutVal,
                                 info->mExtraArgVals.Length(),
-                                info->mExtraArgVals.Elements(), &rval)) {
-        if (!JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
-        }
+                                info->mExtraArgVals.Elements(), &rval) &&
+          !JS_ReportPendingException(aCx)) {
+        retval = false;
+        break;
       }
+    }
+
+    // Reschedule intervals.
+    if (info->mIsInterval) {
+      PRUint32 timeoutIndex = mTimeouts.IndexOf(info);
+      NS_ASSERTION(timeoutIndex != PRUint32(-1),
+                   "Should still be in the main list!");
+
+      mTimeouts[timeoutIndex].forget();
+      mTimeouts.RemoveElementAt(timeoutIndex);
+
+      NS_ASSERTION(!mTimeouts.Contains(info), "Shouldn't have duplicates!");
+
+      info->mTargetTime += info->mInterval;
+      mTimeouts.InsertElementSorted(info, comparator);
     }
   }
 
   // No longer possible to be called recursively.
   mRunningExpiredTimeouts = false;
 
-  // Clean up expired and canceled timeouts, reschedule intervals.
-  for (PRUint32 index = 0; index < expiredTimeouts.Length(); index++) {
-    TimeoutInfo*& info = expiredTimeouts[index];
-    if (info->mCanceled || !info->mIsInterval) {
+  // Now remove canceled and expired timeouts from the main list.
+  for (PRUint32 index = 0; index < mTimeouts.Length(); ) {
+    nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
+    if (info->mTargetTime <= now || info->mCanceled) {
       mTimeouts.RemoveElement(info);
-      continue;
     }
-
-    PRUint32 timeoutIndex = mTimeouts.IndexOf(info);
-    NS_ASSERTION(timeoutIndex != PRUint32(-1),
-                 "Should still be in the other list!");
-
-    mTimeouts[timeoutIndex].forget();
-    mTimeouts.RemoveElementAt(timeoutIndex);
-
-    NS_ASSERTION(!mTimeouts.Contains(info), "Shouldn't have duplicates!");
-
-    AutoPtrComparator<TimeoutInfo> comparator = GetAutoPtrComparator(mTimeouts);
-
-    info->mTargetTime += info->mInterval;
-    mTimeouts.InsertElementSorted(info, comparator);
+    else {
+      index++;
+    }
   }
 
   // Signal the parent that we're no longer using timeouts or reschedule the
