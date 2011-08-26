@@ -41,6 +41,7 @@
 #include "mozilla/Telemetry.h"
 #include "sqlite3.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Util.h"
 
 namespace {
 
@@ -433,6 +434,30 @@ xCurrentTimeInt64(sqlite3_vfs *vfs, sqlite3_int64 *piNow)
   return orig_vfs->xCurrentTimeInt64(orig_vfs, piNow);
 }
 
+static
+int
+xSetSystemCall(sqlite3_vfs *vfs, const char *zName, sqlite3_syscall_ptr pFunc)
+{
+  sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
+  return orig_vfs->xSetSystemCall(orig_vfs, zName, pFunc);
+}
+
+static
+sqlite3_syscall_ptr
+xGetSystemCall(sqlite3_vfs *vfs, const char *zName)
+{
+  sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
+  return orig_vfs->xGetSystemCall(orig_vfs, zName);
+}
+
+static
+const char *
+xNextSystemCall(sqlite3_vfs *vfs, const char *zName)
+{
+  sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
+  return orig_vfs->xNextSystemCall(orig_vfs, zName);
+}
+
 }
 
 namespace mozilla {
@@ -454,8 +479,9 @@ sqlite3_vfs* ConstructTelemetryVFS()
 
   sqlite3_vfs *tvfs = new ::sqlite3_vfs;
   memset(tvfs, 0, sizeof(::sqlite3_vfs));
-  tvfs->iVersion = 2;
-  NS_ASSERTION(vfs->iVersion == tvfs->iVersion, "Telemetry wrapper needs to be updated");
+  tvfs->iVersion = 3;
+  // If the SQLite VFS version is updated, this shim must be updated as well.
+  MOZ_ASSERT(vfs->iVersion == tvfs->iVersion);
   tvfs->szOsFile = sizeof(telemetry_file) - sizeof(sqlite3_file) + vfs->szOsFile;
   tvfs->mxPathname = vfs->mxPathname;
   tvfs->zName = "telemetry-vfs";
@@ -472,7 +498,13 @@ sqlite3_vfs* ConstructTelemetryVFS()
   tvfs->xSleep = xSleep;
   tvfs->xCurrentTime = xCurrentTime;
   tvfs->xGetLastError = xGetLastError;
+  // Added in version 2.
   tvfs->xCurrentTimeInt64 = xCurrentTimeInt64;
+  // Added in version 3.
+  tvfs->xSetSystemCall = xSetSystemCall;
+  tvfs->xGetSystemCall = xGetSystemCall;
+  tvfs->xNextSystemCall = xNextSystemCall;
+
   return tvfs;
 }
 
