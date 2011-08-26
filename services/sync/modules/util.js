@@ -241,7 +241,7 @@ let Utils = {
    *        Property name to defer (or an array of property names)
    */
   deferGetSet: function Utils_deferGetSet(obj, defer, prop) {
-    if (Utils.isArray(prop))
+    if (Array.isArray(prop))
       return prop.map(function(prop) Utils.deferGetSet(obj, defer, prop));
 
     let prot = obj.prototype;
@@ -260,16 +260,6 @@ let Utils = {
       });
     }
   },
-
-  /**
-   * Determine if some value is an array
-   *
-   * @param val
-   *        Value to check (can be null, undefined, etc.)
-   * @return True if it's an array; false otherwise
-   */
-  isArray: function Utils_isArray(val) val != null && typeof val == "object" &&
-    val.constructor.name == "Array",
 
   lazyStrings: function Weave_lazyStrings(name) {
     let bundle = "chrome://weave/locale/services/" + name + ".properties";
@@ -307,7 +297,7 @@ let Utils = {
       return thing;
     let ret;
 
-    if (Utils.isArray(thing)) {
+    if (Array.isArray(thing)) {
       ret = [];
       for (let i = 0; i < thing.length; i++)
         ret.push(Utils.deepCopy(thing[i], noSort));
