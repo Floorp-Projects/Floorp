@@ -468,7 +468,7 @@ ScriptTryDestroyCode(JSContext *cx, JSScript *script, bool normal,
 {
     mjit::JITScript *jit = normal ? script->jitNormal : script->jitCtor;
     if (jit && ScriptPoolDestroyed(cx, jit, releaseInterval, counter))
-        mjit::ReleaseScriptCode(cx, script, normal);
+        mjit::ReleaseScriptCode(cx, script, !normal);
 }
 #endif // JS_METHODJIT && JS_MONOIC
 

@@ -905,10 +905,6 @@ js::types::TypeObject::trace(JSTracer *trc, bool weak)
         markIfUnmarked(static_cast<GCMarker *>(trc)->getMarkColor());
     }
 
-#ifdef DEBUG
-    InlineMarkId(trc, name_, "type_name");
-#endif
-
     unsigned count = getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         Property *prop = getProperty(i);
