@@ -88,6 +88,7 @@ let SyncScheduler = {
     Svc.Obs.add("weave:service:sync:start", this);
     Svc.Obs.add("weave:service:sync:finish", this);
     Svc.Obs.add("weave:engine:sync:finish", this);
+    Svc.Obs.add("weave:engine:sync:error", this);
     Svc.Obs.add("weave:service:login:error", this);
     Svc.Obs.add("weave:service:logout:finish", this);
     Svc.Obs.add("weave:service:sync:error", this);
@@ -129,8 +130,14 @@ let SyncScheduler = {
         this.adjustSyncInterval();
 
         let sync_interval;
-        this._syncErrors = 0;
 
+        if (Status.service == SYNC_FAILED_PARTIAL && this.requiresBackoff) {
+          this.requiresBackoff = false;
+          this.handleSyncError();
+          return;
+        }
+
+        this._syncErrors = 0;
         if (Status.sync == NO_SYNC_NODE_FOUND) {
           this._log.trace("Scheduling a sync at interval NO_SYNC_NODE_FOUND.");
           sync_interval = NO_SYNC_NODE_INTERVAL;
@@ -141,6 +148,13 @@ let SyncScheduler = {
         if (data == "clients") {
           // Update the client mode because it might change what we sync.
           this.updateClientMode();
+        }
+        break;
+      case "weave:engine:sync:error":
+        // subject is the exception thrown by an engine's sync() method
+        let exception = subject;
+        if (exception.status >= 500 && exception.status <= 504) {
+          this.requiresBackoff = true;
         }
         break;
       case "weave:service:login:error":
@@ -420,6 +434,8 @@ const LOG_PREFIX_ERROR   = "error-";
 let ErrorHandler = {
 
   init: function init() {
+    Svc.Obs.add("weave:engine:sync:applied", this);
+    Svc.Obs.add("weave:engine:sync:error", this);
     Svc.Obs.add("weave:service:login:error", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:sync:finish", this);
@@ -450,6 +466,24 @@ let ErrorHandler = {
 
   observe: function observe(subject, topic, data) {
     switch(topic) {
+      case "weave:engine:sync:applied":
+        if (subject.newFailed) {
+          // An engine isn't able to apply one or more incoming records.
+          // We don't fail hard on this, but it usually indicates a bug,
+          // so for now treat it as sync error (c.f. Service._syncEngine())
+          Status.engines = [data, ENGINE_APPLY_FAIL];
+          this._log.debug(data + " failed to apply some records.");
+        }
+        break;
+      case "weave:engine:sync:error":
+        let exception = subject;  // exception thrown by engine's sync() method
+        let engine_name = data;   // engine name that threw the exception
+
+        this.checkServerError(exception);
+
+        Status.engines = [engine_name, exception.failureCode || ENGINE_UNKNOWN_FAIL];
+        this._log.debug(engine_name + " failed: " + Utils.exceptionStr(exception));
+        break;
       case "weave:service:login:error":
         if (Status.login == LOGIN_FAILED_NETWORK_ERROR &&
             !Services.io.offline) {
@@ -476,8 +510,14 @@ let ErrorHandler = {
         }
         break;
       case "weave:service:sync:finish":
-        this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"),
-                          LOG_PREFIX_SUCCESS);
+        if (Status.service == SYNC_FAILED_PARTIAL) {
+          this._log.debug("Some engines did not sync correctly.");
+          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
+                            LOG_PREFIX_ERROR);
+        } else {
+          this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"),
+                            LOG_PREFIX_SUCCESS);
+        }
         this._ignorableErrorCount = 0;
         break;
     }

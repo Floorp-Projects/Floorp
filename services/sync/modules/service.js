@@ -386,7 +386,6 @@ WeaveSvc.prototype = {
     }
 
     Svc.Obs.add("weave:service:setup-complete", this);
-    Svc.Obs.add("weave:engine:sync:applied", this);
     Svc.Prefs.observe("engine.", this);
 
     SyncScheduler.init();
@@ -485,16 +484,6 @@ WeaveSvc.prototype = {
         let status = this._checkSetup();
         if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
             Svc.Obs.notify("weave:engine:start-tracking");
-        break;
-      case "weave:engine:sync:applied":
-        if (subject.newFailed) {
-          // An engine isn't able to apply one or more incoming records.
-          // We don't fail hard on this, but it usually indicates a bug,
-          // so for now treat it as sync error (c.f. Service._syncEngine())
-          Status.engines = [data, ENGINE_APPLY_FAIL];
-          this._syncError = true;
-          this._log.debug(data + " failed to apply some records.");
-        }
         break;
       case "nsPref:changed":
         if (this._ignorePrefObserver)
@@ -1401,19 +1390,18 @@ WeaveSvc.prototype = {
         delete meta.changed;
       }
 
-      if (this._syncError) {
-        throw "Some engines did not sync correctly";
-      } else {
+      // If there were no sync engine failures
+      if (Status.service != SYNC_FAILED_PARTIAL) {
         Svc.Prefs.set("lastSync", new Date().toString());
         Status.sync = SYNC_SUCCEEDED;
-        let syncTime = ((Date.now() - syncStartTime) / 1000).toFixed(2);
-        let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
-        this._log.info("Sync completed successfully at " + dateStr
-                       + " after " + syncTime + " secs.");
       }
     } finally {
-      this._syncError = false;
       Svc.Prefs.reset("firstSync");
+
+      let syncTime = ((Date.now() - syncStartTime) / 1000).toFixed(2);
+      let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+      this._log.info("Sync completed at " + dateStr
+                     + " after " + syncTime + " secs.");
     }
   }))(),
 
@@ -1495,19 +1483,12 @@ WeaveSvc.prototype = {
         // Log out and clear the cluster URL pref. That will make us perform
         // cluster detection and password check on next sync, which handles
         // both causes of 401s; in either case, we won't proceed with this
-        // sync, so return false, but kick off a sync for next time.
+        // sync so return false, but kick off a sync for next time.
         this.logout();
         Svc.Prefs.reset("clusterURL");
         Utils.nextTick(this.sync, this);
         return false;
       }
-
-      ErrorHandler.checkServerError(e);
-
-      Status.engines = [engine.name, e.failureCode || ENGINE_UNKNOWN_FAIL];
-
-      this._syncError = true;
-      this._log.debug(engine.name + " failed: " + Utils.exceptionStr(e));
       return true;
     }
   },

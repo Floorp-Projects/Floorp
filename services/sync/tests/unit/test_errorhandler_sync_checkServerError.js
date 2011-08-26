@@ -16,7 +16,7 @@ function CatapultEngine() {
 CatapultEngine.prototype = {
   __proto__: SyncEngine.prototype,
   exception: null, // tests fill this in
-  sync: function sync() {
+  _sync: function _sync() {
     throw this.exception;
   }
 };
@@ -81,6 +81,7 @@ add_test(function test_backoff500() {
     Service.login();
     Service.sync();
     do_check_true(Status.enforceBackoff);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   } finally {
     Status.resetBackoff();
     Service.startOver();
@@ -114,6 +115,7 @@ add_test(function test_backoff503() {
 
     do_check_true(Status.enforceBackoff);
     do_check_eq(backoffInterval, BACKOFF);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   } finally {
     Status.resetBackoff();
     Service.startOver();
@@ -140,6 +142,7 @@ add_test(function test_overQuota() {
     Service.sync();
 
     do_check_eq(Status.sync, OVER_QUOTA);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -162,6 +165,7 @@ add_test(function test_service_networkError() {
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
     do_check_eq(ErrorHandler._ignorableErrorCount, 1);
+    do_check_eq(Status.service, SYNC_FAILED);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -183,6 +187,7 @@ add_test(function test_service_offline() {
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
     do_check_eq(ErrorHandler._ignorableErrorCount, 0);
+    do_check_eq(Status.service, SYNC_FAILED);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -211,6 +216,7 @@ add_test(function test_service_reset_ignorableErrorCount() {
 
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
     do_check_eq(ErrorHandler._ignorableErrorCount, 0);
+    do_check_eq(Status.service, STATUS_OK);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -222,7 +228,6 @@ add_test(function test_engine_networkError() {
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
   setUp();
   let server = sync_httpd_setup();
-  ErrorHandler._ignorableErrorCount = 0;
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -238,7 +243,7 @@ add_test(function test_engine_networkError() {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
-    do_check_eq(ErrorHandler._ignorableErrorCount, 1);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -265,45 +270,13 @@ add_test(function test_resource_timeout() {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
   } finally {
     Status.resetSync();
     Service.startOver();
   }
   server.stop(run_next_test);
 });
-
-
-// Slightly misplaced test as it doesn't actually test checkServerError,
-// but the observer for "weave:engine:sync:applied".
-// This test should be the last one since it monkeypatches the engine object
-// and we should only have one engine object throughout the file (bug 629664).
-add_test(function test_engine_applyFailed() {
-  setUp();
-  let server = sync_httpd_setup();
-
-  let engine = Engines.get("catapult");
-  engine.enabled = true;
-  delete engine.exception;
-  engine.sync = function sync() {
-    Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "steam");
-  };
-
-  try {
-    do_check_eq(Status.engines["steam"], undefined);
-
-    do_check_true(generateAndUploadKeys());
-
-    Service.login();
-    Service.sync();
-
-    do_check_eq(Status.engines["steam"], ENGINE_APPLY_FAIL);
-  } finally {
-    Status.resetSync();
-    Service.startOver();
-  }
-  server.stop(run_next_test);
-});
-
 
 function run_test() {
   Engines.register(CatapultEngine);
