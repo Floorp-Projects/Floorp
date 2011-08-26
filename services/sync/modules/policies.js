@@ -514,14 +514,13 @@ let ErrorHandler = {
         this.dontIgnoreErrors = false;
         break;
       case "weave:service:sync:finish":
-        this.dontIgnoreErrors = false;
-
         if (Status.service == SYNC_FAILED_PARTIAL) {
           this._log.debug("Some engines did not sync correctly.");
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                             LOG_PREFIX_ERROR);
 
           if (this.shouldReportError()) {
+            this.dontIgnoreErrors = false;
             Svc.Obs.notify("weave:ui:sync:error");
             break;
           }
@@ -529,6 +528,7 @@ let ErrorHandler = {
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnSuccess"),
                             LOG_PREFIX_SUCCESS);
         }
+        this.dontIgnoreErrors = false;
         Svc.Obs.notify("weave:ui:sync:finish");
         break;
     }
@@ -610,6 +610,10 @@ let ErrorHandler = {
       return false;
     }
 
+    if (this.dontIgnoreErrors) {
+      return true;
+    }
+
     let lastSync = Svc.Prefs.get("lastSync");
     if (lastSync && ((Date.now() - Date.parse(lastSync)) >
         Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 1000)) {
@@ -617,7 +621,7 @@ let ErrorHandler = {
       return true;
     }
 
-    return (this.dontIgnoreErrors ||
+    return (Status.sync != SERVER_MAINTENANCE &&
             [Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) == -1);
   },
 
@@ -644,6 +648,7 @@ let ErrorHandler = {
       case 504:
         Status.enforceBackoff = true;
         if (resp.status == 503 && resp.headers["retry-after"]) {
+          Status.sync = SERVER_MAINTENANCE;
           Svc.Obs.notify("weave:service:backoff:interval",
                          parseInt(resp.headers["retry-after"], 10));
         }
