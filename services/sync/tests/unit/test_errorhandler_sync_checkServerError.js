@@ -1,6 +1,7 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/policies.js");
 
 Cu.import("resource://services-sync/util.js");
 Svc.DefaultPrefs.set("registerEngines", "");
@@ -151,7 +152,7 @@ add_test(function test_service_networkError() {
   setUp();
   // Provoke connection refused.
   Service.clusterURL = "http://localhost:12345/";
-  Service._ignorableErrorCount = 0;
+  ErrorHandler._ignorableErrorCount = 0;
 
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
@@ -160,7 +161,7 @@ add_test(function test_service_networkError() {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
-    do_check_eq(Service._ignorableErrorCount, 1);
+    do_check_eq(ErrorHandler._ignorableErrorCount, 1);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -172,7 +173,7 @@ add_test(function test_service_offline() {
   _("Test: Wanting to sync in offline mode leads to the right status code but does not increment the ignorable error count.");
   setUp();
   Services.io.offline = true;
-  Service._ignorableErrorCount = 0;
+  ErrorHandler._ignorableErrorCount = 0;
 
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
@@ -181,7 +182,7 @@ add_test(function test_service_offline() {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
-    do_check_eq(Service._ignorableErrorCount, 0);
+    do_check_eq(ErrorHandler._ignorableErrorCount, 0);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -194,7 +195,7 @@ add_test(function test_service_reset_ignorableErrorCount() {
   _("Test: Successful sync resets the ignorable error count.");
   setUp();
   let server = sync_httpd_setup();
-  Service._ignorableErrorCount = 10;
+  ErrorHandler._ignorableErrorCount = 10;
 
   // Disable the engine so that sync completes.
   let engine = Engines.get("catapult");
@@ -209,7 +210,7 @@ add_test(function test_service_reset_ignorableErrorCount() {
     Service.sync();
 
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
-    do_check_eq(Service._ignorableErrorCount, 0);
+    do_check_eq(ErrorHandler._ignorableErrorCount, 0);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -221,7 +222,7 @@ add_test(function test_engine_networkError() {
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
   setUp();
   let server = sync_httpd_setup();
-  Service._ignorableErrorCount = 0;
+  ErrorHandler._ignorableErrorCount = 0;
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -237,7 +238,7 @@ add_test(function test_engine_networkError() {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
-    do_check_eq(Service._ignorableErrorCount, 1);
+    do_check_eq(ErrorHandler._ignorableErrorCount, 1);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -273,7 +274,7 @@ add_test(function test_resource_timeout() {
 
 
 // Slightly misplaced test as it doesn't actually test checkServerError,
-// but the observer for "weave:engine:sync:apply-failed".
+// but the observer for "weave:engine:sync:applied".
 // This test should be the last one since it monkeypatches the engine object
 // and we should only have one engine object throughout the file (bug 629664).
 add_test(function test_engine_applyFailed() {
