@@ -844,7 +844,6 @@ struct TypeObject : gc::Cell
     void getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force = false);
 
     void print(JSContext *cx);
-    void trace(JSTracer *trc, bool weak = false);
 
     inline void clearProperties();
     inline void sweep(JSContext *cx);
