@@ -471,7 +471,7 @@ if test "$target" != "$host"; then
     LDFLAGS="$HOST_LDFLAGS"
 
     AC_MSG_CHECKING([whether the host c compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
-    AC_TRY_COMPILE([], [return(0);], 
+    AC_TRY_COMPILE([], [return(0);],
 	[ac_cv_prog_hostcc_works=1 AC_MSG_RESULT([yes])],
 	AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CC cannot create executables.]) )
 
@@ -479,10 +479,10 @@ if test "$target" != "$host"; then
     CFLAGS="$HOST_CXXFLAGS"
 
     AC_MSG_CHECKING([whether the host c++ compiler ($HOST_CXX $HOST_CXXFLAGS $HOST_LDFLAGS) works])
-    AC_TRY_COMPILE([], [return(0);], 
+    AC_TRY_COMPILE([], [return(0);],
 	[ac_cv_prog_hostcxx_works=1 AC_MSG_RESULT([yes])],
 	AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CXX cannot create executables.]) )
-    
+
     CC=$_SAVE_CC
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
@@ -703,11 +703,11 @@ case "$target" in
             [ unsigned *test = new unsigned(42); ],,
             AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
         AC_LANG_RESTORE
-        
+
         changequote(,)
         _MSVC_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
         changequote([,])
-        
+
         # Determine compiler version
         CC_VERSION=`"${CC}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
@@ -1043,7 +1043,7 @@ if test "$_perl_res" != 0; then
     AC_MSG_RESULT([no])
     AC_MSG_ERROR([Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required.])
 else
-    AC_MSG_RESULT([yes])    
+    AC_MSG_RESULT([yes])
 fi
 
 MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
@@ -1474,7 +1474,7 @@ Darwin)
         OS_TEST=ppc
         ;;
     i*86*)
-        OS_TEST=i386 
+        OS_TEST=i386
         ;;
     x86_64)
         OS_TEST=x86_64
@@ -1915,7 +1915,7 @@ case "$target" in
     if test ! "$GNU_CC"; then
         if test ! "$HAVE_64BIT_OS"; then
             # Compiling with Visual Age C++ object model compat is the
-            # default. To compile with object model ibm, add 
+            # default. To compile with object model ibm, add
             # AIX_OBJMODEL=ibm to .mozconfig.
             if test "$AIX_OBJMODEL" = "ibm"; then
                 CXXFLAGS="$CXXFLAGS -qobjmodel=ibm"
@@ -1943,10 +1943,10 @@ case "$target" in
                  #endif],
                 _BAD_COMPILER=,_BAD_COMPILER=1)
             if test -n "$_BAD_COMPILER"; then
-                AC_MSG_RESULT([no])    
+                AC_MSG_RESULT([no])
                 AC_MSG_ERROR([IBM XLC/C++ 9.0.0.7 or higher is required to build.])
             else
-                AC_MSG_RESULT([yes])    
+                AC_MSG_RESULT([yes])
             fi
             AC_LANG_RESTORE
             TARGET_COMPILER_ABI="ibmc"
@@ -1985,7 +1985,7 @@ case "$target" in
     esac
     ;;
 
-*-darwin*) 
+*-darwin*)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     # If we're building with --enable-profiling, we need a frame pointer.
@@ -2039,7 +2039,7 @@ case "$target" in
         else
             AC_MSG_RESULT([no])
         fi
-        
+
         LDFLAGS=$_SAVE_LDFLAGS
     fi
     MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
@@ -2053,7 +2053,7 @@ case "$target" in
     if test ! "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
     fi
-    ;; 
+    ;;
 
 ia64*-hpux*)
     DLL_SUFFIX=".so"
@@ -2151,8 +2151,8 @@ ia64*-hpux*)
     ;;
     esac
 
-    if test -z "$MC"; then 
-        MC=mc.exe  
+    if test -z "$MC"; then
+        MC=mc.exe
     fi
     ;;
 *-symbian*)
@@ -2189,7 +2189,7 @@ ia64*-hpux*)
     DLL_SUFFIX=.dll
     RC=rc.exe
     MC=mc.exe
-    # certain versions of cygwin's makedepend barf on the 
+    # certain versions of cygwin's makedepend barf on the
     # #include <string> vs -I./dist/include/string issue so don't use it
     SYSTEM_MAKEDEPEND=
     if test -n "$GNU_CC"; then
@@ -2328,7 +2328,7 @@ ia64*-hpux*)
             AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
         fi
         ;;
-    esac 
+    esac
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
@@ -2491,7 +2491,7 @@ alpha*-*-osf*)
     AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     ;;
 
-*-sco*) 
+*-sco*)
     AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
@@ -2500,7 +2500,7 @@ alpha*-*-osf*)
     fi
     ;;
 
-*-solaris*) 
+*-solaris*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
     if test -z "$CROSS_COMPILE" && pkginfo -q SUNWpr && pkginfo -q SUNWprd; then
@@ -2524,7 +2524,7 @@ alpha*-*-osf*)
        LDFLAGS="-xildoff $LDFLAGS"
        if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
-           LDFLAGS="-M /usr/lib/ld/map.noexstk $LDFLAGS" 
+           LDFLAGS="-M /usr/lib/ld/map.noexstk $LDFLAGS"
            AC_TRY_LINK([#include <stdio.h>],
                        [printf("Hello World\n");],
                        ,
@@ -2591,7 +2591,7 @@ alpha*-*-osf*)
     fi
     ;;
 
-*-sunos*) 
+*-sunos*)
     DSO_LDOPTS='-Bdynamic'
     MKSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
@@ -2604,7 +2604,7 @@ alpha*-*-osf*)
     esac
     ;;
 
-*-sysv4.2uw7*) 
+*-sysv4.2uw7*)
 	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION -L/usr/ccs/lib -lcrt"
     ;;
 
@@ -2664,7 +2664,7 @@ case "$target" in
          fi
         fi
         ;;
-    *-nto*) 
+    *-nto*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-darwin*)
@@ -3015,7 +3015,7 @@ AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for uname.domainname)
 AC_CACHE_VAL(ac_cv_have_uname_domainname_field,
     [AC_TRY_COMPILE([#include <sys/utsname.h>],
-        [ struct utsname *res; char *domain; 
+        [ struct utsname *res; char *domain;
             (void)uname(res);  if (res != 0) { domain = res->domainname; } ],
         [ac_cv_have_uname_domainname_field=true],
         [ac_cv_have_uname_domainname_field=false])])
@@ -3030,7 +3030,7 @@ fi
 AC_MSG_CHECKING(for uname.__domainname)
 AC_CACHE_VAL(ac_cv_have_uname_us_domainname_field,
     [AC_TRY_COMPILE([#include <sys/utsname.h>],
-        [ struct utsname *res; char *domain; 
+        [ struct utsname *res; char *domain;
             (void)uname(res);  if (res != 0) { domain = res->__domainname; } ],
         [ac_cv_have_uname_us_domainname_field=true],
         [ac_cv_have_uname_us_domainname_field=false])])
@@ -3278,8 +3278,8 @@ case $target in
 *-os2*)
     ;;
 *)
-    AC_SEARCH_LIBS(dlopen, dl, 
-        AC_CHECK_HEADER(dlfcn.h, 
+    AC_SEARCH_LIBS(dlopen, dl,
+        AC_CHECK_HEADER(dlfcn.h,
         AC_DEFINE(HAVE_DLOPEN)))
     ;;
 esac
@@ -3334,7 +3334,7 @@ darwin*)
 esac
 
 dnl ========================================================
-dnl Check the command line for --with-pthreads 
+dnl Check the command line for --with-pthreads
 dnl ========================================================
 MOZ_ARG_WITH_BOOL(pthreads,
 [  --with-pthreads         Force use of system pthread library with NSPR ],
@@ -3416,30 +3416,30 @@ then
 			;;
 
 	    *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
-			AC_DEFINE(_REENTRANT) 
+			AC_DEFINE(_REENTRANT)
 			;;
 
-	    *-*-nto*) 
-			AC_DEFINE(_REENTRANT) 
+	    *-*-nto*)
+			AC_DEFINE(_REENTRANT)
 			;;
 
 	    *-aix4.3*|*-aix5*)
-			AC_DEFINE(_REENTRANT) 
+			AC_DEFINE(_REENTRANT)
 			;;
 
 	    *-hpux11.*)
-			AC_DEFINE(_REENTRANT) 
+			AC_DEFINE(_REENTRANT)
 			;;
 
 	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
 			;;
 
-	    *-*-solaris*) 
+	    *-*-solaris*)
 			AC_DEFINE(_REENTRANT)
 			if test "$SOLARIS_SUNPRO_CC"; then
-				CFLAGS="$CFLAGS -mt" 
-				CXXFLAGS="$CXXFLAGS -mt" 
+				CFLAGS="$CFLAGS -mt"
+				CXXFLAGS="$CXXFLAGS -mt"
 			fi
 			;;
 	esac
@@ -3549,7 +3549,7 @@ AC_CACHE_CHECK(
         ],
         [const char *glibc_version = gnu_get_libc_version();],
         [ac_cv_func_gnu_get_libc_version=yes],
-        [ac_cv_func_gnu_get_libc_version=no] 
+        [ac_cv_func_gnu_get_libc_version=no]
         )]
     )
 
@@ -3561,7 +3561,7 @@ case $target_os in
     darwin*|mingw*|os2*)
         ;;
     *)
-    
+
 AC_CHECK_LIB(c, iconv, [_ICONV_LIBS="$_ICONV_LIBS"],
     AC_CHECK_LIB(iconv, iconv, [_ICONV_LIBS="$_ICONV_LIBS -liconv"],
         AC_CHECK_LIB(iconv, libiconv, [_ICONV_LIBS="$_ICONV_LIBS -liconv"])))
@@ -3580,7 +3580,7 @@ AC_CACHE_CHECK(
             iconv_close(h);
         ],
         [ac_cv_func_iconv=yes],
-        [ac_cv_func_iconv=no] 
+        [ac_cv_func_iconv=no]
         )]
     )
 if test "$ac_cv_func_iconv" = "yes"; then
@@ -3602,7 +3602,7 @@ if test "$ac_cv_func_iconv" = "yes"; then
                 iconv_close(h);
             ],
             [ac_cv_func_const_iconv=yes],
-            [ac_cv_func_const_iconv=no] 
+            [ac_cv_func_const_iconv=no]
             )]
         )
     if test "$ac_cv_func_const_iconv" = "yes"; then
@@ -3773,7 +3773,7 @@ fi
 dnl Check to see if we can resolve ambiguity with |using|.
 AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
                ac_cv_cpp_ambiguity_resolving_using,
-               [AC_TRY_COMPILE(class X { 
+               [AC_TRY_COMPILE(class X {
                                  public: int go(const X&) {return 3;}
                                          int jo(const X&) {return 3;}
                                };
@@ -3922,7 +3922,7 @@ AC_CACHE_CHECK(for __attribute__((noreturn)),
                                [],
                                ac_cv_attribute_noreturn=yes,
                                ac_cv_attribute_noreturn=no)])
- 
+
 dnl End of C++ language/feature checks
 AC_LANG_C
 
@@ -4105,7 +4105,7 @@ fi
 dnl ========================================================
 dnl =
 dnl = Components & Features
-dnl = 
+dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Components and Features)
 
@@ -4338,7 +4338,7 @@ AC_SUBST(HAVE_ARM_NEON)
 dnl ========================================================
 dnl =
 dnl = Debugging Options
-dnl = 
+dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Debugging and Optimizations)
 
@@ -4379,7 +4379,7 @@ if test -n "$MOZ_DEBUG"; then
     AC_MSG_CHECKING([for valid debug flags])
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>], 
+    AC_TRY_COMPILE([#include <stdio.h>],
         [printf("Hello World\n");],
         _results=yes,
         _results=no)
@@ -4415,7 +4415,7 @@ if test -n "$MOZ_OPTIMIZE"; then
     AC_MSG_CHECKING([for valid optimization flags])
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>], 
+    AC_TRY_COMPILE([#include <stdio.h>],
         [printf("Hello World\n");],
         _results=yes,
         _results=no)
@@ -4509,7 +4509,7 @@ fi
 
 if test "$MOZ_MEMORY"; then
 
-  dnl Don't try to run compiler tests on Windows  
+  dnl Don't try to run compiler tests on Windows
   if test "$OS_ARCH" = "WINNT"; then
     if test -z "$HAVE_64BIT_OS"; then
       AC_DEFINE_UNQUOTED([MOZ_MEMORY_SIZEOF_PTR_2POW], 2)
@@ -4823,9 +4823,9 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP=1)
 
 dnl ========================================================
-dnl = 
+dnl =
 dnl = Profiling and Instrumenting
-dnl = 
+dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
@@ -4865,7 +4865,7 @@ fi
 dnl ========================================================
 dnl =
 dnl = Misc. Options
-dnl = 
+dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
@@ -4881,7 +4881,7 @@ if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl =
 dnl = Compiler Options
-dnl = 
+dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Compiler Options)
 
@@ -5009,13 +5009,13 @@ AC_CACHE_CHECK(for correct overload resolution with const and templates,
                         public:
                           T* myPtr;
                         };
-                      
+
                       template <class T, class U>
                       int operator==(const Pointer<T>& rhs, U* lhs)
                         {
                           return rhs.myPtr == lhs;
                         }
-                      
+
                       template <class T, class U>
                       int operator==(const Pointer<T>& rhs, const U* lhs)
                         {
@@ -5084,7 +5084,7 @@ fi
 
 AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
 
-# OSF native compilers do not like exception declarations 
+# OSF native compilers do not like exception declarations
 # when exceptions are disabled
 if test -n "$COMPAQ_CXX" -o -n "$VACPP"; then
     AC_DEFINE(CPP_THROW_NEW, [])
@@ -5243,7 +5243,7 @@ AC_SUBST(EDITLINE_LIBS)
 dnl ========================================================
 dnl =
 dnl = Standalone module options
-dnl = 
+dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
@@ -5481,7 +5481,7 @@ if test "$MOZ_X11"; then
             fprintf(stderr, ": can't open %s\n", XDisplayName(NULL));
             exit(1);
         }
-    ], [], 
+    ], [],
     [ AC_MSG_ERROR([Could not compile basic X program.]) ])
     CFLAGS="$_SAVE_CFLAGS"
 
@@ -5568,7 +5568,7 @@ if test -n "$_NON_GLOBAL_ACDEFINES"; then
     done
 fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
- 
+
   sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
 
   if test "$?" != 0; then
@@ -5628,7 +5628,7 @@ editline/Makefile
 "
 fi
 
-dnl 
+dnl
 dnl Run a perl script to quickly create the makefiles.
 dnl If it succeeds, it outputs a shell command to set CONFIG_FILES
 dnl   for the files it cannot handle correctly. This way, config.status
