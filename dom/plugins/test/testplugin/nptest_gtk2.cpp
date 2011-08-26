@@ -541,7 +541,8 @@ static GdkRegion* computeClipRegion(InstanceData* instanceData)
       return 0;
     }
 
-    GdkRectangle windowRect = { 0, 0, width, height };
+    GdkRectangle windowRect = { 0, 0, static_cast<gint>(width),
+                                static_cast<gint>(height) };
     GdkRegion* windowRgn = gdk_region_rectangle(&windowRect);
     if (!windowRgn) {
       gdk_region_destroy(region);

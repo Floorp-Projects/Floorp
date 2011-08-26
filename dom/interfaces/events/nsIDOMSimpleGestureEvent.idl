@@ -97,7 +97,7 @@
  * consuming events.
  */
 
-[scriptable, uuid(fe6b7df3-be7c-4a0b-99a2-da84e956e2f5)]
+[scriptable, uuid(0fdcef08-b4e8-4d41-91a0-4f5d259bfb81)]
 interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
   /* Swipe direction constants */

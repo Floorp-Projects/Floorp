@@ -46,15 +46,6 @@
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
 
-/**
- * Child list name indices
- * @see #GetAdditionalChildListName()
- */
-#define NS_CONTAINER_LIST_COUNT_SANS_OC 1
-  // for frames that don't use overflow containers
-#define NS_CONTAINER_LIST_COUNT_INCL_OC 3
-  // for frames that support overflow containers
-
 // Option flags for ReflowChild() and FinishReflowChild()
 // member functions
 #define NS_FRAME_NO_MOVE_VIEW         0x0001
@@ -81,18 +72,18 @@ public:
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame*   aParent,
                   nsIFrame*   aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIAtom*     aListName,
+  NS_IMETHOD SetInitialChildList(ChildListID  aListID,
                                  nsFrameList& aChildList);
-  NS_IMETHOD AppendFrames(nsIAtom*  aListName,
+  NS_IMETHOD AppendFrames(ChildListID  aListID,
                           nsFrameList& aFrameList);
-  NS_IMETHOD InsertFrames(nsIAtom*  aListName,
+  NS_IMETHOD InsertFrames(ChildListID aListID,
                           nsIFrame* aPrevFrame,
                           nsFrameList& aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom*  aListName,
+  NS_IMETHOD RemoveFrame(ChildListID aListID,
                          nsIFrame* aOldFrame);
 
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
+  virtual nsFrameList GetChildList(ChildListID aList) const;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual void ChildIsDirty(nsIFrame* aChild);
 

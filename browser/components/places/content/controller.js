@@ -1376,15 +1376,23 @@ let PlacesControllerDragHelper = {
   },
 
   /**
-   * Extract the first accepted flavor from a flavors array.
+   * Extract the first accepted flavor from a list of flavors.
    * @param aFlavors
-   *        The flavors array.
+   *        The flavors list of type nsIDOMDOMStringList.
    */
   getFirstValidFlavor: function PCDH_getFirstValidFlavor(aFlavors) {
     for (let i = 0; i < aFlavors.length; i++) {
       if (this.GENERIC_VIEW_DROP_TYPES.indexOf(aFlavors[i]) != -1)
         return aFlavors[i];
     }
+
+    // If no supported flavor is found, check if data includes text/plain 
+    // contents.  If so, request them as text/unicode, a conversion will happen 
+    // automatically.
+    if (aFlavors.contains("text/plain")) {
+        return PlacesUtils.TYPE_UNICODE;
+    }
+
     return null;
   },
 

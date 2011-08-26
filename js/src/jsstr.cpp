@@ -2895,6 +2895,8 @@ static JSFunctionSpec string_methods[] = {
     JS_FS_END
 };
 
+#ifdef JS_HAS_STATIC_STRINGS
+
 /*
  * Set up some tools to make it easier to generate large tables. After constant
  * folding, for each n, Rn(0) is the comma-separated list R(0), R(1), ..., R(2^n-1).
@@ -3088,6 +3090,8 @@ const JSString::Data *const JSAtom::intStaticTable[] = { R8(0) };
 
 #undef R3
 #undef R7
+
+#endif  /* defined(JS_HAS_STATIC_STRINGS) */
 
 JSBool
 js_String(JSContext *cx, uintN argc, Value *vp)

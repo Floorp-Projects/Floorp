@@ -312,12 +312,6 @@ ContentSecurityPolicy.prototype = {
           req.upload.addEventListener("error", failure, false);
           req.upload.addEventListener("abort", failure, false);
 
-          // make request anonymous
-          // This prevents sending cookies with the request,
-          // in case the policy URI is injected, it can't be
-          // abused for CSRF.
-          req.channel.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
-
           req.send(JSON.stringify(report));
           CSPdebug("Sent violation report to " + uris[i]);
         } catch(e) {

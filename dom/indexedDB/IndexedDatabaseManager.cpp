@@ -41,10 +41,13 @@
 
 #include "nsIFile.h"
 #include "nsIObserverService.h"
+#include "nsISHEntry.h"
 #include "nsISimpleEnumerator.h"
 #include "nsITimer.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
@@ -56,7 +59,6 @@
 #include "IDBFactory.h"
 #include "LazyIdleThread.h"
 #include "TransactionThreadPool.h"
-#include "nsISHEntry.h"
 
 // The amount of time, in milliseconds, that our IO thread will stay alive
 // after the last event it processes.
@@ -66,8 +68,18 @@
 // transactions on shutdown before aborting them.
 #define DEFAULT_SHUTDOWN_TIMER_MS 30000
 
+// Amount of space that IndexedDB databases may use by default in megabytes.
+#define DEFAULT_QUOTA_MB 50
+
+// Preference that users can set to override DEFAULT_QUOTA_MB
+#define PREF_INDEXEDDB_QUOTA "dom.indexedDB.warningQuota"
+
+// A bad TLS index number.
+#define BAD_TLS_INDEX (PRUintn)-1
+
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::services;
+using mozilla::Preferences;
 
 namespace {
 
@@ -75,6 +87,39 @@ PRInt32 gShutdown = 0;
 
 // Does not hold a reference.
 IndexedDatabaseManager* gInstance = nsnull;
+
+PRUintn gCurrentDatabaseIndex = BAD_TLS_INDEX;
+
+PRInt32 gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
+
+class QuotaCallback : public mozIStorageQuotaCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD
+  QuotaExceeded(const nsACString& aFilename,
+                PRInt64 aCurrentSizeLimit,
+                PRInt64 aCurrentTotalSize,
+                nsISupports* aUserData,
+                PRInt64* _retval)
+  {
+    NS_ASSERTION(gCurrentDatabaseIndex != BAD_TLS_INDEX,
+                 "This should be impossible!");
+
+    IDBDatabase* database =
+      static_cast<IDBDatabase*>(PR_GetThreadPrivate(gCurrentDatabaseIndex));
+
+    if (database && database->IsQuotaDisabled()) {
+      *_retval = 0;
+      return NS_OK;
+    }
+
+    return NS_ERROR_FAILURE;
+  }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(QuotaCallback, mozIStorageQuotaCallback)
 
 // Adds all databases in the hash to the given array.
 PLDHashOperator
@@ -243,6 +288,23 @@ IndexedDatabaseManager::GetOrCreate()
   nsRefPtr<IndexedDatabaseManager> instance(gInstance);
 
   if (!instance) {
+    // We need a thread-local to hold our current database.
+    if (gCurrentDatabaseIndex == BAD_TLS_INDEX) {
+      if (PR_NewThreadPrivateIndex(&gCurrentDatabaseIndex, nsnull) !=
+          PR_SUCCESS) {
+        NS_ERROR("PR_NewThreadPrivateIndex failed!");
+        gCurrentDatabaseIndex = BAD_TLS_INDEX;
+        return nsnull;
+      }
+
+      if (NS_FAILED(Preferences::AddIntVarCache(&gIndexedDBQuotaMB,
+                                                PREF_INDEXEDDB_QUOTA,
+                                                DEFAULT_QUOTA_MB))) {
+        NS_WARNING("Unable to respond to quota pref changes!");
+        gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
+      }
+    }
+
     instance = new IndexedDatabaseManager();
 
     if (!instance->mLiveDatabases.Init()) {
@@ -274,6 +336,9 @@ IndexedDatabaseManager::GetOrCreate()
     // contents of indexedDB database directories).
     instance->mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
                                              LazyIdleThread::ManualShutdown);
+
+    // We need one quota callback object to hand to SQLite.
+    instance->mQuotaCallbackSingleton = new QuotaCallback();
 
     // The observer service will hold our last reference, don't AddRef here.
     gInstance = instance;
@@ -643,6 +708,120 @@ IndexedDatabaseManager::OnDatabaseClosed(IDBDatabase* aDatabase)
       break;
     }
   }
+}
+
+// static
+bool
+IndexedDatabaseManager::SetCurrentDatabase(IDBDatabase* aDatabase)
+{
+  NS_ASSERTION(gCurrentDatabaseIndex != BAD_TLS_INDEX,
+               "This should have been set already!");
+
+#ifdef DEBUG
+  if (aDatabase) {
+    NS_ASSERTION(!PR_GetThreadPrivate(gCurrentDatabaseIndex),
+                 "Someone forgot to unset gCurrentDatabaseIndex!");
+  }
+  else {
+    NS_ASSERTION(PR_GetThreadPrivate(gCurrentDatabaseIndex),
+                 "Someone forgot to set gCurrentDatabaseIndex!");
+  }
+#endif
+
+  if (PR_SetThreadPrivate(gCurrentDatabaseIndex, aDatabase) != PR_SUCCESS) {
+    NS_WARNING("Failed to set gCurrentDatabaseIndex!");
+    return false;
+  }
+
+  return true;
+}
+
+// static
+PRUint32
+IndexedDatabaseManager::GetIndexedDBQuotaMB()
+{
+  return PRUint32(NS_MAX(gIndexedDBQuotaMB, 0));
+}
+
+nsresult
+IndexedDatabaseManager::EnsureQuotaManagementForDirectory(nsIFile* aDirectory)
+{
+#ifdef DEBUG
+  {
+    PRBool correctThread;
+    NS_ASSERTION(NS_SUCCEEDED(mIOThread->IsOnCurrentThread(&correctThread)) &&
+                 correctThread,
+                 "Running on the wrong thread!");
+  }
+#endif
+  NS_ASSERTION(aDirectory, "Null pointer!");
+
+  nsCString path;
+  nsresult rv = aDirectory->GetNativePath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mTrackedQuotaPaths.Contains(path)) {
+    return true;
+  }
+
+  // First figure out the filename pattern we'll use.
+  nsCOMPtr<nsIFile> patternFile;
+  rv = aDirectory->Clone(getter_AddRefs(patternFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = patternFile->Append(NS_LITERAL_STRING("*"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString pattern;
+  rv = patternFile->GetNativePath(pattern);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now tell SQLite to start tracking this pattern.
+  nsCOMPtr<mozIStorageServiceQuotaManagement> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
+
+  rv = ss->SetQuotaForFilenamePattern(pattern,
+                                      GetIndexedDBQuotaMB() * 1024 * 1024,
+                                      mQuotaCallbackSingleton, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If the directory exists then we need to see if there are any files in it
+  // already. We need to tell SQLite about all of them.
+  PRBool exists;
+  rv = aDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    // Make sure this really is a directory.
+    PRBool isDirectory;
+    rv = aDirectory->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+      nsCOMPtr<nsISupports> entry;
+      rv = entries->GetNext(getter_AddRefs(entry));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+      NS_ENSURE_TRUE(file, NS_NOINTERFACE);
+
+      rv = ss->UpdateQutoaInformationForFile(file);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  NS_ASSERTION(!mTrackedQuotaPaths.Contains(path), "What?!");
+
+  mTrackedQuotaPaths.AppendElement(path);
+  return rv;
 }
 
 NS_IMPL_ISUPPORTS2(IndexedDatabaseManager, nsIIndexedDatabaseManager,

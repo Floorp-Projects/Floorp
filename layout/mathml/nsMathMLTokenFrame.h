@@ -73,7 +73,7 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsIAtom*        aListName,
+  SetInitialChildList(ChildListID     aListID,
                       nsFrameList&    aChildList);
 
   NS_IMETHOD

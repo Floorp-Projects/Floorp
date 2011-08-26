@@ -1549,6 +1549,30 @@ CanIncDecWithoutOverflow(int32_t i)
 # endif
 #endif
 
+template<typename T>
+class GenericInterruptEnabler : public InterpreterFrames::InterruptEnablerBase {
+  public:
+    GenericInterruptEnabler(T *variable, T value) : variable(variable), value(value) { }
+    void enableInterrupts() const { *variable = value; }
+
+  private:
+    T *variable;
+    T value;
+};
+
+inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs, 
+                                            const InterruptEnablerBase &enabler)
+  : context(cx), regs(regs), enabler(enabler)
+{
+    older = JS_THREAD_DATA(cx)->interpreterFrames;
+    JS_THREAD_DATA(cx)->interpreterFrames = this;
+}
+ 
+inline InterpreterFrames::~InterpreterFrames()
+{
+    JS_THREAD_DATA(context)->interpreterFrames = older;
+}
+
 /*
  * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
  * single-thread DEBUG js shell testing to verify property cache hits.
@@ -1730,10 +1754,16 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
-#define COUNT_OP()         JS_BEGIN_MACRO                                     \
-                               if (pcCounts && !regs.fp()->hasImacropc())     \
-                                   ++pcCounts[regs.pc - script->code];        \
-                           JS_END_MACRO
+#define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
+                                            if (pcCounts)                     \
+                                                ENABLE_INTERRUPTS();          \
+                                        JS_END_MACRO
+
+#if JS_THREADED_INTERP
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, jumpTable == interruptJumpTable)
+#else
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, switchMask == -1)
+#endif
 
     /*
      * Macros for threaded interpreter loop
@@ -1755,7 +1785,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     register void * const *jumpTable = normalJumpTable;
 
-# define ENABLE_INTERRUPTS() ((void) (jumpTable = interruptJumpTable))
+    typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
+    InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()                                                    \
@@ -1766,7 +1797,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
-                                COUNT_OP();                                   \
+                                CHECK_PCCOUNT_INTERRUPTS();                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1789,8 +1820,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     register intN switchMask = 0;
     intN switchOp;
-
-# define ENABLE_INTERRUPTS() ((void) (switchMask = -1))
+    typedef GenericInterruptEnabler<intN> InterruptEnabler;
+    InterruptEnabler interruptEnabler(&switchMask, -1);
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()                                                    \
@@ -1824,6 +1855,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
 
 #endif /* !JS_THREADED_INTERP */
+
+#define ENABLE_INTERRUPTS() (interruptEnabler.enableInterrupts())
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -1930,8 +1963,9 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
-        script = regs.fp()->script();                                         \
+        SET_SCRIPT(regs.fp()->script());                                      \
         pcCounts = script->pcCounters.get(JSPCCounters::INTERP);              \
+        ENABLE_PCCOUNT_INTERRUPTS();                                          \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -1942,6 +1976,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         RESTORE_INTERP_VARS();                                                \
         if (cx->isExceptionPending())                                         \
             goto error;                                                       \
+        CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
 
 #define MONITOR_BRANCH()                                                      \
@@ -2022,6 +2057,13 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         DO_OP();                                                              \
     JS_END_MACRO
 
+#define SET_SCRIPT(s)                                                         \
+    JS_BEGIN_MACRO                                                            \
+        script = (s);                                                         \
+        if (script->stepModeEnabled())                                        \
+            ENABLE_INTERRUPTS();                                              \
+    JS_END_MACRO
+
 #define CHECK_INTERRUPT_HANDLER()                                             \
     JS_BEGIN_MACRO                                                            \
         if (cx->debugHooks->interruptHook)                                    \
@@ -2032,10 +2074,18 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     FrameRegs regs = cx->regs();
     PreserveRegsGuard interpGuard(cx, regs);
 
+    /*
+     * Help Debugger find frames running scripts that it has put in
+     * single-step mode.
+     */
+    InterpreterFrames interpreterFrame(cx, &regs, interruptEnabler);
+
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
-    JSScript *script = regs.fp()->script();
+    JSScript *script;
+    SET_SCRIPT(regs.fp()->script());
     double *pcCounts = script->pcCounters.get(JSPCCounters::INTERP);
+    ENABLE_PCCOUNT_INTERRUPTS();
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -2145,11 +2195,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_CHECK_RECURSION(cx, goto error);
 #endif
 
-#if JS_THREADED_INTERP
     DO_NEXT_OP(len);
-#else
-    DO_NEXT_OP(len);
-#endif
 
 #if JS_THREADED_INTERP
     /*
@@ -2172,6 +2218,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
       do_op:
         CHECK_RECORDER();
+        CHECK_PCCOUNT_INTERRUPTS();
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -2185,19 +2232,32 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif /* !JS_THREADED_INTERP */
     {
         bool moreInterrupts = false;
+
+        if (pcCounts) {
+            if (!regs.fp()->hasImacropc())
+                ++pcCounts[regs.pc - script->code];
+            moreInterrupts = true;
+        }
+
         JSInterruptHook hook = cx->debugHooks->interruptHook;
-        if (hook) {
+        if (hook || script->stepModeEnabled()) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "interrupt hook");
+                AbortRecording(cx, "interrupt hook or singleStepMode");
 #ifdef JS_METHODJIT
             if (TRACE_PROFILER(cx))
                 AbortProfiling(cx);
 #endif
 #endif
             Value rval;
-            switch (hook(cx, script, regs.pc, Jsvalify(&rval),
-                         cx->debugHooks->interruptHookData)) {
+            JSTrapStatus status = JSTRAP_CONTINUE;
+            if (hook) {
+                status = hook(cx, script, regs.pc, Jsvalify(&rval),
+                              cx->debugHooks->interruptHookData);
+            }
+            if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
+                status = Debugger::onSingleStep(cx, &rval);
+            switch (status) {
               case JSTRAP_ERROR:
                 goto error;
               case JSTRAP_CONTINUE:
@@ -2418,7 +2478,6 @@ BEGIN_CASE(JSOP_STOP)
         JS_ASSERT(!regs.fp()->hasImacropc());
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, &regs.fp()->scopeChain(), 0));
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
-        CHECK_INTERRUPT_HANDLER();
 
         /* The JIT inlines ScriptEpilogue. */
 #ifdef JS_METHODJIT

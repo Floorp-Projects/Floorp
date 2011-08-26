@@ -130,10 +130,10 @@ nsSliderFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::RemoveFrame(nsIAtom*        aListName,
+nsSliderFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
-  nsresult rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
+  nsresult rv = nsBoxFrame::RemoveFrame(aListID, aOldFrame);
   if (mFrames.IsEmpty())
     RemoveListener();
 
@@ -141,12 +141,12 @@ nsSliderFrame::RemoveFrame(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::InsertFrames(nsIAtom*        aListName,
+nsSliderFrame::InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList)
 {
   PRBool wasEmpty = mFrames.IsEmpty();
-  nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+  nsresult rv = nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
   if (wasEmpty)
     AddListener();
 
@@ -154,13 +154,13 @@ nsSliderFrame::InsertFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::AppendFrames(nsIAtom*        aListName,
+nsSliderFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
   // if we have no children and on was added then make sure we add the
   // listener
   PRBool wasEmpty = mFrames.IsEmpty();
-  nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
+  nsresult rv = nsBoxFrame::AppendFrames(aListID, aFrameList);
   if (wasEmpty)
     AddListener();
 
@@ -848,10 +848,10 @@ nsSliderFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSliderFrame::SetInitialChildList(nsIAtom*        aListName,
+nsSliderFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {
-  nsresult r = nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  nsresult r = nsBoxFrame::SetInitialChildList(aListID, aChildList);
 
   AddListener();
 

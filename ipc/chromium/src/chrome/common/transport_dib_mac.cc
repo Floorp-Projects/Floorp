@@ -25,11 +25,7 @@ TransportDIB::~TransportDIB() {
 // static
 TransportDIB* TransportDIB::Create(size_t size, uint32 sequence_num) {
   TransportDIB* dib = new TransportDIB;
-#ifdef CHROMIUM_MOZILLA_BUILD
   if (!dib->shared_memory_.Create("", false /* read write */,
-#else
-  if (!dib->shared_memory_.Create(L"", false /* read write */,
-#endif
                                   false /* do not open existing */, size)) {
     delete dib;
     return NULL;

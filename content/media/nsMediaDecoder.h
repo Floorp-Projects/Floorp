@@ -296,6 +296,10 @@ public:
   // Return the time ranges that can be seeked into.
   virtual nsresult GetSeekable(nsTimeRanges* aSeekable) = 0;
 
+  // Set the end time of the media resource. When playback reaches
+  // this point the media pauses. aTime is in seconds.
+  virtual void SetEndTime(double aTime) = 0;
+
   // Invalidate the frame.
   virtual void Invalidate();
 

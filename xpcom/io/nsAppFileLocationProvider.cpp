@@ -48,7 +48,7 @@
 #include "prenv.h"
 #include "nsCRT.h"
 
-#if defined(XP_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
 #include <Carbon/Carbon.h>
 #include "nsILocalFileMac.h"
 #elif defined(XP_OS2)
@@ -68,7 +68,7 @@
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
 
-#if defined(XP_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
 #define APP_REGISTRY_NAME NS_LITERAL_CSTRING("Application Registry")
 #define ESSENTIAL_FILES   NS_LITERAL_CSTRING("Essential Files")
 #elif defined(XP_WIN) || defined(XP_OS2)
@@ -84,7 +84,7 @@
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
 #define NS_USER_PLUGINS_DIR         "UserPlugins"
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
 #define NS_MACOSX_USER_PLUGIN_DIR   "OSXUserPlugins"
 #define NS_MACOSX_LOCAL_PLUGIN_DIR  "OSXLocalPlugins"
 #define NS_MACOSX_JAVA2_PLUGIN_DIR  "OSXJavaPlugins"
@@ -128,7 +128,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
     *_retval = nsnull;
     *persistent = PR_TRUE;
 
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     FSRef fileRef;
     nsCOMPtr<nsILocalFileMac> macFile;
 #endif
@@ -194,7 +194,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
     else if (nsCRT::strcmp(prop, NS_MACOSX_USER_PLUGIN_DIR) == 0)
     {
         if (::FSFindFolder(kUserDomain, kInternetPlugInFolderType, false, &fileRef) == noErr) {
@@ -324,7 +324,7 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
 
-#if defined(XP_MACOSX)
+#if defined(MOZ_WIDGET_COCOA)
     FSRef fsRef;
     OSType folderType = aLocal ? (OSType) kCachedDataFolderType : (OSType) kDomainLibraryFolderType;
     OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
@@ -395,7 +395,7 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
     rv = GetProductDirectory(getter_AddRefs(localDir), aLocal);
     if (NS_FAILED(rv)) return rv;
 
-#if defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_WIN)
+#if defined(MOZ_WIDGET_COCOA) || defined(XP_OS2) || defined(XP_WIN)
     // These 3 platforms share this part of the path - do them as one
     rv = localDir->AppendRelativeNativePath(NS_LITERAL_CSTRING("Profiles"));
     if (NS_FAILED(rv)) return rv;
@@ -552,7 +552,7 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
     
     if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
     {
-#ifdef XP_MACOSX
+#ifdef MOZ_WIDGET_COCOA
         // As of Java for Mac OS X 10.5 Update 10, Apple has (in effect) deprecated Java Plugin2 on
         // on OS X 10.5, and removed the soft link to it from /Library/Internet Plug-Ins/.  Java
         // Plugin2 is still present and usable, but there are no longer any links to it in the

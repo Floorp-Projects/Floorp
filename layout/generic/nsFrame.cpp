@@ -370,7 +370,7 @@ nsFrame::Init(nsIContent*      aContent,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
+NS_IMETHODIMP nsFrame::SetInitialChildList(ChildListID     aListID,
                                            nsFrameList&    aChildList)
 {
   // XXX This shouldn't be getting called at all, but currently is for backwards
@@ -385,7 +385,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsFrame::AppendFrames(nsIAtom*        aListName,
+nsFrame::AppendFrames(ChildListID     aListID,
                       nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
@@ -393,7 +393,7 @@ nsFrame::AppendFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsFrame::InsertFrames(nsIAtom*        aListName,
+nsFrame::InsertFrames(ChildListID     aListID,
                       nsIFrame*       aPrevFrame,
                       nsFrameList&    aFrameList)
 {
@@ -402,7 +402,7 @@ nsFrame::InsertFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsFrame::RemoveFrame(nsIAtom*        aListName,
+nsFrame::RemoveFrame(ChildListID     aListID,
                      nsIFrame*       aOldFrame)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
@@ -438,6 +438,20 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     if (placeholder) {
       shell->FrameManager()->UnregisterPlaceholderFrame(placeholder);
       placeholder->SetOutOfFlowFrame(nsnull);
+    }
+  }
+
+  // If we have an IB split special sibling, clear its reference to us.
+  // (Note: This has to happen before we call shell->NotifyDestroyingFrame,
+  // because that clears our Properties() table.)
+  if (mState & NS_FRAME_IS_SPECIAL) {
+    nsIFrame* nextSib = static_cast<nsIFrame*>
+      (Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+    if (nextSib) {
+      NS_WARN_IF_FALSE(this ==
+         nextSib->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()),
+         "Next-sibling / prev-sibling chain is inconsistent");
+      nextSib->Properties().Delete(nsIFrame::IBSplitSpecialPrevSibling());
     }
   }
 
@@ -590,6 +604,28 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     PresContext()->SetBidiEnabled();
   }
 }
+
+// MSVC fails with link error "one or more multiply defined symbols found",
+// gcc fails with "hidden symbol `nsIFrame::kPrincipalList' isn't defined"
+// etc if they are not defined.
+#ifndef _MSC_VER
+// static nsIFrame constants; initialized in the header file.
+const nsIFrame::ChildListID nsIFrame::kPrincipalList;
+const nsIFrame::ChildListID nsIFrame::kAbsoluteList;
+const nsIFrame::ChildListID nsIFrame::kBulletList;
+const nsIFrame::ChildListID nsIFrame::kCaptionList;
+const nsIFrame::ChildListID nsIFrame::kColGroupList;
+const nsIFrame::ChildListID nsIFrame::kExcessOverflowContainersList;
+const nsIFrame::ChildListID nsIFrame::kFixedList;
+const nsIFrame::ChildListID nsIFrame::kFloatList;
+const nsIFrame::ChildListID nsIFrame::kOverflowContainersList;
+const nsIFrame::ChildListID nsIFrame::kOverflowList;
+const nsIFrame::ChildListID nsIFrame::kOverflowOutOfFlowList;
+const nsIFrame::ChildListID nsIFrame::kPopupList;
+const nsIFrame::ChildListID nsIFrame::kPushedFloatsList;
+const nsIFrame::ChildListID nsIFrame::kSelectPopupList;
+const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
+#endif
 
 /* virtual */ nsMargin
 nsIFrame::GetUsedMargin() const
@@ -916,21 +952,6 @@ nsFrame::GetBaseline() const
   // Default to the bottom margin edge, per CSS2.1's definition of the
   // 'baseline' value of 'vertical-align'.
   return mRect.height + GetUsedMargin().bottom;
-}
-
-// Child frame enumeration
-
-nsIAtom*
-nsFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-  NS_PRECONDITION(aIndex >= 0, "invalid index number");
-  return nsnull;
-}
-
-nsFrameList
-nsFrame::GetChildList(nsIAtom* aListName) const
-{
-  return nsFrameList::EmptyList();
 }
 
 static nsIFrame*
@@ -2734,7 +2755,7 @@ static FrameTarget DrillDownToSelectionFrame(nsIFrame* aFrame,
                                              PRBool aEndFrame) {
   if (SelectionDescendToKids(aFrame)) {
     nsIFrame* result = nsnull;
-    nsIFrame *frame = aFrame->GetFirstChild(nsnull);
+    nsIFrame *frame = aFrame->GetFirstPrincipalChild();
     if (!aEndFrame) {
       while (frame && (!SelfIsSelectable(frame) ||
                         frame->IsEmpty()))
@@ -2903,7 +2924,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
       return target;
   }
 
-  nsIFrame *kid = aFrame->GetFirstChild(nsnull);
+  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
 
   if (kid) {
     // Go through all the child frames to find the closest one
@@ -3474,16 +3495,14 @@ nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
   }
 
   nsRect r(0, 0, 0, 0);
-  PRInt32 listIndex = 0;
-  nsIAtom* childList = nsnull;
-  do {
-    nsIFrame* child = GetFirstChild(childList);
-    while (child) {
-       r.UnionRect(r, child->ComputeTightBounds(aContext) + child->GetPosition());
-       child = child->GetNextSibling();
+  ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      r.UnionRect(r, child->ComputeTightBounds(aContext) + child->GetPosition());
     }
-    childList = GetAdditionalChildListName(listIndex++);
-  } while (childList);
+  }
   return r;
 }
 
@@ -4935,35 +4954,25 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
           mRect.x, mRect.y, mRect.width, mRect.height);
 
   // Now dump all of the children on all of the child lists
-  nsIFrame* kid;
-  nsIAtom* list = nsnull;
-  PRInt32 listIndex = 0;
-  do {
-    kid = GetFirstChild(list);
-    if (kid) {
-      IndentBy(out, aIndent);
-      if (nsnull != list) {
-        nsAutoString listName;
-        list->ToString(listName);
-        fprintf(out, "<child-list name=\"");
-        XMLQuote(listName);
-        fputs(NS_LossyConvertUTF16toASCII(listName).get(), out);
-        fprintf(out, "\">\n");
-      }
-      else {
-        fprintf(out, "<child-list>\n");
-      }
-      aIndent++;
-      while (kid) {
-        kid->DumpRegressionData(aPresContext, out, aIndent);
-        kid = kid->GetNextSibling();
-      }
-      aIndent--;
-      IndentBy(out, aIndent);
-      fprintf(out, "</child-list>\n");
+  ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    IndentBy(out, aIndent);
+    if (lists.CurrentID() != kPrincipalList) {
+      fprintf(out, "<child-list name=\"%s\">\n", mozilla::layout::ChildListName(lists.CurrentID()));
     }
-    list = GetAdditionalChildListName(listIndex++);
-  } while (nsnull != list);
+    else {
+      fprintf(out, "<child-list>\n");
+    }
+    aIndent++;
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* kid = childFrames.get();
+      kid->DumpRegressionData(aPresContext, out, aIndent);
+    }
+    aIndent--;
+    IndentBy(out, aIndent);
+    fprintf(out, "</child-list>\n");
+  }
 }
 #endif
 
@@ -5365,13 +5374,13 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 
   // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
-    nsIFrame* child = aFrame->GetChildList(nsnull).LastChild();
+    nsIFrame* child = aFrame->GetLastChild(nsIFrame::kPrincipalList);
     while(child && !result.mContent) {
       result = FindBlockFrameOrBR(child, aDirection);
       child = child->GetPrevSibling();
     }
   } else { // eDirNext
-    nsIFrame* child = aFrame->GetFirstChild(nsnull);
+    nsIFrame* child = aFrame->GetFirstPrincipalChild();
     while(child && !result.mContent) {
       result = FindBlockFrameOrBR(child, aDirection);
       child = child->GetNextSibling();
@@ -5664,7 +5673,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
             if (aPos->mResultFrame->GetType() == nsGkAtoms::tableOuterFrame ||
                 aPos->mResultFrame->GetType() == nsGkAtoms::tableCellFrame)
             {
-              nsIFrame *frame = aPos->mResultFrame->GetFirstChild(nsnull);
+              nsIFrame *frame = aPos->mResultFrame->GetFirstPrincipalChild();
               //got the table frame now
               while(frame) //ok time to drill down to find iterator
               {
@@ -5677,7 +5686,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
                   break; //while(frame)
                 }
                 result = NS_ERROR_FAILURE;
-                frame = frame->GetFirstChild(nsnull);
+                frame = frame->GetFirstPrincipalChild();
               }
             }
 
@@ -6399,8 +6408,8 @@ GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
     // table, that actually means its the _inner_ table that wants to
     // know its parent.  So get the pseudo of the inner in that case.
     if (pseudo == nsCSSAnonBoxes::tableOuter) {
-      pseudo =
-        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudo();
+      pseudo = aFrame->GetFirstPrincipalChild()
+                         ->GetStyleContext()->GetPseudo();
     }
     *aSpecialParent = nsFrame::CorrectStyleParentFrame(parent, pseudo);
   }
@@ -6536,7 +6545,7 @@ nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
   nsIFrame *child = *aFrame;
   //if we are a block frame then go for the last line of 'this'
   while (1){
-    child = child->GetFirstChild(nsnull);
+    child = child->GetFirstPrincipalChild();
     if (!child)
       return;//nothing to do
     nsIFrame* siblingFrame;
@@ -6558,7 +6567,7 @@ nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
     return;
   nsIFrame *child = *aFrame;
   while (1){
-    child = child->GetFirstChild(nsnull);
+    child = child->GetFirstPrincipalChild();
     if (!child)
       return;//nothing to do
     *aFrame = child;
@@ -6607,7 +6616,8 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // will be enough to make them keyboard scrollable.
         nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
         if (scrollFrame &&
-            scrollFrame->GetActualScrollbarSizes() != nsMargin(0,0,0,0)) {
+            scrollFrame->GetScrollbarStyles() != nsIScrollableFrame::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN) &&
+            !scrollFrame->GetScrollRange().IsEqualEdges(nsRect(0, 0, 0, 0))) {
             // Scroll bars will be used for overflow
             isFocusable = PR_TRUE;
             tabIndex = 0;

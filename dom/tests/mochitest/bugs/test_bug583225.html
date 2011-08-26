@@ -29,7 +29,7 @@ SimpleTest.waitForExplicitFinish();
 
 var docFragment = document.createDocumentFragment();
 docFragment.foo = "foo";
-docFragment.onclick = clicked;
+docFragment.addEventListener("click", clicked, false);
 var event = document.createEvent('MouseEvent');
 event.initMouseEvent('click', true, true, window,  1, 0, 0, 0, 0, false, false,
                      false, false, 0, docFragment);

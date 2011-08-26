@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMNSMouseEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMDataTransfer.h"
 #include "nsIDOMEventTarget.h"
 #include "nsWeakPtr.h"
@@ -832,8 +832,8 @@ public:
   }
 
   nsMouseEvent_base(PRBool isTrusted, PRUint32 msg, nsIWidget *w, PRUint8 type)
-  : nsInputEvent(isTrusted, msg, w, type), button(0), pressure(0),
-    inputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE) {}
+    : nsInputEvent(isTrusted, msg, w, type), button(0), pressure(0)
+    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {}
 
   /// The possible related target
   nsCOMPtr<nsISupports> relatedTarget;
@@ -844,7 +844,7 @@ public:
   // ranges between 0.0 and 1.0
   float                 pressure;
 
-  // Possible values at nsIDOMNSMouseEvent
+  // Possible values at nsIDOMMouseEvent
   PRUint16              inputSource;
 };
 
