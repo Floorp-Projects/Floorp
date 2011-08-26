@@ -611,7 +611,8 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
-    status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
+    status = mjit::CanMethodJIT(cx, script, fp->isConstructing(),
+                                mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
         return false;
 
@@ -767,7 +768,8 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         StackFrame *fp = ifg_.fp();
 #ifdef JS_METHODJIT
         /* Hoist dynamic checks from RunScript. */
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, fp, mjit::CompileRequest_JIT);
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, false,
+                                                        mjit::CompileRequest_JIT);
         if (status == mjit::Compile_Error)
             return false;
         if (status != mjit::Compile_Okay)
@@ -4184,7 +4186,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
                                        : mjit::CompileRequest_JIT;
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp(), request);
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, construct, request);
         if (status == mjit::Compile_Error)
             goto error;
         if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {

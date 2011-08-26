@@ -707,14 +707,6 @@ struct TypeNewScript
 /* Type information about an object accessed by a script. */
 struct TypeObject : gc::Cell
 {
-#ifdef DEBUG
-    /* Name of this object. */
-    jsid name_;
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
-#endif
-
     /* Prototype shared by objects using this type. */
     JSObject *proto;
 
@@ -787,8 +779,7 @@ struct TypeObject : gc::Cell
     /* If this is an interpreted function, the corresponding script. */
     JSScript *functionScript;
 
-    /* Make an object with the specified name. */
-    inline TypeObject(jsid id, JSObject *proto, bool isFunction, bool unknown);
+    inline TypeObject(JSObject *proto, bool isFunction, bool unknown);
 
     bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
 
@@ -828,8 +819,6 @@ struct TypeObject : gc::Cell
 
     /* Get a property only if it already exists. */
     inline TypeSet *maybeGetProperty(JSContext *cx, jsid id);
-
-    inline const char * name();
 
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
@@ -1084,7 +1073,6 @@ struct TypeCompartment
      * js_ObjectClass).
      */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              const char *base, const char *postfix,
                               JSProtoKey kind, JSObject *proto, bool unknown = false);
 
     /* Make an object for an allocation site. */
@@ -1124,6 +1112,7 @@ const char * InferSpewColor(TypeSet *types);
 
 void InferSpew(SpewChannel which, const char *fmt, ...);
 const char * TypeString(Type type);
+const char * TypeObjectString(TypeObject *type);
 
 /* Check that the type property for id in obj contains value. */
 bool TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &value);
@@ -1135,6 +1124,7 @@ inline const char * InferSpewColor(TypeConstraint *constraint) { return NULL; }
 inline const char * InferSpewColor(TypeSet *types) { return NULL; }
 inline void InferSpew(SpewChannel which, const char *fmt, ...) {}
 inline const char * TypeString(Type type) { return NULL; }
+inline const char * TypeObjectString(TypeObject *type) { return NULL; }
 
 #endif
 

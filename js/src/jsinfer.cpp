@@ -235,14 +235,23 @@ types::TypeString(Type type)
         return "unknown";
     if (type.isAnyObject())
         return " object";
-    if (type.isSingleObject()) {
-        static char bufs[4][40];
-        static unsigned which = 0;
-        which = (which + 1) & 3;
+
+    static char bufs[4][40];
+    static unsigned which = 0;
+    which = (which + 1) & 3;
+
+    if (type.isSingleObject())
         JS_snprintf(bufs[which], 40, "<0x%p>", (void *) type.singleObject());
-        return bufs[which];
-    }
-    return type.typeObject()->name();
+    else
+        JS_snprintf(bufs[which], 40, "[0x%p]", (void *) type.typeObject());
+
+    return bufs[which];
+}
+
+const char *
+types::TypeObjectString(TypeObject *type)
+{
+    return TypeString(Type::ObjectType(type));
 }
 
 void
@@ -304,7 +313,7 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
 
         if (!types->hasType(type)) {
             TypeFailure(cx, "Missing type in object %s %s: %s",
-                        obj->name(), TypeIdString(id), TypeString(type));
+                        TypeObjectString(obj), TypeIdString(id), TypeString(type));
         }
     }
     return true;
@@ -735,6 +744,16 @@ TypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target, bool onlyNullVoid)
                                                     target, onlyNullVoid));
 }
 
+/* If id is a normal slotful 'own' property of an object, get its shape. */
+static inline const Shape *
+GetSingletonShape(JSObject *obj, jsid id)
+{
+    const Shape *shape = obj->nativeLookup(id);
+    if (shape && shape->hasDefaultGetterOrIsMethod() && shape->slot != SHAPE_INVALID_SLOT)
+        return shape;
+    return NULL;
+}
+
 void
 ScriptAnalysis::pruneTypeBarriers(uint32 offset)
 {
@@ -748,9 +767,8 @@ ScriptAnalysis::pruneTypeBarriers(uint32 offset)
         }
         if (barrier->singleton) {
             JS_ASSERT(barrier->type.isPrimitive(JSVAL_TYPE_UNDEFINED));
-            const Shape *shape = barrier->singleton->nativeLookup(barrier->singletonId);
-            if (shape && shape->hasDefaultGetterOrIsMethod() &&
-                !barrier->singleton->nativeGetSlot(shape->slot).isUndefined()) {
+            const Shape *shape = GetSingletonShape(barrier->singleton, barrier->singletonId);
+            if (shape && !barrier->singleton->nativeGetSlot(shape->slot).isUndefined()) {
                 /*
                  * When we analyzed the script the singleton had an 'own'
                  * property which was undefined (probably a 'var' variable
@@ -777,13 +795,12 @@ static const uint32 BARRIER_OBJECT_LIMIT = 10;
 
 void ScriptAnalysis::breakTypeBarriers(JSContext *cx, uint32 offset, bool all)
 {
+    pruneTypeBarriers(offset);
+
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
         TypeBarrier *barrier = *pbarrier;
-        if (barrier->target->hasType(barrier->type) ) {
-            /* Barrier is now obsolete, it can be removed. */
-            *pbarrier = barrier->next;
-        } else if (all) {
+        if (all) {
             /* Force removal of the barrier. */
             barrier->target->addType(cx, barrier->type);
             *pbarrier = barrier->next;
@@ -963,14 +980,16 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
             object->getFromPrototypes(cx, id, types);
         if (UsePropertyTypeBarrier(pc)) {
             types->addSubsetBarrier(cx, script, pc, target);
-            if (object->singleton && !JSID_IS_VOID(id) && types->empty()) {
+            if (object->singleton && !JSID_IS_VOID(id)) {
                 /*
-                 * Undefined property on a singleton JS object. Add a singleton
-                 * type barrier, which we'll be able to remove after the
-                 * property becomes defined, even if no undefined value is
-                 * observed at pc.
+                 * Add a singleton type barrier on the object if it has an
+                 * 'own' property which is currently undefined. We'll be able
+                 * to remove the barrier after the property becomes defined,
+                 * even if no undefined value is ever observed at pc.
                  */
-                script->analysis()->addSingletonTypeBarrier(cx, pc, target, object->singleton, id);
+                const Shape *shape = GetSingletonShape(object->singleton, id);
+                if (shape && object->singleton->nativeGetSlot(shape->slot).isUndefined())
+                    script->analysis()->addSingletonTypeBarrier(cx, pc, target, object->singleton, id);
             }
         } else {
             types->addSubset(cx, target);
@@ -1792,7 +1811,7 @@ TypeSet::getSingleton(JSContext *cx, bool freeze)
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
 
-TypeObject types::emptyTypeObject(JSID_VOID, NULL, false, true);
+TypeObject types::emptyTypeObject(NULL, false, true);
 
 void
 TypeCompartment::init(JSContext *cx)
@@ -1807,36 +1826,12 @@ TypeCompartment::init(JSContext *cx)
 
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
-                               const char *name, const char *postfix,
                                JSProtoKey key, JSObject *proto, bool unknown)
 {
-#ifdef DEBUG
-    if (*postfix) {
-        unsigned len = strlen(name) + strlen(postfix) + 2;
-        char *newName = (char *) alloca(len);
-        JS_snprintf(newName, len, "%s:%s", name, postfix);
-        name = newName;
-    }
-#if 0
-    /* Add a unique counter to the name, to distinguish objects from different globals. */
-    static unsigned nameCount = 0;
-    unsigned len = strlen(name) + 15;
-    char *newName = (char *) alloca(len);
-    JS_snprintf(newName, len, "%u:%s", ++nameCount, name);
-    name = newName;
-#endif
-    JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    if (!atom)
-        return NULL;
-    jsid id = ATOM_TO_JSID(atom);
-#else
-    jsid id = JSID_VOID;
-#endif
-
     TypeObject *object = NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
         return NULL;
-    new(object) TypeObject(id, proto, key == JSProto_Function, unknown);
+    new(object) TypeObject(proto, key == JSProto_Function, unknown);
 
     if (!cx->typeInferenceEnabled())
         object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
@@ -1859,12 +1854,6 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSite
         }
     }
 
-    char *name = NULL;
-#ifdef DEBUG
-    name = (char *) alloca(40);
-    JS_snprintf(name, 40, "#%lu:%lu", key.script->id(), key.offset);
-#endif
-
     AllocationSiteTable::AddPtr p = allocationSiteTable->lookupForAdd(key);
     JS_ASSERT(!p);
 
@@ -1872,7 +1861,7 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSite
     if (!js_GetClassPrototype(cx, key.script->global(), key.kind, &proto, NULL))
         return NULL;
 
-    TypeObject *res = newTypeObject(cx, key.script, name, "", key.kind, proto);
+    TypeObject *res = newTypeObject(cx, key.script, key.kind, proto);
     if (!res) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
@@ -2459,14 +2448,8 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
     if (p) {
         obj->setType(p->value);
     } else {
-        char *name = NULL;
-#ifdef DEBUG
-        static unsigned count = 0;
-        name = (char *) alloca(20);
-        JS_snprintf(name, 20, "TableArray:%u", ++count);
-#endif
-
-        TypeObject *objType = newTypeObject(cx, NULL, name, "", JSProto_Array, obj->getProto());
+        /* Make a new type to use for future arrays with the same elements. */
+        TypeObject *objType = newTypeObject(cx, NULL, JSProto_Array, obj->getProto());
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2585,14 +2568,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         obj->setType(p->value.object);
     } else {
         /* Make a new type to use for the object and similar future ones. */
-        char *name = NULL;
-#ifdef DEBUG
-        static unsigned count = 0;
-        name = (char *) alloca(20);
-        JS_snprintf(name, 20, "TableObject:%u", ++count);
-#endif
-
-        TypeObject *objType = newTypeObject(cx, NULL, name, "", JSProto_Object, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, NULL, JSProto_Object, obj->getProto());
         if (!objType || !objType->addDefiniteProperties(cx, obj)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2676,7 +2652,7 @@ UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *sh
 {
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
         types->addType(cx, Type::UnknownType());
-    } else if (shape->hasDefaultGetterOrIsMethod()) {
+    } else if (shape->hasDefaultGetterOrIsMethod() && shape->slot != SHAPE_INVALID_SLOT) {
         const Value &value = obj->nativeGetSlot(shape->slot);
 
         /*
@@ -2729,7 +2705,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 
     InferSpew(ISpewOps, "typeSet: %sT%p%s property %s %s",
               InferSpewColor(&base->types), &base->types, InferSpewColorReset(),
-              name(), TypeIdString(id));
+              TypeObjectString(this), TypeIdString(id));
 
     return true;
 }
@@ -2799,7 +2775,7 @@ InlineAddTypeProperty(JSContext *cx, TypeObject *obj, jsid id, Type type)
         return;
 
     InferSpew(ISpewOps, "externalType: property %s %s: %s",
-              obj->name(), TypeIdString(id), TypeString(type));
+              TypeObjectString(obj), TypeIdString(id), TypeString(type));
     types->addType(cx, type);
 }
 
@@ -2884,7 +2860,7 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     this->flags |= flags;
 
-    InferSpew(ISpewOps, "%s: setFlags %u", name(), flags);
+    InferSpew(ISpewOps, "%s: setFlags %u", TypeObjectString(this), flags);
 
     ObjectStateChange(cx, this, false, false);
 }
@@ -2900,7 +2876,7 @@ TypeObject::markUnknown(JSContext *cx)
     if (!(flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED))
         clearNewScript(cx);
 
-    InferSpew(ISpewOps, "UnknownProperties: %s", name());
+    InferSpew(ISpewOps, "UnknownProperties: %s", TypeObjectString(this));
 
     ObjectStateChange(cx, this, true, true);
 
@@ -3040,7 +3016,9 @@ TypeObject::clearNewScript(JSContext *cx)
 void
 TypeObject::print(JSContext *cx)
 {
-    printf("%s : %s", name(), proto ? TypeString(Type::ObjectType(proto)) : "(null)");
+    printf("%s : %s",
+           TypeObjectString(this),
+           proto ? TypeString(Type::ObjectType(proto)) : "(null)");
 
     if (unknownProperties()) {
         printf(" unknown");
@@ -5018,17 +4996,11 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
     if (!cx->typeInferenceEnabled())
         return true;
 
-    char *name = NULL;
-#ifdef DEBUG
-    name = (char *) alloca(10);
-    JS_snprintf(name, 10, "#%u", id());
-#endif
-
     if (singleton) {
         if (!fun->setSingletonType(cx))
             return false;
     } else {
-        TypeObject *type = cx->compartment->types.newTypeObject(cx, this, name, "",
+        TypeObject *type = cx->compartment->types.newTypeObject(cx, this,
                                                                 JSProto_Function, fun->getProto());
         if (!type)
             return false;
@@ -5156,13 +5128,7 @@ JSObject::makeLazyType(JSContext *cx)
     JS_ASSERT(cx->typeInferenceEnabled() && hasLazyType());
     AutoEnterTypeInference enter(cx);
 
-    char *name = NULL;
-#ifdef DEBUG
-    name = (char *) alloca(20);
-    JS_snprintf(name, 20, "<0x%p>", (void *) this);
-#endif
-
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "",
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
                                                             JSProto_Object, getProto());
     if (!type) {
         cx->compartment->types.setPendingNukeTypes(cx);
@@ -5216,12 +5182,7 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript, bool unknown)
 {
     JS_ASSERT(!newType);
 
-    const char *name = NULL;
-#ifdef DEBUG
-    name = TypeString(Type::ObjectType(this));
-#endif
-
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, name, "new",
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
                                                             JSProto_Object, this, unknown);
     if (!type)
         return;

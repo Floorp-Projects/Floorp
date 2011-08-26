@@ -1172,14 +1172,14 @@ mjit::JITScript::scriptDataSize()
 }
 
 void
-mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
+mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
 
-    JITScript **pjit = normal ? &script->jitNormal : &script->jitCtor;
-    void **parity = normal ? &script->jitArityCheckNormal : &script->jitArityCheckCtor;
+    JITScript **pjit = construct ? &script->jitCtor : &script->jitNormal;
+    void **parity = construct ? &script->jitArityCheckCtor : &script->jitArityCheckNormal;
 
     if (*pjit) {
         (*pjit)->~JITScript();

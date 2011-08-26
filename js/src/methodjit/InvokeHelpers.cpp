@@ -322,6 +322,27 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
 
     types::TypeMonitorCall(cx, args, construct);
 
+    /* Try to compile if not already compiled. */
+    if (newscript->getJITStatus(construct) == JITScript_None) {
+        CompileStatus status = CanMethodJIT(cx, newscript, construct, CompileRequest_Interpreter);
+        if (status == Compile_Error) {
+            /* A runtime exception was thrown, get out. */
+            return false;
+        }
+        if (status == Compile_Abort)
+            *unjittable = true;
+    }
+
+    /*
+     * Make sure we are not calling from an inline frame if we need to make a
+     * call object for the callee, as doing so could trigger GC and cause
+     * jitcode discarding / frame expansion.
+     */
+    if (f.regs.inlined() && newfun->isHeavyweight()) {
+        ExpandInlineFrames(cx->compartment);
+        JS_ASSERT(!f.regs.inlined());
+    }
+
     /*
      * Preserve f.regs.fp while pushing the new frame, for the invariant that
      * f.regs reflects the state when we entered the stub call. This handoff is
@@ -341,18 +362,6 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     /* Scope with a call object parented by callee's parent. */
     if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, regs.fp()))
         return false;
-
-    /* Try to compile if not already compiled. */
-    if (newscript->getJITStatus(f.fp()->isConstructing()) == JITScript_None) {
-        CompileStatus status = CanMethodJIT(cx, newscript, regs.fp(), CompileRequest_Interpreter);
-        if (status == Compile_Error) {
-            /* A runtime exception was thrown, get out. */
-            f.cx->stack.popInlineFrame(regs);
-            return false;
-        }
-        if (status == Compile_Abort)
-            *unjittable = true;
-    }
 
     /*
      * If newscript was successfully compiled, run it. Skip for calls which
