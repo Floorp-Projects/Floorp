@@ -57,6 +57,36 @@ Cu.import("resource://gre/modules/Services.jsm");
 let Async = {
 
   /**
+   * Execute an arbitrary number of asynchronous functions one after the
+   * other, passing the callback arguments on to the next one.  All functions
+   * must take a callback function as their last argument.  The 'this' object
+   * will be whatever chain()'s is.
+   * 
+   * @usage this._chain = Async.chain;
+   *        this._chain(this.foo, this.bar, this.baz)(args, for, foo)
+   * 
+   * This is equivalent to:
+   *
+   *   let self = this;
+   *   self.foo(args, for, foo, function (bars, args) {
+   *     self.bar(bars, args, function (baz, params) {
+   *       self.baz(baz, params);
+   *     });
+   *   });
+   */
+  chain: function chain() {
+    let funcs = Array.slice(arguments);
+    let thisObj = this;
+    return function callback() {
+      if (funcs.length) {
+        let args = Array.slice(arguments).concat(callback);
+        let f = funcs.shift();
+        f.apply(thisObj, args);
+      }
+    };
+  },
+
+  /**
    * Helpers for making asynchronous calls within a synchronous API possible.
    *
    * If you value your sanity, do not look closely at the following functions.
