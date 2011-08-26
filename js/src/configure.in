@@ -2264,7 +2264,7 @@ ia64*-hpux*)
         else
             MOZ_FRAMEPTR_FLAGS='-Oy-'
         fi
-        MOZ_OPTIMIZE_FLAGS='-O2 $MOZ_FRAMEPTR_FLAGS'
+        MOZ_OPTIMIZE_FLAGS="-O2 $MOZ_FRAMEPTR_FLAGS"
         MOZ_JS_LIBS='$(libdir)/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
