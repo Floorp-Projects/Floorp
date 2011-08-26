@@ -19,6 +19,12 @@ include pngsuite-palettes/reftest.list
 include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
 
+# BMP tests
+skip-if(Android) include bmp/reftest.list
+
+# ICO tests
+skip-if(Android) include ico/reftest.list
+
 # JPEG tests
 include jpeg/reftest.list
 
@@ -36,3 +42,7 @@ include generic/reftest.list
 
 # Color management test
 include color-management/reftest.list
+
+# Lossless encoders
+skip-if(Android) include encoders-lossless/reftest.list
+
