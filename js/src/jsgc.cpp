@@ -1537,6 +1537,7 @@ GCMarker::GCMarker(JSContext *cx)
     unmarkedArenaStackTop(MarkingDelay::stackBottom()),
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
     ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
+    typeStack(cx->runtime->gcMarkStackTypes, sizeof(cx->runtime->gcMarkStackTypes)),
     xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
     largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
 {
@@ -1798,8 +1799,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case TYPE: {
         types::TypeObject *type = static_cast<types::AutoTypeRooter *>(this)->type;
-        if (!type->isMarked())
-            type->trace(trc);
+        MarkTypeObject(trc, type, "js::AutoTypeRooter");
         return;
       }
 
