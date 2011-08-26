@@ -138,7 +138,7 @@ InvokeSessionGuard::invoke(JSContext *cx)
     mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
     if (!jit) {
         /* Watch in case the code was thrown away due a recompile. */
-        mjit::CompileStatus status = mjit::TryCompile(cx, ifg_.fp());
+        mjit::CompileStatus status = mjit::TryCompile(cx, script_, false);
         if (status == mjit::Compile_Error)
             return false;
         JS_ASSERT(status == mjit::Compile_Okay);

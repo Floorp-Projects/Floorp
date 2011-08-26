@@ -1080,17 +1080,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline const char *
-TypeObject::name()
-{
-#ifdef DEBUG
-    return TypeIdString(name_);
-#else
-    return NULL;
-#endif
-}
-
-inline TypeObject::TypeObject(jsid name, JSObject *proto, bool function, bool unknown)
+inline TypeObject::TypeObject(JSObject *proto, bool function, bool unknown)
 {
     PodZero(this);
 
@@ -1100,11 +1090,7 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto, bool function, bool un
     if (unknown)
         flags |= OBJECT_FLAG_UNKNOWN_MASK;
 
-#ifdef DEBUG
-    this->name_ = name;
-#endif
-
-    InferSpew(ISpewOps, "newObject: %s", this->name());
+    InferSpew(ISpewOps, "newObject: %s", TypeObjectString(this));
 }
 
 inline uint32

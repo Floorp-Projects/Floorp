@@ -598,12 +598,10 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 }
 
 CompileStatus JS_NEVER_INLINE
-mjit::TryCompile(JSContext *cx, StackFrame *fp)
+mjit::TryCompile(JSContext *cx, JSScript *script, bool construct)
 {
-    JS_ASSERT(cx->fp() == fp);
-
 #if JS_HAS_SHARP_VARS
-    if (fp->script()->hasSharps)
+    if (script->hasSharps)
         return Compile_Abort;
 #endif
     bool ok = cx->compartment->ensureJaegerCompartmentExists(cx);
@@ -611,14 +609,14 @@ mjit::TryCompile(JSContext *cx, StackFrame *fp)
         return Compile_Abort;
 
     // Ensure that constructors have at least one slot.
-    if (fp->isConstructing() && !fp->script()->nslots)
-        fp->script()->nslots++;
+    if (construct && !script->nslots)
+        script->nslots++;
 
     CompileStatus status;
     {
         types::AutoEnterTypeInference enter(cx, true);
 
-        Compiler cc(cx, fp->script(), fp->isConstructing());
+        Compiler cc(cx, script, construct);
         status = cc.compile();
     }
 
@@ -628,7 +626,7 @@ mjit::TryCompile(JSContext *cx, StackFrame *fp)
          * Treat this the same way as a static overflow and wait for another
          * attempt to compile the script.
          */
-        JITScriptStatus status = fp->script()->getJITStatus(fp->isConstructing());
+        JITScriptStatus status = script->getJITStatus(construct);
         JS_ASSERT(status != JITScript_Invalid);
         return (status == JITScript_Valid) ? Compile_Okay : Compile_Retry;
     }
