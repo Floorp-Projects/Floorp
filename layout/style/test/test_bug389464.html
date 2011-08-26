@@ -27,24 +27,10 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function get_pref(pref)
-{
-    return SpecialPowers.getIntPref("font.size." + pref);
-}
-
-function set_pref(pref, val)
-{
-    SpecialPowers.setIntPref("font.size." + pref, val);
-}
-
 var cs1 = getComputedStyle(document.getElementById("one"), "");
 var cs2 = getComputedStyle(document.getElementById("two"), "");
 
-var oldVariable = get_pref("variable.x-western");
-var oldFixed = get_pref("fixed.x-western");
-set_pref("variable.x-western", 25);
-set_pref("fixed.x-western", 20);
-setTimeout(part1, 0);
+SpecialPowers.pushPrefEnv({'set': [['variable.x-western', 25], ['fixed.x-western', 20]]}, function() setTimeout(part1, 0));
 
 function part1()
 {
@@ -52,8 +38,6 @@ function part1()
     var fs2 = cs2.fontSize.match(/(.*)px/)[1];
     ok(fs1 < fs2, "<font size=-1> shrinks relative to font-family: -moz-fixed");
 
-    set_pref("variable.x-western", oldVariable);
-    set_pref("fixed.x-western", oldFixed);
     SimpleTest.finish();
 }
 
