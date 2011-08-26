@@ -250,7 +250,9 @@ couldBeObjectOrString(LIns *ins)
         // ins = andq ins_oprnd1, ins_oprnd2
         ret = true;
 #endif
-    } else if (ins->isop(LIR_addp) &&
+    }
+#ifdef JS_HAS_STATIC_STRINGS
+    else if (ins->isop(LIR_addp) &&
                ((ins->oprnd1()->isImmP() &&
                  (void *)ins->oprnd1()->immP() == JSAtom::unitStaticTable) ||
                 (ins->oprnd2()->isImmP() &&
@@ -262,6 +264,7 @@ couldBeObjectOrString(LIns *ins)
         // ins = addp JSString::unitStringTable, ...
         ret = true;
     }
+#endif
 
     return ret;
 }
