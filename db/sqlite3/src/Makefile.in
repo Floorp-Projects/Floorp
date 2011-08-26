@@ -98,6 +98,9 @@ CSRCS = \
 # -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
 # increases the page size from 1k, see bug 416330.  The value must stay in sync
 # with mozIStorageConnection::DEFAULT_PAGE_SIZE.
+# -DSQLITE_MAX_SCHEMA_RETRY increases the times SQLite may try to reparse
+# statements when the schema changes. This is important when supporting lots of
+# concurrent connections, especially when they use shared cache.
 # Note: Be sure to update the configure.in checks when these change!
 DEFINES = \
   -DSQLITE_SECURE_DELETE=1 \
@@ -107,6 +110,7 @@ DEFINES = \
   -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 \
   -DSQLITE_DEFAULT_PAGE_SIZE=32768 \
   -DSQLITE_MAX_DEFAULT_PAGE_SIZE=32768 \
+  -DSQLITE_MAX_SCHEMA_RETRY=25 \
   $(NULL)
 
 # -DSQLITE_ENABLE_LOCKING_STYLE=1 to help with AFP folders
