@@ -510,7 +510,11 @@ class Mochitest(object):
     manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
 
-    self.installSpecialPowersExtension(options)
+    # We only need special powers in non-chrome harnesses
+    if (not options.browserChrome and
+        not options.chrome and
+        not options.a11y):
+      self.installSpecialPowersExtension(options)
     self.installExtensionsToProfile(options)
     return manifest
 

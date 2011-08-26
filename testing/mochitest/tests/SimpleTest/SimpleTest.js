@@ -22,6 +22,11 @@ if (parent) {
     if (!parentRunner && parent.wrappedJSObject) {
         parentRunner = parent.wrappedJSObject.TestRunner;
     }
+
+    //This is the case where we have ChromePowers in harness.xul and we need it in the iframe
+    if (window.SpecialPowers == undefined && parent.SpecialPowers !== undefined) {
+        window.SpecialPowers = parent.SpecialPowers;
+    }
 }
 
 // running in e10s build and need to use IPC?
