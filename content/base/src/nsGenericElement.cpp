@@ -5403,6 +5403,20 @@ nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aRetu
 }
 
 PRInt64
+nsINode::SizeOf() const
+{
+  PRInt64 size = sizeof(*this);
+
+  nsEventListenerManager* elm =
+    const_cast<nsINode*>(this)->GetListenerManager(PR_FALSE);
+  if (elm) {
+    size += elm->SizeOf();
+  }
+
+  return size;
+}
+
+PRInt64
 nsGenericElement::SizeOf() const
 {
   PRInt64 size = MemoryReporter::GetBasicSize<nsGenericElement, Element>(this);

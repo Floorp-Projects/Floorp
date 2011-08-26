@@ -8455,7 +8455,7 @@ nsDocument::CaretPositionFromPoint(float aX, float aY, nsIDOMCaretPosition** aCa
 PRInt64
 nsIDocument::SizeOf() const
 {
-  PRInt64 size = sizeof(*this);
+  PRInt64 size = MemoryReporter::GetBasicSize<nsIDocument, nsINode>(this);
 
   for (nsIContent* node = GetFirstChild(); node;
        node = node->GetNextNode(this)) {
