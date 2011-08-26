@@ -33,6 +33,7 @@ let XULDocument = Ci.nsIDOMXULDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
 let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
+let HTMLFrameSetElement = Ci.nsIDOMHTMLFrameSetElement;
 let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
 let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
 
@@ -743,6 +744,11 @@ let ViewportHandler = {
     // HACK: Since we can't set the scale in local tabs (bug 597081), we force
     // them to device-width and scale=1 so they will lay out reasonably.
     if (Util.isParentProcess())
+      return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
+
+    // HACK: Since we can't set the scale correctly in frameset pages yet (bug 645756), we force
+    // them to device-width and scale=1 so they will lay out reasonably.
+    if (content.frames.length > 0 && (content.document.body instanceof HTMLFrameSetElement))
       return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
 
     // viewport details found here
