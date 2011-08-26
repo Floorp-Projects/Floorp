@@ -18,11 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=662678
 <script type="application/javascript">
 
 /** Test for Bug 662678 **/
-SimpleTest.waitForExplicitFinish();
 
-var checkMotion = function(event) {
-  window.removeEventListener("devicemotion", checkMotion, true);
-
+window.addEventListener("devicemotion", function(event) {
   is(event.acceleration.x, 1.5);
   is(event.acceleration.y, 1.5);
   is(event.acceleration.z, 1.5);
@@ -35,9 +32,7 @@ var checkMotion = function(event) {
   is(event.rotationRate.beta, 1.5);
   is(event.rotationRate.gamma, 1.5);
   SimpleTest.finish();
-};
-
-window.addEventListener("devicemotion", checkMotion, true);
+}, true);
 
 var event = DeviceMotionEvent;
 ok(!!event, "Should have seen DeviceMotionEvent!");
@@ -49,6 +44,7 @@ event.initDeviceMotionEvent('devicemotion', true, true,
                             {alpha:1.5,beta:1.5,gamma:1.5},
                             0);
 window.dispatchEvent(event);
+SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>
