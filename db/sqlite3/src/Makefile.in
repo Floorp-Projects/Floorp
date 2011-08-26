@@ -133,6 +133,8 @@ endif
 ifeq ($(OS_TARGET),Android)
 # default to user readable only to fit Android security model
 DEFINES += -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
+# Force using fsync, since there is not fdatasync in ndk 5.
+DEFINES += -Dfdatasync=fsync
 endif
 
 include $(topsrcdir)/config/rules.mk
