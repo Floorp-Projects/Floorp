@@ -13,6 +13,17 @@ const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 const LOG_PREFIX_SUCCESS = "success-";
 const LOG_PREFIX_ERROR   = "error-";
 
+const PROLONGED_ERROR_DURATION =
+  (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
+
+const NON_PROLONGED_ERROR_DURATION =
+  (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') / 2) * 1000;
+
+function setLastSync(lastSyncValue) {
+  Svc.Prefs.set("lastSync", (new Date(Date.now() -
+    lastSyncValue)).toString());
+}
+
 function CatapultEngine() {
   SyncEngine.call(this, "Catapult");
 }
@@ -34,6 +45,16 @@ function run_test() {
   Log4Moz.repository.getLogger("Sync.ErrorHandler").level = Log4Moz.Level.Trace;
 
   run_next_test();
+}
+
+function generateCredentialsChangedFailure() {
+  // Make sync fail due to changed credentials. We simply re-encrypt
+  // the keys with a different Sync Key, without changing the local one.
+  let newSyncKeyBundle = new SyncKeyBundle(PWDMGR_PASSPHRASE_REALM, Service.username);
+  newSyncKeyBundle.keyStr = "23456234562345623456234562";
+  let keys = CollectionKeys.asWBO();
+  keys.encrypt(newSyncKeyBundle);
+  keys.upload(Service.cryptoKeysURL);
 }
 
 function sync_httpd_setup() {
@@ -86,7 +107,7 @@ add_test(function test_401_logout() {
   // Make sync fail due to login rejected.
   Service.username = "janedoe";
   Service.sync();
-  
+
   do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
   do_check_false(Service.isLoggedIn);
 
@@ -104,15 +125,9 @@ add_test(function test_credentials_changed_logout() {
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  // Make sync fail due to changed credentials. We simply re-encrypt
-  // the keys with a different Sync Key, without changing the local one.
-  let newSyncKeyBundle = new SyncKeyBundle(PWDMGR_PASSPHRASE_REALM, Service.username);
-  newSyncKeyBundle.keyStr = "23456234562345623456234562";
-  let keys = CollectionKeys.asWBO();
-  keys.encrypt(newSyncKeyBundle);
-  keys.upload(Service.cryptoKeysURL);
+  generateCredentialsChangedFailure();
   Service.sync();
-  
+
   do_check_eq(Status.sync, CREDENTIALS_CHANGED);
   do_check_false(Service.isLoggedIn);
 
@@ -121,26 +136,493 @@ add_test(function test_credentials_changed_logout() {
   server.stop(run_next_test);
 });
 
-add_test(function test_shouldIgnoreError() {
-  Status.login = MASTER_PASSWORD_LOCKED;
-  Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+add_test(function test_no_lastSync_pref() {
+  // Test reported error.
+  Status.resetSync();
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = CREDENTIALS_CHANGED;
+  do_check_true(ErrorHandler.shouldReportError());
 
-  // Error ignored since master password locked.
-  do_check_true(ErrorHandler.shouldIgnoreError());
-
-  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-  Status.sync = LOGIN_FAILED_NETWORK_ERROR
-
-  // Error ignored due to network error.
-  do_check_true(ErrorHandler.shouldIgnoreError());
-
-  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-  Status.sync = NO_SYNC_NODE_FOUND;
-
-  // Error not ignored.
-  do_check_false(ErrorHandler.shouldIgnoreError());
+  // Test unreported error.
+  Status.resetSync();
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
 
   run_next_test();
+});
+
+add_test(function test_shouldReportError() {
+  Status.login = MASTER_PASSWORD_LOCKED;
+  do_check_false(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.login = LOGIN_FAILED_NO_PASSWORD;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, non-network, non-prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = CREDENTIALS_CHANGED;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, non-network, prolonged, login error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.login = LOGIN_FAILED_NO_PASSWORD;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, non-network, prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = CREDENTIALS_CHANGED;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, network, non-prolonged, login error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, network, non-prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, network, prolonged, login error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, network, prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test non-network, prolonged, login error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.login = LOGIN_FAILED_NO_PASSWORD;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test non-network, prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.sync = CREDENTIALS_CHANGED;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test network, prolonged, login error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test network, prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test non-network, non-prolonged, login error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.login = LOGIN_FAILED_NO_PASSWORD;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test non-network, non-prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.sync = CREDENTIALS_CHANGED;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test network, non-prolonged, login error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_false(ErrorHandler.shouldReportError());
+
+  // Test network, non-prolonged, sync error reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+  do_check_false(ErrorHandler.shouldReportError());
+
+  run_next_test();
+});
+
+add_test(function test_shouldReportError_master_password() {
+  _("Test error ignored due to locked master password");
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Monkey patch Service.verifyLogin to imitate
+  // master password being locked.
+  Service._verifyLogin = Service.verifyLogin;
+  Service.verifyLogin = function () {
+    Status.login = MASTER_PASSWORD_LOCKED;
+    return false;
+  };
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  Service.sync();
+  do_check_false(ErrorHandler.shouldReportError());
+
+  // Clean up.
+  Service.verifyLogin = Service._verifyLogin;
+  Service.startOver();
+  server.stop(run_next_test);
+});
+
+add_test(function test_login_syncAndReportErrors_non_network_error() {
+  // Test non-network errors are reported
+  // when calling syncAndReportErrors
+  let server = sync_httpd_setup();
+  setUp();
+  Service.password = "";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_sync_syncAndReportErrors_non_network_error() {
+  // Test non-network errors are reported
+  // when calling syncAndReportErrors
+  let server = sync_httpd_setup();
+  setUp();
+
+  // By calling sync, we ensure we're logged in.
+  Service.sync();
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+  do_check_true(Service.isLoggedIn);
+
+  generateCredentialsChangedFailure();
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_login_syncAndReportErrors_prolonged_non_network_error() {
+  // Test prolonged, non-network errors are
+  // reported when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+  setUp();
+  Service.password = "";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_sync_syncAndReportErrors_prolonged_non_network_error() {
+  // Test prolonged, non-network errors are
+  // reported when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+  setUp();
+
+  // By calling sync, we ensure we're logged in.
+  Service.sync();
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+  do_check_true(Service.isLoggedIn);
+
+  generateCredentialsChangedFailure();
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_login_syncAndReportErrors_network_error() {
+  // Test network errors are reported when calling syncAndReportErrors.
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+    Service.startOver();
+    run_next_test();
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+
+add_test(function test_sync_syncAndReportErrors_network_error() {
+  // Test network errors are reported when calling syncAndReportErrors.
+  Services.io.offline = true;
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+
+    Services.io.offline = false;
+    Service.startOver();
+    run_next_test();
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_login_syncAndReportErrors_prolonged_network_error() {
+  // Test prolonged, network errors are reported
+  // when calling syncAndReportErrors.
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    run_next_test();
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
+  // Test prolonged, network errors are reported
+  // when calling syncAndReportErrors.
+  Services.io.offline = true;
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Services.io.offline = false;
+    Service.startOver();
+    run_next_test();
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_login_prolonged_non_network_error() {
+  // Test prolonged, non-network errors are reported
+  let server = sync_httpd_setup();
+  setUp();
+  Service.password = "";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_sync_prolonged_non_network_error() {
+  // Test prolonged, non-network errors are reported
+  let server = sync_httpd_setup();
+  setUp();
+
+  // By calling sync, we ensure we're logged in.
+  Service.sync();
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+  do_check_true(Service.isLoggedIn);
+
+  generateCredentialsChangedFailure();
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_login_prolonged_network_error() {
+  // Test prolonged, network errors are reported
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    run_next_test();
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_sync_prolonged_network_error() {
+  // Test prolonged, network errors are reported
+  Services.io.offline = true;
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Services.io.offline = false;
+    Service.startOver();
+    run_next_test();
+  });
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_login_non_network_error() {
+  // Test non-network errors are reported
+  let server = sync_httpd_setup();
+  setUp();
+  Service.password = "";
+
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+
+add_test(function test_sync_non_network_error() {
+  // Test non-network errors are reported
+  let server = sync_httpd_setup();
+  setUp();
+
+  // By calling sync, we ensure we're logged in.
+  Service.sync();
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+  do_check_true(Service.isLoggedIn);
+
+  generateCredentialsChangedFailure();
+
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
+
+    Service.startOver();
+    server.stop(run_next_test);
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_login_network_error() {
+  Service.username = "johndoe";
+  Service.password = "ilovejane";
+  Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
+  Service.clusterURL = "http://localhost:8080/";
+
+  Svc.Obs.add("weave:ui:login:error", function() {
+    do_throw("Should not get here!");
+  });
+
+  // Test network errors are not reported.
+  Svc.Obs.add("weave:service:login:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:service:login:error", onUIUpdate);
+
+    // Wait until other login:error observers are called since
+    // it may change Status.sync.
+    Utils.nextTick(function() {
+      do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+      Service.startOver();
+      Services.io.offline = false;
+      run_next_test();
+    });
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_sync_network_error() {
+  // Test network errors are not reported.
+  Services.io.offline = true;
+
+  Svc.Obs.add("weave:ui:sync:finish", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:finish", onUIUpdate);
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+
+    Service.startOver();
+    Services.io.offline = false;
+    Status.resetSync();
+    run_next_test();
+  });
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  Service.sync();
 });
 
 add_test(function test_sync_engine_generic_fail() {
