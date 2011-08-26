@@ -3226,6 +3226,8 @@ fi         # Sun Studio on Solaris
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
+MOZ_GCC_PR49911
+
 dnl Check for __force_align_arg_pointer__ for SSE2 on gcc
 dnl ========================================================
 if test "$GNU_CC"; then
