@@ -308,8 +308,6 @@ chrome.jar:
   skin/honeycomb/images/arrowbox-up.png               (honeycomb/images/arrowbox-up.png)
   skin/honeycomb/images/arrowbox-down.png             (honeycomb/images/arrowbox-down.png)
   skin/honeycomb/images/arrowbox-horiz.png            (honeycomb/images/arrowbox-horiz.png)
-  skin/honeycomb/images/check-selected-30.png         (honeycomb/images/check-selected-30.png)
-  skin/honeycomb/images/check-unselected-30.png       (honeycomb/images/check-unselected-30.png)
   skin/honeycomb/images/dropmarker-hdpi.png           (honeycomb/images/dropmarker-hdpi.png)
   skin/honeycomb/images/ratings-18.png                (images/ratings-18.png)
   skin/honeycomb/images/favicon-default-32.png        (honeycomb/images/favicon-default-32.png)
