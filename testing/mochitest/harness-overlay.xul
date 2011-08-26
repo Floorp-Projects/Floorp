@@ -12,12 +12,6 @@
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
   <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/specialpowersAPI.js"/>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js"/>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/ChromePowers.js"/>
-  <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
