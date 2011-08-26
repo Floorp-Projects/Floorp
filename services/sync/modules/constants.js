@@ -162,6 +162,7 @@ CREDENTIALS_CHANGED:                   "error.sync.reason.credentials_changed",
 ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
 OVER_QUOTA:                            "error.sync.reason.over_quota",
+PROLONGED_SYNC_FAILURE:                "error.sync.prolonged_failure",
 
 RESPONSE_OVER_QUOTA:                   "14",
 
