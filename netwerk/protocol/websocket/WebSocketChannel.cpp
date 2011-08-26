@@ -2404,6 +2404,9 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream *aStream)
   LOG(("WebSocketChannel::OnInputStreamReady() %p\n", this));
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "not socket thread");
 
+  if (!mSocketIn) // did we we clean up the socket after scheduling InputReady?
+    return NS_OK;
+  
   nsRefPtr<nsIStreamListener>    deleteProtector1(mInflateReader);
   nsRefPtr<nsIStringInputStream> deleteProtector2(mInflateStream);
 
