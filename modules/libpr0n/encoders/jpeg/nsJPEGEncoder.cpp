@@ -219,6 +219,22 @@ NS_IMETHODIMP nsJPEGEncoder::StartImageEncode(PRUint32 aWidth,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// Returns the image buffer size
+NS_IMETHODIMP  nsJPEGEncoder::GetImageBufferSize(PRUint32 *aOutputSize)
+{
+  NS_ENSURE_ARG_POINTER(aOutputSize);
+  *aOutputSize = mImageBufferSize;
+  return NS_OK;
+}
+
+// Returns a pointer to the start of the image buffer
+NS_IMETHODIMP nsJPEGEncoder::GetImageBuffer(char **aOutputBuffer)
+{
+  NS_ENSURE_ARG_POINTER(aOutputBuffer);
+  *aOutputBuffer = reinterpret_cast<char*>(mImageBuffer);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsJPEGEncoder::AddImageFrame(const PRUint8* aData,
                                            PRUint32 aLength,
                                            PRUint32 aWidth,
