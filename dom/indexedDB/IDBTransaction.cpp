@@ -54,6 +54,7 @@
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBObjectStore.h"
+#include "IndexedDatabaseManager.h"
 #include "TransactionThreadPool.h"
 
 #define SAVEPOINT_NAME "savepoint"
@@ -974,7 +975,7 @@ CommitHelper::Run()
   }
 
   if (mConnection) {
-    IDBFactory::SetCurrentDatabase(database);
+    IndexedDatabaseManager::SetCurrentDatabase(database);
 
     if (!mAborted) {
       NS_NAMED_LITERAL_CSTRING(release, "END TRANSACTION");
@@ -1010,7 +1011,7 @@ CommitHelper::Run()
     mConnection->Close();
     mConnection = nsnull;
 
-    IDBFactory::SetCurrentDatabase(nsnull);
+    IndexedDatabaseManager::SetCurrentDatabase(nsnull);
   }
 
   return NS_OK;
