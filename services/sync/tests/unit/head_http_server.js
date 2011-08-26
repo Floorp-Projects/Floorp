@@ -7,10 +7,21 @@ function new_timestamp() {
   
 function httpd_setup (handlers) {
   let server = new nsHttpServer();
+  let port   = 8080;
   for (let path in handlers) {
     server.registerPathHandler(path, handlers[path]);
   }
-  server.start(8080);
+  try {
+    server.start(port);
+  } catch (ex) {
+    _("==========================================");
+    _("Got exception starting HTTP server on port " + port);
+    _("Error: " + Utils.exceptionStr(ex));
+    _("Is there a process already listening on port " + port + "?");
+    _("==========================================");
+    do_throw(ex);
+  }
+    
   return server;
 }
 
