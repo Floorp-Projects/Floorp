@@ -9,11 +9,29 @@ Cu.import("resource://services-sync/status.js");
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
+const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+const LOG_PREFIX_SUCCESS = "success-";
+const LOG_PREFIX_ERROR   = "error-";
+
+function CatapultEngine() {
+  SyncEngine.call(this, "Catapult");
+}
+CatapultEngine.prototype = {
+  __proto__: SyncEngine.prototype,
+  exception: null, // tests fill this in
+  sync: function sync() {
+    throw this.exception;
+  }
+};
+
+Engines.register(CatapultEngine);
+
 function run_test() {
   initTestLogging("Trace");
 
   Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Sync.SyncScheduler").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.ErrorHandler").level = Log4Moz.Level.Trace;
 
   run_next_test();
 }
@@ -53,7 +71,7 @@ function setUp() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.syncKeyBundle);
-  return serverKeys.upload(Service.cryptoKeysURL);
+  return serverKeys.upload(Service.cryptoKeysURL).success;
 }
 
 add_test(function test_401_logout() {
@@ -123,4 +141,83 @@ add_test(function test_shouldIgnoreError() {
   do_check_false(ErrorHandler.shouldIgnoreError());
 
   run_next_test();
+});
+
+add_test(function test_sync_engine_generic_fail() {
+  let server = sync_httpd_setup();
+
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.sync = function sync() {
+    Svc.Obs.notify("weave:engine:sync:error", "", "steam");
+  };
+
+  let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+  Svc.Prefs.set("log.appender.file.logOnError", true);
+
+  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
+    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+
+    // Test Error log was written on SYNC_FAILED_PARTIAL.
+    let entries = logsdir.directoryEntries;
+    do_check_true(entries.hasMoreElements());
+    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
+                LOG_PREFIX_ERROR);
+
+    Status.resetSync();
+    Service.startOver();
+
+    server.stop(run_next_test);
+  });
+
+  do_check_eq(Status.engines["steam"], undefined);
+
+  do_check_true(setUp());
+
+  Service.sync();
+
+  do_check_eq(Status.engines["steam"], ENGINE_UNKNOWN_FAIL);
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+});
+
+// This test should be the last one since it monkeypatches the engine object
+// and we should only have one engine object throughout the file (bug 629664).
+add_test(function test_engine_applyFailed() {
+  let server = sync_httpd_setup();
+
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  delete engine.exception;
+  engine.sync = function sync() {
+    Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "steam");
+  };
+
+  let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+  Svc.Prefs.set("log.appender.file.logOnError", true);
+
+  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
+    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+
+    // Test Error log was written on SYNC_FAILED_PARTIAL.
+    let entries = logsdir.directoryEntries;
+    do_check_true(entries.hasMoreElements());
+    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    do_check_eq(logfile.leafName.slice(0, LOG_PREFIX_ERROR.length),
+                LOG_PREFIX_ERROR);
+
+    Status.resetSync();
+    Service.startOver();
+
+    server.stop(run_next_test);
+  });
+
+  do_check_eq(Status.engines["steam"], undefined);
+
+  do_check_true(setUp());
+
+  Service.sync();
+
+  do_check_eq(Status.engines["steam"], ENGINE_APPLY_FAIL);
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 });

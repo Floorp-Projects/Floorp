@@ -40,7 +40,8 @@
 
 // gSyncUI handles updating the tools menu
 let gSyncUI = {
-  _obs: ["weave:service:sync:start",
+  _obs: ["weave:engine:sync:error",
+         "weave:service:sync:start",
          "weave:service:sync:finish",
          "weave:service:sync:error",
          "weave:service:sync:delayed",
@@ -437,6 +438,7 @@ let gSyncUI = {
       case "weave:service:sync:finish":
         this.onSyncFinish();
         break;
+      case "weave:engine:sync:error":
       case "weave:service:sync:error":
         this.onSyncError();
         break;
