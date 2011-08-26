@@ -147,6 +147,8 @@
 #include "nsSVGFeatures.h"
 #include "nsDOMMemoryReporter.h"
 
+#include "xpcpublic.h"
+
 using namespace mozilla::dom;
 namespace css = mozilla::css;
 
@@ -2150,6 +2152,28 @@ nsNodeSelectorTearoff::QuerySelectorAll(const nsAString& aSelector,
 }
 
 //----------------------------------------------------------------------
+
+NS_IMPL_CYCLE_COLLECTION_1(nsTouchEventReceiverTearoff, mElement)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTouchEventReceiverTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsITouchEventReceiver)
+NS_INTERFACE_MAP_END_AGGREGATED(mElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTouchEventReceiverTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTouchEventReceiverTearoff)
+
+//----------------------------------------------------------------------
+
+NS_IMPL_CYCLE_COLLECTION_1(nsInlineEventHandlersTearoff, mElement)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInlineEventHandlersTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIInlineEventHandlers)
+NS_INTERFACE_MAP_END_AGGREGATED(mElement)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsInlineEventHandlersTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsInlineEventHandlersTearoff)
+
+//----------------------------------------------------------------------
 nsGenericElement::nsDOMSlots::nsDOMSlots()
   : nsINode::nsSlots(),
     mDataset(nsnull),
@@ -3617,7 +3641,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
     pressure = static_cast<nsMouseEvent*>(aSourceEvent)->pressure;
     inputSource = static_cast<nsMouseEvent*>(aSourceEvent)->inputSource;
   } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
-    inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+    inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
   event.clickCount = clickCount;
@@ -4265,6 +4289,10 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
                                  new nsNodeSelectorTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
                                  new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsITouchEventReceiver,
+                                 new nsTouchEventReceiverTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIInlineEventHandlers,
+                                 new nsInlineEventHandlersTearoff(this))
   // nsNodeSH::PreCreate() depends on the identity pointer being the
   // same as nsINode (which nsIContent inherits), so if you change the
   // below line, make sure nsNodeSH::PreCreate() still does the right
@@ -5385,3 +5413,30 @@ nsGenericElement::SizeOf() const
   return size;
 }
 
+#define EVENT(name_, id_, type_, struct_)                                    \
+  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
+    nsEventListenerManager *elm = GetListenerManager(PR_FALSE);              \
+    if (elm) {                                                               \
+      elm->GetJSEventListener(nsGkAtoms::on##name_, vp);                     \
+    } else {                                                                 \
+      *vp = JSVAL_NULL;                                                      \
+    }                                                                        \
+    return NS_OK;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
+    nsEventListenerManager *elm = GetListenerManager(PR_TRUE);               \
+    if (!elm) {                                                              \
+      return NS_ERROR_OUT_OF_MEMORY;                                         \
+    }                                                                        \
+                                                                             \
+    JSObject *obj = GetWrapper();                                            \
+    if (!obj) {                                                              \
+      /* Just silently do nothing */                                         \
+      return NS_OK;                                                          \
+    }                                                                        \
+    return elm->SetJSEventListenerToJsval(nsGkAtoms::on##name_, cx, obj, v); \
+}
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef EVENT

@@ -44,7 +44,6 @@
 #include "nsContentUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
@@ -470,7 +469,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
 
   mCachedModifiers = 0;
 
-  nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
+  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aEvent);
   if (uiEvent) {
     uiEvent->GetRangeParent(getter_AddRefs(mRangeParent));
     uiEvent->GetRangeOffset(&mRangeOffset);
@@ -1402,8 +1401,11 @@ nsXULPopupManager::GetVisiblePopups()
 
   item = mNoHidePanels;
   while (item) {
-    if (item->Frame()->PopupState() == ePopupOpenAndVisible)
+    // skip panels which are not open and visible as well as draggable popups,
+    // as those don't respond to events.
+    if (item->Frame()->PopupState() == ePopupOpenAndVisible && !item->Frame()->IsDragPopup()) {
       popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
+    }
     item = item->GetParent();
   }
 
@@ -2001,7 +2003,7 @@ nsXULPopupManager::GetNextMenuItem(nsIFrame* aParent,
   if (aStart)
     currFrame = aStart->GetNextSibling();
   else 
-    currFrame = immediateParent->GetFirstChild(nsnull);
+    currFrame = immediateParent->GetFirstPrincipalChild();
   
   while (currFrame) {
     // See if it's a menu item.
@@ -2012,7 +2014,7 @@ nsXULPopupManager::GetNextMenuItem(nsIFrame* aParent,
     currFrame = currFrame->GetNextSibling();
   }
 
-  currFrame = immediateParent->GetFirstChild(nsnull);
+  currFrame = immediateParent->GetFirstPrincipalChild();
 
   // Still don't have anything. Try cycling from the beginning.
   while (currFrame && currFrame != aStart) {
@@ -2041,7 +2043,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsIFrame* aParent,
   if (!immediateParent)
     immediateParent = aParent;
 
-  const nsFrameList& frames(immediateParent->GetChildList(nsnull));
+  const nsFrameList& frames(immediateParent->PrincipalChildList());
 
   nsIFrame* currFrame = nsnull;
   if (aStart)

@@ -465,8 +465,6 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     }
 
 
-    nsresult rv;
-
     // Get the prefix and suffix to stick onto the new hostname. By default these
     // are www. & .com but they could be any other value, e.g. www. & .org
 

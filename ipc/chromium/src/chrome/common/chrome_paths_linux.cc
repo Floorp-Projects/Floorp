@@ -9,9 +9,6 @@
 
 #include "base/file_path.h"
 #include "base/path_service.h"
-#ifndef CHROMIUM_MOZILLA_BUILD
-#include "chrome/third_party/xdg_user_dirs/xdg_user_dir_lookup.h"
-#endif // ifndef CHROMIUM_MOZILLA_BUILD
 
 namespace {
 
@@ -36,14 +33,6 @@ FilePath GetHomeDir() {
 // Wrapper around xdg_user_dir_lookup() from
 // src/chrome/third_party/xdg-user-dirs
 FilePath GetXDGUserDirectory(const char* env_name, const char* fallback_dir) {
-#ifndef CHROMIUM_MOZILLA_BUILD
-  char* xdg_dir = xdg_user_dir_lookup(env_name);
-  if (xdg_dir) {
-    FilePath rv(xdg_dir);
-    free(xdg_dir);
-    return rv;
-  }
-#endif // ifndef CHROMIUM_MOZILLA_BUILD
   return GetHomeDir().Append(fallback_dir);
 }
 

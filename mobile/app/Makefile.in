@@ -48,6 +48,7 @@ PREF_JS_EXPORTS = $(srcdir)/mobile.js
 DIST_FILES = application.ini
 
 ifndef LIBXUL_SDK
+ifneq (Android,$(OS_TARGET))
 PROGRAM=$(MOZ_APP_NAME)$(BIN_SUFFIX)
 
 CPPSRCS = nsBrowserApp.cpp
@@ -74,6 +75,7 @@ ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
 endif
 endif #LIBXUL_SDK
 

@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: fragment tests</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="fragment_noplay.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+// Fragment parameters to try
+var gFragmentParams = [
+  // W3C Media fragment tests
+  // http://www.w3.org/2008/WebVideo/Fragments/TC/ua-test-cases
+  { fragment: "#t=banana", start: null, end: null }, // TC0027-UA
+  { fragment: "#t=3,banana", start: null, end: null }, // TC0028-UA
+  { fragment: "#t=banana,7", start: null, end: null }, // TC0029-UA
+  { fragment: "#t='3'", start: null, end: null }, // TC0030-UA
+  { fragment: "#t=3-7", start: null, end: null }, // TC0031-UA
+  { fragment: "#t=3:7", start: null, end: null }, // TC0032-UA
+  { fragment: "#t=3,7,9", start: null, end: null }, // TC0033-UA
+  { fragment: "#t%3D3", start: null, end: null }, // TC0034-UA
+  { fragment: "#%74=3", start: 3, end: null }, // TC0035-UA
+  { fragment: "#t=%33", start: 3, end: null }, // TC0036-UA
+  { fragment: "#t=3%2C7", start: 3, end: 7 }, // TC0037-UA
+  { fragment: "#t=%6Ept:3", start: 3, end: null }, // TC0038-UA
+  { fragment: "#t=npt%3A3", start: 3, end: null }, // TC0039-UA
+  { fragment: "#t=-1,3", start: null, end: null }, // TC0044-UA
+  { fragment: "#t=3&", start: 3, end: null }, // TC0051-UA
+  { fragment: "#u=12&t=3", start: 3, end: null }, // TC0052-UA
+  { fragment: "#t=foo:7&t=npt:3", start: 3, end: null }, // TC0053-UA
+  { fragment: "#&&=&=tom&jerry=&t=3&t=meow:0#", start: 3, end: null }, // TC0054-UA
+  { fragment: "#t=7&t=3", start: 3, end: null }, // TC0055-UA
+  { fragment: "#T=3,7", start: null, end: null }, // TC0058-UA
+  { fragment: "#t=", start: null, end: null }, // TC0061-UA
+  { fragment: "#t=.", start: null, end: null }, // TC0062-UA
+  { fragment: "#t=.0", start: null, end: null }, // TC0063-UA
+  { fragment: "#t=0s", start: null, end: null }, // TC0064-UA
+  { fragment: "#t=,0s", start: null, end: null }, // TC0065-UA
+  { fragment: "#t=0s,0s", start: null, end: null }, // TC0066-UA
+  { fragment: "#t=00:00:00s", start: null, end: null }, // TC0067-UA
+  { fragment: "#t=s", start: null, end: null }, // TC0068-UA
+  { fragment: "#t=npt:", start: null, end: null }, // TC0069-UA
+  { fragment: "#t=1e-1:", start: null, end: null }, // TC0070-UA
+  { fragment: "#t=00:00:01.1e-1", start: null, end: null }, // TC0071-UA
+  { fragment: "#t=3.", start: 3, end: null }, // TC0072-UA
+  { fragment: "#t=0:0:0", start: null, end: null }, // TC0073-UA
+  { fragment: "#t=0:00:60", start: null, end: null }, // TC0074-UA
+  { fragment: "#t=0:01:60", start: null, end: null }, // TC0075-UA
+  { fragment: "#t=0:60:00", start: null, end: null }, // TC0076-UA
+  { fragment: "#t=0:000:000", start: null, end: null }, // TC0077-UA
+  { fragment: "#t=00:00:03,00:00:07", start: 3, end: 7 }, // TC0078-UA
+  { fragment: "#t=3,00:00:07", start: 3, end: 7 }, // TC0079-UA
+  { fragment: "#t=00:00.", start: null, end: null }, // TC0080-UA
+  { fragment: "#t=0:00:00.", start: null, end: null }, // TC0081-UA
+  { fragment: "#t=0:00:10e-1", start: null, end: null }, // TC0082-UA
+  { fragment: "#t=0:00:60.000", start: null, end: null }, // TC0083-UA
+  { fragment: "#t=0:60:00.000", start: null, end: null }, // TC0084-UA
+  { fragment: "#t=3,7&t=foo", start: 3, end: 7 }, // TC0085-UA
+  { fragment: "#foo&t=3,7", start: 3, end: 7 }, // TC0086-UA
+  { fragment: "#t=3,7&foo", start: 3, end: 7 }, // TC0087-UA
+  { fragment: "#t=3,7&&", start: 3, end: 7 }, // TC0088-UA
+  { fragment: "#&t=3,7", start: 3, end: 7 }, // TC0089-UA
+  { fragment: "#&&t=3,7", start: 3, end: 7 }, // TC0090-UA
+  { fragment: "#&t=3,7&", start: 3, end: 7 }, // TC0091-UA
+  { fragment: "#t%3d10", start: null, end: null }, // TC0092-UA
+  { fragment: "#t=10%26", start: null, end: null }, // TC0093-UA
+  { fragment: "#&t=3,7,", start: null, end: null } // TC0094-UA
+];
+
+function createTestArray() {
+  var tests = [];
+  var tmpVid = document.createElement("video");
+
+  for (var testNum=0; testNum<gFragmentTests.length; testNum++) {
+    var test = gFragmentTests[testNum];
+    if (!tmpVid.canPlayType(test.type)) {
+      continue;
+    }
+
+    for (var fragNum=0; fragNum<gFragmentParams.length; fragNum++) {
+      var p = gFragmentParams[fragNum];
+      var t = new Object;
+      t.name = test.name + p.fragment;
+      t.type = test.type;
+      t.duration = test.duration;
+      t.start = p.start;
+      t.end = p.end;
+      tests.push(t);
+    }
+  }
+  return tests;
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  manager.started(token);
+  v.src = test.name;
+  v.token = token;
+  v.controls = true;
+  document.body.appendChild(v);
+  var name = test.name + " fragment test";
+  var localIs = function(name) { return function(a, b, msg) {
+    is(a, b, name + ": " + msg);
+  }}(name);
+  var localOk = function(name) { return function(a, msg) {
+    ok(a, name + ": " + msg);
+  }}(name);
+  var localFinish = function(v, manager) { return function() {
+    if (v.parentNode) {
+      v.parentNode.removeChild(v);
+    }
+    manager.finished(v.token);
+  }}(v, manager);
+  window['test_fragment_noplay'](v, test.start, test.end, localIs, localOk, localFinish);
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

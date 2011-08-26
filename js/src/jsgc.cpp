@@ -1797,6 +1797,12 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case OBJVECTOR: {
+        AutoObjectVector::VectorImpl &vector = static_cast<AutoObjectVector *>(this)->vector;
+        MarkObjectRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
+        return;
+      }
+
       case TYPE: {
         types::TypeObject *type = static_cast<types::AutoTypeRooter *>(this)->type;
         MarkTypeObject(trc, type, "js::AutoTypeRooter");

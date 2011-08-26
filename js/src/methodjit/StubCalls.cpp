@@ -1273,6 +1273,9 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
         if (hook)
             result = hook(f.cx, f.script(), f.pc(), Jsvalify(&rval),
                           f.cx->debugHooks->interruptHookData);
+
+        if (result == JSTRAP_CONTINUE)
+            result = Debugger::onSingleStep(f.cx, &rval);
     }
 
     if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))

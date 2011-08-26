@@ -1398,10 +1398,12 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus getCharCodeAt(JSString *str,
                                                     nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
                                                     nanojit::LIns** out_ins);
+#ifdef JS_HAS_STATIC_STRINGS
     JS_REQUIRES_STACK nanojit::LIns* getUnitString(nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
     JS_REQUIRES_STACK RecordingStatus getCharAt(JSString *str,
                                                 nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
                                                 JSOp mode, nanojit::LIns** out_ins);
+#endif
 
     JS_REQUIRES_STACK RecordingStatus initOrSetPropertyByName(nanojit::LIns* obj_ins,
                                                               Value* idvalp, Value* rvalp,

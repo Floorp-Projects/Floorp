@@ -313,6 +313,53 @@ GetUpvar(JSContext *cx, uintN level, UpvarCookie cookie);
 extern StackFrame *
 FindUpvarFrame(JSContext *cx, uintN targetLevel);
 
+/*
+ * A linked list of the |FrameRegs regs;| variables belonging to all
+ * js::Interpret C++ frames on this thread's stack.
+ *
+ * Note that this is *not* a list of all JS frames running under the
+ * interpreter; that would include inlined frames, whose FrameRegs are
+ * saved in various pieces in various places. Rather, this lists each
+ * js::Interpret call's live 'regs'; when control returns to that call, it
+ * will resume execution with this 'regs' instance.
+ *
+ * When Debugger puts a script in single-step mode, all js::Interpret
+ * invocations that might be presently running that script must have
+ * interrupts enabled. It's not practical to simply check
+ * script->stepModeEnabled() at each point some callee could have changed
+ * it, because there are so many places js::Interpret could possibly cause
+ * JavaScript to run: each place an object might be coerced to a primitive
+ * or a number, for example. So instead, we simply expose a list of the
+ * 'regs' those frames are using, and let Debugger tweak the affected
+ * js::Interpret frames when an onStep handler is established.
+ *
+ * Elements of this list are allocated within the js::Interpret stack
+ * frames themselves; the list is headed by this thread's js::ThreadData.
+ */
+class InterpreterFrames {
+  public:
+    class InterruptEnablerBase {
+      public:
+        virtual void enableInterrupts() const = 0;
+    };
+
+    InterpreterFrames(JSContext *cx, FrameRegs *regs, const InterruptEnablerBase &enabler);
+    ~InterpreterFrames();
+
+    /* If this js::Interpret frame is running |script|, enable interrupts. */
+    void enableInterruptsIfRunning(JSScript *script) {
+        if (script == regs->fp()->script())
+            enabler.enableInterrupts();
+    }
+
+    InterpreterFrames *older;
+
+  private:
+    JSContext *context;
+    FrameRegs *regs;
+    const InterruptEnablerBase &enabler;
+};
+
 } /* namespace js */
 
 /*

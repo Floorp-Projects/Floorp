@@ -1317,12 +1317,6 @@ setting {
   font-size: @font_small@ !important;
 }
 
-/* full-screen video ------------------------------------------------------- */
-.full-screen {
-  position: absolute;
-  z-index: 500;
-}
-
 /* openwebapps capabilities ------------------------------------------------------------ */
 .webapps-noperm description.webapps-perm-requested-hint {
   display: block;
@@ -1544,6 +1538,7 @@ setting {
 
 /* Tablet mode */
 
+.spacer-actionbar,
 .button-actionbar {
   visibility: collapse;
 }
@@ -1556,6 +1551,7 @@ setting {
   background-color: #8db8d8;
 }
 
+#toolbar-main[tablet="true"] > .spacer-actionbar,
 #toolbar-main[tablet="true"] > .button-actionbar {
   visibility: visible;
 }

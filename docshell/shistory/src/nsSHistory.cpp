@@ -1309,6 +1309,8 @@ PRBool
 nsSHistory::RemoveDuplicate(PRInt32 aIndex, PRBool aKeepNext)
 {
   NS_ASSERTION(aIndex >= 0, "aIndex must be >= 0!");
+  NS_ASSERTION(aIndex != 0 || aKeepNext,
+               "If we're removing index 0 we must be keeping the next");
   NS_ASSERTION(aIndex != mIndex, "Shouldn't remove mIndex!");
   PRInt32 compareIndex = aKeepNext ? aIndex + 1 : aIndex - 1;
   nsCOMPtr<nsIHistoryEntry> rootHE1, rootHE2;
@@ -1345,10 +1347,25 @@ nsSHistory::RemoveDuplicate(PRInt32 aIndex, PRBool aKeepNext)
     if (mRootDocShell) {
       static_cast<nsDocShell*>(mRootDocShell)->HistoryTransactionRemoved(aIndex);
     }
+
+    // Adjust our indices to reflect the removed transaction
     if (mIndex > aIndex) {
       mIndex = mIndex - 1;
     }
-    if (mRequestedIndex > aIndex) {
+
+    // NB: If the transaction we are removing is the transaction currently
+    // being navigated to (mRequestedIndex) then we adjust the index
+    // only if we're not keeping the next entry (because if we are keeping
+    // the next entry (because the current is a duplicate of the next), then
+    // that entry slides into the spot that we're currently pointing to.
+    // We don't do this adjustment for mIndex because mIndex cannot equal
+    // aIndex.
+
+    // NB: We don't need to guard on mRequestedIndex being nonzero here,
+    // because either they're strictly greater than aIndex which is at least
+    // zero, or they are equal to aIndex in which case aKeepNext must be true
+    // if aIndex is zero.
+    if (mRequestedIndex > aIndex || (mRequestedIndex == aIndex && !aKeepNext)) {
       mRequestedIndex = mRequestedIndex - 1;
     }
     --mLength;

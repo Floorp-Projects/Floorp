@@ -81,7 +81,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
       }
       nsIFrame* colFrame = aStartColFrame; 
       if (!colFrame || (colIndex != aFirstColIndex)) {
-        colFrame = colGroupFrame->GetFirstChild(nsnull);
+        colFrame = colGroupFrame->GetFirstPrincipalChild();
       }
       while (colFrame) {
         if (nsGkAtoms::tableColFrame == colFrame->GetType()) {
@@ -162,7 +162,7 @@ nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame)
 
 // don't set mColCount here, it is done in AddColsToTable
 NS_IMETHODIMP
-nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
+nsTableColGroupFrame::SetInitialChildList(ChildListID     aListID,
                                           nsFrameList&    aChildList)
 {
   if (!mFrames.IsEmpty()) {
@@ -171,8 +171,8 @@ nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
     NS_NOTREACHED("unexpected second call to SetInitialChildList");
     return NS_ERROR_UNEXPECTED;
   }
-  if (aListName) {
-    // All we know about is the unnamed principal child list
+  if (aListID != kPrincipalList) {
+    // All we know about is the principal child list.
     NS_NOTREACHED("unknown frame list");
     return NS_ERROR_INVALID_ARG;
   } 
@@ -211,10 +211,10 @@ nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
+nsTableColGroupFrame::AppendFrames(ChildListID     aListID,
                                    nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   nsTableColFrame* col = GetFirstColumn();
   nsTableColFrame* nextCol;
@@ -224,7 +224,7 @@ nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
     // since the HTML spec says to ignore the span of a colgroup if it
     // has content columns in it.
     nextCol = col->GetNextCol();
-    RemoveFrame(nsnull, col);
+    RemoveFrame(kPrincipalList, col);
     col = nextCol;
   }
 
@@ -235,11 +235,11 @@ nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
+nsTableColGroupFrame::InsertFrames(ChildListID     aListID,
                                    nsIFrame*       aPrevFrame,
                                    nsFrameList&    aFrameList)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
@@ -258,7 +258,7 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
       // We'll want to insert at the beginning
       aPrevFrame = nsnull;
     }
-    RemoveFrame(nsnull, col);
+    RemoveFrame(kPrincipalList, col);
     col = nextCol;
   }
 
@@ -319,10 +319,10 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
+nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
                                   nsIFrame*       aOldFrame)
 {
-  NS_ASSERTION(!aListName, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   if (!aOldFrame) return NS_OK;
   PRBool contentRemoval = PR_FALSE;
@@ -352,7 +352,7 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
         // col's style context.
 #endif
         nextCol = col->GetNextCol();
-        RemoveFrame(nsnull, col);
+        RemoveFrame(kPrincipalList, col);
         col = nextCol;
       }
     }

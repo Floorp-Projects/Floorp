@@ -130,10 +130,10 @@ public:
   // The following methods are all overridden so that the menupopup
   // can be stored in a separate list, so that it doesn't impact reflow of the
   // actual menu item at all.
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+  virtual nsFrameList GetChildList(ChildListID aList) const;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
+  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   // Overridden to prevent events from going to children of the menu.
@@ -146,14 +146,14 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(ChildListID     aListID,
                            nsFrameList&    aFrameList);
 
-  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
                            nsFrameList&    aFrameList);
 
-  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame);
 
   virtual nsIAtom* GetType() const { return nsGkAtoms::menuFrame; }

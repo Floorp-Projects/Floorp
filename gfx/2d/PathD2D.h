@@ -39,7 +39,7 @@
 #define MOZILLA_GFX_PATHD2D_H_
 
 #include "2D.h"
-#include <D2D1.h>
+#include <d2d1.h>
 
 namespace mozilla {
 namespace gfx {

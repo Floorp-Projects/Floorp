@@ -77,10 +77,9 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 #define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
 
-// This is defined in the PNG spec as an invariant. We use it to
-// do manual validation without libpng.
-static const PRUint8 pngSignatureBytes[] =
-               { 137, 80, 78, 71, 13, 10, 26, 10 };
+// First 8 bytes of a PNG file
+const PRUint8 
+nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
@@ -317,7 +316,8 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {
 
       // Check that the signature bytes are right
-      if (memcmp(mHeaderBuf, pngSignatureBytes, sizeof(pngSignatureBytes))) {
+      if (memcmp(mHeaderBuf, nsPNGDecoder::pngSignatureBytes, 
+                 sizeof(pngSignatureBytes))) {
         PostDataError();
         return;
       }

@@ -11,7 +11,7 @@ function test_tracking() {
 
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_empty(tracker.changedIDs);
 
   function createPassword() {
     _("RECORD NUM: " + recordNum);
@@ -30,19 +30,19 @@ function test_tracking() {
   try {
     _("Create a password record. Won't show because we haven't started tracking yet");
     createPassword();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
 
     _("Tell the tracker to start tracking changes.");
     Svc.Obs.notify("weave:engine:start-tracking");
     createPassword();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+    do_check_attribute_count(tracker.changedIDs, 1);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:start-tracking");
     createPassword();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 2);
+    do_check_attribute_count(tracker.changedIDs, 2);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
     _("Let's stop tracking again.");
@@ -50,13 +50,13 @@ function test_tracking() {
     tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
     createPassword();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     createPassword();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+    do_check_empty(tracker.changedIDs);
     do_check_eq(tracker.score, 0);
 
   } finally {
@@ -71,7 +71,7 @@ function test_tracking() {
 function test_onWipe() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
 
   try {

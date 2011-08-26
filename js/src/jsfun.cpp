@@ -2201,21 +2201,6 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    JS::Anchor<JSObject *> obj(NewFunction(cx, *global));
-    if (!obj.get())
-        return false;
-
-    /*
-     * NB: (new Function) is not lexically closed by its caller, it's just an
-     * anonymous function in the top-level scope that its constructor inhabits.
-     * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
-     * and so would a call to f from another top-level's script or function.
-     */
-    JSFunction *fun = js_NewFunction(cx, obj.get(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     global, cx->runtime->atomState.anonymousAtom);
-    if (!fun)
-        return false;
-
     Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
 
@@ -2362,11 +2347,22 @@ Function(JSContext *cx, uintN argc, Value *vp)
         length = 0;
     }
 
+    /*
+     * NB: (new Function) is not lexically closed by its caller, it's just an
+     * anonymous function in the top-level scope that its constructor inhabits.
+     * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
+     * and so would a call to f from another top-level's script or function.
+     */
+    JSFunction *fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                                     global, cx->runtime->atomState.anonymousAtom);
+    if (!fun)
+        return false;
+
     JSPrincipals *principals = PrincipalsForCompiledCode(call, cx);
     bool ok = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
                                             chars, length, filename, lineno,
                                             cx->findVersion());
-    call.rval().setObject(obj);
+    call.rval().setObject(*fun);
     return ok;
 }
 
@@ -2478,7 +2474,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
             return NULL;
     }
     JS_ASSERT(!funobj->getPrivate());
-    fun = (JSFunction *) funobj;
+    fun = static_cast<JSFunction *>(funobj);
 
     /* Initialize all function members. */
     fun->nargs = uint16(nargs);
