@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=632379
           </menupopup>
         </menu>
         <menu label="menu5" accesskey="5" id="menu5">
-	  <menupopup onpopupshown="snapshot(this)">
+          <menupopup onpopupshown="snapshot(this)">
             <menuitem label="item"/>
             <menuitem label="item"/>
             <menuitem label="item"/>
@@ -176,13 +176,13 @@ function snapshot(elem)
     pos[count] = elem.getBoundingClientRect().top;
     ++count;
     if (count <= 1) {
-	// close the submenu and open the bottom submenu
-	synthesizeKey("VK_LEFT", {});
-	synthesizeKey("9", {});
+        ok(true, "trying to open the second submenu");
+        // close the submenu and open the bottom submenu
+        synthesizeKey("VK_LEFT", {});
+        synthesizeKey("9", {});
     } else {
-	is(pos[1], pos[0], "Popup should open in the same place when the menu is scrolled");
-
-	SimpleTest.finish();
+        is(pos[1], pos[0], "Popup should open in the same place when the menu is scrolled");
+        SimpleTest.finish();
     }
 }
 
@@ -193,6 +193,7 @@ function doTest() {
 
 function openSubmenu()
 {
+    ok(true, "openSubMenu() called");
     // open a submenu in the middle
     synthesizeKey("5", {});
 }
