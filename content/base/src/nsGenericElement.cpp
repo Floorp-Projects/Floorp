@@ -3641,7 +3641,7 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
     pressure = static_cast<nsMouseEvent*>(aSourceEvent)->pressure;
     inputSource = static_cast<nsMouseEvent*>(aSourceEvent)->inputSource;
   } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
-    inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+    inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
   event.clickCount = clickCount;

@@ -59,7 +59,7 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
     mEventIsInternal = PR_TRUE;
     mEvent->time = PR_Now();
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
-    static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
+    static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
 
   switch (mEvent->eventStructType)
@@ -98,7 +98,6 @@ DOMCI_DATA(MouseEvent, nsDOMMouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMMouseEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSMouseEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MouseEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 

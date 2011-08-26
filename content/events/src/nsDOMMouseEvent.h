@@ -41,13 +41,12 @@
 
 #include "nsIDOMMouseEvent.h"
 #include "nsDOMUIEvent.h"
-#include "nsIDOMNSMouseEvent.h"
 
 class nsIContent;
 class nsEvent;
 
 class nsDOMMouseEvent : public nsDOMUIEvent,
-                        public nsIDOMNSMouseEvent
+                        public nsIDOMMouseEvent
 {
 public:
   nsDOMMouseEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
@@ -57,9 +56,6 @@ public:
 
   // nsIDOMMouseEvent Interface
   NS_DECL_NSIDOMMOUSEEVENT
-
-  // nsIDOMNSMouseEvent Interface
-  NS_DECL_NSIDOMNSMOUSEEVENT
 
   // Forward to base class
   NS_FORWARD_TO_NSDOMUIEVENT
