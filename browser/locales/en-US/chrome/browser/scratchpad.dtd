@@ -93,6 +93,7 @@
   -  was called "Chrome".
   -->
 <!ENTITY browserContext.label         "Browser">
+<!ENTITY browserContext.tooltiptext   "To enable this, set devtools.chrome.enabled preference to true in about:config">
 <!ENTITY browserContext.accesskey     "B">
 
 <!-- LOCALIZATION NOTE (resetContext.label): This command allows the developer
