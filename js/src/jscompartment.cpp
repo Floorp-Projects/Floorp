@@ -531,8 +531,7 @@ JSCompartment::markTypes(JSTracer *trc)
                         MarkObject(trc, *object, "mark_types_singleton");
                 } else {
                     types::TypeObject *object = reinterpret_cast<types::TypeObject *>(thing);
-                    if (!object->isMarked())
-                        object->trace(trc);
+                    MarkTypeObject(trc, object, "object_root");
                 }
             }
         }
