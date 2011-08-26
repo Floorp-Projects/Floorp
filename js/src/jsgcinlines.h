@@ -223,6 +223,44 @@ GCPoke(JSContext *cx, Value oldval)
 #endif
 }
 
+/*
+ * Invoke ArenaOp and CellOp on every arena and cell in a compartment which
+ * have the specified thing kind.
+ */
+template <class ArenaOp, class CellOp>
+void
+ForEachArenaAndCell(JSCompartment *compartment, FinalizeKind thingKind,
+                    ArenaOp arenaOp, CellOp cellOp)
+{
+    size_t thingSize = GCThingSizeMap[thingKind];
+    ArenaHeader *aheader = compartment->arenas[thingKind].getHead();
+
+    for (; aheader; aheader = aheader->next) {
+        Arena *arena = aheader->getArena();
+        arenaOp(arena);
+        FreeSpan firstSpan(aheader->getFirstFreeSpan());
+        const FreeSpan *span = &firstSpan;
+
+        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
+            JS_ASSERT(thing <= arena->thingsEnd());
+            if (thing == span->first) {
+                if (!span->hasNext())
+                    break;
+                thing = span->last;
+                span = span->nextSpan();
+            } else {
+                Cell *t = reinterpret_cast<Cell *>(thing);
+                cellOp(t);
+            }
+        }
+    }
+}
+
+/* Signatures for ArenaOp and CellOp above. */
+
+inline void EmptyArenaOp(Arena *arena) {}
+inline void EmptyCellOp(Cell *t) {}
+
 } /* namespace gc */
 } /* namespace js */
 
