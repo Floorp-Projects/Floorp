@@ -19,9 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=648573
 
 /** Test for Bug 648573 **/
 
-var utils = SpecialPowers.getDOMWindowUtils(window);
-
-ok(!utils.mayHaveTouchEventListeners,
+ok(!SpecialPowers.DOMWindowUtils.mayHaveTouchEventListeners,
   "There shouldn't be any touch event listeners yet.");
 
 ok("createTouch" in document, "Should have createTouch function");
@@ -103,7 +101,7 @@ for (var i = 0; i < events.length; ++i) {
   runEventTest(events[i]);
 }
 
-ok(utils.mayHaveTouchEventListeners,
+ok(SpecialPowers.DOMWindowUtils.mayHaveTouchEventListeners,
   "There should be touch event listeners.");
 </script>
 </pre>

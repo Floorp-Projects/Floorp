@@ -2,16 +2,9 @@
 <head>
   <title>redirecting...</title>
 
-  <script type="text/javascript">
-    function redirect(aURL)
-    {
-      var element = document.createEvent("datacontainerevent");
-      element.initEvent("contentEvent", true, false);
-      element.setData("data", aURL + location.search);
-      element.setData("type", "loadURI");
-      document.dispatchEvent(element);
-    }
+  <script type="text/javascript" src="redirect.js"></script>
 
+  <script type="text/javascript">
     redirect("chrome://mochikit/content/harness.xul");
   </script>
 </head>

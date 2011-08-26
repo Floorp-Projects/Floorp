@@ -69,9 +69,8 @@ function synthesizeMouseEvent(type,                // string
                               modifiers,           // long
                               ignoreWindowBounds)  // boolean
 {
-  var utils = SpecialPowers.getDOMWindowUtils(window);
-  utils.sendMouseEvent(type, x, y, button, clickCount,
-                       modifiers, ignoreWindowBounds);
+  SpecialPowers.DOMWindowUtils.sendMouseEvent(type, x, y, button, clickCount,
+                                              modifiers, ignoreWindowBounds);
 }
 
 function run_test()

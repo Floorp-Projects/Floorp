@@ -311,8 +311,6 @@ TestRunner.runNextTest = function() {
           indicator.style.backgroundColor = "red";
         }
 
-        SpecialPowers.unregisterProcessCrashObservers();
-
         TestRunner.log("TEST-START | Shutdown"); // used by automation.py
         TestRunner.log("Passed: " + $("pass-count").innerHTML);
         TestRunner.log("Failed: " + $("fail-count").innerHTML);
@@ -385,7 +383,7 @@ TestRunner.testFinished = function(tests) {
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
         cleanUpCrashDumpFiles();
-        SpecialPowers.flushPrefEnv(runNextTest);
+        runNextTest();
     });
 };
 

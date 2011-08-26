@@ -95,6 +95,7 @@ _SERV_FILES = 	\
 		ipc.js \
 		browser-harness.xul \
 		redirect.html \
+		redirect.js \
 		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		mozprefs.js \
