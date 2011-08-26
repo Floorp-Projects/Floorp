@@ -43,7 +43,7 @@
  * by providing various information related to the mouse event.
  */
 
-[scriptable, uuid(8418a402-3c9b-431a-80a7-a59b23ed57a0)]
+[scriptable, uuid(78977629-3069-4381-b4fd-0beca7cb4e2f)]
 interface nsIDOMNSMouseEvent : nsIDOMMouseEvent
 {
   // Finger or touch pressure event value

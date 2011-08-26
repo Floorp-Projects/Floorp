@@ -910,9 +910,9 @@
 
         var listBox = this.parentNode.listBoxObject;
         var rows = event.detail;
-        if (rows == NSUIEvent.SCROLL_PAGE_UP)
+        if (rows == UIEvent.SCROLL_PAGE_UP)
           rows = -listBox.getNumberOfVisibleRows();
-        else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+        else if (rows == UIEvent.SCROLL_PAGE_DOWN)
           rows = listBox.getNumberOfVisibleRows();
 
         listBox.scrollByLines(rows);

@@ -119,7 +119,7 @@
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsIAppShell.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSMouseEvent.h"
 #include "nsITheme.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"

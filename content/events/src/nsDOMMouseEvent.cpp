@@ -282,8 +282,9 @@ nsDOMMouseEvent::GetMetaKey(PRBool* aIsDown)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMMouseEvent::GetWhich(PRUint32* aWhich)
+/* virtual */
+nsresult
+nsDOMMouseEvent::Which(PRUint32* aWhich)
 {
   NS_ENSURE_ARG_POINTER(aWhich);
   PRUint16 button;

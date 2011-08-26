@@ -99,7 +99,7 @@
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMUIEvent.h"
 #include "nsDOMDragEvent.h"
 #include "nsIDOMNSEditableElement.h"
 
@@ -2645,8 +2645,8 @@ nsEventStateManager::ComputeWheelDeltaFor(nsMouseScrollEvent* aMouseEvent)
   }
 
   if (ComputeWheelActionFor(aMouseEvent, useSysNumLines) == MOUSE_SCROLL_PAGE) {
-    delta = (delta > 0) ? PRInt32(nsIDOMNSUIEvent::SCROLL_PAGE_DOWN) :
-                          PRInt32(nsIDOMNSUIEvent::SCROLL_PAGE_UP);
+    delta = (delta > 0) ? PRInt32(nsIDOMUIEvent::SCROLL_PAGE_DOWN) :
+                          PRInt32(nsIDOMUIEvent::SCROLL_PAGE_UP);
   }
 
   return delta;
