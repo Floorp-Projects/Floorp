@@ -69,7 +69,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsEventListenerManager.h"
 #ifdef ACCESSIBILITY
@@ -389,10 +389,10 @@ PRBool ShouldProcessMouseClick(nsIDOMEvent* aMouseEvent)
 {
   // only allow the left button
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
-  NS_ENSURE_TRUE(mouseEvent && uiEvent, PR_FALSE);
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aMouseEvent);
+  NS_ENSURE_TRUE(mouseEvent && domNSEvent, PR_FALSE);
   PRBool defaultPrevented = PR_FALSE;
-  uiEvent->GetPreventDefault(&defaultPrevented);
+  domNSEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return PR_FALSE;
   }
@@ -521,10 +521,10 @@ nsFileControlFrame::BrowseMouseListener::HandleEvent(nsIDOMEvent* aEvent)
     return input ? input->FireAsyncClickHandler() : NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
-  NS_ENSURE_STATE(uiEvent);
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
+  NS_ENSURE_STATE(domNSEvent);
   PRBool defaultPrevented = PR_FALSE;
-  uiEvent->GetPreventDefault(&defaultPrevented);
+  domNSEvent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented) {
     return NS_OK;
   }

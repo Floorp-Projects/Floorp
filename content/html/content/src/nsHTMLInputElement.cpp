@@ -2179,7 +2179,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               {
                 nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                    NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-                event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+                event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
 
                 nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
@@ -2217,7 +2217,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                     nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                        NS_MOUSE_CLICK, nsnull,
                                        nsMouseEvent::eReal);
-                    event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+                    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                     rv = nsEventDispatcher::Dispatch(radioContent,
                                                      aVisitor.mPresContext,
                                                      &event, nsnull, &status);
