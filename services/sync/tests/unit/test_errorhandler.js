@@ -30,7 +30,7 @@ function CatapultEngine() {
 CatapultEngine.prototype = {
   __proto__: SyncEngine.prototype,
   exception: null, // tests fill this in
-  sync: function sync() {
+  _sync: function _sync() {
     throw this.exception;
   }
 };
@@ -268,6 +268,35 @@ add_test(function test_shouldReportError() {
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
   do_check_false(ErrorHandler.shouldReportError());
 
+  // Test server maintenance errors are not reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.sync = SERVER_MAINTENANCE;
+  do_check_false(ErrorHandler.shouldReportError());
+
+  // Test prolonged server maintenance errors are reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = false;
+  Status.sync = SERVER_MAINTENANCE;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, server maintenance errors are reported
+  Status.resetSync();
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = SERVER_MAINTENANCE;
+  do_check_true(ErrorHandler.shouldReportError());
+
+  // Test dontIgnoreErrors, prolonged, server maintenance
+  // errors are reported
+  Status.resetSync();
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.dontIgnoreErrors = true;
+  Status.sync = SERVER_MAINTENANCE;
+  do_check_true(ErrorHandler.shouldReportError());
+
   run_next_test();
 });
 
@@ -347,7 +376,7 @@ add_test(function test_login_syncAndReportErrors_prolonged_non_network_error() {
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
-    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
 
     Service.startOver();
     server.stop(run_next_test);
@@ -372,7 +401,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_non_network_error() {
 
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
-    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
 
     Service.startOver();
     server.stop(run_next_test);
@@ -429,7 +458,7 @@ add_test(function test_login_syncAndReportErrors_prolonged_network_error() {
 
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:login:error", onSyncError);
-    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
 
     Service.startOver();
     run_next_test();
@@ -446,7 +475,7 @@ add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
 
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
-    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
 
     Services.io.offline = false;
     Service.startOver();
@@ -598,6 +627,7 @@ add_test(function test_login_network_error() {
       do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
 
       Service.startOver();
+      Status.resetSync();
       Services.io.offline = false;
       run_next_test();
     });
@@ -623,6 +653,120 @@ add_test(function test_sync_network_error() {
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
+});
+
+add_test(function test_sync_server_maintenance_error() {
+  // Test server maintenance errors are not reported.
+  let server = sync_httpd_setup();
+  setUp();
+
+  const BACKOFF = 42;
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = {status: 503,
+                      headers: {"retry-after": BACKOFF}};
+
+  function onUIUpdate() {
+    do_throw("Shouldn't get here!");
+  }
+  Svc.Obs.add("weave:ui:sync:error", onUIUpdate);
+
+  do_check_eq(Status.service, STATUS_OK);
+
+  // Last sync was 2 days ago
+  Svc.Prefs.set("lastSync", (new Date(Date.now() - 172800000)).toString());
+  Service.sync();
+
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+  do_check_eq(Status.sync, SERVER_MAINTENANCE);
+
+  Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+  Service.startOver();
+  Status.resetSync();
+  server.stop(run_next_test);
+});
+
+add_test(function test_sync_prolonged_server_maintenance_error() {
+  // Test prolonged server maintenance errors are reported.
+  let server = sync_httpd_setup();
+  setUp();
+
+  const BACKOFF = 42;
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = {status: 503,
+                      headers: {"retry-after": BACKOFF}};
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_eq(Status.service, SYNC_FAILED);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+
+    Service.startOver();
+    Status.resetSync();
+    server.stop(run_next_test);
+  });
+
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Service.sync();
+});
+
+add_test(function test_syncAndReportErrors_server_maintenance_error() {
+  // Test server maintenance errors are reported
+  // when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+  setUp();
+
+  const BACKOFF = 42;
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = {status: 503,
+                      headers: {"retry-after": BACKOFF}};
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+
+    Service.startOver();
+    Status.resetSync();
+    server.stop(run_next_test);
+  });
+
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(NON_PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
+});
+
+add_test(function test_syncAndReportErrors_prolonged_server_maintenance_error() {
+  // Test prolonged server maintenance errors are
+  // reported when calling syncAndReportErrors.
+  let server = sync_httpd_setup();
+  setUp();
+
+  const BACKOFF = 42;
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = {status: 503,
+                      headers: {"retry-after": BACKOFF}};
+
+  Svc.Obs.add("weave:ui:sync:error", function onUIUpdate() {
+    Svc.Obs.remove("weave:ui:sync:error", onUIUpdate);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+
+    Service.startOver();
+    Status.resetSync();
+    server.stop(run_next_test);
+  });
+
+  do_check_eq(Status.service, STATUS_OK);
+
+  setLastSync(PROLONGED_ERROR_DURATION);
+  ErrorHandler.syncAndReportErrors();
 });
 
 add_test(function test_sync_engine_generic_fail() {
