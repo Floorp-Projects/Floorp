@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLFormElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLFormElement attributes reflection **/
+
+// TODO: acceptCharset
+// TODO: action
+// TODO: autocomplete
+// TODO: enctype
+// TODO: encoding
+// TODO: method
+// TODO: name
+
+// .noValidate
+reflectBoolean({
+  element: document.createElement("form"),
+  attribute: "noValidate",
+});
+
+// TODO: target
+
+</script>
+</pre>
+</body>
+</html>
