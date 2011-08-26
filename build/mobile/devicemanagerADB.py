@@ -13,6 +13,7 @@ class DeviceManagerADB(DeviceManager):
     self.retries = 0
     self._sock = None
     self.useRunAs = False
+    self.packageName = None
     if packageName == None:
       if os.getenv('USER'):
         packageName = 'org.mozilla.fennec_' + os.getenv('USER')
