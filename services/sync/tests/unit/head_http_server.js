@@ -4,7 +4,7 @@
 function new_timestamp() {
   return Math.round(Date.now() / 10) / 100;
 }
-  
+
 function httpd_setup (handlers) {
   let server = new nsHttpServer();
   let port   = 8080;
@@ -21,7 +21,7 @@ function httpd_setup (handlers) {
     _("==========================================");
     do_throw(ex);
   }
-    
+
   return server;
 }
 
