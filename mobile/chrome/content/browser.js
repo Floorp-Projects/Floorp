@@ -2798,14 +2798,10 @@ Tab.prototype = {
       let validW = viewportW > 0;
       let validH = viewportH > 0;
 
-      if (validW && !validH) {
+      if (!validW)
+        viewportW = validH ? (viewportH * (screenW / screenH)) : Browser.defaultBrowserWidth;
+      if (!validH)
         viewportH = viewportW * (screenH / screenW);
-      } else if (!validW && validH) {
-        viewportW = viewportH * (screenW / screenH);
-      } else if (!validW && !validH) {
-        viewportW = Browser.defaultBrowserWidth;
-        viewportH = Browser.defaultBrowserWidth * (screenH / screenW);
-      }
     }
 
     // Make sure the viewport height is not shorter than the window when
