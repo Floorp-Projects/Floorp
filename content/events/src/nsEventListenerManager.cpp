@@ -978,3 +978,18 @@ nsEventListenerManager::GetJSEventListener(nsIAtom *aEventName, jsval *vp)
   *vp = OBJECT_TO_JSVAL(static_cast<JSObject*>(listener->GetHandler()));
 }
 
+PRInt64
+nsEventListenerManager::SizeOf() const
+{
+  PRInt64 size = sizeof(*this);
+  PRUint32 count = mListeners.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    const nsListenerStruct& ls = mListeners.ElementAt(i);
+    size += sizeof(ls);
+    nsIJSEventListener* jsl = ls.GetJSListener();
+    if (jsl) {
+      size += jsl->SizeOf();
+    }
+  }
+  return size;
+}
