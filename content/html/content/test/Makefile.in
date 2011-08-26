@@ -213,7 +213,6 @@ _TEST_FILES = \
 		test_bug593689.html \
 		test_bug561636.html \
 		test_bug590363.html \
-		test_bug557628.html \
 		test_bug592802.html \
 		test_bug595429.html \
 		test_bug595447.html \

@@ -15,13 +15,58 @@
 
 /** Test for HTMLFormElement attributes reflection **/
 
-// TODO: acceptCharset
-// TODO: action
-// TODO: autocomplete
-// TODO: enctype
-// TODO: encoding
-// TODO: method
-// TODO: name
+// .acceptCharset
+reflectString({
+  element: document.createElement("form"),
+  attribute: { idl: "acceptCharset", content: "accept-charset" },
+  otherValues: [ "ISO-8859-1", "UTF-8" ],
+});
+
+// TODO: action (URL)
+
+// .autocomplete
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: "autocomplete",
+  validValues: [ "on", "off" ],
+  invalidValues: [ "", "foo", "tulip", "default" ],
+  defaultValue: "on",
+});
+
+// .enctype
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: "enctype",
+  validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
+                 "text/plain" ],
+  invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
+  defaultValue: "application/x-www-form-urlencoded"
+});
+
+// .encoding
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: { idl: "encoding", content: "enctype" },
+  validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
+                 "text/plain" ],
+  invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
+  defaultValue: "application/x-www-form-urlencoded"
+});
+
+// .method
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: "method",
+  validValues: [ "get", "post" ],
+  invalidValues: [ "", "foo", "tulip" ],
+  defaultValue: "get"
+});
+
+// .name
+reflectString({
+  element: document.createElement("form"),
+  attribute: "name",
+});
 
 // .noValidate
 reflectBoolean({
@@ -29,7 +74,12 @@ reflectBoolean({
   attribute: "noValidate",
 });
 
-// TODO: target
+// .target
+reflectString({
+  element: document.createElement("form"),
+  attribute: "target",
+  otherValues: [ "_blank", "_self", "_parent", "_top" ],
+});
 
 </script>
 </pre>
