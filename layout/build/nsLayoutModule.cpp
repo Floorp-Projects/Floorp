@@ -260,7 +260,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsIXULSortService.h"
 
 nsresult
@@ -539,7 +538,6 @@ MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXUL
 // NS_NewXULTreeBuilder
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
 // NS_NewXULControllers
-// NS_NewXULPrototypeCache
 MAKE_CTOR(CreateXULPopupManager,      nsISupports,      NS_NewXULPopupManager)
 #endif
 #ifdef MOZ_XTF
@@ -785,7 +783,6 @@ NS_DEFINE_NAMED_CID(NS_XULTEMPLATEBUILDER_CID);
 NS_DEFINE_NAMED_CID(NS_XULTREEBUILDER_CID);
 NS_DEFINE_NAMED_CID(NS_XULPOPUPMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_XULDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_XULPROTOTYPECACHE_CID);
 #endif
 #ifdef MOZ_XTF
 NS_DEFINE_NAMED_CID(NS_XTFSERVICE_CID);
@@ -920,7 +917,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XULTREEBUILDER_CID, false, NULL, NS_NewXULTreeBuilder },
   { &kNS_XULPOPUPMANAGER_CID, false, NULL, CreateXULPopupManager },
   { &kNS_XULDOCUMENT_CID, false, NULL, CreateXULDocument },
-  { &kNS_XULPROTOTYPECACHE_CID, false, NULL, NS_NewXULPrototypeCache },
 #endif
 #ifdef MOZ_XTF
   { &kNS_XTFSERVICE_CID, false, NULL, CreateXTFService },
@@ -1056,7 +1052,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/xul/xul-tree-builder;1", &kNS_XULTREEBUILDER_CID },
   { "@mozilla.org/xul/xul-popup-manager;1", &kNS_XULPOPUPMANAGER_CID },
   { "@mozilla.org/xul/xul-document;1", &kNS_XULDOCUMENT_CID },
-  { "@mozilla.org/xul/xul-prototype-cache;1", &kNS_XULPROTOTYPECACHE_CID },
 #endif
 #ifdef MOZ_XTF
   { NS_XTFSERVICE_CONTRACTID, &kNS_XTFSERVICE_CID },
