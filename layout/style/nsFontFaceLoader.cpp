@@ -76,6 +76,7 @@
 #include "nsIConsoleService.h"
 
 #include "nsStyleSet.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 

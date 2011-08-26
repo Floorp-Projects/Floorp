@@ -188,12 +188,21 @@
 
 #footer {
   padding: 15px 12px;
-  background-color: #f1f5fb;
-  box-shadow: 0px 1px 2px rgb(204,214,234) inset;
 }
 
 .progress-label,
 #footer-label {
+%ifdef WINSTRIPE_AERO
   font-style: italic;
+%endif
   color: GrayText;
 }
+
+%ifdef WINSTRIPE_AERO
+@media all and (-moz-windows-default-theme) {
+  #footer {
+    background-color: #f1f5fb;
+    box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+  }
+}
+%endif

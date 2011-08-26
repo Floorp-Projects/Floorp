@@ -1,15 +1,11 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=555840
--->
 <head>
-  <title>Test for Bug 555840</title>
+  <title>Test for the datalist element</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=555840">Mozilla Bug 555840</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <datalist>
@@ -55,26 +51,62 @@ function checkOptions()
     [['option', 'option'], function(d) { d.childNodes[0].value = 'value'; }, 2],
     [['option', 'option'], function(d) { d.childNodes[0].label = 'label'; }, 2],
     [['option', 'option'], function(d) { d.childNodes[0].value = 'value'; d.childNodes[0].label = 'label'; }, 2],
+    [['select'],
+     function(d) {
+       var s = d.childNodes[0];
+       s.appendChild(new Option("foo"));
+       s.appendChild(new Option("bar"));
+     },
+     2],
+    [['select'],
+     function(d) {
+       var s = d.childNodes[0];
+       s.appendChild(new Option("foo"));
+       s.appendChild(new Option("bar"));
+       var label = document.createElement("label");
+       d.appendChild(label);
+       label.appendChild(new Option("foobar"));
+     },
+     3],
+    [['select'],
+     function(d) {
+       var s = d.childNodes[0];
+       s.appendChild(new Option("foo"));
+       s.appendChild(new Option("bar"));
+       var label = document.createElement("label");
+       d.appendChild(label);
+       label.appendChild(new Option("foobar"));
+       s.appendChild(new Option())
+     },
+     4],
+     [[], function(d) { d.appendChild(document.createElementNS("foo", "option")); }, 0]
   ];
 
   var d = document.getElementsByTagName('datalist')[0];
+  var cachedOptions = d.options;
 
-  for each (data in testData) {
-    for each (e in data[0]) {
+  testData.forEach(function(data) {
+    data[0].forEach(function(e) {
       d.appendChild(document.createElement(e));
-    }
+    })
 
     /* Modify children. */
     if (data[1]) {
       data[1](d);
     }
 
+    is(d.options, cachedOptions, "Should get the same object")
     is(d.options.length, data[2],
        "The number of recognized options should be " + data[2])
 
+    for (var i = 0; i < d.options.length; ++i) {
+      is(d.options[i].localName, "option",
+         "Should get an option for d.options[" + i + "]")
+    }
+
     /* Cleaning-up. */
-    for (; d.firstChild; d.removeChild(d.firstChild));
-  }
+    d.textContent = "";
+  })
 }
 
 checkClassesAndAttributes();
