@@ -61,7 +61,6 @@ XPIDLSRCS =					\
 	nsIDOMDataContainerEvent.idl	\
 	nsIDOMKeyEvent.idl			\
 	nsIDOMMutationEvent.idl			\
-	nsIDOMNSUIEvent.idl			\
 	nsIDOMDragEvent.idl  			\
 	nsIDOMDataTransfer.idl  			\
 	nsIDOMPopupBlockedEvent.idl		\

@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, uuid(25f28689-3f78-47e8-8d76-15b936faf8c1)]
+[scriptable, uuid(4f3032d1-bdc5-4f37-bece-af8056d71c5c)]
 interface nsIDOMUIEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMWindow       view;
@@ -57,4 +57,19 @@ interface nsIDOMUIEvent : nsIDOMEvent
                                         in boolean cancelableArg,
                                         in nsIDOMWindow viewArg,
                                         in long detailArg);
+
+  const long SCROLL_PAGE_UP = -32768;
+  const long SCROLL_PAGE_DOWN = 32768;
+
+  readonly attribute long               layerX;
+  readonly attribute long               layerY;
+  readonly attribute long               pageX;
+  readonly attribute long               pageY;
+  readonly attribute unsigned long      which;
+  readonly attribute nsIDOMNode         rangeParent;
+  readonly attribute long               rangeOffset;
+
+           attribute boolean            cancelBubble;
+
+  readonly attribute boolean            isChar;
 };
