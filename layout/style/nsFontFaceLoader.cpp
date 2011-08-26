@@ -76,6 +76,7 @@
 #include "nsIConsoleService.h"
 
 #include "nsStyleSet.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 
@@ -137,11 +138,10 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer *aTimer, void *aClosure)
   // we allow another timeout period before showing a fallback font.
   if (pe->mLoadingState == gfxProxyFontEntry::LOADING_STARTED) {
     PRInt32 contentLength;
-    loader->mChannel->GetContentLength(&contentLength);
     PRUint32 numBytesRead;
-    loader->mStreamLoader->GetNumBytesRead(&numBytesRead);
-
-    if (contentLength > 0 &&
+    if (NS_SUCCEEDED(loader->mChannel->GetContentLength(&contentLength)) &&
+        contentLength > 0 &&
+        NS_SUCCEEDED(loader->mStreamLoader->GetNumBytesRead(&numBytesRead)) &&
         numBytesRead > 3 * (PRUint32(contentLength) >> 2))
     {
       // More than 3/4 the data has been downloaded, so allow 50% extra

@@ -1119,6 +1119,7 @@ MOZ_ARG_ENABLE_STRING(macos-target,
                           Set the minimum MacOS version needed at runtime],
                       [_MACOSX_DEPLOYMENT_TARGET=$enableval])
 
+if test "$target_cpu" != "arm"; then
 case "$target" in
 *-darwin*)
     if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
@@ -1141,6 +1142,7 @@ case "$target" in
     fi
     ;;
 esac
+fi
 
 AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
 
@@ -2006,12 +2008,22 @@ case "$target" in
     STRIP="$STRIP -x -S"
     _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
     TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
-    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
+    LDFLAGS="$LDFLAGS -lobjc"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
-    MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
+    _SAVE_LDFLAGS=$LDFLAGS
+     AC_MSG_CHECKING([for -framework ExceptionHandling])
+    LDFLAGS="$LDFLAGS -framework ExceptionHandling"
+    AC_TRY_LINK(,[return 0;],
+                ac_cv_have_framework_exceptionhandling="yes",
+                ac_cv_have_framework_exceptionhandling="no")
+    AC_MSG_RESULT([$ac_cv_have_framework_exceptionhandling])
+    if test  "$ac_cv_have_framework_exceptionhandling" = "yes"; then
+      MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
+    fi
+    LDFLAGS=$_SAVE_LDFLAGS
     # Debug builds should always have frame pointers
     MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
 
@@ -4379,6 +4391,9 @@ arm-Android)
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
+    ;;
+arm-Darwin)
+    MOZ_THUMB=yes
     ;;
 arm-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then

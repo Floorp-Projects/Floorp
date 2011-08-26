@@ -713,7 +713,6 @@ let UI = {
         if (data == "enter" || data == "exit") {
           hideSearch();
           self._privateBrowsing.transitionMode = data;
-          self.storageBusy();
         }
       } else if (topic == "private-browsing-transition-complete") {
         // We use .transitionMode here, as aData is empty.
@@ -722,7 +721,6 @@ let UI = {
           self.showTabView(false);
 
         self._privateBrowsing.transitionMode = "";
-        self.storageReady();
       }
     }
 
@@ -869,8 +867,12 @@ let UI = {
     this._currentTab = tab;
 
     if (this.isTabViewVisible()) {
-      if (!this.restoredClosedTab && this._lastOpenedTab == tab && 
-        tab._tabViewTabItem) {
+      // We want to zoom in if:
+      // 1) we didn't just restore a tab via Ctrl+Shift+T
+      // 2) we're not in the middle of switching from/to private browsing
+      // 3) the currently selected tab is the last created tab and has a tabItem
+      if (!this.restoredClosedTab && !this._privateBrowsing.transitionMode &&
+          this._lastOpenedTab == tab && tab._tabViewTabItem) {
         tab._tabViewTabItem.zoomIn(true);
         this._lastOpenedTab = null;
         return;
@@ -1130,18 +1132,26 @@ let UI = {
       function getClosestTabBy(norm) {
         if (!self.getActiveTab())
           return null;
-        let centers =
-          [[item.bounds.center(), item]
-             for each(item in TabItems.getItems()) if (!item.parent || !item.parent.hidden)];
-        let myCenter = self.getActiveTab().bounds.center();
-        let matches = centers
-          .filter(function(item){return norm(item[0], myCenter)})
-          .sort(function(a,b){
-            return myCenter.distance(a[0]) - myCenter.distance(b[0]);
-          });
-        if (matches.length > 0)
-          return matches[0][1];
-        return null;
+
+        let activeTab = self.getActiveTab();
+        let activeTabGroup = activeTab.parent;
+        let myCenter = activeTab.bounds.center();
+        let match;
+
+        TabItems.getItems().forEach(function (item) {
+          if (!item.parent.hidden &&
+              (!activeTabGroup.expanded || activeTabGroup.id == item.parent.id)) {
+            let itemCenter = item.bounds.center();
+
+            if (norm(itemCenter, myCenter)) {
+              let itemDist = myCenter.distance(itemCenter);
+              if (!match || match[0] > itemDist)
+                match = [itemDist, item];
+            }
+          }
+        });
+
+        return match && match[1];
       }
 
       let preventDefault = true;
@@ -1502,7 +1512,7 @@ let UI = {
         matches[0].zoomIn();
         zoomedIn = true;
       }
-      hideSearch(null);
+      hideSearch();
     }
 
     if (!zoomedIn) {
@@ -1613,11 +1623,15 @@ let UI = {
   getFavIconUrlForTab: function UI_getFavIconUrlForTab(tab) {
     let url;
 
-    // use the tab image if it doesn't start with http e.g. data:image/png, chrome://
-    if (tab.image && !(/^https?:/.test(tab.image)))
-      url = tab.image;
-    else
+    if (tab.image) {
+      // if starts with http/https, fetch icon from favicon service via the moz-anno protocal
+      if (/^https?:/.test(tab.image))
+        url = gFavIconService.getFaviconLinkForIcon(gWindow.makeURI(tab.image)).spec;
+      else
+        url = tab.image;
+    } else {
       url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
+    }
 
     return url;
   },

@@ -1272,14 +1272,8 @@ xpicleanup@BIN_SUFFIX@
   components/nsPostUpdateWin.js
   js3250.dll
   plugins/npnul32.dll
-  #ifdef MOZ_MEMORY
-    Microsoft.VC80.CRT.manifest
-    msvcm80.dll
-    msvcp80.dll
-    msvcr80.dll
-  #else
-    mozcrt19.dll
-  #endif
+  mozcrt19.dll
+  mozcpp19.dll
 #endif
 @DLL_PREFIX@xpcom_core@DLL_SUFFIX@
 components/@DLL_PREFIX@jar50@DLL_SUFFIX@

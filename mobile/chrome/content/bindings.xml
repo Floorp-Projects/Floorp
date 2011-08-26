@@ -1380,6 +1380,9 @@
       <xul:hbox class="remotetabs-throbber-box" flex="1" align="center" pack="center">
         <xul:image src="chrome://browser/skin/images/throbber.png" />
       </xul:hbox>
+      <xul:hbox class="remotetabs-message-box" flex="1" align="center" pack="center">
+        <xul:label xbl:inherits="value=message" align="center" crop="center" flex="1"/>
+      </xul:hbox>
       <xul:richlistbox anonid="child-items" class="remotetabs-list-children" flex="1" batch="25"/>
     </content>
     <implementation>
@@ -1387,6 +1390,7 @@
         <body><![CDATA[
           let self = this;
           this.setAttribute("loading", "true");
+          this.removeAttribute("message");
 
           if (Weave.Service.isLoggedIn) {
             setTimeout(function() self._loadChildren(), 0);
@@ -1394,6 +1398,7 @@
             // Wait until login or setup finishes before loading items.
             let topics = [
               "browser:sync:setup:userabort",
+              "browser:sync:setup:networkerror",
               "weave:service:login:finish",
               "weave:service:login:error"
             ];
@@ -1412,8 +1417,23 @@
           while (children.lastChild)
             children.removeChild(children.lastChild);
 
-          let items = this._getRemoteTabs();
-          children.setItems(items.map(this.createItem));
+          let engine = this._getWeaveEngine();
+
+          // Only load items if the tabs engine is ready. In case
+          // sync fails, WeaveGlue will show an error dialog. If sync
+          // succeeds but has no data to display, a message is presented
+          // in the panel (see "message" attribute).
+          if (engine) {
+            let items = this._getRemoteTabs(engine);
+
+            if (items.length) {
+              children.setItems(items.map(this.createItem));
+            } else {
+              let bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
+              this.setAttribute("message", bundle.GetStringFromName("sync.message.notabs"));
+            }
+          }
+
           this.removeAttribute("loading");
         ]]></body>
       </method>
@@ -1424,32 +1444,34 @@
 
       <field name="scrollBoxObject">this._children.scrollBoxObject</field>
 
-      <method name="_getRemoteTabs">
+      <method name="_getWeaveEngine">
         <body><![CDATA[
-          // Don't do anything if the Weave isn't ready
-          if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") == "true")
-            return [];
+          // Return null if the Weave isn't ready
+          if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") ==     "true")
+            return null;
           if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED)
-            return [];
+            return null;
 
-          // Don't do anything if the tabs engine isn't ready
-          let engine = Weave.Engines.get("tabs");
-          if (!engine)
-            return [];
+          return Weave.Engines.get("tabs");
+        ]]></body>
+      </method>
 
+      <method name="_getRemoteTabs">
+        <parameter name="aEngine"/>
+        <body><![CDATA[
           // Don't bother refetching tabs if we already did so recently
           let lastFetch = Weave.Svc.Prefs.get("lastTabFetch", 0);
           let now = Math.floor(Date.now() / 1000);
           if (now - lastFetch >= Services.prefs.getIntPref("browser.display.remotetabs.timeout")) {
             // Force a sync only for the tabs engine
-            engine.lastModified = null;
-            engine.sync();
+            aEngine.lastModified = null;
+            aEngine.sync();
             Weave.Svc.Prefs.set("lastTabFetch", now);
           };
 
           // Generate the list of tabs
           let tabs = [];
-          for (let [guid, client] in Iterator(engine.getAllClients())) {
+          for (let [guid, client] in Iterator(aEngine.getAllClients())) {
             if (!client.tabs.length)
               continue;
 

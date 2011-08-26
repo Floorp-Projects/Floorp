@@ -67,6 +67,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     global.addMessageListener("sync", globalListener);
     global.addMessageListener("global-sync", globalListener);
     global.loadFrameScript("data:,sendSyncMessage('global-sync', { data: 1234 });", true);
+    var toBeRemovedScript = "data:,sendAsyncMessage('toberemoved', { data: 2345 })";
+    var c = 0;
+    messageManager.addMessageListener("toberemoved", function() {
+      ++c;
+      opener.wrappedJSObject.is(c, 1, "Should be called only once!");
+    });
+    // This loads the script in the existing <browser>
+    messageManager.loadFrameScript(toBeRemovedScript, true);
+    // But it won't be loaded in the dynamically created <browser>
+    messageManager.removeDelayedFrameScript(toBeRemovedScript);
 
     var oldValue = globalListenerCallCount;
     var b = document.createElement("browser");

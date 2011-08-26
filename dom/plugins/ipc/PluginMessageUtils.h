@@ -130,7 +130,7 @@ struct NPRemoteWindow
 typedef HWND NativeWindowHandle;
 #elif defined(MOZ_X11)
 typedef XID NativeWindowHandle;
-#elif defined(XP_MACOSX) || defined(ANDROID)
+#elif defined(XP_MACOSX) || defined(ANDROID) || defined(MOZ_WIDGET_QT)
 typedef intptr_t NativeWindowHandle; // never actually used, will always be 0
 #else
 #error Need NativeWindowHandle for this platform
@@ -887,10 +887,10 @@ struct ParamTraits<NPCoordinateSpace>
 #  include "mozilla/plugins/NPEventWindows.h"
 #elif defined(XP_OS2)
 #  error Sorry, OS/2 is not supported
-#elif defined(XP_UNIX) && defined(MOZ_X11)
-#  include "mozilla/plugins/NPEventX11.h"
 #elif defined(ANDROID)
 #  include "mozilla/plugins/NPEventAndroid.h"
+#elif defined(XP_UNIX)
+#  include "mozilla/plugins/NPEventUnix.h"
 #else
 #  error Unsupported platform
 #endif

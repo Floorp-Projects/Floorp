@@ -569,6 +569,8 @@ public:
 
     virtual void WindowDestroyed() {}
 
+    virtual void ReleaseSurface() {}
+
     void *GetUserData(void *aKey) {
         void *result = nsnull;
         mUserData.Get(aKey, &result);

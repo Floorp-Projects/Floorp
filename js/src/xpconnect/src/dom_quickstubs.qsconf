@@ -181,12 +181,12 @@ members = [
     #XXX Can't quickstub initProgressEvent because it has long long parameters.
     'nsIDOMNSEvent.originalTarget',
     'nsIDOMNSEvent.getPreventDefault',
-    'nsIDOMNSUIEvent.which',
-    'nsIDOMNSUIEvent.rangeParent',
-    'nsIDOMNSUIEvent.rangeOffset',
-    'nsIDOMNSUIEvent.pageX',
-    'nsIDOMNSUIEvent.pageY',
-    'nsIDOMNSUIEvent.isChar',
+    'nsIDOMUIEvent.which',
+    'nsIDOMUIEvent.rangeParent',
+    'nsIDOMUIEvent.rangeOffset',
+    'nsIDOMUIEvent.pageX',
+    'nsIDOMUIEvent.pageY',
+    'nsIDOMUIEvent.isChar',
 
     'nsIDOMTouch.*',
     'nsIDOMTouchList.*',

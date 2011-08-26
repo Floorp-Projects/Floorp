@@ -624,7 +624,7 @@ struct JS_FRIEND_API(JSCompartment) {
                                                   JSObject *scriptObject);
     void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script, JSObject *handler);
     void clearTraps(JSContext *cx, JSScript *script);
-    bool markBreakpointsIteratively(JSTracer *trc);
+    bool markTrapClosuresIteratively(JSTracer *trc);
 
   private:
     void sweepBreakpoints(JSContext *cx);

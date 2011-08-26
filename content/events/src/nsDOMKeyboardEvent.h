@@ -57,8 +57,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_NSDOMUIEVENT
 
+protected:
   // Specific implementation for a keyboard event.
-  NS_IMETHOD GetWhich(PRUint32 *aWhich);
+  virtual nsresult Which(PRUint32* aWhich);
 };
 
 

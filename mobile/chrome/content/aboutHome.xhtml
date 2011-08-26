@@ -222,15 +222,11 @@
         let uri = chromeWin.Util.makeURI(url);
         let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
 
-        let outer = document.createElement("div");
+        let outer = document.createElement("a");
         outer.setAttribute("role", "button");
+        outer.setAttribute("href", url);
 
-        let pageURL = url;
-        outer.addEventListener("click", function() {
-          openTabs([pageURL]);
-        }, false);
-
-        allPageURLs.push(pageURL);
+        allPageURLs.push(url);
 
         let img = document.createElement("img");
         img.className = "favicon";

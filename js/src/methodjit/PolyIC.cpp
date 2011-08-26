@@ -2412,9 +2412,9 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     CodeLocationLabel cs = buffer.finalize();
 #if DEBUG
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
-    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%lx (\"%s\") shape 0x%x (%s: %d)\n",
-               js_CodeName[op], cs.executableAddress(), JSID_BITS(id), chars, holder->shape(),
-               cx->fp()->script()->filename, CurrentLine(cx));
+    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom %p (\"%s\") shape 0x%x (%s: %d)\n",
+               js_CodeName[op], cs.executableAddress(), (void*)JSID_TO_ATOM(id), chars,
+               holder->shape(), cx->fp()->script()->filename, CurrentLine(cx));
     cx->free_(chars);
 #endif
 

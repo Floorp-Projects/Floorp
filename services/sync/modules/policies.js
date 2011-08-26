@@ -236,7 +236,7 @@ let SyncScheduler = {
   },
 
   calculateScore: function calculateScore() {
-    var engines = Engines.getEnabled();
+    let engines = [Clients].concat(Engines.getEnabled());
     for (let i = 0;i < engines.length;i++) {
       this._log.trace(engines[i].name + ": score: " + engines[i].score);
       this.globalScore += engines[i].score;

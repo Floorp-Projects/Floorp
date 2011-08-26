@@ -58,17 +58,13 @@ using namespace mozilla;
 
 nsCUPSShim gCupsShim;
 
-/* Initialize the printer manager object */
-nsresult
-nsPSPrinterList::Init()
+nsPSPrinterList::nsPSPrinterList()
 {
     // Should we try cups?
-    PRBool useCups =
-        Preferences::GetBool("print.postscript.cups.enabled", PR_TRUE);
-    if (useCups && !gCupsShim.IsInitialized()) {
+    if (Preferences::GetBool("print.postscript.cups.enabled", PR_TRUE) &&
+        !gCupsShim.IsInitialized()) {
         gCupsShim.Init();
     }
-    return NS_OK;
 }
 
 

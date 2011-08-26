@@ -48,6 +48,7 @@
 #include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
 #include "nsDOMError.h"
 #include "nsDOMString.h"
+#include "jspubtd.h"
 
 class nsIContent;
 class nsIDocument;
@@ -280,8 +281,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xc7abbb40, 0x2571, 0x4d12, \
- { 0x8f, 0x89, 0x0d, 0x4f, 0x55, 0xc0, 0x92, 0xf6 } }
+{ 0xcdab747e, 0xa58f, 0x4b96, \
+ { 0x8b, 0xae, 0x9d, 0x53, 0xe0, 0xa7, 0x8a, 0x74 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1365,6 +1366,18 @@ protected:
    */
   nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            PRBool aNotify, nsAttrAndChildArray& aChildArray);
+
+  /* Event stuff that documents and elements share.  This needs to be
+     NS_IMETHOD because some subclasses implement DOM methods with
+     this exact name and signature and then the calling convention
+     needs to match. */
+#define EVENT(name_, id_, type_, struct_)                         \
+  NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);              \
+  NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef EVENT  
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 

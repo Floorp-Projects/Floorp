@@ -41,6 +41,7 @@
 // 3, certain combination of kana is never used in japanese language
 
 #include "nsEUCJPProber.h"
+#include "nsDebug.h"
 
 void  nsEUCJPProber::Reset(void)
 {
@@ -52,6 +53,7 @@ void  nsEUCJPProber::Reset(void)
 
 nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
 {
+  NS_ASSERTION(aLen, "HandleData called with empty buffer");
   nsSMState codingState;
 
   for (PRUint32 i = 0; i < aLen; i++)

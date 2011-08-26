@@ -302,6 +302,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   gDraggedTransferables = aTransferableArray;
 
   nsBaseDragService::StartDragSession();
+  nsBaseDragService::OpenDragPopup();
 
   // We need to retain the view and the event during the drag in case either gets destroyed.
   mNativeDragView = [gLastDragView retain];

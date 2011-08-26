@@ -10,12 +10,12 @@
       function test() {
         document.querySelector("div").focus();
       }
-      function onfocus() {
+      function focusTriggered() {
         document.documentElement.removeAttribute("class");
       }
     </script>
   </head>
   <body onload="test()">
-    <div contenteditable onfocus="onfocus()"><br></div>
+    <div contenteditable onfocus="focusTriggered()"><br></div>
   </body>
 </html>

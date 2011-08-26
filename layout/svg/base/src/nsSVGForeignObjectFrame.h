@@ -73,7 +73,7 @@ public:
                                PRInt32         aModType);
 
   virtual nsIFrame* GetContentInsertionFrame() {
-    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+    return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,

@@ -7,7 +7,7 @@
 #ifndef CHROME_COMMON_ENV_VARS_H__
 #define CHROME_COMMON_ENV_VARS_H__
 
-#if defined(CHROMIUM_MOZILLA_BUILD) && defined(COMPILER_MSVC)
+#if defined(COMPILER_MSVC)
 #include <string.h>
 #endif
 

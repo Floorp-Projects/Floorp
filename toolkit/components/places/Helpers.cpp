@@ -377,14 +377,6 @@ GetHiddenState(bool aIsRedirect,
 
 PlacesEvent::PlacesEvent(const char* aTopic)
 : mTopic(aTopic)
-, mDoubleEnqueue(false)
-{
-}
-
-PlacesEvent::PlacesEvent(const char* aTopic,
-                         bool aDoubleEnqueue)
-: mTopic(aTopic)
-, mDoubleEnqueue(aDoubleEnqueue)
 {
 }
 
@@ -405,16 +397,10 @@ PlacesEvent::Complete()
 void
 PlacesEvent::Notify()
 {
-  if (mDoubleEnqueue) {
-    mDoubleEnqueue = false;
-    (void)NS_DispatchToMainThread(this);
-  }
-  else {
-    NS_ASSERTION(NS_IsMainThread(), "Must only be used on the main thread!");
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
-    }
+  NS_ASSERTION(NS_IsMainThread(), "Must only be used on the main thread!");
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
   }
 }
 
