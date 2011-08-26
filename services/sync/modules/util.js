@@ -410,21 +410,6 @@ let Utils = {
     return hex;
   },
 
-  _sha256: function _sha256(message) {
-    let hasher = Cc["@mozilla.org/security/hash;1"].
-      createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA256);
-    return Utils.digestUTF8(message, hasher);
-  },
-
-  sha256: function sha256(message) {
-    return Utils.bytesAsHex(Utils._sha256(message));
-  },
-
-  sha256Base64: function (message) {
-    return btoa(Utils._sha256(message));
-  },
-
   _sha1: function _sha1(message) {
     let hasher = Cc["@mozilla.org/security/hash;1"].
       createInstance(Ci.nsICryptoHash);
@@ -440,10 +425,6 @@ let Utils = {
     return Utils.encodeBase32(Utils._sha1(message));
   },
   
-  sha1Base64: function (message) {
-    return btoa(Utils._sha1(message));
-  },
-
   /**
    * Produce an HMAC key object from a key string.
    */
@@ -459,26 +440,6 @@ let Utils = {
                    .createInstance(Ci.nsICryptoHMAC);
     hasher.init(type, key);
     return hasher;
-  },
-
-  /**
-   * Some HMAC convenience functions for tests and backwards compatibility:
-   * 
-   *   sha1HMACBytes: hashes byte string, returns bytes string
-   *   sha256HMAC: hashes UTF-8 encoded string, returns hex string
-   *   sha256HMACBytes: hashes byte string, returns bytes string
-   */
-  sha1HMACBytes: function sha1HMACBytes(message, key) {
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1, key);
-    return Utils.digestBytes(message, h);
-  },
-  sha256HMAC: function sha256HMAC(message, key) {
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
-    return Utils.bytesAsHex(Utils.digestUTF8(message, h));
-  },
-  sha256HMACBytes: function sha256HMACBytes(message, key) {
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
-    return Utils.digestBytes(message, h);
   },
 
   /**
