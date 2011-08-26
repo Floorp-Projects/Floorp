@@ -50,19 +50,15 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js"
+const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js"
 const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js"
 
-/**
- * Special Powers Exception - used to throw exceptions nicely
- **/
-function SpecialPowersException(aMsg) {
-  this.message = aMsg;
-  this.name = "SpecialPowersException";
-}
 
-SpecialPowersException.prototype.toString = function() {
-  return this.name + ': "' + this.message + '"';
-};
+//glue to add in the observer API to this object.  This allows us to share code with chrome tests
+var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                       .getService(Components.interfaces.mozIJSSubScriptLoader);
+loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
+
 
 /* XPCOM gunk */
 function SpecialPowersObserver() {
@@ -71,14 +67,16 @@ function SpecialPowersObserver() {
                          getService(Ci.nsIChromeFrameMessageManager);
 }
 
-SpecialPowersObserver.prototype = {
-  classDescription: "Special powers Observer for use in testing.",
-  classID:          Components.ID("{59a52458-13e0-4d93-9d85-a637344f29a1}"),
-  contractID:       "@mozilla.org/special-powers-observer;1",
-  QueryInterface:   XPCOMUtils.generateQI([Components.interfaces.nsIObserver]),
-  _xpcom_categories: [{category: "profile-after-change", service: true }],
 
-  observe: function(aSubject, aTopic, aData)
+SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
+
+  SpecialPowersObserver.prototype.classDescription = "Special powers Observer for use in testing.";
+  SpecialPowersObserver.prototype.classID = Components.ID("{59a52458-13e0-4d93-9d85-a637344f29a1}");
+  SpecialPowersObserver.prototype.contractID = "@mozilla.org/special-powers-observer;1";
+  SpecialPowersObserver.prototype.QueryInterface = XPCOMUtils.generateQI([Components.interfaces.nsIObserver]);
+  SpecialPowersObserver.prototype._xpcom_categories = [{category: "profile-after-change", service: true }];
+
+  SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
   {
     switch (aTopic) {
       case "profile-after-change":
@@ -93,6 +91,7 @@ SpecialPowersObserver.prototype = {
           this._messageManager.addMessageListener("SPPingService", this);
 
           this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
+          this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
           this._messageManager.loadFrameScript(CHILD_SCRIPT, true);
           this._isFrameScriptLoaded = true;
         }
@@ -102,180 +101,41 @@ SpecialPowersObserver.prototype = {
         this.uninit();
         break;
 
-      case "plugin-crashed":
-      case "ipc:content-shutdown":
-        function addDumpIDToMessage(propertyName) {
-          var id = aSubject.getPropertyAsAString(propertyName);
-          if (id) {
-            message.dumpIDs.push(id);
-          }
-        }
-
-        var message = { type: "crash-observed", dumpIDs: [] };
-        aSubject = aSubject.QueryInterface(Ci.nsIPropertyBag2);
-        if (aTopic == "plugin-crashed") {
-          addDumpIDToMessage("pluginDumpID");
-          addDumpIDToMessage("browserDumpID");
-        } else { // ipc:content-shutdown
-          addDumpIDToMessage("dumpID");
-        }
-        this._messageManager.sendAsyncMessage("SPProcessCrashService", message);
+      default:
+        this._observe(aSubject, aTopic, aData);
         break;
     }
-  },
+  };
 
-  init: function()
+  SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg)
+  {
+    this._messageManager.sendAsyncMessage(msgname, msg);
+  };
+
+  SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
+    return this._receiveMessageAPI(aMessage);
+  };
+
+  SpecialPowersObserver.prototype.init = function()
   {
     var obs = Services.obs;
     obs.addObserver(this, "xpcom-shutdown", false);
     obs.addObserver(this, "chrome-document-global-created", false);
-  },
+  };
 
-  uninit: function()
+  SpecialPowersObserver.prototype.uninit = function()
   {
     var obs = Services.obs;
     obs.removeObserver(this, "chrome-document-global-created", false);
-    this.removeProcessCrashObservers();
-  },
-  
-  addProcessCrashObservers: function() {
-    if (this._processCrashObserversRegistered) {
-      return;
-    }
-
-    Services.obs.addObserver(this, "plugin-crashed", false);
-    Services.obs.addObserver(this, "ipc:content-shutdown", false);
-    this._processCrashObserversRegistered = true;
-  },
-
-  removeProcessCrashObservers: function() {
-    if (!this._processCrashObserversRegistered) {
-      return;
-    }
-
-    Services.obs.removeObserver(this, "plugin-crashed");
-    Services.obs.removeObserver(this, "ipc:content-shutdown");
-    this._processCrashObserversRegistered = false;
-  },
-
-  getCrashDumpDir: function() {
-    if (!this._crashDumpDir) {
-      var directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                             .getService(Ci.nsIProperties);
-      this._crashDumpDir = directoryService.get("ProfD", Ci.nsIFile);
-      this._crashDumpDir.append("minidumps");
-    }
-    return this._crashDumpDir;
-  },
-
-  deleteCrashDumpFiles: function(aFilenames) {
-    var crashDumpDir = this.getCrashDumpDir();
-    if (!crashDumpDir.exists()) {
-      return false;
-    }
-
-    var success = aFilenames.length != 0;
-    aFilenames.forEach(function(crashFilename) {
-      var file = crashDumpDir.clone();
-      file.append(crashFilename);
-      if (file.exists()) {
-        file.remove(false);
-      } else {
-        success = false;
-      }
-    });
-    return success;
-  },
-
-  findCrashDumpFiles: function(aToIgnore) {
-    var crashDumpDir = this.getCrashDumpDir();
-    var entries = crashDumpDir.exists() && crashDumpDir.directoryEntries;
-    if (!entries) {
-      return [];
-    }
-
-    var crashDumpFiles = [];
-    while (entries.hasMoreElements()) {
-      var file = entries.getNext().QueryInterface(Ci.nsIFile);
-      var path = String(file.path);
-      if (path.match(/\.(dmp|extra)$/) && !aToIgnore[path]) {
-        crashDumpFiles.push(path);
-      }
-    }
-    return crashDumpFiles.concat();
-  },
+    this._removeProcessCrashObservers();
+  };
 
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
    **/
-  receiveMessage: function(aMessage) {
+  SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
     switch(aMessage.name) {
-      case "SPPrefService":
-        var prefs = Services.prefs;
-        var prefType = aMessage.json.prefType.toUpperCase();
-        var prefName = aMessage.json.prefName;
-        var prefValue = "prefValue" in aMessage.json ? aMessage.json.prefValue : null;
-
-        if (aMessage.json.op == "get") {
-          if (!prefName || !prefType)
-            throw new SpecialPowersException("Invalid parameters for get in SPPrefService");
-        } else if (aMessage.json.op == "set") {
-          if (!prefName || !prefType  || prefValue === null)
-            throw new SpecialPowersException("Invalid parameters for set in SPPrefService");
-        } else if (aMessage.json.op == "clear") {
-          if (!prefName)
-            throw new SpecialPowersException("Invalid parameters for clear in SPPrefService");
-        } else {
-          throw new SpecialPowersException("Invalid operation for SPPrefService");
-        }
-        // Now we make the call
-        switch(prefType) {
-          case "BOOL":
-            if (aMessage.json.op == "get")
-              return(prefs.getBoolPref(prefName));
-            else 
-              return(prefs.setBoolPref(prefName, prefValue));
-          case "INT":
-            if (aMessage.json.op == "get") 
-              return(prefs.getIntPref(prefName));
-            else
-              return(prefs.setIntPref(prefName, prefValue));
-          case "CHAR":
-            if (aMessage.json.op == "get")
-              return(prefs.getCharPref(prefName));
-            else
-              return(prefs.setCharPref(prefName, prefValue));
-          case "COMPLEX":
-            if (aMessage.json.op == "get")
-              return(prefs.getComplexValue(prefName, prefValue[0]));
-            else
-              return(prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
-          case "":
-            if (aMessage.json.op == "clear") {
-              prefs.clearUserPref(prefName);
-              return;
-            }
-        }
-        break;
-
-      case "SPProcessCrashService":
-        switch (aMessage.json.op) {
-          case "register-observer":
-            this.addProcessCrashObservers();
-            break;
-          case "unregister-observer":
-            this.removeProcessCrashObservers();
-            break;
-          case "delete-crash-dump-files":
-            return this.deleteCrashDumpFiles(aMessage.json.filenames);
-          case "find-crash-dump-files":
-            return this.findCrashDumpFiles(aMessage.json.crashDumpFilesToIgnore);
-          default:
-            throw new SpecialPowersException("Invalid operation for SPProcessCrashService");
-        }
-        break;
-
       case "SPPingService":
         if (aMessage.json.op == "ping") {
           aMessage.target
@@ -285,11 +145,9 @@ SpecialPowersObserver.prototype = {
                   .sendAsyncMessage("SPPingService", { op: "pong" });
         }
         break;
-
       default:
-        throw new SpecialPowersException("Unrecognized Special Powers API");
+        return this._receiveMessage(aMessage);
     }
-  }
-};
+  };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);
