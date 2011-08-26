@@ -225,7 +225,7 @@ let gSyncUI = {
     Weave.Notifications.removeAll();
 
     // if we haven't set up the client, don't show errors
-    if (this._needsSetup() || Weave.Service.shouldIgnoreError()) {
+    if (this._needsSetup() || Weave.ErrorHandler.shouldIgnoreError()) {
       this.updateUI();
       return;
     }
@@ -352,7 +352,7 @@ let gSyncUI = {
 
       // Ignore network related errors unless we haven't been able to
       // sync for a while.
-      if (Weave.Service.shouldIgnoreError()) {
+      if (Weave.ErrorHandler.shouldIgnoreError()) {
         this.updateUI();
         return;
       }
