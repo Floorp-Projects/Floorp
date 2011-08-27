@@ -1324,7 +1324,9 @@ FrameState::sync(Assembler &masm, Uses uses) const
     Registers avail(freeRegs.freeMask & Registers::AvailRegs);
     Registers temp(Registers::TempAnyRegs);
 
-    FrameEntry *bottom = cx->typeInferenceEnabled() ? entries : a->sp - uses.nuses;
+    FrameEntry *bottom = (cx->typeInferenceEnabled() || cx->compartment->debugMode())
+        ? entries
+        : a->sp - uses.nuses;
 
     for (FrameEntry *fe = a->sp - 1; fe >= bottom; fe--) {
         if (!fe->isTracked())
@@ -1456,7 +1458,10 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
     }
 
     uint32 maxvisits = tracker.nentries;
-    FrameEntry *bottom = cx->typeInferenceEnabled() ? entries : a->sp - uses.nuses;
+
+    FrameEntry *bottom = (cx->typeInferenceEnabled() || cx->compartment->debugMode())
+        ? entries
+        : a->sp - uses.nuses;
 
     for (FrameEntry *fe = a->sp - 1; fe >= bottom && maxvisits; fe--) {
         if (!fe->isTracked())
