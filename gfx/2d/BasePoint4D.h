@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_BASEPOINT3D_H_
-#define MOZILLA_BASEPOINT3D_H_
+#ifndef MOZILLA_BASEPOINT4D_H_
+#define MOZILLA_BASEPOINT4D_H_
 
 namespace mozilla {
 namespace gfx {
@@ -47,101 +47,108 @@ namespace gfx {
  * cast 'this' to 'Sub*'.
  */
 template <class T, class Sub>
-struct BasePoint3D {
-  T x, y, z;
+struct BasePoint4D {
+  T x, y, z, w;
 
   // Constructors
-  BasePoint3D() : x(0), y(0), z(0) {}
-  BasePoint3D(T aX, T aY, T aZ) : x(aX), y(aY), z(aZ) {}
+  BasePoint4D() : x(0), y(0), z(0), w(0) {}
+  BasePoint4D(T aX, T aY, T aZ, T aW) : x(aX), y(aY), z(aZ), w(aW) {}
 
-  void MoveTo(T aX, T aY, T aZ) { x = aX; y = aY; z = aZ; }
-  void MoveBy(T aDx, T aDy, T aDz) { x += aDx; y += aDy; z += aDz; }
+  void MoveTo(T aX, T aY, T aZ, T aW) { x = aX; y = aY; z = aZ; w = aW; }
+  void MoveBy(T aDx, T aDy, T aDz, T aDw) { x += aDx; y += aDy; z += aDz; w += aDw; }
 
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
 
-  T& operator[](int aIndex) {
-    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 2, "Invalid array index");
-    return *((&x)+aIndex);
-  }
-
-  const T& operator[](int aIndex) const {
-    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 2, "Invalid array index");
-    return *((&x)+aIndex);
-  }
-
   bool operator==(const Sub& aPoint) const {
-    return x == aPoint.x && y == aPoint.y && z == aPoint.z;
+    return x == aPoint.x && y == aPoint.y && 
+           z == aPoint.z && w == aPoint.w;
   }
   bool operator!=(const Sub& aPoint) const {
-    return x != aPoint.x || y != aPoint.y || z != aPoint.z;
+    return x != aPoint.x || y != aPoint.y || 
+           z != aPoint.z || w != aPoint.w;
   }
 
   Sub operator+(const Sub& aPoint) const {
-    return Sub(x + aPoint.x, y + aPoint.y, z + aPoint.z);
+    return Sub(x + aPoint.x, y + aPoint.y, z + aPoint.z, w + aPoint.w);
   }
   Sub operator-(const Sub& aPoint) const {
-    return Sub(x - aPoint.x, y - aPoint.y, z - aPoint.z);
+    return Sub(x - aPoint.x, y - aPoint.y, z - aPoint.z, w - aPoint.w);
   }
   Sub& operator+=(const Sub& aPoint) {
     x += aPoint.x;
     y += aPoint.y;
     z += aPoint.z;
+    w += aPoint.w;
     return *static_cast<Sub*>(this);
   }
   Sub& operator-=(const Sub& aPoint) {
     x -= aPoint.x;
     y -= aPoint.y;
     z -= aPoint.z;
+    w -= aPoint.w;
     return *static_cast<Sub*>(this);
   }
 
   Sub operator*(T aScale) const {
-    return Sub(x * aScale, y * aScale, z * aScale);
+    return Sub(x * aScale, y * aScale, z * aScale, w * aScale);
   }
   Sub operator/(T aScale) const {
-    return Sub(x / aScale, y / aScale, z / aScale);
+    return Sub(x / aScale, y / aScale, z / aScale, w / aScale);
   }
 
   Sub& operator*=(T aScale) {
     x *= aScale;
     y *= aScale;
     z *= aScale;
+    w *= aScale;
     return *static_cast<Sub*>(this);
   }
 
   Sub& operator/=(T aScale) {
-      x /= aScale;
-      y /= aScale;
-      z /= aScale;
-      return *static_cast<Sub*>(this);
+    x /= aScale;
+    y /= aScale;
+    z /= aScale;
+    w /= aScale;
+    return *static_cast<Sub*>(this);
   }
 
   Sub operator-() const {
-    return Sub(-x, -y, -z);
+    return Sub(-x, -y, -z, -w);
   }
 
-  Sub CrossProduct(const Sub& aPoint) const {
-      return Sub(y * aPoint.z - aPoint.y * z,
-                 z * aPoint.x - aPoint.z * x,
-                 x * aPoint.y - aPoint.x * y);
+  T& operator[](int aIndex) {
+    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid array index");
+    return *((&x)+aIndex);
+  }
+
+  const T& operator[](int aIndex) const {
+    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid array index");
+    return *((&x)+aIndex);
   }
 
   T DotProduct(const Sub& aPoint) const {
-      return x * aPoint.x + y * aPoint.y + z * aPoint.z;
+    return x * aPoint.x + y * aPoint.y + z * aPoint.z + w * aPoint.w;
+  }
+
+  // Ignores the 4th component!
+  Sub CrossProduct(const Sub& aPoint) const {
+      return Sub(y * aPoint.z - aPoint.y * z,
+          z * aPoint.x - aPoint.z * x,
+          x * aPoint.y - aPoint.x * y, 
+          0);
   }
 
   T Length() const {
-      return sqrt(x*x + y*y + z*z);
+    return sqrt(x*x + y*y + z*z + w*w);
   }
 
-  // Invalid for points with distance from origin of 0.
   void Normalize() {
-      *this /= Length();
+    *this /= Length();
   }
 };
 
 }
 }
 
-#endif /* MOZILLA_BASEPOINT3D_H_ */
+#endif /* MOZILLA_BASEPOINT4D_H_ */

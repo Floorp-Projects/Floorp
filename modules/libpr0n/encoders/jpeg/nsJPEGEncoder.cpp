@@ -88,6 +88,8 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
                                           PRUint32 aInputFormat,
                                           const nsAString& aOutputOptions)
 {
+  NS_ENSURE_ARG(aData);
+
   // validate input format
   if (aInputFormat != INPUT_FORMAT_RGB &&
       aInputFormat != INPUT_FORMAT_RGBA &&

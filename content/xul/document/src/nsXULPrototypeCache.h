@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsXBLDocumentInfo.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -74,19 +73,17 @@ struct CacheScriptEntry
  *  1. In-memory hashtables
  *  2. The on-disk cache file.
  */
-class nsXULPrototypeCache : public nsIXULPrototypeCache,
-                                   nsIObserver
+class nsXULPrototypeCache : public nsIObserver
 {
 public:
     // nsISupports
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    // nsIXULPrototypeCache
-    virtual PRBool IsCached(nsIURI* aURI) {
+    PRBool IsCached(nsIURI* aURI) {
         return GetPrototype(aURI) != nsnull;
     }
-    virtual void AbortCaching();
+    void AbortCaching();
 
 
     /**
