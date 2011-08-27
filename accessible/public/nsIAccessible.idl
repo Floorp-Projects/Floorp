@@ -56,7 +56,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(c81d8f8c-8585-4094-bc7c-71dd01494906)]
+[scriptable, uuid(c7ac764a-b4c5-4479-9fb7-06e3c9f3db34)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -246,18 +246,6 @@ interface nsIAccessible : nsISupports
    * constants defined in nsIAccessibleRelation).
    */
   nsIAccessibleRelation getRelationByType(in unsigned long aRelationType);
-
-  /**
-   * Returns the number of accessible relations for this object.
-   */
-  readonly attribute unsigned long relationsCount;
-
-  /**
-   * Returns one accessible relation for this object.
-   *
-   * @param index - relation index (0-based)
-   */
-  nsIAccessibleRelation getRelation(in unsigned long index);
 
   /**
    * Returns multiple accessible relations for this object.
