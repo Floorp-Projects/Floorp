@@ -143,6 +143,10 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   }
 
   gfxMatrix userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
+  if (userToDeviceSpace.IsSingular()) {
+    // nothing to draw
+    return;
+  }
   
   // Calculate filterRes (the width and height of the pixel buffer of the
   // temporary offscreen surface that we'll paint into):
