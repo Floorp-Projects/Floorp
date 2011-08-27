@@ -600,8 +600,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     return;
   // Root is being scaled up by the X/Y resolution. Scale it back down.
   gfx3DMatrix rootTransform = root->GetTransform()*
-    gfx3DMatrix::Scale(1.0f/containerParameters.mXScale,
-                       1.0f/containerParameters.mYScale, 1.0f);
+    gfx3DMatrix::ScalingMatrix(1.0f/containerParameters.mXScale,
+                               1.0f/containerParameters.mYScale, 1.0f);
   root->SetTransform(rootTransform);
 
   ViewID id = presContext->IsRootContentDocument() ? FrameMetrics::ROOT_SCROLL_ID
