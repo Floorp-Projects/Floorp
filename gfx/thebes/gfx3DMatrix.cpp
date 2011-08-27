@@ -136,6 +136,41 @@ gfx3DMatrix::IsIdentity() const
          _41 == 0.0f && _42 == 0.0f && _43 == 0.0f && _44 == 1.0f;
 }
 
+void
+gfx3DMatrix::Translate(const gfxPoint3D& aPoint)
+{
+    _41 += aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31;
+    _42 += aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32;
+    _43 += aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33;
+    _44 += aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34;
+}
+
+void
+gfx3DMatrix::SkewXY(float aSkew)
+{
+    (*this)[1] += (*this)[0] * aSkew;
+}
+
+void 
+gfx3DMatrix::SkewXZ(float aSkew)
+{
+    (*this)[2] += (*this)[0] * aSkew;
+}
+
+void
+gfx3DMatrix::SkewYZ(float aSkew)
+{
+    (*this)[2] += (*this)[1] * aSkew;
+}
+
+void
+gfx3DMatrix::Scale(float aX, float aY, float aZ)
+{
+    (*this)[0] *= aX;
+    (*this)[1] *= aY;
+    (*this)[2] *= aZ;
+}
+
 gfx3DMatrix
 gfx3DMatrix::Translation(float aX, float aY, float aZ)
 {
@@ -159,7 +194,7 @@ gfx3DMatrix::Translation(const gfxPoint3D& aPoint)
 }
 
 gfx3DMatrix
-gfx3DMatrix::Scale(float aFactor)
+gfx3DMatrix::ScalingMatrix(float aFactor)
 {
   gfx3DMatrix matrix;
 
@@ -168,7 +203,7 @@ gfx3DMatrix::Scale(float aFactor)
 }
 
 gfx3DMatrix
-gfx3DMatrix::Scale(float aX, float aY, float aZ)
+gfx3DMatrix::ScalingMatrix(float aX, float aY, float aZ)
 {
   gfx3DMatrix matrix;
 
@@ -208,73 +243,148 @@ gfx3DMatrix::Determinant() const
        + _11 * _22 * _33 * _44;
 }
 
+gfxFloat
+gfx3DMatrix::Determinant3x3() const
+{
+    return _11 * (_22 * _33 - _23 * _32) +
+           _12 * (_23 * _31 - _33 * _21) +
+           _13 * (_21 * _32 - _22 * _31);
+}
+
+gfx3DMatrix
+gfx3DMatrix::Inverse3x3() const
+{
+    gfxFloat det = Determinant3x3();
+    if (det == 0.0) {
+        return *this;
+    }
+
+    gfxFloat detInv = 1/det;
+    gfx3DMatrix temp;
+
+    temp._11 = (_22 * _33 - _23 * _32) * detInv;
+    temp._12 = (_13 * _32 - _12 * _33) * detInv;
+    temp._13 = (_12 * _23 - _13 * _22) * detInv;
+    temp._21 = (_23 * _31 - _33 * _21) * detInv;
+    temp._22 = (_11 * _33 - _13 * _31) * detInv;
+    temp._23 = (_13 * _21 - _11 * _23) * detInv;
+    temp._31 = (_21 * _32 - _22 * _31) * detInv;
+    temp._32 = (_31 * _12 - _11 * _32) * detInv;
+    temp._33 = (_11 * _22 - _12 * _21) * detInv;
+    return temp;
+}
+
 PRBool
 gfx3DMatrix::IsSingular() const
 {
   return Determinant() == 0.0;
 }
 
-gfx3DMatrix&
-gfx3DMatrix::Invert()
+gfx3DMatrix
+gfx3DMatrix::Inverse() const
 {
+  if (TransposedVector(3) == gfxPointH3D(0, 0, 0, 1)) {
+    /** 
+     * When the matrix contains no perspective, the inverse
+     * is the same as the 3x3 inverse of the rotation components
+     * multiplied by the inverse of the translation components.
+     * Doing these steps separately is faster and more numerically
+     * stable.
+     *
+     * Inverse of the translation matrix is just negating
+     * the values.
+     */
+    gfx3DMatrix matrix3 = Inverse3x3();
+    matrix3.Translate(gfxPoint3D(-_41, -_42, -_43));
+    return matrix3;
+ }
+
   gfxFloat det = Determinant();
   if (det == 0.0) {
     return *this;
   }
 
-  gfx3DMatrix temp = *this;
+  gfx3DMatrix temp;
 
-  _11 = temp._23*temp._34*temp._42 - temp._24*temp._33*temp._42 
-      + temp._24*temp._32*temp._43 - temp._22*temp._34*temp._43 
-      - temp._23*temp._32*temp._44 + temp._22*temp._33*temp._44;
-  _12 = temp._14*temp._33*temp._42 - temp._13*temp._34*temp._42 
-      - temp._14*temp._32*temp._43 + temp._12*temp._34*temp._43 
-      + temp._13*temp._32*temp._44 - temp._12*temp._33*temp._44;
-  _13 = temp._13*temp._24*temp._42 - temp._14*temp._23*temp._42 
-      + temp._14*temp._22*temp._43 - temp._12*temp._24*temp._43 
-      - temp._13*temp._22*temp._44 + temp._12*temp._23*temp._44;
-  _14 = temp._14*temp._23*temp._32 - temp._13*temp._24*temp._32 
-      - temp._14*temp._22*temp._33 + temp._12*temp._24*temp._33 
-      + temp._13*temp._22*temp._34 - temp._12*temp._23*temp._34;
-  _21 = temp._24*temp._33*temp._41 - temp._23*temp._34*temp._41 
-      - temp._24*temp._31*temp._43 + temp._21*temp._34*temp._43 
-      + temp._23*temp._31*temp._44 - temp._21*temp._33*temp._44;
-  _22 = temp._13*temp._34*temp._41 - temp._14*temp._33*temp._41 
-      + temp._14*temp._31*temp._43 - temp._11*temp._34*temp._43 
-      - temp._13*temp._31*temp._44 + temp._11*temp._33*temp._44;
-  _23 = temp._14*temp._23*temp._41 - temp._13*temp._24*temp._41 
-      - temp._14*temp._21*temp._43 + temp._11*temp._24*temp._43 
-      + temp._13*temp._21*temp._44 - temp._11*temp._23*temp._44;
-  _24 = temp._13*temp._24*temp._31 - temp._14*temp._23*temp._31 
-      + temp._14*temp._21*temp._33 - temp._11*temp._24*temp._33 
-      - temp._13*temp._21*temp._34 + temp._11*temp._23*temp._34;
-  _31 = temp._22*temp._34*temp._41 - temp._24*temp._32*temp._41 
-      + temp._24*temp._31*temp._42 - temp._21*temp._34*temp._42 
-      - temp._22*temp._31*temp._44 + temp._21*temp._32*temp._44;
-  _32 = temp._14*temp._32*temp._41 - temp._12*temp._34*temp._41 
-      - temp._14*temp._31*temp._42 + temp._11*temp._34*temp._42 
-      + temp._12*temp._31*temp._44 - temp._11*temp._32*temp._44;
-  _33 = temp._12*temp._24*temp._41 - temp._14*temp._22*temp._41 
-      + temp._14*temp._21*temp._42 - temp._11*temp._24*temp._42 
-      - temp._12*temp._21*temp._44 + temp._11*temp._22*temp._44;
-  _34 = temp._14*temp._22*temp._31 - temp._12*temp._24*temp._31 
-      - temp._14*temp._21*temp._32 + temp._11*temp._24*temp._32 
-      + temp._12*temp._21*temp._34 - temp._11*temp._22*temp._34;
-  _41 = temp._23*temp._32*temp._41 - temp._22*temp._33*temp._41 
-      - temp._23*temp._31*temp._42 + temp._21*temp._33*temp._42 
-      + temp._22*temp._31*temp._43 - temp._21*temp._32*temp._43;
-  _42 = temp._12*temp._33*temp._41 - temp._13*temp._32*temp._41 
-      + temp._13*temp._31*temp._42 - temp._11*temp._33*temp._42 
-      - temp._12*temp._31*temp._43 + temp._11*temp._32*temp._43;
-  _43 = temp._13*temp._22*temp._41 - temp._12*temp._23*temp._41 
-      - temp._13*temp._21*temp._42 + temp._11*temp._23*temp._42 
-      + temp._12*temp._21*temp._43 - temp._11*temp._22*temp._43;
-  _44 = temp._12*temp._23*temp._31 - temp._13*temp._22*temp._31 
-      + temp._13*temp._21*temp._32 - temp._11*temp._23*temp._32 
-      - temp._12*temp._21*temp._33 + temp._11*temp._22*temp._33;
+  temp._11 = _23*_34*_42 - _24*_33*_42 + 
+             _24*_32*_43 - _22*_34*_43 - 
+             _23*_32*_44 + _22*_33*_44;
+  temp._12 = _14*_33*_42 - _13*_34*_42 -
+             _14*_32*_43 + _12*_34*_43 +
+             _13*_32*_44 - _12*_33*_44;
+  temp._13 = _13*_24*_42 - _14*_23*_42 +
+             _14*_22*_43 - _12*_24*_43 -
+             _13*_22*_44 + _12*_23*_44;
+  temp._14 = _14*_23*_32 - _13*_24*_32 -
+             _14*_22*_33 + _12*_24*_33 +
+             _13*_22*_34 - _12*_23*_34;
+  temp._21 = _24*_33*_41 - _23*_34*_41 -
+             _24*_31*_43 + _21*_34*_43 +
+             _23*_31*_44 - _21*_33*_44;
+  temp._22 = _13*_34*_41 - _14*_33*_41 +
+             _14*_31*_43 - _11*_34*_43 -
+             _13*_31*_44 + _11*_33*_44;
+  temp._23 = _14*_23*_41 - _13*_24*_41 -
+             _14*_21*_43 + _11*_24*_43 +
+             _13*_21*_44 - _11*_23*_44;
+  temp._24 = _13*_24*_31 - _14*_23*_31 +
+             _14*_21*_33 - _11*_24*_33 -
+             _13*_21*_34 + _11*_23*_34;
+  temp._31 = _22*_34*_41 - _24*_32*_41 +
+             _24*_31*_42 - _21*_34*_42 -
+             _22*_31*_44 + _21*_32*_44;
+  temp._32 = _14*_32*_41 - _12*_34*_41 -
+             _14*_31*_42 + _11*_34*_42 +
+             _12*_31*_44 - _11*_32*_44;
+  temp._33 = _12*_24*_41 - _14*_22*_41 +
+             _14*_21*_42 - _11*_24*_42 -
+             _12*_21*_44 + _11*_22*_44;
+  temp._34 = _14*_22*_31 - _12*_24*_31 -
+             _14*_21*_32 + _11*_24*_32 +
+             _12*_21*_34 - _11*_22*_34;
+  temp._41 = _23*_32*_41 - _22*_33*_41 -
+             _23*_31*_42 + _21*_33*_42 +
+             _22*_31*_43 - _21*_32*_43;
+  temp._42 = _12*_33*_41 - _13*_32*_41 +
+             _13*_31*_42 - _11*_33*_42 -
+             _12*_31*_43 + _11*_32*_43;
+  temp._43 = _13*_22*_41 - _12*_23*_41 -
+             _13*_21*_42 + _11*_23*_42 +
+             _12*_21*_43 - _11*_22*_43;
+  temp._44 = _12*_23*_31 - _13*_22*_31 +
+             _13*_21*_32 - _11*_23*_32 -
+             _12*_21*_33 + _11*_22*_33;
 
-  *this /= det;
-  return *this;
+  temp /= det;
+  return temp;
+}
+
+gfx3DMatrix&
+gfx3DMatrix::Normalize()
+{
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            (*this)[i][j] /= (*this)[3][3];
+       }
+    }
+    return *this;
+}
+
+gfx3DMatrix&
+gfx3DMatrix::Transpose()
+{
+    *this = Transposed();
+    return *this;
+}
+
+gfx3DMatrix
+gfx3DMatrix::Transposed() const
+{
+    gfx3DMatrix temp;
+    for (int i = 0; i < 4; i++) {
+        temp[i] = TransposedVector(i);
+    }
+    return temp;
 }
 
 gfxPoint
@@ -298,6 +408,28 @@ gfx3DMatrix::Transform3D(const gfxPoint3D& point) const
   z /= w;
 
   return gfxPoint3D(x, y, z);
+}
+
+gfxPointH3D
+gfx3DMatrix::Transform4D(const gfxPointH3D& aPoint) const
+{
+    gfxFloat x = aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31 + aPoint.w * _41;
+    gfxFloat y = aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32 + aPoint.w * _42;
+    gfxFloat z = aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33 + aPoint.w * _43;
+    gfxFloat w = aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34 + aPoint.w * _44;
+
+    return gfxPointH3D(x, y, z, w);
+}
+
+gfxPointH3D
+gfx3DMatrix::TransposeTransform4D(const gfxPointH3D& aPoint) const
+{
+    gfxFloat x = aPoint.x * _11 + aPoint.y * _12 + aPoint.z * _13 + aPoint.w * _14;
+    gfxFloat y = aPoint.x * _21 + aPoint.y * _22 + aPoint.z * _23 + aPoint.w * _24;
+    gfxFloat z = aPoint.x * _31 + aPoint.y * _32 + aPoint.z * _33 + aPoint.w * _34;
+    gfxFloat w = aPoint.x * _41 + aPoint.y * _42 + aPoint.z * _43 + aPoint.w * _44;
+
+    return gfxPointH3D(x, y, z, w);
 }
 
 gfxRect
