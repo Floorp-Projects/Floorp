@@ -552,7 +552,13 @@ class MTableSwitch
   : public MControlInstruction,
     public TableSwitchPolicy
 {
+    // Contains the cases and default case in order of appearence in the actual switch.
     Vector<MBasicBlock*, 0, IonAllocPolicy> successors_;
+
+    // Contains the consecutive targets of each case.
+    // If the code doesn't contain that number, it goes to the default case.
+    Vector<MBasicBlock*, 0, IonAllocPolicy> cases_;
+
     MDefinition *operand_;
     int32 low_;
     int32 high_;
@@ -560,6 +566,7 @@ class MTableSwitch
 
     MTableSwitch(MDefinition *ins, int32 low, int32 high)
       : successors_(),
+        cases_(),
         low_(low),
         high_(high),
         defaultCase_(-1)
@@ -606,12 +613,8 @@ class MTableSwitch
     }
 
     MBasicBlock *getCase(uint32 i) const {
-        JS_ASSERT(i < successors_.length());
-
-        if (i < defaultCase_)
-            return getSuccessor(i);
-
-        return getSuccessor(i + 1);
+        JS_ASSERT(i < cases_.length());
+        return cases_[i];
     }
 
     size_t numCases() const {
@@ -624,10 +627,11 @@ class MTableSwitch
         successors_.append(block);
     }
 
-    void addCase(MBasicBlock *block) {
-        JS_ASSERT_IF(defaultCase_ == (uint32)-1, successors_.length() < (size_t)(high_ - low_ + 1));
-        JS_ASSERT_IF(defaultCase_ != (uint32)-1, successors_.length() < (size_t)(high_ - low_ + 2));
-        successors_.append(block);
+    void addCase(MBasicBlock *block, bool isDefault = false) {
+        JS_ASSERT(cases_.length() < (size_t)(high_ - low_ + 1));
+        cases_.append(block);
+        if (!isDefault)
+            successors_.append(block);
     }
 
     MDefinition *getOperand(size_t index) const {
