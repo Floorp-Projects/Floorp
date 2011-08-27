@@ -2262,7 +2262,7 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
     /* Ignore duplicate barriers. */
     TypeBarrier *barrier = code.typeBarriers;
     while (barrier) {
-        if (barrier->target == target && barrier->type == type)
+        if (barrier->target == target && barrier->type == type && !barrier->singleton)
             return;
         barrier = barrier->next;
     }
