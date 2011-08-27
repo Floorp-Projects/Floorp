@@ -464,8 +464,10 @@ function BookmarksStore(name) {
 
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
-    for each ([query, stmt] in Iterator(this._stmts))
+    for each ([query, stmt] in Iterator(this._stmts)) {
       stmt.finalize();
+    }
+    this._stmts = {};
   }, this);
 }
 BookmarksStore.prototype = {
@@ -1067,8 +1069,9 @@ BookmarksStore.prototype = {
 
   _stmts: {},
   _getStmt: function(query) {
-    if (query in this._stmts)
+    if (query in this._stmts) {
       return this._stmts[query];
+    }
 
     this._log.trace("Creating SQL statement: " + query);
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
