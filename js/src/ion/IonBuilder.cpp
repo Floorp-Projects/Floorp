@@ -1314,18 +1314,25 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     for (jsint i = 0; i < high-low+1; i++) {
         prevcasepc = casepc;
         casepc = pc + GET_JUMP_OFFSET(pc2);
-
-        JS_ASSERT(casepc > pc && casepc <= exitpc);
+        
+        JS_ASSERT(casepc >= pc && casepc <= exitpc);
 
         // Test if the default case appears before this case.
         // If it does add the default case
         if (defaultpc >= prevcasepc && defaultpc < casepc)
             tableswitch->addDefault(defaultcase);
 
-        MBasicBlock *caseblock = newBlock(current, casepc);
-        if (!caseblock)
-            return ControlStatus_Error;
-        tableswitch->addCase(caseblock);
+        // If the casepc equals the current pc, it is not a written case,
+        // but a filled gap. That way we can use a tableswitch instead of 
+        // lookupswitch, even if not all numbers are consecutive.
+        if (casepc == pc) {
+            tableswitch->addCase(defaultcase, true);
+        } else {
+            MBasicBlock *caseblock = newBlock(current, casepc);
+            if (!caseblock)
+                return ControlStatus_Error;
+            tableswitch->addCase(caseblock);
+        }
 
         pc2 += JUMP_OFFSET_LEN;
     }
@@ -1335,7 +1342,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     if (!casepc || defaultpc >= casepc)
         tableswitch->addDefault(defaultcase);
 
-    JS_ASSERT(tableswitch->numSuccessors() == (uint32)(high - low + 2));
+    JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
 
     // Create info 
