@@ -54,6 +54,10 @@ gfx3DMatrix::gfx3DMatrix(void)
 gfx3DMatrix
 gfx3DMatrix::operator*(const gfx3DMatrix &aMatrix) const
 {
+  if (Is2D() && aMatrix.Is2D()) {
+    return Multiply2D(aMatrix);
+  }
+
   gfx3DMatrix matrix;
 
   matrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21 + _13 * aMatrix._31 + _14 * aMatrix._41;
@@ -80,6 +84,21 @@ gfx3DMatrix&
 gfx3DMatrix::operator*=(const gfx3DMatrix &aMatrix)
 {
   return *this = *this * aMatrix;
+}
+
+gfx3DMatrix
+gfx3DMatrix::Multiply2D(const gfx3DMatrix &aMatrix) const
+{
+  gfx3DMatrix matrix;
+
+  matrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21;
+  matrix._21 = _21 * aMatrix._11 + _22 * aMatrix._21;
+  matrix._41 = _41 * aMatrix._11 + _42 * aMatrix._21 + aMatrix._41;
+  matrix._12 = _11 * aMatrix._12 + _12 * aMatrix._22;
+  matrix._22 = _21 * aMatrix._12 + _22 * aMatrix._22;
+  matrix._42 = _41 * aMatrix._12 + _42 * aMatrix._22 + aMatrix._42;
+
+  return matrix;
 }
 
 bool
@@ -143,6 +162,23 @@ gfx3DMatrix::Translate(const gfxPoint3D& aPoint)
     _42 += aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32;
     _43 += aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33;
     _44 += aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34;
+}
+
+void
+gfx3DMatrix::TranslatePost(const gfxPoint3D& aPoint)
+{
+    _11 += _14 * aPoint.x;
+    _21 += _24 * aPoint.x;
+    _31 += _34 * aPoint.x;
+    _41 += _44 * aPoint.x;
+    _12 += _14 * aPoint.y;
+    _22 += _24 * aPoint.y;
+    _32 += _34 * aPoint.y;
+    _42 += _44 * aPoint.y;
+    _13 += _14 * aPoint.z;
+    _23 += _24 * aPoint.z;
+    _33 += _34 * aPoint.z;
+    _43 += _44 * aPoint.z;
 }
 
 void
@@ -460,12 +496,21 @@ gfx3DMatrix::TransformBounds(const gfxRect& rect) const
 }
 
 PRBool
-gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
+gfx3DMatrix::Is2D() const
 {
   if (_13 != 0.0f || _14 != 0.0f ||
       _23 != 0.0f || _24 != 0.0f ||
       _31 != 0.0f || _32 != 0.0f || _33 != 1.0f || _34 != 0.0f ||
       _43 != 0.0f || _44 != 1.0f) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+PRBool
+gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
+{
+  if (!Is2D()) {
     return PR_FALSE;
   }
   if (aMatrix) {
