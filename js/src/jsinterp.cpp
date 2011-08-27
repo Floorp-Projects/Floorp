@@ -1896,29 +1896,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             interpMode == JSINTERP_SKIP_TRAP);                                \
     JS_END_MACRO
 
-#define MONITOR_BRANCH_METHODJIT()                                            \
-    JS_BEGIN_MACRO                                                            \
-        mjit::CompileStatus status =                                          \
-            mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);       \
-        if (status == mjit::Compile_Error)                                    \
-            goto error;                                                       \
-        if (status == mjit::Compile_Okay) {                                   \
-            void *ncode =                                                     \
-                script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);\
-            mjit::JaegerStatus status =                                       \
-                mjit::JaegerShotAtSafePoint(cx, ncode, true);                 \
-            CHECK_PARTIAL_METHODJIT(status);                                  \
-            interpReturnOK = (status == mjit::Jaeger_Returned);               \
-            if (entryFrame != regs.fp())                                      \
-                goto jit_return;                                              \
-            regs.fp()->setFinishedInInterpreter();                            \
-            goto leave_on_safe_point;                                         \
-        }                                                                     \
-        if (status == mjit::Compile_Abort) {                                  \
-            useMethodJIT = false;                                             \
-        }                                                                     \
-    JS_END_MACRO
-
 #define CHECK_PARTIAL_METHODJIT(status)                                       \
     JS_BEGIN_MACRO                                                            \
         if (status == mjit::Jaeger_Unfinished) {                              \
@@ -1937,8 +1914,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #else
 
 #define RESET_USE_METHODJIT() ((void) 0)
-
-#define MONITOR_BRANCH_METHODJIT() ((void) 0)
 
 #endif
 
@@ -1979,35 +1954,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
 
-#define MONITOR_BRANCH()                                                      \
-    JS_BEGIN_MACRO                                                            \
-        if (TRACING_ENABLED(cx)) {                                            \
-            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && useMethodJIT) { \
-                MONITOR_BRANCH_METHODJIT();                                   \
-            } else {                                                          \
-                MonitorResult r = MonitorLoopEdge(cx, interpMode);            \
-                if (r == MONITOR_RECORDING) {                                 \
-                    JS_ASSERT(TRACE_RECORDER(cx));                            \
-                    JS_ASSERT(!TRACE_PROFILER(cx));                           \
-                    MONITOR_BRANCH_TRACEVIS;                                  \
-                    ENABLE_INTERRUPTS();                                      \
-                    CLEAR_LEAVE_ON_TRACE_POINT();                             \
-                }                                                             \
-                JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);   \
-                RESTORE_INTERP_VARS_CHECK_EXCEPTION();                        \
-            }                                                                 \
-        } else {                                                              \
-            MONITOR_BRANCH_METHODJIT();                                       \
-        }                                                                     \
-    JS_END_MACRO
-
-#else /* !JS_TRACER */
-
-#define MONITOR_BRANCH()                                                      \
-    JS_BEGIN_MACRO                                                            \
-        MONITOR_BRANCH_METHODJIT();                                           \
-    JS_END_MACRO
-
 #endif /* !JS_TRACER */
 
     /*
@@ -2041,18 +1987,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_BEGIN_MACRO                                                            \
         regs.pc += (n);                                                       \
         op = (JSOp) *regs.pc;                                                 \
-        if ((n) <= 0) {                                                       \
-            CHECK_BRANCH();                                                   \
-            if (op == JSOP_NOTRACE) {                                         \
-                if (TRACE_RECORDER(cx) || TRACE_PROFILER(cx)) {               \
-                    MONITOR_BRANCH();                                         \
-                    op = (JSOp) *regs.pc;                                     \
-                }                                                             \
-            } else if (op == JSOP_TRACE) {                                    \
-                MONITOR_BRANCH();                                             \
-                op = (JSOp) *regs.pc;                                         \
-            }                                                                 \
-        }                                                                     \
+        if ((n) <= 0)                                                         \
+            goto check_backedge;                                              \
         LEAVE_ON_SAFE_POINT();                                                \
         DO_OP();                                                              \
     JS_END_MACRO
@@ -2370,6 +2306,53 @@ BEGIN_CASE(JSOP_TRACE)
 BEGIN_CASE(JSOP_NOTRACE)
     LEAVE_ON_SAFE_POINT();
 END_CASE(JSOP_TRACE)
+
+check_backedge:
+{
+    CHECK_BRANCH();
+    if (op != JSOP_NOTRACE && op != JSOP_TRACE)
+        DO_OP();
+
+#ifdef JS_TRACER
+    if (TRACING_ENABLED(cx) && (TRACE_RECORDER(cx) || TRACE_PROFILER(cx) || (op == JSOP_TRACE && !useMethodJIT))) {
+        MonitorResult r = MonitorLoopEdge(cx, interpMode);
+        if (r == MONITOR_RECORDING) {
+            JS_ASSERT(TRACE_RECORDER(cx));
+            JS_ASSERT(!TRACE_PROFILER(cx));
+            MONITOR_BRANCH_TRACEVIS;
+            ENABLE_INTERRUPTS();
+            CLEAR_LEAVE_ON_TRACE_POINT();
+        }
+        JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);
+        RESTORE_INTERP_VARS_CHECK_EXCEPTION();
+        op = (JSOp) *regs.pc;
+        DO_OP();
+    }
+#endif /* JS_TRACER */
+
+#ifdef JS_METHODJIT
+    mjit::CompileStatus status =
+        mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);
+    if (status == mjit::Compile_Error)
+        goto error;
+    if (status == mjit::Compile_Okay) {
+        void *ncode =
+            script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);
+        mjit::JaegerStatus status =
+            mjit::JaegerShotAtSafePoint(cx, ncode, true);
+        CHECK_PARTIAL_METHODJIT(status);
+        interpReturnOK = (status == mjit::Jaeger_Returned);
+        if (entryFrame != regs.fp())
+            goto jit_return;
+        regs.fp()->setFinishedInInterpreter();
+        goto leave_on_safe_point;
+    }
+    if (status == mjit::Compile_Abort)
+        useMethodJIT = false;
+#endif /* JS_METHODJIT */
+
+    DO_OP();
+}
 
 /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
 BEGIN_CASE(JSOP_LINENO)
