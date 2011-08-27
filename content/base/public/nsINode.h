@@ -933,42 +933,6 @@ public:
   nsIDocument* GetOwnerDocument() const;
 
   /**
-   * Iterator that can be used to easily iterate over the children.  This has
-   * the same restrictions on its use as GetChildArray does.
-   */
-  class ChildIterator {
-  public:
-    ChildIterator(const nsINode* aNode) { Init(aNode); }
-    ChildIterator(const nsINode* aNode, PRUint32 aOffset) {
-      Init(aNode);
-      Advance(aOffset);
-    }
-    ~ChildIterator() {
-      NS_ASSERTION(!mGuard.Mutated(0), "Unexpected mutations happened");
-    }
-
-    PRBool IsDone() const { return mCur == mEnd; }
-    operator nsIContent*() const { return *mCur; }
-    void Next() { NS_PRECONDITION(mCur != mEnd, "Check IsDone"); ++mCur; }
-    void Advance(PRUint32 aOffset) {
-      NS_ASSERTION(mCur + aOffset <= mEnd, "Unexpected offset");
-      mCur += aOffset;
-    }
-  private:
-    void Init(const nsINode* aNode) {
-      NS_PRECONDITION(aNode, "Must have node here!");
-      PRUint32 childCount;
-      mCur = aNode->GetChildArray(&childCount);
-      mEnd = mCur + childCount;
-    }
-#ifdef DEBUG
-    nsMutationGuard mGuard;
-#endif
-    nsIContent* const * mCur;
-    nsIContent* const * mEnd;
-  };
-
-  /**
    * The default script type (language) ID for this node.
    * All nodes must support fetching the default script language.
    */
