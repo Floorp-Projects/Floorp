@@ -106,7 +106,8 @@ public:
    * (i.e. as obtained by From2D). If it is, optionally returns the 2D
    * matrix in aMatrix.
    */
-  PRBool Is2D(gfxMatrix* aMatrix = nsnull) const;
+  PRBool Is2D(gfxMatrix* aMatrix) const;
+  PRBool Is2D() const;
 
   /**
    * Returns true if the matrix can be reduced to a 2D affine transformation
@@ -131,6 +132,13 @@ public:
    * gfx3DMatrix::Translation(aPoint) * matrix
    */
   void Translate(const gfxPoint3D& aPoint);
+
+  /**
+   * Add a translation by aPoint after the matrix.
+   * This is functionally equivalent to:
+   * matrix *gfx3DMatrix::Translation(aPoint)
+   */
+  void TranslatePost(const gfxPoint3D& aPoint);
 
   void SkewXY(float aSkew);
   void SkewXZ(float aSkew);
@@ -230,6 +238,8 @@ private:
 
   gfxFloat Determinant3x3() const;
   gfx3DMatrix Inverse3x3() const;
+
+  gfx3DMatrix Multiply2D(const gfx3DMatrix &aMatrix) const;
 
 public:
 
