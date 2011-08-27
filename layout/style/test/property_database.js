@@ -1020,6 +1020,14 @@ var gCSSProperties = {
         other_values: [ "hidden" ],
         invalid_values: [ "collapse" ]
     },
+	"-moz-transform-style": {
+		domProp: "MozTransformStyle",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "flat" ],
+		other_values: [ "preserve-3d" ],
+		invalid_values: []
+	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,
