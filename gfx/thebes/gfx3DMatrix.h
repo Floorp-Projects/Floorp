@@ -97,6 +97,17 @@ public:
   PRBool Is2D(gfxMatrix* aMatrix = nsnull) const;
 
   /**
+   * Returns true if the matrix can be reduced to a 2D affine transformation
+   * (i.e. as obtained by From2D). If it is, optionally returns the 2D
+   * matrix in aMatrix. This should only be used on matrices required for
+   * rendering, not for intermediate calculations.
+   *
+   * Since drawing is to a 2d plane, any 3d transform without perspective
+   * can be reduced by dropping the z row and column.
+   */
+  PRBool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
+
+  /**
    * Returns true if the matrix is the identity matrix. The most important
    * property we require is that gfx3DMatrix().IsIdentity() returns true.
    */

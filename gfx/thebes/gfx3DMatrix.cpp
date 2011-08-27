@@ -347,6 +347,24 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
   return PR_TRUE;
 }
 
+PRBool
+gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
+{
+  if (_14 != 0.0f || _24 != 0.0f ||
+      _34 != 0.0f || _44 != 1.0f) {
+    return PR_FALSE;
+  }
+  if (aMatrix) {
+    aMatrix->xx = _11;
+    aMatrix->yx = _12;
+    aMatrix->xy = _21;
+    aMatrix->yy = _22;
+    aMatrix->x0 = _41;
+    aMatrix->y0 = _42;
+  }
+  return PR_TRUE;
+}
+
 gfxPoint gfx3DMatrix::ProjectPoint(const gfxPoint& aPoint) const
 {
   // Define a ray of the form P + Ut where t is a real number
