@@ -179,12 +179,12 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     nsRect vis = i->GetVisibleRect();
     nsDisplayList* list = i->GetList();
     nsRegion opaque;
+    if (i->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
+        nsDisplayTransform* t = static_cast<nsDisplayTransform*>(i);
+        list = t->GetStoredList()->GetList();
+    }
     if (!list || list->DidComputeVisibility()) {
       opaque = i->GetOpaqueRegion(aBuilder);
-    }
-    if (i->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
-      nsDisplayTransform* t = static_cast<nsDisplayTransform*>(i);
-      list = t->GetStoredList()->GetList();
     }
     fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)%s%s",
             i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
