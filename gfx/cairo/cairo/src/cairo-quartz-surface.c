@@ -1914,9 +1914,8 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    CGContextFlush(surface->cgContext);
-
     if (surface->imageSurfaceEquiv) {
+	CGContextFlush(surface->cgContext);
 	*image_out = (cairo_image_surface_t*) cairo_surface_reference(surface->imageSurfaceEquiv);
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -1928,6 +1927,7 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 	CGColorSpaceRef colorspace;
 	unsigned int color_comps;
 
+	CGContextFlush(surface->cgContext);
 	imageData = (unsigned char *) CGBitmapContextGetData(surface->cgContext);
 
 #ifdef USE_10_3_WORKAROUNDS

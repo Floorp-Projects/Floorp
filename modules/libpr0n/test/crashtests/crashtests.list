@@ -22,3 +22,5 @@ load 256-height.ico
 # A 3-frame animated GIF with an inordinate delay between the second and third
 # frame.
 HTTP load delayedframe.sjs
+
+load 681190.html

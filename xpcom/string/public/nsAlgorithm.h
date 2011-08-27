@@ -71,6 +71,7 @@ NS_MIN( const T& a, const T& b )
     return b < a ? b : a;
   }
 
+// Must return b when a == b in case a is -0
 template <class T>
 inline
 const T&

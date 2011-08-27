@@ -100,7 +100,11 @@ a:hover {
   #searchContainer { height: 20% }
 }
 
-@media all and (max-height: 450px) {
+@media all and (max-height: 500px) {
+  #searchContainer { height: 25% }
+}
+
+@media all and (max-height: 370px) {
   #searchContainer { height: 30% }
 }
 
@@ -279,10 +283,10 @@ body[dir=rtl] #searchSubmit:active {
   text-align: center;
 }
 
-@media all and (max-height: 370px) {
+@media all and (max-height: 500px) {
   #sessionRestoreContainer {
     position: relative;
-    top: -5px;
+    top: -15px;
     padding-top: 0;
   }
 }
@@ -359,4 +363,10 @@ body[dir=rtl] #restorePreviousSession::before {
   width: 100%;
   text-align: center;
   bottom: 2%;
+}
+
+@media all and (max-height: 370px) {
+  #bottomSection {
+    visibility: hidden;
+  }
 }
