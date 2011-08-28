@@ -206,7 +206,7 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIContent* node = GetTable();
-  if (node && node->IsHTML() && node->NodeInfo()->Equals(nsGkAtoms::table)) {
+  if (node && node->IsHTML(nsGkAtoms::table)) {
     nsHTMLTableElement* table = static_cast<nsHTMLTableElement*>(node);
     nsMappedAttributes* tableInheritedAttributes =
       table->GetAttributesMappedForCell();
