@@ -174,6 +174,22 @@ nsINode::nsSlots::~nsSlots()
   }
 }
 
+void
+nsINode::nsSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
+{
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mChildNodes");
+  cb.NoteXPCOMChild(mChildNodes);
+}
+
+void
+nsINode::nsSlots::Unlink()
+{
+  if (mChildNodes) {
+    mChildNodes->DropReference();
+    NS_RELEASE(mChildNodes);
+  }
+}
+
 //----------------------------------------------------------------------
 
 nsINode::~nsINode()
@@ -1140,6 +1156,63 @@ nsIScriptContext*
 nsINode::GetContextForEventHandlers(nsresult* aRv)
 {
   return nsContentUtils::GetContextForEventHandlers(this, aRv);
+}
+
+/* static */
+void
+nsINode::Trace(nsINode *tmp, TraceCallback cb, void *closure)
+{
+  nsContentUtils::TraceWrapper(tmp, cb, closure);
+}
+
+/* static */
+bool
+nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
+{
+  nsIDocument *currentDoc = tmp->GetCurrentDoc();
+  if (currentDoc &&
+      nsCCUncollectableMarker::InGeneration(cb, currentDoc->GetMarkedCCGeneration())) {
+    return false;
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
+
+  nsSlots *slots = tmp->GetExistingSlots();
+  if (slots) {
+    slots->Traverse(cb);
+  }
+
+  if (tmp->HasProperties()) {
+    nsNodeUtils::TraverseUserData(tmp, cb);
+  }
+
+  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
+    nsContentUtils::TraverseListenerManager(tmp, cb);
+  }
+
+  return true;
+}
+
+/* static */
+void
+nsINode::Unlink(nsINode *tmp)
+{
+  nsContentUtils::ReleaseWrapper(tmp, tmp);
+
+  nsSlots *slots = tmp->GetExistingSlots();
+  if (slots) {
+    slots->Unlink();
+  }
+
+  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
+    nsContentUtils::RemoveListenerManager(tmp);
+    tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);
+  }
+
+  if (tmp->HasProperties()) {
+    nsNodeUtils::UnlinkUserData(tmp);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -2190,6 +2263,45 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
   if (mClassList) {
     mClassList->DropReference();
   }
+}
+
+void
+nsGenericElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, bool aIsXUL)
+{
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mStyle");
+  cb.NoteXPCOMChild(mStyle.get());
+
+#ifdef MOZ_SMIL
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mSMILOverrideStyle");
+  cb.NoteXPCOMChild(mSMILOverrideStyle.get());
+#endif // MOZ_SMIL
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mAttributeMap");
+  cb.NoteXPCOMChild(mAttributeMap.get());
+
+  if (aIsXUL) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mControllers");
+    cb.NoteXPCOMChild(mControllers);
+  }
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mChildrenList");
+  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mChildrenList));
+}
+
+void
+nsGenericElement::nsDOMSlots::Unlink(bool aIsXUL)
+{
+  mStyle = nsnull;
+#ifdef MOZ_SMIL
+  mSMILOverrideStyle = nsnull;
+#endif // MOZ_SMIL
+  if (mAttributeMap) {
+    mAttributeMap->DropReference();
+    mAttributeMap = nsnull;
+  }
+  if (aIsXUL)
+    NS_IF_RELEASE(mControllers);
+  mChildrenList = nsnull;
 }
 
 nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -4110,9 +4222,7 @@ nsINode::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
+  nsINode::Unlink(tmp);
 
   if (tmp->HasProperties() && tmp->IsXUL()) {
     tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
@@ -4140,17 +4250,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   {
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
-      slots->mStyle = nsnull;
-#ifdef MOZ_SMIL
-      slots->mSMILOverrideStyle = nsnull;
-#endif // MOZ_SMIL
-      if (slots->mAttributeMap) {
-        slots->mAttributeMap->DropReference();
-        slots->mAttributeMap = nsnull;
-      }
-      if (tmp->IsXUL())
-        NS_IF_RELEASE(slots->mControllers);
-      slots->mChildrenList = nsnull;
+      slots->Unlink(tmp->IsXUL());
     }
   }
 
@@ -4163,7 +4263,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGenericElement)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  nsINode::Trace(tmp, aCallback, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 static const char* kNSURIs[] = {
@@ -4204,9 +4304,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
   // if we're uncollectable.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 
-  nsIDocument* currentDoc = tmp->GetCurrentDoc();
-  if (currentDoc && nsCCUncollectableMarker::InGeneration(
-                      cb, currentDoc->GetMarkedCCGeneration())) {
+  if (!nsINode::Traverse(tmp, cb)) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -4214,9 +4312,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
   if (ownerDoc) {
     ownerDoc->BindingManager()->Traverse(tmp, cb);
   }
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
   if (tmp->HasProperties() && tmp->IsXUL()) {
     nsISupports* property =
@@ -4248,31 +4343,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
     }
   }
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
-
   // Traverse any DOM slots of interest.
   {
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mStyle");
-      cb.NoteXPCOMChild(slots->mStyle.get());
-
-#ifdef MOZ_SMIL
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mSMILOverrideStyle");
-      cb.NoteXPCOMChild(slots->mSMILOverrideStyle.get());
-#endif // MOZ_SMIL
-
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mAttributeMap");
-      cb.NoteXPCOMChild(slots->mAttributeMap.get());
-
-      if (tmp->IsXUL())
-        cb.NoteXPCOMChild(slots->mControllers);
-      cb.NoteXPCOMChild(
-        static_cast<nsIDOMNodeList*>(slots->mChildrenList.get()));
+      slots->Traverse(cb, tmp->IsXUL());
     }
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(GetParent())
   }
-  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 

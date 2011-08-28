@@ -593,10 +593,12 @@ protected:
     class nsXULSlots : public nsGenericElement::nsDOMSlots
     {
     public:
-       nsXULSlots();
-       virtual ~nsXULSlots();
+        nsXULSlots();
+        virtual ~nsXULSlots();
 
-       nsRefPtr<nsFrameLoader> mFrameLoader;
+        void Traverse(nsCycleCollectionTraversalCallback &cb);
+
+        nsRefPtr<nsFrameLoader> mFrameLoader;
     };
 
     virtual nsINode::nsSlots* CreateSlots();
