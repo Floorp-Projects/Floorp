@@ -2331,6 +2331,8 @@ check_backedge:
 #endif /* JS_TRACER */
 
 #ifdef JS_METHODJIT
+    if (!useMethodJIT)
+        DO_OP();
     mjit::CompileStatus status =
         mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);
     if (status == mjit::Compile_Error)
