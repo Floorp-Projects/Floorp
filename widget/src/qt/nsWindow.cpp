@@ -2695,6 +2695,15 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
         }
         // Enable gestures:
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+#if defined MOZ_ENABLE_MEEGOTOUCH
+        // Disable default Gesture filters (speedup filtering)
+        newView->viewport()->ungrabGesture(Qt::PanGesture);
+        newView->viewport()->ungrabGesture(Qt::TapGesture);
+        newView->viewport()->ungrabGesture(Qt::TapAndHoldGesture);
+        newView->viewport()->ungrabGesture(Qt::SwipeGesture);
+#endif
+
+        // Enable required filters
         newView->viewport()->grabGesture(Qt::PinchGesture);
         newView->viewport()->grabGesture(gSwipeGestureId);
 #endif
@@ -2725,6 +2734,13 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
         SetDefaultIcon();
     }
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
+#if defined MOZ_ENABLE_MEEGOTOUCH
+    // Disable default Gesture filters (speedup filtering)
+    widget->ungrabGesture(Qt::PanGesture);
+    widget->ungrabGesture(Qt::TapGesture);
+    widget->ungrabGesture(Qt::TapAndHoldGesture);
+    widget->ungrabGesture(Qt::SwipeGesture);
+#endif
     widget->grabGesture(Qt::PinchGesture);
     widget->grabGesture(gSwipeGestureId);
 #endif
