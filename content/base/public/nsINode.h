@@ -801,6 +801,9 @@ public:
     // putting a DestroySlots function on nsINode
     virtual ~nsSlots();
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb);
+    void Unlink();
+
     /**
      * A list of mutation observers
      */
@@ -1341,6 +1344,10 @@ protected:
 #include "nsEventNameList.h"
 #undef TOUCH_EVENT
 #undef EVENT  
+
+  static void Trace(nsINode *tmp, TraceCallback cb, void *closure);
+  static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
+  static void Unlink(nsINode *tmp);
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
