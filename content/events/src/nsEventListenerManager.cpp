@@ -943,7 +943,11 @@ nsEventListenerManager::SetJSEventListenerToJsval(nsIAtom *aEventName,
     return NS_OK;
   }
 
+  // We might not have a script context, e.g. if we're setting a listener
+  // on a dead Window.
   nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, aScope);
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+
   JSObject *scope = ::JS_GetGlobalForObject(cx, aScope);
   // Untrusted events are always permitted for non-chrome script
   // handlers.
