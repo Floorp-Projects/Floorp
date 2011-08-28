@@ -52,7 +52,6 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIURI.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -387,9 +386,10 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
 
   // See if preventDefault has been set.  If so, don't execute.
   PRBool preventDefault = PR_FALSE;
-  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent(do_QueryInterface(aEvent));
-  if (nsUIEvent)
-    nsUIEvent->GetPreventDefault(&preventDefault);
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
+  if (domNSEvent) {
+    domNSEvent->GetPreventDefault(&preventDefault);
+  }
 
   if (preventDefault)
     return NS_OK;

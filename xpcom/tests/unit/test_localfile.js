@@ -51,6 +51,7 @@ function run_test()
   test_normalize_crash_if_media_missing();
   test_file_modification_time();
   test_directory_modification_time();
+  test_diskSpaceAvailable();
 }
 
 function test_toplevel_parent_is_null()
@@ -162,3 +163,21 @@ function test_directory_modification_time()
   dir.remove(true);
 }
 
+function test_diskSpaceAvailable()
+{
+  let file = do_get_profile();
+  file.QueryInterface(Ci.nsILocalFile);
+
+  let bytes = file.diskSpaceAvailable;
+  do_check_true(bytes > 0);
+
+  file.append("testfile");
+  if (file.exists())
+    file.remove(true);
+  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("644", 8));
+
+  bytes = file.diskSpaceAvailable;
+  do_check_true(bytes > 0);
+
+  file.remove(true);
+}
