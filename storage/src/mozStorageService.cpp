@@ -619,5 +619,20 @@ Service::SetQuotaForFilenamePattern(const nsACString &aPattern,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Service::UpdateQutoaInformationForFile(nsIFile* aFile)
+{
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  nsCString path;
+  nsresult rv = aFile->GetNativePath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int rc = ::sqlite3_quota_file(PromiseFlatCString(path).get());
+  NS_ENSURE_TRUE(rc == SQLITE_OK, convertResultCode(rc));
+
+  return NS_OK;
+}
+
 } // namespace storage
 } // namespace mozilla

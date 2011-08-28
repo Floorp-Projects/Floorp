@@ -44,7 +44,7 @@
 /**
  * imgIEncoder interface
  */
-[scriptable, uuid(4bcba4ec-7a44-43f9-a70f-1e92cdc625b9)]
+[scriptable, uuid(d02e2d95-072d-4b91-8b8f-1300e45fcb2b)]
 interface imgIEncoder : nsIAsyncInputStream
 {
   // Possible values for outputOptions. Multiple values are semicolon-separated.
@@ -156,4 +156,11 @@ interface imgIEncoder : nsIAsyncInputStream
                     in AString frameOptions);
 
   void endImageEncode();
+
+  /*
+   * Sometimes an encoder can contain another encoder and direct access
+   * to its buffer is necessary. 
+   */
+  [noscript] unsigned long getImageBufferSize();
+  [noscript] charPtr getImageBuffer();
 };

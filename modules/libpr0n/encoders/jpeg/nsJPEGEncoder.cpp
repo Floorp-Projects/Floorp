@@ -88,6 +88,8 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
                                           PRUint32 aInputFormat,
                                           const nsAString& aOutputOptions)
 {
+  NS_ENSURE_ARG(aData);
+
   // validate input format
   if (aInputFormat != INPUT_FORMAT_RGB &&
       aInputFormat != INPUT_FORMAT_RGBA &&
@@ -217,6 +219,22 @@ NS_IMETHODIMP nsJPEGEncoder::StartImageEncode(PRUint32 aWidth,
                                               const nsAString& aOutputOptions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// Returns the image buffer size
+NS_IMETHODIMP  nsJPEGEncoder::GetImageBufferSize(PRUint32 *aOutputSize)
+{
+  NS_ENSURE_ARG_POINTER(aOutputSize);
+  *aOutputSize = mImageBufferSize;
+  return NS_OK;
+}
+
+// Returns a pointer to the start of the image buffer
+NS_IMETHODIMP nsJPEGEncoder::GetImageBuffer(char **aOutputBuffer)
+{
+  NS_ENSURE_ARG_POINTER(aOutputBuffer);
+  *aOutputBuffer = reinterpret_cast<char*>(mImageBuffer);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsJPEGEncoder::AddImageFrame(const PRUint8* aData,
