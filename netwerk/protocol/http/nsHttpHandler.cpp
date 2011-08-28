@@ -170,6 +170,7 @@ nsHttpHandler::nsHttpHandler()
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
+    , mFastFallbackToIPv4(PR_FALSE)
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
@@ -896,6 +897,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("connection-retry-timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mIdleSynTimeout = (PRUint16) NS_CLAMP(val, 0, 3000);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("fast-fallback-to-IPv4"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("fast-fallback-to-IPv4"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mFastFallbackToIPv4 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
