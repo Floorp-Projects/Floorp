@@ -77,6 +77,8 @@
 
 #include "nsUXThemeData.h"
 
+#include "nsIDOMMouseEvent.h"
+
 /**
  * Forward class definitions
  */
@@ -211,7 +213,7 @@ public:
                                              LPARAM lParam,
                                              PRBool aIsContextMenuKey = PR_FALSE,
                                              PRInt16 aButton = nsMouseEvent::eLeftButton,
-                                             PRUint16 aInputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE);
+                                             PRUint16 aInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE);
   virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
   virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,

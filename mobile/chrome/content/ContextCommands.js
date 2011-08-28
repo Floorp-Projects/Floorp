@@ -22,7 +22,7 @@ var ContextCommands = {
       let x = ContextHelper.popupState.x;
       let y = ContextHelper.popupState.y;
       let json = {x: x, y: y, command: "paste" };
-      messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+      target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
     } else {
       target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
       target.focus();
@@ -42,7 +42,7 @@ var ContextCommands = {
       let x = ContextHelper.popupState.x;
       let y = ContextHelper.popupState.y;
       let json = {x: x, y: y, command: "select-all" };
-      messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+      target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
     } else {
       target.editor.selectAll();
       target.focus();

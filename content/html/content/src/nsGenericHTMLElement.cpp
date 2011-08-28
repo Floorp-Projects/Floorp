@@ -733,8 +733,10 @@ nsGenericHTMLElement::FireMutationEventsForDirectParsing(nsIDocument* aDoc,
     NS_ASSERTION(newChildCount - aOldChildCount >= 0,
                  "What, some unexpected dom mutation has happened?");
     childNodes.SetCapacity(newChildCount - aOldChildCount);
-    for (nsINode::ChildIterator iter(aDest); !iter.IsDone(); iter.Next()) {
-      childNodes.AppendElement(iter);
+    for (nsIContent* child = aDest->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      childNodes.AppendElement(child);
     }
     nsGenericElement::FireNodeInserted(aDoc, aDest, childNodes);
   }
@@ -3401,7 +3403,7 @@ nsresult nsGenericHTMLElement::Click()
   // is called from chrome code.
   nsMouseEvent event(nsContentUtils::IsCallerChrome(),
                      NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-  event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
+  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
   nsEventDispatcher::Dispatch(this, context, &event);
 
@@ -3507,7 +3509,7 @@ nsGenericHTMLElement::PerformAccesskey(PRBool aKeyCausesActivation,
     // Click on it if the users prefs indicate to do so.
     nsMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
                        nsnull, nsMouseEvent::eReal);
-    event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
 
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);

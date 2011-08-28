@@ -174,7 +174,7 @@ protected:
 
   PRUint32 mSuppressLevel;
 
-  // The input source of the drag event. Possible values are from nsIDOMNSMouseEvent.
+  // The input source of the drag event. Possible values are from nsIDOMMouseEvent.
   PRUint16 mInputSource;
 };
 

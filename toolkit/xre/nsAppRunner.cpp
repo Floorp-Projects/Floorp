@@ -1686,28 +1686,34 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
       (do_GetService(NS_PROMPTSERVICE_CONTRACTID));
     NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
 
-    PRUint32 flags = nsIPromptService::BUTTON_TITLE_OK * nsIPromptService::BUTTON_POS_0;
-
     if (aUnlocker) {
-      flags =
-        nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_0 +
-        nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_1 +
+      const PRUint32 flags =
+        (nsIPromptService::BUTTON_TITLE_CANCEL * 
+         nsIPromptService::BUTTON_POS_0) +
+        (nsIPromptService::BUTTON_TITLE_IS_STRING * 
+         nsIPromptService::BUTTON_POS_1) +
         nsIPromptService::BUTTON_POS_1_DEFAULT;
-    }
 
-    PRInt32 button;
-    // The actual value is irrelevant but we shouldn't be handing out
-    // malformed JSBools to XPConnect.
-    PRBool checkState = PR_FALSE;
-    rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
-                       killTitle, nsnull, nsnull, nsnull, &checkState, &button);
-    NS_ENSURE_SUCCESS_LOG(rv, rv);
+      PRInt32 button;
+      // The actual value is irrelevant but we shouldn't be handing out
+      // malformed JSBools to XPConnect.
+      PRBool checkState = PR_FALSE;
+      rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
+                         killTitle, nsnull, nsnull, nsnull, 
+                         &checkState, &button);
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
 
-    if (button == 1 && aUnlocker) {
-      rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
-      if (NS_FAILED(rv)) return rv;
+      if (button == 1) {
+        rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
+        if (NS_FAILED(rv)) 
+          return rv;
 
-      return NS_LockProfilePath(aProfileDir, aProfileLocalDir, nsnull, aResult);
+        return NS_LockProfilePath(aProfileDir, aProfileLocalDir, 
+                                  nsnull, aResult);
+      }
+    } else {
+      rv = ps->Alert(nsnull, killTitle, killMessage);
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
     }
 
     return NS_ERROR_ABORT;
