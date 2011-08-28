@@ -55,7 +55,6 @@
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent)
   : mContent(aContent),
     mColumns(aColumns),
-    mNext(nsnull),
     mPrevious(nsnull)
 {
   NS_ASSERTION(aContent &&
@@ -70,11 +69,21 @@ nsTreeColumn::~nsTreeColumn()
 {
   if (mNext) {
     mNext->SetPrevious(nsnull);
-    NS_RELEASE(mNext);
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_1(nsTreeColumn, mContent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsTreeColumn)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTreeColumn)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
+  if (tmp->mNext) {
+    tmp->mNext->SetPrevious(nsnull);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNext)
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTreeColumn)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNext)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeColumn)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeColumn)
