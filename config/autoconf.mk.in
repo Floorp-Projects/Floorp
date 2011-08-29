@@ -505,8 +505,7 @@ LIBICONV = @LIBICONV@
 # to normal behavior. Makefile's that create shared libraries out of
 # archives use these flags to force in all of the .o files in the
 # archives into the shared library.
-WRAP_MALLOC_LIB         = @WRAP_MALLOC_LIB@
-WRAP_MALLOC_CFLAGS      = @WRAP_MALLOC_CFLAGS@
+WRAP_LDFLAGS            = @WRAP_LDFLAGS@
 DSO_CFLAGS              = @DSO_CFLAGS@
 DSO_PIC_CFLAGS          = @DSO_PIC_CFLAGS@
 MKSHLIB                 = @MKSHLIB@
