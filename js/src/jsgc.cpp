@@ -339,10 +339,11 @@ Chunk::init(JSRuntime *rt)
     for (size_t i = 0; i != JS_ARRAY_LENGTH(markingDelay); ++i)
         markingDelay[i].init();
 
-    /*
-     * The rest of info fields is initailzied in PickChunk. We do not clear
-     * the mark bitmap as that is done at the start of the next GC.
-     */
+    /* We clear the bitmap to guard against xpc_IsGrayGCThing being called on
+       uninitialized data, which would happen before the first GC cycle. */
+    bitmap.clear();
+
+    /* The rest of info fields are initialized in PickChunk. */
 }
 
 inline Chunk **
