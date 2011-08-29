@@ -271,7 +271,6 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     MInstruction *replace;
 
     // Tableswitch can consume all types, except:
-    // - Double: try to convert to int32
     // - Value: unbox to int32
     switch (in->type()) {
       case MIRType_Value:
