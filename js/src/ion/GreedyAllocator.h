@@ -170,7 +170,6 @@ class GreedyAllocator
         AllocationState in;
         AllocationState out;
         Mover restores;
-        Mover phis;
     };
 
   private:

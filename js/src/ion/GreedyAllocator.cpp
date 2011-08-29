@@ -830,6 +830,8 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
         header->insertBefore(ins, carried.moves);
     }
 
+    Mover phis;
+
     // Handle loop phis.
     for (size_t i = 0; i < header->numPhis(); i++) {
         LPhi *phi = header->getPhi(i);
@@ -839,18 +841,18 @@ GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
         JS_ASSERT(def->policy() == LDefinition::PRESET);
         const LAllocation *a = def->output();
 
-        if (vr->hasStackSlot() && !info->phis.move(*a, vr->backingStack()))
+        if (vr->hasStackSlot() && !phis.move(*a, vr->backingStack()))
             return false;
 
         if (vr->hasRegister() && (!a->isRegister() || vr->reg() != a->toRegister())) {
-            if (!info->phis.move(*a, vr->reg()))
+            if (!phis.move(*a, vr->reg()))
                 return false;
         }
     }
 
-    if (info->phis.moves) {
+    if (phis.moves) {
         LInstruction *ins = *backedge->instructions().rbegin();
-        backedge->insertBefore(ins, info->phis.moves);
+        backedge->insertBefore(ins, phis.moves);
     }
 
     return true;
@@ -863,10 +865,10 @@ GreedyAllocator::mergePhiState(LBlock *block)
     if (!mblock->successorWithPhis())
         return true;
 
-    BlockInfo *info = blockInfo(block);
-
     // Reset state so evictions will work.
     reset();
+
+    Mover phis;
 
     uint32 pos = mblock->positionInPhiSuccessor();
     LBlock *successor = mblock->successorWithPhis()->lir();
@@ -879,10 +881,6 @@ GreedyAllocator::mergePhiState(LBlock *block)
             continue;
 
         LAllocation *a = phi->getOperand(pos);
-
-        // Handle constant inputs.
-        JS_ASSERT(!a->isConstant());
-
         VirtualRegister *use = getVirtualRegister(a->toUse());
 
         // Try to give the use a register.
@@ -899,10 +897,10 @@ GreedyAllocator::mergePhiState(LBlock *block)
         // Emit a move from the use to a def register.
         if (def->hasRegister()) {
             if (use->hasRegister()) {
-                if (use->reg() != def->reg() && !info->phis.move(use->reg(), def->reg()))
+                if (use->reg() != def->reg() && !phis.move(use->reg(), def->reg()))
                     return false;
             } else {
-                if (!info->phis.move(use->backingStack(), def->reg()))
+                if (!phis.move(use->backingStack(), def->reg()))
                     return false;
             }
         }
@@ -910,10 +908,10 @@ GreedyAllocator::mergePhiState(LBlock *block)
         // Emit a move from the use to a def stack slot.
         if (def->hasStackSlot()) {
             if (use->hasRegister()) {
-                if (!info->phis.move(use->reg(), def->backingStack()))
+                if (!phis.move(use->reg(), def->backingStack()))
                     return false;
             } else if (use->backingStack() != def->backingStack()) {
-                if (!info->phis.move(use->backingStack(), def->backingStack()))
+                if (!phis.move(use->backingStack(), def->backingStack()))
                     return false;
             }
         }
@@ -925,8 +923,8 @@ GreedyAllocator::mergePhiState(LBlock *block)
     LInstruction *before = *block->instructions().rbegin();
     if (restores)
         block->insertBefore(before, restores);
-    if (info->phis.moves)
-        block->insertBefore(before, info->phis.moves);
+    if (phis.moves)
+        block->insertBefore(before, phis.moves);
 
     return true;
 }
