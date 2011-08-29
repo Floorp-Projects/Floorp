@@ -1359,6 +1359,10 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
     JSDestroyScriptHook hook;
 
+#ifdef JS_METHODJIT
+    mjit::ReleaseScriptCode(cx, script);
+#endif
+
     hook = cx->debugHooks->destroyScriptHook;
     if (hook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
