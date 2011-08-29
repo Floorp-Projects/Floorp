@@ -544,8 +544,8 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
     if (ins->index()->isDouble()) {
         temp = ins->tempInt();
 
-        // The input is a double, so try and convert it to an integer. If it
-        // does not fit in an integer, take the default case.
+        // The input is a double, so try and convert it to an integer.
+        // If it does not fit in an integer, take the default case.
         emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase);
     } else {
         temp = ins->index();
