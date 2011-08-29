@@ -951,6 +951,7 @@ class FrameState
     Vector<TemporaryCopy> *getTemporaryCopies();
 
     inline void syncAndForgetFe(FrameEntry *fe, bool markSynced = false);
+    inline void forgetLoopReg(FrameEntry *fe);
 
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);
