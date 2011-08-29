@@ -172,29 +172,34 @@ LIRGenerator::visitTest(MTest *test)
 bool
 LIRGenerator::visitCompare(MCompare *comp)
 {
-    // Sniff out if the output of this compare is used only for a branching.
-    // If it is, then we willl emit an LCompare*AndBranch instruction in place of
-    // this compare and any test that uses this compare. Thus, we can ignore this Compare.
-    bool willOptimize = true;
-    for (MUseDefIterator iter(comp->toDefinition()); iter; iter++) {
-        MDefinition *consumer = iter.def();
-        if (!consumer->isControlInstruction()) {
-            willOptimize = false;
-            break;
-        }
-    }
-
-    // This compare can be annoyed, see above comment.
-    if (willOptimize)
-        return true;
-
     MDefinition *left = comp->getOperand(0);
     MDefinition *right = comp->getOperand(1);
 
-    if (comp->specialization() == MIRType_Int32)
-        return define(new LCompareI(comp->condition(), useRegister(left), use(right)), comp);
-    if (comp->specialization() == MIRType_Double)
-        return define(new LCompareD(comp->condition(), useRegister(left), use(right)), comp);
+    if (comp->specialization() != MIRType_None) {
+        // Sniff out if the output of this compare is used only for a branching.
+        // If it is, then we willl emit an LCompare*AndBranch instruction in place
+        // of this compare and any test that uses this compare. Thus, we can
+        // ignore this Compare.
+        bool willOptimize = true;
+        for (MUseIterator iter(comp->usesBegin()); iter!= comp->usesEnd(); iter++) {
+            MNode *node = iter->node();
+            if (node->isSnapshot() ||
+                (node->isDefinition() && !node->toDefinition()->isControlInstruction()))
+            {
+                willOptimize = false;
+                break;
+            }
+        }
+
+        if (willOptimize && !comp->isEmittedAtUses())
+            return emitAtUses(comp);
+
+        if (comp->specialization() == MIRType_Int32)
+            return define(new LCompareI(comp->condition(), useRegister(left), use(right)), comp);
+
+        if (comp->specialization() == MIRType_Double)
+            return define(new LCompareD(comp->condition(), useRegister(left), use(right)), comp);
+    }
 
     // :TODO: implement LCompareV. Bug: 679804
     JS_NOT_REACHED("LCompareV NYI");
@@ -436,13 +441,18 @@ LIRGenerator::visitCopy(MCopy *ins)
 }
 
 static void
-SpewSnapshot(MInstruction *ins, MSnapshot *snapshot)
+SpewSnapshot(MBasicBlock *block, MInstruction *ins, MSnapshot *snapshot)
 {
     fprintf(IonSpewFile, "Current snapshot %p details:\n", (void *)snapshot);
 
-    fprintf(IonSpewFile, "    taken after:");
-    ins->printName(IonSpewFile);
+    if (ins) {
+        fprintf(IonSpewFile, "    taken after: ");
+        ins->printName(IonSpewFile);
+    } else {
+        fprintf(IonSpewFile, "    taken at block %d entry", block->id());
+    }
     fprintf(IonSpewFile, "\n");
+
     fprintf(IonSpewFile, "    pc: %p\n", snapshot->pc());
 
     for (size_t i = 0; i < snapshot->numOperands(); i++) {
@@ -461,12 +471,8 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     if (!ins->accept(this))
         return false;
 
-    if (ins->snapshot()) {
-        last_snapshot_ = ins->snapshot();
-
-        if (IonSpewEnabled(IonSpew_Snapshots))
-            SpewSnapshot(ins, last_snapshot_);
-    }
+    if (ins->snapshot()) 
+        updateResumeState(ins);
 
     if (gen->errored())
         return false;
@@ -495,11 +501,27 @@ LIRGenerator::definePhis()
     return true;
 }
 
+void
+LIRGenerator::updateResumeState(MInstruction *ins)
+{
+    last_snapshot_ = ins->snapshot();
+    if (IonSpewEnabled(IonSpew_Snapshots))
+        SpewSnapshot(NULL, ins, last_snapshot_);
+}
+
+void
+LIRGenerator::updateResumeState(MBasicBlock *block)
+{
+    last_snapshot_ = block->entrySnapshot();
+    if (IonSpewEnabled(IonSpew_Snapshots))
+        SpewSnapshot(block, NULL, last_snapshot_);
+}
+
 bool
 LIRGenerator::visitBlock(MBasicBlock *block)
 {
     current = block->lir();
-    last_snapshot_ = block->entrySnapshot();
+    updateResumeState(block);
 
     if (!definePhis())
         return false;

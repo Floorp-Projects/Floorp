@@ -52,7 +52,7 @@ bool
 LIRGeneratorShared::emitAtUses(MInstruction *mir)
 {
     mir->setEmittedAtUses();
-    mir->setId(0);
+    mir->setVirtualRegister(0);
     return true;
 }
 
@@ -65,7 +65,7 @@ LIRGeneratorShared::use(MDefinition *mir, LUse policy)
 #endif
     if (!ensureDefined(mir))
         return policy;
-    policy.setVirtualRegister(mir->id());
+    policy.setVirtualRegister(mir->virtualRegister());
     return policy;
 }
 
@@ -80,7 +80,7 @@ LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, c
     // virtual register to the MIR, so we can map MIR to LIR during lowering.
     lir->setDef(0, def);
     lir->getDef(0)->setVirtualRegister(vreg);
-    mir->setId(vreg);
+    mir->setVirtualRegister(vreg);
     return add(lir);
 }
 
@@ -114,7 +114,7 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, M
     lir->setDef(0, LDefinition(vreg, LDefinition::BOX, policy));
 #endif
 
-    mir->setId(vreg);
+    mir->setVirtualRegister(vreg);
     return add(lir);
 }
 
@@ -140,7 +140,7 @@ LIRGeneratorShared::redefine(MDefinition *def, MDefinition *as)
     JS_ASSERT(IsCompatibleLIRCoercion(def->type(), as->type()));
     if (!ensureDefined(as))
         return false;
-    def->setId(as->id());
+    def->setVirtualRegister(as->virtualRegister());
     return true;
 }
 
@@ -150,7 +150,7 @@ LIRGeneratorShared::ensureDefined(MDefinition *mir)
     if (mir->isEmittedAtUses()) {
         if (!mir->toInstruction()->accept(this))
             return false;
-        JS_ASSERT(mir->id());
+        JS_ASSERT(mir->isLowered());
     }
     return true;
 }

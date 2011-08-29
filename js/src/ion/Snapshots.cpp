@@ -307,7 +307,7 @@ ValTypeToString(JSValueType type)
 void
 SnapshotWriter::addSlot(JSValueType type, const Register &reg)
 {
-    IonSpew(IonSpew_Snapshots, "    slot %d: %s (stack %s)",
+    IonSpew(IonSpew_Snapshots, "    slot %d: %s (%s)",
             slotsWritten_, ValTypeToString(type), reg.name());
 
     JS_ASSERT(type != JSVAL_TYPE_DOUBLE);
