@@ -92,7 +92,7 @@ class Type
 
     bool isPrimitive(JSValueType type) const {
         JS_ASSERT(type < JSVAL_TYPE_OBJECT);
-        return type == (JSValueType) data;
+        return (jsuword) type == data;
     }
 
     JSValueType primitive() const {
