@@ -63,6 +63,7 @@ _TEST_FILES = \
 		test_validation.html \
 		test_maxlength_attribute.html \
 		test_datalist_element.html \
+		test_form_attributes_reflection.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

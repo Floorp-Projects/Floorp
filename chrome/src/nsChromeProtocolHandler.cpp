@@ -69,14 +69,6 @@
 #include "nsString.h"
 #include "prlog.h"
 
-#ifdef MOZ_XUL
-#include "nsIXULPrototypeCache.h"
-#endif
-
-//----------------------------------------------------------------------
-
-static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsChromeProtocolHandler,

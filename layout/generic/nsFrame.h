@@ -577,7 +577,7 @@ public:
                                nsIFrame** aContainingBlock = nsnull);
 
   // test whether aFrame should apply paginated overflow clipping.
-  static PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame)
+  static PRBool ApplyPaginatedOverflowClipping(const nsIFrame* aFrame)
   {
     // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
     // set, then we want to clip our overflow.

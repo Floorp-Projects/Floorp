@@ -1092,7 +1092,7 @@ var Browser = {
   /** Rect should be in browser coordinates. */
   _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
     const margin = 15;
-    return this.selectedTab.clampZoomLevel(window.innerWidth / (rect.width + margin * 2));
+    return this.selectedTab.clampZoomLevel(ViewableAreaObserver.width / (rect.width + margin * 2));
   },
 
   /**
@@ -1964,7 +1964,7 @@ const ContentTouchHandler = {
     if (!tab.allowZoom)
       return;
 
-    let width = window.innerWidth / Browser.getScaleRatio();
+    let width = ViewableAreaObserver.width / Browser.getScaleRatio();
     this._dispatchMouseEvent("Browser:ZoomToPoint", aX, aY, { width: width });
   },
 
@@ -2798,14 +2798,10 @@ Tab.prototype = {
       let validW = viewportW > 0;
       let validH = viewportH > 0;
 
-      if (validW && !validH) {
+      if (!validW)
+        viewportW = validH ? (viewportH * (screenW / screenH)) : Browser.defaultBrowserWidth;
+      if (!validH)
         viewportH = viewportW * (screenH / screenW);
-      } else if (!validW && validH) {
-        viewportW = viewportH * (screenW / screenH);
-      } else if (!validW && !validH) {
-        viewportW = Browser.defaultBrowserWidth;
-        viewportH = Browser.defaultBrowserWidth * (screenH / screenW);
-      }
     }
 
     // Make sure the viewport height is not shorter than the window when

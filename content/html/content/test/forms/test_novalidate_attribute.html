@@ -31,35 +31,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=556013
 
 /** Test for Bug 556013 **/
 
-var form = document.createElement('form');
-
-function checkNoValidateAttribute(aForm)
-{
-  ok("noValidate" in form, "noValidate should be a form element IDL attribute");
-
-  ok(!aForm.noValidate, "aForm novalidate attribute should be disabled");
-  is(aForm.getAttribute('novalidate'), null,
-    "aForm novalidate attribute should be disabled");
-
-  aForm.noValidate = true;
-  ok(aForm.noValidate, "aForm novalidate attribute should be enabled");
-  isnot(aForm.getAttribute('novalidate'), null,
-    "aForm novalidate attribute should be enabled");
-
-  aForm.removeAttribute('novalidate');
-  aForm.setAttribute('novalidate', '');
-  ok(aForm.noValidate, "aForm novalidate attribute should be enabled");
-  isnot(aForm.getAttribute('novalidate'), null,
-    "aForm novalidate attribute should be enabled");
-
-  aForm.removeAttribute('novalidate');
-  ok(!aForm.noValidate, "aForm novalidate attribute should be disabled");
-  is(aForm.getAttribute('novalidate'), null,
-    "aForm novalidate attribute should be disabled");
-}
-
-checkNoValidateAttribute(form);
-
 /**
  * novalidate should prevent form validation, thus not blocking form submission.
  *
