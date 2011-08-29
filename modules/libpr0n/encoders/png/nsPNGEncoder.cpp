@@ -89,6 +89,7 @@ NS_IMETHODIMP nsPNGEncoder::InitFromData(const PRUint8* aData,
                                          PRUint32 aInputFormat,
                                          const nsAString& aOutputOptions)
 {
+  NS_ENSURE_ARG(aData);
   nsresult rv;
 
   rv = StartImageEncode(aWidth, aHeight, aInputFormat, aOutputOptions);

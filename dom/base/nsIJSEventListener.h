@@ -46,8 +46,8 @@ class nsIScriptObjectOwner;
 class nsIAtom;
 
 #define NS_IJSEVENTLISTENER_IID     \
-{ 0xb88fb066, 0xe9f8, 0x45d0, \
- { 0x92, 0x9a, 0x7d, 0xa8, 0x4c, 0x1f, 0xb5, 0xbc } }
+{ 0x468406d2, 0xf6aa, 0x404f, \
+  { 0x92, 0xa1, 0x53, 0xd1, 0x5f, 0x6e, 0x5e, 0x19 } }
 
 // Implemented by script event listeners. Used to retrieve the
 // script object corresponding to the event target and the handler itself.
@@ -90,6 +90,7 @@ public:
   // the right target.
   virtual void SetHandler(void *aHandler) = 0;
 
+  virtual PRInt64 SizeOf() const = 0;
 protected:
   virtual ~nsIJSEventListener()
   {

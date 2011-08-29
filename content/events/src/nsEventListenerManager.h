@@ -232,6 +232,7 @@ public:
    */
   PRBool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
+  PRInt64 SizeOf() const;
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,

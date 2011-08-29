@@ -1001,6 +1001,16 @@ nsComputedDOMStyle::DoGetMozBackfaceVisibility()
     return val;
 }
 
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTransformStyle()
+{
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    val->SetIdent(
+        nsCSSProps::ValueToKeywordEnum(GetStyleDisplay()->mTransformStyle,
+                                       nsCSSProps::kTransformStyleKTable));
+    return val;
+}
+
 /* If the property is "none", hand back "none" wrapped in a value.
  * Otherwise, compute the aggregate transform matrix and hands it back in a
  * "matrix" wrapper.
@@ -4484,6 +4494,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         MozTextDecorationStyle),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_transform,         MozTransform),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_transform_origin,  MozTransformOrigin),
+    COMPUTED_STYLE_MAP_ENTRY(transform_style,               MozTransformStyle),
     COMPUTED_STYLE_MAP_ENTRY(transition_delay,              TransitionDelay),
     COMPUTED_STYLE_MAP_ENTRY(transition_duration,           TransitionDuration),
     COMPUTED_STYLE_MAP_ENTRY(transition_property,           TransitionProperty),

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test removing an instance's DOM node</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="startTest()">
+  <p id="display"></p>
+
+  <div id="div1">
+    <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+  </div>
+
+  <div id="div2">
+    <div id="div3">
+        <embed id="plugin2" type="application/x-test" width="200" height="200"></embed>
+    </div>
+  </div>
+
+  <script type="application/javascript;version=1.8">
+  SimpleTest.waitForExplicitFinish();
+
+  var destroyed = false;
+  function onDestroy() {
+    destroyed = true;
+  }
+
+  function checkPluginAlreadyDestroyed() {
+    is(destroyed, true, "Plugin instance should have been destroyed.");
+    SimpleTest.finish();
+  }
+
+  function startTest() {
+    var p1 = document.getElementById('plugin1');
+    var d1 = document.getElementById('div1');
+
+    p1.callOnDestroy(onDestroy);
+
+    setTimeout(checkPluginAlreadyDestroyed, 0);
+
+    // Get two parent check events to run.
+    d1.removeChild(p1);
+    d1.appendChild(p1);
+    d1.removeChild(p1);
+  }
+  </script>
+</body>
+</html>

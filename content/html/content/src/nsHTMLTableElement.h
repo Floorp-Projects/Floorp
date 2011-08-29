@@ -80,12 +80,16 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
-                           nsIAtom *aPrefix, const nsAString &aValue,
-                           PRBool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
-
+  /**
+   * Called when an attribute is about to be changed
+   */
+  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
+  /**
+   * Called when an attribute has just been changed
+   */
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableElement,
                                                      nsGenericHTMLElement)

@@ -216,7 +216,7 @@ nsHTMLSharedObjectElement::DoneAddingChildren(PRBool aHaveNotified)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLSharedObjectElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLSharedObjectElement,
                                                   nsGenericHTMLElement)
-  tmp->Traverse(cb);
+  nsObjectLoadingContent::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLSharedObjectElement, nsGenericElement) 

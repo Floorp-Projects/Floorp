@@ -1276,32 +1276,25 @@ nsHTMLTableElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsresult
-nsHTMLTableElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                            nsIAtom* aPrefix, const nsAString& aValue,
-                            PRBool aNotify)
+nsHTMLTableElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  const nsAString* aValue,
+                                  PRBool aNotify)
 {
-  PRBool isCellPadding = (aAttribute == nsGkAtoms::cellpadding);
-  if (isCellPadding) {
+  if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {
     ReleaseInheritedAttributes();
   }
-
-  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aAttribute,
-                                              aPrefix, aValue, aNotify);
-
-  if (isCellPadding) {
-    BuildInheritedAttributes();
-  }
-  return rv;
+  return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName, aValue,
+                                             aNotify);
 }
 
 nsresult
-nsHTMLTableElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                               PRBool aNotify)
+nsHTMLTableElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue,
+                                 PRBool aNotify)
 {
-  PRBool isCellPadding = (aAttribute == nsGkAtoms::cellpadding);
-  if (isCellPadding) {
-    ReleaseInheritedAttributes();
+  if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {
+    BuildInheritedAttributes();
   }
-
-  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
 }
