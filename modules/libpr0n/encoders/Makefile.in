@@ -40,8 +40,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += png \
+DIRS += ico \
+	png \
 	jpeg \
+	bmp \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -72,6 +72,7 @@ pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.
 
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
+pref("browser.viewport.desktopWidth", 980);
 
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
@@ -383,6 +384,9 @@ pref("content.sink.enable_perf_mode",  2); // 0 - switch, 1 - interactive, 2 - p
 pref("content.sink.pending_event_mode", 0);
 pref("content.sink.perf_deflect_count", 1000000);
 pref("content.sink.perf_parse_time", 50000000);
+
+// Disable methodjit in chrome to save memory
+pref("javascript.options.methodjit.chrome",  false);
 
 pref("javascript.options.mem.high_water_mark", 32);
 

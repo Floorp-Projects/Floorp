@@ -23,7 +23,7 @@
  * Contributor(s):
  *   Dan Rosen <dr@netscape.com>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3783,7 +3783,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   // Now, locate the current page we are on and
   // and the page of the page number
   nscoord gap = 0;
-  nsIFrame* pageFrame = seqFrame->GetFirstChild(nsnull);
+  nsIFrame* pageFrame = seqFrame->GetFirstPrincipalChild();
   while (pageFrame != nsnull) {
     nsRect pageRect = pageFrame->GetRect();
     if (pageNum == 1) {

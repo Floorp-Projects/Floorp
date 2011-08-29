@@ -71,7 +71,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsXULContentUtils.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"

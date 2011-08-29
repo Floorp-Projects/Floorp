@@ -60,6 +60,16 @@ struct BasePoint3D {
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
 
+  T& operator[](int aIndex) {
+    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 2, "Invalid array index");
+    return *((&x)+aIndex);
+  }
+
+  const T& operator[](int aIndex) const {
+    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 2, "Invalid array index");
+    return *((&x)+aIndex);
+  }
+
   bool operator==(const Sub& aPoint) const {
     return x == aPoint.x && y == aPoint.y && z == aPoint.z;
   }

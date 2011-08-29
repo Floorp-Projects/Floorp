@@ -53,11 +53,15 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
 #include "nsIFrame.h"
+#include "nsPluginInstanceOwner.h"
+#include "nsIThreadInternal.h"
 
 class nsAsyncInstantiateEvent;
+class nsStopPluginRunnable;
 class AutoNotifier;
 class AutoFallback;
 class AutoSetInstantiatingToFalse;
+class nsObjectFrame;
 
 enum PluginSupportState {
   ePluginUnsupported,  // The plugin is not supported (e.g. not installed)
@@ -96,6 +100,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
   friend class AutoNotifier;
   friend class AutoFallback;
   friend class AutoSetInstantiatingToFalse;
+  friend class nsStopPluginRunnable;
+  friend class nsAsyncInstantiateEvent;
 
   public:
     // This enum's values must be the same as the constants on
@@ -138,7 +144,16 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       mNetworkCreated = aNetworkCreated;
     }
+
+    // Both "InstantiatePluginInstance" methods can flush layout.
+    nsresult InstantiatePluginInstance(nsIChannel* aChannel,
+                                       nsIStreamListener** aStreamListener);
+    nsresult InstantiatePluginInstance(const char* aMimeType, nsIURI* aURI);
+
+    void NotifyOwnerDocumentActivityChanged();
+
   protected:
+
     /**
      * Load the object from the given URI.
      * @param aURI       The URI to load.
@@ -222,10 +237,18 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     void RemovedFromDocument();
 
-    void Traverse(nsCycleCollectionTraversalCallback &cb);
+    static void Traverse(nsObjectLoadingContent *tmp,
+                         nsCycleCollectionTraversalCallback &cb);
 
     void CreateStaticClone(nsObjectLoadingContent* aDest) const;
+  
+    static void DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop);
+
   private:
+
+    void TryNotifyContentObjectWrapper();
+    void NotifyContentObjectWrapper();
+
     /**
      * Check whether the given request represents a successful load.
      */
@@ -304,7 +327,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eFlushLayout,
       eDontFlush
     };
-    nsIObjectFrame* GetExistingFrame(FlushType aFlushType);
+    nsObjectFrame* GetExistingFrame(FlushType aFlushType);
 
     /**
      * Handle being blocked by a content policy.  aStatus is the nsresult
@@ -313,22 +336,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     void HandleBeingBlockedByContentPolicy(nsresult aStatus,
                                            PRInt16 aRetval);
-
-    /**
-     * Checks if we have a frame that's ready for instantiation, and
-     * if so, calls Instantiate(). Note that this can cause the frame
-     * to be deleted while we're instantiating the plugin.
-     */
-    nsresult TryInstantiate(const nsACString& aMIMEType, nsIURI* aURI);
-
-    /**
-     * Instantiates the plugin. This differs from
-     * GetFrame()->Instantiate() in that it ensures that the URI will
-     * be non-null, and that a MIME type will be passed. Note that
-     * this can cause the frame to be deleted while we're
-     * instantiating the plugin.
-     */
-    nsresult Instantiate(nsIObjectFrame* aFrame, const nsACString& aMIMEType, nsIURI* aURI);
 
     /**
      * Get the plugin support state for the given content node and MIME type.
@@ -413,8 +420,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     nsWeakFrame                 mPrintFrame;
 
-    friend class nsAsyncInstantiateEvent;
+    nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
 };
-
 
 #endif

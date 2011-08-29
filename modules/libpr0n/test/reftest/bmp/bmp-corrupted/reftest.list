@@ -1,0 +1,11 @@
+# Corrupted BMP tests
+
+== wrapper.html?invalid-signature.bmp about:blank
+== wrapper.html?invalid-bpp.bmp about:blank
+# Tests for an unsupported compression value
+== wrapper.html?invalid-compression.bmp about:blank
+# Tests for RLE4 with an invalid BPP
+== wrapper.html?invalid-compression-RLE4.bmp about:blank
+# Tests for RLE8 with an invalid BPP
+== wrapper.html?invalid-compression-RLE8.bmp about:blank
+

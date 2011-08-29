@@ -474,7 +474,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->invokeEntry = result;
-    jit->singleStepMode = script->singleStepMode;
+    jit->singleStepMode = script->stepModeEnabled();
     if (fun) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
@@ -903,7 +903,7 @@ mjit::Compiler::generateMethod()
             op = JSOp(*PC);
             trap |= stubs::JSTRAP_TRAP;
         }
-        if (script->singleStepMode && scanner.firstOpInLine(PC - script->code))
+        if (script->stepModeEnabled() && scanner.firstOpInLine(PC - script->code))
             trap |= stubs::JSTRAP_SINGLESTEP;
 
         if (cx->hasRunOption(JSOPTION_PCCOUNT) && script->pcCounters) {
@@ -941,6 +941,17 @@ mjit::Compiler::generateMethod()
 
         SPEW_OPCODE();
         JS_ASSERT(frame.stackDepth() == opinfo->stackDepth);
+
+        // If this is an exception entry point, then jsl_InternalThrow has set
+        // VMFrame::fp to the correct fp for the entry point. We need to copy
+        // that value here to FpReg so that FpReg also has the correct sp.
+        // Otherwise, we would simply be using a stale FpReg value.
+        // Additionally, we check the interrupt flag to allow interrupting
+        // deeply nested exception handling.
+        if (op == JSOP_ENTERBLOCK && analysis->getCode(PC).exceptionEntry) {
+            restoreFrameRegs(masm);
+            interruptCheckHelper();
+        }
 
         if (trap) {
             prepareStubCall(Uses(0));
@@ -4831,17 +4842,6 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 void
 mjit::Compiler::enterBlock(JSObject *obj)
 {
-    // If this is an exception entry point, then jsl_InternalThrow has set
-    // VMFrame::fp to the correct fp for the entry point. We need to copy
-    // that value here to FpReg so that FpReg also has the correct sp.
-    // Otherwise, we would simply be using a stale FpReg value.
-    // Additionally, we check the interrupt flag to allow interrupting
-    // deeply nested exception handling.
-    if (analysis->getCode(PC).exceptionEntry) {
-        restoreFrameRegs(masm);
-        interruptCheckHelper();
-    }
-
     uint32 oldFrameDepth = frame.localSlots();
 
     /* For now, don't bother doing anything for this opcode. */

@@ -111,7 +111,8 @@ ThreadData::ThreadData()
     waiveGCQuota(false),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
-    pendingProxyOperation(NULL)
+    pendingProxyOperation(NULL),
+    interpreterFrames(NULL)
 {
 }
 
@@ -570,7 +571,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     Maybe<AutoLockGC> lockIf;
     if (unlocked)
         lockIf.construct(rt);
-    cx = js_ContextFromLinkField(cx ? cx->link.next : rt->contextList.next);
+    cx = JSContext::fromLinkField(cx ? cx->link.next : rt->contextList.next);
     if (&cx->link == &rt->contextList)
         cx = NULL;
     *iterp = cx;
@@ -1387,9 +1388,9 @@ JSContext::resetCompartment()
     }
 
     compartment = scopeobj->compartment();
-
     if (isExceptionPending())
         wrapPendingException();
+    updateJITEnabled();
     return;
 
 error:
@@ -1580,6 +1581,8 @@ JSContext::updateJITEnabled()
 #ifdef JS_TRACER
     traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
                        !IsJITBrokenHere() &&
+                       compartment &&
+                       !compartment->debugMode() &&
                        (debugHooks == &js_NullDebugHooks ||
                         (debugHooks == &runtime->globalDebugHooks &&
                          !runtime->debuggerInhibitsJIT())));

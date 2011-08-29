@@ -3885,7 +3885,9 @@ private:
     PRUint32 mColumnNumber;
     PRUint32 mFlags;
     nsCString mCategory;
-    PRUint64 mWindowID;
+    PRUint64 mOuterWindowID;
+    PRUint64 mInnerWindowID;
+    PRUint64 mTimeStamp;
 };
 
 /***************************************************************************/

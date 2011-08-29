@@ -26,8 +26,8 @@ function prepareListener(eventName, expectedValue) {
   };
 }
 
-const INPUT_SOURCE_UNKNOWN = Components.interfaces.nsIDOMNSMouseEvent.MOZ_SOURCE_UNKNOWN;
-const INPUT_SOURCE_KEYBOARD = Components.interfaces.nsIDOMNSMouseEvent.MOZ_SOURCE_KEYBOARD;
+const INPUT_SOURCE_UNKNOWN = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN;
+const INPUT_SOURCE_KEYBOARD = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_KEYBOARD;
 
 function doTest() {
   var eventNames = [

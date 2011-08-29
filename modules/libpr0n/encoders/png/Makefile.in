@@ -50,6 +50,8 @@ DEFINES		+= -DMOZ_PNG_WRITE \
 	-DMOZ_PNG_READ \
 	$(NULL)
 
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src/
+
 CPPSRCS		= nsPNGEncoder.cpp
 
 include $(topsrcdir)/config/rules.mk

@@ -59,7 +59,7 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMUIEvent.h"
 #include "nsCopySupport.h"
 
 // Misc
@@ -188,16 +188,16 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   // We have to figure out whether to delete and relocate caret only once
   // Parent and offset are under the mouse cursor
-  nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
-  NS_ENSURE_TRUE(nsuiEvent, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDropEvent);
+  NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> newSelectionParent;
-  rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
+  rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 
   PRInt32 newSelectionOffset;
-  rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
+  rv = uiEvent->GetRangeOffset(&newSelectionOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;

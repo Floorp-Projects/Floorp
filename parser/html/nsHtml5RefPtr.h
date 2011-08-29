@@ -245,19 +245,6 @@ class nsHtml5RefPtr
           return get();
         }
 
-#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
-  // broken version for IRIX
-
-      nsHtml5RefPtr<T>*
-      get_address() const
-          // This is not intended to be used by clients.  See |address_of|
-          // below.
-        {
-          return const_cast<nsHtml5RefPtr<T>*>(this);
-        }
-
-#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
       nsHtml5RefPtr<T>*
       get_address()
           // This is not intended to be used by clients.  See |address_of|
@@ -273,8 +260,6 @@ class nsHtml5RefPtr
         {
           return this;
         }
-
-#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
     public:
       T&
@@ -296,20 +281,6 @@ class nsHtml5RefPtr
         }
   };
 
-#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
-// This is the broken version for IRIX, which can't handle the version below.
-
-template <class T>
-inline
-nsHtml5RefPtr<T>*
-address_of( const nsHtml5RefPtr<T>& aPtr )
-  {
-    return aPtr.get_address();
-  }
-
-#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
 template <class T>
 inline
 nsHtml5RefPtr<T>*
@@ -325,8 +296,6 @@ address_of( const nsHtml5RefPtr<T>& aPtr )
   {
     return aPtr.get_address();
   }
-
-#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
 template <class T>
 class nsHtml5RefPtrGetterAddRefs
@@ -394,7 +363,7 @@ getter_AddRefs( nsHtml5RefPtr<T>& aSmartPtr )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsHtml5RefPtr<T>& lhs, const nsHtml5RefPtr<U>& rhs )
   {
     return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs.get());
@@ -403,7 +372,7 @@ operator==( const nsHtml5RefPtr<T>& lhs, const nsHtml5RefPtr<U>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsHtml5RefPtr<T>& lhs, const nsHtml5RefPtr<U>& rhs )
   {
     return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs.get());
@@ -414,7 +383,7 @@ operator!=( const nsHtml5RefPtr<T>& lhs, const nsHtml5RefPtr<U>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsHtml5RefPtr<T>& lhs, const U* rhs )
   {
     return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs);
@@ -422,7 +391,7 @@ operator==( const nsHtml5RefPtr<T>& lhs, const U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const U* lhs, const nsHtml5RefPtr<T>& rhs )
   {
     return static_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
@@ -430,7 +399,7 @@ operator==( const U* lhs, const nsHtml5RefPtr<T>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsHtml5RefPtr<T>& lhs, const U* rhs )
   {
     return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs);
@@ -438,7 +407,7 @@ operator!=( const nsHtml5RefPtr<T>& lhs, const U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const U* lhs, const nsHtml5RefPtr<T>& rhs )
   {
     return static_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
@@ -454,7 +423,7 @@ operator!=( const U* lhs, const nsHtml5RefPtr<T>& rhs )
 #ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsHtml5RefPtr<T>& lhs, U* rhs )
   {
     return static_cast<const T*>(lhs.get()) == const_cast<const U*>(rhs);
@@ -462,7 +431,7 @@ operator==( const nsHtml5RefPtr<T>& lhs, U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( U* lhs, const nsHtml5RefPtr<T>& rhs )
   {
     return const_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
@@ -470,7 +439,7 @@ operator==( U* lhs, const nsHtml5RefPtr<T>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsHtml5RefPtr<T>& lhs, U* rhs )
   {
     return static_cast<const T*>(lhs.get()) != const_cast<const U*>(rhs);
@@ -478,7 +447,7 @@ operator!=( const nsHtml5RefPtr<T>& lhs, U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( U* lhs, const nsHtml5RefPtr<T>& rhs )
   {
     return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
@@ -491,7 +460,7 @@ operator!=( U* lhs, const nsHtml5RefPtr<T>& rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsHtml5RefPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr == 0|
   {
@@ -500,7 +469,7 @@ operator==( const nsHtml5RefPtr<T>& lhs, NSCAP_Zero* rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( NSCAP_Zero* lhs, const nsHtml5RefPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
@@ -509,7 +478,7 @@ operator==( NSCAP_Zero* lhs, const nsHtml5RefPtr<T>& rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsHtml5RefPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr != 0|
   {
@@ -518,7 +487,7 @@ operator!=( const nsHtml5RefPtr<T>& lhs, NSCAP_Zero* rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator!=( NSCAP_Zero* lhs, const nsHtml5RefPtr<T>& rhs )
     // specifically to allow |0 != smartPtr|
   {
@@ -533,7 +502,7 @@ operator!=( NSCAP_Zero* lhs, const nsHtml5RefPtr<T>& rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsHtml5RefPtr<T>& lhs, int rhs )
     // specifically to allow |smartPtr == 0|
   {
@@ -542,7 +511,7 @@ operator==( const nsHtml5RefPtr<T>& lhs, int rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( int lhs, const nsHtml5RefPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {

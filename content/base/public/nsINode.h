@@ -48,6 +48,8 @@
 #include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
 #include "nsDOMError.h"
 #include "nsDOMString.h"
+#include "jspubtd.h"
+#include "nsDOMMemoryReporter.h"
 
 class nsIContent;
 class nsIDocument;
@@ -280,8 +282,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xc7abbb40, 0x2571, 0x4d12, \
- { 0x8f, 0x89, 0x0d, 0x4f, 0x55, 0xc0, 0x92, 0xf6 } }
+{ 0x5572c8a9, 0xbda9, 0x4b78, \
+  { 0xb4, 0x1a, 0xdb, 0x1a, 0x83, 0xef, 0x53, 0x7e } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -294,9 +296,7 @@ class nsINode : public nsIDOMEventTarget,
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 
-  virtual PRInt64 SizeOf() const {
-    return sizeof(*this);
-  }
+  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
 
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;
@@ -801,6 +801,9 @@ public:
     // putting a DestroySlots function on nsINode
     virtual ~nsSlots();
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb);
+    void Unlink();
+
     /**
      * A list of mutation observers
      */
@@ -931,42 +934,6 @@ public:
    * nsIDocument* to nsINode*.
    */
   nsIDocument* GetOwnerDocument() const;
-
-  /**
-   * Iterator that can be used to easily iterate over the children.  This has
-   * the same restrictions on its use as GetChildArray does.
-   */
-  class ChildIterator {
-  public:
-    ChildIterator(const nsINode* aNode) { Init(aNode); }
-    ChildIterator(const nsINode* aNode, PRUint32 aOffset) {
-      Init(aNode);
-      Advance(aOffset);
-    }
-    ~ChildIterator() {
-      NS_ASSERTION(!mGuard.Mutated(0), "Unexpected mutations happened");
-    }
-
-    PRBool IsDone() const { return mCur == mEnd; }
-    operator nsIContent*() const { return *mCur; }
-    void Next() { NS_PRECONDITION(mCur != mEnd, "Check IsDone"); ++mCur; }
-    void Advance(PRUint32 aOffset) {
-      NS_ASSERTION(mCur + aOffset <= mEnd, "Unexpected offset");
-      mCur += aOffset;
-    }
-  private:
-    void Init(const nsINode* aNode) {
-      NS_PRECONDITION(aNode, "Must have node here!");
-      PRUint32 childCount;
-      mCur = aNode->GetChildArray(&childCount);
-      mEnd = mCur + childCount;
-    }
-#ifdef DEBUG
-    nsMutationGuard mGuard;
-#endif
-    nsIContent* const * mCur;
-    nsIContent* const * mEnd;
-  };
 
   /**
    * The default script type (language) ID for this node.
@@ -1365,6 +1332,22 @@ protected:
    */
   nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            PRBool aNotify, nsAttrAndChildArray& aChildArray);
+
+  /* Event stuff that documents and elements share.  This needs to be
+     NS_IMETHOD because some subclasses implement DOM methods with
+     this exact name and signature and then the calling convention
+     needs to match. */
+#define EVENT(name_, id_, type_, struct_)                         \
+  NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);              \
+  NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef EVENT  
+
+  static void Trace(nsINode *tmp, TraceCallback cb, void *closure);
+  static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
+  static void Unlink(nsINode *tmp);
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 

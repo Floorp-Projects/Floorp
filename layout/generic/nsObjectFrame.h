@@ -40,10 +40,6 @@
 #ifndef nsObjectFrame_h___
 #define nsObjectFrame_h___
 
-#ifdef XP_WIN
-#include <windows.h>
-#endif
-
 #include "nsPluginInstanceOwner.h"
 #include "nsIObjectFrame.h"
 #include "nsFrame.h"
@@ -124,19 +120,8 @@ public:
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance);
-  virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener);
-  virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI);
-  virtual void TryNotifyContentObjectWrapper();
-  virtual void StopPlugin();
-  virtual void SetIsDocumentActive(PRBool aIsActive);
 
-  /*
-   * Stop a plugin instance. If aDelayedStop is true, the plugin will
-   * be stopped at a later point when it's safe to do so (i.e. not
-   * while destroying the frame tree). Delayed stopping is only
-   * implemented on Win32 for now.
-   */
-  void StopPluginInternal(PRBool aDelayedStop);
+  virtual void SetIsDocumentActive(PRBool aIsActive);
 
   NS_IMETHOD GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor);
 
@@ -163,7 +148,7 @@ public:
 #endif
 
   //local methods
-  nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
+  nsresult SetWidget(nsIWidget *aWidget);
 
   // for a given aRoot, this walks the frame tree looking for the next outFrame
   static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
@@ -209,6 +194,19 @@ public:
 
   nsIWidget* GetWidget() { return mWidget; }
 
+  /**
+   * Adjust the plugin's idea of its size, using aSize as its new size.
+   * (aSize must be in twips)
+   */
+  void FixupWindow(const nsSize& aSize);
+
+  /*
+   * Sets up the plugin window and calls SetWindow on the plugin.
+   */
+  nsresult CallSetWindow(PRBool aCheckIsHidden = PR_TRUE);
+
+  void SetInstanceOwner(nsPluginInstanceOwner* aOwner);
+
 protected:
   nsObjectFrame(nsStyleContext* aContext);
   virtual ~nsObjectFrame();
@@ -219,21 +217,6 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  nsresult InstantiatePlugin(nsPluginHost* aPluginHost, 
-                             const char* aMimetype,
-                             nsIURI* aURL);
-
-  /**
-   * Adjust the plugin's idea of its size, using aSize as its new size.
-   * (aSize must be in twips)
-   */
-  void FixupWindow(const nsSize& aSize);
-
-  /**
-   * Sets up the plugin window and calls SetWindow on the plugin.
-   */
-  nsresult CallSetWindow(PRBool aCheckIsHidden = PR_TRUE);
-
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
 
   // check attributes and optionally CSS to see if we should display anything
@@ -241,8 +224,6 @@ protected:
 
   PRBool IsOpaque() const;
   PRBool IsTransparentMode() const;
-
-  void NotifyContentObjectWrapper();
 
   nsIntPoint GetWindowOriginInPixels(PRBool aWindowless);
 
@@ -254,12 +235,6 @@ protected:
   void PaintPlugin(nsDisplayListBuilder* aBuilder,
                    nsRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect, const nsRect& aPluginRect);
-
-  /**
-   * Makes sure that mInstanceOwner is valid and without a current plugin
-   * instance. Essentially, this prepares the frame to receive a new plugin.
-   */
-  NS_HIDDEN_(nsresult) PrepareInstanceOwner();
 
   /**
    * Get the widget geometry for the plugin. aRegion is in some appunits
@@ -291,8 +266,8 @@ private:
   private:
     nsString mEventType;
   };
-  
-  nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
+
+  nsPluginInstanceOwner*          mInstanceOwner; // WEAK
   nsIView*                        mInnerView;
   nsCOMPtr<nsIWidget>             mWidget;
   nsIntRect                       mWindowlessRect;
@@ -301,11 +276,6 @@ private:
    * automatically cleared if the PluginBackgroundSink is destroyed.
    */
   PluginBackgroundSink*           mBackgroundSink;
-
-  // For assertions that make it easier to determine if a crash is due
-  // to the underlying problem described in bug 136927, and to prevent
-  // reentry into instantiation.
-  PRBool mPreventInstantiation;
 
   PRPackedBool mReflowCallbackPosted;
 

@@ -694,9 +694,9 @@
             return;
 
           var rows = event.detail;
-          if (rows == NSUIEvent.SCROLL_PAGE_UP)
+          if (rows == UIEvent.SCROLL_PAGE_UP)
             this.treeBoxObject.scrollByPages(-1);
-          else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+          else if (rows == UIEvent.SCROLL_PAGE_DOWN)
             this.treeBoxObject.scrollByPages(1);
           else
             this.treeBoxObject.scrollByLines(rows);
