@@ -92,24 +92,22 @@ LIRGenerator::visitTableSwitch(MTableSwitch *tableswitch)
     if (tableswitch->numSuccessors() == 1)
         return add(new LGoto(tableswitch->getDefault()));        
 
-    // Case indices are int32, so other types will always go to the default case
-    if (opd->type() != MIRType_Int32)
+    // Case indices are numeric, so other types will always go to the default case.
+    if (opd->type() != MIRType_Int32 && opd->type() != MIRType_Double)
         return add(new LGoto(tableswitch->getDefault()));
 
-    // If input of switch is constant, it will always take the same case/default.
-    if (opd->isConstant()) {
-        MConstant *ins = opd->toConstant();
-
-        int32 switchval = ins->value().toInt32();
-        if (switchval < tableswitch->low() || switchval > tableswitch->high())
-            return add(new LGoto(tableswitch->getDefault()));
-
-        return add(new LGoto(tableswitch->getCase(switchval-tableswitch->low())));
+    // Return an LTableSwitch, capable of handling either an integer or
+    // floating-point index.
+    LAllocation index;
+    LDefinition tempInt;
+    if (opd->type() == MIRType_Int32) {
+        index = useCopy(opd);
+        tempInt = LDefinition::BogusTemp();
+    } else {
+        index = useRegister(opd);
+        tempInt = temp(LDefinition::INTEGER);
     }
-
-    // Return a LTableS witch if it isn't constant.
-    return add(new LTableSwitch(useRegister(opd), temp(LDefinition::INTEGER),
-                                temp(LDefinition::POINTER), tableswitch));
+    return add(new LTableSwitch(index, tempInt, temp(LDefinition::POINTER), tableswitch));
 }
 
 bool

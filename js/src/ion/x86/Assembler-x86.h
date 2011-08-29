@@ -206,6 +206,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::j;
     using AssemblerX86Shared::jmp;
     using AssemblerX86Shared::movsd;
+    using AssemblerX86Shared::retarget;
 
     static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -262,6 +263,23 @@ class Assembler : public AssemblerX86Shared
     void j(Condition cond, void *target, Relocation::Kind reloc) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
+    }
+
+    // Re-routes pending jumps to an external target, flushing the label in the
+    // process.
+    void retarget(Label *label, void *target, Relocation::Kind reloc) {
+        JSC::MacroAssembler::Label jsclabel;
+        if (label->used()) {
+            bool more;
+            JSC::X86Assembler::JmpSrc jmp(label->offset());
+            do {
+                JSC::X86Assembler::JmpSrc next;
+                more = masm.nextJump(jmp, &next);
+                addPendingJump(jmp, target, reloc);
+                jmp = next;
+            } while (more);
+        }
+        label->reset();
     }
 
     void movsd(const double *dp, const FloatRegister &dest) {

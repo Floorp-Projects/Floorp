@@ -157,7 +157,10 @@ GreedyAllocator::prescanDefinitions(LInstruction *ins)
             return false;
     }
     for (size_t i = 0; i < ins->numTemps(); i++) {
-        if (!prescanDefinition(ins->getTemp(i)))
+        LDefinition *temp = ins->getTemp(i);
+        if (temp->isBogusTemp())
+            continue;
+        if (!prescanDefinition(temp))
             return false;
     }
     return true;

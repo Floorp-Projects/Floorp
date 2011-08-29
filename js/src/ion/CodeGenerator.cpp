@@ -74,7 +74,10 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     // the platform-specific codegenerator to do this.
     FloatRegister temp = ToFloatRegister(lir->tempFloat());
     masm.unboxDouble(operand, temp);
-    if (!emitDoubleToInt32(temp, output, lir->snapshot()))
+
+    Label fails;
+    emitDoubleToInt32(temp, output, &fails);
+    if (!bailoutFrom(&fails, lir->snapshot()))
         return false;
     masm.jump(&done);
 

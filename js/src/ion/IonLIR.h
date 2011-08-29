@@ -477,6 +477,10 @@ class LDefinition
     LDefinition() : bits_(0)
     { }
 
+    static LDefinition BogusTemp() {
+        return LDefinition(INTEGER, LConstantIndex::Bogus());
+    }
+
     Policy policy() const {
         return (Policy)((bits_ >> POLICY_SHIFT) & POLICY_MASK);
     }
@@ -494,6 +498,9 @@ class LDefinition
     }
     bool isPreset() const {
         return policy() == PRESET;
+    }
+    bool isBogusTemp() const {
+        return isPreset() && output()->isConstantIndex();
     }
     void setVirtualRegister(uint32 index) {
         JS_ASSERT(index < VREG_MASK);

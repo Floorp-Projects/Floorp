@@ -156,6 +156,12 @@ LIRGeneratorShared::ensureDefined(MDefinition *mir)
 }
 
 LUse
+LIRGeneratorShared::useCopy(MDefinition *mir)
+{
+    return use(mir, LUse(LUse::COPY));
+}
+
+LUse
 LIRGeneratorShared::useRegister(MDefinition *mir)
 {
     return use(mir, LUse(LUse::REGISTER));

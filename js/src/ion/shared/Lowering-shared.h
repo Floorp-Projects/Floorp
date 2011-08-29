@@ -99,6 +99,7 @@ class LIRGeneratorShared : public MInstructionVisitor
     // allocation policy.
     inline LUse use(MDefinition *mir, LUse policy);
     inline LUse use(MDefinition *mir);
+    inline LUse useCopy(MDefinition *mir);
     inline LUse useRegister(MDefinition *mir);
     inline LUse useFixed(MDefinition *mir, Register reg);
     inline LUse useFixed(MDefinition *mir, FloatRegister reg);

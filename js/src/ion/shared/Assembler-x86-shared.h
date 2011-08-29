@@ -260,6 +260,31 @@ class AssemblerX86Shared
         label->bind(masm.label().offset());
     }
 
+    // Re-routes pending jumps to a new label.
+    void retarget(Label *label, Label *target) {
+        JSC::MacroAssembler::Label jsclabel;
+        if (label->used()) {
+            bool more;
+            JSC::X86Assembler::JmpSrc jmp(label->offset());
+            do {
+                JSC::X86Assembler::JmpSrc next;
+                more = masm.nextJump(jmp, &next);
+
+                if (target->bound()) {
+                    // The jump can be immediately patched to the correct destination.
+                    masm.linkJump(jmp, JmpDst(target->offset()));
+                } else {
+                    // Thread the jump list through the unpatched jump targets.
+                    JmpSrc prev = JmpSrc(label->use(jmp.offset()));
+                    masm.setNextJump(jmp, prev);
+                }
+
+                jmp = next;
+            } while (more);
+        }
+        label->reset();
+    }
+
     static void Bind(IonCode *code, AbsoluteLabel *label, const void *address) {
         uint8 *raw = code->raw();
         if (label->used()) {
@@ -327,6 +352,9 @@ class AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
+    }
+    void cmpl(const Register &src, Imm32 imm) {
+        masm.cmpl_ir(imm.value, src.code());
     }
     void cmpl(const Operand &op, Imm32 imm) {
         switch (op.kind()) {

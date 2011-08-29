@@ -183,6 +183,16 @@ class LTableSwitch : public LInstructionHelper<0, 1, 2>
     MTableSwitch *mir() const {
         return mir_;
     }
+
+    const LAllocation *index() {
+        return getOperand(0);
+    }
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
+    }
+    const LAllocation *tempPointer() {
+        return getTemp(1)->output();
+    }
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
@@ -476,6 +486,7 @@ class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
 // Convert a value to an int32.
 //   Input: components of a Value
 //   Output: 32-bit integer
+//   Bailout: undefined, string, object, or non-int32 double
 //   
 // This instruction requires a temporary float register.
 class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
