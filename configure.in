@@ -945,18 +945,6 @@ EOF
     ;;
 esac
 
-dnl Test breaks icc on OS/2 && MSVC
-if test "$CC" != "icc" -a -z "$_WIN32_MSVC"; then
-    AC_PROG_CC_C_O
-    if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
-        USING_HCC=1
-        _OLDCC=$CC
-        _OLDCXX=$CXX
-        CC="${srcdir}/build/hcc '$CC'"
-        CXX="${srcdir}/build/hcpp '$CXX'"
-    fi
-fi
-
 AC_PROG_CPP
 AC_PROG_CXXCPP
 
@@ -8825,15 +8813,6 @@ AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_X86_ASM)
 AC_SUBST(LIBJPEG_TURBO_X64_ASM)
-
-if test "$USING_HCC"; then
-   CC='${topsrcdir}/build/hcc'
-   CC="$CC '$_OLDCC'"
-   CXX='${topsrcdir}/build/hcpp'
-   CXX="$CXX '$_OLDCXX'"
-   AC_SUBST(CC)
-   AC_SUBST(CXX)
-fi
 
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
