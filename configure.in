@@ -2095,22 +2095,31 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
-    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
-    # The ExceptionHandling framework is needed for Objective-C exception
-    # logging code in nsObjCExceptions.h. Currently we only use that in debug
-    # builds.
-    _SAVE_LDFLAGS=$LDFLAGS
-     AC_MSG_CHECKING([for -framework ExceptionHandling])
-    LDFLAGS="$LDFLAGS -framework ExceptionHandling"
-    AC_TRY_LINK(,[return 0;],
-                ac_cv_have_framework_exceptionhandling="yes",
-                ac_cv_have_framework_exceptionhandling="no")
-    AC_MSG_RESULT([$ac_cv_have_framework_exceptionhandling])
-    if test "$ac_cv_have_framework_exceptionhandling" = "yes"; then
-      MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
+    # Check whether we're targeting OS X or iOS
+    AC_CACHE_CHECK(for iOS target,
+                   ac_cv_ios_target,
+                   [AC_TRY_COMPILE([#include <TargetConditionals.h>
+#if !(TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#error not iOS
+#endif],
+                                   [],
+                                   ac_cv_ios_target="yes",
+                                   ac_cv_ios_target="no")])
+    if test "$ac_cv_ios_target" = "yes"; then
+        AC_DEFINE(XP_IOS)
+        AC_DEFINE(XP_DARWIN)
+        _PLATFORM_DEFAULT_TOOLKIT='cairo-uikit'
+    else
+        AC_DEFINE(XP_MACOSX)
+        AC_DEFINE(XP_DARWIN)
+        _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
+        # The ExceptionHandling framework is needed for Objective-C exception
+        # logging code in nsObjCExceptions.h. Currently we only use that in debug
+        # builds.
+        MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
     fi
-    LDFLAGS=$_SAVE_LDFLAGS
+    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
+
 
     if test "x$lto_is_enabled" = "xyes"; then
         echo "Skipping -dead_strip because lto is enabled."
@@ -4662,6 +4671,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-android"
     then
         dnl nglayout only supports building with one toolkit,
@@ -4748,33 +4758,31 @@ cairo-os2)
     ;;
 
 cairo-cocoa)
-    # Check if we have the Cocoa framework, or if we're targeting Cocoa Touch
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -framework Cocoa"
-    AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_COCOA=1,_HAVE_FRAMEWORK_COCOA=)
-    if test -z "$_HAVE_FRAMEWORK_COCOA"; then
-        LDFLAGS="$_SAVE_LDFLAGS -framework UIKit";
-        AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_UIKIT=1,
-                    AC_MSG_ERROR([Neither Cocoa nor UIKit frameworks were found. Are you using the correct SDK?]))
-        MOZ_WIDGET_TOOLKIT=uikit
-      AC_DEFINE(MOZ_WIDGET_UIKIT)
-      TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
-    else
-      MOZ_WIDGET_TOOLKIT=cocoa
-      AC_DEFINE(MOZ_WIDGET_COCOA)
-      TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
-    fi
-    MOZ_USER_DIR="Mozilla"
-    AC_DEFINE(XP_MACOSX)
-
+    MOZ_WIDGET_TOOLKIT=cocoa
+    AC_DEFINE(MOZ_WIDGET_COCOA)
+    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
+    TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
     TK_CFLAGS="-DNO_X11"
-    LDFLAGS="$LDFLAGS -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
+    MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    ;;
+
+cairo-uikit)
+    MOZ_WIDGET_TOOLKIT=uikit
+    AC_DEFINE(MOZ_WIDGET_UIKIT)
+    LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
+    TK_CFLAGS="-DNO_X11"
+    TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
+    CFLAGS="$CFLAGS $TK_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
+    MOZ_USER_DIR="Mozilla"
+    MOZ_FS_LAYOUT=bundle
     ;;
 
 cairo-android)
