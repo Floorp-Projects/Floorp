@@ -181,8 +181,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // the current loop as necessary.
     bool setBackedge(MBasicBlock *block);
 
-    // Propagates phis placed in a loop header down to their corresponding
-    // in successor blocks.
+    // Propagates phis placed in a loop header down to this successor block.
     void inheritPhis(MBasicBlock *header);
 
     void insertBefore(MInstruction *at, MInstruction *ins);
