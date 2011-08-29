@@ -6918,6 +6918,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
                 if (vt.type == JSVAL_TYPE_INT32) {
                     fixedIntToDoubleEntries.append(newv->slot);
                     frame.ensureDouble(fe);
+                    frame.forgetLoopReg(fe);
                 } else if (vt.type == JSVAL_TYPE_UNKNOWN) {
                     /*
                      * Unknown here but a double at the target. The type
@@ -6932,6 +6933,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
             } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
                 fixedDoubleToAnyEntries.append(newv->slot);
                 frame.syncAndForgetFe(fe);
+                frame.forgetLoopReg(fe);
             }
             newv++;
         }
