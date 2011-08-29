@@ -616,7 +616,7 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
         return ControlStatus_Ended;
   
     // Create a new block to represent the join.
-    MBasicBlock *join = newBlock(pred, pc);
+    MBasicBlock *join = newBlock(pred, state.branch.falseEnd);
     if (!join)
         return ControlStatus_Error;
   
@@ -630,10 +630,8 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
     }
 
     // Ignore unreachable remainder of false block if existent.
-    pc = state.branch.falseEnd;
-  
-    // Continue parsing at the join point.
     current = join;
+    pc = current->pc();
     return ControlStatus_Joined;
 }
 
