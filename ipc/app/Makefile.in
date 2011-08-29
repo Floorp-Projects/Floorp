@@ -52,8 +52,7 @@ CPPSRCS = \
   $(NULL)
 
 ifeq (Android,$(OS_TARGET))
-WRAP_MALLOC_CFLAGS =
-WRAP_MALLOC_LIB =
+WRAP_LDFLAGS =
 CPPSRCS = MozillaRuntimeMainAndroid.cpp
 else
 LIBS += \
