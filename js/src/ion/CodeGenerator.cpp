@@ -161,6 +161,62 @@ CodeGenerator::visitInt32ToDouble(LInt32ToDouble *lir)
 }
 
 bool
+CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
+{
+    const ValueOperand value = ToValue(lir, LTestVAndBranch::Input);
+
+    Register tag = splitTagForTest(value);
+
+    Assembler::Condition cond;
+
+    // Eventually we will want some sort of type filter here. For now, just
+    // emit all easy cases. For speed we use the cached tag for all comparison,
+    // except for doubles, which we test last (as the operation can clobber the
+    // tag, which may be in ScratchReg).
+    cond = masm.testUndefined(Assembler::Equal, tag);
+    masm.j(cond, lir->ifFalse());
+
+    cond = masm.testNull(Assembler::Equal, tag);
+    masm.j(cond, lir->ifFalse());
+
+    cond = masm.testObject(Assembler::Equal, tag);
+    masm.j(cond, lir->ifTrue());
+
+    Label notBoolean;
+    cond = masm.testBoolean(Assembler::NotEqual, tag);
+    masm.j(cond, &notBoolean);
+    cond = masm.testBooleanTruthy(false, value);
+    masm.j(cond, lir->ifFalse());
+    masm.jump(lir->ifTrue());
+    masm.bind(&notBoolean);
+
+    Label notInt32;
+    cond = masm.testInt32(Assembler::NotEqual, tag);
+    masm.j(cond, &notInt32);
+    cond = masm.testInt32Truthy(false, value);
+    masm.j(cond, lir->ifFalse());
+    masm.jump(lir->ifTrue());
+    masm.bind(&notInt32);
+
+    // Test if a string is non-empty.
+    Label notString;
+    cond = masm.testString(Assembler::NotEqual, tag);
+    masm.j(cond, &notString);
+    cond = testStringTruthy(false, value);
+    masm.j(cond, lir->ifFalse());
+    masm.jump(lir->ifTrue());
+    masm.bind(&notString);
+
+    // If we reach here the value is a double.
+    masm.unboxDouble(value, ToFloatRegister(lir->tempFloat()));
+    cond = masm.testDoubleTruthy(false, ToFloatRegister(lir->tempFloat()));
+    masm.j(cond, lir->ifFalse());
+    masm.jump(lir->ifTrue());
+
+    return true;
+}
+
+bool
 CodeGenerator::generateBody()
 {
     for (size_t i = 0; i < graph.numBlocks(); i++) {

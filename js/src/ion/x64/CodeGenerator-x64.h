@@ -57,6 +57,10 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
 
+    // This returns the tag in ScratchReg.
+    Register splitTagForTest(const ValueOperand &value);
+    Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
+
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph);
 

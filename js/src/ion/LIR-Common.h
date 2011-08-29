@@ -239,18 +239,29 @@ class LTestDAndBranch : public LInstructionHelper<0, 1, 1>
 };
 
 // Takes in a boxed value and tests it for truthiness.
-class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
+class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
 {
-    MBasicBlock *ifTrue;
-    MBasicBlock *ifFalse;
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(TestVAndBranch);
 
-    LTestVAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue(ifTrue),
-        ifFalse(ifFalse)
-    { }
+    LTestVAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp)
+      : ifTrue_(ifTrue),
+        ifFalse_(ifFalse)
+    {
+        setTemp(0, temp);
+    }
+
+    static const size_t Input = 0;
+
+    const LAllocation *tempFloat() {
+        return getTemp(0)->output();
+    }
+
+    Label *ifTrue();
+    Label *ifFalse();
 };
 
 class LCompareI : public LInstructionHelper<1, 2, 0>

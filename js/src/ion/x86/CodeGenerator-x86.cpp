@@ -228,6 +228,23 @@ CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
     return true;
 }
 
+Register
+CodeGeneratorX86::splitTagForTest(const ValueOperand &value)
+{
+    return value.typeReg();
+}
+
+Assembler::Condition
+CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
+{
+    Register string = value.payloadReg();
+    Operand lengthAndFlags(string, JSString::offsetOfLengthAndFlags());
+
+    size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
+    masm.testl(Imm32(mask), lengthAndFlags);
+    return truthy ? Assembler::NonZero : Assembler::Zero;
+}
+
 bool
 CodeGeneratorX86::visitCompareD(LCompareD *comp)
 {
