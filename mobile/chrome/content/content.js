@@ -1019,10 +1019,6 @@ ContextHandler.registerType("link-shareable", function(aState, aElement) {
   return Util.isShareableScheme(aState.linkProtocol);
 });
 
-ContextHandler.registerType("input-text", function(aState, aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLInputElement && aElement.mozIsTextField(false)) || aElement instanceof Ci.nsIDOMHTMLTextAreaElement;
-});
-
 ["image", "video"].forEach(function(aType) {
   ContextHandler.registerType(aType+"-shareable", function(aState, aElement) {
     if (aState.types.indexOf(aType) == -1)

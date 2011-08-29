@@ -782,13 +782,14 @@ public:
         // Assume that EGL has the same problem as WGL does,
         // where MakeCurrent with an already-current context is
         // still expensive.
-        if (!mSurface || aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
 #ifndef MOZ_WIDGET_QT
-            if (!mSurface) {
-                EGLConfig config = CreateConfig();
-                mSurface = CreateSurfaceForWindow(NULL, config);
-            }
+        if (!mSurface) {
+            EGLConfig config = CreateConfig();
+            mSurface = CreateSurfaceForWindow(NULL, config);
+            aForce = PR_TRUE;
+        }
 #endif
+        if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                  mSurface, mSurface,
                                                  mContext);

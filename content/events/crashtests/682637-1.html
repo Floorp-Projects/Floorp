@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.getElementById("f");
+  var frameWin = frame.contentWindow;
+  frame.parentNode.removeChild(frame);
+  frameWin.onmouseover = function(){};
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<iframe id="f" src="data:text/html,1"></iframe>
+</body>
+
+</html>

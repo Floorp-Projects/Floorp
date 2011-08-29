@@ -1,8 +1,0 @@
-prefix=%prefix%
-sdkdir=%sdkdir%
-includedir=%includedir%
-
-Name: mozilla-gtkembedmoz
-Description: Static version-independent Mozilla Embedding Widget for Gtk+
-Version: %MOZILLA_VERSION%
-Requires: libxul-embedding = %MOZILLA_VERSION%
