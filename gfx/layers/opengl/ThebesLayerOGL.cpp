@@ -749,8 +749,9 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
                             gfxASurface::CONTENT_COLOR_ALPHA;
 
-  gfxMatrix transform2d;
   PRUint32 flags = 0;
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
+  gfxMatrix transform2d;
   if (GetEffectiveTransform().Is2D(&transform2d)) {
     if (transform2d.HasNonIntegerTranslation()) {
       flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
@@ -758,6 +759,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   } else {
     flags |= ThebesLayerBufferOGL::PAINT_WILL_RESAMPLE;
   }
+#endif
 
   Buffer::PaintState state = mBuffer->BeginPaint(contentType, flags);
   mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
