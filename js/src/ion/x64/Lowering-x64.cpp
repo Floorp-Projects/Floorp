@@ -54,7 +54,7 @@ LIRGeneratorX64::useBox(LInstruction *lir, size_t n, MDefinition *mir, LUse::Pol
 
     if (!ensureDefined(mir))
         return false;
-    lir->setOperand(n, LUse(mir->id(), policy));
+    lir->setOperand(n, LUse(mir->virtualRegister(), policy));
     return true;
 }
 
@@ -147,9 +147,8 @@ LIRGeneratorX64::assignSnapshot(LInstruction *ins)
     if (!snapshot)
         return false;
 
-    MSnapshot *mir = snapshot->mir();
-    for (size_t i = 0; i < mir->numOperands(); i++) {
-        MDefinition *def = mir->getOperand(i);
+    for (size_t i = 0; i < last_snapshot_->numOperands(); i++) {
+        MDefinition *def = last_snapshot_->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
         *a = useKeepaliveOrConstant(def);
 #ifdef DEBUG
