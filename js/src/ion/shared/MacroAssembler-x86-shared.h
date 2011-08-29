@@ -78,6 +78,12 @@ class MacroAssemblerX86Shared : public Assembler
         jmp(label);
     }
 
+    Condition testDoubleTruthy(bool truthy, const FloatRegister &reg) {
+        xorpd(ScratchFloatReg, ScratchFloatReg);
+        ucomisd(ScratchFloatReg, reg);
+        return truthy ? NonZero : Zero;
+    }
+
     uint32 framePushed() const {
         return framePushed_;
     }

@@ -131,8 +131,8 @@ LIRGenerator::visitTest(MTest *test)
     }
 
     if (opd->type() == MIRType_Value) {
-        LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse);
-        if (!useBox(lir, 0, opd))
+        LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse, tempFloat());
+        if (!useBox(lir, LTestVAndBranch::Input, opd))
             return false;
         return add(lir);
     }
