@@ -384,6 +384,8 @@ LinearScanAllocator::createDataStructures()
             }
             for (size_t j = 0; j < ins->numTemps(); j++) {
                 LDefinition *def = ins->getTemp(j);
+                if (def->isBogusTemp())
+                    continue;
                 if (!vregs[def].init(def->virtualRegister(), block, *ins, def))
                     return false;
             }
@@ -485,8 +487,12 @@ LinearScanAllocator::buildLivenessInfo()
                 }
             }
 
-            for (size_t i = 0; i < ins->numTemps(); i++)
-                vregs[ins->getTemp(i)].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
+            for (size_t i = 0; i < ins->numTemps(); i++) {
+                LDefinition *temp = ins->getTemp(i);
+                if (temp->isBogusTemp())
+                    continue;
+                vregs[temp].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
+            }
 
             for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next())
             {

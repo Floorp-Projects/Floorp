@@ -218,8 +218,40 @@ CodeGeneratorX86Shared::generateOutOfLineCode()
     return true;
 }
 
-bool
-CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
+class BailoutJump {
+    Assembler::Condition cond_;
+
+  public:
+    BailoutJump(Assembler::Condition cond) : cond_(cond)
+    { }
+#ifdef JS_CPU_X86
+    void operator()(MacroAssembler &masm, uint8 *code) const {
+        masm.j(cond_, code, Relocation::EXTERNAL);
+    }
+#endif
+    void operator()(MacroAssembler &masm, Label *label) const {
+        masm.j(cond_, label);
+    }
+};
+
+class BailoutLabel {
+    Label *label_;
+
+  public:
+    BailoutLabel(Label *label) : label_(label)
+    { }
+#ifdef JS_CPU_X86
+    void operator()(MacroAssembler &masm, uint8 *code) const {
+        masm.retarget(label_, code, Relocation::EXTERNAL);
+    }
+#endif
+    void operator()(MacroAssembler &masm, Label *label) const {
+        masm.retarget(label_, label);
+    }
+};
+
+template <typename T> bool
+CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
 {
     if (!encode(snapshot))
         return false;
@@ -230,13 +262,12 @@ CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *sna
     JS_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
                  frameClass_.frameSize() == masm.framePushed());
 
+#ifdef JS_CPU_X86
     // On x64, bailout tables are pointless, because 16 extra bytes are
     // reserved per external jump, whereas it takes only 10 bytes to encode a
     // a non-table based bailout.
-#ifdef JS_CPU_X86
     if (assignBailoutId(snapshot)) {
-        uint8 *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
-        masm.j(condition, code, Relocation::EXTERNAL);
+        binder(masm, deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE);
         return true;
     }
 #endif
@@ -248,9 +279,20 @@ CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *sna
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.j(condition, ool->entry());
-
+    binder(masm, ool->entry());
     return true;
+}
+
+bool
+CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
+{
+    return bailout(BailoutJump(condition), snapshot);
+}
+
+bool
+CodeGeneratorX86Shared::bailoutFrom(Label *label, LSnapshot *snapshot)
+{
+    return bailout(BailoutLabel(label), snapshot);
 }
 
 bool
@@ -496,21 +538,27 @@ bool
 CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 {
     MTableSwitch *mir = ins->mir();
-    const LAllocation *input = ins->getOperand(0);
+    Label *defaultcase = mir->getDefault()->lir()->label();
+    const LAllocation *temp;
 
-    // Put input in temp. register
-    LDefinition *index = ins->getTemp(0);
-    masm.mov(ToOperand(input), ToRegister(index));
+    if (ins->index()->isDouble()) {
+        temp = ins->tempInt();
+
+        // The input is a double, so try and convert it to an integer. If it
+        // does not fit in an integer, take the default case.
+        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase);
+    } else {
+        temp = ins->index();
+    }
 
     // Lower value with low value
     if (mir->low() != 0)
-        masm.subl(Imm32(mir->low()), ToOperand(index));
+        masm.subl(Imm32(mir->low()), ToRegister(temp));
 
     // Jump to default case if input is out of range
-    LBlock *defaultcase = mir->getDefault()->lir();
     int32 cases = mir->numCases();
-    masm.cmpl(ToOperand(index), Imm32(cases));
-    masm.j(AssemblerX86Shared::AboveOrEqual, defaultcase->label());
+    masm.cmpl(ToRegister(temp), Imm32(cases));
+    masm.j(AssemblerX86Shared::AboveOrEqual, defaultcase);
 
     // Create a JumpTable that during linking will get written.
     DeferredJumpTable *d = new DeferredJumpTable(ins);
@@ -518,9 +566,9 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
         return false;
    
     // Compute the position where a pointer to the right case stands.
-    LDefinition *base = ins->getTemp(1);
+    const LAllocation *base = ins->tempPointer();
     masm.mov(d->label(), ToRegister(base));
-    Operand pointer = Operand(ToRegister(base), ToRegister(index), ScalePointer);
+    Operand pointer = Operand(ToRegister(base), ToRegister(temp), ScalePointer);
 
     // Jump to the right case
     masm.jmp(pointer);
@@ -550,8 +598,8 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
 // Checks whether a double is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
-bool
-CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Register &dest, LSnapshot *snapshot)
+void
+CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail)
 {
     // Note that we don't specify the destination width for the truncated
     // conversion to integer. x64 will use the native width (quadword) which
@@ -559,10 +607,8 @@ CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Regist
     masm.cvttsd2s(src, dest);
     masm.cvtsi2sd(dest, ScratchFloatReg);
     masm.ucomisd(src, ScratchFloatReg);
-    if (!bailoutIf(Assembler::Parity, snapshot))
-        return false;
-    if (!bailoutIf(Assembler::NotEqual, snapshot))
-        return false;
+    masm.j(Assembler::Parity, fail);
+    masm.j(Assembler::NotEqual, fail);
 
     // Check for -0
     Label notZero;
@@ -571,19 +617,15 @@ CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Regist
 
     if (Assembler::HasSSE41()) {
         masm.ptest(src, src);
-        if (!bailoutIf(Assembler::NonZero, snapshot))
-            return false;
+        masm.j(Assembler::NonZero, fail);
     } else {
         // bit 0 = sign of low double
         // bit 1 = sign of high double
         masm.movmskpd(src, dest);
         masm.andl(Imm32(1), dest);
-        if (!bailoutIf(Assembler::NonZero, snapshot))
-            return false;
+        masm.j(Assembler::NonZero, fail);
     }
     
     masm.bind(&notZero);
-
-    return true;
 }
 
