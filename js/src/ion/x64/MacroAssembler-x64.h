@@ -122,22 +122,54 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 #endif
     }
 
-    void cmpTag(const ValueOperand &operand, ImmTag tag) {
+    void splitTag(const ValueOperand &operand, const Register &dest) {
         movq(operand.value(), ScratchReg);
         shrq(Imm32(JSVAL_TAG_SHIFT), ScratchReg);
+    }
+    void cmpTag(const ValueOperand &operand, ImmTag tag) {
+        splitTag(operand, ScratchReg);
         cmpl(Operand(ScratchReg), tag);
+    }
+
+    Condition testInt32(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_INT32));
+        return cond;
+    }
+    Condition testBoolean(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
+        return cond;
+    }
+    Condition testNull(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+    Condition testUndefined(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
+        return cond;
+    }
+    Condition testString(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_STRING));
+        return cond;
+    }
+    Condition testObject(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
     }
 
     // Type-testing instructions on x64 will clobber ScratchReg.
     Condition testInt32(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpTag(src, ImmTag(JSVAL_TAG_INT32));
-        return cond;
+        splitTag(src, ScratchReg);
+        return testInt32(cond, ScratchReg);
     }
     Condition testBoolean(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpTag(src, ImmTag(JSVAL_TAG_BOOLEAN));
-        return cond;
+        splitTag(src, ScratchReg);
+        return testBoolean(cond, ScratchReg);
     }
     Condition testDouble(Condition cond, const ValueOperand &src) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -146,16 +178,24 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return (cond == NotEqual) ? Above : BelowOrEqual;
     }
     Condition testNull(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpTag(src, ImmTag(JSVAL_TAG_NULL));
-        return cond;
+        splitTag(src, ScratchReg);
+        return testNull(cond, ScratchReg);
     }
     Condition testUndefined(Condition cond, const ValueOperand &src) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
-        cmpTag(src, ImmTag(JSVAL_TAG_UNDEFINED));
-        return cond;
+        splitTag(src, ScratchReg);
+        return testUndefined(cond, ScratchReg);
+    }
+    Condition testString(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testString(cond, ScratchReg);
+    }
+    Condition testObject(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testObject(cond, ScratchReg);
     }
 
+    // Note that the |dest| register here may be ScratchReg, so we shouldn't
+    // use it.
     void unboxInt32(const ValueOperand &src, const Register &dest) {
         movl(src.value(), dest);
     }
@@ -164,6 +204,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void unboxDouble(const ValueOperand &src, const FloatRegister &dest) {
         movqsd(src.valueReg(), dest);
+    }
+    void unboxString(const ValueOperand &src, const Register &dest) {
+        movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
+        andq(src.valueReg(), dest);
     }
 
     // These two functions use the low 32-bits of the full value register.
@@ -186,6 +230,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         loadDouble(*dp, dest);
+    }
+
+    Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
+        testl(operand.valueReg(), operand.valueReg());
+        return truthy ? NonZero : Zero;
+    }
+    Condition testBooleanTruthy(bool truthy, const ValueOperand &operand) {
+        testl(operand.valueReg(), operand.valueReg());
+        return truthy ? NonZero : Zero;
     }
 };
 

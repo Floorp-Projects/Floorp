@@ -179,7 +179,7 @@ class ValueOperand
     Register value_;
 
   public:
-    ValueOperand(Register value)
+    explicit ValueOperand(Register value)
       : value_(value)
     { }
 
@@ -288,6 +288,9 @@ class Assembler : public AssemblerX86Shared
         masm.movq_rr(src.code(), dest.code());
     }
 
+    void andq(const Register &src, const Register &dest) {
+        masm.andq_rr(src.code(), dest.code());
+    }
     void andq(Imm32 imm, const Register &dest) {
         masm.andq_ir(imm.value, dest.code());
     }
@@ -400,6 +403,9 @@ class Assembler : public AssemblerX86Shared
     }
     void cmpq(const Register &lhs, const Register &rhs) {
         masm.cmpq_rr(rhs.code(), lhs.code());
+    }
+    void testq(const Register &lhs, const Register &rhs) {
+        masm.testq_rr(lhs.code(), rhs.code());
     }
     void testq(Imm32 lhs, const Register &rhs) {
         masm.testq_i32r(lhs.value, rhs.code());

@@ -102,33 +102,63 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 #endif
     }
 
-    Condition testInt32(Condition cond, const ValueOperand &value) {
-        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(value.type(), ImmType(JSVAL_TYPE_INT32));
+    Condition testInt32(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_INT32));
         return cond;
     }
-    Condition testBoolean(Condition cond, const ValueOperand &value) {
-        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(value.type(), ImmType(JSVAL_TYPE_BOOLEAN));
+    Condition testBoolean(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
         return cond;
     }
-    Condition testDouble(Condition cond, const ValueOperand &value) {
+    Condition testDouble(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        Condition actual = (cond == Assembler::Equal)
-                           ? Assembler::Below
-                           : Assembler::AboveOrEqual;
-        cmpl(value.type(), ImmTag(JSVAL_TAG_CLEAR));
+        Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+        cmpl(tag, ImmTag(JSVAL_TAG_CLEAR));
         return actual;
     }
-    Condition testNull(Condition cond, const ValueOperand &value) {
-        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(value.type(), ImmType(JSVAL_TYPE_NULL));
+    Condition testNull(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_NULL));
         return cond;
     }
-    Condition testUndefined(Condition cond, const ValueOperand &value) {
-        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        cmpl(value.type(), ImmType(JSVAL_TYPE_UNDEFINED));
+    Condition testUndefined(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
         return cond;
+    }
+    Condition testString(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_STRING));
+        return cond;
+    }
+    Condition testObject(Condition cond, const Register &tag) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
+        return cond;
+    }
+
+    Condition testInt32(Condition cond, const ValueOperand &value) {
+        return testInt32(cond, value.typeReg());
+    }
+    Condition testBoolean(Condition cond, const ValueOperand &value) {
+        return testBoolean(cond, value.typeReg());
+    }
+    Condition testDouble(Condition cond, const ValueOperand &value) {
+        return testDouble(cond, value.typeReg());
+    }
+    Condition testNull(Condition cond, const ValueOperand &value) {
+        return testNull(cond, value.typeReg());
+    }
+    Condition testUndefined(Condition cond, const ValueOperand &value) {
+        return testUndefined(cond, value.typeReg());
+    }
+    Condition testString(Condition cond, const ValueOperand &value) {
+        return testString(cond, value.typeReg());
+    }
+    Condition testObject(Condition cond, const ValueOperand &value) {
+        return testObject(cond, value.typeReg());
     }
 
     void unboxInt32(const ValueOperand &operand, const Register &dest) {
@@ -158,6 +188,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         movsd(dp, dest);
+    }
+
+    Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
+        testl(operand.payloadReg(), operand.payloadReg());
+        return truthy ? NonZero : Zero;
+    }
+    Condition testBooleanTruthy(bool truthy, const ValueOperand &operand) {
+        testl(operand.payloadReg(), operand.payloadReg());
+        return truthy ? NonZero : Zero;
     }
 };
 
