@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=659350
+-->
+<head>
+  <title>Test for Bug 659350</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=659350">Mozilla Bug 659350</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 659350 **/
+function testIn(eventName, obj, objName, expected) {
+  is(eventName in obj, expected, "'" + eventName + "' shuld be in " + objName);
+}
+
+var div = document.createElement("div");
+
+// Forwarded events
+testIn("onscroll", window, "window", true);
+testIn("onscroll", document.body, "body", true);
+testIn("onscroll", div, "div", true);
+// Window events
+testIn("onpopstate", window, "window", true);
+testIn("onpopstate", document.body, "body", true);
+testIn("onpopstate", div, "div", false);
+// Non-idl events
+testIn("onopen", window, "window", false);
+testIn("onopen", document.body, "body", false);
+testIn("onopen", div, "div", false);
+
+function f() {}
+function g() {}
+
+// Basic sanity of interaction between the IDL and content attributes
+div.onload = f;
+is(div.onload, f, "Should have 'f' as div's onload");
+div.setAttribute("onload", "");
+isnot(div.onload, f, "Should not longer have 'f' as div's onload");
+is(div.onload.toString(), "function onload(event) {\n}",
+   "Should have wrapped empty string in a function");
+div.setAttribute("onload", "foopy();");
+is(div.onload.toString(), "function onload(event) {\n    foopy();\n}",
+   "Should have wrapped call in a function");
+div.removeAttribute("onload");
+is(div.onload, null, "Should have null onload now");
+
+// Test forwarding to window for both events that are window-specific and that
+// exist on all elements
+function testPropagationToWindow(eventName) {
+  is(window["on"+eventName], null, "Shouldn't have " + eventName + " stuff yet");
+  document.body["on"+eventName] = f;
+  is(window["on"+eventName], f,
+     "Setting on"+eventName+" on body should propagate to window");
+  document.createElement("body")["on"+eventName] = g;
+  is(window["on"+eventName], g,
+     "Setting on"+eventName+" on body not in document should propagate to window");
+  document.createElement("frameset")["on"+eventName] = f;
+  is(window["on"+eventName], f,
+     "Setting on"+eventName+" on frameset not in document should propagate to window");
+
+  document.body.setAttribute("on"+eventName, eventName);
+  is(window["on"+eventName].toString(),
+            "function on"+eventName+"(event) {\n    "+eventName+";\n}",
+            "Setting on"+eventName+"attribute on body should propagate to window");
+  document.createElement("body").setAttribute("on"+eventName, eventName+"2");
+  is(window["on"+eventName].toString(),
+            "function on"+eventName+"(event) {\n    "+eventName+"2;\n}",
+            "Setting on"+eventName+"attribute on body outside the document should propagate to window");
+}
+
+testPropagationToWindow("popstate");
+testPropagationToWindow("scroll");
+
+// Test |this| and scoping
+var called;
+div.onscroll = function(event) {
+  is(this, div, "This should be div when invoking event listener");
+  is(event, ev, "Event argument should be the event that was dispatched");
+  called = true;
+}
+var ev = document.createEvent("Events");
+ev.initEvent("scroll", true, true);
+called = false;
+div.dispatchEvent(ev);
+is(called, true, "Event listener set via on* property not called");
+
+div.foopy = "Found me";
+document.foopy = "Didn't find me";
+document.foopy2 = "Found me";
+div.setAttribute("onscroll",
+                 "is(this, div, 'This should be div when invoking via attribute');\
+                  is(foopy, 'Found me', 'div should be on the scope chain when invoking handler compiled from content attribute');\
+                  is(foopy2, 'Found me', 'document should be on the scope chain when invking handler compiled from content attribute');\
+                  is(event, ev, 'Event argument should be the event that was dispatched');\
+                  called = true;");
+called = false;
+div.dispatchEvent(ev);
+is(called, true, "Event listener set via on* attribute not called");
+</script>
+</pre>
+</body>
+</html>

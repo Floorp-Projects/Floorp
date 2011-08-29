@@ -5,7 +5,7 @@ parsing command lines into argv and making sure that no shell magic is being use
 
 #TODO: ship pyprocessing?
 import multiprocessing, multiprocessing.dummy
-import subprocess, shlex, re, logging, sys, traceback, os, imp
+import subprocess, shlex, re, logging, sys, traceback, os, imp, glob
 # XXXkhuey Work around http://bugs.python.org/issue1731717
 subprocess._cleanup = lambda: None
 import command, util
@@ -15,7 +15,8 @@ if sys.platform=='win32':
 _log = logging.getLogger('pymake.process')
 
 _escapednewlines = re.compile(r'\\\n')
-_blacklist = re.compile(r'[$><;*?[{~`|&]')
+_blacklist = re.compile(r'[$><;[{~`|&]')
+_needsglob = re.compile(r'[\*\?]')
 def clinetoargv(cline):
     """
     If this command line can safely skip the shell, return an argv array.
@@ -33,6 +34,19 @@ def clinetoargv(cline):
         return None, '='
 
     return args, None
+
+def doglobbing(args, cwd):
+    """
+    Perform any needed globbing on the argument list passed in
+    """
+    globbedargs = []
+    for arg in args:
+        if _needsglob.search(arg):
+            globbedargs.extend(glob.glob(os.path.join(cwd, arg)))
+        else:
+            globbedargs.append(arg)
+
+    return globbedargs
 
 shellwords = (':', '.', 'break', 'cd', 'continue', 'exec', 'exit', 'export',
               'getopts', 'hash', 'pwd', 'readonly', 'return', 'shift', 
@@ -55,6 +69,8 @@ def call(cline, env, cwd, loc, cb, context, echo, justprint=False):
             shellreason = "command contains shell-special character '%s'" % (badchar,)
         elif len(argv) and argv[0] in shellwords:
             shellreason = "command starts with shell primitive '%s'" % (argv[0],)
+        else:
+            argv = doglobbing(argv, cwd)
 
     if shellreason is not None:
         _log.debug("%s: using shell: %s: '%s'", loc, shellreason, cline)
@@ -89,6 +105,7 @@ def call(cline, env, cwd, loc, cb, context, echo, justprint=False):
 
 def call_native(module, method, argv, env, cwd, loc, cb, context, echo, justprint=False,
                 pycommandpath=None):
+    argv = doglobbing(argv, cwd)
     context.call_native(module, method, argv, env=env, cwd=cwd, cb=cb,
                         echo=echo, justprint=justprint, pycommandpath=pycommandpath)
 
@@ -199,6 +216,7 @@ class PythonJob(Job):
             return e.exitcode
         except:
             print >>sys.stderr, sys.exc_info()[1]
+            print >>sys.stderr, traceback.print_exc()
             return -127
         finally:
             os.environ = oldenv

@@ -99,7 +99,7 @@ public:
   // Determine if preferences allow WebSocket
   static PRBool PrefEnabled();
 
-  const PRUint64 WindowID() const { return mWindowID; }
+  const PRUint64 InnerWindowID() const { return mInnerWindowID; }
   const nsCString& GetScriptFile() const { return mScriptFile; }
   const PRUint32 GetScriptLine() const { return mScriptLine; }
 
@@ -164,12 +164,12 @@ protected:
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.
   // - source code line number where the Web Socket object was constructed.
-  // - the window ID of the outer window where the script lives. Note that this 
-  // may not be the same as the Web Socket owner window.
+  // - the ID of the inner window where the script lives. Note that this may not
+  //   be the same as the Web Socket owner window.
   // These attributes are used for error reporting.
   nsCString mScriptFile;
   PRUint32 mScriptLine;
-  PRUint64 mWindowID;
+  PRUint64 mInnerWindowID;
 
 private:
   nsWebSocket(const nsWebSocket& x);   // prevent bad usage

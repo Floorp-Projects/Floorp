@@ -77,6 +77,7 @@
         <parameter name="aImage"/>
         <parameter name="aPriority"/>
         <parameter name="aButtons"/>
+        <parameter name="aEventCallback"/>
         <body>
           <![CDATA[
             if (aPriority < this.PRIORITY_INFO_LOW ||
@@ -99,6 +100,7 @@
             newitem.setAttribute("value", aValue);
             if (aImage)
               newitem.setAttribute("image", aImage);
+            newitem.eventCallback = aEventCallback;
 
             if (aButtons) {
               for (var b = 0; b < aButtons.length; b++) {
@@ -148,8 +150,19 @@
             if (aItem == this.currentNotification)
               this.removeCurrentNotification(aSkipAnimation);
             else if (aItem != this._closedNotification)
-              this.removeChild(aItem);
+              this._removeNotificationElement(aItem);
             return aItem;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_removeNotificationElement">
+        <parameter name="aChild"/>
+        <body>
+          <![CDATA[
+            if (aChild.eventCallback)
+              aChild.eventCallback("removed");
+            this.removeChild(aChild);
           ]]>
         </body>
       </method>
@@ -170,7 +183,7 @@
             var notifications = this.allNotifications;
             for (var n = notifications.length - 1; n >= 0; n--) {
               if (aImmediate)
-                this.removeChild(notifications[n]);
+                this._removeNotificationElement(notifications[n]);
               else
                 this.removeNotification(notifications[n]);
             }
@@ -228,7 +241,7 @@
               this.currentNotification = (idx >= 0) ? notifications[idx] : null;
 
               if (skipAnimation) {
-                this.removeChild(this._closedNotification);
+                this._removeNotificationElement(this._closedNotification);
                 this._closedNotification = null;
                 this._setBlockingState(this.currentNotification);
                 return;
@@ -248,7 +261,7 @@
           if (this._animating) {
             this._animating = false;
             if (this._closedNotification) {
-              this.removeChild(this._closedNotification);
+              this._removeNotificationElement(this._closedNotification);
               this._closedNotification = null;
             }
             this._setBlockingState(this.currentNotification);

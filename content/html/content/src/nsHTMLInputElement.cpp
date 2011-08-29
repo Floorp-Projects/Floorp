@@ -1707,7 +1707,7 @@ nsHTMLInputElement::Focus()
     // for file inputs, focus the button instead
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
-      nsIFrame* childFrame = frame->GetFirstChild(nsnull);
+      nsIFrame* childFrame = frame->GetFirstPrincipalChild();
       while (childFrame) {
         // see if the child is a button control
         nsCOMPtr<nsIFormControl> formCtrl =
@@ -2179,7 +2179,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               {
                 nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                    NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-                event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+                event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
 
                 nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
@@ -2217,7 +2217,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                     nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                        NS_MOUSE_CLICK, nsnull,
                                        nsMouseEvent::eReal);
-                    event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+                    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                     rv = nsEventDispatcher::Dispatch(radioContent,
                                                      aVisitor.mPresContext,
                                                      &event, nsnull, &status);

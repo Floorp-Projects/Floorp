@@ -1,0 +1,7 @@
+# BMP tests
+
+include bmp-1bpp/reftest.list
+include bmp-4bpp/reftest.list
+include bmp-8bpp/reftest.list
+include bmp-24bpp/reftest.list
+include bmp-corrupted/reftest.list

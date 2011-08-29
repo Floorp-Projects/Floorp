@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for the datalist element</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <datalist>
+  </datalist>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 555840 **/
+
+function checkClassesAndAttributes()
+{
+  var d = document.getElementsByTagName('datalist');
+  is(d.length, 1, "One datalist has been found");
+
+  d = d[0];
+  ok(d instanceof HTMLDataListElement,
+     "The datalist should be instance of HTMLDataListElement");
+
+  ok('options' in d, "datalist has an options IDL attribute");
+
+  ok(d.options, "options IDL attribute is not null");
+  ok(!d.getAttribute('options'), "datalist has no options content attribute");
+
+  ok(d.options instanceof HTMLCollection,
+     "options IDL attribute should be instance of HTMLCollection");
+}
+
+function checkOptions()
+{
+  var testData = [
+    /* [ Child list, Function modifying children, Recognized options ] */
+    [['option'], null, 1],
+    [['option', 'option', 'option', 'option'], null, 4],
+    /* Disabled options are not valid. */
+    [['option'], function(d) { d.childNodes[0].disabled = true; }, 0],
+    [['option', 'option'], function(d) { d.childNodes[0].disabled = true; }, 1],
+    /* Non-option elements are not recognized. */
+    [['input'], null, 0],
+    [['input', 'option'], null, 1],
+    [['input', 'textarea'], null, 0],
+    /* .value and .label are not needed to be valid options. */
+    [['option', 'option'], function(d) { d.childNodes[0].value = 'value'; }, 2],
+    [['option', 'option'], function(d) { d.childNodes[0].label = 'label'; }, 2],
+    [['option', 'option'], function(d) { d.childNodes[0].value = 'value'; d.childNodes[0].label = 'label'; }, 2],
+    [['select'],
+     function(d) {
+       var s = d.childNodes[0];
+       s.appendChild(new Option("foo"));
+       s.appendChild(new Option("bar"));
+     },
+     2],
+    [['select'],
+     function(d) {
+       var s = d.childNodes[0];
+       s.appendChild(new Option("foo"));
+       s.appendChild(new Option("bar"));
+       var label = document.createElement("label");
+       d.appendChild(label);
+       label.appendChild(new Option("foobar"));
+     },
+     3],
+    [['select'],
+     function(d) {
+       var s = d.childNodes[0];
+       s.appendChild(new Option("foo"));
+       s.appendChild(new Option("bar"));
+       var label = document.createElement("label");
+       d.appendChild(label);
+       label.appendChild(new Option("foobar"));
+       s.appendChild(new Option())
+     },
+     4],
+     [[], function(d) { d.appendChild(document.createElementNS("foo", "option")); }, 0]
+  ];
+
+  var d = document.getElementsByTagName('datalist')[0];
+  var cachedOptions = d.options;
+
+  testData.forEach(function(data) {
+    data[0].forEach(function(e) {
+      d.appendChild(document.createElement(e));
+    })
+
+    /* Modify children. */
+    if (data[1]) {
+      data[1](d);
+    }
+
+    is(d.options, cachedOptions, "Should get the same object")
+    is(d.options.length, data[2],
+       "The number of recognized options should be " + data[2])
+
+    for (var i = 0; i < d.options.length; ++i) {
+      is(d.options[i].localName, "option",
+         "Should get an option for d.options[" + i + "]")
+    }
+
+    /* Cleaning-up. */
+    d.textContent = "";
+  })
+}
+
+checkClassesAndAttributes();
+checkOptions();
+
+</script>
+</pre>
+</body>
+</html>

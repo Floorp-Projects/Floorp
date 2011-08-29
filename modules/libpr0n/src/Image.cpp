@@ -42,7 +42,7 @@ namespace imagelib {
 
 // Constructor
 Image::Image(imgStatusTracker* aStatusTracker) :
-  mWindowId(0),
+  mInnerWindowId(0),
   mAnimationConsumers(0),
   mAnimationMode(kNormalAnimMode),
   mInitialized(PR_FALSE),

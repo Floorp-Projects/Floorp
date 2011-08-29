@@ -78,7 +78,7 @@ def build_interface(iface, ifaces):
     def get_type(type, calltype, iid_is=None, size_is=None):
         """ Return the appropriate xpt.Type object for this param """
 
-        if isinstance(type, xpidl.Typedef):
+        while isinstance(type, xpidl.Typedef):
             type = type.realtype
 
         if isinstance(type, xpidl.Builtin):

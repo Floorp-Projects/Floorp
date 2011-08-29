@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xf43254ce, 0xd315, 0x458b, \
-    { 0xba, 0x72, 0xa8, 0xdf, 0x21, 0xcf, 0xa7, 0x2a } }
+  { 0xEAAF1019, 0x0CD8, 0x4DD8, \
+    { 0xBE, 0xB9, 0x8D, 0x8D, 0xEB, 0x52, 0xFC, 0xF6 } }
 
 /*
  * Window shadow styles
@@ -364,6 +364,14 @@ class nsIWidget : public nsISupports {
                 PRBool           aForceUseIWidgetParent = PR_FALSE) = 0;
 
     /**
+     * Set the event callback for a widget. If a device context is not
+     * provided then the existing device context will remain, it will
+     * not be nulled out.
+     */
+    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
+                                nsDeviceContext *aContext) = 0;
+
+    /**
      * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
@@ -405,7 +413,7 @@ class nsIWidget : public nsISupports {
     /**
      * Reparent a widget
      *
-     * Change the widgets parent
+     * Change the widget's parent. Null parents are allowed.
      *
      * @param     aNewParent   new parent 
      */

@@ -48,6 +48,7 @@ _TEST_FILES = \
 		test_save_restore_radio_groups.html \
 		test_mozistextfield.html \
 		test_input_attributes_reflection.html \
+		test_input_list_attribute.html \
 		test_input_email.html \
 		test_input_url.html \
 		test_pattern_attribute.html \
@@ -59,6 +60,10 @@ _TEST_FILES = \
 		test_output_element.html \
 		test_button_attributes_reflection.html \
 		test_textarea_attributes_reflection.html \
+		test_validation.html \
+		test_maxlength_attribute.html \
+		test_datalist_element.html \
+		test_form_attributes_reflection.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

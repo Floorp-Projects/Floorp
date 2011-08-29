@@ -57,15 +57,19 @@ CPPSRCS = \
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../src \
+		-I$(srcdir)/../encoders/ico \
 		-I$(srcdir)/../encoders/png \
 		-I$(srcdir)/../encoders/jpeg \
+		-I$(srcdir)/../encoders/bmp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
 		../decoders/$(LIB_PREFIX)imgdecoders_s.$(LIB_SUFFIX) \
-		../encoders/png/$(LIB_PREFIX)imgpnge_s.$(LIB_SUFFIX)\
-		../encoders/jpeg/$(LIB_PREFIX)imgjpege_s.$(LIB_SUFFIX)\
+		../encoders/ico/$(LIB_PREFIX)imgicoe_s.$(LIB_SUFFIX) \
+		../encoders/png/$(LIB_PREFIX)imgpnge_s.$(LIB_SUFFIX) \
+		../encoders/jpeg/$(LIB_PREFIX)imgjpege_s.$(LIB_SUFFIX) \
+		../encoders/bmp/$(LIB_PREFIX)imgbmpe_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

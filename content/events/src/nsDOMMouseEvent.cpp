@@ -59,7 +59,7 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
     mEventIsInternal = PR_TRUE;
     mEvent->time = PR_Now();
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
-    static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
+    static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
 
   switch (mEvent->eventStructType)
@@ -98,7 +98,6 @@ DOMCI_DATA(MouseEvent, nsDOMMouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMMouseEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSMouseEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MouseEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
@@ -282,8 +281,9 @@ nsDOMMouseEvent::GetMetaKey(PRBool* aIsDown)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMMouseEvent::GetWhich(PRUint32* aWhich)
+/* virtual */
+nsresult
+nsDOMMouseEvent::Which(PRUint32* aWhich)
 {
   NS_ENSURE_ARG_POINTER(aWhich);
   PRUint16 button;

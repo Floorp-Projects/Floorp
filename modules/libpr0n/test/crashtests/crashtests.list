@@ -19,10 +19,8 @@ load invalid-icc-profile.jpg
 load 256-width.ico
 load 256-height.ico
 
-# GIFs with LZW data that isn't terminated properly.
-load invalid-lzw-end1.gif
-load invalid-lzw-end2.gif
-
 # A 3-frame animated GIF with an inordinate delay between the second and third
 # frame.
 HTTP load delayedframe.sjs
+
+load 681190.html
