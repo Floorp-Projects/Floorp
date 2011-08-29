@@ -57,6 +57,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return this;
     }
 
+    template <typename T>
+    bool bailout(const T &t, LSnapshot *snapshot);
+
   protected:
     // Label for the common return path.
     HeapLabel *returnLabel_;
@@ -79,13 +82,14 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
+    bool bailoutFrom(Label *label, LSnapshot *snapshot);
 
   protected:
     bool generatePrologue();
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
-    bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, LSnapshot *snapshot);
+    void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
 
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);

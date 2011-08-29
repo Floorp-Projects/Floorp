@@ -132,6 +132,11 @@ struct LabelBase
         bound_ = true;
         JS_ASSERT(offset_ == offset);
     }
+    // Marks the label as neither bound nor used.
+    void reset() {
+        offset_ = INVALID_OFFSET;
+        bound_ = false;
+    }
     // Sets the label's latest used position, returning the old use position in
     // the process.
     int32 use(int32 offset) {

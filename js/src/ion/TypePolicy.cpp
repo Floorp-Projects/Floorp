@@ -274,14 +274,11 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     // - Double: try to convert to int32
     // - Value: unbox to int32
     switch (in->type()) {
-        case MIRType_Value:
-            replace = MUnbox::New(in, MIRType_Int32);
-            break;
-        case MIRType_Double:
-            replace = MToInt32::New(in);
-            break;
-        default:
-            return true;
+      case MIRType_Value:
+        replace = MUnbox::New(in, MIRType_Int32);
+        break;
+      default:
+        return true;
     }
     
     ins->block()->insertBefore(ins, replace);
