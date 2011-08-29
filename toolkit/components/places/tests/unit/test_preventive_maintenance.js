@@ -109,7 +109,7 @@ let current_test = null;
 //------------------------------------------------------------------------------
 
 tests.push({
-  name: "A.1",
+  name: "A.3",
   desc: "Remove unused attributes",
 
   _usedPageAttribute: "usedPage",
