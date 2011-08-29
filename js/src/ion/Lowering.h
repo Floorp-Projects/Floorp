@@ -62,6 +62,9 @@ namespace ion {
 
 class LIRGenerator : public LIRGeneratorSpecific
 {
+    void updateResumeState(MInstruction *ins);
+    void updateResumeState(MBasicBlock *block);
+
   public:
     LIRGenerator(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
       : LIRGeneratorSpecific(gen, graph, lirGraph)
