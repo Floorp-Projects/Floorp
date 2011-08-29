@@ -350,10 +350,7 @@ _MSC_VER	= @_MSC_VER@
 
 DLL_PREFIX	= @DLL_PREFIX@
 LIB_PREFIX	= @LIB_PREFIX@
-# We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
-# manually use it before config.mk inclusion
-OBJ_SUFFIX	= $(error config/config.mk needs to be included before using OBJ_SUFFIX)
-_OBJ_SUFFIX	= @OBJ_SUFFIX@
+OBJ_SUFFIX	= @OBJ_SUFFIX@
 LIB_SUFFIX	= @LIB_SUFFIX@
 DLL_SUFFIX	= @DLL_SUFFIX@
 BIN_SUFFIX	= @BIN_SUFFIX@
