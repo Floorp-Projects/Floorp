@@ -246,6 +246,17 @@ PluginPRLibrary::AsyncSetWindow(NPP instance, NPWindow* window)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+nsresult
+PluginPRLibrary::HandleGUIEvent(NPP instance, const nsGUIEvent& anEvent,
+                                bool* handled)
+{
+  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
+  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+
 nsresult
 PluginPRLibrary::GetImage(NPP instance, ImageContainer* aContainer, Image** aImage)
 {

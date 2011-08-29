@@ -120,6 +120,11 @@ protected:
                      const NPRemoteWindow& aWindow,
                      bool aIsAsync);
 
+    virtual bool
+    AnswerHandleKeyEvent(const nsKeyEvent& aEvent, bool* handled);
+    virtual bool
+    AnswerHandleTextEvent(const nsTextEvent& aEvent, bool* handled);
+
     virtual PPluginSurfaceChild* AllocPPluginSurface(const WindowsSharedMemoryHandle&,
                                                      const gfxIntSize&, const bool&) {
         return new PPluginSurfaceChild();
