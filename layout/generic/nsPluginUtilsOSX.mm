@@ -157,7 +157,12 @@ NPBool NS_NPAPI_ConvertPointCocoa(void* inView,
                                   double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                                   double *destX, double *destY, NPCoordinateSpace destSpace)
 {
-  NS_ASSERTION(inView, "Must have a native view to convert coordinates.");
+  // Plugins don't always have a view/frame. It would be odd to ask for a point conversion
+  // without a view, so we'll warn about it, but it's technically OK.
+  if (!inView) {
+    NS_WARNING("Must have a native view to convert coordinates.");
+    return PR_FALSE;
+  }
 
   // Caller has to want a result.
   if (!destX && !destY)

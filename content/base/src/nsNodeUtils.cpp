@@ -66,6 +66,7 @@
 #include "jsobj.h"
 #include "jsgc.h"
 #include "xpcpublic.h"
+#include "nsObjectLoadingContent.h"
 
 using namespace mozilla::dom;
 
@@ -575,15 +576,20 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
       }
     }
 
-#ifdef MOZ_MEDIA
     if (wasRegistered && oldDoc != newDoc) {
+#ifdef MOZ_MEDIA
       nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aNode));
       if (domMediaElem) {
         nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aNode);
         mediaElem->NotifyOwnerDocumentActivityChanged();
       }
-    }
 #endif
+      nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aNode));
+      if (objectLoadingContent) {
+        nsObjectLoadingContent* olc = static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
+        olc->NotifyOwnerDocumentActivityChanged();
+      }
+    }
 
     // nsImageLoadingContent needs to know when its document changes
     if (oldDoc != newDoc) {

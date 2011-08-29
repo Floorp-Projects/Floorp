@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test npruntime and paint count for instance in a display:none div</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="startTest()">
+  <p id="display"></p>
+
+  <div style="display: none;">
+    <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+  </div>
+
+  <script type="application/javascript;version=1.8">
+  SimpleTest.waitForExplicitFinish();
+
+  function startTest() {
+    var paintCount = -1;
+    var exceptionThrown = false;
+
+    var p = document.getElementById('plugin1');
+    try {
+      paintCount = p.getPaintCount();
+    } catch (e) {
+      exceptionThrown = true;
+    }
+
+    is(paintCount, 0, "Paint count test.");
+    is(exceptionThrown, false, "Exception test.");
+
+    SimpleTest.finish();
+  }
+  </script>
+</body>
+</html>
