@@ -703,6 +703,20 @@ PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
     return i->AsyncSetWindow(window);
 }
 
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+nsresult
+PluginModuleParent::HandleGUIEvent(NPP instance,
+                                   const nsGUIEvent& anEvent,
+                                   bool* handled)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->HandleGUIEvent(anEvent, handled);
+}
+#endif
+
 nsresult
 PluginModuleParent::GetImage(NPP instance,
                              mozilla::layers::ImageContainer* aContainer,
