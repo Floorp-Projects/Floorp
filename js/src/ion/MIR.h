@@ -82,14 +82,14 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     }
 }
 
-#define MIR_FLAG_LIST(_)                                                    \
-    _(InWorklist)                                                           \
-    _(EmittedAtUses)                                                        \
-    _(LoopInvariant)                                                        \
-    _(Commutative)                                                          \
-    _(Idempotent) /* The instruction has no side-effects. */                \
-    _(NeverHoisted) /* Don't hoist, even if loop invariant */               \
-    _(Lowered) /* has a virtual register */
+#define MIR_FLAG_LIST(_)                                                        \
+    _(InWorklist)                                                               \
+    _(EmittedAtUses)                                                            \
+    _(LoopInvariant)                                                            \
+    _(Commutative)                                                              \
+    _(Idempotent)    /* The instruction has no side-effects. */                 \
+    _(NeverHoisted)  /* Don't hoist, even if loop invariant */                  \
+    _(Lowered)       /* (Debug only) has a virtual register */
 
 class MDefinition;
 class MInstruction;
