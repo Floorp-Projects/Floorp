@@ -196,29 +196,15 @@ protected:
       // Note!  If we ever need to understand jump instructions, we'll
       // need to rewrite the displacement argument.
       if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
-        // various MOVs
+        // various MOVs; but only handle the case where it truly is a 2-byte instruction
         unsigned char b = origBytes[nBytes+1];
         if (((b & 0xc0) == 0xc0) ||
             (((b & 0xc0) == 0x00) &&
-             ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05)))
+             ((b & 0x38) != 0x20) && ((b & 0x38) != 0x28)))
         {
-          // REG=r, R/M=r or REG=r, R/M=[r]
           nBytes += 2;
-        } else if (((b & 0xc0) == 0x40) && ((b & 0x38) != 0x20)) {
-          // REG=r, R/M=[r + disp8]
-          nBytes += 3;
         } else {
           // complex MOV, bail
-          return 0;
-        }
-      } else if (origBytes[nBytes] == 0x83) {
-        // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r/m, imm8
-        unsigned char b = origBytes[nBytes+1];
-        if ((b & 0xc0) == 0xc0) {
-          // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r, imm8
-          nBytes += 3;
-        } else {
-          // bail
           return 0;
         }
       } else if (origBytes[nBytes] == 0x68) {
@@ -271,8 +257,8 @@ protected:
         } else {
           return 0;
         }
-      } else if ((origBytes[nBytes] & 0xfb) == 0x48) {
-        // REX.W | REX.WR
+      } else if (origBytes[nBytes] == 0x48) {
+        // REX.W
         nBytes++;
 
         if (origBytes[nBytes] == 0x81 && (origBytes[nBytes+1] & 0xf8) == 0xe8) {
@@ -286,20 +272,32 @@ protected:
                   (origBytes[nBytes+1] & 0xf8) == 0x60) {
           // and [r+d], imm8
           nBytes += 5;
-        } else if ((origBytes[nBytes] & 0xfd) == 0x89) {
-          // MOV r/m64, r64 | MOV r64, r/m64
+        } else if (origBytes[nBytes] == 0x89) {
+          // MOV r/m64, r64
           if ((origBytes[nBytes+1] & 0xc0) == 0x40) {
             if ((origBytes[nBytes+1] & 0x7) == 0x04) {
-              // R/M=[SIB+disp8], REG=r64
+              // mov [SIB+disp8], r64
               nBytes += 4;
             } else {
-              // R/M=[r64+disp8], REG=r64
+              // mov [r64+disp8], r64
               nBytes += 3;
             }
-          } else if (((origBytes[nBytes+1] & 0xc0) == 0xc0) ||
-                     (((origBytes[nBytes+1] & 0xc0) == 0x00) &&
-                      ((origBytes[nBytes+1] & 0x07) != 0x04) && ((origBytes[nBytes+1] & 0x07) != 0x05))) {
-            // REG=r64, R/M=r64 or REG=r64, R/M=[r64]
+          } else {
+            // complex mov
+            return 0;
+          }
+        } else if (origBytes[nBytes] == 0x8b) {
+          // mov r64, r/m64
+          if ((origBytes[nBytes+1] & 0xc0) == 0x40) {
+            if ((origBytes[nBytes+1] & 0x7) == 0x04) {
+              // mov r64, [SIB+disp8]
+              nBytes += 4;
+            } else {
+              // mov r64, [r64+disp8]
+              nBytes += 3;
+            }
+          } else if ((origBytes[nBytes+1] & 0xc0) == 0xc0) {
+            // MOV r64, r64
             nBytes += 2;
           } else {
             // complex MOV
