@@ -162,10 +162,6 @@ EXTRA_LIBS = -lsocket -lnsl
 export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
-ifeq ($(OS_TARGET),Android)
-LDOPTS = $(OS_LDFLAGS) $(WRAP_MALLOC_LIB)
-endif
-
 #####################################################
 #
 # The rules
