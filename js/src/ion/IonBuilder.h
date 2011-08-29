@@ -213,8 +213,19 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *newBlock(jsbytecode *pc) {
         return newBlock(NULL, pc);
     }
+
+    // Given a list of pending breaks, creates a new block and inserts a Goto
+    // linking each break to the new block.
     MBasicBlock *createBreakCatchBlock(DeferredEdge *edge, jsbytecode *pc);
-    bool finalizeLoop(CFGState &state, MDefinition *last);
+
+    // Finishes loops that do not actually loop, containing only breaks or
+    // returns.
+    ControlStatus processBrokenLoop(CFGState &state);
+
+    // Computes loop phis, places them in all successors of a loop, then
+    // handles any pending breaks.
+    ControlStatus finishLoop(CFGState &state, MBasicBlock *successor);
+
     void assertValidTraceOp(JSOp op);
     bool forInLoop(JSOp op, jssrcnote *sn) {
         return false;

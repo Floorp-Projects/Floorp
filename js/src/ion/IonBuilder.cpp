@@ -637,58 +637,78 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
     return ControlStatus_Joined;
 }
 
-bool
-IonBuilder::finalizeLoop(CFGState &state, MDefinition *last)
+IonBuilder::ControlStatus
+IonBuilder::processBrokenLoop(CFGState &state)
 {
-    JS_ASSERT(!state.loop.continues);
+    JS_ASSERT(!current);
 
-    // Create a block to catch all breaks.
-    MBasicBlock *breaks = NULL;
+    // If the loop started with a condition (while/for) then even if the
+    // structure never actually loops, the condition itself can still fail and
+    // thus we must resume at the successor, if one exists.
+    current = state.loop.successor;
+
+    // Join the breaks together and continue parsing.
     if (state.loop.breaks) {
-        breaks = createBreakCatchBlock(state.loop.breaks, state.loop.exitpc);
-        if (!breaks)
+        MBasicBlock *block = createBreakCatchBlock(state.loop.breaks, state.loop.exitpc);
+        if (!block)
             return ControlStatus_Error;
+
+        if (current) {
+            current->end(MGoto::New(block));
+            if (!block->addPredecessor(current))
+                return ControlStatus_Error;
+        }
+
+        current = block;
     }
 
-    // If there is no successor, but there are breaks, treat the catch-all
-    // break block as the actual successor.
-    MBasicBlock *successor = state.loop.successor
-                             ? state.loop.successor
-                             : breaks;
+    // If the loop is not gated on a condition, and has only returns, we'll
+    // reach this case. For example:
+    // do { ... return; } while ();
+    if (!current)
+        return ControlStatus_Ended;
 
-    // Place phis in the loop header, propagating their assignment to the
-    // successor block. If there is no |current|, then the successor is still
-    // reachable via the original test branch, and thus its state is coherent.
-    if (current) {
-        JS_ASSERT_IF(last, successor);
+    // Otherwise, the loop is gated on a condition and/or has breaks so keep
+    // parsing at the successor.
+    pc = current->pc();
+    return ControlStatus_Joined;
+}
 
-        MControlInstruction *ins;
-        if (last)
-            ins = MTest::New(last, state.loop.entry, successor);
-        else
-            ins = MGoto::New(state.loop.entry);
-        current->end(ins);
+IonBuilder::ControlStatus
+IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
+{
+    JS_ASSERT(current);
 
-        if (!state.loop.entry->setBackedge(current, successor))
-            return false;
+    // Compute phis in the loop header and propagate them throughout the loop,
+    // including the successor.
+    if (!state.loop.entry->setBackedge(current))
+        return ControlStatus_Error;
+    successor->inheritPhis(state.loop.entry);
+
+    if (state.loop.breaks) {
+        // Propagate phis placed in the header to individual break exit points.
+        DeferredEdge *edge = state.loop.breaks;
+        while (edge) {
+            edge->block->inheritPhis(state.loop.entry);
+            edge = edge->next;
+        }
+
+        // Create a catch block to join all break exits.
+        MBasicBlock *block = createBreakCatchBlock(state.loop.breaks, state.loop.exitpc);
+        if (!block)
+            return ControlStatus_Error;
+
+        // Finally, create an unconditional edge from the successor to the catch
+        // block.
+        successor->end(MGoto::New(block));
+        if (!block->addPredecessor(successor))
+            return ControlStatus_Error;
+        successor = block;
     }
 
-    // Now that phis are computed in the successor block, see if we need to
-    // link the successor and break blocks together. Note that we have the
-    // successor block jump to the break block. This is to preserve the
-    // invariant that every block with phis is the only block with phis in each
-    // of its predecessors' successors. If the break block jumped to the loop
-    // exit block, this would be broken, because the exit would have phis and
-    // its predecessor could be a branch also connecting to the loop header.
-    if (successor && breaks && (successor != breaks)) {
-        successor->end(MGoto::New(breaks));
-        if (!breaks->addPredecessor(successor))
-            return false;
-        successor = breaks;
-    }
-
-    state.loop.successor = successor;
-    return true;
+    current = successor;
+    pc = current->pc();
+    return ControlStatus_Joined;
 }
 
 IonBuilder::ControlStatus
@@ -697,19 +717,10 @@ IonBuilder::processDoWhileBodyEnd(CFGState &state)
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
 
-    // If there is still no current, there are only break statements in the do while.
-    // So in that case just finalize loop and don't process the condition statement.
-    if (!current) {
-        if (!finalizeLoop(state, NULL))
-            return ControlStatus_Error;
-
-        current = state.loop.successor;
-        if (!current)
-            return ControlStatus_Ended;
-
-        pc = current->pc();
-        return ControlStatus_Joined;
-    }
+    // No current means control flow cannot reach the condition, so this will
+    // never loop.
+    if (!current)
+        return processBrokenLoop(state);
 
     MBasicBlock *header = newBlock(current, state.loop.updatepc);
     if (!header)
@@ -728,23 +739,20 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
 
-    MDefinition *last = NULL;
-    if (current) {
-        last = current->pop();
-        state.loop.successor = newBlock(current, GetNextPc(pc));
-        if (!state.loop.successor)
-            return ControlStatus_Error;
-    }
+    // We're guaranteed a |current|, it's impossible to break or return from
+    // inside the conditional expression.
+    JS_ASSERT(current);
 
-    if (!finalizeLoop(state, last))
+    // Pop the last value, and create the successor block.
+    MDefinition *vins = current->pop();
+    MBasicBlock *successor = newBlock(current, GetNextPc(pc));
+    if (!successor)
         return ControlStatus_Error;
 
-    current = state.loop.successor;
-    if (!current)
-        return ControlStatus_Ended;
-
-    pc = current->pc();
-    return ControlStatus_Joined;
+    // Create the test instruction and end the current block.
+    MTest *test = MTest::New(vins, state.loop.entry, successor);
+    current->end(test);
+    return finishLoop(state, successor);
 }
 
 IonBuilder::ControlStatus
@@ -776,15 +784,12 @@ IonBuilder::processWhileBodyEnd(CFGState &state)
 {
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
-    if (!finalizeLoop(state, NULL))
-        return ControlStatus_Error;
 
-    current = state.loop.successor;
     if (!current)
-        return ControlStatus_Ended;
+        return processBrokenLoop(state);
 
-    pc = current->pc();
-    return ControlStatus_Joined;
+    current->end(MGoto::New(state.loop.entry));
+    return finishLoop(state, state.loop.successor);
 }
 
 IonBuilder::ControlStatus
@@ -809,6 +814,37 @@ IonBuilder::processForCondEnd(CFGState &state)
     pc = state.loop.bodyStart;
     current = body;
     return ControlStatus_Jumped;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processForBodyEnd(CFGState &state)
+{
+    if (!processDeferredContinues(state))
+        return ControlStatus_Error;
+
+    // If there is no updatepc, just go right to processing what would be the
+    // end of the update clause. Otherwise, |current| might be NULL; if this is
+    // the case, the udpate is unreachable anyway.
+    if (!state.loop.updatepc || !current)
+        return processForUpdateEnd(state);
+
+    pc = state.loop.updatepc;
+
+    state.state = CFGState::FOR_LOOP_UPDATE;
+    state.stopAt = state.loop.updateEnd;
+    return ControlStatus_Jumped;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processForUpdateEnd(CFGState &state)
+{
+    // If there is no current, we couldn't reach the loop edge and there was no
+    // update clause.
+    if (!current)
+        return processBrokenLoop(state);
+
+    current->end(MGoto::New(state.loop.entry));
+    return finishLoop(state, state.loop.successor);
 }
 
 bool
@@ -871,36 +907,6 @@ IonBuilder::createBreakCatchBlock(DeferredEdge *edge, jsbytecode *pc)
     }
 
     return successor;
-}
-
-IonBuilder::ControlStatus
-IonBuilder::processForBodyEnd(CFGState &state)
-{
-    if (!processDeferredContinues(state))
-        return ControlStatus_Error;
-
-    if (!state.loop.updatepc)
-        return processForUpdateEnd(state);
-
-    pc = state.loop.updatepc;
-
-    state.state = CFGState::FOR_LOOP_UPDATE;
-    state.stopAt = state.loop.updateEnd;
-    return ControlStatus_Jumped;
-}
-
-IonBuilder::ControlStatus
-IonBuilder::processForUpdateEnd(CFGState &state)
-{
-    if (!finalizeLoop(state, NULL))
-        return ControlStatus_Error;
-
-    current = state.loop.successor;
-    if (!current)
-        return ControlStatus_Ended;
-
-    pc = current->pc();
-    return ControlStatus_Joined;
 }
 
 IonBuilder::ControlStatus
