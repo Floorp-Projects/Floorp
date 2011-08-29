@@ -96,3 +96,8 @@ regenerate-idl-parser:
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(topsrcdir)/xpcom/idl-parser/header.py --cachedir=$(topsrcdir)/xpcom/idl-parser --regen
 
+check::
+	$(PYTHON_PATH) \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  $(topsrcdir)/xpcom/idl-parser/runtests.py

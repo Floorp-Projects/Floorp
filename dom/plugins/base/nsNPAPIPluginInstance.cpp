@@ -80,7 +80,6 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
 #endif
     mRunning(NOT_STARTED),
     mWindowless(PR_FALSE),
-    mWindowlessLocal(PR_FALSE),
     mTransparent(PR_FALSE),
     mUsesDOMForCursor(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
@@ -657,12 +656,6 @@ NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
     }
   }
 
-  return NPERR_NO_ERROR;
-}
-
-NPError nsNPAPIPluginInstance::SetWindowlessLocal(PRBool aWindowlessLocal)
-{
-  mWindowlessLocal = aWindowlessLocal;
   return NPERR_NO_ERROR;
 }
 

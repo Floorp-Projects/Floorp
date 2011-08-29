@@ -77,36 +77,6 @@ GRE_MODULE	    = 1
 
 LIBS		= $(NSPR_LIBS) 
 
-ifdef GNU_CXX
-ifdef INTEL_CXX
-# icc gets special optimize flags
-ifdef MOZ_PROFILE_GENERATE
-MODULE_OPTIMIZE_FLAGS = -O0
-else
-MODULE_OPTIMIZE_FLAGS = -O2 -ip
-endif
-else # not INTEL_CXX
-
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fno-stack-protector
-
-# We normally want -fomit-frame-pointer, but we want an explicit
-# -fno-omit-frame-pointer if we're using a sampling profiler.
-ifndef MOZ_PROFILING
-MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
-else
-MODULE_OPTIMIZE_FLAGS += -fno-omit-frame-pointer
-endif
-
-endif
-else # not GNU_CXX
-ifeq ($(OS_ARCH),SunOS)
-MODULE_OPTIMIZE_FLAGS = -xO4
-endif
-ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -O2
-endif
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
@@ -820,11 +790,6 @@ endif # WINNT
 ifeq ($(OS_ARCH),FreeBSD)
 EXTRA_LIBS	+= -pthread
 endif
-ifeq ($(OS_ARCH),IRIX)
-ifdef USE_N32
-DASH_R		+= -n32
-endif
-endif
 ifeq ($(OS_ARCH),Linux)
 EXTRA_LIBS	+= -ldl
 endif
@@ -883,16 +848,6 @@ else
 endif # sparcv9
 endif # sparc
 endif # SOLARIS_SUNPRO_CXX
-
-ifeq ($(OS_ARCH),IRIX)
-ifndef GNU_CC
-_COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
-jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsreflect.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.cpp Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(CXX) -o $@ -c $(_COMPILE_CFLAGS) $<
-endif
-endif
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
