@@ -101,7 +101,7 @@ ifeq ($(_MSC_VER),1500)
 JSSHELL_BINS += $(DIST)/bin/Microsoft.VC90.CRT.manifest
 JSSHELL_BINS += $(DIST)/bin/msvcr90.dll
 endif
-ifeq ($(_MSC_VER),1500)
+ifeq ($(_MSC_VER),1600)
 JSSHELL_BINS += $(DIST)/bin/msvcr100.dll
 endif
 else
