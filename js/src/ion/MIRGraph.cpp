@@ -546,7 +546,7 @@ FollowCopy(MDefinition *def)
 }
 
 bool
-MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
+MBasicBlock::setBackedge(MBasicBlock *pred)
 {
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(lastIns_);
@@ -567,6 +567,12 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
     for (uint32 i = 0; i < stackPosition_; i++) {
         MDefinition *entryDef = entrySnapshot()->getOperand(i);
         MDefinition *exitDef = pred->slots_[i].def;
+
+        // If the entry def is a phi, it must not be a phi owned by this block,
+        // since a loop header can only have two entry points, and one already
+        // exists. This assert would trigger if we accidentally copy propagated,
+        // and two locals had the same def.
+        JS_ASSERT_IF(entryDef->isPhi(), entryDef->block() != this);
 
         // So long as we make sure that local variables are distinct SSA names,
         // and generate a unique copy for each assignment until copy
@@ -604,7 +610,6 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
         //
         // So, the phi joins two definitions which are actually the same, and
         // there was no reason to insert it to begin with.
-
 
         // If the entry definition and exit definition do not differ, then
         // no phi placement is necessary.
@@ -649,25 +654,6 @@ MBasicBlock::setBackedge(MBasicBlock *pred, MBasicBlock *successor)
             return false;
 
         setSlot(i, phi);
-
-        // Only replace the successor's mapping if the successor did not
-        // re-define the variable. For example:
-        //   for (;;) {
-        //      if (x) {
-        //         y = 2;
-        //         break;
-        //      }
-        //      y *= 2;
-        //   }
-        //
-        // In this case, |y| is always 2 leaving the loop, so we should not
-        // replace the phi.
-        if (successor && successor->getSlot(i) == entryDef) {
-            successor->setSlot(i, phi);
-
-            // The use replacement should have updated the snapshot.
-            JS_ASSERT(successor->entrySnapshot()->getOperand(i) == phi);
-        }
     }
 
     // We are now a loop header proper
@@ -717,5 +703,26 @@ MBasicBlock::replacePredecessor(MBasicBlock *old, MBasicBlock *split)
         }
     }
     JS_NOT_REACHED("predecessor was not found");
+}
+
+void
+MBasicBlock::inheritPhis(MBasicBlock *header)
+{
+    for (MPhiIterator iter = header->phisBegin(); iter != header->phisEnd(); iter++) {
+        MPhi *phi = *iter;
+        JS_ASSERT(phi->numOperands() == 2);
+
+        // The entry definition is always the leftmost input to the phi.
+        MDefinition *entryDef = phi->getOperand(0);
+        MDefinition *exitDef = getSlot(phi->slot());
+
+        if (entryDef != exitDef)
+            continue;
+
+        // If the entryDef is the same as exitDef, then we must propagate the
+        // phi down to this successor. This chance was missed as part of
+        // setBackedge() because exits are not captured in snapshots.
+        setSlot(phi->slot(), phi);
+    }
 }
 
