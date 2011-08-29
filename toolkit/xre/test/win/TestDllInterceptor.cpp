@@ -69,6 +69,20 @@ patched_rotatePayload(payload p)
   return orig_rotatePayload(p);
 }
 
+bool TestHook(const char *dll, const char *func)
+{
+  void *orig_func;
+  WindowsDllInterceptor TestIntercept;
+  TestIntercept.Init(dll);
+  if (TestIntercept.AddHook(func, 0, &orig_func)) {
+    printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func, dll);
+    return true;
+  } else {
+    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from %s\n", func, dll);
+    return false;
+  }
+}
+
 int main()
 {
   payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
@@ -124,6 +138,19 @@ int main()
     return 1;
   }
 
-  printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
-  return 0;
+  if (TestHook("user32.dll", "GetWindowInfo") &&
+#ifdef _WIN64
+      TestHook("user32.dll", "SetWindowLongPtrA") &&
+      TestHook("user32.dll", "SetWindowLongPtrW") &&
+#else
+      TestHook("user32.dll", "SetWindowLongA") &&
+      TestHook("user32.dll", "SetWindowLongW") &&
+#endif
+      TestHook("user32.dll", "TrackPopupMenu") &&
+      TestHook("ntdll.dll", "LdrLoadDll")) {
+    printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
+    return 0;
+  }
+
+  return 1;
 }
