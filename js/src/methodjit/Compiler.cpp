@@ -225,8 +225,8 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     JaegerSpew(JSpew_Prof, "compilation took %d us\n", prof.time_us());
 #endif
 
-    JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
-               (*jitp)->code.m_code.executableAddress(), (*jitp)->code.m_size);
+    JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%u\")\n",
+               (*jitp)->code.m_code.executableAddress(), unsigned((*jitp)->code.m_size));
 
     return Compile_Okay;
 }
