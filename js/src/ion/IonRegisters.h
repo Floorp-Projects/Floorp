@@ -198,6 +198,9 @@ class TypedRegisterSet
 
     TypedRegisterSet() : bits_(0)
     { }
+    TypedRegisterSet(const TypedRegisterSet<T> &set) : bits_(set.bits_)
+    { }
+
     static inline TypedRegisterSet All() {
         return TypedRegisterSet(T::Codes::AllocatableMask);
     }
@@ -329,25 +332,63 @@ class RegisterSet {
     }
 };
 
-class AnyRegisterIterator
+template <typename T>
+class TypedRegisterIterator
 {
-    uint32 code_;
+    TypedRegisterSet<T> regset_;
 
   public:
-    AnyRegisterIterator() : code_(0)
+    TypedRegisterIterator(TypedRegisterSet<T> regset) : regset_(regset)
     { }
-    AnyRegisterIterator(const AnyRegisterIterator &other) : code_(other.code_)
+    TypedRegisterIterator(const TypedRegisterIterator &other) : regset_(other.regset_)
+    { }
+
+    bool more() const {
+        return !regset_.empty();
+    }
+    TypedRegisterIterator<T> operator ++(int) {
+        TypedRegisterIterator<T> old(*this);
+        regset_.takeAny();
+        return old;
+    }
+    T operator *() const {
+        return regset_.getAny();
+    }
+};
+
+typedef TypedRegisterIterator<Register> GeneralRegisterIterator;
+typedef TypedRegisterIterator<FloatRegister> FloatRegisterIterator;
+
+class AnyRegisterIterator
+{
+    GeneralRegisterIterator geniter_;
+    FloatRegisterIterator floatiter_;
+
+  public:
+    AnyRegisterIterator()
+      : geniter_(GeneralRegisterSet::All()), floatiter_(FloatRegisterSet::All())
+    { }
+    AnyRegisterIterator(GeneralRegisterSet genset, FloatRegisterSet floatset)
+      : geniter_(genset), floatiter_(floatset)
+    { }
+    AnyRegisterIterator(const AnyRegisterIterator &other)
+      : geniter_(other.geniter_), floatiter_(other.floatiter_)
     { }
     bool more() const {
-        return code_ < AnyRegister::Total;
+        return geniter_.more() || floatiter_.more();
     }
     AnyRegisterIterator operator ++(int) {
         AnyRegisterIterator old(*this);
-        code_++;
+        if (geniter_.more())
+            geniter_++;
+        else
+            floatiter_++;
         return old;
     }
     AnyRegister operator *() const {
-        return AnyRegister::FromCode(code_);
+        if (geniter_.more())
+            return AnyRegister(*geniter_);
+        return AnyRegister(*floatiter_);
     }
 };
 
