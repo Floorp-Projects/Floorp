@@ -56,7 +56,7 @@ LIRGeneratorX86::useBox(LInstruction *lir, size_t n, MDefinition *mir,
 
     if (!ensureDefined(mir))
         return false;
-    lir->setOperand(n, LUse(mir->id(), policy));
+    lir->setOperand(n, LUse(mir->virtualRegister(), policy));
     lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy));
     return true;
 }
@@ -113,8 +113,8 @@ LIRGeneratorX86::visitBox(MBox *box)
         return false;
 
     lir->setDef(0, LDefinition(vreg, LDefinition::TYPE));
-    lir->setDef(1, LDefinition(inner->id(), LDefinition::PAYLOAD, LDefinition::REDEFINED));
-    box->setId(vreg);
+    lir->setDef(1, LDefinition(inner->virtualRegister(), LDefinition::PAYLOAD, LDefinition::REDEFINED));
+    box->setVirtualRegister(vreg);
     return add(lir);
 }
 
@@ -145,7 +145,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     // Re-use the inner payload's def, for better register allocation.
     LDefinition::Type type = LDefinition::TypeFrom(unbox->type());
     lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
-    unbox->setId(VirtualRegisterOfPayload(inner));
+    unbox->setVirtualRegister(VirtualRegisterOfPayload(inner));
 
     return assignSnapshot(lir) && add(lir);
 }
@@ -169,9 +169,8 @@ LIRGeneratorX86::assignSnapshot(LInstruction *ins)
     if (!snapshot)
         return false;
 
-    MSnapshot *mir = snapshot->mir();
-    for (size_t i = 0; i < mir->numOperands(); i++) {
-        MDefinition *ins = mir->getOperand(i);
+    for (size_t i = 0; i < last_snapshot_->numOperands(); i++) {
+        MDefinition *ins = last_snapshot_->getOperand(i);
         LAllocation *type = snapshot->getEntry(i * 2);
         LAllocation *payload = snapshot->getEntry(i * 2 + 1);
 
@@ -244,7 +243,7 @@ LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
     if (typeVreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
-    phi->setId(typeVreg);
+    phi->setVirtualRegister(typeVreg);
 
     uint32 payloadVreg = getVirtualRegister();
     if (payloadVreg >= MAX_VIRTUAL_REGISTERS)
@@ -262,7 +261,7 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
     MDefinition *operand = phi->getOperand(inputPosition);
     LPhi *type = block->getPhi(lirIndex + VREG_TYPE_OFFSET);
     LPhi *payload = block->getPhi(lirIndex + VREG_DATA_OFFSET);
-    type->setOperand(inputPosition, LUse(operand->id() + VREG_TYPE_OFFSET, LUse::ANY));
+    type->setOperand(inputPosition, LUse(operand->virtualRegister() + VREG_TYPE_OFFSET, LUse::ANY));
     payload->setOperand(inputPosition, LUse(VirtualRegisterOfPayload(operand), LUse::ANY));
 }
 

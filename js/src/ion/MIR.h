@@ -88,7 +88,8 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(LoopInvariant)                                                        \
     _(Commutative)                                                          \
     _(Idempotent) /* The instruction has no side-effects. */                \
-    _(NeverHoisted) /* Don't hoist, even if loop invariant */
+    _(NeverHoisted) /* Don't hoist, even if loop invariant */               \
+    _(Lowered) /* has a virtual register */
 
 class MDefinition;
 class MInstruction;
@@ -348,6 +349,17 @@ class MDefinition : public MNode
     }
     uint32 usedTypes() const {
         return usedTypes_;
+    }
+
+    void setVirtualRegister(uint32 vreg) {
+        id_ = vreg;
+#ifdef DEBUG
+        setLoweredUnchecked();
+#endif
+    }
+    uint32 virtualRegister() const {
+        JS_ASSERT(isLowered());
+        return id_;
     }
 
   public:
