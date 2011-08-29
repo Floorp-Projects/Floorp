@@ -374,7 +374,7 @@ nsWindow::Show(PRBool aState)
         nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     }
 
-#ifdef ANDROID_DEBUG_WIDGET
+#ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
 
@@ -1587,13 +1587,13 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     if (status == nsEventStatus_eConsumeNoDefault) {
         pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
-#ifdef ANDROID_DEBUG_WIDGET
+#ifdef DEBUG_ANDROID_WIDGET
     __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.isShift, pressEvent.isAlt, pressEvent.isControl, ae->MetaState());
 #endif
     DispatchEvent(&pressEvent);
 }
 
-#ifdef ANDROID_DEBUG_IME
+#ifdef DEBUG_ANDROID_IME
 #define ALOGIME(args...) ALOG(args)
 #else
 #define ALOGIME(args...)
