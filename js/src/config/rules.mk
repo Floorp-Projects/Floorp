@@ -1460,6 +1460,9 @@ $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	(cd $(topsrcdir) && $(AUTOCONF)) && (cd $(DEPTH) && ./config.status --recheck)
 endif
 
+$(DEPTH)/config/autoconf.mk: $(topsrcdir)/config/autoconf.mk.in
+	cd $(DEPTH) && CONFIG_HEADERS= CONFIG_FILES=config/autoconf.mk ./config.status
+
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
 ###############################################################################
