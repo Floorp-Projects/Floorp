@@ -588,6 +588,7 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
         break;
       case JSOP_MUL:
         masm.mulsd(ToFloatRegister(input), ToFloatRegister(output));
+        break;
       default:
         JS_NOT_REACHED("unexpected opcode");
         return false;
