@@ -178,9 +178,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void replaceSuccessor(size_t pos, MBasicBlock *split);
 
     // Sets a back edge. This places phi nodes and rewrites instructions within
-    // the current loop as necessary, and corrects the successor block's initial
-    // state at the same time. There may be only one backedge per block.
-    bool setBackedge(MBasicBlock *block, MBasicBlock *successor);
+    // the current loop as necessary.
+    bool setBackedge(MBasicBlock *block);
+
+    // Propagates phis placed in a loop header down to their corresponding
+    // in successor blocks.
+    void inheritPhis(MBasicBlock *header);
 
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);
