@@ -23,6 +23,9 @@ var observer = {
       var setting = aSubject.querySelector("rows > setting[first-row] ~ setting");
       var input = gManagerWindow.document.getAnonymousElementByAttribute(setting, "class", "setting-label");
       isnot(input, null, "XBL binding should be applied");
+
+      // Add some extra height to the scrolling pane to ensure that it needs to scroll when appropriate.
+      gManagerWindow.document.getElementById("detail-controls").style.marginBottom = "1000px";
     }
   }
 };
@@ -37,6 +40,17 @@ function installAddon(aCallback) {
     });
     aInstall.install();
   }, "application/x-xpinstall");
+}
+
+function checkScrolling(aShouldHaveScrolled) {
+  var detailView = gManagerWindow.document.getElementById("detail-view");
+  var boxObject = detailView.boxObject;
+  boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+  ok(detailView.scrollHeight > boxObject.height, "Page should require scrolling");
+  if (aShouldHaveScrolled)
+    isnot(detailView.scrollTop, 0, "Page should have scrolled");
+  else
+    is(detailView.scrollTop, 0, "Page should not have scrolled");
 }
 
 function test() {
@@ -147,13 +161,14 @@ add_test(function() {
 
   wait_for_view_load(gManagerWindow, function() {
     is(observer.lastData, "inlinesettings1@tests.mozilla.org", "Observer notification should have fired");
+    is(gManagerWindow.gViewController.currentViewId,
+       "addons://detail/inlinesettings1%40tests.mozilla.org/preferences",
+       "Current view should scroll to preferences");
+    checkScrolling(true);
 
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
     is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
-
-    // Force bindings to apply
-    settings[0].clientTop;
 
     ok(settings[0].hasAttribute("first-row"), "First visible row should have first-row attribute");
     Services.prefs.setBoolPref("extensions.inlinesettings1.bool", false);
@@ -288,9 +303,6 @@ add_test(function() {
     var settings = grid.querySelectorAll("rows > setting");
     is(settings.length, 4, "Grid should have settings children");
 
-    // Force bindings to apply
-    settings[0].clientTop;
-
     ok(settings[0].hasAttribute("first-row"), "First visible row should have first-row attribute");
     Services.prefs.setBoolPref("extensions.inlinesettings3.radioBool", false);
     var radios = settings[0].getElementsByTagName("radio");
@@ -353,9 +365,6 @@ add_test(function() {
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
     is(settings.length, 5, "Grid should have settings children");
-
-    // Force bindings to apply
-    settings[0].clientTop;
 
     var node = settings[0];
     node = settings[0];
@@ -439,10 +448,15 @@ add_test(function() {
   var addon = get_addon_element(gManagerWindow, "inlinesettings1@tests.mozilla.org");
   addon.parentNode.ensureElementIsVisible(addon);
 
-  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "preferences-btn");
+  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "details-btn");
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
+    is(gManagerWindow.gViewController.currentViewId,
+       "addons://detail/inlinesettings1%40tests.mozilla.org",
+       "Current view should not scroll to preferences");
+    checkScrolling(false);
+
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
     is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
