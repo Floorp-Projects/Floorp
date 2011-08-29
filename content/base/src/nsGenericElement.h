@@ -826,6 +826,9 @@ public:
     nsDOMSlots();
     virtual ~nsDOMSlots();
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb, bool aIsXUL);
+    void Unlink(bool aIsXUL);
+
     /**
      * The .style attribute (an interface that forwards to the actual
      * style rules)

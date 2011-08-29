@@ -1412,7 +1412,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       if (!ownLayer->AsContainerLayer()) {
         // The layer's current transform is applied first, then the result is scaled.
         gfx3DMatrix transform = ownLayer->GetTransform()*
-            gfx3DMatrix::Scale(mParameters.mXScale, mParameters.mYScale, 1.0f);
+            gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
         ownLayer->SetTransform(transform);
       }
 
@@ -1677,7 +1677,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
                            ContainerLayer* aLayer)
 {
   gfx3DMatrix transform =
-    gfx3DMatrix::Scale(aIncomingScale.mXScale, aIncomingScale.mYScale, 1.0);
+    gfx3DMatrix::ScalingMatrix(aIncomingScale.mXScale, aIncomingScale.mYScale, 1.0);
   if (aTransform) {
     // aTransform is applied first, then the scale is applied to the result
     transform = (*aTransform)*transform;
@@ -1716,7 +1716,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
 
   // Apply the inverse of our resolution-scale before the rest of our transform
-  transform = gfx3DMatrix::Scale(1.0/scale.width, 1.0/scale.height, 1.0)*transform;
+  transform = gfx3DMatrix::ScalingMatrix(1.0/scale.width, 1.0/scale.height, 1.0)*transform;
   aLayer->SetTransform(transform);
 
   FrameLayerBuilder::ContainerParameters

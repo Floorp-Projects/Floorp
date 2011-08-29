@@ -1027,14 +1027,27 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
     case gif_sub_block:
       mGIFStruct.count = *q;
-      // We can have multiple LZW data blocks. Process the next, but only if
-      // there are any rows left. (If the GIF is invalid, we might not get an
-      // explicit 0-size block terminator.)
-      if (mGIFStruct.count && mGIFStruct.rows_remaining) {
+      if (mGIFStruct.count) {
+        /* Still working on the same image: Process next LZW data block */
+        /* Make sure there are still rows left. If the GIF data */
+        /* is corrupt, we may not get an explicit terminator.   */
+        if (!mGIFStruct.rows_remaining) {
+#ifdef DONT_TOLERATE_BROKEN_GIFS
+          mGIFStruct.state = gif_error;
+          break;
+#else
+          /* This is an illegal GIF, but we remain tolerant. */
+          GETN(1, gif_sub_block);
+#endif
+          if (mGIFStruct.count == GIF_TRAILER) {
+            /* Found a terminator anyway, so consider the image done */
+            GETN(1, gif_done);
+            break;
+          }
+        }
         GETN(mGIFStruct.count, gif_lzw);
       } else {
-        // We've finished decoding this image. See if there are any more images
-        // in this sequence.
+        /* See if there are any more images in this sequence. */
         EndImageFrame();
         GETN(1, gif_image_start);
       }

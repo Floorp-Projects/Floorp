@@ -1584,11 +1584,10 @@ var FullScreenVideo = {
 
   createBrowser: function fsv_createBrowser() {
     let browser = this.browser = document.createElement("browser");
-    browser.className = "window-width window-height full-screen";
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("src", "chrome://browser/content/fullscreen-video.xhtml");
-    document.getElementById("main-window").appendChild(browser);
+    document.getElementById("stack").appendChild(browser);
 
     let mm = browser.messageManager;
     mm.loadFrameScript("chrome://browser/content/fullscreen-video.js", true);

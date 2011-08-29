@@ -205,6 +205,10 @@
   display: -moz-box;
 }
 
+#select-popup > hbox {
+  background-color: @color_background_default@;
+}
+
 #select-commands {
   background: transparent;
   border-top: @border_width_tiny@ solid rgb(205,205,205);

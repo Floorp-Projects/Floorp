@@ -123,16 +123,6 @@
   #define NSCAP_FEATURE_USE_BASE
 #endif
 
-
-#ifdef HAVE_CPP_BOOL
-  typedef bool NSCAP_BOOL;
-#else
-  typedef PRBool NSCAP_BOOL;
-#endif
-
-
-
-
   /*
     The following three macros (|NSCAP_ADDREF|, |NSCAP_RELEASE|, and |NSCAP_LOG_ASSIGNMENT|)
       allow external clients the ability to add logging or other interesting debug facilities.
@@ -820,19 +810,6 @@ nsCOMPtr
           return get();
         }
 
-#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
-  // broken version for IRIX
-
-      nsCOMPtr<T>*
-      get_address() const
-          // This is not intended to be used by clients.  See |address_of|
-          // below.
-        {
-          return const_cast<nsCOMPtr<T>*>(this);
-        }
-
-#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
       nsCOMPtr<T>*
       get_address()
           // This is not intended to be used by clients.  See |address_of|
@@ -848,8 +825,6 @@ nsCOMPtr
         {
           return this;
         }
-
-#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
     public:
       T&
@@ -1142,19 +1117,6 @@ class nsCOMPtr<nsISupports>
           return get();
         }
 
-#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
-  // broken version for IRIX
-
-      nsCOMPtr<nsISupports>*
-      get_address() const
-          // This is not intended to be used by clients.  See |address_of|
-          // below.
-        {
-          return const_cast<nsCOMPtr<nsISupports>*>(this);
-        }
-
-#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
       nsCOMPtr<nsISupports>*
       get_address()
           // This is not intended to be used by clients.  See |address_of|
@@ -1170,8 +1132,6 @@ class nsCOMPtr<nsISupports>
         {
           return this;
         }
-
-#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
     public:
 
@@ -1285,20 +1245,6 @@ nsCOMPtr<T>::begin_assignment()
   }
 #endif
 
-#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
-// This is the broken version for IRIX, which can't handle the version below.
-
-template <class T>
-inline
-nsCOMPtr<T>*
-address_of( const nsCOMPtr<T>& aPtr )
-  {
-    return aPtr.get_address();
-  }
-
-#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
 template <class T>
 inline
 nsCOMPtr<T>*
@@ -1314,8 +1260,6 @@ address_of( const nsCOMPtr<T>& aPtr )
   {
     return aPtr.get_address();
   }
-
-#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
 template <class T>
 class nsGetterAddRefs
@@ -1449,7 +1393,7 @@ CallQueryInterface( T* aSource, nsGetterAddRefs<DestinationType> aDestination )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
     return static_cast<const T*>(lhs.get()) == static_cast<const U*>(rhs.get());
@@ -1458,7 +1402,7 @@ operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
     return static_cast<const T*>(lhs.get()) != static_cast<const U*>(rhs.get());
@@ -1469,7 +1413,7 @@ operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsCOMPtr<T>& lhs, const U* rhs )
   {
     return static_cast<const T*>(lhs.get()) == rhs;
@@ -1477,7 +1421,7 @@ operator==( const nsCOMPtr<T>& lhs, const U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const U* lhs, const nsCOMPtr<T>& rhs )
   {
     return lhs == static_cast<const T*>(rhs.get());
@@ -1485,7 +1429,7 @@ operator==( const U* lhs, const nsCOMPtr<T>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
   {
     return static_cast<const T*>(lhs.get()) != rhs;
@@ -1493,7 +1437,7 @@ operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
   {
     return lhs != static_cast<const T*>(rhs.get());
@@ -1518,7 +1462,7 @@ operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
 #ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsCOMPtr<T>& lhs, U* rhs )
   {
     return static_cast<const T*>(lhs.get()) == const_cast<const U*>(rhs);
@@ -1526,7 +1470,7 @@ operator==( const nsCOMPtr<T>& lhs, U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator==( U* lhs, const nsCOMPtr<T>& rhs )
   {
     return const_cast<const U*>(lhs) == static_cast<const T*>(rhs.get());
@@ -1534,7 +1478,7 @@ operator==( U* lhs, const nsCOMPtr<T>& rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsCOMPtr<T>& lhs, U* rhs )
   {
     return static_cast<const T*>(lhs.get()) != const_cast<const U*>(rhs);
@@ -1542,7 +1486,7 @@ operator!=( const nsCOMPtr<T>& lhs, U* rhs )
 
 template <class T, class U>
 inline
-NSCAP_BOOL
+bool
 operator!=( U* lhs, const nsCOMPtr<T>& rhs )
   {
     return const_cast<const U*>(lhs) != static_cast<const T*>(rhs.get());
@@ -1557,7 +1501,7 @@ class NSCAP_Zero;
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsCOMPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr == 0|
   {
@@ -1566,7 +1510,7 @@ operator==( const nsCOMPtr<T>& lhs, NSCAP_Zero* rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
@@ -1575,7 +1519,7 @@ operator==( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator!=( const nsCOMPtr<T>& lhs, NSCAP_Zero* rhs )
     // specifically to allow |smartPtr != 0|
   {
@@ -1584,7 +1528,7 @@ operator!=( const nsCOMPtr<T>& lhs, NSCAP_Zero* rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator!=( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 != smartPtr|
   {
@@ -1599,7 +1543,7 @@ operator!=( NSCAP_Zero* lhs, const nsCOMPtr<T>& rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( const nsCOMPtr<T>& lhs, int rhs )
     // specifically to allow |smartPtr == 0|
   {
@@ -1608,7 +1552,7 @@ operator==( const nsCOMPtr<T>& lhs, int rhs )
 
 template <class T>
 inline
-NSCAP_BOOL
+bool
 operator==( int lhs, const nsCOMPtr<T>& rhs )
     // specifically to allow |0 == smartPtr|
   {
@@ -1620,7 +1564,7 @@ operator==( int lhs, const nsCOMPtr<T>& rhs )
   // Comparing any two [XP]COM objects for identity
 
 inline
-NSCAP_BOOL
+bool
 SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
   {
     return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );

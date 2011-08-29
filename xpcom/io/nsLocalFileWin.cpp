@@ -2137,6 +2137,15 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 
     ResolveAndStat();
 
+    if (mFileInfo64.type == PR_FILE_FILE) {
+      // Since GetDiskFreeSpaceExW works only on directories, use the parent.
+      nsCOMPtr<nsIFile> parent;
+      if (NS_SUCCEEDED(GetParent(getter_AddRefs(parent))) && parent) {
+        nsCOMPtr<nsILocalFile> localParent = do_QueryInterface(parent);
+        return localParent->GetDiskSpaceAvailable(aDiskSpaceAvailable);
+      }
+    }
+
     ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes;
     if (::GetDiskFreeSpaceExW(mResolvedPath.get(), &liFreeBytesAvailableToCaller, 
                               &liTotalNumberOfBytes, NULL))
