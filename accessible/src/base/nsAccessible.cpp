@@ -2190,40 +2190,6 @@ nsAccessible::RelationByType(PRUint32 aType)
 }
 
 NS_IMETHODIMP
-nsAccessible::GetRelationsCount(PRUint32* aCount)
-{
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIArray> relations;
-  nsresult rv = GetRelations(getter_AddRefs(relations));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return relations->GetLength(aCount);
-}
-
-NS_IMETHODIMP
-nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation** aRelation)
-{
-  NS_ENSURE_ARG_POINTER(aRelation);
-  *aRelation = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIArray> relations;
-  nsresult rv= GetRelations(getter_AddRefs(relations));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIAccessibleRelation> relation = do_QueryElementAt(relations,
-                                                               aIndex, &rv);
-  NS_ADDREF(*aRelation = relation);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsAccessible::GetRelations(nsIArray **aRelations)
 {
   NS_ENSURE_ARG_POINTER(aRelations);

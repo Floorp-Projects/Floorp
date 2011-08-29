@@ -2284,6 +2284,15 @@ CSS_PROP_DISPLAY(
     offsetof(nsStyleDisplay, mChildPerspective),
     eStyleAnimType_Coord)
 CSS_PROP_DISPLAY(
+    -moz-transform-style,
+    transform_style,
+    CSS_PROP_DOMPROP_PREFIXED(TransformStyle),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kTransformStyleKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
     -moz-backface-visibility,
     backface_visibility,
     CSS_PROP_DOMPROP_PREFIXED(BackfaceVisibility),
