@@ -941,7 +941,7 @@ ifdef MOZ_PROFILE_GENERATE
 # Clean up profiling data during PROFILE_GENERATE phase
 export::
 ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
-	-$(RM) *.pgd
+	$(foreach pgd,$(wildcard *.pgd),pgomgr -clear $(pgd);)
 else
 ifdef GNU_CC
 	-$(RM) *.gcda
