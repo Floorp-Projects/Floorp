@@ -93,7 +93,7 @@ class ExpandArgsMore(ExpandArgs):
                     subprocess.call(ar_extract + [os.path.abspath(arg)], cwd=tmp)
                     objs = []
                     for root, dirs, files in os.walk(tmp):
-                        objs += [relativize(os.path.join(root, f)) for f in files if os.path.splitext(f)[1] in [conf.OBJ_SUFFIX, '.i_o']]
+                        objs += [relativize(os.path.join(root, f)) for f in files if os.path.splitext(f)[1] == conf.OBJ_SUFFIX]
                     newlist += objs
                 else:
                     newlist += [arg]
