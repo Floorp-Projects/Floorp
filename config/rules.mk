@@ -526,7 +526,7 @@ TAG_PROGRAM		= xargs etags -a
 
 #
 # Turn on C++ linking if we have any .cpp or .mm files
-# (moved this from config.mk so that config.mk can be included 
+# (moved this from config.mk so that config.mk can be included
 #  before the CPPSRCS are defined)
 #
 ifneq ($(CPPSRCS)$(CMMSRCS),)
@@ -537,7 +537,7 @@ HOST_CPP_PROG_LINK	= 1
 endif
 
 #
-# This will strip out symbols that the component should not be 
+# This will strip out symbols that the component should not be
 # exporting from the .dynsym section.
 #
 ifdef IS_COMPONENT
@@ -545,7 +545,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 endif # IS_COMPONENT
 
 #
-# Enforce the requirement that MODULE_NAME must be set 
+# Enforce the requirement that MODULE_NAME must be set
 # for components in static builds
 #
 ifdef IS_COMPONENT
@@ -635,18 +635,18 @@ ifeq ($(OS_ARCH),OSF1)
 ifdef IS_COMPONENT
 ifeq ($(GNU_CC)$(GNU_CXX),)
 EXTRA_DSO_LDOPTS += -B symbolic
-endif  
-endif  
+endif
+endif
 endif
 
 #
 # Linux: add -Bsymbolic flag for components
-# 
+#
 ifeq ($(OS_ARCH),Linux)
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 endif
-endif 
+endif
 
 #
 # GNU doesn't have path length limitation
@@ -681,6 +681,12 @@ else
 OUTOPTION = -o # eol
 endif # WINNT && !GNU_CC
 
+ifneq (,$(filter ml%,$(AS)))
+ASOUTOPTION = -Fo# eol
+else
+ASOUTOPTION = -o # eol
+endif
+
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
 else
@@ -711,7 +717,7 @@ endif
 	$(MAKE) tools
 
 # Do depend as well
-alldep:: 
+alldep::
 	$(MAKE) export
 	$(MAKE) depend
 	$(MAKE) libs
@@ -959,7 +965,7 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 
 distclean:: $(SUBMAKEFILES)
 	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(STATIC_DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
-	-$(RM) -r $(ALL_TRASH_DIRS) 
+	-$(RM) -r $(ALL_TRASH_DIRS)
 	-$(RM) $(ALL_TRASH)  \
 	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o*) \
@@ -1087,7 +1093,7 @@ endif
 
 #
 # Purify target.  Solaris/sparc only to start.
-# Purify does not recognize "egcs" or "c++" so we go with 
+# Purify does not recognize "egcs" or "c++" so we go with
 # "gcc" and "g++" for now.
 #
 pure:	$(PROGRAM)
@@ -1273,10 +1279,10 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
-# 'moc' only knows about #defines it gets on the command line (-D...), not in 
+# 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
 moc_%.cpp: %.h $(GLOBAL_DEPS)
-	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@ 
+	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
 moc_%.cc: %.cc $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
@@ -1286,7 +1292,7 @@ ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 %.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) $(GLOBAL_DEPS)
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
+	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
 %.$(OBJ_SUFFIX): %.S $(GLOBAL_DEPS)
@@ -1529,7 +1535,7 @@ export:: $(AUTOCFG_JS_EXPORTS) $(FINAL_TARGET)/defaults/autoconfig
 	$(INSTALL) $(IFLAGS1) $^
 endif
 
-endif 
+endif
 ################################################################################
 # Export the elements of $(XPIDLSRCS)
 # generating .h and .xpt files and moving them to the appropriate places.
@@ -1552,7 +1558,7 @@ export:: FORCE
 endif
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
-# warn against overriding existing .h file. 
+# warn against overriding existing .h file.
 $(XPIDL_GEN_DIR)/.done:
 	$(MKDIR) -p $(XPIDL_GEN_DIR)
 	@$(TOUCH) $@
@@ -1614,7 +1620,7 @@ export:: $(XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(DIST)/include
-	$(INSTALL) $(IFLAGS1) $^ 
+	$(INSTALL) $(IFLAGS1) $^
 endif # NO_DIST_INSTALL
 
 endif # XPIDLSRCS
@@ -1978,7 +1984,7 @@ FORCE:
 .DELETE_ON_ERROR:
 
 # Properly set LIBPATTERNS for the platform
-.LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX) 
+.LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX)
 
 tags: TAGS
 

@@ -42,7 +42,7 @@
 #include "prtypes.h"
 #include "prlog.h"
 #include "nsTArray.h"
-
+#include "nsString.h"
 #include "nsIObserver.h"
 
 #include "gfxTypes.h"
@@ -50,6 +50,10 @@
 #include "gfxColor.h"
 
 #include "qcms.h"
+
+#include "gfx2DGlue.h"
+#include "mozilla/RefPtr.h"
+
 #ifdef XP_OS2
 #undef OS2EMX_PLAIN_CHAR
 #endif
@@ -65,9 +69,6 @@ class gfxPlatformFontList;
 class gfxTextRun;
 class nsIURI;
 class nsIAtom;
-
-#include "gfx2DGlue.h"
-#include "mozilla/RefPtr.h"
 
 extern cairo_user_data_key_t kDrawTarget;
 

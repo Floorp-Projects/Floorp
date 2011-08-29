@@ -103,7 +103,6 @@ CPPSRCS += \
 GARBAGE	+= \
 	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
 	$(wildcard *.$(OBJ_SUFFIX)) \
-	dlldeps-javaxpcom.cpp \
 	$(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/intl/unicharutil/util \
@@ -252,11 +251,6 @@ include $(srcdir)/libxul-rules.mk
 ifeq ($(OS_ARCH),OpenBSD)
 # Needed by nsAuthGSSAPI
 EXTRA_DSO_LDOPTS += -lkrb5 -lcrypto
-endif
-
-ifdef MOZ_JAVAXPCOM
-dlldeps-javaxpcom.cpp: $(topsrcdir)/extensions/java/xpcom/src/dlldeps-javaxpcom.cpp
-	$(INSTALL) $^ .
 endif
 
 ifdef MOZ_DEBUG

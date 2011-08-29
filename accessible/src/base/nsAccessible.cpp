@@ -945,7 +945,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
                                         nsAccessibilityAtoms::inlineFrame)) {
       // Only do deeper bounds search if we're on an inline frame
       // Inline frames can contain larger frames inside of them
-      iterNextFrame = iterFrame->GetFirstChild(nsnull);
+      iterNextFrame = iterFrame->GetFirstPrincipalChild();
     }
 
     if (iterNextFrame) 
@@ -2187,40 +2187,6 @@ nsAccessible::RelationByType(PRUint32 aType)
     default:
     return Relation();
   }
-}
-
-NS_IMETHODIMP
-nsAccessible::GetRelationsCount(PRUint32* aCount)
-{
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIArray> relations;
-  nsresult rv = GetRelations(getter_AddRefs(relations));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return relations->GetLength(aCount);
-}
-
-NS_IMETHODIMP
-nsAccessible::GetRelation(PRUint32 aIndex, nsIAccessibleRelation** aRelation)
-{
-  NS_ENSURE_ARG_POINTER(aRelation);
-  *aRelation = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIArray> relations;
-  nsresult rv= GetRelations(getter_AddRefs(relations));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIAccessibleRelation> relation = do_QueryElementAt(relations,
-                                                               aIndex, &rv);
-  NS_ADDREF(*aRelation = relation);
-  return rv;
 }
 
 NS_IMETHODIMP

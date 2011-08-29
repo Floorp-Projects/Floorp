@@ -696,6 +696,29 @@ gfxContext::GetClipExtents()
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
+PRBool
+gfxContext::ClipContainsRect(const gfxRect& aRect)
+{
+    cairo_rectangle_list_t *clip =
+        cairo_copy_clip_rectangle_list(mCairo);
+
+    PRBool result = PR_FALSE;
+
+    if (clip->status == CAIRO_STATUS_SUCCESS) {
+        for (int i = 0; i < clip->num_rectangles; i++) {
+            gfxRect rect(clip->rectangles[i].x, clip->rectangles[i].y,
+                         clip->rectangles[i].width, clip->rectangles[i].height);
+            if (rect.Contains(aRect)) {
+                result = PR_TRUE;
+                break;
+            }
+        }
+    }
+
+   cairo_rectangle_list_destroy(clip);
+   return result;
+}
+
 // rendering sources
 
 void

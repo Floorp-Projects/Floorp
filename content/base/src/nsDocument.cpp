@@ -173,6 +173,7 @@
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
+#include "nsObjectLoadingContent.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
@@ -1701,6 +1702,8 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsITouchEventReceiver)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIInlineEventHandlers)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
@@ -1823,7 +1826,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // if we're uncollectable.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 
-  if (nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration())) {
+  if (!nsINode::Traverse(tmp, cb)) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -1831,15 +1834,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   tmp->mExternalResourceMap.Traverse(&cb);
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
-
   // Traverse the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
     cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
   }
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
   // Traverse all nsIDocument pointer members.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootElement)
@@ -1899,7 +1898,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  nsINode::Trace(tmp, aCallback, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
@@ -1910,6 +1909,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mExternalResourceMap.Shutdown();
 
   nsAutoScriptBlocker scriptBlocker;
+
+  nsINode::Unlink(tmp);
 
   // Unlink the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()) - 1; 
@@ -1927,9 +1928,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
   tmp->mParentDocument = nsnull;
 
@@ -3750,6 +3748,11 @@ NotifyActivityChanged(nsIContent *aContent, void *aUnused)
     mediaElem->NotifyOwnerDocumentActivityChanged();
   }
 #endif
+  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aContent));
+  if (objectLoadingContent) {
+    nsObjectLoadingContent* olc = static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
+    olc->NotifyOwnerDocumentActivityChanged();
+  }
 }
 
 void
@@ -8453,7 +8456,7 @@ nsDocument::CaretPositionFromPoint(float aX, float aY, nsIDOMCaretPosition** aCa
 PRInt64
 nsIDocument::SizeOf() const
 {
-  PRInt64 size = sizeof(*this);
+  PRInt64 size = MemoryReporter::GetBasicSize<nsIDocument, nsINode>(this);
 
   for (nsIContent* node = GetFirstChild(); node;
        node = node->GetNextNode(this)) {
@@ -8471,3 +8474,14 @@ nsDocument::SizeOf() const
   return size;
 }
 
+#define EVENT(name_, id_, type_, struct_)                                 \
+  NS_IMETHODIMP nsDocument::GetOn##name_(JSContext *cx, jsval *vp) {      \
+    return nsINode::GetOn##name_(cx, vp);                                 \
+  }                                                                       \
+  NS_IMETHODIMP nsDocument::SetOn##name_(JSContext *cx, const jsval &v) { \
+    return nsINode::SetOn##name_(cx, v);                                  \
+  }
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef EVENT

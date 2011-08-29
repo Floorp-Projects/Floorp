@@ -194,6 +194,15 @@ public:
      */
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion) = 0;
     /**
+     * Retrieves the region that will require updating, given a
+     * region that needs to be updated. This can be used for
+     * making decisions about updating before calling BeginUpdate().
+     *
+     * |aRegion| is an inout param.
+     */
+    virtual void GetUpdateRegion(nsIntRegion& aForRegion) {
+    };
+    /**
      * Finish the active update and synchronize with the server, if
      * necessary.
      *
@@ -218,6 +227,11 @@ public:
     };
 
     virtual GLuint GetTextureID() = 0;
+
+    virtual PRUint32 GetTileCount() {
+        return 1;
+    };
+
     /**
      * Set this TextureImage's size, and ensure a texture has been
      * allocated.  Must not be called between BeginUpdate and EndUpdate.
@@ -348,6 +362,7 @@ public:
     virtual void BindTexture(GLenum aTextureUnit);
 
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
     virtual GLuint GetTextureID() { return mTexture; };
@@ -392,8 +407,10 @@ public:
     ~TiledTextureImage();
     void DumpDiv();
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual void Resize(const nsIntSize& aSize);
+    virtual PRUint32 GetTileCount();
     virtual void BeginTileIteration();
     virtual PRBool NextTile();
     virtual nsIntRect GetTileRect();

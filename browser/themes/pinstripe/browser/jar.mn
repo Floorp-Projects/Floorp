@@ -137,6 +137,14 @@ browser.jar:
 #endif
   skin/classic/browser/lion/keyhole-circle.png              (keyhole-circle-lion.png)
   skin/classic/browser/lion/Toolbar.png                     (Toolbar-lion.png)
+  skin/classic/browser/lion/toolbarbutton-dropmarker.png    (toolbarbutton-dropmarker-lion.png)
+  skin/classic/browser/lion/tabbrowser/alltabs-box-bkgnd-icon.png      (tabbrowser/alltabs-box-bkgnd-icon-lion.png)
+  skin/classic/browser/lion/tabview/tabview.png                        (tabview/tabview-lion.png)
+  skin/classic/browser/lion/places/toolbar.png              (places/toolbar-lion.png)
 
-% override chrome://browser/skin/keyhole-circle.png chrome://browser/skin/lion/keyhole-circle.png os=Darwin osversion>=10.7
-% override chrome://browser/skin/Toolbar.png chrome://browser/skin/lion/Toolbar.png os=Darwin osversion>=10.7
+% override chrome://browser/skin/keyhole-circle.png                        chrome://browser/skin/lion/keyhole-circle.png                           os=Darwin osversion>=10.7
+% override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/lion/Toolbar.png                                  os=Darwin osversion>=10.7
+% override chrome://browser/skin/toolbarbutton-dropmarker.png              chrome://browser/skin/lion/toolbarbutton-dropmarker.png                 os=Darwin osversion>=10.7
+% override chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png     chrome://browser/skin/lion/tabbrowser/alltabs-box-bkgnd-icon.png        os=Darwin osversion>=10.7
+% override chrome://browser/skin/tabview/tabview.png                       chrome://browser/skin/lion/tabview/tabview.png                          os=Darwin osversion>=10.7
+% override chrome://browser/skin/places/toolbar.png                        chrome://browser/skin/lion/places/toolbar.png                           os=Darwin osversion>=10.7

@@ -48,17 +48,6 @@
 
 namespace css = mozilla::css;
 
-/*
- * nsCSSCompressedDataBlock holds property-value pairs corresponding
- * to CSS declaration blocks.  Each pair is stored in a CDBValueStorage
- * object; these objects form an array at the end of the data block.
- */
-
-struct CDBValueStorage {
-    nsCSSProperty property;
-    nsCSSValue value;
-};
-
 enum {
     CDBValueStorage_advance = sizeof(CDBValueStorage)
 };
@@ -287,7 +276,7 @@ nsCSSCompressedDataBlock::Clone() const
     }
     NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 
-    result->mBlockEnd = result_cursor;
+    result->SetBlockEnd(result_cursor);
     result->mStyleBits = mStyleBits;
     NS_ABORT_IF_FALSE(result->DataSize() == DataSize(), "wrong size");
 
@@ -314,7 +303,7 @@ nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
 nsCSSCompressedDataBlock::CreateEmptyBlock()
 {
     nsCSSCompressedDataBlock *result = new(0) nsCSSCompressedDataBlock();
-    result->mBlockEnd = result->Block();
+    result->SetBlockEnd(result->Block());
     return result;
 }
 
@@ -363,7 +352,7 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
     NS_ABORT_IF_FALSE(cursor == cursor_end, "inconsistent data");
 
     // Don't destroy remnants of what we just copied
-    aBlock->mBlockEnd = aBlock->Block();
+    aBlock->SetBlockEnd(aBlock->Block());
     delete aBlock;
 }
 
@@ -457,12 +446,12 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
         }
     }
 
-    result_normal->mBlockEnd = cursor_normal;
+    result_normal->SetBlockEnd(cursor_normal);
     NS_ABORT_IF_FALSE(result_normal->DataSize() == ptrdiff_t(size.normal),
                       "size miscalculation");
 
     if (result_important) {
-        result_important->mBlockEnd = cursor_important;
+        result_important->SetBlockEnd(cursor_important);
         NS_ABORT_IF_FALSE(result_important->DataSize() ==
                           ptrdiff_t(size.important),
                           "size miscalculation");

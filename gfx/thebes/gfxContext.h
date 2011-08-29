@@ -606,6 +606,13 @@ public:
     gfxRect GetClipExtents();
 
     /**
+     * Returns true if the given rectangle is fully contained in the current clip. 
+     * This is conservative; it may return false even when the given rectangle is 
+     * fully contained by the current clip.
+     */
+    PRBool ClipContainsRect(const gfxRect& aRect);
+
+    /**
      * Groups
      */
     void PushGroup(gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR);

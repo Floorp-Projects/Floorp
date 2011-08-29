@@ -374,6 +374,10 @@ toolbarbutton.urlbar-button {
   list-style-image: url("chrome://browser/skin/images/settings-default-hdpi.png");
 }
 
+#tool-menu {
+  list-style-image: url("chrome://browser/skin/images/menu-hdpi.png");
+}
+
 %ifndef ANDROID
 /* MAEMO (and desktop) only */
 .panel-close {
@@ -1344,12 +1348,6 @@ setting {
   font-size: @font_small@ !important;
 }
 
-/* full-screen video ------------------------------------------------------- */
-.full-screen {
-  position: absolute;
-  z-index: 500;
-}
-
 /* openwebapps capabilities ------------------------------------------------------------ */
 .webapps-noperm description.webapps-perm-requested-hint {
   display: block;
@@ -1574,6 +1572,7 @@ setting {
 
 /* Tablet mode */
 
+.spacer-actionbar,
 .button-actionbar {
   visibility: collapse;
 }
@@ -1586,6 +1585,7 @@ setting {
   background-color: #8db8d8;
 }
 
+#toolbar-main[tablet="true"] > .spacer-actionbar,
 #toolbar-main[tablet="true"] > .button-actionbar {
   visibility: visible;
 }

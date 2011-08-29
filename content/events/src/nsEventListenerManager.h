@@ -50,6 +50,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsTObserverArray.h"
 #include "nsGUIEvent.h"
+#include "nsIJSEventListener.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -60,13 +61,19 @@ class nsEventTargetChainItem;
 class nsPIDOMWindow;
 class nsCxPusher;
 class nsIEventListenerInfo;
+class nsIDocument;
 
 typedef struct {
   nsRefPtr<nsIDOMEventListener> mListener;
   PRUint32                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
   PRUint16                      mFlags;
-  PRBool                        mHandlerIsString;
+  PRPackedBool                  mHandlerIsString;
+
+  nsIJSEventListener* GetJSListener() const {
+    return (mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) ?
+      static_cast<nsIJSEventListener *>(mListener.get()) : nsnull;
+  }
 } nsListenerStruct;
 
 /*
@@ -102,18 +109,24 @@ public:
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
                                  PRInt32 aFlags);
+
+  /**
+   * Sets the current "inline" event listener for aName to be a
+   * function compiled from aFunc if !aDeferCompilation.  If
+   * aDeferCompilation, then we assume that we can get the string from
+   * mTarget later and compile lazily.
+   */
+  // XXXbz does that play correctly with nodes being adopted across
+  // documents?  Need to double-check the spec here.
   nsresult AddScriptEventListener(nsIAtom *aName,
                                   const nsAString& aFunc,
                                   PRUint32 aLanguage,
                                   PRBool aDeferCompilation,
                                   PRBool aPermitUntrustedEvents);
-  nsresult RegisterScriptEventListener(nsIScriptContext *aContext,
-                                       void *aScopeObject,
-                                       nsIAtom* aName);
+  /**
+   * Remove the current "inline" event listener for aName.
+   */
   void RemoveScriptEventListener(nsIAtom *aName);
-  nsresult CompileScriptEventListener(nsIScriptContext *aContext,
-                                      void *aScopeObject,
-                                      nsIAtom* aName, PRBool *aDidCompile);
 
   void HandleEvent(nsPresContext* aPresContext,
                    nsEvent* aEvent, 
@@ -155,18 +168,46 @@ public:
                            nsEventStatus* aEventStatus,
                            nsCxPusher* aPusher);
 
+  /**
+   * Tells the event listener manager that its target (which owns it) is
+   * no longer using it (and could go away).
+   */
   void Disconnect();
 
+  /**
+   * Allows us to quickly determine if we have mutation listeners registered.
+   */
   PRBool HasMutationListeners();
 
+  /**
+   * Allows us to quickly determine whether we have unload or beforeunload
+   * listeners registered.
+   */
   PRBool HasUnloadListeners();
 
+  /**
+   * Returns the mutation bits depending on which mutation listeners are
+   * registered to this listener manager.
+   * @note If a listener is an nsIDOMMutationListener, all possible mutation
+   *       event bits are returned. All bits are also returned if one of the
+   *       event listeners is registered to handle DOMSubtreeModified events.
+   */
   PRUint32 MutationListenerBits();
 
+  /**
+   * Returns PR_TRUE if there is at least one event listener for aEventName.
+   */
   PRBool HasListenersFor(const nsAString& aEventName);
 
+  /**
+   * Returns PR_TRUE if there is at least one event listener.
+   */
   PRBool HasListeners();
 
+  /**
+   * Sets aList to the list of nsIEventListenerInfo objects representing the
+   * listeners managed by this listener manager.
+   */
   nsresult GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList);
 
   PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
@@ -191,6 +232,7 @@ public:
    */
   PRBool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
+  PRInt64 SizeOf() const;
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,
@@ -198,18 +240,49 @@ protected:
                               nsIDOMEventTarget* aCurrentTarget,
                               PRUint32 aPhaseFlags,
                               nsCxPusher* aPusher);
-  nsresult CompileEventHandlerInternal(nsIScriptContext *aContext,
-                                       void *aScopeObject,
-                                       nsISupports *aObject,
-                                       nsIAtom *aName,
-                                       nsListenerStruct *aListenerStruct,
-                                       nsISupports* aCurrentTarget,
-                                       PRBool aNeedsCxPush);
+
+  /**
+   * Compile the "inline" event listener for aListenerStruct.  The
+   * body of the listener can be provided in aBody; if this is null we
+   * will look for it on mTarget.
+   */
+  nsresult CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
+                                       PRBool aNeedsCxPush,
+                                       const nsAString* aBody);
+
+  /**
+   * Find the nsListenerStruct for the "inline" event listener for aTypeAtom.
+   */
   nsListenerStruct* FindJSEventListener(PRUint32 aEventType, nsIAtom* aTypeAtom);
+
+  /**
+   * Set the "inline" event listener for aName to aHandler.  aHandler
+   * may be null to indicate that we should lazily get and compile the
+   * string for this listener.  The nsListenerStruct that results, if
+   * any, is returned in aListenerStruct.
+   */
   nsresult SetJSEventListener(nsIScriptContext *aContext,
                               void *aScopeGlobal,
-                              nsIAtom* aName, PRBool aIsString,
-                              PRBool aPermitUntrustedEvents);
+                              nsIAtom* aName,
+                              JSObject *aHandler,
+                              PRBool aPermitUntrustedEvents,
+                              nsListenerStruct **aListenerStruct);
+
+public:
+  /**
+   * Set the "inline" event listener for aEventName to |v|.  This
+   * might actually remove the event listener, depending on the value
+   * of |v|.
+   */
+  nsresult SetJSEventListenerToJsval(nsIAtom *aEventName, JSContext *cx,
+                                     JSObject *aScope, const jsval &v);
+  /**
+   * Get the value of the "inline" event listener for aEventName.
+   * This may cause lazy compilation if the listener is uncompiled.
+   */
+  void GetJSEventListener(nsIAtom *aEventName, jsval *vp);
+
+protected:
   void AddEventListener(nsIDOMEventListener *aListener, 
                         PRUint32 aType,
                         nsIAtom* aTypeAtom,

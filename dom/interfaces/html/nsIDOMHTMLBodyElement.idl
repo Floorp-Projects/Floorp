@@ -39,6 +39,10 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+%{ C++
+#include "jspubtd.h"
+%}
+
 /**
  * The nsIDOMHTMLBodyElement interface is the interface to a [X]HTML
  * body element.
@@ -50,7 +54,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(87db4ba2-367d-4604-ad36-b97cc09bf3f1)]
+[scriptable, uuid(9569e420-137a-4c7e-a880-288a81f78308)]
 interface nsIDOMHTMLBodyElement : nsIDOMHTMLElement
 {
            attribute DOMString        aLink;
@@ -59,4 +63,23 @@ interface nsIDOMHTMLBodyElement : nsIDOMHTMLElement
            attribute DOMString        link;
            attribute DOMString        text;
            attribute DOMString        vLink;
+
+           [implicit_jscontext] attribute jsval            onafterprint;
+           [implicit_jscontext] attribute jsval            onbeforeprint;
+           [implicit_jscontext] attribute jsval            onbeforeunload;
+           [implicit_jscontext] attribute jsval            onhashchange;
+           [implicit_jscontext] attribute jsval            onmessage;
+           [implicit_jscontext] attribute jsval            onoffline;
+           [implicit_jscontext] attribute jsval            ononline;
+           [implicit_jscontext] attribute jsval            onpagehide;
+           [implicit_jscontext] attribute jsval            onpageshow;
+           [implicit_jscontext] attribute jsval            onpopstate;
+           // Not supported yet
+           // [implicit_jscontext] attribute jsval            onredo;
+           [implicit_jscontext] attribute jsval            onresize;
+           // Not supported yet
+           // [implicit_jscontext] attribute jsval            onstorage;
+           // Not supported yet
+           // [implicit_jscontext] attribute jsval            onundo;
+           [implicit_jscontext] attribute jsval            onunload;
 };

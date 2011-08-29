@@ -86,7 +86,7 @@ toolkit.jar:
         skin/classic/aero/mozapps/extensions/about.css                     (extensions/about.css)
         skin/classic/aero/mozapps/extensions/blocklist.css                 (extensions/blocklist.css)
 *       skin/classic/aero/mozapps/extensions/extensions.css                (extensions/extensions-aero.css)
-*       skin/classic/aero/mozapps/extensions/selectAddons.css              (extensions/selectAddons.css)
+*       skin/classic/aero/mozapps/extensions/selectAddons.css              (extensions/selectAddons-aero.css)
         skin/classic/aero/mozapps/extensions/update.css                    (extensions/update.css)
         skin/classic/aero/mozapps/extensions/extensions.svg                (extensions/extensions.svg)
         skin/classic/aero/mozapps/extensions/themeGeneric.png              (extensions/themeGeneric-aero.png)

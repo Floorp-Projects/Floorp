@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test re-parentinging an instance's DOM node</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="startTest()">
+  <p id="display"></p>
+
+  <div id="div1">
+    <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+  </div>
+  <div id="div2">
+  </div>
+
+  <script type="application/javascript;version=1.8">
+  SimpleTest.waitForExplicitFinish();
+
+  var destroyed = false;
+  function onDestroy() {
+    destroyed = true;
+  }
+
+  function startTest() {
+    var exceptionThrown = false;
+
+    var p = document.getElementById('plugin1');
+    var d1 = document.getElementById('div1');
+    var d2 = document.getElementById('div2');
+
+    p.startWatchingInstanceCount();
+    p.callOnDestroy(onDestroy);
+
+    try {
+      d1.removeChild(p);
+    } catch (e) {
+      exceptionThrown = true;
+    }
+    is(exceptionThrown, false, "Testing for exception after removeChild.");
+
+    try {
+      d2.appendChild(p);
+    } catch (e) {
+      exceptionThrown = true;
+    }
+    is(exceptionThrown, false, "Testing for exception after appendChild.");
+
+    is(destroyed, false, "No instances should have been destroyed at this point.");
+    is(p.getInstanceCount(), 0, "No new instances should have been created at this point.");
+
+    p.stopWatchingInstanceCount();
+
+    SimpleTest.finish();
+  }
+  </script>
+</body>
+</html>

@@ -88,8 +88,18 @@ interface nsIDOMTouchEvent : nsIDOMUIEvent {
                       in nsIDOMTouchList changedTouches);
 };
 
-[scriptable, uuid(804a3851-ea2e-4e5f-bedd-315f37f31ab1)]
-interface nsIDOMDocumentTouch : nsISupports {
+[scriptable, uuid(6d5484f7-92ac-45f8-9388-39b5bad055ce)]
+interface nsITouchEventReceiver : nsISupports {
+  [implicit_jscontext] attribute jsval           ontouchstart;
+  [implicit_jscontext] attribute jsval           ontouchend;
+  [implicit_jscontext] attribute jsval           ontouchmove;
+  [implicit_jscontext] attribute jsval           ontouchenter;
+  [implicit_jscontext] attribute jsval           ontouchleave;
+  [implicit_jscontext] attribute jsval           ontouchcancel;
+};
+
+[scriptable, uuid(974cff68-6f0b-4520-8523-fa68b2754656)]
+interface nsIDOMDocumentTouch : nsITouchEventReceiver {
   nsIDOMTouch createTouch([optional] in nsIDOMWindow view,
                           [optional] in nsIDOMEventTarget target,
                           [optional] in long identifier,

@@ -39,6 +39,10 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+%{ C++
+#include "jspubtd.h"
+%}
+
 /**
  * The nsIDOMHTMLFrameSetElement interface is the interface to a
  * [X]HTML frameset element.
@@ -50,9 +54,28 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(a827ecd2-472d-4cf7-ae3b-21bca7e5c6aa)]
+[scriptable, uuid(d6872633-0f1c-4110-bf49-88713a3cad86)]
 interface nsIDOMHTMLFrameSetElement : nsIDOMHTMLElement
 {
            attribute DOMString        cols;
            attribute DOMString        rows;
+
+           [implicit_jscontext] attribute jsval            onafterprint;
+           [implicit_jscontext] attribute jsval            onbeforeprint;
+           [implicit_jscontext] attribute jsval            onbeforeunload;
+           [implicit_jscontext] attribute jsval            onhashchange;
+           [implicit_jscontext] attribute jsval            onmessage;
+           [implicit_jscontext] attribute jsval            onoffline;
+           [implicit_jscontext] attribute jsval            ononline;
+           [implicit_jscontext] attribute jsval            onpagehide;
+           [implicit_jscontext] attribute jsval            onpageshow;
+           [implicit_jscontext] attribute jsval            onpopstate;
+           // Not supported yet
+           // [implicit_jscontext] attribute jsval            onredo;
+           [implicit_jscontext] attribute jsval            onresize;
+           // Not supported yet
+           // [implicit_jscontext] attribute jsval            onstorage;
+           // Not supported yet
+           // [implicit_jscontext] attribute jsval            onundo;
+           [implicit_jscontext] attribute jsval            onunload;
 };

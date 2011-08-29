@@ -49,12 +49,11 @@
 
 // nsJSEventListener interface
 // misnamed - JS no longer has exclusive rights over this interface!
-class nsJSEventListener : public nsIDOMEventListener,
-                          public nsIJSEventListener
+class nsJSEventListener : public nsIJSEventListener
 {
 public:
   nsJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
-                    nsISupports* aObject, nsIAtom* aType);
+                    nsISupports* aTarget, nsIAtom* aType, void *aHandler);
   virtual ~nsJSEventListener();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -62,11 +61,15 @@ public:
   // nsIDOMEventListener interface
   NS_DECL_NSIDOMEVENTLISTENER
 
-  // nsIJSEventListener interface
-  virtual nsresult GetJSVal(const nsAString& aEventName, jsval* aJSVal);
+  // nsIJSEventListener
+  virtual void SetHandler(void *aHandler);
+  
+  virtual PRInt64 SizeOf() const
+  {
+    return sizeof(*this);
+  }
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSEventListener,
-                                                         nsIDOMEventListener)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsJSEventListener)
 protected:
   nsCOMPtr<nsIAtom> mEventName;
 };

@@ -99,19 +99,27 @@ body[dir="rtl"] #logo {
   border-radius: 8px 8px 0 0;
 }
 
-.section-box > div {
+.section-box > div,
+.section-box > a {
   border-bottom: 1px solid rgba(0,0,0,0.1);
   padding: 8px;
   padding-bottom: 12px;
   position: relative;
 }
 
-.section-box > div:last-child {
+.section-box > a {
+  display: block;
+  text-decoration: none;
+}
+
+.section-box > div:last-child,
+.section-box > a:last-child {
   border-bottom: 0;
 }
 
 /* Make room for the image */
 .section-box > div > div,
+.section-box > a > div,
 .section-row > div > div {
   -moz-margin-start: 48px;
 }

@@ -71,7 +71,14 @@ EXPORTS		= \
 		nsObjectFrame.h \
 		$(NULL)
 
+EXPORTS_NAMESPACES = mozilla/layout
+
+EXPORTS_mozilla/layout = \
+		FrameChildList.h \
+		$(NULL)
+
 CPPSRCS		= \
+		FrameChildList.cpp \
 		nsAbsoluteContainingBlock.cpp \
 		nsBRFrame.cpp \
 		nsBlockFrame.cpp \

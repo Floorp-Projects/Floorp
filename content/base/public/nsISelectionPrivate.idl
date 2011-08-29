@@ -153,14 +153,14 @@ interface nsISelectionPrivate : nsISelection
     void GetRangesForInterval(
         in nsIDOMNode beginNode, in PRInt32 beginOffset,
         in nsIDOMNode endNode, in PRInt32 endOffset,
-        in PRBool allowAdjacent,
+        in boolean allowAdjacent,
         out PRUint32 resultCount,
         [retval, array, size_is(resultCount)] out nsIDOMRange results);
 
     [noscript] void GetRangesForIntervalCOMArray(
         in nsIDOMNode beginNode, in PRInt32 beginOffset,
         in nsIDOMNode endNode, in PRInt32 endOffset,
-        in PRBool allowAdjacent,
+        in boolean allowAdjacent,
         in RangeArray results);
 
     /**

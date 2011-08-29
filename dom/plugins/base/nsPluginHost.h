@@ -148,7 +148,6 @@ public:
                                        char **outPostData, PRUint32 *outPostDataLen);
   nsresult CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile);
   nsresult NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
-  nsresult DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow);
   nsresult InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner);
 
   void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible);

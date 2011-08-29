@@ -119,28 +119,28 @@ CreateViewsForFrames(const nsFrameList& aFrames)
 }
 
 NS_IMETHODIMP
-nsDeckFrame::SetInitialChildList(nsIAtom*        aListName,
+nsDeckFrame::SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList)
 {
   CreateViewsForFrames(aChildList);
-  return nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  return nsBoxFrame::SetInitialChildList(aListID, aChildList);
 }
 
 NS_IMETHODIMP
-nsDeckFrame::AppendFrames(nsIAtom*        aListName,
+nsDeckFrame::AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList)
 {
   CreateViewsForFrames(aFrameList);
-  return nsBoxFrame::AppendFrames(aListName, aFrameList);
+  return nsBoxFrame::AppendFrames(aListID, aFrameList);
 }
 
 NS_IMETHODIMP
-nsDeckFrame::InsertFrames(nsIAtom*        aListName,
+nsDeckFrame::InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList)
 {
   CreateViewsForFrames(aFrameList);
-  return nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+  return nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
 void

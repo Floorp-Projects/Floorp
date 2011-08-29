@@ -743,8 +743,8 @@ public:
    *   @param aColumnNumber Column number within resource containing error.
    *   @param aErrorFlags See nsIScriptError.
    *   @param aCategory Name of module reporting error.
-   *   @param [aWindowId=0] (Optional) The window ID of the outer window the
-   *          message originates from.
+   *   @param [aInnerWindowId=0] (Optional) The window ID of the inner window
+   *          the message originates from.
    */
   enum PropertiesFile {
     eCSS_PROPERTIES,
@@ -769,7 +769,7 @@ public:
                                   PRUint32 aColumnNumber,
                                   PRUint32 aErrorFlags,
                                   const char *aCategory,
-                                  PRUint64 aWindowId = 0);
+                                  PRUint64 aInnerWindowId = 0);
 
   /**
    * Report a localized error message to the error console.
@@ -1661,6 +1661,13 @@ public:
   static nsresult GetElementsByClassName(nsINode* aRootNode,
                                          const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn);
+
+  /**
+   * Returns the widget for this document if there is one. Looks at all ancestor
+   * documents to try to find a widget, so for example this can still find a
+   * widget for documents in display:none frames that have no presentation.
+   */
+  static nsIWidget *WidgetForDocument(nsIDocument *aDoc);
 
   /**
    * Returns a layer manager to use for the given document. Basically we

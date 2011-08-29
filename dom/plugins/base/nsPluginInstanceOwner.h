@@ -83,7 +83,9 @@ class gfxXlibSurface;
 #endif
 
 #ifdef MOZ_WIDGET_QT
+#ifdef MOZ_X11
 #include "gfxQtNativeRenderer.h"
+#endif
 #endif
 
 #ifdef XP_OS2
@@ -130,9 +132,7 @@ public:
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
   nsresult Destroy();  
-  
-  void PrepareToStop(PRBool aDelayedStop);
-  
+
 #ifdef XP_WIN
   void Paint(const RECT& aDirty, HDC aDC);
 #elif defined(XP_MACOSX)
@@ -159,14 +159,11 @@ public:
   
   //locals
   
-  nsresult Init(nsPresContext* aPresContext, nsObjectFrame* aFrame,
-                nsIContent* aContent);
+  nsresult Init(nsObjectFrame* aFrame, nsIContent* aContent);
   
   void* GetPluginPortFromWidget();
   void ReleasePluginPort(void* pluginPort);
-  
-  void SetPluginHost(nsIPluginHost* aHost);
-  
+
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
 #ifdef XP_MACOSX
@@ -205,15 +202,10 @@ public:
   void UpdateDocumentActiveState(PRBool aIsActive);
 #endif // XP_MACOSX
   void CallSetWindow();
-  
-  void SetOwner(nsObjectFrame *aOwner)
-  {
-    mObjectFrame = aOwner;
-  }
-  nsObjectFrame* GetOwner() {
-    return mObjectFrame;
-  }
-  
+
+  void SetFrame(nsObjectFrame *aFrame);
+  nsObjectFrame* GetFrame();
+
   PRUint32 GetLastEventloopNestingLevel() const {
     return mLastEventloopNestingLevel; 
   }
@@ -306,10 +298,11 @@ private:
   
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
-  nsObjectFrame              *mObjectFrame; // owns nsPluginInstanceOwner
-  nsCOMPtr<nsIContent>        mContent;
+  nsObjectFrame              *mObjectFrame;
+  nsIContent                 *mContent; // WEAK, content owns us
   nsCString                   mDocumentBase;
   char                       *mTagText;
+  PRBool                      mWidgetCreationComplete;
   nsCOMPtr<nsIWidget>         mWidget;
   nsRefPtr<nsPluginHost>      mPluginHost;
   
@@ -345,10 +338,7 @@ private:
 #endif
   PRPackedBool                mPluginWindowVisible;
   PRPackedBool                mPluginDocumentActiveState;
-  
-  // If true, destroy the widget on destruction. Used when plugin stop
-  // is being delayed to a safer point in time.
-  PRPackedBool                mDestroyWidget;
+
   PRUint16          mNumCachedAttrs;
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;

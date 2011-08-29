@@ -68,7 +68,6 @@
 #include "nsIViewManager.h"
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIRDFNode.h"

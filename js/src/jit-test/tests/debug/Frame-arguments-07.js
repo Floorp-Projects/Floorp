@@ -14,7 +14,7 @@ dbg.onDebuggerStatement = function (frame) {
     var args = frame.arguments;
     assertEq(args.length, argc);
     for (var i = 0; i < argc; i++)
-	assertEq(args[i], i);
+        assertEq(args[i], i);
     hits++;
 }
 
