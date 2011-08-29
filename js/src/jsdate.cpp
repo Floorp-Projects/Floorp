@@ -847,7 +847,12 @@ date_parseISOString(JSLinearString *str, jsdouble *result, JSContext *cx)
             tzMul = -1;
         ++i;
         NEED_NDIGITS(2, tzHour);
-        NEED(':');
+        /*
+         * Non-standard extension to the ISO date format (permitted by ES5):
+         * allow "-0700" as a time zone offset, not just "-07:00".
+         */
+        if (PEEK(':'))
+          ++i;
         NEED_NDIGITS(2, tzMin);
     } else {
         isLocalTime = JS_TRUE;
