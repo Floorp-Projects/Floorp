@@ -1709,10 +1709,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     request->Init(aURI, aURI, loadGroup, newChannel, entry, cacheId, aCX,
                   aLoadingPrincipal, corsmode);
 
-    // Pass the windowID of the loading document, if possible.
+    // Pass the inner window ID of the loading document, if possible.
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
     if (doc) {
-      request->SetWindowID(doc->OuterWindowID());
+      request->SetInnerWindowID(doc->InnerWindowID());
     }
 
     // create the proxy listener
