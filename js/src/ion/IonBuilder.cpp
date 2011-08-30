@@ -159,12 +159,12 @@ IonBuilder::build()
 
     // Initialize argument references if inside a function frame.
     if (fun()) {
-        MParameter *param = MParameter::New(MParameter::THIS_SLOT);
+        MParameter *param = MParameter::New(MParameter::THIS_SLOT, oracle->thisTypeSet(script));
         current->add(param);
         current->initSlot(thisSlot(), param);
 
         for (uint32 i = 0; i < nargs(); i++) {
-            param = MParameter::New(int(i));
+            param = MParameter::New(int(i), oracle->parameterTypeSet(script, i));
             current->add(param);
             current->initSlot(argSlot(i), param);
         }

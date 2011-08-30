@@ -391,6 +391,7 @@ CPPSRCS +=	MIR.cpp \
 		MoveResolver.cpp \
 		CodeGenerator-shared.cpp \
 		Lowering-shared.cpp \
+		TypeOracle.cpp \
 		TypePolicy.cpp \
 		CodeGenerator.cpp \
 		IonMacroAssembler.cpp \
