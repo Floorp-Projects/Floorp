@@ -1637,7 +1637,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_ID)
 #define                             XPC_MAP_WANT_CALL
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               0
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
@@ -1865,7 +1865,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Exception)
 #define                             XPC_MAP_WANT_CALL
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               0
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
@@ -2426,7 +2426,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Constructor)
 #define                             XPC_MAP_WANT_CALL
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               0
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
