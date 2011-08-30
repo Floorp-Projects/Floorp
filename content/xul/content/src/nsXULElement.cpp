@@ -580,8 +580,7 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
     return PR_FALSE;
 #endif
 
-  nsCOMPtr<nsIDOMXULControlElement> xulControl = 
-    do_QueryInterface(static_cast<nsIContent*>(this));
+  nsCOMPtr<nsIDOMXULControlElement> xulControl = do_QueryObject(this);
   if (xulControl) {
     // a disabled element cannot be focused and is not part of the tab order
     PRBool disabled;
@@ -958,7 +957,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       // and cells going away.
       // First, retrieve the tree.
       // Check first whether this element IS the tree
-      controlElement = do_QueryInterface(static_cast<nsIContent*>(this));
+      controlElement = do_QueryObject(this);
 
       // If it's not, look at our parent
       if (!controlElement)
@@ -2057,7 +2056,7 @@ NS_IMETHODIMP
 nsXULElement::Focus()
 {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(static_cast<nsIContent*>(this));
+    nsCOMPtr<nsIDOMElement> elem = do_QueryObject(this);
     return fm ? fm->SetFocus(this, 0) : NS_OK;
 }
 
