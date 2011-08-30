@@ -39,8 +39,6 @@ function runStyleInspectorTests()
 
   ok(stylePanel.isOpen(), "style inspector is open");
 
-  checkForNewProperties();
-
   var spans = doc.querySelectorAll("span");
   ok(spans, "captain, we have the spans");
 
@@ -53,9 +51,6 @@ function runStyleInspectorTests()
       "style inspector node matches the selected node");
     is(htmlTree.viewedElement, stylePanel.cssLogic.viewedElement,
        "cssLogic node matches the cssHtmlTree node");
-
-    // The Fonts and Color group.
-    ok(groupRuleCount(0) > 0, "we have rules for the current span");
   }
 
   SI_CheckProperty();
@@ -63,63 +58,12 @@ function runStyleInspectorTests()
   stylePanel.hidePopup();
 }
 
-function checkForNewProperties()
-{
-  let htmlTree = stylePanel.cssHtmlTree;
-  htmlTree.createStyleGroupViews();
-  let otherProps = htmlTree._getPropertiesByGroup().other;
-  let otherPlusUnknownProps = htmlTree.propertiesByGroup.other;
-
-  let missingProps = [];
-  for each (let prop in otherPlusUnknownProps) {
-    if (otherProps.indexOf(prop) == -1) {
-      missingProps.push(prop);
-    }
-  }
-
-  if (missingProps.length > 0) {
-    let n = 1;
-    let msg = "The following css properties need to be categorized in " +
-              "CssHtmlTree.getPropertiesByGroup():\r\n";
-    missingProps.forEach(function BSI_buildMissingProps(aProp) {
-      msg += "  " + (n++) + ". " + aProp + "\n";
-    });
-    ok(false, msg);
-  }
-}
-
 function SI_CheckProperty()
 {
-  let group = stylePanel.cssHtmlTree.styleGroups[0];
   let cssLogic = stylePanel.cssLogic;
-
   let propertyInfo = cssLogic.getPropertyInfo("color");
   ok(propertyInfo.matchedRuleCount > 0, "color property has matching rules");
   ok(propertyInfo.unmatchedRuleCount > 0, "color property has unmatched rules");
-}
-
-function groupRuleCount(groupId)
-{
-  let groupRules = 0;
-  let group = stylePanel.cssHtmlTree.styleGroups[groupId];
-
-  ok(group, "we have a StyleGroupView");
-  ok(group.tree, "we have the CssHtmlTree object");
-
-  let cssLogic = stylePanel.cssLogic;
-
-  ok(cssLogic, "we have the CssLogic object");
-
-  // we use the click method to populate the groups properties
-  group.click();
-
-  ok(group.properties.childElementCount > 0, "the StyleGroupView has properties");
-
-  group.propertyViews.forEach(function(property) {
-    groupRules += cssLogic.getPropertyInfo(property.name).matchedRuleCount;
-  });
-
-  return groupRules;
 }
 
 function finishUp()
