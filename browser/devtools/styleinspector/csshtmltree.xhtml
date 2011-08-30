@@ -1,0 +1,158 @@
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/styleinspector.dtd">
+  %inspectorDTD;
+  <!ELEMENT loop ANY>
+  <!ATTLIST li foreach CDATA #IMPLIED>
+  <!ATTLIST div foreach CDATA #IMPLIED>
+  <!ATTLIST loop foreach CDATA #IMPLIED>
+  <!ATTLIST a target CDATA #IMPLIED>
+  <!ATTLIST a __pathElement CDATA #IMPLIED>
+  <!ATTLIST div _id CDATA #IMPLIED>
+  <!ATTLIST div save CDATA #IMPLIED>
+  <!ATTLIST table save CDATA #IMPLIED>
+  <!ATTLIST loop if CDATA #IMPLIED>
+  <!ATTLIST tr if CDATA #IMPLIED>
+]>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the Mozilla Inspector Module.
+   -
+   - The Initial Developer of the Original Code is The Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Joe Walker (jwalker@mozilla.com) (original author)
+   -   Mihai Șucan <mihai.sucan@gmail.com>
+   -   Michael Ratcliffe <mratcliffe@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+  <meta http-equiv="Content-Type"
+    content="application/xhtml+xml; charset=UTF-8" />
+  <link rel="stylesheet" type="text/css"
+    href="chrome://browser/skin/devtools/csshtmltree.css" />
+</head>
+<body role="application">
+
+<!-- The output from #templateRoot (below) is inserted here. -->
+<div id="root">
+</div>
+
+<!--
+To visually debug the templates without running firefox, alter the display:none
+-->
+<div style="display:none;">
+  <!--
+  templateRoot sits at the top of the window showing what we're looking at.
+  For data it needs an instance of CssHtmlTree.
+  -->
+  <div id="templateRoot">
+    <p class="path">
+      <label dir="${getRTLAttr}">&lookingAtLabel;</label>
+      <ol>
+        <li foreach="item in ${pathElements}" dir="${getRTLAttr}">
+          <a href="#" onclick="${pathClick}" __pathElement="${item.element}">
+            ${__element.pathElement = item.element; item.display}
+          </a>
+        </li>
+      </ol>
+    </p>
+
+    <div _id="groups">
+      <div foreach="group in ${styleGroups}" class="group" save="${group.element}" dir="${getRTLAttr}">
+        <h1 onclick="${group.click}" dir="${getRTLAttr}">
+          ${group.localName}
+          <div class="groupexpander"></div>
+        </h1>
+        <div save="${group.properties}"></div>
+      </div>
+    </div>
+  </div>
+
+  <!--
+  A templateProperties sits inside each templateGroups to show the properties
+  themselves. Each needs data like this:
+  {
+    property: [ ..., ] // Array of PropertyViews from CssHtmlTree.jsm
+  }
+  -->
+  <div id="templateProperties">
+    <div foreach="property in ${propertyViews}" class="property-view" save="${property.element}" dir="${getRTLAttr}">
+      <div class="property-header" onclick="${property.click}">
+        <span class="property-name" dir="${getRTLAttr}">
+          <a class="link" target="_blank" title="&helpLinkTitle;"
+              href="${property.link}">${property.name}</a>
+        </span>
+        <span class="property-value" dir="ltr">${property.value}</span>
+        <span class="link" dir="${getRTLAttr}">
+          ${property.ruleTitle(__element)}<div class="expander"></div>
+        </span>
+      </div>
+      <table class="rules" save="${property.rules}" dir="${getRTLAttr}"></table>
+    </div>
+  </div>
+
+  <!--
+  A templateRules sits inside each templateProperties showing the list of rules
+  that affect that property. Each needs data like this:
+  {
+    selectors: ..., // from cssLogic.getPropertyInfo(x).[un]matchedSelectors
+    statusText: function(status) {}, // convert rule.status to readable text
+    showUnmatchedRules: true / false, // show a "more unmatched rules" link
+    showUnmatchedRulesClick: function() {}, // click event handler for the
+        "show more unmatched rules"
+  }
+  This is a template so the parent does not need to be a table, except that
+  using a div as the parent causes the DOM to muck with the tr elements
+  -->
+  <table id="templateRules">
+    <loop foreach="selector in ${selectorViews}" if="${selector.selectorInfo.sheetAllowed}">
+      <tr>
+        <td dir="ltr" class="rule-text ${selector.statusClass}">
+          ${selector.humanReadableText(__element)}
+        </td>
+        <td class="rule-link">
+          <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
+              title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
+        </td>
+      </tr>
+    </loop>
+    <tr if="${showUnmatchedLink}">
+      <td colspan="4">
+        <a href="#" onclick="${showUnmatchedLinkClick}"
+            class="link">${showUnmatchedLinkText}</a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
