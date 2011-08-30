@@ -2880,7 +2880,7 @@ nsXPCComponents_Utils::ReportError()
     if(NS_FAILED(rv) || !argv)
         return NS_OK;
 
-    const PRUint64 windowID = nsJSUtils::GetCurrentlyRunningCodeWindowID(cx);
+    const PRUint64 innerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
 
     JSErrorReport* err = JS_ErrorFromException(cx, argv[0]);
     if(err)
@@ -2899,7 +2899,7 @@ nsXPCComponents_Utils::ReportError()
                                          err->lineno,
                                          column,
                                          err->flags,
-                                         "XPConnect JavaScript", windowID);
+                                         "XPConnect JavaScript", innerWindowID);
         if(NS_FAILED(rv))
             return NS_OK;
 
@@ -2935,8 +2935,8 @@ nsXPCComponents_Utils::ReportError()
         rv = scripterr->InitWithWindowID(reinterpret_cast<const PRUnichar *>(msgchars),
                                          NS_ConvertUTF8toUTF16(fileName).get(),
                                          nsnull,
-                                         lineNo, 0,
-                                         0, "XPConnect JavaScript", windowID);
+                                         lineNo, 0, 0,
+                                         "XPConnect JavaScript", innerWindowID);
         if(NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scripterr);

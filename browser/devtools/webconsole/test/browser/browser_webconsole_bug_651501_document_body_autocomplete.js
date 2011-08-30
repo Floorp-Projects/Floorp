@@ -6,7 +6,7 @@
 
 // Tests that document.body autocompletes in the web console.
 
-Cu.import("resource://gre/modules/PropertyPanel.jsm");
+Cu.import("resource:///modules/PropertyPanel.jsm");
 
 function test() {
   addTab("data:text/html,Web Console autocompletion bug in document.body");

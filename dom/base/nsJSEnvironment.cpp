@@ -267,11 +267,11 @@ public:
                    const nsAString& aFileName,
                    const nsAString& aSourceLine,
                    PRBool aDispatchEvent,
-                   PRUint64 aWindowID)
+                   PRUint64 aInnerWindowID)
   : mScriptGlobal(aScriptGlobal), mLineNr(aLineNr), mColumn(aColumn),
     mFlags(aFlags), mErrorMsg(aErrorMsg), mFileName(aFileName),
     mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent),
-    mWindowID(aWindowID)
+    mInnerWindowID(aInnerWindowID)
   {}
 
   NS_IMETHOD Run()
@@ -364,7 +364,7 @@ public:
           rv = error2->InitWithWindowID(mErrorMsg.get(), mFileName.get(),
                                         mSourceLine.get(),
                                         mLineNr, mColumn, mFlags,
-                                        category, mWindowID);
+                                        category, mInnerWindowID);
         } else {
           rv = errorObject->Init(mErrorMsg.get(), mFileName.get(),
                                  mSourceLine.get(),
@@ -393,7 +393,7 @@ public:
   nsString                        mFileName;
   nsString                        mSourceLine;
   PRBool                          mDispatchEvent;
-  PRUint64                        mWindowID;
+  PRUint64                        mInnerWindowID;
 
   static PRBool sHandlingScriptError;
 };
@@ -474,13 +474,19 @@ NS_ScriptErrorReporter(JSContext *cx,
       nsAutoString sourceLine;
       sourceLine.Assign(reinterpret_cast<const PRUnichar*>(report->uclinebuf));
       nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
-      PRUint64 windowID = win ? win->WindowID() : 0;
+      PRUint64 innerWindowID = 0;
+      if (win) {
+        nsCOMPtr<nsPIDOMWindow> innerWin = win->GetCurrentInnerWindow();
+        if (innerWin) {
+          innerWindowID = innerWin->WindowID();
+        }
+      }
       nsContentUtils::AddScriptRunner(
         new ScriptErrorEvent(globalObject, report->lineno,
                              report->uctokenptr - report->uclinebuf,
                              report->flags, msg, fileName, sourceLine,
                              report->errorNumber != JSMSG_OUT_OF_MEMORY,
-                             windowID));
+                             innerWindowID));
     }
   }
 
