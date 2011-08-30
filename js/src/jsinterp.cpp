@@ -1936,6 +1936,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define MONITOR_BRANCH_TRACEVIS
 #endif
 
+#endif /* !JS_TRACER */
+
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
@@ -1953,8 +1955,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             goto error;                                                       \
         CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
-
-#endif /* !JS_TRACER */
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script

@@ -584,7 +584,7 @@ FrameState::computeAllocation(jsbytecode *target)
         /* State must be synced at exception and switch targets, and at traps. */
 #ifdef DEBUG
         if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-            JaegerSpew(JSpew_Regalloc, "allocation at %u:", target - a->script->code);
+            JaegerSpew(JSpew_Regalloc, "allocation at %u:", unsigned(target - a->script->code));
             dumpAllocation(alloc);
         }
 #endif
@@ -635,7 +635,7 @@ FrameState::computeAllocation(jsbytecode *target)
 
 #ifdef DEBUG
     if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-        JaegerSpew(JSpew_Regalloc, "allocation at %u:", target - a->script->code);
+        JaegerSpew(JSpew_Regalloc, "allocation at %u:", unsigned(target - a->script->code));
         dumpAllocation(alloc);
     }
 #endif
