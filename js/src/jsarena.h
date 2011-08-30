@@ -65,7 +65,8 @@ struct JSArena {
 struct JSArenaPool {
     JSArena     first;          /* first arena in pool list */
     JSArena     *current;       /* arena from which to allocate space */
-    size_t      arenasize;      /* net exact size of a new arena */
+    size_t      netsize;        /* net exact size of a new arena; equal to |size| 
+                                   from JS_InitArenaPool minus sizeof(JSArena) */
     jsuword     mask;           /* alignment mask (power-of-2 - 1) */
 };
 
@@ -173,7 +174,7 @@ struct JSArenaPool {
 
 /*
  * Initialize an arena pool with a minimum size per arena of |size| bytes.
- * |align| must be 1, 2, 4 or 8.
+ * |size| must be a power-of-two.  |align| must be 1, 2, 4 or 8.
  */
 extern JS_PUBLIC_API(void)
 JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,

@@ -311,9 +311,6 @@ js_PurgeThreads(JSContext *cx)
 #endif
 }
 
-static const size_t ARENA_HEADER_SIZE_HACK = 40;
-static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
-
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
@@ -340,8 +337,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble));
-    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int));
+    JS_InitArenaPool(&cx->tempPool, "temp", 16384, sizeof(jsdouble));
+    JS_InitArenaPool(&cx->regExpPool, "regExp", 4096, sizeof(int));
 
     JS_ASSERT(cx->resolveFlags == 0);
 
