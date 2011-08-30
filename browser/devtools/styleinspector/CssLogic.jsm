@@ -1087,6 +1087,7 @@ function CssSelector(aCssRule, aSelector)
   this._cssRule = aCssRule;
   this.text = aSelector;
   this.elementStyle = this.text == "@element.style";
+  this._specificity = null;
 }
 
 CssSelector.prototype = {
@@ -1166,6 +1167,57 @@ CssSelector.prototype = {
   get ruleLine()
   {
     return this._cssRule.line;
+  },
+
+  /**
+   * Retrieve specificity information for the current selector.
+   *
+   * @see http://www.w3.org/TR/css3-selectors/#specificity
+   * @see http://www.w3.org/TR/CSS2/selector.html
+   *
+   * @return {object} an object holding specificity information for the current
+   * selector.
+   */
+  get specificity()
+  {
+    if (this._specificity) {
+      return this._specificity;
+    }
+
+    let specificity = {};
+
+    specificity.ids = 0;
+    specificity.classes = 0;
+    specificity.tags = 0;
+
+    // Split on CSS combinators (section 5.2).
+    // TODO: We need to properly parse the selector. See bug 592743.
+    if (!this.elementStyle) {
+      this.text.split(/[ >+]/).forEach(function(aSimple) {
+        // The regex leaves empty nodes combinators like ' > '
+        if (!aSimple) {
+          return;
+        }
+        // See http://www.w3.org/TR/css3-selectors/#specificity
+        // We can count the IDs by counting the '#' marks.
+        specificity.ids += (aSimple.match(/#/g) || []).length;
+        // Similar with class names and attribute matchers
+        specificity.classes += (aSimple.match(/\./g) || []).length;
+        specificity.classes += (aSimple.match(/\[/g) || []).length;
+        // Pseudo elements count as elements.
+        specificity.tags += (aSimple.match(/:/g) || []).length;
+        // If we have anything of substance before we get into ids/classes/etc
+        // then it must be a tag if it isn't '*'.
+        let tag = aSimple.split(/[#.[:]/)[0];
+        if (tag && tag != "*") {
+          specificity.tags++;
+        }
+      }, this);
+    }
+
+    this._specificity = specificity;
+
+    return this._specificity;
   },
 
   toString: function CssSelector_toString()
@@ -1470,6 +1522,25 @@ function CssSelectorInfo(aSelector, aProperty, aValue, aStatus)
 
   let priority = this.selector._cssRule.getPropertyPriority(this.property);
   this.important = (priority === "important");
+
+  /* Score prefix:
+  0 UA normal property
+  1 UA important property
+  2 normal property
+  3 inline (element.style)
+  4 important
+  5 inline important
+  */
+  let scorePrefix = this.systemRule ? 0 : 2;
+  if (this.elementStyle) {
+    scorePrefix++;
+  }
+  if (this.important) {
+    scorePrefix += this.systemRule ? 1 : 2;
+  }
+
+  this.specificityScore = "" + scorePrefix + this.specificity.ids +
+      this.specificity.classes + this.specificity.tags;
 }
 
 CssSelectorInfo.prototype = {
@@ -1516,6 +1587,17 @@ CssSelectorInfo.prototype = {
   get elementStyle()
   {
     return this.selector.elementStyle;
+  },
+
+  /**
+   * Retrieve specificity information for the current selector.
+   *
+   * @return {object} an object holding specificity information for the current
+   * selector.
+   */
+  get specificity()
+  {
+    return this.selector.specificity;
   },
 
   /**
@@ -1586,6 +1668,15 @@ CssSelectorInfo.prototype = {
 
     if (this.important && !aThat.important) return -1;
     if (aThat.important && !this.important) return 1;
+
+    if (this.specificity.ids > aThat.specificity.ids) return -1;
+    if (aThat.specificity.ids > this.specificity.ids) return 1;
+
+    if (this.specificity.classes > aThat.specificity.classes) return -1;
+    if (aThat.specificity.classes > this.specificity.classes) return 1;
+
+    if (this.specificity.tags > aThat.specificity.tags) return -1;
+    if (aThat.specificity.tags > this.specificity.tags) return 1;
 
     if (this.sheetIndex > aThat.sheetIndex) return -1;
     if (aThat.sheetIndex > this.sheetIndex) return 1;

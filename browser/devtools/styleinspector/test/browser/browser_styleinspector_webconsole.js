@@ -104,6 +104,13 @@ function teststylePanels() {
     doc.getElementById("container")
   ];
 
+  // We have 3 style inspector instances, each with an element selected:
+  // 1. #text
+  // 2. #text2
+  // 3. #container
+  //
+  // We will loop through each instance and check that the correct node is
+  // selected and that the correct css selector has been selected as active
   info("looping through array to check initialization");
   for (let i = 0, max = stylePanels.length; i < max; i++) {
     ok(stylePanels[i], "style inspector instance " + i +
@@ -111,15 +118,40 @@ function teststylePanels() {
     ok(stylePanels[i].isOpen(), "style inspector " + i + " is open");
 
     let htmlTree = stylePanels[i].cssHtmlTree;
+    let cssLogic = htmlTree.cssLogic;
+    let elt = eltArray[i];
+    let eltId = elt.id;
 
-    is(eltArray[i], htmlTree.viewedElement,
-      "style inspector node matches the selected node (id=" +
-      eltArray[i].id + ")");
+    // Check that the correct node is selected
+    is(elt, htmlTree.viewedElement,
+      "style inspector node matches the selected node (id=" + eltId + ")");
     is(htmlTree.viewedElement, stylePanels[i].cssLogic.viewedElement,
-      "cssLogic node matches the cssHtmlTree node (id=" + eltArray[i].id + ")");
+      "cssLogic node matches the cssHtmlTree node (id=" + eltId + ")");
 
     ok(groupRuleCount(0, stylePanels[i]) > 0,
        "we have rules for the current node (id=" + eltArray[i].id + ")");
+
+    // Check that the correct css selector has been selected as active
+    let matchedSelectors = cssLogic.getPropertyInfo("font-family").matchedSelectors;
+    let sel = matchedSelectors[0];
+    let selector = sel.selector.text;
+    let value = sel.value;
+
+    // Because we know which selectors should be the best match and what their
+    // values should be we can check them
+    switch(eltId) {
+      case "text":
+        is(selector, "#container > .text", "correct best match for #text");
+        is(value, "cursive", "correct css property value for #" + eltId);
+        break;
+      case "text2":
+        is(selector, "#container > span", "correct best match for #text2");
+        is(value, "cursive", "correct css property value for #" + eltId);
+        break;
+      case "container":
+        is(selector, "#container", "correct best match for #container");
+        is(value, "fantasy", "correct css property value for #" + eltId);
+    }
   }
 
   info("hiding stylePanels[1]");
