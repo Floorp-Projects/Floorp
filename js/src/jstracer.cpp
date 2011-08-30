@@ -8293,15 +8293,27 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, const Value*& 
 
     LIns* obj_ins;
     JSObject* parent = cx->fp()->callee().getParent();
-    LIns* parent_ins = w.ldpObjParent(get(&cx->fp()->calleev()));
+    LIns *callee_ins = get(&cx->fp()->calleev());
+    LIns* parent_ins = w.ldpObjParent(callee_ins);
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
     if (!cfp) {
-        // Because the parent guard in guardCallee ensures this Call object
-        // will be the same object now and on trace, and because once a Call
-        // object loses its frame it never regains one, on trace we will also
-        // have a null private in the Call object. So all we need to do is
-        // write the value to the Call object's slot.
+        // We need to guard that this Call object will be the same one on
+        // trace, as we can arrive here without having gone through
+        // guardCallee. Once a Call object loses its frame it never regains
+        // one, so on trace we will also have a null private in the Call
+        // object. All we need to do is write the value to the Call object's
+        // slot.
+        VMSideExit *branchExit = snapshot(BRANCH_EXIT);
+        if (parent != globalObj) {
+            if (!parent->isCall())
+                RETURN_STOP("closure scoped by neither the global object nor a Call object");
+
+            guard(true,
+                  w.eqp(w.ldpObjParent(callee_ins), w.immpObjGC(parent)),
+                  branchExit);
+        }
+
         if (shape->getterOp() == GetCallArg) {
             JS_ASSERT(slot < ArgClosureTraits::slot_count(obj));
             slot += ArgClosureTraits::slot_offset(obj);
@@ -8315,7 +8327,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, const Value*& 
         // Now assert that our use of shape->shortid was in fact kosher.
         JS_ASSERT(shape->hasShortID());
 
-        ins = unbox_slot(obj, obj_ins, slot, snapshot(BRANCH_EXIT));
+        ins = unbox_slot(obj, obj_ins, slot, branchExit);
     } else {
         ClosureVarInfo* cv = new (traceAlloc()) ClosureVarInfo();
         cv->slot = slot;
