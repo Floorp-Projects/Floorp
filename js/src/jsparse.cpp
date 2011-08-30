@@ -927,8 +927,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!compiler.init(chars, length, filename, lineno, version))
         return NULL;
 
-    JS_InitArenaPool(&codePool, "code", 4096, sizeof(jsbytecode));
-    JS_InitArenaPool(&notePool, "note", 4096, sizeof(jssrcnote));
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
@@ -1785,8 +1785,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     /* No early return from after here until the js_FinishArenaPool calls. */
     JSArenaPool codePool, notePool;
-    JS_InitArenaPool(&codePool, "code", 4096, sizeof(jsbytecode));
-    JS_InitArenaPool(&notePool, "note", 4096, sizeof(jssrcnote));
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
