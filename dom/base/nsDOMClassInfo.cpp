@@ -9234,7 +9234,14 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
   NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
 
-  return objlc->GetPluginInstance(_result);
+  // If it's not safe to run script we'll only return the instance if it
+  // exists.
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    return objlc->GetPluginInstance(_result);
+  }
+
+  // Make sure that there is a plugin
+  return objlc->EnsureInstantiation(_result);
 }
 
 // Check if proto is already in obj's prototype chain.
@@ -9338,8 +9345,19 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
 
   if (!pi_obj) {
     // Didn't get a plugin instance JSObject, nothing we can do then.
+
     return NS_OK;
   }
+
+  if (IsObjInProtoChain(cx, obj, pi_obj)) {
+    // We must have re-entered ::PostCreate() from nsObjectFrame()
+    // (through the EnsureInstantiation() call in
+    // GetPluginInstanceIfSafe()), this means that we've already done what
+    // we're about to do in this function so we can just return here.
+
+    return NS_OK;
+  }
+
 
   // If we got an xpconnect-wrapped plugin object, set obj's
   // prototype's prototype to the scriptable plugin.
