@@ -12,16 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is  HUDService code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Initial Developer of the Original Code is Mozilla Corporation.
+# 
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Rob Campbell <rcampbell@mozilla.com>
-#  Mike Ratcliffe <mratcliffe@mozilla.com>
+#     Mike Ratcliffe <mratcliffe@mozilla.com>  (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,25 +36,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
-DIRS = \
-  webconsole \
-  scratchpad \
-  sourceeditor \
-  styleinspector \
-  shared \
-  $(NULL)
-
 ifdef ENABLE_TESTS
-# DIRS += test # no tests yet
+ifneq (mobile,$(MOZ_BUILD_APP))
+	DIRS += test
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+libs::
+	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools
