@@ -552,6 +552,9 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
         return Method_Compiled;
     }
 
+    if (script->incUseCount() <= js_IonOptions.invokesBeforeCompile)
+        return Method_Skipped;
+
     if (!IonCompile(cx, script, fp)) {
         script->ion = ION_DISABLED_SCRIPT;
         return Method_CantCompile;

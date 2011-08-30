@@ -5371,6 +5371,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
         else
             return OptionFailure("ion-regalloc", str);
     }
+
+    if (op->getBoolOption("ion-eager"))
+        ion::js_IonOptions.setEagerCompilation();
 #endif
 
     /* |scriptArgs| gets bound on the global before any code is run. */
@@ -5658,6 +5661,7 @@ main(int argc, char **argv, char **envp)
                                "Specify Ion register allocation:\n"
                                "  greedy: Greedy register allocation\n"
                                "  lsra: Linear Scan register allocation (default)")
+        || !op.addBoolOption('\0', "ion-eager", "Always compile methods")
 #endif
     )
     {
