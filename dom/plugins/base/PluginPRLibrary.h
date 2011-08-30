@@ -154,6 +154,10 @@ public:
     NS_OVERRIDE
     virtual nsresult EndUpdateBackground(NPP instance,
                                          gfxContext* aCtx, const nsIntRect&);
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+    virtual nsresult HandleGUIEvent(NPP instance,
+                                    const nsGUIEvent& anEvent, bool* handled);
+#endif
 
 private:
     NP_InitializeFunc mNP_Initialize;

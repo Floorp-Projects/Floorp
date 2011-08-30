@@ -1490,6 +1490,7 @@ nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
   for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
     if (aName == *lengthInfo.mLengthInfo[i].mName) {
       lengthInfo.mLengths[i] = aLength;
+      DidChangeLength(i, PR_TRUE);
       return;
     }
   }

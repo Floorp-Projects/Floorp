@@ -2484,6 +2484,17 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                       runStart, runLimit, runScript);
     }
 
+    // It's possible for CoreText to omit glyph runs if it decides they contain
+    // only invisibles (e.g., U+FEFF, see reftest 474417-1). In this case, we
+    // need to eliminate them from the glyph run array to avoid drawing "partial
+    // ligatures" with the wrong font.
+    // We don't do this during InitScriptRun (or gfxFont::InitTextRun) because
+    // it will iterate back over all glyphruns in the textrun, which leads to
+    // pathologically-bad perf in the case where a textrun contains many script
+    // changes (see bug 680402) - we'd end up re-sanitizing all the earlier runs
+    // every time a new script subrun is processed.
+    aTextRun->SanitizeGlyphRuns();
+
     aTextRun->SortGlyphRuns();
 }
 
@@ -2565,13 +2576,6 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 
         runStart += matchedLength;
     }
-
-    // It's possible for CoreText to omit glyph runs if it decides they contain
-    // only invisibles (e.g., U+FEFF, see reftest 474417-1). In this case, we
-    // need to eliminate them from the glyph run array to avoid drawing "partial
-    // ligatures" with the wrong font.
-    aTextRun->SanitizeGlyphRuns();
-
 }
 
 
@@ -4045,6 +4049,9 @@ gfxTextRun::SortGlyphRuns()
     }
 }
 
+// Note that SanitizeGlyphRuns scans all glyph runs in the textrun;
+// therefore we only call it once, at the end of textrun construction,
+// NOT incrementally as each glyph run is added (bug 680402).
 void
 gfxTextRun::SanitizeGlyphRuns()
 {
