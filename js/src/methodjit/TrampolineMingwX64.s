@@ -114,7 +114,7 @@ JaegerTrampoline:
 .endef
 JaegerTrampolineReturn:
     # .ENDPROLOG
-    or      rcx, rdx
+    or      rsi, rdi
     mov     qword ptr [rbx + 0x30], rcx
     sub     rsp, 0x20
     lea     rcx, [rsp+0x20]

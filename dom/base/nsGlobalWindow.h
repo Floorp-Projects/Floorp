@@ -540,6 +540,11 @@ public:
     return outerWindow && !outerWindow->IsInnerWindow() ? outerWindow : nsnull;
   }
 
+  static nsGlobalWindow* GetInnerWindowWithId(PRUint64 aInnerWindowID) {
+    nsGlobalWindow* innerWindow = sWindowsById->Get(aInnerWindowID);
+    return innerWindow && innerWindow->IsInnerWindow() ? innerWindow : nsnull;
+  }
+
   static bool HasIndexedDBSupport();
 
   static bool HasPerformanceSupport();

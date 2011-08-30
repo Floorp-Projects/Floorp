@@ -72,11 +72,13 @@
 #include "jsstr.h"
 #include "jslibmath.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
 
 using namespace js;
+using namespace js::types;
 
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.

@@ -51,13 +51,16 @@ namespace js {
 #define JSPEW_CHAN_MAP(_)   \
     _(Abort)                \
     _(Scripts)              \
-    _(PCProf)               \
     _(Prof)                 \
     _(JSOps)                \
     _(Insns)                \
     _(VMFrame)              \
     _(PICs)                 \
-    _(SlowCalls)
+    _(SlowCalls)            \
+    _(Analysis)             \
+    _(Regalloc)             \
+    _(Inlining)             \
+    _(Recompile)
 
 enum JaegerSpewChannel {
 #define _(name) JSpew_##name,
@@ -73,6 +76,13 @@ enum JaegerSpewChannel {
 #if defined(JS_METHODJIT_SPEW)
 
 void JMCheckLogging();
+
+struct ConditionalLog {
+    uint32 oldBits;
+    bool logging;
+    ConditionalLog(bool logging);
+    ~ConditionalLog();
+};
 
 bool IsJaegerSpewChannelActive(JaegerSpewChannel channel);
 #ifdef __GNUC__

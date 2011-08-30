@@ -77,6 +77,7 @@
 
 #include "vm/GlobalObject.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -230,9 +231,9 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
     }
 
     if (pobj->getArrayLength() > 0) {
-        size_t capacity = pobj->getDenseArrayCapacity();
+        size_t initlen = pobj->getDenseArrayInitializedLength();
         const Value *vp = pobj->getDenseArrayElements();
-        for (size_t i = 0; i < capacity; ++i, ++vp) {
+        for (size_t i = 0; i < initlen; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
                 if (!Enumerate(cx, obj, pobj, INT_TO_JSID(i), true, flags, ht, props))
@@ -417,8 +418,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
         EmptyShape *emptyEnumeratorShape = EmptyShape::getEmptyEnumeratorShape(cx);
         if (!emptyEnumeratorShape)
             return NULL;
-
-        obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
+        obj->init(cx, &js_IteratorClass, &types::emptyTypeObject, NULL, NULL, false);
         obj->setMap(emptyEnumeratorShape);
         return obj;
     }
@@ -470,6 +470,11 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
 {
     JS_ASSERT(!(flags & JSITER_FOREACH));
 
+    if (obj) {
+        obj->flags |= JSObject::ITERATED;
+        types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
+    }
+
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
         return false;
@@ -516,6 +521,11 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &k
                       Value *vp)
 {
     JS_ASSERT(flags & JSITER_FOREACH);
+
+    if (obj) {
+        obj->flags |= JSObject::ITERATED;
+        types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
+    }
 
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -566,6 +576,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             if (!iterobj)
                 return false;
             vp->setObject(*iterobj);
+            types::MarkIteratorUnknown(cx);
             return true;
         }
 
@@ -633,12 +644,16 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         }
 
       miss:
-        if (obj->isProxy())
+        if (obj->isProxy()) {
+            types::MarkIteratorUnknown(cx);
             return JSProxy::iterate(cx, obj, flags, vp);
+        }
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
-        if (!vp->isUndefined())
+        if (!vp->isUndefined()) {
+            types::MarkIteratorUnknown(cx);
             return true;
+        }
     }
 
     /* NB: for (var p in null) succeeds by iterating over no properties. */

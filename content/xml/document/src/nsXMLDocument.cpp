@@ -382,8 +382,8 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
                                          nsnull, 0, 0, nsIScriptError::warningFlag,
                                          "DOM",
                                          callingDoc ?
-                                           callingDoc->OuterWindowID() :
-                                           this->OuterWindowID());
+                                           callingDoc->InnerWindowID() :
+                                           this->InnerWindowID());
 
       NS_ENSURE_SUCCESS(rv, rv);
 

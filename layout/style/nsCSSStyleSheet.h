@@ -155,8 +155,8 @@ public:
   virtual nsIDocument* GetOwningDocument() const;  // may be null
   virtual void SetOwningDocument(nsIDocument* aDocument);
 
-  // Find the ID of the owner outer window.
-  virtual PRUint64 FindOwningWindowID() const;
+  // Find the ID of the owner inner window.
+  PRUint64 FindOwningWindowInnerID() const;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif

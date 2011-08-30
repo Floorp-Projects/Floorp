@@ -346,6 +346,18 @@ JSWrapper::trace(JSTracer *trc, JSObject *wrapper)
     MarkObject(trc, *wrappedObject(wrapper), "wrappedObject");
 }
 
+JSObject *
+JSWrapper::wrappedObject(const JSObject *wrapper)
+{
+    return wrapper->getProxyPrivate().toObjectOrNull();
+}
+
+JSWrapper *
+JSWrapper::wrapperHandler(const JSObject *wrapper)
+{
+    return static_cast<JSWrapper *>(wrapper->getProxyHandler());
+}
+
 bool
 JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
 {

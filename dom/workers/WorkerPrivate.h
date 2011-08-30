@@ -299,7 +299,7 @@ public:
   PostMessage(JSContext* aCx, jsval aMessage);
 
   PRUint64
-  GetOuterWindowId();
+  GetInnerWindowId();
 
   void
   UpdateJSContextOptions(JSContext* aCx, PRUint32 aOptions);

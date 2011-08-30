@@ -90,7 +90,7 @@ namespace JSC {
         static const RegisterID stackPointerRegister = SparcRegisters::sp;
 
         static const Scale ScalePtr = TimesFour;
-        static const unsigned int TotalRegisters = 32;
+        static const unsigned int TotalRegisters = 24;
 
         void add32(RegisterID src, RegisterID dest)
         {
@@ -1330,6 +1330,11 @@ namespace JSC {
             m_assembler.fmuld_r(SparcRegisters::f30, dest, dest);
         }
 
+        void absDouble(FPRegisterID src, FPRegisterID dest)
+        {
+            m_assembler.fabsd_r(src, dest);
+        }
+
         void sqrtDouble(FPRegisterID src, FPRegisterID dest)
         {
             m_assembler.fsqrtd_r(src, dest);
@@ -1448,7 +1453,7 @@ namespace JSC {
 
         void zeroDouble(FPRegisterID srcDest)
         {
-            m_assembler.fsubd_r(srcDest, srcDest, srcDest);
+            fastLoadDouble(SparcRegisters::g0, SparcRegisters::g0, srcDest);
         }
 
     protected:
