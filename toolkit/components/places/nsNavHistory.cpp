@@ -128,14 +128,27 @@ using namespace mozilla::places;
 #define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "frecency.unvisitedBookmarkBonus"
 #define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "frecency.unvisitedTypedBonus"
 
-#define PREF_CACHE_TO_MEMORY_PERCENTAGE         "database.cache_to_memory_percentage"
-
 #define PREF_FORCE_DATABASE_REPLACEMENT         "database.replaceOnStartup"
 
-// Default integer value for PREF_CACHE_TO_MEMORY_PERCENTAGE.
-// This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
-// Out of this cache, SQLite will use at most the size of the database file.
-#define DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE 6
+// To calculate the cache size we take into account the available physical
+// memory and the current database size.  This is the percentage of memory
+// we reserve for the former case.
+#define DATABASE_CACHE_TO_MEMORY_PERC 2
+// The minimum size of the cache.  We should never work without a cache, since
+// that would badly hurt WAL journaling mode.
+#define DATABASE_CACHE_MIN_BYTES (PRUint64)5242880 // 5MiB
+
+// We calculate an optimal database size, based on hardware specs.  This
+// pertains more to expiration, but the code is pretty much the same used for
+// cache_size, so it's here to reduce code duplication.
+// This percentage of disk size is used to protect against calculating a too
+// large size on disks with tiny quota or available space.
+#define DATABASE_TO_DISK_PERC 2
+// Maximum size of the optimal database.  High-end hardware has plenty of
+// memory and disk space, but performances don't grow linearly.
+#define DATABASE_MAX_SIZE (PRInt64)167772160 // 160MiB
+// Used to share the calculated optimal database size with other components.
+#define PREF_OPTIMAL_DATABASE_SIZE "history.expiration.transient_optimal_database_size"
 
 // If the physical memory size is not available, use MEMSIZE_FALLBACK_BYTES
 // instead.  Must stay in sync with the code in nsPlacesExpiration.js.
@@ -681,16 +694,19 @@ nsNavHistory::SetJournalMode(enum JournalMode aJournalMode)
 nsresult
 nsNavHistory::InitDB()
 {
+  // WARNING: any statement executed before setting the journal mode must be
+  // finalized, since SQLite doesn't allow changing the journal mode if there
+  // is any outstanding statement.
+
   {
     // Get the page size.  This may be different than the default if the
     // database file already existed with a different page size.
     nsCOMPtr<mozIStorageStatement> statement;
-    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
-                                  getter_AddRefs(statement));
+    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "PRAGMA page_size"
+    ), getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    mozStorageStatementScoper scoper(statement);
+    PRBool hasResult = PR_FALSE;
     rv = statement->ExecuteStep(&hasResult);
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
     rv = statement->GetInt32(0, &mDBPageSize);
@@ -703,29 +719,67 @@ nsNavHistory::InitDB()
       "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Compute the size of the database cache using the device's memory size.
+  // We want to work with a cache that is at a maximum half of the database
+  // size.  We also want it to respect the available memory size.
+
+  // Calculate memory size, fallback to a meaningful value if it fails.
+  PRUint64 memSizeBytes = PR_GetPhysicalMemorySize();
+  if (memSizeBytes == 0) {
+    memSizeBytes = MEMSIZE_FALLBACK_BYTES;
+  }
+
+  PRUint64 cacheSize = memSizeBytes * DATABASE_CACHE_TO_MEMORY_PERC / 100;
+
+  // Calculate an optimal database size for expiration purposes.
+  // We usually want to work with a cache that is half the database size.
+  // Limit the size to avoid extreme values on high-end hardware.
+  PRInt64 optimalDatabaseSize = NS_MIN(static_cast<PRInt64>(cacheSize) * 2,
+                                       DATABASE_MAX_SIZE);
+
+  // Protect against a full disk or tiny quota.
+  PRInt64 diskAvailableBytes = 0;
+  nsCOMPtr<nsILocalFile> localDB = do_QueryInterface(mDBFile);
+  if (localDB &&
+      NS_SUCCEEDED(localDB->GetDiskSpaceAvailable(&diskAvailableBytes)) &&
+      diskAvailableBytes > 0) {
+    optimalDatabaseSize = NS_MIN(optimalDatabaseSize,
+                                 diskAvailableBytes * DATABASE_TO_DISK_PERC / 100);
+  }
+
+  // Share the calculated size if it's meaningful.
+  if (optimalDatabaseSize < PR_INT32_MAX) {
+    (void)mPrefBranch->SetIntPref(PREF_OPTIMAL_DATABASE_SIZE,
+                                  static_cast<PRInt32>(optimalDatabaseSize));
+  }
+
+  // Get the current database size. Due to chunked growth we have to use
+  // page_count to evaluate it.
+  PRUint64 databaseSizeBytes = 0;
+  {
+    nsCOMPtr<mozIStorageStatement> statement;
+    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "PRAGMA page_count"
+    ), getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool hasResult = PR_FALSE;
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
+    PRInt32 pageCount = 0;
+    rv = statement->GetInt32(0, &pageCount);
+    NS_ENSURE_SUCCESS(rv, rv);
+    databaseSizeBytes = pageCount * mDBPageSize;
+  }
+
+  // Set cache to a maximum of half the database size.
+  cacheSize = NS_MIN(cacheSize, databaseSizeBytes / 2);
+  // Ensure we never work without a minimum cache.
+  cacheSize = NS_MAX(cacheSize, DATABASE_CACHE_MIN_BYTES);
+
+  // Set the number of cached pages.
   // We don't use PRAGMA default_cache_size, since the database could be moved
   // among different devices and the value would adapt accordingly.
-  PRInt32 cachePercentage;
-  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_CACHE_TO_MEMORY_PERCENTAGE,
-                                        &cachePercentage)))
-    cachePercentage = DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE;
-  // Sanity checks, we allow values between 0 (disable cache) and 50%.
-  if (cachePercentage > 50)
-    cachePercentage = 50;
-  if (cachePercentage < 0)
-    cachePercentage = 0;
-
-  static PRUint64 physMem = PR_GetPhysicalMemorySize();
-  if (physMem == 0)
-    physMem = MEMSIZE_FALLBACK_BYTES;
-
-  PRUint64 cacheSize = physMem * cachePercentage / 100;
-
-  // Compute number of cached pages, this will be our cache size.
-  PRUint64 cachePages = cacheSize / mDBPageSize;
   nsCAutoString cacheSizePragma("PRAGMA cache_size = ");
-  cacheSizePragma.AppendInt(cachePages);
+  cacheSizePragma.AppendInt(cacheSize / mDBPageSize);
   rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4130,9 +4184,10 @@ nsNavHistory::PreparePlacesForVisitsDelete(const nsCString& aPlaceIdsQueryString
   // -visit_count, as we use that value in our "on idle" query
   // to figure out which places to recalculate frecency first.
   // Pay attention to not set frecency = 0 if visit_count = 0
+  // TODO (bug 487809): we don't need anymore to set frecency here.
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "UPDATE moz_places "
-      "SET frecency = -MAX(visit_count, 1) "
+      "SET frecency = -(visit_count + 1) "
       "WHERE id IN ( "
         "SELECT h.id " 
         "FROM moz_places h "
@@ -4563,8 +4618,9 @@ nsNavHistory::RemoveAllPages()
   // Note, we set frecency to -visit_count since we use that value in our
   // idle query to figure out which places to recalcuate frecency first.
   // We must do this before deleting visits.
+  // TODO (bug 487809): we don't need anymore to set frecency here.
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_places SET frecency = -MAX(visit_count, 1) "
+    "UPDATE moz_places SET frecency = -(visit_count + 1) "
     "WHERE id IN(SELECT b.fk FROM moz_bookmarks b WHERE b.fk NOTNULL)"));
   NS_ENSURE_SUCCESS(rv, rv);
 

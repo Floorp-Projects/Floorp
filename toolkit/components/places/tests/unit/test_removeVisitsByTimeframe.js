@@ -382,8 +382,8 @@ var gTests = [
       do_check_true(bmsvc.isBookmarked(TEST_URI));
 
       waitForAsyncUpdates(function () {
-        print("Frecency should be -visit_count.")
-        do_check_eq(frecencyForUrl(TEST_URI), -10);
+        print("Frecency should be negative.")
+        do_check_true(frecencyForUrl(TEST_URI) < 0);
         run_next_test();
       });
     }

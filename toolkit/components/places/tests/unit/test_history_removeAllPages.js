@@ -90,7 +90,7 @@ let historyObserver = {
         stmt.finalize();
 
         stmt = mDBConn.createStatement(
-          "SELECT h.id FROM moz_places h WHERE h.frecency = -2 " +
+          "SELECT h.id FROM moz_places h WHERE h.frecency < 0 " +
             "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
         do_check_true(stmt.executeStep());
         stmt.finalize();

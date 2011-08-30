@@ -65,7 +65,7 @@ function run_test() {
   setMaxPages(0);
 
   // Add some visited page and a couple expire never annotations for each.
-  let now = Date.now() * 1000;
+  let now = getExpirablePRTime();
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
     hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);
