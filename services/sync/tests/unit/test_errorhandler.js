@@ -613,24 +613,16 @@ add_test(function test_login_network_error() {
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
   Service.clusterURL = "http://localhost:8080/";
 
-  Svc.Obs.add("weave:ui:login:error", function() {
-    do_throw("Should not get here!");
-  });
-
   // Test network errors are not reported.
-  Svc.Obs.add("weave:service:login:error", function onUIUpdate() {
-    Svc.Obs.remove("weave:service:login:error", onUIUpdate);
+  Svc.Obs.add("weave:ui:clear-error", function onClearError() {
+    Svc.Obs.remove("weave:ui:clear-error", onClearError);
 
-    // Wait until other login:error observers are called since
-    // it may change Status.sync.
-    Utils.nextTick(function() {
-      do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
 
-      Service.startOver();
-      Status.resetSync();
-      Services.io.offline = false;
-      run_next_test();
-    });
+    Service.startOver();
+    Status.resetSync();
+    Services.io.offline = false;
+    run_next_test();
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);

@@ -494,6 +494,8 @@ let ErrorHandler = {
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                             LOG_PREFIX_ERROR);
           Svc.Obs.notify("weave:ui:login:error");
+        } else {
+          Svc.Obs.notify("weave:ui:clear-error");
         }
 
         this.dontIgnoreErrors = false;
