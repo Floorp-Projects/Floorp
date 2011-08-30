@@ -109,16 +109,10 @@ const PREF_READONLY_CALCULATED_MAX_URIS = "transient_current_max_pages";
 const PREF_INTERVAL_SECONDS = "interval_seconds";
 const PREF_INTERVAL_SECONDS_NOTSET = 3 * 60;
 
-// The percentage of system memory we will use for the database's cache.
-// Use the same value set in nsNavHistory.cpp.  We use the size of the cache to
-// evaluate how many pages we can store before going over it.
-const PREF_DATABASE_CACHE_PER_MEMORY_PERCENTAGE =
-  "places.history.cache_per_memory_percentage";
-const PREF_DATABASE_CACHE_PER_MEMORY_PERCENTAGE_NOTSET = 6;
-
-// Minimum number of unique URIs to retain.  This is used when system-info
-// returns bogus values.
-const MIN_URIS = 1000;
+// An optimal database size calculated by history.  Used to evaluate a limit
+// to the number of pages we may retain before hitting performance issues.
+const PREF_OPTIMAL_DATABASE_SIZE = "transient_optimal_database_size";
+const PREF_OPTIMAL_DATABASE_SIZE_NOTSET = 167772160; // 160MiB
 
 // Max number of entries to expire at each expiration step.
 // This value is globally used for different kind of data we expire, can be
@@ -141,14 +135,10 @@ const EXPIRE_AGGRESSIVITY_MULTIPLIER = 3;
 
 // This is the average size in bytes of an URI entry in the database.
 // Magic numbers are determined through analysis of the distribution of a ratio
-// between number of unique URIs and database size among our users.  We use a
-// more pessimistic ratio on single cores, since we handle some stuff in a
-// separate thread.
+// between number of unique URIs and database size among our users.
 // Based on these values we evaluate how many unique URIs we can handle before
-// going over the database maximum cache size.  If we are over the maximum
-// number of entries, we will expire.
-const URIENTRY_AVG_SIZE_MIN = 2000;
-const URIENTRY_AVG_SIZE_MAX = 3000;
+// starting expiring some.
+const URIENTRY_AVG_SIZE = 1600;
 
 // Seconds of idle time before starting a larger expiration step.
 // Notice during idle we stop the expiration timer since we don't want to hurt
@@ -210,6 +200,8 @@ const EXPIRATION_QUERIES = {
 
   // Finds visits to be expired.  Will return nothing if we are not over the
   // unique URIs limit.
+  // This explicitly excludes any visits added in the last 7 days, to protect
+  // users with thousands of bookmarks from constantly losing history.
   QUERY_FIND_VISITS_TO_EXPIRE: {
     sql: "INSERT INTO expiration_notify "
        +   "(v_id, url, guid, visit_date, expected_results) "
@@ -217,6 +209,7 @@ const EXPIRATION_QUERIES = {
        + "FROM moz_historyvisits v "
        + "JOIN moz_places h ON h.id = v.place_id "
        + "WHERE (SELECT COUNT(*) FROM moz_places) > :max_uris "
+       + "AND visit_date < strftime('%s','now','localtime','start of day','-7 days','utc') * 1000000 "
        + "ORDER BY v.visit_date ASC "
        + "LIMIT :limit_visits",
     actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN | ACTION.IDLE |
@@ -235,6 +228,10 @@ const EXPIRATION_QUERIES = {
   // Finds orphan URIs in the database.
   // Notice we won't notify single removed URIs on removeAllPages, so we don't
   // run this query in such a case, but just delete URIs.
+  // This could run in the middle of adding a visit or bookmark to a new page.
+  // In such a case since it is async, could end up expiring the orphan page
+  // before it actually gets the new visit or bookmark.
+  // Thus, since new pages get frecency -1, we filter on that.
   QUERY_FIND_URIS_TO_EXPIRE: {
     sql: "INSERT INTO expiration_notify "
        +   "(p_id, url, guid, visit_date, expected_results) "
@@ -244,7 +241,7 @@ const EXPIRATION_QUERIES = {
        + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
        + "WHERE v.id IS NULL "
        +   "AND b.id IS NULL "
-       +   "AND h.ROWID <> IFNULL(:null_skips_last, (SELECT MAX(ROWID) FROM moz_places)) "
+       +   "AND frecency <> -1 "
        + "LIMIT :limit_uris",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN |
              ACTION.IDLE | ACTION.DEBUG
@@ -733,7 +730,8 @@ nsPlacesExpiration.prototype = {
   _isIdleObserver: false,
   _expireOnIdle: false,
   set expireOnIdle(aExpireOnIdle) {
-    // Observe idle regardless, since we want to stop timed expiration.
+    // Observe idle regardless aExpireOnIdle, since we always want to stop
+    // timed expiration on idle, to preserve mobile battery life.
     if (!this._isIdleObserver && !this._shuttingDown) {
       this._idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
       this._isIdleObserver = true;
@@ -764,38 +762,15 @@ nsPlacesExpiration.prototype = {
     catch(e) {}
 
     if (this._urisLimit < 0) {
-      // If physical memory size is not available, use MEMSIZE_FALLBACK_BYTES
-      // instead.  Must stay in sync with the code in nsNavHistory.cpp.
-      const MEMSIZE_FALLBACK_BYTES = 268435456; // 256 M
-
-      // The preference did not exist or has a negative value, so we calculate a
-      // limit based on hardware.
-      let memsize = this._sys.getProperty("memsize"); // Memory size in bytes.
-      if (memsize <= 0)
-        memsize = MEMSIZE_FALLBACK_BYTES;
-
-      let cpucount = this._sys.getProperty("cpucount"); // CPU count.
-      const AVG_SIZE_PER_URIENTRY = cpucount > 1 ? URIENTRY_AVG_SIZE_MIN
-                                                 : URIENTRY_AVG_SIZE_MAX;
-      // We will try to live inside the database cache size, since working out
-      // of it can be really slow.
-      let cache_percentage = PREF_DATABASE_CACHE_PER_MEMORY_PERCENTAGE_NOTSET;
+      // The preference did not exist or has a negative value.
+      // Calculate the number of unique places that may fit an optimal database
+      // size on this hardware.  If there are more than these unique pages,
+      // some will be expired.
+      let optimalDatabaseSize = PREF_OPTIMAL_DATABASE_SIZE_NOTSET;
       try {
-        let prefs = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
-        cache_percentage =
-          prefs.getIntPref(PREF_DATABASE_CACHE_PER_MEMORY_PERCENTAGE);
-        if (cache_percentage < 0) {
-          cache_percentage = 0;
-        }
-        else if (cache_percentage > 50) {
-          cache_percentage = 50;
-        }
-      }
-      catch(e) {}
-      let cachesize = memsize * cache_percentage / 100;
-      this._urisLimit = Math.max(MIN_URIS,
-                                 parseInt(cachesize / AVG_SIZE_PER_URIENTRY));
+        optimalDatabaseSize = this._prefBranch.getIntPref(PREF_OPTIMAL_DATABASE_SIZE);
+      } catch (ex) {}
+      this._urisLimit = Math.ceil(optimalDatabaseSize / URIENTRY_AVG_SIZE);
     }
     // Expose the calculated limit to other components.
     this._prefBranch.setIntPref(PREF_READONLY_CALCULATED_MAX_URIS,
@@ -827,6 +802,11 @@ nsPlacesExpiration.prototype = {
     // Skip expiration during batch mode.
     if (this._inBatchMode)
       return;
+    // Don't try to further expire after shutdown.
+    if (this._shuttingDown &&
+        aAction != ACTION.SHUTDOWN && aAction != ACTION.CLEAN_SHUTDOWN) {
+      return;
+    }
 
     let boundStatements = [];
     for (let queryType in EXPIRATION_QUERIES) {
@@ -901,18 +881,6 @@ nsPlacesExpiration.prototype = {
           aLimit == LIMIT.DEBUG && baseLimit == -1 ? 0 : baseLimit;
         break;
       case "QUERY_FIND_URIS_TO_EXPIRE":
-        // We could run in the middle of adding a new visit or bookmark to
-        // a new page.  In such a case since we are async, we could end up
-        // expiring the page before it actually gets the visit or bookmark,
-        // thinking it's an orphan.  So we never expire the last added page
-        // when expiration does not run on user action.
-        if (aAction != ACTION.TIMED && aAction != ACTION.TIMED_OVERLIMIT &&
-            aAction != ACTION.IDLE) {
-          params.null_skips_last = -1;
-        }
-        else {
-          params.null_skips_last = null;
-        }
         params.limit_uris = baseLimit;
         break;
       case "QUERY_SILENT_EXPIRE_ORPHAN_URIS":
