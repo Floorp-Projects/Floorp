@@ -6359,7 +6359,7 @@ mjit::Compiler::finishLoop(jsbytecode *head)
 #ifdef DEBUG
     if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
         RegisterAllocation *alloc = analysis->getAllocation(head);
-        JaegerSpew(JSpew_Regalloc, "loop allocation at %u:", head - script->code);
+        JaegerSpew(JSpew_Regalloc, "loop allocation at %u:", unsigned(head - script->code));
         frame.dumpAllocation(alloc);
     }
 #endif
