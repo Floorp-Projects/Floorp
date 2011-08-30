@@ -80,6 +80,8 @@ class TypeOracle
   public:
     virtual Unary unaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
+    virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
+    virtual types::TypeSet *parameterTypeSet(JSScript *script, size_t index) { return NULL; }
 };
 
 class DummyOracle : public TypeOracle
@@ -98,6 +100,24 @@ class DummyOracle : public TypeOracle
         b.rval = MIRType_Int32;
         return b;
     }
+};
+
+class TypeInferenceOracle : public TypeOracle
+{
+    JSContext *cx;
+    JSScript *script;
+
+    MIRType getMIRType(types::TypeSet *types);
+
+  public:
+    TypeInferenceOracle() : cx(NULL), script(NULL) {}
+
+    bool init(JSContext *cx, JSScript *script);
+
+    Unary unaryOp(JSScript *script, jsbytecode *pc);
+    Binary binaryOp(JSScript *script, jsbytecode *pc);
+    types::TypeSet *thisTypeSet(JSScript *script);
+    types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
 };
 
 static inline JSValueType

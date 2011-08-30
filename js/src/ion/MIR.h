@@ -209,7 +209,8 @@ class MDefinition : public MNode
     uint32 id_;                    // Instruction ID, which after block re-ordering
                                    // is sorted within a basic block.
     uint32 valueNumber_;           // The instruction's value number (see GVN for details in use)
-    MIRType resultType_;           // Actual result type.
+    types::TypeSet *typeSet_;      // Possible types of values produced by this definition.
+    MIRType resultType_;           // Representation of result type.
     uint32 usedTypes_;             // Set of used types.
     uint32 flags_;                 // Bit flags.
 
@@ -240,6 +241,7 @@ class MDefinition : public MNode
     MDefinition()
       : id_(0),
         valueNumber_(0),
+        typeSet_(NULL),
         resultType_(MIRType_None),
         usedTypes_(0),
         flags_(0)
@@ -291,6 +293,10 @@ class MDefinition : public MNode
 
     MIR_FLAG_LIST(FLAG_ACCESSOR)
 #undef FLAG_ACCESSOR
+
+    types::TypeSet *typeSet() const {
+        return typeSet_;
+    }
 
     MIRType type() const {
         return resultType_;
@@ -375,6 +381,10 @@ class MDefinition : public MNode
     inline MInstruction *toInstruction();
     bool isInstruction() const {
         return !isPhi();
+    }
+
+    void setTypeSet(types::TypeSet *types) {
+        typeSet_ = types;
     }
 
     void setResultType(MIRType type) {
@@ -538,7 +548,7 @@ class MParameter : public MAryInstruction<0>
 
   public:
     INSTRUCTION_HEADER(Parameter);
-    static MParameter *New(int32 index);
+    static MParameter *New(int32 index, types::TypeSet *types);
 
     int32 index() const {
         return index_;
