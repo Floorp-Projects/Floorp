@@ -184,6 +184,15 @@ nsICODecoder::ExtractBPPFromBitmap(PRInt8 *bih)
   return bitsPerPixel;
 }
 
+PRInt32 
+nsICODecoder::ExtractBIHSizeFromBitmap(PRInt8 *bih)
+{
+  PRInt32 headerSize;
+  memcpy(&headerSize, bih, sizeof(headerSize));
+  headerSize = LITTLE_TO_NATIVE32(headerSize);
+  return headerSize;
+}
+
 void
 nsICODecoder::SetHotSpotIfCursor() {
   if (!mIsCursor) {
@@ -360,9 +369,16 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 
   // If we have a BMP inside the ICO and we have read the BIH header
   if (!mIsPNG && mPos == mImageOffset + BITMAPINFOSIZE) {
+
+    // Make sure we have a sane value for the bitmap information header
+    PRInt32 bihSize = ExtractBIHSizeFromBitmap(reinterpret_cast<PRInt8*>(mBIHraw));
+    if (bihSize != BITMAPINFOSIZE) {
+      PostDataError();
+      return;
+    }
     // We are extracting the BPP from the BIH header as it should be trusted 
     // over the one we have from the icon header
-    mBPP = ExtractBPPFromBitmap((PRInt8*)mBIHraw);
+    mBPP = ExtractBPPFromBitmap(reinterpret_cast<PRInt8*>(mBIHraw));
     
     // Init the bitmap decoder which will do most of the work for us
     // It will do everything except the AND mask which isn't present in bitmaps
@@ -399,6 +415,11 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     if (mContainedDecoder->HasDataError()) {
       return;
     }
+
+    // We have the size. If we're doing a size decode, we got what
+    // we came for.
+    if (IsSizeDecode())
+      return;
 
     // Sometimes the ICO BPP header field is not filled out
     // so we should trust the contained resource over our own
@@ -487,7 +508,12 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             mCurLine--;
             mRowBytes = 0;
 
-            PRUint32* imageData = static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetImageData();
+            PRUint32* imageData = 
+              static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetImageData();
+            if (!imageData) {
+              PostDataError();
+              return;
+            }
             PRUint32* decoded = imageData + mCurLine * mDirEntry.mWidth;
             PRUint32* decoded_end = decoded + mDirEntry.mWidth;
             PRUint8* p = mRow, *p_end = mRow + rowSize; 
