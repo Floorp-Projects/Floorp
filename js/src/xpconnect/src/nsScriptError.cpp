@@ -43,6 +43,8 @@
  */
 
 #include "xpcprivate.h"
+#include "nsGlobalWindow.h"
+#include "nsPIDOMWindow.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsScriptError, nsIConsoleMessage, nsIScriptError,
                               nsIScriptError2)
@@ -55,7 +57,9 @@ nsScriptError::nsScriptError()
        mColumnNumber(0),
        mFlags(0),
        mCategory(),
-       mWindowID(0)
+       mOuterWindowID(0),
+       mInnerWindowID(0),
+       mTimeStamp(0)
 {
 }
 
@@ -142,7 +146,7 @@ nsScriptError::InitWithWindowID(const PRUnichar *message,
                                 PRUint32 columnNumber,
                                 PRUint32 flags,
                                 const char *category,
-                                PRUint64 aWindowID)
+                                PRUint64 aInnerWindowID)
 {
     mMessage.Assign(message);
     mSourceName.Assign(sourceName);
@@ -151,7 +155,18 @@ nsScriptError::InitWithWindowID(const PRUnichar *message,
     mColumnNumber = columnNumber;
     mFlags = flags;
     mCategory.Assign(category);
-    mWindowID = aWindowID;
+    mTimeStamp = PR_Now() / 1000;
+    mInnerWindowID = aInnerWindowID;
+
+    if(aInnerWindowID) {
+        nsGlobalWindow* window =
+          nsGlobalWindow::GetInnerWindowWithId(aInnerWindowID);
+        if(window) {
+            nsPIDOMWindow* outer = window->GetOuterWindow();
+            if(outer)
+                mOuterWindowID = outer->WindowID();
+        }
+    }
 
     return NS_OK;
 }
@@ -218,8 +233,22 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
 }
 
 NS_IMETHODIMP
-nsScriptError::GetOuterWindowID(PRUint64 *aWindowID)
+nsScriptError::GetOuterWindowID(PRUint64 *aOuterWindowID)
 {
-    *aWindowID = mWindowID;
+    *aOuterWindowID = mOuterWindowID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptError::GetInnerWindowID(PRUint64 *aInnerWindowID)
+{
+    *aInnerWindowID = mInnerWindowID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptError::GetTimeStamp(PRInt64 *aTimeStamp)
+{
+    *aTimeStamp = mTimeStamp;
     return NS_OK;
 }

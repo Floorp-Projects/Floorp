@@ -90,7 +90,7 @@ XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
 XPCOMUtils.defineLazyGetter(this, "AutocompletePopup", function () {
   var obj = {};
   try {
-    Cu.import("resource://gre/modules/AutocompletePopup.jsm", obj);
+    Cu.import("resource:///modules/AutocompletePopup.jsm", obj);
   }
   catch (err) {
     Cu.reportError(err);

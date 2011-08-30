@@ -52,6 +52,9 @@ EXTRA_PP_COMPONENTS = \
 		ConsoleAPI.manifest \
 		$(NULL)
 
+EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
+		$(NULL)
+
 XPIDLSRCS = \
   nsIEntropyCollector.idl \
   nsIScriptChannel.idl \

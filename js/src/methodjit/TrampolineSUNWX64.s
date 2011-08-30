@@ -38,7 +38,7 @@
 .text
 
 / JSBool JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code,
-/                         FrameRegs *regs, uintptr_t inlineCallCount)
+/                         Value *stackLimit)
 .global JaegerTrampoline
 .type   JaegerTrampoline, @function
 JaegerTrampoline:
@@ -62,7 +62,9 @@ JaegerTrampoline:
      * rcx = inlineCallCount
      * fp must go into rbx
      */
-    pushq %rsi        /* entryFp */
+    pushq $0x0        /* stubRejoin */
+    pushq %rsi        /* entryncode */
+    pushq %rsi        /* entryfp */
     pushq %rcx        /* inlineCallCount */
     pushq %rdi        /* cx */
     pushq %rsi        /* fp */
@@ -89,12 +91,12 @@ JaegerTrampoline:
 .global JaegerTrampolineReturn
 .type   JaegerTrampolineReturn, @function
 JaegerTrampolineReturn:
-    or   %rdx, %rcx
-    movq %rcx, 0x30(%rbx)
+    or   %rdi, %rsi
+    movq %rsx, 0x30(%rbx)
     movq %rsp, %rdi
     call PopActiveVMFrame
 
-    addq $0x58, %rsp
+    addq $0x68, %rsp
     popq %rbx
     popq %r15
     popq %r14
@@ -118,7 +120,7 @@ JaegerThrowpoline:
   throwpoline_exit:
     movq %rsp, %rdi
     call PopActiveVMFrame
-    addq $0x58, %rsp
+    addq $0x68, %rsp
     popq %rbx
     popq %r15
     popq %r14
@@ -129,3 +131,41 @@ JaegerThrowpoline:
     ret
 .size   JaegerThrowpoline, . - JaegerThrowpoline
 
+/ void JaegerInterpoline()
+.global JaegerInterpoline
+.type   JaegerInterpoline, @function
+JaegerInterpoline:
+    movq %rsp, %rcx
+    movq %rax, %rdx
+    call js_InternalInterpret
+    movq 0x38(%rsp), %rbx             /* Load frame */
+    movq 0x30(%rbx), %rsi             /* Load rval payload */
+    and %r14, %rsi                    /* Mask rval payload */
+    movq 0x30(%rbx), %rdi             /* Load rval type */
+    and %r13, %rdi                    /* Mask rval type */
+    movq 0x18(%rsp), %rcx             /* Load scratch -> argc */
+    testq %rax, %rax
+    je   interpoline_exit
+    jmp  *%rax
+  interpoline_exit:
+    movq %rsp, %rdi
+    call PopActiveVMFrame
+    addq $0x68, %rsp
+    popq %rbx
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbp
+    xorq %rax,%rax
+    ret
+.size   JaegerInterpoline, . - JaegerInterpoline
+
+/ void JaegerInterpolineScripted()
+.global JaegerInterpolineScripted
+.type   JaegerInterpolineScripted, @function
+JaegerInterpolineScripted:
+    movq 0x20(%rbx), %rbx             /* load prev */
+    movq %rbx, 0x38(%rsp)
+    jmp JaegerInterpoline
+.size   JaegerInterpolineScripted, . - JaegerInterpolineScripted

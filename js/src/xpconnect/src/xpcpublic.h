@@ -41,6 +41,7 @@
 #define xpcpublic_h
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jsobj.h"
 #include "jsgc.h"
 #include "jspubtd.h"
@@ -221,6 +222,7 @@ struct CompartmentStats
     PRInt64 tjitDataAllocatorsReserve;
     PRInt64 tjitDataNonAllocators;
 #endif
+    TypeInferenceMemoryStats typeInferenceMemory;
 };
 
 struct IterateData

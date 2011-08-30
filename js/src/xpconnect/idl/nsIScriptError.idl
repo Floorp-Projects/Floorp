@@ -96,15 +96,23 @@ interface nsIScriptError : nsIConsoleMessage
  * An interface that nsIScriptError objects can implement to allow
  * them to be initialized with a window id.
  */
-[scriptable, uuid(35cd0f6a-f5bb-497a-ba83-9c8d089b52cd)]
+[scriptable, uuid(4472646b-c928-4d76-9e7c-6b91da7f24cc)]
 interface nsIScriptError2 : nsISupports {
     /* Get the window id this was initialized with.  Zero will be
-       returned if init() was used instead of initWithWindowId(). */
+       returned if init() was used instead of initWithWindowID(). */
     readonly attribute unsigned long long outerWindowID;
+
+    /* Get the inner window id this was initialized with.  Zero will be
+       returned if init() was used instead of initWithWindowID(). */
+    readonly attribute unsigned long long innerWindowID;
+
+    /* Elapsed time, in milliseconds, from a platform-specific zero time to the
+       time the message was created. */
+    readonly attribute long long timeStamp;
 
     /* This should be called instead of nsIScriptError.init to
        initialize with a window id.  The window id should be for the
-       outer window associated with this error. */
+       inner window associated with this error. */
     void initWithWindowID(in wstring message,
                           in wstring sourceName,
                           in wstring sourceLine,
@@ -112,7 +120,7 @@ interface nsIScriptError2 : nsISupports {
                           in PRUint32 columnNumber,
                           in PRUint32 flags,
                           in string category,
-                          in unsigned long long windowID);
+                          in unsigned long long innerWindowID);
 };
 
 %{ C++

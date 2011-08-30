@@ -252,12 +252,12 @@ protected:
   // Event Source owner information:
   // - the script file name
   // - source code line number where the Event Source object was constructed.
-  // - the window ID of the outer window where the script lives. Note that this
-  // may not be the same as the Event Source owner window.
+  // - the ID of the inner window where the script lives. Note that this may not
+  //   be the same as the Event Source owner window.
   // These attributes are used for error reporting.
   nsString mScriptFile;
   PRUint32 mScriptLine;
-  PRUint64 mWindowID;
+  PRUint64 mInnerWindowID;
 
 private:
   nsEventSource(const nsEventSource& x);   // prevent bad usage

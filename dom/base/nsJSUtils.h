@@ -71,14 +71,14 @@ public:
   static nsIScriptContext *GetDynamicScriptContext(JSContext *aContext);
 
   /**
-   * Retrieve the outer window ID based on the given JSContext.
+   * Retrieve the inner window ID based on the given JSContext.
    *
    * @param JSContext aContext
-   *        The JSContext from which you want to find the outer window ID.
+   *        The JSContext from which you want to find the inner window ID.
    *
-   * @returns PRUint64 the outer window ID.
+   * @returns PRUint64 the inner window ID.
    */
-  static PRUint64 GetCurrentlyRunningCodeWindowID(JSContext *aContext);
+  static PRUint64 GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext);
 };
 
 

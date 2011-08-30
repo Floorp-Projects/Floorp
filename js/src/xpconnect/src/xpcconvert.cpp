@@ -1827,7 +1827,7 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
                                (const PRUnichar *)report->uclinebuf, report->lineno,
                                report->uctokenptr - report->uclinebuf, report->flags,
                                "XPConnect JavaScript",
-                               nsJSUtils::GetCurrentlyRunningCodeWindowID(ccx.GetJSContext()));
+                               nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(ccx.GetJSContext()));
     }
 
     if(data)

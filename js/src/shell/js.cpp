@@ -95,6 +95,7 @@
 #include "jsworkers.h"
 #include "jsheaptools.h"
 
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -155,6 +156,7 @@ static volatile bool gCanceled = false;
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 static bool enableProfiling = false;
+static bool enableTypeInference = false;
 static bool enableDisassemblyDumps = false;
 
 static bool printTiming = false;
@@ -617,6 +619,7 @@ static const struct {
     {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
+    {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
     {"xml",             JSOPTION_XML},
 };
@@ -791,6 +794,7 @@ Load(JSContext *cx, uintN argc, jsval *vp)
             return false;
     }
 
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -1172,7 +1176,13 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        if (!cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
+        /*
+         * :XXX: Ignore calls to this native when inference is enabled,
+         * with METHODJIT_ALWAYS recompilation can happen and discard the
+         * script's jitcode.
+         */
+        if (!cx->typeInferenceEnabled() &&
+            !cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
@@ -1668,6 +1678,10 @@ Trap(JSContext *cx, uintN argc, jsval *vp)
     argv[argc] = STRING_TO_JSVAL(str);
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
+    if (uint32(i) >= script->length) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TRAP_USAGE);
+        return JS_FALSE;
+    }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_SetTrap(cx, script, script->code + i, TrapHandler, STRING_TO_JSVAL(str));
 }
@@ -2329,7 +2343,7 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
                 return JS_FALSE;
             JSObject *obj;
-            if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+            if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
                 if (!obj->getProperty(cx, id, &value))
@@ -2441,6 +2455,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
                      maxDepth, thingToIgnore);
     if (dumpFile != stdout)
         fclose(dumpFile);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
 
   not_traceable_arg:
@@ -4591,6 +4606,15 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
+    if (method->getFunctionPrivate()->isInterpreted() &&
+        method->getFunctionPrivate()->script()->compileAndGo) {
+        /* Can't reparent compileAndGo scripts. */
+        JSAutoByteString nameBytes(cx, name);
+        if (!!nameBytes)
+            JS_ReportError(cx, "can't bind method %s to compileAndGo script", nameBytes.ptr());
+        return JS_FALSE;
+    }
+
     jsid id;
     if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
         return JS_FALSE;
@@ -5203,6 +5227,8 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_JIT);
     if (enableMethodJit)
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
+    if (enableTypeInference)
+        JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     return cx;
 }
 
@@ -5390,6 +5416,15 @@ int
 Shell(JSContext *cx, OptionParser *op, char **envp)
 {
     JSAutoRequest ar(cx);
+
+    /*
+     * First check to see if type inference is enabled. This flag must be set
+     * on the compartment when it is constructed.
+     */
+    if (op->getBoolOption('n')) {
+        enableTypeInference = !enableTypeInference;
+        JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+    }
 
     JSObject *glob = NewGlobalObject(cx, NEW_COMPARTMENT);
     if (!glob)
@@ -5581,6 +5616,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
         || !op.addBoolOption('j', "tracejit", "Enable the JaegerMonkey trace JIT")
         || !op.addBoolOption('p', "profiling", "Enable runtime profiling select JIT mode")
+        || !op.addBoolOption('n', "typeinfer", "Enable type inference")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
                              "Do not try to run in the interpreter before "

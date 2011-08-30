@@ -76,18 +76,19 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-#include "vm/GlobalObject.h"
-
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 #include "jsautooplen.h"        // generated headers last
 
+#include "vm/GlobalObject.h"
 #include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 using namespace js::unicode;
 
 #ifdef JS_TRACER
@@ -2252,7 +2253,7 @@ class SplitMatchResult {
 
 template<class Matcher>
 static JSObject *
-SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch)
+SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch, TypeObject *type)
 {
     size_t strLength = str->length();
     SplitMatchResult result;
@@ -2351,6 +2352,8 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32 limit, Matcher splitMatch
                     if (!sub || !splits.append(StringValue(sub)))
                         return NULL;
                 } else {
+                    /* Only string entries have been accounted for so far. */
+                    AddTypeProperty(cx, type, NULL, UndefinedValue());
                     if (!splits.append(UndefinedValue()))
                         return NULL;
                 }
@@ -2444,6 +2447,11 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
+    TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Array);
+    if (!type)
+        return false;
+    AddTypeProperty(cx, type, NULL, Type::StringType());
+
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32 limit;
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2479,6 +2487,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         JSObject *aobj = NewDenseEmptyArray(cx);
         if (!aobj)
             return false;
+        aobj->setType(type);
         vp->setObject(*aobj);
         return true;
     }
@@ -2489,6 +2498,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
         JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
             return false;
+        aobj->setType(type);
         vp->setObject(*aobj);
         return true;
     }
@@ -2499,15 +2509,16 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     /* Steps 11-15. */
     JSObject *aobj;
     if (re) {
-        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()));
+        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(re, cx->regExpStatics()), type);
     } else {
         // NB: sepstr is anchored through its storage in vp[2].
-        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr));
+        aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
     }
     if (!aobj)
         return false;
 
     /* Step 16. */
+    aobj->setType(type);
     vp->setObject(*aobj);
     return true;
 }
@@ -3198,6 +3209,12 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     {
         return NULL;
     }
+
+    /* Capture normal data properties pregenerated for String objects. */
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+    AddTypeProperty(cx, type, "length", Type::Int32Type());
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
         return NULL;
