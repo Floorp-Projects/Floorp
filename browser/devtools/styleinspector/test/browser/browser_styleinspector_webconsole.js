@@ -128,9 +128,6 @@ function teststylePanels() {
     is(htmlTree.viewedElement, stylePanels[i].cssLogic.viewedElement,
       "cssLogic node matches the cssHtmlTree node (id=" + eltId + ")");
 
-    ok(groupRuleCount(0, stylePanels[i]) > 0,
-       "we have rules for the current node (id=" + eltArray[i].id + ")");
-
     // Check that the correct css selector has been selected as active
     let matchedSelectors = cssLogic.getPropertyInfo("font-family").matchedSelectors;
     let sel = matchedSelectors[0];
@@ -199,28 +196,4 @@ function cleanUp()
   info("cleaning up");
   doc = hudBox = stylePanels = jsterm = null;
   finishTest();
-}
-
-function groupRuleCount(groupId, aStylePanel)
-{
-  let groupRules = 0;
-  let group = aStylePanel.cssHtmlTree.styleGroups[groupId];
-
-  ok(group, "we have a StyleGroupView");
-  ok(group.tree, "we have the CssHtmlTree object");
-
-  let cssLogic = aStylePanel.cssLogic;
-
-  ok(cssLogic, "we have the CssLogic object");
-
-  // we use the click event to populate the groups properties
-  group.click();
-
-  ok(group.properties.childElementCount > 0, "the StyleGroupView has properties");
-
-  group.propertyViews.forEach(function(property) {
-    groupRules += cssLogic.getPropertyInfo(property.name).matchedRuleCount;
-  });
-
-  return groupRules;
 }

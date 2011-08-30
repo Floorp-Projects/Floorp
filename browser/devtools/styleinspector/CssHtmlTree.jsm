@@ -72,13 +72,15 @@ function CssHtmlTree(aStyleWin, aCssLogic, aPanel)
   // Nodes used in templating
   this.root = this.styleDocument.getElementById("root");
   this.templateRoot = this.styleDocument.getElementById("templateRoot");
+  this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
+  this.templateProperty = this.styleDocument.getElementById("templateProperty");
   this.panel = aPanel;
 
   // The element that we're inspecting, and the document that it comes from.
   this.viewedElement = null;
   this.viewedDocument = null;
 
-  this.createStyleGroupViews();
+  this.createStyleViews();
 }
 
 /**
@@ -104,10 +106,16 @@ CssHtmlTree.l10n = function CssHtmlTree_l10n(aName)
  * @param {nsIDOMElement} aDestination the destination node where the
  * processed nodes will be displayed.
  * @param {object} aData the data to pass to the template.
+ * @param {Boolean} aPreserveDestination If true then the template will be
+ * appended to aDestination's content else aDestination.innerHTML will be
+ * cleared before the template is appended.
  */
-CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate, aDestination, aData)
+CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate,
+                                  aDestination, aData, aPreserveDestination)
 {
-  aDestination.innerHTML = "";
+  if (!aPreserveDestination) {
+    aDestination.innerHTML = "";
+  }
 
   // All the templater does is to populate a given DOM tree with the given
   // values, so we need to clone the template first.
@@ -146,12 +154,11 @@ CssHtmlTree.prototype = {
    */
   highlight: function CssHtmlTree_highlight(aElement)
   {
-    this.viewedElement = aElement;
+    if (this.viewedElement == aElement) {
+      return;
+    }
 
-    // Reset the style groups. Without this previously expanded groups
-    // will fail to expand when inspecting subsequent nodes
-    let close = !aElement;
-    this.styleGroups.forEach(function(group) group.reset(close));
+    this.viewedElement = aElement;
 
     if (this.viewedElement) {
       this.viewedDocument = this.viewedElement.ownerDocument;
@@ -160,6 +167,31 @@ CssHtmlTree.prototype = {
       this.viewedDocument = null;
       this.root.innerHTML = "";
     }
+
+    this.propertyContainer.innerHTML = "";
+
+    // We use a setTimeout loop to display the properties in batches of 25 at a
+    // time. This gives a perceptibly more responsive UI and allows us to cancel
+    // the displaying of properties in the case that a new element is selected.
+    let i = 0;
+    let batchSize = 25;
+    let max = CssHtmlTree.propertyNames.length - 1;
+    function displayProperties() {
+      if (this.viewedElement == aElement && this.panel.isOpen()) {
+        // Display the next 25 properties
+        for (let step = i + batchSize; i < step && i <= max; i++) {
+          let propView = new PropertyView(this, CssHtmlTree.propertyNames[i]);
+          CssHtmlTree.processTemplate(
+              this.templateProperty, this.propertyContainer, propView, true);
+        }
+        if (i < max) {
+          // There are still some properties to display. We loop here to display
+          // the next batch of 25.
+          this.win.setTimeout(displayProperties.bind(this), 0);
+        }
+      }
+    }
+    this.win.setTimeout(displayProperties.bind(this), 0);
   },
 
   /**
@@ -171,10 +203,13 @@ CssHtmlTree.prototype = {
   pathClick: function CssHtmlTree_pathClick(aEvent)
   {
     aEvent.preventDefault();
-    if (aEvent.target && aEvent.target.pathElement) {
+    if (aEvent.target && this.viewedElement != aEvent.target.pathElement) {
+      this.propertyContainer.innerHTML = "";
       if (this.win.InspectorUI.selection) {
         if (aEvent.target.pathElement != this.win.InspectorUI.selection) {
-          this.win.InspectorUI.inspectNode(aEvent.target.pathElement);
+          let elt = aEvent.target.pathElement;
+          this.win.InspectorUI.inspectNode(elt);
+          this.panel.selectNode(elt);
         }
       } else {
         this.panel.selectNode(aEvent.target.pathElement);
@@ -195,369 +230,32 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * Returns arrays of categorized properties.
+   * The CSS as displayed by the UI.
    */
-  _getPropertiesByGroup: function CssHtmlTree_getPropertiesByGroup()
+  createStyleViews: function CssHtmlTree_createStyleViews()
   {
-    return {
-      text: [
-        "color",                    // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "color-interpolation",      //
-        "color-interpolation-filters", //
-        "direction",                // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "fill",                     //
-        "fill-opacity",             //
-        "fill-rule",                //
-        "filter",                   //
-        "flood-color",              //
-        "flood-opacity",            //
-        "font-family",              // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "font-size",                // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "font-size-adjust",         // inherit http://www.w3.org/TR/WD-font/#font-size-props
-        "font-stretch",             // inherit http://www.w3.org/TR/WD-font/#font-stretch
-        "font-style",               // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "font-variant",             // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "font-weight",              // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "ime-mode",                 //
-        "letter-spacing",           // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "lighting-color",           //
-        "line-height",              // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "opacity",                  // no      http://www.w3.org/TR/css3-color/#transparency
-        "quotes",                   // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "stop-color",               //
-        "stop-opacity",             //
-        "stroke-opacity",           //
-        "text-align",               // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "text-anchor",              //
-        "text-decoration",          // no      http://www.w3.org/TR/CSS21/propidx.html
-        "text-indent",              // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "text-overflow",            //
-        "text-rendering",           // inherit http://www.w3.org/TR/SVG/painting.html#TextRenderingProperty !
-        "text-shadow",              // inherit http://www.w3.org/TR/css3-text/#text-shadow
-        "text-transform",           // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "vertical-align",           // no      http://www.w3.org/TR/CSS21/propidx.html
-        "white-space",              // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "word-spacing",             // inherit http://www.w3.org/TR/css3-text/#word-spacing
-        "word-wrap",                // inherit http://www.w3.org/TR/css3-text/#word-wrap
-        "-moz-column-count",        // no      http://www.w3.org/TR/css3-multicol/#column-count
-        "-moz-column-gap",          // no      http://www.w3.org/TR/css3-multicol/#column-gap
-        "-moz-column-rule-color",   // no      http://www.w3.org/TR/css3-multicol/#crc
-        "-moz-column-rule-style",   // no      http://www.w3.org/TR/css3-multicol/#column-rule-style
-        "-moz-column-rule-width",   // no      http://www.w3.org/TR/css3-multicol/#column-rule-width
-        "-moz-column-width",        // no      http://www.w3.org/TR/css3-multicol/#column-width
-        "-moz-font-feature-settings",  //
-        "-moz-font-language-override", //
-        "-moz-hyphens",                //
-        "-moz-text-decoration-color",  //
-        "-moz-text-decoration-style",  //
-        "-moz-text-decoration-line",   //
-        "-moz-text-blink",          //
-        "-moz-tab-size",            //
-      ],
-      list: [
-        "list-style-image",         // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "list-style-position",      // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "list-style-type",          // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "marker-end",               //
-        "marker-mid",               //
-        "marker-offset",            //
-        "marker-start",             //
-      ],
-      background: [
-        "background-attachment",    // no      http://www.w3.org/TR/css3-background/#background-attachment
-        "background-clip",          // no      http://www.w3.org/TR/css3-background/#background-clip
-        "background-color",         // no      http://www.w3.org/TR/css3-background/#background-color
-        "background-image",         // no      http://www.w3.org/TR/css3-background/#background-image
-        "background-origin",        // no      http://www.w3.org/TR/css3-background/#background-origin
-        "background-position",      // no      http://www.w3.org/TR/css3-background/#background-position
-        "background-repeat",        // no      http://www.w3.org/TR/css3-background/#background-repeat
-        "background-size",          // no      http://www.w3.org/TR/css3-background/#background-size
-        "-moz-appearance",          //
-        "-moz-background-inline-policy", //
-      ],
-      dims: [
-        "width",                    // no      http://www.w3.org/TR/CSS21/propidx.html
-        "height",                   // no      http://www.w3.org/TR/CSS21/propidx.html
-        "max-width",                // no      http://www.w3.org/TR/CSS21/propidx.html
-        "max-height",               // no      http://www.w3.org/TR/CSS21/propidx.html
-        "min-width",                // no      http://www.w3.org/TR/CSS21/propidx.html
-        "min-height",               // no      http://www.w3.org/TR/CSS21/propidx.html
-        "margin-top",               // no      http://www.w3.org/TR/CSS21/propidx.html
-        "margin-right",             // no      http://www.w3.org/TR/CSS21/propidx.html
-        "margin-bottom",            // no      http://www.w3.org/TR/CSS21/propidx.html
-        "margin-left",              // no      http://www.w3.org/TR/CSS21/propidx.html
-        "padding-top",              // no      http://www.w3.org/TR/CSS21/propidx.html
-        "padding-right",            // no      http://www.w3.org/TR/CSS21/propidx.html
-        "padding-bottom",           // no      http://www.w3.org/TR/CSS21/propidx.html
-        "padding-left",             // no      http://www.w3.org/TR/CSS21/propidx.html
-        "clip",                     // no      http://www.w3.org/TR/CSS21/propidx.html
-        "clip-path",                //
-        "clip-rule",                //
-        "resize",                   // no      http://www.w3.org/TR/css3-ui/#resize
-        "stroke-width",             //
-        "-moz-box-flex",            //
-        "-moz-box-sizing",          // no      http://www.w3.org/TR/css3-ui/#box-sizing
-      ],
-      pos: [
-        "top",                      // no      http://www.w3.org/TR/CSS21/propidx.html
-        "right",                    // no      http://www.w3.org/TR/CSS21/propidx.html
-        "bottom",                   // no      http://www.w3.org/TR/CSS21/propidx.html
-        "left",                     // no      http://www.w3.org/TR/CSS21/propidx.html
-        "display",                  // no      http://www.w3.org/TR/CSS21/propidx.html
-        "float",                    // no      http://www.w3.org/TR/CSS21/propidx.html
-        "clear",                    // no      http://www.w3.org/TR/CSS21/propidx.html
-        "position",                 // no      http://www.w3.org/TR/CSS21/propidx.html
-        "visibility",               // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "overflow",                 //
-        "overflow-x",               // no      http://www.w3.org/TR/CSS21/propidx.html
-        "overflow-y",               // no      http://www.w3.org/TR/CSS21/propidx.html
-        "z-index",                  // no      http://www.w3.org/TR/CSS21/propidx.html
-        "dominant-baseline",        //
-        "page-break-after",         //
-        "page-break-before",        //
-        "stroke-dashoffset",        //
-        "unicode-bidi",             //
-        "-moz-box-align",           //
-        "-moz-box-direction",       //
-        "-moz-box-ordinal-group",   //
-        "-moz-box-orient",          //
-        "-moz-box-pack",            //
-        "-moz-float-edge",          //
-        "-moz-orient",              //
-        "-moz-stack-sizing",        //
-      ],
-      border: [
-        "border-top-width",         // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-right-width",       // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-bottom-width",      // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-left-width",        // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-top-color",         // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-right-color",       // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-bottom-color",      // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-left-color",        // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-top-style",         // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-right-style",       // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-bottom-style",      // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-left-style",        // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-collapse",          // no      http://www.w3.org/TR/CSS21/propidx.html
-        "border-spacing",           // no      http://www.w3.org/TR/CSS21/propidx.html
-        "outline-offset",           // no      http://www.w3.org/TR/CSS21/propidx.html
-        "outline-style",            //
-        "outline-color",            //
-        "outline-width",            //
-        "border-top-left-radius",       // no http://www.w3.org/TR/css3-background/#border-radius
-        "border-top-right-radius",      // no http://www.w3.org/TR/css3-background/#border-radius
-        "border-bottom-right-radius",   // no http://www.w3.org/TR/css3-background/#border-radius
-        "border-bottom-left-radius",    // no http://www.w3.org/TR/css3-background/#border-radius
-        "-moz-border-bottom-colors",    //
-        "-moz-border-image",            //
-        "-moz-border-left-colors",      //
-        "-moz-border-right-colors",     //
-        "-moz-border-top-colors",       //
-        "-moz-outline-radius-topleft",      // no http://www.w3.org/TR/CSS2/ui.html#dynamic-outlines ?
-        "-moz-outline-radius-topright",     // no http://www.w3.org/TR/CSS2/ui.html#dynamic-outlines ?
-        "-moz-outline-radius-bottomright",  // no http://www.w3.org/TR/CSS2/ui.html#dynamic-outlines ?
-        "-moz-outline-radius-bottomleft",   // no http://www.w3.org/TR/CSS2/ui.html#dynamic-outlines ?
-      ],
-      other: [
-        "box-shadow",               // no      http://www.w3.org/TR/css3-background/#box-shadow
-        "caption-side",             // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "content",                  // no      http://www.w3.org/TR/CSS21/propidx.html
-        "counter-increment",        // no      http://www.w3.org/TR/CSS21/propidx.html
-        "counter-reset",            // no      http://www.w3.org/TR/CSS21/propidx.html
-        "cursor",                   // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "empty-cells",              // inherit http://www.w3.org/TR/CSS21/propidx.html
-        "image-rendering",          // inherit http://www.w3.org/TR/SVG/painting.html#ImageRenderingProperty
-        "mask",                     //
-        "pointer-events",           // inherit http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
-        "shape-rendering",          //
-        "stroke",                   //
-        "stroke-dasharray",         //
-        "stroke-linecap",           //
-        "stroke-linejoin",          //
-        "stroke-miterlimit",        //
-        "table-layout",             // no      http://www.w3.org/TR/CSS21/propidx.html
-        "-moz-animation-delay",     //
-        "-moz-animation-direction", //
-        "-moz-animation-duration",  //
-        "-moz-animation-fill-mode", //
-        "-moz-animation-iteration-count", //
-        "-moz-animation-name",            //
-        "-moz-animation-play-state",      //
-        "-moz-animation-timing-function", //
-        "-moz-backface-visibility",       //
-        "-moz-binding",                   //
-        "-moz-force-broken-image-icon",   //
-        "-moz-image-region",        //
-        "-moz-perspective",         //
-        "-moz-perspective-origin",  //
-        "-moz-transform",           // no      http://www.w3.org/TR/css3-2d-transforms/#transform-property
-        "-moz-transform-origin",    //
-        "-moz-transition-delay",    //
-        "-moz-transition-duration", //
-        "-moz-transition-property", //
-        "-moz-transition-timing-function", //
-        "-moz-user-focus",          // inherit http://www.w3.org/TR/2000/WD-css3-userint-20000216#user-focus
-        "-moz-user-input",          // inherit http://www.w3.org/TR/2000/WD-css3-userint-20000216#user-input
-        "-moz-user-modify",         // inherit http://www.w3.org/TR/2000/WD-css3-userint-20000216#user-modify
-        "-moz-user-select",         // no      http://www.w3.org/TR/2000/WD-css3-userint-20000216#user-select
-        "-moz-window-shadow",       //
-      ],
-    };
-  },
-
-  /**
-   * The CSS groups as displayed by the UI.
-   */
-  createStyleGroupViews: function CssHtmlTree_createStyleGroupViews()
-  {
-    if (!CssHtmlTree.propertiesByGroup) {
-      let pbg = CssHtmlTree.propertiesByGroup = this._getPropertiesByGroup();
-
-      // Add any supported properties that are not categorized to the "other" group
-      let mergedArray = Array.concat(
-          pbg.text,
-          pbg.list,
-          pbg.background,
-          pbg.dims,
-          pbg.pos,
-          pbg.border,
-          pbg.other
-      );
-
-      // Here we build and cache a list of css properties supported by the browser
-      // and store a list to check against. We could use any element but let's
-      // use the inspector style panel
-      let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.body);
-      CssHtmlTree.supportedPropertyLookup = {};
-      for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
-        let prop = styles.item(i);
-        CssHtmlTree.supportedPropertyLookup[prop] = true;
-
-        if (mergedArray.indexOf(prop) == -1) {
-          pbg.other.push(prop);
-        }
-      }
-
-      this.propertiesByGroup = CssHtmlTree.propertiesByGroup;
-    }
-
-    let pbg = CssHtmlTree.propertiesByGroup;
-
-    // These group titles are localized by their ID. See the styleinspector.properties file.
-    this.styleGroups = [
-      new StyleGroupView(this, "Text_Fonts_and_Color", pbg.text),
-      new StyleGroupView(this, "Lists", pbg.list),
-      new StyleGroupView(this, "Background", pbg.background),
-      new StyleGroupView(this, "Dimensions", pbg.dims),
-      new StyleGroupView(this, "Positioning_and_Page_Flow", pbg.pos),
-      new StyleGroupView(this, "Borders", pbg.border),
-      new StyleGroupView(this, "Effects_and_Other", pbg.other),
-    ];
-  },
-};
-
-/**
- * A container to give easy access to style group data from the template engine.
- *
- * @constructor
- * @param {CssHtmlTree} aTree the instance of the CssHtmlTree object that we are
- * working with.
- * @param {string} aId the style group ID.
- * @param {array} aPropertyNames the list of property names associated to this
- * style group view.
- */
-function StyleGroupView(aTree, aId, aPropertyNames)
-{
-  this.tree = aTree;
-  this.id = aId;
-  this.getRTLAttr = CssHtmlTree.getRTLAttr;
-  this.localName = CssHtmlTree.l10n("group." + this.id);
-
-  this.propertyViews = [];
-  aPropertyNames.forEach(function(aPropertyName) {
-    if (this.isPropertySupported(aPropertyName)) {
-      this.propertyViews.push(new PropertyView(this.tree, this, aPropertyName));
-    }
-  }, this);
-
-  this.populated = false;
-
-  this.templateProperties = this.tree.styleDocument.getElementById("templateProperties");
-
-  // Populated by templater: parent element containing the open attribute
-  this.element = null;
-  // Destination for templateProperties.
-  this.properties = null;
-}
-
-StyleGroupView.prototype = {
-  /**
-   * The click event handler for the title of the style group view.
-   */
-  click: function StyleGroupView_click()
-  {
-    // TODO: Animate opening/closing. See bug 587752.
-    if (this.element.hasAttribute("open")) {
-      this.element.removeAttribute("open");
+    if (CssHtmlTree.propertyNames) {
       return;
     }
 
-    if (!this.populated) {
-      CssHtmlTree.processTemplate(this.templateProperties, this.properties, this);
-      this.populated = true;
-    }
+    CssHtmlTree.propertyNames = [];
 
-    this.element.setAttribute("open", "");
-  },
-
-  /**
-   * Close the style group view.
-   */
-  close: function StyleGroupView_close()
-  {
-    if (this.element) {
-      this.element.removeAttribute("open");
-    }
-  },
-
-  /**
-   * Reset the style group view and its property views.
-   *
-   * @param {boolean} aClosePanel tells if the style panel is closing or not.
-   */
-  reset: function StyleGroupView_reset(aClosePanel)
-  {
-    this.close();
-    this.populated = false;
-    for (let i = 0, numViews = this.propertyViews.length; i < numViews; i++) {
-      this.propertyViews[i].reset();
-    }
-
-    if (this.properties) {
-      if (aClosePanel) {
-        if (this.element) {
-          this.element.removeChild(this.properties);
-        }
-
-        this.properties = null;
+    // Here we build and cache a list of css properties supported by the browser
+    // We could use any element but let's use the main document's body
+    let styles = this.styleWin.contentWindow.getComputedStyle(this.styleDocument.body);
+    let mozProps = [];
+    for (let i = 0, numStyles = styles.length; i < numStyles; i++) {
+      let prop = styles.item(i);
+      if (prop.charAt(0) == "-") {
+        mozProps.push(prop);
       } else {
-        while (this.properties.hasChildNodes()) {
-          this.properties.removeChild(this.properties.firstChild);
-        }
+        CssHtmlTree.propertyNames.push(prop);
       }
     }
-  },
 
-  /**
-   * Check if a CSS property is supported
-   *
-   * @param {string} aProperty the CSS property to check for
-   *
-   * @return {boolean} true or false
-   */
-  isPropertySupported: function(aProperty) {
-    return aProperty && aProperty in CssHtmlTree.supportedPropertyLookup;
+    CssHtmlTree.propertyNames.sort();
+    CssHtmlTree.propertyNames.push.apply(CssHtmlTree.propertyNames,
+      mozProps.sort());
   },
 };
 
@@ -566,15 +264,12 @@ StyleGroupView.prototype = {
  *
  * @constructor
  * @param {CssHtmlTree} aTree the CssHtmlTree instance we are working with.
- * @param {StyleGroupView} aGroup the StyleGroupView instance we are working
- * with.
  * @param {string} aName the CSS property name for which this PropertyView
  * instance will render the rules.
  */
-function PropertyView(aTree, aGroup, aName)
+function PropertyView(aTree, aName)
 {
   this.tree = aTree;
-  this.group = aGroup;
   this.name = aName;
   this.getRTLAttr = CssHtmlTree.getRTLAttr;
 
@@ -583,7 +278,7 @@ function PropertyView(aTree, aGroup, aName)
 
   this.link = "https://developer.mozilla.org/en/CSS/" + aName;
 
-  this.templateRules = this.tree.styleDocument.getElementById("templateRules");
+  this.templateRules = aTree.styleDocument.getElementById("templateRules");
 
   // The parent element which contains the open attribute
   this.element = null;
@@ -608,7 +303,6 @@ PropertyView.prototype = {
       return;
     }
 
-    // TODO: Animate opening/closing. See bug 587752.
     if (this.element.hasAttribute("open")) {
       this.element.removeAttribute("open");
       return;
@@ -661,15 +355,19 @@ PropertyView.prototype = {
 
     if (matchedRuleCount > 0) {
       aElement.classList.add("rule-count");
+      aElement.firstElementChild.className = "expander";
 
       let str = CssHtmlTree.l10n("property.numberOfRules");
-      result = PluralForm.get(matchedRuleCount, str).replace("#1", matchedRuleCount);
+      result = PluralForm.get(matchedRuleCount, str)
+          .replace("#1", matchedRuleCount);
     } else if (this.showUnmatchedLink) {
       aElement.classList.add("rule-unmatched");
+      aElement.firstElementChild.className = "expander";
 
       let unmatchedRuleCount = this.propertyInfo.unmatchedRuleCount;
       let str = CssHtmlTree.l10n("property.numberOfUnmatchedRules");
-      result = PluralForm.get(unmatchedRuleCount, str).replace("#1", unmatchedRuleCount);
+      result = PluralForm.get(unmatchedRuleCount, str)
+          .replace("#1", unmatchedRuleCount);
     }
     return result;
   },
@@ -772,7 +470,8 @@ SelectorView.prototype = {
   /**
    * Cache localized status names.
    *
-   * These statuses are localized inside the styleinspector.properties string bundle.
+   * These statuses are localized inside the styleinspector.properties string
+   * bundle.
    * @see CssLogic.jsm - the CssLogic.STATUS array.
    *
    * @return {void}
