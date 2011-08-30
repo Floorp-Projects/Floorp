@@ -14,6 +14,8 @@
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
+    locale/browser/styleinspector.properties       (%chrome/browser/styleinspector.properties)
+    locale/browser/styleinspector.dtd              (%chrome/browser/styleinspector.dtd)
     locale/browser/scratchpad.properties           (%chrome/browser/scratchpad.properties)
     locale/browser/scratchpad.dtd                  (%chrome/browser/scratchpad.dtd)
     locale/browser/inspector.properties            (%chrome/browser/inspector.properties)
