@@ -1359,10 +1359,6 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
     JSDestroyScriptHook hook;
 
-#ifdef JS_METHODJIT
-    mjit::ReleaseScriptCode(cx, script);
-#endif
-
     hook = cx->debugHooks->destroyScriptHook;
     if (hook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
@@ -1455,6 +1451,12 @@ void
 js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner)
 {
     JS_ASSERT(cx->runtime->gcRunning);
+
+#ifdef JS_METHODJIT
+    /* Keep the hook from trying to recompile while the GC is running. */
+    mjit::ReleaseScriptCode(cx, script);
+#endif
+
     js_CallDestroyScriptHook(cx, script);
     DestroyScript(cx, script, owner, 100);
 }
