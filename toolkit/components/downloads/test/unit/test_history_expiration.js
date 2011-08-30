@@ -92,8 +92,9 @@ function run_test()
                 getService(Ci.nsINavHistoryService);
   // Add the download to places
   // Add the visit in the past to circumvent possible VM timing bugs
-  let yesterday = Date.now() - 24 * 60 * 60 * 1000;
-  histsvc.addVisit(theURI, yesterday * 1000, null,
+  // Go back by 8 days, since expiration ignores history in the last 7 days.
+  let expirableTime = Date.now() - 8 * 24 * 60 * 60 * 1000;
+  histsvc.addVisit(theURI, expirableTime * 1000, null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
 
   // Get the download manager as history observer and batch expirations

@@ -8,7 +8,7 @@
  * only expire orphan entries, unless -1 is passed as limit.
  */
 
-let gNow = Date.now() * 1000;
+let gNow = getExpirablePRTime();
 
 add_test(function test_expire_orphans()
 {
