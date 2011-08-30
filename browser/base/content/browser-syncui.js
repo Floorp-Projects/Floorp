@@ -50,7 +50,8 @@ let gSyncUI = {
          "weave:service:start-over",
          "weave:ui:login:error",
          "weave:ui:sync:error",
-         "weave:ui:sync:finish"],
+         "weave:ui:sync:finish",
+         "weave:ui:clear-error"],
 
   _unloaded: false,
 
@@ -207,9 +208,7 @@ let gSyncUI = {
   onLoginFinish: function SUI_onLoginFinish() {
     // Clear out any login failure notifications
     let title = this._stringBundle.GetStringFromName("error.login.title");
-    Weave.Notifications.removeAll(title);
-
-    this.updateUI();
+    this.clearError(title);
   },
 
   onLoginError: function SUI_onLoginError() {
@@ -255,8 +254,7 @@ let gSyncUI = {
   },
 
   onStartOver: function SUI_onStartOver() {
-    Weave.Notifications.removeAll();
-    this.updateUI();
+    this.clearError();
   },
 
   onQuotaNotice: function onQuotaNotice(subject, data) {
@@ -345,19 +343,22 @@ let gSyncUI = {
     syncButton.setAttribute("tooltiptext", lastSyncLabel);
   },
 
+  clearError: function SUI_clearError(errorString) {
+    Weave.Notifications.removeAll(errorString);
+    this.updateUI();
+  },
+
   onSyncFinish: function SUI_onSyncFinish() {
     let title = this._stringBundle.GetStringFromName("error.sync.title");
 
     // Clear out sync failures on a successful sync
-    Weave.Notifications.removeAll(title);
+    this.clearError(title);
 
     if (this._wasDelayed && Weave.Status.sync != Weave.NO_SYNC_NODE_FOUND) {
       title = this._stringBundle.GetStringFromName("error.sync.no_node_found.title");
-      Weave.Notifications.removeAll(title);
+      this.clearError(title);
       this._wasDelayed = false;
     }
-
-    this.updateUI();
   },
 
   onSyncError: function SUI_onSyncError() {
@@ -483,6 +484,9 @@ let gSyncUI = {
         break;
       case "weave:notification:added":
         this.initNotifications();
+        break;
+      case "weave:ui:clear-error":
+        this.clearError();
         break;
     }
   },
