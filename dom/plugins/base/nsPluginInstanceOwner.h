@@ -130,6 +130,9 @@ public:
   
   nsresult MouseDown(nsIDOMEvent* aKeyEvent);
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+  nsresult Text(nsIDOMEvent* aTextEvent);
+#endif
 
   nsresult Destroy();  
   

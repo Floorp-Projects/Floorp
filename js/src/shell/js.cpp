@@ -5644,6 +5644,8 @@ main(int argc, char **argv, char **envp)
         return EXIT_FAILURE;
     }
 
+    op.setArgTerminatesOptions("script", true);
+
     switch (op.parseArgs(argc, argv)) {
       case OptionParser::ParseHelp:
         return EXIT_SUCCESS;
