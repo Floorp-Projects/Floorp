@@ -2680,7 +2680,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     rv = stmt->GetInt32(2, &oldTypedState);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool oldHiddenState = 0;
+    PRInt32 oldHiddenState = 0;
     rv = stmt->GetInt32(3, &oldHiddenState);
     NS_ENSURE_SUCCESS(rv, rv);
 

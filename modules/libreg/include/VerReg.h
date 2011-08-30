@@ -94,7 +94,7 @@ VR_INTERFACE(REGERR) VR_UninstallDeleteFileFromList(char *component_path, char *
 VR_INTERFACE(REGERR) VR_UninstallDeleteSharedFilesKey(char *regPackageName);
 VR_INTERFACE(REGERR) VR_UninstallDestroy(char *regPackageName);
 VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
-                                    int32 len1, char*regPackageName, int32 len2, PRBool bSharedList);
+                                    int32 len1, char*regPackageName, int32 len2, XP_Bool bSharedList);
 VR_INTERFACE(REGERR) VR_GetUninstallUserName(char *regPackageName, char *outbuf, uint32 buflen);
 
 PR_END_EXTERN_C
