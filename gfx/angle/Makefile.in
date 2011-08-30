@@ -77,27 +77,31 @@ CPPSRCS = \
         RemoveTree.cpp \
         ShaderLang.cpp \
         SymbolTable.cpp \
-	VariableInfo.cpp \
-	compilerdebug.cpp \
-	ossource_nspr.cpp \
-	util.cpp \
-	ValidateLimitations.cpp \
-	ForLoopUnroll.cpp \
-	MapLongVariableNames.cpp \
-	$(NULL)
+        VariableInfo.cpp \
+        compilerdebug.cpp \
+        ossource_nspr.cpp \
+        util.cpp \
+        ValidateLimitations.cpp \
+        ForLoopUnroll.cpp \
+        MapLongVariableNames.cpp \
+        BuiltInFunctionEmulator.cpp \
+        $(NULL)
 
 # flex/yacc generated files
 CPPSRCS += \
-	glslang_lex.cpp \
-	glslang_tab.cpp \
-	$(NULL)
+        glslang_lex.cpp \
+        glslang_tab.cpp \
+        $(NULL)
 
 # GLSL translator backend
 CPPSRCS += \
-	CodeGenGLSL.cpp \
-	OutputGLSL.cpp \
-	TranslatorGLSL.cpp \
-	VersionGLSL.cpp \
+        CodeGenGLSL.cpp \
+        OutputGLSL.cpp \
+        TranslatorGLSL.cpp \
+        VersionGLSL.cpp \
+        OutputESSL.cpp \
+        OutputGLSLBase.cpp \
+        TranslatorESSL.cpp \
 	$(NULL)
 
 # Currently, only one or the other
