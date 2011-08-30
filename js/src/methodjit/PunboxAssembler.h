@@ -67,7 +67,9 @@ struct ImmType : ImmTag
 {
     ImmType(JSValueType type)
       : ImmTag(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type)))
-    { }
+    {
+        JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+    }
 };
 
 struct ImmPayload : Imm64
@@ -131,6 +133,10 @@ class PunboxAssembler : public JSC::MacroAssembler
         move(Imm64(val.asRawBits() & JSVAL_PAYLOAD_MASK), payload);
     }
 
+    void loadValuePayload(const Value &val, RegisterID payload) {
+        move(Imm64(val.asRawBits() & JSVAL_PAYLOAD_MASK), payload);
+    }
+
     /*
      * Load a (64b) js::Value from 'address' into 'type' and 'payload', and
      * return a label which can be used by
@@ -183,6 +189,7 @@ class PunboxAssembler : public JSC::MacroAssembler
 
     /* Overloaded for store with value remat info. */
     DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        JS_ASSERT(!vr.isFPRegister());
         if (vr.isConstant()) {
             return storeValueWithAddressOffsetPatch(vr.value(), address);
         } else if (vr.isTypeKnown()) {
@@ -254,6 +261,8 @@ class PunboxAssembler : public JSC::MacroAssembler
     void storeValue(const ValueRemat &vr, T address) {
         if (vr.isConstant())
             storeValue(vr.value(), address);
+        else if (vr.isFPRegister())
+            storeDouble(vr.fpReg(), address);
         else if (vr.isTypeKnown())
             storeValueFromComponents(ImmType(vr.knownType()), vr.dataReg(), address);
         else
@@ -363,6 +372,12 @@ class PunboxAssembler : public JSC::MacroAssembler
         return testString(cond, Registers::ValueReg);
     }
 
+    void compareValue(Address one, Address two, RegisterID T0, RegisterID T1,
+                      Vector<Jump> *mismatches) {
+        loadValue(one, T0);
+        mismatches->append(branchPtr(NotEqual, T0, two));
+    }
+
     void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
         m_assembler.movq_rr(srcDest, typeReg);
         move(Registers::PayloadMaskReg, dataReg);
@@ -384,9 +399,22 @@ class PunboxAssembler : public JSC::MacroAssembler
     }
 
     template <typename T>
-    Jump fastArrayLoadSlot(T address, RegisterID typeReg, RegisterID dataReg) {
-        loadValueAsComponents(address, typeReg, dataReg);
-        return branchPtr(Equal, typeReg, ImmType(JSVAL_TYPE_MAGIC));
+    Jump fastArrayLoadSlot(T address, bool holeCheck,
+                           MaybeRegisterID typeReg, RegisterID dataReg)
+    {
+        Jump notHole;
+        if (typeReg.isSet()) {
+            loadValueAsComponents(address, typeReg.reg(), dataReg);
+            if (holeCheck)
+                notHole = branchPtr(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
+        } else {
+            if (holeCheck) {
+                loadTypeTag(address, Registers::ValueReg);
+                notHole = branchPtr(Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
+            }
+            loadPayload(address, dataReg);
+        }
+        return notHole;
     }
 };
 

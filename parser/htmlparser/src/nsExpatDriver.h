@@ -169,7 +169,7 @@ private:
   nsString         mURISpec;
 
   // Used for error reporting.
-  PRUint64         mWindowID;
+  PRUint64         mInnerWindowID;
 };
 
 #endif

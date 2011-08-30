@@ -41,6 +41,7 @@
 #define jsjaeger_valueinfo_h__
 
 #include "jsapi.h"
+#include "jsnum.h"
 #include "jstypes.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
@@ -55,7 +56,12 @@ class FrameEntry
     friend class ImmutableSync;
 
   public:
+
+    /* Accessors for entries which are known constants. */
+
     bool isConstant() const {
+        if (isCopy())
+            return false;
         return data.isConstant();
     }
 
@@ -69,22 +75,55 @@ class FrameEntry
         return Valueify(JSVAL_FROM_LAYOUT(v_));
     }
 
-    bool isTypeKnown() const {
-        return type.isConstant();
+#if defined JS_NUNBOX32
+    uint32 getPayload() const {
+        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
+        JS_ASSERT(isConstant());
+        return v_.s.payload.u32;
+    }
+#elif defined JS_PUNBOX64
+    uint64 getPayload() const {
+        JS_ASSERT(isConstant());
+        return v_.asBits & JSVAL_PAYLOAD_MASK;
+    }
+#endif
+
+    /* For a constant double FrameEntry, truncate to an int32. */
+    void convertConstantDoubleToInt32(JSContext *cx) {
+        JS_ASSERT(isType(JSVAL_TYPE_DOUBLE) && isConstant());
+        int32 value;
+        ValueToECMAInt32(cx, getValue(), &value);
+
+        Value newValue = Int32Value(value);
+        setConstant(Jsvalify(newValue));
     }
 
+    /*
+     * Accessors for entries whose type is known. Any entry can have a known
+     * type, and constant entries must have one.
+     */
+
+    bool isTypeKnown() const {
+        return backing()->type.isConstant();
+    }
+
+    /*
+     * The known type should not be used in generated code if it is JSVAL_TYPE_DOUBLE.
+     * In such cases either the value is constant, in memory or in a floating point register.
+     */
     JSValueType getKnownType() const {
         JS_ASSERT(isTypeKnown());
-        return knownType;
+        return backing()->knownType;
     }
 
 #if defined JS_NUNBOX32
     JSValueTag getKnownTag() const {
-        return v_.s.tag;
+        JS_ASSERT(backing()->v_.s.tag != JSVAL_TAG_CLEAR);
+        return backing()->v_.s.tag;
     }
 #elif defined JS_PUNBOX64
     JSValueShiftedTag getKnownTag() const {
-        return JSValueShiftedTag(v_.asBits & JSVAL_TAG_MASK);
+        return JSValueShiftedTag(backing()->v_.asBits & JSVAL_TAG_MASK);
     }
 #endif
 
@@ -104,38 +143,22 @@ class FrameEntry
         return !isNotType(type_);
     }
 
-#if defined JS_NUNBOX32
-    uint32 getPayload() const {
-        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
-        return v_.s.payload.u32;
-    }
-#elif defined JS_PUNBOX64
-    uint64 getPayload() const {
-        return v_.asBits & JSVAL_PAYLOAD_MASK;
-    }
-#endif
+    /* Accessors for entries which are copies of other mutable entries. */
 
-    bool isCachedNumber() const {
-        return isNumber;
+    bool isCopy() const { return !!copy; }
+    bool isCopied() const { return copied != 0; }
+
+    const FrameEntry *backing() const {
+        return isCopy() ? copyOf() : this;
     }
 
     bool hasSameBacking(const FrameEntry *other) const {
         return backing() == other->backing();
     }
 
-    bool isCopy() const { return !!copy; }
-    bool isCopied() const { return copied; }
-
-    inline bool initializerArray() {
-        return initArray;
-    }
-
-    inline JSObject *initializerObject() {
-        return initObject;
-    }
-
   private:
     void setType(JSValueType type_) {
+        JS_ASSERT(!isCopy() && type_ != JSVAL_TYPE_UNKNOWN);
         type.setConstant();
 #if defined JS_NUNBOX32
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
@@ -144,19 +167,22 @@ class FrameEntry
         v_.asBits |= JSVAL_TYPE_TO_SHIFTED_TAG(type_);
 #endif
         knownType = type_;
-        JS_ASSERT(!isNumber);
     }
 
     void track(uint32 index) {
-        clear();
+        copied = 0;
+        copy = NULL;
         index_ = index;
         tracked = true;
     }
 
     void clear() {
-        copied = false;
-        copy = NULL;
-        isNumber = false;
+        JS_ASSERT(copied == 0);
+        if (copy) {
+            JS_ASSERT(copy->copied != 0);
+            copy->copied--;
+            copy = NULL;
+        }
     }
 
     uint32 trackerIndex() {
@@ -170,10 +196,8 @@ class FrameEntry
         clear();
         type.unsync();
         data.unsync();
-#ifdef DEBUG
         type.invalidate();
         data.invalidate();
-#endif
     }
 
     /*
@@ -202,32 +226,23 @@ class FrameEntry
             knownType = cv.extractNonDoubleType();
     }
 
-    void setCopied() {
-        JS_ASSERT(!isCopy());
-        copied = true;
-    }
-
     FrameEntry *copyOf() const {
         JS_ASSERT(isCopy());
-        JS_ASSERT(copy < this);
+        JS_ASSERT_IF(!copy->temporary, copy < this);
         return copy;
-    }
-
-    const FrameEntry *backing() const {
-        return isCopy() ? copyOf() : this;
-    }
-
-    void setNotCopied() {
-        copied = false;
     }
 
     /*
      * Set copy index.
      */
     void setCopyOf(FrameEntry *fe) {
-        JS_ASSERT_IF(fe, !fe->isConstant());
-        JS_ASSERT(!isCopied());
+        clear();
         copy = fe;
+        if (fe) {
+            type.invalidate();
+            data.invalidate();
+            fe->copied++;
+        }
     }
 
     inline bool isTracked() const {
@@ -238,6 +253,13 @@ class FrameEntry
         tracked = false;
     }
 
+    inline bool dataInRegister(AnyRegisterID reg) const {
+        JS_ASSERT(!copy);
+        return reg.isReg()
+            ? (data.inRegister() && data.reg() == reg.reg())
+            : (data.inFPRegister() && data.fpreg() == reg.fpreg());
+    }
+
   private:
     JSValueType knownType;
     jsval_layout v_;
@@ -245,15 +267,17 @@ class FrameEntry
     RematInfo  data;
     uint32     index_;
     FrameEntry *copy;
-    bool       copied;
-    bool       isNumber;
     bool       tracked;
-    bool       initArray;
-    JSObject   *initObject;
+    bool       temporary;
 
-#if (JS_BITS_PER_WORD == 32)
-    void       *padding;
-#endif
+    /* Number of copies of this entry. */
+    uint32     copied;
+
+    /*
+     * Offset of the last loop in which this entry was written or had a loop
+     * register assigned.
+     */
+    uint32     lastLoop;
 };
 
 } /* namespace mjit */

@@ -127,13 +127,49 @@ const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
 /* Get the best kind to use when making an object with the given slot count. */
 static inline FinalizeKind
-GetGCObjectKind(size_t numSlots)
+GetGCObjectKind(size_t numSlots, bool isArray = false)
 {
     extern FinalizeKind slotsToThingKind[];
 
-    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
-        return FINALIZE_OBJECT0;
+    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT) {
+        /*
+         * If the object will definitely want more than the maximum number of
+         * fixed slots, use zero fixed slots for arrays and the maximum for
+         * other objects. Arrays do not use their fixed slots anymore when
+         * they have a slots array, while other objects will continue to do so.
+         */
+        return isArray ? FINALIZE_OBJECT0 : FINALIZE_OBJECT16;
+    }
     return slotsToThingKind[numSlots];
+}
+
+static inline bool
+IsBackgroundFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    return kind % 2 == 1;
+}
+
+static inline FinalizeKind
+GetBackgroundFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(!IsBackgroundFinalizeKind(kind));
+    return (FinalizeKind) (kind + 1);
+}
+
+static inline bool
+CanBumpFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    return (kind + 2) <= FINALIZE_OBJECT_LAST;
+}
+
+/* Get the next larger size for an object, keeping BACKGROUND consistent. */
+static inline FinalizeKind
+BumpFinalizeKind(FinalizeKind kind)
+{
+    JS_ASSERT(CanBumpFinalizeKind(kind));
+    return (FinalizeKind) (kind + 2);
 }
 
 /* Get the number of fixed slots and initial capacity associated with a kind. */
@@ -187,6 +223,44 @@ GCPoke(JSContext *cx, Value oldval)
 #endif
 }
 
+/*
+ * Invoke ArenaOp and CellOp on every arena and cell in a compartment which
+ * have the specified thing kind.
+ */
+template <class ArenaOp, class CellOp>
+void
+ForEachArenaAndCell(JSCompartment *compartment, FinalizeKind thingKind,
+                    ArenaOp arenaOp, CellOp cellOp)
+{
+    size_t thingSize = GCThingSizeMap[thingKind];
+    ArenaHeader *aheader = compartment->arenas[thingKind].getHead();
+
+    for (; aheader; aheader = aheader->next) {
+        Arena *arena = aheader->getArena();
+        arenaOp(arena);
+        FreeSpan firstSpan(aheader->getFirstFreeSpan());
+        const FreeSpan *span = &firstSpan;
+
+        for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
+            JS_ASSERT(thing <= arena->thingsEnd());
+            if (thing == span->first) {
+                if (!span->hasNext())
+                    break;
+                thing = span->last;
+                span = span->nextSpan();
+            } else {
+                Cell *t = reinterpret_cast<Cell *>(thing);
+                cellOp(t);
+            }
+        }
+    }
+}
+
+/* Signatures for ArenaOp and CellOp above. */
+
+inline void EmptyArenaOp(Arena *arena) {}
+inline void EmptyCellOp(Cell *t) {}
+
 } /* namespace gc */
 } /* namespace js */
 
@@ -224,10 +298,8 @@ js_NewGCObject(JSContext *cx, js::gc::FinalizeKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::GCThingSizeMap[kind]);
-    if (obj) {
-        obj->capacity = js::gc::GetGCKindSlots(kind);
-        obj->lastProp = NULL; /* Stops obj from being scanned until initializated. */
-    }
+    if (obj)
+        obj->earlyInit(js::gc::GetGCKindSlots(kind));
     return obj;
 }
 

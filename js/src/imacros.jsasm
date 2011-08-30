@@ -695,11 +695,3 @@
         stop
     .end
 .end callprop
-
-.igroup getthisprop JSOP_GETTHISPROP,JSOP_GETARGPROP,JSOP_GETLOCALPROP
-    .imacro scriptgetter        #
-        .fixup +2               # getter obj
-        call 0                  # val
-        stop
-    .end
-.end getthisprop

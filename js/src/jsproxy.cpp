@@ -51,6 +51,7 @@
 #include "jsscope.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -1166,6 +1167,14 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
 
+    /*
+     * Eagerly mark properties unknown for proxies, so we don't try to track
+     * their properties and so that we don't need to walk the compartment if
+     * their prototype changes later.
+     */
+    if (proto)
+        proto->getNewType(cx, NULL, /* markUnknown = */ true);
+
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))
         return NULL;
@@ -1177,6 +1186,10 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
             obj->setSlot(JSSLOT_PROXY_CONSTRUCT, ObjectValue(*construct));
         }
     }
+
+    /* Don't track types of properties of proxies. */
+    MarkTypeObjectUnknownProperties(cx, obj->type());
+
     return obj;
 }
 
@@ -1453,8 +1466,9 @@ JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
     JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj);
-    if (!module)
+    if (!module || !module->setSingletonType(cx))
         return NULL;
+
     if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;

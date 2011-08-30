@@ -1218,7 +1218,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                                                     nsnull,
                                                                     lineNumber, 0, 0,
                                                                     "XPConnect JavaScript",
-                                                                    nsJSUtils::GetCurrentlyRunningCodeWindowID(cx));
+                                                                    nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
                                 if(NS_FAILED(rv))
                                     scriptError = nsnull;
                             }

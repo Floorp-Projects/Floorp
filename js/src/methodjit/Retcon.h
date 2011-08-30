@@ -75,32 +75,38 @@ class AutoScriptRetrapper
 };
 
 /*
- * This class is responsible for sanely re-JITing a script and fixing up
- * the world. If you ever change the code associated with a JSScript, or
- * otherwise would cause existing JITed code to be incorrect, you /must/ use
- * this to invalidate and potentially re-compile the existing JITed code,
- * fixing up the stack in the process.
+ * This class is responsible for sanely destroying a JITed script while frames
+ * for it are still on the stack, removing all references in the world to it
+ * and patching up those existing frames to go into the interpreter. If you
+ * ever change the code associated with a JSScript, or otherwise would cause
+ * existing JITed code to be incorrect, you /must/ use this to invalidate the
+ * JITed code, fixing up the stack in the process.
  */
 class Recompiler {
-    struct PatchableAddress {
-        void **location;
-        CallSite callSite;
-    };
-    
 public:
     Recompiler(JSContext *cx, JSScript *script);
-    
-    bool recompile();
+
+    void recompile(bool resetUses = true);
+
+    static void
+    expandInlineFrames(JSCompartment *compartment, StackFrame *fp, mjit::CallSite *inlined,
+                       StackFrame *next, VMFrame *f);
+
+    static void patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script);
 
 private:
     JSContext *cx;
     JSScript *script;
-    
-    PatchableAddress findPatch(JITScript *jit, void **location);
-    void applyPatch(Compiler& c, PatchableAddress& toPatch);
-    bool recompile(StackFrame *fp, Vector<PatchableAddress> &patches,
-                   Vector<CallSite> &sites);
-    bool saveTraps(JITScript *jit, Vector<CallSite> *sites);
+
+    static void patchCall(JITScript *jit, StackFrame *fp, void **location);
+    static void patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *fp,
+                            jsbytecode *pc, CallSite *inline_, RejoinState rejoin);
+
+    static StackFrame *
+    expandInlineFrameChain(StackFrame *outer, InlineFrame *inner);
+
+    /* Detach jit from any IC callers. */
+    static void cleanup(JITScript *jit);
 };
 
 } /* namespace mjit */

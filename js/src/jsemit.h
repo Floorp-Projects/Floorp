@@ -370,7 +370,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
         topStmt(NULL), topScopeStmt(NULL), blockChainBox(NULL), blockNode(NULL),
         decls(prs->context), parser(prs), yieldNode(NULL), argumentsNode(NULL), scopeChain_(NULL),
         lexdeps(prs->context), parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),
-        innermostWith(NULL), bindings(prs->context, prs->emptyCallShape), sharpSlotBase(-1)
+        innermostWith(NULL), bindings(prs->context), sharpSlotBase(-1)
     {
         prs->tc = this;
     }
@@ -663,6 +663,7 @@ struct JSCodeGenerator : public JSTreeContext
     SlotVector      closedVars;
 
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
+    uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
     /*
      * Initialize cg to allocate bytecode space from codePool, source note

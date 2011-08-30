@@ -1245,7 +1245,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     {
         if(protoJSObject != globalJSObj)
             JS_SetParent(aJSContext, protoJSObject, globalJSObj);
-        JS_SetPrototype(aJSContext, protoJSObject, scope->GetPrototypeJSObject());
+        if (!JS_SplicePrototype(aJSContext, protoJSObject, scope->GetPrototypeJSObject()))
+            return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 
     if(!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {

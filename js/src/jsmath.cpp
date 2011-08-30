@@ -55,6 +55,9 @@
 #include "jslibmath.h"
 #include "jscompartment.h"
 
+#include "jsinferinlines.h"
+#include "jsobjinlines.h"
+
 using namespace js;
 
 #ifndef M_E
@@ -459,8 +462,8 @@ powi(jsdouble x, jsint y)
     }
 }
 
-static JSBool
-math_pow(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_math_pow(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble x, y, z;
 
@@ -616,8 +619,8 @@ math_sin(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-math_sqrt(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_math_sqrt(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble x, z;
 
@@ -676,7 +679,7 @@ MATH_BUILTIN_1(js_math_abs, fabs)
 MATH_BUILTIN_1(math_atan, atan)
 MATH_BUILTIN_1(math_sin, sin)
 MATH_BUILTIN_1(math_cos, cos)
-MATH_BUILTIN_1(math_sqrt, sqrt)
+MATH_BUILTIN_1(js_math_sqrt, sqrt)
 MATH_BUILTIN_1(math_tan, tan)
 
 static jsdouble FASTCALL
@@ -813,7 +816,7 @@ JS_DEFINE_TRCINFO_1(js_math_max,
     (2, (static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, nanojit::ACCSET_NONE)))
 JS_DEFINE_TRCINFO_1(js_math_min,
     (2, (static, DOUBLE, math_min_tn, DOUBLE, DOUBLE,   1, nanojit::ACCSET_NONE)))
-JS_DEFINE_TRCINFO_1(math_pow,
+JS_DEFINE_TRCINFO_1(js_math_pow,
     (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, nanojit::ACCSET_NONE)))
 JS_DEFINE_TRCINFO_1(math_random,
     (1, (static, DOUBLE, math_random_tn, CONTEXT,       0, nanojit::ACCSET_STORE_ANY)))
@@ -840,11 +843,11 @@ static JSFunctionSpec math_static_methods[] = {
     JS_TN("log",            math_log,             1, 0, &math_log_trcinfo),
     JS_TN("max",            js_math_max,          2, 0, &js_math_max_trcinfo),
     JS_TN("min",            js_math_min,          2, 0, &js_math_min_trcinfo),
-    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo),
+    JS_TN("pow",            js_math_pow,          2, 0, &js_math_pow_trcinfo),
     JS_TN("random",         math_random,          0, 0, &math_random_trcinfo),
     JS_TN("round",          js_math_round,        1, 0, &js_math_round_trcinfo),
     JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo),
-    JS_TN("sqrt",           math_sqrt,            1, 0, &math_sqrt_trcinfo),
+    JS_TN("sqrt",           js_math_sqrt,         1, 0, &js_math_sqrt_trcinfo),
     JS_TN("tan",            math_tan,             1, 0, &math_tan_trcinfo),
     JS_FS_END
 };
@@ -862,11 +865,10 @@ js_IsMathFunction(JSNative native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *Math;
-
-    Math = JS_NewObject(cx, Jsvalify(&js_MathClass), NULL, obj);
-    if (!Math)
+    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj);
+    if (!Math || !Math->setSingletonType(cx))
         return NULL;
+
     if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
