@@ -61,6 +61,8 @@
 #endif
 #include "jsgcmark.h"
 #include "jsgcinlines.h"
+#include "jsinferinlines.h"
+#include "jsobjinlines.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -464,12 +466,26 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp)
         return false;
 
     MIRGraph graph;
-    DummyOracle oracle;
-
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    IonBuilder builder(cx, script, fun, temp, graph, &oracle);
-    if (!TestCompiler(builder, graph))
-        return false;
+
+    if (cx->typeInferenceEnabled()) {
+        types::AutoEnterTypeInference enter(cx, true);
+        TypeInferenceOracle oracle;
+
+        if (!oracle.init(cx, script))
+            return false;
+
+        types::AutoEnterCompilation enterCompiler(cx, script);
+
+        IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+        if (!TestCompiler(builder, graph))
+            return false;
+    } else {
+        DummyOracle oracle;
+        IonBuilder builder(cx, script, fun, temp, graph, &oracle);
+        if (!TestCompiler(builder, graph))
+            return false;
+    }
 
     return true;
 }
