@@ -1044,6 +1044,14 @@ nsGeolocation::WindowOwnerStillExists()
 bool
 nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 {
+  if (Preferences::GetBool("geo.prompt.testing", PR_FALSE)) {
+    nsCOMPtr<nsIRunnable> ev =
+        new RequestAllowEvent(Preferences::GetBool("geo.prompt.testing.allow",
+                                                   PR_FALSE), request);
+    NS_DispatchToMainThread(ev);
+    return true;
+  }
+
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
     if (!window)
@@ -1063,14 +1071,6 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
     
     request->Sendprompt();
-    return true;
-  }
-
-  if (Preferences::GetBool("geo.prompt.testing", PR_FALSE)) {
-    nsCOMPtr<nsIRunnable> ev =
-      new RequestAllowEvent(Preferences::GetBool("geo.prompt.testing.allow",
-                                                 PR_FALSE), request);
-    NS_DispatchToMainThread(ev);
     return true;
   }
 
