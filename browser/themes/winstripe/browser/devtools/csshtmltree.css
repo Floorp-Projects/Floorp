@@ -38,17 +38,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 body {
-  font-family: Lucida Grande, sans-serif;
+  font-family: sans-serif;
   font-size: 11px;
   background: #EEE;
 }
-
 .path {
   font-size: 11px;
   word-spacing: -1px;
 }
 .path ol {
-  list-style: none;
+  list-style: none outside none;
   margin: 0;
   padding: 0;
 }
@@ -72,38 +71,13 @@ body {
   content: "";
 }
 
-#sheetList, #sheetList menuitem {
-  font-size: 1em;
-  font-weight: normal;
-}
-
-.sheet_line input {
-  vertical-align: middle;
-}
-
-.sheet_line label {
-  cursor: pointer;
-}
-
-#header, #footer {
+#header,
+#footer {
   padding: 5px;
 }
 
 #header label {
   font-weight: bold;
-}
-#sheets {
-  -moz-margin-end: 10px;
-  margin-top: 5px;
-}
-h1 {
-  font-size: 13px;
-  padding: 2px 10px;
-  margin: 0;
-  background: -moz-linear-gradient(top, #CCC, #AAA);
-  border-radius: 3px;
-  text-shadow: #FFF 0 1px 0;
-  cursor: pointer;
 }
 
 .property-header {
@@ -112,29 +86,52 @@ h1 {
   color: #666;
 }
 
-.property-name, .property-value, .rule-count, .rule-unmatched {
+.property-name,
+.property-value,
+.rule-count,
+.rule-unmatched {
   cursor: pointer;
 }
 
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
-.link { color: #55A;  }
-.link:visited { color: #55A;  }
-a.link { text-decoration: none; cursor: pointer }
-a.link:visited { text-decoration: none; }
-.rule-count, .rule-unmatched {
-  float: right;
+.link,
+.unmatchedlink {
+  color: #55A;
 }
-.rule-count[dir="rtl"], .rule-unmatched[dir="rtl"] {
-  float: left;
+.link:visited,
+.unmatchedlink:visited {
+  color: #55A;
 }
-.property-view .rule-count .expander,
-.property-view .rule-unmatched .expander {
+a.link,
+a.unmatchedlink {
+  text-decoration: none;
+  cursor: pointer;
+}
+a.link:visited,
+a.unmatchedlink:visited {
+  text-decoration: none;
+}
+
+.rule-count,
+.rule-unmatched {
+  padding: 5px 0 0 15px;
+}
+.unmatched {
+  display: inline-block;
+}
+.expander {
   width: 8px;
   height: 8px;
-  -moz-margin-start: 5px;
   display: inline-block;
+  -moz-margin-end: 5px;
+  margin-bottom: 1px;
   background: url("chrome://browser/skin/devtools/arrows.png");
+}
+
+.unmatched-rule {
+  -moz-margin-start: 25px;
+  background-position: 24px 0;
 }
 
 .property-view .rule-count .expander,
@@ -151,57 +148,14 @@ a.link:visited { text-decoration: none; }
 }
 
 .property-name {
+  display: inline-block;
   font-size: 12px;
   font-weight: bold;
-  -moz-padding-end: 4px;
   color: #000;
 }
-span.property-value {
-  -moz-padding-end: 5px;
+.property-value {
+  display: inline-block;
   font-size: 10px;
-}
-.group {
-  margin-top: 10px;
-}
-
-.group > h1 {
-  color: #333;
-  font-size: 11px;
-}
-.group .groupexpander {
-  width: 8px;
-  height: 8px;
-  margin-top: 2px;
-  background: url("chrome://browser/skin/devtools/arrows.png");
-}
-.group > div {
-  display: none;
-}
-.group[open] > div {
-  display: block;
-}
-.group .groupexpander {
-  background-position: 48px 0;
-  float: right;
-}
-.group[dir="rtl"] .groupexpander {
-  background-position: 40px 0;
-  float: left;
-}
-.group[open] .groupexpander {
-  background-position: 32px 0;
-  float: right;
-}
-.group[open][dir="rtl"] .groupexpander {
-  background-position: 32px 0;
-  float: left;
-}
-
-.group, #header, #footer {
-  background: #FFF;
-  border: 1px solid #E1E1E1;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  border-radius: 4px 4px 4px 4px;
 }
 
 .property-view > .rules {
@@ -211,26 +165,37 @@ span.property-value {
   display: table;
 }
 .rules {
+  -moz-margin-start: 32px;
   max-height: 350px;
   overflow-y: auto;
 }
-.rule-specificty, .rule-status {
+.rule-status {
   white-space: nowrap;
 }
 .rule-link {
   text-align: end;
+  -moz-padding-start: 10px;
 }
 
 /* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
 .rule-text {
   direction: ltr;
+  -moz-padding-start: 10px;
 }
 
 .resizerbox {
   background-color: window;
 }
 
-.bestmatch { color: black; }
-.matched { text-decoration: line-through; }
-.parentmatch { color: #666; }
-.unmatched { color: brown; }
+.bestmatch {
+  color: black;
+}
+.matched {
+  text-decoration: line-through;
+}
+.parentmatch {
+  color: #666;
+}
+.unmatched {
+  color: brown;
+}

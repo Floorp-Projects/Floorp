@@ -66,6 +66,10 @@
 <div id="root">
 </div>
 
+<!-- The output from #templateProperty (below) is appended here. -->
+<div id="propertyContainer">
+</div>
+
 <!--
 To visually debug the templates without running firefox, alter the display:none
 -->
@@ -85,38 +89,27 @@ To visually debug the templates without running firefox, alter the display:none
         </li>
       </ol>
     </p>
-
-    <div _id="groups">
-      <div foreach="group in ${styleGroups}" class="group" save="${group.element}" dir="${getRTLAttr}">
-        <h1 onclick="${group.click}" dir="${getRTLAttr}">
-          ${group.localName}
-          <div class="groupexpander"></div>
-        </h1>
-        <div save="${group.properties}"></div>
-      </div>
-    </div>
   </div>
 
   <!--
-  A templateProperties sits inside each templateGroups to show the properties
-  themselves. Each needs data like this:
+  TemplateProperty lists the properties themselves. Each needs data like this:
   {
-    property: [ ..., ] // Array of PropertyViews from CssHtmlTree.jsm
+    property: ... // PropertyView from CssHtmlTree.jsm
   }
   -->
-  <div id="templateProperties">
-    <div foreach="property in ${propertyViews}" class="property-view" save="${property.element}" dir="${getRTLAttr}">
-      <div class="property-header" onclick="${property.click}">
-        <span class="property-name" dir="${getRTLAttr}">
+  <div id="templateProperty">
+    <div class="property-view" save="${element}" dir="${getRTLAttr}">
+      <div class="property-header" onclick="${click}">
+        <div class="property-name" dir="${getRTLAttr}">
           <a class="link" target="_blank" title="&helpLinkTitle;"
-              href="${property.link}">${property.name}</a>
-        </span>
-        <span class="property-value" dir="ltr">${property.value}</span>
-        <span class="link" dir="${getRTLAttr}">
-          ${property.ruleTitle(__element)}<div class="expander"></div>
-        </span>
+              href="${link}">${name}</a>
+        </div>
+        <div class="property-value" dir="ltr">${value}</div>
+        <div class="link" dir="${getRTLAttr}">
+          <div></div>${ruleTitle(__element)}
+        </div>
       </div>
-      <table class="rules" save="${property.rules}" dir="${getRTLAttr}"></table>
+      <table class="rules" save="${rules}" dir="${getRTLAttr}"></table>
     </div>
   </div>
 
@@ -147,8 +140,10 @@ To visually debug the templates without running firefox, alter the display:none
     </loop>
     <tr if="${showUnmatchedLink}">
       <td colspan="4">
-        <a href="#" onclick="${showUnmatchedLinkClick}"
-            class="link">${showUnmatchedLinkText}</a>
+        <div class="expander unmatched-rule"></div>
+        <div class="unmatched">
+          <a href="#" onclick="${showUnmatchedLinkClick}" class="unmatchedlink">${showUnmatchedLinkText}</a>
+        </div>
       </td>
     </tr>
   </table>
