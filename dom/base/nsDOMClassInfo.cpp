@@ -1702,7 +1702,7 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
                                               0, // column for error is not available
                                               nsIScriptError::warningFlag,
                                               "DOM:HTML",
-                                              nsJSUtils::GetCurrentlyRunningCodeWindowID(cx));
+                                              nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
 
   if (NS_SUCCEEDED(rv)){
     nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scriptError);

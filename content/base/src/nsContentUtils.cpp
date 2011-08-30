@@ -2733,7 +2733,7 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                 PRUint32 aColumnNumber,
                                 PRUint32 aErrorFlags,
                                 const char *aCategory,
-                                PRUint64 aWindowId)
+                                PRUint64 aInnerWindowId)
 {
   NS_ASSERTION((aParams && aParamsLength) || (!aParams && !aParamsLength),
                "Supply either both parameters and their number or no"
@@ -2767,7 +2767,8 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                      NS_ConvertUTF8toUTF16(spec).get(), // file name
                                      aSourceLine.get(),
                                      aLineNumber, aColumnNumber,
-                                     aErrorFlags, aCategory, aWindowId);
+                                     aErrorFlags, aCategory,
+                                     aInnerWindowId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptError> logError = do_QueryInterface(errorObject);
@@ -2788,17 +2789,17 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                 nsIDocument* aDocument)
 {
   nsIURI* uri = aURI;
-  PRUint64 windowID = 0;
+  PRUint64 innerWindowID = 0;
   if (aDocument) {
     if (!uri) {
       uri = aDocument->GetDocumentURI();
     }
-    windowID = aDocument->OuterWindowID();
+    innerWindowID = aDocument->InnerWindowID();
   }
 
   return ReportToConsole(aFile, aMessageName, aParams, aParamsLength, uri,
                          aSourceLine, aLineNumber, aColumnNumber, aErrorFlags,
-                         aCategory, windowID);
+                         aCategory, innerWindowID);
 }
 
 PRBool
