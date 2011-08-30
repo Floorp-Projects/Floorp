@@ -585,6 +585,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     }
 # endif
 
+    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
+
 #if defined JS_METHODJIT && defined JS_MONOIC
 
     /*
@@ -595,7 +597,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
      * for compartments which currently have active stack frames.
      */
     uint32 counter = 1;
-    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
     if (discardScripts)
         hasDebugModeCodeToDrop = false;
 
