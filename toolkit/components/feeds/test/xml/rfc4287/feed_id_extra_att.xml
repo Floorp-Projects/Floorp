@@ -8,7 +8,7 @@ Expect: feed.fields.getProperty('atom:id') == 'urn:uuid:60a76c80-d399-11d9-b93C-
 
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:foo="http://example.org">
-  
+
   <title>Example Feed</title>
   <link href="http://example.org/"/>
   <updated>2003-12-13T18:30:02Z</updated>
@@ -16,7 +16,7 @@ Expect: feed.fields.getProperty('atom:id') == 'urn:uuid:60a76c80-d399-11d9-b93C-
        <name>John Doe</name>
   </author>
   <id foo:bar="baz">urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
-  
+
   <entry>
     <title>Atom-Powered Robots Run Amok</title>
     <link href="http://example.org/2003/12/13/atom03"/>
@@ -24,5 +24,5 @@ Expect: feed.fields.getProperty('atom:id') == 'urn:uuid:60a76c80-d399-11d9-b93C-
     <updated>2003-12-13T18:30:02Z</updated>
     <summary>Some text.</summary>
   </entry>
-  
+
 </feed>

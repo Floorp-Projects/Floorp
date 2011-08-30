@@ -109,7 +109,7 @@ let current_test = null;
 //------------------------------------------------------------------------------
 
 tests.push({
-  name: "A.1",
+  name: "A.3",
   desc: "Remove unused attributes",
 
   _usedPageAttribute: "usedPage",
@@ -144,7 +144,7 @@ tests.push({
     stmt.params['item_id'] = this._bookmarkId;
     stmt.params['anno'] = this._usedItemAttribute;
     stmt.execute();
-    stmt.finalize();    
+    stmt.finalize();
   },
 
   check: function() {
@@ -487,7 +487,7 @@ tests.push({
     stmt.params["item_id"] = this._bookmarkId;
     stmt.params["parent"] = this._orphanFolderId;
     do_check_true(stmt.executeStep());
-    stmt.finalize();    
+    stmt.finalize();
   }
 });
 
@@ -625,7 +625,7 @@ tests.push({
     // Add a valid dynamic container with a folder type
     this._validDynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, null, null, "test");
     // Add an invalid dynamic container without a folder type
-    this._invalidDynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, null, null, null);    
+    this._invalidDynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, null, null, null);
   },
 
   check: function() {
@@ -686,7 +686,7 @@ tests.push({
     stmt.params["item_id"] = this._bookmarkId3;
     stmt.params["parent"] = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
-    stmt.finalize();    
+    stmt.finalize();
   }
 });
 
@@ -962,7 +962,7 @@ tests.push({
     stmt.reset();
     stmt.params["place_id"] = this._invalidPlaceId;
     stmt.params["input"] = "moz";
-    stmt.execute();    
+    stmt.execute();
     stmt.finalize();
   },
 
@@ -1219,7 +1219,7 @@ tests.push({
     // Check that all items are correct
     do_check_true(bh.isVisited(this._uri1));
     do_check_true(bh.isVisited(this._uri2));
-    
+
     do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
     do_check_eq(bs.getItemIndex(this._folderId), 0);
 
