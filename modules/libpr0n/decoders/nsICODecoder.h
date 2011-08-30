@@ -73,6 +73,8 @@ private:
   PRBool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
   // Fixes the height of a BMP information header field
   void FillBitmapInformationBufferHeight(PRInt8 *bih);
+  // Extract bitmap info header size count from BMP information header
+  PRInt32 ExtractBIHSizeFromBitmap(PRInt8 *bih);
   // Extract bit count from BMP information header
   PRInt32 ExtractBPPFromBitmap(PRInt8 *bih);
   // Calculates the row size in bytes for the AND mask table
