@@ -1051,12 +1051,8 @@ StackIter::settleOnNewState()
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();
-#ifdef DEBUG
-                if (cx_->stackIterAssertionEnabled) {
-                    JS_ASSERT_IF(!fp_->hasImacropc(),
-                                 spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
-                }
-#endif
+                JS_ASSERT_IF(cx_->stackIterAssertionEnabled && !fp_->hasImacropc(),
+                             spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
                 Value *vp = sp_ - (2 + argc);
 
                 CrashIfInvalidSlot(fp_, vp);
