@@ -1663,13 +1663,6 @@ public:
                                          nsIDOMNodeList** aReturn);
 
   /**
-   * Returns the widget for this document if there is one. Looks at all ancestor
-   * documents to try to find a widget, so for example this can still find a
-   * widget for documents in display:none frames that have no presentation.
-   */
-  static nsIWidget *WidgetForDocument(nsIDocument *aDoc);
-
-  /**
    * Returns a layer manager to use for the given document. Basically we
    * look up the document hierarchy for the first document which has
    * a presentation with an associated widget, and use that widget's
