@@ -379,7 +379,7 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest* request)
 
         // cancel the load and display about:blank
         httpChannel->Cancel(NS_BINDING_ABORTED);
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(static_cast<nsIDocShell*>(mDocShell)));
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(mDocShell));
         if (webNav) {
             webNav->LoadURI(NS_LITERAL_STRING("about:blank").get(),
                             0, nsnull, nsnull, nsnull);
