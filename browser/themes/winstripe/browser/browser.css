@@ -1868,10 +1868,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.tab-close-button:focus {
-  outline: none !important;
-}
-
 /* Tab scrollbox arrow, tabstrip new tab and all-tabs buttons */
 
 @media all and (-moz-touch-enabled) {
