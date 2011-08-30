@@ -230,7 +230,7 @@ SessionStoreService.prototype = {
   _restoreLastWindow: false,
 
   // tabs to restore in order
-  _tabsToRestore: { visible: [], hidden: [] },
+  _tabsToRestore: { priority: [], visible: [], hidden: [] },
   _tabsRestoringCount: 0,
 
   // overrides MAX_CONCURRENT_TAB_RESTORES and _restoreHiddenTabs when true
@@ -437,6 +437,7 @@ SessionStoreService.prototype = {
     this.saveState(true);
 
     // clear out _tabsToRestore in case it's still holding refs
+    this._tabsToRestore.priority = null;
     this._tabsToRestore.visible = null;
     this._tabsToRestore.hidden = null;
 
@@ -2936,7 +2937,9 @@ SessionStoreService.prototype = {
     }
     else {
       // Put the tab into the right bucket
-      if (tabData.hidden)
+      if (tabData.pinned)
+        this._tabsToRestore.priority.push(tab);
+      else if (tabData.hidden)
         this._tabsToRestore.hidden.push(tab);
       else
         this._tabsToRestore.visible.push(tab);
@@ -3065,13 +3068,16 @@ SessionStoreService.prototype = {
       return;
 
     // If it's not possible to restore anything, then just bail out.
-    if (this._restoreOnDemand ||
+    if ((!this._tabsToRestore.priority.length && this._restoreOnDemand) ||
         this._tabsRestoringCount >= MAX_CONCURRENT_TAB_RESTORES)
       return;
 
-    // Look in visible, then hidden
+    // Look in priority, then visible, then hidden
     let nextTabArray;
-    if (this._tabsToRestore.visible.length) {
+    if (this._tabsToRestore.priority.length) {
+      nextTabArray = this._tabsToRestore.priority
+    }
+    else if (this._tabsToRestore.visible.length) {
       nextTabArray = this._tabsToRestore.visible;
     }
     else if (this._restoreHiddenTabs && this._tabsToRestore.hidden.length) {
@@ -4129,7 +4135,7 @@ SessionStoreService.prototype = {
    * Reset state to prepare for a new session state to be restored.
    */
   _resetRestoringState: function sss__initRestoringState() {
-    this._tabsToRestore = { visible: [], hidden: [] };
+    this._tabsToRestore = { priority: [], visible: [], hidden: [] };
     this._tabsRestoringCount = 0;
   },
 
@@ -4174,13 +4180,19 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Remove the tab from this._tabsToRestore[visible/hidden]
+   * Remove the tab from this._tabsToRestore[priority/visible/hidden]
    *
    * @param aTab
    */
   _removeTabFromTabsToRestore: function sss__removeTabFromTabsToRestore(aTab) {
-    let arr = this._tabsToRestore[aTab.hidden ? "hidden" : "visible"];
+    // We'll always check priority first since we don't have an indicator if
+    // a tab will be there or not.
+    let arr = this._tabsToRestore.priority;
     let index = arr.indexOf(aTab);
+    if (index == -1) {
+      arr = this._tabsToRestore[aTab.hidden ? "hidden" : "visible"];
+      index = arr.indexOf(aTab);
+    }
     if (index > -1)
       arr.splice(index, 1);
   },

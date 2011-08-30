@@ -56,7 +56,7 @@ let tests = [test_cascade, test_select, test_multiWindowState,
              test_setWindowStateNoOverwrite, test_setWindowStateOverwrite,
              test_setBrowserStateInterrupted, test_reload,
              /* test_reloadReload, */ test_reloadCascadeSetup,
-             /* test_reloadCascade */];
+             /* test_reloadCascade, */ test_apptabs_only];
 function runNextTest() {
   // Reset the pref
   try {
@@ -717,6 +717,63 @@ function _test_reloadAfter(aTestName, aState, aCallback) {
 
   window.gBrowser.addTabsProgressListener(progressListener);
   BrowserReloadOrDuplicate(fakeEvent);
+}
+
+
+// This test ensures that app tabs are restored regardless of restore_on_demand
+function test_apptabs_only() {
+  // Set the pref to true so we know exactly how many tabs should be restoring at
+  // any given time. This guarantees that a finishing load won't start another.
+  Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
+
+  // We have our own progress listener for this test, which we'll attach before our state is set
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      if (aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        test_apptabs_only_progressCallback(aBrowser);
+    }
+  }
+
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1" }], extData: { "uniq": r() }, pinned: true },
+    { entries: [{ url: "http://example.org/#2" }], extData: { "uniq": r() }, pinned: true },
+    { entries: [{ url: "http://example.org/#3" }], extData: { "uniq": r() }, pinned: true },
+    { entries: [{ url: "http://example.org/#4" }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#5" }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#6" }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#7" }], extData: { "uniq": r() } },
+  ], selected: 5 }] };
+
+  let loadCount = 0;
+  function test_apptabs_only_progressCallback(aBrowser) {
+    loadCount++;
+
+    // We'll make sure that the loads we get come from pinned tabs or the
+    // the selected tab.
+
+    // get the tab
+    let tab;
+    for (let i = 0; i < window.gBrowser.tabs.length; i++) {
+      if (!tab && window.gBrowser.tabs[i].linkedBrowser == aBrowser)
+        tab = window.gBrowser.tabs[i];
+    }
+
+    ok(tab.pinned || gBrowser.selectedTab == tab,
+       "test_apptabs_only: load came from pinned or selected tab");
+
+    // We should get 4 loads: 3 app tabs + 1 normal selected tab
+    if (loadCount < 4)
+      return;
+
+    window.gBrowser.removeTabsProgressListener(progressListener);
+    runNextTest();
+  }
+
+  window.gBrowser.addTabsProgressListener(progressListener);
+  ss.setBrowserState(JSON.stringify(state));
 }
 
 
