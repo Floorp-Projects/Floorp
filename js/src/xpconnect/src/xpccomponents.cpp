@@ -2757,6 +2757,13 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
+    while(obj && !obj->isWrapper() && !IS_WRAPPER_CLASS(obj->getClass()))
+        obj = JS_GetPrototype(cx, obj);
+
+    if(!obj)
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    argv[0] = OBJECT_TO_JSVAL(obj);
     rv = nsXPConnect::GetXPConnect()->GetJSObjectOfWrapper(cx, obj, &obj);
     if(NS_FAILED(rv))
         return rv;
