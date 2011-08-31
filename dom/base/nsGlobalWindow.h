@@ -486,7 +486,6 @@ public:
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const PRUnichar* aData);
 
-  static void Init();
   static void ShutDown();
   static void CleanupCachedXBLHandlers(nsGlobalWindow* aWindow);
   static PRBool IsCallerChrome();
