@@ -185,6 +185,12 @@ class Texture : public RefCountObject
                            int inputPitch, const void *input, size_t outputPitch, void *output) const;
     void loadCompressedImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                  int inputPitch, const void *input, size_t outputPitch, void *output) const;
+    void loadDXT1ImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                           int inputPitch, const void *input, size_t outputPitch, void *output) const;
+    void loadDXT3ImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                           int inputPitch, const void *input, size_t outputPitch, void *output) const;
+    void loadDXT5ImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                           int inputPitch, const void *input, size_t outputPitch, void *output) const;
 
     static unsigned int issueSerial();
 

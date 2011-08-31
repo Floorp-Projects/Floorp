@@ -43,11 +43,6 @@
 #include "readstrings.h"
 #include "errors.h"
 
-// Defined bool stuff here to reduce external dependencies
-typedef int        PRBool;
-#define PR_TRUE    1
-#define PR_FALSE   0
-
 #ifdef XP_WIN
 # define NS_tfopen _wfopen
 # define OPEN_MODE L"rb"
@@ -187,7 +182,7 @@ ReadStrings(const NS_tchar *path,
   fileContents[flen] = '\0';
 
   char *buffer = fileContents;
-  PRBool inStringsSection = PR_FALSE;
+  bool inStringsSection = false;
 
   unsigned int read = 0;
 
@@ -209,7 +204,7 @@ ReadStrings(const NS_tchar *path,
         // we could frankly decide that this INI file is malformed right
         // here and stop, but we won't... keep going, looking for
         // a well-formed [section] to continue working with
-        inStringsSection = PR_FALSE;
+        inStringsSection = false;
       }
       else {
         if (section)

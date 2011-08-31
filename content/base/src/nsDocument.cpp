@@ -2739,8 +2739,7 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
-    do_QueryInterface(static_cast<nsIDocument*>(this));
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryObject(this);
   if (htmlDoc) {
     nsCOMPtr<nsIDOMHTMLElement> bodyElement;
     htmlDoc->GetBody(getter_AddRefs(bodyElement));

@@ -67,6 +67,7 @@ nsBMPDecoder::nsBMPDecoder()
 {
     mColors = nsnull;
     mRow = nsnull;
+    mImageData = nsnull;
     mCurPos = mPos = mNumColors = mRowBytes = 0;
     mOldLine = mCurLine = 1; // Otherwise decoder will never start
     mState = eRLEStateInitial;

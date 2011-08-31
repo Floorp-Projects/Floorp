@@ -296,6 +296,10 @@ private:
 #if defined(XP_MACOSX)
     virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
 #endif
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+    virtual nsresult HandleGUIEvent(NPP instance, const nsGUIEvent& anEvent,
+                                    bool* handled);
+#endif
 
 private:
     void WritePluginExtraDataForMinidump(const nsAString& id);

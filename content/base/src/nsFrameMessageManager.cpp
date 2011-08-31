@@ -457,8 +457,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           // messageManager is wrapped in TabChildGlobal.
           nsCOMPtr<nsISupports> defaultThisValue;
           if (mChrome) {
-            defaultThisValue =
-              do_QueryInterface(static_cast<nsIContentFrameMessageManager*>(this));
+            defaultThisValue = do_QueryObject(this);
           } else {
             defaultThisValue = aTarget;
           }
