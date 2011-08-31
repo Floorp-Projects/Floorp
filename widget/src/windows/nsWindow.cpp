@@ -560,6 +560,12 @@ nsWindow::Create(nsIWidget *aParent,
   } else {
     GetWindowClass(className);
   }
+  // Plugins are created in the disabled state so that they can't
+  // steal focus away from our main window.  This is especially
+  // important if the plugin has loaded in a background tab.
+  if(aInitData->mWindowType == eWindowType_plugin) {
+    style |= WS_DISABLED;
+  }
   mWnd = ::CreateWindowExW(extendedStyle,
                            className.get(),
                            L"",
@@ -7305,6 +7311,17 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     }
   }
 
+  // If a plugin is not visibile, especially if it is in a background tab,
+  // it should not be able to steal keyboard focus.  This code checks whether
+  // the region that the plugin is being clipped to is NULLREGION.  If it is,
+  // the plugin window gets disabled.
+  if(mWindowType == eWindowType_plugin) {
+    if(NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
+      ::EnableWindow(mWnd, FALSE);
+    } else {
+      ::EnableWindow(mWnd, TRUE);
+    }
+  }
   if (!::SetWindowRgn(mWnd, dest, TRUE)) {
     ::DeleteObject(dest);
     return NS_ERROR_FAILURE;
