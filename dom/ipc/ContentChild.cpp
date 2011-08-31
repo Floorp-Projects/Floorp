@@ -687,8 +687,10 @@ bool
 ContentChild::RecvAddPermission(const IPC::Permission& permission)
 {
 #if MOZ_PERMISSIONS
-  nsRefPtr<nsPermissionManager> permissionManager =
-    nsPermissionManager::GetSingleton();
+  nsCOMPtr<nsIPermissionManager> permissionManagerIface =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  nsPermissionManager* permissionManager =
+      static_cast<nsPermissionManager*>(permissionManagerIface.get());
   NS_ABORT_IF_FALSE(permissionManager, 
                    "We have no permissionManager in the Content process !");
 

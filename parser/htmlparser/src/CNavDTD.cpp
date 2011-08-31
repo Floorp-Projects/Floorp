@@ -882,7 +882,7 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
   if (mParserCommand != eViewFragment) {
     PRBool  theChildAgrees = PR_TRUE;
     PRInt32 theIndex = mBodyContext->GetCount();
-    PRBool  theParentContains = PR_FALSE;
+    PRInt32 theParentContains = 0;
 
     do {
       eHTMLTags theParentTag = mBodyContext->TagAt(--theIndex);

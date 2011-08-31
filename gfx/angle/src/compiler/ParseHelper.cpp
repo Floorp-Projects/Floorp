@@ -196,7 +196,6 @@ bool TParseContext::parseMatrixFields(const TString& compString, int matSize, TM
 //
 void TParseContext::recover()
 {
-    recoveredFromError = true;
 }
 
 //
@@ -261,6 +260,8 @@ void TParseContext::binaryOpError(int line, const char* op, TString left, TStrin
 }
 
 bool TParseContext::precisionErrorCheck(int line, TPrecision precision, TBasicType type){
+    if (!checksPrecisionErrors)
+        return false;
     switch( type ){
     case EbtFloat:
         if( precision == EbpUndefined ){
@@ -939,6 +940,12 @@ bool TParseContext::extensionErrorCheck(int line, const TString& extension)
     }
 
     return false;
+}
+
+bool TParseContext::supportsExtension(const char* extension)
+{
+    TExtensionBehavior::const_iterator iter = extensionBehavior.find(extension);
+    return (iter != extensionBehavior.end());
 }
 
 /////////////////////////////////////////////////////////////////////////////////

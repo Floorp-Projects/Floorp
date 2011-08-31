@@ -1124,6 +1124,7 @@ public:
 
     void loadDouble(ImplicitAddress address, FPRegisterID dest)
     {
+        // Load a double from base+offset.
         m_assembler.doubleTransfer(true, dest, address.base, address.offset);
     }
 
@@ -1171,12 +1172,13 @@ public:
  
     void storeDouble(FPRegisterID src, ImplicitAddress address)
     {
+        // Store a double at base+offset.
         m_assembler.doubleTransfer(false, src, address.base, address.offset);
     }
 
-    void storeDouble(FPRegisterID dest, BaseIndex address)
+    void storeDouble(FPRegisterID src, BaseIndex address)
     {
-        m_assembler.baseIndexFloatTransfer(false, true, dest,
+        m_assembler.baseIndexFloatTransfer(false, true, src,
                                            address.base, address.index,
                                            address.scale, address.offset);
     }
@@ -1276,6 +1278,11 @@ public:
     void negDouble(FPRegisterID src, FPRegisterID dest)
     {
         m_assembler.fnegd_r(dest, src);
+    }
+
+    void absDouble(FPRegisterID src, FPRegisterID dest)
+    {
+        m_assembler.fabsd_r(dest, src);
     }
 
     void sqrtDouble(FPRegisterID src, FPRegisterID dest)

@@ -47,6 +47,7 @@
 #include "jsobj.h"
 #include "jstl.h"
 #include "jswrapper.h"
+#include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
@@ -163,8 +164,7 @@ BreakpointSite::recompile(JSContext *cx, bool forTrap)
                 return false;
         }
         js::mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile())
-            return false;
+        recompiler.recompile();
     }
 #endif
     return true;
@@ -1545,6 +1545,7 @@ Debugger::getDebuggees(JSContext *cx, uintN argc, Value *vp)
     JSObject *arrobj = NewDenseAllocatedArray(cx, dbg->debuggees.count(), NULL);
     if (!arrobj)
         return false;
+    arrobj->ensureDenseArrayInitializedLength(cx, 0, dbg->debuggees.count());
     uintN i = 0;
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
         Value v = ObjectValue(*e.front());
@@ -2872,7 +2873,8 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
      * variable references made by this frame.
      */
     JSScript *script = Compiler::compileScript(cx, scobj, fp, fp->scopeChain().principals(cx),
-                                               TCF_COMPILE_N_GO, chars, length,
+                                               TCF_COMPILE_N_GO | TCF_NEED_SCRIPT_OBJECT,
+                                               chars, length,
                                                filename, lineno, cx->findVersion(),
                                                NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
 
@@ -2880,7 +2882,6 @@ EvaluateInScope(JSContext *cx, JSObject *scobj, StackFrame *fp, const jschar *ch
         return false;
 
     bool ok = ExecuteKernel(cx, script, *scobj, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
-    js_DestroyScript(cx, script, 6);
     return ok;
 }
 
@@ -3150,6 +3151,7 @@ DebuggerObject_getParameterNames(JSContext *cx, uintN argc, Value *vp)
     JSObject *result = NewDenseAllocatedArray(cx, fun->nargs, NULL);
     if (!result)
         return false;
+    result->ensureDenseArrayInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());

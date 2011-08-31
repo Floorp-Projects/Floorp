@@ -9,7 +9,7 @@ Expect: feed.fields.getProperty('wfw:commentRss') == 'http://example.org'
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:foo="http://example.org"
       xmlns:bla="http://wellformedweb.org/CommentAPI/">
-  
+
   <title>Example Feed</title>
   <link href="http://example.org/"/>
   <updated>2003-12-13T18:30:02Z</updated>
@@ -25,5 +25,5 @@ Expect: feed.fields.getProperty('wfw:commentRss') == 'http://example.org'
     <updated>2003-12-13T18:30:02Z</updated>
     <summary>Some text.</summary>
   </entry>
-  
+
 </feed>

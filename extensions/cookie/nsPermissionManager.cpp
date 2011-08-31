@@ -159,18 +159,12 @@ nsPermissionManager::nsPermissionManager()
 nsPermissionManager::~nsPermissionManager()
 {
   RemoveAllFromMemory();
+  gPermissionManager = nsnull;
 }
 
 // static
 nsIPermissionManager*
 nsPermissionManager::GetXPCOMSingleton()
-{
-  return GetSingleton().get();
-}
-
-// static
-already_AddRefed<nsPermissionManager>
-nsPermissionManager::GetSingleton()
 {
   if (gPermissionManager) {
     NS_ADDREF(gPermissionManager);
@@ -798,7 +792,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     } else {
       RemoveAllFromMemory();
     }
-  }  
+  }
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(PR_FALSE);

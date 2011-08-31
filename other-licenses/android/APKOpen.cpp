@@ -189,7 +189,7 @@ find_cdir_entry (struct cdir_entry *entry, int count, const char *name)
     if (letoh16(entry->filename_size) == name_size &&
         !memcmp(entry->data, name, name_size))
       return entry;
-    entry = (struct cdir_entry *)((void *)entry + cdir_entry_size(entry));
+    entry = (struct cdir_entry *)((char *)entry + cdir_entry_size(entry));
   }
   return NULL;
 }
@@ -254,7 +254,7 @@ static uint32_t simple_write(int fd, const void *buf, uint32_t count)
 {
   uint32_t out_offset = 0;
   while (out_offset < count) {
-    uint32_t written = write(fd, buf + out_offset,
+    uint32_t written = write(fd, (const char *)buf + out_offset,
                              count - out_offset);
     if (written == -1) {
       if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -445,8 +445,8 @@ static void * mozload(const char * path, void *zip,
 #endif
 
   struct cdir_entry *entry = find_cdir_entry(cdir_start, cdir_entries, path);
-  struct local_file_header *file = (struct local_file_header *)(zip + letoh32(entry->offset));
-  void * data = ((void *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
+  struct local_file_header *file = (struct local_file_header *)((char *)zip + letoh32(entry->offset));
+  void * data = ((char *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
   void * handle;
 
   if (extractLibs) {
@@ -570,8 +570,8 @@ extractBuf(const char * path, void *zip,
            struct cdir_entry *cdir_start, uint16_t cdir_entries)
 {
   struct cdir_entry *entry = find_cdir_entry(cdir_start, cdir_entries, path);
-  struct local_file_header *file = (struct local_file_header *)(zip + letoh32(entry->offset));
-  void * data = ((void *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
+  struct local_file_header *file = (struct local_file_header *)((char *)zip + letoh32(entry->offset));
+  void * data = ((char *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
 
   void * buf = malloc(letoh32(entry->uncompressed_size));
   if (buf == (void *)-1) {
@@ -627,10 +627,10 @@ loadLibs(const char *apkName)
   getrusage(RUSAGE_SELF, &usage1);
 
   void *zip = map_file(apkName);
-  struct cdir_end *dirend = (struct cdir_end *)(zip + zip_size - sizeof(*dirend));
+  struct cdir_end *dirend = (struct cdir_end *)((char *)zip + zip_size - sizeof(*dirend));
   while ((void *)dirend > zip &&
          letoh32(dirend->signature) != CDIR_END_SIG)
-    dirend = (struct cdir_end *)((void *)dirend - 1);
+    dirend = (struct cdir_end *)((char *)dirend - 1);
   if (letoh32(dirend->signature) != CDIR_END_SIG) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't find end of central directory record");
     return;
@@ -639,7 +639,7 @@ loadLibs(const char *apkName)
   uint32_t cdir_offset = letoh32(dirend->cdir_offset);
   uint16_t cdir_entries = letoh16(dirend->cdir_entries);
 
-  struct cdir_entry *cdir_start = (struct cdir_entry *)(zip + cdir_offset);
+  struct cdir_entry *cdir_start = (struct cdir_entry *)((char *)zip + cdir_offset);
 
   lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
 #ifdef MOZ_CRASHREPORTER
