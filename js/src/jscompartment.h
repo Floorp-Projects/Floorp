@@ -455,7 +455,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool ensureJaegerCompartmentExists(JSContext *cx);
 
-    size_t getMjitCodeSize() const;
+    void getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const;
 #endif
     WTF::BumpPointerAllocator    *regExpAllocator;
 
