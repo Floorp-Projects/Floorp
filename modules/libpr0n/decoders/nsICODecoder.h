@@ -22,6 +22,7 @@
  * Contributor(s):
  *   David Hyatt <hyatt@netscape.com> (Original Author)
  *   Bobby Holley <bobbyholley@gmail.com>
+ *   Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,29 +46,13 @@
 #include "Decoder.h"
 #include "imgIDecoderObserver.h"
 #include "nsBMPDecoder.h"
+#include "nsPNGDecoder.h"
+#include "ICOFileHeaders.h"
 
 namespace mozilla {
 namespace imagelib {
 
 class RasterImage;
-
-struct IconDirEntry
-{
-  PRUint8   mWidth;
-  PRUint8   mHeight;
-  PRUint8   mColorCount;
-  PRUint8   mReserved;
-  union {
-    PRUint16 mPlanes;   // ICO
-    PRUint16 mXHotspot; // CUR
-  };
-  union {
-    PRUint16 mBitCount; // ICO
-    PRUint16 mYHotspot; // CUR
-  };
-  PRUint32  mBytesInRes;
-  PRUint32  mImageOffset;
-};
 
 class nsICODecoder : public Decoder
 {
@@ -80,37 +65,42 @@ public:
   virtual void FinishInternal();
 
 private:
-  // Private helper methods
+  // Processes a single dir entry of the icon resource
   void ProcessDirEntry(IconDirEntry& aTarget);
-  void ProcessInfoHeader();
-
-  nsresult SetImageData();
-
+  // Sets the hotspot property of if we have a cursor
+  void SetHotSpotIfCursor();
+  // Creates a bitmap file header buffer, returns PR_TRUE if successful
+  PRBool FillBitmapFileHeaderBuffer(PRInt8 *bfh);
+  // Fixes the height of a BMP information header field
+  void FillBitmapInformationBufferHeight(PRInt8 *bih);
+  // Extract bit count from BMP information header
+  PRInt32 ExtractBPPFromBitmap(PRInt8 *bih);
+  // Calculates the row size in bytes for the AND mask table
   PRUint32 CalcAlphaRowSize();
+  // Obtains the number of colors from the BPP, mBPP must be filled in
+  PRUint16 GetNumColors();
 
-  PRUint32 mPos;
-  PRUint16 mNumIcons;
-  PRUint16 mCurrIcon;
-  PRUint32 mImageOffset;
-
-  char mDirEntryArray[16];
-  IconDirEntry mDirEntry;
-
-  char mBIHraw[40];
-  BMPINFOHEADER mBIH;
-
-  PRUint32 mNumColors;
-  colorTable* mColors;
-
-  PRUint8* mRow; // Holds one raw line of the image
+  PRUint16 mBPP; // Stores the images BPP
+  PRUint32 mPos; // Keeps track of the position we have decoded up until
+  PRUint16 mNumIcons; // Stores the number of icons in the ICO file
+  PRUint16 mCurrIcon; // Stores the current dir entry index we are processing
+  PRUint32 mImageOffset; // Stores the offset of the image data we want
+  PRUint8 *mRow;      // Holds one raw line of the image
+  PRInt32 mCurLine;   // Line index of the image that's currently being decoded
   PRUint32 mRowBytes; // How many bytes of the row were already received
-  PRInt32 mCurLine;
+  PRInt32 mOldLine;   // Previous index of the line 
+  nsAutoPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
 
-  PRUint32* mImageData;
-
-  PRPackedBool mHaveAlphaData;
+  char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer
+  IconDirEntry mDirEntry; // Holds a decoded dir entry
+  // Holds the potential bytes that can be a PNG signature
+  char mSignature[PNGSIGNATURESIZE]; 
+  // Holds the potential bytes for a bitmap information header
+  char mBIHraw[40];
+  // Stores whether or not the icon file we are processing has type 1 (icon)
   PRPackedBool mIsCursor;
-  PRPackedBool mDecodingAndMask;
+  // Stores whether or not the contained resource is a PNG
+  PRPackedBool mIsPNG;
 };
 
 } // namespace imagelib

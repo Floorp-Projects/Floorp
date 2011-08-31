@@ -42,23 +42,53 @@
 #    order:
 #       if $MOZCONFIG is set, use that.
 #       Otherwise, use $TOPSRCDIR/.mozconfig
-#       Otherwise, use $HOME/.mozconfig
 #
 topsrcdir=$1
 
+abspath() {
+  if uname -s | grep -q MINGW; then
+    # We have no way to figure out whether we're in gmake or pymake right
+    # now. gmake gives us Unix-style paths while pymake gives us Windows-style
+    # paths, so attempt to handle both.
+    regexes='^\([A-Za-z]:\|\\\\\|\/\) ^\/'
+  else
+    regexes='^\/'
+  fi
+
+  for regex in $regexes; do
+    if echo $1 | grep -q $regex; then
+      echo $1
+      exit 0
+    fi
+  done
+
+  # If we're at this point, we have a relative path
+  echo `pwd`/$1
+}
+
+if [ -n "$MOZCONFIG" ] && ! [ -f "$MOZCONFIG" ]; then
+  echo "Specified MOZCONFIG \"$MOZCONFIG\" does not exist!"
+  exit 1
+fi
+
+if [ -n "$MOZ_MYCONFIG" ]; then
+  echo "Your environment currently has the MOZ_MYCONFIG variable set to \"$MOZ_MYCONFIG\". MOZ_MYCONFIG is no longer supported. Please use MOZCONFIG instead."
+  exit 1
+fi
+
 for _config in "$MOZCONFIG" \
-               "$MOZ_MYCONFIG"
+               "$topsrcdir/.mozconfig"
 do
-  if [ -n "$_config" ] && ! [ -f "$_config" ]; then
-    echo "Specified MOZCONFIG \"$_config\" does not exist!"
-    exit 1
+  if test -f "$_config"; then
+    echo `abspath $_config`
+    exit 0
   fi
 done
 
-for _config in "$MOZCONFIG" \
-               "$MOZ_MYCONFIG" \
-               "$topsrcdir/.mozconfig" \
-               "$topsrcdir/mozconfig" \
+# We used to support a number of other implicit .mozconfig locations. We now
+# detect if we were about to use any of these locations and issue an error if we
+# find any.
+for _config in "$topsrcdir/mozconfig" \
                "$topsrcdir/mozconfig.sh" \
                "$topsrcdir/myconfig.sh" \
                "$HOME/.mozconfig" \
@@ -66,7 +96,7 @@ for _config in "$MOZCONFIG" \
                "$HOME/.mozmyconfig.sh"
 do
   if test -f "$_config"; then
-    echo "$_config";
-    exit 0
+    echo "You currently have a mozconfig at \"$_config\". This implicit location is no longer supported. Please move it to $topsrcdir/.mozconfig or specify it explicitly via \$MOZCONFIG.";
+    exit 1
   fi
 done

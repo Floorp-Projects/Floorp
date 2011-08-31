@@ -83,7 +83,7 @@
 #endif
 
 // Size to use for PLArena block allocations.
-static const size_t ARENA_PAGE_SIZE = 4096;
+static const size_t ARENA_PAGE_SIZE = 8192;
 
 // Freed memory is filled with a poison value, which we arrange to
 // form a pointer either to an always-unmapped region of the address

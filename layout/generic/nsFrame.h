@@ -175,14 +175,14 @@ public:
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIFrame*        asPrevInFlow);
-  NS_IMETHOD  SetInitialChildList(nsIAtom*           aListName,
+  NS_IMETHOD  SetInitialChildList(ChildListID        aListID,
                                   nsFrameList&       aChildList);
-  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(ChildListID     aListID,
                            nsFrameList&    aFrameList);
-  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
                            nsFrameList&    aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame);
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
@@ -190,8 +190,11 @@ public:
                                          nsStyleContext* aStyleContext);
   virtual void SetParent(nsIFrame* aParent);
   virtual nscoord GetBaseline() const;
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(ChildListID aListID) const {
+    return nsFrameList::EmptyList();
+  }
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const {}
+
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
@@ -574,7 +577,7 @@ public:
                                nsIFrame** aContainingBlock = nsnull);
 
   // test whether aFrame should apply paginated overflow clipping.
-  static PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame)
+  static PRBool ApplyPaginatedOverflowClipping(const nsIFrame* aFrame)
   {
     // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
     // set, then we want to clip our overflow.

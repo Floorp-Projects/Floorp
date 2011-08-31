@@ -49,7 +49,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIContent.h"
@@ -152,17 +151,13 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node
-    nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
-    NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsIDOMNode> parent;
-    PRInt32 offset = 0;
-
-    res = uiEvent->GetRangeParent(getter_AddRefs(parent));
+    res = mouseEvent->GetRangeParent(getter_AddRefs(parent));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
-    res = uiEvent->GetRangeOffset(&offset);
+    PRInt32 offset = 0;
+    res = mouseEvent->GetRangeOffset(&offset);
     NS_ENSURE_SUCCESS(res, res);
 
     // Detect if mouse point is within current selection for context click

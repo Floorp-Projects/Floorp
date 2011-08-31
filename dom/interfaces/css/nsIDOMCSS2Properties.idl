@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(10f43750-b379-11e0-aff2-0800200c9a66)]
+[builtinclass, scriptable, uuid(519ae4fa-0fee-4aaa-bcb9-34b503236801)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -657,6 +657,9 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozBorderImage;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozColumns;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozColumnRule;
                                         // raises(DOMException) on setting
 
@@ -688,7 +691,10 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBackfaceVisibility;
-                                        // raises(DOMException) on setting 
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozTransformStyle;
+                                        // raises(DOMException) on setting
 
            attribute DOMString        MozWindowShadow;
                                         // raises(DOMException) on setting

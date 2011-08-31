@@ -533,7 +533,7 @@ nsDebugImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_COM nsresult
+nsresult
 NS_ErrorAccordingToNSPR()
 {
     PRErrorCode err = PR_GetError();
@@ -559,7 +559,7 @@ NS_ErrorAccordingToNSPR()
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef XP_WIN
-NS_COM PRBool sXPCOMHasLoadedNewDLLs = PR_FALSE;
+PRBool sXPCOMHasLoadedNewDLLs = PR_FALSE;
 
 NS_EXPORT void
 NS_SetHasLoadedNewDLLs()

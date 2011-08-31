@@ -44,10 +44,6 @@ interface nsIIDBKeyRange;
 interface nsIIDBRequest;
 interface nsIVariant;
 
-%{C++
-#include "jspubtd.h"
-%}
-
 /**
  * Interface that defines the indexedDB property on a window.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory

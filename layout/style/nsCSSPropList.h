@@ -1239,6 +1239,11 @@ CSS_PROP_COLOR(
     nsnull,
     offsetof(nsStyleColor, mColor),
     eStyleAnimType_Color)
+CSS_PROP_SHORTHAND(
+    -moz-columns,
+    _moz_columns,
+    CSS_PROP_DOMPROP_PREFIXED(Columns),
+    CSS_PROPERTY_PARSE_FUNCTION)
 CSS_PROP_COLUMN(
     -moz-column-count,
     _moz_column_count,
@@ -2211,8 +2216,9 @@ CSS_PROP_TEXTRESET(
     text-overflow,
     text_overflow,
     TextOverflow,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK | VARIANT_STRING,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     kTextOverflowKTable,
     offsetof(nsStyleTextReset, mTextOverflow),
     eStyleAnimType_None)
@@ -2277,6 +2283,15 @@ CSS_PROP_DISPLAY(
     nsnull,
     offsetof(nsStyleDisplay, mChildPerspective),
     eStyleAnimType_Coord)
+CSS_PROP_DISPLAY(
+    -moz-transform-style,
+    transform_style,
+    CSS_PROP_DOMPROP_PREFIXED(TransformStyle),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kTransformStyleKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_DISPLAY(
     -moz-backface-visibility,
     backface_visibility,

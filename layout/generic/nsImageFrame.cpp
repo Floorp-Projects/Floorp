@@ -548,10 +548,10 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
     return NS_OK;
   }
   
-  UpdateIntrinsicSize(aImage);
-  UpdateIntrinsicRatio(aImage);
+  PRBool intrinsicSizeChanged = UpdateIntrinsicSize(aImage);
+  intrinsicSizeChanged = UpdateIntrinsicRatio(aImage) || intrinsicSizeChanged;
 
-  if (mState & IMAGE_GOTINITIALREFLOW) {
+  if (intrinsicSizeChanged && (mState & IMAGE_GOTINITIALREFLOW)) {
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow
     if (!(mState & IMAGE_SIZECONSTRAINED)) { 
@@ -971,10 +971,11 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
 {
   // Set font and color
   aRenderingContext.SetColor(GetStyleColor()->mColor);
-  nsLayoutUtils::SetFontFromStyle(&aRenderingContext, mStyleContext);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  aRenderingContext.SetFont(fm);
 
   // Format the text to display within the formatting rect
-  nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
   nscoord maxAscent = fm->MaxAscent();
   nscoord maxDescent = fm->MaxDescent();

@@ -1,0 +1,269 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is The Extension Manager.
+#
+# The Initial Developer of the Original Code is
+# the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Dave Townsend <dtownsend@oxymoronical.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE window [
+<!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/extensions/selectAddons.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%updateDTD;
+%brandDTD;
+]>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="addon-select">
+    <content>
+      <xul:hbox class="select-keep select-cell">
+        <xul:checkbox class="addon-keep-checkbox" anonid="keep"
+                      oncommand="document.getBindingParent(this).keepChanged();"/>
+      </xul:hbox>
+      <xul:hbox class="select-icon select-cell">
+        <xul:image class="addon-icon" xbl:inherits="type"/>
+      </xul:hbox>
+      <xul:hbox class="select-name select-cell">
+        <xul:label class="addon-name" crop="end" style="&select.name.style;"
+                   xbl:inherits="xbl:text=name"/>
+      </xul:hbox>
+      <xul:hbox class="select-action select-cell">
+        <xul:label class="addon-action-message" style="&select.action.style;"
+                   xbl:inherits="xbl:text=action"/>
+        <xul:checkbox anonid="update" checked="true" class="addon-action-update"
+                      oncommand="document.getBindingParent(this).updateChanged();"
+                      style="&select.action.style;" xbl:inherits="label=action"/>
+      </xul:hbox>
+      <xul:hbox class="select-source select-cell">
+        <xul:label class="addon-source" xbl:inherits="xbl:text=source"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <field name="_addon"/>
+      <field name="_disabled"/>
+      <field name="_install"/>
+      <field name="_wasActive"/>
+      <field name="_keep">document.getAnonymousElementByAttribute(this, "anonid", "keep");</field>
+      <field name="_update">document.getAnonymousElementByAttribute(this, "anonid", "update");</field>
+      <field name="_appStrings">document.getElementById("app-strings");</field>
+      <field name="_strings">document.getElementById("strings");</field>
+
+      <property name="action" readonly="true">
+        <getter><![CDATA[
+          if (!this._keep.checked) {
+            if (this._wasActive)
+              return "disable";
+            else
+              return null;
+          }
+
+          if (this._addon.appDisabled && !this._install)
+            return "incompatible";
+
+          if (this._install && (AddonManager.shouldAutoUpdate(this._addon) || this._update.checked))
+            return "update";
+
+          if (this._addon.permissions & AddonManager.PERM_CAN_ENABLE)
+            return "enable";
+
+          return null;
+        ]]></getter>
+      </property>
+
+      <method name="setAddon">
+        <parameter name="aAddon"/>
+        <parameter name="aInstall"/>
+        <parameter name="aWasActive"/>
+        <body><![CDATA[
+          this._addon = aAddon;
+          this._install = aInstall;
+          this._wasActive = aWasActive;
+
+          this.setAttribute("name", aAddon.name);
+          this.setAttribute("type", aAddon.type);
+
+          // User and application installed add-ons default to staying enabled,
+          // others default to disabled.
+          switch (aAddon.scope) {
+            case AddonManager.SCOPE_PROFILE:
+              this._keep.checked = !aAddon.userDisabled;
+              this.setAttribute("source", this._strings.getString("source.profile"));
+              break;
+            case AddonManager.SCOPE_APPLICATION:
+              this._keep.checked = !aAddon.userDisabled;
+              this.setAttribute("source", this._appStrings.getString("brandShortName"));
+              break;
+            default:
+              this._keep.checked = false;
+              this.setAttribute("source", this._strings.getString("source.other"));
+          }
+
+          this.updateAction();
+        ]]></body>
+      </method>
+
+      <method name="setActionMessage">
+        <body><![CDATA[
+          if (!this._keep.checked) {
+            // If the user no longer wants this add-on then it is either being
+            // disabled or nothing is changing. Don't complicate matters by
+            // talking about updates for this case
+
+            if (this._wasActive)
+              this.setAttribute("action", this._strings.getString("action.disabled"));
+            else
+              this.setAttribute("action", "");
+
+            this.removeAttribute("optionalupdate");
+            return;
+          }
+
+          if (this._addon.appDisabled && !this._install) {
+            // If the add-on is incompatible and there is no update available
+            // then it will remain disabled
+
+            this.setAttribute("action", this._strings.getString("action.incompatible"));
+
+            this.removeAttribute("optionalupdate");
+            return;
+          }
+
+          if (this._install) {
+            if (!AddonManager.shouldAutoUpdate(this._addon)) {
+              this.setAttribute("optionalupdate", "true");
+
+              // If manual updating for the add-on then display the right
+              // text depending on whether the update is required to make
+              // the add-on work or not
+              if (this._addon.appDisabled)
+                this.setAttribute("action", this._strings.getString("action.neededupdate"));
+              else
+                this.setAttribute("action", this._strings.getString("action.unneededupdate"));
+              return;
+            }
+
+            this.removeAttribute("optionalupdate");
+
+            // If the update is needed to make the add-on compatible then
+            // say so otherwise just say nothing about it
+            if (this._addon.appDisabled) {
+              this.setAttribute("action", this._strings.getString("action.autoupdate"));
+              return;
+            }
+          }
+          else {
+            this.removeAttribute("optionalupdate");
+          }
+
+          // If the add-on didn't used to be active and it now is (via a
+          // compatibility update) or it can be enabled then the action is to
+          // enable the add-on
+          if (!this._wasActive && (this._addon.isActive || this._addon.permissions & AddonManager.PERM_CAN_ENABLE)) {
+            this.setAttribute("action", this._strings.getString("action.enabled"));
+            return;
+          }
+
+          // In all other cases the add-on is simply remaining enabled
+          this.setAttribute("action", "");
+        ]]></body>
+      </method>
+
+      <method name="updateAction">
+        <body><![CDATA[
+          this.setActionMessage();
+          let installingUpdate = this._install &&
+                                 (AddonManager.shouldAutoUpdate(this._addon) || 
+                                  this._update.checked);
+
+          if (this._keep.checked && (!this._addon.appDisabled || installingUpdate))
+            this.setAttribute("active", "true");
+          else
+            this.removeAttribute("active");
+
+          gSelect.updateButtons();
+        ]]></body>
+      </method>
+
+      <method name="updateChanged">
+        <body><![CDATA[
+          this.updateAction();
+        ]]></body>
+      </method>
+
+      <method name="keepChanged">
+        <body><![CDATA[
+          this.updateAction();
+        ]]></body>
+      </method>
+
+      <method name="keep">
+        <body><![CDATA[
+          this._keep.checked = true;
+          this.keepChanged();
+        ]]></body>
+      </method>
+
+      <method name="disable">
+        <body><![CDATA[
+          this._keep.checked = false;
+          this.keepChanged();
+        ]]></body>
+      </method>
+
+      <method name="apply">
+        <body><![CDATA[
+          this._addon.userDisabled = !this._keep.checked;
+
+          if (!this._install || !this._keep.checked)
+            return;
+
+          if (AddonManager.shouldAutoUpdate(this._addon) || this._update.checked)
+            this._install.install();
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="addon-confirm">
+    <content>
+      <xul:image class="addon-icon" xbl:inherits="type"/>
+      <xul:label class="addon-name" xbl:inherits="xbl:text=name"/>
+    </content>
+  </binding>
+</bindings>

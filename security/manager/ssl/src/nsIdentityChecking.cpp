@@ -123,18 +123,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nsnull
   },
   {
-    // E=info@diginotar.nl,CN=DigiNotar Root CA,O=DigiNotar,C=NL
-    "2.16.528.1.1001.1.1.1.12.6.1.1.1",
-    "DigiNotar EV OID",
-    SEC_OID_UNKNOWN,
-    "C0:60:ED:44:CB:D8:81:BD:0E:F8:6C:0B:A2:87:DD:CF:81:67:47:8C",
-    "MF8xCzAJBgNVBAYTAk5MMRIwEAYDVQQKEwlEaWdpTm90YXIxGjAYBgNVBAMTEURp"
-    "Z2lOb3RhciBSb290IENBMSAwHgYJKoZIhvcNAQkBFhFpbmZvQGRpZ2lub3Rhci5u"
-    "bA==",
-    "DHbanJEMTiye/hXQWJM8TA==",
-    nsnull
-  },
-  {
     // CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH
     "2.16.756.1.89.1.2.1.1",
     "SwissSign EV OID",

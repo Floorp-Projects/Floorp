@@ -59,6 +59,11 @@ setting[type="directory"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
 }
 
+setting[type="radio"],
+setting[type="menulist"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
+}
+
 #browsers > notificationbox {
   -moz-binding: url("chrome://browser/content/notification.xml#stacked-notificationbox");
   overflow: -moz-hidden-unscrollable;

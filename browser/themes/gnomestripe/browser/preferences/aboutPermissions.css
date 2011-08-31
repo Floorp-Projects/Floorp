@@ -1,25 +1,19 @@
-/* background styles borrowed from extensions.css */
-#permissions-page {
-  -moz-appearance: none;
-  padding: 18px;
-  background-color: Window;  
-  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
-                    -moz-linear-gradient(-moz-dialog, Window 160px);
-  color: WindowText;
-}
+@import url("chrome://global/skin/inContentUI.css");
 
-#permissions-content {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border: 1px solid ThreeDShadow;
-  border-radius: 5px;
-}
 
 /* sites box */
 
 #sites-box {
   padding: 10px;
   width: 25em;
+}
+
+#sites-filter {
+  margin: 0;
+}
+
+#sites-list {
+  margin: 5px 0 0 0;
 }
 
 .site {
@@ -31,7 +25,7 @@
   height: 16px;
   width: 16px;
   -moz-margin-end: 4px;
-  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 #all-sites-item > .site-container > .site-favicon {

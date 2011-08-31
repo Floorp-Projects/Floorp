@@ -131,8 +131,12 @@ InlineSpellChecker.prototype = {
       return 0; // nothing to do
 
     var spellchecker = this.mInlineSpellChecker.spellChecker;
-    if (! spellchecker.CheckCurrentWord(this.mMisspelling))
-      return 0;  // word seems not misspelled after all (?)
+    try {
+      if (! spellchecker.CheckCurrentWord(this.mMisspelling))
+        return 0;  // word seems not misspelled after all (?)
+    } catch(e) {
+        return 0;
+    }
 
     this.mMenu = menu;
     this.mSpellSuggestions = [];
@@ -192,7 +196,10 @@ InlineSpellChecker.prototype = {
     spellchecker.GetDictionaryList(o1, o2);
     var list = o1.value;
     var listcount = o2.value;
-    var curlang = spellchecker.GetCurrentDictionary();
+    var curlang = "";
+    try {
+        curlang = spellchecker.GetCurrentDictionary();
+    } catch(e) {}
     var isoStrArray;
 
     for (var i = 0; i < list.length; i ++) {
@@ -253,7 +260,6 @@ InlineSpellChecker.prototype = {
       return;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
     spellchecker.SetCurrentDictionary(this.mDictionaryNames[index]);
-    spellchecker.saveDefaultDictionary();
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
   },
 

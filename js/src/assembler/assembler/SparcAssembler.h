@@ -889,6 +889,14 @@ namespace JSC {
             format_3_8(2, rd, 0x34, 0, 0x2a, rs2);
         }
 
+        void fabsd_r(int rs2, int rd)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                           IPFX "fabsd     %s, %s\n", MAYBE_PAD,
+                           nameFpReg(rs2), nameFpReg(rd));
+            format_3_8(2, rd, 0x34, 0, 0x0a, rs2);
+        }
+
         void fnegd_r(int rs2, int rd)
         {
             js::JaegerSpew(js::JSpew_Insns,

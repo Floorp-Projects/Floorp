@@ -68,6 +68,14 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetAdapterRAM(nsAString & aAdapterRAM);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverVersion(nsAString & aAdapterDriverVersion);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverDate(nsAString & aAdapterDriverDate);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDescription2(nsAString & aAdapterDescription);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDriver2(nsAString & aAdapterDriver);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterVendorID2(PRUint32 *aAdapterVendorID);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterRAM2(nsAString & aAdapterRAM);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverDate2(nsAString & aAdapterDriverDate);
+  NS_SCRIPTABLE NS_IMETHOD GetIsGPU2Active(PRBool *aIsGPU2Active);
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
@@ -94,7 +102,18 @@ private:
   nsString mDeviceKeyDebug;
   PRUint32 mAdapterVendorID;
   PRUint32 mAdapterDeviceID;
+  PRUint32 mAdapterSubsysID;
+  nsString mDeviceString2;
+  nsString mDriverVersion2;
+  nsString mDeviceID2;
+  nsString mDriverDate2;
+  nsString mDeviceKey2;
+  PRUint32 mAdapterVendorID2;
+  PRUint32 mAdapterDeviceID2;
+  PRUint32 mAdapterSubsysID2;
   PRUint32 mWindowsVersion;
+  PRBool mHasDualGPU;
+  PRBool mIsGPU2Active;
   PRBool mHasDriverVersionMismatch;
 };
 

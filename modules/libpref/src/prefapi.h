@@ -58,7 +58,7 @@ struct PrefHashEntry : PLDHashEntryHdr
     const char *key;
     PrefValue defaultPref;
     PrefValue userPref;
-    PRUint8   flags;
+    PRUint16  flags;
 };
 
 /*
@@ -84,9 +84,10 @@ void        PREF_CleanupPrefs();
 
 typedef enum { PREF_INVALID = 0,
                PREF_LOCKED = 1, PREF_USERSET = 2, PREF_CONFIG = 4, PREF_REMOTE = 8,
-			   PREF_LILOCAL = 16, PREF_STRING = 32, PREF_INT = 64, PREF_BOOL = 128,
-			   PREF_VALUETYPE_MASK = (PREF_STRING | PREF_INT | PREF_BOOL)
-			  } PrefType;
+               PREF_LILOCAL = 16, PREF_STRING = 32, PREF_INT = 64, PREF_BOOL = 128,
+               PREF_HAS_DEFAULT = 256,
+               PREF_VALUETYPE_MASK = (PREF_STRING | PREF_INT | PREF_BOOL)
+             } PrefType;
 
 /*
 // <font color=blue>

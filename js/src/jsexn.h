@@ -44,7 +44,15 @@
 #ifndef jsexn_h___
 #define jsexn_h___
 
+#include "jsobj.h"
+
 extern js::Class js_ErrorClass;
+
+inline bool
+JSObject::isError() const
+{
+    return clasp == &js_ErrorClass;
+}
 
 /*
  * Initialize the exception constructor/prototype hierarchy.
@@ -89,5 +97,16 @@ js_ErrorFromException(JSContext *cx, jsval exn);
 extern const JSErrorFormatString *
 js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
                             const uintN errorNumber);
+
+/*
+ * Make a copy of errobj parented to scope.
+ *
+ * cx must be in the same compartment as scope. errobj may be in a different
+ * compartment, but it must be an Error object (not a wrapper of one) and it
+ * must not be one of the prototype objects created by js_InitExceptionClasses
+ * (errobj->getPrivate() must not be NULL).
+ */
+extern JSObject *
+js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope);
 
 #endif /* jsexn_h___ */

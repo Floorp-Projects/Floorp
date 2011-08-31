@@ -1384,6 +1384,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     PRBool isMisspelled;
     aWordUtil.NormalizeWord(wordText);
     rv = mSpellCheck->CheckCurrentWordNoSuggest(wordText.get(), &isMisspelled);
+    if (NS_FAILED(rv))
+      continue;
+
     if (isMisspelled) {
       // misspelled words count extra toward the max
       wordsSinceTimeCheck += MISSPELLED_WORD_COUNT_PENALTY;
@@ -1441,6 +1444,23 @@ mozInlineSpellChecker::ResumeCheck(mozInlineSpellStatus* aStatus)
   nsCOMPtr<nsISelection> spellCheckSelection;
   rv = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString currentDictionary;
+  rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
+  if (NS_FAILED(rv)) {
+    // no active dictionary
+    PRInt32 count;
+    spellCheckSelection->GetRangeCount(&count);
+    for (PRInt32 index = count - 1; index >= 0; index--) {
+      nsCOMPtr<nsIDOMRange> checkRange;
+      spellCheckSelection->GetRangeAt(index, getter_AddRefs(checkRange));
+      if (checkRange) {
+        RemoveRange(spellCheckSelection, checkRange);
+      }
+    }
+    return NS_OK; 
+  }
+ 
   CleanupRangesInSelection(spellCheckSelection);
 
   rv = aStatus->FinishInitOnEvent(wordUtil);
@@ -1732,4 +1752,29 @@ nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
+{
+  if (!mSpellCheck) {
+    return NS_OK;
+  }
+
+  nsAutoString previousDictionary;
+  if (NS_FAILED(mSpellCheck->GetCurrentDictionary(previousDictionary))) {
+    previousDictionary.Truncate();
+  }
+
+  nsresult rv = mSpellCheck->UpdateCurrentDictionary();
+
+  nsAutoString currentDictionary;
+  if (NS_FAILED(mSpellCheck->GetCurrentDictionary(currentDictionary))) {
+    currentDictionary.Truncate();
+  }
+
+  if (!previousDictionary.Equals(currentDictionary)) {
+      rv = SpellCheckRange(nsnull);
+  }
+
+  return rv;
 }

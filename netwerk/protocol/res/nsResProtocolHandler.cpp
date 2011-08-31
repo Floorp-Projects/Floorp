@@ -221,7 +221,7 @@ EnumerateSubstitution(const nsACString& aKey,
     }
 
     ResourceMapping resource = {
-        nsDependentCString(aKey), uri
+        nsCString(aKey), uri
     };
     resources->AppendElement(resource);
     return (PLDHashOperator)PL_DHASH_NEXT;

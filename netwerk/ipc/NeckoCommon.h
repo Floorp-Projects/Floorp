@@ -43,6 +43,7 @@
 
 #include "nsXULAppAPI.h"
 #include "prenv.h"
+#include "nsPrintfCString.h"
 
 #if defined(DEBUG) || defined(ENABLE_TESTS)
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT true

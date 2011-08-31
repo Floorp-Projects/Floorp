@@ -314,7 +314,7 @@ nsHTMLLabelElement::PerformAccesskey(PRBool aKeyCausesActivation,
     // Click on it if the users prefs indicate to do so.
     nsMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
                        nsnull, nsMouseEvent::eReal);
-    event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
 
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);

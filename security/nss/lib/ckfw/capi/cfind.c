@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cfind.c,v $ $Revision: 1.3 $ $Date: 2005/12/16 00:48:02 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cfind.c,v $ $Revision: 1.4 $ $Date: 2011/02/02 17:13:40 $";
 #endif /* DEBUG */
 
 #ifndef CKCAPI_H
@@ -136,7 +136,7 @@ ckcapi_attrmatch
   if( a->ulValueLen != b->size ) {
     /* match a decoded serial number */
     if ((a->type == CKA_SERIAL_NUMBER) && (a->ulValueLen < b->size)) {
-	int len;
+	unsigned int len;
 	unsigned char *data;
 
 	data = nss_ckcapi_DERUnwrap(b->data, b->size, &len, NULL);

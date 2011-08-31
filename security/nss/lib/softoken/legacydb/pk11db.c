@@ -211,7 +211,7 @@ secmod_EncodeData(DBT *data, char * module)
     SECMOD_PUTLONG(&encoded->ssl[4],ssl[1]);
     if (ciphers) PORT_Free(ciphers);
 
-    offset = (unsigned short) &(((secmodData *)0)->names[0]);
+    offset = (unsigned short) offsetof(secmodData, names);
     SECMOD_PUTSHORT(encoded->nameStart,offset);
     offset = offset + len + len2 + len3 + 3*sizeof(unsigned short);
     SECMOD_PUTSHORT(encoded->slotOffset,offset);

@@ -1206,6 +1206,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
     if (JSDOUBLE_IS_INT32(d, &i)) {
         if (base == 10 && JSAtom::hasIntStatic(i))
             return &JSAtom::intStatic(i);
+#ifdef JS_HAS_STATIC_STRINGS
         if (jsuint(i) < jsuint(base)) {
             if (i < 10)
                 return &JSAtom::intStatic(i);
@@ -1213,6 +1214,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
             JS_ASSERT(JSAtom::hasUnitStatic(c));
             return &JSAtom::unitStatic(c);
         }
+#endif
 
         if (JSFlatString *str = c->dtoaCache.lookup(base, d))
             return str;

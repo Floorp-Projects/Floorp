@@ -126,7 +126,9 @@ PRBool gChildViewMethodsSwizzled = PR_FALSE;
 extern nsISupportsArray *gDraggedTransferables;
 
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
+NSEvent* ChildViewMouseTracker::sLastMouseMoveEvent = nil;
 NSWindow* ChildViewMouseTracker::sWindowUnderMouse = nil;
+NSPoint ChildViewMouseTracker::sLastScrollEventScreenLocation = NSZeroPoint;
 
 #ifdef INVALIDATE_DEBUGGING
 static void blinkRect(Rect* r);
@@ -304,6 +306,15 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   if (!gChildViewMethodsSwizzled) {
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
                               @selector(nsChildView_NSView_mouseDownCanMoveWindow));
+#ifdef __LP64__
+    if (nsToolkit::OnLionOrLater()) {
+      nsToolkit::SwizzleMethods([NSEvent class], @selector(addLocalMonitorForEventsMatchingMask:handler:),
+                                @selector(nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:handler:),
+                                PR_TRUE);
+      nsToolkit::SwizzleMethods([NSEvent class], @selector(removeMonitor:),
+                                @selector(nsChildView_NSEvent_removeMonitor:), PR_TRUE);
+    }
+#endif
 #ifndef NP_NO_CARBON
     TextInputHandler::SwizzleMethods();
 #endif
@@ -3090,7 +3101,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
         *stop = YES;
         return;
       }
-      if (isComplete) {
+      // gestureAmount is documented to be '-1', '0' or '1' when isComplete
+      // is TRUE, but the docs don't say anything about its value at other
+      // times.  However, tests show that, when phase == NSEventPhaseEnded,
+      // gestureAmount is negative when it will be '-1' at isComplete, and
+      // positive when it will be '1'.  And phase is never equal to
+      // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
+      // Not waiting until isComplete is TRUE substantially reduces the
+      // time it takes to change pages after a swipe, and helps resolve
+      // bug 678891.
+      if (phase == NSEventPhaseEnded) {
         if (gestureAmount) {
           nsSimpleGestureEvent geckoEventCopy(geckoEvent);
           if (gestureAmount > 0) {
@@ -3100,6 +3120,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
           }
           mGeckoChild->DispatchWindowEvent(geckoEventCopy);
         }
+        mSwipeAnimationCancelled = nil;
+      } else if (phase == NSEventPhaseCancelled) {
         mSwipeAnimationCancelled = nil;
       }
     }];
@@ -3690,8 +3712,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // No sense in firing off a Gecko event.
      return;
 
-  BOOL isMomentumScroll = [theEvent respondsToSelector:@selector(_scrollPhase)] &&
-                          [theEvent _scrollPhase] != 0;
+  BOOL isMomentumScroll = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
 
   if (scrollDelta != 0) {
     // Send the line scroll event.
@@ -3813,14 +3834,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 -(void)scrollWheel:(NSEvent*)theEvent
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  if ([self maybeRollup:theEvent])
-    return;
+  ChildViewMouseTracker::MouseScrolled(theEvent);
 
-  if (!mGeckoChild)
+  if ([self maybeRollup:theEvent])
     return;
 
   // It's possible for a single NSScrollWheel event to carry both useful
@@ -3828,11 +3846,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // NSMouseScrollEvent can only carry one axis at a time, so the system
   // event will be split into two Gecko events if necessary.
   [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsVertical];
-  if (!mGeckoChild)
-    return;
   [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsHorizontal];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
@@ -4490,6 +4504,23 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 // NSDraggingSource
+- (void)draggedImage:(NSImage *)anImage movedTo:(NSPoint)aPoint
+{
+  // Get the drag service if it isn't already cached. The drag service
+  // isn't cached when dragging over a different application.
+  nsCOMPtr<nsIDragService> dragService = mDragService;
+  if (!dragService) {
+    dragService = do_GetService(kDragServiceContractID);
+  }
+
+  if (dragService) {
+    NSPoint pnt = [NSEvent mouseLocation];
+    FlipCocoaScreenCoordinate(pnt);
+    dragService->DragMoved(NSToIntRound(pnt.x), NSToIntRound(pnt.y));
+  }
+}
+
+// NSDraggingSource
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4900,6 +4931,8 @@ ChildViewMouseTracker::OnDestroyView(ChildView* aView)
 {
   if (sLastMouseEventView == aView) {
     sLastMouseEventView = nil;
+    [sLastMouseMoveEvent release];
+    sLastMouseMoveEvent = nil;
   }
 }
 
@@ -4946,10 +4979,31 @@ ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent)
 }
 
 void
+ChildViewMouseTracker::ResendLastMouseMoveEvent()
+{
+  if (sLastMouseMoveEvent) {
+    MouseMoved(sLastMouseMoveEvent);
+  }
+}
+
+void
 ChildViewMouseTracker::MouseMoved(NSEvent* aEvent)
 {
   MouseEnteredWindow(aEvent);
   [sLastMouseEventView handleMouseMoved:aEvent];
+  if (sLastMouseMoveEvent != aEvent) {
+    [sLastMouseMoveEvent release];
+    sLastMouseMoveEvent = [aEvent retain];
+  }
+}
+
+void
+ChildViewMouseTracker::MouseScrolled(NSEvent* aEvent)
+{
+  if (!nsCocoaUtils::IsMomentumScrollEvent(aEvent)) {
+    // Store the position so we can pin future momentum scroll events.
+    sLastScrollEventScreenLocation = nsCocoaUtils::ScreenLocationForEvent(aEvent);
+  }
 }
 
 ChildView*
@@ -5064,3 +5118,48 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
 }
 
 @end
+
+#ifdef __LP64__
+// When using blocks, at least on OS X 10.7, the OS sometimes calls
+// +[NSEvent removeMonitor:] more than once on a single event monitor, which
+// causes crashes.  See bug 678607.  We hook these methods to work around
+// the problem.
+@interface NSEvent (MethodSwizzling)
++ (id)nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:(unsigned long long)mask handler:(id)block;
++ (void)nsChildView_NSEvent_removeMonitor:(id)eventMonitor;
+@end
+
+// This is a local copy of the AppKit frameworks sEventObservers hashtable.
+// It only stores "local monitors".  We use it to ensure that +[NSEvent
+// removeMonitor:] is never called more than once on the same local monitor.
+static NSHashTable *sLocalEventObservers = nil;
+
+@implementation NSEvent (MethodSwizzling)
+
++ (id)nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:(unsigned long long)mask handler:(id)block
+{
+  if (!sLocalEventObservers) {
+    sLocalEventObservers = [[NSHashTable hashTableWithOptions:
+      NSHashTableStrongMemory | NSHashTableObjectPointerPersonality] retain];
+  }
+  id retval =
+    [self nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:mask handler:block];
+  if (sLocalEventObservers && retval && ![sLocalEventObservers containsObject:retval]) {
+    [sLocalEventObservers addObject:retval];
+  }
+  return retval;
+}
+
++ (void)nsChildView_NSEvent_removeMonitor:(id)eventMonitor
+{
+  if (sLocalEventObservers && [eventMonitor isKindOfClass: ::NSClassFromString(@"_NSLocalEventObserver")]) {
+    if (![sLocalEventObservers containsObject:eventMonitor]) {
+      return;
+    }
+    [sLocalEventObservers removeObject:eventMonitor];
+  }
+  [self nsChildView_NSEvent_removeMonitor:eventMonitor];
+}
+
+@end
+#endif // #ifdef __LP64__

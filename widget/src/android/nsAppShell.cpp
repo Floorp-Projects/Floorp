@@ -328,6 +328,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
             mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(minimize, "heap-minimize");
         obsServ->NotifyObservers(nsnull, "memory-pressure", minimize.get());
+        obsServ->NotifyObservers(nsnull, "application-background", nsnull);
 
         break;
     }
@@ -355,6 +356,14 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         if (prefs) {
             prefs->SavePrefFile(nsnull);
         }
+
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_START: {
+        nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+        obsServ->NotifyObservers(nsnull, "application-foreground", nsnull);
 
         break;
     }
@@ -437,9 +446,28 @@ nsAppShell::PeekNextEvent()
 void
 nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 {
+    if (ae->Type() == AndroidGeckoEvent::ACTIVITY_STOPPING) {
+        PostEvent(new AndroidGeckoEvent(AndroidGeckoEvent::SURFACE_DESTROYED));
+    }
+
     {
         MutexAutoLock lock(mQueueLock);
-        mEventQueue.AppendElement(ae);
+        if (ae->Type() == AndroidGeckoEvent::SURFACE_DESTROYED) {
+            // Give priority to this event, and discard any pending
+            // SURFACE_CREATED events.
+            mEventQueue.InsertElementAt(0, ae);
+            AndroidGeckoEvent *event;
+            for (int i = mEventQueue.Length()-1; i >=1; i--) {
+                event = mEventQueue[i];
+                if (event->Type() == AndroidGeckoEvent::SURFACE_CREATED) {
+                    mEventQueue.RemoveElementAt(i);
+                    delete event;
+                }
+            }
+        } else {
+            mEventQueue.AppendElement(ae);
+        }
+
         if (ae->Type() == AndroidGeckoEvent::DRAW) {
             mNumDraws++;
         }

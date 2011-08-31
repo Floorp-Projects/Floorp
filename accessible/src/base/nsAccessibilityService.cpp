@@ -56,6 +56,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
 #include "States.h"
+#include "Statistics.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -383,7 +384,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
 
   // 3) for images and imagemaps, or anything else with a child frame
   // we have the object frame, get the image frame
-  nsIFrame* frame = aFrame->GetFirstChild(nsnull);
+  nsIFrame* frame = aFrame->GetFirstPrincipalChild();
   return frame ? frame->CreateAccessible() : nsnull;
 }
 
@@ -1771,6 +1772,8 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
     service->Shutdown();
     return NS_ERROR_FAILURE;
   }
+
+  statistics::A11yInitialized();
 
   nsAccessibilityService::gAccessibilityService = service;
   NS_ADDREF(*aResult = service);

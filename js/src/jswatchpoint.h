@@ -86,8 +86,8 @@ class WatchpointMap {
 
     static bool markAllIteratively(JSTracer *trc);
     bool markIteratively(JSTracer *trc);
-    static void sweepAll(JSRuntime *rt);
-    void sweep();
+    static void sweepAll(JSContext *cx);
+    void sweep(JSContext *cx);
 
   private:
     Map map;

@@ -7,19 +7,18 @@
         overflow-y: auto;
       }
     </style>
-    <script type="text/javascript" src="/MochiKit/packed.js"></script>
     <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <script>
       function test() {
         document.querySelector("div").focus();
         // type a character, then press backspace to delete it
-        sendKey("X", window);
-        sendKey("BACK_SPACE", window);
+        sendKey("X", "div1");
+        sendKey("BACK_SPACE", "div1");
         document.documentElement.removeAttribute("class");
       }
     </script>
   </head>
   <body onload="test()">
-    <div contenteditable></div>
+    <div id="div1" contenteditable></div>
   </body>
 </html>

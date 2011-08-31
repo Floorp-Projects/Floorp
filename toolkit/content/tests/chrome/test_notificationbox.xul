@@ -6,7 +6,6 @@
   -->
 <window title="Notification Box" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
 
   <notificationbox id="nb"/>
@@ -50,6 +49,24 @@ function testtag_notificationbox(nb)
   runTimedTests(tests, -1, nb, null);
 }
 
+var notification_last_event, notification_last_event_item;
+function notification_eventCallback(event)
+{
+  notification_last_event = event;
+  notification_last_event_item = this;
+}
+
+function testtag_notification_eventCallback(expectedEvent, ntf, testName)
+{
+  SimpleTest.is(notification_last_event, expectedEvent,
+                testName + ": event name");
+  SimpleTest.is(notification_last_event_item, ntf,
+                testName + ": event item");
+
+  notification_last_event = null;
+  notification_last_event_item = null;
+}
+
 var tests =
 [
   {
@@ -91,6 +108,33 @@ var tests =
       ise(exh, true, "removeNotification again");
       testtag_notificationbox_State(nb, "removeNotification again", null, 0);
 
+    }
+  },
+  {
+    test: function(nb, ntf) {
+      // append a new notification, but now with an event callback
+      var ntf = nb.appendNotification("Notification", "note", "happy.png",
+                                      nb.PRIORITY_INFO_LOW,
+                                      testtag_notificationbox_buttons,
+                                      notification_eventCallback);
+      ise(ntf && ntf.localName == "notification", true, "append notification with callback");
+      return ntf;
+    },
+    result: function(nb, ntf) {
+      testtag_notificationbox_State(nb, "append with callback", ntf, 1);
+      return ntf;
+    }
+  },
+  {
+    test: function(nb, ntf) {
+      nb.removeNotification(ntf);
+      return ntf;
+    },
+    result: function(nb, ntf) {
+      testtag_notificationbox_State(nb, "removeNotification with callback",
+                                    null, 0);
+
+      testtag_notification_eventCallback("removed", ntf, "removeNotification()");
       return [1, null];
     }
   },

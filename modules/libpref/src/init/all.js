@@ -779,6 +779,10 @@ pref("network.http.qos", 0);
 // connection.
 pref("network.http.connection-retry-timeout", 250);
 
+// Disable IPv6 for backup connections to workaround problems about broken
+// IPv6 connectivity.
+pref("network.http.fast-fallback-to-IPv4", false);
+
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
@@ -1125,8 +1129,10 @@ pref("intl.hyphenation-alias.fr-*", "fr");
 pref("intl.hyphenation-alias.gl-*", "gl");
 pref("intl.hyphenation-alias.hr-*", "hr");
 pref("intl.hyphenation-alias.hsb-*", "hsb");
+pref("intl.hyphenation-alias.hu-*", "hu");
 pref("intl.hyphenation-alias.ia-*", "ia");
 pref("intl.hyphenation-alias.is-*", "is");
+pref("intl.hyphenation-alias.it-*", "it");
 pref("intl.hyphenation-alias.kmr-*", "kmr");
 pref("intl.hyphenation-alias.la-*", "la");
 pref("intl.hyphenation-alias.lt-*", "lt");
@@ -1136,6 +1142,7 @@ pref("intl.hyphenation-alias.pt-*", "pt");
 pref("intl.hyphenation-alias.ru-*", "ru");
 pref("intl.hyphenation-alias.sl-*", "sl");
 pref("intl.hyphenation-alias.sv-*", "sv");
+pref("intl.hyphenation-alias.tr-*", "tr");
 pref("intl.hyphenation-alias.uk-*", "uk");
 
 // use reformed (1996) German patterns by default unless specifically tagged as de-1901
@@ -1454,6 +1461,10 @@ pref("dom.max_script_run_time", 10);
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
 pref("dom.ipc.plugins.timeoutSecs", 45);
+// How long a plugin process will wait for a response from the parent
+// to a synchronous request before terminating itself. After this
+// point the child assumes the parent is hung.
+pref("dom.ipc.plugins.parentTimeoutSecs", 15);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
@@ -1461,6 +1472,7 @@ pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
+pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 #endif
 
 // Disable oopp for standard java. They run their own process isolation (which
@@ -1477,6 +1489,8 @@ pref("dom.ipc.plugins.enabled.602plugin.so", false);
 #endif
 #endif
 #endif
+
+pref("dom.ipc.processCount", 1);
 
 pref("svg.smil.enabled", true);
 
@@ -2101,15 +2115,15 @@ pref("font.name-list.monospace.x-central-euro", "Courier");
 pref("font.name-list.cursive.x-central-euro", "Apple Chancery");
 pref("font.name-list.fantasy.x-central-euro", "Papyrus");
 
-pref("font.name.serif.x-cyrillic", "Times CY");
-pref("font.name.sans-serif.x-cyrillic", "Helvetica CY");
-pref("font.name.monospace.x-cyrillic", "Monaco CY");
-pref("font.name.cursive.x-cyrillic", "Geneva CY");
+pref("font.name.serif.x-cyrillic", "Times");
+pref("font.name.sans-serif.x-cyrillic", "Helvetica");
+pref("font.name.monospace.x-cyrillic", "Monaco");
+pref("font.name.cursive.x-cyrillic", "Geneva");
 pref("font.name.fantasy.x-cyrillic", "Charcoal CY");
-pref("font.name-list.serif.x-cyrillic", "Times CY");
-pref("font.name-list.sans-serif.x-cyrillic", "Helvetica CY");
-pref("font.name-list.monospace.x-cyrillic", "Monaco CY");
-pref("font.name-list.cursive.x-cyrillic", "Geneva CY");
+pref("font.name-list.serif.x-cyrillic", "Times");
+pref("font.name-list.sans-serif.x-cyrillic", "Helvetica");
+pref("font.name-list.monospace.x-cyrillic", "Monaco");
+pref("font.name-list.cursive.x-cyrillic", "Geneva");
 pref("font.name-list.fantasy.x-cyrillic", "Charcoal CY");
 
 pref("font.name.serif.x-devanagari", "Devanagari MT");
@@ -3325,5 +3339,11 @@ pref("network.buffer.cache.size",  32768);
 // Desktop Notification
 pref("notification.feature.enabled", false);
 
+// Alert sliding effect
+pref("alerts.slideIncrement", 1);
+pref("alerts.slideIncrementTime", 10);
+pref("alerts.totalOpenTime", 4000);
+pref("alerts.disableSlidingEffect", false);
+ 
 //3D Transforms
 pref("layout.3d-transforms.enabled, false);

@@ -1,6 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html>
 <html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
 <link rel="stylesheet" type="text/css" href="../unit.css" />
 <script type="application/x-javascript" src="../unit.js"></script>
 <script type="application/x-javascript" src="../util.js"></script>
@@ -74,9 +74,8 @@ void main()
 }
 </script>
 <script id="foobar-frag" type="x-shader/x-fragment">
-#ifdef GL_ES
-precision highp float;
-#endif
+precision mediump float;
+
 uniform vec4 uniV4[1];
 
 varying vec4 texCoord0;

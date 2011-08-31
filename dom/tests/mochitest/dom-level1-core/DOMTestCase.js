@@ -655,3 +655,43 @@ SimpleTest._logResult = function(test, passString, failString) {
       } 
   }
 }
+
+function testFails (test) {
+  if (!test.result) {
+    test.todo = true;
+    return true;
+  }
+  return false;
+}
+
+function markTodos() {
+  if (todoTests[docName]) {
+    // mark the failures as todos
+    var tests = SimpleTest._tests;
+    var failures = [];
+    var o;
+    for (var i = 0; i < tests.length; i++) {
+      o = tests[i];
+      if (testFails(o)) {
+        failures.push(o);
+      } 
+    }
+    // shouldn't be 0 failures
+    todo(SimpleTest._tests != 0 && failures == 0, "test marked todo should fail somewhere");
+  }
+}
+
+function runJSUnitTests() {
+  try {
+    var tests = exposeTestFunctionNames(); 
+    for (var i = 0; i < tests.length; i++) {
+      window[tests[i]](); 
+    }   
+  } catch (ex) {
+    if (todoTests[docName]) {
+      todo(false, "Text threw exception: " + ex);
+    } else { 
+      ok(false, "Test threw exception: " + ex);
+    }
+  }
+}

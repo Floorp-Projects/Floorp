@@ -1059,15 +1059,6 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       }
     }
   } else {
-    // Destroy image loaders now that the presshell is going away.
-    // This is important since imageloaders can have pointers to frames and
-    // we don't want those pointers to outlive the destruction of the frame
-    // arena.
-    for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i) {
-      mImageLoaders[i].Enumerate(destroy_loads, nsnull);
-      mImageLoaders[i].Clear();
-    }
-
     if (mTransitionManager) {
       mTransitionManager->Disconnect();
       mTransitionManager = nsnull;
@@ -1076,6 +1067,18 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       mAnimationManager->Disconnect();
       mAnimationManager = nsnull;
     }
+  }
+}
+
+void
+nsPresContext::DestroyImageLoaders()
+{
+  // Destroy image loaders. This is important to do when frames are being
+  // destroyed because imageloaders can have pointers to frames and we don't
+  // want those pointers to outlive the destruction of the frame arena.
+  for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i) {
+    mImageLoaders[i].Enumerate(destroy_loads, nsnull);
+    mImageLoaders[i].Clear();
   }
 }
 
@@ -1277,16 +1280,6 @@ void
 nsPresContext::SetImageAnimationModeExternal(PRUint16 aMode)
 {
   SetImageAnimationModeInternal(aMode);
-}
-
-already_AddRefed<nsFontMetrics>
-nsPresContext::GetMetricsFor(const nsFont& aFont, PRBool aUseUserFontSet)
-{
-  nsFontMetrics* metrics = nsnull;
-  mDeviceContext->GetMetricsFor(aFont, mLanguage,
-                                aUseUserFontSet ? GetUserFontSet() : nsnull,
-                                metrics);
-  return metrics;
 }
 
 const nsFont*

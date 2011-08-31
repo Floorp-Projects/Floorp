@@ -98,7 +98,7 @@ public:
 } // anon namespace
 
 nsFontMetrics::nsFontMetrics()
-    : mDeviceContext(nsnull), mP2A(-1), mTextRunRTL(PR_FALSE)
+    : mDeviceContext(nsnull), mP2A(0), mTextRunRTL(PR_FALSE)
 {
 }
 
@@ -113,7 +113,7 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                     nsDeviceContext *aContext,
                     gfxUserFontSet *aUserFontSet)
 {
-    NS_ABORT_IF_FALSE(mP2A == -1, "already initialized");
+    NS_ABORT_IF_FALSE(mP2A == 0, "already initialized");
 
     mFont = aFont;
     mLanguage = aLanguage;
@@ -147,7 +147,7 @@ nsFontMetrics::Destroy()
 
 // XXXTODO get rid of this macro
 #define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mP2A) + 0.5)
-#define CEIL_TO_TWIPS(x) (nscoord)NS_ceil((x) * mP2A)
+#define CEIL_TO_TWIPS(x) (nscoord)ceil((x) * mP2A)
 
 const gfxFont::Metrics& nsFontMetrics::GetMetrics() const
 {
@@ -194,15 +194,15 @@ nsFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 static gfxFloat ComputeMaxDescent(const gfxFont::Metrics& aMetrics,
                                   gfxFontGroup* aFontGroup)
 {
-    gfxFloat offset = NS_floor(-aFontGroup->GetUnderlineOffset() + 0.5);
+    gfxFloat offset = floor(-aFontGroup->GetUnderlineOffset() + 0.5);
     gfxFloat size = NS_round(aMetrics.underlineSize);
-    gfxFloat minDescent = NS_floor(offset + size + 0.5);
+    gfxFloat minDescent = floor(offset + size + 0.5);
     return NS_MAX(minDescent, aMetrics.maxDescent);
 }
 
 static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
 {
-    return NS_floor(aMetrics.maxAscent + 0.5);
+    return floor(aMetrics.maxAscent + 0.5);
 }
 
 nscoord

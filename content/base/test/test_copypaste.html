@@ -4,7 +4,6 @@
 -->
 <head>
   <title>Test for copy/paste</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -54,8 +53,8 @@ function testCopyPaste () {
 
   function copySelectionToClipboard() {
     documentViewer.copySelection();
-    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
-    is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
+    ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), "check text/unicode");
+    ok(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), "check text/html");
   }
   function copyToClipboard(node) {
     textarea.blur();

@@ -23,9 +23,6 @@
 #include "base/basictypes.h"
 #include "base/logging.h"
 #include "base/singleton.h"
-#ifndef CHROMIUM_MOZILLA_BUILD
-#include "base/third_party/dmg_fp/dmg_fp.h"
-#endif
 
 namespace {
 
@@ -249,47 +246,6 @@ class HexString16ToLongTraits {
   }
 };
 
-#ifndef CHROMIUM_MOZILLA_BUILD
-class StringToDoubleTraits {
- public:
-  typedef std::string string_type;
-  typedef double value_type;
-  static inline value_type convert_func(const string_type::value_type* str,
-                                        string_type::value_type** endptr) {
-    return dmg_fp::strtod(str, endptr);
-  }
-  static inline bool valid_func(const string_type& str) {
-    return !str.empty() && !isspace(str[0]);
-  }
-};
-
-class String16ToDoubleTraits {
- public:
-  typedef string16 string_type;
-  typedef double value_type;
-  static inline value_type convert_func(const string_type::value_type* str,
-                                        string_type::value_type** endptr) {
-    // Because dmg_fp::strtod does not like char16, we convert it to ASCII.
-    // In theory, this should be safe, but it's possible that 16-bit chars
-    // might get ignored by accident causing something to be parsed when it
-    // shouldn't.
-    std::string ascii_string = UTF16ToASCII(string16(str));
-    char* ascii_end = NULL;
-    value_type ret = dmg_fp::strtod(ascii_string.c_str(), &ascii_end);
-    if (ascii_string.c_str() + ascii_string.length() == ascii_end) {
-      // Put endptr at end of input string, so it's not recognized as an error.
-      *endptr =
-          const_cast<string_type::value_type*>(str) + ascii_string.length();
-    }
-
-    return ret;
-  }
-  static inline bool valid_func(const string_type& str) {
-    return !str.empty() && !iswspace(str[0]);
-  }
-};
-#endif
-
 }  // namespace
 
 
@@ -335,9 +291,7 @@ bool IsWprintfFormatPortable(const wchar_t* format) {
 
 }  // namespace base
 
-#ifdef CHROMIUM_MOZILLA_BUILD
 namespace base {
-#endif
 
 const std::string& EmptyString() {
   return Singleton<EmptyStrings>::get()->s;
@@ -351,9 +305,7 @@ const string16& EmptyString16() {
   return Singleton<EmptyStrings>::get()->s16;
 }
 
-#ifdef CHROMIUM_MOZILLA_BUILD
 }
-#endif
 
 const wchar_t kWhitespaceWide[] = {
   0x0009,  // <control-0009> to <control-000D>
@@ -765,11 +717,7 @@ bool StartsWith(const std::wstring& str,
     if (search.size() > str.size())
       return false;
     return std::equal(search.begin(), search.end(), str.begin(),
-#if defined(CHROMIUM_MOZILLA_BUILD)
                       chromium_CaseInsensitiveCompare<wchar_t>());
-#else
-                      CaseInsensitiveCompare<wchar_t>());
-#endif
   }
 }
 
@@ -944,11 +892,7 @@ static void StringAppendVT(StringType* dst,
   typename StringType::value_type stack_buf[1024];
 
   va_list backup_ap;
-#if !defined(CHROMIUM_MOZILLA_BUILD)
-  base::va_copy(backup_ap, ap);
-#else
   base_va_copy(backup_ap, ap);
-#endif	// !defined(CHROMIUM_MOZILLA_BUILD)
 
 #if !defined(OS_WIN)
   errno = 0;
@@ -995,11 +939,7 @@ static void StringAppendVT(StringType* dst,
     std::vector<typename StringType::value_type> mem_buf(mem_length);
 
     // Restore the va_list before we use it again.
-#if !defined(CHROMIUM_MOZILLA_BUILD)
-    base::va_copy(backup_ap, ap);
-#else
     base_va_copy(backup_ap, ap);
-#endif	// !defined(CHROMIUM_MOZILLA_BUILD)
 
     result = vsnprintfT(&mem_buf[0], mem_length, format, ap);
     va_end(backup_ap);
@@ -1110,19 +1050,6 @@ std::wstring Uint64ToWString(uint64 value) {
   return IntToStringT<std::wstring, uint64, uint64, false>::
       IntToString(value);
 }
-
-#ifndef CHROMIUM_MOZILLA_BUILD
-std::string DoubleToString(double value) {
-  // According to g_fmt.cc, it is sufficient to declare a buffer of size 32.
-  char buffer[32];
-  dmg_fp::g_fmt(buffer, value);
-  return std::string(buffer);
-}
-
-std::wstring DoubleToWString(double value) {
-  return ASCIIToWide(DoubleToString(value));
-}
-#endif
 
 void StringAppendV(std::string* dst, const char* format, va_list ap) {
   StringAppendVT(dst, format, ap);
@@ -1495,7 +1422,7 @@ bool MatchPattern(const std::string& eval, const std::string& pattern) {
 
 // XXX Sigh.
 
-#if !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
+#if !defined(ARCH_CPU_64_BITS)
 bool StringToInt(const std::string& input, int* output) {
   COMPILE_ASSERT(sizeof(int) == sizeof(long), cannot_strtol_to_int);
   return StringToNumber<StringToLongTraits>(input,
@@ -1528,7 +1455,7 @@ bool StringToInt(const string16& input, int* output) {
   *output = static_cast<int>(tmp);
   return true;
 }
-#endif //  !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
+#endif //  !defined(ARCH_CPU_64_BITS)
 
 bool StringToInt64(const std::string& input, int64* output) {
   return StringToNumber<StringToInt64Traits>(input, output);
@@ -1538,7 +1465,7 @@ bool StringToInt64(const string16& input, int64* output) {
   return StringToNumber<String16ToInt64Traits>(input, output);
 }
 
-#if !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
+#if !defined(ARCH_CPU_64_BITS)
 bool HexStringToInt(const std::string& input, int* output) {
   COMPILE_ASSERT(sizeof(int) == sizeof(long), cannot_strtol_to_int);
   return StringToNumber<HexStringToLongTraits>(input,
@@ -1572,7 +1499,7 @@ bool HexStringToInt(const string16& input, int* output) {
   return true;
 }
 
-#endif // !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
+#endif // !defined(ARCH_CPU_64_BITS)
 
 namespace {
 
@@ -1651,28 +1578,6 @@ int HexStringToInt(const string16& value) {
   HexStringToInt(value, &result);
   return result;
 }
-
-#ifndef CHROMIUM_MOZILLA_BUILD
-bool StringToDouble(const std::string& input, double* output) {
-  return StringToNumber<StringToDoubleTraits>(input, output);
-}
-
-bool StringToDouble(const string16& input, double* output) {
-  return StringToNumber<String16ToDoubleTraits>(input, output);
-}
-
-double StringToDouble(const std::string& value) {
-  double result;
-  StringToDouble(value, &result);
-  return result;
-}
-
-double StringToDouble(const string16& value) {
-  double result;
-  StringToDouble(value, &result);
-  return result;
-}
-#endif
 
 // The following code is compatible with the OpenBSD lcpy interface.  See:
 //   http://www.gratisoft.us/todd/papers/strlcpy.html

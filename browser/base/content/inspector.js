@@ -26,6 +26,7 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Julian Viereck <jviereck@mozilla.com>
  *   Paul Rouget <paul@mozilla.com>
+ *   Kyle Simpson <ksimpson@mozilla.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -70,6 +71,11 @@ const INSPECTOR_NOTIFICATIONS = {
 
   // Fires once the Inspector is closed.
   CLOSED: "inspector-closed",
+
+  // Event notifications for the attribute-value editor
+  EDITOR_OPENED: "inspector-editor-opened",
+  EDITOR_CLOSED: "inspector-editor-closed",
+  EDITOR_SAVED: "inspector-editor-saved",
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -534,6 +540,7 @@ var InspectorUI = {
   inspecting: false,
   treeLoaded: false,
   prefEnabledName: "devtools.inspector.enabled",
+  isDirty: false,
 
   /**
    * Toggle the inspector interface elements on or off.
@@ -579,7 +586,7 @@ var InspectorUI = {
   get defaultSelection()
   {
     let doc = this.win.document;
-    return doc.documentElement.lastElementChild;
+    return doc.documentElement ? doc.documentElement.lastElementChild : null;
   },
 
   initializeTreePanel: function IUI_initializeTreePanel()
@@ -591,6 +598,8 @@ var InspectorUI = {
     this.ioBox = new InsideOutBox(this, this.treePanelDiv);
     this.ioBox.createObjectBox(this.win.document.documentElement);
     this.treeLoaded = true;
+    this.editingContext = null;
+    this.editingEvents = {};
 
     // initialize the highlighter
     this.initializeHighlighter();
@@ -614,6 +623,7 @@ var InspectorUI = {
       this.treeIFrame.setAttribute("flex", "1");
       this.treeIFrame.setAttribute("type", "content");
       this.treeIFrame.setAttribute("onclick", "InspectorUI.onTreeClick(event)");
+      this.treeIFrame.setAttribute("ondblclick", "InspectorUI.onTreeDblClick(event);");
       this.treeIFrame = this.treePanel.insertBefore(this.treeIFrame, resizerBox);
     }
 
@@ -770,6 +780,8 @@ var InspectorUI = {
 
     this.toolbar.hidden = false;
     this.inspectCmd.setAttribute("checked", true);
+
+    gBrowser.addProgressListener(InspectorProgressListener);
   },
 
   /**
@@ -817,12 +829,19 @@ var InspectorUI = {
    */
   closeInspectorUI: function IUI_closeInspectorUI(aKeepStore)
   {
+    // if currently editing an attribute value, closing the
+    // highlighter/HTML panel dismisses the editor
+    if (this.editingContext)
+      this.closeEditor();
+
     if (this.closing || !this.win || !this.browser) {
       return;
     }
 
     this.closing = true;
     this.toolbar.hidden = true;
+
+    gBrowser.removeProgressListener(InspectorProgressListener);
 
     if (!aKeepStore) {
       InspectorStore.deleteStore(this.winID);
@@ -854,8 +873,11 @@ var InspectorUI = {
       delete this.treeBrowserDocument;
     }
 
-    if (this.treeIFrame)
+    if (this.treeIFrame) {
+      let parent = this.treeIFrame.parentNode;
+      parent.removeChild(this.treeIFrame);
       delete this.treeIFrame;
+    }
     delete this.ioBox;
 
     if (this.domplate) {
@@ -879,6 +901,8 @@ var InspectorUI = {
     this.treeLoaded = false;
 
     this.treePanel.addEventListener("popuphidden", function treePanelHidden() {
+      this.removeEventListener("popuphidden", treePanelHidden, false);
+
       InspectorUI.closing = false;
       Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
     }, false);
@@ -893,6 +917,11 @@ var InspectorUI = {
    */
   startInspecting: function IUI_startInspecting()
   {
+    // if currently editing an attribute value, starting
+    // "live inspection" mode closes the editor
+    if (this.editingContext)
+      this.closeEditor();
+
     document.getElementById("inspector-inspect-toolbutton").checked = true;
     this.attachPageListeners();
     this.inspecting = true;
@@ -933,6 +962,11 @@ var InspectorUI = {
    */
   select: function IUI_select(aNode, forceUpdate, aScroll)
   {
+    // if currently editing an attribute value, using the
+    // highlighter dismisses the editor
+    if (this.editingContext)
+      this.closeEditor();
+
     if (!aNode)
       aNode = this.defaultSelection;
 
@@ -1044,6 +1078,17 @@ var InspectorUI = {
    */
   onTreeClick: function IUI_onTreeClick(aEvent)
   {
+    // if currently editing an attribute value, clicking outside
+    // the editor dismisses the editor
+    if (this.editingContext) {
+      this.closeEditor();
+
+      // clicking outside the editor ONLY closes the editor
+      // so, cancel the rest of the processing of this event
+      aEvent.preventDefault();
+      return;
+    }
+
     let node;
     let target = aEvent.target;
     let hitTwisty = false;
@@ -1066,6 +1111,222 @@ var InspectorUI = {
         }
       }
     }
+  },
+
+  /**
+   * Handle double-click events in the html tree panel.
+   * (double-clicking an attribute value allows it to be edited)
+   * @param aEvent
+   *        The mouse event.
+   */
+  onTreeDblClick: function IUI_onTreeDblClick(aEvent)
+  {
+    // if already editing an attribute value, double-clicking elsewhere
+    // in the tree is the same as a click, which dismisses the editor
+    if (this.editingContext)
+      this.closeEditor();
+
+    let target = aEvent.target;
+
+    if (this.hasClass(target, "nodeValue")) {
+      let repObj = this.getRepObject(target);
+      let attrName = target.getAttribute("data-attributeName");
+      let attrVal = target.innerHTML;
+
+      this.editAttributeValue(target, repObj, attrName, attrVal);
+    }
+  },
+
+  /**
+   * Starts the editor for an attribute value.
+   * @param aAttrObj
+   *        The DOM object representing the attribute value in the HTML Tree
+   * @param aRepObj
+   *        The original DOM (target) object being inspected/edited
+   * @param aAttrName
+   *        The name of the attribute being edited
+   * @param aAttrVal
+   *        The current value of the attribute being edited
+   */
+  editAttributeValue: 
+  function IUI_editAttributeValue(aAttrObj, aRepObj, aAttrName, aAttrVal)
+  {
+    let editor = this.treeBrowserDocument.getElementById("attribute-editor");
+    let editorInput = 
+      this.treeBrowserDocument.getElementById("attribute-editor-input");
+    let attrDims = aAttrObj.getBoundingClientRect();
+    // figure out actual viewable viewport dimensions (sans scrollbars)
+    let viewportWidth = this.treeBrowserDocument.documentElement.clientWidth;
+    let viewportHeight = this.treeBrowserDocument.documentElement.clientHeight;
+
+    // saves the editing context for use when the editor is saved/closed
+    this.editingContext = {
+      attrObj: aAttrObj,
+      repObj: aRepObj,
+      attrName: aAttrName
+    };
+
+    // highlight attribute-value node in tree while editing
+    this.addClass(aAttrObj, "editingAttributeValue");
+
+    // show the editor
+    this.addClass(editor, "editing");
+
+    // offset the editor below the attribute-value node being edited
+    let editorVeritcalOffset = 2;
+
+    // keep the editor comfortably within the bounds of the viewport
+    let editorViewportBoundary = 5;
+
+    // outer editor is sized based on the <input> box inside it
+    editorInput.style.width = Math.min(attrDims.width, viewportWidth - 
+                                editorViewportBoundary) + "px";
+    editorInput.style.height = Math.min(attrDims.height, viewportHeight - 
+                                editorViewportBoundary) + "px";
+    let editorDims = editor.getBoundingClientRect();
+
+    // calculate position for the editor according to the attribute node
+    let editorLeft = attrDims.left + this.treeIFrame.contentWindow.scrollX -
+                    // center the editor against the attribute value    
+                    ((editorDims.width - attrDims.width) / 2); 
+    let editorTop = attrDims.top + this.treeIFrame.contentWindow.scrollY + 
+                    attrDims.height + editorVeritcalOffset;
+
+    // but, make sure the editor stays within the visible viewport
+    editorLeft = Math.max(0, Math.min(
+                                      (this.treeIFrame.contentWindow.scrollX + 
+                                          viewportWidth - editorDims.width),
+                                      editorLeft)
+                          );
+    editorTop = Math.max(0, Math.min(
+                                      (this.treeIFrame.contentWindow.scrollY + 
+                                          viewportHeight - editorDims.height),
+                                      editorTop)
+                          );
+
+    // position the editor
+    editor.style.left = editorLeft + "px";
+    editor.style.top = editorTop + "px";
+
+    // set and select the text
+    editorInput.value = aAttrVal;
+    editorInput.select();
+
+    // listen for editor specific events
+    this.bindEditorEvent(editor, "click", function(aEvent) {
+      aEvent.stopPropagation();
+    });
+    this.bindEditorEvent(editor, "dblclick", function(aEvent) {
+      aEvent.stopPropagation();
+    });
+    this.bindEditorEvent(editor, "keypress", 
+                          this.handleEditorKeypress.bind(this));
+
+    // event notification    
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, 
+                                  null);
+  },
+
+  /**
+   * Handle binding an event handler for the editor.
+   * (saves the callback for easier unbinding later)   
+   * @param aEditor
+   *        The DOM object for the editor
+   * @param aEventName
+   *        The name of the event to listen for
+   * @param aEventCallback
+   *        The callback to bind to the event (and also to save for later 
+   *          unbinding)
+   */
+  bindEditorEvent: 
+  function IUI_bindEditorEvent(aEditor, aEventName, aEventCallback)
+  {
+    this.editingEvents[aEventName] = aEventCallback;
+    aEditor.addEventListener(aEventName, aEventCallback, false);
+  },
+
+  /**
+   * Handle unbinding an event handler from the editor.
+   * (unbinds the previously bound and saved callback)   
+   * @param aEditor
+   *        The DOM object for the editor
+   * @param aEventName
+   *        The name of the event being listened for
+   */
+  unbindEditorEvent: function IUI_unbindEditorEvent(aEditor, aEventName)
+  {
+    aEditor.removeEventListener(aEventName, this.editingEvents[aEventName], 
+                                  false);
+    this.editingEvents[aEventName] = null;
+  },
+
+  /**
+   * Handle keypress events in the editor.
+   * @param aEvent
+   *        The keyboard event.
+   */
+  handleEditorKeypress: function IUI_handleEditorKeypress(aEvent)
+  {
+    if (aEvent.which == KeyEvent.DOM_VK_RETURN) {
+      this.saveEditor();
+    } else if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+      this.closeEditor();
+    }
+  },
+
+  /**
+   * Close the editor and cleanup.
+   */
+  closeEditor: function IUI_closeEditor()
+  {
+    let editor = this.treeBrowserDocument.getElementById("attribute-editor");
+    let editorInput = 
+      this.treeBrowserDocument.getElementById("attribute-editor-input");
+
+    // remove highlight from attribute-value node in tree
+    this.removeClass(this.editingContext.attrObj, "editingAttributeValue");
+
+    // hide editor
+    this.removeClass(editor, "editing");
+
+    // stop listening for editor specific events
+    this.unbindEditorEvent(editor, "click");
+    this.unbindEditorEvent(editor, "dblclick");
+    this.unbindEditorEvent(editor, "keypress");
+
+    // clean up after the editor
+    editorInput.value = "";
+    editorInput.blur();
+    this.editingContext = null;
+    this.editingEvents = {};
+
+    // event notification    
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, 
+                                  null);
+  },
+
+  /**
+   * Commit the edits made in the editor, then close it.
+   */
+  saveEditor: function IUI_saveEditor()
+  {
+    let editorInput = 
+      this.treeBrowserDocument.getElementById("attribute-editor-input");
+
+    // set the new attribute value on the original target DOM element
+    this.editingContext.repObj.setAttribute(this.editingContext.attrName, 
+                                              editorInput.value);
+
+    // update the HTML tree attribute value
+    this.editingContext.attrObj.innerHTML = editorInput.value;
+
+    this.isDirty = true;
+
+    // event notification    
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, 
+                                  null);
+    
+    this.closeEditor();
   },
 
   /**
@@ -1487,9 +1748,122 @@ var InspectorStore = {
   }
 };
 
+/**
+ * The InspectorProgressListener object is an nsIWebProgressListener which
+ * handles onStateChange events for the inspected browser. If the user makes
+ * changes to the web page and he tries to navigate away, he is prompted to
+ * confirm page navigation, such that he's given the chance to prevent the loss
+ * of edits.
+ */
+var InspectorProgressListener = {
+  onStateChange:
+  function IPL_onStateChange(aProgress, aRequest, aFlag, aStatus)
+  {
+    // Remove myself if the Inspector is no longer open.
+    if (!InspectorUI.isTreePanelOpen) {
+      gBrowser.removeProgressListener(InspectorProgressListener);
+      return;
+    }
+
+    // Skip non-start states.
+    if (!(aFlag & Ci.nsIWebProgressListener.STATE_START)) {
+      return;
+    }
+
+    // If the request is about to happen in a new window, we are not concerned
+    // about the request.
+    if (aProgress.DOMWindow != InspectorUI.win) {
+      return;
+    }
+
+    if (InspectorUI.isDirty) {
+      this.showNotification(aRequest);
+    } else {
+      InspectorUI.closeInspectorUI();
+    }
+  },
+
+  /**
+   * Show an asynchronous notification which asks the user to confirm or cancel
+   * the page navigation request.
+   *
+   * @param nsIRequest aRequest
+   *        The request initiated by the user or by the page itself.
+   * @returns void
+   */
+  showNotification: function IPL_showNotification(aRequest)
+  {
+    aRequest.suspend();
+
+    let notificationBox = gBrowser.getNotificationBox(InspectorUI.browser);
+    let notification = notificationBox.
+      getNotificationWithValue("inspector-page-navigation");
+
+    if (notification) {
+      notificationBox.removeNotification(notification, true);
+    }
+
+    let cancelRequest = function onCancelRequest() {
+      if (aRequest) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+        aRequest.resume(); // needed to allow the connection to be cancelled.
+        aRequest = null;
+      }
+    };
+
+    let eventCallback = function onNotificationCallback(aEvent) {
+      if (aEvent == "removed") {
+        cancelRequest();
+      }
+    };
+
+    let buttons = [
+      {
+        id: "inspector.confirmNavigationAway.buttonLeave",
+        label: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonLeave"),
+        accessKey: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonLeaveAccesskey"),
+        callback: function onButtonLeave() {
+          if (aRequest) {
+            aRequest.resume();
+            aRequest = null;
+            InspectorUI.closeInspectorUI();
+          }
+        },
+      },
+      {
+        id: "inspector.confirmNavigationAway.buttonStay",
+        label: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonStay"),
+        accessKey: InspectorUI.strings.
+          GetStringFromName("confirmNavigationAway.buttonStayAccesskey"),
+        callback: cancelRequest
+      },
+    ];
+
+    let message = InspectorUI.strings.
+      GetStringFromName("confirmNavigationAway.message");
+
+    notification = notificationBox.appendNotification(message,
+      "inspector-page-navigation", "chrome://browser/skin/Info.png",
+      notificationBox.PRIORITY_WARNING_HIGH, buttons, eventCallback);
+
+    // Make sure this not a transient notification, to avoid the automatic
+    // transient notification removal.
+    notification.persistence = -1;
+  },
+};
+
 /////////////////////////////////////////////////////////////////////////
-//// Initializors
+//// Initializers
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
   return document.getElementById("Tools:Inspect");
 });
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
+  return Services.strings.
+         createBundle("chrome://browser/locale/inspector.properties");
+});
+

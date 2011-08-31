@@ -78,7 +78,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsLinebreakConverter.h"
-#include "nsAHtml5FragmentParser.h"
 #include "nsHtml5Module.h"
 #include "nsTreeSanitizer.h"
 
@@ -91,7 +90,7 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMUIEvent.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1552,20 +1551,20 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       // if we run into problems here, we'll just assume the user doesn't want a copy
       PRBool userWantsCopy = PR_FALSE;
 
-      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent(do_QueryInterface(aDropEvent));
-      NS_ENSURE_TRUE(nsuiEvent, NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDropEvent);
+      NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aDropEvent));
-      if (mouseEvent)
-
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDropEvent);
+      if (mouseEvent) {
 #if defined(XP_MACOSX)
         mouseEvent->GetAltKey(&userWantsCopy);
 #else
         mouseEvent->GetCtrlKey(&userWantsCopy);
 #endif
+      }
 
       // Current doc is destination
-      nsCOMPtr<nsIDOMDocument>destdomdoc; 
+      nsCOMPtr<nsIDOMDocument> destdomdoc; 
       rv = GetDocument(getter_AddRefs(destdomdoc)); 
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1579,11 +1578,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       NS_ENSURE_SUCCESS(rv, rv);
       
       // Parent and offset under the mouse cursor
-      rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
+      rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
 
-      rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
+      rv = uiEvent->GetRangeOffset(&newSelectionOffset);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // XXX: This userSelectNode code is a workaround for bug 195957.

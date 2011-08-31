@@ -6,8 +6,6 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Table indices of accessible table for XUL listbox">
 
-  <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 

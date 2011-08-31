@@ -305,6 +305,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
   mPluginWindowVisible = PR_FALSE;
+  mPluginDocumentActiveState = PR_TRUE;
   mNumCachedAttrs = 0;
   mNumCachedParams = 0;
   mCachedAttrParamNames = nsnull;
@@ -1687,6 +1688,29 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   return NS_OK;
 }    
 
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+nsresult nsPluginInstanceOwner::Text(nsIDOMEvent* aTextEvent)
+{
+  if (mInstance) {
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aTextEvent));
+    if (privateEvent) {
+      nsEvent *event = privateEvent->GetInternalNSEvent();
+      if (event && event->eventStructType == NS_TEXT_EVENT) {
+        nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+        if (nsEventStatus_eConsumeNoDefault == rv) {
+          aTextEvent->PreventDefault();
+          aTextEvent->StopPropagation();
+        }
+      }
+      else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchTextToPlugin failed, textEvent null");
+    }
+    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchTextToPlugin failed, privateEvent null");
+  }
+
+  return NS_OK;
+}
+#endif
+
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
 #ifdef XP_MACOSX
@@ -1870,23 +1894,23 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("keypress")) {
     return KeyPress(aEvent);
   }
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+  if (eventType.EqualsLiteral("text")) {
+    return Text(aEvent);
+  }
+#endif
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
     if (privateEvent) {
       nsEvent* ievent = privateEvent->GetInternalNSEvent();
-      if (ievent && NS_IS_TRUSTED_EVENT(ievent) &&
-          (ievent->message == NS_DRAGDROP_ENTER || ievent->message == NS_DRAGDROP_OVER)) {
-        // set the allowed effect to none here. The plugin should set it if necessary
-        nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-        dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
-        if (dataTransfer)
-          dataTransfer->SetEffectAllowed(NS_LITERAL_STRING("none"));
+      if ((ievent && NS_IS_TRUSTED_EVENT(ievent)) &&
+           ievent->message != NS_DRAGDROP_ENTER && ievent->message != NS_DRAGDROP_OVER) {
+        aEvent->PreventDefault();
       }
 
       // Let the plugin handle drag events.
-      aEvent->PreventDefault();
       aEvent->StopPropagation();
     }
   }
@@ -1942,7 +1966,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                   presContext->AppUnitsToDevPixels(pt.y));
 #ifndef NP_NO_CARBON
   nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
-  ::Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
+  ::Point carbonPt = { static_cast<short>(ptPx.y + geckoScreenCoords.y),
+                       static_cast<short>(ptPx.x + geckoScreenCoords.x) };
   if (eventModel == NPEventModelCarbon) {
     if (event && anEvent.eventStructType == NS_MOUSE_EVENT) {
       static_cast<EventRecord*>(event)->where = carbonPt;
@@ -2371,10 +2396,29 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           // DOMKeyCodeToGdkKeyCode(keyEvent.keyCode) and
           // gdk_keymap_get_entries_for_keyval will be useful, but the
           // mappings will not be unique.
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+          bool handled;
+          if (NS_SUCCEEDED(mInstance->HandleGUIEvent(anEvent, &handled)) &&
+              handled) {
+            rv = nsEventStatus_eConsumeNoDefault;
+          }
+#else
           NS_WARNING("Synthesized key event not sent to plugin");
+#endif
         }
       break;
 
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+   case NS_TEXT_EVENT:
+        {
+          bool handled;
+          if (NS_SUCCEEDED(mInstance->HandleGUIEvent(anEvent, &handled)) &&
+              handled) {
+            rv = nsEventStatus_eConsumeNoDefault;
+          }
+        }
+      break;
+#endif
     default: 
       switch (anEvent.message)
         {
@@ -2455,6 +2499,9 @@ nsPluginInstanceOwner::Destroy()
   mContent->RemoveEventListener(NS_LITERAL_STRING("dragstart"), this, PR_TRUE);
   mContent->RemoveEventListener(NS_LITERAL_STRING("draggesture"), this, PR_TRUE);
   mContent->RemoveEventListener(NS_LITERAL_STRING("dragend"), this, PR_TRUE);
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+  mContent->RemoveEventListener(NS_LITERAL_STRING("text"), this, PR_TRUE);
+#endif
 
   if (mWidget) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -2915,6 +2962,9 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
   mContent->AddEventListener(NS_LITERAL_STRING("dragstart"), this, PR_TRUE);
   mContent->AddEventListener(NS_LITERAL_STRING("draggesture"), this, PR_TRUE);
   mContent->AddEventListener(NS_LITERAL_STRING("dragend"), this, PR_TRUE);
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+  mContent->AddEventListener(NS_LITERAL_STRING("text"), this, PR_TRUE);
+#endif
   
   // Register scroll position listeners
   // We need to register a scroll position listener on every scrollable
@@ -3240,7 +3290,7 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
   mPluginWindow->clipRect.left = 0;
   mPluginWindow->clipRect.top = 0;
 
-  if (mPluginWindowVisible) {
+  if (mPluginWindowVisible && mPluginDocumentActiveState) {
     mPluginWindow->clipRect.right = mPluginWindow->width;
     mPluginWindow->clipRect.bottom = mPluginWindow->height;
   } else {
@@ -3268,6 +3318,12 @@ nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
   UpdateWindowPositionAndClipRect(PR_TRUE);
 }
 
+void
+nsPluginInstanceOwner::UpdateDocumentActiveState(PRBool aIsActive)
+{
+  mPluginDocumentActiveState = aIsActive;
+  UpdateWindowPositionAndClipRect(PR_TRUE);
+}
 #endif // XP_MACOSX
 
 void

@@ -9,6 +9,7 @@ var gFilePickerFiles = [];
 var gMockFilePickerFactory;
 var gMockFilePickerFactoryCID;
 var gManagerWindow;
+var gSawInstallNotification = false;
 
 function MockFilePicker() { }
 
@@ -97,6 +98,16 @@ WindowOpenListener.prototype = {
 };
 
 
+var gInstallNotificationObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    var installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
+    isnot(installInfo.originatingWindow, null, "Notification should have non-null originatingWindow");
+    gSawInstallNotification = true;
+    Services.obs.removeObserver(this, "addon-install-started");
+  }
+};
+
+
 function test_confirmation(aWindow, aExpectedURLs) {
   var list = aWindow.document.getElementById("itemList");
   is(list.childNodes.length, aExpectedURLs.length, "Should be the right number of installs");
@@ -135,6 +146,8 @@ function test() {
 }
 
 function end_test() {
+  is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
+
   var compReg = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
   compReg.unregisterFactory(gMockFilePickerFactoryCID,
                             gMockFilePickerFactory);
@@ -151,9 +164,12 @@ add_test(function() {
                   ];
   gFilePickerFiles = filePaths.map(function(aPath) aPath.file);
   
+  Services.obs.addObserver(gInstallNotificationObserver,
+                           "addon-install-started", false);
+
   new WindowOpenListener(INSTALL_URI, function(aWindow) {
     test_confirmation(aWindow, filePaths.map(function(aPath) aPath.spec));
   }, run_next_test);
-  
+
   gManagerWindow.gViewController.doCommand("cmd_installFromFile");
 });

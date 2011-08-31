@@ -46,6 +46,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
+#include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
@@ -69,6 +70,8 @@
 #endif
 #include "methodjit/MethodJIT.h"
 #include "ion/IonCode.h"
+#include "methodjit/Retcon.h"
+#include "vm/Debugger.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
@@ -292,43 +295,25 @@ Bindings::trace(JSTracer *trc)
 } /* namespace js */
 
 static void
-volatile_memcpy(volatile char *dst, void *src, size_t n)
-{
-    for (size_t i = 0; i < n; i++)
-        dst[i] = ((char *)src)[i];
-}
-
-static void
 CheckScript(JSScript *script, JSScript *prev)
 {
-    volatile char dbg1[sizeof(JSScript)], dbg2[sizeof(JSScript)];
+#ifdef JS_CRASH_DIAGNOSTICS
     if (script->cookie1 != JS_SCRIPT_COOKIE || script->cookie2 != JS_SCRIPT_COOKIE) {
-        volatile_memcpy(dbg1, script, sizeof(JSScript));
-        if (prev)
-            volatile_memcpy(dbg2, prev, sizeof(JSScript));
+        crash::StackBuffer<sizeof(JSScript), 0x87> buf1(script);
+        crash::StackBuffer<sizeof(JSScript), 0x88> buf2(prev);
+        JS_OPT_ASSERT(false);
     }
-    JS_OPT_ASSERT(script->cookie1 == JS_SCRIPT_COOKIE && script->cookie2 == JS_SCRIPT_COOKIE);
+#endif
 }
 
 static void
 CheckScriptOwner(JSScript *script, JSObject *owner)
 {
-    if (script->ownerObject != owner) {
-        volatile char scriptData[sizeof(JSScript)];
-        volatile char owner1Data[sizeof(JSObject)], owner2Data[sizeof(JSObject)];
-        volatile char savedOwner[sizeof(JSObject *)];
-
-        volatile_memcpy(scriptData, script, sizeof(JSScript));
-        volatile_memcpy(savedOwner, &owner, sizeof(JSObject *));
-        if (script->ownerObject != JS_NEW_SCRIPT && script->ownerObject != JS_CACHED_SCRIPT)
-            volatile_memcpy(owner1Data, script->ownerObject, sizeof(JSObject));
-        if (owner != JS_NEW_SCRIPT && owner != JS_CACHED_SCRIPT)
-            volatile_memcpy(owner2Data, owner, sizeof(JSObject));
-    }
+#ifdef JS_CRASH_DIAGNOSTICS
     JS_OPT_ASSERT(script->ownerObject == owner);
-
     if (owner != JS_NEW_SCRIPT && owner != JS_CACHED_SCRIPT)
         JS_OPT_ASSERT(script->compartment == owner->compartment());
+#endif
 }
 
 #if JS_HAS_XDR
@@ -982,8 +967,10 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
         return NULL;
 
     PodZero(script);
+#ifdef JS_CRASH_DIAGNOSTICS
     script->cookie1 = script->cookie2 = JS_SCRIPT_COOKIE;
     script->ownerObject = JS_NEW_SCRIPT;
+#endif
     script->length = length;
     script->version = version;
     new (&script->bindings) Bindings(cx);
@@ -1221,8 +1208,12 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         script->hasSharps = true;
     if (cg->flags & TCF_STRICT_MODE_CODE)
         script->strictModeCode = true;
-    if (cg->flags & TCF_COMPILE_N_GO)
+    if (cg->flags & TCF_COMPILE_N_GO) {
         script->compileAndGo = true;
+        const StackFrame *fp = cg->parser->callerFrame;
+        if (fp && fp->isFunctionFrame())
+            script->savedCallerFun = true;
+    }
     if (cg->callsEval())
         script->usesEval = true;
     if (cg->flags & TCF_FUN_USES_ARGUMENTS)
@@ -1261,12 +1252,12 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
     script->bindings.transfer(cx, &cg->bindings);
 
-    /*
-     * We initialize fun->u.script to be the script constructed above
-     * so that the debugger has a valid FUN_SCRIPT(fun).
-     */
     fun = NULL;
     if (cg->inFunction()) {
+        /*
+         * We initialize fun->u.i.script to be the script constructed above
+         * so that the debugger has a valid fun->script().
+         */
         fun = cg->fun();
         JS_ASSERT(fun->isInterpreted());
         JS_ASSERT(!fun->script());
@@ -1292,15 +1283,30 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
         fun->u.i.script = script;
         script->setOwnerObject(fun);
+    } else {
+        /*
+         * Initialize script->object, if necessary, so that the debugger has a
+         * valid holder object.
+         */
+        if ((cg->flags & TCF_NEED_SCRIPT_OBJECT) && !js_NewScriptObject(cx, script))
+            goto bad;
     }
 
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);
+    if (!cg->parent) {
+        Debugger::onNewScript(cx, script,
+                              fun ? fun : (script->u.object ? script->u.object : cg->scopeChain()),
+                              (fun || script->u.object)
+                              ? Debugger::NewHeldScript
+                              : Debugger::NewNonHeldScript);
+    }
 
     return script;
 
 bad:
-    js_DestroyScript(cx, script, 2);
+    if (!script->u.object)
+        js_DestroyScript(cx, script, 2);
     return NULL;
 }
 
@@ -1316,8 +1322,10 @@ JSScript::totalSize()
 void
 JSScript::setOwnerObject(JSObject *owner)
 {
+#ifdef JS_CRASH_DIAGNOSTICS
     CheckScriptOwner(this, JS_NEW_SCRIPT);
     ownerObject = owner;
+#endif
 }
 
 /*
@@ -1355,24 +1363,9 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     hook = cx->debugHooks->destroyScriptHook;
     if (hook)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
+    Debugger::onDestroyScript(script);
     JS_ClearScriptTraps(cx, script);
 }
-
-namespace js {
-
-void
-CheckCompartmentScripts(JSCompartment *comp)
-{
-    JSScript *prev = NULL;
-    for (JSScript *script = (JSScript *)comp->scripts.next;
-         &script->links != &comp->scripts;
-         prev = script, script = (JSScript *)script->links.next)
-    {
-        CheckScript(script, prev);
-    }
-}
-
-} /* namespace js */
 
 static void
 DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
@@ -1432,15 +1425,12 @@ DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
     ion::IonScript::Destroy(cx, script);
 #endif
 
-#ifdef JS_METHODJIT
-    mjit::ReleaseScriptCode(cx, script, true);
-    mjit::ReleaseScriptCode(cx, script, false);
-#endif
-
-    if (script->types) {
+    if (script->types)
         script->types->destroy();
-        Foreground::free_(script->types);
-    }
+
+#ifdef JS_METHODJIT
+    mjit::ReleaseScriptCode(cx, script);
+#endif
 
     JS_REMOVE_LINK(&script->links);
 
@@ -1449,7 +1439,7 @@ DestroyScript(JSContext *cx, JSScript *script, JSObject *owner, uint32 caller)
     if (script->sourceMap)
         cx->free_(script->sourceMap);
 
-    memset(script, 0xdb, script->totalSize());
+    JS_POISON(script, 0xdb, sizeof(JSScript));
     *(uint32 *)script = caller;
     cx->free_(script);
 }
@@ -1466,6 +1456,12 @@ void
 js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner)
 {
     JS_ASSERT(cx->runtime->gcRunning);
+
+#ifdef JS_METHODJIT
+    /* Keep the hook from trying to recompile while the GC is running. */
+    mjit::ReleaseScriptCode(cx, script);
+#endif
+
     js_CallDestroyScriptHook(cx, script);
     DestroyScript(cx, script, owner, 100);
 }
@@ -1486,19 +1482,20 @@ js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner)
     if (owner)
         CheckScriptOwner(script, owner);
 
+    JSRuntime *rt = trc->context->runtime;
+
     /*
      * During per-compartment GCs we may attempt to trace scripts that are out
      * of the target compartment. Ignore such attempts, marking the children is
      * wasted work and if we mark external type objects they will not get
      * unmarked at the end of the GC cycle.
      */
-    JSRuntime *rt = trc->context->runtime;
-
     if (rt->gcCurrentCompartment && rt->gcCurrentCompartment != script->compartment)
         return;
 
-    if (rt->gcCheckCompartment && script->compartment != rt->gcCheckCompartment)
-        JS_Assert("compartment mismatch in GC", __FILE__, __LINE__);
+#ifdef JS_CRASH_DIAGNOSTICS
+    JS_OPT_ASSERT_IF(rt->gcCheckCompartment, script->compartment == rt->gcCheckCompartment);
+#endif
 
     JSAtomMap *map = &script->atomMap;
     MarkAtomRange(trc, map->length, map->vector, "atomMap");
@@ -1523,7 +1520,7 @@ js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner)
      * separately if, e.g. we are GC'ing while type inference code is active,
      * and we need to make sure both the script and the object survive the GC.
      */
-    if (!script->isCachedEval && !script->isUncachedEval && script->u.object)
+    if (!script->isCachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
     if (script->hasFunction)
         MarkObject(trc, *script->function(), "script_fun");
@@ -1902,4 +1899,59 @@ void
 JSScript::copyClosedSlotsTo(JSScript *other)
 {
     memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
+}
+
+bool
+JSScript::recompileForStepMode(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    js::mjit::JITScript *jit = jitNormal ? jitNormal : jitCtor;
+    if (jit && stepModeEnabled() != jit->singleStepMode) {
+        js::mjit::Recompiler recompiler(cx, this);
+        recompiler.recompile();
+    }
+#endif
+    return true;
+}
+
+bool
+JSScript::tryNewStepMode(JSContext *cx, uint32 newValue)
+{
+    uint32 prior = stepMode;
+    stepMode = newValue;
+
+    if (!prior != !newValue) {
+        /* Step mode has been enabled or disabled. Alert the methodjit. */
+        if (!recompileForStepMode(cx)) {
+            stepMode = prior;
+            return false;
+        }
+
+        if (newValue) {
+            /* Step mode has been enabled. Alert the interpreter. */
+            InterpreterFrames *frames;
+            for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
+                frames->enableInterruptsIfRunning(this);
+        }
+    }
+    return true;
+}
+
+bool
+JSScript::setStepModeFlag(JSContext *cx, bool step)
+{
+    return tryNewStepMode(cx, (stepMode & stepCountMask) | (step ? stepFlagMask : 0));
+}
+
+bool
+JSScript::changeStepModeCount(JSContext *cx, int delta)
+{
+    assertSameCompartment(cx, this);
+    JS_ASSERT_IF(delta > 0, cx->compartment->debugMode());
+
+    uint32 count = stepMode & stepCountMask;
+    JS_ASSERT(((count + delta) & stepCountMask) == count + delta);
+    return tryNewStepMode(cx, 
+                          (stepMode & stepFlagMask) |
+                          ((count + delta) & stepCountMask));
 }

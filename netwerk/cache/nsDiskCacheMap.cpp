@@ -234,7 +234,10 @@ nsDiskCacheMap::FlushHeader()
     if (sizeof(nsDiskCacheHeader) != bytesWritten) {
         return NS_ERROR_UNEXPECTED;
     }
-    
+
+    PRStatus err = PR_Sync(mMapFD);
+    if (err != PR_SUCCESS) return NS_ERROR_UNEXPECTED;
+
     return NS_OK;
 }
 

@@ -77,36 +77,6 @@ GRE_MODULE	    = 1
 
 LIBS		= $(NSPR_LIBS) 
 
-ifdef GNU_CXX
-ifdef INTEL_CXX
-# icc gets special optimize flags
-ifdef MOZ_PROFILE_GENERATE
-MODULE_OPTIMIZE_FLAGS = -O0
-else
-MODULE_OPTIMIZE_FLAGS = -O2 -ip
-endif
-else # not INTEL_CXX
-
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fno-stack-protector
-
-# We normally want -fomit-frame-pointer, but we want an explicit
-# -fno-omit-frame-pointer if we're using a sampling profiler.
-ifndef MOZ_PROFILING
-MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
-else
-MODULE_OPTIMIZE_FLAGS += -fno-omit-frame-pointer
-endif
-
-endif
-else # not GNU_CXX
-ifeq ($(OS_ARCH),SunOS)
-MODULE_OPTIMIZE_FLAGS = -xO4
-endif
-ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -O2
-endif
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
@@ -186,6 +156,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		Debugger.cpp \
 		GlobalObject.cpp \
 		Stack.cpp \
 		String.cpp \
@@ -277,7 +248,7 @@ EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
-		GlobalObject.h	 \
+		GlobalObject.h \
 		Stack.h \
 		String.h \
 		StringObject.h \
@@ -494,6 +465,9 @@ else
 ###############################################
 # BEGIN include sources for the Nitro assembler
 #
+
+ENABLE_YARR_JIT = 1
+
 VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
 		$(srcdir)/assembler/jit \
@@ -733,7 +707,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
 	$(srcdir)/config/check_source_count.py OffTheBooks:: 60 \
-		"in Makefile.in" "{cx,rt}->{new_,new_array,malloc_,calloc_,realloc_}" $^
+		"in Makefile.in" "{cx,rt}->{new_,array_new,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \
 		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
@@ -868,11 +842,6 @@ endif # WINNT
 ifeq ($(OS_ARCH),FreeBSD)
 EXTRA_LIBS	+= -pthread
 endif
-ifeq ($(OS_ARCH),IRIX)
-ifdef USE_N32
-DASH_R		+= -n32
-endif
-endif
 ifeq ($(OS_ARCH),Linux)
 EXTRA_LIBS	+= -ldl
 endif
@@ -931,16 +900,6 @@ else
 endif # sparcv9
 endif # sparc
 endif # SOLARIS_SUNPRO_CXX
-
-ifeq ($(OS_ARCH),IRIX)
-ifndef GNU_CC
-_COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
-jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsreflect.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.cpp Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(CXX) -o $@ -c $(_COMPILE_CFLAGS) $<
-endif
-endif
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
@@ -1137,7 +1096,11 @@ endif
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just
 # the code in js/src/assembler.
-CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
+CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
+
+ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_TRACEJIT)$(ENABLE_METHODJIT))
+CXXFLAGS +=  -DENABLE_JIT=1
+endif
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 

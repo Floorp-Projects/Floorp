@@ -121,6 +121,9 @@
 #include "nsAppShellCID.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/unused.h"
+
+using mozilla::unused;
 
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
@@ -751,9 +754,7 @@ nsXULAppInfo::EnsureContentProcess()
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     return NS_ERROR_NOT_AVAILABLE;
 
-  ContentParent* c = ContentParent::GetSingleton();
-  if (!c)
-    return NS_ERROR_NOT_AVAILABLE;
+  unused << ContentParent::GetNewOrUsed();
   return NS_OK;
 }
 
@@ -1558,7 +1559,12 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
- 
+
+#ifdef MOZ_JPROF
+  // make sure JPROF doesn't think we're E10s
+  unsetenv("JPROF_SLAVE");
+#endif
+
   if (aBlankCommandLine) {
 #if defined(MOZ_WIDGET_QT)
     // Remove only arguments not given to Qt
@@ -1680,28 +1686,34 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
       (do_GetService(NS_PROMPTSERVICE_CONTRACTID));
     NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
 
-    PRUint32 flags = nsIPromptService::BUTTON_TITLE_OK * nsIPromptService::BUTTON_POS_0;
-
     if (aUnlocker) {
-      flags =
-        nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_0 +
-        nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_1 +
+      const PRUint32 flags =
+        (nsIPromptService::BUTTON_TITLE_CANCEL * 
+         nsIPromptService::BUTTON_POS_0) +
+        (nsIPromptService::BUTTON_TITLE_IS_STRING * 
+         nsIPromptService::BUTTON_POS_1) +
         nsIPromptService::BUTTON_POS_1_DEFAULT;
-    }
 
-    PRInt32 button;
-    // The actual value is irrelevant but we shouldn't be handing out
-    // malformed JSBools to XPConnect.
-    PRBool checkState = PR_FALSE;
-    rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
-                       killTitle, nsnull, nsnull, nsnull, &checkState, &button);
-    NS_ENSURE_SUCCESS_LOG(rv, rv);
+      PRInt32 button;
+      // The actual value is irrelevant but we shouldn't be handing out
+      // malformed JSBools to XPConnect.
+      PRBool checkState = PR_FALSE;
+      rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
+                         killTitle, nsnull, nsnull, nsnull, 
+                         &checkState, &button);
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
 
-    if (button == 1 && aUnlocker) {
-      rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
-      if (NS_FAILED(rv)) return rv;
+      if (button == 1) {
+        rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
+        if (NS_FAILED(rv)) 
+          return rv;
 
-      return NS_LockProfilePath(aProfileDir, aProfileLocalDir, nsnull, aResult);
+        return NS_LockProfilePath(aProfileDir, aProfileLocalDir, 
+                                  nsnull, aResult);
+      }
+    } else {
+      rv = ps->Alert(nsnull, killTitle, killMessage);
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
     }
 
     return NS_ERROR_ABORT;
@@ -3060,6 +3072,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #ifdef MOZ_ENABLE_XREMOTE
     // handle -remote now that xpcom is fired up
+    bool disableRemote = false;
+    {
+      char *e = PR_GetEnv("MOZ_NO_REMOTE");
+      disableRemote = (e && *e);
+    }
 
     const char* xremotearg;
     ar = CheckArg("remote", PR_TRUE, &xremotearg);
@@ -3073,7 +3090,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return HandleRemoteArgument(xremotearg, desktopStartupIDPtr);
     }
 
-    if (!PR_GetEnv("MOZ_NO_REMOTE")) {
+    if (!disableRemote) {
       // Try to remote the entire command line. If this fails, start up normally.
       RemoteResult rr = RemoteCommandLine(desktopStartupIDPtr);
       if (rr == REMOTE_FOUND)
@@ -3515,7 +3532,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef MOZ_ENABLE_XREMOTE
           // if we have X remote support, start listening for requests on the
           // proxy window.
-          remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
+          if (!disableRemote)
+            remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
           if (remoteService)
             remoteService->Startup(gAppData->name,
                                    PromiseFlatCString(profileName).get());

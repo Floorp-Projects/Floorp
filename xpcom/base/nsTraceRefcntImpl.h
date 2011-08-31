@@ -48,30 +48,30 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRACEREFCNT
 
-  static NS_COM void Startup();
-  static NS_COM void Shutdown();
+  static void Startup();
+  static void Shutdown();
 
   enum StatisticsType {
     ALL_STATS,
     NEW_STATS
   };
 
-  static NS_COM nsresult DumpStatistics(StatisticsType type = ALL_STATS,
+  static nsresult DumpStatistics(StatisticsType type = ALL_STATS,
                                         FILE* out = 0);
 
-  static NS_COM void ResetStatistics(void);
+  static void ResetStatistics(void);
 
-  static NS_COM void DemangleSymbol(const char * aSymbol,
+  static void DemangleSymbol(const char * aSymbol,
                                     char * aBuffer,
                                     int aBufLen);
 
-  static NS_COM void WalkTheStack(FILE* aStream);
+  static void WalkTheStack(FILE* aStream);
   /**
    * Tell nsTraceRefcnt whether refcounting, allocation, and destruction
    * activity is legal.  This is used to trigger assertions for any such
    * activity that occurs because of static constructors or destructors.
    */
-  static NS_COM void SetActivityIsLegal(PRBool aLegal);
+  static void SetActivityIsLegal(PRBool aLegal);
 
   static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 };
@@ -89,7 +89,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // And now for that utility that you've all been asking for...
 
-extern "C" NS_COM void
+extern "C" void
 NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
                  double *meanResult, double *stdDevResult);
 

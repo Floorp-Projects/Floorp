@@ -144,6 +144,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_651501_document_body_autocomplete.js \
 	browser_webconsole_bug_653531_highlighter_console_helper.js \
 	browser_webconsole_bug_659907_console_dir.js \
+	browser_webconsole_bug_678816.js \
 	head.js \
 	$(NULL)
 
@@ -212,6 +213,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-644419-log-limits.html \
 	test-bug-632275-getters.html \
 	test-bug-646025-console-file-location.html \
+	test-bug-678816-content.js \
 	test-file-location.js \
 	$(NULL)
 

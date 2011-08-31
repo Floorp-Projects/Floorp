@@ -2074,7 +2074,8 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     jsval rval = JSVAL_VOID;
     AUTO_MARK_JSVAL(ccx, &rval);
 
-    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal, NULL, false);
+    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal, NULL, false, 
+                                          EmptyCString());
     NS_ASSERTION(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
                  "Bad return value from xpc_CreateSandboxObject()!");
 
@@ -2567,18 +2568,8 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
 
             /* ParticipatesInCycleCollection means "on the main thread" */
             if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
-                if (gDesiredDebugMode) {
-                    if (!JS_SetDebugModeForCompartment(cx, comp, JS_TRUE))
-                        goto fail;
-                } else {
-                    /*
-                     * Debugging may be turned off with live scripts, so just
-                     * mark future scripts to be compiled into non-debug mode.
-                     * Existing scripts will continue to call JSD callbacks,
-                     * which will have no effect.
-                     */
-                    comp->debugMode = JS_FALSE;
-                }
+                if (!JS_SetDebugModeForCompartment(cx, comp, gDesiredDebugMode))
+                    goto fail;
             }
         }
     }

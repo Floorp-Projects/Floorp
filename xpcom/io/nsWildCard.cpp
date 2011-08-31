@@ -170,13 +170,13 @@ NS_WildCardValid_(const T *expr)
     return (x < 0 ? x : VALID_SXP);
 }
 
-NS_COM int
+int
 NS_WildCardValid(const char *expr)
 {
     return NS_WildCardValid_(expr);
 }
 
-NS_COM int
+int
 NS_WildCardValid(const PRUnichar *expr)
 {
     return NS_WildCardValid_(expr);
@@ -444,7 +444,7 @@ ns_WildCardMatch(const T *str, const T *xp, PRBool case_insensitive)
 }
 
 template<class T>
-NS_COM int
+int
 NS_WildCardMatch_(const T *str, const T *expr, PRBool case_insensitive)
 {
     int is_valid = NS_WildCardValid(expr);
@@ -456,14 +456,14 @@ NS_WildCardMatch_(const T *str, const T *expr, PRBool case_insensitive)
     }
 }
 
-NS_COM int
+int
 NS_WildCardMatch(const char *str, const char *xp,
                  PRBool case_insensitive)
 {
     return NS_WildCardMatch_(str, xp, case_insensitive);
 }
 
-NS_COM int
+int
 NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
                  PRBool case_insensitive)
 {

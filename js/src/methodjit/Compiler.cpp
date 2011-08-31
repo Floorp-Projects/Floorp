@@ -117,13 +117,14 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     callPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())),
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
-    fixedDoubleEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
+    fixedIntToDoubleEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
+    fixedDoubleToAnyEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     rootedObjects(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame),
-    debugMode_(cx->compartment->debugMode),
+    debugMode_(cx->compartment->debugMode()),
 #if defined JS_TRACER
     addTraceHints(cx->traceJitEnabled),
 #else
@@ -135,8 +136,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     applyTricks(NoApplyTricks),
     pcLengths(NULL)
 {
-    JS_ASSERT(!outerScript->isUncachedEval);
-
     /* :FIXME: bug 637856 disabling traceJit if inference is enabled */
     if (cx->typeInferenceEnabled())
         addTraceHints = false;
@@ -243,7 +242,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     while (nextOffset < script->length) {
         uint32 offset = nextOffset;
         jsbytecode *pc = script->code + offset;
-        nextOffset = offset + GetBytecodeLength(pc);
+        nextOffset = offset + analyze::GetBytecodeLength(pc);
 
         Bytecode *code = analysis->maybeCode(pc);
         if (!code)
@@ -521,8 +520,8 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     JaegerSpew(JSpew_Prof, "compilation took %d us\n", prof.time_us());
 #endif
 
-    JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
-               (*jitp)->code.m_code.executableAddress(), (*jitp)->code.m_size);
+    JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%u\")\n",
+               (*jitp)->code.m_code.executableAddress(), unsigned((*jitp)->code.m_size));
 
     if (!*jitp)
         return Compile_Abort;
@@ -599,31 +598,25 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 }
 
 CompileStatus JS_NEVER_INLINE
-mjit::TryCompile(JSContext *cx, StackFrame *fp)
+mjit::TryCompile(JSContext *cx, JSScript *script, bool construct)
 {
-    JS_ASSERT(cx->fp() == fp);
-
 #if JS_HAS_SHARP_VARS
-    if (fp->script()->hasSharps)
+    if (script->hasSharps)
         return Compile_Abort;
 #endif
     bool ok = cx->compartment->ensureJaegerCompartmentExists(cx);
     if (!ok)
         return Compile_Abort;
 
-    // Uncached eval scripts are not analyzed or compiled.
-    if (fp->script()->isUncachedEval)
-        return Compile_Abort;
-
     // Ensure that constructors have at least one slot.
-    if (fp->isConstructing() && !fp->script()->nslots)
-        fp->script()->nslots++;
+    if (construct && !script->nslots)
+        script->nslots++;
 
     CompileStatus status;
     {
         types::AutoEnterTypeInference enter(cx, true);
 
-        Compiler cc(cx, fp->script(), fp->isConstructing());
+        Compiler cc(cx, script, construct);
         status = cc.compile();
     }
 
@@ -633,7 +626,7 @@ mjit::TryCompile(JSContext *cx, StackFrame *fp)
          * Treat this the same way as a static overflow and wait for another
          * attempt to compile the script.
          */
-        JITScriptStatus status = fp->script()->getJITStatus(fp->isConstructing());
+        JITScriptStatus status = script->getJITStatus(construct);
         JS_ASSERT(status != JITScript_Invalid);
         return (status == JITScript_Valid) ? Compile_Okay : Compile_Retry;
     }
@@ -778,7 +771,7 @@ mjit::Compiler::generatePrologue()
                                                    StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
-            masm.storePtr(ImmPtr((void *) script->function()->nargs),
+            masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
                           Address(JSFrameReg, StackFrame::offsetOfArgs()));
             hasArgs.linkTo(masm.label(), &masm);
         }
@@ -857,7 +850,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     masm.forceFlushConstantPool();
     stubcc.masm.forceFlushConstantPool();
 #endif
-    JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %lu, Slow code (stubcc) size = %lu.\n", masm.size(), stubcc.size());
+    JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %lu, Slow code (stubcc) size = %lu.\n",
+               (unsigned long) masm.size(), (unsigned long) stubcc.size());
 
     size_t codeSize = masm.size() +
                       stubcc.size() +
@@ -925,7 +919,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->script = script;
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->invokeEntry = result;
-    jit->singleStepMode = script->singleStepMode;
+    jit->singleStepMode = script->stepModeEnabled();
     if (script->hasFunction) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
         jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
@@ -1329,6 +1323,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
+    JS_ASSERT(jit->scriptDataSize() == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -1444,7 +1439,7 @@ mjit::Compiler::generateMethod()
             op = JSOp(*PC);
             trap |= stubs::JSTRAP_TRAP;
         }
-        if (script->singleStepMode && scanner.firstOpInLine(PC - script->code))
+        if (script->stepModeEnabled() && scanner.firstOpInLine(PC - script->code))
             trap |= stubs::JSTRAP_SINGLESTEP;
 
         Bytecode *opinfo = analysis->maybeCode(PC);
@@ -1459,9 +1454,6 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
-        if (loop && !a->parent)
-            loop->setOuterPC(PC);
-
         frame.setPC(PC);
         frame.setInTryBlock(opinfo->inTryBlock);
 
@@ -1469,22 +1461,27 @@ mjit::Compiler::generateMethod()
             /*
              * If there is fallthrough from the previous opcode and we changed
              * any entries into doubles for a branch at that previous op,
-             * revert those entries into integers. Maintain an invariant that
-             * for any variables inferred to be integers, the compiler
-             * maintains them as integers, both for faster code inside
-             * basic blocks and for fewer conversions needed when branching.
+             * revert those entries into integers. Similarly, if we forgot that
+             * an entry is a double then make it a double again, as the frame
+             * may have assigned it a normal register.
              */
-            for (unsigned i = 0; i < fixedDoubleEntries.length(); i++) {
-                FrameEntry *fe = frame.getSlotEntry(fixedDoubleEntries[i]);
+            for (unsigned i = 0; i < fixedIntToDoubleEntries.length(); i++) {
+                FrameEntry *fe = frame.getSlotEntry(fixedIntToDoubleEntries[i]);
                 frame.ensureInteger(fe);
             }
+            for (unsigned i = 0; i < fixedDoubleToAnyEntries.length(); i++) {
+                FrameEntry *fe = frame.getSlotEntry(fixedDoubleToAnyEntries[i]);
+                frame.syncAndForgetFe(fe);
+            }
         }
-        fixedDoubleEntries.clear();
+        fixedIntToDoubleEntries.clear();
+        fixedDoubleToAnyEntries.clear();
 
         if (opinfo->jumpTarget || trap) {
             if (fallthrough) {
                 fixDoubleTypes(PC);
-                fixedDoubleEntries.clear();
+                fixedIntToDoubleEntries.clear();
+                fixedDoubleToAnyEntries.clear();
 
                 /*
                  * Watch for fallthrough to the head of a 'do while' loop.
@@ -1523,6 +1520,12 @@ mjit::Compiler::generateMethod()
         }
         frame.assertValidRegisterState();
         a->jumpMap[uint32(PC - script->code)] = masm.label();
+
+        // Now that we have the PC's register allocation, make sure it gets
+        // explicitly updated if this is the loop entry and new loop registers
+        // are allocated later on.
+        if (loop && !a->parent)
+            loop->setOuterPC(PC);
 
         SPEW_OPCODE();
         JS_ASSERT(frame.stackDepth() == opinfo->stackDepth);
@@ -1600,6 +1603,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RETURN)
 
           BEGIN_CASE(JSOP_GOTO)
+          BEGIN_CASE(JSOP_GOTOX)
           BEGIN_CASE(JSOP_DEFAULT)
           {
             unsigned targetOffset = FollowBranch(cx, script, PC - script->code);
@@ -1612,7 +1616,7 @@ mjit::Compiler::generateMethod()
              * These jump to the loop condition test and are immediately
              * followed by the head of the loop.
              */
-            jsbytecode *next = PC + JSOP_GOTO_LENGTH;
+            jsbytecode *next = PC + js_CodeSpec[op].length;
             if (cx->typeInferenceEnabled() && analysis->maybeCode(next) &&
                 analysis->getCode(next).loopHead) {
                 frame.syncAndForgetEverything();
@@ -1627,16 +1631,22 @@ mjit::Compiler::generateMethod()
                     return Compile_Error;
             }
             fallthrough = false;
+            PC += js_CodeSpec[op].length;
+            break;
           }
           END_CASE(JSOP_GOTO)
 
           BEGIN_CASE(JSOP_IFEQ)
           BEGIN_CASE(JSOP_IFNE)
+          BEGIN_CASE(JSOP_IFEQX)
+          BEGIN_CASE(JSOP_IFNEX)
           {
-            jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
+            jsbytecode *target = PC + GetJumpOffset(PC, PC);
             fixDoubleTypes(target);
             if (!jsop_ifneq(op, target))
                 return Compile_Error;
+            PC += js_CodeSpec[op].length;
+            break;
           }
           END_CASE(JSOP_IFNE)
 
@@ -2081,6 +2091,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_AND)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
+          BEGIN_CASE(JSOP_TABLESWITCHX)
             /*
              * Note: there is no need to syncForBranch for the various targets of
              * switch statement. The liveness analysis has already marked these as
@@ -2502,8 +2513,11 @@ mjit::Compiler::generateMethod()
             Address upvarAddress(reg, JSObject::getFlatClosureUpvarsOffset());
             masm.loadPrivate(upvarAddress, reg);
             // push ((Value *) reg)[index]
-            frame.freeReg(reg);
-            frame.push(Address(reg, index * sizeof(Value)), knownPushedType(0));
+
+            BarrierState barrier = pushAddressMaybeBarrier(Address(reg, index * sizeof(Value)),
+                                                           knownPushedType(0), true);
+            finishBarrier(barrier, REJOIN_GETTER, 0);
+
             if (op == JSOP_CALLFCSLOT)
                 frame.push(UndefinedValue());
           }
@@ -2666,7 +2680,7 @@ mjit::Compiler::generateMethod()
           {
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(PC), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::Debugger, REJOIN_FALLTHROUGH);
+            INLINE_STUBCALL(stubs::DebuggerStatement, REJOIN_FALLTHROUGH);
           }
           END_CASE(JSOP_DEBUGGER)
 
@@ -2700,7 +2714,7 @@ mjit::Compiler::generateMethod()
      *  END COMPILER OPS  *
      **********************/ 
 
-        if (cx->typeInferenceEnabled() && PC == lastPC + GetBytecodeLength(lastPC)) {
+        if (cx->typeInferenceEnabled() && PC == lastPC + analyze::GetBytecodeLength(lastPC)) {
             /*
              * Inform the frame of the type sets for values just pushed. Skip
              * this if we did any opcode fusions, we don't keep track of the
@@ -2845,16 +2859,9 @@ mjit::Compiler::jsop_getglobal(uint32 index)
         }
     }
 
-    /*
-     * Always add a barrier to check for undefined if the global is currently
-     * undefined and won't be immediately popped.
-     */
-    bool testUndefined = globalObj->getSlot(slot).isUndefined() && !analysis->popGuaranteed(PC);
-
     RegisterID reg = frame.allocReg();
     Address address = masm.objSlotRef(globalObj, reg, slot);
-    BarrierState barrier = pushAddressMaybeBarrier(address, knownPushedType(0), true,
-                                                   testUndefined);
+    BarrierState barrier = pushAddressMaybeBarrier(address, knownPushedType(0), true);
     finishBarrier(barrier, REJOIN_GETTER, 0);
 }
 
@@ -4238,7 +4245,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
-            frame.push(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
@@ -4258,7 +4265,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.copyDataIntoReg(top);
             frame.pop();
-            frame.push(Address(reg, TypedArray::lengthOffset()), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(reg, TypedArray::lengthOffset()), JSVAL_TYPE_INT32);
             frame.freeReg(reg);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
@@ -4272,7 +4279,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
          */
         if (types->isLazyArguments(cx)) {
             frame.pop();
-            frame.push(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
             return true;
         }
     }
@@ -6742,9 +6749,12 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
     return true;
 #else
     jsbytecode *originalPC = pc;
+    JSOp op = JSOp(*originalPC);
+    JS_ASSERT(op == JSOP_TABLESWITCH || op == JSOP_TABLESWITCHX);
 
-    uint32 defaultTarget = GET_JUMP_OFFSET(pc);
-    pc += JUMP_OFFSET_LEN;
+    uint32 defaultTarget = GetJumpOffset(pc, pc);
+    unsigned jumpLength = (op == JSOP_TABLESWITCHX) ? JUMPX_OFFSET_LEN : JUMP_OFFSET_LEN;
+    pc += jumpLength;
 
     jsint low = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
@@ -6796,12 +6806,12 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
     jumpTables.append(jt);
 
     for (int i = 0; i < numJumps; i++) {
-        uint32 target = GET_JUMP_OFFSET(pc);
+        uint32 target = GetJumpOffset(originalPC, pc);
         if (!target)
             target = defaultTarget;
         uint32 offset = (originalPC + target) - script->code;
         jumpTableOffsets.append(offset);
-        pc += JUMP_OFFSET_LEN;
+        pc += jumpLength;
     }
     if (low != 0)
         masm.sub32(Imm32(low), dataReg);
@@ -6881,41 +6891,49 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
         return;
 
     /*
-     * Fill fixedDoubleEntries with all variables that are known to be an int
-     * here and a double at the branch target. Per prepareInferenceTypes, the
-     * target state consists of the current state plus any phi nodes or other
-     * new values introduced at the target.
+     * Fill fixedIntToDoubleEntries with all variables that are known to be an
+     * int here and a double at the branch target, and fixedDoubleToAnyEntries
+     * with all variables that are known to be a double here but not at the
+     * branch target.
+     *
+     * Per prepareInferenceTypes, the target state consists of the current
+     * state plus any phi nodes or other new values introduced at the target.
      */
-    JS_ASSERT(fixedDoubleEntries.empty());
+    JS_ASSERT(fixedIntToDoubleEntries.empty());
+    JS_ASSERT(fixedDoubleToAnyEntries.empty());
     const SlotValue *newv = analysis->newValues(target);
     if (newv) {
         while (newv->slot) {
             if (newv->value.kind() != SSAValue::PHI ||
-                newv->value.phiOffset() != uint32(target - script->code)) {
+                newv->value.phiOffset() != uint32(target - script->code) ||
+                !analysis->trackSlot(newv->slot)) {
                 newv++;
                 continue;
             }
-            if (newv->slot < TotalSlots(script)) {
-                types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
-                VarType &vt = a->varTypes[newv->slot];
-                if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
-                    analysis->trackSlot(newv->slot)) {
-                    FrameEntry *fe = frame.getSlotEntry(newv->slot);
-                    if (vt.type == JSVAL_TYPE_INT32) {
-                        fixedDoubleEntries.append(newv->slot);
-                        frame.ensureDouble(fe);
-                    } else if (vt.type == JSVAL_TYPE_UNKNOWN) {
-                        /*
-                         * Unknown here but a double at the target. The type
-                         * set for the existing value must be empty, so this
-                         * code is doomed and we can just mark the value as
-                         * a double.
-                         */
-                        frame.ensureDouble(fe);
-                    } else {
-                        JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
-                    }
+            JS_ASSERT(newv->slot < TotalSlots(script));
+            types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
+            FrameEntry *fe = frame.getSlotEntry(newv->slot);
+            VarType &vt = a->varTypes[newv->slot];
+            if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
+                if (vt.type == JSVAL_TYPE_INT32) {
+                    fixedIntToDoubleEntries.append(newv->slot);
+                    frame.ensureDouble(fe);
+                    frame.forgetLoopReg(fe);
+                } else if (vt.type == JSVAL_TYPE_UNKNOWN) {
+                    /*
+                     * Unknown here but a double at the target. The type
+                     * set for the existing value must be empty, so this
+                     * code is doomed and we can just mark the value as
+                     * a double.
+                     */
+                    frame.ensureDouble(fe);
+                } else {
+                    JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
                 }
+            } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+                fixedDoubleToAnyEntries.append(newv->slot);
+                frame.syncAndForgetFe(fe);
+                frame.forgetLoopReg(fe);
             }
             newv++;
         }
@@ -7222,13 +7240,30 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
         Jump notObject = masm.testObject(Assembler::NotEqual, typeReg);
         Address typeAddress(dataReg, JSObject::offsetOfType());
 
+        /*
+         * Test for a singleton objects first. If singletons have lazy types
+         * then they may share their raw type pointer with another type object
+         * in the observed set and we can get a spurious match.
+         */
+        Jump notSingleton = masm.branchTest32(Assembler::Zero,
+                                              Address(dataReg, offsetof(JSObject, flags)),
+                                              Imm32(JSObject::SINGLETON_TYPE));
+
         for (unsigned i = 0; i < count; i++) {
             if (JSObject *object = types->getSingleObject(i))
                 matches.append(masm.branchPtr(Assembler::Equal, dataReg, ImmPtr(object)));
-            else if (types::TypeObject *object = types->getTypeObject(i))
+        }
+
+        Jump singletonMismatch = masm.jump();
+
+        notSingleton.linkTo(masm.label(), &masm);
+
+        for (unsigned i = 0; i < count; i++) {
+            if (types::TypeObject *object = types->getTypeObject(i))
                 matches.append(masm.branchPtr(Assembler::Equal, typeAddress, ImmPtr(object)));
         }
 
+        singletonMismatch.linkTo(masm.label(), &masm);
         notObject.linkTo(masm.label(), &masm);
     }
 
@@ -7265,7 +7300,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
         if (!analysis->getCode(PC).monitoredTypesReturn)
             return state;
     } else if (!hasTypeBarriers(PC)) {
-        if (testUndefined)
+        if (testUndefined && !types->hasType(types::Type::UndefinedType()))
             state.jump.setJump(masm.testUndefined(Assembler::Equal, typeReg));
         return state;
     }

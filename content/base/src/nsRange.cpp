@@ -274,21 +274,58 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
   // If the changed node contains our start boundary and the change starts
   // before the boundary we'll need to adjust the offset.
   if (aContent == mStartParent &&
-      aInfo->mChangeStart < (PRUint32)mStartOffset) {
-    // If boundary is inside changed text, position it before change
-    // else adjust start offset for the change in length
-    mStartOffset = (PRUint32)mStartOffset <= aInfo->mChangeEnd ?
-       aInfo->mChangeStart :
-       mStartOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
-         aInfo->mReplaceLength;
+      aInfo->mChangeStart < static_cast<PRUint32>(mStartOffset)) {
+    if (aInfo->mDetails) {
+      // splitText(), aInfo->mDetails->mNextSibling is the new text node
+      NS_ASSERTION(aInfo->mDetails->mType ==
+                   CharacterDataChangeInfo::Details::eSplit,
+                   "only a split can start before the end");
+      NS_ASSERTION(static_cast<PRUint32>(mStartOffset) <= aInfo->mChangeEnd,
+                   "mStartOffset is beyond the end of this node");
+      mStartOffset = static_cast<PRUint32>(mStartOffset) - aInfo->mChangeStart;
+      mStartParent = aInfo->mDetails->mNextSibling;
+    } else {
+      // If boundary is inside changed text, position it before change
+      // else adjust start offset for the change in length.
+      mStartOffset = static_cast<PRUint32>(mStartOffset) <= aInfo->mChangeEnd ?
+        aInfo->mChangeStart :
+        mStartOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
+          aInfo->mReplaceLength;
+    }
   }
 
   // Do the same thing for the end boundary.
-  if (aContent == mEndParent && aInfo->mChangeStart < (PRUint32)mEndOffset) {
-    mEndOffset = (PRUint32)mEndOffset <= aInfo->mChangeEnd ?
-       aInfo->mChangeStart :
-       mEndOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
-         aInfo->mReplaceLength;
+  if (aContent == mEndParent && aInfo->mChangeStart < static_cast<PRUint32>(mEndOffset)) {
+    if (aInfo->mDetails) {
+      // splitText(), aInfo->mDetails->mNextSibling is the new text node
+      NS_ASSERTION(aInfo->mDetails->mType ==
+                   CharacterDataChangeInfo::Details::eSplit,
+                   "only a split can start before the end");
+      NS_ASSERTION(static_cast<PRUint32>(mEndOffset) <= aInfo->mChangeEnd,
+                   "mEndOffset is beyond the end of this node");
+      mEndOffset = static_cast<PRUint32>(mEndOffset) - aInfo->mChangeStart;
+      mEndParent = aInfo->mDetails->mNextSibling;
+    } else {
+      mEndOffset = static_cast<PRUint32>(mEndOffset) <= aInfo->mChangeEnd ?
+        aInfo->mChangeStart :
+        mEndOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
+          aInfo->mReplaceLength;
+    }
+  }
+
+  if (aInfo->mDetails &&
+      aInfo->mDetails->mType == CharacterDataChangeInfo::Details::eMerge) {
+    // normalize(), aInfo->mDetails->mNextSibling is the merged text node
+    // that will be removed
+    nsIContent* removed = aInfo->mDetails->mNextSibling;
+    if (removed == mStartParent) {
+      mStartOffset = static_cast<PRUint32>(mStartOffset) + aInfo->mChangeStart;
+      mStartParent = aContent;
+    }
+    if (removed == mEndParent) {
+      mEndOffset = static_cast<PRUint32>(mEndOffset) + aInfo->mChangeStart;
+      mEndParent = aContent;
+    }
   }
 }
 

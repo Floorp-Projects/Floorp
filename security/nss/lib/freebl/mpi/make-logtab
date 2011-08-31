@@ -1,4 +1,4 @@
-#!/usr/linguist/bin/perl
+#!/usr/bin/perl
 
 #
 # make-logtab
@@ -43,7 +43,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: make-logtab,v 1.4 2005/02/02 22:28:22 gerv%gerv.net Exp $
+# $Id: make-logtab,v 1.5 2011/05/23 23:45:11 wtc%google.com Exp $
 
 $ARRAYNAME = $ENV{'ARRAYNAME'} || "s_logv_2";
 $ARRAYTYPE = $ENV{'ARRAYTYPE'} || "float";

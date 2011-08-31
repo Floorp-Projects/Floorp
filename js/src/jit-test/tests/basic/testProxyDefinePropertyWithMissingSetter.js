@@ -1,6 +1,5 @@
 // throw, don't crash
 
-var expect = "TypeError: property descriptor's setter field is neither undefined nor a function";
 var actual = "";
 
 try {
@@ -20,4 +19,4 @@ Object.defineProperty(x, "", ({
     actual = '' + e;
 }
 
-assertEq(expect, actual);
+assertEq(actual, "InternalError: too much recursion");

@@ -67,7 +67,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
@@ -185,8 +184,9 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 
 imgRequest::imgRequest() : 
   mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
-  mWindowId(0), mCORSMode(imgIRequest::CORS_NONE), mDecodeRequested(PR_FALSE),
-  mIsMultiPartChannel(PR_FALSE), mGotData(PR_FALSE), mIsInCache(PR_FALSE)
+  mInnerWindowId(0), mCORSMode(imgIRequest::CORS_NONE),
+  mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE), mGotData(PR_FALSE),
+  mIsInCache(PR_FALSE)
 {}
 
 imgRequest::~imgRequest()
@@ -1036,7 +1036,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     } else {
       mImage = new RasterImage(mStatusTracker.forget());
     }
-    mImage->SetWindowID(mWindowId);
+    mImage->SetInnerWindowID(mInnerWindowId);
     imageType = mImage->GetType();
 
     // Notify any imgRequestProxys that are observing us that we have an Image.

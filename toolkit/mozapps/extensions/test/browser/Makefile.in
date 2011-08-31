@@ -70,6 +70,7 @@ _MAIN_TEST_FILES = \
   browser_bug608316.js \
   browser_bug610764.js \
   browser_bug618502.js \
+  browser_bug679604.js \
   browser_details.js \
   browser_discovery.js \
   browser_dragdrop.js \
@@ -98,6 +99,10 @@ _TEST_FILES = \
   browser_bug623950.js \
   browser_updatessl.js \
   browser_installssl.js \
+  browser_newaddon.js \
+  browser_select_selection.js \
+  browser_select_confirm.js \
+  browser_select_update.js \
   $(NULL)
 
 _TEST_RESOURCES = \
@@ -119,6 +124,7 @@ _TEST_RESOURCES = \
   browser_eula.xml \
   browser_purchase.xml \
   discovery.html \
+  more_options.xul \
   options.xul \
   redirect.sjs \
   releaseNotes.xhtml \

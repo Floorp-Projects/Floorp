@@ -202,8 +202,12 @@
 #include "nsDOMTouchEvent.h"
 
 #include "mozilla/Preferences.h"
+#include "nsFrame.h"
 
 #include "imgILoader.h"
+
+#include "nsDOMCaretPosition.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1697,6 +1701,8 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsITouchEventReceiver)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIInlineEventHandlers)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
@@ -1819,7 +1825,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // if we're uncollectable.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 
-  if (nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration())) {
+  if (!nsINode::Traverse(tmp, cb)) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -1827,15 +1833,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   tmp->mExternalResourceMap.Traverse(&cb);
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
-
   // Traverse the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildren[i]");
     cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
   }
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
   // Traverse all nsIDocument pointer members.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootElement)
@@ -1895,7 +1897,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  nsINode::Trace(tmp, aCallback, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
@@ -1906,6 +1908,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mExternalResourceMap.Shutdown();
 
   nsAutoScriptBlocker scriptBlocker;
+
+  nsINode::Unlink(tmp);
 
   // Unlink the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()) - 1; 
@@ -1923,9 +1927,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
   tmp->mParentDocument = nsnull;
 
@@ -6121,7 +6122,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       } while ((doc = doc->GetParentDocument()));
 
       // Remove from parent.
-      nsINode* parent = adoptedNode->GetNodeParent();
+      nsCOMPtr<nsINode> parent = adoptedNode->GetNodeParent();
       if (parent) {
         rv = parent->RemoveChildAt(parent->IndexOf(adoptedNode), PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -8394,10 +8395,62 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::CaretPositionFromPoint(float aX, float aY, nsIDOMCaretPosition** aCaretPos)
+{
+  NS_ENSURE_ARG_POINTER(aCaretPos);
+  *aCaretPos = nsnull;
+  
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
+  nsPoint pt(x, y);
+
+  nsIPresShell *ps = GetShell();
+  if (!ps) {
+    return NS_OK;
+  }
+
+  nsIFrame *rootFrame = ps->GetRootFrame();
+
+  // XUL docs, unlike HTML, have no frame tree until everything's done loading
+  if (!rootFrame) {
+    return NS_OK; // return null to premature XUL callers as a reminder to wait
+  }
+
+  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, PR_TRUE,
+                                                      PR_FALSE);
+  if (!ptFrame) {
+    return NS_OK;
+  }
+
+  nsFrame::ContentOffsets offsets = ptFrame->GetContentOffsetsFromPoint(pt);
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(offsets.content);
+  nsIContent* ptContent = offsets.content;
+  PRInt32 offset = offsets.offset;
+  if (ptContent && ptContent->IsInNativeAnonymousSubtree()) {
+    nsIContent* nonanon = ptContent->FindFirstNonNativeAnonymous();
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nonanon);
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(nonanon);
+    PRBool isText;
+    if (textArea || (input &&
+                     NS_SUCCEEDED(input->MozIsTextField(PR_FALSE, &isText)) && 
+                     isText)) {
+      node = do_QueryInterface(nonanon);
+    } else {
+      node = nsnull;
+      offset = 0;
+    }
+  }
+
+  *aCaretPos = new nsDOMCaretPosition(node, offset);
+  NS_ADDREF(*aCaretPos);
+  return NS_OK;
+}
+
 PRInt64
 nsIDocument::SizeOf() const
 {
-  PRInt64 size = sizeof(*this);
+  PRInt64 size = MemoryReporter::GetBasicSize<nsIDocument, nsINode>(this);
 
   for (nsIContent* node = GetFirstChild(); node;
        node = node->GetNextNode(this)) {
@@ -8415,3 +8468,14 @@ nsDocument::SizeOf() const
   return size;
 }
 
+#define EVENT(name_, id_, type_, struct_)                                 \
+  NS_IMETHODIMP nsDocument::GetOn##name_(JSContext *cx, jsval *vp) {      \
+    return nsINode::GetOn##name_(cx, vp);                                 \
+  }                                                                       \
+  NS_IMETHODIMP nsDocument::SetOn##name_(JSContext *cx, const jsval &v) { \
+    return nsINode::SetOn##name_(cx, v);                                  \
+  }
+#define TOUCH_EVENT EVENT
+#include "nsEventNameList.h"
+#undef TOUCH_EVENT
+#undef EVENT

@@ -215,7 +215,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (FAILED(result))
     {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+      ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL);
 
         ERR("Could not create additional swap chains or offscreen surfaces: %08lX", result);
         release();
@@ -231,7 +231,7 @@ bool Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
 
     if (FAILED(result))
     {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_INVALIDCALL);
 
         ERR("Could not create depthstencil surface for new swap chain: %08lX", result);
         release();
@@ -290,7 +290,7 @@ void Surface::subclassWindow()
     }
 
     SetLastError(0);
-    LONG oldWndProc = SetWindowLong(mWindow, GWL_WNDPROC, reinterpret_cast<LONG>(SurfaceWindowProc));
+    LONG_PTR oldWndProc = SetWindowLongPtr(mWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(SurfaceWindowProc));
     if(oldWndProc == 0 && GetLastError() != ERROR_SUCCESS)
     {
         mWindowSubclassed = false;
@@ -310,7 +310,7 @@ void Surface::unsubclassWindow()
     }
 
     // un-subclass
-    LONG parentWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
+    LONG_PTR parentWndFunc = reinterpret_cast<LONG_PTR>(GetProp(mWindow, kParentWndProc));
 
     // Check the windowproc is still SurfaceWindowProc.
     // If this assert fails, then it is likely the application has subclassed the
@@ -319,8 +319,8 @@ void Surface::unsubclassWindow()
     // EGL context, or to unsubclass before destroying the EGL context.
     if(parentWndFunc)
     {
-        LONG prevWndFunc = SetWindowLong(mWindow, GWL_WNDPROC, parentWndFunc);
-        ASSERT(prevWndFunc == reinterpret_cast<LONG>(SurfaceWindowProc));
+        LONG_PTR prevWndFunc = SetWindowLongPtr(mWindow, GWLP_WNDPROC, parentWndFunc);
+        ASSERT(prevWndFunc == reinterpret_cast<LONG_PTR>(SurfaceWindowProc));
     }
 
     RemoveProp(mWindow, kSurfaceProperty);

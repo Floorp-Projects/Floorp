@@ -472,6 +472,7 @@ protected:
         NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
         return mEnabledExtensions[ext] != nsnull;
     }
+    bool IsExtensionSupported(WebGLExtensionID ei);
 
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRInt32* maxAllowedCount, const char *info);
@@ -491,7 +492,9 @@ protected:
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
     PRBool ValidateStencilParamsForDrawCall();
     
-    bool  ValidateGLSLIdentifier(const nsAString& name, const char *info);
+    bool ValidateGLSLVariableName(const nsAString& name, const char *info);
+    bool ValidateGLSLCharacter(PRUnichar c);
+    bool ValidateGLSLString(const nsAString& string, const char *info);
 
     static PRUint32 GetTexelSize(WebGLenum format, WebGLenum type);
 

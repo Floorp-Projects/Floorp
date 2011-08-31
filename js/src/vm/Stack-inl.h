@@ -428,12 +428,6 @@ StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptr
     return true;
 }
 
-bool
-StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
-{
-    return ensureSpace(cx, report, from, nvals, cx->compartment);
-}
-
 inline Value *
 StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
 {

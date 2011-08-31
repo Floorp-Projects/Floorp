@@ -71,6 +71,8 @@ class GeckoSurfaceView
     extends SurfaceView
     implements SurfaceHolder.Callback, SensorEventListener, LocationListener
 {
+    private static final String LOG_FILE_NAME = "GeckoSurfaceView";
+
     public GeckoSurfaceView(Context context) {
         super(context);
 
@@ -107,7 +109,7 @@ class GeckoSurfaceView
     void drawSplashScreen(SurfaceHolder holder, int width, int height) {
         Canvas c = holder.lockCanvas();
         if (c == null) {
-            Log.i("GeckoSurfaceView", "canvas is null");
+            Log.i(LOG_FILE_NAME, "canvas is null");
             return;
         }
         Resources res = getResources();
@@ -167,13 +169,35 @@ class GeckoSurfaceView
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+        // Force exactly one frame to render
+        // because the surface change is only seen after we
+        // have swapped the back buffer.
+        // The buffer size only changes after the next swap buffer.
+        // We need to make sure the Gecko's view resize when Android's 
+        // buffer resizes.
+        if (mDrawMode == DRAW_GLES_2) {
+            // When we get a surfaceChange event, we have 0 to n paint events 
+            // waiting in the Gecko event queue. We will make the first
+            // succeed and the abort the others.
+            mDrawSingleFrame = true;
+            if (!mInDrawing) { 
+                // Queue at least one paint event in case none are queued.
+                GeckoAppShell.scheduleRedraw();
+            }
+            GeckoAppShell.geckoEventSync();
+            mDrawSingleFrame = false;
+            mAbortDraw = false;
+        }
+
         if (mShowingSplashScreen)
             drawSplashScreen(holder, width, height);
+
         mSurfaceLock.lock();
 
         try {
             if (mInDrawing) {
-                Log.w("GeckoAppJava", "surfaceChanged while mInDrawing is true!");
+                Log.w(LOG_FILE_NAME, "surfaceChanged while mInDrawing is true!");
             }
 
             boolean invalidSize;
@@ -198,7 +222,7 @@ class GeckoSurfaceView
             mHeight = height;
             mSurfaceValid = true;
 
-            Log.i("GeckoAppJava", "surfaceChanged: fmt: " + format + " dim: " + width + " " + height);
+            Log.i(LOG_FILE_NAME, "surfaceChanged: fmt: " + format + " dim: " + width + " " + height);
 
             DisplayMetrics metrics = new DisplayMetrics();
             GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -219,13 +243,19 @@ class GeckoSurfaceView
             }
         } finally {
             mSurfaceLock.unlock();
+            if (mDrawMode == DRAW_GLES_2) {
+                // Force a frame to be drawn before the surfaceChange returns,
+                // otherwise we get artifacts.
+                GeckoAppShell.scheduleRedraw();
+                GeckoAppShell.geckoEventSync();
+            }
         }
 
         Object syncDrawObject = null;
         try {
             syncDrawObject = mSyncDraws.take();
         } catch (InterruptedException ie) {
-            Log.e("GeckoAppJava", "Threw exception while getting sync draw bitmap/buffer: ", ie);
+            Log.e(LOG_FILE_NAME, "Threw exception while getting sync draw bitmap/buffer: ", ie);
         }
         if (syncDrawObject != null) {
             if (syncDrawObject instanceof Bitmap)
@@ -238,7 +268,7 @@ class GeckoSurfaceView
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.i("GeckoAppJava", "surface created");
+        Log.i(LOG_FILE_NAME, "surface created");
         GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_CREATED);
         GeckoAppShell.sendEventToGecko(e);
         if (mShowingSplashScreen)
@@ -246,13 +276,18 @@ class GeckoSurfaceView
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.i("GeckoAppJava", "surface destroyed");
+        Log.i(LOG_FILE_NAME, "surface destroyed");
         mSurfaceValid = false;
         mSoftwareBuffer = null;
         mSoftwareBufferCopy = null;
         mSoftwareBitmap = null;
         GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_DESTROYED);
-        GeckoAppShell.sendEventToGecko(e);
+        if (mDrawMode == DRAW_GLES_2) {
+            // Ensure GL cleanup occurs before we return.
+            GeckoAppShell.sendEventToGeckoSync(e);
+        } else {
+            GeckoAppShell.sendEventToGecko(e);
+        }
     }
 
     public Bitmap getSoftwareDrawBitmap() {
@@ -291,11 +326,21 @@ class GeckoSurfaceView
     public static final int DRAW_ERROR = 0;
     public static final int DRAW_GLES_2 = 1;
     public static final int DRAW_2D = 2;
+    // Drawing is disable when the surface buffer
+    // has changed size but we haven't yet processed the
+    // resize event.
+    public static final int DRAW_DISABLED = 3;
 
     public int beginDrawing() {
         if (mInDrawing) {
-            Log.e("GeckoAppJava", "Recursive beginDrawing call!");
+            Log.e(LOG_FILE_NAME, "Recursive beginDrawing call!");
             return DRAW_ERROR;
+        }
+
+        // Once we drawn our first frame after resize we can ignore
+        // the other draw events until we handle the resize events.
+        if (mAbortDraw) {
+            return DRAW_DISABLED;
         }
 
         /* Grab the lock, which we'll hold while we're drawing.
@@ -312,7 +357,7 @@ class GeckoSurfaceView
         mSurfaceLock.lock();
 
         if (!mSurfaceValid) {
-            Log.e("GeckoAppJava", "Surface not valid");
+            Log.e(LOG_FILE_NAME, "Surface not valid");
             mSurfaceLock.unlock();
             return DRAW_ERROR;
         }
@@ -324,20 +369,23 @@ class GeckoSurfaceView
 
     public void endDrawing() {
         if (!mInDrawing) {
-            Log.e("GeckoAppJava", "endDrawing without beginDrawing!");
+            Log.e(LOG_FILE_NAME, "endDrawing without beginDrawing!");
             return;
         }
 
+       if (mDrawSingleFrame)
+            mAbortDraw = true;
+
         try {
             if (!mSurfaceValid) {
-                Log.e("GeckoAppJava", "endDrawing with false mSurfaceValid");
+                Log.e(LOG_FILE_NAME, "endDrawing with false mSurfaceValid");
                 return;
             }
         } finally {
             mInDrawing = false;
 
             if (!mSurfaceLock.isHeldByCurrentThread())
-                Log.e("GeckoAppJava", "endDrawing while mSurfaceLock not held by current thread!");
+                Log.e(LOG_FILE_NAME, "endDrawing while mSurfaceLock not held by current thread!");
 
             mSurfaceLock.unlock();
         }
@@ -368,7 +416,7 @@ class GeckoSurfaceView
                 try {
                     mSyncDraws.put(bitmap);
                 } catch (InterruptedException ie) {
-                    Log.e("GeckoAppJava", "Threw exception while getting sync draws queue: ", ie);
+                    Log.e(LOG_FILE_NAME, "Threw exception while getting sync draws queue: ", ie);
                 }
                 return;
             }
@@ -389,7 +437,7 @@ class GeckoSurfaceView
                 try {
                     mSyncDraws.put(buffer);
                 } catch (InterruptedException ie) {
-                    Log.e("GeckoAppJava", "Threw exception while getting sync bitmaps queue: ", ie);
+                    Log.e(LOG_FILE_NAME, "Threw exception while getting sync bitmaps queue: ", ie);
                 }
                 return;
             }
@@ -492,7 +540,7 @@ class GeckoSurfaceView
                 mLastGeoAddress = addresses.get(0);
                 GeckoAppShell.sendEventToGecko(new GeckoEvent(location[0], mLastGeoAddress));
             } catch (Exception e) {
-                Log.w("GeckoSurfaceView", "GeocoderTask "+e);
+                Log.w(LOG_FILE_NAME, "GeocoderTask "+e);
             }
             return null;
         }
@@ -654,6 +702,10 @@ class GeckoSurfaceView
 
     // Are we actively between beginDrawing/endDrawing?
     boolean mInDrawing;
+
+    // Used to finish the current buffer before changing the surface size
+    boolean mDrawSingleFrame = false;
+    boolean mAbortDraw = false;
 
     // Are we waiting for a buffer to draw in surfaceChanged?
     boolean mSyncDraw;

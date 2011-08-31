@@ -78,7 +78,7 @@ def build_interface(iface, ifaces):
     def get_type(type, calltype, iid_is=None, size_is=None):
         """ Return the appropriate xpt.Type object for this param """
 
-        if isinstance(type, xpidl.Typedef):
+        while isinstance(type, xpidl.Typedef):
             type = type.realtype
 
         if isinstance(type, xpidl.Builtin):
@@ -91,7 +91,6 @@ def build_interface(iface, ifaces):
                   isPtr = (tag == xpt.Type.Tags.char_ptr or tag == xpt.Type.Tags.wchar_t_ptr)
                   return xpt.SimpleType(tag,
                                         pointer=isPtr,
-                                        #XXXkhuey unique_pointer is completely unused (bug 677787.)
                                         reference=False)
 
         if isinstance(type, xpidl.Array):
@@ -118,7 +117,6 @@ def build_interface(iface, ifaces):
                 isRef = type.isRef(calltype) and not type.specialtype == 'jsval'
                 return xpt.SimpleType(TypeMap[type.specialtype],
                                       pointer=isPtr,
-                                      #XXXkhuey unique_pointer is completely unused
                                       reference=isRef)
             elif iid_is != None:
                 return xpt.InterfaceIsType(iid_is)
@@ -126,7 +124,6 @@ def build_interface(iface, ifaces):
                 # void ptr
                 return xpt.SimpleType(TypeMap['void'],
                                       pointer=True,
-                                      #XXXkhuey unique_pointer is completely unused
                                       reference=False)
 
         raise Exception("Unknown type!")
@@ -281,6 +278,8 @@ if __name__ == '__main__':
                  help="Output file")
     o.add_option('-d', dest='depfile', default=None,
                  help="Generate a make dependency file")
+    o.add_option('--regen', action='store_true', dest='regen', default=False,
+                 help="Regenerate IDL Parser cache")
     options, args = o.parse_args()
     file, = args
 
@@ -288,6 +287,14 @@ if __name__ == '__main__':
         if not os.path.isdir(options.cachedir):
             os.mkdir(options.cachedir)
         sys.path.append(options.cachedir)
+
+    if options.regen:
+        if options.cachedir is None:
+            print >>sys.stderr, "--regen requires --cachedir"
+            sys.exit(1)
+
+        p = xpidl.IDLParser(outputdir=options.cachedir, regen=True)
+        sys.exit(0)
 
     if options.depfile is not None and options.outfile is None:
         print >>sys.stderr, "-d requires -o"

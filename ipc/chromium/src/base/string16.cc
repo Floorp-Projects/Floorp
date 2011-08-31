@@ -69,10 +69,4 @@ char16* c16memset(char16* s, char16 c, size_t n) {
 
 template class std::basic_string<char16, base::string16_char_traits>;
 
-#ifndef CHROMIUM_MOZILLA_BUILD
-std::ostream& operator<<(std::ostream& out, const string16& str) {
-  return out << UTF16ToUTF8(str);
-}
-#endif
-
 #endif  // WCHAR_T_IS_UTF32

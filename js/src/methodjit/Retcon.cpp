@@ -470,11 +470,11 @@ Recompiler::recompile(bool resetUses)
 
     if (script->jitNormal) {
         cleanup(script->jitNormal);
-        ReleaseScriptCode(cx, script, true);
+        ReleaseScriptCode(cx, script, false);
     }
     if (script->jitCtor) {
         cleanup(script->jitCtor);
-        ReleaseScriptCode(cx, script, false);
+        ReleaseScriptCode(cx, script, true);
     }
 
     if (resetUses) {

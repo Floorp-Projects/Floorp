@@ -43,6 +43,7 @@
 
 #include "jscell.h"
 
+class JSString;
 class JSDependentString;
 class JSExtensibleString;
 class JSExternalString;
@@ -51,6 +52,29 @@ class JSFixedString;
 class JSStaticAtom;
 class JSRope;
 class JSAtom;
+
+namespace js {
+
+class PropertyName;
+
+/* The buffer length required to contain any unsigned 32-bit integer. */
+static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
+
+/* N.B. must correspond to boolean tagging behavior. */
+enum InternBehavior
+{
+    DoNotInternAtom = false,
+    InternAtom = true
+};
+
+} /* namespace js */
+
+/*
+ * Find or create the atom for a string. Return null on failure to allocate
+ * memory.
+ */
+extern JSAtom *
+js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 /*
  * JavaScript strings
@@ -474,6 +498,21 @@ class JSFlatString : public JSLinearString
         return chars();
     }
 
+    /*
+     * Returns true if this string's characters store an unsigned 32-bit
+     * integer value, initializing *indexp to that value if so.  (Thus if
+     * calling isElement returns true, js::IndexToString(cx, *indexp) will be a
+     * string equal to this string.)
+     */
+    bool isElement(uint32 *indexp) const;
+
+    /*
+     * Returns a property name represented by this string, or null on failure.
+     * You must verify that this is not an element per isElement before calling
+     * this method.
+     */
+    inline js::PropertyName *toPropertyName(JSContext *cx);
+
     /* Only called by the GC for strings with the FINALIZE_STRING kind. */
 
     inline void finalize(JSRuntime *rt);
@@ -616,24 +655,35 @@ class JSExternalString : public JSFixedString
 
 JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
 
+#if !defined(__ia64__)
+/*
+ * Don't use static strings on ia64 since the compiler may put the static
+ * memory out of the acceptable 47-bit jsval pointer range.
+ */
+# define JS_HAS_STATIC_STRINGS
+#endif
+
 class JSAtom : public JSFixedString
 {
   public:
     /* Exposed only for jits. */
 
+#ifdef JS_HAS_STATIC_STRINGS
     static const size_t UNIT_STATIC_LIMIT   = 256U;
     static const size_t SMALL_CHAR_LIMIT    = 128U; /* Bigger chars cannot be in a length-2 string. */
     static const size_t NUM_SMALL_CHARS     = 64U;
     static const size_t INT_STATIC_LIMIT    = 256U;
     static const size_t NUM_HUNDRED_STATICS = 156U;
 
-#ifdef __SUNPRO_CC
-# pragma align 8 (__1cGJSAtomPunitStaticTable_, __1cGJSAtomSlength2StaticTable_, __1cGJSAtomShundredStaticTable_)
-#endif
+# ifdef __SUNPRO_CC
+#  pragma align 8 (__1cGJSAtomPunitStaticTable_, __1cGJSAtomSlength2StaticTable_, __1cGJSAtomShundredStaticTable_)
+# endif
+
     static const JSString::Data unitStaticTable[];
     static const JSString::Data length2StaticTable[];
     static const JSString::Data hundredStaticTable[];
     static const JSString::Data *const intStaticTable[];
+#endif
 
   private:
     /* Defined in jsgcinlines.h */
@@ -678,6 +728,9 @@ class JSAtom : public JSFixedString
     /* Return null if no static atom exists for the given (chars, length). */
     static inline JSStaticAtom *lookupStatic(const jschar *chars, size_t length);
 
+    /* Returns the PropertyName for this.  isElement() must be false. */
+    inline js::PropertyName *asPropertyName();
+
     inline void finalize(JSRuntime *rt);
 };
 
@@ -708,7 +761,21 @@ class JSStaticAtom : public JSAtom
 
 JS_STATIC_ASSERT(sizeof(JSStaticAtom) == sizeof(JSString));
 
-/* Avoid requring vm/String-inl.h just to call getChars. */
+namespace js {
+
+/*
+ * Represents an atomized string which does not contain an unsigned 32-bit
+ * value.  That is, it is never the case that for a PropertyName propname,
+ * ToString(ToUint32(propname)) is equal to propname.
+ */
+class PropertyName : public JSAtom
+{};
+
+JS_STATIC_ASSERT(sizeof(PropertyName) == sizeof(JSString));
+
+} /* namespace js */
+
+/* Avoid requiring vm/String-inl.h just to call getChars. */
 
 JS_ALWAYS_INLINE const jschar *
 JSString::getChars(JSContext *cx)
@@ -756,6 +823,16 @@ JSString::ensureFixed(JSContext *cx)
         d.lengthAndFlags ^= JS_BIT(3);
     }
     return &asFixed();
+}
+
+inline js::PropertyName *
+JSAtom::asPropertyName()
+{
+#ifdef DEBUG
+    uint32 dummy;
+    JS_ASSERT(!isElement(&dummy));
+#endif
+    return static_cast<js::PropertyName *>(this);
 }
 
 #endif

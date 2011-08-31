@@ -1316,6 +1316,14 @@ GetCompartmentTjitDataAllocatorsReserveSize(JSCompartment *c)
          : 0;
 }
 
+PRInt64
+GetCompartmentTjitDataTraceMonitorSize(JSCompartment *c)
+{
+    return c->hasTraceMonitor()
+         ? c->traceMonitor()->getTraceMonitorSize()
+         : 0;
+}
+
 #endif  // JS_TRACER
 
 void
@@ -1338,6 +1346,7 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     curr->tjitCode = GetCompartmentTjitCodeSize(compartment);
     curr->tjitDataAllocatorsMain = GetCompartmentTjitDataAllocatorsMainSize(compartment);
     curr->tjitDataAllocatorsReserve = GetCompartmentTjitDataAllocatorsReserveSize(compartment);
+    curr->tjitDataNonAllocators = GetCompartmentTjitDataTraceMonitorSize(compartment);
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory);
 }
@@ -1575,22 +1584,30 @@ CompartmentStats::CompartmentStats(JSContext *cx, JSCompartment *c)
     {
         if(c->principals->codebase)
         {
-            // A hack: replace forward slashes with '\\' so they aren't
-            // treated as path separators.  Users of the reporters
-            // (such as about:memory) have to undo this change.
             name.Assign(c->principals->codebase);
-            name.ReplaceChar('/', '\\');
 
             // If it's the system compartment, append the address.
             // This means that multiple system compartments (and there
             // can be many) can be distinguished.
             if(c->isSystemCompartment)
             {
+                if (c->data && 
+                    !((xpc::CompartmentPrivate*)c->data)->location.IsEmpty())
+                {
+                    name.AppendLiteral(", ");
+                    name.Append(((xpc::CompartmentPrivate*)c->data)->location);
+                }
+
                 // ample; 64-bit address max is 18 chars
                 static const int maxLength = 31;
                 nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
                 name.Append(address);
             }
+
+            // A hack: replace forward slashes with '\\' so they aren't
+            // treated as path separators.  Users of the reporters
+            // (such as about:memory) have to undo this change.
+            name.ReplaceChar('/', '\\');
         }
         else
         {
@@ -1765,6 +1782,13 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "object-empty-shapes"),
+                       nsIMemoryReporter::KIND_HEAP,
+                       stats.typeInferenceMemory.emptyShapes,
+    "Arrays attached to prototype JS objects managing shape information.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "scripts"),
                        nsIMemoryReporter::KIND_HEAP, stats.scripts,
     "Memory allocated for the compartment's JSScripts.  A JSScript is created "
@@ -1809,49 +1833,46 @@ ReportCompartmentStats(const CompartmentStats &stats,
     "Memory used by the trace JIT and held in reserve for the compartment's "
     "VMAllocators in case of OOM.",
                        callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "tjit-data/trace-monitor"),
+                       nsIMemoryReporter::KIND_HEAP,
+                       stats.tjitDataNonAllocators,
+    "Memory used by the trace JIT that is stored in the TraceMonitor.  This "
+    "includes the TraceMonitor object itself, plus its TraceNativeStorage, "
+    "RecordAttemptMap, and LoopProfileMap.",
+                       callback, closure);
 #endif
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference/script-main"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.scriptMain,
+                       stats.typeInferenceMemory.scripts,
     "Memory used during type inference to store type sets of variables "
     "and dynamically observed types.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "type-inference/script-typesets"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.scriptSets,
-    "Memory used during type inference to hold the contents of type "
-    "sets associated with scripts.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "type-inference/object-main"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.objectMain,
+                       JS_GC_HEAP_KIND,
+                       stats.typeInferenceMemory.objects,
     "Memory used during type inference to store types and possible "
     "property types of JS objects.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "type-inference/object-typesets"),
+                                              "type-inference/tables"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.objectSets,
-    "Memory used during type inference to hold the contents of type "
-    "sets associated with objects.",
+                       stats.typeInferenceMemory.tables,
+    "Memory used during type inference for compartment-wide tables.",
                        callback, closure);
 
-    /*
-     * This is in a different category from the rest of type inference
-     * data as this can be large but is volatile and cleared on GC.
-     */
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "type-inference-pools"),
+                                              "type-inference-temporary"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.poolMain,
-    "Memory used during type inference to hold transient analysis information.",
+                       stats.typeInferenceMemory.temporary,
+    "Memory used during type inference to hold transient analysis "
+    "information.  Cleared on GC.",
                        callback, closure);
 }
 

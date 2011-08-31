@@ -48,7 +48,6 @@ EXTRA_DEPS += $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES += \
   -DEXCLUDE_SKIA_DEPENDENCIES \
-  -DCHROMIUM_MOZILLA_BUILD \
   $(NULL)
 
 LOCAL_INCLUDES += \

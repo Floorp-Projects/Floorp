@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(9441effd-fbe1-4f48-aa90-1741c1e390a1)]
+[scriptable, uuid(16b81ded-30cb-427d-831d-1635dc68d346)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -87,6 +87,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 
   // playback state
            attribute double currentTime;
+  readonly attribute double initialTime;
   readonly attribute double duration;
   readonly attribute boolean paused;
   readonly attribute nsIDOMTimeRanges seekable;
@@ -118,4 +119,9 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   // buffered data. In fact any future data downloaded by this element or
   // other will be sharable by both elements.
   void mozLoadFrom(in nsIDOMHTMLMediaElement other);
+
+  // Mozilla extension: provides access to the fragment end time if
+  // the media element has a fragment URI for the currentSrc, otherwise
+  // it is equal to the media duration.
+  readonly attribute double mozFragmentEnd;
 };

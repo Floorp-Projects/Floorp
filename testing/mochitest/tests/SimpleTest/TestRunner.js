@@ -4,6 +4,13 @@
  * type = eventName (QuitApplication, LoggerInit, LoggerClose, Logger, GetPref, SetPref)
  * data = json object {"filename":filename} <- for LoggerInit
  */
+function getElement(id) {
+    return ((typeof(id) == "string") ?
+        document.getElementById(id) : id); 
+};   
+
+this.$ = this.getElement;
+
 function contentDispatchEvent(type, data, sync) {
   if (typeof(data) == "undefined") {
     data = {};
@@ -24,6 +31,39 @@ function contentSyncEvent(type, data) {
 function contentAsyncEvent(type, data) {
   contentDispatchEvent(type, data, 0);
 }
+
+/* Helper Function */
+function extend(obj, /* optional */skip) {        
+    // Extend an array with an array-like object starting
+    // from the skip index
+    if (!skip) {
+        skip = 0;
+    }
+    if (obj) {
+        var l = obj.length;
+        var ret = [];
+        for (var i = skip; i < l; i++) {
+            ret.push(obj[i]);
+        }
+    }
+    return ret;
+};
+
+function flattenArguments(lst/* ...*/) {
+    var res = [];
+    var args = extend(arguments);
+    while (args.length) {
+        var o = args.shift();
+        if (o && typeof(o) == "object" && typeof(o.length) == "number") {
+            for (var i = o.length - 1; i >= 0; i--) {
+                args.unshift(o[i]);
+            }
+        } else {
+            res.push(o);
+        }
+    }
+    return res;
+};
 
 /**
  * TestRunner: A test runner for SimpleTest
@@ -78,7 +118,7 @@ TestRunner._checkForHangs = function() {
         return;
     }
 
-    TestRunner.deferred = callLater(30, TestRunner._checkForHangs);
+    setTimeout(TestRunner._checkForHangs, 30000);
   }
 }
 
@@ -89,7 +129,7 @@ TestRunner.requestLongerTimeout = function(factor) {
 /**
  * This is used to loop tests
 **/
-TestRunner.loops = 0;
+TestRunner.repeat = 0;
 TestRunner._currentLoop = 0;
 
 /**
@@ -100,7 +140,7 @@ TestRunner.onComplete = null;
 /**
  * If logEnabled is true, this is the logger that will be used.
 **/
-TestRunner.logger = MochiKit.Logging.logger;
+TestRunner.logger = LogController;
 
 TestRunner.log = function(msg) {
     if (TestRunner.logEnabled) {
@@ -203,27 +243,36 @@ TestRunner.resetTests = function(listURLs) {
 /*
  * Used to run a single test in a loop and update the UI with the results
  */
-TestRunner.loopTest = function(testPath){
- var numLoops = TestRunner.loops;
-  while(numLoops >= 0){
-    //must set the following line so that TestHarness.updateUI finds the right div to update
-    $("current-test-path").innerHTML = testPath;
-    function checkComplete() {
-      var testWindow = window.open(testPath, 'test window');
-      if (testWindow.document.readyState == "complete") {
-        TestRunner.currentTestURL = testPath;
-        TestRunner.updateUI(testWindow.SimpleTest._tests);
-        testWindow.close();
-      } else {
-        setTimeout(checkComplete, 1000);
+TestRunner.loopTest = function(testPath) {
+  //must set the following line so that TestHarness.updateUI finds the right div to update
+  document.getElementById("current-test-path").innerHTML = testPath;
+  var numLoops = TestRunner.repeat;
+  var completed = 0; // keep track of how many tests have finished
+
+  // function to kick off the test and to check when the test is complete
+  function checkComplete() {
+    var testWindow = window.open(testPath, 'test window'); // kick off the test or find the active window
+    if (testWindow.document.readyState == "complete") {
+      // the test is complete -> mark as complete
+      TestRunner.currentTestURL = testPath;
+      TestRunner.updateUI(testWindow.SimpleTest._tests);
+      testWindow.close();
+      if (TestRunner.repeat == completed  && TestRunner.onComplete) {
+        TestRunner.onComplete();
       }
+      completed++;
     }
+    else {
+      // wait and check later
+      setTimeout(checkComplete, 1000);
+    }
+  }
+  while (numLoops >= 0) {
     checkComplete();
     numLoops--;
   }
 }
 
-/**
 /**
  * Run the next test. If no test remains, calls onComplete().
  **/
@@ -267,14 +316,15 @@ TestRunner.runNextTest = function() {
         TestRunner.log("Failed: " + $("fail-count").innerHTML);
         TestRunner.log("Todo:   " + $("todo-count").innerHTML);
         // If we are looping, don't send this cause it closes the log file
-        if (TestRunner.loops == 0)
+        if (TestRunner.repeat == 0) {
           TestRunner.log("SimpleTest FINISHED");
+        }
 
-        if (TestRunner.loops == 0 && TestRunner.onComplete) {
+        if (TestRunner.repeat == 0 && TestRunner.onComplete) {
              TestRunner.onComplete();
          }
  
-        if (TestRunner._currentLoop < TestRunner.loops){
+        if (TestRunner._currentLoop < TestRunner.repeat) {
           TestRunner._currentLoop++;
           TestRunner.resetTests(TestRunner._urls);
         } else {
@@ -433,7 +483,7 @@ TestRunner.updateUI = function(tests) {
   tds[2].innerHTML = parseInt(tds[2].innerHTML) + parseInt(results.todo);
 
   //if we ran in a loop, display any found errors
-  if(TestRunner.loops > 0){
+  if (TestRunner.repeat > 0) {
     TestRunner.displayLoopErrors('fail-table', tests);
   }
 }

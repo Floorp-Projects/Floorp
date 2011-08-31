@@ -522,6 +522,13 @@ nsMediaFeatures::features[] = {
         GetSystemMetric
     },
     {
+        &nsGkAtoms::_moz_mac_lion_theme,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::mac_lion_theme },
+        GetSystemMetric
+    },
+    {
         &nsGkAtoms::_moz_windows_compositor,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eBoolInteger,

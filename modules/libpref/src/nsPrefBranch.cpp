@@ -164,7 +164,7 @@ NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
   return PREF_GetBoolPref(pref, _retval, mIsDefault);
 }
 
-NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRInt32 aValue)
+NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRBool aValue)
 {
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");

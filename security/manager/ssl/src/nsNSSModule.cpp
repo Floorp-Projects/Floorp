@@ -68,7 +68,6 @@
 #include "nsCURILoader.h"
 #include "nsICategoryManager.h"
 #include "nsCRLManager.h"
-#include "nsCipherInfo.h"
 #include "nsNTLMAuthModule.h"
 #include "nsStreamCipher.h"
 #include "nsKeyModule.h"
@@ -239,7 +238,6 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSEncoder)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertPicker)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCRLManager)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCipherInfoService)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsNTLMAuthModule, InitTest)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHMAC)
@@ -280,7 +278,6 @@ NS_DEFINE_NAMED_CID(NS_CRYPTO_HASH_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_PICKER_CID);
 NS_DEFINE_NAMED_CID(NS_CRLMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_CIPHERINFOSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NTLMAUTHMODULE_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMCIPHER_CID);
 NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECT_CID);
@@ -319,7 +316,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_CRYPTO_HMAC_CID, false, NULL, nsCryptoHMACConstructor },
   { &kNS_CERT_PICKER_CID, false, NULL, nsCertPickerConstructor },
   { &kNS_CRLMANAGER_CID, false, NULL, nsCRLManagerConstructor },
-  { &kNS_CIPHERINFOSERVICE_CID, false, NULL, nsCipherInfoServiceConstructor },
   { &kNS_NTLMAUTHMODULE_CID, false, NULL, nsNTLMAuthModuleConstructor },
   { &kNS_STREAMCIPHER_CID, false, NULL, nsStreamCipherConstructor },
   { &kNS_KEYMODULEOBJECT_CID, false, NULL, nsKeyObjectConstructor },
@@ -360,7 +356,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_CERT_PICKER_CONTRACTID, &kNS_CERT_PICKER_CID },
   { "@mozilla.org/uriloader/psm-external-content-listener;1", &kNS_PSMCONTENTLISTEN_CID },
   { NS_CRLMANAGER_CONTRACTID, &kNS_CRLMANAGER_CID },
-  { NS_CIPHERINFOSERVICE_CONTRACTID, &kNS_CIPHERINFOSERVICE_CID },
   { NS_CRYPTO_FIPSINFO_SERVICE_CONTRACTID, &kNS_PKCS11MODULEDB_CID },
   { NS_NTLMAUTHMODULE_CONTRACTID, &kNS_NTLMAUTHMODULE_CID },
   { NS_STREAMCIPHER_CONTRACTID, &kNS_STREAMCIPHER_CID },

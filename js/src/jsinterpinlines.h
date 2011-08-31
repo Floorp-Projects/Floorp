@@ -138,7 +138,7 @@ InvokeSessionGuard::invoke(JSContext *cx)
     mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
     if (!jit) {
         /* Watch in case the code was thrown away due a recompile. */
-        mjit::CompileStatus status = mjit::TryCompile(cx, ifg_.fp());
+        mjit::CompileStatus status = mjit::TryCompile(cx, script_, false);
         if (status == mjit::Compile_Error)
             return false;
         JS_ASSERT(status == mjit::Compile_Okay);
@@ -344,7 +344,7 @@ ScriptPrologue(JSContext *cx, StackFrame *fp, bool newType)
     }
 
     Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         ScriptDebugPrologue(cx, fp);
 
     return true;
@@ -354,7 +354,7 @@ inline bool
 ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 {
     Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         ok = ScriptDebugEpilogue(cx, fp, ok);
 
     /*
@@ -374,7 +374,7 @@ ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp, bool newType)
 {
     if (!fp->isGeneratorFrame())
         return ScriptPrologue(cx, fp, newType);
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         ScriptDebugPrologue(cx, fp);
     return true;
 }
@@ -384,7 +384,7 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok)
 {
     if (!fp->isYielding())
         return ScriptEpilogue(cx, fp, ok);
-    if (cx->compartment->debugMode)
+    if (cx->compartment->debugMode())
         return ScriptDebugEpilogue(cx, fp, ok);
     return ok;
 }

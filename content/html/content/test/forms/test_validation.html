@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345624
+-->
+<head>
+  <title>Test for Bug 345624</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input, textarea, fieldset, button, select, keygen, output, object { background-color: rgb(0,0,0) !important; }
+    :valid   { background-color: rgb(0,255,0) !important; }
+    :invalid { background-color: rgb(255,0,0) !important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345624">Mozilla Bug 345624</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <fieldset id='f'></fieldset>
+  <input id='i' oninvalid="invalidEventHandler(event);">
+  <button id='b' oninvalid="invalidEventHandler(event);"></button>
+  <select id='s' oninvalid="invalidEventHandler(event);"></select>
+  <textarea id='t' oninvalid="invalidEventHandler(event);"></textarea>
+  <output id='o' oninvalid="invalidEventHandler(event);"></output>
+  <keygen id='k'></keygen>
+  <object id='obj'></object>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 345624 **/
+
+var gInvalid = false;
+
+function invalidEventHandler(aEvent)
+{
+  function checkInvalidEvent(aEvent)
+  {
+    is(aEvent.type, "invalid", "Invalid event type should be invalid");
+    ok(!aEvent.bubbles, "Invalid event should not bubble");
+    ok(aEvent.cancelable, "Invalid event should be cancelable");
+  }
+
+  checkInvalidEvent(aEvent);
+
+  gInvalid = true;
+}
+
+function checkConstraintValidationAPIExist(element)
+{
+  ok('willValidate' in element, "willValidate is not available in the DOM");
+  ok('validationMessage' in element, "validationMessage is not available in the DOM");
+  ok('validity' in element, "validity is not available in the DOM");
+
+  if ('validity' in element) {
+    validity = element.validity;
+    ok('valueMissing' in validity, "validity.valueMissing is not available in the DOM");
+    ok('typeMismatch' in validity, "validity.typeMismatch is not available in the DOM");
+    ok('patternMismatch' in validity, "validity.patternMismatch is not available in the DOM");
+    ok('tooLong' in validity, "validity.tooLong is not available in the DOM");
+    ok('rangeUnderflow' in validity, "validity.rangeUnderflow is not available in the DOM");
+    ok('rangeOverflow' in validity, "validity.rangeOverflow is not available in the DOM");
+    ok('stepMismatch' in validity, "validity.stepMismatch is not available in the DOM");
+    ok('customError' in validity, "validity.customError is not available in the DOM");
+    ok('valid' in validity, "validity.valid is not available in the DOM");
+  }
+}
+
+function checkConstraintValidationAPIDefaultValues(element)
+{
+  // Not checking willValidate because the default value depends of the element
+
+  is(element.validationMessage, "", "validationMessage default value should be empty string");
+
+  ok(!element.validity.valueMissing, "The element should not suffer from a constraint validation");
+  ok(!element.validity.typeMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.patternMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.tooLong, "The element should not suffer from a constraint validation");
+  ok(!element.validity.rangeUnderflow, "The element should not suffer from a constraint validation");
+  ok(!element.validity.rangeOverflow, "The element should not suffer from a constraint validation");
+  ok(!element.validity.stepMismatch, "The element should not suffer from a constraint validation");
+  ok(!element.validity.customError, "The element should not suffer from a constraint validation");
+  ok(element.validity.valid, "The element should be valid by default");
+
+  ok(element.checkValidity(), "The element should be valid by default");
+}
+
+function checkDefaultPseudoClass()
+{
+  is(window.getComputedStyle(document.getElementById('f'), null)
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     "Nor :valid and :invalid should apply");
+
+  is(window.getComputedStyle(document.getElementById('o'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid should apply");
+
+  is(window.getComputedStyle(document.getElementById('obj'), null)
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     "Nor :valid and :invalid should apply");
+
+  todo_is(window.getComputedStyle(document.getElementById('k'), null)
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     "Nor :valid and :invalid should apply");
+
+  is(window.getComputedStyle(document.getElementById('s'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+
+  is(window.getComputedStyle(document.getElementById('i'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+
+  is(window.getComputedStyle(document.getElementById('t'), null)
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid pseudo-class should apply");
+
+  is(window.getComputedStyle(document.getElementById('b'), null)
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     ":valid pseudo-class should not apply");
+}
+
+function checkSpecificWillValidate()
+{
+  // fieldset, output, object, keygen (TODO) and select elements
+  ok(!document.getElementById('f').willValidate, "Fielset element should be barred from constraint validation");
+  ok(!document.getElementById('obj').willValidate, "Object element should be barred from constraint validation");
+  todo(!document.getElementById('k').willValidate, "Keygen element should be barred from constraint validation");
+  ok(document.getElementById('o').willValidate, "Output element should not be barred from constraint validation");
+  ok(document.getElementById('s').willValidate, "Select element should not be barred from constraint validation");
+
+  // input element
+  i = document.getElementById('i');
+  i.type = "hidden";
+  ok(!i.willValidate, "Hidden state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.type = "reset";
+  ok(!i.willValidate, "Reset button state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.type = "button";
+  ok(!i.willValidate, "Button state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.type = "image";
+  ok(!i.willValidate, "Image state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.type = "submit";
+  ok(!i.willValidate, "Submit state input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.type = "";
+  i.readOnly = 'true';
+  ok(!i.willValidate, "Readonly input should be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  i.removeAttribute('readOnly');
+  ok(i.willValidate, "Default input element should not be barred from constraint validation");
+  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+
+  // button element
+  b = document.getElementById('b');
+  b.type = "reset";
+  ok(!b.willValidate, "Reset state button should be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  b.type = "button";
+  ok(!b.willValidate, "Button state button should be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  b.type = "submit";
+  ok(!b.willValidate, "Submit state button should be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  b.type = "";
+  ok(!b.willValidate, "Default button element should be barred from constraint validation");
+  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", ":valid pseudo-class should apply");
+
+  // textarea element
+  t = document.getElementById('t');
+  t.readOnly = true;
+  ok(!t.willValidate, "Readonly textarea should be barred from constraint validation");
+  is(window.getComputedStyle(t, null).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  t.removeAttribute('readOnly');
+  ok(t.willValidate, "Default textarea element should not be barred from constraint validation");
+  is(window.getComputedStyle(t, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+
+  // TODO: PROGRESS
+  // TODO: METER
+}
+
+function checkCommonWillValidate(element)
+{
+  // Not checking the default value because it has been checked previously.
+
+  // Not checking output elements because they can't be disabled.
+  if (element.tagName != 'OUTPUT') {
+    element.disabled = true;
+    ok(!element.willValidate, "Disabled element should be barred from constraint validation");
+
+    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+       "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+
+    element.removeAttribute('disabled');
+  }
+
+  // TODO: If an element has a datalist element ancestor, it is barred from constraint validation.
+}
+
+function checkCustomError(element, isBarred)
+{
+  element.setCustomValidity("message");
+  if (!isBarred) {
+    is(element.validationMessage, "message",
+       "When the element has a custom validity message, validation message should return it");
+  } else {
+    is(element.validationMessage, "",
+       "An element barred from constraint validation can't have a validation message");
+  }
+  ok(element.validity.customError, "The element should suffer from a custom error");
+  ok(!element.validity.valid, "The element should not be valid with a custom error");
+
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     isBarred ? "rgb(0, 0, 0)" : "rgb(255, 0, 0)",
+     ":invalid pseudo-classs should apply");
+
+  element.setCustomValidity("");
+  is(element.validationMessage, "", "The element should not have a validation message when reseted");
+  ok(!element.validity.customError, "The element should not suffer anymore from a custom error");
+  ok(element.validity.valid, "The element should now be valid");
+
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     isBarred ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
+     ":valid pseudo-classs should apply");
+}
+
+function checkCheckValidity(element)
+{
+  element.setCustomValidity("message");
+  ok(!element.checkValidity(), "checkValidity() should return false when the element is not valid");
+
+  ok(gInvalid, "Invalid event should have been handled");
+
+  gInvalid = false;
+  element.setCustomValidity("");
+
+  ok(element.checkValidity(), "Element should be valid");
+  ok(!gInvalid, "Invalid event should not have been handled");
+}
+
+function checkValidityStateObjectAliveWithoutElement(element)
+{
+  // We are creating a temporary element and getting it's ValidityState object.
+  // Then, we make sure it is removed by the garbage collector and we check the
+  // ValidityState default values (it should not crash).
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var v = document.createElement(element).validity;
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIDOMWindowUtils).garbageCollect();
+
+  ok(!v.valueMissing,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.typeMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.patternMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.tooLong,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.rangeUnderflow,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.rangeOverflow,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.stepMismatch,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(!v.customError,
+    "When the element is not alive, it shouldn't suffer from constraint validation");
+  ok(v.valid, "When the element is not alive, it should be valid");
+}
+
+checkConstraintValidationAPIExist(document.getElementById('f'));
+checkConstraintValidationAPIExist(document.getElementById('i'));
+checkConstraintValidationAPIExist(document.getElementById('b'));
+checkConstraintValidationAPIExist(document.getElementById('s'));
+checkConstraintValidationAPIExist(document.getElementById('t'));
+checkConstraintValidationAPIExist(document.getElementById('k'));
+checkConstraintValidationAPIExist(document.getElementById('o'));
+checkConstraintValidationAPIExist(document.getElementById('obj'));
+
+checkConstraintValidationAPIDefaultValues(document.getElementById('f'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('i'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('b'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('s'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('t'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('k'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('o'));
+checkConstraintValidationAPIDefaultValues(document.getElementById('obj'));
+
+checkDefaultPseudoClass();
+
+checkSpecificWillValidate();
+
+// Not checking button, fieldset, object and keygen
+// because they are always barred from constraint validation.
+checkCommonWillValidate(document.getElementById('i'));
+checkCommonWillValidate(document.getElementById('s'));
+checkCommonWillValidate(document.getElementById('t'));
+checkCommonWillValidate(document.getElementById('o'));
+
+/* TODO: add "keygen" element */
+checkCustomError(document.getElementById('i'), false);
+checkCustomError(document.getElementById('s'), false);
+checkCustomError(document.getElementById('t'), false);
+checkCustomError(document.getElementById('o'), false);
+checkCustomError(document.getElementById('b'), true);
+checkCustomError(document.getElementById('f'), true);
+checkCustomError(document.getElementById('obj'), true);
+
+// Not checking button, fieldset, object and keygen
+// because they are always barred from constraint validation.
+checkCheckValidity(document.getElementById('i'));
+checkCheckValidity(document.getElementById('s'));
+checkCheckValidity(document.getElementById('t'));
+checkCheckValidity(document.getElementById('o'));
+
+/* TODO: add "keygen" element */
+checkValidityStateObjectAliveWithoutElement("fieldset");
+checkValidityStateObjectAliveWithoutElement("input");
+checkValidityStateObjectAliveWithoutElement("button");
+checkValidityStateObjectAliveWithoutElement("select");
+checkValidityStateObjectAliveWithoutElement("textarea");
+checkValidityStateObjectAliveWithoutElement("output");
+checkValidityStateObjectAliveWithoutElement("object");
+
+</script>
+</pre>
+</body>
+</html>

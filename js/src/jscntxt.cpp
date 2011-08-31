@@ -111,7 +111,8 @@ ThreadData::ThreadData()
     waiveGCQuota(false),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
-    pendingProxyOperation(NULL)
+    pendingProxyOperation(NULL),
+    interpreterFrames(NULL)
 {
 }
 
@@ -516,7 +517,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 JSCompartment **compartment = rt->compartments.begin();
                 JSCompartment **end = rt->compartments.end();
                 while (compartment < end) {
-                    (*compartment)->types.print(cx);
+                    (*compartment)->types.print(cx, false);
                     compartment++;
                 }
             }
@@ -525,7 +526,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             js_FinishCommonAtoms(cx);
 
             /* Clear debugging state to remove GC roots. */
-            JS_ClearAllTraps(cx);
+            for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+                (*c)->clearTraps(cx, NULL);
             JS_ClearAllWatchPoints(cx);
         }
 
@@ -583,7 +585,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     Maybe<AutoLockGC> lockIf;
     if (unlocked)
         lockIf.construct(rt);
-    cx = js_ContextFromLinkField(cx ? cx->link.next : rt->contextList.next);
+    cx = JSContext::fromLinkField(cx ? cx->link.next : rt->contextList.next);
     if (&cx->link == &rt->contextList)
         cx = NULL;
     *iterp = cx;
@@ -1098,7 +1100,7 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
     bytes = NULL;
     if (IsFunctionObject(v)) {
-        atom = GET_FUNCTION_PRIVATE(cx, &v.toObject())->atom;
+        atom = v.toObject().getFunctionPrivate()->atom;
         bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
                                         v, atom);
         if (!bytes)
@@ -1406,6 +1408,7 @@ JSContext::resetCompartment()
 
     if (isExceptionPending())
         wrapPendingException();
+    updateJITEnabled();
     return;
 
 error:
@@ -1596,6 +1599,8 @@ JSContext::updateJITEnabled()
 #ifdef JS_TRACER
     traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
                        !IsJITBrokenHere() &&
+                       compartment &&
+                       !compartment->debugMode() &&
                        (debugHooks == &js_NullDebugHooks ||
                         (debugHooks == &runtime->globalDebugHooks &&
                          !runtime->debuggerInhibitsJIT())));

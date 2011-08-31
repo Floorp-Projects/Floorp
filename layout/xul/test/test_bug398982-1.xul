@@ -7,7 +7,6 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=398982
 -->
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <tooltip type="zzz">

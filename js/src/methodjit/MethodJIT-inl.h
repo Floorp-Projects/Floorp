@@ -59,11 +59,11 @@ static const size_t USES_BEFORE_COMPILE       = 16;
 static const size_t INFER_USES_BEFORE_COMPILE = 40;
 
 static inline CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest request)
+CanMethodJIT(JSContext *cx, JSScript *script, bool construct, CompileRequest request)
 {
     if (!cx->methodJitEnabled)
         return Compile_Abort;
-    JITScriptStatus status = script->getJITStatus(fp->isConstructing());
+    JITScriptStatus status = script->getJITStatus(construct);
     if (status == JITScript_Invalid)
         return Compile_Abort;
     if (request == CompileRequest_Interpreter &&
@@ -76,7 +76,7 @@ CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest req
         return Compile_Skipped;
     }
     if (status == JITScript_None)
-        return TryCompile(cx, fp);
+        return TryCompile(cx, script, construct);
     return Compile_Okay;
 }
 
@@ -110,7 +110,7 @@ CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode
         }
     }
     if (status == JITScript_None)
-        return TryCompile(cx, fp);
+        return TryCompile(cx, fp->script(), fp->isConstructing());
     return Compile_Okay;
 }
 

@@ -153,6 +153,20 @@ xpcshell-tests:
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
+xpcshell-tests-remote: DM_TRANS?=adb
+xpcshell-tests-remote:
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
+	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  $(EXTRA_TEST_ARGS) \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
+
 # Execute a single test, specified in $(SOLO_FILE), but don't automatically
 # start the test. Instead, present the xpcshell prompt so the user can
 # attach a debugger and then start the test.
@@ -182,6 +196,23 @@ check-one:
 	  $(LIBXUL_DIST)/bin/xpcshell \
 	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
+check-one-remote: DM_TRANS?=adb
+check-one-remote:
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  -I$(topsrcdir)/build/mobile \
+	  $(testxpcsrcdir)/remotexpcshelltests.py \
+	  --symbols-path=$(DIST)/crashreporter-symbols \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  --test-path=$(SOLO_FILE) \
+	  --profile-name=$(MOZ_APP_NAME) \
+	  --verbose \
+	  $(EXTRA_TEST_ARGS) \
+	  --dm_trans=$(DM_TRANS) \
+	  --deviceIP=${TEST_DEVICE} \
+	  --objdir=$(DEPTH) \
+          --noSetup \
+	  $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(relativesrcdir)/$(dir))
 endif # XPCSHELL_TESTS
 
 ifdef CPP_UNIT_TESTS
@@ -433,7 +464,7 @@ endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory)
 +@$(UPDATE_TITLE)
-+@$(MAKE) $(if $(2),-C $(2)) $(1)
++$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
 
@@ -495,7 +526,7 @@ TAG_PROGRAM		= xargs etags -a
 
 #
 # Turn on C++ linking if we have any .cpp or .mm files
-# (moved this from config.mk so that config.mk can be included 
+# (moved this from config.mk so that config.mk can be included
 #  before the CPPSRCS are defined)
 #
 ifneq ($(CPPSRCS)$(CMMSRCS),)
@@ -506,7 +537,7 @@ HOST_CPP_PROG_LINK	= 1
 endif
 
 #
-# This will strip out symbols that the component should not be 
+# This will strip out symbols that the component should not be
 # exporting from the .dynsym section.
 #
 ifdef IS_COMPONENT
@@ -514,7 +545,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 endif # IS_COMPONENT
 
 #
-# Enforce the requirement that MODULE_NAME must be set 
+# Enforce the requirement that MODULE_NAME must be set
 # for components in static builds
 #
 ifdef IS_COMPONENT
@@ -604,18 +635,18 @@ ifeq ($(OS_ARCH),OSF1)
 ifdef IS_COMPONENT
 ifeq ($(GNU_CC)$(GNU_CXX),)
 EXTRA_DSO_LDOPTS += -B symbolic
-endif  
-endif  
+endif
+endif
 endif
 
 #
 # Linux: add -Bsymbolic flag for components
-# 
+#
 ifeq ($(OS_ARCH),Linux)
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 endif
-endif 
+endif
 
 #
 # GNU doesn't have path length limitation
@@ -650,6 +681,12 @@ else
 OUTOPTION = -o # eol
 endif # WINNT && !GNU_CC
 
+ifneq (,$(filter ml%,$(AS)))
+ASOUTOPTION = -Fo# eol
+else
+ASOUTOPTION = -o # eol
+endif
+
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
 else
@@ -680,7 +717,7 @@ endif
 	$(MAKE) tools
 
 # Do depend as well
-alldep:: 
+alldep::
 	$(MAKE) export
 	$(MAKE) depend
 	$(MAKE) libs
@@ -899,7 +936,7 @@ ifdef SHARED_LIBRARY
 endif
 endif # SHARED_LIBRARY || PROGRAM
 endif # WINNT_
-endif # MOZ_PROFILE_GENERATE || MOZ_PROFILE_USE
+endif # MOZ_PROFILE_USE
 ifdef MOZ_PROFILE_GENERATE
 # Clean up profiling data during PROFILE_GENERATE phase
 export::
@@ -928,7 +965,7 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 
 distclean:: $(SUBMAKEFILES)
 	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(STATIC_DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
-	-$(RM) -r $(ALL_TRASH_DIRS) 
+	-$(RM) -r $(ALL_TRASH_DIRS)
 	-$(RM) $(ALL_TRASH)  \
 	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o*) \
@@ -1056,7 +1093,7 @@ endif
 
 #
 # Purify target.  Solaris/sparc only to start.
-# Purify does not recognize "egcs" or "c++" so we go with 
+# Purify does not recognize "egcs" or "c++" so we go with
 # "gcc" and "g++" for now.
 #
 pure:	$(PROGRAM)
@@ -1081,6 +1118,7 @@ endif
 
 ifdef DTRACE_PROBE_OBJ
 EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
+OBJS += $(DTRACE_PROBE_OBJ)
 endif
 
 $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
@@ -1121,8 +1159,9 @@ ifdef HAVE_DTRACE
 ifndef XP_MACOSX
 ifdef DTRACE_PROBE_OBJ
 ifndef DTRACE_LIB_DEPENDENT
-$(DTRACE_PROBE_OBJ): $(OBJS)
-	dtrace -G -C -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ) $(OBJS)
+NON_DTRACE_OBJS := $(filter-out $(DTRACE_PROBE_OBJ),$(OBJS))
+$(DTRACE_PROBE_OBJ): $(NON_DTRACE_OBJS)
+	dtrace -G -C -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ) $(NON_DTRACE_OBJS)
 endif
 endif
 endif
@@ -1144,7 +1183,7 @@ endif
 	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(MOZILLA_PROBE_LIBS) $(RESFILE) $(LDFLAGS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 	@$(RM) $(DTRACE_PROBE_OBJ)
 else # ! DTRACE_LIB_DEPENDENT
-	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
+	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 endif # DTRACE_LIB_DEPENDENT
 	@$(call CHECK_STDCXX,$@)
 
@@ -1240,10 +1279,10 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
-# 'moc' only knows about #defines it gets on the command line (-D...), not in 
+# 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
 moc_%.cpp: %.h $(GLOBAL_DEPS)
-	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@ 
+	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
 moc_%.cc: %.cc $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
@@ -1253,7 +1292,7 @@ ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 %.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) $(GLOBAL_DEPS)
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
+	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
 %.$(OBJ_SUFFIX): %.S $(GLOBAL_DEPS)
@@ -1496,7 +1535,7 @@ export:: $(AUTOCFG_JS_EXPORTS) $(FINAL_TARGET)/defaults/autoconfig
 	$(INSTALL) $(IFLAGS1) $^
 endif
 
-endif 
+endif
 ################################################################################
 # Export the elements of $(XPIDLSRCS)
 # generating .h and .xpt files and moving them to the appropriate places.
@@ -1518,11 +1557,8 @@ export:: FORCE
 	@echo; sleep 2; false
 endif
 
-$(IDL_DIR)::
-	$(NSINSTALL) -D $@
-
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
-# warn against overriding existing .h file. 
+# warn against overriding existing .h file.
 $(XPIDL_GEN_DIR)/.done:
 	$(MKDIR) -p $(XPIDL_GEN_DIR)
 	@$(TOUCH) $@
@@ -1584,21 +1620,15 @@ export:: $(XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(DIST)/include
-	$(INSTALL) $(IFLAGS1) $^ 
+	$(INSTALL) $(IFLAGS1) $^
 endif # NO_DIST_INSTALL
 
 endif # XPIDLSRCS
 
 
 
-#
 # General rules for exporting idl files.
-#
-# WORK-AROUND ONLY, for mozilla/tools/module-deps/bootstrap.pl build.
-# Bug to fix idl dependency problems w/o this extra build pass is
-#   http://bugzilla.mozilla.org/show_bug.cgi?id=145777
-#
-$(IDL_DIR)::
+$(IDL_DIR):
 	$(NSINSTALL) -D $@
 
 export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
@@ -1954,7 +1984,7 @@ FORCE:
 .DELETE_ON_ERROR:
 
 # Properly set LIBPATTERNS for the platform
-.LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX) 
+.LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX)
 
 tags: TAGS
 
@@ -2065,7 +2095,6 @@ showhost:
 	@echo "HOST_LIBRARY       = $(HOST_LIBRARY)"
 
 showbuildmods::
-	@echo "Build Modules	= $(BUILD_MODULES)"
 	@echo "Module dirs	= $(BUILD_MODULE_DIRS)"
 
 documentation:

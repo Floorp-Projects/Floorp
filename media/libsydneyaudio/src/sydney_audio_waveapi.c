@@ -194,9 +194,9 @@ int sa_stream_open(sa_stream_t *s) {
   return status;
 }
 
-int sa_stream_get_min_write(sa_stream_t *s, size_t *samples) {
+int sa_stream_get_min_write(sa_stream_t *s, size_t *size) {
   ERROR_IF_NO_INIT(s);
-  *samples = (s->blockSize / BYTES_PER_SAMPLE) / s->channels;
+  *size = s->blockSize;
   return SA_SUCCESS;
 }
 

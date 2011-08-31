@@ -2,3 +2,5 @@ browser.jar:
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
 *   content/browser/scratchpad.xul                (scratchpad/scratchpad.xul)
 *   content/browser/scratchpad.js                 (scratchpad/scratchpad.js)
+    content/browser/orion.js                      (sourceeditor/orion/orion.js)
+    content/browser/orion.css                     (sourceeditor/orion/orion.css)

@@ -43,7 +43,7 @@ interface nsIDOMDocumentFragment;
  * and for triggering of menuitem actions with assigned identifiers.
  */
 
-[scriptable, uuid(f0c35053-14cc-4e23-a9db-f9a68fae8375)]
+[scriptable, uuid(eb6b42c0-2f1c-4760-b5ca-bdc9b3ec77d4)]
 interface nsIXULContextMenuBuilder : nsISupports
 {
 
@@ -53,21 +53,17 @@ interface nsIXULContextMenuBuilder : nsISupports
    * @param aDocumentFragment the fragment that will be used to append top
    *        level elements
    *
-   * @param aGeneratedAttrName the name of the attribute that will be used
-   *        to mark elements as generated.
-   *
-   * @param aIdentAttrName the name of the attribute that will be used for
-   *        menuitem identification.
+   * @param aGeneratedItemIdAttrName the name of the attribute that will be
+   *        used to mark elements as generated and for menuitem identification
    */
   void init(in nsIDOMDocumentFragment aDocumentFragment,
-            in AString aGeneratedAttrName,
-            in AString aIdentAttrName);
+            in AString aGeneratedItemIdAttrName);
 
   /**
-   * Invoke the action of the menuitem with assigned identifier aIdent.
+   * Invoke the action of the menuitem with assigned id aGeneratedItemId.
    *
-   * @param aIdent the menuitem identifier
+   * @param aGeneratedItemId the menuitem id
    */
-  void click(in DOMString aIdent);
+  void click(in DOMString aGeneratedItemId);
 
 };

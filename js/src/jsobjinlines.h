@@ -140,11 +140,11 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     if (op) {
         if (!op(cx, this, receiver, id, vp))
             return false;
-        js::types::AddTypePropertyId(cx, this, id, *vp);
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT_IF(!hasSingletonType(), js::types::TypeHasProperty(cx, type(), id, *vp));
+        JS_ASSERT_IF(!hasSingletonType(),
+                     js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
 }
@@ -264,7 +264,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = funobj->getFunctionPrivate();
     JS_ASSERT(fun == funobj);
-    JS_ASSERT(FUN_NULL_CLOSURE(fun));
+    JS_ASSERT(fun->isNullClosure());
 
     funobj = CloneFunctionObject(cx, fun, funobj->getParent(), true);
     if (!funobj)
@@ -369,6 +369,13 @@ JSObject::getReservedSlot(uintN index) const
     return (index < numSlots()) ? getSlot(index) : js::UndefinedValue();
 }
 
+inline void
+JSObject::setReservedSlot(uintN index, const js::Value &v)
+{
+    JS_ASSERT(index < JSSLOT_FREE(getClass()));
+    setSlot(index, v);
+}
+
 inline bool
 JSObject::canHaveMethodBarrier() const
 {
@@ -436,7 +443,7 @@ inline uint32
 JSObject::getArrayLength() const
 {
     JS_ASSERT(isArray());
-    return (uint32)(size_t) getPrivate();
+    return (uint32)(uintptr_t) getPrivate();
 }
 
 inline void
@@ -457,7 +464,7 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
                                      js::types::Type::DoubleType());
     }
 
-    setPrivate((void*) length);
+    setPrivate((void*)(uintptr_t) length);
 }
 
 inline void
@@ -466,7 +473,7 @@ JSObject::setDenseArrayLength(uint32 length)
     /* Variant of setArrayLength for use on dense arrays where the length cannot overflow int32. */
     JS_ASSERT(isDenseArray());
     JS_ASSERT(length <= INT32_MAX);
-    setPrivate((void*) length);
+    setPrivate((void*)(uintptr_t) length);
 }
 
 inline uint32
@@ -673,7 +680,7 @@ inline void
 JSObject::setFlatClosureUpvars(js::Value *upvars)
 {
     JS_ASSERT(isFunction());
-    JS_ASSERT(FUN_FLAT_CLOSURE(getFunctionPrivate()));
+    JS_ASSERT(getFunctionPrivate()->isFlatClosure());
     setFixedSlot(JSSLOT_FLAT_CLOSURE_UPVARS, PrivateValue(upvars));
 }
 
@@ -768,12 +775,12 @@ JSObject::setNamespaceDeclared(jsval decl)
     setSlot(JSSLOT_NAMESPACE_DECLARED, js::Valueify(decl));
 }
 
-inline JSLinearString *
+inline JSAtom *
 JSObject::getQNameLocalName() const
 {
     JS_ASSERT(isQName());
     const js::Value &v = getSlot(JSSLOT_QNAME_LOCAL_NAME);
-    return !v.isUndefined() ? &v.toString()->asLinear() : NULL;
+    return !v.isUndefined() ? &v.toString()->asAtom() : NULL;
 }
 
 inline jsval
@@ -784,7 +791,7 @@ JSObject::getQNameLocalNameVal() const
 }
 
 inline void
-JSObject::setQNameLocalName(JSLinearString *name)
+JSObject::setQNameLocalName(JSAtom *name)
 {
     JS_ASSERT(isQName());
     setSlot(JSSLOT_QNAME_LOCAL_NAME, name ? js::StringValue(name) : js::UndefinedValue());
@@ -1655,6 +1662,28 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     }
 
     global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
+    return true;
+}
+
+bool
+PropDesc::checkGetter(JSContext *cx)
+{
+    if (hasGet && !js_IsCallable(get) && !get.isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+                             js_getter_str);
+        return false;
+    }
+    return true;
+}
+
+bool
+PropDesc::checkSetter(JSContext *cx)
+{
+    if (hasSet && !js_IsCallable(set) && !set.isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+                             js_setter_str);
+        return false;
+    }
     return true;
 }
 

@@ -374,7 +374,7 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   nsresult rv =
     nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE, aDesiredSize);
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
-    DidReflowChildren(GetFirstChild(nsnull));
+    DidReflowChildren(GetFirstPrincipalChild());
     return rv;
   }
 

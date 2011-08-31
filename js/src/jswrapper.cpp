@@ -41,6 +41,7 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsexn.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
 #include "jsiter.h"
@@ -71,6 +72,19 @@ bool
 JSObject::isWrapper() const
 {
     return isProxy() && getProxyHandler()->family() == &sWrapperFamily;
+}
+
+bool
+JSObject::isCrossCompartmentWrapper() const
+{
+    return isWrapper() && !!(getWrapperHandler()->flags() & JSWrapper::CROSS_COMPARTMENT);
+}
+
+JSWrapper *
+JSObject::getWrapperHandler() const
+{
+    JS_ASSERT(isWrapper());
+    return static_cast<JSWrapper *>(getProxyHandler());
 }
 
 JSObject *
@@ -407,11 +421,12 @@ ForceFrame::enter()
     LeaveTrace(context);
 
     JS_ASSERT(context->compartment == target->compartment());
+    JSCompartment *destination = context->compartment;
 
     JSObject *scopeChain = target->getGlobal();
     JS_ASSERT(scopeChain->isNative());
 
-    return context->stack.pushDummyFrame(context, *scopeChain, frame);
+    return context->stack.pushDummyFrame(context, destination, *scopeChain, frame);
 }
 
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
@@ -440,7 +455,7 @@ AutoCompartment::enter()
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
-        if (!context->stack.pushDummyFrame(context, *scopeChain, &frame.ref()))
+        if (!context->stack.pushDummyFrame(context, destination, *scopeChain, &frame.ref()))
             return false;
 
         if (context->isExceptionPending())
@@ -459,6 +474,24 @@ AutoCompartment::leave()
         context->resetCompartment();
     }
     entered = false;
+}
+
+ErrorCopier::~ErrorCopier()
+{
+    JSContext *cx = ac.context;
+    if (cx->compartment == ac.destination &&
+        ac.origin != ac.destination &&
+        cx->isExceptionPending())
+    {
+        Value exc = cx->getPendingException();
+        if (exc.isObject() && exc.toObject().isError() && exc.toObject().getPrivate()) {
+            cx->clearPendingException();
+            ac.leave();
+            JSObject *copyobj = js_CopyErrorObject(cx, &exc.toObject(), scope);
+            if (copyobj)
+                cx->setPendingException(ObjectValue(*copyobj));
+        }
+    }
 }
 
 /* Cross compartment wrappers. */

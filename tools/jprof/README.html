@@ -48,18 +48,25 @@ equivalent to ensure frame pointer generation in the compiler you're using.</p>
 <p>Finally, build mozilla with your new configuration.  Now you can run jprof.</p>
 
 <h3><a name="usage">Usage</a></h3>
+<pre> jprof [-v] [-t] [-e exclude] [-i include] [-s stackdepth] [--last] [--all] [--start n [--end m]] [--output-dir dir] prog log [log2 ...]</pre>
 Options:
 <ul>
   <li><b>-s depth</b> : Limit depth looked at from captured stack
       frames</li>
   <li><b>-v</b> : Output some information about the symbols, memory map, etc.</li>
-  <li><b>-t</b> : Group output according to thread.  Requires external
+  <li><b>-t or --threads</b> : Group output according to thread.  May require external
       LD_PRELOAD library to help force sampling of spawned threads; jprof
-       normally captures the main thread only.  See <a
+       may capture the main thread only.  See <a
        href="http://sam.zoy.org/writings/programming/gprof.html">gprof-helper</a>;
        it may need adaption for jprof.</li>
+  <li><b>--only-thread id</b> : Only output data for thread 'id'</li>
   <li><b>-e exclusion</b> : Allows excluding specific stack frames</li>
   <li><b>-i inclusion</b> : Allows including specific stack frames</li>
+  <li><b>--last</b> : Only process data from the last 'section' of sampling
+      (starting at the last PROF)</li>
+  <li><b>--start N</b> : Start processing data at 'section' N </li>
+  <li><b>--end N</b> : Stop processing data at 'section' N </li>
+  <li><b>--output-dir dir</b> : Store generated .html files in the given directory </li>
 </ul>
 The behavior of jprof is determined by the value of the JPROF_FLAGS environment
 variable.  This environment variable can be composed of several substrings
@@ -95,6 +102,12 @@ which have the following meanings:
     set to is 8192.  Note that <code>/dev/rtc</code> will need to be readable
     by the Firefox process; making that file world-readable is a simple way to
     accomplish that.
+
+    <li> <b>JP_FILENAME=basefilename</b> : This is the filename used for
+    saving the log files to; the default is "jprof-log".  If Electrolysis
+    is used, each process after the first will have the process ID
+    added ("jprof-log-3212");
+
 </ul>
 
 <h4>Starting and stopping jprof from JavaScript</h4>
@@ -149,11 +162,18 @@ this jprof needs the name of the mozilla binary and the log file.  It deduces
 the name of the map file:
 
 <pre>
-  ./jprof /home/user/mozilla/debug/dist/bin/mozilla-bin ./jprof-log > tmp.html
+  ./jprof /home/user/mozilla/objdir/dist/bin/firefox ./jprof-log > tmp.html
 </pre>
 
 This will generate the file <code>tmp.html</code> which you should view in a
 web browser.
+
+<pre>
+  ./jprof --output-dir=/tmp /home/user/mozilla/objdir/dist/bin/firefox ./jprof-log*
+</pre>
+
+This will generate a set of files in /tmp for each process.
+
 
 <h3><a name="interpretation">Interpretation</a></h3>
 

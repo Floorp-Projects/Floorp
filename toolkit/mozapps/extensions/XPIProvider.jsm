@@ -78,7 +78,9 @@ const PREF_XPI_UNPACK                 = "extensions.alwaysUnpack";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
+const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 
+const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
 
@@ -123,7 +125,7 @@ const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 const DB_SCHEMA                       = 5;
 const REQ_VERSION                     = 2;
 
-#ifdef MOZ_COMPATABILITY_NIGHTLY
+#ifdef MOZ_COMPATIBILITY_NIGHTLY
 const PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE +
                                     ".nightly";
 #else
@@ -965,7 +967,6 @@ function flushJarCache(aJarFile) {
 
 function flushStartupCache() {
   // Init this, so it will get the notification.
-  Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 
@@ -1584,8 +1585,12 @@ var XPIProvider = {
     // information but only if the mismatch UI isn't disabled
     if (aAppChanged && !this.allAppGlobal &&
         Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
-      this.showMismatchWindow();
+      this.showUpgradeUI();
       flushCaches = true;
+    }
+    else if (aAppChanged === undefined) {
+      // For new profiles we will never need to show the add-on selection UI
+      Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
     }
 
     if (flushCaches) {
@@ -1701,16 +1706,24 @@ var XPIProvider = {
   /**
    * Shows the "Compatibility Updates" UI
    */
-  showMismatchWindow: function XPI_showMismatchWindow() {
-    var variant = Cc["@mozilla.org/variant;1"].
-                  createInstance(Ci.nsIWritableVariant);
-    variant.setFromVariant(this.inactiveAddonIDs);
-
-    // This *must* be modal as it has to block startup.
-    var features = "chrome,centerscreen,dialog,titlebar,modal";
-    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-             getService(Ci.nsIWindowWatcher);
-    ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
+  showUpgradeUI: function XPI_showUpgradeUI() {
+    if (!Prefs.getBoolPref(PREF_SHOWN_SELECTION_UI, false)) {
+      // This *must* be modal as it has to block startup.
+      var features = "chrome,centerscreen,dialog,titlebar,modal";
+      Services.ww.openWindow(null, URI_EXTENSION_SELECT_DIALOG, "", features, null);
+      Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
+    }
+    else {
+      var variant = Cc["@mozilla.org/variant;1"].
+                    createInstance(Ci.nsIWritableVariant);
+      variant.setFromVariant(this.inactiveAddonIDs);
+  
+      // This *must* be modal as it has to block startup.
+      var features = "chrome,centerscreen,dialog,titlebar,modal";
+      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
+      ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
+    }
 
     // Ensure any changes to the add-ons list are flushed to disk
     XPIDatabase.writeAddonsList([]);
@@ -1738,6 +1751,9 @@ var XPIProvider = {
       Services.appinfo.annotateCrashReport("Add-ons", data);
     }
     catch (e) { }
+    
+    const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+    TelemetryPing.observe(null, "Add-ons", data);
   },
 
   /**
@@ -3444,12 +3460,17 @@ var XPIProvider = {
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
-    this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal);
 
     if (!aFile.exists()) {
+      this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal,
+                                                               {sandboxName: aFile.path});
       ERROR("Attempted to load bootstrap scope from missing directory " + bootstrap.path);
       return;
     }
+
+    let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
+    this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal,
+                                                             {sandboxName: uri});
 
     let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                  createInstance(Ci.mozIJSSubScriptLoader);
@@ -3458,8 +3479,7 @@ var XPIProvider = {
       // As we don't want our caller to control the JS version used for the
       // bootstrap file, we run loadSubScript within the context of the
       // sandbox with the latest JS version set explicitly.
-      this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ =
-          getURIForResourceInFile(aFile, "bootstrap.js").spec;
+      this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = uri;
       Components.utils.evalInSandbox(
         "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
                    .createInstance(Components.interfaces.mozIJSSubScriptLoader) \

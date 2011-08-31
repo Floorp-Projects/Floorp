@@ -98,7 +98,7 @@ CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
   if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
     return nsnull;
 
-  for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling())
+  for (nsIFrame* f = aFrame->GetFirstPrincipalChild(); f; f = f->GetNextSibling())
   {
     nsIFrame* r = CheckForTrailingTextFrameRecursive(f, aStopAtFrame);
     if (r)
@@ -643,7 +643,8 @@ void nsCaret::InvalidateTextOverflowBlock()
         nsLayoutUtils::FindNearestBlockAncestor(caretFrame);
       if (block) {
         const nsStyleTextReset* style = block->GetStyleTextReset();
-        if (style->mTextOverflow.mType != NS_STYLE_TEXT_OVERFLOW_CLIP) {
+        if (style->mTextOverflow.mLeft.mType != NS_STYLE_TEXT_OVERFLOW_CLIP ||
+            style->mTextOverflow.mRight.mType != NS_STYLE_TEXT_OVERFLOW_CLIP) {
           block->InvalidateOverflowRect();
         }
       }

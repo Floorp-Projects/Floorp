@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -77,7 +77,6 @@
 #include "nsDOMError.h"
 #include "nsScriptLoader.h"
 #include "nsRuleData.h"
-#include "nsAHtml5FragmentParser.h"
 
 #include "nsPresState.h"
 #include "nsILayoutHistoryState.h"
@@ -734,8 +733,10 @@ nsGenericHTMLElement::FireMutationEventsForDirectParsing(nsIDocument* aDoc,
     NS_ASSERTION(newChildCount - aOldChildCount >= 0,
                  "What, some unexpected dom mutation has happened?");
     childNodes.SetCapacity(newChildCount - aOldChildCount);
-    for (nsINode::ChildIterator iter(aDest); !iter.IsDone(); iter.Next()) {
-      childNodes.AppendElement(iter);
+    for (nsIContent* child = aDest->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      childNodes.AppendElement(child);
     }
     nsGenericElement::FireNodeInserted(aDoc, aDest, childNodes);
   }
@@ -1246,7 +1247,8 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(PRBool* aDefer)
     // FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
     // nsDocument::GetInnerWindow can return an outer window in some cases,
     // we don't want to stick an event listener on an outer window, so
-    // bail if it does.
+    // bail if it does.  See similar code in nsHTMLBodyElement and
+    // nsHTMLFramesetElement
     *aDefer = PR_FALSE;
     if (document &&
         (win = document->GetInnerWindow()) && win->IsInnerWindow()) {
@@ -1449,7 +1451,7 @@ nsGenericHTMLElement::GetFormControlFrame(PRBool aFlushFrames)
 
     // If we have generated content, the primary frame will be a
     // wrapper frame..  out real frame will be in its child list.
-    for (frame = frame->GetFirstChild(nsnull);
+    for (frame = frame->GetFirstPrincipalChild();
          frame;
          frame = frame->GetNextSibling()) {
       form_frame = do_QueryFrame(frame);
@@ -3401,7 +3403,7 @@ nsresult nsGenericHTMLElement::Click()
   // is called from chrome code.
   nsMouseEvent event(nsContentUtils::IsCallerChrome(),
                      NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
-  event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
+  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
   nsEventDispatcher::Dispatch(this, context, &event);
 
@@ -3507,7 +3509,7 @@ nsGenericHTMLElement::PerformAccesskey(PRBool aKeyCausesActivation,
     // Click on it if the users prefs indicate to do so.
     nsMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
                        nsnull, nsMouseEvent::eReal);
-    event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
+    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
 
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
