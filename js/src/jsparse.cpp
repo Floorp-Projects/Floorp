@@ -2476,7 +2476,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
         } else if (funbox->inAnyDynamicScope()) {
             JS_ASSERT(!fun->isNullClosure());
         } else {
-            uintN hasUpvars = false;
+            bool hasUpvars = false;
             bool canFlatten = true;
 
             if (pn->pn_type == TOK_UPVARS) {

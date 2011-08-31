@@ -382,7 +382,7 @@ nsMathMLmactionFrame::MouseListener::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("mouseover")) {
     mOwner->MouseOver();
   }
-  else if (eventType.EqualsLiteral("mouseclick")) {
+  else if (eventType.EqualsLiteral("click")) {
     mOwner->MouseClick();
   }
   else if (eventType.EqualsLiteral("mouseout")) {

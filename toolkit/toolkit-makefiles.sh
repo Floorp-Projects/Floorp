@@ -683,6 +683,12 @@ MAKEFILES_jsreflect="
   toolkit/components/reflect/Makefile
 "
 
+MAKEFILES_jsductwork="
+  js/ductwork/Makefile
+  js/ductwork/debugger/Makefile
+  js/ductwork/debugger/tests/Makefile
+"
+
 MAKEFILES_libpr0n="
   modules/libpr0n/Makefile
   modules/libpr0n/build/Makefile
@@ -750,6 +756,7 @@ add_makefiles "
   $MAKEFILES_jsdebugger
   $MAKEFILES_jsctypes
   $MAKEFILES_jsreflect
+  $MAKEFILES_jsductwork
   $MAKEFILES_content
   $MAKEFILES_layout
   $MAKEFILES_libimg

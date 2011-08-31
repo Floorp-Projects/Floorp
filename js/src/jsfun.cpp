@@ -1173,20 +1173,6 @@ static void
 call_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isCall());
-    if (StackFrame *fp = obj->maybeCallObjStackFrame()) {
-        /*
-         * FIXME: Hide copies of stack values rooted by fp from the Cycle
-         * Collector, which currently lacks a non-stub Unlink implementation
-         * for JS objects (including Call objects), so is unable to collect
-         * cycles involving Call objects whose frames are active without this
-         * hiding hack.
-         */
-        uintN first = JSObject::CALL_RESERVED_SLOTS;
-        uintN count = fp->script()->bindings.countArgsAndVars();
-
-        JS_ASSERT(obj->numSlots() >= first + count);
-        obj->clearSlotRange(first, count);
-    }
 
     MaybeMarkGenerator(trc, obj);
 }
