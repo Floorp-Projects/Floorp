@@ -3808,6 +3808,11 @@ MakeAbsolutePathname(JSContext *cx, const char *from, const char *leaf)
     char *dir;
     const char *slash = NULL, *cp;
 
+    if (*leaf == '/') {
+        /* We were given an absolute pathname. */
+        return JS_strdup(cx, leaf);
+    }
+
     cp = from;
     while (*cp) {
         if (*cp == '/') {
