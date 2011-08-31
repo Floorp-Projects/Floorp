@@ -1547,8 +1547,6 @@ dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
-    # FIXME: Let us build with strict aliasing. bug 414641.
-    CFLAGS="$CFLAGS -fno-strict-aliasing"
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     DSO_LDOPTS='-shared'
@@ -1619,8 +1617,6 @@ else
 fi
 
 if test "$GNU_CXX"; then
-    # FIXME: Let us build with strict aliasing. bug 414641.
-    CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
@@ -2676,7 +2672,7 @@ i?86-*)
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
-    ENABLE_POLYIC_TYPED_ARRAY=1
+    ENABLE_METHODJIT_TYPED_ARRAY=1
     AC_DEFINE(JS_CPU_X86)
     AC_DEFINE(JS_NUNBOX32)
     ;;
@@ -2686,7 +2682,7 @@ x86_64*-*)
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
-    ENABLE_POLYIC_TYPED_ARRAY=1
+    ENABLE_METHODJIT_TYPED_ARRAY=1
     AC_DEFINE(JS_CPU_X64)
     AC_DEFINE(JS_PUNBOX64)
     ;;
@@ -2706,7 +2702,7 @@ sparc*-*)
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
-    ENABLE_POLYIC_TYPED_ARRAY=1
+    ENABLE_METHODJIT_TYPED_ARRAY=1
     AC_DEFINE(JS_CPU_SPARC)
     AC_DEFINE(JS_NUNBOX32)
     ;;
@@ -2747,8 +2743,8 @@ if test "$ENABLE_POLYIC"; then
     AC_DEFINE(JS_POLYIC)
 fi
 
-if test "$ENABLE_POLYIC_TYPED_ARRAY"; then
-    AC_DEFINE(JS_POLYIC_TYPED_ARRAY)
+if test "$ENABLE_METHODJIT_TYPED_ARRAY"; then
+    AC_DEFINE(JS_METHODJIT_TYPED_ARRAY)
 fi
 
 if test "$ENABLE_METHODJIT_SPEW"; then

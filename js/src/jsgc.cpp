@@ -109,16 +109,17 @@ using namespace js::gc;
 /*
  * Check that JSTRACE_XML follows JSTRACE_OBJECT and JSTRACE_STRING.
  */
-JS_STATIC_ASSERT(JSTRACE_OBJECT == 0);
-JS_STATIC_ASSERT(JSTRACE_STRING == 1);
-JS_STATIC_ASSERT(JSTRACE_SHAPE  == 2);
-JS_STATIC_ASSERT(JSTRACE_XML    == 3);
+JS_STATIC_ASSERT(JSTRACE_OBJECT      == 0);
+JS_STATIC_ASSERT(JSTRACE_STRING      == 1);
+JS_STATIC_ASSERT(JSTRACE_SHAPE       == 2);
+JS_STATIC_ASSERT(JSTRACE_TYPE_OBJECT == 3);
+JS_STATIC_ASSERT(JSTRACE_XML         == 4);
 
 /*
- * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_SHAPE is the last non-xml
+ * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_TYPE_OBJECT is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_SHAPE + 1 == JSTRACE_XML);
+JS_STATIC_ASSERT(JSTRACE_TYPE_OBJECT + 1 == JSTRACE_XML);
 
 namespace js {
 namespace gc {
@@ -149,6 +150,7 @@ const uint8 GCThingSizeMap[] = {
     sizeof(JSObject_Slots16),   /* FINALIZE_OBJECT16_BACKGROUND */
     sizeof(JSFunction),         /* FINALIZE_FUNCTION            */
     sizeof(Shape),              /* FINALIZE_SHAPE               */
+    sizeof(types::TypeObject),  /* FINALIZE_TYPE_OBJECT         */
 #if JS_HAS_XML_SUPPORT
     sizeof(JSXML),              /* FINALIZE_XML                 */
 #endif
@@ -339,10 +341,11 @@ Chunk::init(JSRuntime *rt)
     for (size_t i = 0; i != JS_ARRAY_LENGTH(markingDelay); ++i)
         markingDelay[i].init();
 
-    /*
-     * The rest of info fields is initailzied in PickChunk. We do not clear
-     * the mark bitmap as that is done at the start of the next GC.
-     */
+    /* We clear the bitmap to guard against xpc_IsGrayGCThing being called on
+       uninitialized data, which would happen before the first GC cycle. */
+    bitmap.clear();
+
+    /* The rest of info fields are initialized in PickChunk. */
 }
 
 inline Chunk **
@@ -581,7 +584,7 @@ js_GCThingIsMarked(void *thing, uintN color = BLACK)
  * JIT code is discarded in inactive compartments, regardless of how often that
  * code runs.
  */
-static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 120 * 1000 * 1000;
+static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 60 * 1000 * 1000;
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
@@ -786,6 +789,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         break;
       case FINALIZE_SHAPE:
         test = MarkArenaPtrConservatively<Shape>(trc, aheader, addr);
+        break;
+      case FINALIZE_TYPE_OBJECT:
+        test = MarkArenaPtrConservatively<types::TypeObject>(trc, aheader, addr);
         break;
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
@@ -1459,6 +1465,8 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         return RefillTypedFreeList<JSFunction>(cx, thingKind);
       case FINALIZE_SHAPE:
         return RefillTypedFreeList<Shape>(cx, thingKind);
+      case FINALIZE_TYPE_OBJECT:
+        return RefillTypedFreeList<types::TypeObject>(cx, thingKind);
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
         return RefillTypedFreeList<JSXML>(cx, thingKind);
@@ -1530,6 +1538,7 @@ GCMarker::GCMarker(JSContext *cx)
     unmarkedArenaStackTop(MarkingDelay::stackBottom()),
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
     ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
+    typeStack(cx->runtime->gcMarkStackTypes, sizeof(cx->runtime->gcMarkStackTypes)),
     xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
     largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
 {
@@ -1623,9 +1632,13 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
         ptr = vp->isGCThing() ? vp->toGCThing() : NULL;
     }
 
-    if (ptr) {
+    if (ptr && !trc->context->runtime->gcCurrentCompartment) {
         if (!JSAtom::isStatic(ptr)) {
-            /* Use conservative machinery to find if ptr is a valid GC thing. */
+            /*
+             * Use conservative machinery to find if ptr is a valid GC thing.
+             * We only do this during global GCs, to preserve the invariant
+             * that mark callbacks are not in place during compartment GCs.
+             */
             JSTracer checker;
             JS_TRACER_INIT(&checker, trc->context, EmptyMarkCallback);
             ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<jsuword>(ptr));
@@ -1790,6 +1803,18 @@ AutoGCRooter::trace(JSTracer *trc)
         MarkObjectRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
         return;
       }
+
+      case TYPE: {
+        types::TypeObject *type = static_cast<types::AutoTypeRooter *>(this)->type;
+        MarkTypeObject(trc, type, "js::AutoTypeRooter");
+        return;
+      }
+
+      case VALARRAY: {
+        AutoValueArray *array = static_cast<AutoValueArray *>(this);
+        MarkValueRange(trc, array->length(), array->start(), "js::AutoValueArray");
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
@@ -1848,6 +1873,8 @@ MarkRuntime(JSTracer *trc)
     JSContext *iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
         MarkContext(trc, acx);
+
+    PER_COMPARTMENT_OP(rt, if (c->activeAnalysis) c->markTypes(trc));
 
 #ifdef JS_TRACER
     PER_COMPARTMENT_OP(rt, if (c->hasTraceMonitor()) c->traceMonitor()->mark(trc));
@@ -2017,6 +2044,7 @@ JSCompartment::finalizeStringArenaLists(JSContext *cx)
 void
 JSCompartment::finalizeShapeArenaLists(JSContext *cx)
 {
+    arenas[FINALIZE_TYPE_OBJECT].finalizeNow<types::TypeObject>(cx);
     arenas[FINALIZE_SHAPE].finalizeNow<Shape>(cx);
 }
 
@@ -2815,6 +2843,34 @@ TraceRuntime(JSTracer *trc)
     MarkRuntime(trc);
 }
 
+struct IterateArenaCallbackOp
+{
+    JSContext *cx;
+    void *data;
+    IterateArenaCallback callback;
+    size_t traceKind;
+    size_t thingSize;
+    IterateArenaCallbackOp(JSContext *cx, void *data, IterateArenaCallback callback,
+                           size_t traceKind, size_t thingSize)
+        : cx(cx), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
+    {}
+    void operator()(Arena *arena) { (*callback)(cx, data, arena, traceKind, thingSize); }
+};
+
+struct IterateCellCallbackOp
+{
+    JSContext *cx;
+    void *data;
+    IterateCellCallback callback;
+    size_t traceKind;
+    size_t thingSize;
+    IterateCellCallbackOp(JSContext *cx, void *data, IterateCellCallback callback,
+                          size_t traceKind, size_t thingSize)
+        : cx(cx), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
+    {}
+    void operator()(Cell *cell) { (*callback)(cx, data, cell, traceKind, thingSize); }
+};
+
 void
 IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                IterateCompartmentCallback compartmentCallback,
@@ -2822,7 +2878,6 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                IterateCellCallback cellCallback)
 {
     CHECK_REQUEST(cx);
-
     LeaveTrace(cx);
 
     JSRuntime *rt = cx->runtime;
@@ -2843,29 +2898,40 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
         for (unsigned thingKind = 0; thingKind < FINALIZE_LIMIT; thingKind++) {
             size_t traceKind = GetFinalizableTraceKind(thingKind);
             size_t thingSize = GCThingSizeMap[thingKind];
-            ArenaHeader *aheader = compartment->arenas[thingKind].getHead();
+            IterateArenaCallbackOp arenaOp(cx, data, arenaCallback, traceKind, thingSize);
+            IterateCellCallbackOp cellOp(cx, data, cellCallback, traceKind, thingSize);
 
-            for (; aheader; aheader = aheader->next) {
-                Arena *arena = aheader->getArena();
-                (*arenaCallback)(cx, data, arena, traceKind, thingSize);
-                FreeSpan firstSpan(aheader->getFirstFreeSpan());
-                const FreeSpan *span = &firstSpan;
-
-                for (uintptr_t thing = arena->thingsStart(thingSize); ; thing += thingSize) {
-                    JS_ASSERT(thing <= arena->thingsEnd());
-                    if (thing == span->first) {
-                        if (!span->hasNext())
-                            break;
-                        thing = span->last;
-                        span = span->nextSpan();
-                    } else {
-                        void *t = reinterpret_cast<void *>(thing);
-                        (*cellCallback)(cx, data, t, traceKind, thingSize);
-                    }
-                }
-            }
+            ForEachArenaAndCell(compartment, (FinalizeKind) thingKind, arenaOp, cellOp);
         }
     }
+}
+
+void
+IterateCells(JSContext *cx, JSCompartment *compartment, FinalizeKind thingKind,
+             void *data, IterateCellCallback cellCallback)
+{
+    /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
+    CHECK_REQUEST(cx);
+
+    LeaveTrace(cx);
+
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(!rt->gcRunning);
+
+    AutoLockGC lock(rt);
+    AutoGCSession gcsession(cx);
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepEnd(rt, false);
+#endif
+    AutoUnlockGC unlock(rt);
+
+    AutoCopyFreeListToArenas copy(rt);
+
+    size_t traceKind = GetFinalizableTraceKind(thingKind);
+    size_t thingSize = GCThingSizeMap[thingKind];
+    IterateCellCallbackOp cellOp(cx, data, cellCallback, traceKind, thingSize);
+
+    ForEachArenaAndCell(compartment, thingKind, EmptyArenaOp, cellOp);
 }
 
 namespace gc {
@@ -2875,7 +2941,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = cx->new_<JSCompartment>(rt);
-    if (compartment && compartment->init()) {
+    if (compartment && compartment->init(cx)) {
         // Any compartment with the trusted principals -- and there can be
         // multiple -- is a system compartment.
         compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;

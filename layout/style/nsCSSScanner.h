@@ -248,7 +248,7 @@ protected:
   PRUint32 mErrorLineNumber, mColNumber, mErrorColNumber;
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
-  PRUint64 mWindowID;
+  PRUint64 mInnerWindowID;
   PRBool mWindowIDCached;
   nsCSSStyleSheet* mSheet;
   mozilla::css::Loader* mLoader;
