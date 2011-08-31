@@ -206,7 +206,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                   prescale ? mScaleHint.height : aData.mPicSize.height);
 
   mStride = gfxASurface::FormatStrideForWidth(format, size.width);
-  mBuffer = new PRUint8[size.height * mStride];
+  mBuffer = AllocateBuffer(size.height * mStride);
   if (!mBuffer) {
     // out of memory
     return;
