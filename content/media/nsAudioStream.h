@@ -74,7 +74,7 @@ public:
   static nsAudioStream* AllocateStream();
 
   // Initialize the audio stream. aNumChannels is the number of audio channels 
-  // (1 for mono, 2 for stereo, etc) and aRate is the frequency of the sound 
+  // (1 for mono, 2 for stereo, etc) and aRate is the frequency of the audio 
   // samples (22050, 44100, etc).
   // Unsafe to call with the decoder monitor held.
   virtual nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat) = 0;
@@ -83,15 +83,14 @@ public:
   // Unsafe to call with the decoder monitor held.
   virtual void Shutdown() = 0;
 
-  // Write sound data to the audio hardware.  aBuf is an array of samples in
+  // Write audio data to the audio hardware.  aBuf is an array of samples in
   // the format specified by mFormat of length aCount.  aCount should be
-  // evenly divisible by the number of channels in this audio stream.
-  // When aBlocking is PR_TRUE, we'll block until the write has completed,
-  // otherwise we'll buffer any data we can't write immediately, and write
-  // it in a later call.
-  virtual nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking) = 0;
+  // evenly divisible by the number of channels in this audio stream.  If
+  // aCount is larger than the result of Available(), the write will block
+  // until sufficient buffer space is available.
+  virtual nsresult Write(const void* aBuf, PRUint32 aCount) = 0;
 
-  // Return the number of sound samples that can be written to the audio device
+  // Return the number of audio samples that can be written to the audio device
   // without blocking.
   virtual PRUint32 Available() = 0;
 

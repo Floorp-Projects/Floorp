@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
+#include "nsHTMLTableElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
@@ -44,6 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsRuleData.h"
+#include "nsRuleWalker.h"
 #include "nsIDocument.h"
 #include "celldata.h"
 
@@ -203,19 +205,15 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   nsresult rv = nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Add style information from the mapped attributes of the table
-  // element.  This depends on the strange behavior of the
-  // |MapAttributesIntoRule| in nsHTMLTableElement.cpp, which is
-  // technically incorrect since it's violating the nsIStyleRule
-  // contract.  However, things are OK (except for the incorrect
-  // dependence on display type rather than tag) since tables and cells
-  // match different, less specific, rules.
-  nsIContent* table = GetTable();
-  if (table) {
-    rv = table->WalkContentStyleRules(aRuleWalker);
+  nsIContent* node = GetTable();
+  if (node && node->IsHTML(nsGkAtoms::table)) {
+    nsHTMLTableElement* table = static_cast<nsHTMLTableElement*>(node);
+    nsMappedAttributes* tableInheritedAttributes =
+      table->GetAttributesMappedForCell();
+    if (tableInheritedAttributes)
+      aRuleWalker->Forward(tableInheritedAttributes);
   }
-
-  return rv;
+  return NS_OK;
 }
 
 

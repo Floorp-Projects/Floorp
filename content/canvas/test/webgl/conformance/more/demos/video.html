@@ -1,5 +1,6 @@
 <html>
 <head>
+<meta charset="utf-8">
 <script type="application/x-javascript" src="../util.js"></script>
 <script>
 var processor = {
@@ -72,9 +73,8 @@ var processor = {
     }
 </script>
 <script id="greenScreen" type="x-shader/x-fragment">
-    #ifdef GL_ES
-precision highp float;
-#endif
+    precision mediump float;
+
     uniform sampler2D Texture;
     uniform sampler2D Texture2;
 

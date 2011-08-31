@@ -71,7 +71,7 @@
 class nsITimer;
 class nsIMemory;
 
-class NS_COM nsRecyclingAllocator {
+class nsRecyclingAllocator {
  protected:
     struct Block {
       PRSize bytes;

@@ -512,7 +512,7 @@ class SetPropCompiler : public PICStubCompiler
 
         if (!obj->getType(cx)->unknownProperties()) {
             types::AutoEnterTypeInference enter(cx);
-            types::TypeSet *types = obj->getType(cx)->getProperty(cx, id, true);
+            types::TypeSet *types = obj->getType(cx)->getProperty(cx, types::MakeTypeId(cx, id), true);
             if (!types)
                 return false;
             pic.rhsTypes->addSubset(cx, types);
@@ -602,7 +602,7 @@ class SetPropCompiler : public PICStubCompiler
                     return disable("can't have method barrier");
 
                 JSObject *funobj = &f.regs.sp[-1].toObject();
-                if (funobj != GET_FUNCTION_PRIVATE(cx, funobj))
+                if (funobj != funobj->getFunctionPrivate())
                     return disable("mismatched function");
 
                 flags |= Shape::METHOD;
@@ -622,6 +622,9 @@ class SetPropCompiler : public PICStubCompiler
                 return error();
             if (flags & Shape::METHOD)
                 obj->nativeSetSlot(shape->slot, f.regs.sp[-1]);
+
+            if (monitor.recompiled())
+                return Lookup_Uncacheable;
 
             /*
              * Test after calling putProperty since it can switch obj into
@@ -2409,9 +2412,9 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     CodeLocationLabel cs = buffer.finalize();
 #if DEBUG
     char *chars = DeflateString(cx, v.toString()->getChars(cx), v.toString()->length());
-    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%lx (\"%s\") shape 0x%x (%s: %d)\n",
-               js_CodeName[op], cs.executableAddress(), JSID_BITS(id), chars, holder->shape(),
-               cx->fp()->script()->filename, CurrentLine(cx));
+    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom %p (\"%s\") shape 0x%x (%s: %d)\n",
+               js_CodeName[op], cs.executableAddress(), (void*)JSID_TO_ATOM(id), chars,
+               holder->shape(), cx->fp()->script()->filename, CurrentLine(cx));
     cx->free_(chars);
 #endif
 
@@ -2659,7 +2662,6 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     // Bounds check.
     Jump outOfBounds;
     Address typedArrayLength(objReg, TypedArray::lengthOffset());
-    typedArrayLength = masm.payloadOf(typedArrayLength);
     if (idRemat.isConstant()) {
         JS_ASSERT(idRemat.value().toInt32() == v.toInt32());
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(v.toInt32()));
@@ -3016,7 +3018,6 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
     // Bounds check.
     Jump outOfBounds;
     Address typedArrayLength(objReg, TypedArray::lengthOffset());
-    typedArrayLength = masm.payloadOf(typedArrayLength);
     if (hasConstantKey)
         outOfBounds = masm.branch32(Assembler::BelowOrEqual, typedArrayLength, Imm32(keyValue));
     else

@@ -1,0 +1,45 @@
+diff --git a/gfx/angle/src/libGLESv2/VertexDataManager.cpp b/gfx/angle/src/libGLESv2/VertexDataManager.cpp
+--- a/gfx/angle/src/libGLESv2/VertexDataManager.cpp
++++ b/gfx/angle/src/libGLESv2/VertexDataManager.cpp
+@@ -714,17 +714,17 @@ void StaticVertexBuffer::reserveRequired
+     {
+         // Already allocated
+     }
+     else UNREACHABLE();   // Static vertex buffers can't be resized
+ 
+     mRequiredSpace = 0;
+ }
+ 
+-UINT StaticVertexBuffer::lookupAttribute(const VertexAttribute &attribute)
++std::size_t StaticVertexBuffer::lookupAttribute(const VertexAttribute &attribute)
+ {
+     for (unsigned int element = 0; element < mCache.size(); element++)
+     {
+         if (mCache[element].type == attribute.mType &&  mCache[element].size == attribute.mSize && mCache[element].normalized == attribute.mNormalized)
+         {
+             if (mCache[element].attributeOffset == attribute.mOffset % attribute.stride())
+             {
+                 return mCache[element].streamOffset;
+diff --git a/gfx/angle/src/libGLESv2/VertexDataManager.h b/gfx/angle/src/libGLESv2/VertexDataManager.h
+--- a/gfx/angle/src/libGLESv2/VertexDataManager.h
++++ b/gfx/angle/src/libGLESv2/VertexDataManager.h
+@@ -88,17 +88,17 @@ class StaticVertexBuffer : public ArrayV
+ {
+   public:
+     explicit StaticVertexBuffer(IDirect3DDevice9 *device);
+     ~StaticVertexBuffer();
+ 
+     void *map(const VertexAttribute &attribute, std::size_t requiredSpace, std::size_t *streamOffset);
+     void reserveRequiredSpace();
+ 
+-    UINT lookupAttribute(const VertexAttribute &attribute);   // Returns the offset into the vertex buffer, or -1 if not found
++    std::size_t lookupAttribute(const VertexAttribute &attribute);   // Returns the offset into the vertex buffer, or -1 if not found
+ 
+   private:
+     struct VertexElement
+     {
+         GLenum type;
+         GLint size;
+         bool normalized;
+         int attributeOffset;
+ 

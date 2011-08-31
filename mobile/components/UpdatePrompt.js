@@ -58,6 +58,16 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function aus_gBrowserBundle(
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
 
+XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
+  Cu.import("resource://gre/modules/AddonManager.jsm");
+  return AddonManager;
+});
+
+XPCOMUtils.defineLazyGetter(this, "LocaleRepository", function() {
+  Cu.import("resource://gre/modules/LocaleRepository.jsm");
+  return LocaleRepository;
+});
+
 function getPref(func, preference, defaultValue) {
   try {
     return Services.prefs[func](preference);
@@ -192,11 +202,43 @@ UpdatePrompt.prototype = {
     if (!this._enabled)
       return;
 
+    // uninstall all installed locales
+    AddonManager.getAddonsByTypes(["locale"], (function (aAddons) {
+      if (aAddons.length > 0) {
+        let listener = this.getAddonListener(aUpdate, this);
+        AddonManager.addAddonListener(listener);  
+        aAddons.forEach(function(aAddon) {
+          listener._uninstalling.push(aAddon.id);
+          aAddon.uninstall();
+        }, this);
+      } else {
+        this._showDownloadedNotification(aUpdate);
+      }
+    }).bind(this));
+  },
+
+  _showDownloadedNotification: function UP_showDlNotification(aUpdate) {
     let stringsPrefix = "updateDownloaded_" + aUpdate.type + ".";
     let title = gUpdateBundle.formatStringFromName(stringsPrefix + "title", [aUpdate.name], 1);
     let text = gUpdateBundle.GetStringFromName(stringsPrefix + "text");
     let imageUrl = "";
     this._showNotification(aUpdate, title, text, imageUrl, "downloaded");
+  },
+
+  _uninstalling: [],
+  _installing: [],
+  _currentUpdate: null,
+
+  _reinstallLocales: function UP_reinstallLocales(aUpdate, aListener, aPending) {
+    LocaleRepository.getLocales((function(aLocales) {
+      aLocales.forEach(function(aLocale, aIndex, aArray) {
+        let index = aPending.indexOf(aLocale.addon.id);
+        if (index > -1) {
+          aListener._installing.push(aLocale.addon.id);
+          aLocale.addon.install.install();
+        }
+      }, this);
+    }).bind(this), { buildID: aUpdate.buildID });
   },
 
   showUpdateInstalled: function UP_showUpdateInstalled() {
@@ -258,8 +300,39 @@ UpdatePrompt.prototype = {
   // When we have new status text
   onStatus: function(request, context, status, statusText) {
     // NOT IMPL
+  },
+
+  // -------------------------------
+  // AddonListener
+  // -------------------------------
+  getAddonListener: function(aUpdate, aUpdatePrompt) {
+    return {
+      _installing: [],
+      _uninstalling: [],
+      onInstalling: function(aAddon, aNeedsRestart) {
+        let index = this._installing.indexOf(aAddon.id);
+        if (index > -1)
+          this._installing.splice(index, 1);
+    
+        if (this._installing.length == 0) {
+          aUpdatePrompt._showDownloadedNotification(aUpdate);
+          AddonManager.removeAddonListener(this);
+        }
+      },
+    
+      onUninstalling: function(aAddon, aNeedsRestart) {
+        let pending = [];
+        let index = this._uninstalling.indexOf(aAddon.id);
+        if (index > -1) {
+          pending.push(aAddon.id);
+          this._uninstalling.splice(index, 1);
+        }
+        if (this._uninstalling.length == 0)
+          aUpdatePrompt._reinstallLocales(aUpdate, this, pending);
+      }
+    }
   }
-  
+
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdatePrompt]);

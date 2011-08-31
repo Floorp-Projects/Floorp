@@ -2387,7 +2387,7 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
       nsCOMPtr<nsIDownloadHistory> dh =
         do_GetService(NS_DOWNLOADHISTORY_CONTRACTID);
       if (dh)
-        (void)dh->AddDownload(mSource, mReferrer, mStartTime);
+        (void)dh->AddDownload(mSource, mReferrer, mStartTime, mTarget);
     }
 
     // Fetch the entityID, but if we can't get it, don't panic (non-resumable)

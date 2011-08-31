@@ -63,6 +63,18 @@ public:
    */
   void Init(RasterImage* aImage, imgIDecoderObserver* aObserver);
 
+
+  /**
+   * Initializes a decoder whose aImage and aObserver is already being used by a
+   * parent decoder. Decoders may not be re-initialized.
+   *
+   * @param aContainer The image container to decode to.
+   * @param aObserver The observer for decode notification events.
+   *
+   * Notifications Sent: TODO
+   */
+  void InitSharedDecoder(RasterImage* aImage, imgIDecoderObserver* aObserver);
+
   /**
    * Writes data to the decoder.
    *
@@ -81,6 +93,14 @@ public:
    * Notifications Sent: TODO
    */
   void Finish();
+
+  /**
+   * Informs the shared decoder that all the data has been written.
+   * Should only be used if InitSharedDecoder was useed
+   *
+   * Notifications Sent: TODO
+   */
+  void FinishSharedDecoder();
 
   /**
    * Tells the decoder to flush any pending invalidations. This informs the image
@@ -122,6 +142,9 @@ public:
   bool HasDecoderError() { return NS_FAILED(mFailCode); };
   nsresult GetDecoderError() { return mFailCode; };
   void PostResizeError() { PostDataError(); }
+  bool GetDecodeDone() const {
+    return mDecodeDone;
+  }
 
   // flags.  Keep these in sync with imgIContainer.idl.
   // SetDecodeFlags must be called before Init(), otherwise
@@ -176,12 +199,13 @@ protected:
    *
    */
   nsRefPtr<RasterImage> mImage;
-
-  PRUint32 mDecodeFlags;
-
-private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
 
+  PRUint32 mDecodeFlags;
+  bool mDecodeDone;
+  bool mDataError;
+
+private:
   PRUint32 mFrameCount; // Number of frames, including anything in-progress
 
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
@@ -191,8 +215,6 @@ private:
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
-  bool mDecodeDone;
-  bool mDataError;
 };
 
 } // namespace imagelib

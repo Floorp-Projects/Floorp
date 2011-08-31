@@ -464,7 +464,9 @@ struct JSScript {
     jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint32          length;     /* length of code vector */
 
+#ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie1;
+#endif
 
   private:
     size_t          useCount_;  /* Number of times the script has been called
@@ -478,6 +480,15 @@ struct JSScript {
                                    slot array */
     uint16          nTypeSets;  /* number of type sets used in this script for
                                    dynamic type monitoring */
+
+    /*
+     * When non-zero, compile script in single-step mode. The top bit is set and
+     * cleared by setStepMode, as used by JSD. The lower bits are a count,
+     * adjusted by changeStepModeCount, used by the Debugger object. Only
+     * when the bit is clear and the count is zero may we compile the script
+     * without single-step support.
+     */
+    uint32          stepMode;
 
     /*
      * Offsets to various array structures from the end of this script, or
@@ -497,7 +508,7 @@ struct JSScript {
 
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
-    bool            savedCallerFun:1; /* object 0 is caller function */
+    bool            savedCallerFun:1; /* can call getCallerFunction() */
     bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
@@ -513,13 +524,11 @@ struct JSScript {
     bool            hasFunction:1;    /* function is active in 'where' union */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
-    bool            isUncachedEval:1; /* script came from EvaluateScript */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
     bool            createdArgs:1;    /* script has had arguments objects created */
     bool            uninlineable:1;   /* script is considered uninlineable by analysis */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
-    bool            singleStepMode:1; /* compile script in single-step mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
 
@@ -537,7 +546,9 @@ struct JSScript {
     JSPrincipals    *principals;/* principals for this script */
     jschar          *sourceMap; /* source map file or null */
 
+#ifdef JS_CRASH_DIAGNOSTICS
     JSObject        *ownerObject;
+#endif
 
     void setOwnerObject(JSObject *owner);
 
@@ -551,12 +562,6 @@ struct JSScript {
          * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
          *   similar functions never have these objects; such scripts are
          *   explicitly destroyed by the code that created them.
-         * Debugging API functions (JSDebugHooks::newScriptHook;
-         * JS_GetFunctionScript) may reveal sans-script-object Function and
-         * temporary scripts to clients, but clients must never call
-         * JS_NewScriptObject on such scripts: doing so would double-free them,
-         * once from the explicit call to js_DestroyScript, and once when the
-         * script object is garbage collected.
          */
         JSObject    *object;
         JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
@@ -571,7 +576,9 @@ struct JSScript {
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
 
+#ifdef JS_CRASH_DIAGNOSTICS
     uint32          cookie2;
+#endif
 
   public:
 #ifdef JS_ION
@@ -741,6 +748,7 @@ struct JSScript {
     }
 
     inline JSFunction *getFunction(size_t index);
+    inline JSFunction *getCallerFunction();
 
     inline JSObject *getRegExp(size_t index);
 
@@ -768,6 +776,42 @@ struct JSScript {
     }
 
     void copyClosedSlotsTo(JSScript *other);
+
+  private:
+    static const uint32 stepFlagMask = 0x80000000U;
+    static const uint32 stepCountMask = 0x7fffffffU;
+
+    /*
+     * Attempt to recompile with or without single-stepping support, as directed
+     * by stepModeEnabled().
+     */
+    bool recompileForStepMode(JSContext *cx);
+
+    /* Attempt to change this->stepMode to |newValue|. */
+    bool tryNewStepMode(JSContext *cx, uint32 newValue);
+
+  public:
+    /*
+     * Set or clear the single-step flag. If the flag is set or the count
+     * (adjusted by changeStepModeCount) is non-zero, then the script is in
+     * single-step mode. (JSD uses an on/off-style interface; Debugger uses a
+     * count-style interface.)
+     */
+    bool setStepModeFlag(JSContext *cx, bool step);
+    
+    /*
+     * Increment or decrement the single-step count. If the count is non-zero or
+     * the flag (set by setStepModeFlag) is set, then the script is in
+     * single-step mode. (JSD uses an on/off-style interface; Debugger uses a
+     * count-style interface.)
+     */
+    bool changeStepModeCount(JSContext *cx, int delta);
+
+    bool stepModeEnabled() { return !!stepMode; }
+
+#ifdef DEBUG
+    uint32 stepModeCount() { return stepMode & stepCountMask; }
+#endif
 };
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
@@ -836,19 +880,6 @@ js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSObject *owner);
  */
 extern void
 js_DestroyCachedScript(JSContext *cx, JSScript *script);
-
-namespace js {
-
-/*
- * This diagnostic function checks that a compartment's list of scripts
- * contains only valid scripts. It also searches for the target script
- * in the list. If expected is true, it asserts that the target script
- * is found. If expected is false, it asserts that it's not found.
- */
-void
-CheckCompartmentScripts(JSCompartment *comp);
-
-} /* namespace js */
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner);

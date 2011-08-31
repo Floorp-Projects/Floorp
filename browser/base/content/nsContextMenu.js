@@ -79,7 +79,8 @@ nsContextMenu.prototype = {
 
     this.hasPageMenu = false;
     if (!aIsShift) {
-      this.hasPageMenu = PageMenu.init(this.target, aXulMenu);
+      this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(this.target,
+                                                          aXulMenu);
     }
 
     this.isFrameImage = document.getElementById("isFrameImage");

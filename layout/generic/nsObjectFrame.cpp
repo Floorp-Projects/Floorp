@@ -2495,6 +2495,16 @@ nsObjectFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
 }
 
 void
+nsObjectFrame::SetIsDocumentActive(PRBool aIsActive)
+{
+#ifndef XP_MACOSX
+  if (mInstanceOwner) {
+    mInstanceOwner->UpdateDocumentActiveState(aIsActive);
+  }
+#endif
+}
+
+void
 nsObjectFrame::NotifyContentObjectWrapper()
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
@@ -2535,7 +2545,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
 nsIObjectFrame *
 nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 {
-  nsIFrame* child = aRoot->GetFirstChild(nsnull);
+  nsIFrame* child = aRoot->GetFirstPrincipalChild();
 
   while (child) {
     nsIObjectFrame* outFrame = do_QueryFrame(child);

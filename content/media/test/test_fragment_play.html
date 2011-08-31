@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="fragment_play.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+// Fragment parameters to try. These tests
+// try playing the video. Tests for other fragment
+// formats are in test_fragment_noplay.html.
+var gFragmentParams = [
+  { fragment: "", start: null, end: null },
+  { fragment: "#t=,", start: null, end: null },
+  { fragment: "#t=3,3", start: null, end: null },
+  { fragment: "#t=7,3", start: null, end: null },
+  { fragment: "#t=7,15", start: 7, end: null },
+  { fragment: "#t=15,20", start: 9.287981, end: null },
+  { fragment: "#t=5", start: 5, end: null },
+  { fragment: "#t=5.5", start: 5.5, end: null },
+  { fragment: "#t=5,", start: null, end: null },
+  { fragment: "#t=,5", start: 0, end: 5 },
+  { fragment: "#t=2.5,5.5", start: 2.5, end: 5.5, todo: "See Bug 682141" },
+  { fragment: "#t=1,2.5", start: 1, end: 2.5, todo: "See Bug 682141" },
+  { fragment: "#t=,15", start: 0, end: null }
+];
+
+function createTestArray() {
+  var tests = [];
+  var tmpVid = document.createElement("video");
+
+  for (var testNum=0; testNum<gFragmentTests.length; testNum++) {
+    var test = gFragmentTests[testNum];
+    if (!tmpVid.canPlayType(test.type)) {
+      continue;
+    }
+
+    for (var fragNum=0; fragNum<gFragmentParams.length; fragNum++) {
+      var p = gFragmentParams[fragNum];
+      var t = new Object;
+      t.name = test.name + p.fragment;
+      t.type = test.type;
+      t.duration = test.duration;
+      t.start = p.start;
+      t.end = p.end;
+      t.todo = p.todo;
+      tests.push(t);
+    }
+  }
+  return tests;
+}
+
+function startTest(test, token) {
+  if (test.todo) {
+    todo(false, test.todo);
+    return;
+  }
+  var v = document.createElement('video');
+  manager.started(token);
+  v.src = test.name;
+  v.token = token;
+  v.controls = true;
+  document.body.appendChild(v);
+  var name = test.name + " fragment test";
+  var localIs = function(name) { return function(a, b, msg) {
+    is(a, b, name + ": " + msg);
+  }}(name);
+  var localOk = function(name) { return function(a, msg) {
+    ok(a, name + ": " + msg);
+  }}(name);
+  var localFinish = function(v, manager) { return function() {
+    if (v.parentNode) {
+      v.parentNode.removeChild(v);
+    }
+    manager.finished(v.token);
+  }}(v, manager);
+  window['test_fragment_play'](v, test.start, test.end, localIs, localOk, localFinish);
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

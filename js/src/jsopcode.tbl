@@ -370,8 +370,8 @@ OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
  * in the function's u.i.script->upvars() array. The CALL variant computes the
  * callee and this-object in preparation for a JSOP_CALL.
  */
-OPDEF(JSOP_GETFCSLOT,   136,"getfcslot",  NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
-OPDEF(JSOP_CALLFCSLOT,  137,"callfcslot", NULL,       3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
+OPDEF(JSOP_GETFCSLOT,   136,"getfcslot",  NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_CALLFCSLOT,  137,"callfcslot", NULL,       3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET|JOF_CALLOP)
 
 /*
  * Bytecodes that avoid making an arguments object in most cases:

@@ -43,6 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 _SIMPLETEST_FILES =	MozillaLogger.js \
+			LogController.js \
 			quit.js \
 			SimpleTest.js \
 			test.css \

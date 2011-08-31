@@ -80,6 +80,10 @@
 #include "MaemoLocationProvider.h"
 #endif
 
+#ifdef MOZ_ENABLE_QTMOBILITY
+#include "QTMLocationProvider.h"
+#endif
+
 #ifdef ANDROID
 #include "AndroidLocationProvider.h"
 #endif
@@ -145,7 +149,7 @@ public:
   // have to do more, then we can change this around.
   RequestSendLocationEvent(nsIDOMGeoPosition* aPosition,
                            nsGeolocationRequest* aRequest,
-                           nsGeolocation* aLocator = nsnull)
+                           nsGeolocation* aLocator)
     : mPosition(aPosition),
       mRequest(aRequest),
       mLocator(aLocator)
@@ -385,7 +389,9 @@ nsGeolocationRequest::Allow()
     // okay, we can return a cached position
     mAllowed = PR_TRUE;
     
-    nsCOMPtr<nsIRunnable> ev = new RequestSendLocationEvent(lastPosition, this, mLocator);
+     nsCOMPtr<nsIRunnable> ev =
+         new RequestSendLocationEvent(lastPosition, this,
+                                      mIsWatchPositionRequest ? nsnull : mLocator);
     NS_DispatchToMainThread(ev);
   }
 
@@ -458,7 +464,9 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
 void
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 {
-  nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aPosition, this);
+  nsCOMPtr<nsIRunnable> ev  =
+      new RequestSendLocationEvent(aPosition, this,
+                                   mIsWatchPositionRequest ? nsnull : mLocator);
   NS_DispatchToMainThread(ev);
 }
 
@@ -574,6 +582,12 @@ nsresult nsGeolocationService::Init()
 
 #ifdef MOZ_MAEMO_LIBLOCATION
   provider = new MaemoLocationProvider();
+  if (provider)
+    mProviders.AppendObject(provider);
+#endif
+
+#ifdef MOZ_ENABLE_QTMOBILITY
+  provider = new QTMLocationProvider();
   if (provider)
     mProviders.AppendObject(provider);
 #endif

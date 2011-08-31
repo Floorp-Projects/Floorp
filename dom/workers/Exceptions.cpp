@@ -1,4 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -189,7 +190,6 @@ JSClass DOMException::sClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-
 JSPropertySpec DOMException::sProperties[] = {
   { "code", SLOT_code, PROPERTY_FLAGS, GetProperty, js_GetterOnlyPropertyStub },
   { "name", SLOT_name, PROPERTY_FLAGS, GetProperty, js_GetterOnlyPropertyStub },
@@ -277,6 +277,156 @@ DOMException::Create(JSContext* aCx, intN aCode)
   return obj;
 }
 
+class FileException : public PrivatizableBase
+{
+  static JSClass sClass;
+  static JSPropertySpec sProperties[];
+  static JSPropertySpec sStaticProperties[];
+
+  enum SLOT {
+    SLOT_code = 0,
+    SLOT_name,
+
+    SLOT_COUNT
+  };
+
+public:
+  static JSObject*
+  InitClass(JSContext* aCx, JSObject* aObj)
+  {
+    return JS_InitClass(aCx, aObj, NULL, &sClass, Construct, 0, sProperties,
+                        NULL, sStaticProperties, NULL);
+  }
+
+  static JSObject*
+  Create(JSContext* aCx, intN aCode);
+
+private:
+  FileException()
+  {
+    MOZ_COUNT_CTOR(mozilla::dom::workers::exceptions::FileException);
+  }
+
+  ~FileException()
+  {
+    MOZ_COUNT_DTOR(mozilla::dom::workers::exceptions::FileException);
+  }
+
+  static JSBool
+  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  {
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
+                         sClass.name);
+    return false;
+  }
+
+  static void
+  Finalize(JSContext* aCx, JSObject* aObj)
+  {
+    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    delete GetJSPrivateSafeish<FileException>(aCx, aObj);
+  }
+
+  static JSBool
+  GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
+  {
+    JS_ASSERT(JSID_IS_INT(aIdval));
+
+    int32 slot = JSID_TO_INT(aIdval);
+
+    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+
+    if (classPtr != &sClass ||
+        !GetJSPrivateSafeish<FileException>(aCx, aObj)) {
+      JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
+                           JSMSG_INCOMPATIBLE_PROTO, sClass.name,
+                           sProperties[slot].name,
+                           classPtr ? classPtr->name : "object");
+      return false;
+    }
+
+    return JS_GetReservedSlot(aCx, aObj, slot, aVp);
+  }
+
+  static JSBool
+  GetConstant(JSContext* aCx, JSObject* aObj, jsid idval, jsval* aVp)
+  {
+    JS_ASSERT(JSID_IS_INT(idval));
+    *aVp = INT_TO_JSVAL(JSID_TO_INT(idval));
+    return true;
+  }
+};
+
+JSClass FileException::sClass = {
+  "FileException",
+  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+JSPropertySpec FileException::sProperties[] = {
+  { "code", SLOT_code, PROPERTY_FLAGS, GetProperty, js_GetterOnlyPropertyStub },
+  { "name", SLOT_name, PROPERTY_FLAGS, GetProperty, js_GetterOnlyPropertyStub },
+  { 0, 0, 0, NULL, NULL }
+};
+
+JSPropertySpec FileException::sStaticProperties[] = {
+
+#define EXCEPTION_ENTRY(_name) \
+  { #_name, FILE_##_name, CONSTANT_FLAGS, GetConstant, NULL },
+
+  EXCEPTION_ENTRY(NOT_FOUND_ERR)
+  EXCEPTION_ENTRY(SECURITY_ERR)
+  EXCEPTION_ENTRY(ABORT_ERR)
+  EXCEPTION_ENTRY(NOT_READABLE_ERR)
+  EXCEPTION_ENTRY(ENCODING_ERR)
+
+#undef EXCEPTION_ENTRY
+
+  { 0, 0, 0, NULL, NULL }
+};
+
+// static
+JSObject*
+FileException::Create(JSContext* aCx, intN aCode)
+{
+  JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
+  if (!obj) {
+    return NULL;
+  }
+
+  size_t foundIndex = size_t(-1);
+  for (size_t index = 0;
+       index < JS_ARRAY_LENGTH(sStaticProperties) - 1;
+       index++) {
+    if (sStaticProperties[index].tinyid == aCode) {
+      foundIndex = index;
+      break;
+    }
+  }
+
+  JS_ASSERT(foundIndex != size_t(-1));
+
+  JSString* name = JS_NewStringCopyZ(aCx, sStaticProperties[foundIndex].name);
+  if (!name) {
+    return NULL;
+  }
+
+  if (!JS_SetReservedSlot(aCx, obj, SLOT_code, INT_TO_JSVAL(aCode)) ||
+      !JS_SetReservedSlot(aCx, obj, SLOT_name, STRING_TO_JSVAL(name))) {
+    return NULL;
+  }
+
+  FileException* priv = new FileException();
+  if (!SetJSPrivateSafeish(aCx, obj, priv)) {
+    delete priv;
+    return NULL;
+  }
+
+  return obj;
+}
+
 } // anonymous namespace
 
 BEGIN_WORKERS_NAMESPACE
@@ -286,13 +436,23 @@ namespace exceptions {
 bool
 InitClasses(JSContext* aCx, JSObject* aGlobal)
 {
-  return !!DOMException::InitClass(aCx, aGlobal);
+  return DOMException::InitClass(aCx, aGlobal) &&
+         FileException::InitClass(aCx, aGlobal);
 }
 
 void
 ThrowDOMExceptionForCode(JSContext* aCx, intN aCode)
 {
   JSObject* exception = DOMException::Create(aCx, aCode);
+  JS_ASSERT(exception);
+
+  JS_SetPendingException(aCx, OBJECT_TO_JSVAL(exception));
+}
+
+void
+ThrowFileExceptionForCode(JSContext* aCx, intN aCode)
+{
+  JSObject* exception = FileException::Create(aCx, aCode);
   JS_ASSERT(exception);
 
   JS_SetPendingException(aCx, OBJECT_TO_JSVAL(exception));

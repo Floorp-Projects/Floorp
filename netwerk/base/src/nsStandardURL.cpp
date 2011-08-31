@@ -400,7 +400,6 @@ nsStandardURL::Clear()
     mBasename.Reset();
 
     mExtension.Reset();
-    mParam.Reset();
     mQuery.Reset();
     mRef.Reset();
 
@@ -511,16 +510,16 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // buffers for holding escaped url segments (these will remain empty unless
     // escaping is required).
     nsCAutoString encUsername, encPassword, encHost, encDirectory,
-      encBasename, encExtension, encParam, encQuery, encRef;
+      encBasename, encExtension, encQuery, encRef;
     PRBool useEncUsername, useEncPassword, useEncHost, useEncDirectory,
-      useEncBasename, useEncExtension, useEncParam, useEncQuery, useEncRef;
+      useEncBasename, useEncExtension, useEncQuery, useEncRef;
     nsCAutoString portbuf;
 
     //
     // escape each URL segment, if necessary, and calculate approximate normalized
     // spec length.
     //
-    // [scheme://][username[:password]@]host[:port]/path[;param][?query_string][#ref]
+    // [scheme://][username[:password]@]host[:port]/path[?query_string][#ref]
 
     PRUint32 approxLen = 0;
 
@@ -556,9 +555,6 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
         // These next ones *always* add their leading character even if length is 0
         // Handles items like "http://#"
-        // ;param
-        if (mParam.mLen >= 0)
-            approxLen += 1 + encoder.EncodeSegmentCount(spec, mParam,     esc_Param,         encParam,     useEncParam);
         // ?query
         if (mQuery.mLen >= 0)
             approxLen += 1 + queryEncoder.EncodeSegmentCount(spec, mQuery, esc_Query,        encQuery,     useEncQuery);
@@ -678,10 +674,6 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         // calculate corrected filepath length
         mFilepath.mLen = i - mFilepath.mPos;
 
-        if (mParam.mLen >= 0) {
-            buf[i++] = ';';
-            i = AppendSegmentToBuf(buf, i, spec, mParam, &encParam, useEncParam);
-        }
         if (mQuery.mLen >= 0) {
             buf[i++] = '?';
             i = AppendSegmentToBuf(buf, i, spec, mQuery, &encQuery, useEncQuery);
@@ -838,13 +830,11 @@ nsStandardURL::ParsePath(const char *spec, PRUint32 pathPos, PRInt32 pathLen)
 
     nsresult rv = mParser->ParsePath(spec + pathPos, pathLen,
                                      &mFilepath.mPos, &mFilepath.mLen,
-                                     &mParam.mPos, &mParam.mLen,
                                      &mQuery.mPos, &mQuery.mLen,
                                      &mRef.mPos, &mRef.mLen);
     if (NS_FAILED(rv)) return rv;
 
     mFilepath.mPos += pathPos;
-    mParam.mPos += pathPos;
     mQuery.mPos += pathPos;
     mRef.mPos += pathPos;
 
@@ -996,6 +986,21 @@ NS_IMETHODIMP
 nsStandardURL::GetSpec(nsACString &result)
 {
     result = mSpec;
+    return NS_OK;
+}
+
+// result may contain unescaped UTF-8 characters
+NS_IMETHODIMP
+nsStandardURL::GetSpecIgnoringRef(nsACString &result)
+{
+    // URI without ref is 0 to one char before ref
+    if (mRef.mLen >= 0) {
+        URLSegment noRef(0, mRef.mPos - 1);
+
+        result = Segment(noRef);
+    } else {
+        result = mSpec;
+    }
     return NS_OK;
 }
 
@@ -1193,7 +1198,6 @@ nsStandardURL::SetSpec(const nsACString &input)
         LOG((" directory = (%u,%d)\n", mDirectory.mPos, mDirectory.mLen));
         LOG((" basename  = (%u,%d)\n", mBasename.mPos,  mBasename.mLen));
         LOG((" extension = (%u,%d)\n", mExtension.mPos, mExtension.mLen));
-        LOG((" param     = (%u,%d)\n", mParam.mPos,     mParam.mLen));
         LOG((" query     = (%u,%d)\n", mQuery.mPos,     mQuery.mLen));
         LOG((" ref       = (%u,%d)\n", mRef.mPos,       mRef.mLen));
     }
@@ -1618,7 +1622,6 @@ nsStandardURL::SetPath(const nsACString &input)
         // these are no longer defined
         mBasename.mLen = -1;
         mExtension.mLen = -1;
-        mParam.mLen = -1;
         mQuery.mLen = -1;
         mRef.mLen = -1;
     }
@@ -1669,8 +1672,7 @@ nsStandardURL::EqualsInternal(nsIURI *unknownOther,
         !SegmentIs(mQuery, other->mSpec.get(), other->mQuery) ||
         !SegmentIs(mUsername, other->mSpec.get(), other->mUsername) ||
         !SegmentIs(mPassword, other->mSpec.get(), other->mPassword) ||
-        Port() != other->Port() ||
-        !SegmentIs(mParam, other->mSpec.get(), other->mParam)) {
+        Port() != other->Port()) {
         // No need to compare files or other URI parts -- these are different
         // beasties
         *result = PR_FALSE;
@@ -1780,7 +1782,6 @@ nsStandardURL::CloneInternal(nsStandardURL::RefHandlingEnum refHandlingMode,
     clone->mDirectory = mDirectory;
     clone->mBasename = mBasename;
     clone->mExtension = mExtension;
-    clone->mParam = mParam;
     clone->mQuery = mQuery;
     clone->mRef = mRef;
     clone->mOriginCharset = mOriginCharset;
@@ -2005,7 +2006,7 @@ nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
 
     // backup to just after previous slash so we grab an appropriate path
     // segment such as a directory (not partial segments)
-    // todo:  also check for file matches which include '?', '#', and ';'
+    // todo:  also check for file matches which include '?' and '#'
     while ((thisIndex != startCharPos) && (*(thisIndex-1) != '/'))
         thisIndex--;
 
@@ -2086,7 +2087,7 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
 
     // backup to just after previous slash so we grab an appropriate path
     // segment such as a directory (not partial segments)
-    // todo:  also check for file matches with '#', '?' and ';'
+    // todo:  also check for file matches with '#' and '?'
     while ((*(thatIndex-1) != '/') && (thatIndex != startCharPos))
         thatIndex--;
 
@@ -2122,14 +2123,6 @@ nsStandardURL::GetFilePath(nsACString &result)
 
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
-nsStandardURL::GetParam(nsACString &result)
-{
-    result = Param();
-    return NS_OK;
-}
-
-// result may contain unescaped UTF-8 characters
-NS_IMETHODIMP
 nsStandardURL::GetQuery(nsACString &result)
 {
     result = Query();
@@ -2141,6 +2134,13 @@ NS_IMETHODIMP
 nsStandardURL::GetRef(nsACString &result)
 {
     result = Ref();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetHasRef(PRBool *result)
+{
+    *result = (mRef.mLen >= 0);
     return NS_OK;
 }
 
@@ -2241,8 +2241,8 @@ nsStandardURL::SetFilePath(const nsACString &input)
     }
     else if (mPath.mLen > 1) {
         mSpec.Cut(mPath.mPos + 1, mFilepath.mLen - 1);
-        // left shift param, query, and ref
-        ShiftFromParam(1 - mFilepath.mLen);
+        // left shift query, and ref
+        ShiftFromQuery(1 - mFilepath.mLen);
         // these contain only a '/'
         mPath.mLen = 1;
         mDirectory.mLen = 1;
@@ -2252,13 +2252,6 @@ nsStandardURL::SetFilePath(const nsACString &input)
         mExtension.mLen = -1;
     }
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardURL::SetParam(const nsACString &input)
-{
-    NS_NOTYETIMPLEMENTED("");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2481,7 +2474,7 @@ nsStandardURL::SetFileName(const nsACString &input)
         }
     }
     if (shift) {
-        ShiftFromParam(shift);
+        ShiftFromQuery(shift);
         mFilepath.mLen += shift;
         mPath.mLen += shift;
     }
@@ -2778,9 +2771,6 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     rv = ReadSegment(stream, mExtension);
     if (NS_FAILED(rv)) return rv;
 
-    rv = ReadSegment(stream, mParam);
-    if (NS_FAILED(rv)) return rv;
-
     rv = ReadSegment(stream, mQuery);
     if (NS_FAILED(rv)) return rv;
 
@@ -2867,9 +2857,6 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
     rv = WriteSegment(stream, mExtension);
     if (NS_FAILED(rv)) return rv;
 
-    rv = WriteSegment(stream, mParam);
-    if (NS_FAILED(rv)) return rv;
-
     rv = WriteSegment(stream, mQuery);
     if (NS_FAILED(rv)) return rv;
 
@@ -2942,7 +2929,6 @@ nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
         !ReadSegment(aMsg, aIter, mDirectory) ||
         !ReadSegment(aMsg, aIter, mBasename) ||
         !ReadSegment(aMsg, aIter, mExtension) ||
-        !ReadSegment(aMsg, aIter, mParam) ||
         !ReadSegment(aMsg, aIter, mQuery) ||
         !ReadSegment(aMsg, aIter, mRef) ||
         !ReadParam(aMsg, aIter, &mOriginCharset) ||
@@ -2983,7 +2969,6 @@ nsStandardURL::Write(IPC::Message *aMsg)
     WriteSegment(aMsg, mDirectory);
     WriteSegment(aMsg, mBasename);
     WriteSegment(aMsg, mExtension);
-    WriteSegment(aMsg, mParam);
     WriteSegment(aMsg, mQuery);
     WriteSegment(aMsg, mRef);
     WriteParam(aMsg, mOriginCharset);

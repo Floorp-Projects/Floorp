@@ -44,8 +44,6 @@
         height="300"
         title="Chrome Context Menu Test w/Plugin Focus">
 
-<script type="application/javascript" 
-        src="chrome://mochikit/content/MochiKit/packed.js"></script>
 <script type="application/javascript"
         src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 <script type="application/javascript"

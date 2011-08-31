@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389797
 -->
 <head>
   <title>Test for Bug 389797</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -36,7 +35,9 @@ function HTML_TAG(aTagName, aImplClass) {
       "nsIDOMEventTarget",
       "nsIDOMNSHTMLElement",
       "nsIDOMElementCSSInlineStyle",
-      "nsIDOMNodeSelector" ];
+      "nsIDOMNodeSelector",
+      "nsITouchEventReceiver",
+      "nsIInlineEventHandlers" ];
 
   // Some interfaces don't appear in classinfo because other interfaces that
   // inherit from them do.

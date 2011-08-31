@@ -209,7 +209,10 @@ const char *const js_common_atom_names[] = {
 
     "WeakMap",                  /* WeakMapAtom                  */
 
-    "byteLength"                /* byteLengthAtom               */
+    "byteLength",               /* byteLengthAtom               */
+
+    "return",                   /* returnAtom                   */
+    "throw"                     /* throwAtom                    */
 };
 
 void
@@ -771,9 +774,7 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
         return true;
     }
 
-    if (!js_IsFunctionQName(cx, &idval.toObject(), idp))
-        return JS_FALSE;
-    if (!JSID_IS_VOID(*idp))
+    if (js_GetLocalNameFromFunctionQName(&idval.toObject(), idp, cx))
         return true;
 
     return js_ValueToStringId(cx, idval, idp);
@@ -791,9 +792,7 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
         return true;
     }
 
-    if (!js_IsFunctionQName(cx, &idval.toObject(), idp))
-        return JS_FALSE;
-    if (!JSID_IS_VOID(*idp)) {
+    if (js_GetLocalNameFromFunctionQName(&idval.toObject(), idp, cx)) {
         *vp = IdToValue(*idp);
         return true;
     }

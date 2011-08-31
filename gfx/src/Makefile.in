@@ -55,8 +55,6 @@ FORCE_USE_PIC  = 1
 XPIDLSRCS = \
 	nsIFontEnumerator.idl \
 	nsIScriptableRegion.idl \
-	gfxIFormats.idl \
-	gfxidltypes.idl \
 	$(NULL)
         
 EXPORTS	= \

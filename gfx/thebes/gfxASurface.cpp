@@ -84,6 +84,7 @@
 #include "nsCOMPtr.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStringGlue.h"
 
 using mozilla::CheckedInt;
 
@@ -530,7 +531,6 @@ gfxASurface::FastMovePixels(const nsIntRect& aSourceRect,
                             const nsIntPoint& aDestTopLeft)
 {
     // Used when the backend can internally handle self copies.
-    gfxIntSize size = GetSize();
     nsIntRect dest(aDestTopLeft, aSourceRect.Size());
     
     nsRefPtr<gfxContext> ctx = new gfxContext(this);

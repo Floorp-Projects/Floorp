@@ -1293,6 +1293,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     i = ac; // i will be decremented immediately thanks to the for loop
   }
 
+#ifdef MOZ_MEDIA
   // If we've got HTML audio or video, add the controls attribute, because
   // otherwise the content is unplayable with scripts removed.
   if (aElement->IsHTML(nsGkAtoms::video) ||
@@ -1302,6 +1303,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                       EmptyString(),
                       PR_FALSE);
   }
+#endif
 }
 
 PRBool

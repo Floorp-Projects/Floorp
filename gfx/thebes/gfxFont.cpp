@@ -651,15 +651,12 @@ void gfxFontFamily::LocalizedName(nsAString& aLocalizedName)
 void
 gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
 {
-    if (!mHasStyles) {
+    if (!mHasStyles)
         FindStyleVariations();
-    }
 
-    if (!TestCharacterMap(aMatchData->mCh)) {
-        // none of the faces in the family support the required char,
-        // so bail out immediately
-        return;
-    }
+    // xxx - optimization point - keep a bit vector with the union of supported unicode ranges
+    // by all fonts for this family and bail immediately if the character is not in any of
+    // this family's cmaps
 
     // iterate over fonts
     PRUint32 numFonts = mAvailableFonts.Length();
@@ -1594,7 +1591,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeed
         extents.y_bearing >= -fontMetrics.maxAscent &&
         extents.height + extents.y_bearing <= fontMetrics.maxDescent) {
         PRUint32 appUnitsWidth =
-            PRUint32(NS_ceil((extents.x_bearing + extents.width)*appUnitsPerDevUnit));
+            PRUint32(ceil((extents.x_bearing + extents.width)*appUnitsPerDevUnit));
         if (appUnitsWidth < gfxGlyphExtents::INVALID_WIDTH) {
             aExtents->SetContainedGlyphWidthAppUnits(aGlyphID, PRUint16(appUnitsWidth));
             return;
@@ -1713,9 +1710,9 @@ RoundToNearestMultiple(double aValue, double aFraction)
 void gfxFont::CalculateDerivedMetrics(Metrics& aMetrics)
 {
     aMetrics.maxAscent =
-        NS_ceil(RoundToNearestMultiple(aMetrics.maxAscent, 1/1024.0));
+        ceil(RoundToNearestMultiple(aMetrics.maxAscent, 1/1024.0));
     aMetrics.maxDescent =
-        NS_ceil(RoundToNearestMultiple(aMetrics.maxDescent, 1/1024.0));
+        ceil(RoundToNearestMultiple(aMetrics.maxDescent, 1/1024.0));
 
     if (aMetrics.xHeight <= 0) {
         // only happens if we couldn't find either font metrics
@@ -1828,13 +1825,13 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
     // If strikeout line is overflowed from the ascent, the line should be resized and moved for
     // that being in the ascent space.
     // Note that the strikeoutOffset is *middle* of the strikeout line position.
-    gfxFloat halfOfStrikeoutSize = NS_floor(aMetrics->strikeoutSize / 2.0 + 0.5);
+    gfxFloat halfOfStrikeoutSize = floor(aMetrics->strikeoutSize / 2.0 + 0.5);
     if (halfOfStrikeoutSize + aMetrics->strikeoutOffset > aMetrics->maxAscent) {
         if (aMetrics->strikeoutSize > aMetrics->maxAscent) {
             aMetrics->strikeoutSize = NS_MAX(aMetrics->maxAscent, 1.0);
-            halfOfStrikeoutSize = NS_floor(aMetrics->strikeoutSize / 2.0 + 0.5);
+            halfOfStrikeoutSize = floor(aMetrics->strikeoutSize / 2.0 + 0.5);
         }
-        gfxFloat ascent = NS_floor(aMetrics->maxAscent + 0.5);
+        gfxFloat ascent = floor(aMetrics->maxAscent + 0.5);
         aMetrics->strikeoutOffset = NS_MAX(halfOfStrikeoutSize, ascent / 2.0);
     }
 
@@ -2487,6 +2484,17 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                       runStart, runLimit, runScript);
     }
 
+    // It's possible for CoreText to omit glyph runs if it decides they contain
+    // only invisibles (e.g., U+FEFF, see reftest 474417-1). In this case, we
+    // need to eliminate them from the glyph run array to avoid drawing "partial
+    // ligatures" with the wrong font.
+    // We don't do this during InitScriptRun (or gfxFont::InitTextRun) because
+    // it will iterate back over all glyphruns in the textrun, which leads to
+    // pathologically-bad perf in the case where a textrun contains many script
+    // changes (see bug 680402) - we'd end up re-sanitizing all the earlier runs
+    // every time a new script subrun is processed.
+    aTextRun->SanitizeGlyphRuns();
+
     aTextRun->SortGlyphRuns();
 }
 
@@ -2544,7 +2552,7 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                     gfxFloat wid = mainFont->SynthesizeSpaceWidth(ch);
                     if (wid >= 0.0) {
                         nscoord advance =
-                            aTextRun->GetAppUnitsPerDevUnit() * NS_floor(wid + 0.5);
+                            aTextRun->GetAppUnitsPerDevUnit() * floor(wid + 0.5);
                         gfxTextRun::CompressedGlyph g;
                         if (gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance)) {
                             aTextRun->SetSimpleGlyph(index,
@@ -2568,13 +2576,6 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 
         runStart += matchedLength;
     }
-
-    // It's possible for CoreText to omit glyph runs if it decides they contain
-    // only invisibles (e.g., U+FEFF, see reftest 474417-1). In this case, we
-    // need to eliminate them from the glyph run array to avoid drawing "partial
-    // ligatures" with the wrong font.
-    aTextRun->SanitizeGlyphRuns();
-
 }
 
 
@@ -2612,22 +2613,6 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
         if (font->HasCharacter(aCh)) {
             *aMatchType = gfxTextRange::kFontGroup;
             return font.forget();
-        }
-        // check other faces of the family
-        gfxFontFamily *family = font->GetFontEntry()->Family();
-        if (family && family->TestCharacterMap(aCh)) {
-            FontSearch matchData(aCh, font);
-            family->FindFontForChar(&matchData);
-            gfxFontEntry *fe = matchData.mBestMatch;
-            if (fe) {
-                PRBool needsBold =
-                    font->GetStyle()->weight >= 600 && !fe->IsBold();
-                selectedFont =
-                    fe->FindOrMakeFont(font->GetStyle(), needsBold);
-                if (selectedFont) {
-                    return selectedFont.forget();
-                }
-            }
         }
     }
 
@@ -4064,6 +4049,9 @@ gfxTextRun::SortGlyphRuns()
     }
 }
 
+// Note that SanitizeGlyphRuns scans all glyph runs in the textrun;
+// therefore we only call it once, at the end of textrun construction,
+// NOT incrementally as each glyph run is added (bug 680402).
 void
 gfxTextRun::SanitizeGlyphRuns()
 {

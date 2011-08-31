@@ -48,6 +48,7 @@
 #include "jstl.h"
 #include "jsprvtd.h"
 #include "jsvalue.h"
+#include "jshashtable.h"
 
 namespace js {
     class CallArgs;
@@ -91,7 +92,7 @@ class Type
 
     bool isPrimitive(JSValueType type) const {
         JS_ASSERT(type < JSVAL_TYPE_OBJECT);
-        return type == (JSValueType) data;
+        return (jsuword) type == data;
     }
 
     JSValueType primitive() const {
@@ -177,8 +178,13 @@ inline Type GetValueType(JSContext *cx, const Value &val);
  * which occurs while we are not actively working with inference or other
  * analysis information, we clear out all generated constraints, all type sets
  * describing stack types within scripts, and (normally) all data describing
- * type objects describing particular JS objects (see the lazy type objects
- * overview below). JIT code depends on this data and is cleared as well.
+ * type objects for particular JS objects (see the lazy type objects overview
+ * below). JIT code depends on this data and is cleared as well.
+ *
+ * All this data is allocated into compartment->pool. Some type inference data
+ * lives across GCs: type sets for scripts and non-singleton type objects, and
+ * propeties for such type objects. This data is also allocated into
+ * compartment->pool, but everything still live is copied to a new arena on GC.
  */
 
 /*
@@ -246,33 +252,30 @@ enum {
     /* Mask of normal type flags on a type set. */
     TYPE_FLAG_BASE_MASK           = 0x000100ff,
 
-    /* Flag for type sets which are cleared on GC. */
-    TYPE_FLAG_INTERMEDIATE_SET    = 0x00020000,
-
     /* Flags for type sets which are on object properties. */
 
     /*
      * Whether there are subset constraints propagating the possible types
      * for this property inherited from the object's prototypes. Reset on GC.
      */
-    TYPE_FLAG_PROPAGATED_PROPERTY = 0x00040000,
+    TYPE_FLAG_PROPAGATED_PROPERTY = 0x00020000,
 
     /* Whether this property has ever been directly written. */
-    TYPE_FLAG_OWN_PROPERTY        = 0x00080000,
+    TYPE_FLAG_OWN_PROPERTY        = 0x00040000,
 
     /*
      * Whether the property has ever been deleted or reconfigured to behave
      * differently from a normal native property (e.g. made non-writable or
      * given a scripted getter or setter).
      */
-    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00100000,
+    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00080000,
 
     /*
      * Whether the property is definitely in a particular inline slot on all
      * objects from which it has not been deleted or reconfigured. Implies
      * OWN_PROPERTY and unlike OWN/CONFIGURED property, this cannot change.
      */
-    TYPE_FLAG_DEFINITE_PROPERTY   = 0x00200000,
+    TYPE_FLAG_DEFINITE_PROPERTY   = 0x00100000,
 
     /* If the property is definite, mask and shift storing the slot. */
     TYPE_FLAG_DEFINITE_MASK       = 0x0f000000,
@@ -369,25 +372,27 @@ class TypeSet
     void print(JSContext *cx);
 
     inline void sweep(JSContext *cx, JSCompartment *compartment);
-    size_t dynamicSize();
+    inline size_t dynamicSize();
 
     /* Whether this set contains a specific type. */
     inline bool hasType(Type type);
 
-    TypeFlags baseFlags() { return flags & TYPE_FLAG_BASE_MASK; }
-    bool unknown() { return !!(flags & TYPE_FLAG_UNKNOWN); }
-    bool unknownObject() { return !!(flags & (TYPE_FLAG_UNKNOWN | TYPE_FLAG_ANYOBJECT)); }
+    TypeFlags baseFlags() const { return flags & TYPE_FLAG_BASE_MASK; }
+    bool unknown() const { return !!(flags & TYPE_FLAG_UNKNOWN); }
+    bool unknownObject() const { return !!(flags & (TYPE_FLAG_UNKNOWN | TYPE_FLAG_ANYOBJECT)); }
 
-    bool hasAnyFlag(TypeFlags flags) {
+    bool empty() const { return !baseFlags() && !baseObjectCount(); }
+
+    bool hasAnyFlag(TypeFlags flags) const {
         JS_ASSERT((flags & TYPE_FLAG_BASE_MASK) == flags);
         return !!(baseFlags() & flags);
     }
 
-    bool isOwnProperty(bool configurable) {
+    bool isOwnProperty(bool configurable) const {
         return flags & (configurable ? TYPE_FLAG_CONFIGURED_PROPERTY : TYPE_FLAG_OWN_PROPERTY);
     }
-    bool isDefiniteProperty() { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
-    unsigned definiteSlot() {
+    bool isDefiniteProperty() const { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
+    unsigned definiteSlot() const {
         JS_ASSERT(isDefiniteProperty());
         return flags >> TYPE_FLAG_DEFINITE_SHIFT;
     }
@@ -411,8 +416,6 @@ class TypeSet
     inline JSObject *getSingleObject(unsigned i);
     inline TypeObject *getTypeObject(unsigned i);
 
-    bool intermediate() { return !!(flags & TYPE_FLAG_INTERMEDIATE_SET); }
-    void setIntermediate() { JS_ASSERT(!flags); flags = TYPE_FLAG_INTERMEDIATE_SET; }
     void setOwnProperty(bool configurable) {
         flags |= TYPE_FLAG_OWN_PROPERTY;
         if (configurable)
@@ -445,8 +448,8 @@ class TypeSet
     void addLazyArguments(JSContext *cx, TypeSet *target);
 
     /*
-     * Make an intermediate type set with the specified debugging name,
-     * not embedded in another structure.
+     * Make an type set with the specified debugging name, not embedded in
+     * another structure.
      */
     static TypeSet *make(JSContext *cx, const char *name);
 
@@ -497,13 +500,12 @@ class TypeSet
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton(JSContext *cx, bool freeze = true);
 
-    static bool
-    SweepTypeSet(JSContext *cx, JSCompartment *compartment, TypeSet *types);
-
     inline void clearObjects();
 
   private:
-    inline uint32 baseObjectCount() const;
+    uint32 baseObjectCount() const {
+        return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
+    }
     inline void setBaseObjectCount(uint32 count);
 };
 
@@ -566,6 +568,13 @@ struct TypeResult
  * grows to match the set of possible types --- then the result of the bytecode
  * no longer needs to be dynamically checked (unless the set of possible types
  * grows, triggering the generation of new type barriers).
+ *
+ * Barriers are only relevant for accesses on properties whose types inference
+ * actually tracks (see propertySet comment under TypeObject). Accesses on
+ * other properties may be able to produce additional unobserved types even
+ * without a barrier present, and can only be compiled to jitcode with special
+ * knowledge of the property in question (e.g. for lengths of arrays, or
+ * elements of typed arrays).
  */
 
 /*
@@ -589,8 +598,16 @@ struct TypeBarrier
      */
     Type type;
 
-    TypeBarrier(TypeSet *target, Type type)
-        : next(NULL), target(target), type(type)
+    /*
+     * If specified, this barrier can be removed if object has a non-undefined
+     * value in property id.
+     */
+    JSObject *singleton;
+    jsid singletonId;
+
+    TypeBarrier(TypeSet *target, Type type, JSObject *singleton, jsid singletonId)
+        : next(NULL), target(target), type(type),
+          singleton(singleton), singletonId(singletonId)
     {}
 };
 
@@ -605,6 +622,10 @@ struct Property
 
     Property(jsid id)
         : id(id)
+    {}
+
+    Property(const Property &o)
+        : id(o.id), types(o.types)
     {}
 
     static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
@@ -686,14 +707,6 @@ struct TypeNewScript
 /* Type information about an object accessed by a script. */
 struct TypeObject : gc::Cell
 {
-#ifdef DEBUG
-    /* Name of this object. */
-    jsid name_;
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
-#endif
-
     /* Prototype shared by objects using this type. */
     JSObject *proto;
 
@@ -734,35 +747,39 @@ struct TypeObject : gc::Cell
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
      * types of all integer indexes of the object, and/or JSID_EMPTY, holding
-     * constraints listening to changes to the object's state. Correspondence
-     * between the properties of a TypeObject and the properties of
-     * script-visible JSObjects (not Call, Block, etc.) which have that type is
-     * as follows:
+     * constraints listening to changes to the object's state.
      *
-     * - If the type has unknownProperties(), the possible properties and value
-     *   types for associated JSObjects are unknown.
+     * The type sets in the properties of a type object describe the possible
+     * values that can be read out of that property in actual JS objects.
+     * Properties only account for native properties (those with a slot and no
+     * specialized getter hook) and the elements of dense arrays. For accesses
+     * on such properties, the correspondence is as follows:
      *
-     * - Otherwise, for any JSObject obj with TypeObject type, and any jsid id
-     *   which is a property in obj, after obj->getProperty(id) the property in
-     *   type for id must reflect the result of the getProperty. The result is
-     *   additionally allowed to be undefined for properties of global objects
-     *   defined with 'var' but not yet written.
+     * 1. If the type has unknownProperties(), the possible properties and
+     *    value types for associated JSObjects are unknown.
      *
-     * - Additionally, if id is a normal owned native property within obj, then
-     *   after the setProperty or defineProperty which wrote its value, the
-     *   property in type for id must reflect that type.
+     * 2. Otherwise, for any JSObject obj with TypeObject type, and any jsid id
+     *    which is a property in obj, before obj->getProperty(id) the property
+     *    in type for id must reflect the result of the getProperty.
+     *
+     *    There is an exception for properties of singleton JS objects which
+     *    are undefined at the point where the property was (lazily) generated.
+     *    In such cases the property type set will remain empty, and the
+     *    'undefined' type will only be added after a subsequent assignment or
+     *    deletion. After these properties have been assigned a defined value,
+     *    the only way they can become undefined again is after such an assign
+     *    or deletion.
      *
      * We establish these by using write barriers on calls to setProperty and
-     * defineProperty which are on native properties, and read barriers on
-     * getProperty that go through a class hook or special PropertyOp.
+     * defineProperty which are on native properties, and by using the inference
+     * analysis to determine the side effects of code which is JIT-compiled.
      */
     Property **propertySet;
 
     /* If this is an interpreted function, the corresponding script. */
     JSScript *functionScript;
 
-    /* Make an object with the specified name. */
-    inline TypeObject(jsid id, JSObject *proto, bool isFunction, bool unknown);
+    inline TypeObject(JSObject *proto, bool isFunction, bool unknown);
 
     bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
 
@@ -803,8 +820,6 @@ struct TypeObject : gc::Cell
     /* Get a property only if it already exists. */
     inline TypeSet *maybeGetProperty(JSContext *cx, jsid id);
 
-    inline const char * name();
-
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
 
@@ -829,9 +844,11 @@ struct TypeObject : gc::Cell
     void getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force = false);
 
     void print(JSContext *cx);
-    void trace(JSTracer *trc, bool weak = false);
 
     inline void clearProperties();
+    inline void sweep(JSContext *cx);
+
+    inline size_t dynamicSize();
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -904,7 +921,6 @@ struct TypeScript
     static inline TypeSet *ThisTypes(JSScript *script);
     static inline TypeSet *ArgTypes(JSScript *script, unsigned i);
     static inline TypeSet *LocalTypes(JSScript *script, unsigned i);
-    static inline TypeSet *UpvarTypes(JSScript *script, unsigned i);
 
     /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
     static inline TypeSet *SlotTypes(JSScript *script, unsigned slot);
@@ -949,7 +965,6 @@ struct TypeScript
     static inline void SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::Value &value);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type);
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value);
-    static inline void SetUpvar(JSContext *cx, JSScript *script, unsigned upvar, const js::Value &value);
 
     static void Sweep(JSContext *cx, JSScript *script);
     void destroy();
@@ -1047,8 +1062,8 @@ struct TypeCompartment
     /* Resolve pending type registrations, excluding delayed ones. */
     inline void resolvePending(JSContext *cx);
 
-    /* Prints results of this compartment if spew is enabled, checks for warnings. */
-    void print(JSContext *cx);
+    /* Prints results of this compartment if spew is enabled or force is set. */
+    void print(JSContext *cx, bool force);
 
     /*
      * Make a function or non-function object associated with an optional
@@ -1057,7 +1072,6 @@ struct TypeCompartment
      * js_ObjectClass).
      */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              const char *base, const char *postfix,
                               JSProtoKey kind, JSObject *proto, bool unknown = false);
 
     /* Make an object for an allocation site. */
@@ -1097,6 +1111,7 @@ const char * InferSpewColor(TypeSet *types);
 
 void InferSpew(SpewChannel which, const char *fmt, ...);
 const char * TypeString(Type type);
+const char * TypeObjectString(TypeObject *type);
 
 /* Check that the type property for id in obj contains value. */
 bool TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &value);
@@ -1108,6 +1123,7 @@ inline const char * InferSpewColor(TypeConstraint *constraint) { return NULL; }
 inline const char * InferSpewColor(TypeSet *types) { return NULL; }
 inline void InferSpew(SpewChannel which, const char *fmt, ...) {}
 inline const char * TypeString(Type type) { return NULL; }
+inline const char * TypeObjectString(TypeObject *type) { return NULL; }
 
 #endif
 

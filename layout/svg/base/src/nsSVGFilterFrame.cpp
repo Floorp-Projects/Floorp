@@ -135,7 +135,6 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   
   gfxRect filterRegion = nsSVGUtils::GetRelativeRect(filterUnits,
     filter->mLengthAttributes, bbox, aTarget);
-  filterRegion.RoundOut();
 
   if (filterRegion.Width() <= 0 || filterRegion.Height() <= 0) {
     // 0 disables rendering, < 0 is error. dispatch error console warning
@@ -144,18 +143,28 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   }
 
   gfxMatrix userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
+  if (userToDeviceSpace.IsSingular()) {
+    // nothing to draw
+    return;
+  }
   
   // Calculate filterRes (the width and height of the pixel buffer of the
   // temporary offscreen surface that we'll paint into):
 
   gfxIntSize filterRes;
-  if (filter->mIntegerPairAttributes[nsSVGFilterElement::FILTERRES].IsExplicitlySet()) {
-    PRInt32 filterResX =
-      filter->mIntegerPairAttributes[nsSVGFilterElement::FILTERRES].GetAnimValue(nsSVGIntegerPair::eFirst);
-    PRInt32 filterResY =
-      filter->mIntegerPairAttributes[nsSVGFilterElement::FILTERRES].GetAnimValue(nsSVGIntegerPair::eSecond);
-    // XXX what if the 'filterRes' attribute has a bad value? error console warning?
+  const nsSVGIntegerPair& filterResAttrs =
+    filter->mIntegerPairAttributes[nsSVGFilterElement::FILTERRES];
+  if (filterResAttrs.IsExplicitlySet()) {
+    PRInt32 filterResX = filterResAttrs.GetAnimValue(nsSVGIntegerPair::eFirst);
+    PRInt32 filterResY = filterResAttrs.GetAnimValue(nsSVGIntegerPair::eSecond);
+    if (filterResX <= 0 || filterResY <= 0) {
+      // 0 disables rendering, < 0 is error. dispatch error console warning?
+      return;
+    }
 
+    filterRegion.Scale(filterResX, filterResY);
+    filterRegion.RoundOut();
+    filterRegion.Scale(1.0 / filterResX, 1.0 / filterResY);
     // We don't care if this overflows, because we can handle upscaling/
     // downscaling to filterRes
     PRBool overflow;
@@ -168,16 +177,15 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     // Match filterRes as closely as possible to the pixel density of the nearest
     // outer 'svg' device space:
     float scale = nsSVGUtils::MaxExpansion(userToDeviceSpace);
+
+    filterRegion.Scale(scale);
+    filterRegion.RoundOut();
     // We don't care if this overflows, because we can handle upscaling/
     // downscaling to filterRes
     PRBool overflow;
-    filterRes = nsSVGUtils::ConvertToSurfaceSize(filterRegion.Size() * scale,
+    filterRes = nsSVGUtils::ConvertToSurfaceSize(filterRegion.Size(),
                                                  &overflow);
-  }
-
-  if (filterRes.width <= 0 || filterRes.height <= 0) {
-    // 0 disables rendering, < 0 is error. dispatch error console warning?
-    return;
+    filterRegion.Scale(1.0 / scale);
   }
 
   // XXX we haven't taken account of the fact that filterRegion may be

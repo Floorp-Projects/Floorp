@@ -82,6 +82,10 @@ CPPSRCS	= \
 		nsDeviceContextSpecQt.cpp \
 		$(NULL)
 
+EXPORTS		= \
+		nsQtKeyUtils.h \
+		$(NULL)
+
 ifdef MOZ_ENABLE_QTMOBILITY
 MOCSRCS += moc_mozqorientationsensorfilter.cpp
 CPPSRCS += mozqorientationsensorfilter.cpp
@@ -124,5 +128,5 @@ LOCAL_INCLUDES	+= \
 		   $(NULL)
 ifdef MOZ_X11
 INCLUDES   	+= -I$(srcdir)/../shared/x11
-INCLUDES   	+= -I$(srcdir)/../shared
 endif
+INCLUDES   	+= -I$(srcdir)/../shared

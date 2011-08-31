@@ -368,6 +368,12 @@ function shutdownManager() {
     if (thr.hasPendingEvents())
       thr.processNextEvent(false);
   }
+
+  // Force the XPIProvider provider to reload since it defines some constants on
+  // load that need to change during tests
+  let scope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
+  AddonManagerPrivate.unregisterProvider(scope.XPIProvider);
+  Components.utils.unload("resource://gre/modules/XPIProvider.jsm");
 }
 
 function loadAddonsList() {

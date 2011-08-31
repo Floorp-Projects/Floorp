@@ -807,8 +807,11 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
 {
 __try {
+  if (!pvarEndUpAt)
+    return E_INVALIDARG;
+
   nsAccessible *xpAccessibleStart = GetXPAccessibleFor(varStart);
-  if (!xpAccessibleStart)
+  if (!xpAccessibleStart || IsDefunct())
     return E_FAIL;
 
   VariantInit(pvarEndUpAt);

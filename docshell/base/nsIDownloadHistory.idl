@@ -46,7 +46,7 @@ interface nsIURI;
  * interface specifically for downloads in case embedders choose to track
  * downloads differently from other types of history.
  */
-[scriptable, uuid(202533cd-a8f1-4ee4-8d20-3a6a0d2c6c51)]
+[scriptable, uuid(a7a3358c-9af2-41e3-adfe-3bf0b7ac2c38)]
 interface nsIDownloadHistory : nsISupports {
   /**
    * Adds a download to history.  This will also notify observers that the
@@ -61,12 +61,16 @@ interface nsIDownloadHistory : nsISupports {
    * @param aStartTime
    *        [optional] The time the download was started.  If the start time
    *        is not given, the current time is used.
+   * @param aDestination
+   *        [optional] The target where the download is to be saved on the local
+   *        filesystem.
    * @throws NS_ERROR_NOT_AVAILABLE
    *         In a situation where a history implementation is not available,
    *         where 'history implementation' refers to something like
    *         nsIGlobalHistory and friends.
    */
   void addDownload(in nsIURI aSource, [optional] in nsIURI aReferrer,
-                   [optional] in PRTime aStartTime);
+                   [optional] in PRTime aStartTime,
+                   [optional] in nsIURI aDestination);
 };
 

@@ -37,6 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+#include <QEvent>
+#include <QKeyEvent>
+#include <QApplication>
+#include <QInputMethodEvent>
+#include "nsQtKeyUtils.h"
+#endif
+
 #include "PluginBackgroundDestroyer.h"
 #include "PluginInstanceChild.h"
 #include "PluginModuleChild.h"
@@ -74,6 +82,8 @@ using namespace mozilla::plugins;
 
 #elif defined(MOZ_WIDGET_QT)
 #include <QX11Info>
+#undef KeyPress
+#undef KeyRelease
 #elif defined(OS_WIN)
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL     0x020E
@@ -1092,6 +1102,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 
 #elif defined(ANDROID)
 #  warning Need Android impl
+#elif defined(MOZ_WIDGET_QT)
+#  warning Need QT-nonX impl
 #else
 #  error Implement me for your OS
 #endif
@@ -2315,6 +2327,57 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     return true;
 }
 
+bool
+PluginInstanceChild::AnswerHandleKeyEvent(const nsKeyEvent& aKeyEvent,
+                                          bool* handled)
+{
+    AssertPluginThread();
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+    Qt::KeyboardModifiers modifier;
+    if (aKeyEvent.isShift)
+        modifier |= Qt::ShiftModifier;
+    if (aKeyEvent.isControl)
+        modifier |= Qt::ControlModifier;
+    if (aKeyEvent.isAlt)
+        modifier |= Qt::AltModifier;
+    if (aKeyEvent.isMeta)
+        modifier |= Qt::MetaModifier;
+
+    QEvent::Type type;
+    if (aKeyEvent.message == NS_KEY_DOWN) {
+        type = QEvent::KeyPress;
+    } else if (aKeyEvent.message == NS_KEY_UP) {
+        type = QEvent::KeyRelease;
+    } else {
+        *handled = false;
+        return true;
+    }
+    QKeyEvent keyEv(type, DOMKeyCodeToQtKeyCode(aKeyEvent.keyCode), modifier);
+    *handled = QApplication::sendEvent(qApp, &keyEv);
+#else
+    NS_ERROR("Not implemented");
+#endif
+
+    return true;
+}
+
+bool
+PluginInstanceChild::AnswerHandleTextEvent(const nsTextEvent& aEvent,
+                                           bool* handled)
+{
+    AssertPluginThread();
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+    QInputMethodEvent event;
+    event.setCommitString(QString((const QChar*)aEvent.theText.get(),
+                          aEvent.theText.Length()));
+    *handled = QApplication::sendEvent(qApp, &event);
+#else
+    NS_ERROR("Not implemented");
+#endif
+
+    return true;
+}
+
 void
 PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                                       const NPRemoteWindow& aWindow,
@@ -2389,6 +2452,7 @@ PluginInstanceChild::CreateOptSurface(void)
         (mIsTransparent && !mBackground) ? gfxASurface::ImageFormatARGB32 :
                                            gfxASurface::ImageFormatRGB24;
 
+#ifdef MOZ_X11
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // On Maemo 5, we must send the Visibility event to activate the plugin
     if (mMaemoImageRendering) {
@@ -2400,7 +2464,6 @@ PluginInstanceChild::CreateOptSurface(void)
         mPluginIface->event(&mData, reinterpret_cast<void*>(&pluginEvent));
     }
 #endif
-#ifdef MOZ_X11
     Display* dpy = mWsInfo.display;
     Screen* screen = DefaultScreenOfDisplay(dpy);
     if (format == gfxASurface::ImageFormatRGB24 &&

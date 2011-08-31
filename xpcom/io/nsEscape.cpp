@@ -156,7 +156,7 @@ static char* nsEscapeCount(
 }
 
 //----------------------------------------------------------------------------------------
-NS_COM char* nsEscape(const char * str, nsEscapeMask flags)
+char* nsEscape(const char * str, nsEscapeMask flags)
 //----------------------------------------------------------------------------------------
 {
     if(!str)
@@ -165,7 +165,7 @@ NS_COM char* nsEscape(const char * str, nsEscapeMask flags)
 }
 
 //----------------------------------------------------------------------------------------
-NS_COM char* nsUnescape(char * str)
+char* nsUnescape(char * str)
 //----------------------------------------------------------------------------------------
 {
 	nsUnescapeCount(str);
@@ -173,7 +173,7 @@ NS_COM char* nsUnescape(char * str)
 }
 
 //----------------------------------------------------------------------------------------
-NS_COM PRInt32 nsUnescapeCount(char * str)
+PRInt32 nsUnescapeCount(char * str)
 //----------------------------------------------------------------------------------------
 {
     register char *src = str;
@@ -219,7 +219,7 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 } /* NET_UnEscapeCnt */
 
 
-NS_COM char *
+char *
 nsEscapeHTML(const char * string)
 {
     char *rv = nsnull;
@@ -285,7 +285,7 @@ nsEscapeHTML(const char * string)
     return(rv);
 }
 
-NS_COM PRUnichar *
+PRUnichar *
 nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
 {
   // if the caller didn't calculate the length
@@ -353,7 +353,7 @@ const int EscapeChars[256] =
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,       /* 0x */
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	    /* 1x */
         0,1023,   0, 512,1023,   0,1023,   0,1023,1023,1023,1023,1023,1023, 953, 784,       /* 2x   !"#$%&'()*+,-./	 */
-     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008, 912,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008,1008,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
      1008,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 4x  @ABCDEFGHIJKLMNO  */
      1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896, 896, 896, 896,1023,       /* 5x  PQRSTUVWXYZ[\]^_	 */
         0,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 6x  `abcdefghijklmno	 */
@@ -391,7 +391,7 @@ const int EscapeChars[256] =
    esc_Forced        =  1024
 */
 
-NS_COM PRBool NS_EscapeURL(const char *part,
+PRBool NS_EscapeURL(const char *part,
                            PRInt32 partLen,
                            PRUint32 flags,
                            nsACString &result)
@@ -477,7 +477,7 @@ NS_COM PRBool NS_EscapeURL(const char *part,
 
 #define ISHEX(c) memchr(hexChars, c, sizeof(hexChars)-1)
 
-NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACString &result)
+PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACString &result)
 {
     if (!str) {
         NS_NOTREACHED("null pointer");

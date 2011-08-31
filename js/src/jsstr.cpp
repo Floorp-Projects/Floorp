@@ -1536,11 +1536,8 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     }
 
     Value v;
-    if (!res->createLastMatch(cx, &v))
-        return false;
-
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v, false);
+    return res->createLastMatch(cx, &v) &&
+           arrayobj->defineProperty(cx, INT_TO_JSID(count), v);
 }
 
 static JSBool
@@ -2898,6 +2895,8 @@ static JSFunctionSpec string_methods[] = {
     JS_FS_END
 };
 
+#ifdef JS_HAS_STATIC_STRINGS
+
 /*
  * Set up some tools to make it easier to generate large tables. After constant
  * folding, for each n, Rn(0) is the comma-separated list R(0), R(1), ..., R(2^n-1).
@@ -3091,6 +3090,8 @@ const JSString::Data *const JSAtom::intStaticTable[] = { R8(0) };
 
 #undef R3
 #undef R7
+
+#endif  /* defined(JS_HAS_STATIC_STRINGS) */
 
 JSBool
 js_String(JSContext *cx, uintN argc, Value *vp)
@@ -3524,7 +3525,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
         return false;
     if (js_IsCallable(fval)) {
-        if (!ExternalInvoke(cx, v, fval, 0, NULL, &rval))
+        if (!Invoke(cx, v, fval, 0, NULL, &rval))
             return false;
     }
 

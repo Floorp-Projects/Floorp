@@ -99,7 +99,7 @@
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMUIEvent.h"
 #include "nsDOMDragEvent.h"
 #include "nsIDOMNSEditableElement.h"
 
@@ -2537,9 +2537,8 @@ GetScrollableLineHeight(nsIFrame* aTargetFrame)
   }
 
   // Fall back to the font height of the target frame.
-  const nsStyleFont* font = aTargetFrame->GetStyleFont();
-  const nsFont& f = font->mFont;
-  nsRefPtr<nsFontMetrics> fm = aTargetFrame->PresContext()->GetMetricsFor(f);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(aTargetFrame, getter_AddRefs(fm));
   NS_ASSERTION(fm, "FontMetrics is null!");
   if (fm)
     return fm->MaxHeight();
@@ -2646,8 +2645,8 @@ nsEventStateManager::ComputeWheelDeltaFor(nsMouseScrollEvent* aMouseEvent)
   }
 
   if (ComputeWheelActionFor(aMouseEvent, useSysNumLines) == MOUSE_SCROLL_PAGE) {
-    delta = (delta > 0) ? PRInt32(nsIDOMNSUIEvent::SCROLL_PAGE_DOWN) :
-                          PRInt32(nsIDOMNSUIEvent::SCROLL_PAGE_UP);
+    delta = (delta > 0) ? PRInt32(nsIDOMUIEvent::SCROLL_PAGE_DOWN) :
+                          PRInt32(nsIDOMUIEvent::SCROLL_PAGE_UP);
   }
 
   return delta;

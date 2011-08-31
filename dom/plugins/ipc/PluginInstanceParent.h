@@ -57,6 +57,7 @@
 #ifdef MOZ_X11
 class gfxXlibSurface;
 #endif
+#include "nsGUIEvent.h"
 
 namespace mozilla {
 namespace plugins {
@@ -290,6 +291,9 @@ public:
                                    gfxContext** aCtx);
     nsresult EndUpdateBackground(gfxContext* aCtx,
                                  const nsIntRect& aRect);
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+    nsresult HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled);
+#endif
 
 private:
     // Create an appropriate platform surface for a background of size
@@ -353,8 +357,8 @@ private:
 #if defined(MOZ_WIDGET_COCOA)
 private:
     Shmem                  mShSurface; 
-    size_t                 mShWidth;
-    size_t                 mShHeight;
+    uint16_t               mShWidth;
+    uint16_t               mShHeight;
     CGColorSpaceRef        mShColorSpace;
     int16_t                mDrawingModel;
     nsRefPtr<nsIOSurface> mIOSurface;

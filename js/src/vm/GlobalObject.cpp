@@ -220,33 +220,45 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom
      * Remember the class this function is a constructor for so that we know to
      * create an object of this class when we call the constructor.
      */
-    FUN_CLASP(fun) = clasp;
+    fun->setConstructorClass(clasp);
     return fun;
 }
 
-JSObject *
-GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
+static JSObject *
+CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &global)
 {
     JS_ASSERT(clasp != &js_ObjectClass);
     JS_ASSERT(clasp != &js_FunctionClass);
 
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, this, JSProto_Object, &objectProto))
-        return NULL;
-
-    JSObject *proto = NewNonFunction<WithProto::Given>(cx, clasp, objectProto, this);
-    if (!proto || !proto->setSingletonType(cx))
+    JSObject *blankProto = NewNonFunction<WithProto::Given>(cx, clasp, &proto, &global);
+    if (!blankProto || !blankProto->setSingletonType(cx))
         return NULL;
 
     /*
      * Supply the created prototype object with an empty shape for the benefit
      * of callers of JSObject::initSharingEmptyShape.
      */
-    types::TypeObject *type = proto->getNewType(cx);
+    types::TypeObject *type = blankProto->getNewType(cx);
     if (!type || !type->getEmptyShape(cx, clasp, gc::FINALIZE_OBJECT0))
         return NULL;
 
-    return proto;
+    return blankProto;
+}
+
+JSObject *
+GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
+{
+    JSObject *objectProto;
+    if (!js_GetClassPrototype(cx, this, JSProto_Object, &objectProto))
+        return NULL;
+
+    return CreateBlankProto(cx, clasp, *objectProto, *this);
+}
+
+JSObject *
+GlobalObject::createBlankPrototypeInheriting(JSContext *cx, Class *clasp, JSObject &proto)
+{
+    return CreateBlankProto(cx, clasp, proto, *this);
 }
 
 bool
@@ -266,6 +278,67 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFun
         return false;
     if (!cx->typeInferenceEnabled())
         obj->brand(cx);
+    return true;
+}
+
+void
+GlobalDebuggees_finalize(JSContext *cx, JSObject *obj)
+{
+    cx->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
+}
+
+static Class
+GlobalDebuggees_class = {
+    "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub, GlobalDebuggees_finalize
+};
+
+GlobalObject::DebuggerVector *
+GlobalObject::getDebuggers()
+{
+    Value debuggers = getReservedSlot(DEBUGGERS);
+    if (debuggers.isUndefined())
+        return NULL;
+    JS_ASSERT(debuggers.toObject().clasp == &GlobalDebuggees_class);
+    return (DebuggerVector *) debuggers.toObject().getPrivate();
+}
+
+GlobalObject::DebuggerVector *
+GlobalObject::getOrCreateDebuggers(JSContext *cx)
+{
+    assertSameCompartment(cx, this);
+    DebuggerVector *debuggers = getDebuggers();
+    if (debuggers)
+        return debuggers;
+
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GlobalDebuggees_class, NULL, this);
+    if (!obj)
+        return NULL;
+    debuggers = cx->new_<DebuggerVector>();
+    if (!debuggers)
+        return NULL;
+    obj->setPrivate(debuggers);
+    setReservedSlot(DEBUGGERS, ObjectValue(*obj));
+    return debuggers;
+}
+
+bool
+GlobalObject::addDebugger(JSContext *cx, Debugger *dbg)
+{
+    DebuggerVector *debuggers = getOrCreateDebuggers(cx);
+    if (!debuggers)
+        return false;
+#ifdef DEBUG
+    for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++)
+        JS_ASSERT(*p != dbg);
+#endif
+    if (debuggers->empty() && !compartment()->addDebuggee(cx, this))
+        return false;
+    if (!debuggers->append(dbg)) {
+        compartment()->removeDebuggee(cx, this);
+        return false;
+    }
     return true;
 }
 

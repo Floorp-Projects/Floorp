@@ -59,7 +59,7 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharBuffer, NS_IUNICHARBUFFER_IID)
 
 /// Factory method for nsIUnicharBuffer.
-extern NS_COM nsresult
+extern nsresult
 NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
                     nsISupports* aOuter,
                     PRUint32 aBufferSize = 0);

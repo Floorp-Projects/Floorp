@@ -2127,9 +2127,10 @@ nsXULTemplateBuilder::DetermineMemberVariable(nsIContent* aElement)
 {
     // recursively iterate over the children looking for an element
     // with uri="?..."
-    for (nsINode::ChildIterator iter(aElement); !iter.IsDone(); iter.Next()) {
+    for (nsIContent* child = aElement->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
         nsAutoString uri;
-        nsIContent *child = iter;
         child->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
         if (!uri.IsEmpty() && uri[0] == PRUnichar('?')) {
             return NS_NewAtom(uri);

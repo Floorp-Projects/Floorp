@@ -1,4 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +41,7 @@
 
 #include "nsIClassInfo.h"
 #include "nsIConsoleService.h"
+#include "nsIDOMFile.h"
 #include "nsIDocument.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIJSContextStack.h"
@@ -68,6 +70,7 @@
 
 #include "Events.h"
 #include "Exceptions.h"
+#include "File.h"
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
@@ -143,6 +146,57 @@ struct WorkerStructuredCloneCallbacks
   Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32 aTag,
        uint32 aData, void* aClosure)
   {
+    // See if object is a nsIDOMFile pointer.
+    if (aTag == DOMWORKER_SCTAG_FILE) {
+      JS_ASSERT(!aData);
+
+      nsIDOMFile* file;
+      if (JS_ReadBytes(aReader, &file, sizeof(file))) {
+        JS_ASSERT(file);
+
+#ifdef DEBUG
+        {
+          // File should not be mutable.
+          nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
+          PRBool isMutable;
+          NS_ASSERTION(NS_SUCCEEDED(mutableFile->GetMutable(&isMutable)) &&
+                       !isMutable,
+                       "Only immutable file should be passed to worker");
+        }
+#endif
+
+        // nsIDOMFiles should be threadsafe, thus we will use the same instance
+        // in the worker.
+        JSObject* jsFile = file::CreateFile(aCx, file);
+        return jsFile;
+      }
+    }
+    // See if object is a nsIDOMBlob pointer.
+    else if (aTag == DOMWORKER_SCTAG_BLOB) {
+      JS_ASSERT(!aData);
+
+      nsIDOMBlob* blob;
+      if (JS_ReadBytes(aReader, &blob, sizeof(blob))) {
+        JS_ASSERT(blob);
+
+#ifdef DEBUG
+        {
+          // Blob should not be mutable.
+          nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
+          PRBool isMutable;
+          NS_ASSERTION(NS_SUCCEEDED(mutableBlob->GetMutable(&isMutable)) &&
+                       !isMutable,
+                       "Only immutable blob should be passed to worker");
+        }
+#endif
+
+        // nsIDOMBlob should be threadsafe, thus we will use the same instance
+        // in the worker.
+        JSObject* jsBlob = file::CreateBlob(aCx, blob);
+        return jsBlob;
+      }
+    }
+
     Error(aCx, 0);
     return nsnull;
   }
@@ -151,6 +205,38 @@ struct WorkerStructuredCloneCallbacks
   Write(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj,
         void* aClosure)
   {
+    NS_ASSERTION(aClosure, "Null pointer!");
+
+    // We'll stash any nsISupports pointers that need to be AddRef'd here.
+    nsTArray<nsCOMPtr<nsISupports> >* clonedObjects =
+      static_cast<nsTArray<nsCOMPtr<nsISupports> >*>(aClosure);
+
+    // See if this is a File object.
+    {
+      nsIDOMFile* file = file::GetDOMFileFromJSObject(aCx, aObj);
+      if (file) {
+        if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_FILE, 0) &&
+            JS_WriteBytes(aWriter, &file, sizeof(file))) {
+          clonedObjects->AppendElement(file);
+          return true;
+        }
+      }
+    }
+
+    // See if this is a Blob object.
+    {
+      nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aCx, aObj);
+      if (blob) {
+        nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
+        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(PR_FALSE)) &&
+            JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
+            JS_WriteBytes(aWriter, &blob, sizeof(blob))) {
+          clonedObjects->AppendElement(blob);
+          return true;
+        }
+      }
+    }
+
     Error(aCx, 0);
     return false;
   }
@@ -176,6 +262,73 @@ struct MainThreadWorkerStructuredCloneCallbacks
   {
     AssertIsOnMainThread();
 
+    // See if object is a nsIDOMFile pointer.
+    if (aTag == DOMWORKER_SCTAG_FILE) {
+      JS_ASSERT(!aData);
+
+      nsIDOMFile* file;
+      if (JS_ReadBytes(aReader, &file, sizeof(file))) {
+        JS_ASSERT(file);
+
+#ifdef DEBUG
+        {
+          // File should not be mutable.
+          nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
+          PRBool isMutable;
+          NS_ASSERTION(NS_SUCCEEDED(mutableFile->GetMutable(&isMutable)) &&
+                       !isMutable,
+                       "Only immutable file should be passed to worker");
+        }
+#endif
+
+        // nsIDOMFiles should be threadsafe, thus we will use the same instance
+        // on the main thread.
+        jsval wrappedFile;
+        nsresult rv =
+          nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), file,
+                                     &NS_GET_IID(nsIDOMFile), &wrappedFile);
+        if (NS_FAILED(rv)) {
+          Error(aCx, DATA_CLONE_ERR);
+          return nsnull;
+        }
+
+        return JSVAL_TO_OBJECT(wrappedFile);
+      }
+    }
+    // See if object is a nsIDOMBlob pointer.
+    else if (aTag == DOMWORKER_SCTAG_BLOB) {
+      JS_ASSERT(!aData);
+
+      nsIDOMBlob* blob;
+      if (JS_ReadBytes(aReader, &blob, sizeof(blob))) {
+        JS_ASSERT(blob);
+
+#ifdef DEBUG
+        {
+          // Blob should not be mutable.
+          nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
+          PRBool isMutable;
+          NS_ASSERTION(NS_SUCCEEDED(mutableBlob->GetMutable(&isMutable)) &&
+                       !isMutable,
+                       "Only immutable blob should be passed to worker");
+        }
+#endif
+
+        // nsIDOMBlobs should be threadsafe, thus we will use the same instance
+        // on the main thread.
+        jsval wrappedBlob;
+        nsresult rv =
+          nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), blob,
+                                     &NS_GET_IID(nsIDOMBlob), &wrappedBlob);
+        if (NS_FAILED(rv)) {
+          Error(aCx, DATA_CLONE_ERR);
+          return nsnull;
+        }
+
+        return JSVAL_TO_OBJECT(wrappedBlob);
+      }
+    }
+
     JSObject* clone =
       WorkerStructuredCloneCallbacks::Read(aCx, aReader, aTag, aData, aClosure);
     if (clone) {
@@ -191,6 +344,51 @@ struct MainThreadWorkerStructuredCloneCallbacks
         void* aClosure)
   {
     AssertIsOnMainThread();
+
+    NS_ASSERTION(aClosure, "Null pointer!");
+
+    // We'll stash any nsISupports pointers that need to be AddRef'd here.
+    nsTArray<nsCOMPtr<nsISupports> >* clonedObjects =
+      static_cast<nsTArray<nsCOMPtr<nsISupports> >*>(aClosure);
+
+    // See if this is a wrapped native.
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
+    nsContentUtils::XPConnect()->
+      GetWrappedNativeOfJSObject(aCx, aObj, getter_AddRefs(wrappedNative));
+
+    if (wrappedNative) {
+      // Get the raw nsISupports out of it.
+      nsISupports* wrappedObject = wrappedNative->Native();
+      NS_ASSERTION(wrappedObject, "Null pointer?!");
+
+      // See if the wrapped native is a nsIDOMFile.
+      nsCOMPtr<nsIDOMFile> file = do_QueryInterface(wrappedObject);
+      if (file) {
+        nsCOMPtr<nsIMutable> mutableFile = do_QueryInterface(file);
+        if (mutableFile && NS_SUCCEEDED(mutableFile->SetMutable(PR_FALSE))) {
+          nsIDOMFile* filePtr = file;
+          if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_FILE, 0) &&
+              JS_WriteBytes(aWriter, &filePtr, sizeof(filePtr))) {
+            clonedObjects->AppendElement(file);
+            return true;
+          }
+        }
+      }
+
+      // See if the wrapped native is a nsIDOMBlob.
+      nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(wrappedObject);
+      if (blob) {
+        nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
+        if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(PR_FALSE))) {
+          nsIDOMBlob* blobPtr = blob;
+          if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
+              JS_WriteBytes(aWriter, &blobPtr, sizeof(blobPtr))) {
+            clonedObjects->AppendElement(blob);
+            return true;
+          }
+        }
+      }
+    }
 
     JSBool ok =
       WorkerStructuredCloneCallbacks::Write(aCx, aWriter, aObj, aClosure);
@@ -519,15 +717,21 @@ class MessageEventRunnable : public WorkerRunnable
 {
   uint64* mData;
   size_t mDataByteCount;
+  nsTArray<nsCOMPtr<nsISupports> > mClonedObjects;
 
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget,
-                       JSAutoStructuredCloneBuffer& aData)
+                       JSAutoStructuredCloneBuffer& aData,
+                       nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects)
   : WorkerRunnable(aWorkerPrivate, aTarget, aTarget == WorkerThread ?
                                                        ModifyBusyCount :
                                                        UnchangedBusyCount)
   {
     aData.steal(&mData, &mDataByteCount);
+
+    if (!mClonedObjects.SwapElements(aClonedObjects)) {
+      NS_ERROR("This should never fail!");
+    }
   }
 
   bool
@@ -569,7 +773,8 @@ public:
 
     NS_ASSERTION(target, "This should never be null!");
 
-    JSObject* event = events::CreateMessageEvent(aCx, buffer, mainRuntime);
+    JSObject* event = events::CreateMessageEvent(aCx, buffer, mClonedObjects,
+                                                 mainRuntime);
     if (!event) {
       return false;
     }
@@ -690,11 +895,11 @@ public:
       aWorkerPrivate->AssertInnerWindowIsCorrect();
     }
 
-    PRUint64 windowId;
+    PRUint64 innerWindowId;
 
     WorkerPrivate* parent = aWorkerPrivate->GetParent();
     if (parent) {
-      windowId = 0;
+      innerWindowId = 0;
     }
     else {
       AssertIsOnMainThread();
@@ -704,13 +909,13 @@ public:
         return true;
       }
 
-      windowId = aWorkerPrivate->GetOuterWindowId();
+      innerWindowId = aWorkerPrivate->GetInnerWindowId();
     }
 
     return ReportErrorRunnable::ReportError(aCx, parent, true, target, mMessage,
                                             mFilename, mLine, mLineNumber,
                                             mColumnNumber, mFlags,
-                                            mErrorNumber, windowId);
+                                            mErrorNumber, innerWindowId);
   }
 
   static bool
@@ -718,7 +923,7 @@ public:
               bool aFireAtScope, JSObject* aTarget, const nsString& aMessage,
               const nsString& aFilename, const nsString& aLine,
               PRUint32 aLineNumber, PRUint32 aColumnNumber, PRUint32 aFlags,
-              PRUint32 aErrorNumber, PRUint64 aWindowId)
+              PRUint32 aErrorNumber, PRUint64 aInnerWindowId)
   {
     if (aWorkerPrivate) {
       aWorkerPrivate->AssertIsOnWorkerThread();
@@ -825,7 +1030,7 @@ public:
                                                      aLine.get(), aLineNumber,
                                                      aColumnNumber, aFlags,
                                                      "Web Worker",
-                                                     aWindowId))) {
+                                                     aInnerWindowId))) {
         consoleMessage = do_QueryInterface(scriptError);
         NS_ASSERTION(consoleMessage, "This should never fail!");
       }
@@ -1390,7 +1595,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mJSObject(aObject), mParent(aParent), mParentJSContext(aParentJSContext),
   mScriptURL(aScriptURL), mDomain(aDomain), mBusyCount(0),
   mParentStatus(Pending), mJSObjectRooted(false), mParentSuspended(false),
-  mIsChromeWorker(aIsChromeWorker)
+  mIsChromeWorker(aIsChromeWorker), mPrincipalIsSystem(false)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivateParent);
 
@@ -1693,7 +1898,12 @@ WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx, jsval aMessage)
 
   JSStructuredCloneCallbacks* callbacks;
   if (GetParent()) {
-    callbacks = nsnull;
+    if (IsChromeWorker()) {
+      callbacks = &gChromeWorkerStructuredCloneCallbacks;
+    }
+    else {
+      callbacks = &gWorkerStructuredCloneCallbacks;
+    }
   }
   else {
     AssertIsOnMainThread();
@@ -1706,23 +1916,26 @@ WorkerPrivateParent<Derived>::PostMessage(JSContext* aCx, jsval aMessage)
     }
   }
 
+  nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
+
   JSAutoStructuredCloneBuffer buffer;
-  if (!buffer.write(aCx, aMessage, callbacks, nsnull)) {
+  if (!buffer.write(aCx, aMessage, callbacks, &clonedObjects)) {
     return false;
   }
 
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(ParentAsWorkerPrivate(),
-                             WorkerRunnable::WorkerThread, buffer);
+                             WorkerRunnable::WorkerThread, buffer,
+                             clonedObjects);
   return runnable->Dispatch(aCx);
 }
 
 template <class Derived>
 PRUint64
-WorkerPrivateParent<Derived>::GetOuterWindowId()
+WorkerPrivateParent<Derived>::GetInnerWindowId()
 {
   AssertIsOnMainThread();
-  return mDocument->OuterWindowID();
+  return mDocument->InnerWindowID();
 }
 
 template <class Derived>
@@ -1837,6 +2050,16 @@ WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
   }
 
   return NS_OK;
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal)
+{
+  AssertIsOnMainThread();
+
+  mPrincipal = aPrincipal;
+  mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
 }
 
 template <class Derived>
@@ -2629,13 +2852,21 @@ WorkerPrivate::PostMessageToParent(JSContext* aCx, jsval aMessage)
 {
   AssertIsOnWorkerThread();
 
+  JSStructuredCloneCallbacks* callbacks =
+    IsChromeWorker() ?
+    &gChromeWorkerStructuredCloneCallbacks :
+    &gWorkerStructuredCloneCallbacks;
+
+  nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
+
   JSAutoStructuredCloneBuffer buffer;
-  if (!buffer.write(aCx, aMessage, nsnull, nsnull)) {
+  if (!buffer.write(aCx, aMessage, callbacks, &clonedObjects)) {
     return false;
   }
 
   nsRefPtr<MessageEventRunnable> runnable =
-    new MessageEventRunnable(this, WorkerRunnable::ParentThread, buffer);
+    new MessageEventRunnable(this, WorkerRunnable::ParentThread, buffer,
+                             clonedObjects);
   return runnable->Dispatch(aCx);
 }
 
@@ -2996,18 +3227,21 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
   bool retval = true;
 
-  TimeStamp now = TimeStamp::Now();
+  AutoPtrComparator<TimeoutInfo> comparator = GetAutoPtrComparator(mTimeouts);
+  JSObject* global = JS_GetGlobalObject(aCx);
+  JSPrincipals* principal = GetWorkerPrincipal();
 
   // We want to make sure to run *something*, even if the timer fired a little
   // early. Fudge the value of now to at least include the first timeout.
-  now = NS_MAX(now, mTimeouts[0]->mTargetTime);
+  const TimeStamp now = NS_MAX(TimeStamp::Now(), mTimeouts[0]->mTargetTime);
 
   nsAutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (PRUint32 index = 0; index < mTimeouts.Length(); index++) {
     nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
-    if (info->mTargetTime <= now || info->mCanceled) {
-      expiredTimeouts.AppendElement(info);
+    if (info->mTargetTime > now) {
+      break;
     }
+    expiredTimeouts.AppendElement(info);
   }
 
   // Guard against recursion.
@@ -3021,7 +3255,9 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       continue;
     }
 
-    JSObject* global = JS_GetGlobalObject(aCx);
+    // Always call JS_ReportPendingException if something fails, and if
+    // JS_ReportPendingException returns false (i.e. uncatchable exception) then
+    // break out of the loop.
 
     if (JSVAL_IS_STRING(info->mTimeoutVal)) {
       JSString* expression = JSVAL_TO_STRING(info->mTimeoutVal);
@@ -3029,62 +3265,56 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       size_t stringLength;
       const jschar* string = JS_GetStringCharsAndLength(aCx, expression,
                                                         &stringLength);
-      if (!string) {
-        if (!JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
-        }
-        continue;
-      }
 
-      if (!JS_EvaluateUCScriptForPrincipals(aCx, global, GetWorkerPrincipal(),
-                                            string, stringLength,
-                                            info->mFilename.get(),
-                                            info->mLineNumber, nsnull)) {
-        if (!JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
-        }
-        continue;
+      if ((!string ||
+           !JS_EvaluateUCScriptForPrincipals(aCx, global, principal, string,
+                                             stringLength,
+                                             info->mFilename.get(),
+                                             info->mLineNumber, nsnull)) &&
+          !JS_ReportPendingException(aCx)) {
+        retval = false;
+        break;
       }
     }
     else {
       jsval rval;
       if (!JS_CallFunctionValue(aCx, global, info->mTimeoutVal,
                                 info->mExtraArgVals.Length(),
-                                info->mExtraArgVals.Elements(), &rval)) {
-        if (!JS_ReportPendingException(aCx)) {
-          retval = false;
-          break;
-        }
+                                info->mExtraArgVals.Elements(), &rval) &&
+          !JS_ReportPendingException(aCx)) {
+        retval = false;
+        break;
       }
+    }
+
+    // Reschedule intervals.
+    if (info->mIsInterval) {
+      PRUint32 timeoutIndex = mTimeouts.IndexOf(info);
+      NS_ASSERTION(timeoutIndex != PRUint32(-1),
+                   "Should still be in the main list!");
+
+      mTimeouts[timeoutIndex].forget();
+      mTimeouts.RemoveElementAt(timeoutIndex);
+
+      NS_ASSERTION(!mTimeouts.Contains(info), "Shouldn't have duplicates!");
+
+      info->mTargetTime += info->mInterval;
+      mTimeouts.InsertElementSorted(info, comparator);
     }
   }
 
   // No longer possible to be called recursively.
   mRunningExpiredTimeouts = false;
 
-  // Clean up expired and canceled timeouts, reschedule intervals.
-  for (PRUint32 index = 0; index < expiredTimeouts.Length(); index++) {
-    TimeoutInfo*& info = expiredTimeouts[index];
-    if (info->mCanceled || !info->mIsInterval) {
+  // Now remove canceled and expired timeouts from the main list.
+  for (PRUint32 index = 0; index < mTimeouts.Length(); ) {
+    nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
+    if (info->mTargetTime <= now || info->mCanceled) {
       mTimeouts.RemoveElement(info);
-      continue;
     }
-
-    PRUint32 timeoutIndex = mTimeouts.IndexOf(info);
-    NS_ASSERTION(timeoutIndex != PRUint32(-1),
-                 "Should still be in the other list!");
-
-    mTimeouts[timeoutIndex].forget();
-    mTimeouts.RemoveElementAt(timeoutIndex);
-
-    NS_ASSERTION(!mTimeouts.Contains(info), "Shouldn't have duplicates!");
-
-    AutoPtrComparator<TimeoutInfo> comparator = GetAutoPtrComparator(mTimeouts);
-
-    info->mTargetTime += info->mInterval;
-    mTimeouts.InsertElementSorted(info, comparator);
+    else {
+      index++;
+    }
   }
 
   // Signal the parent that we're no longer using timeouts or reschedule the
@@ -3210,15 +3440,19 @@ GetWorkerPrivateFromContext(JSContext* aCx)
 }
 
 JSStructuredCloneCallbacks*
-WorkerStructuredCloneCallbacks()
+WorkerStructuredCloneCallbacks(bool aMainRuntime)
 {
-  return &gWorkerStructuredCloneCallbacks;
+  return aMainRuntime ?
+         &gMainThreadWorkerStructuredCloneCallbacks :
+         &gWorkerStructuredCloneCallbacks;
 }
 
 JSStructuredCloneCallbacks*
-ChromeWorkerStructuredCloneCallbacks()
+ChromeWorkerStructuredCloneCallbacks(bool aMainRuntime)
 {
-  return &gChromeWorkerStructuredCloneCallbacks;
+  return aMainRuntime ?
+         &gMainThreadChromeWorkerStructuredCloneCallbacks :
+         &gChromeWorkerStructuredCloneCallbacks;
 }
 
 END_WORKERS_NAMESPACE

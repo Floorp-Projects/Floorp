@@ -1,7 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>Test for SMIL keySplines</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -59,7 +58,7 @@ function main() {
     var anim = createAnim();
     svg.setCurrentTime(0);
     tests[i](anim);
-    removeElement(anim);
+    anim.parentNode.removeChild(anim);
   }
   SimpleTest.finish();
 }
@@ -249,7 +248,7 @@ function testOkSyntax(anim) {
     testAnim.setAttribute('calcMode', 'spline');
     testAnim.setAttribute('keySplines', okStrs[i]);
     checkSample(4, 20);
-    removeElement(testAnim);
+    testAnim.parentNode.removeChild(testAnim);
   }
 }
 
@@ -275,7 +274,7 @@ function testBadSyntaxA(anim) {
     testAnim.setAttribute('calcMode', 'spline');
     testAnim.setAttribute('keySplines', badStrs[i]);
     checkSample(4, -100);
-    removeElement(testAnim);
+    testAnim.parentNode.removeChild(testAnim);
   }
 }
 

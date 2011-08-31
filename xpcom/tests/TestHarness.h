@@ -44,6 +44,14 @@
 #ifndef TestHarness_h__
 #define TestHarness_h__
 
+#if defined(_MSC_VER) && defined(MOZ_STATIC_JS)
+/*
+ * Including jsdbgapi.h may cause build break with --disable-shared-js
+ * This is a workaround for bug 673616.
+ */
+#define STATIC_JS_API
+#endif
+
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -56,6 +64,7 @@
 #include "nsIFile.h"
 #include "nsIProperties.h"
 #include "nsXULAppAPI.h"
+#include "jsdbgapi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -95,17 +104,6 @@ void passed(const char* test)
 // Code profiling
 //
 static const char* gCurrentProfile;
-static PRBool gProfilerTriedInit = PR_FALSE;
-static PRBool gProfilerInited = PR_FALSE;
-
-// Platform profilers must implement these functions.
-// Init and deinit are guaranteed to only be called once, and
-// StartProfile/StopProfile may assume that they are only called
-// when the profiler has successfully been initialized.
-static PRBool _PlatformInitProfiler();
-static PRBool _PlatformStartProfile(const char* profileName);
-static PRBool _PlatformStopProfile(const char* profileName);
-static PRBool _PlatformDeinitProfiler();
 
 /**
  * If the build has been configured properly, start the best code profiler
@@ -124,19 +122,12 @@ static PRBool _PlatformDeinitProfiler();
 inline PRBool
 StartProfiling(const char* profileName)
 {
-    if (!gProfilerTriedInit) {
-        gProfilerTriedInit = PR_TRUE;
-        gProfilerInited = _PlatformInitProfiler();
-    }
-    if (!gProfilerInited)
-        return PR_FALSE;
-
     NS_ASSERTION(profileName, "need a name for this profile");
     NS_PRECONDITION(!gCurrentProfile, "started a new profile before stopping another");
 
-    PRBool rv = _PlatformStartProfile(profileName);
+    JSBool ok = JS_StartProfiling(profileName);
     gCurrentProfile = profileName;
-    return rv;
+    return ok ? PR_TRUE : PR_FALSE;
 }
 
 /**
@@ -153,77 +144,12 @@ StartProfiling(const char* profileName)
 inline PRBool
 StopProfiling()
 {
-    NS_ASSERTION(gProfilerTriedInit, "tried to stop profile before starting one");
-    if (!gProfilerInited)
-        return PR_FALSE;
-
     NS_PRECONDITION(gCurrentProfile, "tried to stop profile before starting one");
 
     const char* profileName = gCurrentProfile;
     gCurrentProfile = 0;
-    return _PlatformStopProfile(profileName);
+    return JS_StopProfiling(profileName) ? PR_TRUE : PR_FALSE;
 }
-
-//--------------------------------------------------
-// Shark impl
-#if defined(MOZ_SHARK)
-#include "jsdbgapi.h"
-
-static PRBool
-_PlatformInitProfiler()
-{
-    return PR_TRUE;
-}
-
-static PRBool
-_PlatformStartProfile(const char* profileName)
-{
-    return JS_StartProfiling() ? PR_TRUE : PR_FALSE;
-}
-
-static PRBool
-_PlatformStopProfile(const char* profileName)
-{
-    JS_StopProfiling();
-    return PR_TRUE;
-}
-
-static PRBool
-_PlatformDeinitProfiler()
-{
-    return PR_TRUE;
-}
-
-//--------------------------------------------------
-// Default, no-profiler impl
-#else 
-
-static PRBool
-_PlatformInitProfiler()
-{
-    NS_WARNING("Profiling is not available/configured for your platform.");
-    return PR_FALSE;
-}
-static PRBool
-_PlatformStartProfile(const char* profileName)
-{
-    NS_WARNING("Profiling is not available/configured for your platform.");
-    return PR_FALSE;
-}
-static PRBool
-_PlatformStopProfile(const char* profileName)
-{
-    NS_WARNING("Profiling is not available/configured for your platform.");
-    return PR_FALSE;
-}
-static PRBool
-_PlatformDeinitProfiler()
-{
-    NS_WARNING("Profiling is not available/configured for your platform.");
-    return PR_FALSE;
-}
-
-#endif
 
 //-----------------------------------------------------------------------------
 
@@ -264,10 +190,6 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
 
     ~ScopedXPCOM()
     {
-      if (gProfilerInited)
-        if (!_PlatformDeinitProfiler())
-          NS_WARNING("Problem shutting down profiler");
-
       // If we created a profile directory, we need to remove it.
       if (mProfD) {
         if (NS_FAILED(mProfD->Remove(PR_TRUE)))

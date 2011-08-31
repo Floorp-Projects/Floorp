@@ -35,11 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHapticFeedback.h"
 #if (MOZ_PLATFORM_MAEMO == 5)
 #include <dbus/dbus.h>
 #include <mce/dbus-names.h>
 #endif
+#if defined(MOZ_ENABLE_QTMOBILITY)
+#include <QFeedbackEffect>
+using namespace QtMobility;
+#endif
+
+#include "nsHapticFeedback.h"
 
 NS_IMPL_ISUPPORTS1(nsHapticFeedback, nsIHapticFeedback)
 
@@ -84,6 +89,12 @@ nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
         dbus_message_unref(msg);
         return NS_ERROR_FAILURE;
     }
+#elif defined(MOZ_ENABLE_QTMOBILITY)
+    if (aType == ShortPress)
+        QFeedbackEffect::playThemeEffect(QFeedbackEffect::ThemeBasicButton);
+    if (aType == LongPress)
+        QFeedbackEffect::playThemeEffect(QFeedbackEffect::ThemeLongPress);
 #endif
+
     return NS_OK;
 }

@@ -95,7 +95,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 
 /// This is a wrapper class around all the C runtime functions. 
 
-class NS_COM nsCRT {
+class nsCRT {
 public:
   enum {
     LF='\n'   /* Line Feed */,

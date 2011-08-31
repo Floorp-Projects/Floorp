@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=676401
+-->
+<head>
+  <title>Test for Bug 676401</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=676401">Mozilla Bug 676401</a>
+<p id="display"></p>
+<div id="content">
+  <!-- we need a blockquote to test the "outdent" command -->
+  <section>
+    <blockquote> not editable </blockquote>
+  </section>
+  <section contenteditable>
+    <blockquote> editable </blockquote>
+  </section>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 676401 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+var gBlock1, gBlock2;
+
+function IsCommandEnabled(command) {
+  var enabled;
+
+  // non-editable div: should return false
+  window.getSelection().selectAllChildren(gBlock1);
+  enabled = document.queryCommandEnabled(command);
+  is(enabled, false, "'" + command + "' should not be enabled on a non-editable block.");
+
+  // editable div: should return true
+  window.getSelection().selectAllChildren(gBlock2);
+  enabled = document.queryCommandEnabled(command);
+  is(enabled, true, "'" + command + "' should be enabled on an editable block.");
+}
+
+function runTests() {
+  var i, commands;
+  gBlock1 = document.querySelector("#content section blockquote");
+  gBlock2 = document.querySelector("#content [contenteditable] blockquote");
+
+  // common commands: test with and without "styleWithCSS"
+  commands = [
+    "bold", "italic", "underline", "strikeThrough", 
+    "subscript", "superscript", "foreColor", "backColor", "hiliteColor",
+    "fontName", "fontSize",
+    "justifyLeft", "justifyCenter", "justifyRight", "justifyFull",
+    "indent", "outdent",
+    "insertOrderedList", "insertUnorderedList", "insertParagraph",
+    "heading", "formatBlock",
+    "contentReadOnly", "createLink",
+    "decreaseFontSize", "increaseFontSize",
+    "insertHTML", "insertHorizontalRule", "insertImage",
+    "removeFormat", "selectAll", "styleWithCSS"
+  ];
+  document.execCommand("styleWithCSS", false, false);
+  for (i = 0; i < commands.length; i++)
+    IsCommandEnabled(commands[i]);
+  document.execCommand("styleWithCSS", false, true);
+  for (i = 0; i < commands.length; i++)
+    IsCommandEnabled(commands[i]);
+
+  // Mozilla-specific stuff
+  commands = ["enableInlineTableEditing", "enableObjectResizing", "insertBrOnReturn"];
+  for (i = 0; i < commands.length; i++)
+    IsCommandEnabled(commands[i]);
+
+  // cut/copy/paste -- SpecialPowers required
+  SpecialPowers.setCharPref("capability.policy.policynames",                      "allowclipboard");
+  SpecialPowers.setCharPref("capability.policy.allowclipboard.sites",             "http://mochi.test:8888");
+  SpecialPowers.setCharPref("capability.policy.allowclipboard.Clipboard.cutcopy", "allAccess");
+  SpecialPowers.setCharPref("capability.policy.allowclipboard.Clipboard.paste",   "allAccess");
+  commands = ["cut", "paste", "copy"];
+  for (i = 0; i < commands.length; i++) {
+    IsCommandEnabled(commands[i]);
+    document.execCommand(commands[i], false, false);
+  }
+  SpecialPowers.clearUserPref("capability.policy.policynames");
+  SpecialPowers.clearUserPref("capability.policy.allowclipboard.sites");
+  SpecialPowers.clearUserPref("capability.policy.allowclipboard.Clipboard.cutcopy");
+  SpecialPowers.clearUserPref("capability.policy.allowclipboard.Clipboard.paste");
+
+  // delete/undo/redo -- we have to execute this commands because:
+  //  * there's nothing to undo if we haven't modified the selection first
+  //  * there's nothing to redo if we haven't undone something first
+  commands = ["delete", "undo", "redo"];
+  for (i = 0; i < commands.length; i++) {
+    IsCommandEnabled(commands[i]);
+    document.execCommand(commands[i], false, false);
+  }
+
+  // done
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

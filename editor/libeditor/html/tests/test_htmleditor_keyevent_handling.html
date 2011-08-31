@@ -2,8 +2,6 @@
 <head>
   <title>Test for key event handler of HTML editor</title>
   <script type="text/javascript"
-          src="/MochiKit/packed.js"></script>
-  <script type="text/javascript"
           src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript"
           src="/tests/SimpleTest/EventUtils.js"></script>
@@ -327,12 +325,10 @@ function runTests()
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab after Tab on UL",
           true, true, !aIsTabbable && !aIsReadonly && !aIsPlaintext);
-    // XXX why do we fail to outdent on non-tabbable HTML editor?
     is(aElement.innerHTML,
-       aIsReadonly || aIsTabbable ?
+       aIsReadonly || aIsTabbable || (!aIsPlaintext) ?
          "<ul><li id=\"target\">ul list item</li></ul>" :
-         aIsPlaintext ? "<ul><li id=\"target\">ul list item\t</li></ul>" :
-           "<ul><ul><li id=\"target\">ul list item</li></ul></ul>",
+         "<ul><li id=\"target\">ul list item\t</li></ul>",
        aDescription + "Shift+Tab after Tab on UL");
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab after Tab on UL)");
@@ -342,10 +338,8 @@ function runTests()
     check(aDescription + "Shift+Tab on UL",
           true, true, !aIsTabbable && !aIsReadonly && !aIsPlaintext);
     is(aElement.innerHTML,
-       aIsReadonly || aIsTabbable ?
-         "<ul><li id=\"target\">ul list item</li></ul>" :
-         aIsPlaintext ? "<ul><li id=\"target\">ul list item</li></ul>" :
-           "<ul><li id=\"target\">ul list item</li></ul>",
+       aIsReadonly || aIsTabbable || aIsPlaintext ?
+         "<ul><li id=\"target\">ul list item</li></ul>" : "ul list item",
        aDescription + "Shift+Tab on UL");
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on UL)");
@@ -391,12 +385,10 @@ function runTests()
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab after Tab on OL",
           true, true, !aIsTabbable && !aIsReadonly && !aIsPlaintext);
-    // XXX why do we fail to outdent on non-tabbable HTML editor?
     is(aElement.innerHTML,
-       aIsReadonly || aIsTabbable ?
+       aIsReadonly || aIsTabbable || (!aIsPlaintext) ?
          "<ol><li id=\"target\">ol list item</li></ol>" :
-         aIsPlaintext ? "<ol><li id=\"target\">ol list item\t</li></ol>" :
-           "<ol><ol><li id=\"target\">ol list item</li></ol></ol>",
+         "<ol><li id=\"target\">ol list item\t</li></ol>",
        aDescription + "Shift+Tab after Tab on OL");
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab after Tab on OL)");
@@ -406,10 +398,8 @@ function runTests()
     check(aDescription + "Shift+Tab on OL",
           true, true, !aIsTabbable && !aIsReadonly && !aIsPlaintext);
     is(aElement.innerHTML,
-       aIsReadonly || aIsTabbable ?
-         "<ol><li id=\"target\">ol list item</li></ol>" :
-         aIsPlaintext ? "<ol><li id=\"target\">ol list item</li></ol>" :
-           "<ol><li id=\"target\">ol list item</li></ol>",
+       aIsReadonly || aIsTabbable || aIsPlaintext ?
+         "<ol><li id=\"target\">ol list item</li></ol>" : "ol list item",
        aDescription + "Shfit+Tab on OL");
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on OL)");

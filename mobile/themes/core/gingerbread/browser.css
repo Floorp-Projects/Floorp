@@ -190,6 +190,7 @@ toolbarbutton.urlbar-button {
 #urlbar-favicon {
   width: 32px;
   height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 #urlbar-favicon[src=""] {
@@ -323,7 +324,7 @@ toolbarbutton.urlbar-button {
   list-style-image: url("chrome://browser/skin/images/bookmark-default-hdpi.png");
 }
 
-#tool-star[starred="true"] {
+.tool-star[starred="true"] {
   list-style-image: url("chrome://browser/skin/images/bookmark-starred-hdpi.png");
 }
 
@@ -696,6 +697,7 @@ placeitem > .bookmark-manage > image {
   width: 32px;
   height: 32px;
   max-height: 32px;
+  image-rendering: -moz-crisp-edges;
   /* margin-top = (1 - title's line-height) * title's font-size */
   margin-top: @autocomplete_item_container_image_padding@;
   margin-bottom: 0;
@@ -1315,12 +1317,6 @@ setting {
   font-size: @font_small@ !important;
 }
 
-/* full-screen video ------------------------------------------------------- */
-.full-screen {
-  position: absolute;
-  z-index: 500;
-}
-
 /* openwebapps capabilities ------------------------------------------------------------ */
 .webapps-noperm description.webapps-perm-requested-hint {
   display: block;
@@ -1542,6 +1538,7 @@ setting {
 
 /* Tablet mode */
 
+.spacer-actionbar,
 .button-actionbar {
   visibility: collapse;
 }
@@ -1554,6 +1551,7 @@ setting {
   background-color: #8db8d8;
 }
 
+#toolbar-main[tablet="true"] > .spacer-actionbar,
 #toolbar-main[tablet="true"] > .button-actionbar {
   visibility: visible;
 }

@@ -132,7 +132,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   nsHTMLReflowMetrics supScriptSize;
   nsBoundingMetrics bmBase, bmSupScript;
   nsIFrame* supScriptFrame = nsnull;
-  nsIFrame* baseFrame = aFrame->GetFirstChild(nsnull);
+  nsIFrame* baseFrame = aFrame->GetFirstPrincipalChild();
   if (baseFrame)
     supScriptFrame = baseFrame->GetNextSibling();
   if (!baseFrame || !supScriptFrame || supScriptFrame->GetNextSibling()) {
@@ -154,8 +154,8 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   // get min supscript shift limit from x-height
   // = d(x) + 1/4 * sigma_5, Rule 18c, App. G, TeXbook
   nscoord xHeight = 0;
-  nsRefPtr<nsFontMetrics> fm =
-    aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(baseFrame, getter_AddRefs(fm));
 
   xHeight = fm->XHeight();
   nscoord minShiftFromXHeight = (nscoord) 

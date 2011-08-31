@@ -62,6 +62,7 @@ VPATH += $(srcdir)/src/compiler/preprocessor
 
 CPPSRCS = \
 	Compiler.cpp \
+        DetectRecursion.cpp \
         InfoSink.cpp \
         Initialize.cpp \
         InitializeDll.cpp \
@@ -123,9 +124,6 @@ CSRCS   = \
 
 DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
 
-# ANGLE only on Win32 for now, the solution isn't set up
-# for 64-bit yet. This is handled by MOZ_ANGLE which the configure script
-# leaves undefined in the 64-bit case.
 ifdef MOZ_ANGLE
 
 # libEGL depends on (links against!) libGLESv2!

@@ -267,7 +267,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsPresContext* aPresContext,
                                         nsIFrame*& result)
 {
   // recursively search our children
-  nsIFrame* childFrame = start->GetFirstChild(nsnull);
+  nsIFrame* childFrame = start->GetFirstPrincipalChild();
   while (nsnull != childFrame) 
   {    
     // get the content node

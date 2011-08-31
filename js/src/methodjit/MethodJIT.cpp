@@ -1153,6 +1153,9 @@ mjit::JITScript::scriptDataSize()
 {
     return sizeof(JITScript) +
         sizeof(NativeMapEntry) * nNmapPairs +
+        sizeof(InlineFrame) * nInlineFrames +
+        sizeof(CallSite) * nCallSites +
+        sizeof(JSObject *) * nRootedObjects +
 #if defined JS_MONOIC
         sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
         sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +
@@ -1165,18 +1168,18 @@ mjit::JITScript::scriptDataSize()
         sizeof(ic::GetElementIC) * nGetElems +
         sizeof(ic::SetElementIC) * nSetElems +
 #endif
-        sizeof(CallSite) * nCallSites;
+        0;
 }
 
 void
-mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
+mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
 
-    JITScript **pjit = normal ? &script->jitNormal : &script->jitCtor;
-    void **parity = normal ? &script->jitArityCheckNormal : &script->jitArityCheckCtor;
+    JITScript **pjit = construct ? &script->jitCtor : &script->jitNormal;
+    void **parity = construct ? &script->jitArityCheckCtor : &script->jitArityCheckNormal;
 
     if (*pjit) {
         (*pjit)->~JITScript();

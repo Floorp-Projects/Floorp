@@ -1,0 +1,18 @@
+<svg width="100%" height="100%" preserveAspectRatio="none" 
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+ 
+  <title>Testcase for scaled filter with non-integer x and y and objectBoundingBox</title> 
+  <defs>
+    <filter id="filter" filterUnits="objectBoundingBox" x="0.5" y="0.5" width="0.25" height="0.25">
+      <feFlood flood-color="red" width="1" height="1" />
+    </filter>
+  </defs>
+
+  <rect width="100%" height="100%" fill="lime"/>
+  <g transform="scale(400)">
+    <rect width="1" height="1" filter="url(#filter)" />
+  </g>
+  <rect x="200" y="200" width="100" height="100" fill="lime" />
+
+</svg>

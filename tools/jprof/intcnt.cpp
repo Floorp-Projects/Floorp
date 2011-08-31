@@ -41,6 +41,13 @@ int IntCount::getSize() {return numInts;}
 int IntCount::getCount(int pos) {return iPair[pos].cnt;}
 int IntCount::getIndex(int pos) {return iPair[pos].idx;}
 
+void IntCount::clear()
+{
+    delete[] iPair;
+    iPair = new IntPair[0];
+    numInts = 0;
+}
+
 int IntCount::countAdd(int index, int increment)
 {
     if(numInts) {

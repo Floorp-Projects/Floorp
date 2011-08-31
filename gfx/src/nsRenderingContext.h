@@ -70,7 +70,7 @@ public:
     // These accessors will never return null.
     gfxContext *ThebesContext() { return mThebes; }
     nsDeviceContext *DeviceContext() { return mDeviceContext; }
-    PRInt32 AppUnitsPerDevPixel() { return mP2A; }
+    PRUint32 AppUnitsPerDevPixel() { return NSToIntRound(mP2A); }
 
     // Graphics state
 
@@ -117,9 +117,6 @@ public:
 
     // Text
 
-    void SetFont(const nsFont& aFont, nsIAtom* aLanguage,
-                 gfxUserFontSet *aUserFontSet);
-    void SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
     void SetFont(nsFontMetrics *aFontMetrics);
     nsFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
 

@@ -216,7 +216,7 @@ struct VMFrame
     }
 };
 
-#ifdef JS_CPU_ARM
+#if defined(JS_CPU_ARM) || defined(JS_CPU_SPARC)
 // WARNING: Do not call this function directly from C(++) code because it is not ABI-compliant.
 extern "C" void JaegerStubVeneer(void);
 #endif
@@ -678,10 +678,19 @@ void JS_FASTCALL
 ProfileStubCall(VMFrame &f);
 
 CompileStatus JS_NEVER_INLINE
-TryCompile(JSContext *cx, StackFrame *fp);
+TryCompile(JSContext *cx, JSScript *script, bool construct);
 
 void
-ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal);
+ReleaseScriptCode(JSContext *cx, JSScript *script, bool construct);
+
+inline void
+ReleaseScriptCode(JSContext *cx, JSScript *script)
+{
+    if (script->jitCtor)
+        mjit::ReleaseScriptCode(cx, script, CONSTRUCT);
+    if (script->jitNormal)
+        mjit::ReleaseScriptCode(cx, script, NO_CONSTRUCT);
+}
 
 // Expand all stack frames inlined by the JIT within a compartment.
 void

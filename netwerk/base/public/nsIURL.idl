@@ -45,7 +45,6 @@
  *
  * http://host/directory/fileBaseName.fileExtension?query
  * http://host/directory/fileBaseName.fileExtension#ref
- * http://host/directory/fileBaseName.fileExtension;param
  *            \          \                       /
  *             \          -----------------------
  *              \                   |          /
@@ -54,7 +53,7 @@
  *                            |
  *                        filePath
  */
-[scriptable, uuid(eab18ad5-e3be-4eb3-9c78-7d4e750200d6)]
+[scriptable, uuid(067d697a-c725-4293-9656-e658a75e6bcf)]
 interface nsIURL : nsIURI
 {
     /*************************************************************************
@@ -69,13 +68,6 @@ interface nsIURL : nsIURI
      * Some characters may be escaped.
      */
     attribute AUTF8String filePath;
-
-    /**
-     * Returns the parameters specified after the ; in the URL. 
-     *
-     * Some characters may be escaped.
-     */
-    attribute AUTF8String param;
 
     /**
      * Returns the query portion (the part after the "?") of the URL.

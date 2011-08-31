@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var f1, f2;
+
+function b1()
+{
+  f1 = document.getElementById("f1");
+  f2 = document.getElementById("f2");
+  f1.contentWindow.document.write("11");
+  f1.contentWindow.history.back();
+  setTimeout(b2, 0);
+}
+
+function b2()
+{
+  f2.contentWindow.history.forward();
+  f2.contentWindow.location.reload();
+  f1.parentNode.removeChild(f1);
+}
+
+</script>
+
+
+</script>
+</head>
+
+<body onload="setTimeout(b1, 0);">
+
+<iframe id="f1" src="data:text/html,1"></iframe>
+<iframe id="f2" src="data:text/html,2"></iframe>
+
+</body>
+</html>

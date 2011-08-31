@@ -37,7 +37,7 @@
 /*
  * Base64 decoding (ascii to binary).
  *
- * $Id: nssb64d.c,v 1.7.32.1 2011/05/07 18:20:53 kaie%kuix.de Exp $
+ * $Id: nssb64d.c,v 1.8 2011/05/07 18:20:45 kaie%kuix.de Exp $
  */
 
 #include "nssb64.h"

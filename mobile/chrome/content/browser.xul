@@ -102,7 +102,7 @@
     <command id="cmd_openLocation" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
-    <command id="cmd_showTabs" label="&showTabs.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_showTabs" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
@@ -213,15 +213,16 @@
       </vbox>
 
       <!-- Page Area -->
-      <stack class="window-width window-height">
-        <scrollbox id="page-scrollbox" class="window-width window-height">
+      <stack>
+        <scrollbox id="page-scrollbox">
           <vbox>
             <!-- Main Toolbar -->
             <box id="toolbar-container" class="panel-dark toolbar-height">
               <box id="toolbar-moveable-container" observes="bcast_uidiscovery">
-                <toolbar id="toolbar-main" class="panel-dark window-width" observes="bcast_urlbarState">
+                <toolbar id="toolbar-main" class="panel-dark viewable-width" observes="bcast_urlbarState">
                   <toolbarbutton id="tool-back2" class="tool-back button-actionbar" command="cmd_back"/>
                   <toolbarbutton id="tool-forward2" class="tool-forward button-actionbar" command="cmd_forward"/>
+                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
 #ifdef MOZ_PLATFORM_MAEMO
 #if MOZ_PLATFORM_MAEMO != 6
                   <toolbarbutton id="tool-app-switch" oncommand="BrowserUI.switchTask();"/>
@@ -261,7 +262,8 @@
                     </hbox>
                   </hbox>
                   <toolbarbutton id="tool-star2" class="tool-star button-actionbar" command="cmd_star"/>
-                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
+                  <spacer class="spacer-actionbar" flex="1"/>
+                  <toolbarbutton id="tool-menu" class="button-actionbar" command="cmd_menu"/>
 #ifndef ANDROID
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
 #endif
@@ -282,7 +284,7 @@
         </scrollbox>
 
         <!-- popup for content navigator helper -->
-        <vbox id="content-navigator" class="window-width" top="0">
+        <vbox id="content-navigator" top="0">
           <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search"/>
         </vbox>
 
@@ -314,7 +316,7 @@
     </arrowbox>
 
     <!-- popup for site identity information -->
-    <arrowbox id="identity-container" hidden="true" class="window-width" mode="unknownIdentity" offset="18" flex="1">
+    <arrowbox id="identity-container" hidden="true" mode="unknownIdentity" offset="18" flex="1">
       <hbox id="identity-popup-container" flex="1" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box" flex="1">
@@ -336,7 +338,7 @@
         </vbox>
       </hbox>
 
-      <hbox id="pageactions-container" class="window-width" hidden="true">
+      <hbox id="pageactions-container" hidden="true">
 #ifndef ANDROID
         <pageaction id="pageaction-findinpage" title="&pageactions.findInPage;"
           onclick="FindHelperUI.show();"/>
@@ -376,7 +378,7 @@
       </richlistbox>
     </arrowbox>
 
-    <box id="bookmark-container" class="perm-modal-block window-width window-height" hidden="true">
+    <box id="bookmark-container" class="perm-modal-block" hidden="true">
       <dialog id="bookmark-dialog" class="content-dialog" flex="1">
         <hbox id="bookmark-form-title" class="prompt-title">
           <description>&editBookmarkDialog.title;</description>
@@ -388,6 +390,10 @@
         </hbox>
       </dialog>
     </box>
+
+    <arrowbox id="appmenu-popup" hidden="true">
+      <richlistbox id="appmenu-popup-commands"/>
+    </arrowbox>
 
     <box id="panel-container" hidden="true" class="window-width window-height panel-dark"
          style="-moz-stack-sizing: ignore" left="10000">
@@ -443,14 +449,14 @@
                             oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
                   </setting>
-                  <setting id="prefs-uilanguage" title="&language.title;" type="control">
+                  <setting id="prefs-uilanguage" title="&language.title;" type="menulist">
                     <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
                       <menupopup>
                         <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
                       </menupopup>
                     </menulist>
                   </setting>
-                  <setting id="prefs-homepage" title="&homepage.title;" type="control">
+                  <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
                     <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
                       <menupopup onpopupshowing="PreferencesView.updateHomePageList();">
                         <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
@@ -481,6 +487,7 @@
                     <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2"/>
                     <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
                     <setting pref="privacy.donottrackheader.enabled" title="&doNotTrack.title;" type="bool"/>
+                    <setting id="prefs-master-password" title="&masterPassword.title;" type="bool" oncommand="MasterPasswordUI.show(this.value);"/>
                     <setting title="&clearPrivateData2.title;" type="control">
                       <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
                     </setting>
@@ -541,7 +548,7 @@
     </vbox>
 
 #ifdef MOZ_SERVICES_SYNC
-    <box id="syncsetup-container" class="perm-modal-block window-width window-height" hidden="true">
+    <box id="syncsetup-container" class="perm-modal-block" hidden="true">
       <dialog id="syncsetup-dialog" class="content-dialog" flex="1">
         <hbox class="prompt-title">
           <description>&sync.setup.title;</description>
@@ -571,7 +578,7 @@
             <separator/>
             <textbox id="syncsetup-account" class="prompt-edit" placeholder="&sync.account;" oninput="WeaveGlue.canConnect();"/>
             <textbox id="syncsetup-password" class="prompt-edit" placeholder="&sync.password;" type="password" oninput="WeaveGlue.canConnect();"/>
-            <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.syncKey;" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.recoveryKey;" oninput="WeaveGlue.canConnect();"/>
             <separator class="thin"/>
             <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
               <image class="button-image-icon"/>
@@ -599,7 +606,7 @@
     </arrowbox>
 
     <!-- options dialog for select form field -->
-    <vbox id="select-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+    <vbox id="select-container" class="context-block" hidden="true">
       <vbox id="select-popup" class="dialog-dark">
         <hbox pack="center">
           <label id="select-title" class="options-title" align="center" crop="center" flex="1"/>
@@ -611,7 +618,7 @@
       </vbox>
     </vbox>
 
-    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+    <hbox id="context-container" class="context-block" hidden="true">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">
           <label id="context-hint" crop="center" flex="1"/>
@@ -626,6 +633,9 @@
           <richlistitem class="context-command" id="context-paste" type="paste" onclick="ContextCommands.paste();">
             <label value="&paste.label;"/>
           </richlistitem>
+          <richlistitem class="context-command" id="context-paste-n-go" type="paste-url" onclick="ContextCommands.pasteAndGo();">
+            <label value="&pasteAndGo.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-select-all" type="select-all" onclick="ContextCommands.selectAll();">
             <label value="&selectAll.label;"/>
           </richlistitem>
@@ -634,9 +644,6 @@
           </richlistitem>
           <richlistitem class="context-command" id="context-bookmark-link" type="link" onclick="ContextCommands.bookmarkLink();">
             <label value="&contextBookmarkLink.label;"/>
-          </richlistitem>
-          <richlistitem class="context-command" id="context-savelink" type="link-saveable" onclick="ContextCommands.saveLink();">
-            <label value="&contextSaveLink.label;"/>
           </richlistitem>
           <richlistitem class="context-command" id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveImage.label;"/>
@@ -686,7 +693,7 @@
     <toolbarbutton id="selectionhandle-start" label="^" left="0" top="0" hidden="true"/>
     <toolbarbutton id="selectionhandle-end" label="^" left="0" top="0" hidden="true"/>
 
-    <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
+    <hbox id="menulist-container" class="context-block" hidden="true">
       <vbox id="menulist-popup" class="dialog-dark">
         <label id="menulist-title" class="options-title" crop="center" flex="1"/>
         <richlistbox id="menulist-commands" class="action-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>

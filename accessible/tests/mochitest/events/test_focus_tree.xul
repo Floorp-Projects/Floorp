@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL tree focus testing">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../treeview.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function setTreeView(aTreeID, aView)
+    {
+      this.DOMNode = getNode(aTreeID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.DOMNode)
+      ];
+
+      this.invoke = function setTreeView_invoke()
+      {
+        this.DOMNode.treeBoxObject.view = aView;
+      }
+
+      this.getID = function setTreeView_getID()
+        { return "set tree view for " + prettyName(aTreeID); }
+    };
+
+    function focusTree(aTreeID)
+    {
+      var checker = new invokerChecker(EVENT_FOCUS, getFirstTreeItem, aTreeID);
+      this.__proto__ = new synthFocus(aTreeID, [ checker ]);
+    }
+
+    function moveToNextItem(aTreeID)
+    {
+      var checker = new invokerChecker(EVENT_FOCUS, getSecondTreeItem, aTreeID);
+      this.__proto__ = new synthDownKey(aTreeID, [ checker ]);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Helpers
+
+    function getTreeItemAt(aTreeID, aIdx)
+      { return getAccessible(aTreeID).getChildAt(aIdx + 1); }
+
+    function getFirstTreeItem(aTreeID)
+      { return getTreeItemAt(aTreeID, 0); }
+
+    function getSecondTreeItem(aTreeID)
+      { return getTreeItemAt(aTreeID, 1); }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    var gQueue = null;
+
+    //gA11yEventDumpID = "debug"; // debugging
+    //gA11yEventDumpToConsole = true; // debugging
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new setTreeView("tree", new nsTableTreeView(5)));
+      gQueue.push(new focusTree("tree"));
+      gQueue.push(new moveToNextItem("tree"));
+
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=386821"
+         title="Need better solution for firing delayed event against xul tree">
+        Mozilla Bug 386821
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="debug"/>
+    <tree id="tree" flex="1">
+      <treecols>
+        <treecol id="col1" flex="1" primary="true" label="column"/>
+        <treecol id="col2" flex="1" label="column 2"/>
+      </treecols>
+      <treechildren id="treechildren"/>
+    </tree>
+  </hbox>
+
+</window>
+

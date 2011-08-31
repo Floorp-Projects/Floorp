@@ -57,6 +57,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
+#include "nsRuleData.h"
 #include "nsRuleProcessorData.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
@@ -76,6 +77,50 @@ nsEmptyStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 #ifdef DEBUG
 /* virtual */ void
 nsEmptyStyleRule::List(FILE* out, PRInt32 aIndent) const
+{
+}
+#endif
+
+NS_IMPL_ISUPPORTS1(nsInitialStyleRule, nsIStyleRule)
+
+/* virtual */ void
+nsInitialStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  // Iterate over the property groups
+  for (nsStyleStructID sid = nsStyleStructID(0);
+       sid < nsStyleStructID_Length; sid = nsStyleStructID(sid + 1)) {
+    if (aRuleData->mSIDs & (1 << sid)) {
+      // Iterate over nsCSSValues within the property group
+      nsCSSValue * const value_start =
+        aRuleData->mValueStorage + aRuleData->mValueOffsets[sid];
+      for (nsCSSValue *value = value_start,
+           *value_end = value + nsCSSProps::PropertyCountInStruct(sid);
+           value != value_end; ++value) {
+        // If MathML is disabled take care not to set MathML properties (or we
+        // will trigger assertions in nsRuleNode)
+        if (sid == eStyleStruct_Font &&
+            !aRuleData->mPresContext->Document()->GetMathMLEnabled()) {
+          size_t index = value - value_start;
+          if (index == nsCSSProps::PropertyIndexInStruct(
+                          eCSSProperty_script_level) ||
+              index == nsCSSProps::PropertyIndexInStruct(
+                          eCSSProperty_script_size_multiplier) ||
+              index == nsCSSProps::PropertyIndexInStruct(
+                          eCSSProperty_script_min_size)) {
+            continue;
+          }
+        }
+        if (value->GetUnit() == eCSSUnit_Null) {
+          value->SetInitialValue();
+        }
+      }
+    }
+  }
+}
+
+#ifdef DEBUG
+/* virtual */ void
+nsInitialStyleRule::List(FILE* out, PRInt32 aIndent) const
 {
 }
 #endif
@@ -1564,4 +1609,13 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
     }
   }
   return res;
+}
+
+nsIStyleRule*
+nsStyleSet::InitialStyleRule()
+{
+  if (!mInitialStyleRule) {
+    mInitialStyleRule = new nsInitialStyleRule;
+  }
+  return mInitialStyleRule;
 }

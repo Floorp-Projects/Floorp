@@ -68,7 +68,6 @@
 #include "nsIViewManager.h"
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIRDFNode.h"
@@ -4047,7 +4046,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (attr == nsGkAtoms::removeelement &&
             value.EqualsLiteral("true")) {
 
-            rv = RemoveElement(aTargetNode->GetParent(), aTargetNode);
+            nsCOMPtr<nsIContent> parent = aTargetNode->GetParent();
+            rv = RemoveElement(parent, aTargetNode);
             if (NS_FAILED(rv)) return rv;
 
             return NS_OK;

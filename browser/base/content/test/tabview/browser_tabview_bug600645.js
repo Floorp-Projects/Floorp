@@ -40,8 +40,18 @@ function onTabViewWindowLoaded() {
     // fired, a delay is used here to avoid the test code run before the browser 
     // code.
     executeSoon(function() {
-      is($icon.attr("src"), fi.defaultFavicon.spec,
-         "The icon is showing the default fav icon");
+      let iconSrc = $icon.attr("src");
+      let hasData = true;
+      try {
+        fi.getFaviconDataAsDataURL(iconSrc);
+      } catch(e) {
+        hasData = false;
+      }
+      ok(!hasData, "The icon src doesn't return any data");
+      // with moz-anno:favicon automatically redirects to the default favIcon 
+      // if the given url is invalid
+      ok(/^moz-anno:favicon:/.test(iconSrc),
+         "The icon url starts with moz-anno:favicon so the default fav icon would be displayed");
 
       // clean up
       gBrowser.removeTab(newTab);

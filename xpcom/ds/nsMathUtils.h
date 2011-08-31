@@ -106,30 +106,6 @@ inline NS_HIDDEN_(PRInt32) NS_lroundf(float x)
 }
 
 /*
- * ceil
- */
-inline NS_HIDDEN_(double) NS_ceil(double x)
-{
-    return ceil(x);
-}
-inline NS_HIDDEN_(float) NS_ceilf(float x)
-{
-    return ceilf(x);
-}
-
-/*
- * floor
- */
-inline NS_HIDDEN_(double) NS_floor(double x)
-{
-    return floor(x);
-}
-inline NS_HIDDEN_(float) NS_floorf(float x)
-{
-    return floorf(x);
-}
-
-/*
  * hypot.  We don't need a super accurate version of this, if a platform
  * turns up with none of the possibilities below it would be okay to fall
  * back to sqrt(x*x + y*y).

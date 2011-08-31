@@ -13,8 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
 
   <title>Test for Bug 437844 and Bug 348233</title>
   <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" 
           src="chrome://mochikit/content/chrome-harness.js"></script>

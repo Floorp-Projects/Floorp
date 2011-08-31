@@ -76,6 +76,7 @@ VPATH += $(srcdir)/.. \
 
 CPPSRCS = \
   Compiler.cpp \
+  DetectRecursion.cpp \
   InfoSink.cpp \
   Initialize.cpp \
   InitializeDll.cpp \
@@ -143,8 +144,8 @@ DEFFILE = $(srcdir)/libEGL.def
 
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3d9.lib" \
-                   "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/dxguid.lib" \
+EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
+                   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/dxguid.lib" \
 		   "$(DIST)/lib/libGLESv2.lib" \
 		   dwmapi.lib \
 		   delayimp.lib \

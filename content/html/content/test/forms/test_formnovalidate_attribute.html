@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589696
 -->
 <head>
   <title>Test for Bug 589696</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -46,36 +45,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589696
 <script type="application/javascript">
 
 /** Test for Bug 589696 **/
-
-function checkFormNoValidateAttribute(aElementName)
-{
-  var element = document.createElement(aElementName);
-
-  ok("formNoValidate" in element, "formNoValidate should be a " + aElementName +
-                              " element IDL attribute");
-
-  ok(!element.formNoValidate, "formnovalidate attribute should be disabled");
-  is(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be disabled");
-
-  element.formNoValidate = true;
-  ok(element.formNoValidate, "formnovalidate attribute should be enabled");
-  isnot(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be enabled");
-
-  element.removeAttribute('formnovalidate');
-  element.setAttribute('formnovalidate', '');
-  ok(element.formNoValidate, "formnovalidate attribute should be enabled");
-  isnot(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be enabled");
-
-  element.removeAttribute('formnovalidate');
-  ok(!element.formNoValidate, "formnovalidate attribute should be disabled");
-  is(element.getAttribute('formnovalidate'), null,
-    "formnovalidate attribute should be disabled");
-}
-
-checkFormNoValidateAttribute('button');
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 var os = Components.classes['@mozilla.org/observer-service;1']

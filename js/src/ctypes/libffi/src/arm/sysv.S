@@ -229,6 +229,10 @@ LSYM(Lepilogue):
         .size    CNAME(ffi_call_SYSV),.ffi_call_SYSV_end-CNAME(ffi_call_SYSV)
 
 
+/* Below are VFP hard-float ABI call and closure implementations.
+   Add VFP FPU directive here. */
+	.fpu	vfp
+
 	@ r0:   fn
 	@ r1:   &ecif
 	@ r2:   cif->bytes

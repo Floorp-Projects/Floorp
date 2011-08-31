@@ -59,10 +59,10 @@ void
 gfxRect::Round()
 {
     // Note that don't use NS_round here. See the comment for this method in gfxRect.h
-    gfxFloat x0 = NS_floor(X() + 0.5);
-    gfxFloat y0 = NS_floor(Y() + 0.5);
-    gfxFloat x1 = NS_floor(XMost() + 0.5);
-    gfxFloat y1 = NS_floor(YMost() + 0.5);
+    gfxFloat x0 = floor(X() + 0.5);
+    gfxFloat y0 = floor(Y() + 0.5);
+    gfxFloat x1 = floor(XMost() + 0.5);
+    gfxFloat y1 = floor(YMost() + 0.5);
 
     x = x0;
     y = y0;
@@ -74,10 +74,10 @@ gfxRect::Round()
 void
 gfxRect::RoundIn()
 {
-    gfxFloat x0 = NS_ceil(X());
-    gfxFloat y0 = NS_ceil(Y());
-    gfxFloat x1 = NS_floor(XMost());
-    gfxFloat y1 = NS_floor(YMost());
+    gfxFloat x0 = ceil(X());
+    gfxFloat y0 = ceil(Y());
+    gfxFloat x1 = floor(XMost());
+    gfxFloat y1 = floor(YMost());
 
     x = x0;
     y = y0;
@@ -89,10 +89,10 @@ gfxRect::RoundIn()
 void
 gfxRect::RoundOut()
 {
-    gfxFloat x0 = NS_floor(X());
-    gfxFloat y0 = NS_floor(Y());
-    gfxFloat x1 = NS_ceil(XMost());
-    gfxFloat y1 = NS_ceil(YMost());
+    gfxFloat x0 = floor(X());
+    gfxFloat y0 = floor(Y());
+    gfxFloat x1 = ceil(XMost());
+    gfxFloat y1 = ceil(YMost());
 
     x = x0;
     y = y0;

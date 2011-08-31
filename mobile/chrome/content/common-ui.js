@@ -810,7 +810,6 @@ var FormHelperUI = {
         if (focusedElement && focusedElement.localName == "browser")
           return;
 
-        Browser.keySender.handleEvent(aEvent);
         break;
 
       case "SizeChanged":
@@ -1343,6 +1342,21 @@ var SelectionHelper = {
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "PanBegin":
+        window.removeEventListener("PanBegin", this, true);
+        window.removeEventListener("TapUp", this, true);
+        window.addEventListener("PanFinished", this, true);
+        this._start.hidden = true;
+        this._end.hidden = true;
+        break;
+      case "PanFinished":
+        window.removeEventListener("PanFinished", this, true);
+        try {
+          this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionMeasure", {});
+        } catch (e) {
+          Cu.reportError(e);
+        }
+        break
       case "TapDown":
         if (aEvent.target == this._start || aEvent.target == this._end) {
           this.target = aEvent.target;
@@ -1350,14 +1364,22 @@ var SelectionHelper = {
           this.deltaY = (aEvent.clientY - this.target.top);
           window.addEventListener("TapMove", this, true);
         } else {
-          this.hide(aEvent);
+          window.addEventListener("PanBegin", this, true);
+          window.addEventListener("TapUp", this, true);
+          this.target = null;
         }
         break;
       case "TapUp":
-        window.removeEventListener("TapMove", this, true);
-        this.target = null;
-        this.deltaX = -1;
-        this.deltaY = -1;
+        if (this.target) {
+          window.removeEventListener("TapMove", this, true);
+          this.target = null;
+          this.deltaX = -1;
+          this.deltaY = -1;
+        } else {
+          window.removeEventListener("PanBegin", this, true);
+          window.removeEventListener("TapUp", this, true);
+          this.hide(aEvent);
+        }
         break;
       case "TapMove":
         if (this.target) {
@@ -1375,10 +1397,18 @@ var SelectionHelper = {
         }
         break;
       case "resize":
-      case "keypress":
-      case "URLChanged":
       case "SizeChanged":
       case "ZoomChanged":
+      {
+        try {
+          this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionMeasure", {});
+        } catch (e) {
+          Cu.reportError(e);
+        }
+        break        
+      }
+      case "URLChanged":
+      case "keypress":
         this.hide(aEvent);
         break;
     }
@@ -1459,7 +1489,16 @@ var BadgeHandlers = {
       aPopup.registerBadgeHandler(handlers[i].url, handlers[i]);
   },
 
+  get _pk11DB() {
+    delete this._pk11DB;
+    return this._pk11DB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+  },
+
   getLogin: function(aURL) {
+    let token = this._pk11DB.getInternalKeyToken();
+    if (!token.isLoggedIn())
+      return {username: "", password: ""};
+
     let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
     let logins = lm.findLogins({}, aURL, aURL, null);
     let username = logins.length > 0 ? logins[0].username : "";
@@ -1544,11 +1583,10 @@ var FullScreenVideo = {
 
   createBrowser: function fsv_createBrowser() {
     let browser = this.browser = document.createElement("browser");
-    browser.className = "window-width window-height full-screen";
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("src", "chrome://browser/content/fullscreen-video.xhtml");
-    document.getElementById("main-window").appendChild(browser);
+    document.getElementById("stack").appendChild(browser);
 
     let mm = browser.messageManager;
     mm.loadFrameScript("chrome://browser/content/fullscreen-video.js", true);

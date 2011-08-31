@@ -55,7 +55,8 @@ const STRING_KEY_MAP = {
   version:            "version",
   icon:               "iconURL",
   homepage:           "homepageURL",
-  support:            "supportURL"
+  support:            "supportURL",
+  strings:            "strings"
 };
 
 var LocaleRepository = {
@@ -81,14 +82,26 @@ var LocaleRepository = {
     return (descendant != null) ? this._getTextContent(descendant) : null;
   },
 
-  getLocales: function getLocales(aCallback) {
-    if (!gServiceURL) {
+  getLocales: function getLocales(aCallback, aFilters) {
+    let url = gServiceURL;
+
+    if (!url) {
       aCallback([]);
       return;
     }
+
+    let buildID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).QueryInterface(Ci.nsIXULRuntime).appBuildID;
+    if (aFilters) {
+      if (aFilters.buildID)
+        buildid = aFilters.buildID;
+    }
+    buildID = buildID.substring(0,4) + "-" + buildID.substring(4).replace(/\d{2}(?=\d)/g, "$&-");
+    url = url.replace(/%BUILDID_EXPANDED%/g, buildID);
+    url = Services.urlFormatter.formatURL(url);
+
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     request.mozBackgroundRequest = true;
-    request.open("GET", gServiceURL, true);
+    request.open("GET", url, true);
     request.overrideMimeType("text/xml");
   
     let self = this;
@@ -320,6 +333,7 @@ LocaleSearchResult.prototype = {
   sourceURI: null,
   repositoryStatus: null,
   size: null,
+  strings: "",
   updateDate: null,
   isCompatible: true,
   isPlatformCompatible: true,

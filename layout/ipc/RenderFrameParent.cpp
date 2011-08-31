@@ -95,7 +95,7 @@ struct ViewTransform {
   operator gfx3DMatrix() const
   {
     return
-      gfx3DMatrix::Scale(mXScale, mYScale, 1) *
+      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1) *
       gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
   }
 

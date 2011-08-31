@@ -86,6 +86,7 @@ NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
   if((nsnull == aBuf) || (nsnull == oDontFeedMe))
     return NS_ERROR_ILLEGAL_VALUE;
 
+  this->Reset();
   nsresult rv = this->HandleData(aBuf, aLen);
   if (NS_FAILED(rv))
     return rv;

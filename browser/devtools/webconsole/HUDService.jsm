@@ -90,7 +90,7 @@ XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
 XPCOMUtils.defineLazyGetter(this, "AutocompletePopup", function () {
   var obj = {};
   try {
-    Cu.import("resource://gre/modules/AutocompletePopup.jsm", obj);
+    Cu.import("resource:///modules/AutocompletePopup.jsm", obj);
   }
   catch (err) {
     Cu.reportError(err);
@@ -2708,6 +2708,12 @@ HUD_SERVICE.prototype =
 
     let _browser = gBrowser.
       getBrowserForDocument(aContentWindow.top.document);
+
+    // ignore newly created documents that don't belong to a tab's browser
+    if (!_browser) {
+      return;
+    }
+
     let nBox = gBrowser.getNotificationBox(_browser);
     let nBoxId = nBox.getAttribute("id");
     let hudId = "hud_" + nBoxId;

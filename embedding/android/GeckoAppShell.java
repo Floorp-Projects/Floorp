@@ -62,6 +62,7 @@ import android.telephony.*;
 import android.webkit.MimeTypeMap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
+import android.provider.Settings;
 
 import android.util.*;
 import android.net.Uri;
@@ -73,6 +74,8 @@ import android.graphics.Bitmap;
 
 public class GeckoAppShell
 {
+    private static final String LOG_FILE_NAME = "GeckoAppShell";
+
     // static members only
     private GeckoAppShell() { }
 
@@ -115,6 +118,8 @@ public class GeckoAppShell
     public static native void loadLibs(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status, String type);
     public static native void reportJavaCrash(String stack);
+
+    public static native void processNextNativeEvent();
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -189,25 +194,25 @@ public class GeckoAppShell
                     sFreeSpace = cacheStats.getFreeBlocks() *
                         cacheStats.getBlockSize();
                 } else {
-                    Log.i("GeckoAppShell", "Unable to get cache dir");
+                    Log.i(LOG_FILE_NAME, "Unable to get cache dir");
                 }
             }
         } catch (Exception e) {
-            Log.e("GeckoAppShell", "exception while stating cache dir: ", e);
+            Log.e(LOG_FILE_NAME, "exception while stating cache dir: ", e);
         }
         return sFreeSpace;
     }
 
     static boolean moveFile(File inFile, File outFile)
     {
-        Log.i("GeckoAppShell", "moving " + inFile + " to " + outFile);
+        Log.i(LOG_FILE_NAME, "moving " + inFile + " to " + outFile);
         if (outFile.isDirectory())
             outFile = new File(outFile, inFile.getName());
         try {
             if (inFile.renameTo(outFile))
                 return true;
         } catch (SecurityException se) {
-            Log.w("GeckoAppShell", "error trying to rename file", se);
+            Log.w(LOG_FILE_NAME, "error trying to rename file", se);
         }
         try {
             long lastModified = inFile.lastModified();
@@ -226,11 +231,11 @@ public class GeckoAppShell
             else
                 return false;
         } catch (Exception e) {
-            Log.e("GeckoAppShell", "exception while moving file: ", e);
+            Log.e(LOG_FILE_NAME, "exception while moving file: ", e);
             try {
                 outFile.delete();
             } catch (SecurityException se) {
-                Log.w("GeckoAppShell", "error trying to delete file", se);
+                Log.w(LOG_FILE_NAME, "error trying to delete file", se);
             }
             return false;
         }
@@ -243,7 +248,7 @@ public class GeckoAppShell
             if (from.renameTo(to))
                 return true;
         } catch (SecurityException se) {
-            Log.w("GeckoAppShell", "error trying to rename file", se);
+            Log.w(LOG_FILE_NAME, "error trying to rename file", se);
         }
         File[] files = from.listFiles();
         boolean retVal = true;
@@ -261,7 +266,7 @@ public class GeckoAppShell
             }
             from.delete();
         } catch(Exception e) {
-            Log.e("GeckoAppShell", "error trying to move file", e);
+            Log.e(LOG_FILE_NAME, "error trying to move file", e);
         }
         return retVal;
     }
@@ -309,11 +314,11 @@ public class GeckoAppShell
         GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
         Intent i = geckoApp.getIntent();
         String env = i.getStringExtra("env0");
-        Log.i("GeckoApp", "env0: "+ env);
+        Log.i(LOG_FILE_NAME, "env0: "+ env);
         for (int c = 1; env != null; c++) {
             GeckoAppShell.putenv(env);
             env = i.getStringExtra("env" + c);
-            Log.i("GeckoApp", "env"+ c +": "+ env);
+            Log.i(LOG_FILE_NAME, "env"+ c +": "+ env);
         }
 
         File f = geckoApp.getDir("tmp", Context.MODE_WORLD_READABLE |
@@ -345,7 +350,7 @@ public class GeckoAppShell
             GeckoAppShell.putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
         }
         catch (Exception e) {
-            Log.i("GeckoApp", "No download directory has been found: " + e);
+            Log.i(LOG_FILE_NAME, "No download directory has been found: " + e);
         }
 
         putLocaleEnv();
@@ -556,6 +561,9 @@ public class GeckoAppShell
                 Context.INPUT_METHOD_SERVICE);
         if (imm == null)
             return;
+
+        // Log.d("GeckoAppJava", String.format("IME: notifyIMEChange: t=%s s=%d ne=%d oe=%d",
+        //                                      text, start, newEnd, end));
 
         if (newEnd < 0)
             GeckoApp.surfaceView.inputConnection.notifySelectionChange(
@@ -1103,7 +1111,7 @@ public class GeckoAppShell
 
         // If the network state has changed, notify Gecko
         if (notifyChanged && (state != sNetworkState || typeCode != sNetworkTypeCode)) {
-            Log.i("GeckoAppShell", "Network state changed: (" + state + ", " + type + ") ");
+            Log.i(LOG_FILE_NAME, "Network state changed: (" + state + ", " + type + ") ");
             sNetworkState = state;
             sNetworkType = type;
             sNetworkTypeCode = typeCode;
@@ -1187,7 +1195,7 @@ public class GeckoAppShell
                             fos.write(new Integer(pid).toString().getBytes());
                             fos.close();
                         } catch(Exception e) {
-                            Log.e("GeckoAppShell", "error putting child in the background", e);
+                            Log.e(LOG_FILE_NAME, "error putting child in the background", e);
                         }
                     }
                     return true;
@@ -1208,7 +1216,7 @@ public class GeckoAppShell
                         fos.write(new Integer(pid).toString().getBytes());
                         fos.close();
                     } catch(Exception e) {
-                        Log.e("GeckoAppShell", "error putting child in the foreground", e);
+                        Log.e(LOG_FILE_NAME, "error putting child in the foreground", e);
                     }
                 }
                 return true;
@@ -1296,7 +1304,7 @@ public class GeckoAppShell
             in.close();
         }
         catch (Exception e) {
-            Log.i("GeckoAppShell", "finding procs throws ",  e);
+            Log.i(LOG_FILE_NAME, "finding procs throws ",  e);
         }
     }
 
@@ -1339,7 +1347,7 @@ public class GeckoAppShell
             return buf.array();
         }
         catch (Exception e) {
-            Log.i("GeckoAppShell", "getIconForExtension error: ",  e);
+            Log.i(LOG_FILE_NAME, "getIconForExtension error: ",  e);
             return null;
         }
     }
@@ -1365,5 +1373,17 @@ public class GeckoAppShell
         ActivityInfo activityInfo = resolveInfo.activityInfo;
 
         return activityInfo.loadIcon(pm);
+    }
+
+    public static boolean getShowPasswordSetting() {
+        try {
+            int showPassword =
+                Settings.System.getInt(GeckoApp.mAppContext.getContentResolver(),
+                                       Settings.System.TEXT_SHOW_PASSWORD);
+            return (showPassword > 0);
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 }

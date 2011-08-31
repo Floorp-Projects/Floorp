@@ -280,11 +280,11 @@ extern JSObject *
 js_InitXMLClasses(JSContext *cx, JSObject *obj);
 
 /*
- * If obj is QName corresponding to function::name, set *funidp to name's id,
- * otherwise set *funidp to void.
+ * If obj is a QName corresponding to function::name, set *funidp to name's id
+ * and return true, else return false.
  */
-JSBool
-js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp);
+extern bool
+js_GetLocalNameFromFunctionQName(JSObject *obj, jsid *funidp, JSContext *cx);
 
 extern JSBool
 js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp);

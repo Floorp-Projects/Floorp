@@ -66,8 +66,6 @@ CSRCS = \
 	xconst.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = certdb
 
 # This part of the code, including all sub-dirs, can be optimized for size

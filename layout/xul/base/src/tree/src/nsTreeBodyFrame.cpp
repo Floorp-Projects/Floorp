@@ -851,7 +851,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
     return;
   }
   
-  nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
+  nsIFrame* child = aCurrFrame->GetFirstPrincipalChild();
   while (child &&
          !child->GetContent()->IsRootOfNativeAnonymousSubtree() &&
          (!aResult->mVScrollbar || !aResult->mHScrollbar ||
@@ -1609,7 +1609,10 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
 
   AdjustForBorderPadding(textContext, textRect);
 
-  nsLayoutUtils::SetFontFromStyle(rc, textContext);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
+                                               getter_AddRefs(fm));
+  rc->SetFont(fm);
 
   AdjustForCellText(cellText, aRowIndex, aColumn, *rc, textRect);
 
@@ -1736,7 +1739,10 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
   // Get the borders and padding for the text.
   GetBorderPadding(textContext, bp);
 
-  nsLayoutUtils::SetFontFromStyle(aRenderingContext, textContext);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
+                                               getter_AddRefs(fm));
+  aRenderingContext->SetFont(fm);
 
   // Get the width of the text itself
   nscoord width =

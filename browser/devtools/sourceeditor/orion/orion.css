@@ -1,0 +1,115 @@
+.view {
+	background-color: white;
+}
+
+.viewContainer {
+	font-family: monospace;
+	font-size: 10pt;
+}
+
+.viewContent {
+}.ruler_annotation {
+	background-color: #e1ebfb;
+	width: 16px;
+}
+
+.ruler_annotation_todo {
+}
+
+.ruler_annotation_todo_overview {
+	background-color: lightgreen;
+	border: 1px solid green;
+}
+
+.ruler_annotation_breakpoint {
+}
+
+.ruler_annotation_breakpoint_overview {
+	background-color: lightblue;
+	border: 1px solid blue;
+}
+
+.ruler_lines {
+	background-color: #e1ebfb;
+	border-right: 1px solid #b1badf;
+	text-align: right;
+}
+
+.ruler_overview {
+	background-color: #e1ebfb;
+}
+
+.ruler_lines_even {
+	background-color: #e1ebfb;
+}
+
+.ruler_lines_odd {
+	background-color: white;
+}
+
+.token_comment {
+	color: green;
+}
+
+.token_javadoc {
+	color: #00008F;
+}
+
+.token_string {
+	color: blue;
+}
+
+.token_keyword {
+	color: darkred;
+	font-weight: bold;
+}
+
+.token_bracket_outline {
+	outline: 1px solid red;
+}
+
+.token_bracket {
+	color: white;
+	background-color: grey;
+}
+
+.token_space {
+	background-image: url('/examples/textview/images/white_space.png');
+	background-repeat: no-repeat;
+ 	background-position: center center;
+}
+
+.token_tab {
+	background-image: url('/examples/textview/images/white_tab.png');
+	background-repeat: no-repeat;
+ 	background-position: left center;
+}
+
+.line_caret {
+	background-color: #EAF2FE;
+}/* Styling for html syntax highlighting */
+.entity-name-tag {
+	color: #3f7f7f;
+}
+
+.entity-other-attribute-name {
+	color: #7f007f;
+}
+
+.punctuation-definition-comment {
+	color: #3f5fbf;
+}
+
+.comment {
+	color: #3f5fbf
+}
+
+.string-quoted {
+	color: #2a00ff;
+	font-style: italic;
+}
+
+.invalid {
+	color: red;
+	font-weight: bold;
+}

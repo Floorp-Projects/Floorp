@@ -622,8 +622,9 @@ SyncEngine.prototype = {
       // Mark all items to be uploaded, but treat them as changed from long ago
       this._log.debug("First sync, uploading all items");
       this._modified = {};
-      for (let id in this._store.getAllIDs())
+      for (let id in this._store.getAllIDs()) {
         this._modified[id] = 0;
+      }
     }
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
@@ -631,7 +632,7 @@ SyncEngine.prototype = {
  
     // Array of just the IDs from this._modified. This is what we iterate over
     // so we can modify this._modified during the iteration.
-    this._modifiedIDs = [id for (id in this._modified)];
+    this._modifiedIDs = Object.keys(this._modified);
     this._log.info(this._modifiedIDs.length +
                    " outgoing items pre-reconciliation");
 
@@ -652,7 +653,7 @@ SyncEngine.prototype = {
       batchSize = MOBILE_BATCH_SIZE;
     }
     newitems.newer = this.lastSync;
-    newitems.full = true;
+    newitems.full  = true;
     newitems.limit = batchSize;
     
     // applied    => number of items that should be applied.
@@ -1002,7 +1003,7 @@ SyncEngine.prototype = {
         if (modified > this.lastSync)
           this.lastSync = modified;
 
-        let failed_ids = [id for (id in resp.obj.failed)];
+        let failed_ids = Object.keys(resp.obj.failed);
         if (failed_ids.length)
           this._log.debug("Records that will be uploaded again because "
                           + "the server couldn't store them: "
@@ -1079,8 +1080,8 @@ SyncEngine.prototype = {
     for (let [id, when] in Iterator(this._modified)) {
       this._tracker.addChangedID(id, when);
     }
-    delete this._modified;
-    delete this._modifiedIDs;
+    this._modified    = {};
+    this._modifiedIDs = [];
   },
 
   _sync: function SyncEngine__sync() {
