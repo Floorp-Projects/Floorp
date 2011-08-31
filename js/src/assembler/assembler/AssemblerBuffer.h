@@ -137,14 +137,14 @@ namespace JSC {
          * The user must check for a NULL return value, which means
          * no code was generated, or there was an OOM.
          */
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp)
+        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind)
         {
             if (m_oom || m_size == 0) {
                 *poolp = NULL;
                 return 0;
             }
 
-            void* result = allocator->alloc(m_size, poolp);
+            void* result = allocator->alloc(m_size, poolp, kind);
             if (!result) {
                 *poolp = NULL;
                 return 0;

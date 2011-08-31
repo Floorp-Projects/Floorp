@@ -2397,7 +2397,7 @@ public:
         // XXX yarr-oom
         ExecutablePool *pool;
         bool ok;
-        LinkBuffer linkBuffer(this, globalData->regexAllocator, &pool, &ok);
+        LinkBuffer linkBuffer(this, globalData->regexAllocator, &pool, &ok, REGEXP_CODE);
         m_backtrackingState.linkDataLabels(linkBuffer);
         jitObject.set(linkBuffer.finalizeCode());
         jitObject.setFallBack(m_shouldFallBack);

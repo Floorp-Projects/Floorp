@@ -49,10 +49,8 @@ namespace nj = nanojit;
 nj::LIns *
 Writer::getArgsLength(nj::LIns *args) const
 {
-    uint32 slot = ArgumentsObject::INITIAL_LENGTH_SLOT;
-    nj::LIns *vaddr_ins = ldpObjSlots(args);
-    return name(lir->insLoad(nj::LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset,
-                             ACCSET_SLOTS),
+    uint32 offset = JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT) + sPayloadOffset;
+    return name(lir->insLoad(nj::LIR_ldi, args, offset, ACCSET_SLOTS),
                 "argsLength");
 }
 

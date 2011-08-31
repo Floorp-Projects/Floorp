@@ -103,6 +103,8 @@ nsDOMMemoryReporter::GetAmount(PRInt64* aAmount) {
   *aAmount = 0;
 
   nsGlobalWindow::WindowByIdTable* windows = nsGlobalWindow::GetWindowsTable();
+  NS_ENSURE_TRUE(windows, NS_OK);
+
   windows->Enumerate(GetWindowsMemoryUsage, aAmount);
 
   return NS_OK;

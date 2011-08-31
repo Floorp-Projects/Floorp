@@ -88,6 +88,7 @@
 
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -96,6 +97,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 inline JSObject *
 JSObject::getThrowTypeError() const
@@ -107,7 +109,6 @@ JSBool
 js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 {
     JSObject *argsobj;
-
     if (fp->hasOverriddenArgs()) {
         JS_ASSERT(fp->hasCallObj());
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
@@ -193,6 +194,10 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
         return NULL;
 
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
     JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
     JS_STATIC_ASSERT(StrictArgumentsObject::RESERVED_SLOTS == 2);
     JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
@@ -214,7 +219,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     obj->init(cx, callee.getFunctionPrivate()->inStrictMode()
               ? &StrictArgumentsObject::jsClass
               : &NormalArgumentsObject::jsClass,
-              proto, proto->getParent(), NULL, false);
+              type, proto->getParent(), NULL, false);
     obj->setMap(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -249,6 +254,13 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
     JS_ASSERT(fp->isFunctionFrame());
     while (fp->isEvalInFunction())
         fp = fp->prev();
+
+    /*
+     * Mark all functions which have ever had arguments objects constructed,
+     * which will prevent lazy arguments optimizations in the method JIT.
+     */
+    if (!fp->script()->createdArgs)
+        types::MarkArgumentsCreated(cx, fp->script());
 
     /* Create an arguments object for fp only if it lacks one. */
     JS_ASSERT_IF(fp->fun()->isHeavyweight(), fp->hasCallObj());
@@ -418,8 +430,11 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         if (arg < argsobj->initialLength()) {
             if (StackFrame *fp = reinterpret_cast<StackFrame *>(argsobj->getPrivate())) {
                 JSScript *script = fp->functionScript();
-                if (script->usesArguments)
+                if (script->usesArguments) {
+                    if (arg < fp->numFormalArgs())
+                        TypeScript::SetArgument(cx, script, arg, *vp);
                     fp->canonicalActualArg(arg) = *vp;
+                }
                 return true;
             }
         }
@@ -797,9 +812,9 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
     if (!emptyDeclEnvShape)
         return NULL;
-
-    envobj->init(cx, &js_DeclEnvClass, NULL, &fp->scopeChain(), fp, false);
+    envobj->init(cx, &js_DeclEnvClass, &emptyTypeObject, &fp->scopeChain(), fp, false);
     envobj->setMap(emptyDeclEnvShape);
+
     return envobj;
 }
 
@@ -870,8 +885,8 @@ inline static void
 CopyValuesToCallObject(JSObject &callobj, uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
     JS_ASSERT(callobj.numSlots() >= JSObject::CALL_RESERVED_SLOTS + nargs + nvars);
-    callobj.copySlots(JSObject::CALL_RESERVED_SLOTS, argv, nargs);
-    callobj.copySlots(JSObject::CALL_RESERVED_SLOTS + nargs, slots, nvars);
+    callobj.copySlotRange(JSObject::CALL_RESERVED_SLOTS, argv, nargs);
+    callobj.copySlotRange(JSObject::CALL_RESERVED_SLOTS + nargs, slots, nvars);
 }
 
 void
@@ -1018,6 +1033,9 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     else
         obj->setCallObjArg(i, *vp);
 
+    JSScript *script = obj->getCallObjCalleeFunction()->script();
+    TypeScript::SetArgument(cx, script, i, *vp);
+
     return true;
 }
 
@@ -1081,6 +1099,9 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         fp->varSlot(i) = *vp;
     else
         obj->setCallObjVar(i, *vp);
+
+    JSScript *script = obj->getCallObjCalleeFunction()->script();
+    TypeScript::SetLocal(cx, script, i, *vp);
 
     return true;
 }
@@ -1164,7 +1185,7 @@ call_trace(JSTracer *trc, JSObject *obj)
         uintN count = fp->script()->bindings.countArgsAndVars();
 
         JS_ASSERT(obj->numSlots() >= first + count);
-        obj->setSlotsUndefined(first, count);
+        obj->clearSlotRange(first, count);
     }
 
     MaybeMarkGenerator(trc, obj);
@@ -1252,9 +1273,14 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
 
                             if (IsFunctionObject(v, &clone) &&
                                 clone->getFunctionPrivate() == fun &&
-                                clone->hasMethodObj(*thisp))
-                            {
-                                JS_ASSERT(clone != &funobj);
+                                clone->hasMethodObj(*thisp)) {
+                                /*
+                                 * N.B. If the method barrier was on a function
+                                 * with singleton type, then while crossing the
+                                 * method barrier CloneFunctionObject will have
+                                 * ignored the attempt to clone the function.
+                                 */
+                                JS_ASSERT_IF(!clone->hasSingletonType(), clone != &funobj);
                                 *vp = v;
                                 overwriteCallee(*clone);
                                 return true;
@@ -1281,7 +1307,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
              * track of the method, so we associate it with the first barriered
              * object found starting from thisp on the prototype chain.
              */
-            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent());
+            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent(), true);
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);
@@ -1304,11 +1330,22 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
     JSFunction *fun = obj->getFunctionPrivate();
 
+    /*
+     * Mark the function's script as uninlineable, to expand any of its
+     * frames on the stack before we go looking for them. This allows the
+     * below walk to only check each explicit frame rather than needing to
+     * check any calls that were inlined.
+     */
+    if (fun->isInterpreted()) {
+        fun->script()->uninlineable = true;
+        MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
+    }
+
     /* Set to early to null in case of error */
     vp->setNull();
 
     /* Find fun's top-most activation record. */
-    StackFrame *fp = js_GetTopStackFrame(cx);
+    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
     if (!fp)
         return true;
 
@@ -1317,6 +1354,23 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (!fp)
             return true;
     }
+
+#ifdef JS_METHODJIT
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
+        /*
+         * If the frame was called from within an inlined frame, mark the
+         * innermost function as uninlineable to expand its frame and allow us
+         * to recover its callee object.
+         */
+        JSInlinedSite *inlined;
+        fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
+        if (inlined) {
+            JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
+            fun->script()->uninlineable = true;
+            MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
+        }
+    }
+#endif
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
@@ -1424,11 +1478,11 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
      * as the function object itself.
      */
     JSObject *parent = obj->getParent();
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+    JSObject *objProto;
+    if (!js_GetClassPrototype(cx, parent, JSProto_Object, &objProto))
         return NULL;
-    proto = NewNativeClassInstance(cx, &js_ObjectClass, proto, parent);
-    if (!proto)
+    JSObject *proto = NewNativeClassInstance(cx, &js_ObjectClass, objProto, parent);
+    if (!proto || !proto->setSingletonType(cx))
         return NULL;
 
     /*
@@ -1554,21 +1608,14 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             }
             return false;
         }
-        if (fun->u.i.wrapper) {
-            JSAutoByteString funNameBytes;
-            if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes))
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XDR_CLOSURE_WRAPPER, name);
-            return false;
-        }
-        JS_ASSERT((fun->u.i.wrapper & ~1U) == 0);
-        firstword = (fun->u.i.skipmin << 2) | (fun->u.i.wrapper << 1) | !!fun->atom;
+        firstword = (fun->u.i.skipmin << 2) | !!fun->atom;
         flagsword = (fun->nargs << 16) | fun->flags;
     } else {
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
         fun->clearParent();
-        fun->clearProto();
+        fun->clearType();
     }
 
     AutoObjectRooter tvr(cx, fun);
@@ -1585,7 +1632,6 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         JS_ASSERT((flagsword & JSFUN_KINDMASK) >= JSFUN_INTERPRETED);
         fun->flags = uint16(flagsword);
         fun->u.i.skipmin = uint16(firstword >> 2);
-        fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
     /*
@@ -1603,6 +1649,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 #ifdef CHECK_SCRIPT_OWNER
         fun->script()->owner = NULL;
 #endif
+        if (!fun->u.i.script->typeSetFunction(cx, fun))
+            return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
     }
@@ -1932,7 +1980,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
             return false;
 
         JS_ASSERT(numSlots() >= argslen + FUN_CLASS_RESERVED_SLOTS);
-        copySlots(FUN_CLASS_RESERVED_SLOTS, args, argslen);
+        copySlotRange(FUN_CLASS_RESERVED_SLOTS, args, argslen);
     }
     return true;
 }
@@ -1956,16 +2004,23 @@ JSObject::getBoundFunctionThis() const
     return getSlot(JSSLOT_BOUND_FUNCTION_THIS);
 }
 
-inline const js::Value *
-JSObject::getBoundFunctionArguments(uintN &argslen) const
+inline const js::Value &
+JSObject::getBoundFunctionArgument(uintN which) const
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(isBoundFunction());
+    JS_ASSERT(which < getBoundFunctionArgumentCount());
+
+    return getSlot(FUN_CLASS_RESERVED_SLOTS + which);
+}
+
+inline size_t
+JSObject::getBoundFunctionArgumentCount() const
 {
     JS_ASSERT(isFunction());
     JS_ASSERT(isBoundFunction());
 
-    argslen = getSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).toPrivateUint32();
-    JS_ASSERT_IF(argslen > 0, numSlots() >= argslen);
-
-    return getSlots() + FUN_CLASS_RESERVED_SLOTS;
+    return getSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).toPrivateUint32();
 }
 
 namespace js {
@@ -1983,8 +2038,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     bool constructing = IsConstructing(vp);
 
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
-    uintN argslen;
-    const Value *boundArgs = obj->getBoundFunctionArguments(argslen);
+    uintN argslen = obj->getBoundFunctionArgumentCount();
 
     if (argc + argslen > StackSpace::ARGS_LENGTH_MAX) {
         js_ReportAllocationOverflow(cx);
@@ -2002,7 +2056,8 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
-    memcpy(args.argv(), boundArgs, argslen * sizeof(Value));
+    for (uintN i = 0; i < argslen; i++)
+        args[i] = obj->getBoundFunctionArgument(i);
     memcpy(args.argv() + argslen, vp + 2, argc * sizeof(Value));
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
@@ -2138,11 +2193,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-    if (!emptyCallShape)
-        return false;
-
-    Bindings bindings(cx, emptyCallShape);
+    Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
 
     uintN lineno;
@@ -2357,12 +2408,18 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
+    /*
+     * The default 'new' object for Function.prototype has unknown properties.
+     * This will be used for generic scripted functions, e.g. from non-compileAndGo code.
+     */
+    proto->getNewType(cx, NULL, /* markUnknown = */ true);
+
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         return NULL;
     fun->flags |= JSFUN_PROTOTYPE;
 
-    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
+    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
     if (!script)
         return NULL;
     script->noScriptRval = true;
@@ -2372,6 +2429,9 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     script->owner = NULL;
 #endif
     fun->u.i.script = script;
+    fun->getType(cx)->functionScript = script;
+    script->hasFunction = true;
+    script->where.fun = fun;
     script->setOwnerObject(fun);
     js_CallNewScriptHook(cx, script, fun);
 
@@ -2402,6 +2462,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         funobj = NewFunction(cx, parent);
         if (!funobj)
             return NULL;
+        if (native && !funobj->setSingletonType(cx))
+            return NULL;
     }
     JS_ASSERT(!funobj->getPrivate());
     fun = static_cast<JSFunction *>(funobj);
@@ -2413,7 +2475,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
         fun->u.i.skipmin = 0;
-        fun->u.i.wrapper = false;
         fun->u.i.script = NULL;
     } else {
         fun->u.n.clasp = NULL;
@@ -2455,6 +2516,17 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent);
         if (!clone)
             return NULL;
+
+        /*
+         * We can use the same type as the original function provided that (a)
+         * its prototype is correct, and (b) its type is not a singleton. The
+         * first case will hold in all compileAndGo code, and the second case
+         * will have been caught by CloneFunctionObject coming from function
+         * definitions or read barriers, so will not get here.
+         */
+        if (fun->getProto() == proto && !fun->hasSingletonType())
+            clone->setType(fun->type());
+
         clone->setPrivate(fun);
     } else {
         /*
@@ -2464,6 +2536,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         clone = NewFunction(cx, parent);
         if (!clone)
             return NULL;
+
         JSFunction *cfun = (JSFunction *) clone;
         cfun->nargs = fun->nargs;
         cfun->flags = fun->flags;
@@ -2481,7 +2554,11 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
+
             cfun->u.i.script = cscript;
+            if (!cfun->u.i.script->typeSetFunction(cx, cfun))
+                return NULL;
+
             cfun->script()->setOwnerObject(cfun);
 #ifdef CHECK_SCRIPT_OWNER
             cfun->script()->owner = NULL;
@@ -2512,7 +2589,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     JS_ASSERT_IF(JSScript::isValidOffset(fun->script()->upvarsOffset),
                  fun->script()->upvars()->length == fun->script()->bindings.countUpvars());
 
-    JSObject *closure = CloneFunctionObject(cx, fun, scopeChain);
+    JSObject *closure = CloneFunctionObject(cx, fun, scopeChain, true);
     if (!closure)
         return closure;
 
@@ -2637,6 +2714,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
 
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
+
     return fun;
 }
 

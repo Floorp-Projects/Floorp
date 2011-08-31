@@ -114,7 +114,7 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
   if (NS_FAILED(rv)) return rv;
 
   // get back output parameters
-  PRBool tempValue;
+  PRInt32 tempValue;
   block->GetInt(nsICookieAcceptDialog::ACCEPT_COOKIE, &tempValue);
   *aAccept = tempValue;
   

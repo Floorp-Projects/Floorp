@@ -44,47 +44,61 @@
 #include "jsvalue.h"
 #include "jsobj.h"
 
-namespace js {
-inline JSUint32
-ArrayBuffer::getByteLength(JSObject *obj)
+inline uint32
+JSObject::arrayBufferByteLength()
 {
-    return *((JSUint32*) obj->getSlotsPtr());
+    JS_ASSERT(isArrayBuffer());
+    return *((uint32*) slots);
 }
 
 inline uint8 *
-ArrayBuffer::getDataOffset(JSObject *obj) {
-    uint64 *base = ((uint64*)obj->getSlotsPtr()) + 1;
+JSObject::arrayBufferDataOffset()
+{
+    uint64 *base = ((uint64*)slots) + 1;
     return (uint8*) base;
+}
+
+namespace js {
+
+static inline int32
+ClampIntForUint8Array(int32 x)
+{
+    if (x < 0)
+        return 0;
+    if (x > 255)
+        return 255;
+    return x;
 }
 
 inline JSUint32
 TypedArray::getLength(JSObject *obj) {
-    return obj->getSlot(FIELD_LENGTH).toInt32();
+    return obj->getFixedSlot(FIELD_LENGTH).toInt32();
 }
 
 inline JSUint32
 TypedArray::getByteOffset(JSObject *obj) {
-    return obj->getSlot(FIELD_BYTEOFFSET).toInt32();
+    return obj->getFixedSlot(FIELD_BYTEOFFSET).toInt32();
 }
 
 inline JSUint32
 TypedArray::getByteLength(JSObject *obj) {
-    return obj->getSlot(FIELD_BYTELENGTH).toInt32();
+    return obj->getFixedSlot(FIELD_BYTELENGTH).toInt32();
 }
 
 inline JSUint32
 TypedArray::getType(JSObject *obj) {
-    return obj->getSlot(FIELD_TYPE).toInt32();
+    return obj->getFixedSlot(FIELD_TYPE).toInt32();
 }
 
 inline JSObject *
 TypedArray::getBuffer(JSObject *obj) {
-    return &obj->getSlot(FIELD_BUFFER).toObject();
+    return &obj->getFixedSlot(FIELD_BUFFER).toObject();
 }
 
 inline void *
 TypedArray::getDataOffset(JSObject *obj) {
     return (void *)obj->getPrivate();
 }
+
 }
 #endif /* jstypedarrayinlines_h */

@@ -50,6 +50,7 @@
  * is reference counted and the slot vector is malloc'ed.
  */
 #include "jsapi.h"
+#include "jsinfer.h"
 #include "jshash.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
@@ -62,10 +63,9 @@ namespace js {
 
 class JSProxyHandler;
 class AutoPropDescArrayRooter;
+struct GCMarker;
 
-namespace mjit {
-class Compiler;
-}
+namespace mjit { class Compiler; }
 
 static inline PropertyOp
 CastAsPropertyOp(JSObject *object)
@@ -310,10 +310,12 @@ class ValidateWriter;
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
  * struct allocated from a larger GC size-class.
  *
- * The clasp member stores the js::Class pointer for this object. We do *not*
- * synchronize updates of clasp or flags -- API clients must take care.
+ * The clasp member stores the js::Class pointer for this object.
  *
- * An object is a delegate if it is on another object's prototype (the proto
+ * The type member stores the type of the object, which contains its prototype
+ * object and the possible types of its properties.
+ *
+ * An object is a delegate if it is on another object's prototype (type->proto
  * field) or scope chain (the parent field), and therefore the delegate might
  * be asked implicitly to get or set a property on behalf of another object.
  * Delegates may be accessed directly too, as may any object, but only those
@@ -331,15 +333,29 @@ class ValidateWriter;
  * Both these flag bits are initially zero; they may be set or queried using
  * the (is|set)(Delegate|System) inline methods.
  *
- * The slots member is a pointer to the slot vector for the object.
- * This can be either a fixed array allocated immediately after the object,
- * or a dynamically allocated array.  A dynamic array can be tested for with
- * hasSlotsArray().  In all cases but one, capacity gives the number of usable
- * slots. The exception is for ArrayBuffer where capacity gives the number of
- * whole slots in the slots array (which includes one word for the array's
- * length); there may be a fraction of a slot left over at the end.
- * Two objects with the same shape have the same number of fixed slots, and
- * either both have or neither have dynamically allocated slot arrays.
+ * Objects can have slots allocated either in a fixed array immediately
+ * following the object, in dynamically allocated slots, or both. In all cases,
+ * 'capacity' gives the number of usable slots. How the slots are organized
+ * is different for dense arrays vs. other objects.
+ *
+ * For dense arrays (arrays with only normal integer properties), the 'slots'
+ * member points either to the fixed array or to a dynamic array, and in
+ * all cases is indexed by the associated property (e.g. obj->slots[5] stores
+ * the value for property '5'). If a dynamic array is in use, slots in the
+ * fixed array are not used.
+ *
+ * ArrayBuffer objects may also use their fixed slots for storage in a similar
+ * manner to dense arrays. The fixed slots do not represent Values in such
+ * cases. (ArrayBuffers never have other properties added directly to them, as
+ * they delegate such attempts to another JSObject).
+ *
+ * For objects other than dense arrays and array buffers, if the object has N
+ * fixed slots then those are always the first N slots of the object. The
+ * dynamic slots pointer is used if those fixed slots overflow, and stores all
+ * remaining slots. The dynamic slots pointer is NULL if there is no slots
+ * overflow, and never points to the object's fixed slots. Unlike dense arrays,
+ * the fixed slots can always be accessed. Two objects with the same shape are
+ * guaranteed to have the same number of fixed slots.
  *
  * If you change this struct, you'll probably need to change the AccSet values
  * in jsbuiltins.h.
@@ -353,7 +369,6 @@ struct JSObject : js::gc::Cell {
      */
     friend class js::TraceRecorder;
     friend class nanojit::ValidateWriter;
-    friend class GetPropCompiler;
 
     /*
      * Private pointer to the last added property and methods to manipulate the
@@ -399,8 +414,16 @@ struct JSObject : js::gc::Cell {
         HAS_EQUALITY              =      0x800,
         VAROBJ                    =     0x1000,
         WATCHED                   =     0x2000,
+        PACKED_ARRAY              =     0x4000,
+        ITERATED                  =     0x8000,
+        SINGLETON_TYPE            =    0x10000,
+        LAZY_TYPE                 =    0x20000,
 
-        UNUSED_FLAG_BITS          = 0xFFFFC000
+        /* The top 5 bits of an object's flags are its number of fixed slots. */
+        FIXED_SLOTS_SHIFT         =         27,
+        FIXED_SLOTS_MASK          =       0x1f << FIXED_SLOTS_SHIFT,
+
+        UNUSED_FLAG_BITS          = 0x07FC0000
     };
 
     /*
@@ -415,32 +438,34 @@ struct JSObject : js::gc::Cell {
     uint32      flags;                      /* flags */
     uint32      objShape;                   /* copy of lastProp->shape, or override if different */
 
-    /* If prototype, lazily filled array of empty shapes for each object size. */
-    js::EmptyShape **emptyShapes;
+    union {
+        /* If prototype, type of values using this as their prototype. */
+        js::types::TypeObject *newType;
 
-    JSObject    *proto;                     /* object's prototype */
+        /* If dense array, the initialized length (see jsarray.cpp). */
+        jsuword initializedLength;
+    };
+
     JSObject    *parent;                    /* object's parent */
     void        *privateData;               /* private data */
-    jsuword     capacity;                   /* number of slots; for ArrayBuffer the number 
-                                               may be be non-integral, so this may underestimate */
+    jsuword     capacity;                   /* total number of available slots */
+
   private:
     js::Value   *slots;                     /* dynamically allocated slots,
-                                               or pointer to fixedSlots() */
-  public:
-    static size_t offsetOfSlots() {
-        return offsetof(JSObject, slots);
-    }
+                                               or pointer to fixedSlots() for
+                                               dense arrays. */
 
     /*
-     * Return an immutable, shareable, empty shape with the same clasp as this
-     * and the same slotSpan as this had when empty.
-     *
-     * If |this| is the scope of an object |proto|, the resulting scope can be
-     * used as the scope of a new object whose prototype is |proto|.
+     * The object's type and prototype. For objects with the LAZY_TYPE flag
+     * set, this is the prototype's default 'new' type and can only be used
+     * to get that prototype.
      */
-    inline bool canProvideEmptyShape(js::Class *clasp);
-    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp,
-                                         /* gc::FinalizeKind */ unsigned kind);
+    js::types::TypeObject *type_;
+
+    /* Make the type object to use for LAZY_TYPE objects. */
+    void makeLazyType(JSContext *cx);
+
+  public:
 
     inline bool isNative() const;
     inline bool isNewborn() const;
@@ -455,6 +480,9 @@ struct JSObject : js::gc::Cell {
     const js::ObjectOps *getOps() const {
         return &getClass()->ops;
     }
+
+    inline void trace(JSTracer *trc);
+    inline void scanSlots(js::GCMarker *gcmarker);
 
     uint32 shape() const {
         JS_ASSERT(objShape != INVALID_SHAPE);
@@ -539,7 +567,7 @@ struct JSObject : js::gc::Cell {
 
     /* Functions for setting up scope chain object maps and shapes. */
     void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
-    void initClonedBlock(JSContext *cx, JSObject *proto, js::StackFrame *priv);
+    void initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *priv);
     void setBlockOwnShape(JSContext *cx);
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
@@ -640,13 +668,38 @@ struct JSObject : js::gc::Cell {
 
     uint32 numSlots() const { return uint32(capacity); }
 
-    size_t slotsAndStructSize(uint32 nslots) const;
-    size_t slotsAndStructSize() const { return slotsAndStructSize(numSlots()); }
+    inline size_t structSize() const;
+    inline size_t slotsAndStructSize() const;
 
-    inline js::Value* fixedSlots() const;
-    inline size_t numFixedSlots() const;
+    /* Slot accessors for JITs. */
 
     static inline size_t getFixedSlotOffset(size_t slot);
+    static inline size_t offsetOfCapacity() { return offsetof(JSObject, capacity); }
+    static inline size_t offsetOfSlots() { return offsetof(JSObject, slots); }
+
+    /*
+     * Get a raw pointer to the object's slots, or a slot of the object given
+     * a previous value for its since-reallocated dynamic slots.
+     */
+    inline const js::Value *getRawSlots();
+    inline const js::Value *getRawSlot(size_t slot, const js::Value *slots);
+
+    /* Whether a slot is at a fixed offset from this object. */
+    inline bool isFixedSlot(size_t slot);
+
+    /* Index into the dynamic slots array to use for a dynamic slot. */
+    inline size_t dynamicSlotIndex(size_t slot);
+
+    inline size_t numFixedSlots() const;
+
+    /* Whether this object has any dynamic slots at all. */
+    inline bool hasSlotsArray() const;
+
+    /* Get the number of dynamic slots required for a given capacity. */
+    inline size_t numDynamicSlots(size_t capacity) const;
+
+  private:
+    inline js::Value* fixedSlots() const;
 
   public:
     /* Minimum size for dynamically allocated slots. */
@@ -661,6 +714,18 @@ struct JSObject : js::gc::Cell {
             return growSlots(cx, nslots);
         return true;
     }
+
+    /*
+     * Fill a range of slots with holes or undefined, depending on whether this
+     * is a dense array.
+     */
+    void clearSlotRange(size_t start, size_t length);
+
+    /*
+     * Copy a flat array of slots to this object at a start slot. Caller must
+     * ensure there are enough slots in this object.
+     */
+    void copySlotRange(size_t start, const js::Value *vector, size_t length);
 
     /*
      * Ensure that the object has at least JSCLASS_RESERVED_SLOTS(clasp) +
@@ -681,25 +746,6 @@ struct JSObject : js::gc::Cell {
     bool ensureInstanceReservedSlots(JSContext *cx, size_t nreserved);
 
     /*
-     * Get a direct pointer to the object's slots.
-     * This can be reallocated if the object is modified, watch out!
-     */
-    const js::Value *getSlots() const { return slots; }
-
-    js::Value *getSlotsPtr() { return slots; }
-    void setSlotsPtr(js::Value *vp) { slots = vp; }
-
-    void copySlots(uint32 dstStart, const js::Value *src, uint32 count) {
-        JS_ASSERT(dstStart + count <= capacity);
-        memcpy(slots + dstStart, src, count * sizeof(js::Value));
-    }
-
-    void setSlotsUndefined(uint32 start, uint32 count) {
-        JS_ASSERT(start + count <= capacity);
-        js::SetValueRangeToUndefined(slots + start, count);
-    }
-
-    /*
      * NB: ensureClassReservedSlotsForEmptyObject asserts that nativeEmpty()
      * Use ensureClassReservedSlots for any object, either empty or already
      * extended with properties.
@@ -712,31 +758,57 @@ struct JSObject : js::gc::Cell {
 
     inline bool containsSlot(uint32 slot) const;
 
+    void rollbackProperties(JSContext *cx, uint32 slotSpan);
+
     js::Value& getSlotRef(uintN slot) {
         JS_ASSERT(slot < capacity);
-        return slots[slot];
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
     }
 
     inline js::Value &nativeGetSlotRef(uintN slot);
 
     const js::Value &getSlot(uintN slot) const {
         JS_ASSERT(slot < capacity);
-        return slots[slot];
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
     }
 
     inline const js::Value &nativeGetSlot(uintN slot) const;
 
     void setSlot(uintN slot, const js::Value &value) {
         JS_ASSERT(slot < capacity);
-        slots[slot] = value;
+        getSlotRef(slot) = value;
     }
 
     inline void nativeSetSlot(uintN slot, const js::Value &value);
+    inline void nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value);
 
     inline js::Value getReservedSlot(uintN index) const;
 
     /* Call this only after the appropriate ensure{Class,Instance}ReservedSlots call. */
     inline void setReservedSlot(uintN index, const js::Value &v);
+
+    /* For slots which are known to always be fixed, due to the way they are allocated. */
+
+    js::Value &getFixedSlotRef(uintN slot) {
+        JS_ASSERT(slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    const js::Value &getFixedSlot(uintN slot) const {
+        JS_ASSERT(slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    void setFixedSlot(uintN slot, const js::Value &value) {
+        JS_ASSERT(slot < numFixedSlots());
+        fixedSlots()[slot] = value;
+    }
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
@@ -745,16 +817,61 @@ struct JSObject : js::gc::Cell {
     /* Extend this object to have shape as its last-added property. */
     inline void extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);
 
-    JSObject *getProto() const  { return proto; }
-    void clearProto()           { proto = NULL; }
+    /*
+     * Whether this is the only object which has its specified type. This
+     * object will have its type constructed lazily as needed by analysis.
+     */
+    bool hasSingletonType() const { return flags & SINGLETON_TYPE; }
 
-    void setProto(JSObject *newProto) {
-#ifdef DEBUG
-        for (JSObject *obj = newProto; obj; obj = obj->getProto())
-            JS_ASSERT(obj != this);
-#endif
-        setDelegateNullSafe(newProto);
-        proto = newProto;
+    /*
+     * Whether the object's type has not been constructed yet. If an object
+     * might have a lazy type, use getType() below, otherwise type().
+     */
+    bool hasLazyType() const { return flags & LAZY_TYPE; }
+
+    /*
+     * Marks this object as having a singleton type, and leave the type lazy.
+     * Constructs a new, unique shape for the object.
+     */
+    inline bool setSingletonType(JSContext *cx);
+
+    /* Called from GC, reverts a singleton object to having a lazy type. */
+    inline void revertLazyType();
+
+    inline js::types::TypeObject *getType(JSContext *cx);
+
+    js::types::TypeObject *type() const {
+        JS_ASSERT(!hasLazyType());
+        return type_;
+    }
+
+    js::types::TypeObject *typeFromGC() const {
+        /* Direct field access for use by GC. */
+        return type_;
+    }
+
+    static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
+
+    inline void clearType();
+    inline void setType(js::types::TypeObject *newType);
+
+    inline js::types::TypeObject *getNewType(JSContext *cx, JSScript *script = NULL,
+                                             bool markUnknown = false);
+  private:
+    void makeNewType(JSContext *cx, JSScript *script, bool markUnknown);
+  public:
+
+    /* Set a new prototype for an object with a singleton type. */
+    bool splicePrototype(JSContext *cx, JSObject *proto);
+
+    /*
+     * For bootstrapping, whether to splice a prototype for Function.prototype
+     * or the global object.
+     */
+    bool shouldSplicePrototype(JSContext *cx);
+
+    JSObject * getProto() const {
+        return type_->proto;
     }
 
     JSObject *getParent() const {
@@ -835,6 +952,11 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getPrimitiveThis() const;
     inline void setPrimitiveThis(const js::Value &pthis);
 
+    static size_t getPrimitiveThisOffset() {
+        /* All primitive objects have their value in a fixed slot. */
+        return getFixedSlotOffset(JSSLOT_PRIMITIVE_THIS);
+    }
+
   public:
     inline js::StringObject *asString();
 
@@ -843,15 +965,26 @@ struct JSObject : js::gc::Cell {
      */
 
     inline uint32 getArrayLength() const;
-    inline void setArrayLength(uint32 length);
+    inline void setArrayLength(JSContext *cx, uint32 length);
 
     inline uint32 getDenseArrayCapacity();
+    inline uint32 getDenseArrayInitializedLength();
+    inline void setDenseArrayLength(uint32 length);
+    inline void setDenseArrayInitializedLength(uint32 length);
+    inline void ensureDenseArrayInitializedLength(JSContext *cx, uintN index, uintN extra);
+    inline void backfillDenseArrayHoles(JSContext *cx);
     inline const js::Value* getDenseArrayElements();
     inline const js::Value &getDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
+    inline void setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val);
     inline void copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count);
     inline void moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
+    inline bool denseArrayHasInlineSlots() const;
+
+    /* Packed information for this array. */
+    inline bool isPackedDenseArray();
+    inline void markDenseArrayNotPacked(JSContext *cx);
 
     /*
      * ensureDenseArrayElements ensures that the dense array can hold at least
@@ -877,6 +1010,11 @@ struct JSObject : js::gc::Cell {
      * true. On OOM, report it and return false.
      */
     bool arrayGetOwnDataElement(JSContext *cx, size_t i, js::Value *vp);
+
+  public:
+    bool allocateArrayBufferSlots(JSContext *cx, uint32 size);
+    inline uint32 arrayBufferByteLength();
+    inline uint8 * arrayBufferDataOffset();
 
   public:
     inline js::ArgumentsObject *asArguments();
@@ -982,6 +1120,10 @@ struct JSObject : js::gc::Cell {
   public:
     static const uint32 FUN_CLASS_RESERVED_SLOTS = 2;
 
+    static size_t getFlatClosureUpvarsOffset() {
+        return getFixedSlotOffset(JSSLOT_FLAT_CLOSURE_UPVARS);
+    }
+
     inline JSFunction *getFunctionPrivate() const;
 
     inline js::Value *getFlatClosureUpvars() const;
@@ -998,7 +1140,8 @@ struct JSObject : js::gc::Cell {
 
     inline JSObject *getBoundFunctionTarget() const;
     inline const js::Value &getBoundFunctionThis() const;
-    inline const js::Value *getBoundFunctionArguments(uintN &argslen) const;
+    inline const js::Value &getBoundFunctionArgument(uintN which) const;
+    inline size_t getBoundFunctionArgumentCount() const;
 
     /*
      * RegExp-specific getters and setters.
@@ -1109,9 +1252,17 @@ struct JSObject : js::gc::Cell {
      */
     inline bool isCallable();
 
+    /* Do initialization required immediately after allocation. */
+    void earlyInit(jsuword capacity) {
+        this->capacity = capacity;
+
+        /* Stops obj from being scanned until initializated. */
+        lastProp = NULL;
+    }
+
     /* The map field is not initialized here and should be set separately. */
-    void init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *parent,
-              void *priv, bool useHoles);
+    void init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
+              JSObject *parent, void *priv, bool denseArray);
 
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx);
@@ -1122,18 +1273,10 @@ struct JSObject : js::gc::Cell {
      */
     inline bool initSharingEmptyShape(JSContext *cx,
                                       js::Class *clasp,
-                                      JSObject *proto,
+                                      js::types::TypeObject *type,
                                       JSObject *parent,
                                       void *priv,
                                       /* gc::FinalizeKind */ unsigned kind);
-
-    inline bool hasSlotsArray() const;
-
-    /* This method can only be called when hasSlotsArray() returns true. */
-    inline void freeSlotsArray(JSContext *cx);
-
-    /* Free the slots array and copy slots that fit into the fixed array. */
-    inline void revertToFixedSlots(JSContext *cx);
 
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 
@@ -1180,6 +1323,15 @@ struct JSObject : js::gc::Cell {
 
     bool toDictionaryMode(JSContext *cx);
 
+    struct TradeGutsReserved;
+    static bool ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
+                                    TradeGutsReserved &reserved);
+
+    static void TradeGuts(JSContext *cx, JSObject *a, JSObject *b,
+                          TradeGutsReserved &reserved);
+
+    void updateFixedSlots(uintN fixed);
+
   public:
     /* Add a property whose id is not yet in this scope. */
     const js::Shape *addProperty(JSContext *cx, jsid id,
@@ -1222,14 +1374,8 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
     }
 
-    JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp) {
-        js::PropertyIdOp op = getOps()->getProperty;
-        return (op ? op : (js::PropertyIdOp)js_GetProperty)(cx, this, receiver, id, vp);
-    }
-
-    JSBool getProperty(JSContext *cx, jsid id, js::Value *vp) {
-        return getProperty(cx, this, id, vp);
-    }
+    inline JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
+    inline JSBool getProperty(JSContext *cx, jsid id, js::Value *vp);
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
         if (getOps()->setProperty)
@@ -1244,15 +1390,8 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
     }
 
-    JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp) {
-        js::AttributesOp op = getOps()->setAttributes;
-        return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
-    }
-
-    JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict) {
-        js::DeleteIdOp op = getOps()->deleteProperty;
-        return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
-    }
+    inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
+    inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
 
     JSBool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp) {
         js::NewEnumerateOp op = getOps()->enumerate;
@@ -1321,6 +1460,7 @@ struct JSObject : js::gc::Cell {
     inline bool isProxy() const;
     inline bool isObjectProxy() const;
     inline bool isFunctionProxy() const;
+    inline bool isArrayBuffer() const;
 
     JS_FRIEND_API(bool) isWrapper() const;
     bool isCrossCompartmentWrapper() const;
@@ -1354,8 +1494,11 @@ JSObject::fixedSlots() const {
     return (js::Value*) (jsuword(this) + sizeof(JSObject));
 }
 
-inline bool
-JSObject::hasSlotsArray() const { return this->slots != fixedSlots(); }
+inline size_t
+JSObject::numFixedSlots() const
+{
+    return flags >> FIXED_SLOTS_SHIFT;
+}
 
 /* static */ inline size_t
 JSObject::getFixedSlotOffset(size_t slot) {
@@ -1422,6 +1565,32 @@ class ValueArray {
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
+extern js::Class js_ArrayClass, js_SlowArrayClass, js_ArrayBufferClass;
+
+inline bool
+JSObject::isDenseArray() const
+{
+    return getClass() == &js_ArrayClass;
+}
+
+inline bool
+JSObject::isSlowArray() const
+{
+    return getClass() == &js_SlowArrayClass;
+}
+
+inline bool
+JSObject::isArray() const
+{
+    return isDenseArray() || isSlowArray();
+}
+
+inline bool
+JSObject::isArrayBuffer() const
+{
+    return getClass() == &js_ArrayBufferClass;
+}
+
 extern js::Class js_ObjectClass;
 extern js::Class js_WithClass;
 extern js::Class js_BlockClass;
@@ -1448,26 +1617,14 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
 static const uint32 JSSLOT_BLOCK_DEPTH = 0;
 static const uint32 JSSLOT_BLOCK_FIRST_FREE_SLOT = JSSLOT_BLOCK_DEPTH + 1;
 
-inline bool
-JSObject::isStaticBlock() const
-{
-    return isBlock() && !getProto();
-}
-
-inline bool
-JSObject::isClonedBlock() const
-{
-    return isBlock() && !!getProto();
-}
-
 static const uint32 JSSLOT_WITH_THIS = 1;
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     (obj)->propertyCount()
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    (obj)->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
+    (obj)->getFixedSlot(JSSLOT_BLOCK_DEPTH).toInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    (obj)->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
+    (obj)->setFixedSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to
@@ -1481,11 +1638,7 @@ extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
 
 inline JSObject *
-js_UnwrapWithObject(JSContext *cx, JSObject *withobj)
-{
-    JS_ASSERT(withobj->getClass() == &js_WithClass);
-    return withobj->getProto();
-}
+js_UnwrapWithObject(JSContext *cx, JSObject *withobj);
 
 /*
  * Create a new block scope object not linked to any proto or parent object.
@@ -1604,10 +1757,6 @@ extern JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
-extern JSBool
-js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
-                  JSObject *cobj, JSObject *prototype);
-
 /*
  * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
  * JSProto_Null, clasp must non-null.
@@ -1627,7 +1776,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
 
 // Specialized call for constructing |this| with a known function callee.
 extern JSObject *
-js_CreateThisForFunction(JSContext *cx, JSObject *callee);
+js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType);
 
 // Generic call for constructing |this|.
 extern JSObject *
@@ -1691,6 +1840,7 @@ const uintN DNP_SET_METHOD   = 4;   /* DefineNativeProperty,js_SetPropertyHelper
 const uintN DNP_UNQUALIFIED  = 8;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
+const uintN DNP_SKIP_TYPE = 0x10;   /* Don't update type information */
 
 /*
  * Return successfully added or changed shape or NULL on error.
@@ -1759,16 +1909,16 @@ IsCacheableNonGlobalScope(JSObject *obj)
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
 extern js::PropertyCacheEntry *
-js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
+js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
                       JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 /*
- * Return the index along the scope chain in which id was found, or the last
- * index if not found, or -1 on error.
+ * Search for id either on the current scope chain or on the scope chain's
+ * global object, per the global parameter.
  */
 extern JS_FRIEND_API(JSBool)
-js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-                JSProperty **propp);
+js_FindProperty(JSContext *cx, jsid id, bool global,
+                JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 extern JS_REQUIRES_STACK JSObject *
 js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id);
