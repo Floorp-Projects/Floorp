@@ -1900,7 +1900,7 @@ PRBool nsXULWindow::ConstrainToZLevel(PRBool      aImmediate,
         *aPlacement = nsWindowZRelative;
 
       if (aImmediate) {
-        nsCOMPtr<nsIBaseWindow> ourBase = do_QueryInterface(static_cast<nsIXULWindow *>(this));
+        nsCOMPtr<nsIBaseWindow> ourBase = do_QueryObject(this);
         if (ourBase) {
           nsCOMPtr<nsIWidget> ourWidget;
           ourBase->GetMainWidget(getter_AddRefs(ourWidget));

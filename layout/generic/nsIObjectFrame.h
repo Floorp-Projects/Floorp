@@ -55,6 +55,42 @@ public:
   NS_IMETHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) = 0;
 
   /**
+   * Instantiate a plugin for a channel, returning a stream listener for the
+   * data.
+   *
+   * @note Calling this method can delete the frame, so don't assume
+   *       the frame is alive after this call returns.
+   */
+  virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener) = 0;
+
+  /**
+   * @note Calling this method can delete the frame, so don't assume
+   *       the frame is alive after this call returns.
+   */
+  virtual void TryNotifyContentObjectWrapper() = 0;
+
+  /**
+   * Instantiate a plugin that loads the data itself.
+   * @param aMimeType Type of the plugin to instantiate. May be null.
+   * @param aURI      URI of the plugin data. May be null.
+   * @note            Only one of aURI and aMimeType may be null.
+   *                  If aURI is null, aMimeType must not be the empty string.
+   * @note XXX this method is here only temporarily, until plugins are loaded
+   *       from content.
+   *
+   * @note Calling this method can delete the frame, so don't assume
+   *       the frame is alive after this call returns.
+   */
+  virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI) = 0;
+
+  /**
+   * Stops and unloads the plugin. Makes the frame ready to receive another
+   * Instantiate() call. It is safe to call this method even when no plugin
+   * is currently active in this frame.
+   */
+  virtual void StopPlugin() = 0;
+
+  /**
    * Get the native widget for the plugin, if any.
    */
   virtual nsIWidget* GetWidget() = 0;

@@ -1558,9 +1558,9 @@ public:
         return m_formatter.size();
     }
 
-    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp)
+    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind)
     {
-        void* copy = m_formatter.executableAllocAndCopy(allocator, poolp);
+        void* copy = m_formatter.executableAllocAndCopy(allocator, poolp, kind);
 
         unsigned jumpCount = m_jumpsToLink.size();
         for (unsigned i = 0; i < jumpCount; ++i) {
@@ -1909,8 +1909,8 @@ private:
         size_t size() const { return m_buffer.size(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         void* data() const { return m_buffer.data(); }
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp) {
-            return m_buffer.executableAllocAndCopy(allocator, poolp);
+        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind) {
+            return m_buffer.executableAllocAndCopy(allocator, poolp, kind);
         }
         bool oom() const { return m_buffer.oom(); }
 

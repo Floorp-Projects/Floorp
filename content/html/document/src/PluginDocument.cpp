@@ -47,7 +47,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
-#include "nsObjectLoadingContent.h"
 
 namespace mozilla {
 namespace dom {
@@ -145,13 +144,20 @@ PluginStreamListener::SetupPlugin()
   // nsObjectFrame does that at the end of reflow.
   shell->FlushPendingNotifications(Flush_Layout);
 
-  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(embed));
-  if (!olc) {
+  nsIFrame* frame = embed->GetPrimaryFrame();
+  if (!frame) {
+    mPluginDoc->AllowNormalInstantiation();
+    return NS_OK;
+  }
+
+  nsIObjectFrame* objFrame = do_QueryFrame(frame);
+  if (!objFrame) {
+    mPluginDoc->AllowNormalInstantiation();
     return NS_ERROR_UNEXPECTED;
   }
-  nsObjectLoadingContent* olcc = static_cast<nsObjectLoadingContent*>(olc.get());
-  nsresult rv = olcc->InstantiatePluginInstance(mPluginDoc->GetType().get(),
-                                                mDocument->nsIDocument::GetDocumentURI());
+
+  nsresult rv = objFrame->Instantiate(mPluginDoc->GetType().get(),
+                                      mDocument->nsIDocument::GetDocumentURI());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -349,7 +355,7 @@ PluginDocument::Print()
   nsIObjectFrame* objectFrame =
     do_QueryFrame(mPluginContent->GetPrimaryFrame());
   if (objectFrame) {
-    nsRefPtr<nsNPAPIPluginInstance> pi;
+    nsCOMPtr<nsNPAPIPluginInstance> pi;
     objectFrame->GetPluginInstance(getter_AddRefs(pi));
     if (pi) {
       NPPrint npprint;

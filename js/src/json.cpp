@@ -64,6 +64,7 @@
 #include "json.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -71,6 +72,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 Class js_JSONClass = {
     js_JSON_str,
@@ -908,11 +910,10 @@ static JSFunctionSpec json_static_methods[] = {
 JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *JSON;
-
-    JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
-    if (!JSON)
+    JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
+    if (!JSON || !JSON->setSingletonType(cx))
         return NULL;
+
     if (!JS_DefineProperty(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
                            JS_PropertyStub, JS_StrictPropertyStub, 0))
         return NULL;

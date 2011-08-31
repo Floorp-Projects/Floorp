@@ -29,8 +29,6 @@ namespace egl
 class Display
 {
   public:
-    Display(HDC deviceContext);
-
     ~Display();
 
     bool initialize();
@@ -38,6 +36,8 @@ class Display
 
     virtual void startScene();
     virtual void endScene();
+
+    static egl::Display *getDisplay(EGLNativeDisplayType displayId);
 
     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
     bool getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value);
@@ -60,9 +60,12 @@ class Display
 
     virtual IDirect3DDevice9 *getDevice();
     virtual D3DCAPS9 getDeviceCaps();
+    virtual D3DADAPTER_IDENTIFIER9 *getAdapterIdentifier();
     bool isDeviceLost();
     virtual void getMultiSampleSupport(D3DFORMAT format, bool *multiSampleArray);
-    virtual bool getCompressedTextureSupport();
+    virtual bool getDXT1TextureSupport();
+    virtual bool getDXT3TextureSupport();
+    virtual bool getDXT5TextureSupport();
     virtual bool getEventQuerySupport();
     virtual bool getFloatTextureSupport(bool *filtering, bool *renderable);
     virtual bool getHalfFloatTextureSupport(bool *filtering, bool *renderable);
@@ -78,8 +81,11 @@ class Display
   private:
     DISALLOW_COPY_AND_ASSIGN(Display);
 
+    Display(EGLNativeDisplayType displayId, HDC deviceContext, bool software);
+
     D3DPRESENT_PARAMETERS getDefaultPresentParameters();
 
+    EGLNativeDisplayType mDisplayId;
     const HDC mDc;
 
     HMODULE mD3d9Module;
@@ -91,11 +97,13 @@ class Display
     IDirect3DDevice9 *mDevice;
     IDirect3DDevice9Ex *mDeviceEx;  // Might be null if D3D9Ex is not supported.
     D3DCAPS9 mDeviceCaps;
+    D3DADAPTER_IDENTIFIER9 mAdapterIdentifier;
     HWND mDeviceWindow;
 
     bool mSceneStarted;
     EGLint mMaxSwapInterval;
     EGLint mMinSwapInterval;
+    bool mSoftwareDevice;
     
     typedef std::set<Surface*> SurfaceSet;
     SurfaceSet mSurfaceSet;

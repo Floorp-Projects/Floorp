@@ -144,6 +144,11 @@ BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 inline bool
 ComputeThis(JSContext *cx, StackFrame *fp);
 
+enum MaybeConstruct {
+    NO_CONSTRUCT = INITIAL_NONE,
+    CONSTRUCT = INITIAL_CONSTRUCT
+};
+
 /*
  * InvokeKernel assumes that the given args have been pushed on the top of the
  * VM stack. Additionally, if 'args' is contained in a CallArgsList, that they
@@ -257,7 +262,9 @@ enum InterpMode
     JSINTERP_NORMAL    = 0, /* interpreter is running normally */
     JSINTERP_RECORD    = 1, /* interpreter has been started to record/run traces */
     JSINTERP_SAFEPOINT = 2, /* interpreter should leave on a method JIT safe point */
-    JSINTERP_PROFILE   = 3  /* interpreter should profile a loop */
+    JSINTERP_PROFILE   = 3, /* interpreter should profile a loop */
+    JSINTERP_REJOIN    = 4, /* as normal, but the frame has already started */
+    JSINTERP_SKIP_TRAP = 5  /* as REJOIN, but skip trap at first opcode */
 };
 
 /*

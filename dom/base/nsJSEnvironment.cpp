@@ -915,6 +915,7 @@ static const char js_methodjit_chrome_str[]   = JS_OPTIONS_DOT_STR "methodjit.ch
 static const char js_profiling_content_str[]  = JS_OPTIONS_DOT_STR "jitprofiling.content";
 static const char js_profiling_chrome_str[]   = JS_OPTIONS_DOT_STR "jitprofiling.chrome";
 static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_always";
+static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
 
 int
@@ -947,6 +948,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                                js_profiling_chrome_str :
                                                js_profiling_content_str);
   PRBool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
+  PRBool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     PRBool safeMode = PR_FALSE;
@@ -955,6 +957,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useTraceJIT = PR_FALSE;
       useMethodJIT = PR_FALSE;
       useProfiling = PR_FALSE;
+      useTypeInference = PR_FALSE;
       useMethodJITAlways = PR_TRUE;
     }
   }    
@@ -978,6 +981,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_METHODJIT_ALWAYS;
   else
     newDefaultJSOptions &= ~JSOPTION_METHODJIT_ALWAYS;
+
+  if (useTypeInference)
+    newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
+  else
+    newDefaultJSOptions &= ~JSOPTION_TYPE_INFERENCE;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
