@@ -192,18 +192,6 @@ regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";
 DOCOPY=
 
 check::
-	@echo "Running XPIDL tests"
-	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl
-	@if grep Notscriptable TestScriptable.h | grep NS_SCRIPTABLE >/dev/null 2>&1 ; then \
-		echo "Nonscriptable object marked scriptable by xpidl"; \
-		exit 1; \
-	fi
-	@if test `grep 'NS_IMETHOD[^I].*Scriptable' TestScriptable.h | grep -v -c NS_SCRIPTABLE` -ne 0 ; then \
-		echo "Scriptable object marked nonscriptable by xpidl"; \
-		exit 1; \
-	fi
-	$(RM_DIST) $(DIST_PATH)components/compreg.dat; \
-	$(DOCOPY) \
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) $(regOrderDir)
 
