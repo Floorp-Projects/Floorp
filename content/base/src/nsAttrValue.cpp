@@ -1250,10 +1250,14 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                "Trying to re-set atom or string!");
   if (aValue) {
     PRUint32 len = aValue->Length();
-    // We're allowing eCSSStyleRule attributes to store empty strings as it
-    // can be beneficial to store an empty style attribute as a parsed rule.
+    // * We're allowing eCSSStyleRule attributes to store empty strings as it
+    //   can be beneficial to store an empty style attribute as a parsed rule.
+    // * We're allowing enumerated values because sometimes the empty
+    //   string corresponds to a particular enumerated value, especially
+    //   for enumerated values that are not limited enumerated.
     // Add other types as needed.
-    NS_ASSERTION(len || Type() == eCSSStyleRule, "Empty string?");
+    NS_ASSERTION(len || Type() == eCSSStyleRule || Type() == eEnum,
+                 "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
       nsIAtom* atom = NS_NewAtom(*aValue);
