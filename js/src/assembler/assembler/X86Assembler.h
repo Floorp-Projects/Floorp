@@ -257,6 +257,7 @@ private:
         OP2_SUBSD_VsdWsd    = 0x5C,
         OP2_DIVSD_VsdWsd    = 0x5E,
         OP2_SQRTSD_VsdWsd   = 0x51,
+        OP2_ANDPD_VpdWpd    = 0x54,
         OP2_XORPD_VpdWpd    = 0x57,
         OP2_MOVD_VdEd       = 0x6E,
         OP2_PSRLDQ_Vd       = 0x73,
@@ -690,6 +691,13 @@ public:
     }
 
 #if WTF_CPU_X86_64
+    void negq_r(RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "negq       %s\n", MAYBE_PAD, nameIReg(8,dst));
+        m_formatter.oneByteOp64(OP_GROUP3_Ev, GROUP3_OP_NEG, dst);
+    }
+
     void orq_rr(RegisterID src, RegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -1563,8 +1571,8 @@ public:
     void movq_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
-                       IPFX "movq       %s0x%x(%s), %s\n", MAYBE_PAD,
-                       PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(8,dst));
+                       IPFX "movq       %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameIReg(8,dst));
         m_formatter.oneByteOp64(OP_MOV_GvEv, dst, base, index, scale, offset);
     }
 
@@ -2250,6 +2258,15 @@ public:
         m_formatter.twoByteOp(OP2_XORPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
     }
 
+    void andpd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "andpd      %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_ANDPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
+    }
+
     void sqrtsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -2474,9 +2491,9 @@ public:
         return dst.m_offset - src.m_offset;
     }
     
-    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp)
+    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp, CodeKind kind)
     {
-        return m_formatter.executableAllocAndCopy(allocator, poolp);
+        return m_formatter.executableAllocAndCopy(allocator, poolp, kind);
     }
 
     void executableCopy(void* buffer)
@@ -2826,8 +2843,8 @@ private:
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         void* data() const { return m_buffer.data(); }
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp) {
-            return m_buffer.executableAllocAndCopy(allocator, poolp);
+        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind) {
+            return m_buffer.executableAllocAndCopy(allocator, poolp, kind);
         }
 
     private:

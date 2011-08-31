@@ -5,14 +5,14 @@
 == row-or-column-sizing-1.xul row-or-column-sizing-4.xul
 == z-order-1.xul z-order-1-ref.xul
 == z-order-2.xul z-order-2-ref.xul
-fails-if(Android) == not-full-basic.xul not-full-basic-ref.xhtml # bug 650597
-fails-if(Android) == not-full-grid-pack-align.xul not-full-basic-ref.xhtml # bug 650597
+== not-full-basic.xul not-full-basic-ref.xhtml
+== not-full-grid-pack-align.xul not-full-basic-ref.xhtml
 == not-full-row-group-align.xul not-full-row-group-align-ref.xhtml # does anyone want/need this behavior?
 == not-full-row-group-pack.xul not-full-row-group-pack-ref.xhtml
-fails-if(Android) == not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml # bug 650597
-fails-if(Android) == not-full-row-leaf-align.xul not-full-basic-ref.xhtml # bug 650597
-fails-if(Android) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml # bug 650597
-fails-if(Android) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml # bug 650597
+== not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml
+== not-full-row-leaf-align.xul not-full-basic-ref.xhtml
+== not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
+== not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
 fails-if(Android) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597
 fails == scrollable-rows.xul scrollable-rows-ref.xhtml
 == sizing-2d.xul sizing-2d-ref.xul

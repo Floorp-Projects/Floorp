@@ -403,6 +403,18 @@ struct JS_FRIEND_API(JSCompartment) {
     bool                         hold;
     bool                         isSystemCompartment;
 
+    /*
+     * Pool for analysis and intermediate type information in this compartment.
+     * Cleared on every GC, unless the GC happens during analysis (indicated
+     * by activeAnalysis, which is implied by activeInference).
+     */
+    JSArenaPool                  pool;
+    bool                         activeAnalysis;
+    bool                         activeInference;
+
+    /* Type information about the scripts and objects in this compartment. */
+    js::types::TypeCompartment   types;
+
 #ifdef JS_TRACER
   private:
     /*
@@ -443,7 +455,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool ensureJaegerCompartmentExists(JSContext *cx);
 
-    size_t getMjitCodeSize() const;
+    void getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const;
 #endif
     WTF::BumpPointerAllocator    *regExpAllocator;
 
@@ -507,7 +519,7 @@ struct JS_FRIEND_API(JSCompartment) {
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
 
-    bool init();
+    bool init(JSContext *cx);
 
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer *trc);
@@ -521,6 +533,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
+    void markTypes(JSTracer *trc);
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
@@ -699,6 +712,13 @@ GetMathCache(JSContext *cx)
 }
 }
 
+inline void
+JSContext::setCompartment(JSCompartment *compartment)
+{
+    this->compartment = compartment;
+    this->inferenceEnabled = compartment ? compartment->types.inferenceEnabled : false;
+}
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -710,15 +730,19 @@ class PreserveCompartment {
     JSContext *cx;
   private:
     JSCompartment *oldCompartment;
+    bool oldInferenceEnabled;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
      PreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) : cx(cx) {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         oldCompartment = cx->compartment;
+        oldInferenceEnabled = cx->inferenceEnabled;
     }
 
     ~PreserveCompartment() {
+        /* The old compartment may have been destroyed, so we can't use cx->setCompartment. */
         cx->compartment = oldCompartment;
+        cx->inferenceEnabled = oldInferenceEnabled;
     }
 };
 
@@ -729,14 +753,14 @@ class SwitchToCompartment : public PreserveCompartment {
         : PreserveCompartment(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->compartment = newCompartment;
+        cx->setCompartment(newCompartment);
     }
 
     SwitchToCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : PreserveCompartment(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->compartment = target->getCompartment();
+        cx->setCompartment(target->getCompartment());
     }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER

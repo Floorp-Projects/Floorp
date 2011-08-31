@@ -713,12 +713,13 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
   {
     PRUint32 flags = 0;
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
     gfxMatrix transform;
     if (!GetEffectiveTransform().CanDraw2D(&transform) ||
-        transform.HasNonIntegerTranslation() ||
-        MustRetainContent() /*<=> has shadow layer*/) {
+        transform.HasNonIntegerTranslation()) {
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
+#endif
     Buffer::PaintState state =
       mBuffer.BeginPaint(this, contentType, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);

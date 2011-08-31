@@ -3072,6 +3072,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #ifdef MOZ_ENABLE_XREMOTE
     // handle -remote now that xpcom is fired up
+    bool disableRemote = false;
+    {
+      char *e = PR_GetEnv("MOZ_NO_REMOTE");
+      disableRemote = (e && *e);
+    }
 
     const char* xremotearg;
     ar = CheckArg("remote", PR_TRUE, &xremotearg);
@@ -3085,7 +3090,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return HandleRemoteArgument(xremotearg, desktopStartupIDPtr);
     }
 
-    if (!PR_GetEnv("MOZ_NO_REMOTE")) {
+    if (!disableRemote) {
       // Try to remote the entire command line. If this fails, start up normally.
       RemoteResult rr = RemoteCommandLine(desktopStartupIDPtr);
       if (rr == REMOTE_FOUND)
@@ -3527,7 +3532,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef MOZ_ENABLE_XREMOTE
           // if we have X remote support, start listening for requests on the
           // proxy window.
-          remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
+          if (!disableRemote)
+            remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
           if (remoteService)
             remoteService->Startup(gAppData->name,
                                    PromiseFlatCString(profileName).get());
