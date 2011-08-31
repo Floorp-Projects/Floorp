@@ -17,4 +17,5 @@
 == bmp-size-32x32-1bpp.bmp bmp-size-32x32-1bpp.png
 == bmp-size-33x33-1bpp.bmp bmp-size-33x33-1bpp.png
 == bmp-not-square-1bpp.bmp bmp-not-square-1bpp.png
-
+== os2bmp-size-32x32-1bpp.bmp bmp-size-32x32-1bpp.png
+== top-to-bottom-16x16-1bpp.bmp bmp-size-16x16-1bpp.png

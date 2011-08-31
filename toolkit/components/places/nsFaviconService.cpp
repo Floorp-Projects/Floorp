@@ -718,6 +718,17 @@ nsFaviconService::GetFaviconURLForPage(nsIURI *aPageURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFaviconService::GetFaviconDataForPage(nsIURI* aPageURI,
+                                        nsIFaviconDataCallback* aCallback)
+{
+  NS_ENSURE_ARG(aPageURI);
+  NS_ENSURE_ARG(aCallback);
+
+  nsresult rv = AsyncGetFaviconDataForPage::start(aPageURI, mDBConn, aCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFaviconService::GetFaviconImageForPage(nsIURI* aPageURI, nsIURI** _retval)

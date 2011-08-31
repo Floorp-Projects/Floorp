@@ -110,9 +110,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-/* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
-#if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
-
 JSObject *
 js::GetScopeChain(JSContext *cx)
 {
@@ -1322,7 +1319,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
  * Enter the new with scope using an object at sp[-1] and associate the depth
  * of the with block with sp + stackIndex.
  */
-JS_STATIC_INTERPRET JS_REQUIRES_STACK JSBool
+JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
 {
     StackFrame *fp = cx->fp();
@@ -1357,7 +1354,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
     return JS_TRUE;
 }
 
-JS_STATIC_INTERPRET JS_REQUIRES_STACK void
+JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx)
 {
     JSObject *withobj;
@@ -1413,7 +1410,7 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
     return normalUnwind;
 }
 
-JS_STATIC_INTERPRET JSBool
+JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 {
     if (cs->format & JOF_POST) {
@@ -1474,10 +1471,6 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
     }
     return fp;
 }
-
-#endif /* !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___ */
-
-#ifndef  jsinvoke_cpp___
 
 #define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = v
@@ -6371,5 +6364,3 @@ END_CASE(JSOP_ARRAYPUSH)
 }
 
 } /* namespace js */
-
-#endif /* !defined jsinvoke_cpp___ */

@@ -341,6 +341,16 @@ iconsvc.getFaviconURLForPage(page1URI, {
       do_check_eq(aDataLen, 0);
       do_check_eq(aData.length, 0);
       do_check_eq(aMimeType, "");
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFaviconDataCallback])
+});
+
+iconsvc.getFaviconDataForPage(page1URI, {
+    onFaviconDataAvailable: function(aURI, aDataLen, aData, aMimeType) {
+      do_check_true(aURI.equals(savedIcon1URI));
+      do_check_eq(icon1MimeType, out1MimeType.value);
+      checkArrays(icon1Data, aData);
+      do_check_eq(aDataLen, aData.length);
       do_test_finished();
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFaviconDataCallback])
