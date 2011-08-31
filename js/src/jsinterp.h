@@ -362,30 +362,6 @@ class InterpreterFrames {
 
 } /* namespace js */
 
-/*
- * JS_LONE_INTERPRET indicates that the compiler should see just the code for
- * the js_Interpret function when compiling jsinterp.cpp. The rest of the code
- * from the file should be visible only when compiling jsinvoke.cpp. It allows
- * platform builds to optimize selectively js_Interpret when the granularity
- * of the optimizations with the given compiler is a compilation unit.
- *
- * JS_STATIC_INTERPRET is the modifier for functions defined in jsinterp.cpp
- * that only js_Interpret calls. When JS_LONE_INTERPRET is true all such
- * functions are declared below.
- */
-#ifndef JS_LONE_INTERPRET
-# ifdef _MSC_VER
-#  define JS_LONE_INTERPRET 0
-# else
-#  define JS_LONE_INTERPRET 1
-# endif
-#endif
-
-#if !JS_LONE_INTERPRET
-# define JS_STATIC_INTERPRET    static
-#else
-# define JS_STATIC_INTERPRET
-
 extern JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen);
 
@@ -401,7 +377,6 @@ js_LeaveWith(JSContext *cx);
 extern JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, js::Value *vp, js::Value *vp2);
 
-#endif /* JS_LONE_INTERPRET */
 /*
  * Unwind block and scope chains to match the given depth. The function sets
  * fp->sp on return to stackDepth.
