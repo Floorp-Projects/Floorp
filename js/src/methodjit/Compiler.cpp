@@ -860,8 +860,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                       jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool;
-    uint8 *result =
-        (uint8 *)script->compartment->jaegerCompartment()->execAlloc()->alloc(codeSize, &execPool);
+    uint8 *result = (uint8 *)script->compartment->jaegerCompartment()->execAlloc()->
+                    alloc(codeSize, &execPool, JSC::METHOD_CODE);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -871,8 +871,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
 
-    JSC::LinkBuffer fullCode(result, codeSize);
-    JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
+    JSC::LinkBuffer fullCode(result, codeSize, JSC::METHOD_CODE);
+    JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size(), JSC::METHOD_CODE);
 
     size_t nNmapLive = loopEntries.length();
     for (size_t i = 0; i < script->length; i++) {
