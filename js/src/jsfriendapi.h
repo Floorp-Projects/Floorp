@@ -78,11 +78,11 @@ JS_GetCustomIteratorCount(JSContext *cx);
 /* Data for tracking analysis/inference memory usage. */
 typedef struct TypeInferenceMemoryStats
 {
-    int64 scriptMain;
-    int64 scriptSets;
-    int64 objectMain;
-    int64 objectSets;
-    int64 poolMain;
+    int64 scripts;
+    int64 objects;
+    int64 tables;
+    int64 temporary;
+    int64 emptyShapes;
 } TypeInferenceMemoryStats;
 
 extern JS_FRIEND_API(void)

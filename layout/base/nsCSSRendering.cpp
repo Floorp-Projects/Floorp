@@ -723,7 +723,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock)
       break;
     // If we're done, we really want it and all its later siblings.
-    frameForArea = frameForArea->GetFirstChild(nsnull);
+    frameForArea = frameForArea->GetFirstPrincipalChild();
     NS_ASSERTION(frameForArea, "anonymous block with no children?");
   } while (frameForArea);
   nsRect innerRect; // relative to aBorderArea.TopLeft()
@@ -1943,7 +1943,7 @@ static nscoord
 FindTileStart(nscoord aDirtyCoord, nscoord aTilePos, nscoord aTileDim)
 {
   NS_ASSERTION(aTileDim > 0, "Non-positive tile dimension");
-  double multiples = NS_floor(double(aDirtyCoord - aTilePos)/aTileDim);
+  double multiples = floor(double(aDirtyCoord - aTilePos)/aTileDim);
   return NSToCoordRound(multiples*aTileDim + aTilePos);
 }
 
@@ -2050,7 +2050,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       // try to do anything in that case. We certainly need to avoid
       // dividing by zero.
       if (stopDelta >= 1e-6) {
-        double instanceCount = NS_ceil(-firstStop/stopDelta);
+        double instanceCount = ceil(-firstStop/stopDelta);
         // Advance stops by instanceCount multiples of the period of the
         // repeating gradient.
         double offset = instanceCount*stopDelta;
@@ -2571,7 +2571,7 @@ PrepareBackgroundLayer(nsPresContext* aPresContext,
       break;
     }
   } else if (frameType == nsGkAtoms::canvasFrame) {
-    geometryFrame = aForFrame->GetFirstChild(nsnull);
+    geometryFrame = aForFrame->GetFirstPrincipalChild();
     // geometryFrame might be null if this canvas is a page created
     // as an overflow container (e.g. the in-flow content has already
     // finished and this page only displays the continuations of
@@ -3607,15 +3607,15 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 
   PRBool canLiftUnderline = aDescentLimit >= 0.0;
 
-  const gfxFloat left  = NS_floor(aPt.x + 0.5),
-                 right = NS_floor(aPt.x + aLineSize.width + 0.5);
+  const gfxFloat left  = floor(aPt.x + 0.5),
+                 right = floor(aPt.x + aLineSize.width + 0.5);
   gfxRect r(left, 0, right - left, 0);
 
   gfxFloat lineHeight = NS_round(aLineSize.height);
   lineHeight = NS_MAX(lineHeight, 1.0);
 
   gfxFloat ascent = NS_round(aAscent);
-  gfxFloat descentLimit = NS_floor(aDescentLimit);
+  gfxFloat descentLimit = floor(aDescentLimit);
 
   gfxFloat suggestedMaxRectHeight = NS_MAX(NS_MIN(ascent, descentLimit), 1.0);
   r.height = lineHeight;
@@ -3671,7 +3671,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
     }
   }
 
-  gfxFloat baseline = NS_floor(aPt.y + aAscent + 0.5);
+  gfxFloat baseline = floor(aPt.y + aAscent + 0.5);
   gfxFloat offset = 0.0;
   switch (aDecoration) {
     case NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE:
@@ -3692,7 +3692,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
       offset = aOffset - lineHeight + r.Height();
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH: {
-      gfxFloat extra = NS_floor(r.Height() / 2.0 + 0.5);
+      gfxFloat extra = floor(r.Height() / 2.0 + 0.5);
       extra = NS_MAX(extra, lineHeight);
       offset = aOffset - lineHeight + extra;
       break;
@@ -3700,7 +3700,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
     default:
       NS_ERROR("Invalid decoration value!");
   }
-  r.y = baseline - NS_floor(offset + 0.5);
+  r.y = baseline - floor(offset + 0.5);
   return r;
 }
 

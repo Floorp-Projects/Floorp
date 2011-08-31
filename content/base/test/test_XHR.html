@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Test for XMLHttpRequest</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -121,6 +120,17 @@ checkResponseXMLAccessThrows(xhr);
 ab = xhr.response;
 ok(ab != null, "should have a non-null arraybuffer");
 arraybuffer_equals_to(ab, "hello pass\n");
+
+// test reusing the same XHR (Bug 680816)
+xhr.open("GET", 'file_XHR_binary1.bin', false);
+xhr.responseType = 'arraybuffer';
+xhr.send(null);
+is(xhr.status, 200, "wrong status");
+ab2 = xhr.response;
+ok(ab2 != null, "should have a non-null arraybuffer");
+ok(ab2 != ab, "arraybuffer on XHR reuse should be distinct");
+arraybuffer_equals_to(ab, "hello pass\n");
+arraybuffer_equals_to(ab2, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb");
 
 // with a binary file
 xhr = new XMLHttpRequest();

@@ -215,8 +215,8 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
         size_t block_header_size = ALIGN_RND(sizeof(BLK_HDR), arena->alignment);
         size_t new_space = arena->block_size;
          
-        if (bytes > new_space - block_header_size)
-            new_space += bytes;
+        while (bytes > new_space - block_header_size)
+            new_space += arena->block_size;
 
         new_block = (BLK_HDR*) calloc(new_space/arena->alignment, 
                                       arena->alignment);

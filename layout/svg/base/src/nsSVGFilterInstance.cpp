@@ -371,7 +371,7 @@ nsSVGFilterInstance::BuildSourceImages()
     // (In theory it would be better to minimize error by having filtered SVG
     // graphics temporarily paint to user space when painting the sources and
     // only set a user space to filter space transform on the gfxContext
-    // (since that would elliminate the transform multiplications from user
+    // (since that would eliminate the transform multiplications from user
     // space to device space and back again). However, that would make the
     // code more complex while being hard to get right without introducing
     // subtle bugs, and in practice it probably makes no real difference.)

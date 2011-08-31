@@ -80,7 +80,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsINode.h"
 #include "nsHashtable.h"
 #include "nsIDOMNode.h"
-#include "nsAHtml5FragmentParser.h"
+#include "nsHtml5Parser.h"
 #include "nsIFragmentContentSink.h"
 #include "nsMathUtils.h"
 
@@ -743,8 +743,8 @@ public:
    *   @param aColumnNumber Column number within resource containing error.
    *   @param aErrorFlags See nsIScriptError.
    *   @param aCategory Name of module reporting error.
-   *   @param [aWindowId=0] (Optional) The window ID of the outer window the
-   *          message originates from.
+   *   @param [aInnerWindowId=0] (Optional) The window ID of the inner window
+   *          the message originates from.
    */
   enum PropertiesFile {
     eCSS_PROPERTIES,
@@ -769,7 +769,7 @@ public:
                                   PRUint32 aColumnNumber,
                                   PRUint32 aErrorFlags,
                                   const char *aCategory,
-                                  PRUint64 aWindowId = 0);
+                                  PRUint64 aInnerWindowId = 0);
 
   /**
    * Report a localized error message to the error console.
@@ -1865,7 +1865,7 @@ private:
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
 
-  static nsAHtml5FragmentParser* sHTMLFragmentParser;
+  static nsHtml5Parser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
   static nsIFragmentContentSink* sXMLFragmentSink;
 

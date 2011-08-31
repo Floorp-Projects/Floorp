@@ -1565,7 +1565,7 @@ ValueToScript(JSContext *cx, jsval v)
         } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->floatingFrame()->fun();
-            script = FUN_SCRIPT(fun);
+            script = fun->script();
         }
     }
 
@@ -1573,7 +1573,7 @@ ValueToScript(JSContext *cx, jsval v)
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
-        script = FUN_SCRIPT(fun);
+        script = fun->maybeScript();
         if (!script) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
                                  JSSMSG_SCRIPTS_ONLY);
@@ -1600,9 +1600,10 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
      * In the future, this restriction may be lifted.
      */
 
-    JSBool rv = JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
-    JS_SET_RVAL(cx, vp, rv ? JSVAL_TRUE : JSVAL_FALSE);
-    return JS_TRUE;
+    JSBool ok = JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
+    if (ok)
+        JS_SET_RVAL(cx, vp, JSVAL_TRUE);
+    return ok;
 }
 
 static JSBool
@@ -2006,7 +2007,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
     JSScript *script = ValueToScript(cx, v);
     if (!script)
         return false;
-    if (VALUE_IS_FUNCTION(cx, v)) {
+    if (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isFunction()) {
         JSFunction *fun = JS_ValueToFunction(cx, v);
         if (fun && (fun->flags & ~7U)) {
             uint16 flags = fun->flags;
@@ -2021,10 +2022,10 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive, Sprinter *s
 
 #undef SHOW_FLAG
 
-            if (FUN_INTERPRETED(fun)) {
-                if (FUN_NULL_CLOSURE(fun))
+            if (fun->isInterpreted()) {
+                if (fun->isNullClosure())
                     Sprint(sp, " NULL_CLOSURE");
-                else if (FUN_FLAT_CLOSURE(fun))
+                else if (fun->isFlatClosure())
                     Sprint(sp, " FLAT_CLOSURE");
 
                 JSScript *script = fun->script();
@@ -2697,24 +2698,47 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *funobj, *parent, *clone;
 
-    if (!argc)
+    if (!argc) {
+        JS_ReportError(cx, "Invalid arguments to clone");
         return JS_FALSE;
+    }
 
     jsval *argv = JS_ARGV(cx, vp);
-    if (VALUE_IS_FUNCTION(cx, argv[0])) {
-        funobj = JSVAL_TO_OBJECT(argv[0]);
-    } else {
-        JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
-        if (!fun)
-            return JS_FALSE;
-        funobj = JS_GetFunctionObject(fun);
+    {
+        JSAutoEnterCompartment ac;
+        if (!JSVAL_IS_PRIMITIVE(argv[0]) &&
+            JSVAL_TO_OBJECT(argv[0])->isCrossCompartmentWrapper())
+        {
+            JSObject *obj = JSVAL_TO_OBJECT(argv[0])->unwrap();
+            if (!ac.enter(cx, obj))
+                return JS_FALSE;
+            argv[0] = OBJECT_TO_JSVAL(obj);
+        }
+        if (!JSVAL_IS_PRIMITIVE(argv[0]) && JSVAL_TO_OBJECT(argv[0])->isFunction()) {
+            funobj = JSVAL_TO_OBJECT(argv[0]);
+        } else {
+            JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
+            if (!fun)
+                return JS_FALSE;
+            funobj = JS_GetFunctionObject(fun);
+        }
     }
+    if (funobj->compartment() != cx->compartment) {
+        JSFunction *fun = funobj->getFunctionPrivate();
+        if (fun->isInterpreted() && fun->u.i.script->compileAndGo) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                                 "function", "compile-and-go");
+            return JS_FALSE;
+        }
+    }
+
     if (argc > 1) {
         if (!JS_ValueToObject(cx, argv[1], &parent))
             return JS_FALSE;
     } else {
-        parent = JS_GetParent(cx, funobj);
+        parent = JS_GetParent(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
     }
+
     clone = JS_CloneFunctionObject(cx, funobj, parent);
     if (!clone)
         return JS_FALSE;
@@ -4191,19 +4215,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
     JS_FN("resolver",       Resolver,       1,0),
-    JS_FN("pauseProfilers", js_PauseProfilers, 0,0),
-    JS_FN("resumeProfilers", js_ResumeProfilers, 0,0),
-#ifdef MOZ_CALLGRIND
-    JS_FN("startCallgrind", js_StartCallgrind,  0,0),
-    JS_FN("stopCallgrind",  js_StopCallgrind,   0,0),
-    JS_FN("dumpCallgrind",  js_DumpCallgrind,   1,0),
-#endif
-#ifdef MOZ_VTUNE
-    JS_FN("startVtune",     js_StartVtune,    1,0),
-    JS_FN("stopVtune",      js_StopVtune,     0,0),
-    JS_FN("pauseVtune",     js_PauseVtune,    0,0),
-    JS_FN("resumeVtune",    js_ResumeVtune,   0,0),
-#endif
 #ifdef MOZ_TRACEVIS
     JS_FN("startTraceVis",  StartTraceVisNative, 1,0),
     JS_FN("stopTraceVis",   StopTraceVisNative,  0,0),
@@ -4331,19 +4342,6 @@ static const char *const shell_help_messages[] = {
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 "resolver(src[, proto])   Create object with resolve hook that copies properties\n"
 "                         from src. If proto is omitted, use Object.prototype.",
-"pauseProfilers()         Pause all profilers that can be paused",
-"resumeProfilers()        Resume profilers if they are paused",
-#ifdef MOZ_CALLGRIND
-"startCallgrind()         Start callgrind instrumentation",
-"stopCallgrind()          Stop callgrind instrumentation",
-"dumpCallgrind([name])    Dump callgrind counters",
-#endif
-#ifdef MOZ_VTUNE
-"startVtune([filename])   Start vtune instrumentation",
-"stopVtune()              Stop vtune instrumentation",
-"pauseVtune()             Pause vtune collection",
-"resumeVtune()            Resume vtune collection",
-#endif
 #ifdef MOZ_TRACEVIS
 "startTraceVis(filename)  Start TraceVis recording (stops any current recording)",
 "stopTraceVis()           Stop TraceVis recording",
@@ -4386,20 +4384,50 @@ static const char *const shell_help_messages[] = {
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
-"startProfiling()         Start a profiling session.\n"
+"startProfiling([profileName])\n"
+"                         Start a profiling session\n"
 "                         Profiler must be running with programatic sampling",
-"stopProfiling()          Stop a running profiling session\n"
+"stopProfiling([profileName])\n"
+"                         Stop a running profiling session",
+"pauseProfilers([profileName])\n"
+"                         Pause a running profiling session",
+"resumeProfilers([profileName])\n"
+"                         Resume a paused profiling session",
+"dumpProfile([outfile[, profileName]])\n"
+"                         Dump out current profile info (only valid for callgrind)",
+# ifdef MOZ_CALLGRIND
+"startCallgrind()         Start Callgrind instrumentation",
+"stopCallgrind()          Stop Callgrind instrumentation",
+"dumpCallgrind([outfile]) Dump current Callgrind counters to file or stdout",
+# endif
+# ifdef MOZ_VTUNE
+"startVtune()             Start Vtune instrumentation",
+"stopVtune()              Stop Vtune instrumentation",
+"pauseVtune()             Pause Vtune collection",
+"resumeVtune()            Resume Vtune collection",
+# endif
 #endif
 };
 
 #ifdef MOZ_PROFILING
-#define PROFILING_FUNCTION_COUNT 2
+# define PROFILING_FUNCTION_COUNT 5
+# ifdef MOZ_CALLGRIND
+#  define CALLGRIND_FUNCTION_COUNT 3
+# else
+#  define CALLGRIND_FUNCTION_COUNT 0
+# endif
+# ifdef MOZ_VTUNE
+#  define VTUNE_FUNCTION_COUNT 4
+# else
+#  define VTUNE_FUNCTION_COUNT 0
+# endif
+# define EXTERNAL_FUNCTION_COUNT (PROFILING_FUNCTION_COUNT + CALLGRIND_FUNCTION_COUNT + VTUNE_FUNCTION_COUNT)
 #else
-#define PROFILING_FUNCTION_COUNT 0
+# define EXTERNAL_FUNCTION_COUNT 0
 #endif
 
 /* Help messages must match shell functions. */
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - PROFILING_FUNCTION_COUNT ==
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - EXTERNAL_FUNCTION_COUNT ==
                  JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
 
 #ifdef DEBUG
@@ -4410,7 +4438,7 @@ CheckHelpMessages()
     const char *lp;
 
     /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - PROFILING_FUNCTION_COUNT; ++m) {
+    for (m = shell_help_messages; m != JS_ARRAY_END(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
         lp = strchr(*m, '(');
         JS_ASSERT(lp);
         JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
@@ -4423,6 +4451,9 @@ CheckHelpMessages()
 #endif
 
 #undef PROFILING_FUNCTION_COUNT
+#undef CALLGRIND_FUNCTION_COUNT
+#undef VTUNE_FUNCTION_COUNT
+#undef EXTERNAL_FUNCTION_COUNT
 
 static JSBool
 Help(JSContext *cx, uintN argc, jsval *vp)
@@ -5236,6 +5267,8 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 #endif
         if (!JS_InitReflect(cx, glob))
             return NULL;
+        if (!JS_DefineDebuggerObject(cx, glob))
+            return NULL;
         if (!JS::RegisterPerfMeasurement(cx, glob))
             return NULL;
         if (!JS_DefineFunctions(cx, glob, shell_functions) ||
@@ -5272,7 +5305,14 @@ BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     JSObject *scriptArgs = JS_NewArrayObject(cx, 0, NULL);
     if (!scriptArgs)
         return false;
-    if (!JS_DefineProperty(cx, obj, "scriptArgs", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
+
+    /* 
+     * Script arguments are bound as a normal |arguments| property on the
+     * global object. It has no special significance, like |arguments| in
+     * function scope does -- this identifier is used de-facto across shell
+     * implementations, see bug 675269.
+     */
+    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(scriptArgs), NULL, NULL, 0))
         return false;
 
     for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
@@ -5334,10 +5374,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (op->getBoolOption('b'))
         printTiming = true;
 
-    if (op->getBoolOption('D')) {
+    if (op->getBoolOption('D'))
         enableDisassemblyDumps = true;
-        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
-    }
 
 #if defined(JS_ION)
     if (op->getBoolOption("ion"))
@@ -5509,7 +5547,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 #endif  /* JSDEBUGGER */
 
     if (enableDisassemblyDumps)
-        JS_DumpAllProfiles(cx);
+        JS_DumpCompartmentBytecode(cx);
  
     return result;
 }
@@ -5646,7 +5684,7 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
         || !op.addOptionalMultiStringArg("scriptArgs",
-                                         "String arguments to bind as |scriptArgs| in the "
+                                         "String arguments to bind as |arguments| in the "
                                          "shell's global")
 #ifdef JS_ION
         || !op.addBoolOption('\0', "ion", "Enable IonMonkey")
@@ -5667,6 +5705,8 @@ main(int argc, char **argv, char **envp)
     {
         return EXIT_FAILURE;
     }
+
+    op.setArgTerminatesOptions("script", true);
 
     switch (op.parseArgs(argc, argv)) {
       case OptionParser::ParseHelp:
@@ -5721,6 +5761,10 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+
+    /* Must be done before creating the global object */
+    if (op.getBoolOption('D'))
+        JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
 
     result = Shell(cx, &op, envp);
 

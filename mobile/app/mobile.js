@@ -72,6 +72,7 @@ pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.
 
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
+pref("browser.viewport.desktopWidth", 980);
 
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
@@ -162,6 +163,9 @@ pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 6000);
 pref("alerts.height", 50);
+
+/* download helper */
+pref("browser.helperApps.deleteTempFileOnExit", false);
 
 /* password manager */
 pref("signon.rememberSignons", true);
@@ -369,7 +373,7 @@ pref("plugins.force.wmode", "opaque");
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
 // base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://www.google.com/loc/json");
+pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
 
 // enable geo
 pref("geo.enabled", true);
@@ -380,6 +384,9 @@ pref("content.sink.enable_perf_mode",  2); // 0 - switch, 1 - interactive, 2 - p
 pref("content.sink.pending_event_mode", 0);
 pref("content.sink.perf_deflect_count", 1000000);
 pref("content.sink.perf_parse_time", 50000000);
+
+// Disable methodjit in chrome to save memory
+pref("javascript.options.methodjit.chrome",  false);
 
 pref("javascript.options.mem.high_water_mark", 32);
 
@@ -554,6 +561,7 @@ pref("services.sync.prefs.sync.lightweightThemes.isThemeSelected", true);
 pref("services.sync.prefs.sync.lightweightThemes.usedThemes", true);
 pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
 pref("services.sync.prefs.sync.permissions.default.image", true);
+pref("services.sync.prefs.sync.privacy.donottrackheader.enabled", true);
 pref("services.sync.prefs.sync.signon.rememberSignons", true);
 #endif
 

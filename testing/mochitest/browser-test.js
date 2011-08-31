@@ -47,9 +47,7 @@ function Tester(aTests, aDumper, aCallback) {
   this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                        getService(Ci.mozIJSSubScriptLoader);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", this.EventUtils);
-  // Avoid polluting this scope with packed.js contents.
   var simpleTestScope = {};
-  this._scriptLoader.loadSubScript("chrome://mochikit/content/MochiKit/packed.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/SimpleTest.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;
@@ -58,7 +56,7 @@ Tester.prototype = {
   EventUtils: {},
   SimpleTest: {},
 
-  loops: 0,
+  repeat: 0,
   checker: null,
   currentTestIndex: -1,
   lastStartTime: null,
@@ -73,7 +71,7 @@ Tester.prototype = {
     //if testOnLoad was not called, then gConfig is not defined
     if(!gConfig)
       gConfig = readConfig();
-    this.loops = gConfig.loops;
+    this.repeat = gConfig.repeat;
     this.dumper.dump("*** Start BrowserChrome Test Results ***\n");
     this._cs.registerListener(this);
 
@@ -129,8 +127,8 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
-    if(this.loops > 0){
-      --this.loops;
+    if (this.repeat > 0) {
+      --this.repeat;
       this.currentTestIndex = -1;
       this.nextTest();
     }

@@ -1,30 +1,22 @@
-/* background styles borrowed from extensions.css */
-#permissions-page {
-  -moz-appearance: none;
-  padding: 18px;
-  background-repeat: repeat;
-  color: -moz-dialogText;
-  background-color: -moz-dialog;
-  background-image: /* Fade-out texture at the top, and blend with browser tab */
-                    -moz-linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0) 30%),
-                    /* Texture */
-                    url("chrome://mozapps/skin/extensions/background-texture.png");
-}
+@import url("chrome://global/skin/inContentUI.css");
 
-#permissions-content {
-  background-color: rgba(255, 255, 255, 0.35);
-  background-image: -moz-linear-gradient(top,
-                                         rgba(255, 255, 255, 0),
-                                         rgba(255, 255, 255, 0.75));
-  border: 1px solid #C3CEDF;
-  border-radius: 5px;
-}
 
 /* sites box */
 
 #sites-box {
   padding: 10px;
   width: 25em;
+}
+
+#sites-filter {
+  margin: 0;
+}
+
+#sites-list {
+  -moz-appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.32);
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 5px 0 0 0;
 }
 
 .site {

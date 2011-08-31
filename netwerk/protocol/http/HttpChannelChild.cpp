@@ -144,6 +144,48 @@ HttpChannelChild::ReleaseIPDLReference()
   Release();
 }
 
+class AssociateApplicationCacheEvent : public ChannelEvent
+{
+  public:
+    AssociateApplicationCacheEvent(HttpChannelChild* child,
+                                   const nsCString &groupID,
+                                   const nsCString &clientID)
+    : mChild(child)
+    , groupID(groupID)
+    , clientID(clientID) {}
+
+    void Run() { mChild->AssociateApplicationCache(groupID, clientID); }
+  private:
+    HttpChannelChild* mChild;
+    nsCString groupID;
+    nsCString clientID;
+};
+
+bool
+HttpChannelChild::RecvAssociateApplicationCache(const nsCString &groupID,
+                                                const nsCString &clientID)
+{
+  if (mEventQ.ShouldEnqueue()) {
+    mEventQ.Enqueue(new AssociateApplicationCacheEvent(this, groupID, clientID));
+  } else {
+    AssociateApplicationCache(groupID, clientID);
+  }
+  return true;
+}
+
+void
+HttpChannelChild::AssociateApplicationCache(const nsCString &groupID,
+                                            const nsCString &clientID)
+{
+  nsresult rv;
+  mApplicationCache = do_CreateInstance(NS_APPLICATIONCACHE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return;
+
+  mLoadedFromApplicationCache = PR_TRUE;
+  mApplicationCache->InitAsHandle(groupID, clientID);
+}
+
 class StartRequestEvent : public ChannelEvent
 {
  public:
@@ -191,21 +233,6 @@ class StartRequestEvent : public ChannelEvent
   PRNetAddr mSelfAddr;
   PRNetAddr mPeerAddr;
 };
-
-bool
-HttpChannelChild::RecvAssociateApplicationCache(const nsCString &groupID,
-                                                const nsCString &clientID)
-{
-  nsresult rv;
-  mApplicationCache = do_CreateInstance(
-    NS_APPLICATIONCACHE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return true;
-
-  mLoadedFromApplicationCache = PR_TRUE;
-  mApplicationCache->InitAsHandle(groupID, clientID);
-  return true;
-}
 
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,

@@ -79,7 +79,8 @@ using namespace mozilla;
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;
 
-static const char kTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
+static const char kChildTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
+static const char kParentTimeoutPref[] = "dom.ipc.plugins.parentTimeoutSecs";
 static const char kLaunchTimeoutPref[] = "dom.ipc.plugins.processLaunchTimeoutSecs";
 
 template<>
@@ -109,7 +110,7 @@ PluginModuleParent::LoadModule(const char* aFilePath)
     parent->Open(parent->mSubprocess->GetChannel(),
                  parent->mSubprocess->GetChildProcessHandle());
 
-    TimeoutChanged(kTimeoutPref, parent);
+    TimeoutChanged(kChildTimeoutPref, parent);
     return parent.forget();
 }
 
@@ -131,7 +132,8 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
         NS_ERROR("Out of memory");
     }
 
-    Preferences::RegisterCallback(TimeoutChanged, kTimeoutPref, this);
+    Preferences::RegisterCallback(TimeoutChanged, kChildTimeoutPref, this);
+    Preferences::RegisterCallback(TimeoutChanged, kParentTimeoutPref, this);
 }
 
 PluginModuleParent::~PluginModuleParent()
@@ -156,7 +158,8 @@ PluginModuleParent::~PluginModuleParent()
         mSubprocess = nsnull;
     }
 
-    Preferences::UnregisterCallback(TimeoutChanged, kTimeoutPref, this);
+    Preferences::UnregisterCallback(TimeoutChanged, kChildTimeoutPref, this);
+    Preferences::UnregisterCallback(TimeoutChanged, kParentTimeoutPref, this);
 }
 
 #ifdef MOZ_CRASHREPORTER
@@ -226,14 +229,17 @@ int
 PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thead!");
-    NS_ABORT_IF_FALSE(!strcmp(aPref, kTimeoutPref),
-                      "unexpected pref callback");
-
-    PRInt32 timeoutSecs = Preferences::GetInt(kTimeoutPref, 0);
-    int32 timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
-                      SyncChannel::kNoTimeout;
-
-    static_cast<PluginModuleParent*>(aModule)->SetReplyTimeoutMs(timeoutMs);
+    if (!strcmp(aPref, kChildTimeoutPref)) {
+      // The timeout value used by the parent for children
+      PRInt32 timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
+      int32 timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
+                        SyncChannel::kNoTimeout;
+      static_cast<PluginModuleParent*>(aModule)->SetReplyTimeoutMs(timeoutMs);
+    } else if (!strcmp(aPref, kParentTimeoutPref)) {
+      // The timeout value used by the child for its parent
+      PRInt32 timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
+      static_cast<PluginModuleParent*>(aModule)->SendSetParentHangTimeout(timeoutSecs);
+    }
     return 0;
 }
 
@@ -697,6 +703,20 @@ PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
     return i->AsyncSetWindow(window);
 }
 
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+nsresult
+PluginModuleParent::HandleGUIEvent(NPP instance,
+                                   const nsGUIEvent& anEvent,
+                                   bool* handled)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->HandleGUIEvent(anEvent, handled);
+}
+#endif
+
 nsresult
 PluginModuleParent::GetImage(NPP instance,
                              mozilla::layers::ImageContainer* aContainer,
@@ -921,6 +941,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
         return NS_ERROR_FAILURE;
     }
 
+    TimeoutChanged(kParentTimeoutPref, this);
+    
     return NS_OK;
 }
 

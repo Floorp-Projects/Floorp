@@ -150,8 +150,9 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       // We also do this in strict mode because BR should act like a
       // normal inline frame.  That line-height is used is important
       // here for cases where the line-height is less than 1.
-      nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-      nsFontMetrics *fm = aReflowState.rendContext->FontMetrics();
+      nsRefPtr<nsFontMetrics> fm;
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+      aReflowState.rendContext->SetFont(fm); // FIXME: maybe not needed?
       if (fm) {
         nscoord logicalHeight = aReflowState.CalcLineHeight();
         aMetrics.height = logicalHeight;

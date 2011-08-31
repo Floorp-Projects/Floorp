@@ -86,7 +86,7 @@ is done on the decode thread when video frames are decoded.
 
 The decode thread pushes decoded audio and videos frames into two
 separate queues - one for audio and one for video. These are kept
-separate to make it easy to constantly feed audio data to the sound
+separate to make it easy to constantly feed audio data to the audio
 hardware while allowing frame skipping of video data. These queues are
 threadsafe, and neither the decode, audio, or state machine should
 be able to monopolize them, and cause starvation of the other threads.
@@ -102,7 +102,7 @@ to shut down the decode thread in order to conserve resources.
 
 During playback the audio thread will be idle (via a Wait() on the
 monitor) if the audio queue is empty. Otherwise it constantly pops
-sound data off the queue and plays it with a blocking write to the audio
+audio data off the queue and plays it with a blocking write to the audio
 hardware (via nsAudioStream and libsydneyaudio).
 
 */
@@ -278,6 +278,9 @@ public:
   // Timer function to implement ScheduleStateMachine(aUsecs).
   void TimeoutExpired();
 
+  // Set the media fragment end time. aEndTime is in microseconds.
+  void SetFragmentEndTime(PRInt64 aEndTime);
+
 protected:
 
   // Returns PR_TRUE if we've got less than aAudioUsecs microseconds of decoded
@@ -360,7 +363,7 @@ protected:
                        PRUint64 aSampleOffset);
 
   // Pops an audio chunk from the front of the audio queue, and pushes its
-  // sound data to the audio hardware. MozAudioAvailable sample data is also
+  // audio data to the audio hardware. MozAudioAvailable sample data is also
   // queued here. Called on the audio thread.
   PRUint32 PlayFromAudioQueue(PRUint64 aSampleOffset, PRUint32 aChannels);
 
@@ -510,6 +513,9 @@ protected:
   // The decoder monitor lock must be obtained before reading or writing
   // this value. Accessed on main and decode thread.
   PRInt64 mSeekTime;
+
+  // Media Fragment end time in microseconds. Access controlled by decoder monitor.
+  PRInt64 mFragmentEndTime;
 
   // The audio stream resource. Used on the state machine, and audio threads.
   // This is created and destroyed on the audio thread, while holding the

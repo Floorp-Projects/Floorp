@@ -146,8 +146,14 @@ nsSMILCSSProperty::GetBaseValue() const
 
   // (4) Populate our nsSMILValue from the computed style
   if (didGetComputedVal) {
+    // When we parse animation values we check if they are context-sensitive or
+    // not so that we don't cache animation values whose meaning may change.
+    // For base values however this is unnecessary since on each sample the
+    // compositor will fetch the (computed) base value and compare it against
+    // the cached (computed) value and detect changes for us.
     nsSMILCSSValueType::ValueFromString(mPropID, mElement,
-                                        computedStyleVal, baseValue);
+                                        computedStyleVal, baseValue,
+                                        nsnull);
   }
   return baseValue;
 }
@@ -160,22 +166,17 @@ nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
-  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue);
-  if (aValue.IsNull()) {
-    return NS_ERROR_FAILURE;
+  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue,
+      &aPreventCachingOfSandwich);
+
+  // XXX Due to bug 536660 (or at least that seems to be the most likely
+  // culprit), when we have animation setting display:none on a <use> element,
+  // if we DON'T set the property every sample, chaos ensues.
+  if (!aPreventCachingOfSandwich && mPropID == eCSSProperty_display) {
+    aPreventCachingOfSandwich = PR_TRUE;
   }
 
-  // XXXdholbert: For simplicity, just assume that all CSS values have to
-  // reparsed every sample. This prevents us from doing the "nothing's changed
-  // so don't recompose" optimization (bug 533291) for CSS properties & mapped
-  // attributes.  If it ends up being expensive to always recompose those, we
-  // can be a little smarter here.  We really only need to set
-  // aPreventCachingOfSandwich to true for "inherit" & "currentColor" (whose
-  // values could change at any time), for length-valued types (particularly
-  // those with em/ex/percent units, since their conversion ratios can change
-  // at any time), and for any value for 'font-family'.
-  aPreventCachingOfSandwich = PR_TRUE;
-  return NS_OK;
+  return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
 }
 
 nsresult

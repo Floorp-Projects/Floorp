@@ -60,10 +60,10 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame);
+  NS_IMETHOD RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame);
 
   NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
   NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);

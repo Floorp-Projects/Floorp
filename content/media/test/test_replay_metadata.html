@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467972
 -->
 <head>
   <title>Test for Bug 467972</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="manifest.js"></script>
@@ -33,7 +32,6 @@ function seekStarted(evt) {
 function seekEnded(evt) {
   var v = evt.target;
   v._gotSeekEnded = true;
-  v.play();
 }
 
 function loadedData(evt) {
@@ -66,7 +64,6 @@ function playbackEnded(evt) {
     ok(v.seeking, "seeking should be true for " + v._name);
     ok(!v.ended, "ended shouldn't be true once seeking has begun for " + v._name);
     v._playedOnce = true;
-    v.play();
   } else {
     ok(v._gotSeekEnded, "Should have received seekended for " + v._name);
     ok(v._gotSeekStarted, "Should have received seekstarted for " + v._name);

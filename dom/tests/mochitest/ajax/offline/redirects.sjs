@@ -3,7 +3,6 @@ ver1manifest =
   "# v1\n" +
   "\n" +
   "http://mochi.test:8888/tests/SimpleTest/SimpleTest.js\n" +
-  "http://mochi.test:8888/MochiKit/packed.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs";
 
@@ -12,7 +11,6 @@ ver2manifest =
   "# v2\n" +
   "\n" +
   "http://mochi.test:8888/tests/SimpleTest/SimpleTest.js\n" +
-  "http://mochi.test:8888/MochiKit/packed.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs";
 
@@ -21,7 +19,6 @@ ver3manifest =
   "# v3\n" +
   "\n" +
   "http://mochi.test:8888/tests/SimpleTest/SimpleTest.js\n" +
-  "http://mochi.test:8888/MochiKit/packed.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js\n" +
   "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs";
 

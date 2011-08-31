@@ -68,9 +68,6 @@
 #include <os2.h>
 #endif
 
-#define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
-#define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
-
 static void
 clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
@@ -298,7 +295,7 @@ nsresult
 PREF_SetBoolPref(const char *pref_name, PRBool value, PRBool set_default)
 {
     PrefValue pref;
-    pref.boolVal = value ? PR_TRUE : PR_FALSE;
+    pref.boolVal = value;
 
     return pref_HashPref(pref_name, pref, PREF_BOOL, set_default);
 }
@@ -339,9 +336,10 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
     PrefValue* sourcePref;
 
     if (PREF_HAS_USER_VALUE(pref) &&
-        pref_ValueChanged(pref->defaultPref,
-                          pref->userPref,
-                          (PrefType) PREF_TYPE(pref))) {
+        (pref_ValueChanged(pref->defaultPref,
+                           pref->userPref,
+                           (PrefType) PREF_TYPE(pref)) ||
+         !(pref->flags & PREF_HAS_DEFAULT))) {
         sourcePref = &pref->userPref;
     } else {
         if (argData->saveTypes == SAVE_ALL_AND_DEFAULTS) {
@@ -523,7 +521,7 @@ nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_
         {
             PRInt32 tempInt = pref->defaultPref.intVal;
             /* check to see if we even had a default */
-            if (tempInt == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
+            if (!(pref->flags & PREF_HAS_DEFAULT))
                 return NS_ERROR_UNEXPECTED;
             *return_int = tempInt;
         }
@@ -548,7 +546,7 @@ nsresult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool g
         {
             PRBool tempBool = pref->defaultPref.boolVal;
             /* check to see if we even had a default */
-            if (tempBool != ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE)) {
+            if (pref->flags & PREF_HAS_DEFAULT) {
                 *return_value = tempBool;
                 rv = NS_OK;
             }
@@ -614,11 +612,7 @@ PREF_ClearUserPref(const char *pref_name)
     {
         pref->flags &= ~PREF_USERSET;
 
-        if ((pref->flags & PREF_INT && 
-             pref->defaultPref.intVal == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE)) ||
-            (pref->flags & PREF_BOOL && 
-             pref->defaultPref.boolVal == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE)) ||
-            (pref->flags & PREF_STRING && !pref->defaultPref.stringVal)) {
+        if (!(pref->flags & PREF_HAS_DEFAULT)) {
             PL_DHashTableOperate(&gHashTable, pref_name, PL_DHASH_REMOVE);
         }
 
@@ -640,11 +634,7 @@ pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, PRUint32,
     {
         pref->flags &= ~PREF_USERSET;
 
-        if ((pref->flags & PREF_INT && 
-             pref->defaultPref.intVal == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE)) ||
-            (pref->flags & PREF_BOOL && 
-             pref->defaultPref.boolVal == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE)) ||
-            (pref->flags & PREF_STRING && !pref->defaultPref.stringVal)) {
+        if (!(pref->flags & PREF_HAS_DEFAULT)) {
             nextOp = PL_DHASH_REMOVE;
         }
 
@@ -757,15 +747,6 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool s
         pref->key = ArenaStrDup(key, &gPrefNameArena);
         memset(&pref->defaultPref, 0, sizeof(pref->defaultPref));
         memset(&pref->userPref, 0, sizeof(pref->userPref));
-
-        /* ugly hack -- define it to a default that no pref will ever
-           default to this should really get fixed right by some out
-           of band data
-        */
-        if (pref->flags & PREF_BOOL)
-            pref->defaultPref.boolVal = (PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE;
-        if (pref->flags & PREF_INT)
-            pref->defaultPref.intVal = (PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE;
     }
     else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) !=
                  (type & PREF_VALUETYPE_MASK))
@@ -779,9 +760,11 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool s
     {
         if (!PREF_IS_LOCKED(pref))
         {       /* ?? change of semantics? */
-            if (pref_ValueChanged(pref->defaultPref, value, type))
+            if (pref_ValueChanged(pref->defaultPref, value, type) ||
+                !(pref->flags & PREF_HAS_DEFAULT))
             {
                 pref_SetValue(&pref->defaultPref, value, type);
+                pref->flags |= PREF_HAS_DEFAULT;
                 if (!PREF_HAS_USER_VALUE(pref))
                     valueChanged = PR_TRUE;
             }
@@ -791,7 +774,8 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool s
     {
         /* If new value is same as the default value, then un-set the user value.
            Otherwise, set the user value only if it has changed */
-        if ( !pref_ValueChanged(pref->defaultPref, value, type) )
+        if (!pref_ValueChanged(pref->defaultPref, value, type) &&
+            pref->flags & PREF_HAS_DEFAULT)
         {
             if (PREF_HAS_USER_VALUE(pref))
             {

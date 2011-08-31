@@ -16,6 +16,13 @@
  *
  * sendMouseEvent({type:'click'}, 'node');
  */
+function getElement(id) {
+  return ((typeof(id) == "string") ?
+    document.getElementById(id) : id); 
+};   
+
+this.$ = this.getElement;
+
 function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (['click', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
     throw new Error("sendMouseEvent doesn't know about event type '"+aEvent.type+"'");
@@ -631,7 +638,7 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
   try {
     // need to use real mouse action
     aWindow.addEventListener("dragstart", trapDrag, true);
-    synthesizeMouse(srcElement, 2, 2, { type: "mousedown" }, aWindow);
+    synthesizeMouseAtCenter(srcElement, { type: "mousedown" }, aWindow);
     synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
     synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
     aWindow.removeEventListener("dragstart", trapDrag, true);

@@ -1,4 +1,5 @@
 /* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,6 +44,7 @@
 
 #include "jspubtd.h"
 
+// DOMException Codes.
 #define INDEX_SIZE_ERR 1
 #define DOMSTRING_SIZE_ERR 2
 #define HIERARCHY_REQUEST_ERR 3
@@ -69,6 +71,13 @@
 #define INVALID_NODE_TYPE_ERR 24
 #define DATA_CLONE_ERR 25
 
+// FileException Codes
+#define FILE_NOT_FOUND_ERR 1
+#define FILE_SECURITY_ERR 2
+#define FILE_ABORT_ERR 3
+#define FILE_NOT_READABLE_ERR 4
+#define FILE_ENCODING_ERR 5
+
 BEGIN_WORKERS_NAMESPACE
 
 namespace exceptions {
@@ -78,6 +87,9 @@ InitClasses(JSContext* aCx, JSObject* aGlobal);
 
 void
 ThrowDOMExceptionForCode(JSContext* aCx, intN aCode);
+
+void
+ThrowFileExceptionForCode(JSContext* aCx, intN aCode);
 
 } // namespace exceptions
 

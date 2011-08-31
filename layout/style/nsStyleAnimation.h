@@ -175,13 +175,22 @@ public:
    * @param aUseSVGMode     A flag to indicate whether we should parse
    *                        |aSpecifiedValue| in SVG mode.
    * @param [out] aComputedValue The resulting computed value.
+   * @param [out] aIsContextSensitive
+   *                        Set to PR_TRUE if |aSpecifiedValue| may produce
+   *                        a different |aComputedValue| depending on other CSS
+   *                        properties on |aTargetElement| or its ancestors.
+   *                        PR_FALSE otherwise.
+   *                        Note that the operation of this method is
+   *                        significantly faster when |aIsContextSensitive| is
+   *                        nsnull.
    * @return PR_TRUE on success, PR_FALSE on failure.
    */
   static PRBool ComputeValue(nsCSSProperty aProperty,
-                             mozilla::dom::Element* aElement,
+                             mozilla::dom::Element* aTargetElement,
                              const nsAString& aSpecifiedValue,
                              PRBool aUseSVGMode,
-                             Value& aComputedValue);
+                             Value& aComputedValue,
+                             PRBool* aIsContextSensitive = nsnull);
 
   /**
    * Creates a specified value for the given computed value.

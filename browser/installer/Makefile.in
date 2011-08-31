@@ -88,10 +88,6 @@ endif
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
-ifdef WIN32_OLD_STYLE_JEMALLOC
-DEFINES += -DWIN32_OLD_STYLE_JEMALLOC=1
-endif
-
 ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
 DEFINES += -DSHIP_FEEDBACK=1
 endif
@@ -99,7 +95,7 @@ endif
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 
-$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
+$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) $(GLOBAL_DEPS)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
 
 GARBAGE += $(MOZ_PKG_MANIFEST)

@@ -268,7 +268,7 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   nsBlockFrame* frameBlock = nsLayoutUtils::GetAsBlock(ancestor);
   NS_ASSERTION(frameBlock, "ancestor not a block");
 
-  const nsFrameList& blockChildren(ancestor->GetChildList(nsnull));
+  const nsFrameList& blockChildren(ancestor->PrincipalChildList());
   PRBool isOverflow = !blockChildren.ContainsFrame(ancestorBlockChild);
 
   while (PR_TRUE) {
@@ -528,7 +528,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       // so nsFirstLetterFrame::Reflow can destroy them safely (bug 401042).
       nsIFrame* realFrame = nsPlaceholderFrame::GetRealFrameFor(frame);
       if (realFrame->GetType() == nsGkAtoms::letterFrame) {
-        nsIFrame* child = realFrame->GetFirstChild(nsnull);
+        nsIFrame* child = realFrame->GetFirstPrincipalChild();
         if (child) {
           NS_ASSERTION(child->GetType() == nsGkAtoms::textFrame,
                        "unexpected frame type");
@@ -644,8 +644,9 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                           : aReflowState.mComputedBorderPadding.left;
   }
 
-  nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-  nsFontMetrics* fm = aReflowState.rendContext->FontMetrics();
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  aReflowState.rendContext->SetFont(fm);
 
   if (fm) {
     // Compute final height of the frame.
@@ -1134,63 +1135,63 @@ nsPositionedInlineFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::SetInitialChildList(nsIAtom*        aListName,
+nsPositionedInlineFrame::SetInitialChildList(ChildListID     aListID,
                                              nsFrameList&    aChildList)
 {
   nsresult  rv;
 
-  if (nsGkAtoms::absoluteList == aListName) {
-    rv = mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
+  if (kAbsoluteList == aListID) {
+    rv = mAbsoluteContainer.SetInitialChildList(this, aListID, aChildList);
   } else {
-    rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
+    rv = nsInlineFrame::SetInitialChildList(aListID, aChildList);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::AppendFrames(nsIAtom*        aListName,
+nsPositionedInlineFrame::AppendFrames(ChildListID     aListID,
                                       nsFrameList&    aFrameList)
 {
   nsresult  rv;
   
-  if (nsGkAtoms::absoluteList == aListName) {
-    rv = mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
+  if (kAbsoluteList == aListID) {
+    rv = mAbsoluteContainer.AppendFrames(this, aListID, aFrameList);
   } else {
-    rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
+    rv = nsInlineFrame::AppendFrames(aListID, aFrameList);
   }
 
   return rv;
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::InsertFrames(nsIAtom*        aListName,
+nsPositionedInlineFrame::InsertFrames(ChildListID     aListID,
                                       nsIFrame*       aPrevFrame,
                                       nsFrameList&    aFrameList)
 {
   nsresult  rv;
 
-  if (nsGkAtoms::absoluteList == aListName) {
-    rv = mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
+  if (kAbsoluteList == aListID) {
+    rv = mAbsoluteContainer.InsertFrames(this, aListID, aPrevFrame,
                                          aFrameList);
   } else {
-    rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
+    rv = nsInlineFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
   }
 
   return rv;
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
+nsPositionedInlineFrame::RemoveFrame(ChildListID     aListID,
                                      nsIFrame*       aOldFrame)
 {
   nsresult  rv;
 
-  if (nsGkAtoms::absoluteList == aListName) {
-    mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
+  if (kAbsoluteList == aListID) {
+    mAbsoluteContainer.RemoveFrame(this, aListID, aOldFrame);
     rv = NS_OK;
   } else {
-    rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
+    rv = nsInlineFrame::RemoveFrame(aListID, aOldFrame);
   }
 
   return rv;
@@ -1206,22 +1207,20 @@ nsPositionedInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
-nsIAtom*
-nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
-{
-  if (0 == aIndex) {
-    return nsGkAtoms::absoluteList;
-  }
-  return nsnull;
-}
-
 nsFrameList
-nsPositionedInlineFrame::GetChildList(nsIAtom* aListName) const
+nsPositionedInlineFrame::GetChildList(ChildListID aListID) const
 {
-  if (nsGkAtoms::absoluteList == aListName)
+  if (kAbsoluteList == aListID)
     return mAbsoluteContainer.GetChildList();
 
-  return nsInlineFrame::GetChildList(aListName);
+  return nsInlineFrame::GetChildList(aListID);
+}
+
+void
+nsPositionedInlineFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+{
+  nsInlineFrame::GetChildLists(aLists);
+  mAbsoluteContainer.AppendChildList(aLists, kAbsoluteList);
 }
 
 nsIAtom*

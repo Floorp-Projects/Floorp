@@ -5,14 +5,8 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "base/gfx/rect.h"
-#ifndef CHROMIUM_MOZILLA_BUILD
-#include "googleurl/src/gurl.h"
-#endif
 #ifndef EXCLUDE_SKIA_DEPENDENCIES
 #include "SkBitmap.h"
-#endif
-#ifndef CHROMIUM_MOZILLA_BUILD
-#include "webkit/glue/dom_operations.h"
 #endif
 
 namespace IPC {
@@ -99,133 +93,5 @@ void ParamTraits<SkBitmap>::Log(const SkBitmap& p, std::wstring* l) {
 }
 
 #endif  // EXCLUDE_SKIA_DEPENDENCIES
-
-#ifndef CHROMIUM_MOZILLA_BUILD
-void ParamTraits<GURL>::Write(Message* m, const GURL& p) {
-  m->WriteString(p.possibly_invalid_spec());
-  // TODO(brettw) bug 684583: Add encoding for query params.
-}
-
-bool ParamTraits<GURL>::Read(const Message* m, void** iter, GURL* p) {
-  std::string s;
-  if (!m->ReadString(iter, &s)) {
-    *p = GURL();
-    return false;
-  }
-  *p = GURL(s);
-  return true;
-}
-
-void ParamTraits<GURL>::Log(const GURL& p, std::wstring* l) {
-  l->append(UTF8ToWide(p.spec()));
-}
-
-void ParamTraits<gfx::Point>::Write(Message* m, const gfx::Point& p) {
-  m->WriteInt(p.x());
-  m->WriteInt(p.y());
-}
-
-bool ParamTraits<gfx::Point>::Read(const Message* m, void** iter,
-                                   gfx::Point* r) {
-  int x, y;
-  if (!m->ReadInt(iter, &x) ||
-      !m->ReadInt(iter, &y))
-    return false;
-  r->set_x(x);
-  r->set_y(y);
-  return true;
-}
-
-void ParamTraits<gfx::Point>::Log(const gfx::Point& p, std::wstring* l) {
-  l->append(StringPrintf(L"(%d, %d)", p.x(), p.y()));
-}
-
-
-void ParamTraits<gfx::Rect>::Write(Message* m, const gfx::Rect& p) {
-  m->WriteInt(p.x());
-  m->WriteInt(p.y());
-  m->WriteInt(p.width());
-  m->WriteInt(p.height());
-}
-
-bool ParamTraits<gfx::Rect>::Read(const Message* m, void** iter, gfx::Rect* r) {
-  int x, y, w, h;
-  if (!m->ReadInt(iter, &x) ||
-      !m->ReadInt(iter, &y) ||
-      !m->ReadInt(iter, &w) ||
-      !m->ReadInt(iter, &h))
-    return false;
-  r->set_x(x);
-  r->set_y(y);
-  r->set_width(w);
-  r->set_height(h);
-  return true;
-}
-
-void ParamTraits<gfx::Rect>::Log(const gfx::Rect& p, std::wstring* l) {
-  l->append(StringPrintf(L"(%d, %d, %d, %d)", p.x(), p.y(),
-                         p.width(), p.height()));
-}
-
-
-void ParamTraits<gfx::Size>::Write(Message* m, const gfx::Size& p) {
-  m->WriteInt(p.width());
-  m->WriteInt(p.height());
-}
-
-bool ParamTraits<gfx::Size>::Read(const Message* m, void** iter, gfx::Size* r) {
-  int w, h;
-  if (!m->ReadInt(iter, &w) ||
-      !m->ReadInt(iter, &h))
-    return false;
-  r->set_width(w);
-  r->set_height(h);
-  return true;
-}
-
-void ParamTraits<gfx::Size>::Log(const gfx::Size& p, std::wstring* l) {
-  l->append(StringPrintf(L"(%d, %d)", p.width(), p.height()));
-}
-
-void ParamTraits<webkit_glue::WebApplicationInfo>::Write(
-    Message* m, const webkit_glue::WebApplicationInfo& p) {
-  WriteParam(m, p.title);
-  WriteParam(m, p.description);
-  WriteParam(m, p.app_url);
-  WriteParam(m, p.icons.size());
-  for (size_t i = 0; i < p.icons.size(); ++i) {
-    WriteParam(m, p.icons[i].url);
-    WriteParam(m, p.icons[i].width);
-    WriteParam(m, p.icons[i].height);
-  }
-}
-
-bool ParamTraits<webkit_glue::WebApplicationInfo>::Read(
-    const Message* m, void** iter, webkit_glue::WebApplicationInfo* r) {
-  size_t icon_count;
-  bool result =
-    ReadParam(m, iter, &r->title) &&
-    ReadParam(m, iter, &r->description) &&
-    ReadParam(m, iter, &r->app_url) &&
-    ReadParam(m, iter, &icon_count);
-  if (!result)
-    return false;
-  for (size_t i = 0; i < icon_count && result; ++i) {
-    param_type::IconInfo icon_info;
-    result =
-        ReadParam(m, iter, &icon_info.url) &&
-        ReadParam(m, iter, &icon_info.width) &&
-        ReadParam(m, iter, &icon_info.height);
-    r->icons.push_back(icon_info);
-  }
-  return result;
-}
-
-void ParamTraits<webkit_glue::WebApplicationInfo>::Log(
-    const webkit_glue::WebApplicationInfo& p, std::wstring* l) {
-  l->append(L"<WebApplicationInfo>");
-}
-
-#endif // CHROMIUM_MOZILLA_BUILD
 
 }  // namespace IPC

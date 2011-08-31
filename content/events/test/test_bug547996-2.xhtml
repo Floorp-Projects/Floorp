@@ -6,7 +6,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=547996
 -->
 <head>
   <title>Test for Bug 547996</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -30,13 +29,13 @@ function check(event) {
 function doTest() {
   setup();
 
-  expectedInputSource = Components.interfaces.nsIDOMNSMouseEvent.MOZ_SOURCE_KEYBOARD;
+  expectedInputSource = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_KEYBOARD;
   testKeyboard();
 
-  expectedInputSource = Components.interfaces.nsIDOMNSMouseEvent.MOZ_SOURCE_MOUSE;
+  expectedInputSource = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
   testMouse();
 
-  expectedInputSource = Components.interfaces.nsIDOMNSMouseEvent.MOZ_SOURCE_UNKNOWN;
+  expectedInputSource = Components.interfaces.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN;
   testScriptedClicks();
 
   cleanup();

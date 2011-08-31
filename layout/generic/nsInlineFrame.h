@@ -242,30 +242,29 @@ public:
 
   nsPositionedInlineFrame(nsStyleContext* aContext)
     : nsInlineFrame(aContext)
-    , mAbsoluteContainer(nsGkAtoms::absoluteList)
+    , mAbsoluteContainer(kAbsoluteList)
   {}
 
   virtual ~nsPositionedInlineFrame() { } // useful for debugging
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsFrameList&    aChildList);
-  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsFrameList&    aFrameList);
-  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
-                         nsIFrame*       aOldFrame);
+  NS_IMETHOD SetInitialChildList(ChildListID  aListID,
+                                 nsFrameList& aChildList);
+  NS_IMETHOD AppendFrames(ChildListID  aListID,
+                          nsFrameList& aFrameList);
+  NS_IMETHOD InsertFrames(ChildListID  aListID,
+                          nsIFrame*    aPrevFrame,
+                          nsFrameList& aFrameList);
+  NS_IMETHOD RemoveFrame(ChildListID aListID,
+                         nsIFrame*   aOldFrame);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(ChildListID aListID) const;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

@@ -83,7 +83,9 @@ class gfxXlibSurface;
 #endif
 
 #ifdef MOZ_WIDGET_QT
+#ifdef MOZ_X11
 #include "gfxQtNativeRenderer.h"
+#endif
 #endif
 
 #ifdef XP_OS2
@@ -128,6 +130,9 @@ public:
   
   nsresult MouseDown(nsIDOMEvent* aKeyEvent);
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+#if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
+  nsresult Text(nsIDOMEvent* aTextEvent);
+#endif
 
   nsresult Destroy();  
   
@@ -202,6 +207,7 @@ public:
 #else // XP_MACOSX
   void UpdateWindowPositionAndClipRect(PRBool aSetWindow);
   void UpdateWindowVisibility(PRBool aVisible);
+  void UpdateDocumentActiveState(PRBool aIsActive);
 #endif // XP_MACOSX
   void CallSetWindow();
   
@@ -343,6 +349,7 @@ private:
   PRPackedBool                mFlash10Quirks;
 #endif
   PRPackedBool                mPluginWindowVisible;
+  PRPackedBool                mPluginDocumentActiveState;
   
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.

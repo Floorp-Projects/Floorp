@@ -1,12 +1,7 @@
 CACHE MANIFEST
 
 http://mochi.test:8888/tests/SimpleTest/SimpleTest.js
-http://mochi.test:8888/MochiKit/packed.js
 http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
-
-# The following item doesn't have the same scheme as the manifest, and
-# will be ignored.
-https://mochi.test:8888/MochiKit/packed.js
 
 # The following item is not a valid URI and will be ignored
 bad:/uri/invalid

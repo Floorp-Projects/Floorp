@@ -187,9 +187,9 @@ PRBool nsWaveReader::DecodeAudioData()
   PRInt64 readSize = NS_MIN(BLOCK_SIZE, remaining);
   PRInt64 samples = readSize / mSampleSize;
 
-  PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(SoundDataValue) / MAX_CHANNELS);
+  PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(AudioDataValue) / MAX_CHANNELS);
   const size_t bufferSize = static_cast<size_t>(samples * mChannels);
-  nsAutoArrayPtr<SoundDataValue> sampleBuffer(new SoundDataValue[bufferSize]);
+  nsAutoArrayPtr<AudioDataValue> sampleBuffer(new AudioDataValue[bufferSize]);
 
   PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(char));
   nsAutoArrayPtr<char> dataBuffer(new char[static_cast<size_t>(readSize)]);
@@ -201,7 +201,7 @@ PRBool nsWaveReader::DecodeAudioData()
 
   // convert data to samples
   const char* d = dataBuffer.get();
-  SoundDataValue* s = sampleBuffer.get();
+  AudioDataValue* s = sampleBuffer.get();
   for (int i = 0; i < samples; ++i) {
     for (unsigned int j = 0; j < mChannels; ++j) {
       if (mSampleFormat == nsAudioStream::FORMAT_U8) {
@@ -229,7 +229,7 @@ PRBool nsWaveReader::DecodeAudioData()
   NS_ASSERTION(readSizeTime <= PR_INT64_MAX / USECS_PER_S, "readSizeTime overflow");
   NS_ASSERTION(samples < PR_INT32_MAX, "samples overflow");
 
-  mAudioQueue.Push(new SoundData(pos,
+  mAudioQueue.Push(new AudioData(pos,
                                  static_cast<PRInt64>(posTime * USECS_PER_S),
                                  static_cast<PRInt64>(readSizeTime * USECS_PER_S),
                                  static_cast<PRInt32>(samples),

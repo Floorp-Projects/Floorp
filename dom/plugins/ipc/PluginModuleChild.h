@@ -111,6 +111,9 @@ protected:
         return MediateRace(parent, child);
     }
 
+    NS_OVERRIDE
+    virtual bool ShouldContinueFromReplyTimeout();
+
     // Implement the PPluginModuleChild interface
     virtual bool AnswerNP_GetEntryPoints(NPError* rv);
     virtual bool AnswerNP_Initialize(NativeThreadId* tid, NPError* rv);
@@ -167,6 +170,9 @@ protected:
     RecvSetAudioSessionData(const nsID& aId,
                             const nsString& aDisplayName,
                             const nsString& aIconPath);
+
+    virtual bool
+    RecvSetParentHangTimeout(const uint32_t& aSeconds);
 
     virtual void
     ActorDestroy(ActorDestroyReason why);

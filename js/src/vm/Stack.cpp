@@ -439,7 +439,10 @@ StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from,
 {
     assertInvariants();
 
-    JS_ASSERT_IF(dest, cx);
+    /* See CX_COMPARTMENT comment. */
+    if (dest == (JSCompartment *)CX_COMPARTMENT)
+        dest = cx->compartment;
+
     bool trusted = !dest || dest->principals == cx->runtime->trustedPrincipals();
     Value *end = trusted ? trustedEnd_ : defaultEnd_;
 
@@ -628,13 +631,6 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
     return seg_->slotsBegin();
 }
 
-Value *
-ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
-                          MaybeExtend extend, bool *pushedSeg)
-{
-    return ensureOnTop(cx, report, nvars, extend, pushedSeg, cx->compartment);
-}
-
 void
 ContextStack::popSegment()
 {
@@ -776,9 +772,9 @@ ContextStack::pushBailoutFrame(JSContext *cx, JSObject *callee, JSFunction *fun,
 }
 
 bool
-ContextStack::pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg)
+ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg)
 {
-    JSCompartment *dest = scopeChain.compartment();
+    JS_ASSERT(dest == scopeChain.compartment());
 
     uintN nvars = VALUES_PER_STACK_FRAME;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &dfg->pushedSeg_, dest);

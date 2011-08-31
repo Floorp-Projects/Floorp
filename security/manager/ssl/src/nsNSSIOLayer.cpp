@@ -226,7 +226,8 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mAllowTLSIntoleranceTimeout(PR_TRUE),
     mRememberClientAuthCertificate(PR_FALSE),
     mHandshakeStartTime(0),
-    mPort(0)
+    mPort(0),
+    mIsCertIssuerBlacklisted(PR_FALSE)
 {
   mThreadData = new nsSSLSocketThreadData;
 }
@@ -1776,9 +1777,7 @@ nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, ns
 
   PRBool enableSSL3 = PR_FALSE;
   SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL3, &enableSSL3);
-  PRBool enableSSL2 = PR_FALSE;
-  SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL2, &enableSSL2);
-  if (enableSSL3 || enableSSL2) {
+  if (enableSSL3) {
     // Add this site to the list of TLS intolerant sites.
     addIntolerantSite(key);
   }
@@ -3339,73 +3338,6 @@ cancel_and_failure(nsNSSSocketInfo* infoObject)
   return SECFailure;
 }
 
-class nsIsStsHostRunnable : public nsIRunnable
-{
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  nsIsStsHostRunnable(const nsCOMPtr<nsIStrictTransportSecurityService> &stss)
-    : stss(stss), stsEnabled(PR_FALSE), nsrv(NS_ERROR_UNEXPECTED)
-  {}
-
-  nsXPIDLCString hostName;
-
-  nsresult GetResult(PRBool &b) const { b = stsEnabled; return nsrv; }
-
- private:
-  nsCOMPtr<nsIStrictTransportSecurityService> stss;
-  PRBool stsEnabled;
-  nsresult nsrv;
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsIsStsHostRunnable,
-                              nsIRunnable)
-
-NS_IMETHODIMP nsIsStsHostRunnable::Run()
-{
-  nsrv = stss->IsStsHost(hostName, &stsEnabled);
-  return NS_OK;
-}
-
-class nsNotifyCertProblemRunnable : public nsIRunnable
-{
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  nsNotifyCertProblemRunnable(nsIInterfaceRequestor *cb,
-                              nsIInterfaceRequestor *csi,
-                              nsSSLStatus* status,
-                              const nsCString &hostWithPortString)
-  : cb(cb),
-    csi(csi),
-    status(status),
-    hostWithPortString(hostWithPortString),
-    suppressMessage(PR_FALSE)
-  {}
-
-  PRBool GetSuppressMessage() { return suppressMessage; }
-
- private:
-  nsIInterfaceRequestor* cb;
-  nsIInterfaceRequestor* csi;
-  nsSSLStatus* status;
-  const nsCString& hostWithPortString;
-  PRBool suppressMessage;
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNotifyCertProblemRunnable,
-                              nsIRunnable)
-
-NS_IMETHODIMP nsNotifyCertProblemRunnable::Run()
-{
-  nsCOMPtr<nsIBadCertListener2> bcl = do_GetInterface(cb);
-  if (bcl)
-    bcl->NotifyCertProblem(csi, status, hostWithPortString, &suppressMessage);
-  return NS_OK;
-}
-
 static SECStatus
 nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 {
@@ -3509,6 +3441,10 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
                                 cvout, (void*)infoObject);
     }
 
+    if (infoObject->IsCertIssuerBlacklisted()) {
+      collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
+    }
+
     // We ignore the result code of the cert verification.
     // Either it is a failure, which is expected, and we'll process the
     //                         verify log below.
@@ -3589,25 +3525,21 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 
   nsCOMPtr<nsIStrictTransportSecurityService> stss
     = do_GetService(NS_STSSERVICE_CONTRACTID);
+  nsCOMPtr<nsIStrictTransportSecurityService> proxied_stss;
 
-  nsCOMPtr<nsIsStsHostRunnable> runnable(new nsIsStsHostRunnable(stss));
-  if (!runnable)
-    return SECFailure;
-
-  // now grab the host name to pass to the STS Service
-  nsrv = infoObject->GetHostName(getter_Copies(runnable->hostName));
+  nsrv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                              NS_GET_IID(nsIStrictTransportSecurityService),
+                              stss, NS_PROXY_SYNC,
+                              getter_AddRefs(proxied_stss));
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  if (!mainThread)
-    return SECFailure;
-
-  // Dispatch SYNC since the result is used below
-  nsrv = mainThread->Dispatch(runnable, NS_DISPATCH_SYNC);
+  // now grab the host name to pass to the STS Service
+  nsXPIDLCString hostName;
+  nsrv = infoObject->GetHostName(getter_Copies(hostName));
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
   PRBool strictTransportSecurityEnabled;
-  nsrv = runnable->GetResult(strictTransportSecurityEnabled);
+  nsrv = proxied_stss->IsStsHost(hostName, &strictTransportSecurityEnabled);
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
   if (!strictTransportSecurityEnabled) {
@@ -3647,23 +3579,33 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   // giving the caller a chance to suppress the error messages.
 
   PRBool suppressMessage = PR_FALSE;
+  nsresult rv;
 
   // Try to get a nsIBadCertListener2 implementation from the socket consumer.
   nsCOMPtr<nsIInterfaceRequestor> cb;
   infoObject->GetNotificationCallbacks(getter_AddRefs(cb));
   if (cb) {
-    nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(infoObject);
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                         NS_GET_IID(nsIInterfaceRequestor),
+                         cb,
+                         NS_PROXY_SYNC,
+                         getter_AddRefs(callbacks));
 
-    nsCOMPtr<nsNotifyCertProblemRunnable> runnable(
-        new nsNotifyCertProblemRunnable(cb, csi, status, hostWithPortString));
-    if (!runnable)
-      return SECFailure;
-
-    // Dispatch SYNC since the result is used below
-    nsrv = mainThread->Dispatch(runnable, NS_DISPATCH_SYNC);
-    NS_ENSURE_SUCCESS(nsrv, SECFailure);
-
-    suppressMessage = runnable->GetSuppressMessage();
+    nsCOMPtr<nsIBadCertListener2> bcl = do_GetInterface(callbacks);
+    if (bcl) {
+      nsCOMPtr<nsIBadCertListener2> proxy_bcl;
+      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsIBadCertListener2),
+                           bcl,
+                           NS_PROXY_SYNC,
+                           getter_AddRefs(proxy_bcl));
+      if (proxy_bcl) {
+        nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(infoObject);
+        rv = proxy_bcl->NotifyCertProblem(csi, status, hostWithPortString, 
+                                          &suppressMessage);
+      }
+    }
   }
 
   nsCOMPtr<nsIRecentBadCertsService> recentBadCertsService = 
@@ -3754,15 +3696,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
     infoObject->SetHasCleartextPhase(PR_TRUE);
   }
 
-  if (forSTARTTLS) {
-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_SSL2, PR_FALSE)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (SECSuccess != SSL_OptionSet(fd, SSL_V2_COMPATIBLE_HELLO, PR_FALSE)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   // Let's see if we're trying to connect to a site we know is
   // TLS intolerant.
   nsCAutoString key;
@@ -3780,10 +3713,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
     // One advantage of this approach, if a site only supports the older
     // hellos, it is more likely that we will get a reasonable error code
     // on our single retry attempt.
-    
-    if (!forSTARTTLS &&
-        SECSuccess != SSL_OptionSet(fd, SSL_V2_COMPATIBLE_HELLO, PR_TRUE))
-      return NS_ERROR_FAILURE;
   }
 
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {

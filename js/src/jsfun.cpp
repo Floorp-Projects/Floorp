@@ -72,6 +72,7 @@
 #include "jsexn.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "vm/Debugger.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
@@ -1271,7 +1272,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                             JSObject *clone;
 
                             if (IsFunctionObject(v, &clone) &&
-                                GET_FUNCTION_PRIVATE(cx, clone) == fun &&
+                                clone->getFunctionPrivate() == fun &&
                                 clone->hasMethodObj(*thisp)) {
                                 /*
                                  * N.B. If the method barrier was on a function
@@ -1598,8 +1599,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 
     cx = xdr->cx;
     if (xdr->mode == JSXDR_ENCODE) {
-        fun = GET_FUNCTION_PRIVATE(cx, *objp);
-        if (!FUN_INTERPRETED(fun)) {
+        fun = (*objp)->getFunctionPrivate();
+        if (!fun->isInterpreted()) {
             JSAutoByteString funNameBytes;
             if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_SCRIPTED_FUNCTION,
@@ -1620,11 +1621,11 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
-        FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearType();
+        fun->clearParent();
+        fun->clearType();
     }
 
-    AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
+    AutoObjectRooter tvr(cx, fun);
 
     if (!JS_XDRUint32(xdr, &firstword))
         return false;
@@ -1651,7 +1652,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     fun->u.i.script = script;
 
     if (xdr->mode == JSXDR_DECODE) {
-        *objp = FUN_OBJECT(fun);
+        *objp = fun;
         fun->u.i.script->setOwnerObject(fun);
 #ifdef CHECK_SCRIPT_OWNER
         fun->script()->owner = NULL;
@@ -1792,7 +1793,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
         return NULL;
     }
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    JSFunction *fun = obj->getFunctionPrivate();
     if (!fun)
         return NULL;
 
@@ -2092,7 +2093,7 @@ fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    JSFunction *fun = funobj->getFunctionPrivate();
 
     bool result = false;
     if (fun->isInterpreted()) {
@@ -2199,21 +2200,6 @@ Function(JSContext *cx, uintN argc, Value *vp)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
         return false;
     }
-
-    JS::Anchor<JSObject *> obj(NewFunction(cx, *global));
-    if (!obj.get())
-        return false;
-
-    /*
-     * NB: (new Function) is not lexically closed by its caller, it's just an
-     * anonymous function in the top-level scope that its constructor inhabits.
-     * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
-     * and so would a call to f from another top-level's script or function.
-     */
-    JSFunction *fun = js_NewFunction(cx, obj.get(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     global, cx->runtime->atomState.anonymousAtom);
-    if (!fun)
-        return false;
 
     Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
@@ -2361,11 +2347,22 @@ Function(JSContext *cx, uintN argc, Value *vp)
         length = 0;
     }
 
+    /*
+     * NB: (new Function) is not lexically closed by its caller, it's just an
+     * anonymous function in the top-level scope that its constructor inhabits.
+     * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
+     * and so would a call to f from another top-level's script or function.
+     */
+    JSFunction *fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                                     global, cx->runtime->atomState.anonymousAtom);
+    if (!fun)
+        return false;
+
     JSPrincipals *principals = PrincipalsForCompiledCode(call, cx);
     bool ok = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
                                             chars, length, filename, lineno,
                                             cx->findVersion());
-    call.rval().setObject(obj);
+    call.rval().setObject(*fun);
     return ok;
 }
 
@@ -2477,7 +2474,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
             return NULL;
     }
     JS_ASSERT(!funobj->getPrivate());
-    fun = (JSFunction *) funobj;
+    fun = static_cast<JSFunction *>(funobj);
 
     /* Initialize all function members. */
     fun->nargs = uint16(nargs);
@@ -2508,7 +2505,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     fun->atom = atom;
 
     /* Set private to self to indicate non-cloned fully initialized function. */
-    FUN_OBJECT(fun)->setPrivate(fun);
+    fun->setPrivate(fun);
     return fun;
 }
 
@@ -2562,6 +2559,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment != cx->compartment);
             JS_OPT_ASSERT(script->ownerObject == fun);
 
+            cfun->u.i.script = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
@@ -2575,6 +2573,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             cfun->script()->owner = NULL;
 #endif
             js_CallNewScriptHook(cx, cfun->script(), cfun);
+            Debugger::onNewScript(cx, cfun->script(), cfun, Debugger::NewHeldScript);
         }
     }
     return clone;
@@ -2641,10 +2640,8 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     uintN level = fun->script()->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
-    for (uint32 i = 0, n = uva->length; i < n; i++) {
+    for (uint32 i = 0, n = uva->length; i < n; i++)
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
-        TypeScript::SetUpvar(cx, fun->script(), i, upvars[i]);
-    }
 
     return closure;
 }
@@ -2740,7 +2737,7 @@ js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
         js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
-    return GET_FUNCTION_PRIVATE(cx, funobj);
+    return funobj->getFunctionPrivate();
 }
 
 JSObject *

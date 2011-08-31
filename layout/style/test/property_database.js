@@ -472,6 +472,16 @@ var gCSSProperties = {
 		other_values: [ "border-box", "padding-box" ],
 		invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
 	},
+	"-moz-columns": {
+		domProp: "MozColumns",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-column-count", "-moz-column-width" ],
+		initial_values: [ "auto", "auto auto" ],
+		other_values: [ "3", "20px", "2 10px", "10px 2", "2 auto", "auto 2", "auto 50px", "50px auto" ],
+		invalid_values: [ "5%", "-1px", "-1", "3 5", "10px 4px", "10 2px 5in", "30px -1",
+		                  "auto 3 5px", "5 auto 20px", "auto auto auto" ]
+	},
 	"-moz-column-count": {
 		domProp: "MozColumnCount",
 		inherited: false,
@@ -1010,6 +1020,14 @@ var gCSSProperties = {
         other_values: [ "hidden" ],
         invalid_values: [ "collapse" ]
     },
+	"-moz-transform-style": {
+		domProp: "MozTransformStyle",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "flat" ],
+		other_values: [ "preserve-3d" ],
+		invalid_values: []
+	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,
@@ -2546,9 +2564,9 @@ var gCSSProperties = {
 		domProp: "textOverflow",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "clip" ],
-		other_values: [ "ellipsis", '""', "''", '"hello"' ],
-		invalid_values: [ "none", "auto" ]
+		initial_values: [ "clip", "clip clip" ],
+		other_values: [ "ellipsis", '""', "''", '"hello"', 'clip ellipsis', 'clip ""', '"hello" ""', '"" ellipsis' ],
+		invalid_values: [ "none", "auto", '"hello" inherit', 'inherit "hello"', 'clip initial', 'initial clip', 'initial inherit', 'inherit initial', 'inherit none']
 	},
 	"text-shadow": {
 		domProp: "textShadow",

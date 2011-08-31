@@ -43,7 +43,7 @@ interface nsISelection;
 interface nsIEditor;
 interface nsIEditorSpellCheck;
 
-[scriptable, uuid(07be036a-2355-4a92-b150-5c9b7e9fdf2f)]
+[scriptable, uuid(f456dda1-965d-470c-8c55-e51b38e45212)]
 
 interface nsIInlineSpellChecker : nsISupports
 {
@@ -71,6 +71,7 @@ interface nsIInlineSpellChecker : nsISupports
   
   void ignoreWord(in AString aWord);
   void ignoreWords([array, size_is(aCount)] in wstring aWordsToIgnore, in unsigned long aCount);
+  void updateCurrentDictionary();
 };
 
 %{C++

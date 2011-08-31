@@ -50,6 +50,7 @@
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
 #include "jstypes.h"
+#include "vm/Debugger.h"
 #include "vm/String.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -766,9 +767,9 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
          * FIXME: bug 476950, although debugger users may also demand some kind
@@ -1203,13 +1204,20 @@ stubs::Mod(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::Debugger(VMFrame &f, jsbytecode *pc)
+stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
 {
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
-    if (handler) {
+    if (handler || !f.cx->compartment->getDebuggees().empty()) {
+        JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
-        switch (handler(f.cx, f.script(), f.pc(), Jsvalify(&rval),
-                        f.cx->debugHooks->debuggerHandlerData)) {
+        if (handler) {
+            st = handler(f.cx, f.script(), pc, Jsvalify(&rval),
+                         f.cx->debugHooks->debuggerHandlerData);
+        }
+        if (st == JSTRAP_CONTINUE)
+            st = Debugger::onDebuggerStatement(f.cx, &rval);
+
+        switch (st) {
           case JSTRAP_THROW:
             f.cx->setPendingException(rval);
             THROW();
@@ -1265,10 +1273,13 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
         if (hook)
             result = hook(f.cx, f.script(), f.pc(), Jsvalify(&rval),
                           f.cx->debugHooks->interruptHookData);
+
+        if (result == JSTRAP_CONTINUE)
+            result = Debugger::onSingleStep(f.cx, &rval);
     }
 
     if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
-        result = JS_HandleTrap(f.cx, f.script(), f.pc(), Jsvalify(&rval));
+        result = Debugger::onTrap(f.cx, &rval);
 
     switch (result) {
       case JSTRAP_THROW:
@@ -1416,10 +1427,10 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
      * activation.
      */
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
-    JSObject *obj = FUN_OBJECT(fun);
+    JS_ASSERT(!fun->isFlatClosure());
+    JSObject *obj = fun;
 
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         obj = CloneFunctionObject(f.cx, fun, &f.fp()->scopeChain(), true);
         if (!obj)
             THROWV(NULL);
@@ -1472,9 +1483,9 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 JSObject * JS_FASTCALL
 stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
     jsbytecode *nextpc = (jsbytecode *) f.scratch;
-    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
+    if (fun->isNullClosure() && obj->getParent() == &f.fp()->scopeChain()) {
         fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(nextpc)));
         return obj;
     }
@@ -1484,9 +1495,9 @@ stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
     jsbytecode *nextpc = (jsbytecode *) f.scratch;
-    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
+    if (fun->isNullClosure() && obj->getParent() == &f.fp()->scopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
             fun->setMethodAtom(f.script()->getAtom(GET_SLOTNO(nextpc)));
@@ -1499,9 +1510,9 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
     jsbytecode *nextpc = (jsbytecode *) f.scratch;
-    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
+    if (fun->isNullClosure() && obj->getParent() == &f.fp()->scopeChain()) {
         /*
          * Array.prototype.sort and String.prototype.replace are
          * optimized as if they are special form. We know that they
@@ -1537,9 +1548,9 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
     jsbytecode *nextpc = (jsbytecode *) f.scratch;
-    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
+    if (fun->isNullClosure() && obj->getParent() == &f.fp()->scopeChain()) {
         jsbytecode *pc2 = nextpc + JSOP_NULL_LENGTH;
         JSOp op2 = JSOp(*pc2);
 
@@ -1552,10 +1563,10 @@ stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::Lambda(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     JSObject *parent;
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         parent = &f.fp()->scopeChain();
     } else {
         parent = GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
@@ -2140,8 +2151,13 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 {
     jsbytecode * const originalPC = origPc;
     jsbytecode *pc = originalPC;
-    uint32 jumpOffset = GET_JUMP_OFFSET(pc);
-    pc += JUMP_OFFSET_LEN;
+
+    JSOp op = JSOp(*originalPC);
+    JS_ASSERT(op == JSOP_TABLESWITCH || op == JSOP_TABLESWITCHX);
+
+    uint32 jumpOffset = js::analyze::GetJumpOffset(originalPC, pc);
+    unsigned jumpLength = (op == JSOP_TABLESWITCHX) ? JUMPX_OFFSET_LEN : JUMP_OFFSET_LEN;
+    pc += jumpLength;
 
     /* Note: compiler adjusts the stack beforehand. */
     Value rval = f.regs.sp[-1];
@@ -2169,8 +2185,8 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 
         tableIdx -= low;
         if ((jsuint) tableIdx < (jsuint)(high - low + 1)) {
-            pc += JUMP_OFFSET_LEN * tableIdx;
-            uint32 candidateOffset = GET_JUMP_OFFSET(pc);
+            pc += jumpLength * tableIdx;
+            uint32 candidateOffset = js::analyze::GetJumpOffset(originalPC, pc);
             if (candidateOffset)
                 jumpOffset = candidateOffset;
         }

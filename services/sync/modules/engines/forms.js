@@ -64,36 +64,79 @@ Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 
 let FormWrapper = {
   _log: Log4Moz.repository.getLogger("Sync.Engine.Forms"),
-    
-  getAllEntries: function getAllEntries() {
-    // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
-    let query = Svc.Form.DBConnection.createAsyncStatement(
+
+  _getEntryCols: ["name", "value"],
+  _guidCols:     ["guid"],
+
+  _stmts: {},
+  _getStmt: function _getStmt(query) {
+    if (query in this._stmts) {
+      return this._stmts[query];
+    }
+
+    this._log.trace("Creating SQL statement: " + query);
+    let db = Svc.Form.DBConnection;
+    return this._stmts[query] = db.createAsyncStatement(query);
+  },
+
+  get _getAllEntriesStmt() {
+    const query =
       "SELECT fieldname name, value FROM moz_formhistory " +
       "ORDER BY 1.0 * (lastUsed - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) / " +
         "((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * " +
         "timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) DESC " +
-      "LIMIT 500");
-    return Async.querySpinningly(query, ["name", "value"]);
+      "LIMIT 500";
+    return this._getStmt(query);
+  },
+
+  get _getEntryStmt() {
+    const query = "SELECT fieldname name, value FROM moz_formhistory " +
+                  "WHERE guid = :guid";
+    return this._getStmt(query);
+  },
+
+  get _getGUIDStmt() {
+    const query = "SELECT guid FROM moz_formhistory " +
+                  "WHERE fieldname = :name AND value = :value";
+    return this._getStmt(query);
+  },
+
+  get _setGUIDStmt() {
+    const query = "UPDATE moz_formhistory SET guid = :guid " +
+                  "WHERE fieldname = :name AND value = :value";
+    return this._getStmt(query);
+  },
+
+  get _hasGUIDStmt() {
+    const query = "SELECT guid FROM moz_formhistory WHERE guid = :guid LIMIT 1";
+    return this._getStmt(query);
+  },
+
+  get _replaceGUIDStmt() {
+    const query = "UPDATE moz_formhistory SET guid = :newGUID " +
+                  "WHERE guid = :oldGUID";
+    return this._getStmt(query);
+  },
+
+  getAllEntries: function getAllEntries() {
+    return Async.querySpinningly(this._getAllEntriesStmt, this._getEntryCols);
   },
 
   getEntry: function getEntry(guid) {
-    let query = Svc.Form.DBConnection.createAsyncStatement(
-      "SELECT fieldname name, value FROM moz_formhistory WHERE guid = :guid");
-    query.params.guid = guid;
-    return Async.querySpinningly(query, ["name", "value"])[0];
+    let stmt = this._getEntryStmt;
+    stmt.params.guid = guid;
+    return Async.querySpinningly(stmt, this._getEntryCols)[0];
   },
 
   getGUID: function getGUID(name, value) {
-    // Query for the provided entry
-    let getQuery = Svc.Form.DBConnection.createAsyncStatement(
-      "SELECT guid FROM moz_formhistory " +
-      "WHERE fieldname = :name AND value = :value");
-    getQuery.params.name = name;
-    getQuery.params.value = value;
+    // Query for the provided entry.
+    let getStmt = this._getGUIDStmt;
+    getStmt.params.name = name;
+    getStmt.params.value = value;
 
-    // Give the guid if we found one
-    let item = Async.querySpinningly(getQuery, ["guid"])[0];
-    
+    // Give the GUID if we found one.
+    let item = Async.querySpinningly(getStmt, this._guidCols)[0];
+
     if (!item) {
       // Shouldn't happen, but Bug 597400...
       // Might as well just return.
@@ -102,36 +145,33 @@ let FormWrapper = {
                       JSON.stringify(value) + ") => " + item);
       return null;
     }
-    
-    if (item.guid != null)
-      return item.guid;
 
-    // We need to create a guid for this entry
-    let setQuery = Svc.Form.DBConnection.createAsyncStatement(
-      "UPDATE moz_formhistory SET guid = :guid " +
-      "WHERE fieldname = :name AND value = :value");
+    if (item.guid != null) {
+      return item.guid;
+    }
+
+    // We need to create a GUID for this entry.
+    let setStmt = this._setGUIDStmt;
     let guid = Utils.makeGUID();
-    setQuery.params.guid = guid;
-    setQuery.params.name = name;
-    setQuery.params.value = value;
-    Async.querySpinningly(setQuery);
+    setStmt.params.guid = guid;
+    setStmt.params.name = name;
+    setStmt.params.value = value;
+    Async.querySpinningly(setStmt);
 
     return guid;
   },
 
   hasGUID: function hasGUID(guid) {
-    let query = Svc.Form.DBConnection.createAsyncStatement(
-      "SELECT guid FROM moz_formhistory WHERE guid = :guid LIMIT 1");
-    query.params.guid = guid;
-    return Async.querySpinningly(query, ["guid"]).length == 1;
+    let stmt = this._hasGUIDStmt;
+    stmt.params.guid = guid;
+    return Async.querySpinningly(stmt, this._guidCols).length == 1;
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
-    let query = Svc.Form.DBConnection.createAsyncStatement(
-      "UPDATE moz_formhistory SET guid = :newGUID WHERE guid = :oldGUID");
-    query.params.oldGUID = oldGUID;
-    query.params.newGUID = newGUID;
-    Async.querySpinningly(query);
+    let stmt = this._replaceGUIDStmt;
+    stmt.params.oldGUID = oldGUID;
+    stmt.params.newGUID = newGUID;
+    Async.querySpinningly(stmt);
   }
 
 };
@@ -149,8 +189,9 @@ FormEngine.prototype = {
   get prefName() "history",
 
   _findDupe: function _findDupe(item) {
-    if (Svc.Form.entryExists(item.name, item.value))
+    if (Svc.Form.entryExists(item.name, item.value)) {
       return FormWrapper.getGUID(item.name, item.value);
+    }
   }
 };
 
@@ -173,8 +214,9 @@ FormStore.prototype = {
 
   getAllIDs: function FormStore_getAllIDs() {
     let guids = {};
-    for each (let {name, value} in FormWrapper.getAllEntries())
+    for each (let {name, value} in FormWrapper.getAllEntries()) {
       guids[FormWrapper.getGUID(name, value)] = true;
+    }
     return guids;
   },
 
@@ -192,9 +234,9 @@ FormStore.prototype = {
     if (entry != null) {
       record.name = entry.name;
       record.value = entry.value;
-    }
-    else
+    } else {
       record.deleted = true;
+    }
     return record;
   },
 
@@ -208,8 +250,9 @@ FormStore.prototype = {
 
     // Just skip remove requests for things already gone
     let entry = FormWrapper.getEntry(record.id);
-    if (entry == null)
+    if (entry == null) {
       return;
+    }
 
     Svc.Form.removeEntry(entry.name, entry.value);
   },
@@ -281,8 +324,9 @@ FormTracker.prototype = {
   },
 
   notify: function FormTracker_notify(formElement, aWindow, actionURI) {
-    if (this.ignoreAll)
+    if (this.ignoreAll) {
       return;
+    }
 
     this._log.trace("Form submission notification for " + actionURI.spec);
 
@@ -309,8 +353,9 @@ FormTracker.prototype = {
 
       // Grab the name for debugging, but check if empty when satchel would
       let name = el.name;
-      if (name === "")
+      if (name === "") {
         name = el.id;
+      }
 
       if (!(el instanceof Ci.nsIDOMHTMLInputElement)) {
         this._log.trace(name + " is not a DOMHTMLInputElement: " + el);

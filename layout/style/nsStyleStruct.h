@@ -1131,20 +1131,32 @@ private:
   }
 };
 
-struct nsStyleTextOverflow {
-  nsStyleTextOverflow() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
+struct nsStyleTextOverflowSide {
+  nsStyleTextOverflowSide() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
 
-  bool operator==(const nsStyleTextOverflow& aOther) const {
+  bool operator==(const nsStyleTextOverflowSide& aOther) const {
     return mType == aOther.mType &&
            (mType != NS_STYLE_TEXT_OVERFLOW_STRING ||
             mString == aOther.mString);
   }
-  bool operator!=(const nsStyleTextOverflow& aOther) const {
+  bool operator!=(const nsStyleTextOverflowSide& aOther) const {
     return !(*this == aOther);
   }
 
   nsString mString;
   PRUint8  mType;
+};
+
+struct nsStyleTextOverflow {
+  bool operator==(const nsStyleTextOverflow& aOther) const {
+    return mLeft == aOther.mLeft && mRight == aOther.mRight;
+  }
+  bool operator!=(const nsStyleTextOverflow& aOther) const {
+    return !(*this == aOther);
+  }
+
+  nsStyleTextOverflowSide mLeft;
+  nsStyleTextOverflowSide mRight;
 };
 
 struct nsStyleTextReset {
@@ -1519,6 +1531,7 @@ struct nsStyleDisplay {
   nsStyleCoord mChildPerspective; // [reset] coord
   nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
   PRUint8 mBackfaceVisibility;
+  PRUint8 mTransformStyle;
 
   nsAutoTArray<nsTransition, 1> mTransitions; // [reset]
   // The number of elements in mTransitions that are not from repeating
@@ -1602,7 +1615,7 @@ struct nsStyleDisplay {
 
   /* Returns whether the element has the -moz-transform property. */
   PRBool HasTransform() const {
-    return mSpecifiedTransform != nsnull;
+    return mSpecifiedTransform != nsnull || mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D;
   }
 };
 

@@ -56,7 +56,7 @@ public:
   NS_DECL_NSIFACTORY
   NS_DECL_NSISIMPLEUNICHARSTREAMFACTORY
 
-  static NS_COM nsSimpleUnicharStreamFactory* GetInstance();
+  static nsSimpleUnicharStreamFactory* GetInstance();
 
 private:
   static const nsSimpleUnicharStreamFactory kInstance;

@@ -29,6 +29,7 @@
 #   Dan Mosedale <dmose@mozilla.org>
 #   Jim Mathies <jmathies@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Kailas Patil <patilkr24@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -139,6 +140,7 @@ const nsITimer = Components.interfaces.nsITimer;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadLastDir.jsm");
 Components.utils.import("resource://gre/modules/DownloadPaths.jsm");
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
 /* ctor
  */
@@ -609,8 +611,16 @@ nsUnknownContentTypeDialog.prototype = {
       else
         typeString = mimeInfo.MIMEType;
     }
-
-    type.value = typeString;
+    if (this.mLauncher.contentLength) {
+      let [size, unit] = DownloadUtils.
+                         convertByteUnits(this.mLauncher.contentLength);
+      type.value = this.dialogElement("strings")
+                       .getFormattedString("fileSizeWithType", 
+                                           [typeString, size, unit]);
+    }
+    else {
+      type.value = typeString;
+    }
   },
 
   _blurred: false,

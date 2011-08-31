@@ -106,6 +106,7 @@
 #include "nsAutoPtr.h"
 
 #include "nsBidiUtils.h"
+#include "nsPrintfCString.h"
 
 #include "gfxFont.h"
 #include "gfxContext.h"
@@ -228,6 +229,11 @@ NS_DECLARE_FRAME_PROPERTY(OffsetToFrameProperty, nsnull)
 
 // nsTextFrame.h has
 // #define TEXT_HAS_NONCOLLAPSED_CHARACTERS NS_FRAME_STATE_BIT(31)
+
+// If true, then this frame is being removed due to a SetLength() on a
+// previous continuation and the style context of that previous
+// continuation is the same as this frame's
+#define TEXT_STYLE_MATCHES_PREV_CONTINUATION NS_FRAME_STATE_BIT(62)
 
 // Whether this frame is cached in the Offset Frame Cache (OffsetToFrameProperty)
 #define TEXT_IN_OFFSET_CACHE       NS_FRAME_STATE_BIT(63)
@@ -1067,8 +1073,9 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
     }
   } else {
     if (continuesTextRun) {
-      result.mFrameToScan = aFrame->GetFirstChild(nsnull);
-      result.mOverflowFrameToScan = aFrame->GetFirstChild(nsGkAtoms::overflowList);
+      result.mFrameToScan = aFrame->GetFirstPrincipalChild();
+      result.mOverflowFrameToScan =
+        aFrame->GetFirstChild(nsIFrame::kOverflowList);
       NS_WARN_IF_FALSE(!result.mOverflowFrameToScan,
                        "Scanning overflow inline frames is something we should avoid");
       result.mScanSiblings = PR_TRUE;
@@ -1194,7 +1201,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     // just one line
     scanner.SetAtStartOfLine();
     scanner.SetCommonAncestorWithLastFrame(nsnull);
-    nsIFrame* child = aLineContainer->GetFirstChild(nsnull);
+    nsIFrame* child = aLineContainer->GetFirstPrincipalChild();
     while (child) {
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
@@ -2766,7 +2773,7 @@ AdvanceToNextTab(gfxFloat aX, nsIFrame* aFrame,
   // Advance aX to the next multiple of *aCachedTabWidth. We must advance
   // by at least 1 appunit.
   // XXX should we make this 1 CSS pixel?
-  return NS_ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
+  return ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
 }
 
 void
@@ -3826,8 +3833,10 @@ nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // we have to clear the textrun because we're going away and the
   // textrun had better not keep a dangling reference to us.
   if ((GetStateBits() & TEXT_IN_TEXTRUN_USER_DATA) ||
-      !mPrevContinuation ||
-      mPrevContinuation->GetStyleContext() != GetStyleContext()) {
+      (!mPrevContinuation &&
+       !(GetStateBits() & TEXT_STYLE_MATCHES_PREV_CONTINUATION)) ||
+      (mPrevContinuation &&
+       mPrevContinuation->GetStyleContext() != GetStyleContext())) {
     ClearTextRun(nsnull);
     // Clear the previous continuation's text run also, so that it can rebuild
     // the text run to include our text.
@@ -4517,7 +4526,7 @@ ComputeSelectionUnderlineHeight(nsPresContext* aPresContext,
       gfxFloat fontSize = NS_MIN(gfxFloat(defaultFontSize),
                                  aFontMetrics.emHeight);
       fontSize = NS_MAX(fontSize, 1.0);
-      return NS_ceil(fontSize / 20);
+      return ceil(fontSize / 20);
     }
     default:
       NS_WARNING("Requested underline style is not valid");
@@ -6628,8 +6637,7 @@ RoundOut(const gfxRect& aRect)
 nsRect
 nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
 {
-  if ((GetStyleContext()->HasTextDecorationLines() &&
-       eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) ||
+  if (GetStyleContext()->HasTextDecorationLines() ||
       (GetStateBits() & TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.
     return GetVisualOverflowRect();
@@ -6672,6 +6680,53 @@ HasSoftHyphenBefore(const nsTextFragment* aFrag, gfxTextRun* aTextRun,
       return PR_TRUE;
   }
   return PR_FALSE;
+}
+
+static void
+RemoveInFlows(nsIFrame* aFrame, nsIFrame* aFirstToNotRemove)
+{
+  NS_PRECONDITION(aFrame != aFirstToNotRemove, "This will go very badly");
+  // We have to be careful here, because some RemoveFrame implementations
+  // remove and destroy not only the passed-in frame but also all its following
+  // in-flows (and sometimes all its following continuations in general).  So
+  // we remove |f| and everything up to but not including firstToNotRemove from
+  // the flow first, to make sure that only the things we want destroyed are
+  // destroyed.
+
+  // This sadly duplicates some of the logic from
+  // nsSplittableFrame::RemoveFromFlow.  We can get away with not duplicating
+  // all of it, because we know that the prev-continuation links of
+  // firstToNotRemove and f are fluid, and non-null.
+  NS_ASSERTION(aFirstToNotRemove->GetPrevContinuation() ==
+               aFirstToNotRemove->GetPrevInFlow() &&
+               aFirstToNotRemove->GetPrevInFlow() != nsnull,
+               "aFirstToNotRemove should have a fluid prev continuation");
+  NS_ASSERTION(aFrame->GetPrevContinuation() ==
+               aFrame->GetPrevInFlow() &&
+               aFrame->GetPrevInFlow() != nsnull,
+               "aFrame should have a fluid prev continuation");
+  
+  nsIFrame* prevContinuation = aFrame->GetPrevContinuation();
+  nsIFrame* lastRemoved = aFirstToNotRemove->GetPrevContinuation();
+
+  prevContinuation->SetNextInFlow(aFirstToNotRemove);
+  aFirstToNotRemove->SetPrevInFlow(prevContinuation);
+
+  aFrame->SetPrevInFlow(nsnull);
+  lastRemoved->SetNextInFlow(nsnull);
+
+  nsIFrame *parent = aFrame->GetParent();
+  nsBlockFrame *parentBlock = nsLayoutUtils::GetAsBlock(parent);
+  if (parentBlock) {
+    // Manually call DoRemoveFrame so we can tell it that we're
+    // removing empty frames; this will keep it from blowing away
+    // text runs.
+    parentBlock->DoRemoveFrame(aFrame, nsBlockFrame::FRAMES_ARE_EMPTY);
+  } else {
+    // Just remove it normally; use the nextBidi list to avoid
+    // posting new reflows.
+    parent->RemoveFrame(nsIFrame::kNoReflowPrincipalList, aFrame);
+  }
 }
 
 void
@@ -6720,7 +6775,7 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
       if (NS_SUCCEEDED(rv)) {
         nsTextFrame* next = static_cast<nsTextFrame*>(newFrame);
         nsFrameList temp(next, next);
-        GetParent()->InsertFrames(nsGkAtoms::nextBidi, this, temp);
+        GetParent()->InsertFrames(kNoReflowPrincipalList, this, temp);
         f = next;
       }
     }
@@ -6737,6 +6792,10 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
   // We don't dirty those lines. That's OK, because when we reflow
   // our empty next-in-flow, it will take text from its next-in-flow and
   // dirty that line.
+
+  // Note that in the process we may end up removing some frames from
+  // the flow if they end up empty.
+  nsIFrame *framesToRemove = nsnull;
   while (f && f->mContentOffset < end) {
     f->mContentOffset = end;
     if (f->GetTextRun() != mTextRun) {
@@ -6752,19 +6811,34 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
         (aSetLengthFlags & ALLOW_FRAME_CREATION_AND_DESTRUCTION)) {
       // |f| is now empty.  We may as well remove it, instead of copying all
       // the text from |next| into it instead; the latter leads to use
-      // rebuilding textruns for all following continuations.  We have to be
-      // careful here, though, because some RemoveFrame implementations remove
-      // and destroy not only the passed-in frame but also all its following
-      // in-flows (and sometimes all its following continuations in general).
-      // So we remove |f| from the flow first, to make sure that only |f| is
-      // destroyed.
+      // rebuilding textruns for all following continuations.
       // We skip this optimization if we were called during bidi resolution,
       // since the bidi resolver may try to handle the destroyed frame later
       // and crash
-      nsSplittableFrame::RemoveFromFlow(f);
-      f->GetParent()->RemoveFrame(nsGkAtoms::nextBidi, f);
+      if (!framesToRemove) {
+        // Remember that we have to remove this frame.
+        framesToRemove = f;
+      }
+
+      // Important: if |f| has the same style context as its prev continuation,
+      // mark it accordingly so we can skip clearing textruns as needed.  Note
+      // that at this point f always has a prev continuation.
+      if (f->GetStyleContext() == f->GetPrevContinuation()->GetStyleContext()) {
+        f->AddStateBits(TEXT_STYLE_MATCHES_PREV_CONTINUATION);
+      }
+    } else if (framesToRemove) {
+      RemoveInFlows(framesToRemove, f);
+      framesToRemove = nsnull;
     }
     f = next;
+  }
+  NS_POSTCONDITION(!framesToRemove || (f && f->mContentOffset == end),
+                   "How did we exit the loop if we null out framesToRemove if "
+                   "!next || next->mContentOffset > end ?");
+  if (framesToRemove) {
+    // We are guaranteed that we exited the loop with f not null, per the
+    // postcondition above
+    RemoveInFlows(framesToRemove, f);
   }
 
 #ifdef DEBUG

@@ -102,10 +102,10 @@ public:
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
 
   /**
-   * Use heuristics to figure out the name of the child list that
+   * Use heuristics to figure out the child list that
    * aChildFrame is currently in.
    */
-  static nsIAtom* GetChildListNameFor(nsIFrame* aChildFrame);
+  static nsIFrame::ChildListID GetChildListNameFor(nsIFrame* aChildFrame);
 
   /**
    * GetBeforeFrame returns the outermost :before frame of the given frame, if
@@ -1212,11 +1212,6 @@ public:
   static nsRect GetWholeImageDestination(const nsIntSize& aWholeImageSize,
                                          const nsRect& aImageSourceArea,
                                          const nsRect& aDestArea);
-
-  /**
-   * Set the font on aRC based on the style in aSC
-   */
-  static void SetFontFromStyle(nsRenderingContext* aRC, nsStyleContext* aSC);
 
   /**
    * Determine if any corner radius is of nonzero size

@@ -40,7 +40,7 @@
 #include "nsIDOMMouseEvent.idl"
 
 
-[scriptable, uuid(e9ed248b-1995-482f-8407-33ae7744bb9c)]
+[scriptable, uuid(e680bab6-740a-4097-b5e0-5e9d7d381cbc)]
 interface nsIDOMMozTouchEvent : nsIDOMMouseEvent
 {
   readonly attribute unsigned long streamId;

@@ -101,6 +101,8 @@ var PreferencesView = {
     this._loadLocales();
 
     this._loadHomePage();
+
+    MasterPasswordUI.updatePreference();
   },
 
   _loadLocales: function _loadLocales() {
@@ -255,6 +257,11 @@ var PreferencesView = {
           display = Browser.selectedBrowser.contentTitle || currentURL;
         }
         break;
+      case "custom":
+        // If value is custom, this means the user is trying to
+        // set homepage to the same custom value. Do nothing in
+        // this case.
+        return;
     }
 
     // Show or hide the title or URL of the custom homepage

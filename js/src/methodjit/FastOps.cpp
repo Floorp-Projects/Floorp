@@ -541,6 +541,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub,
 
     /* The compiler should have handled constant folding. */
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
+    JS_ASSERT(fused == JSOP_NOP || fused == JSOP_IFEQ || fused == JSOP_IFNE);
 
     /* Always slow path... */
     if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE) &&
@@ -804,10 +805,10 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 
     frame.syncAndForgetEverything();
 
-    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_OR)
+    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
                                 ? Assembler::NonZero
                                 : Assembler::Zero;
-    Assembler::Condition ncond = (op == JSOP_IFNE || op == JSOP_OR)
+    Assembler::Condition ncond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
                                  ? Assembler::Zero
                                  : Assembler::NonZero;
 
@@ -881,7 +882,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
 
         frame.pop();
 
-        if (op == JSOP_IFEQ)
+        if (op == JSOP_IFEQ || op == JSOP_IFEQX)
             b = !b;
         if (b) {
             if (!frame.syncForBranch(target, Uses(0)))
@@ -1253,18 +1254,20 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
              *    because we've already pinned a key register and can't use
              *    tempRegInMaskForData.
              */
-            MaybeRegisterID reg;
+            MaybeRegisterID reg, dataReg;
             bool needsByteReg = (atype == TypedArray::TYPE_INT8 ||
                                  atype == TypedArray::TYPE_UINT8 ||
                                  atype == TypedArray::TYPE_UINT8_CLAMPED);
             FrameEntry *id = frame.peek(-2);
             if (!value->isType(JSVAL_TYPE_INT32) || atype == TypedArray::TYPE_UINT8_CLAMPED ||
                 (needsByteReg && frame.haveSameBacking(id, value))) {
-                // Pin value so that we don't evict it.
-                MaybeRegisterID dataReg;
-                if (value->mightBeType(JSVAL_TYPE_INT32) && !frame.haveSameBacking(id, value)) {
+                // Grab data register before branching.
+                if (value->mightBeType(JSVAL_TYPE_INT32)) {
                     dataReg = frame.tempRegForData(value);
-                    frame.pinReg(dataReg.reg());
+
+                    // Make sure it's not clobbered by allocReg or tempRegForType.
+                    if (!frame.haveSameBacking(id, value))
+                        frame.pinReg(dataReg.reg());
                 }
 
                 // x86 has 4 single byte registers. Worst case we've pinned 3
@@ -1275,13 +1278,20 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
                 else
                     reg = frame.allocReg();
                 *allocated = true;
-                if (dataReg.isSet())
-                    frame.unpinReg(dataReg.reg());
             } else {
                 if (needsByteReg)
                     reg = frame.tempRegInMaskForData(value, Registers::SingleByteRegs).reg();
                 else
                     reg = frame.tempRegForData(value);
+            }
+
+            // Get type register before branching.
+            MaybeRegisterID typeReg;
+            if (!value->isTypeKnown()) {
+                // Note: we don't need to pin reg, it's never a temporary register if the
+                // type of value is not known.
+                JS_ASSERT(*allocated);
+                typeReg = frame.tempRegForType(value);
             }
 
             MaybeJump intDone;
@@ -1290,11 +1300,14 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
                 MaybeJump notInt;
                 if (!value->isTypeKnown()) {
                     JS_ASSERT(*allocated);
-                    notInt = frame.testInt32(Assembler::NotEqual, value);
+                    notInt = masm.testInt32(Assembler::NotEqual, typeReg.reg());
                 }
 
-                if (*allocated)
-                    masm.move(frame.tempRegForData(value), reg.reg());
+                if (*allocated) {
+                    masm.move(dataReg.reg(), reg.reg());
+                    if (!frame.haveSameBacking(id, value))
+                        frame.unpinReg(dataReg.reg());
+                }
 
                 if (atype == TypedArray::TYPE_UINT8_CLAMPED)
                     masm.clampInt32ToUint8(reg.reg());
@@ -1307,7 +1320,7 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
             if (value->mightBeType(JSVAL_TYPE_DOUBLE)) {
                 // Check if the value is a double.
                 if (!value->isTypeKnown()) {
-                    Jump notNumber = frame.testDouble(Assembler::NotEqual, value);
+                    Jump notNumber = masm.testDouble(Assembler::NotEqual, typeReg.reg());
                     stubcc.linkExit(notNumber, Uses(3));
                 }
 
@@ -1849,9 +1862,34 @@ mjit::Compiler::jsop_getelem_args()
 }
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
-void
+bool
 mjit::Compiler::jsop_getelem_typed(int atype)
 {
+    // Unlike dense arrays, the types of elements in typed arrays are not
+    // guaranteed to be present in the object's type, and we need to use
+    // knowledge about the possible contents of the array vs. the types
+    // that have been read out of it to figure out how to do the load.
+
+    //                          Array contents
+    //                   Float     Uint32         Int32
+    // Observed types
+    //
+    // {int}             XXX       reg pair+test  reg
+    // {int,float}       FP reg    FP reg         reg pair
+    // {X,int}           XXX       reg pair+test  reg pair
+    // {X,int,float}     reg pair  reg pair       reg pair
+    // {X}               XXX       XXX            XXX
+
+    // Reject entries marked 'XXX' above, and compile a normal GETELEM.
+    types::TypeSet *pushedTypes = pushedTypeSet(0);
+    if (atype == TypedArray::TYPE_FLOAT32 || atype == TypedArray::TYPE_FLOAT64) {
+        if (!pushedTypes->hasType(types::Type::DoubleType()))
+            return false;
+    } else {
+        if (!pushedTypes->hasType(types::Type::Int32Type()))
+            return false;
+    }
+
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *id = frame.peek(-1);
 
@@ -1936,6 +1974,12 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     if (tempReg.isSet())
         frame.freeReg(tempReg.reg());
 
+    if (atype == TypedArray::TYPE_UINT32 &&
+        !pushedTypes->hasType(types::Type::DoubleType())) {
+        Jump isDouble = masm.testDouble(Assembler::Equal, typeReg.reg());
+        stubcc.linkExit(isDouble, Uses(2));
+    }
+
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
 
@@ -1946,8 +1990,6 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         frame.pushDouble(dataReg.fpreg());
     } else if (typeReg.isSet()) {
         frame.pushRegs(typeReg.reg(), dataReg.reg(), knownPushedType(0));
-        if (hasTypeBarriers(PC))
-            barrier = testBarrier(typeReg.reg(), dataReg.reg(), false);
     } else {
         JS_ASSERT(type == JSVAL_TYPE_INT32);
         frame.pushTypedPayload(JSVAL_TYPE_INT32, dataReg.reg());
@@ -1955,6 +1997,8 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     stubcc.rejoin(Changes(2));
 
     finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
+
+    return true;
 }
 #endif /* JS_METHODJIT_TYPED_ARRAY */
 
@@ -1993,13 +2037,13 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
-            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY) &&
-            pushedTypeSet(0)->baseFlags() != 0) {
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             // Inline typed array path.
             int atype = types->getTypedArrayType(cx);
             if (atype != TypedArray::TYPE_MAX) {
-                jsop_getelem_typed(atype);
-                return true;
+                if (jsop_getelem_typed(atype))
+                    return true;
+                // Fallthrough to the normal GETELEM path.
             }
         }
 #endif
@@ -2194,12 +2238,21 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         /* Ignore the sign bit. */
         masm.lshiftPtr(Imm32(1), treg);
-#ifndef JS_CPU_X64
-        static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
 #ifdef JS_CPU_SPARC
         /* On Sparc the result 0/0 is 0x7FFFFFFF not 0x7FF80000 */
-        masm.and32(Imm32(ShiftedCanonicalNaNType), treg);
-#endif
+        static const int ShiftedCanonicalNaNType1 = 0x7FFFFFFF << 1;
+        static const int ShiftedCanonicalNaNType2 = 0x7FF80000 << 1;
+        RegisterID result1 = frame.allocReg();
+        masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType1), result1);
+        masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType2), result);
+        if(op == JSOP_STRICTEQ) {
+            masm.and32(result1, result);
+        } else {
+            masm.or32(result1, result);
+        }
+        frame.freeReg(result1);
+#elif !defined(JS_CPU_X64)
+        static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
         masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType), result);
 #else
         static const void *ShiftedCanonicalNaNType = (void *)(0x7FF8000000000000 << 1);

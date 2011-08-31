@@ -6,7 +6,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668817
 -->
 <head>
   <title>Test for &lt;input type='email'&gt; validity</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -76,8 +75,12 @@ var email = document.forms[0].elements[0];
 var values = [
   [ '', true ], // The empty string shouldn't be considered as invalid.
   [ 'foo@bar.com', true ],
-  [ ' foo@bar.com', false ],
-  [ 'foo@bar.com ', false ],
+  [ ' foo@bar.com', true ],
+  [ 'foo@bar.com ', true ],
+  [ '\r\n foo@bar.com', true ],
+  [ 'foo@bar.com \n\r', true ],
+  [ '\n\n \r\rfoo@bar.com\n\n   \r\r', true ],
+  [ '\n\r \n\rfoo@bar.com\n\r   \n\r', true ],
   [ 'tulip', false ],
   // Some checks on the user part of the address.
   [ '@bar.com', false ],
@@ -164,7 +167,7 @@ values.push(["foo@bar.com" + legalCharacters, true]);
 // Add domain illegal characters.
 illegalCharacters = "()<>[]:;@\\,!#$%&'*+/=?^_`{|}~ \t";
 for each (c in illegalCharacters) {
-  values.push(['foo@foo.bar' + c, false]);
+  values.push(['foo@foo.ba' + c + 'r', false]);
 }
 
 values.forEach(function([value, valid]) {

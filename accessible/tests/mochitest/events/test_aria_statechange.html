@@ -7,8 +7,6 @@
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
@@ -26,52 +24,103 @@
      */
     var gQueue = null;
 
-    // Debug stuff.
-    //gA11yEventDumpID = "eventdump";
-    // gA11yEventDumpToConsole = true;
+    //gA11yEventDumpID = "eventdump"; // debugging
+    //gA11yEventDumpToConsole = true; // debugging
 
-    function expandNode(aNodeOrID, bExpand)
+    function expandNode(aID, aIsExpanded)
     {
-      this.DOMNode = getNode(aNodeOrID);
+      this.DOMNode = getNode(aID);
 
-      this.invoke = function expandNode_invoke() {
-        // Note: this should fire an EVENT_STATE_CHANGE
-        this.DOMNode.setAttribute("aria-expanded", bExpand);
+      this.eventSeq = [
+        new expandedStateChecker(aIsExpanded, this.DOMNode)
+      ];
+
+      this.invoke = function expandNode_invoke()
+      {
+        this.DOMNode.setAttribute("aria-expanded",
+                                  (aIsExpanded ? "true" : "false"));
       };
 
-      this.check = function expandNode_check() {
-        testStates(aNodeOrID,
-                   bExpand ? STATE_EXPANDED : STATE_COLLAPSED,
-                   EXT_STATE_EXPANDABLE);
-      };
-
-      this.getID = function expandNode_getID() {
-        return prettyName(aNodeOrID) + " aria-expanded changed";
+      this.getID = function expandNode_getID()
+      {
+        return prettyName(aID) + " aria-expanded changed to '" + aIsExpanded + "'";
       };
     }
 
-    function busyify(aNodeOrID, aBusy)
+    function busyify(aID, aIsBusy)
     {
-      this.DOMNode = getNode(aNodeOrID);
+      this.DOMNode = getNode(aID);
 
-      this.invoke = function busyify_invoke() {
-        this.DOMNode.setAttribute("aria-busy", aBusy);
+      this.eventSeq = [
+        new stateChangeChecker(STATE_BUSY, kOrdinalState, aIsBusy, this.DOMNode)
+      ];
+
+      this.invoke = function busyify_invoke()
+      {
+        this.DOMNode.setAttribute("aria-busy", (aIsBusy ? "true" : "false"));
       };
 
-      this.check = function busyify_check(event) {
-        testStates(aNodeOrID,
-                   (aBusy ? STATE_BUSY : 0), 0,
-                   (aBusy ? 0 : STATE_BUSY), 0);
+      this.getID = function busyify_getID()
+      {
+        return prettyName(aID) + " aria-busy changed to '" + aIsBusy + "'";
+      };
+    }
+
+    function setAttrOfMixedType(aID, aAttr, aState, aValue)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new stateChangeChecker(aState, kOrdinalState,
+                               aValue == "true", this.DOMNode)
+      ];
+
+      if (hasState(aID, STATE_MIXED) || aValue == "mixed") {
+        this.eventSeq.push(
+          new stateChangeChecker(STATE_MIXED, kOrdinalState,
+                                 aValue == "mixed", this.DOMNode)
+        );
+      }
+
+      this.invoke = function setAttrOfMixedType_invoke()
+      {
+        this.DOMNode.setAttribute(aAttr, aValue);
       };
 
-      this.getID = function busyify_getID() {
-        return prettyName(aNodeOrID) + " aria-busy changed to " + aBusy;
+      this.getID = function setAttrOfMixedType_getID()
+      {
+        return prettyName(aID) + " " + aAttr + " changed to '" + aValue + "'";
       };
+    }
+
+    function setPressed(aID, aValue)
+    {
+      this.__proto__ =
+        new setAttrOfMixedType(aID, "aria-pressed", STATE_PRESSED, aValue);
+    }
+
+    function setChecked(aID, aValue)
+    {
+      this.__proto__ =
+        new setAttrOfMixedType(aID, "aria-checked", STATE_CHECKED, aValue);
+    }
+
+    function buildQueueForAttrOfMixedType(aQueue, aID, aInvokerFunc)
+    {
+      var list = [ "", "undefined", "false", "true", "mixed" ];
+      for (var i = 0; i < list.length; i++) {
+        for (var j = i + 1; j < list.length; j++) {
+          // XXX: changes from/to "undefined"/"" shouldn't fire state change
+          // events, bug 472142.
+          aQueue.push(new aInvokerFunc(aID, list[i]));
+          aQueue.push(new aInvokerFunc(aID, list[j]));
+        }
+      }
     }
 
     function doTests()
     {
-      gQueue = new eventQueue(EVENT_STATE_CHANGE);
+      gQueue = new eventQueue();
 
       gQueue.push(new expandNode("section", true));
       gQueue.push(new expandNode("section", false));
@@ -80,6 +129,10 @@
 
       gQueue.push(new busyify("aria_doc", true));
       gQueue.push(new busyify("aria_doc", false));
+
+      buildQueueForAttrOfMixedType(gQueue, "pressable", setPressed);
+      buildQueueForAttrOfMixedType(gQueue, "checkable", setChecked);
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -94,13 +147,18 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=551684"
      title="No statechange event for aria-expanded on native HTML elements, is fired on ARIA widgets">
     Mozilla Bug 551684
-  </a>
-
+  </a><br>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=648133"
      title="fire state change event for aria-busy"
     Mozilla Bug 648133
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=467143"
+     title="mixed state change event is fired for focused accessible only"
+    Mozilla Bug 467143
   </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -113,5 +171,11 @@
 
   <!-- aria-busy -->
   <div id="aria_doc" role="document" tabindex="0">A document</div>
+
+  <!-- aria-pressed -->
+  <div id="pressable" role="button"></div>
+
+  <!-- aria-checked -->
+  <div id="checkable" role="checkbox"></div>
 </body>
 </html>

@@ -288,6 +288,9 @@ include xul-document-load/reftest.list
 # xul/
 include xul/reftest.list
 
+# xul
+include ../xul/base/reftest/reftest.list
+
 # xul grid
 include ../xul/base/src/grid/reftests/reftest.list
 

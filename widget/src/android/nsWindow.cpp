@@ -95,8 +95,8 @@ class ContentCreationNotifier : public nsIObserver
                        const PRUnichar* aData)
     {
         if (!strcmp(aTopic, "ipc:content-created")) {
-            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-            NS_ABORT_IF_FALSE(cp, "Must have content process if notified of its creation");
+            nsCOMPtr<nsIObserver> cpo = do_QueryInterface(aSubject);
+            ContentParent* cp = static_cast<ContentParent*>(cpo.get());
             unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
         } else if (!strcmp(aTopic, "xpcom-shutdown")) {
             nsCOMPtr<nsIObserverService>
@@ -128,6 +128,7 @@ static nsTArray<nsWindow*> gTopLevelWindows;
 static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
 static bool sValidSurface;
+static bool sSurfaceExists = false;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -656,7 +657,8 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
+nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence, 
+                          bool* aAllowRetaining)
 {
     if (aAllowRetaining) {
         *aAllowRetaining = true;
@@ -773,9 +775,10 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 break;
 
             // Tell the content process the new screen size.
-            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-            if (cp)
-                unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
+            nsTArray<ContentParent*> cplist;
+            ContentParent::GetAll(cplist);
+            for (PRUint32 i = 0; i < cplist.Length(); ++i)
+                unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
 
             if (gContentCreationNotifier)
                 break;
@@ -842,9 +845,14 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::SURFACE_CREATED:
+            sSurfaceExists = true;
             break;
 
         case AndroidGeckoEvent::SURFACE_DESTROYED:
+            if (sGLContext && sValidSurface) {
+                sGLContext->ReleaseSurface();
+            }
+            sSurfaceExists = false;
             sValidSurface = false;
             break;
 
@@ -968,6 +976,11 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
+  
+    if (!sSurfaceExists) {
+        return;
+    }
+
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
         DumpWindows();
@@ -1047,6 +1060,10 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         }
     } else {
         int drawType = sview.BeginDrawing();
+
+        if (drawType == AndroidGeckoSurfaceView::DRAW_DISABLED) {
+            return;
+        }
 
         if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
             ALOG("##### BeginDrawing failed!");

@@ -139,18 +139,3 @@ let tests = {
     is(unsortedNode.uri, MOZURISPEC, "node uri's are the same");
   },
 };
-
-/**
- * Clears history invoking callback when done.
- */
-function waitForClearHistory(aCallback) {
-  const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
-      aCallback();
-    }
-  };
-  Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
-  PlacesUtils.bhistory.removeAllPages();
-}

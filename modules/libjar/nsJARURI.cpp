@@ -248,6 +248,20 @@ nsJARURI::GetSpec(nsACString &aSpec)
 }
 
 NS_IMETHODIMP
+nsJARURI::GetSpecIgnoringRef(nsACString &aSpec)
+{
+    nsCAutoString entrySpec;
+    mJAREntry->GetSpecIgnoringRef(entrySpec);
+    return FormatSpec(entrySpec, aSpec);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetHasRef(PRBool *result)
+{
+    return mJAREntry->GetHasRef(result);
+}
+
+NS_IMETHODIMP
 nsJARURI::SetSpec(const nsACString& aSpec)
 {
     return SetSpecWithBase(aSpec, nsnull);
@@ -568,19 +582,6 @@ NS_IMETHODIMP
 nsJARURI::SetFilePath(const nsACString& filePath)
 {
     return mJAREntry->SetFilePath(filePath);
-}
-
-NS_IMETHODIMP
-nsJARURI::GetParam(nsACString& param)
-{
-    param.Truncate();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARURI::SetParam(const nsACString& param)
-{
-    return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP

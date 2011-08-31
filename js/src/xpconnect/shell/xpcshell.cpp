@@ -848,11 +848,6 @@ static JSFunctionSpec glob_functions[] = {
 #endif
     {"sendCommand",     SendCommand,    1,0},
     {"getChildGlobalObject", GetChildGlobalObject, 0,0},
-#ifdef MOZ_CALLGRIND
-    {"startCallgrind",  js_StartCallgrind,  0,0},
-    {"stopCallgrind",   js_StopCallgrind,   0,0},
-    {"dumpCallgrind",   js_DumpCallgrind,   1,0},
-#endif
     {nsnull,nsnull,0,0}
 };
 
@@ -1844,7 +1839,9 @@ main(int argc, char **argv, char **envp)
                 XRE_GetFileFromPath(argv[4], getter_AddRefs(appOmni));
                 argc-=2;
                 argv+=2;
-            } 
+            } else {
+                appOmni = greOmni;
+            }
             
             XRE_InitOmnijar(greOmni, appOmni);
             argc-=2;

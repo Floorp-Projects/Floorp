@@ -221,11 +221,16 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
                                           nsnull, 0, nsnull, 0);
     NS_ENSURE_SUCCESS(res, res);
 
+    // if only trailing <br> remaining remove it
+    res = RemoveRedundantTrailingBR();
+    if (NS_FAILED(res))
+      return res;
+
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
     NS_ENSURE_SUCCESS(res, res);
     
-    // insure trailing br node
+    // ensure trailing br node
     res = CreateTrailingBRIfNeeded();
     NS_ENSURE_SUCCESS(res, res);
 
@@ -938,7 +943,7 @@ nsTextEditRules::WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHa
  * Since undo and redo are relatively rare, it makes sense to take the (small) performance hit here.
  */
 nsresult
-nsTextEditRules:: DidUndo(nsISelection *aSelection, nsresult aResult)
+nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
 {
   nsresult res = aResult;  // if aResult is an error, we return it.
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
@@ -1042,6 +1047,66 @@ nsTextEditRules::WillOutputText(nsISelection *aSelection,
 nsresult
 nsTextEditRules::DidOutputText(nsISelection *aSelection, nsresult aResult)
 {
+  return NS_OK;
+}
+
+nsresult
+nsTextEditRules::RemoveRedundantTrailingBR()
+{
+  // If the bogus node exists, we have no work to do
+  if (mBogusNode)
+    return NS_OK;
+
+  // Likewise, nothing to be done if we could never have inserted a trailing br
+  if (IsSingleLineEditor())
+    return NS_OK;
+
+  nsIDOMNode* body = mEditor->GetRoot();
+  if (!body)
+    return NS_ERROR_NULL_POINTER;
+
+  PRBool hasChildren;
+  nsresult res = body->HasChildNodes(&hasChildren);
+  NS_ENSURE_SUCCESS(res, res);
+
+  if (hasChildren) {
+    nsCOMPtr<nsIDOMNodeList> childList;
+    res = body->GetChildNodes(getter_AddRefs(childList));
+    NS_ENSURE_SUCCESS(res, res);
+
+    if (!childList)
+      return NS_ERROR_NULL_POINTER;
+
+    PRUint32 childCount;
+    res = childList->GetLength(&childCount);
+    NS_ENSURE_SUCCESS(res, res);
+
+    // The trailing br is redundant if it is the only remaining child node
+    if (childCount != 1)
+      return NS_OK;
+
+    nsCOMPtr<nsIDOMNode> child;
+    res = body->GetFirstChild(getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(res, res);
+
+    if (nsTextEditUtils::IsMozBR(child)) {
+      // Rather than deleting this node from the DOM tree we should instead
+      // morph this br into the bogus node
+      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(child);
+      if (elem) {
+        elem->RemoveAttribute(NS_LITERAL_STRING("type"));
+        NS_ENSURE_SUCCESS(res, res);
+
+        // set mBogusNode to be this <br>
+        mBogusNode = elem;
+ 
+        // give it the bogus node attribute
+        nsCOMPtr<nsIContent> content = do_QueryInterface(elem);
+        content->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
+                         kMOZEditorBogusNodeValue, PR_FALSE);
+      }
+    }
+  }
   return NS_OK;
 }
 

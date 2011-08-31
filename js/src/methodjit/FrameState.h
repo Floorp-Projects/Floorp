@@ -277,6 +277,13 @@ class FrameState
      */
     inline void push(Address address, JSValueType knownType, bool reuseBase = false);
 
+    /*
+     * Loads a word from memory and pushes it. If reuseBase is set, the
+     * Compiler owns the register and it should be reused if possible.
+     * It takes an address and loads/pushes an unboxed word of a given non-double type.
+     */
+    inline void pushWord(Address address, JSValueType knownType, bool reuseBase = false);
+
     /* Loads a value from memory into a register pair, returning the register. */
     inline void loadIntoRegisters(Address address, bool reuseBase,
                                   RegisterID *ptypeReg, RegisterID *pdataReg);
@@ -944,6 +951,7 @@ class FrameState
     Vector<TemporaryCopy> *getTemporaryCopies();
 
     inline void syncAndForgetFe(FrameEntry *fe, bool markSynced = false);
+    inline void forgetLoopReg(FrameEntry *fe);
 
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);

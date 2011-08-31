@@ -121,7 +121,7 @@ UnicharBufferImpl::Grow(PRInt32 aNewSize)
   return PR_FALSE;
 }
 
-NS_COM nsresult
+nsresult
 NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
                     nsISupports* aOuter,
                     PRUint32 aBufferSize)

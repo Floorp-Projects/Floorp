@@ -1,9 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html>
 <html><head>
+<meta charset="utf-8">
 <!--
 Tests for the OpenGL ES 2.0 HTML Canvas context
 
-Copyright (C) 2009  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
+Copyright (C) 2011  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -27,7 +28,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 -->
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" type="text/css" href="../unit.css" />
 <script type="application/x-javascript" src="../unit.js"></script>
 <script type="application/x-javascript" src="../util.js"></script>
@@ -75,17 +75,16 @@ Tests.testReadPixels = function(gl) {
           new Uint8Array(1*4));});
 }
 
-/* this part is obsolete because of bug 656277
- *
 Tests.testReadPixelsSOPIMG = function(gl) {
     var img = document.getElementById("i");
     while (!img.complete) {}
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    gl.bindTexture(gl.TEXTURE_2D, null);
     // SOP failure
     assertThrowNoGLError(gl, "throw because img is from another domain",
+      function(){gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);});
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    assertOk("canvas still origin-clean",
       function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE,
           new Uint8Array(4));});
     gl.deleteTexture(tex);
@@ -99,15 +98,15 @@ Tests.testReadPixelsSOPCanvas = function(gl) {
       function(){c.getContext("2d").getImageData(0,0,1,1);});
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
-    gl.bindTexture(gl.TEXTURE_2D, null);
     // SOP failure
     assertThrowNoGLError(gl, "throw because canvas is not origin clean",
+      function(){gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);});
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    assertOk("canvas still origin-clean",
       function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE,
           new Uint8Array(4));});
     gl.deleteTexture(tex);
 }
-*/
 
 Tests.endUnit = function(gl) {
 }

@@ -1368,7 +1368,7 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     // IPv6 on the backup connection gives them a much better user experience
     // with dual-stack hosts, though they still pay the 250ms delay for each new
     // connection. This strategy is also known as "happy eyeballs".
-    if (isBackup)
+    if (isBackup && gHttpHandler->FastFallbackToIPv4())
         tmpFlags |= nsISocketTransport::DISABLE_IPV6;
 
     socketTransport->SetConnectionFlags(tmpFlags);

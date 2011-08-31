@@ -41,7 +41,6 @@
 #include "nsMenuBarListener.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
-#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 
@@ -193,16 +192,16 @@ nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   // if event has already been handled, bail
-  nsCOMPtr<nsIDOMNSUIEvent> uiEvent ( do_QueryInterface(aKeyEvent) );
-  if ( uiEvent ) {
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  if (domNSEvent) {
     PRBool eventHandled = PR_FALSE;
-    uiEvent->GetPreventDefault ( &eventHandled );
-    if ( eventHandled )
+    domNSEvent->GetPreventDefault(&eventHandled);
+    if (eventHandled) {
       return NS_OK;       // don't consume event
+    }
   }
 
   //handlers shouldn't be triggered by non-trusted events.
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
   PRBool trustedEvent = PR_FALSE;
   if (domNSEvent) {
     domNSEvent->GetIsTrusted(&trustedEvent);
@@ -217,11 +216,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   if (mAccessKey)
   {
-    nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
-
     PRBool preventDefault;
-
-    nsUIEvent->GetPreventDefault(&preventDefault);
+    domNSEvent->GetPreventDefault(&preventDefault);
     if (!preventDefault) {
       nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
       PRUint32 keyCode, charCode;

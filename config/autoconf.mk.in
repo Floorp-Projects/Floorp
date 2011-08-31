@@ -43,7 +43,6 @@ USE_AUTOCONF 	= 1
 MOZILLA_CLIENT	= 1
 target          = @target@
 ac_configure_args = @ac_configure_args@
-BUILD_MODULES	= @BUILD_MODULES@
 MOZILLA_VERSION = @MOZILLA_VERSION@
 FIREFOX_VERSION	= @FIREFOX_VERSION@
 
@@ -223,7 +222,6 @@ MOZ_XUL                    = @MOZ_XUL@
 MOZ_RDF                    = @MOZ_RDF@
 
 NECKO_PROTOCOLS = @NECKO_PROTOCOLS@
-NECKO_DISK_CACHE = @NECKO_DISK_CACHE@
 NECKO_COOKIES = @NECKO_COOKIES@
 NECKO_WIFI = @NECKO_WIFI@
 MOZ_AUTH_EXTENSION = @MOZ_AUTH_EXTENSION@
@@ -363,7 +361,7 @@ USE_N32		= @USE_N32@
 HAVE_64BIT_OS	= @HAVE_64BIT_OS@
 
 # Temp hack.  It is not my intention to leave this crap in here for ever.
-# Im talking to fur right now to solve the problem without introducing 
+# Im talking to fur right now to solve the problem without introducing
 # NS_USE_NATIVE to the build system -ramiro.
 NS_USE_NATIVE = @NS_USE_NATIVE@
 
@@ -629,17 +627,12 @@ MOZ_TOOLS_DIR	= @MOZ_TOOLS_DIR@
 MOZ_QUANTIFY	= @MOZ_QUANTIFY@
 MSMANIFEST_TOOL = @MSMANIFEST_TOOL@
 WIN32_REDIST_DIR = @WIN32_REDIST_DIR@
-WIN32_CRT_SRC_DIR = @WIN32_CRT_SRC_DIR@
 MOZ_MEMORY_LDFLAGS = @MOZ_MEMORY_LDFLAGS@
-WIN32_OLD_STYLE_JEMALLOC = @WIN32_OLD_STYLE_JEMALLOC@
 WIN32_CRT_LIBS = @WIN32_CRT_LIBS@
-MOZ_CRT_CPU_ARCH = @MOZ_CRT_CPU_ARCH@
 
 # This is for custom CRT building
 ifdef MOZ_MEMORY
-ifdef WIN32_CRT_SRC_DIR
 DLLFLAGS = @DLLFLAGS@
-endif
 endif
 
 # Codesighs tools option, enables win32 mapfiles.

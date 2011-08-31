@@ -1908,6 +1908,12 @@ _cairo_surface_release_device_reference (cairo_surface_t *surface);
 						      CAIRO_CONTENT_COLOR_ALPHA))\
 				       == 0))
 
+static inline cairo_bool_t
+_cairo_valid_stride_alignment(int stride)
+{
+    return !(stride & (CAIRO_STRIDE_ALIGNMENT-1));
+}
+
 cairo_private int
 _cairo_format_bits_per_pixel (cairo_format_t format) cairo_const;
 

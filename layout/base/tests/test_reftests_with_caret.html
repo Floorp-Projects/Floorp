@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Reftests with caret drawing</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
@@ -95,46 +94,53 @@ function endTest() {
   }
 }
 
+var isWindows = /WINNT/.test(SpecialPowers.OS);
+
 var tests = [
     [ 'bug106855-1.html' , 'bug106855-1-ref.html' ] ,
-    [ 'bug106855-2.html' , 'bug106855-1-ref.html' ] ,
-    [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
-    [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
     [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
     [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
     [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
-    [ 'bug512295-1.html' , 'bug512295-1-ref.html' ] ,
-    [ 'bug512295-2.html' , 'bug512295-2-ref.html' ] ,
     [ 'bug585922.html'   , 'bug585922-ref.html'   ] ,
-    [ 'bug597519-1.html' , 'bug597519-1-ref.html' ] ,
-    [ 'bug602141-1.html' , 'bug602141-1-ref.html' ] ,
     [ 'bug602141-2.html' , 'bug602141-2-ref.html' ] ,
     [ 'bug602141-3.html' , 'bug602141-3-ref.html' ] ,
-    [ 'bug602141-4.html' , 'bug602141-4-ref.html' ] ,
-    [ 'bug612271-1.html' , 'bug612271-ref.html' ] ,
-    [ 'bug612271-2.html' , 'bug612271-ref.html' ] ,
-    [ 'bug612271-3.html' , 'bug612271-ref.html' ] ,
-    [ 'bug613433-1.html' , 'bug613433-ref.html' ] ,
     [ 'bug613433-2.html' , 'bug613433-ref.html' ] ,
     [ 'bug613433-3.html' , 'bug613433-ref.html' ] ,
-    [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
     [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
     [ 'bug632215-2.html' , 'bug632215-ref.html'   ] ,
     [ 'bug633044-1.html' , 'bug633044-1-ref.html' ] ,
-    [ 'bug634406-1.html' , 'bug634406-1-ref.html' ] ,
     [ 'bug644428-1.html' , 'bug644428-1-ref.html' ] ,
-    function() {
-      SpecialPowers.setBoolPref("bidi.browser.ui", true);
-    },
-    [ 'bug646382-1.html' , 'bug646382-1-ref.html' ] ,
-    [ 'bug646382-2.html' , 'bug646382-2-ref.html' ] ,
-    [ 'bug664087-1.html' , 'bug664087-1-ref.html' ] ,
-    [ 'bug664087-2.html' , 'bug664087-2-ref.html' ] ,
-    function() {
-      SpecialPowers.clearUserPref("bidi.browser.ui");
-    },
 ];
+
+if (!isWindows) {
+  tests.push([ 'bug106855-2.html' , 'bug106855-1-ref.html' ]); // bug 681138
+  tests.push([ 'bug240933-1.html' , 'bug240933-1-ref.html' ]); // bug 681144
+  tests.push([ 'bug240933-2.html' , 'bug240933-1-ref.html' ]); // bug 681162
+  tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]); // bug 681152
+  tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]); // bug 681331
+  tests.push([ 'bug597519-1.html' , 'bug597519-1-ref.html' ]); // bug 680579
+  tests.push([ 'bug602141-1.html' , 'bug602141-1-ref.html' ]); // bug 681334
+  tests.push([ 'bug602141-4.html' , 'bug602141-4-ref.html' ]); // bug 681167
+  tests.push([ 'bug612271-1.html' , 'bug612271-ref.html' ]);   // bug 681032
+  tests.push([ 'bug612271-2.html' , 'bug612271-ref.html' ]);   // bug 680581
+  tests.push([ 'bug612271-3.html' , 'bug612271-ref.html' ]);   // bug 681035
+  tests.push([ 'bug613433-1.html' , 'bug613433-ref.html' ]);   // bug 681332
+  tests.push([ 'bug613807-1.html' , 'bug613807-1-ref.html' ]); // bug 680574
+  tests.push([ 'bug634406-1.html' , 'bug634406-1-ref.html' ]); // bug 681146
+}
+
+tests.push(function() {SpecialPowers.setBoolPref("bidi.browser.ui", true);});
+
+if (!isWindows) {
+  tests.push([ 'bug646382-1.html' , 'bug646382-1-ref.html' ]);  // bug 681076
+  tests.push([ 'bug646382-2.html' , 'bug646382-2-ref.html' ]);  // bug 680577
+  tests.push([ 'bug664087-1.html' , 'bug664087-1-ref.html' ]);  // bug 681038
+  tests.push([ 'bug664087-2.html' , 'bug664087-2-ref.html' ]);  // bug 680578
+}
+
+tests.push(function() {SpecialPowers.clearUserPref("bidi.browser.ui");});
+
 var testIndex = 0;
 
 function nextTest() {

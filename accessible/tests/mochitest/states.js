@@ -45,6 +45,8 @@ const EXT_STATE_SUPPORTS_AUTOCOMPLETION =
   nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
 const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
 
+const kOrdinalState = 0;
+const kExtraState = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test functions

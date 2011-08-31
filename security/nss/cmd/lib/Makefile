@@ -78,5 +78,4 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 export:: private_export
 
-$(OBJDIR)/secerror$(OBJ_SUFFIX): NSPRerrs.h SECerrs.h SSLerrs.h 
 

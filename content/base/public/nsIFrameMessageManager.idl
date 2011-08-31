@@ -118,10 +118,17 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] nsIContent getOwnerContent();
 };
 
-[scriptable, uuid(ed6522fd-ffb6-4920-b50d-cf629309616b)]
-interface nsIChromeFrameMessageManager : nsIFrameMessageManager
+[scriptable, uuid(6331bbca-2c9f-4766-b3c7-ae75554bf1ec)]
+interface nsITreeItemFrameMessageManager : nsIFrameMessageManager
 {
-  /*
+  readonly attribute unsigned long childCount;
+  nsITreeItemFrameMessageManager getChildAt(in unsigned long aIndex);
+};
+
+[scriptable, uuid(9e5c0526-aa4c-49f0-afbb-57f489cd9b59)]
+interface nsIChromeFrameMessageManager : nsITreeItemFrameMessageManager
+{
+  /**
    * Load a script in the (remote) frame. aURL must be the absolute URL.
    * data: URLs are also supported. For example data:,dump("foo\n");
    * If aAllowDelayedLoad is true, script will be loaded when the
@@ -129,5 +136,10 @@ interface nsIChromeFrameMessageManager : nsIFrameMessageManager
    * only if the frame is already available.
    */
   void loadFrameScript(in AString aURL, in boolean aAllowDelayedLoad);
+
+  /**
+   * Removes aURL from the list of scripts which support delayed load.
+   */
+  void removeDelayedFrameScript(in AString aURL);
 };
 

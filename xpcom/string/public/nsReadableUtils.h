@@ -59,29 +59,29 @@ inline size_t Distance( const nsReadingIterator<char>& start, const nsReadingIte
     return end.get() - start.get();
   }
 
-NS_COM void LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest NS_OUTPARAM );
-NS_COM void CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest NS_OUTPARAM );
+void LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest NS_OUTPARAM );
+void CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest NS_OUTPARAM );
-NS_COM void CopyASCIItoUTF16( const char* aSource, nsAString& aDest NS_OUTPARAM );
+void LossyCopyUTF16toASCII( const PRUnichar* aSource, nsACString& aDest NS_OUTPARAM );
+void CopyASCIItoUTF16( const char* aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest NS_OUTPARAM );
-NS_COM void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest NS_OUTPARAM );
+void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest NS_OUTPARAM );
+void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest NS_OUTPARAM );
-NS_COM void CopyUTF8toUTF16( const char* aSource, nsAString& aDest NS_OUTPARAM );
+void CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest NS_OUTPARAM );
+void CopyUTF8toUTF16( const char* aSource, nsAString& aDest NS_OUTPARAM );
 
-NS_COM void LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest );
-NS_COM void AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest );
+void LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest );
+void AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest );
 
-NS_COM void LossyAppendUTF16toASCII( const PRUnichar* aSource, nsACString& aDest );
-NS_COM void AppendASCIItoUTF16( const char* aSource, nsAString& aDest );
+void LossyAppendUTF16toASCII( const PRUnichar* aSource, nsACString& aDest );
+void AppendASCIItoUTF16( const char* aSource, nsAString& aDest );
 
-NS_COM void AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
-NS_COM void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
+void AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
+void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 
-NS_COM void AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
-NS_COM void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
+void AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
+void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
@@ -94,7 +94,7 @@ NS_COM void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
    * @param aSource a 16-bit wide string
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
-NS_COM char* ToNewCString( const nsAString& aSource );
+char* ToNewCString( const nsAString& aSource );
 
 
   /**
@@ -106,7 +106,7 @@ NS_COM char* ToNewCString( const nsAString& aSource );
    * @param aSource an 8-bit wide string
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
-NS_COM char* ToNewCString( const nsACString& aSource );
+char* ToNewCString( const nsACString& aSource );
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
@@ -123,7 +123,7 @@ NS_COM char* ToNewCString( const nsACString& aSource );
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
 
-NS_COM char* ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count = nsnull );
+char* ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count = nsnull );
 
 
   /**
@@ -138,7 +138,7 @@ NS_COM char* ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count = n
    * @param aSource a UTF-16 string
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
-NS_COM PRUnichar* ToNewUnicode( const nsAString& aSource );
+PRUnichar* ToNewUnicode( const nsAString& aSource );
 
 
   /**
@@ -152,7 +152,7 @@ NS_COM PRUnichar* ToNewUnicode( const nsAString& aSource );
    * @param aSource an 8-bit wide string (a C-string, NOT UTF-8)
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
-NS_COM PRUnichar* ToNewUnicode( const nsACString& aSource );
+PRUnichar* ToNewUnicode( const nsACString& aSource );
 
   /**
    * Returns a new |PRUnichar| buffer containing a zero-terminated copy
@@ -169,7 +169,7 @@ NS_COM PRUnichar* ToNewUnicode( const nsACString& aSource );
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    *         (UTF-16 encoded)
    */
-NS_COM PRUnichar* UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count = nsnull );
+PRUnichar* UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count = nsnull );
 
   /**
    * Copies |aLength| 16-bit code units from the start of |aSource| to the
@@ -183,7 +183,7 @@ NS_COM PRUnichar* UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16C
    * @param aLength the number of 16-bit code units to copy
    * @return pointer to destination buffer - identical to |aDest|
    */
-NS_COM PRUnichar* CopyUnicodeTo( const nsAString& aSource,
+PRUnichar* CopyUnicodeTo( const nsAString& aSource,
                                  PRUint32 aSrcOffset,
                                  PRUnichar* aDest,
                                  PRUint32 aLength );
@@ -200,7 +200,7 @@ NS_COM PRUnichar* CopyUnicodeTo( const nsAString& aSource,
    * @param aSrcEnd end source iterator
    * @param aDest destination for the copy
    */
-NS_COM void CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
+void CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
                            const nsAString::const_iterator& aSrcEnd,
                            nsAString& aDest );
 
@@ -214,7 +214,7 @@ NS_COM void CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
    * @param aSrcEnd end source iterator
    * @param aDest destination for the copy
    */
-NS_COM void AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
+void AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
                              const nsAString::const_iterator& aSrcEnd,
                              nsAString& aDest );
 
@@ -223,15 +223,14 @@ NS_COM void AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
    *
    * @param aString a 16-bit wide string to scan
    */
-NS_COM PRBool IsASCII( const nsAString& aString );
+PRBool IsASCII( const nsAString& aString );
 
   /**
    * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
    *
    * @param aString a 8-bit wide string to scan
    */
-NS_COM PRBool IsASCII( const nsACString& aString );
-
+PRBool IsASCII( const nsACString& aString );
 
   /**
    * Returns |PR_TRUE| if |aString| is a valid UTF-8 string.
@@ -251,28 +250,28 @@ NS_COM PRBool IsASCII( const nsACString& aString );
    *
    * @param aString an 8-bit wide string to scan
    */
-NS_COM PRBool IsUTF8( const nsACString& aString );
+PRBool IsUTF8( const nsACString& aString );
 
-NS_COM PRBool ParseString(const nsACString& aAstring, char aDelimiter, 
+PRBool ParseString(const nsACString& aAstring, char aDelimiter, 
                           nsTArray<nsCString>& aArray);
 
   /**
    * Converts case in place in the argument string.
    */
-NS_COM void ToUpperCase( nsACString& );
+void ToUpperCase( nsACString& );
 
-NS_COM void ToLowerCase( nsACString& );
+void ToLowerCase( nsACString& );
 
-NS_COM void ToUpperCase( nsCSubstring& );
+void ToUpperCase( nsCSubstring& );
 
-NS_COM void ToLowerCase( nsCSubstring& );
+void ToLowerCase( nsCSubstring& );
 
   /**
    * Converts case from string aSource to aDest.
    */
-NS_COM void ToUpperCase( const nsACString& aSource, nsACString& aDest );
+void ToUpperCase( const nsACString& aSource, nsACString& aDest );
 
-NS_COM void ToLowerCase( const nsACString& aSource, nsACString& aDest );
+void ToLowerCase( const nsACString& aSource, nsACString& aDest );
 
   /**
    * Finds the leftmost occurrence of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
@@ -284,8 +283,8 @@ NS_COM void ToLowerCase( const nsACString& aSource, nsACString& aDest );
    * If we need something faster, then we can implement that later.
    */
 
-NS_COM PRBool FindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
-NS_COM PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
+PRBool FindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
+PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
 
 /* sometimes we don't care about where the string was, just that we
  * found it or not */
@@ -306,7 +305,7 @@ inline PRBool FindInReadable( const nsACString& aPattern, const nsACString& aSou
 }
 
 
-NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
+PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
   /**
    * Finds the rightmost occurrence of |aPattern| 
@@ -314,8 +313,8 @@ NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACStr
    * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
    *
    */
-NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
-NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
+PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
+PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
 
    /**
    * Finds the leftmost occurrence of |aChar|, if any in the range 
@@ -325,37 +324,36 @@ NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_ite
    * point to the match.  If no match was found, returns |PR_FALSE| and 
    * makes |aSearchStart == aSearchEnd|.
    */
-NS_COM PRBool FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd );
-NS_COM PRBool FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd );
+PRBool FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd );
+PRBool FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd );
 
     /**
     * Finds the number of occurences of |aChar| in the string |aStr|
     */
-NS_COM PRUint32 CountCharInReadable( const nsAString& aStr,
+PRUint32 CountCharInReadable( const nsAString& aStr,
                                      PRUnichar aChar );
-NS_COM PRUint32 CountCharInReadable( const nsACString& aStr,
+PRUint32 CountCharInReadable( const nsACString& aStr,
                                      char aChar );
 
-NS_COM PRBool
+PRBool
 StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring,
                   const nsStringComparator& aComparator =
                                               nsDefaultStringComparator() );
-NS_COM PRBool
+PRBool
 StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring,
                   const nsCStringComparator& aComparator =
                                                nsDefaultCStringComparator() );
-NS_COM PRBool
+PRBool
 StringEndsWith( const nsAString& aSource, const nsAString& aSubstring,
                 const nsStringComparator& aComparator =
                                             nsDefaultStringComparator() );
-NS_COM PRBool
+PRBool
 StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
                 const nsCStringComparator& aComparator =
                                              nsDefaultCStringComparator() );
 
-NS_COM const nsAFlatString& EmptyString();
-NS_COM const nsAFlatCString& EmptyCString();
-
+const nsAFlatString& EmptyString();
+const nsAFlatCString& EmptyCString();
 
    /**
    * Compare a UTF-8 string to an UTF-16 string.
@@ -365,11 +363,11 @@ NS_COM const nsAFlatCString& EmptyCString();
    * error (eg the strings are not valid UTF8 and UTF16 respectively),
    * this method will return PR_INT32_MIN.
    */
-NS_COM PRInt32
+PRInt32
 CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
                    const nsASingleFragmentString& aUTF16String);
 
-NS_COM void
+void
 AppendUCS4ToUTF16(const PRUint32 aSource, nsAString& aDest);
 
 template<class T>

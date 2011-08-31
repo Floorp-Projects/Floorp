@@ -562,7 +562,7 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
     return 0;
 
   SharedMemory* segment = 0;
-  size_t segmentSize = SharedMemory::PageAlignedSize(size + sizeof(size_t));
+  size_t segmentSize = SharedMemory::PageAlignedSize(size + sizeof(uint32));
 
   if (SharedMemory::TYPE_BASIC == type) {
     SharedMemoryBasic::Handle handle;

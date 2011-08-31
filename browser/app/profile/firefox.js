@@ -74,6 +74,11 @@ pref("extensions.blocklist.itemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/
 
 pref("extensions.update.autoUpdateDefault", true);
 
+// Disable add-ons installed into the shared user and shared system areas by
+// default. This does not include the application directory. See the SCOPE
+// constants in AddonManager.jsm for values to use here
+pref("extensions.autoDisableScopes", 10);
+
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/dictionaries/");
 
@@ -778,12 +783,12 @@ pref("browser.sessionstore.max_windows_undo", 3);
 // number of crashes that can occur before the about:sessionrestore page is displayed
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("browser.sessionstore.max_resumed_crashes", 1);
-// The number of tabs that can restore concurrently:
-// < 0 = All tabs can restore at the same time
-//   0 = Only the selected tab in each window will be restored
-//       Other tabs won't be restored until they are selected
-//   N = The number of tabs to restore at the same time
-pref("browser.sessionstore.max_concurrent_tabs", 3);
+// restore_on_demand overrides MAX_CONCURRENT_TAB_RESTORES (sessionstore constant)
+// and restore_hidden_tabs. When true, tabs will not be restored until they are
+// focused (also applies to tabs that aren't visible). When false, the values
+// for MAX_CONCURRENT_TAB_RESTORES and restore_hidden_tabs are respected.
+// Selected tabs are always restored regardless of this pref.
+pref("browser.sessionstore.restore_on_demand", false);
 // Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
 pref("browser.sessionstore.restore_hidden_tabs", false);
 
@@ -876,7 +881,7 @@ pref("browser.privatebrowsing.dont_prompt_on_enter", false);
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 
 // base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://www.google.com/loc/json");
+pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
 pref("geo.wifi.protocol", 0);
 
 // Whether to use a panel that looks like an OS X sheet for customization
@@ -1039,6 +1044,17 @@ pref("devtools.hud.loglimit.console", 200);
 // - expandtab: expand Tab characters to spaces.
 pref("devtools.editor.tabsize", 4);
 pref("devtools.editor.expandtab", true);
+
+// Tells which component you want to use for source editing in developer tools.
+//
+// Available components:
+//   "textarea" - this is a basic text editor, like an HTML <textarea>.
+//
+//   "orion" - this is the Orion source code editor from the Eclipse project. It
+//   provides programmer-specific editor features such as syntax highlighting,
+//   indenting and bracket recognition. It may not be appropriate for all
+//   locales (esp. RTL) or a11y situations.
+pref("devtools.editor.component", "orion");
 
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.

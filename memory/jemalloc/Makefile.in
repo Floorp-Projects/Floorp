@@ -49,70 +49,11 @@ MODULE		= jemalloc
 # symbols.
 VISIBILITY_FLAGS=
 
-ifeq (WINNT,$(OS_TARGET))
-ifdef WIN32_OLD_STYLE_JEMALLOC
-# Building the CRT from source
-CRT_OBJ_DIR = $(CURDIR)/crtsrc
-MOZ_CRT_DLL_NAME = mozcrt19
-MOZ_CRTCPP_DLL_NAME = mozcpp19
-MOZ_CRT_STATIC_LIBS = libcmt libcpmt
-MOZ_CRT_DLL = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRT_DLL_NAME).dll
-MOZ_CRT_IMPORT_LIB = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRT_DLL_NAME).lib
-MOZ_CRTCPP_DLL = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRTCPP_DLL_NAME).dll
-MOZ_CRTCPP_IMPORT_LIB = $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/$(MOZ_CRTCPP_DLL_NAME).lib
-
-# copy the CRT DLLs to dist/bin,
-# copy the import libs to dist/lib
-libs:: $(MOZ_CRT_DLL) $(MOZ_CRT_IMPORT_LIB)
-	$(INSTALL) $(MOZ_CRT_DLL) $(MOZ_CRTCPP_DLL) $(FINAL_TARGET)
-	$(INSTALL) $(MOZ_CRT_IMPORT_LIB) $(MOZ_CRTCPP_IMPORT_LIB) $(DIST)/lib
-
-$(MOZ_CRT_IMPORT_LIB): $(MOZ_CRT_DLL)
-
-define EXTRACT_CMD
-cd $(CRT_OBJ_DIR)/$(MOZ_CRT_CPU_ARCH)/$(i)_lib && lib "-extract:..\\build\\$(MOZ_CRT_CPU_ARCH)\\$(i)_obj\\unhandld.obj" eh.lib
-
-endef # don't touch the blank line. actually, don't touch anything in this file.
-
-# patch if necessary
-ifeq ($(CC_VERSION), 14.00.50727.762)
-CRTDIFF=crtvc8sp1-$(MOZ_CRT_CPU_ARCH).diff
-else
-CRTDIFF=crtvc9sp1-$(MOZ_CRT_CPU_ARCH).diff
-endif
-
-$(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/$(CRTDIFF)
-	rm -rf $(CRT_OBJ_DIR)
-	cp -R "$(WIN32_CRT_SRC_DIR)" $(CRT_OBJ_DIR)
-# per http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=1189363&SiteID=1
-	$(foreach i,dll mt xdll xmt,$(EXTRACT_CMD))
-# truly awful
-#XXX: get ed into mozillabuild, bug 415123
-	$(PERL) $(srcdir)/apply-ed-patches.pl $(srcdir)/$(CRTDIFF) \
-	$(CRT_OBJ_DIR) $(srcdir)/ed.exe
-
-$(MOZ_CRT_DLL): \
-  $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h \
-  $(srcdir)/jemalloc_types.h $(srcdir)/rb.h
-	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/jemalloc_types.h $(srcdir)/rb.h \
-	$(CRT_OBJ_DIR)
-# this pretty much sucks, but nmake and make don't play well together
-	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
-# XXX: these don't link right for some reason; the problem is likely
-# that  not all the standard symbols are exported; looks like MSFT
-# never updated the sample.def files; could probably fix if someone
-# were ever bored enough. :-)
-	rm -f $(addsuffix .lib, $(addprefix $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/, $(MOZ_CRT_STATIC_LIBS)))
-	rm -f $(addsuffix .pdb, $(addprefix $(CRT_OBJ_DIR)/build/$(MOZ_CRT_CPU_ARCH)/, $(MOZ_CRT_STATIC_LIBS)))
-
-# but still export jemalloc.h
-EXPORTS = jemalloc.h jemalloc_types.h
-
-else
-
 CSRCS = jemalloc.c
 EXPORTS = jemalloc.h jemalloc_types.h
 LIBRARY_NAME = jemalloc
+
+ifeq (WINNT,$(OS_TARGET))
 FORCE_SHARED_LIB = 1
 
 MOZ_MEMORY_LDFLAGS = # Don't link against ourselves
@@ -122,8 +63,6 @@ DEFFILE = $(srcdir)/jemalloc.def
 LDFLAGS += -ENTRY:DllMain
 
 NO_INSTALL_IMPORT_LIBRARY = 1
-
-endif
 else # Not Windows
 
 ifeq ($(OS_ARCH),SunOS)
@@ -132,27 +71,22 @@ MODULE_OPTIMIZE_FLAGS = -xO5
 endif
 endif
 
-LIBRARY_NAME	= jemalloc
-
 # Build jemalloc as a shared lib.  This is mandatory for Darwin, since a library
 # init function is used on that platform.
 ifeq ($(OS_ARCH),Darwin)
 FORCE_SHARED_LIB= 1
 else
+# On Android, we're going to link jemalloc into mozutils, and that only works
+# properly if we only build a fakelib, which won't happen if we DIST_INSTALL
+ifneq ($(OS_TARGET),Android)
 DIST_INSTALL = 1
+endif
 FORCE_STATIC_LIB= 1
 endif
-
-EXPORTS = jemalloc.h jemalloc_types.h
-CSRCS   = jemalloc.c
 
 #XXX: PGO on Linux causes problems here
 # See bug 419470
 NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-
-ifdef WRAP_MALLOC_CFLAGS
-DEFINES += -DWRAP_MALLOC
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -162,8 +96,6 @@ LDFLAGS += -init _jemalloc_darwin_init
 endif
 
 ifeq (WINNT,$(OS_TARGET))
-ifndef WIN32_OLD_STYLE_JEMALLOC
-
 # Roll our own custom logic here for the import library
 
 ###############################################################################
@@ -240,6 +172,4 @@ crtdll.obj: msvc_combined.lib
 # Grab both CRT libraries and combine them into one library to simplify things
 msvc_combined.lib:
 	lib -OUT:$@ $(WIN32_CRT_LIBS)
-
-endif
 endif

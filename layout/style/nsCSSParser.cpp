@@ -492,6 +492,7 @@ protected:
 
   // for 'clip' and '-moz-image-region'
   PRBool ParseRect(nsCSSProperty aPropID);
+  PRBool ParseColumns();
   PRBool ParseContent();
   PRBool ParseCounterData(nsCSSProperty aPropID);
   PRBool ParseCursor();
@@ -513,6 +514,7 @@ protected:
   PRBool ParseSize();
   PRBool ParseTextDecoration();
   PRBool ParseTextDecorationLine(nsCSSValue& aValue);
+  PRBool ParseTextOverflow(nsCSSValue& aValue);
 
   PRBool ParseShadowItem(nsCSSValue& aValue, PRBool aIsBoxShadow);
   PRBool ParseShadowList(nsCSSProperty aProperty);
@@ -1893,8 +1895,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
       rv = GetToken(PR_TRUE);
       if (!rv)
         break;
-      rv = mToken.mType == eCSSToken_Dimension &&
-           mToken.mIntegerValid && mToken.mNumber > 0.0f;
+      rv = mToken.mType == eCSSToken_Dimension && mToken.mNumber > 0.0f;
       if (!rv) {
         UngetToken();
         break;
@@ -5492,6 +5493,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
 
   case eCSSProperty_clip:
     return ParseRect(eCSSProperty_clip);
+  case eCSSProperty__moz_columns:
+    return ParseColumns();
   case eCSSProperty__moz_column_rule:
     return ParseBorderSide(kColumnRuleIDs, PR_FALSE);
   case eCSSProperty_content:
@@ -5587,6 +5590,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_NONE | VARIANT_INHERIT, nsnull);
   }
 
+  if (aPropID == eCSSPropertyExtra_x_auto_value) {
+    return ParseVariant(aValue, VARIANT_AUTO | VARIANT_INHERIT, nsnull);
+  }
+
   if (aPropID < 0 || aPropID >= eCSSProperty_COUNT_no_shorthands) {
     NS_ABORT_IF_FALSE(PR_FALSE, "not a single value property");
     return PR_FALSE;
@@ -5602,6 +5609,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseMarks(aValue);
       case eCSSProperty_text_decoration_line:
         return ParseTextDecorationLine(aValue);
+      case eCSSProperty_text_overflow:
+        return ParseTextOverflow(aValue);
       default:
         NS_ABORT_IF_FALSE(PR_FALSE, "should not reach here");
         return PR_FALSE;
@@ -6841,6 +6850,48 @@ CSSParserImpl::ParseRect(nsCSSProperty aPropID)
   }
 
   AppendValue(aPropID, val);
+  return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::ParseColumns()
+{
+  // We use a similar "fake value" hack to ParseListStyle, because
+  // "auto" is acceptable for both column-count and column-width.
+  // If the fake "auto" value is found, and one of the real values isn't,
+  // that means the fake auto value is meant for the real value we didn't
+  // find.
+  static const nsCSSProperty columnIDs[] = {
+    eCSSPropertyExtra_x_auto_value,
+    eCSSProperty__moz_column_count,
+    eCSSProperty__moz_column_width
+  };
+  const PRInt32 numProps = NS_ARRAY_LENGTH(columnIDs);
+
+  nsCSSValue values[numProps];
+  PRInt32 found = ParseChoice(values, columnIDs, numProps);
+  if (found < 1 || !ExpectEndProperty()) {
+    return PR_FALSE;
+  }
+  if ((found & (1|2|4)) == (1|2|4) &&
+      values[0].GetUnit() ==  eCSSUnit_Auto) {
+    // We filled all 3 values, which is invalid
+    return PR_FALSE;
+  }
+
+  if ((found & 2) == 0) {
+    // Provide auto column-count
+    values[1].SetAutoValue();
+  }
+  if ((found & 4) == 0) {
+    // Provide auto column-width
+    values[2].SetAutoValue();
+  }
+
+  // Start at index 1 to skip the fake auto value.
+  for (PRInt32 index = 1; index < numProps; index++) {
+    AppendValue(columnIDs[index], values[index]);
+  }
   return PR_TRUE;
 }
 
@@ -8119,6 +8170,27 @@ CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
   return PR_FALSE;
 }
 
+PRBool
+CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
+{
+  if (ParseVariant(aValue, VARIANT_INHERIT, nsnull)) {
+    // 'inherit' and 'initial' must be alone
+    return PR_TRUE;
+  }
+
+  nsCSSValue left;
+  if (!ParseVariant(left, VARIANT_KEYWORD | VARIANT_STRING,
+                    nsCSSProps::kTextOverflowKTable))
+    return PR_FALSE;
+
+  nsCSSValue right;
+  if (ParseVariant(right, VARIANT_KEYWORD | VARIANT_STRING,
+                    nsCSSProps::kTextOverflowKTable))
+    aValue.SetPairValue(left, right);
+  else
+    aValue.SetPairValue(left, left);
+  return PR_TRUE;
+}
 
 PRBool
 CSSParserImpl::ParseTransitionProperty()

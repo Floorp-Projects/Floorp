@@ -39,7 +39,7 @@
 #include "nsIDOMHTMLElement.idl"
 
 /**
- * The nsIDOMHTMLVideoElement interface is the interface to a HTML
+ * The nsIDOMHTMLSourceElement interface is the interface to a HTML
  * <source> element.
  *
  * For more information on this interface, please see

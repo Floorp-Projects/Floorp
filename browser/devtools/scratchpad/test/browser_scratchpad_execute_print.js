@@ -28,85 +28,103 @@ function runTests()
 
   content.wrappedJSObject.foobarBug636725 = 1;
 
-  ok(sp.textbox, "textbox exists");
-  sp.textbox.value = "++window.foobarBug636725";
+  sp.setText("++window.foobarBug636725");
 
   let exec = sp.run();
-  is(exec[0], sp.textbox.value, "execute()[0] is correct");
+  is(exec[0], sp.getText(), "run()[0] is correct");
   is(exec[1], content.wrappedJSObject.foobarBug636725,
-     "execute()[1] is correct");
+     "run()[1] is correct");
 
-  is(sp.textbox.value, "++window.foobarBug636725",
-     "execute() does not change the textbox value");
+  is(sp.getText(), "++window.foobarBug636725",
+     "run() does not change the editor content");
 
   is(content.wrappedJSObject.foobarBug636725, 2,
-     "execute() updated window.foobarBug636725");
+     "run() updated window.foobarBug636725");
 
   sp.display();
 
   is(content.wrappedJSObject.foobarBug636725, 3,
-     "print() updated window.foobarBug636725");
+     "display() updated window.foobarBug636725");
 
-  is(sp.textbox.value, "++window.foobarBug636725/*\n3\n*/",
-     "print() shows evaluation result in the textbox");
+  is(sp.getText(), "++window.foobarBug636725/*\n3\n*/",
+     "display() shows evaluation result in the textbox");
 
   is(sp.selectedText, "/*\n3\n*/", "selectedText is correct");
-  is(sp.textbox.selectionStart, 24, "selectionStart is correct");
-  is(sp.textbox.selectionEnd, 31, "selectionEnd is correct");
+  let selection = sp.getSelectionRange();
+  is(selection.start, 24, "selection.start is correct");
+  is(selection.end, 31, "selection.end is correct");
 
-  // Test selection execute() and print().
+  // Test selection run() and display().
 
-  sp.textbox.value = "window.foobarBug636725 = 'a';\n" +
-                     "window.foobarBug636725 = 'b';";
+  sp.setText("window.foobarBug636725 = 'a';\n" +
+             "window.foobarBug636725 = 'b';");
 
   sp.selectRange(1, 2);
 
-  is(sp.textbox.selectionStart, 1, "selectionStart is 1");
-  is(sp.textbox.selectionEnd, 2, "selectionEnd is 2");
+  selection = sp.getSelectionRange();
+
+  is(selection.start, 1, "selection.start is 1");
+  is(selection.end, 2, "selection.end is 2");
 
   sp.selectRange(0, 29);
 
-  is(sp.textbox.selectionStart, 0, "selectionStart is 0");
-  is(sp.textbox.selectionEnd, 29, "selectionEnd is 29");
+  selection = sp.getSelectionRange();
+
+  is(selection.start, 0, "selection.start is 0");
+  is(selection.end, 29, "selection.end is 29");
 
   exec = sp.run();
 
   is(exec[0], "window.foobarBug636725 = 'a';",
-     "execute()[0] is correct");
+     "run()[0] is correct");
   is(exec[1], "a",
-     "execute()[1] is correct");
+     "run()[1] is correct");
 
-  is(sp.textbox.value, "window.foobarBug636725 = 'a';\n" +
-                       "window.foobarBug636725 = 'b';",
-     "execute() does not change the textbox value");
+  is(sp.getText(), "window.foobarBug636725 = 'a';\n" +
+                   "window.foobarBug636725 = 'b';",
+     "run() does not change the textbox value");
 
   is(content.wrappedJSObject.foobarBug636725, "a",
-     "execute() worked for the selected range");
+     "run() worked for the selected range");
 
-  sp.textbox.value = "window.foobarBug636725 = 'c';\n" +
-                     "window.foobarBug636725 = 'b';";
+  sp.setText("window.foobarBug636725 = 'c';\n" +
+             "window.foobarBug636725 = 'b';");
 
   sp.selectRange(0, 22);
 
   sp.display();
 
   is(content.wrappedJSObject.foobarBug636725, "a",
-     "print() worked for the selected range");
+     "display() worked for the selected range");
 
-  is(sp.textbox.value, "window.foobarBug636725" +
-                       "/*\na\n*/" +
-                       " = 'c';\n" +
-                       "window.foobarBug636725 = 'b';",
-     "print() shows evaluation result in the textbox");
+  is(sp.getText(), "window.foobarBug636725" +
+                   "/*\na\n*/" +
+                   " = 'c';\n" +
+                   "window.foobarBug636725 = 'b';",
+     "display() shows evaluation result in the textbox");
 
   is(sp.selectedText, "/*\na\n*/", "selectedText is correct");
-  is(sp.textbox.selectionStart, 22, "selectionStart is correct");
-  is(sp.textbox.selectionEnd, 29, "selectionEnd is correct");
+
+  selection = sp.getSelectionRange();
+  is(selection.start, 22, "selection.start is correct");
+  is(selection.end, 29, "selection.end is correct");
 
   sp.deselect();
 
   ok(!sp.selectedText, "selectedText is empty");
-  is(sp.textbox.selectionStart, sp.textbox.selectionEnd, "deselect() works");
+
+  selection = sp.getSelectionRange();
+  is(selection.start, selection.end, "deselect() works");
+
+  // Test undo/redo.
+
+  sp.setText("foo1");
+  sp.setText("foo2");
+  is(sp.getText(), "foo2", "editor content updated");
+  sp.undo();
+  is(sp.getText(), "foo1", "undo() works");
+  sp.redo();
+  is(sp.getText(), "foo2", "redo() works");
 
   gScratchpadWindow.close();
   gScratchpadWindow = null;

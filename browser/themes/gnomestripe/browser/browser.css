@@ -195,7 +195,7 @@ menuitem.bookmark-item {
 
 /* Bookmark items */
 .bookmark-item:not([container])  {
-  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .bookmark-item[container] {
@@ -603,16 +603,35 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #forward-button {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
+  -moz-transition: 250ms ease-out;
 }
-#forward-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
-}
-
 #forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
 }
-#forward-button[disabled="true"]:-moz-locale-dir(rtl) {
+
+toolbar:not([mode=icons]) #forward-button[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+toolbar:not([mode=icons]) #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
+}
+
+toolbar[mode=icons] #forward-button[disabled="true"] {
+  -moz-transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+toolbar[mode=icons] #forward-button[disabled="true"]:-moz-locale-dir(ltr) {
+  margin-left: -36px;
+}
+toolbar[mode=icons] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
+  margin-right: -36px;
+}
+toolbar[mode=icons][iconsize=small] #forward-button[disabled="true"]:-moz-locale-dir(ltr) {
+  margin-left: -28px;
+}
+toolbar[mode=icons][iconsize=small] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
+  margin-right: -28px;
 }
 
 #reload-button {
@@ -786,7 +805,7 @@ toolbar[iconsize="small"] #forward-button {
 .unified-nav-forward[_moz-menuactive] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu") !important;
 }
-toolbar[iconsize="small"] #forward-button[disabled="true"] {
+toolbar[iconsize="small"]:not([mode=icons]) #forward-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
@@ -796,7 +815,7 @@ toolbar[iconsize="small"] #forward-button:-moz-locale-dir(rtl) {
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
 }
-toolbar[iconsize="small"] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
+toolbar[iconsize="small"]:not([mode=icons]) #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
@@ -982,7 +1001,7 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 #page-proxy-favicon:not([src]) {
-  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 #page-proxy-favicon[pageproxystate="invalid"] {
@@ -1562,7 +1581,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   width: 16px;
   height: 16px;
   -moz-margin-end: 3px;
-  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .tab-throbber {
@@ -1700,7 +1719,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* All tabs menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .alltabs-item[selected="true"] {

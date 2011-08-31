@@ -79,17 +79,19 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
-#include "ion/Ion.h"
 #endif
+#include "ion/Ion.h"
+#include "vm/Debugger.h"
+
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 #include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsopcodeinlines.h"
 #include "jstypedarrayinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -426,23 +428,10 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
 #endif
 
     if (JSFunction *fun = js_ValueToFunction(cx, &vp[0], 0)) {
-        const char *name = thisv.isObject()
-                           ? thisv.toObject().getClass()->name
-                           : thisv.isString()
-                           ? "string"
-                           : thisv.isNumber()
-                           ? "number"
-                           : thisv.isBoolean()
-                           ? "boolean"
-                           : thisv.isNull()
-                           ? js_null_str
-                           : thisv.isUndefined()
-                           ? js_undefined_str
-                           : "value";
         JSAutoByteString funNameBytes;
         if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                 clasp->name, funName, name);
+                                 clasp->name, funName, InformalValueTypeName(thisv));
         }
     }
 }
@@ -530,7 +519,7 @@ Class js_NoSuchMethodClass = {
  * the base object, we search for the __noSuchMethod__ method in the base.
  * If it exists, we store the method and the property's id into an object of
  * NoSuchMethod class and store this object into the callee's stack slot.
- * Later, js_Invoke will recognise such an object and transfer control to
+ * Later, Invoke will recognise such an object and transfer control to
  * NoSuchMethod that invokes the method like:
  *
  *   this.__noSuchMethod__(id, args)
@@ -558,9 +547,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         /* Extract the function name from function::name qname. */
         if (vp[0].isObject()) {
             obj = &vp[0].toObject();
-            if (!js_IsFunctionQName(cx, obj, &id))
-                return false;
-            if (!JSID_IS_VOID(id))
+            if (js_GetLocalNameFromFunctionQName(obj, &id, cx))
                 vp[0] = IdToValue(id);
         }
 #endif
@@ -633,7 +620,8 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
-    status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
+    status = mjit::CanMethodJIT(cx, script, fp->isConstructing(),
+                                mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
         return false;
 
@@ -651,7 +639,7 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
  * when done.  Then push the return value.
  */
 JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
+InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 {
     /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
 
@@ -789,7 +777,8 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         StackFrame *fp = ifg_.fp();
 #ifdef JS_METHODJIT
         /* Hoist dynamic checks from RunScript. */
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, fp, mjit::CompileRequest_JIT);
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, false,
+                                                        mjit::CompileRequest_JIT);
         if (status == mjit::Compile_Error)
             return false;
         if (status != mjit::Compile_Okay)
@@ -829,8 +818,8 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
 }
 
 bool
-ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
-               uintN argc, Value *argv, Value *rval)
+Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
+       Value *rval)
 {
     LeaveTrace(cx);
 
@@ -862,8 +851,7 @@ ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
 }
 
 bool
-ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
-                          Value *rval)
+InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
 {
     LeaveTrace(cx);
 
@@ -883,18 +871,18 @@ ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *a
 }
 
 bool
-ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
-                 JSAccessMode mode, uintN argc, Value *argv, Value *rval)
+InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
+                     Value *rval)
 {
     LeaveTrace(cx);
 
     /*
-     * ExternalInvoke could result in another try to get or set the same id
-     * again, see bug 355497.
+     * Invoke could result in another try to get or set the same id again, see
+     * bug 355497.
      */
     JS_CHECK_RECURSION(cx, return false);
 
-    return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
+    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
 
 #if JS_HAS_SHARP_VARS
@@ -926,8 +914,8 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
 #endif
 
 bool
-Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
-        ExecuteType type, StackFrame *evalInFrame, Value *result)
+ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+              ExecuteType type, StackFrame *evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
 
@@ -969,7 +957,7 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &this
 }
 
 bool
-ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
+Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
 {
     /* The scope chain could be anything, so innerize just in case. */
     JSObject *scopeChain = &scopeChainArg;
@@ -994,8 +982,8 @@ ExternalExecute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value 
         return false;
     Value thisv = ObjectValue(*thisObj);
 
-    return Execute(cx, script, *scopeChain, thisv, EXECUTE_GLOBAL,
-                   NULL /* evalInFrame */, rval);
+    return ExecuteKernel(cx, script, *scopeChain, thisv, EXECUTE_GLOBAL,
+                         NULL /* evalInFrame */, rval);
 }
 
 bool
@@ -1240,7 +1228,7 @@ TypeOfValue(JSContext *cx, const Value &vref)
 }
 
 JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
+InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 {
     JS_ASSERT(!js_FunctionClass.construct);
     CallArgs args = argsRef;
@@ -1262,7 +1250,7 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
             if (!fun->isInterpretedConstructor())
                 goto error;
 
-            if (!Invoke(cx, args, CONSTRUCT))
+            if (!InvokeKernel(cx, args, CONSTRUCT))
                 return false;
 
             JS_ASSERT(args.rval().isObject());
@@ -1570,6 +1558,30 @@ CanIncDecWithoutOverflow(int32_t i)
 # endif
 #endif
 
+template<typename T>
+class GenericInterruptEnabler : public InterpreterFrames::InterruptEnablerBase {
+  public:
+    GenericInterruptEnabler(T *variable, T value) : variable(variable), value(value) { }
+    void enableInterrupts() const { *variable = value; }
+
+  private:
+    T *variable;
+    T value;
+};
+
+inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs, 
+                                            const InterruptEnablerBase &enabler)
+  : context(cx), regs(regs), enabler(enabler)
+{
+    older = JS_THREAD_DATA(cx)->interpreterFrames;
+    JS_THREAD_DATA(cx)->interpreterFrames = this;
+}
+ 
+inline InterpreterFrames::~InterpreterFrames()
+{
+    JS_THREAD_DATA(context)->interpreterFrames = older;
+}
+
 /*
  * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
  * single-thread DEBUG js shell testing to verify property cache hits.
@@ -1751,10 +1763,16 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
-#define COUNT_OP()         JS_BEGIN_MACRO                                     \
-                               if (pcCounts && !regs.fp()->hasImacropc())     \
-                                   ++pcCounts[regs.pc - script->code];        \
-                           JS_END_MACRO
+#define ENABLE_PCCOUNT_INTERRUPTS()     JS_BEGIN_MACRO                        \
+                                            if (pcCounts)                     \
+                                                ENABLE_INTERRUPTS();          \
+                                        JS_END_MACRO
+
+#if JS_THREADED_INTERP
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, jumpTable == interruptJumpTable)
+#else
+#define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(pcCounts, switchMask == -1)
+#endif
 
     /*
      * Macros for threaded interpreter loop
@@ -1776,7 +1794,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     register void * const *jumpTable = normalJumpTable;
 
-# define ENABLE_INTERRUPTS() ((void) (jumpTable = interruptJumpTable))
+    typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
+    InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()                                                    \
@@ -1787,7 +1806,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_RECORDER();                             \
-                                COUNT_OP();                                   \
+                                CHECK_PCCOUNT_INTERRUPTS();                   \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1810,8 +1829,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     register intN switchMask = 0;
     intN switchOp;
-
-# define ENABLE_INTERRUPTS() ((void) (switchMask = -1))
+    typedef GenericInterruptEnabler<intN> InterruptEnabler;
+    InterruptEnabler interruptEnabler(&switchMask, -1);
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()                                                    \
@@ -1845,6 +1864,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
 
 #endif /* !JS_THREADED_INTERP */
+
+#define ENABLE_INTERRUPTS() (interruptEnabler.enableInterrupts())
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -1884,29 +1905,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             interpMode == JSINTERP_SKIP_TRAP);                                \
     JS_END_MACRO
 
-#define MONITOR_BRANCH_METHODJIT()                                            \
-    JS_BEGIN_MACRO                                                            \
-        mjit::CompileStatus status =                                          \
-            mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);       \
-        if (status == mjit::Compile_Error)                                    \
-            goto error;                                                       \
-        if (status == mjit::Compile_Okay) {                                   \
-            void *ncode =                                                     \
-                script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);\
-            mjit::JaegerStatus status =                                       \
-                mjit::JaegerShotAtSafePoint(cx, ncode, true);                 \
-            CHECK_PARTIAL_METHODJIT(status);                                  \
-            interpReturnOK = (status == mjit::Jaeger_Returned);               \
-            if (entryFrame != regs.fp())                                      \
-                goto jit_return;                                              \
-            regs.fp()->setFinishedInInterpreter();                            \
-            goto leave_on_safe_point;                                         \
-        }                                                                     \
-        if (status == mjit::Compile_Abort) {                                  \
-            useMethodJIT = false;                                             \
-        }                                                                     \
-    JS_END_MACRO
-
 #define CHECK_PARTIAL_METHODJIT(status)                                       \
     JS_BEGIN_MACRO                                                            \
         if (status == mjit::Jaeger_Unfinished) {                              \
@@ -1925,8 +1923,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #else
 
 #define RESET_USE_METHODJIT() ((void) 0)
-
-#define MONITOR_BRANCH_METHODJIT() ((void) 0)
 
 #endif
 
@@ -1951,8 +1947,9 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
-        script = regs.fp()->script();                                         \
+        SET_SCRIPT(regs.fp()->script());                                      \
         pcCounts = script->pcCounters.get(JSPCCounters::INTERP);              \
+        ENABLE_PCCOUNT_INTERRUPTS();                                          \
         argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
@@ -1963,35 +1960,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         RESTORE_INTERP_VARS();                                                \
         if (cx->isExceptionPending())                                         \
             goto error;                                                       \
-    JS_END_MACRO
-
-#define MONITOR_BRANCH()                                                      \
-    JS_BEGIN_MACRO                                                            \
-        if (TRACING_ENABLED(cx)) {                                            \
-            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && useMethodJIT) { \
-                MONITOR_BRANCH_METHODJIT();                                   \
-            } else {                                                          \
-                MonitorResult r = MonitorLoopEdge(cx, interpMode);            \
-                if (r == MONITOR_RECORDING) {                                 \
-                    JS_ASSERT(TRACE_RECORDER(cx));                            \
-                    JS_ASSERT(!TRACE_PROFILER(cx));                           \
-                    MONITOR_BRANCH_TRACEVIS;                                  \
-                    ENABLE_INTERRUPTS();                                      \
-                    CLEAR_LEAVE_ON_TRACE_POINT();                             \
-                }                                                             \
-                JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);   \
-                RESTORE_INTERP_VARS_CHECK_EXCEPTION();                        \
-            }                                                                 \
-        } else {                                                              \
-            MONITOR_BRANCH_METHODJIT();                                       \
-        }                                                                     \
-    JS_END_MACRO
-
-#else /* !JS_TRACER */
-
-#define MONITOR_BRANCH()                                                      \
-    JS_BEGIN_MACRO                                                            \
-        MONITOR_BRANCH_METHODJIT();                                           \
+        CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
 
 #endif /* !JS_TRACER */
@@ -2027,20 +1996,17 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_BEGIN_MACRO                                                            \
         regs.pc += (n);                                                       \
         op = (JSOp) *regs.pc;                                                 \
-        if ((n) <= 0) {                                                       \
-            CHECK_BRANCH();                                                   \
-            if (op == JSOP_NOTRACE) {                                         \
-                if (TRACE_RECORDER(cx) || TRACE_PROFILER(cx)) {               \
-                    MONITOR_BRANCH();                                         \
-                    op = (JSOp) *regs.pc;                                     \
-                }                                                             \
-            } else if (op == JSOP_TRACE) {                                    \
-                MONITOR_BRANCH();                                             \
-                op = (JSOp) *regs.pc;                                         \
-            }                                                                 \
-        }                                                                     \
+        if ((n) <= 0)                                                         \
+            goto check_backedge;                                              \
         LEAVE_ON_SAFE_POINT();                                                \
         DO_OP();                                                              \
+    JS_END_MACRO
+
+#define SET_SCRIPT(s)                                                         \
+    JS_BEGIN_MACRO                                                            \
+        script = (s);                                                         \
+        if (script->stepModeEnabled())                                        \
+            ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
 #define CHECK_INTERRUPT_HANDLER()                                             \
@@ -2053,10 +2019,18 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     FrameRegs regs = cx->regs();
     PreserveRegsGuard interpGuard(cx, regs);
 
+    /*
+     * Help Debugger find frames running scripts that it has put in
+     * single-step mode.
+     */
+    InterpreterFrames interpreterFrame(cx, &regs, interruptEnabler);
+
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
-    JSScript *script = regs.fp()->script();
+    JSScript *script;
+    SET_SCRIPT(regs.fp()->script());
     double *pcCounts = script->pcCounters.get(JSPCCounters::INTERP);
+    ENABLE_PCCOUNT_INTERRUPTS();
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
@@ -2166,11 +2140,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JS_CHECK_RECURSION(cx, goto error);
 #endif
 
-#if JS_THREADED_INTERP
     DO_NEXT_OP(len);
-#else
-    DO_NEXT_OP(len);
-#endif
 
 #if JS_THREADED_INTERP
     /*
@@ -2193,6 +2163,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
       do_op:
         CHECK_RECORDER();
+        CHECK_PCCOUNT_INTERRUPTS();
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -2206,19 +2177,32 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif /* !JS_THREADED_INTERP */
     {
         bool moreInterrupts = false;
+
+        if (pcCounts) {
+            if (!regs.fp()->hasImacropc())
+                ++pcCounts[regs.pc - script->code];
+            moreInterrupts = true;
+        }
+
         JSInterruptHook hook = cx->debugHooks->interruptHook;
-        if (hook) {
+        if (hook || script->stepModeEnabled()) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "interrupt hook");
+                AbortRecording(cx, "interrupt hook or singleStepMode");
 #ifdef JS_METHODJIT
             if (TRACE_PROFILER(cx))
                 AbortProfiling(cx);
 #endif
 #endif
             Value rval;
-            switch (hook(cx, script, regs.pc, Jsvalify(&rval),
-                         cx->debugHooks->interruptHookData)) {
+            JSTrapStatus status = JSTRAP_CONTINUE;
+            if (hook) {
+                status = hook(cx, script, regs.pc, Jsvalify(&rval),
+                              cx->debugHooks->interruptHookData);
+            }
+            if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
+                status = Debugger::onSingleStep(cx, &rval);
+            switch (status) {
               case JSTRAP_ERROR:
                 goto error;
               case JSTRAP_CONTINUE:
@@ -2332,6 +2316,55 @@ BEGIN_CASE(JSOP_NOTRACE)
     LEAVE_ON_SAFE_POINT();
 END_CASE(JSOP_TRACE)
 
+check_backedge:
+{
+    CHECK_BRANCH();
+    if (op != JSOP_NOTRACE && op != JSOP_TRACE)
+        DO_OP();
+
+#ifdef JS_TRACER
+    if (TRACING_ENABLED(cx) && (TRACE_RECORDER(cx) || TRACE_PROFILER(cx) || (op == JSOP_TRACE && !useMethodJIT))) {
+        MonitorResult r = MonitorLoopEdge(cx, interpMode);
+        if (r == MONITOR_RECORDING) {
+            JS_ASSERT(TRACE_RECORDER(cx));
+            JS_ASSERT(!TRACE_PROFILER(cx));
+            MONITOR_BRANCH_TRACEVIS;
+            ENABLE_INTERRUPTS();
+            CLEAR_LEAVE_ON_TRACE_POINT();
+        }
+        JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);
+        RESTORE_INTERP_VARS_CHECK_EXCEPTION();
+        op = (JSOp) *regs.pc;
+        DO_OP();
+    }
+#endif /* JS_TRACER */
+
+#ifdef JS_METHODJIT
+    if (!useMethodJIT)
+        DO_OP();
+    mjit::CompileStatus status =
+        mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);
+    if (status == mjit::Compile_Error)
+        goto error;
+    if (status == mjit::Compile_Okay) {
+        void *ncode =
+            script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);
+        mjit::JaegerStatus status =
+            mjit::JaegerShotAtSafePoint(cx, ncode, true);
+        CHECK_PARTIAL_METHODJIT(status);
+        interpReturnOK = (status == mjit::Jaeger_Returned);
+        if (entryFrame != regs.fp())
+            goto jit_return;
+        regs.fp()->setFinishedInInterpreter();
+        goto leave_on_safe_point;
+    }
+    if (status == mjit::Compile_Abort)
+        useMethodJIT = false;
+#endif /* JS_METHODJIT */
+
+    DO_OP();
+}
+
 /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
 BEGIN_CASE(JSOP_LINENO)
 END_CASE(JSOP_LINENO)
@@ -2439,7 +2472,6 @@ BEGIN_CASE(JSOP_STOP)
         JS_ASSERT(!regs.fp()->hasImacropc());
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, &regs.fp()->scopeChain(), 0));
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
-        CHECK_INTERRUPT_HANDLER();
 
         /* The JIT inlines ScriptEpilogue. */
 #ifdef JS_METHODJIT
@@ -4145,7 +4177,7 @@ BEGIN_CASE(JSOP_EVAL)
         if (!DirectEval(cx, args))
             goto error;
     } else {
-        if (!Invoke(cx, args))
+        if (!InvokeKernel(cx, args))
             goto error;
     }
     CHECK_INTERRUPT_HANDLER();
@@ -4170,10 +4202,10 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
     if (!IsFunctionObject(args.calleev(), &callee, &fun) || !fun->isInterpretedConstructor()) {
         if (construct) {
-            if (!InvokeConstructor(cx, args))
+            if (!InvokeConstructorKernel(cx, args))
                 goto error;
         } else {
-            if (!Invoke(cx, args))
+            if (!InvokeKernel(cx, args))
                 goto error;
         }
         regs.sp = args.spAfterCall();
@@ -4217,7 +4249,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
                                        : mjit::CompileRequest_JIT;
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp(), request);
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, construct, request);
         if (status == mjit::Compile_Error)
             goto error;
         if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
@@ -4598,7 +4630,7 @@ BEGIN_CASE(JSOP_TRAP)
     }
 
     Value rval;
-    JSTrapStatus status = JS_HandleTrap(cx, script, regs.pc, Jsvalify(&rval));
+    JSTrapStatus status = Debugger::onTrap(cx, &rval);
     switch (status) {
       case JSTRAP_ERROR:
         goto error;
@@ -4724,6 +4756,7 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
 
     JS_ASSERT(index < obj->getFunctionPrivate()->script()->bindings.countUpvars());
     PUSH_COPY(obj->getFlatClosureUpvar(index));
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
     if (op == JSOP_CALLFCSLOT)
         PUSH_UNDEFINED();
 }
@@ -4800,10 +4833,10 @@ BEGIN_CASE(JSOP_DEFFUN)
      */
     JSFunction *fun;
     LOAD_FUNCTION(0);
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     JSObject *obj2;
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         /*
          * Even a null closure needs a parent for principals finding.
          * FIXME: bug 476950, although debugger users may also demand some kind
@@ -4940,10 +4973,10 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSFunction *fun;
     LOAD_FUNCTION(SLOTNO_LEN);
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
-    JSObject *obj = FUN_OBJECT(fun);
+    JS_ASSERT(!fun->isFlatClosure());
+    JSObject *obj = fun;
 
-    if (FUN_NULL_CLOSURE(fun)) {
+    if (fun->isNullClosure()) {
         obj = CloneFunctionObject(cx, fun, &regs.fp()->scopeChain(), true);
         if (!obj)
             goto error;
@@ -4992,12 +5025,12 @@ BEGIN_CASE(JSOP_LAMBDA)
     /* Load the specified function object literal. */
     JSFunction *fun;
     LOAD_FUNCTION(0);
-    JSObject *obj = FUN_OBJECT(fun);
+    JSObject *obj = fun;
 
     /* do-while(0) so we can break instead of using a goto. */
     do {
         JSObject *parent;
-        if (FUN_NULL_CLOSURE(fun)) {
+        if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
 
             if (obj->getParent() == parent) {
@@ -5055,7 +5088,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                         JSObject *callee;
 
                         if (IsFunctionObject(cref, &callee)) {
-                            JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+                            JSFunction *calleeFun = callee->getFunctionPrivate();
                             if (Native native = calleeFun->maybeNative()) {
                                 if ((iargc == 1 && native == array_sort) ||
                                     (iargc == 2 && native == str_replace)) {
@@ -5628,25 +5661,27 @@ END_CASE(JSOP_INSTANCEOF)
 
 BEGIN_CASE(JSOP_DEBUGGER)
 {
-    JSDebuggerHandler handler = cx->debugHooks->debuggerHandler;
-    if (handler) {
-        Value rval;
-        switch (handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData)) {
-        case JSTRAP_ERROR:
-            goto error;
-        case JSTRAP_CONTINUE:
-            break;
-        case JSTRAP_RETURN:
-            regs.fp()->setReturnValue(rval);
-            interpReturnOK = JS_TRUE;
-            goto forced_return;
-        case JSTRAP_THROW:
-            cx->setPendingException(rval);
-            goto error;
-        default:;
-        }
-        CHECK_INTERRUPT_HANDLER();
+    JSTrapStatus st = JSTRAP_CONTINUE;
+    Value rval;
+    if (JSDebuggerHandler handler = cx->debugHooks->debuggerHandler)
+        st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData);
+    if (st == JSTRAP_CONTINUE)
+        st = Debugger::onDebuggerStatement(cx, &rval);
+    switch (st) {
+      case JSTRAP_ERROR:
+        goto error;
+      case JSTRAP_CONTINUE:
+        break;
+      case JSTRAP_RETURN:
+        regs.fp()->setReturnValue(rval);
+        interpReturnOK = JS_TRUE;
+        goto forced_return;
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        goto error;
+      default:;
     }
+    CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_DEBUGGER)
 
@@ -6158,11 +6193,16 @@ END_CASE(JSOP_ARRAYPUSH)
         atoms = script->atomMap.vector;
 
         /* Call debugger throw hook if set. */
-        handler = cx->debugHooks->throwHook;
-        if (handler) {
+        if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;
-            switch (handler(cx, script, regs.pc, Jsvalify(&rval),
-                            cx->debugHooks->throwHookData)) {
+            JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
+            if (st == JSTRAP_CONTINUE) {
+                handler = cx->debugHooks->throwHook;
+                if (handler)
+                    st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->throwHookData);
+            }
+
+            switch (st) {
               case JSTRAP_ERROR:
                 cx->clearPendingException();
                 goto error;
@@ -6309,7 +6349,7 @@ END_CASE(JSOP_ARRAYPUSH)
     /*
      * At this point we are inevitably leaving an interpreted function or a
      * top-level script, and returning to one of:
-     * (a) an "out of line" call made through js_Invoke;
+     * (a) an "out of line" call made through Invoke;
      * (b) a js_Execute activation;
      * (c) a generator (SendToGenerator, jsiter.c).
      *

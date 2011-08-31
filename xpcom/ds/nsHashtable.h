@@ -66,7 +66,7 @@ class nsIObjectOutputStream;
 class nsHashtable;
 class nsStringKey;
 
-class NS_COM nsHashKey {
+class nsHashKey {
   protected:
     nsHashKey(void) {
 #ifdef DEBUG
@@ -109,11 +109,10 @@ class NS_COM nsHashKey {
 // Return values for nsHashtableEnumFunc
 enum {
     kHashEnumerateStop      = PR_FALSE,
-    kHashEnumerateNext      = PR_TRUE,
-    kHashEnumerateRemove    = 2
+    kHashEnumerateNext      = PR_TRUE
 };
 
-typedef PRIntn
+typedef PRBool
 (* nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* aClosure);
 
 typedef nsresult
@@ -128,7 +127,7 @@ typedef void
 typedef nsresult
 (* nsHashtableWriteDataFunc)(nsIObjectOutputStream *aStream, void *aData);
 
-class NS_COM nsHashtable {
+class nsHashtable {
   protected:
     // members  
     PRLock*         mLock;
@@ -163,7 +162,7 @@ class NS_COM nsHashtable {
 
 typedef void* (* nsHashtableCloneElementFunc)(nsHashKey *aKey, void *aData, void* aClosure);
 
-class NS_COM nsObjectHashtable : public nsHashtable {
+class nsObjectHashtable : public nsHashtable {
   public:
     nsObjectHashtable(nsHashtableCloneElementFunc cloneElementFun,
                       void* cloneElementClosure,
@@ -192,12 +191,10 @@ class NS_COM nsObjectHashtable : public nsHashtable {
 
 class nsISupports;
 
-class NS_COM nsSupportsHashtable
+class nsSupportsHashtable
   : private nsHashtable
 {
   public:
-    typedef PRBool (* EnumFunc) (nsHashKey *aKey, void *aData, void* aClosure);
-
     nsSupportsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE)
       : nsHashtable(aSize, threadSafe) {}
     ~nsSupportsHashtable();
@@ -214,7 +211,7 @@ class NS_COM nsSupportsHashtable
     nsISupports* Get(nsHashKey *aKey);
     PRBool Remove(nsHashKey *aKey, nsISupports **value = nsnull);
     nsHashtable *Clone();
-    void Enumerate(EnumFunc aEnumFunc, void* aClosure = NULL) {
+    void Enumerate(nsHashtableEnumFunc aEnumFunc, void* aClosure = NULL) {
         nsHashtable::Enumerate(aEnumFunc, aClosure);
     }
     void Reset();
@@ -231,7 +228,7 @@ class NS_COM nsSupportsHashtable
 
 #include "nsISupports.h"
 
-class NS_COM nsISupportsKey : public nsHashKey {
+class nsISupportsKey : public nsHashKey {
   protected:
     nsISupports* mKey;
     
@@ -337,7 +334,7 @@ class nsVoidKey : public nsHashKey {
 #include "nsString.h"
 
 // for null-terminated c-strings
-class NS_COM nsCStringKey : public nsHashKey {
+class nsCStringKey : public nsHashKey {
   public:
 
     // NB: when serializing, NEVER_OWN keys are deserialized as OWN.
@@ -371,7 +368,7 @@ class NS_COM nsCStringKey : public nsHashKey {
 };
 
 // for null-terminated unicode strings
-class NS_COM nsStringKey : public nsHashKey {
+class nsStringKey : public nsHashKey {
   public:
 
     // NB: when serializing, NEVER_OWN keys are deserialized as OWN.

@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549475
 -->
 <head>
   <title>Test for Bug 549475</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -48,9 +47,9 @@ function sanitizeValue(aType, aValue)
     case "password":
     case "search":
     case "tel":
-    case "email":
       return aValue.replace(/[\n\r]/g, "");
     case "url":
+    case "email":
       return aValue.replace(/[\n\r]/g, "").replace(/^\s+|\s+$/g, "");
     case "date":
     case "month":

@@ -497,10 +497,12 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
-#define JSPROP_SHORTID          0x100   /* set in JSPropertyDescriptor.attrs
+#define JSPROP_SHORTID          0x100   /* set in JS_DefineProperty attrs
                                            if getters/setters use a shortid */
+#define JSPROP_NATIVE_ACCESSORS 0x08    /* set in JSPropertyDescriptor.flags
+                                           if getters/setters are JSNatives */
 
-/* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
+/* Function flags, internal use only, returned by JS_GetFunctionFlags. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
@@ -2026,7 +2028,7 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
-#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 6)
+#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 7)
 #define JSCLASS_GLOBAL_FLAGS                                                  \
     (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT))
 

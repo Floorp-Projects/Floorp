@@ -41,6 +41,8 @@ function runTests()
     "sp-menu-resetContext": "resetContext",
     "sp-menu-errorConsole": "openErrorConsole",
     "sp-menu-webConsole": "openWebConsole",
+    "sp-menu-undo": "undo",
+    "sp-menu-redo": "redo",
   };
 
   let lastMethodCalled = null;

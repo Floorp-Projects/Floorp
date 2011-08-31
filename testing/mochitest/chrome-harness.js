@@ -215,7 +215,6 @@ function getFileListing(basePath, testPath, dir, srvScope)
     if (!testsDir.exists())
       return [];
 
-    // If we were passed a speComponents.interfacesfic file, run only that test.
     if (testsDir.isFile()) {
       if (fileNameRegexp.test(testsDir.leafName))
         var singlePath = basePath + '/' + testPath;

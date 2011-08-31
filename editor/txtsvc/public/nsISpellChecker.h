@@ -142,7 +142,8 @@ public:
   /**
    * Tells the spellchecker to use a specific dictionary.
    * @param aDictionary a string that is in the list returned
-   * by GetDictionaryList().
+   * by GetDictionaryList() or an empty string. If aDictionary is 
+   * empty string, spellchecker will be disabled.
    */
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary) = 0;
 };

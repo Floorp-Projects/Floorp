@@ -44,7 +44,6 @@
 #include "nsSize.h"
 #include "gfxTypes.h"
 #include "nsID.h"
-#include "gfxIFormats.h"
 #include "gfxContext.h"
 #include "gfxPattern.h"
 #include "gfxDrawable.h"

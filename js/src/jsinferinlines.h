@@ -455,7 +455,7 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
-    return script->nTypeSets + analyze::TotalSlots(script) + script->bindings.countUpvars();
+    return script->nTypeSets + analyze::TotalSlots(script);
 }
 
 /* static */ inline TypeSet *
@@ -491,13 +491,6 @@ TypeScript::LocalTypes(JSScript *script, unsigned i)
 }
 
 /* static */ inline TypeSet *
-TypeScript::UpvarTypes(JSScript *script, unsigned i)
-{
-    JS_ASSERT(i < script->bindings.countUpvars());
-    return script->types->typeArray() + script->nTypeSets + js::analyze::TotalSlots(script) + i;
-}
-
-/* static */ inline TypeSet *
 TypeScript::SlotTypes(JSScript *script, unsigned slot)
 {
     JS_ASSERT(slot < js::analyze::TotalSlots(script));
@@ -515,9 +508,8 @@ TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 
 struct AllocationSiteKey {
     JSScript *script;
-    uint32 offset : 23;
+    uint32 offset : 24;
     JSProtoKey kind : 8;
-    bool uncached : 1;
 
     static const uint32 OFFSET_LIMIT = (1 << 23);
 
@@ -546,7 +538,6 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JS
     AllocationSiteKey key;
     key.script = script;
     key.offset = offset;
-    key.uncached = script->isUncachedEval;
     key.kind = kind;
 
     if (!cx->compartment->types.allocationSiteTable)
@@ -614,7 +605,7 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
         return;
 
     /* Analyze the script regardless if -a was used. */
-    bool analyze = cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) && !script->isUncachedEval;
+    bool analyze = cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS);
 
     if (!ThisTypes(script)->hasType(type) || analyze) {
         AutoEnterTypeInference enter(cx);
@@ -678,21 +669,6 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
     if (cx->typeInferenceEnabled()) {
         Type type = GetValueType(cx, value);
         SetArgument(cx, script, arg, type);
-    }
-}
-
-/* static */ inline void
-TypeScript::SetUpvar(JSContext *cx, JSScript *script, unsigned upvar, const js::Value &value)
-{
-    if (!cx->typeInferenceEnabled() || !script->ensureHasTypes(cx))
-        return;
-    Type type = GetValueType(cx, value);
-    if (!UpvarTypes(script, upvar)->hasType(type)) {
-        AutoEnterTypeInference enter(cx);
-
-        InferSpew(ISpewOps, "externalType: setUpvar #%u %u: %s",
-                  script->id(), upvar, TypeString(type));
-        UpvarTypes(script, upvar)->addType(cx, type);
     }
 }
 
@@ -796,7 +772,7 @@ HashKey(T v)
  */
 template <class T, class U, class KEY>
 static U **
-HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
+HashSetInsertTry(JSCompartment *compartment, U **&values, unsigned &count, T key)
 {
     unsigned capacity = HashSetCapacity(count);
     unsigned insertpos = HashKey<T,KEY>(key) & (capacity - 1);
@@ -820,13 +796,9 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         return &values[insertpos];
     }
 
-    U **newValues = pool
-        ? ArenaArray<U*>(cx->compartment->pool, newCapacity)
-        : (U **) js::OffTheBooks::malloc_(newCapacity * sizeof(U*));
-    if (!newValues) {
-        cx->compartment->types.setPendingNukeTypes(cx);
+    U **newValues = ArenaArray<U*>(compartment->pool, newCapacity);
+    if (!newValues)
         return NULL;
-    }
     PodZero(newValues, newCapacity);
 
     for (unsigned i = 0; i < capacity; i++) {
@@ -838,8 +810,6 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         }
     }
 
-    if (values && !pool)
-        Foreground::free_(values);
     values = newValues;
 
     insertpos = HashKey<T,KEY>(key) & (newCapacity - 1);
@@ -854,7 +824,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
  */
 template <class T, class U, class KEY>
 static inline U **
-HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
+HashSetInsert(JSCompartment *compartment, U **&values, unsigned &count, T key)
 {
     if (count == 0) {
         JS_ASSERT(values == NULL);
@@ -867,12 +837,9 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         if (KEY::getKey(oldData) == key)
             return (U **) &values;
 
-        values = pool
-            ? ArenaArray<U*>(cx->compartment->pool, SET_ARRAY_SIZE)
-            : (U **) js::OffTheBooks::malloc_(SET_ARRAY_SIZE * sizeof(U*));
+        values = ArenaArray<U*>(compartment->pool, SET_ARRAY_SIZE);
         if (!values) {
             values = (U **) oldData;
-            cx->compartment->types.setPendingNukeTypes(cx);
             return NULL;
         }
         PodZero(values, SET_ARRAY_SIZE);
@@ -894,7 +861,7 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
         }
     }
 
-    return HashSetInsertTry<T,U,KEY>(cx, values, count, key, pool);
+    return HashSetInsertTry<T,U,KEY>(compartment, values, count, key);
 }
 
 /* Lookup an entry in a hash set, return NULL if it does not exist. */
@@ -928,12 +895,6 @@ HashSetLookup(U **values, unsigned count, T key)
     return NULL;
 }
 
-inline uint32
-TypeSet::baseObjectCount() const
-{
-    return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
-}
-
 inline bool
 TypeSet::hasType(Type type)
 {
@@ -964,8 +925,6 @@ TypeSet::setBaseObjectCount(uint32 count)
 inline void
 TypeSet::clearObjects()
 {
-    if (baseObjectCount() >= 2 && !intermediate())
-        Foreground::free_(objectSet);
     setBaseObjectCount(0);
     objectSet = NULL;
 }
@@ -999,8 +958,12 @@ TypeSet::addType(JSContext *cx, Type type)
         uint32 objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                                     (cx, objectSet, objectCount, object, intermediate());
-        if (!pentry || *pentry)
+                                     (cx->compartment, objectSet, objectCount, object);
+        if (!pentry) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
+        }
+        if (*pentry)
             return;
         *pentry = object;
 
@@ -1117,17 +1080,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline const char *
-TypeObject::name()
-{
-#ifdef DEBUG
-    return TypeIdString(name_);
-#else
-    return NULL;
-#endif
-}
-
-inline TypeObject::TypeObject(jsid name, JSObject *proto, bool function, bool unknown)
+inline TypeObject::TypeObject(JSObject *proto, bool function, bool unknown)
 {
     PodZero(this);
 
@@ -1137,11 +1090,7 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto, bool function, bool un
     if (unknown)
         flags |= OBJECT_FLAG_UNKNOWN_MASK;
 
-#ifdef DEBUG
-    this->name_ = name;
-#endif
-
-    InferSpew(ISpewOps, "newObject: %s", this->name());
+    InferSpew(ISpewOps, "newObject: %s", TypeObjectString(this));
 }
 
 inline uint32
@@ -1168,9 +1117,11 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 
     uint32 propertyCount = basePropertyCount();
     Property **pprop = HashSetInsert<jsid,Property,Property>
-                           (cx, propertySet, propertyCount, id, singleton != NULL);
-    if (!pprop)
+                           (cx->compartment, propertySet, propertyCount, id);
+    if (!pprop) {
+        cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
+    }
 
     if (!*pprop) {
         setBasePropertyCount(propertyCount);

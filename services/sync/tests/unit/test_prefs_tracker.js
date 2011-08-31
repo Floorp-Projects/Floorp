@@ -20,7 +20,7 @@ function run_test() {
 
     _("Engine's getChangedID() just returns the one GUID we have.");
     let changedIDs = engine.getChangedIDs();
-    let ids = [id for (id in changedIDs)];
+    let ids = Object.keys(changedIDs);
     do_check_eq(ids.length, 1);
     do_check_eq(ids[0], Utils.encodeBase64url(Services.appinfo.ID));
 
@@ -28,7 +28,7 @@ function run_test() {
     do_check_false(tracker.modified);
 
     _("No modified state, so no changed IDs.");
-    do_check_eq([id for (id in engine.getChangedIDs())].length, 0);
+    do_check_empty(engine.getChangedIDs());
 
     _("Initial score is 0");
     do_check_eq(tracker.score, 0);

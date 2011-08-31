@@ -1056,6 +1056,24 @@ public:
   }
 };
 
+class OverrideMimeTypeRunnable : public WorkerThreadProxySyncRunnable
+{
+  nsCString mMimeType;
+
+public:
+  OverrideMimeTypeRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
+                           const nsCString& aMimeType)
+  : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mMimeType(aMimeType)
+  { }
+
+  intN
+  MainThreadRun()
+  {
+    nsresult rv = mProxy->mXHR->OverrideMimeType(mMimeType);
+    return GetDOMExceptionCodeFromResult(rv);
+  }
+};
+
 } // anonymous namespace
 
 void
@@ -1621,6 +1639,36 @@ XMLHttpRequestPrivate::SetRequestHeader(JSContext* aCx, JSString* aHeader,
     new SetRequestHeaderRunnable(mWorkerPrivate, mProxy,
                                  NS_ConvertUTF16toUTF8(header),
                                  NS_ConvertUTF16toUTF8(value));
+  return runnable->Dispatch(aCx);
+}
+
+bool
+XMLHttpRequestPrivate::OverrideMimeType(JSContext* aCx, JSString* aMimeType)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (mCanceled) {
+    return false;
+  }
+
+  // We're supposed to throw if the state is not OPENED or HEADERS_RECEIVED. We
+  // can detect OPENED really easily but we can't detect HEADERS_RECEIVED in a
+  // non-racy way until the XHR state machine actually runs on this thread
+  // (bug 671047). For now we're going to let this work only if the Send()
+  // method has not been called.
+  if (!mProxy || SendInProgress()) {
+    ThrowDOMExceptionForCode(aCx, INVALID_STATE_ERR);
+    return false;
+  }
+
+  nsDependentJSString mimeType;
+  if (!mimeType.init(aCx, aMimeType)) {
+    return false;
+  }
+
+  nsRefPtr<OverrideMimeTypeRunnable> runnable =
+    new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, 
+                                 NS_ConvertUTF16toUTF8(mimeType));
   return runnable->Dispatch(aCx);
 }
 

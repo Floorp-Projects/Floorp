@@ -85,6 +85,9 @@ void
 MarkShape(JSTracer *trc, const Shape *shape, const char *name);
 
 void
+MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name);
+
+void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name);
 
 void

@@ -773,8 +773,14 @@ nsBinaryInputStream::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
         { 0xd6d04c36, 0x0fa4, 0x4db3,
           { 0xbe, 0x05, 0x4a, 0x18, 0x39, 0x71, 0x03, 0xe2 }};
 
+    // hackaround for bug 682031
+    static const nsIID oldURIiid3 =
+        { 0x12120b20, 0x0929, 0x40e9,
+          { 0x88, 0xcf, 0x6e, 0x08, 0x76, 0x6e, 0x8b, 0x23 }};
+
     if (iid.Equals(oldURIiid) ||
-        iid.Equals(oldURIiid2)) {
+        iid.Equals(oldURIiid2) ||
+        iid.Equals(oldURIiid3)) {
         const nsIID newURIiid = NS_IURI_IID;
         iid = newURIiid;
     }

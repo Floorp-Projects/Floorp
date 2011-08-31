@@ -54,8 +54,8 @@
 /**
  * thread-safe conversion routines that do not depend on uconv libraries.
  */
-NS_COM nsresult NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output);
-NS_COM nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output);
+nsresult NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output);
+nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output);
 
 /* 
  * This function indicates whether the character encoding used in the file
@@ -71,7 +71,7 @@ NS_COM nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &outp
  * and other platforms (e.g. OS2), it's never UTF-8.  
  */
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(ANDROID)
-NS_COM PRBool NS_IsNativeUTF8();
+PRBool NS_IsNativeUTF8();
 #else
 inline PRBool NS_IsNativeUTF8()
 {

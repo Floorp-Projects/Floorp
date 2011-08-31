@@ -82,6 +82,7 @@ html[dir=rtl] .favicon {
   width: 16px;
   height: 16px;
   background-image: -moz-image-rect(url("chrome://browser/skin/tabview/close.png"), 0, 16, 16, 0);
+  background-repeat: no-repeat;
 }
 
 .close:hover {
@@ -236,6 +237,17 @@ html[dir=rtl] .groupItem.activeGroupItem {
 
 .groupItem .close {
   z-index: 10;
+  top: 0px;
+  right: 0px;
+  width: 22px;
+  height: 22px;
+  background-position: bottom left;
+}
+
+html[dir=rtl] .groupItem .close {
+  right: auto;
+  left: 0px;
+  background-position: bottom right;
 }
 
 .dragRegion {

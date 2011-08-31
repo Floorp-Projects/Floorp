@@ -944,6 +944,31 @@ public:
    */
   nsIContent* GetEditingHost();
 
+  /**
+   * Determing language. Look at the nearest ancestor element that has a lang
+   * attribute in the XML namespace or is an HTML element and has a lang in
+   * no namespace attribute.
+   */
+  void GetLang(nsAString& aResult) const {
+    for (const nsIContent* content = this; content; content = content->GetParent()) {
+      if (content->GetAttrCount() > 0) {
+        // xml:lang has precedence over lang on HTML elements (see
+        // XHTML1 section C.7).
+        PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
+                                          aResult);
+        if (!hasAttr && content->IsHTML()) {
+          hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
+                                     aResult);
+        }
+        NS_ASSERTION(hasAttr || aResult.IsEmpty(),
+                     "GetAttr that returns false should not make string non-empty");
+        if (hasAttr) {
+          return;
+        }
+      }
+    }
+  }
+
   // Overloaded from nsINode
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
@@ -1001,29 +1026,5 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
-
-// Some cycle-collecting helper macros for nsIContent subclasses
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER \
-  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {           \
-    nsContentUtils::TraverseListenerManager(tmp, cb);     \
-  }
-
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA \
-  if (tmp->HasProperties()) {                      \
-    nsNodeUtils::TraverseUserData(tmp, cb);        \
-  }
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER \
-  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {         \
-    nsContentUtils::RemoveListenerManager(tmp);         \
-    tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);          \
-  }
-
-#define NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA \
-  if (tmp->HasProperties()) {                    \
-    nsNodeUtils::UnlinkUserData(tmp);            \
-  }
-
 
 #endif /* nsIContent_h___ */

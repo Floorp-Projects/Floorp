@@ -71,6 +71,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include <stdlib.h>
+#include "nsIMemoryReporter.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
@@ -91,6 +92,28 @@ NS_IMPL_CYCLE_COLLECTION_3(mozHunspell,
                            mEncoder,
                            mDecoder)
 
+// Memory reporting stuff
+static PRInt64 gHunspellAllocatedSize = 0;
+
+void HunspellReportMemoryAllocation(void* ptr) {
+  gHunspellAllocatedSize += moz_malloc_usable_size(ptr);
+}
+void HunspellReportMemoryDeallocation(void* ptr) {
+  gHunspellAllocatedSize -= moz_malloc_usable_size(ptr);
+}
+static PRInt64 HunspellGetCurrentAllocatedSize() {
+  return gHunspellAllocatedSize;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(Hunspell,
+    "explicit/spell-check",
+    KIND_HEAP,
+    UNITS_BYTES,
+    HunspellGetCurrentAllocatedSize,
+    "Memory used by the Hunspell spell checking engine.  This number accounts "
+    "for the memory in use by Hunspell's internal data structures."
+)
+
 nsresult
 mozHunspell::Init()
 {
@@ -105,6 +128,9 @@ mozHunspell::Init()
     obs->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
+  mHunspellReporter = new NS_MEMORY_REPORTER_NAME(Hunspell);
+  NS_RegisterMemoryReporter(mHunspellReporter);
+
   return NS_OK;
 }
 
@@ -112,6 +138,8 @@ mozHunspell::~mozHunspell()
 {
   mPersonalDictionary = nsnull;
   delete mHunspell;
+
+  NS_UnregisterMemoryReporter(mHunspellReporter);
 }
 
 /* attribute wstring dictionary; */

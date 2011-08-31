@@ -269,6 +269,13 @@ CallArgsFromSp(uintN argc, Value *sp)
 
 /*****************************************************************************/
 
+/*
+ * For calls to natives, the InvokeArgsGuard object provides a record of the
+ * call for the debugger's callstack. For this to work, the InvokeArgsGuard
+ * record needs to know when the call is actually active (because the
+ * InvokeArgsGuard can be pushed long before and popped long after the actual
+ * call, during which time many stack-observing things can happen).
+ */
 class CallArgsList : public CallArgs
 {
     friend class StackSegment;
@@ -1456,11 +1463,19 @@ class StackSpace
     friend class ContextStack;
     friend class StackFrame;
 
+    /*
+     * Except when changing compartment (see pushDummyFrame), the 'dest'
+     * parameter of ensureSpace is cx->compartment. Ideally, we'd just pass
+     * this directly (and introduce a helper that supplies cx->compartment when
+     * no 'dest' is given). For some compilers, this really hurts performance,
+     * so, instead, a trivially sinkable magic constant is used to indicate
+     * that dest should be cx->compartment.
+     */
+    static const size_t CX_COMPARTMENT = 0xc;
+
     inline bool ensureSpace(JSContext *cx, MaybeReportError report,
                             Value *from, ptrdiff_t nvals,
-                            JSCompartment *dest) const;
-    inline bool ensureSpace(JSContext *cx, MaybeReportError report,
-                            Value *from, ptrdiff_t nvals) const;
+                            JSCompartment *dest = (JSCompartment *)CX_COMPARTMENT) const;
     JS_FRIEND_API(bool) ensureSpaceSlow(JSContext *cx, MaybeReportError report,
                                         Value *from, ptrdiff_t nvals,
                                         JSCompartment *dest) const;
@@ -1566,9 +1581,7 @@ class ContextStack
     enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
     Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
                        MaybeExtend extend, bool *pushedSeg,
-                       JSCompartment *dest);
-    Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
-                       MaybeExtend extend, bool *pushedSeg);
+                       JSCompartment *dest = (JSCompartment *)StackSpace::CX_COMPARTMENT);
 
     inline StackFrame *
     getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
@@ -1662,7 +1675,7 @@ class ContextStack
      * function will change the compartment to 'scopeChain.compartment()' and
      * push a dummy frame for 'scopeChain'. On failure, nothing is changed.
      */
-    bool pushDummyFrame(JSContext *cx, JSObject &scopeChain, DummyFrameGuard *dfg);
+    bool pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg);
 
     /*
      * An "inline frame" may only be pushed from within the top, active
@@ -1852,7 +1865,8 @@ class FrameRegsIter
     }
 
   public:
-    FrameRegsIter(JSContext *cx) : iter_(cx) { settle(); }
+    FrameRegsIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : iter_(cx, opt) { settle(); }
 
     bool done() const { return iter_.done(); }
     FrameRegsIter &operator++() { ++iter_; settle(); return *this; }

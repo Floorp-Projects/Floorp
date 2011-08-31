@@ -83,7 +83,5 @@ CSRCS = \
 	pkix_pl_ocspcertid.c \
 	$(NULL)
 
-REQUIRES = dbm
-
 LIBRARY_NAME = pkixpki
 

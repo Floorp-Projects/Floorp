@@ -44,6 +44,7 @@ CSRCS = \
 	baddbdir.c \
 	conflict.c \
 	dertimetest.c \
+	encodeinttest.c \
 	nonspr10.c \
 	remtest.c \
 	$(NULL)

@@ -291,17 +291,6 @@ static JSFunctionSpec gGlobalFun[] = {
     {"atob",    Atob,   1,0},
     {"btoa",    Btoa,   1,0},
     {"File",    File,   1,JSFUN_CONSTRUCTOR},
-#ifdef MOZ_CALLGRIND
-    {"startCallgrind",  js_StartCallgrind, 0,0},
-    {"stopCallgrind",   js_StopCallgrind,  0,0},
-    {"dumpCallgrind",   js_DumpCallgrind,  1,0},
-#endif
-#ifdef MOZ_VTUNE
-    {"startVtune",      js_StartVtune,     1,0},
-    {"stopVtune",       js_StopVtune,      0,0},
-    {"pauseVtune",      js_PauseVtune,     0,0},
-    {"resumeVtune",     js_ResumeVtune,    0,0},
-#endif
 #ifdef MOZ_TRACEVIS
     {"initEthogram",     js_InitEthogram,      0,0},
     {"shutdownEthogram", js_ShutdownEthogram,  0,0},
@@ -1357,7 +1346,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                 logBuffer.Append(bytes.ptr());
             logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
-                LOG(("%s] from %s\n", PromiseFlatCString(logBuffer).get(),
+                LOG(("%s] from %s\n", logBuffer.get(),
                                       PromiseFlatCString(aLocation).get()));
             }
 #endif

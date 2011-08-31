@@ -220,6 +220,15 @@ static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
   if (aRect.y - screenBounds.y + aRect.height > screenBounds.height) {
     aRect.y += screenBounds.height - (aRect.y - screenBounds.y + aRect.height);
   }
+
+  // If the left/top edge of the window is off the screen in either direction,
+  // then set the window to start at the left/top edge of the screen.
+  if (aRect.x < screenBounds.x || aRect.x > (screenBounds.x + screenBounds.width)) {
+    aRect.x = screenBounds.x;
+  }
+  if (aRect.y < screenBounds.y || aRect.y > (screenBounds.y + screenBounds.height)) {
+    aRect.y = screenBounds.y;
+  }
 }
 
 // Some applications like Camino use native popup windows
@@ -248,8 +257,29 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
 
+  // Find the screen that overlaps aRect the most,
+  // if none are found default to the mainScreen.
+  NSScreen *targetScreen = [NSScreen mainScreen];
+  NSArray *screens = [NSScreen screens];
+  if (screens) {
+    int largestIntersectArea = 0;
+    int i = [screens count];
+    while (i--) {
+      NSScreen *screen = [screens objectAtIndex:i];
+      nsIntRect screenBounds(nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
+
+      nsIntRegion intersect;
+      intersect.And(screenBounds, aRect);
+      int area = intersect.GetBounds().width * intersect.GetBounds().height;
+
+      if (area > largestIntersectArea) {
+        largestIntersectArea = area;
+        targetScreen = screen;
+      }
+    }
+  }
   nsIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, [NSScreen mainScreen]);
+  FitRectToVisibleAreaForScreen(newBounds, targetScreen);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;
@@ -268,8 +298,12 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
                                    mBorderStyle, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mWindowType == eWindowType_popup)
+  if (mWindowType == eWindowType_popup) {
+    if (aInitData->mIsDragPopup) {
+      [mWindow setIgnoresMouseEvents:YES];
+    }
     return CreatePopupContentView(newBounds, aHandleEventFunction, aContext, aAppShell, aToolkit);
+  }
 
   return NS_OK;
 
@@ -983,7 +1017,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
+  NSPoint coord = {static_cast<CGFloat>(aX), nsCocoaUtils::FlippedScreenY(aY)};
   [mWindow setFrameTopLeftPoint:coord];
 
   return NS_OK;
@@ -2301,6 +2335,14 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
       // Re-layout our contents.
       geckoWindow->ReportSizeEvent();
     }
+
+    // Resizing the content area causes a reflow which would send a synthesized
+    // mousemove event to the old mouse position relative to the top left
+    // corner of the content area. But the mouse has shifted relative to the
+    // content area, so that event would have wrong position information. So
+    // we'll send a mouse move event with the correct new position.
+    ChildViewMouseTracker::ResendLastMouseMoveEvent();
+
     [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
   }
 }
@@ -2417,11 +2459,14 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
             nil],
           nil);
 
-  // At some window widths the call to CUIDraw doesn't draw the top pixel strip.
-  // We don't want to have a flickering transparent line, so we overdraw it.
-  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
-  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
-                                         aTitlebarRect.size.width, 1));
+  if (nsToolkit::OnLionOrLater()) {
+    // On Lion the call to CUIDraw doesn't draw the top pixel strip at some
+    // window widths. We don't want to have a flickering transparent line, so
+    // we overdraw it.
+    CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
+    CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
+                                           aTitlebarRect.size.width, 1));
+  }
 }
 
 // Pattern draw callback for standard titlebar gradients and solid titlebar colors
@@ -2429,15 +2474,7 @@ static void
 TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 {
   ToolbarWindow *window = (ToolbarWindow*)aInfo;
-
-  // Remember: this context is NOT flipped, so the origin is in the bottom left.
-  float titlebarWidth = [window frame].size.width;
-  float titlebarHeight = [window titlebarHeight];
-  float titlebarOrigin = [window frame].size.height - titlebarHeight;
-  NSRect titlebarRect = NSMakeRect(0, titlebarOrigin, titlebarWidth, titlebarHeight);
-
-  [NSGraphicsContext saveGraphicsState];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
+  NSRect titlebarRect = [window titlebarRect];
 
   if ([window drawsContentsIntoWindowFrame]) {
     NSView* view = [[[window contentView] subviews] lastObject];
@@ -2446,12 +2483,12 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
 
     // Gecko drawing assumes flippedness, but the current context isn't flipped
     // (because we're painting into the window's border view, which is not a
-    // ChildView, so it isn't flpped).
+    // ChildView, so it isn't flipped).
     // So we need to set a flip transform.
     CGContextScaleCTM(aContext, 1.0f, -1.0f);
     CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
 
-    NSRect flippedTitlebarRect = NSMakeRect(0, 0, titlebarWidth, titlebarHeight);
+    NSRect flippedTitlebarRect = { NSZeroPoint, titlebarRect.size };
     [(ChildView*)view drawRect:flippedTitlebarRect inTitlebarContext:aContext];
   } else {
     BOOL isMain = [window isMainWindow];
@@ -2462,12 +2499,13 @@ TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
                          [window unifiedToolbarHeight], isMain);
     } else {
       // If the titlebar color is not nil, just set and draw it normally.
+      [NSGraphicsContext saveGraphicsState];
+      [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
       [titlebarColor set];
       NSRectFill(titlebarRect);
+      [NSGraphicsContext restoreGraphicsState];
     }
   }
-
-  [NSGraphicsContext restoreGraphicsState];
 }
 
 - (void)setFill

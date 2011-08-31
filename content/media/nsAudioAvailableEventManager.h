@@ -63,7 +63,7 @@ public:
 
   // Queues audio sample data and re-packages it into equal sized
   // framebuffers.  Called from the audio thread.
-  void QueueWrittenAudioData(SoundDataValue* aAudioData,
+  void QueueWrittenAudioData(AudioDataValue* aAudioData,
                              PRUint32 aAudioDataLength,
                              PRUint64 aEndTimeSampleOffset);
 

@@ -44,6 +44,7 @@
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
+#include "nsAutoPtr.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
@@ -81,8 +82,7 @@ protected:
   virtual void InitNative(nsIWidget *aParent,
                           const nsAString& aTitle,
                           PRInt16 aMode);
-
-
+  static void GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath);
   void GetFilterListArray(nsString& aFilterList);
 
   nsCOMPtr<nsIWidget>    mParentWidget;
@@ -97,6 +97,22 @@ protected:
   static char            mLastUsedDirectory[];
   nsString               mUnicodeFile;
   static PRUnichar      *mLastUsedUnicodeDirectory;
+};
+
+// The constructor will obtain the working path, the destructor
+// will set the working path back to what it used to be.
+class AutoRestoreWorkingPath
+{
+public:
+  AutoRestoreWorkingPath();
+  ~AutoRestoreWorkingPath();
+  inline bool HasWorkingPath() const
+  {
+    return mWorkingPath != NULL;
+  }
+
+private:
+  nsAutoArrayPtr<PRUnichar> mWorkingPath;
 };
 
 #endif // nsFilePicker_h__

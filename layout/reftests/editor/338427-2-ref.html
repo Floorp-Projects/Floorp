@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function init() {
+    var editor = document.getElementById('editor');
+    editor.addEventListener("focus", function() {
+        window.setTimeout(function() {
+            document.documentElement.className = '';
+        }, 0);
+    }, false);
+    editor.focus();
+}
+</script>
+<body onload="init()">
+    <div id="editor" lang="testing-XX" contenteditable="true" spellcheck="false">strangeimpossibleword</div>
+</body>
+</html>
+

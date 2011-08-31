@@ -148,6 +148,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
     jGetIconForExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
     jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -538,7 +539,7 @@ AndroidBridge::SetClipboardText(const nsAString& aText)
     AutoLocalJNIFrame jniFrame;
     jstring jstr = mJNIEnv->NewString(nsPromiseFlatString(aText).get(),
                                       aText.Length());
-    mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, jstr);
 }
 
 bool
@@ -559,7 +560,7 @@ void
 AndroidBridge::EmptyClipboard()
 {
     ALOG_BRIDGE("AndroidBridge::EmptyClipboard");
-    mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetClipboardText, nsnull);
 }
 
 void
@@ -753,6 +754,13 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSiz
         memcpy(aBuf, elements, bufSize);
 
     mJNIEnv->ReleaseByteArrayElements(arr, elements, 0);
+}
+
+bool
+AndroidBridge::GetShowPasswordSetting()
+{
+    ALOG_BRIDGE("AndroidBridge::GetShowPasswordSetting");
+    return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass, jGetShowPasswordSetting);
 }
 
 void
@@ -998,4 +1006,3 @@ AndroidBridge::UnlockBitmap(jobject bitmap)
     if ((err = AndroidBitmap_unlockPixels(JNI(), bitmap)) != 0)
         ALOG_BRIDGE("AndroidBitmap_unlockPixels failed! (error %d)", err);
 }
-
