@@ -142,6 +142,7 @@ COMPONENT_LIBS += \
 	composer \
 	jetpack_s \
 	telemetry \
+	jsdebugger \
 	storagecomps \
 	$(NULL)
 

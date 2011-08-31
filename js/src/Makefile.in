@@ -124,7 +124,6 @@ CPPSRCS		= \
 		jshash.cpp \
 		jsinfer.cpp \
 		jsinterp.cpp \
-		jsinvoke.cpp \
 		jsiter.cpp \
 		jslock.cpp \
 		jslog2.cpp \
