@@ -92,6 +92,10 @@
     return NS_OK; \
   } else
 
+// Number of changes to handle separately in a batch.  If more changes are
+// requested the node will switch to full refresh mode.
+#define MAX_BATCH_CHANGES_BEFORE_REFRESH 5
+
 // Emulate string comparison (used for sorting) for PRTime and int.
 inline PRInt32 ComparePRTime(PRTime a, PRTime b)
 {
@@ -2293,7 +2297,8 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
                                   PR_TRUE, EmptyCString(), nsnull),
   mLiveUpdate(QUERYUPDATE_COMPLEX_WITH_BOOKMARKS),
   mHasSearchTerms(PR_FALSE),
-  mContentsValid(PR_FALSE)
+  mContentsValid(PR_FALSE),
+  mBatchChanges(0)
 {
 }
 
@@ -2305,7 +2310,8 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   PR_TRUE, EmptyCString(), aOptions),
   mQueries(aQueries),
-  mContentsValid(PR_FALSE)
+  mContentsValid(PR_FALSE),
+  mBatchChanges(0)
 {
   NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
 
@@ -2326,7 +2332,8 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   PR_TRUE, EmptyCString(), aOptions),
   mQueries(aQueries),
-  mContentsValid(PR_FALSE)
+  mContentsValid(PR_FALSE),
+  mBatchChanges(0)
 {
   NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
 
@@ -2867,6 +2874,8 @@ nsNavHistoryQueryResultNode::OnEndUpdateBatch()
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  mBatchChanges = 0;
   return NS_OK;
 }
 
@@ -2885,6 +2894,15 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
                                      const nsACString& aGUID,
                                      PRUint32* aAdded)
 {
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+  if (result->mBatchInProgress &&
+      ++mBatchChanges > MAX_BATCH_CHANGES_BEFORE_REFRESH) {
+    nsresult rv = Refresh();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
@@ -3010,6 +3028,15 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
     return NS_OK; // no updates in tree state
   }
 
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+  if (result->mBatchInProgress &&
+      ++mBatchChanges > MAX_BATCH_CHANGES_BEFORE_REFRESH) {
+    nsresult rv = Refresh();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
   // compute what the new title should be
   NS_ConvertUTF16toUTF8 newTitle(aPageTitle);
 
@@ -3082,6 +3109,15 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI* aURI,
                                          const nsACString& aGUID,
                                          PRUint16 aReason)
 {
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_STATE(result);
+  if (result->mBatchInProgress &&
+      ++mBatchChanges > MAX_BATCH_CHANGES_BEFORE_REFRESH) {
+    nsresult rv = Refresh();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
   if (IsContainersQuery()) {
     // Incremental updates of query returning queries are pretty much
     // complicated.  In this case it's possible one of the child queries has
