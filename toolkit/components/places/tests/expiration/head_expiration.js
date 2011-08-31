@@ -128,3 +128,20 @@ function clearHistoryEnabled() {
   }
   catch(ex) {}
 }
+
+/**
+ * Returns a PRTime in the past usable to add expirable visits.
+ *
+ * @note Expiration ignores any visit added in the last 7 days, but it's
+ *       better be safe against DST issues, by going back one day more.
+ */
+function getExpirablePRTime() {
+  let dateObj = new Date();
+  // Normalize to midnight
+  dateObj.setHours(0);
+  dateObj.setMinutes(0);
+  dateObj.setSeconds(0);
+  dateObj.setMilliseconds(0);
+  dateObj = new Date(dateObj.getTime() - 8 * 86400000);
+  return dateObj.getTime() * 1000;
+}

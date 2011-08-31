@@ -1,6 +1,6 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r686
+Current revision: r740
 
 == Applied local patches ==
 
@@ -8,15 +8,7 @@ In this order:
   angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
   angle-renaming.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
-  angle-amap-arev-fix.patch - plain bug fix, this is ANGLE r699
-  angle-r702.patch - this is ANGLE r702
   angle-limit-identifiers-to-250-chars.patch - see bug 675625
-  angle-r712.patch - this is ANGLE r712
-  angle-win64.patch - Win64 support. This is ANGLE r697
-  angle-r707.patch - this is ANGLE r707 for Win64 bug fix
-  angle-r719.patch - this is ANGLE r719
-  angle-r711.patch - this is ANGLE r711
-  fix-angle-surface-assert.patch - this is ANGLE r739
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

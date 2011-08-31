@@ -42,7 +42,7 @@ size_t ExecutableAllocator::determinePageSize()
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
     void *allocation = VirtualAlloc(0, n, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    ExecutablePool::Allocation alloc = {reinterpret_cast<char*>(allocation), n};
+    ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }
 

@@ -22,13 +22,7 @@ public:
     MapLongVariableNames(TMap<TString, TString>& varyingLongNameMap);
 
     virtual void visitSymbol(TIntermSymbol*);
-    virtual void visitConstantUnion(TIntermConstantUnion*);
-    virtual bool visitBinary(Visit, TIntermBinary*);
-    virtual bool visitUnary(Visit, TIntermUnary*);
-    virtual bool visitSelection(Visit, TIntermSelection*);
-    virtual bool visitAggregate(Visit, TIntermAggregate*);
     virtual bool visitLoop(Visit, TIntermLoop*);
-    virtual bool visitBranch(Visit, TIntermBranch*);
 
 private:
     TString mapVaryingLongName(const TString& name);
