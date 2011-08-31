@@ -2017,8 +2017,7 @@ TypeCompartment::setPendingNukeTypes(JSContext *cx)
 void
 TypeCompartment::nukeTypes(JSContext *cx)
 {
-    JSCompartment *compartment = cx->compartment;
-    JS_ASSERT(this == &compartment->types);
+    JS_ASSERT(this == &cx->compartment->types);
 
     /*
      * This is the usual response if we encounter an OOM while adding a type
@@ -2060,7 +2059,8 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
 #ifdef JS_METHODJIT
 
-    mjit::ExpandInlineFrames(cx->compartment);
+    JSCompartment *compartment = cx->compartment;
+    mjit::ExpandInlineFrames(compartment);
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
     for (JSCList *cursor = compartment->scripts.next;

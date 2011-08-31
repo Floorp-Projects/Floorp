@@ -1,9 +1,10 @@
 # HG changeset patch
-# Parent a0dd1332c0e6ebaf429f9a3732b8901f9e46cde0
+# Parent 96359f46b01fdb37e791f564495e8b2755a05233
+
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
-@@ -72,17 +72,17 @@ CPPSRCS = \
+@@ -73,17 +73,17 @@ CPPSRCS = \
          parseConst.cpp \
          ParseHelper.cpp \
          PoolAlloc.cpp \
@@ -11,44 +12,20 @@ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
          RemoveTree.cpp \
          ShaderLang.cpp \
          SymbolTable.cpp \
- 	VariableInfo.cpp \
--	debug.cpp \
-+	compilerdebug.cpp \
- 	ossource_nspr.cpp \
- 	util.cpp \
- 	ValidateLimitations.cpp \
- 	ForLoopUnroll.cpp \
- 	MapLongVariableNames.cpp \
- 	$(NULL)
+         VariableInfo.cpp \
+-        debug.cpp \
++        compilerdebug.cpp \
+         ossource_nspr.cpp \
+         util.cpp \
+         ValidateLimitations.cpp \
+         ForLoopUnroll.cpp \
+         MapLongVariableNames.cpp \
+         BuiltInFunctionEmulator.cpp \
+         $(NULL)
  
- # flex/yacc generated files
-diff --git a/gfx/angle/src/build_angle.gyp b/gfx/angle/src/build_angle.gyp
---- a/gfx/angle/src/build_angle.gyp
-+++ b/gfx/angle/src/build_angle.gyp
-@@ -17,18 +17,18 @@
-         '.',
-         '../include',
-       ],
-       'sources': [
-         'compiler/BaseTypes.h',
-         'compiler/Common.h',
-         'compiler/Compiler.cpp',
-         'compiler/ConstantUnion.h',
--        'compiler/debug.cpp',
--        'compiler/debug.h',
-+        'compiler/compilerdebug.cpp',
-+        'compiler/compilerdebug.h',
-         'compiler/glslang.h',
-         'compiler/glslang_lex.cpp',
-         'compiler/glslang_tab.cpp',
-         'compiler/glslang_tab.h',
-         'compiler/InfoSink.cpp',
-         'compiler/InfoSink.h',
-         'compiler/Initialize.cpp',
-         'compiler/Initialize.h',
-diff --git a/gfx/angle/src/compiler/OutputGLSL.cpp b/gfx/angle/src/compiler/OutputGLSL.cpp
---- a/gfx/angle/src/compiler/OutputGLSL.cpp
-+++ b/gfx/angle/src/compiler/OutputGLSL.cpp
+diff --git a/gfx/angle/src/compiler/OutputGLSLBase.cpp b/gfx/angle/src/compiler/OutputGLSLBase.cpp
+--- a/gfx/angle/src/compiler/OutputGLSLBase.cpp
++++ b/gfx/angle/src/compiler/OutputGLSLBase.cpp
 @@ -1,16 +1,16 @@
  //
  // Copyright (c) 2002-2011 The ANGLE Project Authors. All rights reserved.
@@ -56,7 +33,7 @@ diff --git a/gfx/angle/src/compiler/OutputGLSL.cpp b/gfx/angle/src/compiler/Outp
  // found in the LICENSE file.
  //
  
- #include "compiler/OutputGLSL.h"
+ #include "compiler/OutputGLSLBase.h"
 -#include "compiler/debug.h"
 +#include "compiler/compilerdebug.h"
  
@@ -157,7 +134,7 @@ diff --git a/gfx/angle/src/compiler/compilerdebug.h b/gfx/angle/src/compiler/com
 diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
 --- a/gfx/angle/src/compiler/osinclude.h
 +++ b/gfx/angle/src/compiler/osinclude.h
-@@ -30,17 +30,17 @@
+@@ -32,17 +32,17 @@
  #include <windows.h>
  #elif defined(ANGLE_OS_POSIX)
  #include <pthread.h>

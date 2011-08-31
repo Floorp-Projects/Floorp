@@ -85,7 +85,8 @@ if (!gl) {
       testPassed("Successfully enabled OES_texture_float extension");
       runTextureCreationTest(testProgram, true);
       runRenderTargetTest(testProgram);
-      runUniqueObjectTest();
+      // bug 683216, see the discussion in bug 630672
+      // runUniqueObjectTest();
   }
 }
 

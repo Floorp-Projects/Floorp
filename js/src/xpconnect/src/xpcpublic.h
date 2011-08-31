@@ -213,7 +213,9 @@ struct CompartmentStats
 
     PRInt64 scripts;
 #ifdef JS_METHODJIT
-    PRInt64 mjitCode;
+    PRInt64 mjitCodeMethod;
+    PRInt64 mjitCodeRegexp;
+    PRInt64 mjitCodeUnused;
     PRInt64 mjitData;
 #endif
 #ifdef JS_TRACER

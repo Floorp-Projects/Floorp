@@ -2343,16 +2343,14 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     // Transforms:
     nsCOMPtr<nsIDOMSVGAnimatedTransformList> transformList;
     if (aName == nsGkAtoms::transform) {
-      nsCOMPtr<nsIDOMSVGTransformable> transformable(
-              do_QueryInterface(static_cast<nsIContent*>(this)));
+      nsCOMPtr<nsIDOMSVGTransformable> transformable(do_QueryObject(this));
       if (!transformable)
         return nsnull;
       nsresult rv = transformable->GetTransform(getter_AddRefs(transformList));
       NS_ENSURE_SUCCESS(rv, nsnull);
     }
     if (aName == nsGkAtoms::gradientTransform) {
-      nsCOMPtr<nsIDOMSVGGradientElement> gradientElement(
-              do_QueryInterface(static_cast<nsIContent*>(this)));
+      nsCOMPtr<nsIDOMSVGGradientElement> gradientElement(do_QueryObject(this));
       if (!gradientElement)
         return nsnull;
 
@@ -2360,8 +2358,7 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
       NS_ENSURE_SUCCESS(rv, nsnull);
     }
     if (aName == nsGkAtoms::patternTransform) {
-      nsCOMPtr<nsIDOMSVGPatternElement> patternElement(
-              do_QueryInterface(static_cast<nsIContent*>(this)));
+      nsCOMPtr<nsIDOMSVGPatternElement> patternElement(do_QueryObject(this));
       if (!patternElement)
         return nsnull;
 

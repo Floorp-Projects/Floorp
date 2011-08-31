@@ -50,6 +50,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
+#include "assembler/jit/ExecutableAllocator.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -176,10 +177,16 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
     return true;
 }
 
-size_t
-JSCompartment::getMjitCodeSize() const
+void
+JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const
 {
-    return jaegerCompartment_ ? jaegerCompartment_->execAlloc()->getCodeSize() : 0;
+    if (jaegerCompartment_) {
+        jaegerCompartment_->execAlloc()->getCodeStats(method, regexp, unused);
+    } else {
+        method = 0;
+        regexp = 0;
+        unused = 0;
+    }
 }
 #endif
 
@@ -234,8 +241,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     /*
      * Wrappers should really be parented to the wrapped parent of the wrapped
      * object, but in that case a wrapped global object would have a NULL
-     * parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead
-,
+     * parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead,
      * we parent all wrappers to the global object in their home compartment.
      * This loses us some transparency, and is generally very cheesy.
      */
@@ -585,6 +591,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     }
 # endif
 
+    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
+
 #if defined JS_METHODJIT && defined JS_MONOIC
 
     /*
@@ -595,7 +603,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
      * for compartments which currently have active stack frames.
      */
     uint32 counter = 1;
-    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
     if (discardScripts)
         hasDebugModeCodeToDrop = false;
 

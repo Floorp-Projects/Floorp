@@ -1,0 +1,73 @@
+Name
+
+    ANGLE_texture_compression_dxt
+
+Name Strings
+
+    GL_ANGLE_texture_compression_dxt3
+    GL_ANGLE_texture_compression_dxt5
+
+Contributors
+
+    Gregg Tavares, Google Inc.
+    Daniel Koch, TransGaming Inc.
+    Al Patrick, Google Inc.
+
+Contacts
+
+    Gregg Tavares, Google Inc. (gman 'at' google 'dot' com)
+
+Status
+
+    Implemented in ANGLE ES2
+
+Version
+
+    Last Modified Date: Aug 2, 2011
+
+Number
+
+    OpenGL ES Extension #..
+
+Dependencies
+
+    Requires OpenGL ES 2.0.
+
+    The extension is written against the OpenGL ES 2.0 specification.
+
+Overview
+
+    These extensions are exactly the same as EXT_texture_compression_dxt1
+    except they expose the formats COMPRESSED_RGBA_S3TC_DXT3_ANGLE and
+    COMPRESSED_RGBA_S3TC_DXT5_ANGLE respectively.
+
+    See EXT_texture_compression_dxt1 for the full list of changes. Also
+    see EXT_texture_compression_s3tc for a description of the formats.
+
+New Procedures and Functions
+
+    None.
+
+New Types
+
+    None.
+
+New Tokens
+
+    Accepted by the <internalformat> parameter of CompressedTexImage2D
+    and the <format> parameter of CompressedTexSubImage2D:
+
+    COMPRESSED_RGBA_S3TC_DXT3_ANGLE                   0x83F2
+    COMPRESSED_RGBA_S3TC_DXT5_ANGLE                   0x83F3
+
+Errors
+
+    None.
+
+New State
+
+    None.
+
+Revision History
+
+

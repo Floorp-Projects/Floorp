@@ -19,6 +19,13 @@
 #include "base/string_tokenizer.h"
 #include "base/string_util.h"
 
+#ifdef MOZ_MEMORY_ANDROID
+extern "C" {
+extern void _malloc_prefork(void);
+extern void _malloc_postfork(void);
+}
+#endif
+
 namespace {
 
 enum ParsingState {
@@ -44,7 +51,17 @@ bool LaunchApp(const std::vector<std::string>& argv,
                const environment_map& env_vars_to_set,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
+#ifdef MOZ_MEMORY_ANDROID
+  /* We specifically don't call pthread_atfork in jemalloc because it is not
+    available in bionic until 2.3. However without it, jemalloc could
+    potentially deadlock, when stl allocates memory through jemalloc, after
+    fork and before execvp. Therefore, we must manually inform jemalloc here */
+  ::_malloc_prefork();
+#endif
   pid_t pid = fork();
+#ifdef MOZ_MEMORY_ANDROID
+  ::_malloc_postfork();
+#endif
   if (pid < 0)
     return false;
 

@@ -268,9 +268,14 @@ public:
   nsresult FixInvalidFrecencies();
 
   /**
-   * Set the frecencies of excluded places so they don't show up in queries
+   * Invalidate the frecencies of a list of places so they will be recalculated
+   * at the first idle-daily notification.
+   *
+   * @param aPlacesIdsQueryString
+   *        Query string containing list of places to be invalidated.  If it's
+   *        an empty string all places will be invalidated.
    */
-  nsresult FixInvalidFrecenciesForExcludedPlaces();
+  nsresult invalidateFrecencies(const nsCString& aPlaceIdsQueryString);
 
   /**
    * Returns a pointer to the storage connection used by history. This
@@ -728,7 +733,6 @@ protected:
   nsresult MigrateV11Up(mozIStorageConnection *aDBConn);
 
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
-  nsresult PreparePlacesForVisitsDelete(const nsCString& aPlaceIdsQueryString);
   nsresult CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString);
 
   nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,

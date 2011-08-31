@@ -1265,10 +1265,11 @@ GetCompartmentScriptsSize(JSCompartment *c)
 
 #ifdef JS_METHODJIT
 
-PRInt64
-GetCompartmentMjitCodeSize(JSCompartment *c)
+void
+GetCompartmentMjitCodeStats(JSCompartment *c, size_t& method, size_t& regexp,
+        size_t& unused)
 {
-    return c->getMjitCodeSize();
+    c->getMjitCodeStats(method, regexp, unused);
 }
 
 PRInt64
@@ -1339,7 +1340,11 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     // Get the compartment-level numbers.
     curr->scripts = GetCompartmentScriptsSize(compartment);
 #ifdef JS_METHODJIT
-    curr->mjitCode = GetCompartmentMjitCodeSize(compartment);
+    size_t method, regexp, unused;
+    GetCompartmentMjitCodeStats(compartment, method, regexp, unused);
+    curr->mjitCodeMethod = method;
+    curr->mjitCodeRegexp = regexp;
+    curr->mjitCodeUnused = unused;
     curr->mjitData = GetCompartmentMjitDataSize(compartment);
 #endif
 #ifdef JS_TRACER
@@ -1799,9 +1804,22 @@ ReportCompartmentStats(const CompartmentStats &stats,
 
 #ifdef JS_METHODJIT
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "mjit-code"),
-                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCode,
+                                              "mjit-code/method"),
+                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCodeMethod,
     "Memory used by the method JIT to hold the compartment's generated code.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "mjit-code/regexp"),
+                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCodeRegexp,
+    "Memory used by the regexp JIT to hold the compartment's generated code.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "mjit-code/unused"),
+                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCodeUnused,
+    "Memory allocated by the method and/or regexp JIT to hold the "
+    "compartment's code, but which is currently unused.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,

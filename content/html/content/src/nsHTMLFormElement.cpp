@@ -1214,8 +1214,7 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // If the element is subject to constraint validaton and is invalid, we need
   // to update our internal counter.
   if (aUpdateValidity) {
-    nsCOMPtr<nsIConstraintValidation> cvElmt =
-      do_QueryInterface(static_cast<nsGenericHTMLElement*>(aChild));
+    nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aChild);
     if (cvElmt &&
         cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
       UpdateValidity(PR_FALSE);
@@ -1301,8 +1300,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   // If the element was subject to constraint validaton and is invalid, we need
   // to update our internal counter.
   if (aUpdateValidity) {
-    nsCOMPtr<nsIConstraintValidation> cvElmt =
-      do_QueryInterface(static_cast<nsGenericHTMLElement*>(aChild));
+    nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aChild);
     if (cvElmt &&
         cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
       UpdateValidity(PR_TRUE);
@@ -2350,8 +2348,7 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
       list->AppendElement(newFirst ? content : aChild);
 
 
-      nsCOMPtr<nsISupports> listSupports =
-        do_QueryInterface(static_cast<nsIDOMNodeList*>(list));
+      nsCOMPtr<nsISupports> listSupports = do_QueryObject(list);
 
       // Replace the element with the list.
       NS_ENSURE_TRUE(mNameLookupTable.Put(aName, listSupports),
