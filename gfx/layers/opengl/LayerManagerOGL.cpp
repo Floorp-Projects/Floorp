@@ -46,6 +46,7 @@
 #include "ColorLayerOGL.h"
 #include "CanvasLayerOGL.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Preferences.h"
 
 #include "LayerManagerOGLShaders.h"
 
@@ -79,7 +80,6 @@ LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
   , mBackBufferTexture(0)
   , mBackBufferSize(-1, -1)
   , mHasBGRA(0)
-  , mRenderFPS(false)
 {
 }
 
@@ -334,7 +334,7 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
   };
   mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
 
-  nsCOMPtr<nsIConsoleService> 
+  nsCOMPtr<nsIConsoleService>
     console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
   if (console) {
@@ -356,6 +356,8 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
       msg += NS_LITERAL_STRING("TEXTURE_RECTANGLE");
     console->LogStringMessage(msg.get());
   }
+
+  Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
 
   reporter.SetSuccessful();
   return true;
@@ -537,6 +539,8 @@ LayerManagerOGL::RootLayer() const
 
   return static_cast<LayerOGL*>(mRoot->ImplData());
 }
+
+PRBool LayerManagerOGL::sDrawFPS = PR_FALSE;
 
 /* This function tries to stick to portable C89 as much as possible
  * so that it can be easily copied into other applications */
@@ -802,7 +806,7 @@ LayerManagerOGL::Render()
     return;
   }
 
-  if (mRenderFPS) {
+  if (sDrawFPS) {
     mFPS.DrawFPS(mGLContext, GetCopy2DProgram());
   }
 
