@@ -47,7 +47,7 @@ interface nsIFaviconDataCallback;
  * @status EXPERIMENTAL
  */
 
-[scriptable, uuid(6D2B0507-245F-452D-9718-5595DCD3CD14)]
+[scriptable, uuid(0cb4e536-e120-41e6-998f-66123d81ec53)]
 interface mozIAsyncFavicons : nsISupports
 {
   /**
@@ -106,4 +106,18 @@ interface mozIAsyncFavicons : nsISupports
    */
   void getFaviconURLForPage(in nsIURI aPageURI,
                             in nsIFaviconDataCallback aCallback);
+
+  /**
+   * Retrieve the URL and data of the favicon for the given page.
+   *
+   * @param aPageURI
+   *        URI of the page whose favicon's URL and data we're looking up
+   * @param aCallback
+   *        Once we've found the favicon's URL, we invoke this callback with
+   *        the favicon data.
+   *
+   * @see nsIFaviconDataCallback in nsIFaviconService.idl.
+   */
+  void getFaviconDataForPage(in nsIURI aPageURI,
+                             in nsIFaviconDataCallback aCallback);
 };
