@@ -1020,6 +1020,29 @@ struct ConvertImpl<JSUint64, jsdouble> {
 };
 #endif
 
+// C++ doesn't guarantee that exact values are the only ones that will
+// round-trip. In fact, on some platforms, including SPARC, there are pairs of
+// values, a uint64 and a double, such that neither value is exactly
+// representable in the other type, but they cast to each other.
+#ifdef SPARC
+// Simulate x86 overflow behavior
+template<>
+struct ConvertImpl<JSUint64, jsdouble> {
+  static JS_ALWAYS_INLINE JSUint64 Convert(jsdouble d) {
+    return d >= 0xffffffffffffffff ?
+           0x8000000000000000 : JSUint64(d);
+  }
+};
+
+template<>
+struct ConvertImpl<JSInt64, jsdouble> {
+  static JS_ALWAYS_INLINE JSInt64 Convert(jsdouble d) {
+    return d >= 0x7fffffffffffffff ?
+           0x8000000000000000 : JSInt64(d);
+  }
+};
+#endif
+
 template<class TargetType, class FromType>
 static JS_ALWAYS_INLINE TargetType Convert(FromType d)
 {

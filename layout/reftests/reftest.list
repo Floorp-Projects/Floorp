@@ -273,6 +273,9 @@ include text-transform/reftest.list
 # -moz-transform/
 include transform/reftest.list
 
+# 3d transforms - disabled currently
+#include transform-3d/reftest.list
+
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
 include unicode/reftest.list
 

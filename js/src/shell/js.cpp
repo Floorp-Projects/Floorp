@@ -2666,11 +2666,16 @@ static JSBool
 Clear(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
-    if (argc != 0 && !JS_ValueToObject(cx, JS_ARGV(cx, vp)[0], &obj))
-        return JS_FALSE;
+    if (argc == 0) {
+        obj = JS_GetGlobalForScopeChain(cx);
+        if (!obj)
+            return false;
+    } else if (!JS_ValueToObject(cx, JS_ARGV(cx, vp)[0], &obj)) {
+        return false;
+    }
     JS_ClearScope(cx, obj);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -4037,9 +4042,12 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_METHODJIT
     JSRuntime *rt = cx->runtime;
     AutoLockGC lock(rt);
-    size_t n = 0;
+    size_t n = 0, method, regexp, unused;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        n += (*c)->getMjitCodeSize();
+    {
+        (*c)->getMjitCodeStats(method, regexp, unused);
+        n += method + regexp + unused;
+    }
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);

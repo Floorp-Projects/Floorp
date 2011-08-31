@@ -120,12 +120,6 @@ struct JSFunction : public JSObject_Slots2
             uint16       skipmin; /* net skip amount up (toward zero) from
                                      script->staticLevel to nearest upvar,
                                      including upvars in nested functions */
-            JSPackedBool wrapper; /* true if this function is a wrapper that
-                                     rewrites bytecode optimized for a function
-                                     judged non-escaping by the compiler, which
-                                     then escaped via the debugger or a rogue
-                                     indirect eval; if true, then this function
-                                     object's proto is the wrapped object */
             js::Shape   *names;   /* argument and variable names */
         } i;
         void            *nativeOrScript;

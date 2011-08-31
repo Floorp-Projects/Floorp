@@ -1936,6 +1936,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define MONITOR_BRANCH_TRACEVIS
 #endif
 
+#endif /* !JS_TRACER */
+
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
@@ -1953,8 +1955,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             goto error;                                                       \
         CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
-
-#endif /* !JS_TRACER */
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -5014,7 +5014,7 @@ BEGIN_CASE(JSOP_LAMBDA)
         if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
 
-            if (obj->getParent() == parent) {
+            if (fun->joinable()) {
                 jsbytecode *pc2 = AdvanceOverBlockchainOp(regs.pc + JSOP_LAMBDA_LENGTH);
                 JSOp op2 = JSOp(*pc2);
 
@@ -5049,41 +5049,39 @@ BEGIN_CASE(JSOP_LAMBDA)
                         fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                         break;
                     }
-                } else if (fun->joinable()) {
-                    if (op2 == JSOP_CALL) {
-                        /*
-                         * Array.prototype.sort and String.prototype.replace are
-                         * optimized as if they are special form. We know that they
-                         * won't leak the joined function object in obj, therefore
-                         * we don't need to clone that compiler- created function
-                         * object for identity/mutation reasons.
-                         */
-                        int iargc = GET_ARGC(pc2);
+                } else if (op2 == JSOP_CALL) {
+                    /*
+                     * Array.prototype.sort and String.prototype.replace are
+                     * optimized as if they are special form. We know that they
+                     * won't leak the joined function object in obj, therefore
+                     * we don't need to clone that compiler-created function
+                     * object for identity/mutation reasons.
+                     */
+                    int iargc = GET_ARGC(pc2);
 
-                        /*
-                         * Note that we have not yet pushed obj as the final argument,
-                         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
-                         * is the callee for this JSOP_CALL.
-                         */
-                        const Value &cref = regs.sp[1 - (iargc + 2)];
-                        JSObject *callee;
+                    /*
+                     * Note that we have not yet pushed obj as the final argument,
+                     * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+                     * is the callee for this JSOP_CALL.
+                     */
+                    const Value &cref = regs.sp[1 - (iargc + 2)];
+                    JSObject *callee;
 
-                        if (IsFunctionObject(cref, &callee)) {
-                            JSFunction *calleeFun = callee->getFunctionPrivate();
-                            if (Native native = calleeFun->maybeNative()) {
-                                if ((iargc == 1 && native == array_sort) ||
-                                    (iargc == 2 && native == str_replace)) {
-                                    break;
-                                }
+                    if (IsFunctionObject(cref, &callee)) {
+                        JSFunction *calleeFun = callee->getFunctionPrivate();
+                        if (Native native = calleeFun->maybeNative()) {
+                            if ((iargc == 1 && native == array_sort) ||
+                                (iargc == 2 && native == str_replace)) {
+                                break;
                             }
                         }
-                    } else if (op2 == JSOP_NULL) {
-                        pc2 += JSOP_NULL_LENGTH;
-                        op2 = JSOp(*pc2);
-
-                        if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
-                            break;
                     }
+                } else if (op2 == JSOP_NULL) {
+                    pc2 += JSOP_NULL_LENGTH;
+                    op2 = JSOp(*pc2);
+
+                    if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
+                        break;
                 }
             }
         } else {

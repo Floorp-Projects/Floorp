@@ -987,7 +987,7 @@ namespace JSC {
             return loadBranchTarget(ARMRegisters::pc, cc, useConstantPool);
         }
 
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp);
+        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp, CodeKind kind);
         void executableCopy(void* buffer);
         void fixUpOffsets(void* buffer);
 
