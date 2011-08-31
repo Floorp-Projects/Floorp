@@ -1266,8 +1266,13 @@ static
 #endif
 bool		malloc_init_hard(void);
 
+#ifdef MOZ_MEMORY_ANDROID
+void	_malloc_prefork(void);
+void	_malloc_postfork(void);
+#else
 static void	_malloc_prefork(void);
 static void	_malloc_postfork(void);
+#endif
 
 #ifdef MOZ_MEMORY_DARWIN
 /*
@@ -5606,6 +5611,8 @@ MALLOC_OUT:
 
 #if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_ANDROID))
 	/* Prevent potential deadlock on malloc locks after fork. */
+	/* XXX on Android there is no pthread_atfork, so we specifically
+	   call _malloc_prefork and _malloc_postfork in process_util_linux.cc */
 	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
 #endif
 
@@ -6436,7 +6443,11 @@ _msize(const void *ptr)
  * is threaded here.
  */
 
+#ifdef MOZ_MEMORY_ANDROID
+void
+#else
 static void
+#endif
 _malloc_prefork(void)
 {
 	unsigned i;
@@ -6454,7 +6465,11 @@ _malloc_prefork(void)
 	malloc_mutex_lock(&huge_mtx);
 }
 
+#ifdef MOZ_MEMORY_ANDROID
+void
+#else
 static void
+#endif
 _malloc_postfork(void)
 {
 	unsigned i;
