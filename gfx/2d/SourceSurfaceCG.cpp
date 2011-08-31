@@ -110,7 +110,7 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
   };
 
   void *data = malloc(aStride * aSize.height);
-  memcpy(aData, data, aStride * aSize.height);
+  memcpy(data, aData, aStride * aSize.height);
 
   mFormat = aFormat;
 
