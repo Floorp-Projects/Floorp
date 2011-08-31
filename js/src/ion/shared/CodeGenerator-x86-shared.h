@@ -90,6 +90,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool generateOutOfLineCode();
 
     void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
+    void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
   public:
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);

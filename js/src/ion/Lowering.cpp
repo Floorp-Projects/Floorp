@@ -400,7 +400,7 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
     switch (opd->type()) {
       case MIRType_Value:
       {
-        LValueToInt32 *lir = new LValueToInt32(tempFloat());
+        LValueToInt32 *lir = new LValueToInt32(tempFloat(), LValueToInt32::NORMAL);
         if (!useBox(lir, LValueToInt32::Input, opd))
             return false;
         return define(lir, convert) && assignSnapshot(lir);
@@ -427,7 +427,37 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
 bool
 LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
 {
-    JS_NOT_REACHED("NYI");
+    MDefinition *opd = truncate->input();
+
+    switch (opd->type()) {
+      case MIRType_Value:
+      {
+        LValueToInt32 *lir = new LValueToInt32(tempFloat(), LValueToInt32::TRUNCATE);
+        if (!useBox(lir, LValueToInt32::Input, opd))
+            return false;
+        return define(lir, truncate) && assignSnapshot(lir);
+      }
+
+      case MIRType_Null:
+      case MIRType_Undefined:
+        return define(new LInteger(0), truncate);
+
+      case MIRType_Int32:
+      case MIRType_Boolean:
+        return redefine(truncate, opd);
+
+      case MIRType_Double:
+      {
+        LTruncateDToInt32 *lir = new LTruncateDToInt32(useRegister(opd));
+        return define(lir, truncate) && assignSnapshot(lir);
+      }
+
+      default:
+        // Objects might not be idempotent.
+        // Strings are complicated - we don't handle them yet.
+        JS_NOT_REACHED("unexpected type");
+    }
+
     return false;
 }
 
