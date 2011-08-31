@@ -1816,9 +1816,6 @@ mjit::Compiler::jsop_getelem_args()
     RegisterID dataReg = frame.allocReg();
     RegisterID typeReg = frame.allocReg();
 
-    if (!key.isConstant())
-        frame.unpinReg(key.reg());
-
     // Guard on nactual.
     if (!hoistedLength) {
         Address nactualAddr(JSFrameReg, StackFrame::offsetOfArgs());
@@ -1839,6 +1836,9 @@ mjit::Compiler::jsop_getelem_args()
         actualsReg = dataReg;
         masm.loadFrameActuals(outerScript->function(), actualsReg);
     }
+
+    if (!key.isConstant())
+        frame.unpinReg(key.reg());
 
     if (key.isConstant()) {
         Address arg(actualsReg, key.index() * sizeof(Value));
