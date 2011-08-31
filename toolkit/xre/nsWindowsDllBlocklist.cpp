@@ -55,10 +55,6 @@
 #define IN_WINDOWS_DLL_BLOCKLIST
 #include "nsWindowsDllBlocklist.h"
 
-#include "mozilla/Telemetry.h"
-
-using namespace mozilla;
-
 #ifndef STATUS_DLL_NOT_FOUND
 #define STATUS_DLL_NOT_FOUND ((DWORD)0xC0000135L)
 #endif
@@ -226,7 +222,6 @@ XRE_SetupDllBlocklist()
 
   bool ok = NtDllIntercept.AddHook("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
 
-  Telemetry::Accumulate(Telemetry::DLLBLOCKLIST_HOOK_INSTALLED, ok ? 1 : 0);
 #ifdef DEBUG
   if (!ok)
     printf_stderr ("LdrLoadDll hook failed, no dll blocklisting active\n");
