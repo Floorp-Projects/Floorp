@@ -3346,4 +3346,4 @@ pref("alerts.totalOpenTime", 4000);
 pref("alerts.disableSlidingEffect", false);
  
 //3D Transforms
-pref("layout.3d-transforms.enabled, false);
+pref("layout.3d-transforms.enabled", false);
