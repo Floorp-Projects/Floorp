@@ -1112,7 +1112,7 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
     return PR_FALSE;
   }
 
-  SetIntValueAndType(originalVal, eInteger, nsnull);
+  SetIntValueAndType(originalVal, eInteger, strict ? nsnull : &aString);
 
   return PR_TRUE;
 }
@@ -1129,7 +1129,7 @@ nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
     return PR_FALSE;
   }
 
-  SetIntValueAndType(originalVal, eInteger, nsnull);
+  SetIntValueAndType(originalVal, eInteger, strict ? nsnull : &aString);
 
   return PR_TRUE;
 }
