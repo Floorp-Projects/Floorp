@@ -1422,45 +1422,99 @@ public:
     return result;
   }
 
-  static PLDHashOperator LiveShellSizeEnumerator(PresShellPtrKey *aEntry,
-                                                 void *userArg)
+  class MemoryReporter : public nsIMemoryMultiReporter
   {
-    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
-    PRUint32 *val = (PRUint32*)userArg;
-    *val += aShell->EstimateMemoryUsed();
-    *val += aShell->mPresContext->EstimateMemoryUsed();
-    return PL_DHASH_NEXT;
-  }
-
-  static PLDHashOperator StyleSizeEnumerator(PresShellPtrKey *aEntry,
-                                             void *userArg)
-  {
-    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
-    PRUint32 *val = (PRUint32*)userArg;
-    *val += aShell->StyleSet()->SizeOf();
-    return PL_DHASH_NEXT;
-  }
-
-  static PRUint32
-  EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
-  {
-    PRUint32 result = 0;
-    sLiveShells->EnumerateEntries(aEnumerator, &result);
-    return result;
-  }
-
-  static PRInt64 SizeOfLayoutMemoryReporter() {
-    return EstimateShellsMemory(LiveShellSizeEnumerator);
-  }
-
-  static PRInt64 SizeOfStyleMemoryReporter() {
-    return EstimateShellsMemory(StyleSizeEnumerator);
-  }
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMEMORYMULTIREPORTER
+  protected:
+    static PLDHashOperator SizeEnumerator(PresShellPtrKey *aEntry, void *userArg);
+  };
 
 protected:
   void QueryIsActive();
   nsresult UpdateImageLockingState();
 };
+
+NS_IMPL_ISUPPORTS1(PresShell::MemoryReporter, nsIMemoryMultiReporter)
+
+namespace {
+
+struct MemoryReporterData
+{
+  nsIMemoryMultiReporterCallback* callback;
+  nsISupports* closure;
+};
+
+} // anonymous namespace
+
+/* static */ PLDHashOperator
+PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
+                                          void *userArg)
+{
+  PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
+  MemoryReporterData *data = (MemoryReporterData*)userArg;
+
+  // Build the string "explicit/layout/shell(<uri of the document>)"
+  nsCAutoString str("explicit/layout/shell(");
+
+  nsIDocument* doc = aShell->GetDocument();
+  if (doc) {
+    nsIURI* docURI = doc->GetDocumentURI();
+
+    if (docURI) {
+      nsCString spec;
+      docURI->GetSpec(spec);
+
+      // A hack: replace forward slashes with '\\' so they aren't
+      // treated as path separators.  Users of the reporters
+      // (such as about:memory) have to undo this change.
+      spec.ReplaceChar('/', '\\');
+
+      str += spec;
+    }
+  }
+
+  str += NS_LITERAL_CSTRING(")");
+
+  NS_NAMED_LITERAL_CSTRING(kArenaDesc, "Memory used by layout PresShell, PresContext, and other related areas.");
+  NS_NAMED_LITERAL_CSTRING(kStyleDesc, "Memory used by the style system.");
+
+  nsCAutoString arenaPath = str + NS_LITERAL_CSTRING("/arenas");
+  nsCAutoString stylePath = str + NS_LITERAL_CSTRING("/styledata");
+
+  PRUint32 arenasSize;
+  arenasSize = aShell->EstimateMemoryUsed();
+  arenasSize += aShell->mPresContext->EstimateMemoryUsed();
+
+  PRUint32 styleSize;
+  styleSize = aShell->StyleSet()->SizeOf();
+
+  data->callback->
+    Callback(EmptyCString(), arenaPath, nsIMemoryReporter::KIND_HEAP,
+             nsIMemoryReporter::UNITS_BYTES, arenasSize, kArenaDesc,
+             data->closure);
+
+  data->callback->
+    Callback(EmptyCString(), stylePath, nsIMemoryReporter::KIND_HEAP,
+             nsIMemoryReporter::UNITS_BYTES, styleSize, kStyleDesc,
+             data->closure);
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
+                                          nsISupports* aClosure)
+{
+  MemoryReporterData data;
+  data.callback = aCb;
+  data.closure = aClosure;
+
+  sLiveShells->EnumerateEntries(SizeEnumerator, &data);
+
+  return NS_OK;
+}
 
 class nsAutoCauseReflowNotifier
 {
@@ -1665,20 +1719,6 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
 static PRBool sSynthMouseMove = PR_TRUE;
 
-NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
-    "explicit/layout/arenas",
-    KIND_HEAP,
-    UNITS_BYTES,
-    PresShell::SizeOfLayoutMemoryReporter,
-    "Memory used by layout PresShell, PresContext, and other related areas.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(LayoutStyle,
-    "explicit/layout/styledata",
-    KIND_HEAP,
-    UNITS_BYTES,
-    PresShell::SizeOfStyleMemoryReporter,
-    "Memory used by the style system.")
-
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
@@ -1706,8 +1746,7 @@ PresShell::PresShell()
 
   static bool registeredReporter = false;
   if (!registeredReporter) {
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutStyle));
+    NS_RegisterMemoryMultiReporter(new MemoryReporter);
     Preferences::AddBoolVarCache(&sSynthMouseMove,
                                  "layout.reflow.synthMouseMove", PR_TRUE);
     registeredReporter = true;
@@ -7581,9 +7620,10 @@ PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
 static void
 FreezeElement(nsIContent *aContent, void * /* unused */)
 {
-  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aContent));
-  if (olc) {
-    olc->StopPluginInstance();
+  nsIFrame *frame = aContent->GetPrimaryFrame();
+  nsIObjectFrame *objectFrame = do_QueryFrame(frame);
+  if (objectFrame) {
+    objectFrame->StopPlugin();
   }
 }
 
@@ -7661,9 +7701,10 @@ PresShell::FireOrClearDelayedEvents(PRBool aFireEvents)
 static void
 ThawElement(nsIContent *aContent, void *aShell)
 {
-  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aContent));
-  if (olc) {
-    olc->StartPluginInstance();
+  nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
+  if (objlc) {
+    nsRefPtr<nsNPAPIPluginInstance> inst;
+    objlc->EnsureInstantiation(getter_AddRefs(inst));
   }
 }
 

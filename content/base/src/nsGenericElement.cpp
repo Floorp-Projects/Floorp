@@ -4874,8 +4874,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (hasMutationListeners) {
-    nsCOMPtr<nsIDOMEventTarget> node =
-      do_QueryInterface(static_cast<nsIContent *>(this));
+    nsCOMPtr<nsIDOMEventTarget> node = do_QueryObject(this);
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
     mutation.mRelatedNode = attrNode;

@@ -1266,8 +1266,13 @@ static
 #endif
 bool		malloc_init_hard(void);
 
+#ifdef MOZ_MEMORY_ANDROID
+void	_malloc_prefork(void);
+void	_malloc_postfork(void);
+#else
 static void	_malloc_prefork(void);
 static void	_malloc_postfork(void);
+#endif
 
 #ifdef MOZ_MEMORY_DARWIN
 /*
@@ -2195,6 +2200,26 @@ static void *
 pages_map(void *addr, size_t size, int pfd)
 {
 	void *ret;
+#if defined(__ia64__)
+        /*
+         * The JS engine assumes that all allocated pointers have their high 17 bits clear,
+         * which ia64's mmap doesn't support directly. However, we can emulate it by passing
+         * mmap an "addr" parameter with those bits clear. The mmap will return that address,
+         * or the nearest available memory above that address, providing a near-guarantee
+         * that those bits are clear. If they are not, we return NULL below to indicate
+         * out-of-memory.
+         * 
+         * The addr is chosen as 0x0000070000000000, which still allows about 120TB of virtual 
+         * address space.
+         * 
+         * See Bug 589735 for more information.
+         */
+	bool check_placement = true;
+        if (addr == NULL) {
+		addr = (void*)0x0000070000000000;
+		check_placement = false;
+	}
+#endif
 
 	/*
 	 * We don't use MAP_FIXED here, because it can cause the *replacement*
@@ -2214,7 +2239,20 @@ pages_map(void *addr, size_t size, int pfd)
 
 	if (ret == MAP_FAILED)
 		ret = NULL;
+#if defined(__ia64__)
+        /* 
+         * If the allocated memory doesn't have its upper 17 bits clear, consider it 
+         * as out of memory.
+        */
+        else if ((long long)ret & 0xffff800000000000) {
+		munmap(ret, size);
+                ret = NULL;
+        }
+        /* If the caller requested a specific memory location, verify that's what mmap returned. */
+	else if (check_placement && ret != addr) {
+#else
 	else if (addr != NULL && ret != addr) {
+#endif
 		/*
 		 * We succeeded in mapping memory, but not in the right place.
 		 */
@@ -2230,8 +2268,13 @@ pages_map(void *addr, size_t size, int pfd)
 		ret = NULL;
 	}
 
+#if defined(__ia64__)
+	assert(ret == NULL || (!check_placement && ret != NULL)
+	    || (check_placement && ret == addr));
+#else
 	assert(ret == NULL || (addr == NULL && ret != addr)
 	    || (addr != NULL && ret == addr));
+#endif
 	return (ret);
 }
 
@@ -5568,6 +5611,8 @@ MALLOC_OUT:
 
 #if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_ANDROID))
 	/* Prevent potential deadlock on malloc locks after fork. */
+	/* XXX on Android there is no pthread_atfork, so we specifically
+	   call _malloc_prefork and _malloc_postfork in process_util_linux.cc */
 	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
 #endif
 
@@ -6398,7 +6443,11 @@ _msize(const void *ptr)
  * is threaded here.
  */
 
+#ifdef MOZ_MEMORY_ANDROID
+void
+#else
 static void
+#endif
 _malloc_prefork(void)
 {
 	unsigned i;
@@ -6416,7 +6465,11 @@ _malloc_prefork(void)
 	malloc_mutex_lock(&huge_mtx);
 }
 
+#ifdef MOZ_MEMORY_ANDROID
+void
+#else
 static void
+#endif
 _malloc_postfork(void)
 {
 	unsigned i;

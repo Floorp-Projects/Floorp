@@ -1637,7 +1637,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_ID)
 #define                             XPC_MAP_WANT_CALL
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               0
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
@@ -1865,7 +1865,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Exception)
 #define                             XPC_MAP_WANT_CALL
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               0
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
@@ -2426,7 +2426,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Constructor)
 #define                             XPC_MAP_WANT_CALL
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define                             XPC_MAP_WANT_HASINSTANCE
-#define XPC_MAP_FLAGS               0
+#define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
@@ -2757,6 +2757,13 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
+    while(obj && !obj->isWrapper() && !IS_WRAPPER_CLASS(obj->getClass()))
+        obj = JS_GetPrototype(cx, obj);
+
+    if(!obj)
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    argv[0] = OBJECT_TO_JSVAL(obj);
     rv = nsXPConnect::GetXPConnect()->GetJSObjectOfWrapper(cx, obj, &obj);
     if(NS_FAILED(rv))
         return rv;

@@ -77,10 +77,11 @@ let historyObserver = {
     // check browserHistory returns no entries
     do_check_eq(0, PlacesUtils.bhistory.count);
 
-    let expirationObserver = {
-      observe: function (aSubject, aTopic, aData) {
-        Services.obs.removeObserver(this, aTopic, false);
+    Services.obs.addObserver(function observeExpiration(aSubject, aTopic, aData)
+    {
+      Services.obs.removeObserver(observeExpiration, aTopic, false);
 
+      waitForAsyncUpdates(function () {
         // Check that frecency for not cleared items (bookmarks) has been converted
         // to -MAX(visit_count, 1), so we will be able to recalculate frecency
         // starting from most frecent bookmarks.
@@ -90,7 +91,7 @@ let historyObserver = {
         stmt.finalize();
 
         stmt = mDBConn.createStatement(
-          "SELECT h.id FROM moz_places h WHERE h.frecency = -2 " +
+          "SELECT h.id FROM moz_places h WHERE h.frecency < 0 " +
             "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
         do_check_true(stmt.executeStep());
         stmt.finalize();
@@ -154,11 +155,8 @@ let historyObserver = {
         stmt.finalize();
 
         do_test_finished();
-      }
-    }
-    Services.obs.addObserver(expirationObserver,
-                             PlacesUtils.TOPIC_EXPIRATION_FINISHED,
-                             false);
+      });
+    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
   },
 
   QueryInterface: XPCOMUtils.generateQI([

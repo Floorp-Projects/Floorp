@@ -2255,8 +2255,7 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
     return nsnull;
 
   // Only video frames need an image container.
-  nsCOMPtr<nsIDOMHTMLVideoElement> video =
-    do_QueryInterface(static_cast<nsIContent*>(this));
+  nsCOMPtr<nsIDOMHTMLVideoElement> video = do_QueryObject(this);
   if (!video)
     return nsnull;
 
@@ -2283,7 +2282,7 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetOwnerDoc());
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(static_cast<nsIContent*>(this)));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryObject(this));
   NS_ENSURE_TRUE(domDoc && target, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsIDOMEvent> event;
@@ -2496,8 +2495,7 @@ void nsHTMLMediaElement::NotifyAddedSource()
 nsIContent* nsHTMLMediaElement::GetNextSource()
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNode> thisDomNode =
-    do_QueryInterface(static_cast<nsGenericElement*>(this));
+  nsCOMPtr<nsIDOMNode> thisDomNode = do_QueryObject(this);
 
   mSourceLoadCandidate = nsnull;
 

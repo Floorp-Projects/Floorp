@@ -218,6 +218,11 @@ public:
         }
     }
 
+    void negPtr(RegisterID srcDest)
+    {
+        m_assembler.negq_r(srcDest);
+    }
+
     void notPtr(RegisterID srcDest)
     {
         m_assembler.notq_r(srcDest);
