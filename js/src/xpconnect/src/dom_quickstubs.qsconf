@@ -811,7 +811,7 @@ customMethodCalls = {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOM3Node_IsSameNode': {
+    'nsIDOMNode_IsSameNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
         'code': '    PRBool result = self == arg0;',

@@ -466,8 +466,8 @@ bool
 JSStructuredCloneWriter::writeArrayBuffer(JSObject *obj)
 {
     obj = ArrayBuffer::getArrayBuffer(obj);
-    return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, ArrayBuffer::getByteLength(obj)) &&
-           out.writeBytes(ArrayBuffer::getDataOffset(obj), ArrayBuffer::getByteLength(obj));
+    return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, obj->arrayBufferByteLength()) &&
+           out.writeBytes(obj->arrayBufferDataOffset(), obj->arrayBufferByteLength());
 }
 
 bool
@@ -691,8 +691,8 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, Value *vp)
     if (!obj)
         return false;
     vp->setObject(*obj);
-    JS_ASSERT(ArrayBuffer::getByteLength(obj) == nbytes);
-    return in.readArray(ArrayBuffer::getDataOffset(obj), nbytes);
+    JS_ASSERT(obj->arrayBufferByteLength() == nbytes);
+    return in.readArray(obj->arrayBufferDataOffset(), nbytes);
 }
 
 bool

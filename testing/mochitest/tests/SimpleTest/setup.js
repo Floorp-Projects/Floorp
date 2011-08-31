@@ -109,8 +109,8 @@ var fileLevel =  params.fileLevel || null;
 var consoleLevel = params.consoleLevel || null;
 
 // loop tells us how many times to run the tests
-if (params.loops) {
-  TestRunner.loops = params.loops;
+if (params.repeat) {
+  TestRunner.repeat = params.repeat;
 } 
 
 // closeWhenDone tells us to call quit.js when complete

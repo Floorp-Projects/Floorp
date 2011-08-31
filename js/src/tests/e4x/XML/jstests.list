@@ -54,3 +54,4 @@ skip script regress-324688.js # bug 528404 - disable due to random timeouts
 script regress-336921.js
 script regress-376773.js
 script regress-621464.js
+script regress-638982.js

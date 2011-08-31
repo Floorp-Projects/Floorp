@@ -42,146 +42,144 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(540aca25-1e01-467f-b24c-df89cbe40f8d)]
+[scriptable, uuid(212371ab-d8b9-4835-b867-d0eb78c0cb18)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
-     * addPageWithDetails
+     * Used by the History migrator to add a page to global history, with a
+     * specific title and last visit time.
      *
-     * Adds a page to history with specific time stamp information. This is used in
-     * the History migrator. 
+     * @param aURI
+     *        URI of the page to be added.
+     * @param aTitle
+     *        Title of the page.
+     * @param aLastvisited
+     *        Microseconds from epoch representing the last visit time.
      */
-    void addPageWithDetails(in nsIURI aURI, in wstring aTitle, in long long aLastVisited);
+    void addPageWithDetails(in nsIURI aURI,
+                            in wstring aTitle,
+                            in long long aLastVisited);
 
     /**
-     * lastPageVisited
-     *
      * The last page that was visited in a top-level window.
      */
     readonly attribute AUTF8String lastPageVisited;
 
     /**
-     * count
+     * Indicates if there are entries in global history.
      *
-     * Indicate if there are entries in global history
-     * For performance reasons this does not return the real number of entries
+     * @note For performance reasons this is not the real number of entries.
+     *       It will instead evaluate to 0 for no entries, 1 otherwise.
      */
     readonly attribute PRUint32 count;
 
     /**
-     * removePage
+     * Removes a page from global history.
      *
-     * Remove a page from history
+     * @note It is preferrable to use this one rather then RemovePages when
+     *       removing less than 10 pages, since it won't start a full batch
+     *       operation.
      */
     void removePage(in nsIURI aURI);
 
     /**
-     * removePages
+     * Removes a list of pages from global history.
      *
-     * Remove a bunch of pages from history
-     * Notice that this does not call observers for performance reasons,
-     * instead setting aDoBatchNotify true will send Begin/EndUpdateBatch
+     * @param aURIs
+     *        Array of URIs to be removed.
+     * @param aLength
+     *        Length of the array.
+     *
+     * @note the removal happens in a batch.
      */
     void removePages([array, size_is(aLength)] in nsIURI aURIs,
-                     in unsigned long aLength, in boolean aDoBatchNotify);
+                     in unsigned long aLength);
 
     /**
-     * removePagesFromHost
+     * Removes all global history information about pages for a given host.
      *
-     * Removes all history information about pages from a given host. If
-     * aEntireDomain is set, we will also delete pages from sub hosts (so if
-     * we are passed in "microsoft.com" we delete "www.microsoft.com",
-     * "msdn.microsoft.com", etc.). An empty host name means local files and
-     * anything else with no host name. You can also pass in the localized
-     * "(local files)" title given to you from a history query to remove all
-     * history information from local files.
+     * @param aHost
+     *        Hostname to be removed.
+     *        An empty host name means local files and anything else with no
+     *        hostname.  You can also pass in the localized "(local files)"
+     *        title given to you from a history query to remove all
+     *        history information from local files.
+     * @param aEntireDomain
+     *        If true, will also delete pages from sub hosts (so if
+     *        passed in "microsoft.com" will delete "www.microsoft.com",
+     *        "msdn.microsoft.com", etc.).
      *
-     * Note that this does not call observers for single deleted uris,
-     * but will send Begin/EndUpdateBatch.
+     * @note The removal happens in a batch.
      */
-    void removePagesFromHost(in AUTF8String aHost, in boolean aEntireDomain);
+    void removePagesFromHost(in AUTF8String aHost,
+                             in boolean aEntireDomain);
 
     /**
-     * removePagesByTimeframe
-     *
-     * Remove all pages for a given timeframe.
+     * Removes all pages for a given timeframe.
      * Limits are included: aBeginTime <= timeframe <= aEndTime
-     * Notice that this does not call observers for single deleted uris,
-     * instead it will send Begin/EndUpdateBatch
+     *
+     * @param aBeginTime
+     *        Microseconds from epoch, representing the initial time.
+     * @param aEndTime
+     *        Microseconds from epoch, representing the final time.
+     *
+     * @note The removal happens in a batch.
      */
-    void removePagesByTimeframe(in long long aBeginTime, in long long aEndTime);
+    void removePagesByTimeframe(in long long aBeginTime,
+                                in long long aEndTime);
 
     /**
-     * removeVisitsByTimeframe
+     * Removes all visits in a given timeframe.
+     * Limits are included: aBeginTime <= timeframe <= aEndTime.
+     * Any pages that becomes unvisited as a result will also be deleted.
      *
-     * Removes all visits in a given timeframe.  Limits are included:
-     * aBeginTime <= timeframe <= aEndTime.  Any place that becomes unvisited
-     * as a result will also be deleted.
+     * @param aBeginTime
+     *        Microseconds from epoch, representing the initial time.
+     * @param aEndTime
+     *        Microseconds from epoch, representing the final time.
      *
-     * Note that removal is performed in batch, so observers will not be
-     * notified of individual places that are deleted.  Instead they will be
-     * notified onBeginUpdateBatch and onEndUpdateBatch.
+     * @note The removal happens in a batch.
      */
-    void removeVisitsByTimeframe(in long long aBeginTime, in long long aEndTime);
+    void removeVisitsByTimeframe(in long long aBeginTime,
+                                 in long long aEndTime);
 
     /**
-     * removeAllPages
+     * Removes all existing pages from global history.
+     * Visits are removed synchronously, but pages are expired asynchronously
+     * off the main-thread.
      *
-     * Remove all pages from global history
+     * @note The removal happens in a batch. Single removals are not notified,
+     *       instead an onClearHistory notification is sent to
+     *       nsINavHistoryObserver implementers.
      */
     void removeAllPages();
 
     /**
-     * hidePage
+     * Hides the specified URL from being enumerated (and thus displayed in
+     * the UI).
      *
-     * Hide the specified URL from being enumerated (and thus
-     * displayed in the UI)
-     * If the page hasn't been visited yet, then it will be added
-     * as if it was visited, and then marked as hidden
+     * @param aURI
+     *        URI of the page to be marked.
+     *
+     * @note If the page hasn't been visited yet, then it will be added
+     *       as if it was visited, and then marked as hidden
      */
     void hidePage(in nsIURI aURI);
 
     /**
-     * markPageAsTyped
+     * Designates the url as having been explicitly typed in by the user.
      *
-     * Designate the url as having been explicitly typed in by
-     * the user, so it's okay to be an autocomplete result.
+     * @param aURI
+     *        URI of the page to be marked.
      */
     void markPageAsTyped(in nsIURI aURI);
 
     /**
-     * markPageAsFollowedLink
-     *
-     * Designate the url as coming from a link explicitly followed by
+     * Designates the url as coming from a link explicitly followed by
      * the user (for example by clicking on it).
+     *
+     * @param aURI
+     *        URI of the page to be marked.
      */
     void markPageAsFollowedLink(in nsIURI aURI);
-
-    /**
-     * Mark a page as being currently open.
-     *
-     * @note Pages will not be automatically unregistered when Private Browsing
-     *       mode is entered or exited.  Therefore, consumers MUST unregister or
-     *       register themselves.
-     *
-     * @note This is just an alias for mozIPlacesAutoComplete::registerOpenPage.
-     *
-     * @status DEPRECATED
-     */
-    [deprecated] void registerOpenPage(in nsIURI aURI);
-
-    /**
-     * Mark a page as no longer being open (either by closing the window or tab,
-     * or by navigating away from that page).
-     *
-     * @note Pages will not be automatically unregistered when Private Browsing
-     *       mode is entered or exited.  Therefore, consumers MUST unregister or
-     *       register themselves.
-     *
-     * @note This is just an alias for
-     *       mozIPlacesAutoComplete::unregisterOpenPage.
-     *
-     * @status DEPRECATED
-     */
-    [deprecated] void unregisterOpenPage(in nsIURI aURI);
 };

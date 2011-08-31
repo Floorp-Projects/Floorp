@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>Reference for test that language support doesn't override
+	specified family - Bug 678561</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	@font-face {
+		font-family: "MarkA";
+		src: url(../fonts/markA.ttf);
+	}
+	@font-face {
+		font-family: "MarkB";
+		src: url(../fonts/markB.ttf);
+	}
+	@font-face {
+		font-family: "DejaVu Sans Mono";
+		src: url(../fonts/DejaVuSansMono.otf);
+	}
+
+	.c1 { font-family: MarkA; }
+	.c2 { font-family: MarkB; }
+	.c3 { font-family: DejaVu Sans Mono; }
+
+        /* to ensure the same vertical positioning of the text */
+        .spacer { line-height: 3em }
+	</style>
+</head>
+<body>
+
+<p><span class="c1">A</span></p>
+<p><span class="c2">B</span><span class="spacer"></span></p>
+<p><span class="c3">C</span><span class="spacer"></span></p>
+
+<p class="c3">A</p>
+<p class="c3">B</p>
+<p class="c3">C</p>
+
+</body>
+</html>
