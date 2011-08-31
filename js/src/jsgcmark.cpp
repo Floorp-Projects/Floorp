@@ -100,20 +100,32 @@ PushMarkStack(GCMarker *gcmarker, JSShortString *thing);
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
 
+static inline void
+PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing);
+
 template<typename T>
-void
-Mark(JSTracer *trc, T *thing)
+static inline void
+CheckMarkedThing(JSTracer *trc, T *thing)
 {
     JS_ASSERT(thing);
     JS_ASSERT(JS_IS_VALID_TRACE_KIND(GetGCThingTraceKind(thing)));
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
+    JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
 
     JS_ASSERT(!JSAtom::isStatic(thing));
     JS_ASSERT(thing->isAligned());
 
-    JSRuntime *rt = trc->context->runtime;
     JS_ASSERT(thing->compartment());
-    JS_ASSERT(thing->compartment()->rt == rt);
+    JS_ASSERT(thing->compartment()->rt == trc->context->runtime);
+}
+
+template<typename T>
+void
+Mark(JSTracer *trc, T *thing)
+{
+    CheckMarkedThing(trc, thing);
+
+    JSRuntime *rt = trc->context->runtime;
 
     JS_OPT_ASSERT_IF(rt->gcCheckCompartment,
                      thing->compartment() == rt->gcCheckCompartment ||
@@ -191,6 +203,30 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     Mark(trc, shape);
 }
 
+void
+MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(type);
+    JS_SET_TRACING_NAME(trc, name);
+    if (type == &types::emptyTypeObject)
+        return;
+    Mark(trc, type);
+
+    /*
+     * Mark parts of a type object skipped by ScanTypeObject. ScanTypeObject is
+     * only used for marking tracers; for tracers with a callback, if we
+     * reenter through JS_TraceChildren then MarkChildren will *not* skip these
+     * members, and we don't need to handle them here.
+     */
+    if (IS_GC_MARKING_TRACER(trc)) {
+        if (type->singleton)
+            MarkObject(trc, *type->singleton, "type_singleton");
+        if (type->functionScript)
+            js_TraceScript(trc, type->functionScript, NULL);
+    }
+}
+
 #if JS_HAS_XML_SUPPORT
 void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name)
@@ -230,6 +266,16 @@ PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
+}
+
+void
+PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
+{
+    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+
+    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+        gcmarker->pushType(thing);
 }
 
 void
@@ -338,6 +384,9 @@ MarkKind(JSTracer *trc, void *thing, uint32 kind)
         case JSTRACE_SHAPE:
             Mark(trc, reinterpret_cast<Shape *>(thing));
             break;
+        case JSTRACE_TYPE_OBJECT:
+            Mark(trc, reinterpret_cast<types::TypeObject *>(thing));
+            break;
 #if JS_HAS_XML_SUPPORT
         case JSTRACE_XML:
             Mark(trc, reinterpret_cast<JSXML *>(thing));
@@ -382,16 +431,16 @@ MarkCrossCompartmentValue(JSTracer *trc, const js::Value &v, const char *name)
 }
 
 void
-MarkValueRange(JSTracer *trc, Value *beg, Value *end, const char *name)
+MarkValueRange(JSTracer *trc, const Value *beg, const Value *end, const char *name)
 {
-    for (Value *vp = beg; vp < end; ++vp) {
+    for (const Value *vp = beg; vp < end; ++vp) {
         JS_SET_TRACING_INDEX(trc, name, vp - beg);
         MarkValueRaw(trc, *vp);
     }
 }
 
 void
-MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
+MarkValueRange(JSTracer *trc, size_t len, const Value *vec, const char *name)
 {
     MarkValueRange(trc, vec, vec + len, name);
 }
@@ -467,6 +516,12 @@ void
 MarkRoot(JSTracer *trc, const Shape *thing, const char *name)
 {
     MarkShape(trc, thing, name);
+}
+
+void
+MarkRoot(JSTracer *trc, types::TypeObject *thing, const char *name)
+{
+    MarkTypeObject(trc, thing, name);
 }
 
 void
@@ -611,28 +666,34 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
     if (obj->isNewborn())
         return;
 
+    types::TypeObject *type = obj->typeFromGC();
+    if (type != &types::emptyTypeObject)
+        PushMarkStack(gcmarker, type);
+
     if (JSObject *parent = obj->getParent())
         PushMarkStack(gcmarker, parent);
-    if (JSObject *proto = obj->getProto())
-        PushMarkStack(gcmarker, proto);
 
+    /*
+     * Call the trace hook if necessary, and check for a newType on objects
+     * which are not dense arrays (dense arrays have trace hooks).
+     */
     Class *clasp = obj->getClass();
     if (clasp->trace) {
-        if (obj->isDenseArray() && obj->getDenseArrayCapacity() > LARGE_OBJECT_CHUNK_SIZE) {
-            if (!gcmarker->largeStack.push(LargeMarkItem(obj))) {
+        if (clasp == &js_ArrayClass) {
+            if (obj->getDenseArrayInitializedLength() > LARGE_OBJECT_CHUNK_SIZE) {
+                if (!gcmarker->largeStack.push(LargeMarkItem(obj)))
+                    clasp->trace(gcmarker, obj);
+            } else {
                 clasp->trace(gcmarker, obj);
             }
         } else {
+            if (obj->newType)
+                PushMarkStack(gcmarker, obj->newType);
             clasp->trace(gcmarker, obj);
         }
-    }
-
-    if (obj->emptyShapes) {
-        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
-        for (int i = 0; i < count; i++) {
-            if (obj->emptyShapes[i])
-                PushMarkStack(gcmarker, obj->emptyShapes[i]);
-        }
+    } else {
+        if (obj->newType)
+            PushMarkStack(gcmarker, obj->newType);
     }
 
     if (obj->isNative()) {
@@ -652,15 +713,11 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
         uint32 nslots = obj->slotSpan();
         JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         if (nslots > LARGE_OBJECT_CHUNK_SIZE) {
-            if (!gcmarker->largeStack.push(LargeMarkItem(obj))) {
-                for (uint32 i = nslots; i > 0; i--)
-                    ScanValue(gcmarker, obj->getSlot(i-1));
-            }
-        } else {
-            for (uint32 i = nslots; i > 0; i--) {
-                ScanValue(gcmarker, obj->getSlot(i-1));
-            }
+            if (gcmarker->largeStack.push(LargeMarkItem(obj)))
+                return;
         }
+
+        obj->scanSlots(gcmarker);
     }
 }
 
@@ -669,36 +726,27 @@ ScanLargeObject(GCMarker *gcmarker, LargeMarkItem &item)
 {
     JSObject *obj = item.obj;
 
+    uintN start = item.markpos;
+    uintN stop;
     uint32 capacity;
     if (obj->isDenseArray()) {
-        capacity = obj->getDenseArrayCapacity();
+        capacity = obj->getDenseArrayInitializedLength();
+        stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
+        for (uintN i=stop; i>start; i--)
+            ScanValue(gcmarker, obj->getDenseArrayElement(i-1));
     } else {
         JS_ASSERT(obj->isNative());
         capacity = obj->slotSpan();
+        stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
+        for (uintN i=stop; i>start; i--)
+            ScanValue(gcmarker, obj->nativeGetSlot(i-1));
     }
-
-    uintN start = item.markpos;
-    uintN stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
-    for (uintN i=stop; i>start; i--)
-        ScanValue(gcmarker, obj->getSlot(i-1));
 
     if (stop == capacity)
         return true;
 
     item.markpos += LARGE_OBJECT_CHUNK_SIZE;
     return false;
-}
-
-static void
-MarkObjectSlots(JSTracer *trc, JSObject *obj)
-{
-    JS_ASSERT(obj->slotSpan() <= obj->numSlots());
-    uint32 nslots = obj->slotSpan();
-    for (uint32 i = 0; i != nslots; ++i) {
-        const Value &v = obj->getSlot(i);
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
-        MarkValueRaw(trc, v);
-    }
 }
 
 void
@@ -708,19 +756,13 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     if (obj->isNewborn())
         return;
 
+    MarkTypeObject(trc, obj->typeFromGC(), "type");
+
     /* Trace universal (ops-independent) members. */
-    if (JSObject *proto = obj->getProto())
-        MarkObject(trc, *proto, "proto");
+    if (!obj->isDenseArray() && obj->newType)
+        MarkTypeObject(trc, obj->newType, "new_type");
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
-
-    if (obj->emptyShapes) {
-        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
-        for (int i = 0; i < count; i++) {
-            if (obj->emptyShapes[i])
-                MarkShape(trc, obj->emptyShapes[i], "emptyShape");
-        }
-    }
 
     Class *clasp = obj->getClass();
     if (clasp->trace)
@@ -729,8 +771,12 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     if (obj->isNative()) {
         MarkShape(trc, obj->lastProp, "shape");
 
-        if (obj->slotSpan() > 0)
-            MarkObjectSlots(trc, obj);
+        JS_ASSERT(obj->slotSpan() <= obj->numSlots());
+        uint32 nslots = obj->slotSpan();
+        for (uint32 i = 0; i < nslots; i++) {
+            JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+            MarkValueRaw(trc, obj->nativeGetSlot(i));
+        }
     }
 }
 
@@ -765,6 +811,81 @@ restart:
         goto restart;
 }
 
+static void
+ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
+{
+    if (!type->singleton) {
+        unsigned count = type->getPropertyCount();
+        for (unsigned i = 0; i < count; i++) {
+            types::Property *prop = type->getProperty(i);
+            if (prop && JSID_IS_STRING(prop->id)) {
+                JSString *str = JSID_TO_STRING(prop->id);
+                if (!str->isStaticAtom())
+                    PushMarkStack(gcmarker, str);
+            }
+        }
+    }
+
+    if (type->emptyShapes) {
+        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
+        for (int i = 0; i < count; i++) {
+            if (type->emptyShapes[i])
+                PushMarkStack(gcmarker, type->emptyShapes[i]);
+        }
+    }
+
+    if (type->proto)
+        PushMarkStack(gcmarker, type->proto);
+
+    if (type->newScript) {
+        js_TraceScript(gcmarker, type->newScript->script, NULL);
+        PushMarkStack(gcmarker, type->newScript->shape);
+    }
+
+    /*
+     * Don't need to trace singleton or functionScript, an object with this
+     * type must have already been traced and it will also hold a reference
+     * on the script (singleton and functionScript types cannot be the newType
+     * of another object). Attempts to mark type objects directly must use
+     * MarkTypeObject, which will itself mark these extra bits.
+     */
+}
+
+void
+MarkChildren(JSTracer *trc, types::TypeObject *type)
+{
+    if (!type->singleton) {
+        unsigned count = type->getPropertyCount();
+        for (unsigned i = 0; i < count; i++) {
+            types::Property *prop = type->getProperty(i);
+            if (prop)
+                MarkId(trc, prop->id, "type_prop");
+        }
+    }
+
+    if (type->emptyShapes) {
+        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
+        for (int i = 0; i < count; i++) {
+            if (type->emptyShapes[i])
+                MarkShape(trc, type->emptyShapes[i], "empty_shape");
+        }
+    }
+
+    if (type->proto)
+        MarkObject(trc, *type->proto, "type_proto");
+
+    if (type->singleton)
+        MarkObject(trc, *type->singleton, "type_singleton");
+
+    if (type->newScript) {
+        js_TraceScript(trc, type->newScript->script, NULL);
+        MarkShape(trc, type->newScript->shape, "type_new_shape");
+    }
+
+    if (type->functionScript)
+        js_TraceScript(trc, type->functionScript, NULL);
+}
+
 #ifdef JS_HAS_XML_SUPPORT
 void
 MarkChildren(JSTracer *trc, JSXML *xml)
@@ -787,6 +908,9 @@ GCMarker::drainMarkStack()
 
         while (!objStack.isEmpty())
             ScanObject(this, objStack.pop());
+
+        while (!typeStack.isEmpty())
+            ScanTypeObject(this, typeStack.pop());
 
         while (!xmlStack.isEmpty())
             MarkChildren(this, xmlStack.pop());
@@ -827,10 +951,41 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 	MarkChildren(trc, (js::Shape *)thing);
         break;
 
+      case JSTRACE_TYPE_OBJECT:
+        MarkChildren(trc, (types::TypeObject *)thing);
+        break;
+
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
         MarkChildren(trc, (JSXML *)thing);
         break;
 #endif
     }
+}
+
+inline void
+JSObject::scanSlots(GCMarker *gcmarker)
+{
+    /*
+     * Scan the fixed slots and the dynamic slots separately, to avoid
+     * branching inside nativeGetSlot().
+     */
+    JS_ASSERT(slotSpan() <= numSlots());
+    unsigned i, nslots = slotSpan();
+    if (slots) {
+        unsigned nfixed = numFixedSlots();
+        if (nslots > nfixed) {
+            Value *vp = fixedSlots();
+            for (i = 0; i < nfixed; i++, vp++)
+                ScanValue(gcmarker, *vp);
+            vp = slots;
+            for (; i < nslots; i++, vp++)
+                ScanValue(gcmarker, *vp);
+            return;
+        }
+    }
+    JS_ASSERT(nslots <= numFixedSlots());
+    Value *vp = fixedSlots();
+    for (i = 0; i < nslots; i++, vp++)
+        ScanValue(gcmarker, *vp);
 }

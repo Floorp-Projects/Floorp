@@ -95,6 +95,7 @@ fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynam
 == dynamic-use-02.svg pass.svg
 == dynamic-use-03.svg pass.svg
 == dynamic-use-04.svg pass.svg
+== dynamic-use-05.svg pass.svg
 random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
 == linked-pattern-01.svg pass.svg

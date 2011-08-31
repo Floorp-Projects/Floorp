@@ -38,7 +38,7 @@
 .text
 
 / JSBool JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code,
-/                         FrameRegs *regs, uintptr_t inlineCallCount)
+/                         Value *stackLimit)
 .global JaegerTrampoline
 .type   JaegerTrampoline, @function
 JaegerTrampoline:
@@ -52,8 +52,12 @@ JaegerTrampoline:
 
     /* Build the JIT frame. Push fields in order, */
     /* then align the stack to form esp == VMFrame. */
-    movl  12(%ebp), %ebx                       /* fp */
-    pushl %ebx                                 /* entryFp */
+    movl  12(%ebp), %ebx                       /* load fp */
+    pushl %ebx                                 /* unused1 */
+    pushl %ebx                                 /* unused0 */
+    pushl $0x0                                 /* stubRejoin */
+    pushl %ebx                                 /* entryncode */
+    pushl %ebx                                 /* entryfp */
     pushl 20(%ebp)                             /* stackLimit */
     pushl 8(%ebp)                              /* cx */
     pushl %ebx                                 /* fp */
@@ -65,19 +69,23 @@ JaegerTrampoline:
     call SetVMFrameRegs
     call PushActiveVMFrame
     popl  %edx
-    jmp  *16(%ebp)
+
+    movl 28(%esp), %ebp                       /* load fp for JIT code */
+    jmp  *88(%esp)
 .size   JaegerTrampoline, . - JaegerTrampoline
 
 / void JaegerTrampolineReturn()
 .global JaegerTrampolineReturn
 .type   JaegerTrampolineReturn, @function
 JaegerTrampolineReturn:
-    movl  %edx, 0x18(%ebx)
-    movl  %ecx, 0x1C(%ebx)
+    movl  %esi, 0x18(%ebp)
+    movl  %edi, 0x1C(%ebp)
+    movl  %esp, %ebp
+    addl  $0x48, %ebp
     pushl %esp
     call PopActiveVMFrame
 
-    addl $0x30, %esp
+    addl $0x40, %esp
     popl %ebx
     popl %edi
     popl %esi
@@ -110,8 +118,7 @@ JaegerThrowpoline:
 throwpoline_exit:
     pushl %esp
     call PopActiveVMFrame
-    popl %ebx
-    addl $0x2C, %esp
+    addl $0x40, %esp
     popl %ebx
     popl %edi
     popl %esi
@@ -120,3 +127,53 @@ throwpoline_exit:
     ret
 .size   JaegerThrowpoline, . - JaegerThrowpoline
 
+/ void JaegerInterpoline()
+.global JaegerInterpoline
+.type   JaegerInterpoline, @function
+JaegerInterpoline:
+    /* For Sun Studio there is no fast call. */
+    /* We add the stack by 16 before. */
+    addl $0x10, %esp
+    /* Align the stack to 16 bytes. */
+    pushl %esp
+    pushl %eax
+    pushl %edi
+    pushl %esi
+    call js_InternalInterpret
+    addl $0x10, %esp
+    movl 0x1C(%esp), %ebp    /* Load frame */
+    movl 0x18(%ebp), %esi    /* Load rval payload */
+    movl 0x1C(%ebp), %edi    /* Load rval type */
+    movl 0xC(%esp), %ecx     /* Load scratch -> argc, for any scripted call */
+    testl %eax, %eax
+    je   interpoline_exit
+    jmp  *%eax
+interpoline_exit:
+    pushl %esp
+    call PopActiveVMFrame
+    addl $0x40, %esp
+    popl %ebx
+    popl %edi
+    popl %esi
+    popl %ebp
+    xorl %eax, %eax
+    ret
+.size   JaegerInterpoline, . - JaegerInterpoline
+
+/ void JaegerInterpolineScripted()
+.global JaegerInterpolineScripted
+.type   JaegerInterpolineScripted, @function
+JaegerInterpolineScripted:
+    movl 0x10(%ebp), %ebp
+    movl %ebp, 0x1C(%esp)
+    subl $0x10, %esp
+    jmp JaegerInterpoline
+.size   JaegerInterpolineScripted, . - JaegerInterpolineScripted
+
+/ void JaegerInterpolinePatched()
+.global JaegerInterpolinePatched
+.type   JaegerInterpolinePatched, @function
+JaegerInterpolinePatched:
+    subl $0x10, %esp
+    jmp JaegerInterpoline
+.size   JaegerInterpolinePatched, . - JaegerInterpolinePatched

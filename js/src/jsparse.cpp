@@ -92,6 +92,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
@@ -192,7 +193,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldCons
     functionCount(0),
     traceListHead(NULL),
     tc(NULL),
-    emptyCallShape(NULL),
     keepAtoms(cx->runtime),
     foldConstants(foldConstants)
 {
@@ -208,9 +208,6 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
 {
     JSContext *cx = context;
     if (!cx->ensureParseMapPool())
-        return false;
-    emptyCallShape = EmptyShape::getEmptyCallShape(cx);
-    if (!emptyCallShape)
         return false;
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
@@ -294,7 +291,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
-    new (&funbox->bindings) Bindings(context, emptyCallShape);
+    new (&funbox->bindings) Bindings(context);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -314,7 +311,9 @@ bool
 JSFunctionBox::joinable() const
 {
     return function()->isNullClosure() &&
-           !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
+           (tcflags & (TCF_FUN_USES_ARGUMENTS |
+                       TCF_FUN_USES_OWN_NAME |
+                       TCF_COMPILE_N_GO)) == TCF_COMPILE_N_GO;
 }
 
 bool
@@ -357,9 +356,6 @@ Parser::trace(JSTracer *trc)
             static_cast<JSFunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
-
-    if (emptyCallShape)
-        MarkShape(trc, emptyCallShape, "emptyCallShape");
 
     for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
         tc->trace(trc);
@@ -1091,13 +1087,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             if ((cs->format & JOF_SHARPSLOT) ||
                 JOF_TYPE(cs->format) == JOF_LOCAL ||
                 (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
-                /*
-                 * JSOP_GETARGPROP also has JOF_SLOTATOM type, but it may be
-                 * emitted only for a function.
-                 */
                 JS_ASSERT_IF(!(cs->format & JOF_SHARPSLOT),
-                             (JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
-                             (op == JSOP_GETLOCALPROP));
+                             JOF_TYPE(cs->format) != JOF_SLOTATOM);
                 slot = GET_SLOTNO(code);
                 if (!(cs->format & JOF_SHARPSLOT))
                     slot += cg.sharpSlots();
@@ -1173,13 +1164,21 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
              * optimizations only take place if the property is not defined.
              */
             rval.setObject(*fun);
+            types::AddTypePropertyId(cx, globalObj, id, rval);
         } else {
             rval.setUndefined();
         }
 
+        /*
+         * Don't update the type information when defining the property for the
+         * global object, per the consistency rules for type properties. If the
+         * property is only undefined before it is ever written, we can check
+         * the global directly during compilation and avoid having to emit type
+         * checks every time it is accessed in the script.
+         */
         const Shape *shape =
             DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0);
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
         if (!shape)
             return false;
         def.knownSlot = shape->slot;
@@ -1979,7 +1978,7 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                        parent, atom);
     if (fun && !tc->compileAndGo()) {
         fun->clearParent();
-        fun->clearProto();
+        fun->clearType();
     }
     return fun;
 }
@@ -2275,8 +2274,9 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
 
         /*
          * If this function is reaching up across an enclosing funarg, then we
-         * cannot copy dn's value into a flat closure slot (the display stops
-         * working once the funarg escapes).
+         * cannot copy dn's value into a flat closure slot. The flat closure
+         * code assumes the upvars to be copied are in frames still on the
+         * stack.
          */
         if (!afunbox || afunbox->node->isFunArg())
             return false;
@@ -2415,48 +2415,56 @@ DeoptimizeUsesWithin(JSDefinition *dn, const TokenPos &pos)
     return ndeoptimized != 0;
 }
 
+static void
+ConsiderUnbranding(JSFunctionBox *funbox)
+{
+    /*
+     * We've already recursively set our kids' kinds, which also classifies
+     * enclosing functions holding upvars referenced in those descendants'
+     * bodies. So now we can check our "methods".
+     *
+     * Despecialize from branded method-identity-based shape to shape- or
+     * slot-based shape if this function smells like a constructor and too many
+     * of its methods are *not* joinable null closures (i.e., they have one or
+     * more upvars fetched via the display).
+     */
+    bool returnsExpr = !!(funbox->tcflags & TCF_RETURN_EXPR);
+#if JS_HAS_EXPR_CLOSURES
+    {
+        JSParseNode *pn2 = funbox->node->pn_body;
+        if (PN_TYPE(pn2) == TOK_UPVARS)
+            pn2 = pn2->pn_tree;
+        if (PN_TYPE(pn2) == TOK_ARGSBODY)
+            pn2 = pn2->last();
+        if (PN_TYPE(pn2) != TOK_LC)
+            returnsExpr = true;
+    }
+#endif
+    if (!returnsExpr) {
+        uintN methodSets = 0, slowMethodSets = 0;
+
+        for (JSParseNode *method = funbox->methods; method; method = method->pn_link) {
+            JS_ASSERT(PN_OP(method) == JSOP_LAMBDA || PN_OP(method) == JSOP_LAMBDA_FC);
+            ++methodSets;
+            if (!method->pn_funbox->joinable())
+                ++slowMethodSets;
+        }
+
+        if (funbox->shouldUnbrand(methodSets, slowMethodSets))
+            funbox->tcflags |= TCF_FUN_UNBRAND_THIS;
+    }
+}
+
 void
 Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 {
-    for (;;) {
+    for (; funbox; funbox = funbox->siblings) {
         JSParseNode *fn = funbox->node;
         JSParseNode *pn = fn->pn_body;
 
         if (funbox->kids) {
             setFunctionKinds(funbox->kids, tcflags);
-
-            /*
-             * We've unwound from recursively setting our kids' kinds, which
-             * also classifies enclosing functions holding upvars referenced in
-             * those descendants' bodies. So now we can check our "methods".
-             *
-             * Despecialize from branded method-identity-based shape to shape-
-             * or slot-based shape if this function smells like a constructor
-             * and too many of its methods are *not* joinable null closures
-             * (i.e., they have one or more upvars fetched via the display).
-             */
-            JSParseNode *pn2 = pn;
-            if (PN_TYPE(pn2) == TOK_UPVARS)
-                pn2 = pn2->pn_tree;
-            if (PN_TYPE(pn2) == TOK_ARGSBODY)
-                pn2 = pn2->last();
-
-#if JS_HAS_EXPR_CLOSURES
-            if (PN_TYPE(pn2) == TOK_LC)
-#endif
-            if (!(funbox->tcflags & TCF_RETURN_EXPR)) {
-                uintN methodSets = 0, slowMethodSets = 0;
-
-                for (JSParseNode *method = funbox->methods; method; method = method->pn_link) {
-                    JS_ASSERT(PN_OP(method) == JSOP_LAMBDA || PN_OP(method) == JSOP_LAMBDA_FC);
-                    ++methodSets;
-                    if (!method->pn_funbox->joinable())
-                        ++slowMethodSets;
-                }
-
-                if (funbox->shouldUnbrand(methodSets, slowMethodSets))
-                    funbox->tcflags |= TCF_FUN_UNBRAND_THIS;
-            }
+            ConsiderUnbranding(funbox);
         }
 
         JSFunction *fun = funbox->function();
@@ -2467,54 +2475,13 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             /* nothing to do */
         } else if (funbox->inAnyDynamicScope()) {
             JS_ASSERT(!fun->isNullClosure());
-        } else if (pn->pn_type != TOK_UPVARS) {
-            /*
-             * No lexical dependencies => null closure, for best performance.
-             * A null closure needs no scope chain, but alas we've coupled
-             * principals-finding to scope (for good fundamental reasons, but
-             * the implementation overloads the parent slot and we should fix
-             * that). See, e.g., the JSOP_LAMBDA case in jsinterp.cpp.
-             *
-             * In more detail: the ES3 spec allows the implementation to create
-             * "joined function objects", or not, at its discretion. But real-
-             * world implementations always create unique function objects for
-             * closures, and this can be detected via mutation. Open question:
-             * do popular implementations create unique function objects for
-             * null closures?
-             *
-             * FIXME: bug 476950.
-             */
-            fun->setKind(JSFUN_NULL_CLOSURE);
         } else {
-            AtomDefnMapPtr upvars = pn->pn_names;
-            JS_ASSERT(!upvars->empty());
+            uintN hasUpvars = false;
+            bool canFlatten = true;
 
-            if (!fn->isFunArg()) {
-                /*
-                 * This function is Algol-like, it never escapes.
-                 *
-                 * Check that at least one outer lexical binding was assigned
-                 * to (global variables don't count). This is conservative: we
-                 * could limit assignments to those in the current function,
-                 * but that's too much work. As with flat closures (handled
-                 * below), we optimize for the case where outer bindings are
-                 * not reassigned anywhere.
-                 */
-                AtomDefnRange r = upvars->all();
-                for (; !r.empty(); r.popFront()) {
-                    JSDefinition *defn = r.front().value();
-                    JSDefinition *lexdep = defn->resolve();
-
-                    if (!lexdep->isFreeVar()) {
-                        JS_ASSERT(lexdep->frameLevel() <= funbox->level);
-                        break;
-                    }
-                }
-
-                if (r.empty())
-                    fun->setKind(JSFUN_NULL_CLOSURE);
-            } else {
-                uintN nupvars = 0, nflattened = 0;
+            if (pn->pn_type == TOK_UPVARS) {
+                AtomDefnMapPtr upvars = pn->pn_names;
+                JS_ASSERT(!upvars->empty());
 
                 /*
                  * For each lexical dependency from this closure to an outer
@@ -2526,51 +2493,39 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
                     JSDefinition *lexdep = defn->resolve();
 
                     if (!lexdep->isFreeVar()) {
-                        ++nupvars;
-                        if (CanFlattenUpvar(lexdep, funbox, *tcflags)) {
-                            ++nflattened;
-                            continue;
+                        hasUpvars = true;
+                        if (!CanFlattenUpvar(lexdep, funbox, *tcflags)) {
+                            /*
+                             * Can't flatten. Enclosing functions holding
+                             * variables used by this function will be flagged
+                             * heavyweight below. FIXME bug 545759: re-enable
+                             * partial flat closures.
+                             */
+                            canFlatten = false;
+                            break;
                         }
-
-                        /*
-                         * FIXME bug 545759: to test nflattened != 0 instead of
-                         * nflattened == nupvars below, we'll need to avoid n^2
-                         * bugs such as 617430 in uncommenting the following:
-                         *
-                         * if (DeoptimizeUsesWithin(lexdep, funbox->node->pn_body->pn_pos))
-                         *     FlagHeavyweights(lexdep, funbox, tcflags);
-                         *
-                         * For now it's best to avoid this tedious, use-wise
-                         * deoptimization and let fun remain an unoptimized
-                         * closure. This is safe because we leave fun's kind
-                         * set to interpreted, so all functions holding its
-                         * upvars will be flagged as heavyweight.
-                         */
                     }
                 }
+            }
 
-                if (nupvars == 0) {
-                    fun->setKind(JSFUN_NULL_CLOSURE);
-                } else if (nflattened == nupvars) {
-                    /*
-                     * We made it all the way through the upvar loop, so it's
-                     * safe to optimize to a flat closure.
-                     */
-                    fun->setKind(JSFUN_FLAT_CLOSURE);
-                    switch (PN_OP(fn)) {
-                      case JSOP_DEFFUN:
-                        fn->pn_op = JSOP_DEFFUN_FC;
-                        break;
-                      case JSOP_DEFLOCALFUN:
-                        fn->pn_op = JSOP_DEFLOCALFUN_FC;
-                        break;
-                      case JSOP_LAMBDA:
-                        fn->pn_op = JSOP_LAMBDA_FC;
-                        break;
-                      default:
-                        /* js_EmitTree's case TOK_FUNCTION: will select op. */
-                        JS_ASSERT(PN_OP(fn) == JSOP_NOP);
-                    }
+            if (!hasUpvars) {
+                /* No lexical dependencies => null closure, for best performance. */
+                fun->setKind(JSFUN_NULL_CLOSURE);
+            } else if (canFlatten) {
+                fun->setKind(JSFUN_FLAT_CLOSURE);
+                switch (PN_OP(fn)) {
+                case JSOP_DEFFUN:
+                    fn->pn_op = JSOP_DEFFUN_FC;
+                    break;
+                case JSOP_DEFLOCALFUN:
+                    fn->pn_op = JSOP_DEFLOCALFUN_FC;
+                    break;
+                case JSOP_LAMBDA:
+                    fn->pn_op = JSOP_LAMBDA_FC;
+                    break;
+                default:
+                    /* js_EmitTree's case TOK_FUNCTION: will select op. */
+                    JS_ASSERT(PN_OP(fn) == JSOP_NOP);
                 }
             }
         }
@@ -2598,10 +2553,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 
         if (funbox->joinable())
             fun->setJoinable();
-
-        funbox = funbox->siblings;
-        if (!funbox)
-            break;
     }
 }
 
@@ -4484,8 +4435,6 @@ CloneParseTree(JSParseNode *opn, JSTreeContext *tc)
 }
 
 #endif /* JS_HAS_DESTRUCTURING */
-
-extern const char js_with_statement_str[];
 
 static JSParseNode *
 ContainsStmt(JSParseNode *pn, TokenKind tt)
@@ -7349,7 +7298,7 @@ Parser::generatorExpr(JSParseNode *kid)
          * removed from tc->flags.
          */
         gentc.flags |= TCF_FUN_IS_GENERATOR | TCF_GENEXP_LAMBDA |
-                       (tc->flags & (TCF_FUN_FLAGS & ~TCF_FUN_PARAM_ARGUMENTS));
+                       (outertc->flags & (TCF_FUN_FLAGS & ~TCF_FUN_PARAM_ARGUMENTS));
         funbox->tcflags |= gentc.flags;
         genfn->pn_funbox = funbox;
         genfn->pn_blockid = gentc.bodyid;
@@ -8608,8 +8557,16 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             tt = tokenStream.getToken();
             if (tt == TOK_COLON) {
                 pnval = assignExpr();
-                if (pnval && !pnval->isConstant())
+
+                /*
+                 * Treat initializers which mutate __proto__ as non-constant,
+                 * so that we can later assume singleton objects delegate to
+                 * the default Object.prototype.
+                 */
+                if ((pnval && !pnval->isConstant()) ||
+                    atom == context->runtime->atomState.protoAtom) {
                     pn->pn_xflags |= PNX_NONCONST;
+                }
             } else {
 #if JS_HAS_DESTRUCTURING_SHORTHAND
                 if (tt != TOK_COMMA && tt != TOK_RC) {
@@ -8955,7 +8912,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->compileAndGo()) {
             obj->clearParent();
-            obj->clearProto();
+            obj->clearType();
         }
 
         pn->pn_objbox = tc->parser->newObjectBox(obj);

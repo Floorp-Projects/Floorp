@@ -47,11 +47,10 @@
 using namespace js;
 using namespace mjit;
 
-StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script)
+StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame)
 : cx(cx),
   cc(cc),
   frame(frame),
-  script(script),
   generation(1),
   lastGeneration(0),
   exits(CompilerAllocPolicy(cx, cc)),
@@ -152,8 +151,9 @@ StubCompiler::rejoin(Changes changes)
 
     frame.merge(masm, changes);
 
-    Jump j = masm.jump();
-    crossJump(j, cc.getLabel());
+    unsigned index = crossJump(masm.jump(), cc.getLabel());
+    if (cc.loop)
+        cc.loop->addJoin(index, false);
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
 }
@@ -167,58 +167,98 @@ StubCompiler::linkRejoin(Jump j)
 typedef JSC::MacroAssembler::RegisterID RegisterID;
 typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 typedef JSC::MacroAssembler::Imm32 Imm32;
+typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, uint32 id)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin)
 {
-    return emitStubCall(ptr, frame.stackDepth() + script->nfixed, id);
+    return emitStubCall(ptr, rejoin, frame.totalDepth());
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, int32 slots, uint32 id)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
-    Call cl = masm.fallibleVMCall(ptr, cc.getPC(), slots);
+    masm.bumpStubCounter(cc.script, cc.PC, Registers::tempCallReg());
+    DataLabelPtr inlinePatch;
+    Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
+                                  ptr, cc.outerPC(), &inlinePatch, slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
-    if (cc.debugMode()) {
-        Compiler::InternalCallSite site(masm.callReturnOffset(cl), cc.getPC(), id, true, true);
-        cc.addCallSite(site);
+
+    /* Add the call site for debugging and recompilation. */
+    Compiler::InternalCallSite site(masm.callReturnOffset(cl),
+                                    cc.inlineIndex(), cc.inlinePC(),
+                                    rejoin, true);
+    site.inlinePatch = inlinePatch;
+
+    /* Add a hook for restoring loop invariants if necessary. */
+    if (cc.loop && cc.loop->generatingInvariants()) {
+        site.loopJumpLabel = masm.label();
+        Jump j = masm.jump();
+        Label l = masm.label();
+        /* MissedBoundsCheck* are not actually called, so f.regs need to be written before InvariantFailure. */
+        bool entry = (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckEntry))
+                  || (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckHead));
+        cc.loop->addInvariantCall(j, l, true, entry, cc.callSites.length());
     }
+
+    cc.addCallSite(site);
     return cl;
 }
 
 void
 StubCompiler::fixCrossJumps(uint8 *ncode, size_t offset, size_t total)
 {
-    JSC::LinkBuffer fast(ncode, total);
-    JSC::LinkBuffer slow(ncode + offset, total - offset);
+    JSC::LinkBuffer fast(ncode, total, JSC::METHOD_CODE);
+    JSC::LinkBuffer slow(ncode + offset, total - offset, JSC::METHOD_CODE);
 
     for (size_t i = 0; i < exits.length(); i++)
         fast.link(exits[i].from, slow.locationOf(exits[i].to));
 
     for (size_t i = 0; i < scriptJoins.length(); i++) {
         const CrossJumpInScript &cj = scriptJoins[i];
-        slow.link(cj.from, fast.locationOf(cc.labelOf(cj.pc)));
+        slow.link(cj.from, fast.locationOf(cc.labelOf(cj.pc, cj.inlineIndex)));
     }
 
     for (size_t i = 0; i < joins.length(); i++)
         slow.link(joins[i].from, fast.locationOf(joins[i].to));
 }
 
-void
+unsigned
 StubCompiler::crossJump(Jump j, Label L)
 {
     joins.append(CrossPatch(j, L));
+
+    /* This won't underflow, as joins has space preallocated for some entries. */
+    return joins.length() - 1;
 }
 
 bool
 StubCompiler::jumpInScript(Jump j, jsbytecode *target)
 {
     if (cc.knownJump(target)) {
-        crossJump(j, cc.labelOf(target));
-        return true;
+        unsigned index = crossJump(j, cc.labelOf(target, cc.inlineIndex()));
+        if (cc.loop)
+            cc.loop->addJoin(index, false);
     } else {
-        return scriptJoins.append(CrossJumpInScript(j, target));
+        if (!scriptJoins.append(CrossJumpInScript(j, target, cc.inlineIndex())))
+            return false;
+        if (cc.loop)
+            cc.loop->addJoin(scriptJoins.length() - 1, true);
     }
+    return true;
 }
 
+void
+StubCompiler::patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg)
+{
+    Jump &j = script ? scriptJoins[i].from : joins[i].from;
+    j.linkTo(masm.label(), &masm);
+
+    if (reg.isReg())
+        masm.loadPayload(address, reg.reg());
+    else
+        masm.loadDouble(address, reg.fpreg());
+
+    j = masm.jump();
+}

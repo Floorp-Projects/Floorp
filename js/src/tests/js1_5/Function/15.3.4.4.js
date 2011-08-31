@@ -59,7 +59,7 @@ printStatus(inSection(2));
 
 function getBoundMethod()
 {
-  return it.bindMethod("boundMethod", function () { return this; });
+  return it.bindMethod("boundMethod", Function("return this"));
 }
 
 // it is a js shell only construction

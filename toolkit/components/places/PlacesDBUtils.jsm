@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Marco Bonardo <mak77@bonardo.net> (Original Author)
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -303,7 +304,28 @@ let PlacesDBUtils = {
     let cleanupStatements = [];
 
     // MOZ_ANNO_ATTRIBUTES
-    // A.1 remove unused attributes
+    // A.1 remove obsolete annotations from moz_annos.
+    // The 'weave0' idiom exploits character ordering (0 follows /) to
+    // efficiently select all annos with a 'weave/' prefix.
+    let deleteObsoleteAnnos = DBConn.createAsyncStatement(
+      "DELETE FROM moz_annos "                      +
+      "WHERE anno_attribute_id IN ( "               +
+      "  SELECT id FROM moz_anno_attributes "       +
+      "  WHERE name BETWEEN 'weave/' AND 'weave0' " +
+      ")");
+    cleanupStatements.push(deleteObsoleteAnnos);
+
+    // A.2 remove obsolete annotations from moz_items_annos.
+    let deleteObsoleteItemsAnnos = DBConn.createAsyncStatement(
+      "DELETE FROM moz_items_annos "                +
+      "WHERE anno_attribute_id IN ( "               +
+      "  SELECT id FROM moz_anno_attributes "       +
+      "  WHERE name = 'sync/children' "             +
+      "     OR name BETWEEN 'weave/' AND 'weave0' " +
+      ")");
+    cleanupStatements.push(deleteObsoleteItemsAnnos);
+
+    // A.3 remove unused attributes.
     let deleteUnusedAnnoAttributes = DBConn.createAsyncStatement(
       "DELETE FROM moz_anno_attributes WHERE id IN ( " +
         "SELECT id FROM moz_anno_attributes n " +
