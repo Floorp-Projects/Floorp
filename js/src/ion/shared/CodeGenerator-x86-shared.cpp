@@ -292,6 +292,7 @@ CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *sna
 bool
 CodeGeneratorX86Shared::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
+    JS_ASSERT(label->used() && !label->bound());
     return bailout(BailoutLabel(label), snapshot);
 }
 
@@ -628,5 +629,15 @@ CodeGeneratorX86Shared::emitDoubleToInt32(const FloatRegister &src, const Regist
     }
     
     masm.bind(&notZero);
+}
+
+JS_STATIC_ASSERT(INT_MIN == int(0x80000000));
+
+void
+CodeGeneratorX86Shared::emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail)
+{
+    masm.cvttsd2si(src, dest);
+    masm.cmpl(dest, Imm32(INT_MIN));
+    masm.j(Assembler::Equal, fail);
 }
 

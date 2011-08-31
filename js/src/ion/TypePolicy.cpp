@@ -236,12 +236,11 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
         if (in->type() == ins->type())
             continue;
 
-        MInstruction *replace;
-        if (in->type() == MIRType_Value && specialization_ != MIRType_Any)
-            replace = MUnbox::New(in, MIRType_Int32);
-        else
-            replace = MTruncateToInt32::New(in);
+        // See BinaryArithPolicy::adjustInputs for an explanation of the following
+        if (in->type() == MIRType_Object || in->type() == MIRType_String)
+            in = boxAt(ins, in);
 
+        MInstruction *replace = MTruncateToInt32::New(in);
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(i, replace);
     }
