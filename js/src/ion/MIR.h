@@ -1010,6 +1010,10 @@ class MTruncateToInt32 : public MUnaryInstruction
     {
         return new MTruncateToInt32(def);
     }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
 };
 
 class MBitNot

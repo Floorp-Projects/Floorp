@@ -76,18 +76,37 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     masm.unboxDouble(operand, temp);
 
     Label fails;
-    emitDoubleToInt32(temp, output, &fails);
+    switch (lir->mode()) {
+      case LValueToInt32::TRUNCATE:
+        emitTruncateDouble(temp, output, &fails);
+        break;
+      default:
+        JS_ASSERT(lir->mode() == LValueToInt32::NORMAL);
+        emitDoubleToInt32(temp, output, &fails);
+        break;
+    }
     if (!bailoutFrom(&fails, lir->snapshot()))
         return false;
     masm.jump(&done);
 
     masm.bind(&notDouble);
 
-    // If the value is not null, it's a string, object, or undefined, which we
-    // can't handle here.
-    cond = masm.testNull(Assembler::NotEqual, operand);
-    if (!bailoutIf(cond, lir->snapshot()))
-        return false;
+    if (lir->mode() == LValueToInt32::NORMAL) {
+        // If the value is not null, it's a string, object, or undefined,
+        // which we can't handle here.
+        cond = masm.testNull(Assembler::NotEqual, operand);
+        if (!bailoutIf(cond, lir->snapshot()))
+            return false;
+    } else {
+        // Test for string or object - then fallthrough to null, which will
+        // also handle undefined.
+        cond = masm.testObject(Assembler::Equal, operand);
+        if (!bailoutIf(cond, lir->snapshot()))
+            return false;
+        cond = masm.testString(Assembler::Equal, operand);
+        if (!bailoutIf(cond, lir->snapshot()))
+            return false;
+    }
     
     // The value is null - just emit 0.
     masm.mov(Imm32(0), output);
@@ -212,6 +231,18 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
     cond = masm.testDoubleTruthy(false, ToFloatRegister(lir->tempFloat()));
     masm.j(cond, lir->ifFalse());
     masm.jump(lir->ifTrue());
+
+    return true;
+}
+
+bool
+CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
+{
+    Label fails;
+
+    emitTruncateDouble(ToFloatRegister(lir->input()), ToRegister(lir->output()), &fails);
+    if (!bailoutFrom(&fails, lir->snapshot()))
+        return false;
 
     return true;
 }
