@@ -1984,7 +1984,7 @@ panel[dimmed="true"] {
   outline-offset: -1px;
 }
 
-#highlighter-veil-transparentbox[locked] {
+#highlighter-veil-container[locked] > #highlighter-veil-middlebox > #highlighter-veil-transparentbox {
   box-shadow: 0 0 0 1px black;
   outline-color: white;
 }
