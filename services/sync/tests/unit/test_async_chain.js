@@ -1,4 +1,4 @@
-Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/async.js");
 
 function run_test() {
   _("Chain a few async methods, making sure the 'this' object is correct.");
@@ -18,7 +18,7 @@ function run_test() {
       callback(-x);
     }
   };
-  methods.chain = Utils.asyncChain;
+  methods.chain = Async.chain;
 
   // ((1 + 1 + 1) * (-1) + 1) * 2 + 1 = -3
   methods.chain(methods.save, methods.addX, methods.addX, methods.neg,

@@ -87,16 +87,15 @@ TPSCmdLineHandler.prototype =
     if (logfile == null)
         logfile = "";
 
-    let uri = cmdLine.resolveURI(uristr).spec;
-
     /* Ignore the platform's online/offline status while running tests. */
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
               .getService(Components.interfaces.nsIIOService2);
     ios.manageOfflineStatus = false;
     ios.offline = false;
-             
+
     Components.utils.import("resource://tps/tps.jsm");
     Components.utils.import("resource://tps/quit.js", TPS);
+    let uri = cmdLine.resolveURI(uristr).spec;
     TPS.RunTestPhase(uri, phase, logfile);
     
     //cmdLine.preventDefault = true;

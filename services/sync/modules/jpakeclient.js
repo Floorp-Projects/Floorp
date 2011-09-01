@@ -142,7 +142,7 @@ function JPAKEClient(observer) {
 }
 JPAKEClient.prototype = {
 
-  _chain: Utils.asyncChain,
+  _chain: Async.chain,
 
   /*
    * Public API

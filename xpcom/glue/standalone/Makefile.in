@@ -54,8 +54,13 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 ifeq (Darwin,$(OS_ARCH))
+ifeq (uikit,$(MOZ_WIDGET_TOOLKIT))
+LINKSRC = nsGlueLinkingDlopen.cpp
+else
 LINKSRC = nsGlueLinkingOSX.cpp
 endif
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 LINKSRC = nsGlueLinkingWin.cpp
 endif

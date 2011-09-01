@@ -82,6 +82,14 @@ function FakeGUIDService() {
 }
 
 
+function fakeSHA256HMAC(message) {
+   message = message.substr(0, 64);
+   while (message.length < 64) {
+     message += " ";
+   }
+   return message;
+}
+
 /*
  * Mock implementation of WeaveCrypto. It does not encrypt or
  * decrypt, merely returning the input verbatim.
@@ -91,23 +99,12 @@ function FakeCryptoService() {
 
   delete Svc.Crypto;  // get rid of the getter first
   Svc.Crypto = this;
-  Utils.sha256HMAC = this.sha256HMAC;
 
-  CryptoWrapper.prototype.ciphertextHMAC = this.ciphertextHMAC;
+  CryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(keyBundle) {
+    return fakeSHA256HMAC(this.ciphertext);
+  };
 }
 FakeCryptoService.prototype = {
-
-  sha256HMAC: function Utils_sha256HMAC(message, hasher) {
-     message = message.substr(0, 64);
-     while (message.length < 64) {
-       message += " ";
-     }
-     return message;
-  },
-
-  ciphertextHMAC: function CryptoWrapper_ciphertextHMAC(keyBundle) {
-    return Utils.sha256HMAC(this.ciphertext);
-  },
 
   encrypt: function(aClearText, aSymmetricKey, aIV) {
     return aClearText;
@@ -187,7 +184,7 @@ Cu.import("resource://services-sync/identity.js");
  * Test setup helpers.
  */
 
-// Turn WBO cleartext into "encrypted" payload as it goes over the wire
+// Turn WBO cleartext into fake "encrypted" payload as it goes over the wire.
 function encryptPayload(cleartext) {
   if (typeof cleartext == "object") {
     cleartext = JSON.stringify(cleartext);
@@ -195,7 +192,7 @@ function encryptPayload(cleartext) {
 
   return {ciphertext: cleartext, // ciphertext == cleartext with fake crypto
           IV: "irrelevant",
-          hmac: Utils.sha256HMAC(cleartext, Utils.makeHMACKey(""))};
+          hmac: fakeSHA256HMAC(cleartext, Utils.makeHMACKey(""))};
 }
 
 function generateNewKeys(collections) {

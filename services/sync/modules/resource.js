@@ -408,7 +408,7 @@ AsyncResource.prototype = {
     this._doRequest("POST", data, callback);
   },
 
-  delete: function delete(callback) {
+  delete: function delete_(callback) {
     this._doRequest("DELETE", undefined, callback);
   }
 };
