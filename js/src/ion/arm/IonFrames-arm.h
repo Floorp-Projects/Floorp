@@ -39,41 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
-
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
+#ifndef jsion_ionframes_arm_h__
+#define jsion_ionframes_arm_h__
 
 namespace js {
 namespace ion {
-
-class CodeGenerator : public CodeGeneratorSpecific
-{
-    bool generateBody();
-
-  public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
-
-  public:
-    bool generate();
-
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
-};
-
-} // namespace ion
-} // namespace js
-
-#endif // jsion_codegen_h__
-

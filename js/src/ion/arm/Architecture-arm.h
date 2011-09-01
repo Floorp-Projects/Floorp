@@ -39,46 +39,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_architecture_x64_h__
-#define jsion_architecture_x64_h__
+#ifndef jsion_architecture_arm_h__
+#define jsion_architecture_arm_h__
 
-#include "assembler/assembler/X86Assembler.h"
+#include "assembler/assembler/ARMAssembler.h"
+#include "ion/shared/Assembler-shared.h"
 
 namespace js {
 namespace ion {
 
-static const ptrdiff_t STACK_SLOT_SIZE       = 8;
-static const uint32 MAX_STACK_SLOTS          = 256;
+static const ptrdiff_t STACK_SLOT_SIZE       = 4;
+static const uint32 DOUBLE_STACK_ALIGNMENT   = 2;
 
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
-//   +8 for gpr spills
+//   +4 for gpr spills
 //   +8 for double spills
-static const uint32 ION_FRAME_SLACK_SIZE     = 24;
-
-#ifdef _WIN64
-static const uint32 ShadowStackSpace = 32;
-#else
-static const uint32 ShadowStackSpace = 0;
-#endif
+static const uint32 ION_FRAME_SLACK_SIZE    = 20;
 
 // An offset that is illegal for a local variable's stack allocation.
 static const int32 INVALID_STACK_SLOT       = -1;
 
+////
+// These offsets are related to bailouts.
+////
+
+// Size of each bailout table entry. On arm, this is at most a ldr, then a branch
+static const uint32 BAILOUT_TABLE_ENTRY_SIZE    = 8;
+
 class Registers {
   public:
-    typedef JSC::X86Registers::RegisterID Code;
+    typedef JSC::ARMRegisters::RegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "rax", "rcx", "rdx", "rbx",
-                                       "rsp", "rbp", "rsi", "rdi",
-                                       "r8",  "r9",  "r10", "r11",
-                                       "r12", "r13", "r14", "r15" };
+        static const char *Names[] = { "r0", "r1", "r2", "r3",
+                                       "r4", "r5", "r6", "r7",
+                                       "r8", "r9", "r10", "r11",
+                                       "r12", "sp", "r14", "pc"};
         return Names[code];
     }
 
-    static const Code StackPointer = JSC::X86Registers::esp;
-    static const Code Invalid = JSC::X86Registers::invalid_reg;
+    static const Code StackPointer = JSC::ARMRegisters::sp;
+    static const Code Invalid = JSC::ARMRegisters::invalid_reg;
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 14;
@@ -86,81 +88,63 @@ class Registers {
     static const uint32 AllMask = (1 << Total) - 1;
 
     static const uint32 VolatileMask =
-        (1 << JSC::X86Registers::eax) |
-        (1 << JSC::X86Registers::ecx) |
-        (1 << JSC::X86Registers::edx) |
-# if !defined(_WIN64)
-        (1 << JSC::X86Registers::esi) |
-        (1 << JSC::X86Registers::edi) |
-# endif
-        (1 << JSC::X86Registers::r8) |
-        (1 << JSC::X86Registers::r9) |
-        (1 << JSC::X86Registers::r10) |
-        (1 << JSC::X86Registers::r11);
+        (1 << JSC::ARMRegisters::r0) |
+        (1 << JSC::ARMRegisters::r1) |
+        (1 << JSC::ARMRegisters::r2) |
+        (1 << JSC::ARMRegisters::r3);
 
     static const uint32 NonVolatileMask =
-        (1 << JSC::X86Registers::ebx) |
-#if defined(_WIN64)
-        (1 << JSC::X86Registers::esi) |
-        (1 << JSC::X86Registers::edi) |
-#endif
-        (1 << JSC::X86Registers::ebp) |
-        (1 << JSC::X86Registers::r12) |
-        (1 << JSC::X86Registers::r13) |
-        (1 << JSC::X86Registers::r14) |
-        (1 << JSC::X86Registers::r15);
+        (1 << JSC::ARMRegisters::r4) |
+        (1 << JSC::ARMRegisters::r5) |
+        (1 << JSC::ARMRegisters::r6) |
+        (1 << JSC::ARMRegisters::r7) |
+        (1 << JSC::ARMRegisters::r8) |
+        (1 << JSC::ARMRegisters::r9) |
+        (1 << JSC::ARMRegisters::r10) |
+        (1 << JSC::ARMRegisters::r11) |
+        (1 << JSC::ARMRegisters::r12) |
+        (1 << JSC::ARMRegisters::r14);
 
-    static const uint32 SingleByteRegs = VolatileMask | NonVolatileMask;
-
+    static const uint32 SingleByteRegs =
+        VolatileMask | NonVolatileMask;
+    // we should also account for any scratch registers that we care about.x
+    // possibly the stack as well.
     static const uint32 NonAllocatableMask =
-        (1 << JSC::X86Registers::esp) |
-        (1 << JSC::X86Registers::r11);      // This is ScratchReg.
+        (1 << JSC::ARMRegisters::sp) |
+        (1 << JSC::ARMRegisters::pc);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 class FloatRegisters {
   public:
-    typedef JSC::X86Registers::XMMRegisterID Code;
+    typedef JSC::ARMRegisters::FPRegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "xmm0",  "xmm1",  "xmm2",  "xmm3",
-                                       "xmm4",  "xmm5",  "xmm6",  "xmm7",
-                                       "xmm8",  "xmm9",  "xmm10", "xmm11",
-                                       "xmm12", "xmm13", "xmm14", "xmm15" };
+        static const char *Names[] = { "d0", "d1", "d2", "d3",
+                                       "d4", "d5", "d6", "d7",
+                                       "d8", "d9", "d10", "d11",
+                                       "d12", "d13", "d14", "d15"};
         return Names[code];
     }
 
-    static const Code Invalid = JSC::X86Registers::invalid_xmm;
+    static const Code Invalid = JSC::ARMRegisters::invalid_freg;
 
     static const uint32 Total = 16;
     static const uint32 Allocatable = 15;
 
     static const uint32 AllMask = (1 << Total) - 1;
 
-    static const uint32 VolatileMask = 
-#if defined(_WIN64)
-        (1 << JSC::X86Registers::xmm0) |
-        (1 << JSC::X86Registers::xmm1) |
-        (1 << JSC::X86Registers::xmm2) |
-        (1 << JSC::X86Registers::xmm3) |
-        (1 << JSC::X86Registers::xmm4) |
-        (1 << JSC::X86Registers::xmm5);
-#else
-        AllMask;
-#endif
-
-
-    static const uint32 NonVolatileMask = AllMask & ~VolatileMask;
+    static const uint32 VolatileMask = AllMask;
+    static const uint32 NonVolatileMask = 0;
 
     static const uint32 NonAllocatableMask =
-        (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.
+        // the scratch float register for ARM.
+        (1 << JSC::ARMRegisters::SD0);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
-
-} // namespace js
 } // namespace ion
+} // namespace js
 
-#endif // jsion_architecture_x64_h__
-
+#endif // jsion_architecture_arm_h__

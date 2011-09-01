@@ -2757,7 +2757,8 @@ MOZ_ARG_DISABLE_BOOL(polyic-typed-array,
 
 MOZ_ARG_DISABLE_BOOL(ion,
 [  --disable-ion      Disable use of IONMonkey compiler],
-  ENABLE_ION= )
+  ENABLE_ION=,
+  ENABLE_ION=1 )
 
 AC_SUBST(ENABLE_METHODJIT)
 

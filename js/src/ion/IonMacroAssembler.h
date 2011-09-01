@@ -42,10 +42,12 @@
 #ifndef jsion_macro_assembler_h__
 #define jsion_macro_assembler_h__
 
-#ifdef JS_CPU_X86
+#if defined(JS_CPU_X86)
 # include "ion/x86/MacroAssembler-x86.h"
-#elif JS_CPU_X64
+#elif defined(JS_CPU_X64)
 # include "ion/x64/MacroAssembler-x64.h"
+#elif defined(JS_CPU_ARM)
+# include "ion/arm/MacroAssembler-arm.h"
 #endif
 #include "MoveResolver.h"
 

@@ -39,41 +39,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
+#include "jscntxt.h"
+#include "jscompartment.h"
+#include "ion/Bailouts.h"
+#include "ion/IonCompartment.h"
 
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
+using namespace js;
+using namespace js::ion;
+
+static const uintptr_t BAILOUT_TABLE_ENTRY_SIZE = 5;
+#if 0
+// no clue what these asserts should be.
+JS_STATIC_ASSERT(sizeof(BailoutStack) ==
+                 sizeof(uintptr_t) +
+                 sizeof(double) * 8 +
+                 sizeof(uintptr_t) * 8 +
+                 sizeof(uintptr_t));
+
+JS_STATIC_ASSERT(sizeof(ExtendedBailoutStack) ==
+                 sizeof(BailoutStack) +
+                 sizeof(uintptr_t));
+
 #endif
-
-namespace js {
-namespace ion {
-
-class CodeGenerator : public CodeGeneratorSpecific
+BailoutEnvironment::BailoutEnvironment(IonCompartment *ion, void **sp)
+  : sp_(sp)
 {
-    bool generateBody();
+    bailout_ = reinterpret_cast<ExtendedBailoutStack *>(sp);
 
-  public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+    if (bailout_->frameClass() != FrameSizeClass::None()) {
+        frameSize_ = bailout_->frameSize();
+        frame_ = &sp_[sizeof(BailoutStack) / STACK_SLOT_SIZE];
 
-  public:
-    bool generate();
+        // Compute the bailout ID.
+        IonCode *code = ion->getBailoutTable(bailout_->frameClass());
+        uintptr_t tableOffset = bailout_->tableOffset();
+        uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
-};
+        JS_ASSERT(tableOffset >= tableStart &&
+                  tableOffset < tableStart + code->instructionsSize());
+        JS_ASSERT((tableOffset - tableStart) % BAILOUT_TABLE_ENTRY_SIZE == 0);
 
-} // namespace ion
-} // namespace js
+        bailoutId_ = ((tableOffset - tableStart) / BAILOUT_TABLE_ENTRY_SIZE) - 1;
+        JS_ASSERT(bailoutId_ < BAILOUT_TABLE_SIZE);
+    } else {
+        frameSize_ = bailout_->frameSize();
+        frame_ = &sp_[sizeof(ExtendedBailoutStack) / STACK_SLOT_SIZE];
+    }
+}
 
-#endif // jsion_codegen_h__
+IonFramePrefix *
+BailoutEnvironment::top() const
+{
+    return (IonFramePrefix *)&frame_[frameSize_ / STACK_SLOT_SIZE];
+}
 
