@@ -248,7 +248,7 @@
                              autocompletepopup="popup_autocomplete"
                              completeselectedindex="true"
                              minresultsforpopup="0"
-                             onsearchbegin="BrowserUI.updateAwesomeHeader(this.controller.searchString);"
+                             onsearchbegin="AwesomeScreen.updateHeader(this.controller.searchString);"
                              placeholder="&urlbar.emptytext;"
                              collapsed="true"
                              flex="1"
@@ -539,11 +539,11 @@
       </hbox>
 
       <!-- titlebar autocomplete results -->
-      <vbox id="popup_autocomplete" class="panel-dark" flex="1" onshow="BrowserUI._edit.showHistoryPopup();" hidden="true"/>
-      <placelist id="bookmarks-items" type="bookmarks" onopen="BookmarkList.openLink(event);" onhide="BrowserUI.updateStar();" flex="1" hidden="true"/>
-      <historylist id="history-items" onopen="HistoryList.openLink(event);" flex="1" hidden="true"/>
+      <vbox id="popup_autocomplete" class="panel-dark place-list" flex="1" onshow="BrowserUI._edit.showHistoryPopup();" hidden="true"/>
+      <placelist id="bookmarks-items" class="place-list" type="bookmarks" onopen="BookmarkList.openLink(event);" onhide="BrowserUI.updateStar();" flex="1" hidden="true"/>
+      <historylist id="history-items" class="place-list" onopen="HistoryList.openLink(event);" flex="1" hidden="true"/>
 #ifdef MOZ_SERVICES_SYNC
-      <remotetabslist id="remotetabs-items" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
+      <remotetabslist id="remotetabs-items" class="place-list" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
 #endif
     </vbox>
 
