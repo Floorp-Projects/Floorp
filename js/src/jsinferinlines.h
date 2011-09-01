@@ -42,6 +42,7 @@
 #include "jsarray.h"
 #include "jsanalyze.h"
 #include "jscompartment.h"
+#include "jsgcmark.h"
 #include "jsinfer.h"
 #include "jsprf.h"
 #include "vm/GlobalObject.h"
@@ -318,10 +319,16 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
     extern void TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
                                     const CallArgs &args, bool constructing);
 
-    if (cx->typeInferenceEnabled()) {
-        JSObject *callee = &args.callee();
-        if (callee->isFunction() && callee->getFunctionPrivate()->isInterpreted())
-            TypeMonitorCallSlow(cx, callee, args, constructing);
+    JSObject *callee = &args.callee();
+    if (callee->isFunction()) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        if (fun->isInterpreted()) {
+            JSScript *script = fun->script();
+            if (!script->ensureRanAnalysis(cx, fun, callee->getParent()))
+                return;
+            if (cx->typeInferenceEnabled())
+                TypeMonitorCallSlow(cx, callee, args, constructing);
+        }
     }
 }
 
@@ -508,6 +515,10 @@ TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 
 struct AllocationSiteKey {
     JSScript *script;
+
+    /* For determining whether the script is about to be destroyed :XXX: bug 674251 remove */
+    JSFunction *fun;
+
     uint32 offset : 24;
     JSProtoKey kind : 8;
 
@@ -537,6 +548,7 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JS
 
     AllocationSiteKey key;
     key.script = script;
+    key.fun = script->hasFunction ? script->function() : NULL;
     key.offset = offset;
     key.kind = kind;
 
@@ -601,8 +613,9 @@ TypeScript::MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
 /* static */ inline void
 TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
 {
-    if (!cx->typeInferenceEnabled() || !script->ensureHasTypes(cx))
+    if (!cx->typeInferenceEnabled())
         return;
+    JS_ASSERT(script->types);
 
     /* Analyze the script regardless if -a was used. */
     bool analyze = cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS);
@@ -614,7 +627,7 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
                   script->id(), TypeString(type));
         ThisTypes(script)->addType(cx, type);
 
-        if (analyze)
+        if (analyze && script->types->hasScope())
             script->ensureRanInference(cx);
     }
 }
@@ -629,8 +642,10 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, const js::Value &value)
 /* static */ inline void
 TypeScript::SetLocal(JSContext *cx, JSScript *script, unsigned local, Type type)
 {
-    if (!cx->typeInferenceEnabled() || !script->ensureHasTypes(cx))
+    if (!cx->typeInferenceEnabled())
         return;
+    JS_ASSERT(script->types);
+
     if (!LocalTypes(script, local)->hasType(type)) {
         AutoEnterTypeInference enter(cx);
 
@@ -652,8 +667,10 @@ TypeScript::SetLocal(JSContext *cx, JSScript *script, unsigned local, const js::
 /* static */ inline void
 TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type)
 {
-    if (!cx->typeInferenceEnabled() || !script->ensureHasTypes(cx))
+    if (!cx->typeInferenceEnabled())
         return;
+    JS_ASSERT(script->types);
+
     if (!ArgTypes(script, arg)->hasType(type)) {
         AutoEnterTypeInference enter(cx);
 
@@ -670,6 +687,17 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
         Type type = GetValueType(cx, value);
         SetArgument(cx, script, arg, type);
     }
+}
+
+void
+TypeScript::trace(JSTracer *trc)
+{
+    if (function)
+        gc::MarkObject(trc, *function, "script_fun");
+    if (hasScope() && global)
+        gc::MarkObject(trc, *global, "script_global");
+
+    /* Note: nesting does not keep anything alive. */
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1085,6 +1113,7 @@ inline TypeObject::TypeObject(JSObject *proto, bool function, bool unknown)
     PodZero(this);
 
     this->proto = proto;
+
     if (function)
         flags |= OBJECT_FLAG_FUNCTION;
     if (unknown)
@@ -1216,6 +1245,16 @@ TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
         setFlags(cx, flags);
 }
 
+inline JSObject *
+TypeObject::getGlobal()
+{
+    if (singleton)
+        return singleton->getGlobal();
+    if (interpretedFunction && interpretedFunction->script()->compileAndGo)
+        return interpretedFunction->getGlobal();
+    return NULL;
+}
+
 class AutoTypeRooter : private AutoGCRooter {
   public:
     AutoTypeRooter(JSContext *cx, TypeObject *type
@@ -1236,28 +1275,20 @@ class AutoTypeRooter : private AutoGCRooter {
 } } /* namespace js::types */
 
 inline bool
-JSScript::isAboutToBeFinalized(JSContext *cx)
+JSScript::ensureHasTypes(JSContext *cx, JSFunction *fun)
 {
-    return isCachedEval ||
-        (u.object && IsAboutToBeFinalized(cx, u.object)) ||
-        (hasFunction && IsAboutToBeFinalized(cx, function()));
+    return types || makeTypes(cx, fun);
 }
 
 inline bool
-JSScript::ensureHasTypes(JSContext *cx)
+JSScript::ensureRanAnalysis(JSContext *cx, JSFunction *fun, JSObject *scope)
 {
-    return types || makeTypes(cx);
-}
-
-inline bool
-JSScript::ensureRanBytecode(JSContext *cx)
-{
-    if (!ensureHasTypes(cx))
+    if (!ensureHasTypes(cx, fun))
         return false;
-    if (!hasAnalysis()) {
-        if (!makeAnalysis(cx))
-            return false;
-    }
+    if (!types->hasScope() && !js::types::TypeScript::SetScope(cx, this, scope))
+        return false;
+    if (!hasAnalysis() && !makeAnalysis(cx))
+        return false;
     JS_ASSERT(analysis()->ranBytecode());
     return true;
 }
@@ -1265,7 +1296,7 @@ JSScript::ensureRanBytecode(JSContext *cx)
 inline bool
 JSScript::ensureRanInference(JSContext *cx)
 {
-    if (!ensureRanBytecode(cx))
+    if (!ensureRanAnalysis(cx))
         return false;
     if (!analysis()->ranInference()) {
         js::types::AutoEnterTypeInference enter(cx);
@@ -1285,6 +1316,13 @@ JSScript::analysis()
 {
     JS_ASSERT(hasAnalysis());
     return types->analysis;
+}
+
+inline void
+JSScript::clearAnalysis()
+{
+    if (types)
+        types->analysis = NULL;
 }
 
 inline void

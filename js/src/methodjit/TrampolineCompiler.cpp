@@ -109,7 +109,8 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
 /*
  * This is shamelessly copied from emitReturn, but with several changes:
  * - There was always at least one inline call.
- * - We don't know if there is a call object, so we always check.
+ * - We don't know if there are activation objects or a script with nesting
+ *   state whose active frames need adjustment, so we always stub the epilogue.
  * - We don't know where we came from, so we don't know frame depth or PC.
  * - There is no stub buffer.
  */
@@ -119,13 +120,8 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     /* The JSStackFrame register may have been clobbered while returning, reload it. */
     masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
 
-    masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::ScriptDebugEpilogue), NULL, NULL, 0);
-
-    /* if (hasArgsObj() || hasCallObj()) stubs::PutActivationObjects() */
-    Jump noActObjs = masm.branchTest32(Assembler::Zero, FrameFlagsAddress(),
-                                       Imm32(StackFrame::HAS_CALL_OBJ | StackFrame::HAS_ARGS_OBJ));
-    masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::PutActivationObjects), NULL, NULL, 0);
-    noActObjs.linkTo(masm.label(), &masm);
+    /* Perform the frame epilogue. */
+    masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::AnyFrameEpilogue), NULL, NULL, 0);
 
     /* Store any known return value */
     masm.loadValueAsComponents(UndefinedValue(), JSReturnReg_Type, JSReturnReg_Data);

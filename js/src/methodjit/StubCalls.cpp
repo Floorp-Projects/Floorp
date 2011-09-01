@@ -2538,6 +2538,27 @@ stubs::Exception(VMFrame &f)
     f.cx->clearPendingException();
 }
 
+void JS_FASTCALL
+stubs::FunctionFramePrologue(VMFrame &f)
+{
+    if (!f.fp()->functionPrologue(f.cx))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::FunctionFrameEpilogue(VMFrame &f)
+{
+    f.fp()->functionEpilogue();
+}
+
+void JS_FASTCALL
+stubs::AnyFrameEpilogue(VMFrame &f)
+{
+    if (f.fp()->isNonEvalFunctionFrame())
+        f.fp()->functionEpilogue();
+    stubs::ScriptDebugEpilogue(f);
+}
+
 template <bool Clamped>
 int32 JS_FASTCALL
 stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
