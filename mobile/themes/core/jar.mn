@@ -361,6 +361,7 @@ chrome.jar:
   skin/honeycomb/images/close-default-hdpi.png        (honeycomb/images/close-default-hdpi.png)
   skin/honeycomb/images/close-active-hdpi.png         (honeycomb/images/close-active-hdpi.png)
   skin/honeycomb/images/close-inactive-tab-hdpi.png   (honeycomb/images/close-inactive-tab-hdpi.png)
+  skin/honeycomb/images/check-30.png                  (images/check-30.png)
   skin/honeycomb/images/check-selected-hdpi.png       (honeycomb/images/check-selected-hdpi.png)
   skin/honeycomb/images/check-unselected-hdpi.png     (honeycomb/images/check-unselected-hdpi.png)
   skin/honeycomb/images/search-glass-30.png           (honeycomb/images/search-glass-30.png)
