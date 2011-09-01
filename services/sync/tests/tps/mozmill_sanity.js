@@ -35,26 +35,28 @@
  *
  * **** END LICENSE BLOCK ***** */
 
-var jum = {}; Components.utils.import('resource://mozmill/modules/jum.js', jum);
+Components.utils.import('resource://tps/sync.jsm');
 
 var setupModule = function(module) {
   controller = mozmill.getBrowserController();
-  jum.assert(true, "SetupModule passes");
+  assert.ok(true, "SetupModule passes");
 }
 
 var setupTest = function(module) {
-  jum.assert(true, "SetupTest passes");
+  assert.ok(true, "SetupTest passes");
 }
 
 var testTestStep = function() {
-  jum.assert(true, "test Passes");
+  assert.ok(true, "test Passes");
   controller.open("http://www.mozilla.org");
+  TPS.SetupSyncAccount();
+  assert.equal(TPS.Sync(SYNC_WIPE_SERVER), 0, "sync succeeded");
 }
 
 var teardownTest = function () {
-  jum.assert(true, "teardownTest passes");
+  assert.ok(true, "teardownTest passes");
 }
 
 var teardownModule = function() {
-  jum.assert(true, "teardownModule passes");
+  assert.ok(true, "teardownModule passes");
 }
