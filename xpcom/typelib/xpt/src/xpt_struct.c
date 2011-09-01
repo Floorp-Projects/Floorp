@@ -941,7 +941,7 @@ static XPT_TYPELIB_VERSIONS_STRUCT versions[] = XPT_TYPELIB_VERSIONS;
 XPT_PUBLIC_API(PRUint16)
 XPT_ParseVersionString(const char* str, PRUint8* major, PRUint8* minor)
 {
-    int i;
+    unsigned int i;
     for (i = 0; i < XPT_TYPELIB_VERSIONS_COUNT; i++) {
         if (!strcmp(versions[i].str, str)) {
             *major = versions[i].major;

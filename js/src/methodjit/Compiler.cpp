@@ -142,7 +142,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
 
     /* Once a script starts getting really hot we will inline calls in it. */
     if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
-        (outerScript->useCount() >= USES_BEFORE_INLINING ||
+        (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
          cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
         inlining_ = true;
     }
@@ -865,7 +865,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                       jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool;
-    uint8 *result = (uint8 *)script->compartment->jaegerCompartment()->execAlloc()->
+    uint8 *result = (uint8 *)script->compartment()->jaegerCompartment()->execAlloc()->
                     alloc(codeSize, &execPool, JSC::METHOD_CODE);
     if (!result) {
         js_ReportOutOfMemory(cx);
@@ -2822,7 +2822,7 @@ mjit::Compiler::fullAtomIndex(jsbytecode *pc)
 
     /* If we ever enable INDEXBASE garbage, use this below. */
 #if 0
-    return GET_SLOTNO(pc) + (atoms - script->atomMap.vector);
+    return GET_SLOTNO(pc) + (atoms - script->atoms);
 #endif
 }
 
@@ -5502,7 +5502,7 @@ mjit::Compiler::iter(uintN flags)
     frame.unpinReg(reg);
 
     /* Fetch the most recent iterator. */
-    masm.loadPtr(&script->compartment->nativeIterCache.last, ioreg);
+    masm.loadPtr(&script->compartment()->nativeIterCache.last, ioreg);
 
     /* Test for NULL. */
     Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);

@@ -100,9 +100,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     breakpointSites(rt),
     watchpointMap(NULL)
 {
-    JS_INIT_CLIST(&scripts);
-
-    PodArrayZero(scriptsToGC);
+    PodArrayZero(evalCache);
 }
 
 JSCompartment::~JSCompartment()
@@ -123,8 +121,8 @@ JSCompartment::~JSCompartment()
     Foreground::delete_(watchpointMap);
 
 #ifdef DEBUG
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
-        JS_ASSERT(!scriptsToGC[i]);
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i)
+        JS_ASSERT(!evalCache[i]);
 #endif
 }
 
@@ -492,27 +490,6 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
         MarkValue(trc, e.front().key, "cross-compartment wrapper");
 }
 
-struct MarkSingletonObjectOp
-{
-    JSTracer *trc;
-    MarkSingletonObjectOp(JSTracer *trc) : trc(trc) {}
-    void operator()(Cell *cell) {
-        JSObject *object = static_cast<JSObject *>(cell);
-        if (!object->isNewborn() && object->hasSingletonType())
-            MarkObject(trc, *object, "mark_types_singleton");
-    }
-};
-
-struct MarkTypeObjectOp
-{
-    JSTracer *trc;
-    MarkTypeObjectOp(JSTracer *trc) : trc(trc) {}
-    void operator()(Cell *cell) {
-        types::TypeObject *object = static_cast<types::TypeObject *>(cell);
-        MarkTypeObject(trc, object, "mark_types_scan");
-    }
-};
-
 void
 JSCompartment::markTypes(JSTracer *trc)
 {
@@ -523,20 +500,23 @@ JSCompartment::markTypes(JSTracer *trc)
      */
     JS_ASSERT(activeAnalysis);
 
-    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        js_TraceScript(trc, script, NULL);
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        MarkScript(trc, script, "mark_types_script");
     }
 
-    MarkSingletonObjectOp objectCellOp(trc);
     for (unsigned thingKind = FINALIZE_OBJECT0;
          thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
          thingKind++) {
-        gc::ForEachArenaAndCell(this, (FinalizeKind) thingKind, EmptyArenaOp, objectCellOp);
+        for (CellIterUnderGC i(this, FinalizeKind(thingKind)); !i.done(); i.next()) {
+            JSObject *object = i.get<JSObject>();
+            if (!object->isNewborn() && object->hasSingletonType())
+                MarkObject(trc, *object, "mark_types_singleton");
+        }
     }
 
-    MarkTypeObjectOp typeCellOp(trc);
-    gc::ForEachArenaAndCell(this, FINALIZE_TYPE_OBJECT, EmptyArenaOp, typeCellOp);
+    for (CellIterUnderGC i(this, FINALIZE_TYPE_OBJECT); !i.done(); i.next())
+        MarkTypeObject(trc, i.get<types::TypeObject>(), "mark_types_scan");
 }
 
 void
@@ -584,8 +564,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
      * Purge all PICs in the compartment. These can reference type data and
      * need to know which types are pending collection.
      */
-    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
         if (script->hasJITCode())
             mjit::ic::PurgePICs(cx, script);
     }
@@ -606,8 +586,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     if (discardScripts)
         hasDebugModeCodeToDrop = false;
 
-    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
         if (script->hasJITCode()) {
             mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
@@ -636,9 +616,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 #ifdef JS_METHODJIT
             mjit::ClearAllFrames(this);
 #endif
-
-            for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-                JSScript *script = reinterpret_cast<JSScript *>(cursor);
+            for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+                JSScript *script = i.get<JSScript>();
                 if (script->types) {
                     types::TypeScript::Sweep(cx, script);
 
@@ -657,20 +636,14 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
         types.sweep(cx);
 
-        for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
-            JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
             if (script->types)
                 script->types->analysis = NULL;
         }
 
         /* Reset the analysis pool, releasing all analysis and intermediate type data. */
         JS_FinishArenaPool(&oldPool);
-
-        /*
-         * Destroy eval'ed scripts, now that any type inference information referring
-         * to eval scripts has been removed.
-         */
-        js_DestroyScriptsToGC(cx, this);
     }
 
     active = false;
@@ -681,6 +654,21 @@ JSCompartment::purge(JSContext *cx)
 {
     freeLists.purge();
     dtoaCache.purge();
+
+    /*
+     * Clear the hash and reset all evalHashLink to null before the GC. This
+     * way MarkChildren(trc, JSScript *) can assume that JSScript::u.object is
+     * not null when we have script owned by an object and not from the eval
+     * cache.
+     */
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(evalCache); ++i) {
+        for (JSScript **listHeadp = &evalCache[i]; *listHeadp; ) {
+            JSScript *script = *listHeadp;
+            JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
+            *listHeadp = NULL;
+            listHeadp = &script->u.evalHashLink;
+        }
+    }
 
     nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
@@ -695,19 +683,16 @@ JSCompartment::purge(JSContext *cx)
             traceMonitor()->needFlush = JS_TRUE;
 #endif
 
-#ifdef JS_METHODJIT
-    for (JSScript *script = (JSScript *)scripts.next;
-         &script->links != &scripts;
-         script = (JSScript *)script->links.next) {
-        if (script->hasJITCode()) {
-# if defined JS_MONOIC
-            /*
-             * MICs do not refer to data which can be GC'ed and do not generate stubs
-             * which might need to be discarded, but are sensitive to shape regeneration.
-             */
-            if (cx->runtime->gcRegenShapes)
+#if defined JS_METHODJIT && defined JS_MONOIC
+    /*
+     * MICs do not refer to data which can be GC'ed and do not generate stubs
+     * which might need to be discarded, but are sensitive to shape regeneration.
+     */
+    if (cx->runtime->gcRegenShapes) {
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            if (script->hasJITCode())
                 mjit::ic::PurgeMICs(cx, script);
-# endif
         }
     }
 #endif
@@ -761,7 +746,7 @@ JSCompartment::hasScriptsOnStack(JSContext *cx)
 {
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         JSScript *script = i.fp()->maybeScript();
-        if (script && script->compartment == this)
+        if (script && script->compartment() == this)
             return true;
     }
     return false;
@@ -818,12 +803,12 @@ JSCompartment::updateForDebugMode(JSContext *cx)
         return;
     }
 
-    // Discard JIT code for any scripts that change debugMode. This assumes
-    // that 'comp' is in the same thread as 'cx'.
-    for (JSScript *script = (JSScript *) scripts.next;
-         &script->links != &scripts;
-         script = (JSScript *) script->links.next)
-    {
+    /*
+     * Discard JIT code for any scripts that change debugMode. This assumes
+     * that 'comp' is in the same thread as 'cx'.
+     */
+    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
         if (script->debugMode != enabled) {
             mjit::ReleaseScriptCode(cx, script);
             script->debugMode = enabled;
@@ -905,7 +890,7 @@ void
 JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script,
                                   JSObject *handler)
 {
-    JS_ASSERT_IF(script, script->compartment == this);
+    JS_ASSERT_IF(script, script->compartment() == this);
 
     for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
         BreakpointSite *site = e.front().value;

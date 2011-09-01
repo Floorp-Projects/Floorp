@@ -87,7 +87,7 @@ FindExceptionHandler(JSContext *cx)
 top:
     if (cx->isExceptionPending() && JSScript::isValidOffset(script->trynotesOffset)) {
         // The PC is updated before every stub call, so we can use it here.
-        unsigned offset = cx->regs().pc - script->main;
+        unsigned offset = cx->regs().pc - script->main();
 
         JSTryNoteArray *tnarray = script->trynotes();
         for (unsigned i = 0; i < tnarray->length; ++i) {
@@ -113,7 +113,7 @@ top:
             if (tn->stackDepth > cx->regs().sp - fp->base())
                 continue;
 
-            jsbytecode *pc = script->main + tn->start + tn->length;
+            jsbytecode *pc = script->main() + tn->start + tn->length;
             cx->regs().pc = pc;
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(cx->regs().sp == fp->base() + tn->stackDepth);
@@ -181,11 +181,12 @@ InlineReturn(VMFrame &f)
     JS_ASSERT(!js_IsActiveWithOrBlock(f.cx, &f.fp()->scopeChain(), 0));
     f.cx->stack.popInlineFrame(f.regs);
 
-    JS_ASSERT(*f.regs.pc == JSOP_CALL ||
-              *f.regs.pc == JSOP_NEW ||
-              *f.regs.pc == JSOP_EVAL ||
-              *f.regs.pc == JSOP_FUNCALL ||
-              *f.regs.pc == JSOP_FUNAPPLY);
+    DebugOnly<JSOp> op = js_GetOpcode(f.cx, f.fp()->script(), f.regs.pc);
+    JS_ASSERT(op == JSOP_CALL ||
+              op == JSOP_NEW ||
+              op == JSOP_EVAL ||
+              op == JSOP_FUNCALL ||
+              op == JSOP_FUNAPPLY);
     f.regs.pc += JSOP_CALL_LENGTH;
 }
 

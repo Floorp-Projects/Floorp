@@ -148,7 +148,7 @@ class LinkerHelper : public JSC::LinkBuffer
         // The pool is incref'd after this call, so it's necessary to release()
         // on any failure.
         JSScript *script = cx->fp()->script();
-        JSC::ExecutableAllocator *allocator = script->compartment->jaegerCompartment()->execAlloc();
+        JSC::ExecutableAllocator *allocator = script->compartment()->jaegerCompartment()->execAlloc();
         JSC::ExecutablePool *pool;
         m_code = executableAllocAndCopy(masm, allocator, &pool);
         if (!m_code) {

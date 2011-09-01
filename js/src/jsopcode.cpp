@@ -258,7 +258,6 @@ public:
             // No change needed
             newPC = origPC;
         } else {
-            script->main += newCode - script->code;
             *pc = newPC = origPC + (newCode - script->code);
             script->code = newCode;
 #ifdef DEBUG
@@ -274,7 +273,6 @@ public:
             jsbytecode *oldCode = script->code - delta;
             cx->free_(script->code);
             script->code = oldCode;
-            script->main -= delta;
 #ifdef DEBUG
             cx->stackIterAssertionEnabled = assertionBefore;
 #endif
@@ -313,7 +311,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
     next = script->code;
     end = next + script->length;
     while (next < end) {
-        if (next == script->main)
+        if (next == script->main())
             SprintCString(sp, "main:\n");
         if (pc != NULL) {
             if (pc == next)
@@ -2023,8 +2021,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
     JS_BEGIN_MACRO                                                            \
         jsatomid atomIndex_ = (jsatomid) js_GetSrcNoteOffset((sn), 0);        \
                                                                               \
-        LOCAL_ASSERT(atomIndex_ < jp->script->atomMap.length);                \
-        (atom) = jp->script->atomMap.vector[atomIndex_];                      \
+        LOCAL_ASSERT(atomIndex_ < jp->script->natoms);                        \
+        (atom) = jp->script->atoms[atomIndex_];                               \
     JS_END_MACRO
 
 /*
@@ -4110,8 +4108,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * Decompile only the main bytecode, to avoid tripping over
                      * new prolog ops that have stack effects.
                      */
-                    ok = Decompile(&ss2, inner->main,
-                                   inner->length - (inner->main - inner->code),
+                    ok = Decompile(&ss2, inner->main(), inner->length - inner->mainOffset,
                                    JSOP_NOP)
                          != NULL;
                     jp->script = outer;
@@ -4997,7 +4994,7 @@ js_DecompileFunction(JSPrinter *jp)
 #endif
 
         /* Print the parameters. */
-        pc = script->main;
+        pc = script->main();
         AutoScriptUntrapper untrapper(jp->sprinter.context, script, &pc);
         endpc = pc + script->length;
         ok = JS_TRUE;
@@ -5106,7 +5103,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs().pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
-    if (pc < script->main)
+    if (pc < script->main())
         goto do_fallback;
     
     if (spindex != JSDVG_IGNORE_STACK) {

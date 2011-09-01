@@ -971,7 +971,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (tcflags & TCF_COMPILE_N_GO) {
         if (source) {
             /*
-             * Save eval program source in script->atomMap.vector[0] for the
+             * Save eval program source in script->atoms[0] for the
              * eval cache (see EvalCacheLookup in jsobj.cpp).
              */
             JSAtom *atom = js_AtomizeString(cx, source);
@@ -1114,11 +1114,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(script->savedCallerFun == savedCallerFun);
 
-    {
-        AutoScriptRooter root(cx, script);
-        if (!defineGlobals(cx, globalScope, script))
-            goto late_error;
-    }
+    if (!defineGlobals(cx, globalScope, script))
+        script = NULL;
 
   out:
     JS_FinishArenaPool(&codePool);
@@ -1128,11 +1125,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
   too_many_slots:
     parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
-    /* Fall through. */
-
-  late_error:
-    if (script && !script->u.object)
-        js_DestroyScript(cx, script, 7);
     script = NULL;
     goto out;
 }
@@ -2476,7 +2468,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
         } else if (funbox->inAnyDynamicScope()) {
             JS_ASSERT(!fun->isNullClosure());
         } else {
-            uintN hasUpvars = false;
+            bool hasUpvars = false;
             bool canFlatten = true;
 
             if (pn->pn_type == TOK_UPVARS) {
