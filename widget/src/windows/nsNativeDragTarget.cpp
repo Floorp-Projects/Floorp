@@ -127,9 +127,16 @@ void
 nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect,
                                        PRUint32 * aGeckoAction)
 {
+  // If a window is disabled or a modal window is on top of 
+  // it (which implies it is disabled), then we should not allow dropping.
+  PRBool isEnabled;
+  if (NS_SUCCEEDED(mWindow->IsEnabled(&isEnabled)) && !isEnabled) {
+    *pdwEffect = DROPEFFECT_NONE;
+    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_NONE;
+  }
   // Only a single effect should be specified outgoing for the parameter pdwEffect.
   // When Shift and Control are pressed, we should specify a LINK effect.
-  if (!mMovePreferred && (grfKeyState & MK_CONTROL) && 
+  else if (!mMovePreferred && (grfKeyState & MK_CONTROL) && 
       (grfKeyState & MK_SHIFT) && (mEffectsAllowed & DROPEFFECT_LINK)) {
     *pdwEffect = DROPEFFECT_LINK;
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_LINK;
