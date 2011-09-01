@@ -3547,10 +3547,16 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         TypeSet *seen = bytecodeTypes(pc);
         seen->addSubset(cx, &pushed[0]);
 
-        /* Try to resolve this name by walking the function's scope nesting. */
+        /*
+         * Try to resolve this name by walking the function's scope nesting.
+         * If we succeed but the accessed script has had its TypeScript purged
+         * in the past, we still must use a type barrier: the name access can
+         * be on a call object which predated the purge, and whose types might
+         * not be reflected in the reconstructed information.
+         */
         jsid id = GetAtomId(cx, script, pc, 0);
         NameAccess access = resolveNameAccess(cx, id);
-        if (access.script) {
+        if (access.script && !access.script->typesPurged) {
             TypeSet *types = TypeScript::SlotTypes(access.script, access.slot);
             types->addSubsetBarrier(cx, script, pc, seen);
         } else {
