@@ -1636,10 +1636,9 @@ NS_SecurityHashURI(nsIURI* aURI)
     if (scheme.EqualsLiteral("file"))
         return schemeHash; // sad face
 
-    PRBool hasFlag;
-    if (NS_FAILED(NS_URIChainHasFlags(baseURI, 
-        nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
-        hasFlag) 
+    if (scheme.EqualsLiteral("imap") ||
+        scheme.EqualsLiteral("mailbox") ||
+        scheme.EqualsLiteral("news"))
     {
         nsCAutoString spec;
         PRUint32 specHash = baseURI->GetSpec(spec);
@@ -1733,13 +1732,13 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
         return NS_SUCCEEDED(rv) && filesAreEqual;
     }
 
-    PRBool hasFlag;
-    if (NS_FAILED(NS_URIChainHasFlags(targetBaseURI, 
-        nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
-        hasFlag) 
+    // Special handling for mailnews schemes
+    if (targetScheme.EqualsLiteral("imap") ||
+        targetScheme.EqualsLiteral("mailbox") ||
+        targetScheme.EqualsLiteral("news"))
     {
-        // URIs with this flag have the whole spec as a distinct trust 
-        // domain; use the whole spec for comparison
+        // Each message is a distinct trust domain; use the
+        // whole spec for comparison
         nsCAutoString targetSpec;
         nsCAutoString sourceSpec;
         return ( NS_SUCCEEDED( targetBaseURI->GetSpec(targetSpec) ) &&
