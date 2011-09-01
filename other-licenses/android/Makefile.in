@@ -42,10 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = mozutils
-LIBRARY_NAME     = mozutils
-FORCE_SHARED_LIB = 1
-DIST_INSTALL     = 1
+MODULE           = android
+LIBRARY_NAME     = android
+FORCE_STATIC_LIB = 1
 
 DEFINES += \
   -DLINKER_DEBUG=0 \
@@ -71,14 +70,5 @@ CSRCS = \
   $(NULL)
 
 EXPORTS = APKOpen.h
-
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
-
-ifdef MOZ_MEMORY
-SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
-endif
-
-WRAP_LDFLAGS =
-MOZ_MEMORY_LDFLAGS =
 
 include $(topsrcdir)/config/rules.mk
