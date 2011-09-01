@@ -143,7 +143,7 @@ var TPS =
             Weave.Service.logout();
             Utils.nextTick(this.RunNextTestAction, this);
           }
-          else {
+          else if (this._waitingForSync) {
             // ...otherwise abort the test
             this.DumpError("sync error; aborting test");
             return;
@@ -471,7 +471,7 @@ var TPS =
         this.DumpError("Sync logged in on startup...profile may be dirty");
         return;
       }
-      
+
       // setup observers
       Services.obs.addObserver(this, "weave:service:sync:finish", true);
       Services.obs.addObserver(this, "weave:service:sync:error", true);
@@ -498,7 +498,15 @@ var TPS =
       // wipe the server at the end of the final test phase
       if (this.phases["phase" + (parseInt(this._currentPhase) + 1)] == undefined)
         this_phase.push([this.WipeServer]);
-      
+
+      // Store account details as prefs so they're accessible to the mozmill
+      // framework.
+      let prefs = CC["@mozilla.org/preferences-service;1"]
+                  .getService(CI.nsIPrefBranch);
+      prefs.setCharPref('tps.account.username', this.config.account.username);
+      prefs.setCharPref('tps.account.password', this.config.account.password);
+      prefs.setCharPref('tps.account.passphrase', this.config.account.passphrase);
+
       // start processing the test actions
       this._currentAction = 0;
     }
