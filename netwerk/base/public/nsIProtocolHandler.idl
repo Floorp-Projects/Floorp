@@ -133,27 +133,6 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_NOAUTH = (1<<1);
 
     /**
-     * This protocol handler can be proxied via a proxy (socks or http)
-     * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
-     * proxying, the handler should implement nsIProxiedProtocolHandler.
-     *
-     * If it supports only HTTP proxying, then it need not support
-     * nsIProxiedProtocolHandler, but should instead set the ALLOWS_PROXY_HTTP
-     * flag (see below).
-     *
-     * @see nsIProxiedProtocolHandler
-     */
-    const unsigned long ALLOWS_PROXY = (1<<2);
-
-    /**
-     * This protocol handler can be proxied using a http proxy (e.g., http,
-     * ftp, etc.).  nsIIOService::newChannelFromURI will feed URIs from this
-     * protocol handler to the HTTP protocol handler instead.  This flag is
-     * ignored if ALLOWS_PROXY is not set.
-     */
-    const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
-
-    /**
      * The URIs for this protocol have no inherent security context, so
      * documents loaded via this protocol should inherit the security context
      * from the document that loads them.
@@ -229,6 +208,13 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_IS_LOCAL_FILE = (1<<9);
 
     /**
+     * The URIs for this protocol can be loaded only by callers with a
+     * principal that subsumes this uri. For example, privileged code and
+     * websites that are same origin as this uri.
+     */
+    const unsigned long URI_LOADABLE_BY_SUBSUMERS = (1<<14);
+
+    /**
      * Loading channels from this protocol has side-effects that make
      * it unsuitable for saving to a local file.
      */
@@ -253,18 +239,28 @@ interface nsIProtocolHandler : nsISupports
      */
     const unsigned long URI_OPENING_EXECUTES_SCRIPT = (1<<13);
 
-    /**
-     * The URIs for this protocol can be loaded only by callers with a
-     * principal that subsumes this uri. For example, privileged code and
-     * websites that are same origin as this uri.
-     */
-    const unsigned long URI_LOADABLE_BY_SUBSUMERS = (1<<14);
+    // Note that 1 << 14 is used above
 
     /**
-     * If this flag is set, then the origin for this protocol is the full URI 
-     * spec, not just the scheme + host + port.
+     * This protocol handler can be proxied via a proxy (socks or http)
+     * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
+     * proxying, the handler should implement nsIProxiedProtocolHandler.
+     *
+     * If it supports only HTTP proxying, then it need not support
+     * nsIProxiedProtocolHandler, but should instead set the ALLOWS_PROXY_HTTP
+     * flag (see below).
+     *
+     * @see nsIProxiedProtocolHandler
      */
-    const unsigned long ORIGIN_IS_FULL_SPEC = (1<<15);
+    const unsigned long ALLOWS_PROXY = (1<<2);
+
+    /**
+     * This protocol handler can be proxied using a http proxy (e.g., http,
+     * ftp, etc.).  nsIIOService::newChannelFromURI will feed URIs from this
+     * protocol handler to the HTTP protocol handler instead.  This flag is
+     * ignored if ALLOWS_PROXY is not set.
+     */
+    const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
 };
 
 %{C++
@@ -275,6 +271,4 @@ interface nsIProtocolHandler : nsISupports
 /**
  * For example, "@mozilla.org/network/protocol;1?name=http"
  */
- 
-#define IS_ORIGIN_IS_FULL_SPEC_DEFINED 1
 %}
