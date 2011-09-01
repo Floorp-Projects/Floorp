@@ -409,10 +409,16 @@ endif
 endif
 endif
 ifdef ENABLE_ION
-ifeq (arm, $(TARGET_CPU))
+ifeq (arm, $(findstring arm, $(TARGET_CPU)))
 #CPPSRCS		+= only_on_arm.cpp
 VPATH +=	$(srcdir)/ion/arm
-CPPSRCS +=	Lowering-arm.cpp
+CPPSRCS +=	Lowering-arm.cpp \
+		CodeGenerator-arm.cpp \
+		Trampoline-arm.cpp \
+		Assembler-arm.cpp \
+		Bailouts-arm.cpp \
+		MoveEmitter-arm.cpp \
+		$(NULL)
 endif
 endif #ENABLE_ION
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
@@ -502,7 +508,7 @@ else
 #CPPSRCS		+= only_on_x86.cpp
 endif
 endif
-ifeq (arm, $(TARGET_CPU))
+ifeq (arm, $(findstring arm, $(TARGET_CPU)))
 #CPPSRCS		+= only_on_arm.cpp
 endif
 #

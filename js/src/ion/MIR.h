@@ -856,7 +856,7 @@ class MCompare
   : public MBinaryInstruction,
     public ComparePolicy
 {
-    AssemblerX86Shared::Condition cond_;
+    Assembler::Condition cond_;
 
     MCompare(MDefinition *left, MDefinition *right, JSOp op)
       : MBinaryInstruction(left, right)
@@ -874,7 +874,7 @@ class MCompare
         return specialization_;
     }
 
-    AssemblerX86Shared::Condition condition() {
+    Assembler::Condition condition() {
         return cond_;
     }
 

@@ -53,6 +53,8 @@
 # include "x86/Lowering-x86.h"
 #elif defined(JS_CPU_X64)
 # include "x64/Lowering-x64.h"
+#elif defined(JS_CPU_ARM)
+# include "arm/Lowering-arm.h"
 #else
 # error "CPU!"
 #endif

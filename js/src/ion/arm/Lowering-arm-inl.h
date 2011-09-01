@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <dvander@alliedmods.net>
+ *   David Anderson <danderson@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,41 +39,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
+#ifndef jsion_ion_lowering_arm_inl_h__
+#define jsion_ion_lowering_arm_inl_h__
 
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
+#include "ion/IonLIR-inl.h"
 
 namespace js {
 namespace ion {
 
-class CodeGenerator : public CodeGeneratorSpecific
+// Returns the virtual register of a js::Value-defining instruction. This is
+// abstracted because MBox is a special value-returning instruction that
+// redefines its input payload if its input is not constant. Therefore, it is
+// illegal to request a box's payload by adding VREG_DATA_OFFSET to its raw id.
+static inline uint32
+VirtualRegisterOfPayload(MDefinition *mir)
 {
-    bool generateBody();
+    if (mir->isBox()) {
+        MDefinition *inner = mir->toBox()->getOperand(0);
+        if (!inner->isConstant() && inner->type() != MIRType_Double)
+            return inner->id();
+    }
+    return mir->id() + VREG_DATA_OFFSET;
+}
 
-  public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+LUse
+LIRGeneratorARM::useType(MDefinition *mir, LUse::Policy policy)
+{
+    JS_ASSERT(mir->id());
+    JS_ASSERT(mir->type() == MIRType_Value);
 
-  public:
-    bool generate();
+    return LUse(mir->id() + VREG_TYPE_OFFSET, policy);
+}
 
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
-};
+LUse
+LIRGeneratorARM::usePayload(MDefinition *mir, LUse::Policy policy)
+{
+    JS_ASSERT(mir->id());
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    return LUse(VirtualRegisterOfPayload(mir), policy);
+}
+
+LUse
+LIRGeneratorARM::usePayloadInRegister(MDefinition *mir)
+{
+    return usePayload(mir, LUse::REGISTER);
+}
+
+bool
+LIRGeneratorARM::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
+{
+    if (!ensureDefined(mir))
+        return false;
+    lir->getOperand(n)->toUse()->setVirtualRegister(mir->id() + VREG_TYPE_OFFSET);
+    lir->getOperand(n + 1)->toUse()->setVirtualRegister(VirtualRegisterOfPayload(mir));
+    return true;
+}
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_codegen_h__
+#endif // jsion_ion_lowering_arm_h__
 

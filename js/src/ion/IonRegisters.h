@@ -48,7 +48,7 @@
 #elif defined(JS_CPU_X64)
 # include "x64/Architecture-x64.h"
 #elif defined(JS_CPU_ARM)
-# include "arm/Architecture-ARM.h"
+# include "arm/Architecture-arm.h"
 #endif
 #include "assembler/assembler/MacroAssembler.h"
 

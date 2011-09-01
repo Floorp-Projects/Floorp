@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <dvander@alliedmods.net>
+ *   David Anderson <danderson@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,41 +39,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
+#ifndef jsion_lir_opcodes_arm_h__
+#define jsion_lir_opcodes_arm_h__
 
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
+#define LIR_CPU_OPCODE_LIST(_)  \
+    _(Unbox)                    \
+    _(UnboxDouble)              \
+    _(Box)                      \
+    _(BoxDouble)                \
 
-namespace js {
-namespace ion {
-
-class CodeGenerator : public CodeGeneratorSpecific
-{
-    bool generateBody();
-
-  public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
-
-  public:
-    bool generate();
-
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
-};
-
-} // namespace ion
-} // namespace js
-
-#endif // jsion_codegen_h__
+#endif // jsion_lir_opcodes_arm_h__
 

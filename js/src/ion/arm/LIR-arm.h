@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <dvander@alliedmods.net>
+ *   David Anderson <danderson@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,41 +39,83 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
+#ifndef jsion_lir_arm_h__
+#define jsion_lir_arm_h__
 
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
+#include "ion/TypeOracle.h"
 
 namespace js {
 namespace ion {
 
-class CodeGenerator : public CodeGeneratorSpecific
+class LBox : public LInstructionHelper<2, 1, 0>
 {
-    bool generateBody();
+    MIRType type_;
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+    LIR_HEADER(Box);
+
+    LBox(const LAllocation &in_payload, MIRType type)
+      : type_(type)
+    {
+        setOperand(0, in_payload);
+    }
+
+    MIRType type() const {
+        return type_;
+    }
+};
+
+class LBoxDouble : public LInstructionHelper<2, 1, 0>
+{
+  public:
+    LIR_HEADER(BoxDouble);
+
+    LBoxDouble(const LAllocation &in) {
+        setOperand(0, in);
+    }
+};
+
+class LUnbox : public LInstructionHelper<1, 2, 0>
+{
+    MIRType type_;
 
   public:
-    bool generate();
+    LIR_HEADER(Unbox);
 
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
+    LUnbox(MIRType type)
+      : type_(type)
+    { }
+
+    MIRType type() const {
+        return type_;
+    }
+};
+
+class LUnboxDouble : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(UnboxDouble);
+
+    static const size_t Input = 0;
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+// Constant double.
+class LDouble : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Double);
+
+    LDouble(const LConstantIndex &cindex) {
+        setOperand(0, cindex);
+    }
 };
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_codegen_h__
+#endif // jsion_lir_arm_h__
 
