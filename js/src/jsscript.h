@@ -629,8 +629,6 @@ struct JSScript : public js::gc::Cell {
     inline bool hasAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    inline bool isAboutToBeFinalized(JSContext *cx);
-
   private:
     bool makeTypes(JSContext *cx);
     bool makeAnalysis(JSContext *cx);

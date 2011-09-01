@@ -5480,7 +5480,7 @@ TypeCompartment::sweep(JSContext *cx)
             const AllocationSiteKey &key = e.front().key;
             TypeObject *object = e.front().value;
 
-            if (key.script->isAboutToBeFinalized(cx) || !object->isMarked())
+            if (IsAboutToBeFinalized(cx, key.script) || !object->isMarked())
                 e.removeFront();
         }
     }
@@ -5520,7 +5520,7 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
     unsigned num = NumTypeSets(script);
     TypeSet *typeArray = script->types->typeArray();
 
-    if (script->isAboutToBeFinalized(cx)) {
+    if (IsAboutToBeFinalized(cx, script)) {
         /* Release all memory associated with the persistent type sets. */
         for (unsigned i = 0; i < num; i++)
             typeArray[i].clearObjects();
