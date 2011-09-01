@@ -2358,7 +2358,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (op != JSOP_NAME)
             return JS_TRUE;
-        if (level >= UpvarCookie::UPVAR_LEVEL_LIMIT)
+        if (skip >= UpvarCookie::UPVAR_LEVEL_LIMIT)
             return JS_TRUE;
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
