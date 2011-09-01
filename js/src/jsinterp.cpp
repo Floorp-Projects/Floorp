@@ -110,9 +110,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-/* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
-#if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
-
 JSObject *
 js::GetScopeChain(JSContext *cx)
 {
@@ -919,7 +916,6 @@ ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value
     }
 
     LeaveTrace(cx);
-    AutoScriptRooter root(cx, script);
 
     ExecuteFrameGuard efg;
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
@@ -1330,7 +1326,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
  * Enter the new with scope using an object at sp[-1] and associate the depth
  * of the with block with sp + stackIndex.
  */
-JS_STATIC_INTERPRET JS_REQUIRES_STACK JSBool
+JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
 {
     StackFrame *fp = cx->fp();
@@ -1365,7 +1361,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
     return JS_TRUE;
 }
 
-JS_STATIC_INTERPRET JS_REQUIRES_STACK void
+JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx)
 {
     JSObject *withobj;
@@ -1421,7 +1417,7 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
     return normalUnwind;
 }
 
-JS_STATIC_INTERPRET JSBool
+JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 {
     if (cs->format & JOF_POST) {
@@ -1482,10 +1478,6 @@ js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
     }
     return fp;
 }
-
-#endif /* !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___ */
-
-#ifndef  jsinvoke_cpp___
 
 #define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = v
@@ -1871,14 +1863,13 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         JS_ASSERT(regs.fp()->hasImacropc()                                    \
                   ? atoms == rt->atomState.commonAtomsStart() &&              \
                     GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
-                  : (size_t)(atoms - script->atomMap.vector) <                \
-                    (size_t)(script->atomMap.length -                         \
-                             GET_INDEX(regs.pc + PCOFF)));                    \
+                  : (size_t)(atoms - script->atoms) <                         \
+                    (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));   \
         atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
     JS_END_MACRO
 
 #define GET_FULL_INDEX(PCOFF)                                                 \
-    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + (PCOFF)))
+    (atoms - script->atoms + GET_INDEX(regs.pc + (PCOFF)))
 
 #define LOAD_OBJECT(PCOFF, obj)                                               \
     (obj = script->getObject(GET_FULL_INDEX(PCOFF)))
@@ -1944,6 +1935,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define MONITOR_BRANCH_TRACEVIS
 #endif
 
+#endif /* !JS_TRACER */
+
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
@@ -1961,8 +1954,6 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             goto error;                                                       \
         CHECK_INTERRUPT_HANDLER();                                            \
     JS_END_MACRO
-
-#endif /* !JS_TRACER */
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -2050,7 +2041,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * access. For less frequent object and regexp loads we have to recover
      * the segment from atoms pointer first.
      */
-    JSAtom **atoms = script->atomMap.vector;
+    JSAtom **atoms = script->atoms;
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
@@ -2458,7 +2449,7 @@ BEGIN_CASE(JSOP_STOP)
             regs.pc += GetDecomposeLength(imacpc, js_CodeSpec[*imacpc].length);
         regs.fp()->clearImacropc();
         LEAVE_ON_SAFE_POINT();
-        atoms = script->atomMap.vector;
+        atoms = script->atoms;
         op = JSOp(*regs.pc);
         DO_OP();
     }
@@ -4374,7 +4365,7 @@ END_CASE(JSOP_INT32)
 
 BEGIN_CASE(JSOP_INDEXBASE)
     /*
-     * Here atoms can exceed script->atomMap.length as we use atoms as a
+     * Here atoms can exceed script->natoms as we use atoms as a
      * segment register for object literals as well.
      */
     atoms += GET_INDEXBASE(regs.pc);
@@ -4388,7 +4379,7 @@ END_CASE(JSOP_INDEXBASE3)
 
 BEGIN_CASE(JSOP_RESETBASE0)
 BEGIN_CASE(JSOP_RESETBASE)
-    atoms = script->atomMap.vector;
+    atoms = script->atoms;
 END_CASE(JSOP_RESETBASE)
 
 BEGIN_CASE(JSOP_DOUBLE)
@@ -4550,7 +4541,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
      * index in it would exceed 64K limit.
      */
     JS_ASSERT(!regs.fp()->hasImacropc());
-    JS_ASSERT(atoms == script->atomMap.vector);
+    JS_ASSERT(atoms == script->atoms);
     jsbytecode *pc2 = regs.pc;
 
     Value lval = regs.sp[-1];
@@ -5022,7 +5013,7 @@ BEGIN_CASE(JSOP_LAMBDA)
         if (fun->isNullClosure()) {
             parent = &regs.fp()->scopeChain();
 
-            if (obj->getParent() == parent) {
+            if (fun->joinable()) {
                 jsbytecode *pc2 = AdvanceOverBlockchainOp(regs.pc + JSOP_LAMBDA_LENGTH);
                 JSOp op2 = JSOp(*pc2);
 
@@ -5057,41 +5048,39 @@ BEGIN_CASE(JSOP_LAMBDA)
                         fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                         break;
                     }
-                } else if (fun->joinable()) {
-                    if (op2 == JSOP_CALL) {
-                        /*
-                         * Array.prototype.sort and String.prototype.replace are
-                         * optimized as if they are special form. We know that they
-                         * won't leak the joined function object in obj, therefore
-                         * we don't need to clone that compiler- created function
-                         * object for identity/mutation reasons.
-                         */
-                        int iargc = GET_ARGC(pc2);
+                } else if (op2 == JSOP_CALL) {
+                    /*
+                     * Array.prototype.sort and String.prototype.replace are
+                     * optimized as if they are special form. We know that they
+                     * won't leak the joined function object in obj, therefore
+                     * we don't need to clone that compiler-created function
+                     * object for identity/mutation reasons.
+                     */
+                    int iargc = GET_ARGC(pc2);
 
-                        /*
-                         * Note that we have not yet pushed obj as the final argument,
-                         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
-                         * is the callee for this JSOP_CALL.
-                         */
-                        const Value &cref = regs.sp[1 - (iargc + 2)];
-                        JSObject *callee;
+                    /*
+                     * Note that we have not yet pushed obj as the final argument,
+                     * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+                     * is the callee for this JSOP_CALL.
+                     */
+                    const Value &cref = regs.sp[1 - (iargc + 2)];
+                    JSObject *callee;
 
-                        if (IsFunctionObject(cref, &callee)) {
-                            JSFunction *calleeFun = callee->getFunctionPrivate();
-                            if (Native native = calleeFun->maybeNative()) {
-                                if ((iargc == 1 && native == array_sort) ||
-                                    (iargc == 2 && native == str_replace)) {
-                                    break;
-                                }
+                    if (IsFunctionObject(cref, &callee)) {
+                        JSFunction *calleeFun = callee->getFunctionPrivate();
+                        if (Native native = calleeFun->maybeNative()) {
+                            if ((iargc == 1 && native == array_sort) ||
+                                (iargc == 2 && native == str_replace)) {
+                                break;
                             }
                         }
-                    } else if (op2 == JSOP_NULL) {
-                        pc2 += JSOP_NULL_LENGTH;
-                        op2 = JSOp(*pc2);
-
-                        if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
-                            break;
                     }
+                } else if (op2 == JSOP_NULL) {
+                    pc2 += JSOP_NULL_LENGTH;
+                    op2 = JSOp(*pc2);
+
+                    if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
+                        break;
                 }
             }
         } else {
@@ -5516,7 +5505,7 @@ END_CASE(JSOP_SHARPINIT)
 {
 BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
-    jsint i = (regs.pc - script->main) + JSOP_GOSUB_LENGTH;
+    jsint i = (regs.pc - script->code) + JSOP_GOSUB_LENGTH;
     PUSH_INT32(i);
     len = GET_JUMP_OFFSET(regs.pc);
 END_VARLEN_CASE
@@ -5525,7 +5514,7 @@ END_VARLEN_CASE
 {
 BEGIN_CASE(JSOP_GOSUBX)
     PUSH_BOOLEAN(false);
-    jsint i = (regs.pc - script->main) + JSOP_GOSUBX_LENGTH;
+    jsint i = (regs.pc - script->code) + JSOP_GOSUBX_LENGTH;
     len = GET_JUMPX_OFFSET(regs.pc);
     PUSH_INT32(i);
 END_VARLEN_CASE
@@ -5550,7 +5539,7 @@ BEGIN_CASE(JSOP_RETSUB)
     }
     JS_ASSERT(rval.isInt32());
     len = rval.toInt32();
-    regs.pc = script->main;
+    regs.pc = script->code;
 END_VARLEN_CASE
 }
 
@@ -6179,7 +6168,7 @@ END_CASE(JSOP_ARRAYPUSH)
         uint32 offset;
 
         /* Restore atoms local in case we will resume. */
-        atoms = script->atomMap.vector;
+        atoms = script->atoms;
 
         /* Call debugger throw hook if set. */
         if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
@@ -6214,7 +6203,7 @@ END_CASE(JSOP_ARRAYPUSH)
         if (!JSScript::isValidOffset(script->trynotesOffset))
             goto no_catch;
 
-        offset = (uint32)(regs.pc - script->main);
+        offset = (uint32)(regs.pc - script->main());
         tn = script->trynotes()->vector;
         tnlimit = tn + script->trynotes()->length;
         do {
@@ -6248,7 +6237,7 @@ END_CASE(JSOP_ARRAYPUSH)
              * to the beginning of catch or finally or to [enditer] closing
              * the for-in loop.
              */
-            regs.pc = (script)->main + tn->start + tn->length;
+            regs.pc = (script)->main() + tn->start + tn->length;
 
             JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(regs.sp == regs.fp()->base() + tn->stackDepth);
@@ -6381,5 +6370,3 @@ END_CASE(JSOP_ARRAYPUSH)
 }
 
 } /* namespace js */
-
-#endif /* !defined jsinvoke_cpp___ */

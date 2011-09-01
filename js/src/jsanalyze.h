@@ -964,7 +964,7 @@ class ScriptAnalysis
     /* Accessors for bytecode information. */
 
     Bytecode& getCode(uint32 offset) {
-        JS_ASSERT(script->compartment->activeAnalysis);
+        JS_ASSERT(script->compartment()->activeAnalysis);
         JS_ASSERT(offset < script->length);
         JS_ASSERT(codeArray[offset]);
         return *codeArray[offset];
@@ -972,7 +972,7 @@ class ScriptAnalysis
     Bytecode& getCode(const jsbytecode *pc) { return getCode(pc - script->code); }
 
     Bytecode* maybeCode(uint32 offset) {
-        JS_ASSERT(script->compartment->activeAnalysis);
+        JS_ASSERT(script->compartment()->activeAnalysis);
         JS_ASSERT(offset < script->length);
         return codeArray[offset];
     }
@@ -1160,7 +1160,7 @@ class ScriptAnalysis
      * containing script (which does not imply the variable is closed).
      */
     bool slotEscapes(uint32 slot) {
-        JS_ASSERT(script->compartment->activeAnalysis);
+        JS_ASSERT(script->compartment()->activeAnalysis);
         if (slot >= numSlots)
             return true;
         return escapedSlots[slot];
@@ -1175,7 +1175,7 @@ class ScriptAnalysis
     bool trackSlot(uint32 slot) { return !slotEscapes(slot) && canTrackVars; }
 
     const LifetimeVariable & liveness(uint32 slot) {
-        JS_ASSERT(script->compartment->activeAnalysis);
+        JS_ASSERT(script->compartment()->activeAnalysis);
         JS_ASSERT(!slotEscapes(slot));
         return lifetimes[slot];
     }

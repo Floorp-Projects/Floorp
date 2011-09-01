@@ -408,7 +408,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
       nsCOMPtr<nsIEditorMailSupport> mailEditor;
       if (ctrlKey)
-        mailEditor = do_QueryInterface(static_cast<nsIEditor*>(mEditor));
+        mailEditor = do_QueryObject(mEditor);
 
       PRInt32 clipboard;
 

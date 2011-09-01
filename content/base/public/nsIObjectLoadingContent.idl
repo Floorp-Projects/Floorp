@@ -51,7 +51,7 @@ interface nsIDOMClientRect;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(6D8914C7-0E22-4452-8962-11B69BBE84D7)]
+[scriptable, uuid(107e8048-d00f-4711-bd21-97184ccae0b1)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -87,6 +87,24 @@ interface nsIObjectLoadingContent : nsISupports
   [noscript] readonly attribute nsNPAPIPluginInstancePtr pluginInstance;
 
   /**
+   * Makes sure that a frame for this object exists, and that the plugin is
+   * instantiated. This method does nothing if the type is not #TYPE_PLUGIN.
+   * There is no guarantee that there will be a frame after this method is
+   * called; for example, the node may have a display:none style. If plugin
+   * instantiation is possible, it will be done synchronously by this method,
+   * and the plugin instance will be returned. A success return value does not
+   * necessarily mean that the instance is nonnull.
+   *
+   * This is a noscript method because it is internal and will go away once
+   * plugin loading moves to content.
+   *
+   * @note If there is an error instantiating the plugin, this method will
+   * trigger fallback to replacement content, and the type will change (and
+   * this method will return a failure code)
+   */
+  [noscript] nsNPAPIPluginInstancePtr ensureInstantiation();
+
+  /**
    * Tells the content about an associated object frame.
    * This can be called multiple times for different frames.
    *
@@ -94,8 +112,6 @@ interface nsIObjectLoadingContent : nsISupports
    * because nsIObjectFrame is unscriptable.
    */
   [noscript] void hasNewFrame(in nsIObjectFrame aFrame);
-
-  [noscript] void disconnectFrame();
 
   /**
    * If this object is in going to be printed, this method
@@ -109,8 +125,4 @@ interface nsIObjectLoadingContent : nsISupports
                                 in AString pluginDumpID,
                                 in AString browserDumpID,
                                 in boolean submittedCrashReport);
-
-  [noscript] void stopPluginInstance();
-
-  [noscript] void startPluginInstance();
 };

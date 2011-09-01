@@ -798,12 +798,6 @@ pref("accessibility.blockautorefresh", false);
 // Whether history is enabled or not.
 pref("places.history.enabled", true);
 
-// The percentage of system memory that the Places database can use.  Out of the
-// allowed cache size it will at most use the size of the database file.
-// Changes to this value are effective after an application restart.
-// Acceptable values are between 0 and 50.
-pref("places.database.cache_to_memory_percentage", 6);
-
 // the (maximum) number of the recent visits to sample
 // when calculating frecency
 pref("places.frecency.numVisits", 10);
@@ -1014,6 +1008,9 @@ pref("devtools.errorconsole.enabled", false);
 
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
+
+// Enable the style inspector
+pref("devtools.styleinspector.enabled", true);
 
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);

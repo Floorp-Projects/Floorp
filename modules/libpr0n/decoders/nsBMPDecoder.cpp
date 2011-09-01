@@ -67,6 +67,7 @@ nsBMPDecoder::nsBMPDecoder()
 {
     mColors = nsnull;
     mRow = nsnull;
+    mImageData = nsnull;
     mCurPos = mPos = mNumColors = mRowBytes = 0;
     mOldLine = mCurLine = 1; // Otherwise decoder will never start
     mState = eRLEStateInitial;
@@ -313,7 +314,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
           PostDataError();
           return;
         }
-        if (mBIH.compression == BI_RLE4 && mBIH.bpp != 4) {
+        if (mBIH.compression == BI_RLE4 && mBIH.bpp != 4 && mBIH.bpp != 1) {
           PR_LOG(gBMPLog, PR_LOG_DEBUG, 
                  ("BMP RLE4 compression only supports 4 bits per pixel\n"));
           PostDataError();

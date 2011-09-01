@@ -338,7 +338,7 @@ nsStandardURL::Prepath()
 }
 
 inline const nsDependentCSubstring
-nsStandardURL::Userpass(int includeDelim)
+nsStandardURL::Userpass(PRBool includeDelim)
 {
     PRUint32 pos=0, len=0;
     // if there is no username, then there can be no password

@@ -226,7 +226,8 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mAllowTLSIntoleranceTimeout(PR_TRUE),
     mRememberClientAuthCertificate(PR_FALSE),
     mHandshakeStartTime(0),
-    mPort(0)
+    mPort(0),
+    mIsCertIssuerBlacklisted(PR_FALSE)
 {
   mThreadData = new nsSSLSocketThreadData;
 }
@@ -3438,6 +3439,10 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
       srv = CERT_PKIXVerifyCert(peerCert, certificateUsageSSLServer,
                                 survivingParams->GetRawPointerForNSS(),
                                 cvout, (void*)infoObject);
+    }
+
+    if (infoObject->IsCertIssuerBlacklisted()) {
+      collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
     }
 
     // We ignore the result code of the cert verification.

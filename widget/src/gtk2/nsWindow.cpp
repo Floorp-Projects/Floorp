@@ -882,17 +882,15 @@ nsWindow::GetDPI()
 NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
-    if (mContainer || !mGdkWindow) {
-        NS_NOTREACHED("nsWindow::SetParent called illegally");
+    if (mContainer || !mGdkWindow || !mParent) {
+        NS_NOTREACHED("nsWindow::SetParent - reparenting a non-child window");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     NS_ASSERTION(!mTransientParent, "child widget with transient parent");
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
-    if (mParent) {
-        mParent->RemoveChild(this);
-    }
+    mParent->RemoveChild(this);
 
     mParent = aNewParent;
 
@@ -989,10 +987,6 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
             NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(aNewParentWindow)->destroyed,
                               "destroyed GdkWindow with widget");
             SetWidgetForHierarchy(mGdkWindow, aOldContainer, aNewContainer);
-
-            if (aOldContainer == gInvisibleContainer) {
-              CheckDestroyInvisibleContainer();
-            }
         }
 
         if (!mIsTopLevel) {
@@ -1849,6 +1843,9 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 
     case NS_NATIVE_SHELLWIDGET:
         return (void *) mShell;
+
+    case NS_NATIVE_SHAREABLE_WINDOW:
+        return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
 
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");

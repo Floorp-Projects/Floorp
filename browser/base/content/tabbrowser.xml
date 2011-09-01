@@ -4002,7 +4002,6 @@
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected"
-                             tabindex="-1"
                              clickthrough="never"
                              class="tab-close-button"/>
         </xul:hbox>
@@ -4040,24 +4039,13 @@
       <handler event="dragstart" phase="capturing">
         this.style.MozUserFocus = '';
       </handler>
-      <handler event="mousedown" button="0" phase="capturing">
+      <handler event="mousedown">
       <![CDATA[
-        if (this.mOverCloseButton) {
-          event.stopPropagation();
-        }
-        else if (this.selected) {
+        if (this.selected) {
           this.style.MozUserFocus = 'ignore';
           this.clientTop; // just using this to flush style updates
         }
       ]]>
-      </handler>
-      <handler event="mousedown" button="1">
-        this.style.MozUserFocus = 'ignore';
-        this.clientTop;
-      </handler>
-      <handler event="mousedown" button="2">
-        this.style.MozUserFocus = 'ignore';
-        this.clientTop;
       </handler>
       <handler event="mouseup">
         this.style.MozUserFocus = '';

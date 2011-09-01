@@ -77,7 +77,7 @@ Preferences.prototype = {
    * @returns the value of the pref, if any; otherwise the default value
    */
   get: function(prefName, defaultValue) {
-    if (isArray(prefName))
+    if (Array.isArray(prefName))
       return prefName.map(function(v) this.get(v, defaultValue), this);
 
     if (this._site)
@@ -211,7 +211,7 @@ Preferences.prototype = {
    *          or not the prefs have values
    */
   has: function(prefName) {
-    if (isArray(prefName))
+    if (Array.isArray(prefName))
       return prefName.map(this.has, this);
 
     if (this._site)
@@ -243,7 +243,7 @@ Preferences.prototype = {
    *          whether or not the prefs have user-set values
    */
   isSet: function(prefName) {
-    if (isArray(prefName))
+    if (Array.isArray(prefName))
       return prefName.map(this.isSet, this);
 
     return (this.has(prefName) && this._prefSvc.prefHasUserValue(prefName));
@@ -257,7 +257,7 @@ Preferences.prototype = {
   modified: function(prefName) { return this.isSet(prefName) },
 
   reset: function(prefName) {
-    if (isArray(prefName)) {
+    if (Array.isArray(prefName)) {
       prefName.map(function(v) this.reset(v), this);
       return;
     }
@@ -296,7 +296,7 @@ Preferences.prototype = {
    *          the pref to lock, or an array of prefs to lock
    */
   lock: function(prefName) {
-    if (isArray(prefName))
+    if (Array.isArray(prefName))
       prefName.map(this.lock, this);
 
     this._prefSvc.lockPref(prefName);
@@ -309,7 +309,7 @@ Preferences.prototype = {
    *          the pref to lock, or an array of prefs to lock
    */
   unlock: function(prefName) {
-    if (isArray(prefName))
+    if (Array.isArray(prefName))
       prefName.map(this.unlock, this);
 
     this._prefSvc.unlockPref(prefName);
@@ -327,7 +327,7 @@ Preferences.prototype = {
    *          whether or not the prefs have user-set values
    */
   locked: function(prefName) {
-    if (isArray(prefName))
+    if (Array.isArray(prefName))
       return prefName.map(this.locked, this);
 
     return this._prefSvc.prefIsLocked(prefName);
@@ -514,14 +514,6 @@ PrefObserver.prototype = {
       this.callback.observe(subject, topic, data);
   }
 };
-
-function isArray(val) {
-  // We can't check for |val.constructor == Array| here, since the value
-  // might be from a different context whose Array constructor is not the same
-  // as ours, so instead we match based on the name of the constructor.
-  return (typeof val != "undefined" && val != null && typeof val == "object" &&
-          val.constructor.name == "Array");
-}
 
 function isObject(val) {
   // We can't check for |val.constructor == Object| here, since the value
