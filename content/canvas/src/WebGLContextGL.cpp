@@ -2340,14 +2340,8 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
         {
             GLint i = 0;
 #ifdef XP_MACOSX
-            if (pname == LOCAL_GL_VALIDATE_STATUS &&
-                gl->Vendor() == gl::GLContext::VendorNVIDIA)
-            {
-                // See comment in ValidateProgram below.
-                i = 1;
-            } else {
-                gl->fGetProgramiv(progname, pname, &i);
-            }
+            // See comment in ValidateProgram below.
+            i = 1;
 #else
             gl->fGetProgramiv(progname, pname, &i);
 #endif
