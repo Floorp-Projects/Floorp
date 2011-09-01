@@ -363,6 +363,12 @@ static TString BuiltInFunctionsVertex(const ShBuiltInResources& resources)
     s.append(TString("vec4 texture2DProjLod(sampler2D sampler, vec4 coord, float lod);"));
     s.append(TString("vec4 textureCubeLod(samplerCube sampler, vec3 coord, float lod);"));
 
+    if (resources.OES_EGL_image_external) {
+        s.append(TString("vec4 texture2D(samplerExternalOES sampler, vec2 coord);"));
+        s.append(TString("vec4 texture2DProj(samplerExternalOES sampler, vec3 coord);"));
+        s.append(TString("vec4 texture2DProj(samplerExternalOES sampler, vec4 coord);"));
+    }
+
     return s;
 }
 
@@ -387,6 +393,12 @@ static TString BuiltInFunctionsFragment(const ShBuiltInResources& resources)
     s.append(TString("vec4 texture2DProj(sampler2D sampler, vec3 coord, float bias);"));
     s.append(TString("vec4 texture2DProj(sampler2D sampler, vec4 coord, float bias);"));
     s.append(TString("vec4 textureCube(samplerCube sampler, vec3 coord, float bias);"));
+
+    if (resources.OES_EGL_image_external) {
+        s.append(TString("vec4 texture2D(samplerExternalOES sampler, vec2 coord);"));
+        s.append(TString("vec4 texture2DProj(samplerExternalOES sampler, vec3 coord);"));
+        s.append(TString("vec4 texture2DProj(samplerExternalOES sampler, vec4 coord);"));
+    }
 
     if (resources.OES_standard_derivatives) {
         s.append(TString("float dFdx(float p);"));
@@ -625,5 +637,7 @@ void InitExtensionBehavior(const ShBuiltInResources& resources,
                            TExtensionBehavior& extBehavior)
 {
     if (resources.OES_standard_derivatives)
-        extBehavior["GL_OES_standard_derivatives"] = EBhDisable;
+        extBehavior["GL_OES_standard_derivatives"] = EBhUndefined;
+    if (resources.OES_EGL_image_external)
+        extBehavior["GL_OES_EGL_image_external"] = EBhUndefined;
 }

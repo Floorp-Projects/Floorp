@@ -114,6 +114,9 @@ ThreadData::ThreadData()
     pendingProxyOperation(NULL),
     interpreterFrames(NULL)
 {
+#ifdef DEBUG
+    noGCOrAllocationCheck = 0;
+#endif
 }
 
 ThreadData::~ThreadData()

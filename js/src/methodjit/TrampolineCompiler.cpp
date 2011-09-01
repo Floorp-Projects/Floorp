@@ -41,6 +41,7 @@
 #include "TrampolineCompiler.h"
 #include "StubCalls.h"
 #include "assembler/assembler/LinkBuffer.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
 namespace js {
 namespace mjit {
@@ -96,7 +97,7 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
     JS_ASSERT(entry.isSet());
 
     bool ok;
-    JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok);
+    JSC::LinkBuffer buffer(&masm, execAlloc, poolp, &ok, JSC::METHOD_CODE);
     if (!ok) 
         return false;
     masm.finalize(buffer);

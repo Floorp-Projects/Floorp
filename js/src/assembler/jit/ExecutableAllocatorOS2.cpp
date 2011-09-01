@@ -44,7 +44,7 @@ ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
     if (DosAllocMem(&allocation, n, OBJ_ANY|PAG_COMMIT|PAG_READ|PAG_WRITE) &&
         DosAllocMem(&allocation, n, PAG_COMMIT|PAG_READ|PAG_WRITE))
         CRASH();
-    ExecutablePool::Allocation alloc = {reinterpret_cast<char*>(allocation), n};
+    ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }
 

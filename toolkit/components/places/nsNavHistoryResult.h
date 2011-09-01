@@ -790,6 +790,8 @@ public:
 
   nsCOMPtr<nsIURI> mRemovingURI;
   nsresult NotifyIfTagsChanged(nsIURI* aURI);
+
+  PRUint32 mBatchChanges;
 };
 
 

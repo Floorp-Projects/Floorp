@@ -232,12 +232,12 @@ class MochitestOptions(optparse.OptionParser):
                            "inside a VMware Workstation 7.0 or later VM")
     defaults["vmwareRecording"] = False
 
-    self.add_option("--loops",
+    self.add_option("--repeat",
                     action = "store", type = "int",
-                    dest = "loops", metavar = "LOOPS",
-                    help = "repeats the test or set of tests the given number of times "
-                           "without restarting the browser (given number > 0)")
-    defaults["loops"] = 0
+                    dest = "repeat", metavar = "REPEAT",
+                    help = "repeats the test or set of tests the given number of times, ie: repeat=1 will run the test twice.")
+                   
+    defaults["repeat"] = 0
 
     # -h, --help are automatically handled by OptionParser
 
@@ -441,7 +441,7 @@ class Mochitest(object):
     """ Build the url path to the specific test harness and test file or directory """
     testHost = "http://mochi.test:8888"
     testURL = ("/").join([testHost, self.TEST_PATH, options.testPath])
-    if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.loops > 0:
+    if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
        testURL = ("/").join([testHost, self.PLAIN_LOOP_PATH])
     if options.chrome or options.a11y:
        testURL = ("/").join([testHost, self.CHROME_PATH])
@@ -548,7 +548,7 @@ class Mochitest(object):
         totalChunks -- how many chunks to split tests into
         thisChunk -- which chunk to run
         timeout -- per-test timeout in seconds
-        loops -- How many times to run the test
+        repeat -- How many times to repeat the test, ie: repeat=1 will run the test twice.
     """
   
     # allow relative paths for logFile
@@ -577,9 +577,9 @@ class Mochitest(object):
         self.urlOpts.append("shuffle=1")
       if "MOZ_HIDE_RESULTS_TABLE" in env and env["MOZ_HIDE_RESULTS_TABLE"] == "1":
         self.urlOpts.append("hideResultsTable=1")
-      if options.loops:
-        self.urlOpts.append("loops=%d" % options.loops)
-      if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.loops > 0:
+      if options.repeat:
+        self.urlOpts.append("repeat=%d" % options.repeat)
+      if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
         self.urlOpts.append("testname=%s" % ("/").join([self.TEST_PATH, options.testPath]))
 
   def cleanup(self, manifest, options):

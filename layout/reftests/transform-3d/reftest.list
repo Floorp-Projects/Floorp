@@ -1,0 +1,27 @@
+== rotatey-1a.html rotatey-1-ref.html 
+== rotatex-1a.html rotatex-1-ref.html 
+# Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
+== scalezrotatex-1.html scalezrotatex-1-ref.html
+# Check that the perspectve() transform function results in some visual changes
+!= rotatex-perspective-1a.html rotatex-1-ref.html
+# Check that -moz-perspective results in visual changes to child transformed elements
+!= rotatex-perspective-1b.html rotatex-1-ref.html
+# -moz-perspective should only apply to child elements
+== rotatex-perspective-1c.html rotatex-1-ref.html
+== scalez-1a.html scalez-1-ref.html
+fails == preserve3d-1a.html preserve3d-1-ref.html
+== preserve3d-1b.html about:blank
+== scale3d-z.html scalez-1-ref.html
+== scale3d-all.html scale3d-1-ref.html
+== scale3d-xz.html scale3d-2-ref.html
+== translatez-1a.html translatez-1-ref.html
+!= translatez-1b.html translatez-1-ref.html
+== translate3d-1a.html translate3d-1-ref.html
+== matrix3d-1a.html matrix3d-1-ref.html
+== matrix3d-2a.html matrix3d-2-ref.html
+== rotate3d-1a.html rotatex-1-ref.html
+== rotate3d-2a.html rotatey-1-ref.html
+!= backface-visibility-1a.html about:blank
+== backface-visibility-1b.html about:blank
+!= perspective-origin-1a.html rotatex-perspective-1a.html
+== perspective-origin-1b.html perspective-origin-1a.html

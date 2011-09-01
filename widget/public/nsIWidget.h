@@ -107,6 +107,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT 8
 #define NS_NATIVE_SCREEN      9
 #define NS_NATIVE_SHELLWIDGET 10      // Get the shell GtkWidget
+// Has to match to NPNVnetscapeWindow, and shareable across processes
+// HWND on Windows and XID on X11
+#define NS_NATIVE_SHAREABLE_WINDOW 11
 #ifdef XP_MACOSX
 #define NS_NATIVE_PLUGIN_PORT_QD    100
 #define NS_NATIVE_PLUGIN_PORT_CG    101
@@ -118,8 +121,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xEAAF1019, 0x0CD8, 0x4DD8, \
-    { 0xBE, 0xB9, 0x8D, 0x8D, 0xEB, 0x52, 0xFC, 0xF6 } }
+  { 0xf43254ce, 0xd315, 0x458b, \
+    { 0xba, 0x72, 0xa8, 0xdf, 0x21, 0xcf, 0xa7, 0x2a } }
 
 /*
  * Window shadow styles
@@ -364,14 +367,6 @@ class nsIWidget : public nsISupports {
                 PRBool           aForceUseIWidgetParent = PR_FALSE) = 0;
 
     /**
-     * Set the event callback for a widget. If a device context is not
-     * provided then the existing device context will remain, it will
-     * not be nulled out.
-     */
-    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
-                                nsDeviceContext *aContext) = 0;
-
-    /**
      * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
@@ -413,7 +408,7 @@ class nsIWidget : public nsISupports {
     /**
      * Reparent a widget
      *
-     * Change the widget's parent. Null parents are allowed.
+     * Change the widgets parent
      *
      * @param     aNewParent   new parent 
      */

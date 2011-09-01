@@ -344,9 +344,11 @@ nsWindowsShellService::IsDefaultBrowserVista(PRBool* aIsDefaultBrowser)
                                 (void**)&pAAR);
 
   if (SUCCEEDED(hr)) {
+    BOOL res;
     hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
                                     APP_REG_NAME,
-                                    aIsDefaultBrowser);
+                                    &res);
+    *aIsDefaultBrowser = res;
 
     pAAR->Release();
     return PR_TRUE;
