@@ -285,7 +285,10 @@ function nsPlacesAutoComplete()
   });
 
   XPCOMUtils.defineLazyGetter(this, "_historyQuery", function() {
-    let replacementText = "AND h.visit_count > 0";
+    // Enforce ignoring the visit_count index, since the frecency one is much
+    // faster in this case.  ANALYZE helps the query planner to figure out the
+    // faster path, but it may not have run yet.
+    let replacementText = "AND +h.visit_count > 0";
     return this._db.createAsyncStatement(
       SQL_BASE.replace("{ADDITIONAL_CONDITIONS}", replacementText, "g")
     );
