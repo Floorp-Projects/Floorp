@@ -73,6 +73,7 @@
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jstracer.h"
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
 #include "jsxml.h"
