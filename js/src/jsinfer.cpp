@@ -4163,6 +4163,9 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
         return false;
     }
 
+    if (script->hasClearedGlobal())
+        return false;
+
     if (!script->ensureRanInference(cx)) {
         *pbaseobj = NULL;
         cx->compartment->types.setPendingNukeTypes(cx);
