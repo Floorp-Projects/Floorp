@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="position: relative; -moz-column-count: 3;" class="reftest-wait">
+
+<head>
+<script>
+function boom()
+{
+  document.documentElement.offsetHeight;
+  document.body.style.position = "";
+  document.documentElement.offsetHeight;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="boom();" style="position: absolute;">A<span><div></div>B</span></body>
+
+</html>
