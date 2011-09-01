@@ -39,8 +39,8 @@ function test1() {
     ok(!contentWindow.StoragePolicy.canStoreThumbnailForTab(newTab), 
        "Should not save the thumbnail for tab");
 
-    whenDeniedToCacheImageData(tabItem, test2);
-    tabItem.save(true);
+    whenDeniedToSaveImageData(tabItem, test2);
+    tabItem.saveThumbnail({synchronously: true});
     HttpRequestObserver.cacheControlValue = null;
   });
 
@@ -59,7 +59,7 @@ function test2() {
        "Should save the thumbnail for tab");
 
     whenSavedCachedImageData(tabItem, test3);
-    tabItem.save(true);
+    tabItem.saveThumbnail({synchronously: true});
   });
 }
 
@@ -77,7 +77,7 @@ function test3() {
        "Should save the thumbnail for tab");
 
     whenSavedCachedImageData(tabItem, test4);
-    tabItem.save(true);
+    tabItem.saveThumbnail({synchronously: true});
   });
 }
 
@@ -95,7 +95,7 @@ function test4() {
        "Should save the thumbnail for tab");
 
     whenSavedCachedImageData(tabItem, test5);
-    tabItem.save(true);
+    tabItem.saveThumbnail({synchronously: true});
   });
 }
 
@@ -109,13 +109,13 @@ function test5() {
     ok(!contentWindow.StoragePolicy.canStoreThumbnailForTab(newTab),
        "Should not save the thumbnail for tab");
 
-    whenDeniedToCacheImageData(tabItem, function () {
+    whenDeniedToSaveImageData(tabItem, function () {
       hideTabView(function () {
         gBrowser.removeTab(gBrowser.tabs[1]);
         finish();
       });
     });
-    tabItem.save(true);
+    tabItem.saveThumbnail({synchronously: true});
   });
 
   newTab.linkedBrowser.loadURI("https://example.com/");
@@ -147,9 +147,9 @@ function whenSavedCachedImageData(tabItem, callback) {
   });
 }
 
-function whenDeniedToCacheImageData(tabItem, callback) {
-  tabItem.addSubscriber("deniedToCacheImageData", function onDenied() {
-    tabItem.removeSubscriber("deniedToCacheImageData", onDenied);
+function whenDeniedToSaveImageData(tabItem, callback) {
+  tabItem.addSubscriber("deniedToSaveImageData", function onDenied() {
+    tabItem.removeSubscriber("deniedToSaveImageData", onDenied);
     callback();
   });
 }
