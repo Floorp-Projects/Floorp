@@ -159,7 +159,7 @@
               this.anchorNode = aAnchorNode;
 
               let anchorRect = aAnchorNode.getBoundingClientRect();
-              let popupRect = this.getBoundingClientRect();
+              let popupRect = this.firstChild.getBoundingClientRect();
               let offset = this.offset;
 
               let horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :

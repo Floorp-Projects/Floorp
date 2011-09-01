@@ -123,9 +123,15 @@ textbox[disabled="true"] {
 
 .dialog-dark,
 .panel-arrowcontent {
-  background-color: @color_background_dialog@;
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@, black 0 -@border_radius_tiny@ @border_radius_tiny@;
+  background-color: @color_background_default@;
   padding: 0;
+}
+
+.panel-arrowcontent {
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;  
+  background-image: url(chrome://browser/skin/images/menu-top-insideglow.png);
+  background-repeat: repeat-x;
+  background-position: top left;
 }
 
 @media (max-width: 499px) {
@@ -578,7 +584,6 @@ dialog,
 dialog,
 .arrowbox-dark .panel-arrowcontent {
   border: @border_width_small@ solid @color_dialog_border@;
-  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
 }
 
 dialog {
@@ -623,55 +628,27 @@ dialog {
   text-align: start;
 }
 
-.panel-arrow[side="top"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
-  margin-bottom: -@margin_snormal@;
-}
-
-.panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-top: -@margin_snormal@;
-}
-
-.panel-arrow[side="left"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-right: -@margin_snormal@;
-  -moz-transform: scaleX(-1);
-}
-
-.panel-arrow[side="right"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-left: -@margin_snormal@;
-}
-
 /*.panel-row-header ------------------------------------------------------------ */
 .panel-row-header {
-  border-bottom: @border_width_xxlarge@ solid @color_background_active@;
-  background-color: @color_background_header@ !important;
-  color: @color_text_header@;
+  background-color: @color_background_panelrow@ !important;
+  color: @color_text_panelrow@;
   padding: 0 !important;
 }
 
 .panel-row-button {
-  color: @color_text_header@;
+  color: @color_text_panelrow@;
   -moz-appearance: none;
-  background-size: 100% 100%;
   border: 0 solid transparent !important;
-  -moz-border-start: @border_width_tiny@ solid rgba(255,255,255,0.2) !important;
-  -moz-border-end: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
-  padding-top: @padding_xsmall@ !important;
-  padding-bottom: @padding_xsmall@ !important;
-  -moz-padding-start: @padding_xsmall@ !important;
-  -moz-padding-end: @padding_xsmall@ !important;
-  -moz-box-flex: 1;
   -moz-user-focus: ignore;
   -moz-user-select: none;
+  margin: 0px;
+  padding-top: @padding_normal@ !important;
+  -moz-box-flex: 1;
 }
 
 .panel-row-button:hover:active {
-  background: @color_background_active@;
-  color: @color_text_active@;
-  background-size: 100% 100%;
+  background: @color_background_highlight@;
+  color: @color_text_highlight@;
 }
 
 .panel-row-button:first-child {
@@ -686,14 +663,11 @@ dialog {
   .panel-row-button {
     -moz-box-orient: vertical;
   }
-
-  .panel-row-button .toolbarbutton-text {
-    font-size: @font_xsmall@ !important;
-  }
 }
 
 .panel-row-button .toolbarbutton-text {
   text-align: left;
+  font-size: @font_xtiny@ !important;
 }
 
 .panel-row-button .toolbarbutton-text:-moz-locale-dir(rtl) {
@@ -713,9 +687,8 @@ dialog {
 }
 
 .panel-row-button[checked="true"] {
-  background: @color_background_active@;
-  color: @color_text_active@;
-  background-size: 100% 100% !important;
+  background: @color_background_default_window@;
+  color: @color_text_default@;
 }
 
 .panel-row-button[checked="true"],
