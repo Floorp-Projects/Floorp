@@ -182,6 +182,7 @@ var Browser = {
     /* handles web progress management for open browsers */
     Elements.browsers.webProgress = new Browser.WebProgress();
 
+    this.keyFilter = new KeyFilter(Elements.browsers);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule(Elements.browsers);
     let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
@@ -1234,14 +1235,19 @@ var Browser = {
         break;
       }
 
-      case "Browser:KeyPress":
+      case "Browser:KeyPress": {
+        let keyset = document.getElementById("mainKeyset");
+        keyset.setAttribute("disabled", "false");
+        if (json.preventDefault)
+          break;
+
         let event = document.createEvent("KeyEvents");
         event.initKeyEvent("keypress", true, true, null,
                            json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
                            json.keyCode, json.charCode);
-        document.getElementById("mainKeyset").dispatchEvent(event);
+        keyset.dispatchEvent(event);
         break;
-
+      }
       case "Browser:ZoomToPoint:Return":
         if (json.zoomTo) {
           let rect = Rect.fromRect(json.zoomTo);
@@ -2063,6 +2069,31 @@ const ContentTouchHandler = {
     return "[ContentTouchHandler] { }";
   }
 };
+
+
+/** Prevent chrome from consuming key events before remote content has a chance. */
+function KeyFilter(container) {
+  container.addEventListener("keypress", this, false);
+  container.addEventListener("keyup", this, false);
+  container.addEventListener("keydown", this, false);
+}
+
+KeyFilter.prototype = {
+  handleEvent: function handleEvent(aEvent) {
+    if (Elements.contentShowing.getAttribute("disabled") == "true")
+      return;
+
+    let browser = getBrowser();
+    if (browser && browser.active && browser.getAttribute("remote") == "true") {
+        document.getElementById("mainKeyset").setAttribute("disabled", "true");
+    }
+  },
+
+  toString: function toString() {
+    return "[KeyFilter] { }";
+  }
+};
+
 
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
