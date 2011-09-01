@@ -447,7 +447,7 @@ DumpHeap(JSContext *cx,
 {
     JSAutoByteString fileName;
     void* startThing = NULL;
-    uint32 startTraceKind = 0;
+    JSGCTraceKind startTraceKind = JSTRACE_OBJECT;
     void *thingToFind = NULL;
     size_t maxDepth = (size_t)-1;
     void *thingToIgnore = NULL;

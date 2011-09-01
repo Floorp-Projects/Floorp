@@ -2192,11 +2192,10 @@ JS_TraceRuntime(JSTracer *trc)
 }
 
 JS_PUBLIC_API(void)
-JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
+JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(thing);
-    JS_ASSERT(kind <= JSTRACE_LAST);
-    MarkKind(trc, thing, JSGCTraceKind(kind));
+    MarkKind(trc, thing, kind);
 }
 
 #ifdef DEBUG
@@ -2206,12 +2205,10 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 #endif
 
 JS_PUBLIC_API(void)
-JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, uint32 kindIndex,
-                       JSBool details)
+JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
+                       JSGCTraceKind kind, JSBool details)
 {
-    JS_ASSERT(kindIndex <= JSTRACE_LAST);
-    JSGCTraceKind kind = JSGCTraceKind(kindIndex);
-    const char *name;
+    const char *name = NULL; /* silence uninitialized warning */
     size_t n;
 
     if (bufsize == 0)
@@ -2336,7 +2333,7 @@ typedef struct JSHeapDumpNode JSHeapDumpNode;
 
 struct JSHeapDumpNode {
     void            *thing;
-    uint32          kind;
+    JSGCTraceKind   kind;
     JSHeapDumpNode  *next;          /* next sibling */
     JSHeapDumpNode  *parent;        /* node with the thing that refer to thing
                                        from this node */
@@ -2357,7 +2354,7 @@ typedef struct JSDumpingTracer {
 } JSDumpingTracer;
 
 static void
-DumpNotify(JSTracer *trc, void *thing, uint32 kind)
+DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     JSDumpingTracer *dtrc;
     JSContext *cx;
@@ -2501,7 +2498,7 @@ DumpNode(JSDumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
+JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind startKind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore)
 {
     JSDumpingTracer dtrc;
@@ -2527,7 +2524,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
     node = NULL;
     dtrc.lastNodep = &node;
     if (!startThing) {
-        JS_ASSERT(startKind == 0);
+        JS_ASSERT(startKind == JSTRACE_OBJECT);
         TraceRuntime(&dtrc.base);
     } else {
         JS_TraceChildren(&dtrc.base, startThing, startKind);
