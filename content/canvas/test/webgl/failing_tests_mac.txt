@@ -12,7 +12,6 @@ conformance/program-test.html
 conformance/read-pixels-test.html
 conformance/tex-input-validation.html
 conformance/texture-npot.html
-conformance/webgl-specific.html
 conformance/more/conformance/quickCheckAPI.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html
