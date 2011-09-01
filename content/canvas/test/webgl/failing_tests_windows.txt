@@ -4,7 +4,6 @@ conformance/framebuffer-object-attachment.html
 conformance/gl-getshadersource.html
 conformance/glsl-conformance.html
 conformance/glsl-long-variable-names.html
-conformance/object-deletion-behaviour.html
 conformance/premultiplyalpha-test.html
 conformance/read-pixels-test.html
 conformance/more/conformance/quickCheckAPI.html
