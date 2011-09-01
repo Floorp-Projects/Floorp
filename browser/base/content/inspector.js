@@ -110,21 +110,21 @@ Highlighter.prototype = {
     this.highlighterContainer = document.createElement("stack");
     this.highlighterContainer.id = "highlighter-container";
 
-    let veilBox = document.createElement("vbox");
-    veilBox.id = "highlighter-veil-container";
+    this.veilContainer = document.createElement("vbox");
+    this.veilContainer.id = "highlighter-veil-container";
 
     let controlsBox = document.createElement("box");
     controlsBox.id = "highlighter-controls";
 
     // The veil will make the whole page darker except
     // for the region of the selected box.
-    this.buildVeil(veilBox);
+    this.buildVeil(this.veilContainer);
 
     // The controlsBox will host the different interactive
     // elements of the highlighter (buttons, toolbars, ...).
     this.buildControls(controlsBox);
 
-    this.highlighterContainer.appendChild(veilBox);
+    this.highlighterContainer.appendChild(this.veilContainer);
     this.highlighterContainer.appendChild(controlsBox);
 
     stack.appendChild(this.highlighterContainer);
@@ -223,6 +223,7 @@ Highlighter.prototype = {
     this.veilLeftBox = null;
     this.veilMiddleBox = null;
     this.veilTransparentBox = null;
+    this.veilContainer = null;
     this.node = null;
     this.highlighterContainer.parentNode.removeChild(this.highlighterContainer);
     this.highlighterContainer = null;
@@ -925,7 +926,7 @@ var InspectorUI = {
     document.getElementById("inspector-inspect-toolbutton").checked = true;
     this.attachPageListeners();
     this.inspecting = true;
-    this.highlighter.veilTransparentBox.removeAttribute("locked");
+    this.highlighter.veilContainer.removeAttribute("locked");
   },
 
   /**
@@ -948,7 +949,7 @@ var InspectorUI = {
     } else {
       this.select(null, true, true);
     }
-    this.highlighter.veilTransparentBox.setAttribute("locked", true);
+    this.highlighter.veilContainer.setAttribute("locked", true);
   },
 
   /**
