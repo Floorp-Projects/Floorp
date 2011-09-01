@@ -392,7 +392,8 @@
     </box>
 
     <arrowbox id="appmenu-popup" hidden="true">
-      <richlistbox id="appmenu-popup-commands"/>
+      <box id="appmenu-popup-sitecommands"/>
+      <richlistbox id="appmenu-popup-appcommands"/>
     </arrowbox>
 
     <box id="panel-container" hidden="true" class="window-width window-height panel-dark"
@@ -714,7 +715,7 @@
     </hbox>
 
     <hbox id="appmenu" bottom="0" hidden="true" align="stretch" oncommand="AppMenu.hide();">
-      <toolbarbutton class="appmenu-site-button appmenu-button"
+      <toolbarbutton class="appmenu-site-button appmenu-button appmenu-pageaction"
         label="&appMenu.siteOptions;"
         oncommand="getIdentityHandler().show(); event.stopPropagation();"/>
       <toolbarbutton class="appmenu-preferences-button appmenu-button"
@@ -723,17 +724,17 @@
       <toolbarbutton class="appmenu-addons-button appmenu-button"
         label="&addonsHeader.label;"
         oncommand="BrowserUI.showPanel('addons-container');"/>
-      <toolbarbutton class="appmenu-share-button appmenu-button"
+      <toolbarbutton class="appmenu-share-button appmenu-button appmenu-pageaction"
         label="&pageactions.share.page;"
         oncommand="SharingUI.show(getBrowser().currentURI.spec, getBrowser().contentTitle);"/>
-      <toolbarbutton class="appmenu-findinpage-button appmenu-button"
+      <toolbarbutton class="appmenu-findinpage-button appmenu-button appmenu-pageaction"
         label="&pageactions.findInPage;"
         oncommand="FindHelperUI.show();"/>
       <toolbarbutton class="appmenu-downloads-button appmenu-button"
         label="&downloadsHeader.label;"
         oncommand="BrowserUI.showPanel('downloads-container');"/>
 #ifdef NS_PRINTING
-      <toolbarbutton class="appmenu-saveas-button appmenu-button"
+      <toolbarbutton class="appmenu-saveas-button appmenu-button appmenu-pageaction"
         label="&pageactions.saveas.pdf;"
         oncommand="PageActions.savePageAsPDF();"/>
 #endif
