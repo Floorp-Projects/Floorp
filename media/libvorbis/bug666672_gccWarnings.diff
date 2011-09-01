@@ -1,0 +1,91 @@
+diff --git a/media/libvorbis/lib/vorbis_codebook.c b/media/libvorbis/lib/vorbis_codebook.c
+--- a/media/libvorbis/lib/vorbis_codebook.c
++++ b/media/libvorbis/lib/vorbis_codebook.c
+@@ -243,17 +243,17 @@ static_codebook *vorbis_staticbook_unpac
+         quantvals=(s->dim==0?0:_book_maptype1_quantvals(s));
+         break;
+       case 2:
+         quantvals=s->entries*s->dim;
+         break;
+       }
+ 
+       /* quantized values */
+-      if((quantvals*s->q_quant+7>>3)>opb->storage-oggpack_bytes(opb))
++      if(((quantvals*s->q_quant+7)>>3)>opb->storage-oggpack_bytes(opb))
+         goto _eofout;
+       s->quantlist=_ogg_malloc(sizeof(*s->quantlist)*quantvals);
+       for(i=0;i<quantvals;i++)
+         s->quantlist[i]=oggpack_read(opb,s->q_quant);
+ 
+       if(quantvals&&s->quantlist[quantvals-1]==-1)goto _eofout;
+     }
+     break;
+diff --git a/media/libvorbis/lib/vorbis_floor1.c b/media/libvorbis/lib/vorbis_floor1.c
+--- a/media/libvorbis/lib/vorbis_floor1.c
++++ b/media/libvorbis/lib/vorbis_floor1.c
+@@ -1030,17 +1030,17 @@ static void *floor1_inverse1(vorbis_bloc
+         }else{
+           if(val&1){
+             val= -((val+1)>>1);
+           }else{
+             val>>=1;
+           }
+         }
+ 
+-        fit_value[i]=val+predicted&0x7fff;
++        fit_value[i]=(val+predicted)&0x7fff;
+         fit_value[look->loneighbor[i-2]]&=0x7fff;
+         fit_value[look->hineighbor[i-2]]&=0x7fff;
+ 
+       }else{
+         fit_value[i]=predicted|0x8000;
+       }
+ 
+     }
+diff --git a/media/libvorbis/lib/vorbis_psy.c b/media/libvorbis/lib/vorbis_psy.c
+--- a/media/libvorbis/lib/vorbis_psy.c
++++ b/media/libvorbis/lib/vorbis_psy.c
+@@ -1149,37 +1149,38 @@ void _vp_couple_quantize_normalize(int b
+ 
+             }else{
+               /* lossy (point) coupling */
+               if(j<limit-i){
+                 /* dipole */
+                 reM[j] += reA[j];
+                 qeM[j] = fabs(reM[j]);
+               }else{
++#if 0
+                 /* AoTuV */
+                 /** @ M2 **
+                     The boost problem by the combination of noise normalization and point stereo is eased.
+                     However, this is a temporary patch.
+                     by Aoyumi @ 2004/04/18
+                 */
+-                /*float derate = (1.0 - de*((float)(j-limit+i) / (float)(n-limit)));
+-                /* elliptical 
++                float derate = (1.0 - de*((float)(j-limit+i) / (float)(n-limit)));
++                /* elliptical */
+                 if(reM[j]+reA[j]<0){
+                   reM[j] = - (qeM[j] = (fabs(reM[j])+fabs(reA[j]))*derate*derate);
+                 }else{
+                   reM[j] =   (qeM[j] = (fabs(reM[j])+fabs(reA[j]))*derate*derate);
+-                  }*/
+-
++                }
++#else
+                 /* elliptical */
+                 if(reM[j]+reA[j]<0){
+                   reM[j] = - (qeM[j] = fabs(reM[j])+fabs(reA[j]));
+                 }else{
+                   reM[j] =   (qeM[j] = fabs(reM[j])+fabs(reA[j]));
+                 }
+-
++#endif
+ 
+               }
+               reA[j]=qeA[j]=0.f;
+               fA[j]=1;
+               iA[j]=0;
+             }
+           }
+           floorM[j]=floorA[j]=floorM[j]+floorA[j];
