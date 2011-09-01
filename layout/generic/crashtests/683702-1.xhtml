@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+  function doe() {
+    document.getElementById('a').style.display = '';
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+</head>
+<body onload="doe()">
+<div style="position: absolute; -moz-column-count: 2;">
+<table id="c">
+<div id="a" style="border: 100px solid black; display:none;"></div><tr>
+<td style="position: absolute;">
+  <span>
+    <div style="border: 100px solid black;"></div>
+  </span>
+
+</td>
+</tr>
+</table>
+</div>
+</body>
+</html>
