@@ -3290,6 +3290,8 @@ pref("layers.acceleration.disabled", false);
 // Whether to force acceleration on, ignoring blacklists.
 pref("layers.acceleration.force-enabled", false);
 
+pref("layers.acceleration.draw-fps", false);
+
 #ifdef XP_WIN
 // Whether to disable the automatic detection and use of direct2d.
 #ifdef MOZ_E10S_COMPAT

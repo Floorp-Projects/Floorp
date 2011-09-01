@@ -202,16 +202,13 @@ struct CompartmentStats
     PRInt64 gcHeapArenaPadding;
     PRInt64 gcHeapArenaUnused;
 
-    PRInt64 gcHeapObjects;
-    PRInt64 gcHeapStrings;
-    PRInt64 gcHeapShapes;
-    PRInt64 gcHeapXml;
+    PRInt64 gcHeapKinds[JSTRACE_LAST + 1];
 
     PRInt64 objectSlots;
     PRInt64 stringChars;
     PRInt64 propertyTables;
+    PRInt64 scriptData;
 
-    PRInt64 scripts;
 #ifdef JS_METHODJIT
     PRInt64 mjitCodeMethod;
     PRInt64 mjitCodeRegexp;

@@ -458,9 +458,10 @@ static int GetColorTableSize(BITMAPINFOHEADER* aHeader)
     // table should be of size 0.  
     // Setting aHeader->biCompression = BI_RGB forces the later call to 
     // GetDIBits to return to us BI_RGB data.
-    if (aHeader->biCompression == BI_BITFIELDS)
+    if (aHeader->biCompression == BI_BITFIELDS) {
       aHeader->biCompression = BI_RGB;
-      colorTableSize = 0;
+    }
+    colorTableSize = 0;
     break;
   case 24:
     colorTableSize = 0;

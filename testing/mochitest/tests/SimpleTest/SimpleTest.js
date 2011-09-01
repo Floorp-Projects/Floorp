@@ -33,8 +33,6 @@ if (parentRunner) {
 }
 
 /* Helper functions pulled out of various MochiKit modules */
-var reprRegistry = [];
-
 if (typeof(repr) == 'undefined') {
     function repr(o) {
         if (typeof(o) == "undefined") {
@@ -48,17 +46,16 @@ if (typeof(repr) == 'undefined') {
             } else if (typeof(o.repr) == 'function' && o.repr != arguments.callee) {
                 return o.repr();
             }
-            return reprRegistry.match(o);
-        } catch (e) {
-            try {
-                if (typeof(o.NAME) == 'string' && (
-                        o.toString == Function.prototype.toString ||
-                        o.toString == Object.prototype.toString
-                    )) {
-                    return o.NAME;
-                }
-            } catch (e) {
+       } catch (e) {
+       }
+       try {
+            if (typeof(o.NAME) == 'string' && (
+                    o.toString == Function.prototype.toString ||
+                    o.toString == Object.prototype.toString
+                )) {
+                return o.NAME;
             }
+        } catch (e) {
         }
         try {
             var ostring = (o + "");
