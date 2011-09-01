@@ -107,11 +107,12 @@ protected:
   void ProcessDrag(PRUint32 aEventType, DWORD grfKeyState,
                    POINTL pt, DWORD* pdwEffect);
   void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
+  void AddLinkSupportIfCanBeGenerated(LPDATAOBJECT aIDataSource);
 
   // Native Stuff
   ULONG            m_cRef;      // reference count
   HWND             mHWnd;
-  DWORD            mEffect;
+  DWORD            mEffectsAllowed;
   PRBool           mMovePreferred;
   PRBool           mTookOwnRef;
 
