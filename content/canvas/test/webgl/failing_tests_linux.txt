@@ -1,4 +1,3 @@
-conformance/buffer-offscreen-test.html
 conformance/drawingbuffer-static-canvas-test.html
 conformance/drawingbuffer-test.html
 conformance/framebuffer-object-attachment.html
