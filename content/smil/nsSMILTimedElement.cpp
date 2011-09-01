@@ -758,10 +758,10 @@ nsSMILTimedElement::Rewind()
                     mSeekState == SEEK_BACKWARD_FROM_ACTIVE,
                     "Rewind in the middle of a forwards seek?");
 
-  ClearIntervals();
-  // ClearIntervals puts us in to the POSTACTIVE state but we're doing a full
-  // rewind so go back to the startup state
+  // Putting us in the startup state will ensure we skip doing any interval
+  // updates
   mElementState = STATE_STARTUP;
+  ClearIntervals();
 
   UnsetBeginSpec(RemoveNonDynamic);
   UnsetEndSpec(RemoveNonDynamic);
@@ -784,6 +784,8 @@ nsSMILTimedElement::Rewind()
 
   mPrevRegisteredMilestone = sMaxMilestone;
   RegisterMilestone();
+  NS_ABORT_IF_FALSE(!mCurrentInterval,
+                    "Current interval is set at end of rewind");
 }
 
 namespace
@@ -1332,7 +1334,9 @@ nsSMILTimedElement::ClearSpecs(TimeValueSpecList& aSpecs,
 void
 nsSMILTimedElement::ClearIntervals()
 {
-  mElementState = STATE_POSTACTIVE;
+  if (mElementState != STATE_STARTUP) {
+    mElementState = STATE_POSTACTIVE;
+  }
   mCurrentRepeatIteration = 0;
   ResetCurrentInterval();
 
