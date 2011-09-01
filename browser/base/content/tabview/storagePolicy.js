@@ -190,6 +190,11 @@ let StoragePolicy = {
   // Function: canStoreThumbnailForTab
   // Returns whether we're allowed to store the thumbnail of the given tab.
   canStoreThumbnailForTab: function StoragePolicy_canStoreThumbnailForTab(tab) {
+    // deny saving thumbnails in private browsing mode
+    if (gPrivateBrowsing.privateBrowsingEnabled &&
+        UI._privateBrowsing.transitionMode != "enter")
+      return false;
+
     return (this._deniedBrowsers.indexOf(tab.linkedBrowser) == -1);
   },
 
