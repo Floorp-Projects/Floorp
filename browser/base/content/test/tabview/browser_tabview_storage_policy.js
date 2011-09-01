@@ -3,6 +3,9 @@
 
 const PREF_DISK_CACHE_SSL = "browser.cache.disk_cache_ssl";
 
+let pb = Cc["@mozilla.org/privatebrowsing;1"].
+         getService(Ci.nsIPrivateBrowsingService);
+
 let contentWindow;
 let newTab;
 
@@ -20,6 +23,7 @@ function test() {
     hideTabView();
 
     Services.prefs.clearUserPref(PREF_DISK_CACHE_SSL);
+    pb.privateBrowsingEnabled = false;
   });
 
   showTabView(function() {
@@ -110,15 +114,28 @@ function test5() {
        "Should not save the thumbnail for tab");
 
     whenDeniedToSaveImageData(tabItem, function () {
-      hideTabView(function () {
-        gBrowser.removeTab(gBrowser.tabs[1]);
-        finish();
-      });
+      gBrowser.removeTab(newTab);
+      test6();
     });
+
     tabItem.saveThumbnail({synchronously: true});
   });
 
   newTab.linkedBrowser.loadURI("https://example.com/");
+}
+
+// ensure that no thumbnails are saved while in private browsing mode
+function test6() {
+  HttpRequestObserver.cacheControlValue = "public";
+
+  togglePrivateBrowsing(function () {
+    let tab = gBrowser.tabs[0];
+
+    ok(!contentWindow.StoragePolicy.canStoreThumbnailForTab(tab),
+       "Should not save the thumbnail for tab");
+
+    togglePrivateBrowsing(finish);
+  });
 }
 
 let HttpRequestObserver = {
