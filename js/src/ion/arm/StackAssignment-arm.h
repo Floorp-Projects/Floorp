@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <dvander@alliedmods.net>
+ *   David Anderson <danderson@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,41 +39,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
-
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
+#ifndef jsion_cpu_arm_stack_assignment_h__
+#define jsion_cpu_arm_stack_assignment_h__
 
 namespace js {
 namespace ion {
 
-class CodeGenerator : public CodeGeneratorSpecific
+class StackAssignment
 {
-    bool generateBody();
+    js::Vector<uint32, 4, IonAllocPolicy> normalSlots;
+    js::Vector<uint32, 4, IonAllocPolicy> doubleSlots;
+    uint32 height_;
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
+    StackAssignment() : height_(0)
+    { }
 
-  public:
-    bool generate();
+    void freeSlot(uint32 index) {
+        normalSlots.append(index);
+    }
+    void freeDoubleSlot(uint32 index) {
+        doubleSlots.append(index);
+    }
 
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
+    bool allocateDoubleSlot(uint32 *index) {
+        if (!doubleSlots.empty()) {
+            *index = doubleSlots.popCopy();
+            JS_ASSERT(*index <= height_);
+            return true;
+        }
+        if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT)) {
+            normalSlots.append(height_++);
+            JS_ASSERT(!ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT));
+        }
+        height_ += 2;
+        *index = height_;
+        return true;
+    }
+
+    bool allocateSlot(uint32 *index) {
+        if (!normalSlots.empty()) {
+            *index = normalSlots.popCopy();
+            JS_ASSERT(*index <= height_);
+            return true;
+        }
+        if (!doubleSlots.empty()) {
+            *index = doubleSlots.popCopy();
+            JS_ASSERT(*index <= height_);
+            return normalSlots.append(*index - 1);
+        }
+        *index = ++height_;
+        return true;
+    }
+
+    uint32 stackHeight() const {
+        return height_;
+    }
 };
 
 } // namespace ion
 } // namespace js
 
-#endif // jsion_codegen_h__
+#endif // jsion_cpu_arm_stack_assignment_h__
 

@@ -48,6 +48,8 @@
 # include "ion/x86/Bailouts-x86.h"
 #elif defined(JS_CPU_X64)
 # include "ion/x64/Bailouts-x64.h"
+#elif defined(JS_CPU_ARM)
+# include "ion/arm/Bailouts-arm.h"
 #else
 # error "CPU!"
 #endif

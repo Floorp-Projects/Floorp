@@ -39,8 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x86_regs_h__
-#define jsion_cpu_x86_regs_h__
+#ifndef jsion_architecture_x86_h__
+#define jsion_architecture_x86_h__
 
 #include "assembler/assembler/X86Assembler.h"
 
@@ -136,5 +136,5 @@ class FloatRegisters {
 } // namespace js
 } // namespace ion
 
-#endif // jsion_cpu_x86_regs_h__
+#endif // jsion_architecture_x86_h__
 

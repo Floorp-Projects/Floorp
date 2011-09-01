@@ -39,41 +39,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_codegen_h__
-#define jsion_codegen_h__
+#ifndef jsion_move_resolver_arm_shared_h__
+#define jsion_move_resolver_arm_shared_h__
 
-#if defined(JS_CPU_X86)
-# include "x86/CodeGenerator-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/CodeGenerator-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/CodeGenerator-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
+#include "ion/MoveResolver.h"
+#include "ion/IonMacroAssembler.h"
 
 namespace js {
 namespace ion {
 
-class CodeGenerator : public CodeGeneratorSpecific
+class CodeGenerator;
+
+class MoveEmitterARM
 {
-    bool generateBody();
+    typedef MoveResolver::Move Move;
+    typedef MoveResolver::MoveOperand MoveOperand;
+
+    bool inCycle_;
+    MacroAssembler &masm;
+
+    // Original stack push value.
+    uint32 pushedAtStart_;
+
+    // These store stack offsets to spill locations, snapshotting
+    // codegen->framePushed_ at the time they were allocated. They are -1 if no
+    // stack space has been allocated for that particular spill.
+    int32 pushedAtCycle_;
+    int32 pushedAtSpill_;
+    int32 pushedAtDoubleSpill_;
+
+    // These are registers that are available for temporary use. They may be
+    // assigned InvalidReg. If no corresponding spill space has been assigned,
+    // then these registers do not need to be spilled.
+    Register spilledReg_;
+    FloatRegister spilledFloatReg_;
+
+    void assertDone();
+    Register tempReg();
+    FloatRegister tempFloatReg();
+    Operand cycleSlot() const;
+    Operand spillSlot() const;
+    Operand doubleSpillSlot() const;
+    Operand toOperand(const MoveOperand &operand) const;
+
+    void emitMove(const MoveOperand &from, const MoveOperand &to);
+    void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
+    void breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
+    void completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
+    void emit(const Move &move);
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph &graph);
-
-  public:
-    bool generate();
-
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
+    MoveEmitterARM(MacroAssembler &masm);
+    ~MoveEmitterARM();
+    void emit(const MoveResolver &moves);
+    void finish();
 };
 
-} // namespace ion
-} // namespace js
+typedef MoveEmitterARM MoveEmitter;
 
-#endif // jsion_codegen_h__
+} // ion
+} // js
+
+#endif // jsion_move_resolver_arm_shared_h__
 

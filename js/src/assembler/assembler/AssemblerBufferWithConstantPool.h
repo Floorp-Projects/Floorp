@@ -189,7 +189,7 @@ public:
         return AssemblerBuffer::size();
     }
 
-    int uncheckedSize()
+    int uncheckedSize() const
     {
         return AssemblerBuffer::size();
     }

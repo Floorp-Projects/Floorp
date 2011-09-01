@@ -398,16 +398,16 @@ MCompare::setCondition(JSOp op)
 {
     switch (op) {
       case JSOP_LT:
-        cond_ = AssemblerX86Shared::LessThan;
+        cond_ = Assembler::LessThan;
         return;
       case JSOP_LE:
-        cond_ = AssemblerX86Shared::LessThanOrEqual;
+        cond_ = Assembler::LessThanOrEqual;
         return;
       case JSOP_GT:
-        cond_ = AssemblerX86Shared::GreaterThan;
+        cond_ = Assembler::GreaterThan;
         return;
       case JSOP_GE:
-        cond_ = AssemblerX86Shared::GreaterThanOrEqual;
+        cond_ = Assembler::GreaterThanOrEqual;
         return;
       default:
         JS_NOT_REACHED("Unrecognized comparison operation");
