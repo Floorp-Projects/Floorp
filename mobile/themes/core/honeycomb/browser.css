@@ -1514,7 +1514,7 @@ setting {
   margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
 }
 
-#appmenu-overflow-commands > .appmenu-button {
+#appmenu-overflow-appcommands > .appmenu-button {
   color: @color_text_default@;
   background: transparent;
   font-size: @font_normal@ !important;
@@ -1524,9 +1524,88 @@ setting {
   -moz-box-align: center;
 }
 
-#appmenu-overflow-commands > .appmenu-button:hover:active {
+#appmenu-overflow-appcommands > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
+}
+
+#appmenu-popup-appcommands {
+  padding: @padding_normal@ !important;
+  background-color: transparent;
+}
+
+#appmenu-popup-appcommands richlistitem {
+  -moz-box-align: center;
+  border-top: @border_width_tiny@ solid @color_button_border@;
+  border-bottom: none;
+  background-color: transparent;
+}
+
+#appmenu-popup-appcommands richlistitem:hover:active {
+  background-color: @color_background_highlight_overlay@;
+}
+
+#appmenu-popup-sitecommands {
+  display: block;
+  max-width: -moz-calc(4.51 * @touch_button_xlarge@ + 2 * @padding_normal@) !important;
+  width: -moz-calc(4.51 * @touch_button_xlarge@ + 2 * @padding_normal@) !important;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction {
+  font-size: @font_tiny@;
+  display: inline-block;
+  min-height: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  min-width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  max-width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  border-radius: 0px;
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+  text-align: center;
+  background-repeat: no-repeat;
+  background-position: 50% -moz-calc(50% - 1em);
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction > label {
+  padding-top: @touch_button_small@;
+}
+
+#appmenu-popup-sitecommands > .appmenu-site-button {
+  background-image: url("chrome://browser/skin/images/appmenu-site-hdpi.png");
+}
+
+#appmenu-popup-sitecommands > .appmenu-share-button {
+  background-image: url("chrome://browser/skin/images/appmenu-share-hdpi.png");
+}
+
+#appmenu-popup-sitecommands > .appmenu-findinpage-button {
+  background-image: url("chrome://browser/skin/images/appmenu-findinpage-hdpi.png");
+}
+
+#appmenu-popup-sitecommands > .appmenu-saveas-button {
+  background-image: url("chrome://browser/skin/images/appmenu-saveas-hdpi.png");
+}
+
+#appmenu-popup-sitecommands {
+  padding: @padding_normal@ !important;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction:not(:nth-child(3n+3)):-moz-locale-dir(ltr) {
+  border-right: @border_width_tiny@ solid @color_button_border@;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction:not(:nth-child(3n+3)):-moz-locale-dir(rtl) {
+  border-left: @border_width_tiny@ solid @color_button_border@;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+1):last-child,
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+1):nth-last-child(-3n+2),
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+1):nth-last-child(-3n+3),
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+2):last-child,
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+2):nth-last-child(-3n+2),
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+3):last-child {
+  border-bottom: none;
 }
 
 /* Sync setup ------------------------------------------------------------- */

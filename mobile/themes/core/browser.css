@@ -1470,7 +1470,7 @@ setting {
   margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
 }
 
-#appmenu-overflow-commands > .appmenu-button {
+#appmenu-overflow-appcommands > .appmenu-button {
   color: #000;
   background: transparent;
   font-size: @font_normal@ !important;
@@ -1480,9 +1480,13 @@ setting {
   -moz-box-align: center;
 }
 
-#appmenu-overflow-commands > .appmenu-button:hover:active {
+#appmenu-overflow-appcommands > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
+}
+
+#appmenu-popup-sitecommands {
+  -moz-box-orient: vertical;
 }
 
 /* Sync setup ------------------------------------------------------------- */

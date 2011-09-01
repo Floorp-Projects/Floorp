@@ -290,6 +290,7 @@ chrome.jar:
   skin/honeycomb/images/appmenu-preferences-hdpi.png  (honeycomb/images/appmenu-preferences-hdpi.png)
   skin/honeycomb/images/appmenu-share-hdpi.png        (honeycomb/images/appmenu-share-hdpi.png)
   skin/honeycomb/images/appmenu-site-hdpi.png         (honeycomb/images/appmenu-site-hdpi.png)
+  skin/honeycomb/images/appmenu-saveas-hdpi.png       (honeycomb/images/appmenu-saveas-hdpi.png)
   skin/honeycomb/images/aboutBackground.jpg           (honeycomb/images/aboutBackground.jpg)
   skin/honeycomb/images/button-bg.png                 (honeycomb/images/button-bg.png)
   skin/honeycomb/images/textbox-bg.png                (honeycomb/images/textbox-bg.png)

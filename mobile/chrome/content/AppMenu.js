@@ -1,4 +1,5 @@
 var AppMenu = {
+  offset: 10,
   get panel() {
     delete this.panel;
     return this.panel = document.getElementById("appmenu");
@@ -27,9 +28,13 @@ var AppMenu = {
     addEventListener("keypress", this, true);
 
     if (listFormat) {
-      let listbox = document.getElementById("appmenu-popup-commands");
+      let listbox = document.getElementById("appmenu-popup-appcommands");
       while (listbox.firstChild)
         listbox.removeChild(listbox.firstChild);
+
+      let siteCommandsBox = document.getElementById("appmenu-popup-sitecommands");
+      while (siteCommandsBox.firstChild)
+        siteCommandsBox.removeChild(siteCommandsBox.firstChild);
 
       let childrenCount = this.panel.childElementCount;
       for (let i = 0; i < childrenCount; i++) {
@@ -41,20 +46,23 @@ var AppMenu = {
         child.setAttribute("show", true);
 
         let item = document.createElement("richlistitem");
-        item.setAttribute("class", "appmenu-button");
+        item.setAttribute("class", child.className);
         item.onclick = function() { child.click(); }
 
         let label = document.createElement("label");
         label.setAttribute("value", child.label);
         item.appendChild(label);
 
-        listbox.appendChild(item);
+        if (item.classList.contains("appmenu-pageaction"))
+          siteCommandsBox.appendChild(item);
+        else
+          listbox.appendChild(item);
       }
 
       this.popup.top = menuButton.getBoundingClientRect().bottom;
 
       let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
-      this.popup.setAttribute(chromeReg.isLocaleRTL("global") ? "left" : "right", 0);
+      this.popup.setAttribute(chromeReg.isLocaleRTL("global") ? "left" : "right", this.offset);
 
       this.popup.hidden = false;
       this.popup.anchorTo(menuButton);
