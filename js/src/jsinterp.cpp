@@ -1436,7 +1436,6 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
 {
     JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
     const uintN targetLevel = closureLevel - cookie.level();
-    JS_ASSERT(targetLevel < UpvarCookie::UPVAR_LEVEL_LIMIT);
 
     StackFrame *fp = FindUpvarFrame(cx, targetLevel);
     uintN slot = cookie.slot();
