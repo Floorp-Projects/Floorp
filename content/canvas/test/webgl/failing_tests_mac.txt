@@ -15,6 +15,5 @@ conformance/more/conformance/quickCheckAPI.html
 conformance/more/functions/copyTexImage2D.html
 conformance/more/functions/copyTexSubImage2D.html
 conformance/more/functions/deleteBufferBadArgs.html
-conformance/more/functions/texImage2DBadArgs.html
 conformance/more/functions/uniformfBadArgs.html
 conformance/more/functions/uniformiBadArgs.html
