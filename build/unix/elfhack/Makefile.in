@@ -47,6 +47,7 @@ INTERNAL_TOOLS = 1
 
 HOST_PROGRAM = elfhack
 NO_DIST_INSTALL = 1
+NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 VPATH += $(topsrcdir)/build
 
@@ -71,12 +72,20 @@ endif
 CSRCS := \
   inject/$(CPU).c \
   inject/$(CPU)-noinit.c \
+  test.c \
   $(NULL)
 
-libs:: $(CSRCS:.c=.$(OBJ_SUFFIX))
+ifndef CROSS_COMPILE
+CSRCS += dummy.c
+endif
 
-WRAP_MALLOC_CFLAGS=
-WRAP_MALLOC_LIB=
+WRAP_LDFLAGS=
+
+# need this to suppress errors due to /usr/include/linux/byteorder/swab.h
+# on mozilla buildbots
+OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
+
+include $(topsrcdir)/config/rules.mk
 
 test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 	$(MKSHLIB) $(LDFLAGS) $<
@@ -94,8 +103,6 @@ test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 
 .PRECIOUS: test$(DLL_SUFFIX)
 
-CSRCS += test.c
-
 GARBAGE += test$(DLL_SUFFIX) test$(DLL_SUFFIX).bak
 
 libs:: test$(DLL_SUFFIX)
@@ -108,8 +115,6 @@ libs:: dummy
 	# Will either crash or return exit code 1 if elfhack is broken
 	LD_LIBRARY_PATH=$(CURDIR) $(CURDIR)/dummy
 
-CSRCS += dummy.c
-
 GARBAGE += dummy
 endif
 
@@ -120,12 +125,6 @@ inject/%.c: inject.c | inject
 	cp $< $@
 
 GARBAGE_DIRS += inject
-
-# need this to suppress errors due to /usr/include/linux/byteorder/swab.h
-# on mozilla buildbots
-OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
-
-include $(topsrcdir)/config/rules.mk
 
 inject/%.$(OBJ_SUFFIX): DEFINES += -DBITS=$(if $(HAVE_64BIT_OS),64,32)
 inject/%.$(OBJ_SUFFIX): CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))

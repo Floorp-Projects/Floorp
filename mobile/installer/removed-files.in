@@ -3,6 +3,22 @@ README.txt
 extensions/feedback@mobile.mozilla.org.xpi
 #endif
 #ifdef XP_WIN
+  #if _MSC_VER != 1400
+    @BINPATH@/Microsoft.VC80.CRT.manifest
+    @BINPATH@/msvcm80.dll
+    @BINPATH@/msvcp80.dll
+    @BINPATH@/msvcr80.dll
+  #endif
+  #if _MSC_VER != 1500
+    @BINPATH@/Microsoft.VC90.CRT.manifest
+    @BINPATH@/msvcm90.dll
+    @BINPATH@/msvcp90.dll
+    @BINPATH@/msvcr90.dll
+  #endif
+  #if _MSC_VER != 1600
+    @BINPATH@/msvcp100.dll
+    @BINPATH@/msvcr100.dll
+  #endif
   mozcrt19.dll
   mozcpp19.dll
 #endif

@@ -59,6 +59,12 @@ CU.import("resource://tps/forms.jsm");
 CU.import("resource://tps/prefs.jsm");
 CU.import("resource://tps/tabs.jsm");
 
+var hh = CC["@mozilla.org/network/protocol;1?name=http"]
+         .getService(CI.nsIHttpProtocolHandler);
+
+var mozmillInit = {}; 
+CU.import('resource://mozmill/modules/init.js', mozmillInit);
+
 const ACTION_ADD = "add";
 const ACTION_VERIFY = "verify";
 const ACTION_VERIFY_NOT = "verify-not";
@@ -396,6 +402,27 @@ var TPS =
       " on bookmarks");
   },
 
+  MozmillEndTestListener: function TPS__MozmillEndTestListener(obj) {
+    Logger.logInfo("mozmill endTest: " + JSON.stringify(obj));
+    if (obj.failed > 0) {
+      this.DumpError('mozmill test failed, name: ' + obj.name + ', reason: ' + JSON.stringify(obj.fails));
+      return;
+    }
+    else if ('skipped' in obj && obj.skipped) {
+      this.DumpError('mozmill test failed, name: ' + obj.name + ', reason: ' + obj.skipped_reason);
+      return;
+    }
+    else {
+      Utils.namedTimer(function() {
+        this.FinishAsyncOperation();
+      }, 2000, this, "postmozmilltest");
+    }
+  },
+
+  MozmillSetTestListener: function TPS__MozmillSetTestListener(obj) {
+    Logger.logInfo("mozmill setTest: " + obj.name);
+  },
+
   RunNextTestAction: function() {
     try {
       if (this._currentAction >= 
@@ -435,13 +462,13 @@ var TPS =
   RunTestPhase: function (file, phase, logpath) {
     try {
       Logger.init(logpath);
-      Logger.logInfo("Weave version: " + WEAVE_VERSION);
+      Logger.logInfo("Sync version: " + WEAVE_VERSION);
       Logger.logInfo("Firefox builddate: " + Services.appinfo.appBuildID);
       Logger.logInfo("Firefox version: " + Services.appinfo.version);
 
-      // do some weave housekeeping
+      // do some sync housekeeping
       if (Weave.Service.isLoggedIn) {
-        this.DumpError("Weave logged in on startup...profile may be dirty");
+        this.DumpError("Sync logged in on startup...profile may be dirty");
         return;
       }
       
@@ -483,6 +510,25 @@ var TPS =
 
   Phase: function Test__Phase(phasename, fnlist) {
     this._phaselist[phasename] = fnlist;
+  },
+
+  RunMozmillTest: function TPS__RunMozmillTest(testfile) {
+    var mozmillfile = CC["@mozilla.org/file/local;1"]
+                      .createInstance(CI.nsILocalFile);
+    if (hh.oscpu.toLowerCase().indexOf('windows') > -1) {
+      let re = /\/(\w)\/(.*)/;
+      this.config.testdir = this.config.testdir.replace(re, "$1://$2").replace("/", "\\", "g");
+    }
+    mozmillfile.initWithPath(this.config.testdir);
+    mozmillfile.appendRelativePath(testfile);
+    Logger.logInfo("Running mozmill test " + mozmillfile.path);
+
+    var frame = {};
+    CU.import('resource://mozmill/modules/frame.js', frame);
+    frame.events.addListener('setTest', this.MozmillSetTestListener.bind(this));
+    frame.events.addListener('endTest', this.MozmillEndTestListener.bind(this));
+    this.StartAsyncOperation();
+    frame.runTestFile(mozmillfile.path, false);
   },
 
   SetPrivateBrowsing: function TPS__SetPrivateBrowsing(options) {
