@@ -183,6 +183,11 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(JSScript *script)
 {
+    if (script->hasClearedGlobal()) {
+        JaegerSpew(JSpew_Abort, "script has a cleared global\n");
+        return Compile_Abort;
+    }
+
     if (!script->ensureRanBytecode(cx))
         return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
