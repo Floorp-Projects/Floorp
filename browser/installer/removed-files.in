@@ -9,6 +9,7 @@
 @DLL_PREFIX@xpcom_compat@DLL_SUFFIX@
 @DLL_PREFIX@xpistub@DLL_SUFFIX@
 @DLL_PREFIX@zlib@DLL_SUFFIX@
+@DLL_PREFIX@jemalloc@DLL_SUFFIX@
 #ifdef MOZ_STATIC_JS
 @DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
@@ -1258,7 +1259,6 @@ xpicleanup@BIN_SUFFIX@
     dictionaries/PL.dic
     icons/mozicon16.xpm
     icons/mozicon50.xpm
-    libjemalloc.so
     plugins/libnullplugin.so
     readme.txt
   #endif
