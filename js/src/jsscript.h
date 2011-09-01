@@ -525,6 +525,7 @@ struct JSScript {
     bool            createdArgs:1;    /* script has had arguments objects created */
     bool            uninlineable:1;   /* script is considered uninlineable by analysis */
     bool            reentrantOuterFunction:1; /* outer function marked reentrant */
+    bool            typesPurged:1;    /* TypeScript has been purged at some point */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */

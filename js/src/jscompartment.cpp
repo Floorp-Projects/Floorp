@@ -643,6 +643,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
                     if (discardScripts) {
                         script->types->destroy();
                         script->types = NULL;
+                        script->typesPurged = true;
                     }
                 }
             }
