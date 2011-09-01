@@ -115,7 +115,6 @@ nsBaseWidget::nsBaseWidget()
 , mZIndex(0)
 , mSizeMode(nsSizeMode_Normal)
 , mPopupLevel(ePopupLevelTop)
-, mDrawFPS(PR_FALSE)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -287,21 +286,6 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
   }
 
   return nsnull;
-}
-
-NS_IMETHODIMP
-nsBaseWidget::SetEventCallback(EVENT_CALLBACK aEventFunction,
-                               nsDeviceContext *aContext)
-{
-  mEventCallback = aEventFunction;
-
-  if (aContext) {
-    NS_IF_RELEASE(mContext);
-    mContext = aContext;
-    NS_ADDREF(mContext);
-  }
-
-  return NS_OK;
 }
 
 // Attach a view to our widget which we'll send events to. 
@@ -831,11 +815,9 @@ nsBaseWidget::GetShouldAccelerate()
     Preferences::GetBool("layers.acceleration.disabled", PR_FALSE);
   PRBool forceAcceleration =
     Preferences::GetBool("layers.acceleration.force-enabled", PR_FALSE);
-  mDrawFPS =
-    Preferences::GetBool("layers.acceleration.draw-fps", PR_FALSE);
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-  accelerateByDefault = accelerateByDefault || 
+  accelerateByDefault = accelerateByDefault ||
                         (acceleratedEnv && (*acceleratedEnv != '0'));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -894,7 +876,6 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
        * deal with it though!
        */
       if (layerManager->Initialize()) {
-        layerManager->SetRenderFPS(mDrawFPS);
         mLayerManager = layerManager;
       }
     }

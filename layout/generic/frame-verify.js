@@ -60,7 +60,7 @@ function process_tree_decl(d)
 {
   d = dehydra_convert(d);
   
-  if (d.name && frameIIDRE(d.name)) {
+  if (d.name && frameIIDRE.exec(d.name)) {
     haveIDs[d.memberOf.name] = 1;
   }
 }
@@ -68,7 +68,7 @@ function process_tree_decl(d)
 function process_cp_pre_genericize(d)
 {
   d = dehydra_convert(d);
-  if (queryFrameRE(d.name) && d.template === undefined) {
+  if (queryFrameRE.exec(d.name) && d.template === undefined) {
     let templtype = d.type.type.type;
     while (templtype.typedef !== undefined)
       templtype = templtype.typedef;

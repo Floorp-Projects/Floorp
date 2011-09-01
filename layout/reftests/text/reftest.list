@@ -1,5 +1,6 @@
 fails-if(Android) == fallback-01.xhtml fallback-01-ref.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
+== font-selection-fallback-1.html font-selection-fallback-1-ref.html
 HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html
 fails-if(Android) != font-size-adjust-01.html font-size-adjust-01-ref.html
 # The following test passes consistently only on Mac OS X;

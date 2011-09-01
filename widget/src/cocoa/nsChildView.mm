@@ -704,30 +704,26 @@ nsChildView::SetParent(nsIWidget* aNewParent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  NS_ENSURE_ARG(aNewParent);
+
   if (mOnDestroyCalled)
     return NS_OK;
 
+  // make sure we stay alive
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   
-  if (mParentWidget) {
+  // remove us from our existing parent
+  if (mParentWidget)
     mParentWidget->RemoveChild(this);
-  }
 
-  if (aNewParent) {
-    ReparentNativeWidget(aNewParent);
-  } else {
-    [mView removeFromSuperview];
-    mParentView = nil;
-  }
+  nsresult rv = ReparentNativeWidget(aNewParent);
+  if (NS_SUCCEEDED(rv))
+    mParentWidget = aNewParent;
 
-  mParentWidget = aNewParent;
-
-  if (mParentWidget) {
-    mParentWidget->AddChild(this);
-  }
-
+  // add us to the new parent
+  mParentWidget->AddChild(this);
   return NS_OK;
-
+  
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
@@ -747,7 +743,7 @@ nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
 
   // we hold a ref to mView, so this is safe
   [mView removeFromSuperview];
-  mParentView = newParentView;
+  mParentView   = newParentView;
   [mParentView addSubview:mView];
   return NS_OK;
 

@@ -299,16 +299,8 @@ GARBAGE += $(VPX_CONVERTED_ASFILES)
 
 %.asm.$(ASM_SUFFIX): %.asm
 	$(VPX_AS_CONVERSION) < $< > $@
-
-vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
-	./$(HOST_PROGRAM) rvds $< | $(VPX_AS_CONVERSION) > $@
-
 else
 ASFILES += $(VPX_ASFILES)
-
-vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
-	./$(HOST_PROGRAM) rvds $< > $@
-
 endif
 
 GARBAGE += vpx_asm_offsets.$(OBJ_SUFFIX) vpx_asm_offsets.asm
@@ -325,4 +317,9 @@ filter_c.o: filter_c.c Makefile.in
 	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(patsubst -xO[45],-xO3,$(COMPILE_CFLAGS)) $<
 endif
+endif
+
+ifdef VPX_ARM_ASM
+vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+	./$(HOST_PROGRAM) rvds $< $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 endif

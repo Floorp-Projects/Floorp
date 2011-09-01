@@ -140,7 +140,7 @@ nsHTMLLIElement::ParseAttribute(PRInt32 aNamespaceID,
              aResult.ParseEnumValue(aValue, kUnorderedListItemTypeTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::value) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+      return aResult.ParseIntValue(aValue);
     }
   }
 

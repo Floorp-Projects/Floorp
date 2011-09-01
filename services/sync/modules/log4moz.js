@@ -481,7 +481,7 @@ BlockingStreamAppender.prototype = {
       }
       this._converterStream.init(
         this._outputStream, "UTF-8", STREAM_SEGMENT_SIZE,
-        Ci.nsIConverterOutputStream.DEFAULT_REPLACEMENT_CHARACTER);      
+        Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);      
     }
     return this._converterStream;
   },

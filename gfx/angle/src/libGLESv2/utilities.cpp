@@ -200,18 +200,23 @@ GLsizei ComputeCompressedSize(GLsizei width, GLsizei height, GLenum format)
     {
       case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
       case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        return 8 * (GLsizei)ceil((float)width / 4.0f) * (GLsizei)ceil((float)height / 4.0f);
         break;
+      case GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE:
+      case GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE:
+        return 16 * (GLsizei)ceil((float)width / 4.0f) * (GLsizei)ceil((float)height / 4.0f);
       default:
         return 0;
     }
 
-    return 8 * (GLsizei)ceil((float)width / 4.0f) * (GLsizei)ceil((float)height / 4.0f);
 }
 
 bool IsCompressed(GLenum format)
 {
     if(format == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-       format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT)
+       format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
+       format == GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE ||
+       format == GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE)
     {
         return true;
     }

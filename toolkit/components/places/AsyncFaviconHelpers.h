@@ -314,6 +314,53 @@ private:
   nsCString mPageSpec;
 };
 
+
+/**
+ * Asynchronously tries to get the URL and data of a page's favicon.  
+ * If this succeeds, notifies the given observer.
+ */
+class AsyncGetFaviconDataForPage : public AsyncFaviconHelperBase
+{
+public:
+  NS_DECL_NSIRUNNABLE
+
+  /**
+   * Creates the event and dispatches it to the I/O thread.
+   *
+   * @param aPageURI
+   *        URL of the page whose favicon URL and data we're fetching
+   * @param aDBConn
+   *        database connection to use
+   * @param aCallback
+   *        function to be called once the URL and data is retrieved from the database
+   */
+  static nsresult start(nsIURI* aPageURI,
+                        nsCOMPtr<mozIStorageConnection>& aDBConn,
+                        nsIFaviconDataCallback* aCallback);
+
+  /**
+   * Constructor.
+   *
+   * @param aPageSpec
+   *        URL of the page whose favicon URL and data we're fetching
+   * @param aDBConn
+   *        database connection to use
+   * @param aFaviconSvc
+   *        the favicon service to query
+   * @param aCallback
+   *        function to be called once the URL is retrieved from the database
+   */
+  AsyncGetFaviconDataForPage(const nsACString& aPageSpec,
+                             nsCOMPtr<mozIStorageConnection>& aDBConn,
+                             nsRefPtr<nsFaviconService>& aFaviconSvc,
+                             nsCOMPtr<nsIFaviconDataCallback>& aCallback);
+
+  virtual ~AsyncGetFaviconDataForPage();
+
+private:
+  nsCString mPageSpec;
+};
+
 /**
  * Notifies the icon change to favicon observers.
  */
