@@ -85,20 +85,31 @@ ifdef GNU_CXX #{
 EXPORTS_mozilla	+= throw_gcc.h
 else
 ifdef _MSC_VER #{
-EXPORTS_mozilla	+= throw_msvc.h
-ifdef MOZ_MSVC_STL_WRAP__Throw #{
-EXPORTS_mozilla	+= msvc_throw_wrapper.h
-CPPSRCS		+= msvc_throw_wrapper.cpp
+
+ifeq ($(MOZ_MSVC_STL_WRAP__RAISE),1) #{
+BUILD_MSVC_WRAPPERS = 1
 else
-ifdef MOZ_MSVC_STL_WRAP__RAISE #{
-EXPORTS_mozilla	+= msvc_raise_wrappers.h
-CPPSRCS		+= msvc_raise_wrappers.cpp
-else
-$(error Unknown STL wrapper tactic for MSVC)
+ifeq ($(MOZ_MSVC_STL_WRAP__Throw),1) #{
+BUILD_MSVC_WRAPPERS = 1
 endif #}
 endif #}
+
+ifdef BUILD_MSVC_WRAPPERS #{
+EXPORTS_mozilla		+=			\
+	msvc_raise_wrappers.h			\
+	msvc_throw_wrapper.h			\
+	throw_msvc.h				\
+	$(NULL)
+
+CPPSRCS			+= 			\
+	msvc_raise_wrappers.cpp			\
+	msvc_throw_wrapper.cpp			\
+	$(NULL)
+endif #}
+
 endif #}
 endif #}
+
 endif #}
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))

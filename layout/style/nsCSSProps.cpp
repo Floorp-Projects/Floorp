@@ -351,6 +351,12 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
       }
     }
   }
+  
+  if (res == eCSSProperty_perspective || res == eCSSProperty_perspective_origin || 
+      res == eCSSProperty_backface_visibility || res == eCSSProperty_transform_style) {
+    return eCSSProperty_UNKNOWN;
+  }
+
   return res;
 }
 
@@ -372,6 +378,12 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
       }
     }
   }
+  
+  if (res == eCSSProperty_perspective || res == eCSSProperty_perspective_origin || 
+      res == eCSSProperty_backface_visibility || res == eCSSProperty_transform_style) {
+    return eCSSProperty_UNKNOWN;
+  }
+
   return res;
 }
 

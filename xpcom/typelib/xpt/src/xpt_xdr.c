@@ -406,7 +406,7 @@ XPT_DoString(XPTArena *arena, XPTCursor *cursor, XPTString **strp)
     XPTString *str = *strp;
     PRBool already;
 
-    XPT_PREAMBLE_NO_ALLOC(cursor, strp, XPT_DATA, str->length + 2, my_cursor,
+    XPT_PREAMBLE_NO_ALLOC(cursor, strp, XPT_DATA, str->length + 2u, my_cursor,
                           already)
 
     return XPT_DoStringInline(arena, &my_cursor, strp);

@@ -1601,16 +1601,25 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
  * other strong ref identified for debugging purposes by name or index or
  * a naming callback.
  *
- * By definition references to traceable things include non-null pointers
- * to JSObject, JSString and jsdouble and corresponding jsvals.
- *
  * See the JSTraceOp typedef in jspubtd.h.
  */
 
-/* Trace kinds to pass to JS_Tracing. */
-#define JSTRACE_OBJECT  0
-#define JSTRACE_STRING  1
-#define JSTRACE_SHAPE   2
+typedef enum {
+    JSTRACE_OBJECT,
+    JSTRACE_STRING,
+    JSTRACE_SCRIPT,
+
+    /*
+     * Trace kinds internal to the engine. JSTraceCallback implementation can
+     * only call JS_TraceChildren on them.
+     */ 
+#if JS_HAS_XML_SUPPORT
+    JSTRACE_XML,
+#endif
+    JSTRACE_SHAPE,
+    JSTRACE_TYPE_OBJECT,
+    JSTRACE_LAST = JSTRACE_TYPE_OBJECT
+} JSGCTraceKind;
 
 /*
  * Use the following macros to check if a particular jsval is a traceable
