@@ -222,8 +222,8 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
     if (IS_GC_MARKING_TRACER(trc)) {
         if (type->singleton)
             MarkObject(trc, *type->singleton, "type_singleton");
-        if (type->functionScript)
-            js_TraceScript(trc, type->functionScript, NULL);
+        if (type->interpretedFunction)
+            MarkObject(trc, *type->interpretedFunction, "type_function");
     }
 }
 
@@ -838,7 +838,7 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
         PushMarkStack(gcmarker, type->proto);
 
     if (type->newScript) {
-        js_TraceScript(gcmarker, type->newScript->script, NULL);
+        PushMarkStack(gcmarker, type->newScript->fun);
         PushMarkStack(gcmarker, type->newScript->shape);
     }
 
@@ -878,12 +878,12 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
         MarkObject(trc, *type->singleton, "type_singleton");
 
     if (type->newScript) {
-        js_TraceScript(trc, type->newScript->script, NULL);
+        MarkObject(trc, *type->newScript->fun, "type_new_function");
         MarkShape(trc, type->newScript->shape, "type_new_shape");
     }
 
-    if (type->functionScript)
-        js_TraceScript(trc, type->functionScript, NULL);
+    if (type->interpretedFunction)
+        MarkObject(trc, *type->interpretedFunction, "type_function");
 }
 
 #ifdef JS_HAS_XML_SUPPORT

@@ -360,7 +360,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
     PreserveRegsGuard regsGuard(cx, regs);
 
     /* Scope with a call object parented by callee's parent. */
-    if (newfun->isHeavyweight() && !js::CreateFunCallObject(cx, regs.fp()))
+    if (!regs.fp()->functionPrologue(cx))
         return false;
 
     /*
@@ -496,13 +496,6 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallRes
     return;
 }
 
-void JS_FASTCALL
-stubs::PutActivationObjects(VMFrame &f)
-{
-    JS_ASSERT(f.fp()->hasCallObj() || f.fp()->hasArgsObj());
-    f.fp()->putActivationObjects();
-}
-
 static void
 RemoveOrphanedNative(JSContext *cx, StackFrame *fp)
 {
@@ -633,7 +626,7 @@ js_InternalThrow(VMFrame &f)
          */
         cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
 
-        if (!script->ensureRanBytecode(cx)) {
+        if (!script->ensureRanAnalysis(cx)) {
             js_ReportOutOfMemory(cx);
             return NULL;
         }
@@ -667,14 +660,6 @@ js_InternalThrow(VMFrame &f)
     }
 
     return script->nativeCodeForPC(fp->isConstructing(), pc);
-}
-
-void JS_FASTCALL
-stubs::CreateFunCallObject(VMFrame &f)
-{
-    JS_ASSERT(f.fp()->fun()->isHeavyweight());
-    if (!js::CreateFunCallObject(f.cx, f.fp()))
-        THROW();
 }
 
 void JS_FASTCALL
@@ -1250,7 +1235,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     JSOp op = JSOp(*pc);
     const JSCodeSpec *cs = &js_CodeSpec[op];
 
-    if (!script->ensureRanBytecode(cx)) {
+    if (!script->ensureRanAnalysis(cx)) {
         js_ReportOutOfMemory(cx);
         return js_InternalThrow(f);
     }
@@ -1394,7 +1379,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         break;
       }
 
-      case REJOIN_CHECK_ARGUMENTS: {
+      case REJOIN_CHECK_ARGUMENTS:
         /*
          * Do all the work needed in arity check JIT prologues after the
          * arguments check occurs (FixupArity has been called if needed, but
@@ -1405,22 +1390,17 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
         SetValueRangeToUndefined(fp->slots(), script->nfixed);
 
-        if (fp->fun()->isHeavyweight()) {
-            if (!js::CreateFunCallObject(cx, fp))
-                return js_InternalThrow(f);
-        }
-
+        if (!fp->functionPrologue(cx))
+            return js_InternalThrow(f);
         /* FALLTHROUGH */
-      }
 
-      case REJOIN_CREATE_CALL_OBJECT: {
+      case REJOIN_FUNCTION_PROLOGUE:
         fp->scopeChain();
 
         /* Construct the 'this' object for the frame if necessary. */
         if (!ScriptPrologueOrGeneratorResume(cx, fp, types::UseNewTypeAtEntry(cx, fp)))
             return js_InternalThrow(f);
         break;
-      }
 
       case REJOIN_CALL_PROLOGUE:
       case REJOIN_CALL_PROLOGUE_LOWERED_CALL:
@@ -1492,6 +1472,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             break;
 
           case JSOP_CALLGNAME:
+          case JSOP_CALLNAME:
             if (!ComputeImplicitThis(cx, &fp->scopeChain(), nextsp[-2], &nextsp[-1]))
                 return js_InternalThrow(f);
             f.regs.pc = nextpc;
