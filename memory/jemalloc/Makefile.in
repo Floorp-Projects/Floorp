@@ -52,17 +52,20 @@ VISIBILITY_FLAGS=
 CSRCS = jemalloc.c
 EXPORTS = jemalloc.h jemalloc_types.h
 LIBRARY_NAME = jemalloc
+MOZ_MEMORY_LDFLAGS = # Don't link against ourselves
 
 ifeq (WINNT,$(OS_TARGET))
 FORCE_SHARED_LIB = 1
-
-MOZ_MEMORY_LDFLAGS = # Don't link against ourselves
 
 DEFFILE = $(srcdir)/jemalloc.def
 
 LDFLAGS += -ENTRY:DllMain
 
+ifneq (,$(filter -DEFAULTLIB:mozcrt,$(MOZ_MEMORY_LDFLAGS)))
+# Don't install the import library if we use mozcrt
 NO_INSTALL_IMPORT_LIBRARY = 1
+endif
+
 else # Not Windows
 
 ifeq ($(OS_ARCH),SunOS)

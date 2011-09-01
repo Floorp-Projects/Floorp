@@ -2723,7 +2723,6 @@ dnl ========================================================
 case "$target" in
     *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS='-rdynamic -Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/jemalloc-standalone-linkage-version-script'
         ;;
     *-solaris*)
         if test -z "$GNU_CC"; then
@@ -7101,6 +7100,21 @@ if test -z "$MOZ_MEMORY"; then
       ;;
   esac
 else
+  if test "${OS_TARGET}" = "Android"; then
+    dnl On Android, we use WRAP_MALLOC to link everything to jemalloc, through mozutils
+    :
+  elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
+    dnl On Windows, OSX and OS2, we want to link all our binaries against jemalloc
+    MOZ_MEMORY_LDFLAGS='$(call EXPAND_LIBNAME_PATH,jemalloc,$(LIBXUL_DIST)/lib)'
+  else
+    dnl On other Unix systems, we only want to link executables against jemalloc
+    MOZ_MEMORY_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,jemalloc,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
+    if test -n "$GNU_CC"; then
+      dnl And we need jemalloc symbols to be exported.
+      MOZ_MEMORY_PROGRAM_LDFLAGS="$MOZ_MEMORY_PROGRAM_LDFLAGS -rdynamic"
+    fi
+  fi
+
   dnl Don't try to run compiler tests on Windows
   if test "$OS_ARCH" = "WINNT"; then
     if test -z "$HAVE_64BIT_OS"; then
@@ -7141,6 +7155,7 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
+    MOZ_MEMORY_LDFLAGS=
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7163,8 +7178,6 @@ else
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
       MOZ_MEMORY_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
-    else
-      MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
     fi
     rm crtdll.obj
 
@@ -7186,6 +7199,7 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
+AC_SUBST(MOZ_MEMORY_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
@@ -8601,7 +8615,6 @@ AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-AC_SUBST(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
@@ -9177,6 +9190,9 @@ if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
    if test -n "$MOZ_MEMORY_LDFLAGS"; then
      export MOZ_MEMORY_LDFLAGS
+   fi
+   if test -n "$MOZ_MEMORY_PROGRAM_LDFLAGS"; then
+     export MOZ_MEMORY_PROGRAM_LDFLAGS
    fi
 fi
 export MOZ_APP_NAME
