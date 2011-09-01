@@ -21,7 +21,8 @@
     "test_privbrw_tabs.js",
     "test_bookmarks_in_same_named_folder.js",
     "test_client_wipe.js",
-    "test_special_tabs.js"
+    "test_special_tabs.js",
+    "test_mozmill_sanity.js"
   ]
 }
 

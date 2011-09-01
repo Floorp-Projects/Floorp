@@ -36,13 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
-                          "FileUtils", "Utils", "Svc", "Str"];
+                          "FileUtils", "Utils", "Async", "Svc", "Str"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
@@ -60,36 +61,6 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
  */
 
 let Utils = {
-  /**
-   * Execute an arbitrary number of asynchronous functions one after the
-   * other, passing the callback arguments on to the next one.  All functions
-   * must take a callback function as their last argument.  The 'this' object
-   * will be whatever asyncChain's is.
-   * 
-   * @usage this._chain = Utils.asyncChain;
-   *        this._chain(this.foo, this.bar, this.baz)(args, for, foo)
-   * 
-   * This is equivalent to:
-   *
-   *   let self = this;
-   *   self.foo(args, for, foo, function (bars, args) {
-   *     self.bar(bars, args, function (baz, params) {
-   *       self.baz(baz, params);
-   *     });
-   *   });
-   */
-  asyncChain: function asyncChain() {
-    let funcs = Array.slice(arguments);
-    let thisObj = this;
-    return function callback() {
-      if (funcs.length) {
-        let args = Array.slice(arguments).concat(callback);
-        let f = funcs.shift();
-        f.apply(thisObj, args);
-      }
-    };
-  },
-
   /**
    * Wrap a function to catch all exceptions and log them
    *
@@ -202,25 +173,6 @@ let Utils = {
     }
   },
 
-
-  /*
-   * Partition the input array into an array of arrays. Return a generator.
-   */
-  slices: function slices(arr, sliceSize) {
-    if (!sliceSize || sliceSize <= 0)
-      throw "Invalid slice size.";
-
-    if (sliceSize > arr.length) {
-      yield arr;
-    } else {
-      let offset = 0;
-      while (arr.length > offset) {
-        yield arr.slice(offset, offset + sliceSize);
-        offset += sliceSize;
-      }
-    }
-  },
-
   byteArrayToString: function byteArrayToString(bytes) {
     return [String.fromCharCode(byte) for each (byte in bytes)].join("");
   },
@@ -289,7 +241,7 @@ let Utils = {
    *        Property name to defer (or an array of property names)
    */
   deferGetSet: function Utils_deferGetSet(obj, defer, prop) {
-    if (Utils.isArray(prop))
+    if (Array.isArray(prop))
       return prop.map(function(prop) Utils.deferGetSet(obj, defer, prop));
 
     let prot = obj.prototype;
@@ -308,16 +260,6 @@ let Utils = {
       });
     }
   },
-
-  /**
-   * Determine if some value is an array
-   *
-   * @param val
-   *        Value to check (can be null, undefined, etc.)
-   * @return True if it's an array; false otherwise
-   */
-  isArray: function Utils_isArray(val) val != null && typeof val == "object" &&
-    val.constructor.name == "Array",
 
   lazyStrings: function Weave_lazyStrings(name) {
     let bundle = "chrome://weave/locale/services/" + name + ".properties";
@@ -355,7 +297,7 @@ let Utils = {
       return thing;
     let ret;
 
-    if (Utils.isArray(thing)) {
+    if (Array.isArray(thing)) {
       ret = [];
       for (let i = 0; i < thing.length; i++)
         ret.push(Utils.deepCopy(thing[i], noSort));
@@ -468,21 +410,6 @@ let Utils = {
     return hex;
   },
 
-  _sha256: function _sha256(message) {
-    let hasher = Cc["@mozilla.org/security/hash;1"].
-      createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA256);
-    return Utils.digestUTF8(message, hasher);
-  },
-
-  sha256: function sha256(message) {
-    return Utils.bytesAsHex(Utils._sha256(message));
-  },
-
-  sha256Base64: function (message) {
-    return btoa(Utils._sha256(message));
-  },
-
   _sha1: function _sha1(message) {
     let hasher = Cc["@mozilla.org/security/hash;1"].
       createInstance(Ci.nsICryptoHash);
@@ -498,10 +425,6 @@ let Utils = {
     return Utils.encodeBase32(Utils._sha1(message));
   },
   
-  sha1Base64: function (message) {
-    return btoa(Utils._sha1(message));
-  },
-
   /**
    * Produce an HMAC key object from a key string.
    */
@@ -517,26 +440,6 @@ let Utils = {
                    .createInstance(Ci.nsICryptoHMAC);
     hasher.init(type, key);
     return hasher;
-  },
-
-  /**
-   * Some HMAC convenience functions for tests and backwards compatibility:
-   * 
-   *   sha1HMACBytes: hashes byte string, returns bytes string
-   *   sha256HMAC: hashes UTF-8 encoded string, returns hex string
-   *   sha256HMACBytes: hashes byte string, returns bytes string
-   */
-  sha1HMACBytes: function sha1HMACBytes(message, key) {
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1, key);
-    return Utils.digestBytes(message, h);
-  },
-  sha256HMAC: function sha256HMAC(message, key) {
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
-    return Utils.bytesAsHex(Utils.digestUTF8(message, h));
-  },
-  sha256HMACBytes: function sha256HMACBytes(message, key) {
-    let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
-    return Utils.digestBytes(message, h);
   },
 
   /**
@@ -1198,20 +1101,6 @@ let Utils = {
     return false;
   },
   
-  /**
-   * Check if the app is ready (not quitting)
-   */
-  checkAppReady: function checkAppReady() {
-    // Watch for app-quit notification to stop any sync calls
-    Svc.Obs.add("quit-application", function() {
-      Utils.checkAppReady = function() {
-        throw Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
-      };
-    });
-    // In the common case, checkAppReady just returns true
-    return (Utils.checkAppReady = function() true)();
-  },
-
   /**
    * Return a value for a backoff interval.  Maximum is eight hours, unless
    * Status.backoffInterval is higher.

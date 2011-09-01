@@ -29,10 +29,8 @@ add_test(function test_offline() {
   try {
     _("The right bits are set when we're offline.");
     Services.io.offline = true;
-    do_check_eq(Service._ignorableErrorCount, 0);
     do_check_false(!!Service.login());
     do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-    do_check_eq(Service._ignorableErrorCount, 0);
     Services.io.offline = false;
   } finally {
     Svc.Prefs.resetBranch("");

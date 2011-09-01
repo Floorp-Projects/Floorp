@@ -350,7 +350,10 @@ _MSC_VER	= @_MSC_VER@
 
 DLL_PREFIX	= @DLL_PREFIX@
 LIB_PREFIX	= @LIB_PREFIX@
-OBJ_SUFFIX	= @OBJ_SUFFIX@
+# We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
+# manually use it before config.mk inclusion
+OBJ_SUFFIX	= $(error config/config.mk needs to be included before using OBJ_SUFFIX)
+_OBJ_SUFFIX	= @OBJ_SUFFIX@
 LIB_SUFFIX	= @LIB_SUFFIX@
 DLL_SUFFIX	= @DLL_SUFFIX@
 BIN_SUFFIX	= @BIN_SUFFIX@
@@ -502,8 +505,7 @@ LIBICONV = @LIBICONV@
 # to normal behavior. Makefile's that create shared libraries out of
 # archives use these flags to force in all of the .o files in the
 # archives into the shared library.
-WRAP_MALLOC_LIB         = @WRAP_MALLOC_LIB@
-WRAP_MALLOC_CFLAGS      = @WRAP_MALLOC_CFLAGS@
+WRAP_LDFLAGS            = @WRAP_LDFLAGS@
 DSO_CFLAGS              = @DSO_CFLAGS@
 DSO_PIC_CFLAGS          = @DSO_PIC_CFLAGS@
 MKSHLIB                 = @MKSHLIB@

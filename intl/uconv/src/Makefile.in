@@ -74,16 +74,6 @@ CPPSRCS		= \
 # version of nsUTF8ToUnicodeSSE2.cpp.
 ifneq (,$(INTEL_ARCHITECTURE))
 CPPSRCS			+= nsUTF8ToUnicodeSSE2.cpp
-
-# nsUTF8ToUnicodeSSE2.cpp uses SSE2 intrinsics, so we need to pass -msse2 if
-# we're using gcc. (See bug 585538 comment 12.)
-ifdef GNU_CC
-nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-endif
-
-ifdef SOLARIS_SUNPRO_CXX
-nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-endif
 endif
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
@@ -107,3 +97,15 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+ifneq (,$(INTEL_ARCHITECTURE))
+# nsUTF8ToUnicodeSSE2.cpp uses SSE2 intrinsics, so we need to pass -msse2 if
+# we're using gcc. (See bug 585538 comment 12.)
+ifdef GNU_CC
+nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+
+ifdef SOLARIS_SUNPRO_CXX
+nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+endif
+endif

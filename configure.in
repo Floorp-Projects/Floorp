@@ -945,18 +945,6 @@ EOF
     ;;
 esac
 
-dnl Test breaks icc on OS/2 && MSVC
-if test "$CC" != "icc" -a -z "$_WIN32_MSVC"; then
-    AC_PROG_CC_C_O
-    if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
-        USING_HCC=1
-        _OLDCC=$CC
-        _OLDCXX=$CXX
-        CC="${srcdir}/build/hcc '$CC'"
-        CXX="${srcdir}/build/hcpp '$CXX'"
-    fi
-fi
-
 AC_PROG_CPP
 AC_PROG_CXXCPP
 
@@ -2095,22 +2083,31 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
-    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
-    # The ExceptionHandling framework is needed for Objective-C exception
-    # logging code in nsObjCExceptions.h. Currently we only use that in debug
-    # builds.
-    _SAVE_LDFLAGS=$LDFLAGS
-     AC_MSG_CHECKING([for -framework ExceptionHandling])
-    LDFLAGS="$LDFLAGS -framework ExceptionHandling"
-    AC_TRY_LINK(,[return 0;],
-                ac_cv_have_framework_exceptionhandling="yes",
-                ac_cv_have_framework_exceptionhandling="no")
-    AC_MSG_RESULT([$ac_cv_have_framework_exceptionhandling])
-    if test "$ac_cv_have_framework_exceptionhandling" = "yes"; then
-      MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
+    # Check whether we're targeting OS X or iOS
+    AC_CACHE_CHECK(for iOS target,
+                   ac_cv_ios_target,
+                   [AC_TRY_COMPILE([#include <TargetConditionals.h>
+#if !(TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#error not iOS
+#endif],
+                                   [],
+                                   ac_cv_ios_target="yes",
+                                   ac_cv_ios_target="no")])
+    if test "$ac_cv_ios_target" = "yes"; then
+        AC_DEFINE(XP_IOS)
+        AC_DEFINE(XP_DARWIN)
+        _PLATFORM_DEFAULT_TOOLKIT='cairo-uikit'
+    else
+        AC_DEFINE(XP_MACOSX)
+        AC_DEFINE(XP_DARWIN)
+        _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
+        # The ExceptionHandling framework is needed for Objective-C exception
+        # logging code in nsObjCExceptions.h. Currently we only use that in debug
+        # builds.
+        MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
     fi
-    LDFLAGS=$_SAVE_LDFLAGS
+    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
+
 
     if test "x$lto_is_enabled" = "xyes"; then
         echo "Skipping -dead_strip because lto is enabled."
@@ -4662,6 +4659,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-android"
     then
         dnl nglayout only supports building with one toolkit,
@@ -4748,33 +4746,31 @@ cairo-os2)
     ;;
 
 cairo-cocoa)
-    # Check if we have the Cocoa framework, or if we're targeting Cocoa Touch
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -framework Cocoa"
-    AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_COCOA=1,_HAVE_FRAMEWORK_COCOA=)
-    if test -z "$_HAVE_FRAMEWORK_COCOA"; then
-        LDFLAGS="$_SAVE_LDFLAGS -framework UIKit";
-        AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_UIKIT=1,
-                    AC_MSG_ERROR([Neither Cocoa nor UIKit frameworks were found. Are you using the correct SDK?]))
-        MOZ_WIDGET_TOOLKIT=uikit
-      AC_DEFINE(MOZ_WIDGET_UIKIT)
-      TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
-    else
-      MOZ_WIDGET_TOOLKIT=cocoa
-      AC_DEFINE(MOZ_WIDGET_COCOA)
-      TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
-    fi
-    MOZ_USER_DIR="Mozilla"
-    AC_DEFINE(XP_MACOSX)
-
+    MOZ_WIDGET_TOOLKIT=cocoa
+    AC_DEFINE(MOZ_WIDGET_COCOA)
+    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
+    TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
     TK_CFLAGS="-DNO_X11"
-    LDFLAGS="$LDFLAGS -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
+    MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    ;;
+
+cairo-uikit)
+    MOZ_WIDGET_TOOLKIT=uikit
+    AC_DEFINE(MOZ_WIDGET_UIKIT)
+    LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
+    TK_CFLAGS="-DNO_X11"
+    TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
+    CFLAGS="$CFLAGS $TK_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
+    MOZ_USER_DIR="Mozilla"
+    MOZ_FS_LAYOUT=bundle
     ;;
 
 cairo-android)
@@ -7145,8 +7141,6 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
-    export WRAP_MALLOC_LIB="-L$_objdir/dist/lib -lmozutils"
-    WRAP_MALLOC_CFLAGS="-Wl,--wrap=dlopen -Wl,--wrap=dlclose -Wl,--wrap=dlerror -Wl,--wrap=dlsym -Wl,--wrap=dladdr"
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7196,6 +7190,13 @@ AC_SUBST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
 
+dnl We need to wrap dlopen and related functions on Android because we use
+dnl our own linker.
+if test "$OS_TARGET" = Android; then
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+fi
+
 dnl ========================================================
 dnl = Use malloc wrapper lib
 dnl ========================================================
@@ -7205,10 +7206,14 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
     _WRAP_MALLOC= )
 
 if test -n "$_WRAP_MALLOC"; then
-    if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} ${WRAP_MALLOC_CFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign -Wl,--wrap,malloc_usable_size"
-    MKSHLIB="$MKSHLIB"' $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB)'
-    MKCSHLIB="$MKCSHLIB"' $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB)'
+    if test -n "$GNU_CC"; then
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=PR_Free,--wrap=PR_Malloc,--wrap=PR_Calloc,--wrap=PR_Realloc"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
+    else
+        AC_MSG_ERROR([--enable-wrap-malloc is not supported for non-GNU toolchains])
     fi
 fi
 
@@ -7217,7 +7222,7 @@ dnl = Location of malloc wrapper lib
 dnl ========================================================
 MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc=DIR  Location of malloc wrapper library],
-    WRAP_MALLOC_LIB=$withval)
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval")
 
 dnl ========================================================
 dnl = Use JS Call tracing
@@ -8762,8 +8767,7 @@ AC_SUBST(INTEL_ARCHITECTURE)
 AC_SUBST(MOZ_DISABLE_JAR_PACKAGING)
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 
-AC_SUBST(WRAP_MALLOC_CFLAGS)
-AC_SUBST(WRAP_MALLOC_LIB)
+AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(MKCSHLIB)
 AC_SUBST(MKSHLIB_FORCE_ALL)
@@ -8809,15 +8813,6 @@ AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_X86_ASM)
 AC_SUBST(LIBJPEG_TURBO_X64_ASM)
-
-if test "$USING_HCC"; then
-   CC='${topsrcdir}/build/hcc'
-   CC="$CC '$_OLDCC'"
-   CXX='${topsrcdir}/build/hcpp'
-   CXX="$CXX '$_OLDCXX'"
-   AC_SUBST(CC)
-   AC_SUBST(CXX)
-fi
 
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
@@ -9120,8 +9115,11 @@ unset CONFIG_FILES
 # No need to run subconfigures when building with LIBXUL_SDK_DIR
 if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
 
+export WRAP_LDFLAGS
+
 if test -n "$_WRAP_MALLOC"; then
-  _SUBDIR_CONFIG_ARGS="$_SUBDIR_CONFIG_ARGS --enable-wrap-malloc"
+    # Avoid doubling wrap malloc arguments
+    _SUBDIR_CONFIG_ARGS="`echo $_SUBDIR_CONFIG_ARGS | sed -e 's/--enable-wrap-malloc *//'`"
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then

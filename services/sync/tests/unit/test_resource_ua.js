@@ -76,7 +76,7 @@ function test_resource_user_agent() {
     });
   }
 
-  Utils.asyncChain(
+  Async.chain(
     test_fetchInfo,
     test_desktop_post,
     test_desktop_get,

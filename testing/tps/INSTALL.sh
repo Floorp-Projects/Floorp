@@ -68,7 +68,7 @@ NEWCONFIG=${CONFIG:0:${#CONFIG}-3}
 cd "../../services/sync/tests/tps"
 TESTDIR="`pwd`"
 
-cd "../../tps"
+cd "../../tps/extensions"
 EXTDIR="`pwd`"
 
 sed 's|__TESTDIR__|'"${TESTDIR}"'|' "${CONFIG}" | sed 's|__EXTENSIONDIR__|'"${EXTDIR}"'|' > "${NEWCONFIG}"

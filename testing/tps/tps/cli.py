@@ -91,7 +91,7 @@ def main():
   if configfile is None:
     if os.environ.get('VIRTUAL_ENV'):
       configfile = os.path.join(os.path.dirname(__file__), 'config.json')
-    else:
+    if configfile is None or not os.access(configfile, os.F_OK):
       raise Exception("Unable to find config.json in a VIRTUAL_ENV; you must "
                       "specify a config file using the --configfile option")
 
