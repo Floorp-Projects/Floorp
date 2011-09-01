@@ -1011,13 +1011,10 @@ GCMarker::drainMarkStack()
 } /* namespace js */
 
 JS_PUBLIC_API(void)
-JS_TraceChildren(JSTracer *trc, void *thing, uint32 kindIndex)
+JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
-    JS_ASSERT(kindIndex <= JSTRACE_LAST);
-    JSGCTraceKind kind = JSGCTraceKind(kindIndex);
     switch (kind) {
-      default:
-        JS_ASSERT(kind == JSTRACE_OBJECT);
+      case JSTRACE_OBJECT:
 	MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 

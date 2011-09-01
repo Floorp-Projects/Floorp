@@ -360,21 +360,6 @@ typedef void
 (* JSTraceOp)(JSTracer *trc, JSObject *obj);
 
 /*
- * Tracer callback, called for each traceable thing directly referenced by a
- * particular object or runtime structure. It is the callback responsibility
- * to ensure the traversal of the full object graph via calling eventually
- * JS_TraceChildren on the passed thing. In this case the callback must be
- * prepared to deal with cycles in the traversal graph.
- *
- * kind argument is one of JSTRACE_OBJECT, JSTRACE_STRING or a tag denoting
- * internal implementation-specific traversal kind. In the latter case the only
- * operations on thing that the callback can do is to call JS_TraceChildren or
- * DEBUG-only JS_PrintTraceThingInfo.
- */
-typedef void
-(* JSTraceCallback)(JSTracer *trc, void *thing, uint32 kind);
-
-/*
  * DEBUG only callback that JSTraceOp implementation can provide to return
  * a string describing the reference traced with JS_CallTracer.
  */
