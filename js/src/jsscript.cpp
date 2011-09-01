@@ -1228,15 +1228,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->upvarMap.clear();
     }
 
-    /* Set global for compileAndGo scripts. */
-    if (script->compileAndGo) {
-        GlobalScope *globalScope = cg->compiler()->globalScope;
-        if (globalScope->globalObj && globalScope->globalObj->isGlobal())
-            script->where.global = globalScope->globalObj->asGlobal();
-        else if (cx->globalObject->isGlobal())
-            script->where.global = cx->globalObject->asGlobal();
-    }
-
     if (cg->globalUses.length()) {
         memcpy(script->globals()->vector, &cg->globalUses[0],
                cg->globalUses.length() * sizeof(GlobalSlotArray::Entry));
@@ -1517,8 +1508,8 @@ js_TraceScript(JSTracer *trc, JSScript *script, JSObject *owner)
      */
     if (!script->isCachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
-    if (script->hasFunction)
-        MarkObject(trc, *script->function(), "script_fun");
+    if (script->types)
+        script->types->trace(trc);
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);

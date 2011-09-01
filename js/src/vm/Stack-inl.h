@@ -46,6 +46,7 @@
 
 #include "Stack.h"
 
+#include "jsscriptinlines.h"
 #include "ArgumentsObject-inl.h"
 #include "methodjit/MethodJIT.h"
 
@@ -129,11 +130,6 @@ inline void
 StackFrame::resetCallFrame(JSScript *script)
 {
     JS_ASSERT(script == this->script());
-
-    /* Undo changes to frame made during execution; see also initCallFrame */
-
-    putActivationObjects();
-    markActivationObjectsAsPut();
 
     if (flags_ & UNDERFLOW_ARGS)
         SetValueRangeToUndefined(formalArgs() + numActualArgs(), formalArgsEnd());
@@ -365,9 +361,44 @@ StackFrame::callObj() const
     return *pobj;
 }
 
-inline void
-StackFrame::putActivationObjects()
+inline bool
+StackFrame::maintainNestingState() const
 {
+    /*
+     * Whether to invoke the nesting epilogue/prologue to maintain active
+     * frame counts and check for reentrant outer functions.
+     */
+    return isNonEvalFunctionFrame() && !isGeneratorFrame() && script()->nesting();
+}
+
+inline bool
+StackFrame::functionPrologue(JSContext *cx)
+{
+    JS_ASSERT(isNonEvalFunctionFrame());
+
+    JSFunction *fun = this->fun();
+
+    if (fun->isHeavyweight()) {
+        if (!CreateFunCallObject(cx, this))
+            return false;
+    } else {
+        /* Force instantiation of the scope chain, for JIT frames. */
+        scopeChain();
+    }
+
+    if (script()->nesting()) {
+        JS_ASSERT(maintainNestingState());
+        types::NestingPrologue(cx, this);
+    }
+
+    return true;
+}
+
+inline void
+StackFrame::functionEpilogue(bool objectsOnly)
+{
+    JS_ASSERT(isNonEvalFunctionFrame());
+
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         /* NB: there is an ordering dependency here. */
         if (hasCallObj())
@@ -375,10 +406,13 @@ StackFrame::putActivationObjects()
         else if (hasArgsObj())
             js_PutArgsObject(this);
     }
+
+    if (!objectsOnly && maintainNestingState())
+        types::NestingEpilogue(this);
 }
 
 inline void
-StackFrame::markActivationObjectsAsPut()
+StackFrame::markFunctionEpilogueDone(bool activationOnly)
 {
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         if (hasArgsObj() && !argsObj().getPrivate()) {
@@ -399,6 +433,14 @@ StackFrame::markActivationObjectsAsPut()
             flags_ &= ~HAS_CALL_OBJ;
         }
     }
+
+    /*
+     * For outer/inner function frames, undo the active frame balancing so that
+     * when we redo it in the epilogue we get the right final value. The other
+     * nesting epilogue changes (update active args/vars) are idempotent.
+     */
+    if (!activationOnly && maintainNestingState())
+        script()->nesting()->activeFrames++;
 }
 
 /*****************************************************************************/
@@ -547,7 +589,7 @@ ContextStack::popInlineFrame(FrameRegs &regs)
     JS_ASSERT(&regs == &seg_->regs());
 
     StackFrame *fp = regs.fp();
-    fp->putActivationObjects();
+    fp->functionEpilogue();
 
     Value *newsp = fp->actualArgs() - 1;
     JS_ASSERT(newsp >= fp->prev()->base());

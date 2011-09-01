@@ -652,8 +652,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
         for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
             JSScript *script = reinterpret_cast<JSScript *>(cursor);
-            if (script->types)
-                script->types->analysis = NULL;
+            script->clearAnalysis();
         }
 
         /* Reset the analysis pool, releasing all analysis and intermediate type data. */
