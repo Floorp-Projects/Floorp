@@ -430,6 +430,10 @@ var ExtensionsView = {
     } else if (aItem.getAttribute("type") == "theme") {
       aItem.addon.userDisabled = true;
       aItem.setAttribute("isDisabled", true);
+    } else if (aItem.getAttribute("type") == "locale") {
+      Services.prefs.clearUserPref("general.useragent.locale");
+      aItem.addon.userDisabled = true;
+      aItem.setAttribute("isDisabled", true);
     } else {
       aItem.addon.userDisabled = true;
       opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
