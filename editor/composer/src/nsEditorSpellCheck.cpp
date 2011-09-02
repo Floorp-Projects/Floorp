@@ -729,9 +729,8 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
   }
 
   // otherwise, get language from preferences
-  nsAutoString preferedDict(Preferences::GetLocalizedString("spellchecker.dictionary"));
   if (dictName.IsEmpty()) {
-    dictName.Assign(preferedDict);
+    dictName.Assign(Preferences::GetLocalizedString("spellchecker.dictionary"));
   }
 
   if (dictName.IsEmpty())
@@ -756,50 +755,27 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
     rv = SetCurrentDictionary(dictName);
     if (NS_FAILED(rv)) {
       // required dictionary was not available. Try to get a dictionary
-      // matching at least language part of dictName: 
-
+      // matching at least language part of dictName: If required dictionary is
+      // "aa-bb", we try "aa", then we try any available dictionary aa-XX
       nsAutoString langCode;
       PRInt32 dashIdx = dictName.FindChar('-');
       if (dashIdx != -1) {
         langCode.Assign(Substring(dictName, 0, dashIdx));
+        // try to use langCode
+        rv = SetCurrentDictionary(langCode);
       } else {
         langCode.Assign(dictName);
       }
-
-      nsDefaultStringComparator comparator;
-
-      // try dictionary.spellchecker preference if it starts with langCode (and
-      // if we haven't tried it already)
-      if (!preferedDict.IsEmpty() && !dictName.Equals(preferedDict) && 
-          nsStyleUtil::DashMatchCompare(preferedDict, langCode, comparator)) {
-        rv = SetCurrentDictionary(preferedDict);
-      }
-
-      // Otherwise, try langCode (if we haven't tried it already)
-      if (NS_FAILED(rv)) {
-        if (!dictName.Equals(langCode) && !preferedDict.Equals(langCode)) {
-          rv = SetCurrentDictionary(preferedDict);
-        }
-      }
-
-      // Otherwise, try any available dictionary aa-XX
       if (NS_FAILED(rv)) {
         // loop over avaible dictionaries; if we find one with required
         // language, use it
         nsTArray<nsString> dictList;
         rv = mSpellChecker->GetDictionaryList(&dictList);
         NS_ENSURE_SUCCESS(rv, rv);
+        nsDefaultStringComparator comparator;
         PRInt32 i, count = dictList.Length();
         for (i = 0; i < count; i++) {
           nsAutoString dictStr(dictList.ElementAt(i));
-
-          if (dictStr.Equals(dictName) ||
-              dictStr.Equals(preferedDict) ||
-              dictStr.Equals(langCode)) {
-            // We have already tried it
-            continue;
-          }
-
           if (nsStyleUtil::DashMatchCompare(dictStr, langCode, comparator) &&
               NS_SUCCEEDED(SetCurrentDictionary(dictStr))) {
               break;
