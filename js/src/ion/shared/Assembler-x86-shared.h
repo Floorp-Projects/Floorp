@@ -275,7 +275,7 @@ class AssemblerX86Shared
                     masm.linkJump(jmp, JmpDst(target->offset()));
                 } else {
                     // Thread the jump list through the unpatched jump targets.
-                    JmpSrc prev = JmpSrc(label->use(jmp.offset()));
+                    JmpSrc prev = JmpSrc(target->use(jmp.offset()));
                     masm.setNextJump(jmp, prev);
                 }
 
