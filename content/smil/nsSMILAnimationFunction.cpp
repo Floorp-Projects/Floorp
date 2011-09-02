@@ -478,6 +478,21 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   if (calcMode == CALC_DISCRETE || NS_FAILED(rv)) {
     double scaledSimpleProgress =
       ScaleSimpleProgress(simpleProgress, CALC_DISCRETE);
+
+    // Floating-point errors can mean that, for example, a sample time of 29s in
+    // a 100s duration animation gives us a simple progress of 0.28999999999
+    // instead of the 0.29 we'd expect. Normally this isn't a noticeable
+    // problem, but when we have sudden jumps in animation values (such as is
+    // the case here with discrete animation) we can get unexpected results.
+    //
+    // To counteract this, before we perform a floor() on the animation
+    // progress, we add a tiny fudge factor to push us into the correct interval
+    // in cases where floating-point errors might cause us to fall short.
+    static const double kFloatingPointFudgeFactor = 1.0e-16;
+    if (scaledSimpleProgress + kFloatingPointFudgeFactor <= 1.0) {
+      scaledSimpleProgress += kFloatingPointFudgeFactor;
+    }
+
     if (IsToAnimation()) {
       // We don't follow SMIL 3, 12.6.4, where discrete to animations
       // are the same as <set> animations.  Instead, we treat it as a

@@ -171,12 +171,11 @@ Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *jenv, jcl
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *, jclass, jstring stack)
+Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstring stack)
 {
 #ifdef MOZ_CRASHREPORTER
-     nsJNIString javaStack(stack);
-     CrashReporter::AppendAppNotesToCrashReport(
-         NS_ConvertUTF16toUTF8(javaStack));
+    nsJNIString javaStack(stack, jenv);
+    CrashReporter::AppendAppNotesToCrashReport(NS_ConvertUTF16toUTF8(javaStack));
 #endif
     abort();
 }
