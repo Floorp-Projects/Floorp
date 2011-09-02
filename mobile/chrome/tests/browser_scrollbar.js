@@ -15,7 +15,7 @@ function runNextTest() {
   }
   else {
     // Close the awesome panel just in case
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
     finish();
   }
 }

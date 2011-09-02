@@ -437,7 +437,7 @@ Recompiler::recompile(bool resetUses)
 
     // Find all JIT'd stack frames to account for return addresses that will
     // need to be patched after recompilation.
-    for (VMFrame *f = script->compartment->jaegerCompartment()->activeFrame();
+    for (VMFrame *f = script->compartment()->jaegerCompartment()->activeFrame();
          f != NULL;
          f = f->previous) {
 

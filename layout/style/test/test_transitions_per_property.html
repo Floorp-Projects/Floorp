@@ -80,9 +80,6 @@ var supported_properties = {
     "-moz-transform-origin": [ test_length_pair_transition,
                                test_length_percent_pair_transition,
                                test_length_percent_pair_unclamped ],
-    "-moz-perspective-origin": [ test_length_pair_transition,
-                                 test_length_percent_pair_transition,
-                                 test_length_percent_pair_unclamped ],
     "background-color": [ test_color_transition ],
     "background-position": [ test_background_position_transition,
                              // FIXME: We don't currently test clamping,
@@ -193,7 +190,6 @@ var supported_properties = {
     "padding-top": [ test_length_transition, test_percent_transition,
                      test_length_percent_calc_transition,
                      test_length_clamped, test_percent_clamped ],
-    "-moz-perspective": [ test_length_transition ],
     "right": [ test_length_transition, test_percent_transition,
                test_length_percent_calc_transition,
                test_length_unclamped, test_percent_unclamped ],
@@ -347,6 +343,11 @@ function get_distance(prop, v1, v2)
 {
   return SpecialPowers.DOMWindowUtils
            .computeAnimationDistance(div, prop, v1, v2);
+}
+
+function transform3D_enabled()
+{
+  return SpecialPowers.getBoolPref("layout.3d-transforms.enabled");
 }
 
 function check_distance(prop, start, quarter, end)
@@ -1268,16 +1269,44 @@ function test_transform_transition(prop) {
     { start: 'none', end: 'rotate(360deg)',
       expected_uncomputed: 'rotate(90deg)',
       expected: c('rotate(90deg)') },
+    { start: 'none', end: 'rotatez(360deg)',
+      expected_uncomputed: 'rotate(90deg)',
+      expected: c('rotate(90deg)'),
+      requires_3d: true },
     { start: 'none', end: 'rotate(720deg)',
       expected_uncomputed: 'rotate(180deg)',
       expected: c('rotate(180deg)') },
+    { start: 'none', end: 'rotate(720deg)',
+      expected_uncomputed: 'rotatez(180deg)',
+      expected: c('rotate(180deg)'),
+      requires_3d: true },
     { start: 'none', end: 'rotate(1080deg)',
       expected_uncomputed: 'rotate(270deg)',
       expected: c('rotate(270deg)') },
+    { start: 'none', end: 'rotate(1080deg)',
+      expected_uncomputed: 'rotate(270deg)',
+      expected: c('rotatez(270deg)'),
+      requires_3d: true },
     { start: 'none', end: 'rotate(1440deg)',
       expected_uncomputed: 'rotate(360deg)',
       expected: c('scale(1)'),
       round_error_ok: true },
+    { start: 'none', end: 'rotatey(60deg)',
+      expected_uncomputed: 'rotatey(15deg)',
+      expected: c('rotatey(15deg)'),
+      requires_3d: true },
+    { start: 'none', end: 'rotatey(720deg)',
+      expected_uncomputed: 'rotatey(180deg)',
+      expected: c('rotatey(180deg)'),
+      requires_3d: true },
+    { start: 'none', end: 'rotatex(60deg)',
+      expected_uncomputed: 'rotatex(15deg)',
+      expected: c('rotatex(15deg)'),
+      requires_3d: true },
+    { start: 'none', end: 'rotatex(720deg)',
+      expected_uncomputed: 'rotatex(180deg)',
+      expected: c('rotatex(180deg)'),
+      requires_3d: true },
 
     // translate
     { start: 'translate(20px)', end: 'none',
@@ -1292,6 +1321,14 @@ function test_transform_transition(prop) {
     { start: 'translateY(-40px)', end: 'none',
       expected_uncomputed: 'translateY(-30px)',
       expected: 'matrix(1, 0, 0, 1, 0px, -30px)' },
+    { start: 'translateZ(40px)', end: 'none',
+      expected_uncomputed: 'translateZ(30px)',
+      expected: 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 30, 1)',
+      requires_3d: true },
+    { start: 'none', end: 'translate3D(40px, 60px, -40px)',
+      expected_uncomputed: 'translate3D(10px, 15px, -10px)',
+      expected: 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 15, -10, 1)',
+      requires_3d: true },
     // percentages are relative to 300px (width) and 50px (height)
     // per the prerequisites in property_database.js
     { start: 'translate(20%)', end: 'none',
@@ -1361,6 +1398,14 @@ function test_transform_transition(prop) {
     { start: 'scaleY(5)', end: 'none',
       expected_uncomputed: 'scaleY(4)',
       expected: 'matrix(1, 0, 0, 4, 0px, 0px)' },
+    { start: 'scaleZ(5)', end: 'none',
+      expected_uncomputed: 'scaleZ(4)',
+      expected: 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1)',
+      requires_3d: true },
+    { start: 'none', end: 'scale3D(5, 5, 5)',
+      expected_uncomputed: 'scale3D(2, 2, 2)',
+      expected: 'matrix3d(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1)',
+      requires_3d: true },
 
     // skew
     { start: 'skewX(45deg)', end: 'none',
@@ -1521,6 +1566,9 @@ function test_transform_transition(prop) {
 
   for (var i in tests) {
     var test = tests[i];
+    if (test.requires_3d && !transform3D_enabled()) {
+      continue;
+    }
     div.style.setProperty("-moz-transition-property", "none", "");
     div.style.setProperty(prop, test.start, "");
     cs.getPropertyValue(prop);

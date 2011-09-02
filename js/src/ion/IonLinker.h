@@ -71,7 +71,7 @@ class Linker
         if (bytesNeeded >= MAX_BUFFER_SIZE)
             return fail(cx);
 
-        uint8 *result = (uint8 *)comp->execAlloc()->alloc(bytesNeeded, &pool);
+        uint8 *result = (uint8 *)comp->execAlloc()->alloc(bytesNeeded, &pool, JSC::METHOD_CODE);
         if (!result)
             return fail(cx);
 

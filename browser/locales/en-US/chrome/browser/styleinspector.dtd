@@ -1,0 +1,10 @@
+<!-- LOCALIZATION NOTE (lookingAtLabel): This is the label for the path of
+  -  the highlighted element in the web page. This path is based on the document
+  -  tree. -->
+<!ENTITY lookingAtLabel        "Looking at:">
+
+<!-- LOCALIZATION NOTE (helpLinkTitle): For each style property
+  -  the user can hover it and get a help link button which allows one to
+  -  quickly jump to the documentation from the Mozilla Developer Network site.
+  -  This is the link title shown in the hover tooltip. -->
+<!ENTITY helpLinkTitle         "Read the documentation for this property">

@@ -103,7 +103,7 @@
                   <menuseparator/>
                   <menuitem label="&changePassword2.label;"
                             oncommand="gSyncUtils.changePassword();"/>
-                  <menuitem label="&mySyncKey.label;"
+                  <menuitem label="&myRecoveryKey.label;"
                             oncommand="gSyncUtils.resetPassphrase();"/>
                   <menuseparator/>
                   <menuitem label="&resetSync2.label;"

@@ -392,35 +392,39 @@ function start() {
 <div id="content" style="display: none">
 
 </div>
-<table border="2">
-<tr style="height: 300px;">
-<td>
-<table>
-<tr><td><h4>WebGL Conformance Test Runner</h4>
-<tr><td>
-  <div style="border: 1px">
-    <b>Status:</b> <div><span id="status"></span></div><br />
-    <b>Results:</b>
-    <div><span id="results-default"></span></div>
-    <br />
-    <div><span id="expectedtofail"></span></div>
-    <br />
-    <div><span id="ignoredtests"></span></div>
-  </div>
-</td></tr>
-</table>
-</td>
-<td>
-<iframe id="testframe" scrolling="yes" width="100%" height="100%"></iframe>
-</td>
-</tr>
-<tr>
-<td colspan="2">
-<div style="text-align: left; width: 100%; height: 100%; overflow: auto;">
-<div><ul id="results"></ul></div>
-</div>
-</td>
-</tr>
+<table border="2px">
+  <tr style="height: 500px;">
+    <td style="width: 500px;">
+      <iframe id="testframe" scrolling="no" width="500px" height="500px"></iframe>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <td><h4>WebGL Conformance Test Runner</h4></td>
+        </tr>
+        <tr>
+          <td>
+            <div style="border: 1px">
+              <b>Status:</b> <div><span id="status"></span></div><br />
+              <b>Results:</b>
+              <div><span id="results-default"></span></div>
+              <br />
+              <div><span id="expectedtofail"></span></div>
+              <br />
+              <div><span id="ignoredtests"></span></div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div style="text-align: left; width: 100%; height: 100%; overflow: auto;">
+        <div><ul id="results"></ul></div>
+      </div>
+    </td>
+  </tr>
 </table>
 <canvas id="webglcheck-default" style="display: none;"></canvas>
 </body>

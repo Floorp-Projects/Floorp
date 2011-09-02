@@ -123,6 +123,8 @@ browser.jar:
   skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
+  skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
+  skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

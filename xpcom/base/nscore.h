@@ -164,17 +164,6 @@
 #define NS_CONSTRUCTOR_FASTCALL
 #endif
 
-/*
- * NS_DEFCALL undoes the effect of a global regparm/stdcall setting
- * so that xptcall works correctly.
- */
-#if defined(__i386__) && defined(__GNUC__) && \
-    (__GNUC__ >= 3) && !defined(XP_OS2)
-#define NS_DEFCALL __attribute__ ((regparm (0), cdecl))
-#else
-#define NS_DEFCALL
-#endif
-
 #ifdef NS_WIN32
 
 #define NS_IMPORT __declspec(dllimport)
@@ -217,7 +206,7 @@
 #define NS_IMPORT_(type) NS_EXTERNAL_VIS_(type)
 #define NS_EXPORT NS_EXTERNAL_VIS
 #define NS_EXPORT_(type) NS_EXTERNAL_VIS_(type)
-#define NS_IMETHOD_(type) virtual IMETHOD_VISIBILITY type NS_DEFCALL
+#define NS_IMETHOD_(type) virtual IMETHOD_VISIBILITY type
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)

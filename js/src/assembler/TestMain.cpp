@@ -110,7 +110,7 @@ void test1 ( void )
 
   // constructor for LinkBuffer asks ep to allocate r-x memory,
   // then copies it there.
-  JSC::LinkBuffer patchBuffer(am, ep);
+  JSC::LinkBuffer patchBuffer(am, ep, JSC::METHOD_CODE);
 
   // finalize
   JSC::MacroAssemblerCodeRef cr = patchBuffer.finalizeCode();
@@ -266,7 +266,7 @@ void test2 ( void )
 
   // constructor for LinkBuffer asks ep to allocate r-x memory,
   // then copies it there.
-  JSC::LinkBuffer patchBuffer(am, ep);
+  JSC::LinkBuffer patchBuffer(am, ep, JSC::METHOD_CODE);
 
   // finalize
   JSC::MacroAssemblerCodeRef cr = patchBuffer.finalizeCode();
@@ -453,7 +453,7 @@ void test3 ( void )
 
   // constructor for LinkBuffer asks ep to allocate r-x memory,
   // then copies it there.
-  JSC::LinkBuffer patchBuffer(am, ep);
+  JSC::LinkBuffer patchBuffer(am, ep, JSC::METHOD_CODE);
 
   // finalize
   JSC::MacroAssemblerCodeRef cr = patchBuffer.finalizeCode();
@@ -663,7 +663,7 @@ void test4 ( void )
 
   // constructor for LinkBuffer asks ep to allocate r-x memory,
   // then copies it there.
-  JSC::LinkBuffer patchBuffer(am, ep);
+  JSC::LinkBuffer patchBuffer(am, ep, JSC::METHOD_CODE);
 
   // now fix up any branches/calls
   //JSC::FunctionPtr target = JSC::FunctionPtr::FunctionPtr( &cube );
@@ -869,7 +869,7 @@ void test5 ( void )
 
   // constructor for LinkBuffer asks ep to allocate r-x memory,
   // then copies it there.
-  JSC::LinkBuffer patchBuffer(am, ep);
+  JSC::LinkBuffer patchBuffer(am, ep, JSC::METHOD_CODE);
 
   // now fix up any branches/calls
   JSC::FunctionPtr target = JSC::FunctionPtr::FunctionPtr( &cube );

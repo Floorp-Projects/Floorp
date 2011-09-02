@@ -1045,9 +1045,9 @@ namespace JSC {
             return reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(code) + destination.m_offset);
         }
 
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp)
+        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp, CodeKind kind)
         {
-            return m_buffer.executableAllocAndCopy(allocator, poolp);
+            return m_buffer.executableAllocAndCopy(allocator, poolp, kind);
         }
 
         void* executableCopy(void* buffer)

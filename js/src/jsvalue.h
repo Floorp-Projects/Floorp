@@ -565,9 +565,9 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    int32 gcKind() const {
+    JSGCTraceKind gcKind() const {
         JS_ASSERT(isMarkable());
-        return JSVAL_TRACE_KIND_IMPL(data);
+        return JSGCTraceKind(JSVAL_TRACE_KIND_IMPL(data));
     }
 
     JS_ALWAYS_INLINE

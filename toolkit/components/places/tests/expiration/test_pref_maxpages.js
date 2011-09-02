@@ -121,7 +121,7 @@ function run_next_test() {
     gCurrentTest.receivedNotifications = 0;
 
     // Setup visits.
-    let now = Date.now() * 1000;
+    let now = getExpirablePRTime();
     for (let i = 0; i < gCurrentTest.addPages; i++) {
       hs.addVisit(uri("http://" + gTestIndex + "." + i + ".mozilla.org/"), now++, null,
                   hs.TRANSITION_TYPED, false, 0);

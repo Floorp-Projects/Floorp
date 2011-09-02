@@ -46,22 +46,10 @@ MODULE = transformiix
 LIBRARY_NAME = txxml_s
 LIBXUL_LIBRARY = 1
 
-
-
 CPPSRCS	= \
 	txXMLUtils.cpp \
 	txXMLParser.cpp \
 	$(NULL)
-
-ifdef MOZ_XSLT_STANDALONE
-CPPSRCS += \
-	txAttr.cpp \
-	txDocument.cpp \
-	txElement.cpp \
-	txNodeDefinition.cpp \
-	txProcessingInstruction.cpp \
-	$(NULL)
-endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

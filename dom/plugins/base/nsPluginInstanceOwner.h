@@ -69,7 +69,7 @@
 #endif
 
 class nsIInputStream;
-class nsIntRect;
+struct nsIntRect;
 class nsPluginDOMContextMenuListener;
 class nsObjectFrame;
 class nsDisplayListBuilder;

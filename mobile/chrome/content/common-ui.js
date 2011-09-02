@@ -74,7 +74,7 @@ var BrowserSearch = {
     while (list.lastChild)
       list.removeChild(list.lastChild);
 
-    this.engines.forEach(function(aEngine) {
+    this.engines.forEach(function(aEngine, aIndex, aArray) {
       let button = document.createElement("button");
       button.className = "action-button";
       button.setAttribute("label", aEngine.name);
@@ -86,7 +86,24 @@ var BrowserSearch = {
 
     popup.hidden = false;
     popup.top = BrowserUI.toolbarH - popup.offset;
-    popup.anchorTo(document.getElementById("tool-search"));
+    let searchButton = document.getElementById("tool-search");
+    if (Util.isTablet()) {
+      let width = list.getBoundingClientRect().width;
+      let searchButtonRect = searchButton.getBoundingClientRect();
+      let left = searchButtonRect.left;
+      if (Util.localeDir > 0) {
+        if (left + width > window.innerWidth)
+          left = window.innerWidth - width;
+      } else {
+        left = searchButtonRect.right - width;
+        if (left < 0)
+          left = 0;
+      }
+      popup.left = left;
+    } else if (popup.hasAttribute("left")) {
+      popup.removeAttribute("left");
+    }
+    popup.anchorTo(searchButton);
 
     document.getElementById("urlbar-icons").setAttribute("open", "true");
     BrowserUI.pushPopup(this, [popup, this._button]);
@@ -810,6 +827,7 @@ var FormHelperUI = {
         if (focusedElement && focusedElement.localName == "browser")
           return;
 
+        Browser.keyFilter.handleEvent(aEvent);
         break;
 
       case "SizeChanged":

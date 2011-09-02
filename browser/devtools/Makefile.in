@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #  Rob Campbell <rcampbell@mozilla.com>
+#  Mike Ratcliffe <mratcliffe@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,8 @@ DIRS = \
   webconsole \
   scratchpad \
   sourceeditor \
+  styleinspector \
+  shared \
   $(NULL)
 
 ifdef ENABLE_TESTS
