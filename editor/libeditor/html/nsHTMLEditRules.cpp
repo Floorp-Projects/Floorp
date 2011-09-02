@@ -4047,6 +4047,21 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
         NS_ENSURE_SUCCESS(res, res);
         continue;
       }
+      // is it a block with a 'margin' property?
+      if (useCSS && IsBlockNode(curNode))
+      {
+        nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
+        nsAutoString value;
+        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, marginProperty, value);
+        float f;
+        nsCOMPtr<nsIAtom> unit;
+        mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
+        if (f > 0)
+        {
+          RelativeChangeIndentationOfElementNode(curNode, -1);
+          continue;
+        }
+      }
       // is it a list item?
       if (nsHTMLEditUtils::IsListItem(curNode)) 
       {
