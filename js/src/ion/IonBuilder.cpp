@@ -991,9 +991,27 @@ IonBuilder::processBreak(JSOp op, jssrcnote *sn)
         }
     }
 
+    if (!found) {
+        // Sometimes, we can't determine the structure of a labeled break. For
+        // example:
+        //
+        // 0:    label: {
+        // 1:        for (;;) {
+        // 2:            break label;
+        // 3:        }
+        // 4:        stuff;
+        // 5:    }
+        //
+        // In this case, the successor of the block is 4, but the target of the
+        // single-level break is actually 5. To recognize this case we'd need
+        // to know about the label structure at 0,5 ahead of time - and lacking
+        // those source notes for now, we just abort instead.
+        abort("could not find the target of a break");
+        return ControlStatus_Error;
+    }
+
     // There must always be a valid target loop structure. If not, there's
     // probably an off-by-something error in which pc we track.
-    JS_ASSERT(found);
     CFGState &state = *found;
 
     state.loop.breaks = new DeferredEdge(current, state.loop.breaks);
