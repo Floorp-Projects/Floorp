@@ -40,16 +40,12 @@
 #include "txXPathResultComparator.h"
 #include "txExpr.h"
 #include "txCore.h"
-#ifndef TX_EXE
 #include "nsCollationCID.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsIServiceManager.h"
 #include "nsLocaleCID.h"
 #include "prmem.h"
-#else
-#include "txStringUtils.h"
-#endif
 
 #define kAscending (1<<0)
 #define kUpperFirst (1<<1)
@@ -63,14 +59,11 @@ txResultStringComparator::txResultStringComparator(MBool aAscending,
         mSorting |= kAscending;
     if (aUpperFirst)
         mSorting |= kUpperFirst;
-#ifndef TX_EXE
     nsresult rv = init(aLanguage);
     if (NS_FAILED(rv))
         NS_ERROR("Failed to initialize txResultStringComparator");
-#endif
 }
 
-#ifndef TX_EXE
 nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 {
     nsresult rv;
@@ -98,7 +91,6 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 
     return NS_OK;
 }
-#endif
 
 nsresult
 txResultStringComparator::createSortableValue(Expr *aExpr,
@@ -110,14 +102,6 @@ txResultStringComparator::createSortableValue(Expr *aExpr,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv;
-#ifdef TX_EXE
-    rv = aExpr->evaluateToString(aContext, val->mStr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // We don't support case-order on standalone
-    TX_ToLowerCase(val->mStr);
-#else
     if (!mCollation)
         return NS_ERROR_FAILURE;
 
@@ -127,7 +111,7 @@ txResultStringComparator::createSortableValue(Expr *aExpr,
     }
 
     nsString& nsCaseKey = *(nsString *)val->mCaseKey;
-    rv = aExpr->evaluateToString(aContext, nsCaseKey);
+    nsresult rv = aExpr->evaluateToString(aContext, nsCaseKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (nsCaseKey.IsEmpty()) {
@@ -139,7 +123,6 @@ txResultStringComparator::createSortableValue(Expr *aExpr,
     rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive,
                                         nsCaseKey, &val->mKey, &val->mLength);
     NS_ENSURE_SUCCESS(rv, rv);
-#endif
 
     aResult = val.forget();
 
@@ -150,27 +133,7 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
 {
     StringValue* strval1 = (StringValue*)aVal1;
     StringValue* strval2 = (StringValue*)aVal2;
-#ifdef TX_EXE
-    PRUint32 len1 = strval1->mStr.Length();
-    PRUint32 len2 = strval2->mStr.Length();
-    PRUint32 minLength = (len1 < len2) ? len1 : len2;
 
-    PRUint32 c = 0;
-    while (c < minLength) {
-        PRUnichar ch1 = strval1->mStr.CharAt(c);
-        PRUnichar ch2 = strval2->mStr.CharAt(c);
-        if (ch1 < ch2)
-            return ((mSorting & kAscending) ? 1 : -1) * -1;
-        if (ch2 < ch1)
-            return ((mSorting & kAscending) ? 1 : -1) * 1;
-        c++;
-    }
-
-    if (len1 == len2)
-        return 0;
-
-    return ((mSorting & kAscending) ? 1 : -1) * ((len1 < len2) ? -1 : 1);
-#else
     if (!mCollation)
         return -1;
 
@@ -234,10 +197,8 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
 
     return ((mSorting & kAscending) ? 1 : -1) *
            ((mSorting & kUpperFirst) ? -1 : 1) * result;
-#endif
 }
 
-#ifndef TX_EXE
 txResultStringComparator::StringValue::StringValue() : mKey(0),
                                                        mCaseKey(0),
                                                        mLength(0),
@@ -253,7 +214,6 @@ txResultStringComparator::StringValue::~StringValue()
     else
         delete (nsString*)mCaseKey;
 }
-#endif
 
 txResultNumberComparator::txResultNumberComparator(MBool aAscending)
 {

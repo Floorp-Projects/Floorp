@@ -31,7 +31,7 @@ function runNextTest() {
     });
 
     // Close the awesome panel just in case
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
     finish();
   }
 }
