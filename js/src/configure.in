@@ -4543,7 +4543,7 @@ if test "$MOZ_MEMORY"; then
     ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    # the interesting bits will get passed down in MOZ_MEMORY_LDFLAGS
+    # the interesting bits will get passed down in MOZ_UTILS_LDFLAGS
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -4558,7 +4558,8 @@ if test "$MOZ_MEMORY"; then
   fi
 fi
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_MEMORY_LDFLAGS)
+AC_SUBST(MOZ_UTILS_LDFLAGS)
+AC_SUBST(MOZ_UTILS_PROGRAM_LDFLAGS)
 
 dnl ========================================================
 dnl = Use malloc wrapper lib
