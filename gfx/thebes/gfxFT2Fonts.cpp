@@ -697,9 +697,10 @@ gfxFT2Font::InitTextRun(gfxContext *aContext,
     }
 
     if (!ok) {
-        aTextRun->AdjustAdvancesForSyntheticBold(aRunStart, aRunLength);
         AddRange(aTextRun, aString, aRunStart, aRunLength);
     }
+
+    aTextRun->AdjustAdvancesForSyntheticBold(aRunStart, aRunLength);
 
     return PR_TRUE;
 }
