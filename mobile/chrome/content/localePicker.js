@@ -362,7 +362,12 @@ function start() {
     clearTimeout(timeout);
     LocaleUI._mainPage.removeAttribute("mode");
 
-    let currentLocale = Services.prefs.getCharPref("general.useragent.locale");
+    let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].getService(Ci.nsILocaleService);
+    let currentLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
+    if (Services.prefs.prefHasUserValue("general.useragent.locale")) {
+      currentLocale = Services.prefs.getCharPref("general.useragent.locale");
+    }
+
     let match = NO_MATCH;
     let matchingLocale = null;
 
@@ -374,15 +379,26 @@ function start() {
         match = newMatch;
       }
     }
+
     if (matchingLocale) {
       // if we found something, try to install it automatically
-      LocaleUI.strings = new FakeStringBundle(matchingLocale.addon);
-      LocaleUI.updateStrings();
-      LocaleUI._currentInstall = matchingLocale.addon;
-
-      LocaleUI.selectedPanel = LocaleUI._installerPage;
-      matchingLocale.addon.install.addListener(installListener);
-      matchingLocale.addon.install.install();
+      AddonManager.getAddonByID(matchingLocale.addon.id, function (aAddon) {
+        // if this locale is already installed, but is user disabled,
+        // bail out of here.
+        if (aAddon && aAddon.userDisabled) {
+          Services.prefs.clearUserPref("general.useragent.locale");
+          LocaleUI.closeWindow();
+          return;
+        }
+        // if we found something, try to install it automatically
+        LocaleUI.strings = new FakeStringBundle(matchingLocale.addon);
+        LocaleUI.updateStrings();
+        LocaleUI._currentInstall = matchingLocale.addon;
+  
+        LocaleUI.selectedPanel = LocaleUI._installerPage;
+        matchingLocale.addon.install.addListener(installListener);
+        matchingLocale.addon.install.install();
+      });
     }
   });
 
