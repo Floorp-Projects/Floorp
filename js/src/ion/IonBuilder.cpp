@@ -703,6 +703,11 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
     }
 
     current = successor;
+
+    // An infinite loop (for (;;) { }) will not have a successor.
+    if (!current)
+        return ControlStatus_Ended;
+
     pc = current->pc();
     return ControlStatus_Joined;
 }
