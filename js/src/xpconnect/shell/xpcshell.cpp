@@ -477,14 +477,14 @@ Load(JSContext *cx, uintN argc, jsval *vp)
                            filename.ptr());
             return false;
         }
-        JSObject *scriptObj = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(),
-                                                                file, gJSPrincipals);
+        JSScript *script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(),
+                                                             file, gJSPrincipals);
         fclose(file);
-        if (!scriptObj)
+        if (!script)
             return false;
 
         jsval result;
-        if (!compileOnly && !JS_ExecuteScript(cx, obj, scriptObj, &result))
+        if (!compileOnly && !JS_ExecuteScript(cx, obj, script, &result))
             return false;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -1011,7 +1011,7 @@ static void
 ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
             JSBool forceTTY)
 {
-    JSObject *scriptObj;
+    JSScript *script;
     jsval result;
     int lineno, startline;
     JSBool ok, hitEOF;
@@ -1044,11 +1044,11 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         ungetc(ch, file);
         DoBeginRequest(cx);
 
-        scriptObj = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
-                                                      gJSPrincipals);
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
+                                                   gJSPrincipals);
 
-        if (scriptObj && !compileOnly)
-            (void)JS_ExecuteScript(cx, obj, scriptObj, &result);
+        if (script && !compileOnly)
+            (void)JS_ExecuteScript(cx, obj, script, &result);
         DoEndRequest(cx);
 
         return;
@@ -1080,13 +1080,13 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        scriptObj = JS_CompileScriptForPrincipals(cx, obj, gJSPrincipals, buffer,
-                                                  strlen(buffer), "typein", startline);
-        if (scriptObj) {
+        script = JS_CompileScriptForPrincipals(cx, obj, gJSPrincipals, buffer,
+                                               strlen(buffer), "typein", startline);
+        if (script) {
             JSErrorReporter older;
 
             if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, obj, scriptObj, &result);
+                ok = JS_ExecuteScript(cx, obj, script, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS_ValueToString(). */
                     older = JS_SetErrorReporter(cx, NULL);

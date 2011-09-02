@@ -197,13 +197,13 @@ ContentScriptErrorReporter(JSContext* aCx,
 
 class nsScriptCacheCleaner;
 
-struct nsFrameScriptExecutorJSObjectHolder
+struct nsFrameJSScriptExecutorHolder
 {
-  nsFrameScriptExecutorJSObjectHolder(JSObject* aObject) : mObject(aObject)
-  { MOZ_COUNT_CTOR(nsFrameScriptExecutorJSObjectHolder); }
-  ~nsFrameScriptExecutorJSObjectHolder()
-  { MOZ_COUNT_DTOR(nsFrameScriptExecutorJSObjectHolder); }
-  JSObject* mObject;
+  nsFrameJSScriptExecutorHolder(JSScript* aScript) : mScript(aScript)
+  { MOZ_COUNT_CTOR(nsFrameJSScriptExecutorHolder); }
+  ~nsFrameJSScriptExecutorHolder()
+  { MOZ_COUNT_DTOR(nsFrameJSScriptExecutorHolder); }
+  JSScript* mScript;
 };
 
 class nsFrameScriptExecutor
@@ -228,7 +228,7 @@ protected:
   PRUint32 mCxStackRefCnt;
   PRPackedBool mDelayedCxDestroy;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  static nsDataHashtable<nsStringHashKey, nsFrameScriptExecutorJSObjectHolder*>* sCachedScripts;
+  static nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>* sCachedScripts;
   static nsRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
 };
 
