@@ -1087,18 +1087,6 @@ PSM_SSL_BlacklistDigiNotar(CERTCertificate * serverCert,
     if (!node->cert->issuerName)
       continue;
 
-    // If it's one of the "Staat der Nederlanden Root"s, then don't blacklist.
-    // Compare names, and ensure it's a self-signed root.
-    if ((!strcmp(node->cert->issuerName,
-                "CN=Staat der Nederlanden Root CA,O=Staat der Nederlanden,C=NL") ||
-         !strcmp(node->cert->issuerName,
-                "CN=Staat der Nederlanden Root CA - G2,O=Staat der Nederlanden,C=NL")) &&
-        SECITEM_ItemsAreEqual(&node->cert->derIssuer,&node->cert->derSubject)
-        ) {
-      // keep as valid
-      return 0;
-    }
-
     if (strstr(node->cert->issuerName, "CN=DigiNotar")) {
       isDigiNotarIssuedCert = PR_TRUE;
     }
