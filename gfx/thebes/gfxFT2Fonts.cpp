@@ -700,7 +700,7 @@ gfxFT2Font::InitTextRun(gfxContext *aContext,
         AddRange(aTextRun, aString, aRunStart, aRunLength);
     }
 
-    aTextRun->AdjustAdvancesForSyntheticBold(aRunStart, aRunLength);
+    aTextRun->AdjustAdvancesForSyntheticBold(aContext, aRunStart, aRunLength);
 
     return PR_TRUE;
 }
@@ -810,9 +810,7 @@ gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
     : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
 {
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
-    if (aNeedsBold) {
-        mSyntheticBoldOffset = 1.0;
-    }
+    mApplySyntheticBold = aNeedsBold;
     mCharGlyphCache.Init(64);
 }
 
