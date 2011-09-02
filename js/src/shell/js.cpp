@@ -5109,7 +5109,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     ToString valstr(cx, *vp, JS_TRUE);
     if (valstr.threw())
         return JS_FALSE;
-#if defined XP_WIN || defined HPUX || defined OSF1 || defined IRIX
+#if defined XP_WIN || defined HPUX || defined OSF1
     {
         char *waste = JS_smprintf("%s=%s", idstr.getBytes(), valstr.getBytes());
         if (!waste) {
