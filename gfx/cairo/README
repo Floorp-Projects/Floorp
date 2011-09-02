@@ -172,8 +172,6 @@ fixup-unbounded.patch: Hack to work around bad assumption.
 
 quartz-get-image-performance: Make cairo_quartz_get_image faster in the failure case by not flushing unless we are going to succeed.
 
-lround-c99-only.patch: Only use lround in C99 programs.
-
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
