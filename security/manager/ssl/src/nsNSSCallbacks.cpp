@@ -1069,15 +1069,6 @@ PSM_SSL_BlacklistDigiNotar(CERTCertificate * serverCert,
         }
       }
     }
-
-    // By request of the Dutch government
-    if ((!strcmp(node->cert->issuerName,
-                "CN=Staat der Nederlanden Root CA,O=Staat der Nederlanden,C=NL") ||
-         !strcmp(node->cert->issuerName,
-                "CN=Staat der Nederlanden Root CA - G2,O=Staat der Nederlanden,C=NL")) &&
-        CERT_LIST_END(CERT_LIST_NEXT(node), serverCertChain)) {
-      return 0;
-    }
   }
 
   if (isDigiNotarIssuedCert)
