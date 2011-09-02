@@ -143,12 +143,12 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 bool
 LIRGeneratorX64::assignSnapshot(LInstruction *ins)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
+    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
     if (!snapshot)
         return false;
 
-    for (size_t i = 0; i < last_snapshot_->numOperands(); i++) {
-        MDefinition *def = last_snapshot_->getOperand(i);
+    for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
+        MDefinition *def = lastResumePoint_->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
         *a = useKeepaliveOrConstant(def);
 #ifdef DEBUG

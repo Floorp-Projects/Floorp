@@ -92,8 +92,8 @@ ion::EliminateDeadCode(MIRGraph &graph)
 
         // FIXME: Bug 678273.
         // All phi nodes currently have non-zero uses as determined
-        // by hasUses(). They are kept alive by snapshots, and therefore cannot
-        // currently be eliminated.
+        // by hasUses(). They are kept alive by resume points, and therefore
+        // cannot currently be eliminated.
     }
 
     return true;
@@ -370,20 +370,20 @@ TypeAnalyzer::determineSpecializations()
 static inline bool
 ShouldSpecializeInput(MDefinition *box, MNode *use, MUnbox *unbox)
 {
-    // If the node is a snapshot, always replace the input to avoid carrying
-    // around a wider type.
-    if (use->isSnapshot()) {
-        MSnapshot *snapshot = use->toSnapshot();
+    // If the node is a resume point, always replace the input to avoid
+    // carrying around a wider type.
+    if (use->isResumePoint()) {
+        MResumePoint *resumePoint = use->toResumePoint();
             
-        // If this snapshot is the definition's snapshot (in case it is
-        // effectful), we *cannot* replace its use! The snapshot comes in
-        // between the definition and the unbox.
-        MSnapshot *defSnapshot;
+        // If this resume point is attached to the definition, being effectful,
+        // we *cannot* replace its use! The resume point comes in between the
+        // definition and the unbox.
+        MResumePoint *defResumePoint;
         if (box->isInstruction())
-            defSnapshot = box->toInstruction()->snapshot();
+            defResumePoint = box->toInstruction()->resumePoint();
         else if (box->isPhi())
-            defSnapshot = box->block()->entrySnapshot();
-        return (defSnapshot != snapshot);
+            defResumePoint = box->block()->entryResumePoint();
+        return (defResumePoint != resumePoint);
     }
 
     MDefinition *def = use->toDefinition();

@@ -179,11 +179,11 @@ IonBuilder::build()
 
     current->makeStart(new MStart());
 
-    // Attach start's snapshot to each parameter, so the type analyzer doesn't
-    // replace uses in the snapshot.
+    // Attach a resume point to each parameter, so the type analyzer doesn't
+    // replace its first use.
     for (uint32 i = 0; i < CountArgSlots(fun()); i++) {
         MParameter *param = current->getEntrySlot(i)->toInstruction()->toParameter();
-        param->setSnapshot(current->entrySnapshot());
+        param->setResumePoint(current->entryResumePoint());
     }
 
     if (!traverseBytecode())
@@ -266,9 +266,7 @@ IonBuilder::traverseBytecode()
                 return true;
         }
 
-        // Nothing beyond is allowed to advance the pc. Relying on this, we
-        // take an early snapshot if beneficial.
-
+        // Nothing in inspectOpcode() is allowed to advance the pc.
         JSOp op = JSOp(*pc);
         if (!inspectOpcode(op))
             return false;
@@ -1704,44 +1702,44 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
     return block;
 }
 
-// A snapshot is a mapping of stack slots to MDefinitions. It is used to
+// A resume point is a mapping of stack slots to MDefinitions. It is used to
 // capture the environment such that if a guard fails, and IonMonkey needs
 // to exit back to the interpreter, the interpreter state can be
 // reconstructed.
 //
-// The snapshot model differs from TraceMonkey in that we do not need to
-// take snapshots for every guard. Instead, we take snapshots at two
+// The resume model differs from TraceMonkey in that we do not need to
+// take snapshots for every guard. Instead, we capture stack state at
 // critical points:
 //   * (1) At the beginning of every basic block.
 //   * (2) After every non-idempotent operation.
 //
 // As long as these two properties are maintained, instructions can
 // be moved, hoisted, or, eliminated without problems, and ops without side
-// effects do not need to worry about capturing snapshots at precisely the
+// effects do not need to worry about capturing state at precisely the
 // right point in time.
 //
-// Effectful instructions, of course, need to take a snapshot after completion,
+// Effectful instructions, of course, need to capture state after completion,
 // where the interpreter will not attempt to repeat the operation. For this,
-// snapshotAfter() must be used. The snapshot is attached directly to the
-// effectful instruction to ensure that no intermediate instructions could be
-// injected in between by a future analysis pass.
+// resumeAfter() must be used. The state is attached directly to the effectful
+// instruction to ensure that no intermediate instructions could be injected
+// in between by a future analysis pass.
 //
 // During LIR construction, if an instruction can bail back to the interpreter,
-// we create an LSnapshot, which uses the last known snapshot to request
+// we create an LSnapshot, which uses the last known resume point to request
 // register/stack assignments for every live value.
 bool
-IonBuilder::snapshotAfter(MInstruction *ins)
+IonBuilder::resumeAfter(MInstruction *ins)
 {
-    return snapshotAt(ins, GetNextPc(pc));
+    return resumeAt(ins, GetNextPc(pc));
 }
 
 bool
-IonBuilder::snapshotAt(MInstruction *ins, jsbytecode *pc)
+IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
 {
-    MSnapshot *snapshot = MSnapshot::New(current, pc);
-    if (!snapshot)
+    MResumePoint *resumePoint = MResumePoint::New(current, pc);
+    if (!resumePoint)
         return false;
-    ins->setSnapshot(snapshot);
+    ins->setResumePoint(resumePoint);
     return true;
 }
 

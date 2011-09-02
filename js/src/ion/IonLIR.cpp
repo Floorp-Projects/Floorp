@@ -92,7 +92,7 @@ LBlock::lastId()
     return last->id();
 }
 
-LSnapshot::LSnapshot(MSnapshot *mir)
+LSnapshot::LSnapshot(MResumePoint *mir)
   : numSlots_(mir->numOperands() * BOX_PIECES),
     slots_(NULL),
     mir_(mir),
@@ -108,7 +108,7 @@ LSnapshot::init(MIRGenerator *gen)
 }
 
 LSnapshot *
-LSnapshot::New(MIRGenerator *gen, MSnapshot *mir)
+LSnapshot::New(MIRGenerator *gen, MResumePoint *mir)
 {
     LSnapshot *snapshot = new LSnapshot(mir);
     if (!snapshot->init(gen))
