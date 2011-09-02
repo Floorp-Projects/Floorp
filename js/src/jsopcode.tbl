@@ -199,8 +199,9 @@ OPDEF(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, 10,  JOF_BYTE|J
 OPDEF(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, 10,  JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC)
 
 /*
- * Host object extension: given 'o.item(i) = j', the left-hand side compiles
- * JSOP_SETCALL after JSOP_CALL, JSOP_EVAL, JSOP_FUNAPPLY, or JSOP_FUNCALL.
+ * Sometimes web pages do 'o.Item(i) = j'. This is not an early SyntaxError,
+ * for web compatibility. Instead we emit JSOP_SETCALL after the function call,
+ * an opcode that always throws.
  */
 OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         1,  1,  2, 18,  JOF_BYTE)
 
@@ -218,7 +219,7 @@ OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         1,  1,  2, 18,  JOF_BYTE)
  */
 OPDEF(JSOP_ITER,      75, "iter",       NULL,         2,  1,  1,  0,  JOF_UINT8)
 OPDEF(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  0,  JOF_BYTE)
-OPDEF(JSOP_ITERNEXT,  77, "iternext",   "<next>",     2,  0,  1,  0,  JOF_UINT8)
+OPDEF(JSOP_ITERNEXT,  77, "iternext",   "<next>",     1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_ENDITER,   78, "enditer",    NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 OPDEF(JSOP_FUNAPPLY,  79, "funapply",   NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET)

@@ -14862,7 +14862,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ITERNEXT()
 {
     LIns* v_ins;
-    Value &iterobj_val = stackval(-GET_INT8(cx->regs().pc));
+    Value &iterobj_val = stackval(-1);
     CHECK_STATUS_A(unboxNextValue(iterobj_val, v_ins));
     stack(0, v_ins);
     return ARECORD_CONTINUE;
