@@ -159,6 +159,8 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+  nsGlobalWindow::Init();
+
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsContentUtils");

@@ -44,9 +44,7 @@
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
 #include "nsWhitespaceTokenizer.h"
-#ifndef TX_EXE
 #include "nsIContent.h"
-#endif
 
 /*
  * Returns the default priority of this Pattern.
@@ -304,22 +302,10 @@ MBool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     }
 
     // Get a ID attribute, if there is
-#ifdef TX_EXE
-    Element* elem;
-    nsresult rv = txXPathNativeNode::getElement(aNode, &elem);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "So why claim it's an element above?");
-
-    nsAutoString value;
-    if (!elem->getIDValue(value)) {
-        return PR_FALSE;
-    }
-    nsCOMPtr<nsIAtom> id = do_GetAtom(value);
-#else
     nsIContent* content = txXPathNativeNode::getContent(aNode);
     NS_ASSERTION(content, "a Element without nsIContent");
 
     nsIAtom* id = content->GetID();
-#endif // TX_EXE
     return id && mIds.IndexOf(id) > -1;
 }
 

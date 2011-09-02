@@ -1,0 +1,25 @@
+# HG changeset patch
+# Parent 6c8a909977d32284bbddd60a45e1780e824b5d7c
+diff --git a/content/canvas/test/webgl/conformance/oes-texture-float.html b/content/canvas/test/webgl/conformance/oes-texture-float.html
+--- a/content/canvas/test/webgl/conformance/oes-texture-float.html
++++ b/content/canvas/test/webgl/conformance/oes-texture-float.html
+@@ -80,17 +80,18 @@ if (!gl) {
+   runTextureCreationTest(testProgram, false);
+ 
+   if (!gl.getExtension("OES_texture_float")) {
+       testPassed("No OES_texture_float support -- this is legal");
+   } else {
+       testPassed("Successfully enabled OES_texture_float extension");
+       runTextureCreationTest(testProgram, true);
+       runRenderTargetTest(testProgram);
+-      runUniqueObjectTest();
++      // bug 683216, see the discussion in bug 630672
++      // runUniqueObjectTest();
+   }
+ }
+ 
+ // Needs to be global for shouldBe to see it.
+ var pixels;
+ 
+ function allocateTexture()
+ {

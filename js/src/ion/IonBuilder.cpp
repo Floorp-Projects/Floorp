@@ -61,7 +61,7 @@ IonBuilder::IonBuilder(JSContext *cx, JSScript *script, JSFunction *fun, TempAll
     oracle(oracle)
 {
     pc = script->code;
-    atoms = script->atomMap.vector;
+    atoms = script->atoms;
 }
 
 static inline int32
@@ -84,7 +84,7 @@ GetNextPc(jsbytecode *pc)
 uint32
 IonBuilder::readIndex(jsbytecode *pc)
 {
-    return (atoms - script->atomMap.vector) + GET_INDEX(pc);
+    return (atoms - script->atoms) + GET_INDEX(pc);
 }
 
 IonBuilder::CFGState

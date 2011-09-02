@@ -122,7 +122,7 @@ class PICLinker : public LinkerHelper
 
   public:
     PICLinker(Assembler &masm, ic::BasePolyIC &ic)
-      : LinkerHelper(masm), ic(ic)
+      : LinkerHelper(masm, JSC::METHOD_CODE), ic(ic)
     { }
 
     bool init(JSContext *cx) {
@@ -2978,7 +2978,7 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
     JS_ASSERT(!execPool);
     JS_ASSERT(!inlineHoleGuardPatched);
 
-    LinkerHelper buffer(masm);
+    LinkerHelper buffer(masm, JSC::METHOD_CODE);
     execPool = buffer.init(cx);
     if (!execPool)
         return error(cx);
@@ -3059,7 +3059,7 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
     // by a GC or shape regenerated GC. We let this stub live for the lifetime
     // of the script.
     JS_ASSERT(!execPool);
-    LinkerHelper buffer(masm);
+    LinkerHelper buffer(masm, JSC::METHOD_CODE);
     execPool = buffer.init(cx);
     if (!execPool)
         return error(cx);

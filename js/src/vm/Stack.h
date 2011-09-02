@@ -893,7 +893,7 @@ class StackFrame
      */
 
     JSCompartment *compartment() const {
-        JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment);
+        JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment());
         return scopeChain().compartment();
     }
 

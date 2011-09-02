@@ -42,6 +42,11 @@
 
 #include "nsAString.h"
 #include "nsIAtom.h"
+#include "nsUnicharUtils.h"
+
+#define TX_ToLowerCase ToLowerCase
+
+typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
 
 /**
  * Check equality between a string and an atom containing ASCII.
@@ -51,30 +56,6 @@ TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom)
 {
   return aAtom->Equals(aString);
 }
-
-#ifndef TX_EXE
-
-#include "nsUnicharUtils.h"
-typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
-
-#define TX_ToLowerCase ToLowerCase
-
-#else
-
-// These only work for ASCII ranges!
-
-class txCaseInsensitiveStringComparator
-: public nsStringComparator
-{
-public:
-  virtual int operator()(const char_type*, const char_type*, PRUint32 aLength) const;
-  virtual int operator()(char_type, char_type) const;
-};
-
-void TX_ToLowerCase(nsAString& aString);
-void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
-
-#endif
 
 inline already_AddRefed<nsIAtom>
 TX_ToLowerCaseAtom(nsIAtom* aAtom)

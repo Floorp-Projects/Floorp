@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+  <title>Style inspector test</title>
+  <style>
+    .text {
+      font-family: sans-serif;
+    }
+
+    .container > .text {
+      font-family: serif;
+    }
+
+    .text2 {
+      font-family: sans-serif;
+    }
+
+    .text3 {
+      font-size: 100px;
+    }
+
+    .text[dir=rtl] {
+      font-family: monospace;
+    }
+
+    .container .text {
+      font-family: fantasy;
+    }
+
+    #container .text {
+      font-family: fantasy;
+    }
+
+    .container > .text {
+      font-family: cursive;
+    }
+
+    #container > .text {
+      font-family: cursive;
+    }
+
+    #container > .dummy, #container > .dummy2 {
+      font-family: cursive;
+    }
+
+    div {
+      font-family: fantasy;
+    }
+
+    #container {
+      font-family: fantasy;
+    }
+
+    #container > span {
+      font-family: cursive;
+    }
+
+    #container .dummy {
+      font-family: fantasy;
+    }
+
+    html + .dummy {
+      font-family: fantasy;
+    }
+
+    span + span {
+      font-family: fantasy;
+    }
+
+    span[id=text] {
+      font-family: cursive;
+    }
+
+    span[att=glue] {
+      font-family: cursive;
+    }
+
+    span::before {
+      font-family: cursive;
+      content: "START ";
+    }
+
+    span::after {
+      font-family: cursive;
+      content: " END";
+    }
+
+    spawn::before {
+      font-family: cursive;
+      content: "START ";
+    }
+
+    spawn::after {
+      font-family: cursive;
+      content: " END";
+    }
+
+    a:link {
+      font-family: sans-serif;
+    }
+
+    .link:link {
+      font-family: fantasy;
+    }
+
+    a:visited {
+      font-family: sans-serif;
+    }
+
+    .link:visited {
+      font-family: fantasy;
+    }
+
+    a:active {
+      font-family: sans-serif;
+    }
+
+    .link:active {
+      font-family: fantasy;
+    }
+
+    a:hover {
+      font-family: sans-serif;
+    }
+
+    .link:hover {
+      font-family: fantasy;
+    }
+
+    a:focus {
+      font-family: sans-serif;
+      outline: 5px solid #0f0;
+    }
+
+    .link:focus {
+      font-family: fantasy;
+    }
+
+    span::first-letter {
+      font-family: sans-serif;
+    }
+
+    .text::first-letter {
+      font-family: fantasy;
+    }
+
+    span::first-line {
+      font-family: sans-serif;
+    }
+
+    .text::first-line {
+      font-family: fantasy;
+    }
+
+    #container:first-child {
+      font-family: sans-serif;
+    }
+
+    div:first-child {
+      font-family: fantasy;
+    }
+
+    span:lang(en) {
+      font-family: sans-serif;
+    }
+
+    span:lang(it) {
+      font-family: fantasy;
+    }
+
+    html::-moz-selection {
+      background-color: #f00;
+      font-family: fantasy;
+    }
+  </style>
+</head>
+<body>
+  <h2>font-size</h2>
+  <div id="container">
+    <span id="text" lang="en" class="text">Use inspectstyle($('text')) to inspect me</span><br />
+    <span id="text2" class="text2">Use inspectstyle($('text2'))</span><br />
+    <a class="link" href="#">Some Link</a>
+    <h2>font-family has a single unmatched rule</h2>
+  </div>
+</body>
+</html>

@@ -166,6 +166,7 @@ endif
 
 ALL_TRASH		= $(TARGETS) $(OBJS) $(RES) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
+			  $(OBJS:.$(OBJ_SUFFIX)=.i_o) \
 			  so_locations
 
 ifndef RELEASE_LIBS_DEST
@@ -300,7 +301,7 @@ ifdef MOZ_PROFILE_GENERATE
 	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
 endif	# MOZ_PROFILE_GENERATE
 else	# WINNT && !GCC
-	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(WRAP_LDFLAGS)
 endif	# WINNT && !GCC
 ifdef ENABLE_STRIP
 	$(STRIP) $@
@@ -353,7 +354,7 @@ ifdef MOZ_PROFILE_GENERATE
 	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
 endif	# MOZ_PROFILE_GENERATE
 else	# WINNT && !GCC
-	$(MKSHLIB) $(OBJS) $(RES) $(LDFLAGS) $(EXTRA_LIBS)
+	$(MKSHLIB) $(OBJS) $(RES) $(LDFLAGS) $(WRAP_LDFLAGS) $(EXTRA_LIBS)
 endif	# WINNT && !GCC
 endif	# AIX 4.1
 ifdef ENABLE_STRIP
@@ -376,12 +377,27 @@ $(PROGRAM): pgo.relink
 endif	# WINNT && !GCC
 endif	# MOZ_PROFILE_USE
 
+ifneq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
+ifdef NS_USE_GCC
+# Force rebuilding libraries and programs in both passes because each
+# pass uses different object files.
+$(PROGRAM) $(SHARED_LIBRARY) $(LIBRARY): FORCE
+.PHONY: FORCE
+endif
+endif
+
 ################################################################################
 
 ifdef MOZ_PROFILE_GENERATE
 # Clean up profiling data during PROFILE_GENERATE phase
 export::
-	-$(RM) *.pgd *.gcda
+ifeq ($(OS_ARCH)_$(NS_USE_GCC), WINNT_)
+	$(foreach pgd,$(wildcard *.pgd),pgomgr -clear $(pgd);)
+else
+ifdef NS_USE_GCC
+	-$(RM) *.gcda
+endif
+endif
 endif
 
 ################################################################################

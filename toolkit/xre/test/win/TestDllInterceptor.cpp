@@ -38,47 +38,71 @@
 #include <stdio.h>
 #include "nsWindowsDllInterceptor.h"
 
-static bool patched_func_called = false;
+struct payload {
+  UINT64 a;
+  UINT64 b;
+  UINT64 c;
 
-static BOOL (WINAPI *orig_GetVersionExA)(LPOSVERSIONINFO);
+  bool operator==(const payload &other) const {
+    return (a == other.a &&
+            b == other.b &&
+            c == other.c);
+  }
+};
 
-static BOOL WINAPI
-patched_GetVersionExA(LPOSVERSIONINFO lpVersionInfo)
-{
-  patched_func_called = true;
-  return orig_GetVersionExA(lpVersionInfo);
+extern "C" __declspec(dllexport,noinline) payload rotatePayload(payload p) {
+  UINT64 tmp = p.a;
+  p.a = p.b;
+  p.b = p.c;
+  p.c = tmp;
+  return p;
 }
 
-bool osvi_equal(OSVERSIONINFO &info0, OSVERSIONINFO &info1)
+static bool patched_func_called = false;
+
+static payload (*orig_rotatePayload)(payload);
+
+static payload
+patched_rotatePayload(payload p)
 {
-  return (info0.dwMajorVersion == info1.dwMajorVersion &&
-          info0.dwMinorVersion == info1.dwMinorVersion &&
-          info0.dwBuildNumber == info1.dwBuildNumber &&
-          info0.dwPlatformId == info1.dwPlatformId &&
-          !strncmp(info0.szCSDVersion, info1.szCSDVersion, sizeof(info0.szCSDVersion)));
+  patched_func_called = true;
+  return orig_rotatePayload(p);
+}
+
+bool TestHook(const char *dll, const char *func)
+{
+  void *orig_func;
+  WindowsDllInterceptor TestIntercept;
+  TestIntercept.Init(dll);
+  if (TestIntercept.AddHook(func, 0, &orig_func)) {
+    printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func, dll);
+    return true;
+  } else {
+    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from %s\n", func, dll);
+    return false;
+  }
 }
 
 int main()
 {
-  OSVERSIONINFO info0, info1;
-  ZeroMemory(&info0, sizeof(OSVERSIONINFO));
-  ZeroMemory(&info1, sizeof(OSVERSIONINFO));
-  info0.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  info1.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
+  payload p0, p1;
+  ZeroMemory(&p0, sizeof(p0));
+  ZeroMemory(&p1, sizeof(p1));
 
-  GetVersionExA(&info0);
+  p0 = rotatePayload(initial);
 
   {
-    WindowsDllInterceptor Kernel32Intercept;
-    Kernel32Intercept.Init("kernel32.dll");
-    if (Kernel32Intercept.AddHook("GetVersionExA", reinterpret_cast<intptr_t>(patched_GetVersionExA), (void**) &orig_GetVersionExA)) {
+    WindowsDllInterceptor ExeIntercept;
+    ExeIntercept.Init("TestDllInterceptor.exe");
+    if (ExeIntercept.AddHook("rotatePayload", reinterpret_cast<intptr_t>(patched_rotatePayload), (void**) &orig_rotatePayload)) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook added\n");
     } else {
       printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to add hook\n");
       return 1;
     }
 
-    GetVersionExA(&info1);
+    p1 = rotatePayload(initial);
 
     if (patched_func_called) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook called\n");
@@ -87,7 +111,7 @@ int main()
       return 1;
     }
 
-    if (osvi_equal(info0, info1)) {
+    if (p0 == p1) {
       printf("TEST-PASS | WindowsDllInterceptor | Hook works properly\n");
     } else {
       printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Hook didn't return the right information\n");
@@ -96,8 +120,9 @@ int main()
   }
 
   patched_func_called = false;
+  ZeroMemory(&p1, sizeof(p1));
 
-  GetVersionExA(&info1);
+  p1 = rotatePayload(initial);
 
   if (!patched_func_called) {
     printf("TEST-PASS | WindowsDllInterceptor | Hook was not called after unregistration\n");
@@ -106,13 +131,26 @@ int main()
     return 1;
   }
 
-  if (osvi_equal(info0, info1)) {
+  if (p0 == p1) {
     printf("TEST-PASS | WindowsDllInterceptor | Original function worked properly\n");
   } else {
     printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Original function didn't return the right information\n");
     return 1;
   }
 
-  printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
-  return 0;
+  if (TestHook("user32.dll", "GetWindowInfo") &&
+#ifdef _WIN64
+      TestHook("user32.dll", "SetWindowLongPtrA") &&
+      TestHook("user32.dll", "SetWindowLongPtrW") &&
+#else
+      TestHook("user32.dll", "SetWindowLongA") &&
+      TestHook("user32.dll", "SetWindowLongW") &&
+#endif
+      TestHook("user32.dll", "TrackPopupMenu") &&
+      TestHook("ntdll.dll", "LdrLoadDll")) {
+    printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
+    return 0;
+  }
+
+  return 1;
 }

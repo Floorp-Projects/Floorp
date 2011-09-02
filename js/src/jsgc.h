@@ -101,6 +101,7 @@ enum FinalizeKind {
     FINALIZE_OBJECT_LAST = FINALIZE_OBJECT16_BACKGROUND,
     FINALIZE_FUNCTION,
     FINALIZE_FUNCTION_AND_OBJECT_LAST = FINALIZE_FUNCTION,
+    FINALIZE_SCRIPT,
     FINALIZE_SHAPE,
     FINALIZE_TYPE_OBJECT,
 #if JS_HAS_XML_SUPPORT
@@ -112,6 +113,12 @@ enum FinalizeKind {
     FINALIZE_IONCODE,
     FINALIZE_LIMIT
 };
+
+/*
+ * This must be an upper bound, but we do not need the least upper bound, so
+ * we just exclude non-background objects.
+ */
+const size_t MAX_BACKGROUND_FINALIZE_KINDS = FINALIZE_LIMIT - (FINALIZE_OBJECT_LAST + 1) / 2;
 
 extern JS_FRIEND_DATA(const uint8) GCThingSizeMap[];
 
@@ -761,15 +768,6 @@ Cell::compartment() const
     return arenaHeader()->compartment;
 }
 
-#define JSTRACE_TYPE_OBJECT 3
-#define JSTRACE_IONCODE     4
-#define JSTRACE_XML         5
-
-/*
- * One past the maximum trace kind.
- */
-#define JSTRACE_LIMIT       6
-
 /*
  * Lower limit after which we limit the heap growth
  */
@@ -785,12 +783,10 @@ const float GC_HEAP_GROWTH_FACTOR = 3.0f;
 /* Perform a Full GC every 20 seconds if MaybeGC is called */
 static const int64 GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
 
-static inline size_t
+static inline JSGCTraceKind
 GetFinalizableTraceKind(size_t thingKind)
 {
-    JS_STATIC_ASSERT(JSExternalString::TYPE_LIMIT == 8);
-
-    static const uint8 map[FINALIZE_LIMIT] = {
+    static const JSGCTraceKind map[FINALIZE_LIMIT] = {
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT0 */
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT0_BACKGROUND */
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT2 */
@@ -804,6 +800,7 @@ GetFinalizableTraceKind(size_t thingKind)
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16 */
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16_BACKGROUND */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
+        JSTRACE_SCRIPT,     /* FINALIZE_SCRIPT */
         JSTRACE_SHAPE,      /* FINALIZE_SHAPE */
         JSTRACE_TYPE_OBJECT,/* FINALIZE_TYPE_OBJECT */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
@@ -819,7 +816,7 @@ GetFinalizableTraceKind(size_t thingKind)
     return map[thingKind];
 }
 
-inline uint32
+inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing);
 
 static inline JSRuntime *
@@ -887,6 +884,10 @@ class ArenaList {
 
     bool willBeFinalizedLater() const {
         return backgroundFinalizeState == BFS_RUN;
+    }
+
+    bool doneBackgroundFinalize() const {
+        return backgroundFinalizeState == BFS_DONE;
     }
 #endif
 
@@ -973,13 +974,16 @@ struct FreeLists {
      * outside the GC.
      */
     void copyToArenas() {
-        for (size_t i = 0; i != size_t(FINALIZE_LIMIT); ++i) {
-            FreeSpan *list = &lists[i];
-            if (!list->isEmpty()) {
-                ArenaHeader *aheader = list->arenaHeader();
-                JS_ASSERT(!aheader->hasFreeThings());
-                aheader->setFirstFreeSpan(list);
-            }
+        for (size_t i = 0; i != size_t(FINALIZE_LIMIT); ++i)
+            copyToArena(FinalizeKind(i));
+    }
+
+    void copyToArena(FinalizeKind thingKind) {
+        FreeSpan *list = &lists[thingKind];
+        if (!list->isEmpty()) {
+            ArenaHeader *aheader = list->arenaHeader();
+            JS_ASSERT(!aheader->hasFreeThings());
+            aheader->setFirstFreeSpan(list);
         }
     }
 
@@ -988,14 +992,38 @@ struct FreeLists {
      * copyToArenas.
      */
     void clearInArenas() {
-        for (size_t i = 0; i != size_t(FINALIZE_LIMIT); ++i) {
-            FreeSpan *list = &lists[i];
-            if (!list->isEmpty()) {
-                ArenaHeader *aheader = list->arenaHeader();
-                JS_ASSERT(aheader->getFirstFreeSpan().isSameNonEmptySpan(list));
-                aheader->setAsFullyUsed();
-            }
+        for (size_t i = 0; i != size_t(FINALIZE_LIMIT); ++i) 
+            clearInArena(FinalizeKind(i));
+    }
+
+
+    void clearInArena(FinalizeKind thingKind) {
+        FreeSpan *list = &lists[thingKind];
+        if (!list->isEmpty()) {
+            ArenaHeader *aheader = list->arenaHeader();
+            JS_ASSERT(aheader->getFirstFreeSpan().isSameNonEmptySpan(list));
+            aheader->setAsFullyUsed();
         }
+    }
+
+    /*
+     * Check that the free list is either empty or were synchronized with the
+     * arena using copyToArena().
+     */
+    bool isSynchronizedWithArena(FinalizeKind thingKind) {
+        FreeSpan *list = &lists[thingKind];
+        if (list->isEmpty())
+            return true;
+        ArenaHeader *aheader = list->arenaHeader();
+        if (aheader->hasFreeThings()) {
+            /*
+             * If the arena has a free list, it must be the same as one in
+             * lists.
+             */ 
+            JS_ASSERT(aheader->getFirstFreeSpan().isSameNonEmptySpan(list));
+            return true;
+        }
+        return false;
     }
 
     JS_ALWAYS_INLINE void *getNext(unsigned thingKind, size_t thingSize) {
@@ -1086,7 +1114,7 @@ extern bool
 CheckAllocation(JSContext *cx);
 #endif
 
-extern JS_FRIEND_API(uint32)
+extern JS_FRIEND_API(JSGCTraceKind)
 js_GetGCThingTraceKind(void *thing);
 
 extern JSBool
@@ -1201,10 +1229,6 @@ js_WaitForGC(JSRuntime *rt);
 
 #endif
 
-extern void
-js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp);
-
-
 namespace js {
 
 #ifdef JS_THREADSAFE
@@ -1280,7 +1304,7 @@ class GCHelperThread {
             replenishAndFreeLater(ptr);
     }
 
-    void setContext(JSContext *context) { cx = context; }
+    bool prepareForBackgroundSweep(JSContext *context);
 };
 
 #endif /* JS_THREADSAFE */
@@ -1489,10 +1513,10 @@ void
 MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
 typedef void (*IterateCompartmentCallback)(JSContext *cx, void *data, JSCompartment *compartment);
-typedef void (*IterateArenaCallback)(JSContext *cx, void *data, gc::Arena *arena, size_t traceKind,
-                                     size_t thingSize);
-typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing, size_t traceKind,
-                                    size_t thingSize);
+typedef void (*IterateArenaCallback)(JSContext *cx, void *data, gc::Arena *arena,
+                                     JSGCTraceKind traceKind, size_t thingSize);
+typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing,
+                                    JSGCTraceKind traceKind, size_t thingSize);
 
 /*
  * This function calls |compartmentCallback| on every compartment,
@@ -1505,8 +1529,11 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback);
 
-/* Invoke cellCallback on every in-use object of the specified thing kind. */
-void
+/*
+ * Invoke cellCallback on every in-use object of the specified thing kind for
+ * the given compartment or for all compartments if it is null.
+ */
+extern JS_FRIEND_API(void)
 IterateCells(JSContext *cx, JSCompartment *compartment, gc::FinalizeKind thingKind,
              void *data, IterateCellCallback cellCallback);
 
@@ -1519,12 +1546,6 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str);
  * Macro to test if a traversal is the marking phase of the GC.
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
-
-#if JS_HAS_XML_SUPPORT
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
-#else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_IONCODE)
-#endif
 
 namespace js {
 namespace gc {

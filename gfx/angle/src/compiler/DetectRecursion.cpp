@@ -64,29 +64,6 @@ DetectRecursion::~DetectRecursion()
         delete functions[i];
 }
 
-void DetectRecursion::visitSymbol(TIntermSymbol*)
-{
-}
-
-void DetectRecursion::visitConstantUnion(TIntermConstantUnion*)
-{
-}
-
-bool DetectRecursion::visitBinary(Visit, TIntermBinary*)
-{
-    return true;
-}
-
-bool DetectRecursion::visitUnary(Visit, TIntermUnary*)
-{
-    return true;
-}
-
-bool DetectRecursion::visitSelection(Visit, TIntermSelection*)
-{
-    return true;
-}
-
 bool DetectRecursion::visitAggregate(Visit visit, TIntermAggregate* node)
 {
     switch (node->getOp())
@@ -123,16 +100,6 @@ bool DetectRecursion::visitAggregate(Visit visit, TIntermAggregate* node)
         default:
             break;
     }
-    return true;
-}
-
-bool DetectRecursion::visitLoop(Visit, TIntermLoop*)
-{
-    return true;
-}
-
-bool DetectRecursion::visitBranch(Visit, TIntermBranch*)
-{
     return true;
 }
 

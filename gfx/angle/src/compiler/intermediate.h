@@ -410,8 +410,8 @@ protected:
 //
 class TIntermUnary : public TIntermOperator {
 public:
-    TIntermUnary(TOperator o, TType& t) : TIntermOperator(o, t), operand(0) {}
-    TIntermUnary(TOperator o) : TIntermOperator(o), operand(0) {}
+    TIntermUnary(TOperator o, TType& t) : TIntermOperator(o, t), operand(0), useEmulatedFunction(false) {}
+    TIntermUnary(TOperator o) : TIntermOperator(o), operand(0), useEmulatedFunction(false) {}
 
     virtual void traverse(TIntermTraverser*);
     virtual TIntermUnary* getAsUnaryNode() { return this; }
@@ -420,8 +420,12 @@ public:
     TIntermTyped* getOperand() { return operand; }    
     bool promote(TInfoSink&);
 
+    void setUseEmulatedFunction() { useEmulatedFunction = true; }
+    bool getUseEmulatedFunction() { return useEmulatedFunction; }
+
 protected:
     TIntermTyped* operand;
+    bool useEmulatedFunction; // if set to true, replace the function call by an emulated one.
 };
 
 typedef TVector<TIntermNode*> TIntermSequence;
