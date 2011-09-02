@@ -542,6 +542,10 @@ public:
   }
 
   static nsGlobalWindow* GetInnerWindowWithId(PRUint64 aInnerWindowID) {
+    if (!sWindowsById) {
+      return nsnull;
+    }
+
     nsGlobalWindow* innerWindow = sWindowsById->Get(aInnerWindowID);
     return innerWindow && innerWindow->IsInnerWindow() ? innerWindow : nsnull;
   }
