@@ -175,6 +175,9 @@ let UI = {
       // ___ storage
       Storage.init();
 
+      // ___ storage policy
+      StoragePolicy.init();
+
       if (Storage.readWindowBusyState(gWindow))
         this.storageBusy();
 
@@ -280,13 +283,16 @@ let UI = {
       gWindow.addEventListener("SSWindowClosing", function onWindowClosing() {
         gWindow.removeEventListener("SSWindowClosing", onWindowClosing, false);
 
+        // XXX bug #635975 - don't unlink the tab if the dom window is closing.
         self.isDOMWindowClosing = true;
 
         if (self.isTabViewVisible())
           GroupItems.removeHiddenGroups();
 
+        TabItems.saveAll();
+        TabItems.saveAllThumbnails({synchronously: true});
+
         Storage.saveActiveGroupName(gWindow);
-        TabItems.saveAll(true);
         self._save();
       }, false);
 
@@ -323,7 +329,7 @@ let UI = {
     TabItems.uninit();
     GroupItems.uninit();
     Storage.uninit();
-    ThumbnailStorage.uninit();
+    StoragePolicy.uninit();
 
     this._removeTabActionHandlers();
     this._currentTab = null;
@@ -713,6 +719,11 @@ let UI = {
         if (data == "enter" || data == "exit") {
           hideSearch();
           self._privateBrowsing.transitionMode = data;
+
+          // make sure to save all thumbnails that haven't been saved yet
+          // before we enter the private browsing mode
+          if (data == "enter")
+            TabItems.saveAllThumbnails({synchronously: true});
         }
       } else if (topic == "private-browsing-transition-complete") {
         // We use .transitionMode here, as aData is empty.
