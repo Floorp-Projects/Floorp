@@ -5875,6 +5875,12 @@ nsDocument::GetUserData(const nsAString & key,
 }
 
 NS_IMETHODIMP
+nsDocument::Contains(nsIDOMNode* aOther, PRBool* aReturn)
+{
+  return nsINode::Contains(aOther, aReturn);
+}
+
+NS_IMETHODIMP
 nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 {
   if (mHaveInputEncoding) {
