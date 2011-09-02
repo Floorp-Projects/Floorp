@@ -5,6 +5,7 @@
 %define color_background_default_window #fff
 %define color_background_default rgba(255,255,255,0.95)
 %define color_text_default #222222
+%define color_toolbar_background #eaeaea
 %define color_divider_border #333333
 %define color_button_border rgb(207,207,207)
 %define color_background_dialog #fff
