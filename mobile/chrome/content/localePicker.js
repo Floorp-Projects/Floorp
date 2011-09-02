@@ -214,6 +214,8 @@ let LocaleUI = {
   },
 
   closeWindow : function() {
+    var buildID =  Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).platformBuildID;
+    Services.prefs.setCharPref("extensions.compatability.locales.buildid", buildID);
     // Trying to close this window and open a new one results in a corrupt UI.
     if (LocaleUI._currentInstall) {
       // a new locale was installed, restart the browser
