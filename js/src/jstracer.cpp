@@ -2301,6 +2301,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
     JS_ASSERT(globalObj->hasOwnShape());
     JS_ASSERT(cx->regs().pc == (jsbytecode*)fragment->ip);
 
+#ifdef JS_ION
+    JS_NOT_REACHED("Tracer is not compatible with Ion");
+#endif
+
 #ifdef JS_METHODJIT
     if (TRACE_PROFILER(cx))
         AbortProfiling(cx);
