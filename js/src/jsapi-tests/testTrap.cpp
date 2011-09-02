@@ -30,12 +30,12 @@ BEGIN_TEST(testTrap_gc)
         ;
 
     // compile
-    JSObject *scriptObj = JS_CompileScript(cx, global, source, strlen(source), __FILE__, 1);
-    CHECK(scriptObj);
+    JSScript *script = JS_CompileScript(cx, global, source, strlen(source), __FILE__, 1);
+    CHECK(script);
 
     // execute
     jsvalRoot v2(cx);
-    CHECK(JS_ExecuteScript(cx, global, scriptObj, v2.addr()));
+    CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
     CHECK(JSVAL_IS_OBJECT(v2));
     CHECK_EQUAL(emptyTrapCallCount, 0);
 
@@ -51,7 +51,6 @@ BEGIN_TEST(testTrap_gc)
     // JS_ExecuteScript. This way we avoid using Anchor.
     JSString *trapClosure;
     {
-        JSScript *script = JS_GetScriptFromObject(scriptObj);
         jsbytecode *line2 = JS_LineNumberToPC(cx, script, 1);
         CHECK(line2);
 
@@ -69,7 +68,7 @@ BEGIN_TEST(testTrap_gc)
     }
 
     // execute
-    CHECK(JS_ExecuteScript(cx, global, scriptObj, v2.addr()));
+    CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
     CHECK_EQUAL(emptyTrapCallCount, 11);
 
     JS_GC(cx);

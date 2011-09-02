@@ -48,9 +48,9 @@ using namespace mozilla::scache;
 
 static nsresult
 ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
-                     JSObject **scriptObj)
+                     JSScript **script)
 {
-    *scriptObj = nsnull;
+    *script = nsnull;
 
     PRUint32 size;
     nsresult rv = stream->Read32(&size);
@@ -66,7 +66,7 @@ ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
     xdr->userdata = stream;
     JS_XDRMemSetData(xdr, data, size);
 
-    if (!JS_XDRScriptObject(xdr, scriptObj)) {
+    if (!JS_XDRScript(xdr, script)) {
         rv = NS_ERROR_FAILURE;
     }
 
@@ -103,7 +103,7 @@ ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
 }
 
 static nsresult
-WriteScriptToStream(JSContext *cx, JSObject *scriptObj,
+WriteScriptToStream(JSContext *cx, JSScript *script,
                     nsIObjectOutputStream *stream)
 {
     JSXDRState *xdr = JS_XDRNewMem(cx, JSXDR_ENCODE);
@@ -112,7 +112,7 @@ WriteScriptToStream(JSContext *cx, JSObject *scriptObj,
     xdr->userdata = stream;
     nsresult rv = NS_OK;
 
-    if (JS_XDRScriptObject(xdr, &scriptObj)) {
+    if (JS_XDRScript(xdr, &script)) {
         // Get the encoded JSXDRState data and write it.  The JSXDRState owns
         // this buffer memory and will free it beneath ::JS_XDRDestroy.
         //
@@ -145,7 +145,7 @@ WriteScriptToStream(JSContext *cx, JSObject *scriptObj,
 }
 
 nsresult
-ReadCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx, JSObject **scriptObj)
+ReadCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx, JSScript **script)
 {
     nsresult rv;
 
@@ -162,11 +162,11 @@ ReadCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx, JSObject *
     NS_ENSURE_SUCCESS(rv, rv);
     buf.forget();
 
-    return ReadScriptFromStream(cx, ois, scriptObj);
+    return ReadScriptFromStream(cx, ois, script);
 }
 
 nsresult
-WriteCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx, JSObject *scriptObj)
+WriteCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx, JSScript *script)
 {
     nsresult rv;
 
@@ -177,7 +177,7 @@ WriteCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx, JSObject 
                                              true);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = WriteScriptToStream(cx, scriptObj, oos);
+    rv = WriteScriptToStream(cx, script, oos);
     oos->Close();
     NS_ENSURE_SUCCESS(rv, rv);
 

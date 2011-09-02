@@ -835,7 +835,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
         return NS_ERROR_FAILURE;
 
 
-    JSObject *scriptObj = nsnull;
+    JSScript *script = nsnull;
 
     // Before compiling the script, first check to see if we have it in
     // the startupcache.  Note: as a rule, startupcache errors are not fatal
@@ -849,7 +849,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (cache) {
-        rv = ReadCachedScript(cache, cachePath, cx, &scriptObj);
+        rv = ReadCachedScript(cache, cachePath, cx, &script);
         if (NS_SUCCEEDED(rv)) {
             LOG(("Successfully loaded %s from startupcache\n", nativePath.get()));
         } else {
@@ -860,7 +860,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
         }
     }
 
-    if (!scriptObj) {
+    if (!script) {
         // The script wasn't in the cache , so compile it now.
         LOG(("Slow loading %s\n", nativePath.get()));
 
@@ -919,7 +919,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FAILURE;
             }
 
-            scriptObj = JS_CompileScriptForPrincipalsVersion(
+            script = JS_CompileScriptForPrincipalsVersion(
               cx, global, jsPrincipals, buf, fileSize32, nativePath.get(), 1,
               JSVERSION_LATEST);
 
@@ -939,7 +939,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FILE_NOT_FOUND;
             }
 
-            scriptObj = JS_CompileFileHandleForPrincipalsVersion(
+            script = JS_CompileFileHandleForPrincipalsVersion(
               cx, global, nativePath.get(), fileHandle, jsPrincipals, JSVERSION_LATEST);
 
             /* JS will close the filehandle after compilation is complete. */
@@ -975,20 +975,20 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
             buf[len] = '\0';
 
-            scriptObj = JS_CompileScriptForPrincipalsVersion(
+            script = JS_CompileScriptForPrincipalsVersion(
               cx, global, jsPrincipals, buf, bytesRead, nativePath.get(), 1,
               JSVERSION_LATEST);
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
         JS_SetOptions(cx, oldopts);
-        if (!scriptObj && exception) {
+        if (!script && exception) {
             JS_GetPendingException(cx, exception);
             JS_ClearPendingException(cx);
         }
     }
 
-    if (!scriptObj) {
+    if (!script) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
                 nativePath.get());
@@ -1003,7 +1003,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
     if (writeToCache) {
         // We successfully compiled the script, so cache it. 
-        rv = WriteCachedScript(cache, cachePath, cx, scriptObj);
+        rv = WriteCachedScript(cache, cachePath, cx, script);
 
         // Don't treat failure to write as fatal, since we might be working
         // with a read-only cache.
@@ -1018,7 +1018,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // See bug 384168.
     *aGlobal = global;
 
-    if (!JS_ExecuteScriptVersion(cx, global, scriptObj, NULL, JSVERSION_LATEST)) {
+    if (!JS_ExecuteScriptVersion(cx, global, script, NULL, JSVERSION_LATEST)) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif

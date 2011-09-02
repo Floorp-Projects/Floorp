@@ -42,7 +42,7 @@ struct VersionFixture : public JSAPITest
                                  EvalScriptVersion16, 0, 0);
     }
 
-    JSObject *fakeScript(const char *contents, size_t length) {
+    JSScript *fakeScript(const char *contents, size_t length) {
         return JS_CompileScript(cx, global, contents, length, "<test>", 1);
     }
 
@@ -75,9 +75,9 @@ struct VersionFixture : public JSAPITest
 
     /* Check that script compilation results in a version without XML. */
     bool checkNewScriptNoXML() {
-        JSObject *scriptObj = fakeScript("", 0);
-        CHECK(scriptObj);
-        CHECK(!hasXML(JS_GetScriptFromObject(scriptObj)->getVersion()));
+        JSScript *script = fakeScript("", 0);
+        CHECK(script);
+        CHECK(!hasXML(script->getVersion()));
         return true;
     }
 
@@ -196,9 +196,9 @@ BEGIN_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
         "disableXMLOption();"
         "callSetVersion17();"
         "checkNewScriptNoXML();";
-    JSObject *toActivate = fakeScript(toActivateChars, sizeof(toActivateChars) - 1);
+    JSScript *toActivate = fakeScript(toActivateChars, sizeof(toActivateChars) - 1);
     CHECK(toActivate);
-    CHECK(hasXML(JS_GetScriptFromObject(toActivate)));
+    CHECK(hasXML(toActivate));
 
     disableXML();
 
