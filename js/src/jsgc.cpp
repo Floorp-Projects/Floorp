@@ -1620,7 +1620,7 @@ GCMarker::markDelayedChildren()
 
 #ifdef DEBUG
 static void
-EmptyMarkCallback(JSTracer *trc, void *thing, uint32 kind)
+EmptyMarkCallback(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
 }
 #endif
