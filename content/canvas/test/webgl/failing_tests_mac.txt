@@ -6,6 +6,7 @@ conformance/gl-getshadersource.html
 conformance/gl-object-get-calls.html
 conformance/glsl-conformance.html
 conformance/glsl-long-variable-names.html
+conformance/invalid-passed-params.html
 conformance/premultiplyalpha-test.html
 conformance/program-test.html
 conformance/read-pixels-test.html
