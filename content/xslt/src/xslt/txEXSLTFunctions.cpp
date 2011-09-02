@@ -47,15 +47,12 @@
 #include "txRtfHandler.h"
 #include "txXPathTreeWalker.h"
 #include "nsPrintfCString.h"
-
-#ifndef TX_EXE
 #include "nsComponentManagerUtils.h"
 #include "nsContentCID.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"
 #include "txMozillaXMLOutput.h"
-#endif
 
 class txStylesheetCompilerState;
 
@@ -76,9 +73,6 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
 
     const txXPathNode& document = es->getSourceDocument();
 
-#ifdef TX_EXE
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
     nsCOMPtr<nsIDOMDocumentFragment> domFragment;
     nsresult rv = NS_NewDocumentFragment(getter_AddRefs(domFragment),
@@ -102,7 +96,6 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
     aRtf->setNode(node);
 
     return NS_OK;
-#endif
 }
 
 static nsresult
@@ -119,9 +112,6 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
 
     const txXPathNode& document = es->getSourceDocument();
 
-#ifdef TX_EXE
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
     nsCOMPtr<nsIContent> text;
     nsresult rv = NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
@@ -134,10 +124,8 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
     NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
-#endif
 }
 
-#ifndef TX_EXE
 static nsresult
 createDocFragment(txIEvalContext *aContext, nsIContent** aResult)
 {
@@ -195,7 +183,6 @@ createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
 
     return NS_OK;
 }
-#endif
 
 // Need to update this array if types are added to the ResultType enum in
 // txAExprResult.

@@ -758,10 +758,10 @@ nsSMILTimedElement::Rewind()
                     mSeekState == SEEK_BACKWARD_FROM_ACTIVE,
                     "Rewind in the middle of a forwards seek?");
 
-  ClearIntervals();
-  // ClearIntervals puts us in to the POSTACTIVE state but we're doing a full
-  // rewind so go back to the startup state
+  // Putting us in the startup state will ensure we skip doing any interval
+  // updates
   mElementState = STATE_STARTUP;
+  ClearIntervals();
 
   UnsetBeginSpec(RemoveNonDynamic);
   UnsetEndSpec(RemoveNonDynamic);
@@ -784,6 +784,8 @@ nsSMILTimedElement::Rewind()
 
   mPrevRegisteredMilestone = sMaxMilestone;
   RegisterMilestone();
+  NS_ABORT_IF_FALSE(!mCurrentInterval,
+                    "Current interval is set at end of rewind");
 }
 
 namespace
@@ -1332,7 +1334,9 @@ nsSMILTimedElement::ClearSpecs(TimeValueSpecList& aSpecs,
 void
 nsSMILTimedElement::ClearIntervals()
 {
-  mElementState = STATE_POSTACTIVE;
+  if (mElementState != STATE_STARTUP) {
+    mElementState = STATE_POSTACTIVE;
+  }
   mCurrentRepeatIteration = 0;
   ResetCurrentInterval();
 
@@ -1684,14 +1688,15 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
       // a) We never had any end attribute to begin with (and hence we should
       //    just use the active duration after allowing for the possibility of
       //    an end instance provided by a DOM call), OR
-      // b) We have an end attribute but no end instances--this is a special
-      //    case that is needed for syncbase timing so that animations of the
-      //    following sort: <animate id="a" end="a.begin+1s" ... /> can be
-      //    resolved (see SVGT 1.2 Test Suite animate-elem-221-t.svg) by first
-      //    establishing an interval of unresolved duration, OR
+      // b) We have no resolved (not incl. indefinite) end instances
+      //    (SMIL only says "if the instance list is empty"--but if we have
+      //    indefinite/unresolved instance times then there must be a good
+      //    reason we haven't used them (since they'll be >= tempBegin) such as
+      //    avoiding creating a self-referential loop. In any case, the interval
+      //    should be allowed to be open.), OR
       // c) We have end events which leave the interval open-ended.
       PRBool openEndedIntervalOk = mEndSpecs.IsEmpty() ||
-                                   mEndInstances.IsEmpty() ||
+                                   !HaveResolvedEndTimes() ||
                                    EndHasEventConditions();
       if (!tempEnd && !openEndedIntervalOk)
         return PR_FALSE; // Bad interval
@@ -2246,6 +2251,17 @@ nsSMILTimedElement::GetPreviousInterval() const
   return mOldIntervals.IsEmpty()
     ? nsnull
     : mOldIntervals[mOldIntervals.Length()-1].get();
+}
+
+PRBool
+nsSMILTimedElement::HaveResolvedEndTimes() const
+{
+  if (mEndInstances.IsEmpty())
+    return PR_FALSE;
+
+  // mEndInstances is sorted so if the first time is not resolved then none of
+  // them are
+  return mEndInstances[0]->Time().IsResolved();
 }
 
 PRBool

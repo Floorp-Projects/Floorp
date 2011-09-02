@@ -182,6 +182,7 @@ var Browser = {
     /* handles web progress management for open browsers */
     Elements.browsers.webProgress = new Browser.WebProgress();
 
+    this.keyFilter = new KeyFilter(Elements.browsers);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule(Elements.browsers);
     let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
@@ -1017,11 +1018,7 @@ var Browser = {
 
     let snappedX = 0;
 
-    // determine browser dir first to know which direction to snap to
-    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                      getService(Ci.nsIXULChromeRegistry);
-    let dirVal = chromeReg.isLocaleRTL("global") ? -1 : 1;
-
+    let dirVal = Util.localeDir;
     if (leftvis != 0 && leftvis != 1) {
       if (leftvis >= 0.6666) {
         snappedX = -((1 - leftvis) * leftw) * dirVal;
@@ -1229,14 +1226,19 @@ var Browser = {
         break;
       }
 
-      case "Browser:KeyPress":
+      case "Browser:KeyPress": {
+        let keyset = document.getElementById("mainKeyset");
+        keyset.setAttribute("disabled", "false");
+        if (json.preventDefault)
+          break;
+
         let event = document.createEvent("KeyEvents");
         event.initKeyEvent("keypress", true, true, null,
                            json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
                            json.keyCode, json.charCode);
-        document.getElementById("mainKeyset").dispatchEvent(event);
+        keyset.dispatchEvent(event);
         break;
-
+      }
       case "Browser:ZoomToPoint:Return":
         if (json.zoomTo) {
           let rect = Rect.fromRect(json.zoomTo);
@@ -1469,7 +1471,7 @@ Browser.MainDragger.prototype = {
         let [tabsSidebar, controlsSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
 
         // Check if the sidebars are inverted (rtl)
-        let direction = (tabsSidebar.left > controlsSidebar.left) ? 1 : -1;
+        let direction = -1 * Util.localeDir;
         x = Math.round(tabsW * tabsVis) * direction
       }
 
@@ -1976,6 +1978,31 @@ const ContentTouchHandler = {
   }
 };
 
+
+/** Prevent chrome from consuming key events before remote content has a chance. */
+function KeyFilter(container) {
+  container.addEventListener("keypress", this, false);
+  container.addEventListener("keyup", this, false);
+  container.addEventListener("keydown", this, false);
+}
+
+KeyFilter.prototype = {
+  handleEvent: function handleEvent(aEvent) {
+    if (Elements.contentShowing.getAttribute("disabled") == "true")
+      return;
+
+    let browser = getBrowser();
+    if (browser && browser.active && browser.getAttribute("remote") == "true") {
+        document.getElementById("mainKeyset").setAttribute("disabled", "true");
+    }
+  },
+
+  toString: function toString() {
+    return "[KeyFilter] { }";
+  }
+};
+
+
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
  */
@@ -2184,7 +2211,7 @@ IdentityHandler.prototype = {
     Elements.contentShowing.setAttribute("disabled", "true");
 
     // dismiss any dialog which hide the identity popup
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
     while (BrowserUI.activeDialog)
       BrowserUI.activeDialog.close();
 

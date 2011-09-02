@@ -1364,7 +1364,7 @@ typedef struct JSCountHeapNode JSCountHeapNode;
 
 struct JSCountHeapNode {
     void                *thing;
-    int32               kind;
+    JSGCTraceKind       kind;
     JSCountHeapNode     *next;
 };
 
@@ -1377,7 +1377,7 @@ typedef struct JSCountHeapTracer {
 } JSCountHeapTracer;
 
 static void
-CountHeapNotify(JSTracer *trc, void *thing, uint32 kind)
+CountHeapNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     JSCountHeapTracer *countTracer;
     JSDHashEntryStub *entry;
@@ -1419,7 +1419,7 @@ static JSBool
 CountHeap(JSContext *cx, uintN argc, jsval *vp)
 {
     void* startThing;
-    int32 startTraceKind;
+    JSGCTraceKind startTraceKind;
     jsval v;
     int32 traceKind, i;
     JSString *str;
@@ -1440,7 +1440,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     };
 
     startThing = NULL;
-    startTraceKind = 0;
+    startTraceKind = JSTRACE_OBJECT;
     if (argc > 0) {
         v = JS_ARGV(cx, vp)[0];
         if (JSVAL_IS_TRACEABLE(v)) {
@@ -2370,7 +2370,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     void* startThing;
-    uint32 startTraceKind;
+    JSGCTraceKind startTraceKind;
     const char *badTraceArg;
     void *thingToFind;
     size_t maxDepth;
@@ -2396,7 +2396,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     startThing = NULL;
-    startTraceKind = 0;
+    startTraceKind = JSTRACE_OBJECT;
     if (argc > 1) {
         v = JS_ARGV(cx, vp)[1];
         if (JSVAL_IS_TRACEABLE(v)) {

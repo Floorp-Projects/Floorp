@@ -134,9 +134,65 @@ function ContentPrefService() {
   // was due to a temporary condition (like being out of disk space).
   this._dbInit();
 
+  // detect if we are in private browsing mode
+  this._inPrivateBrowsing = false;
+  try { // The Private Browsing service might not be available.
+    var pbs = Cc["@mozilla.org/privatebrowsing;1"].
+                getService(Ci.nsIPrivateBrowsingService);
+    this._inPrivateBrowsing = pbs.privateBrowsingEnabled;
+  } catch (e) {}
+  this._observerSvc.addObserver(this, "private-browsing", false);
+
   // Observe shutdown so we can shut down the database connection.
   this._observerSvc.addObserver(this, "xpcom-shutdown", false);
 }
+
+var inMemoryPrefsProto = {
+  getPref: function(aName, aGroup) {
+    aGroup = aGroup || "__GlobalPrefs__";
+
+    if (this._prefCache[aGroup] && this._prefCache[aGroup].hasOwnProperty(aName)) {
+      let value = this._prefCache[aGroup][aName];
+      return [true, value];
+    }
+    return [false, undefined];
+  },
+
+  setPref: function(aName, aValue, aGroup) {
+    if (typeof aValue == "boolean")
+      aValue = aValue ? 1 : 0;
+    else if (aValue === undefined)
+      aValue = null;
+
+    this.cachePref(aName, aValue, aGroup);
+  },
+
+  removePref: function(aName, aGroup) {
+    aGroup = aGroup || "__GlobalPrefs__";
+
+    if (this._prefCache[aGroup].hasOwnProperty(aName)) {
+      delete this._prefCache[aGroup][aName];
+      if (Object.keys(this._prefCache[aGroup]).length == 0) {
+        // remove empty group
+        delete this._prefCache[aGroup];
+      }
+    }
+  },
+
+  invalidate: function(aKeepGlobal) {
+    if (!aKeepGlobal) {
+      this._prefCache = {};
+      return;
+    }
+
+    if (this._prefCache.hasOwnProperty("__GlobalPrefs__")) {
+      let globals = this._prefCache["__GlobalPrefs__"];
+      this._prefCache = {"__GlobalPrefs__": globals};
+    } else {
+      this._prefCache = {};
+    }
+  }
+};
 
 ContentPrefService.prototype = {
   //**************************************************************************//
@@ -183,6 +239,7 @@ ContentPrefService.prototype = {
 
   _destroy: function ContentPrefService__destroy() {
     this._observerSvc.removeObserver(this, "xpcom-shutdown");
+    this._observerSvc.removeObserver(this, "private-browsing");
 
     // Finalize statements which may have been used asynchronously.
     if (this.__stmtSelectPref)
@@ -210,6 +267,17 @@ ContentPrefService.prototype = {
       case "xpcom-shutdown":
         this._destroy();
         break;
+      case "private-browsing":
+        switch (data) {
+          case "enter":
+            this._inPrivateBrowsing = true;
+            break;
+          case "exit":
+            this._inPrivateBrowsing = false;
+            this._privModeStorage.invalidate();
+            break;
+        }
+        break;
     }
   },
 
@@ -217,71 +285,86 @@ ContentPrefService.prototype = {
   //**************************************************************************//
   // Prefs cache
 
-  _cache: {
-    _prefCache: {},
-
-    cachePref: function(aName, aValue, aGroup) {
-      aGroup = aGroup || "__GlobalPrefs__";
-
-      if (!this._prefCache[aGroup]) {
-        this._possiblyCleanCache();
-        this._prefCache[aGroup] = {};
-      }
-
-      this._prefCache[aGroup][aName] = aValue;
+  _cache: Object.create(inMemoryPrefsProto, {
+    _prefCache: { 
+      value: {}, configurable: true, writable: true, enumerable: true
     },
 
-    getPref: function(aName, aGroup) {
-      aGroup = aGroup || "__GlobalPrefs__";
+    cachePref: { value:
+      function(aName, aValue, aGroup) {
+        aGroup = aGroup || "__GlobalPrefs__";
 
-      if (this._prefCache[aGroup] && this._prefCache[aGroup].hasOwnProperty(aName)) {
-        let value = this._prefCache[aGroup][aName];
-        return [true, value];
-      }
-      return [false, undefined];
-    },
-
-    setPref: function(aName, aValue, aGroup) {
-      if (typeof aValue == "boolean")
-        aValue = aValue ? 1 : 0;
-      else if (aValue === undefined)
-        aValue = null;
-
-      this.cachePref(aName, aValue, aGroup);
-    },
-
-    removePref: function(aName, aGroup) {
-      aGroup = aGroup || "__GlobalPrefs__";
-
-      if (this._prefCache[aGroup].hasOwnProperty(aName)) {
-        delete this._prefCache[aGroup][aName];
-        if (Object.keys(this._prefCache[aGroup]).length == 0) {
-          // remove empty group
-          delete this._prefCache[aGroup];
+        if (!this._prefCache[aGroup]) {
+          this._possiblyCleanCache();
+          this._prefCache[aGroup] = {};
         }
-      }
+
+        this._prefCache[aGroup][aName] = aValue;
+      },
     },
 
-    invalidate: function() {
-      this._prefCache = {};
-    },
+    _possiblyCleanCache: { value:
+      function() {
+        let groupCount = Object.keys(this._prefCache).length;
 
-    _possiblyCleanCache: function() {
-      let groupCount = Object.keys(this._prefCache).length;
+        if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
+          // Clean half of the entries
+          for (let entry in this._prefCache) {
+            delete this._prefCache[entry];
+            groupCount--;
 
-      if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
-        // Clean half of the entries
-        for (let entry in this._prefCache) {
-          delete this._prefCache[entry];
-          groupCount--;
-
-          if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2)
-            break;
+            if (groupCount < CACHE_MAX_GROUP_ENTRIES / 2)
+              break;
+          }
         }
       }
     }
-  },
+  }),
 
+  //**************************************************************************//
+  // Private mode storage
+  _privModeStorage: Object.create(inMemoryPrefsProto, {
+    _prefCache: { 
+      value: {}, configurable: true, writable: true, enumerable: true
+    },
+
+    cachePref: { value: 
+      function(aName, aValue, aGroup) {
+        aGroup = aGroup || "__GlobalPrefs__";
+
+        if (!this._prefCache[aGroup]) {
+          this._prefCache[aGroup] = {};
+        }
+
+        this._prefCache[aGroup][aName] = aValue;
+      }
+    },
+
+    getPrefs: { value: 
+      function(aGroup) {
+        aGroup = aGroup || "__GlobalPrefs__";
+        if (this._prefCache[aGroup]) {
+          return [true, this._prefCache[aGroup]];
+        }
+        return [false, undefined];
+      }
+    },
+
+    groupsForName: { value: 
+      function(aName) {
+        var res = [];
+        for (let entry in this._prefCache) {
+          if (this._prefCache[entry]) {
+            if (entry === "__GlobalPrefs__") {
+              entry = null;
+            }
+            res.push(entry);
+          }
+        }
+        return res;
+      }
+    }
+  }),
 
   //**************************************************************************//
   // nsIContentPrefService
@@ -292,6 +375,20 @@ ContentPrefService.prototype = {
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
 
     var group = this._parseGroupParam(aGroup);
+
+    if (this._inPrivateBrowsing) {
+      let [haspref, value] = this._privModeStorage.getPref(aName, group);
+      if (haspref) {
+        if (aCallback) {
+          this._scheduleCallback(function(){aCallback.onResult(value);});
+          return;
+        }
+        return value;
+      }
+      // if we don't have a pref specific to this private mode browsing
+      // session, to try to get one from normal mode
+    }
+
     if (group == null)
       return this._selectGlobalPref(aName, aCallback);
     return this._selectPref(group, aName, aCallback);
@@ -304,20 +401,16 @@ ContentPrefService.prototype = {
       if (currentValue == aValue)
         return;
     }
-    else {
-      // If we are in private browsing mode, refuse to set new prefs
-      var inPrivateBrowsing = false;
-      try { // The Private Browsing service might not be available.
-        var pbs = Cc["@mozilla.org/privatebrowsing;1"].
-                  getService(Ci.nsIPrivateBrowsingService);
-        inPrivateBrowsing = pbs.privateBrowsingEnabled;
-      } catch (e) {}
-      if (inPrivateBrowsing)
-        return;
+
+    var group = this._parseGroupParam(aGroup);
+
+    if (this._inPrivateBrowsing) {
+      this._privModeStorage.setPref(aName, aValue, group);
+      this._notifyPrefSet(group, aName, aValue);
+      return;
     }
 
     var settingID = this._selectSettingID(aName) || this._insertSetting(aName);
-    var group = this._parseGroupParam(aGroup);
     var groupID, prefID;
     if (group == null) {
       groupID = null;
@@ -335,14 +428,8 @@ ContentPrefService.prototype = {
       this._insertPref(groupID, settingID, aValue);
 
     this._cache.setPref(aName, aValue, group);
-    for each (var observer in this._getObservers(aName)) {
-      try {
-        observer.onContentPrefSet(group, aName, aValue);
-      }
-      catch(ex) {
-        Cu.reportError(ex);
-      }
-    }
+
+    this._notifyPrefSet(group, aName, aValue);
   },
 
   hasPref: function ContentPrefService_hasPref(aGroup, aName) {
@@ -357,7 +444,8 @@ ContentPrefService.prototype = {
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
 
     let group = this._parseGroupParam(aGroup);
-    let [cached,] = this._cache.getPref(aName, group);
+    let storage = this._inPrivateBrowsing? this._privModeStorage: this._cache;
+    let [cached,] = storage.getPref(aName, group);
     return cached;
   },
 
@@ -366,9 +454,15 @@ ContentPrefService.prototype = {
     if (!this.hasPref(aGroup, aName))
       return;
 
+    var group = this._parseGroupParam(aGroup);
+
+    if (this._inPrivateBrowsing) {
+      this._privModeStorage.removePref(aName, group);
+      this._notifyPrefRemoved(group, aName);
+      return;
+    }
 
     var settingID = this._selectSettingID(aName);
-    var group = this._parseGroupParam(aGroup);
     var groupID, prefID;
     if (group == null) {
       groupID = null;
@@ -391,7 +485,12 @@ ContentPrefService.prototype = {
   },
 
   removeGroupedPrefs: function ContentPrefService_removeGroupedPrefs() {
-    this._cache.invalidate();
+    // will not delete global preferences
+    if (this._inPrivateBrowsing) {
+        // keep only global prefs
+        this._privModeStorage.invalidate(true);
+    }
+    this._cache.invalidate(true);
     this._dbConnection.beginTransaction();
     try {
       this._dbConnection.executeSimpleSQL("DELETE FROM prefs WHERE groupID IS NOT NULL");
@@ -412,6 +511,15 @@ ContentPrefService.prototype = {
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
+
+    if (this._inPrivateBrowsing) {
+      let groupNames = this._privModeStorage.groupsForName(aName);
+      for (var i = 0; i < groupNames.length; i++) {
+        let groupName = groupNames[i];
+        this._privModeStorage.removePref(aName, groupName);
+        this._notifyPrefRemoved(groupName, aName);
+      }
+    }
 
     var settingID = this._selectSettingID(aName);
     if (!settingID)
@@ -447,14 +555,28 @@ ContentPrefService.prototype = {
 
     for (var i = 0; i < groupNames.length; i++) {
       this._cache.removePref(aName, groupNames[i]);
-      this._notifyPrefRemoved(groupNames[i], aName);
       if (groupNames[i]) // ie. not null, which will be last (and i == groupIDs.length)
         this._deleteGroupIfUnused(groupIDs[i]);
+      if (!this._inPrivateBrowsing) {
+        this._notifyPrefRemoved(groupNames[i], aName);
+      }
     }
   },
 
   getPrefs: function ContentPrefService_getPrefs(aGroup) {
     var group = this._parseGroupParam(aGroup);
+    if (this._inPrivateBrowsing) {
+        let prefs = Cc["@mozilla.org/hash-property-bag;1"].
+                    createInstance(Ci.nsIWritablePropertyBag);
+        let [hasbranch,properties] = this._privModeStorage.getPrefs(group);
+        for (let entry in properties) {
+          if (properties.hasOwnProperty(entry)) {
+            prefs.setProperty(entry, properties[entry]);
+          }
+        }
+        return prefs;
+    }
+
     if (group == null)
       return this._selectGlobalPrefs();
     return this._selectPrefs(group);
@@ -465,8 +587,23 @@ ContentPrefService.prototype = {
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
 
+    if (this._inPrivateBrowsing) {
+      let prefs = Cc["@mozilla.org/hash-property-bag;1"].
+                  createInstance(Ci.nsIWritablePropertyBag);
+      let groupNames = this._privModeStorage.groupsForName(aName);
+      for (var i = 0; i < groupNames.length; i++) {
+        let groupName = groupNames[i];
+        prefs.setProperty(groupName,
+                          this._privModeStorage.getPref(aName, groupName)[1]);
+      }
+      return prefs;
+    }
+
     return this._selectPrefsByName(aName);
   },
+
+  // boolean to indicate if we are in private browsing mode
+  _inPrivateBrowsing: false,
 
   // A hash of arrays of observers, indexed by setting name.
   _observers: {},
@@ -530,6 +667,17 @@ ContentPrefService.prototype = {
     }
   },
 
+  _notifyPrefSet: function ContentPrefService__notifyPrefSet(aGroup, aName, aValue) {
+    for each (var observer in this._getObservers(aName)) {
+      try {
+        observer.onContentPrefSet(aGroup, aName, aValue);
+      }
+      catch(ex) {
+        Cu.reportError(ex);
+      }
+    }
+  },
+
   _grouper: null,
   get grouper() {
     if (!this._grouper)
@@ -567,7 +715,6 @@ ContentPrefService.prototype = {
   },
 
   _selectPref: function ContentPrefService__selectPref(aGroup, aSetting, aCallback) {
-
     let [cached, value] = this._cache.getPref(aSetting, aGroup);
     if (cached) {
       if (aCallback) {
@@ -617,7 +764,6 @@ ContentPrefService.prototype = {
   },
 
   _selectGlobalPref: function ContentPrefService__selectGlobalPref(aName, aCallback) {
-
     let [cached, value] = this._cache.getPref(aName, null);
     if (cached) {
       if (aCallback) {

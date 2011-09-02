@@ -1207,6 +1207,22 @@ NS_INTERFACE_MAP_BEGIN(WebGLExtension)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
 NS_INTERFACE_MAP_END
 
+/* readonly attribute WebGLsizei drawingBufferWidth; */
+NS_IMETHODIMP
+WebGLContext::GetDrawingBufferWidth(WebGLsizei *aWidth)
+{
+    *aWidth = mWidth;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLsizei drawingBufferHeight; */
+NS_IMETHODIMP
+WebGLContext::GetDrawingBufferHeight(WebGLsizei *aHeight)
+{
+    *aHeight = mHeight;
+    return NS_OK;
+}
+
 /* [noscript] attribute WebGLint location; */
 NS_IMETHODIMP
 WebGLUniformLocation::GetLocation(WebGLint *aLocation)

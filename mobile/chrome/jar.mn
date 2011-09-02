@@ -20,7 +20,7 @@ chrome.jar:
 * content/common-ui.js                 (content/common-ui.js)
 * content/AlertsHelper.js              (content/AlertsHelper.js)
   content/AppMenu.js                   (content/AppMenu.js)
-  content/AwesomePanel.js              (content/AwesomePanel.js)
+* content/AwesomePanel.js              (content/AwesomePanel.js)
   content/BookmarkHelper.js            (content/BookmarkHelper.js)
   content/BookmarkPopup.js             (content/BookmarkPopup.js)
   content/ContentPopupHelper.js        (content/ContentPopupHelper.js)

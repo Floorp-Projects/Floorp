@@ -4485,7 +4485,6 @@ MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
-MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
@@ -4541,8 +4540,6 @@ MOZ_ARG_ENABLE_STRING(application,
                           Options include:
                             browser (Firefox)
                             xulrunner
-                            content/xslt (Standalone Transformiix XSLT)
-                            netwerk (Standalone Necko)
                             tools/update-packaging (AUS-related packaging tools)],
 [ MOZ_BUILD_APP=$enableval ] )
 
@@ -4616,11 +4613,6 @@ browser)
 xulrunner)
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
-
-content/xslt)
-  AC_DEFINE(TX_EXE)
-  ;;
-
 esac
 
 AC_SUBST(MOZ_BUILD_APP)
@@ -8543,7 +8535,6 @@ AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SMIL)
-AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)

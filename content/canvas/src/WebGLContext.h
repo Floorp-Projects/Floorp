@@ -428,6 +428,16 @@ protected:
     void UndoFakeVertexAttrib0();
     void InvalidateFakeVertexAttrib0();
 
+    static CheckedUint32 GetImageSize(WebGLsizei height, 
+                                      WebGLsizei width, 
+                                      PRUint32 pixelSize,
+                                      PRUint32 alignment);
+
+    // Returns x rounded to the next highest multiple of y.
+    static CheckedUint32 RoundedToNextMultipleOf(CheckedUint32 x, CheckedUint32 y) {
+        return ((x + y - 1) / y) * y;
+    }
+
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
     nsHTMLCanvasElement *HTMLCanvasElement() {
         return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
