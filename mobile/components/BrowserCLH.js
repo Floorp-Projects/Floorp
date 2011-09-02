@@ -126,6 +126,12 @@ function haveSystemLocale() {
 
 function checkCurrentLocale() {
   if (Services.prefs.prefHasUserValue("general.useragent.locale")) {
+    // if the user has a compatable locale from a different buildid, we need to update
+    var buildID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).appBuildID;
+    let localeBuildID = Services.prefs.getCharPref("extensions.compatability.locales.buildid");
+    if (buildID != localeBuildID)
+      return false;
+
     let currentLocale = Services.prefs.getCharPref("general.useragent.locale");
     return isLocaleAvailable(currentLocale);
   }
@@ -239,7 +245,7 @@ BrowserCLH.prototype = {
           uris = uris.slice(1);
         }
 
-        // Show the locale selector if we have a new profile
+        // Show the locale selector if we have a new profile, or if the selected locale is no longer compatible
         let showLocalePicker = Services.prefs.getBoolPref("browser.firstrun.show.localepicker")
         if ((needHomepageOverride() == "new profile" && showLocalePicker && !haveSystemLocale()) || !checkCurrentLocale()) {
           browserWin = openWindow(null, "chrome://browser/content/localePicker.xul", "_blank", "chrome,dialog=no,all", defaultURL);
