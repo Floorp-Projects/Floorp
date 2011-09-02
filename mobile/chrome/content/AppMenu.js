@@ -50,7 +50,7 @@ var AppMenu = {
         item.onclick = function() { child.click(); }
 
         let label = document.createElement("label");
-        label.setAttribute("value", child.label);
+        label.textContent = child.label;
         item.appendChild(label);
 
         if (item.classList.contains("appmenu-pageaction"))
