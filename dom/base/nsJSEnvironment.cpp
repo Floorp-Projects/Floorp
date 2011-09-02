@@ -1844,7 +1844,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     JSObject *obj = static_cast<JSObject *>(aHandler);
     if (obj->isFunctionProxy())
       obj = obj->unwrap(NULL);
-    JSString *id = JS_GetFunctionId(GET_FUNCTION_PRIVATE(mContext, obj));
+    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);

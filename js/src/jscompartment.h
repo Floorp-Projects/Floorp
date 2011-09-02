@@ -301,10 +301,11 @@ class IonCompartment;
 /* Defined in jsapi.cpp */
 extern JSClass js_dummy_class;
 
-/* Number of potentially reusable scriptsToGC to search for the eval cache. */
 #ifndef JS_EVAL_CACHE_SHIFT
 # define JS_EVAL_CACHE_SHIFT        6
 #endif
+
+/* Number of buckets in the hash of eval scripts. */
 #define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
 
 namespace js {
@@ -429,7 +430,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
   public:
     /* Hashed lists of scripts created by eval to garbage-collect. */
-    JSScript                     *scriptsToGC[JS_EVAL_CACHE_SIZE];
+    JSScript                     *evalCache[JS_EVAL_CACHE_SIZE];
 
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
@@ -458,7 +459,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool ensureJaegerCompartmentExists(JSContext *cx);
 
-    size_t getMjitCodeSize() const;
+    void getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const;
 #endif
     WTF::BumpPointerAllocator    *regExpAllocator;
 
@@ -510,8 +511,6 @@ struct JS_FRIEND_API(JSCompartment) {
     uintN                        debugModeBits;  // see debugMode() below
 
   public:
-    JSCList                      scripts;        // scripts in this compartment
-
     js::NativeIterCache          nativeIterCache;
 
     typedef js::Maybe<js::ToSourceCache> LazyToSourceCache;
@@ -544,6 +543,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeObjectArenaLists(JSContext *cx);
     void finalizeStringArenaLists(JSContext *cx);
     void finalizeShapeArenaLists(JSContext *cx);
+    void finalizeScriptArenaLists(JSContext *cx);
     void finalizeIonCodeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
@@ -650,7 +650,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
 };
 
-#define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
 
 /*

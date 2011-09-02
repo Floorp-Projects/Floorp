@@ -1,8 +1,7 @@
 pref("startup.homepage_override_url","http://www.mozilla.org/projects/%APP%/%VERSION%/whatsnew/");
 pref("startup.homepage_welcome_url","http://www.mozilla.org/projects/%APP%/%VERSION%/firstrun/");
 // The time interval between checks for a new version (in seconds)
-// nightly=8 hours, official=24 hours
-pref("app.update.interval", 28800);
+pref("app.update.interval", 86400); // 24 hours
 // The time interval between the downloading of mar file chunks in the
 // background (in seconds)
 pref("app.update.download.backgroundInterval", 60);

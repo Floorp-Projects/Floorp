@@ -621,5 +621,30 @@ PuppetWidget::GetDPI()
   return mDPI;
 }
 
+void*
+PuppetWidget::GetNativeData(PRUint32 aDataType)
+{
+    switch (aDataType) {
+    case NS_NATIVE_SHAREABLE_WINDOW: {
+        NS_ABORT_IF_FALSE(mTabChild, "Need TabChild to get the nativeWindow from!");
+        mozilla::WindowsHandle nativeData = nsnull;
+        mTabChild->SendGetWidgetNativeData(&nativeData);
+        return (void*)nativeData;
+    }
+    case NS_NATIVE_WINDOW:
+    case NS_NATIVE_DISPLAY:
+    case NS_NATIVE_PLUGIN_PORT:
+    case NS_NATIVE_GRAPHIC:
+    case NS_NATIVE_SHELLWIDGET:
+    case NS_NATIVE_WIDGET:
+        NS_WARNING("nsWindow::GetNativeData not implemented for this type");
+        break;
+    default:
+        NS_WARNING("nsWindow::GetNativeData called with bad value");
+        break;
+    }
+    return nsnull;
+}
+
 }  // namespace widget
 }  // namespace mozilla

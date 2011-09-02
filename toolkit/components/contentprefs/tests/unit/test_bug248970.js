@@ -83,16 +83,18 @@ function run_test() {
       do_check_eq(cp.getPref(uri1, pref_name), zoomA);
       // save Zoom-B
       cp.setPref(uri2, pref_name, zoomB);
-      // make sure Zoom-B is not retrievable
-      do_check_eq(cp.getPref(uri2, pref_name), undefined);
+      // make sure Zoom-B is retrievable
+      do_check_eq(cp.getPref(uri2, pref_name), zoomB);
       // update Zoom-A
       cp.setPref(uri1, pref_name, zoomA_new);
       // make sure Zoom-A has changed
       do_check_eq(cp.getPref(uri1, pref_name), zoomA_new);
       // exit private browsing mode
       pb.privateBrowsingEnabled = false;
-      // make sure Zoom-A change has persisted
-      do_check_eq(cp.getPref(uri1, pref_name), zoomA_new);
+      // make sure Zoom-A change has not persisted
+      do_check_eq(cp.getPref(uri1, pref_name), zoomA);
+      // make sure Zoom-B change has not persisted
+      do_check_eq(cp.hasPref(uri2, pref_name), false);
     } catch (e) {
       do_throw("Unexpected exception: " + e);
     }

@@ -1,0 +1,201 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla Inspector Module.
+ *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Walker <jwalker@mozilla.com> (original author)
+ *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Michael Ratcliffe <mratcliffe@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+body {
+  font-family: sans-serif;
+  font-size: 11px;
+  background: #EEE;
+}
+.path {
+  font-size: 11px;
+  word-spacing: -1px;
+}
+.path ol {
+  list-style: none outside none;
+  margin: 0;
+  padding: 0;
+}
+.path li {
+  border-radius: 3px;
+  padding: 2px 3px;
+  text-shadow: #FFF 0 1px 0;
+  font-weight: bold;
+  font-size: 11px;
+  background: -moz-linear-gradient(top, #F6F6FF, #E3E3FF);
+  display: inline-block;
+}
+.path li:after {
+  content: " > ";
+}
+.path li:last-child {
+  background: -moz-linear-gradient(top, #FFC, #DD8);
+}
+.path li:last-child:after {
+  color: red;
+  content: "";
+}
+
+#header,
+#footer {
+  padding: 5px;
+}
+
+#header label {
+  font-weight: bold;
+}
+
+.property-header {
+  padding: 2px 5px;
+  background: -moz-linear-gradient(top, #F8F8F8, #E8E8E8);
+  color: #666;
+}
+
+.property-name,
+.property-value,
+.rule-count,
+.rule-unmatched {
+  cursor: pointer;
+}
+
+/* Take away these two :visited rules to get a core dumper     */
+/* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
+.link,
+.unmatchedlink {
+  color: #55A;
+}
+.link:visited,
+.unmatchedlink:visited {
+  color: #55A;
+}
+a.link,
+a.unmatchedlink {
+  text-decoration: none;
+  cursor: pointer;
+}
+a.link:visited,
+a.unmatchedlink:visited {
+  text-decoration: none;
+}
+
+.rule-count,
+.rule-unmatched {
+  padding: 5px 0 0 15px;
+}
+.unmatched {
+  display: inline-block;
+}
+.expander {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  -moz-margin-end: 5px;
+  margin-bottom: 1px;
+  background: url("chrome://browser/skin/devtools/arrows.png");
+}
+
+.unmatched-rule {
+  -moz-margin-start: 25px;
+  background-position: 24px 0;
+}
+
+.property-view .rule-count .expander,
+.property-view .rule-unmatched .expander {
+  background-position: 24px 0;
+}
+.property-view[dir="rtl"] .rule-count .expander,
+.property-view[dir="rtl"] .rule-unmatched .expander {
+  background-position: 16px 0;
+}
+.property-view[open] .rule-count .expander,
+.property-view[open] .rule-unmatched .expander {
+  background-position: 8px 0;
+}
+
+.property-name {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+}
+.property-value {
+  display: inline-block;
+  font-size: 10px;
+}
+
+.property-view > .rules {
+  display: none;
+}
+.property-view[open] > .rules {
+  display: table;
+}
+.rules {
+  -moz-margin-start: 32px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+.rule-status {
+  white-space: nowrap;
+}
+.rule-link {
+  text-align: end;
+  -moz-padding-start: 10px;
+}
+
+/* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
+.rule-text {
+  direction: ltr;
+  -moz-padding-start: 10px;
+}
+
+.resizerbox {
+  background-color: window;
+}
+
+.bestmatch {
+  color: black;
+}
+.matched {
+  text-decoration: line-through;
+}
+.parentmatch {
+  color: #666;
+}
+.unmatched {
+  color: brown;
+}

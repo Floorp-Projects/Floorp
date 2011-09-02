@@ -2617,9 +2617,9 @@ public:
         return dst.m_offset - src.m_offset;
     }
     
-    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp)
+    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool **poolp, CodeKind kind)
     {
-        return m_formatter.executableAllocAndCopy(allocator, poolp);
+        return m_formatter.executableAllocAndCopy(allocator, poolp, kind);
     }
 
     void executableCopy(void* buffer)
@@ -3002,8 +3002,8 @@ private:
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         void* data() const { return m_buffer.data(); }
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp) {
-            return m_buffer.executableAllocAndCopy(allocator, poolp);
+        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind) {
+            return m_buffer.executableAllocAndCopy(allocator, poolp, kind);
         }
 
     private:

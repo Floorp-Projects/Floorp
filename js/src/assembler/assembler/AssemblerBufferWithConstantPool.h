@@ -194,10 +194,10 @@ public:
         return AssemblerBuffer::size();
     }
 
-    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp)
+    void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind)
     {
         flushConstantPool(false);
-        return AssemblerBuffer::executableAllocAndCopy(allocator, poolp);
+        return AssemblerBuffer::executableAllocAndCopy(allocator, poolp, kind);
     }
 
     void putIntWithConstantInt(uint32_t insn, uint32_t constant, bool isReusable = false)

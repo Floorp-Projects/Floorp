@@ -182,7 +182,7 @@ jsbytecode *
 js_UntrapScriptCode(JSContext *cx, JSScript *script)
 {
     jsbytecode *code = script->code;
-    BreakpointSiteMap &sites = script->compartment->breakpointSites;
+    BreakpointSiteMap &sites = script->compartment()->breakpointSites;
     for (BreakpointSiteMap::Range r = sites.all(); !r.empty(); r.popFront()) {
         BreakpointSite *site = r.front().value;
         if (site->script == script && size_t(site->pc - script->code) < script->length) {
@@ -212,7 +212,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
     if (!CheckDebugMode(cx))
         return false;
 
-    BreakpointSite *site = script->compartment->getOrCreateBreakpointSite(cx, script, pc, NULL);
+    BreakpointSite *site = script->compartment()->getOrCreateBreakpointSite(cx, script, pc, NULL);
     if (!site)
         return false;
     site->setTrap(cx, handler, Valueify(closure));
@@ -222,7 +222,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
 JS_PUBLIC_API(JSOp)
 JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    BreakpointSite *site = script->compartment->getBreakpointSite(pc);
+    BreakpointSite *site = script->compartment()->getBreakpointSite(pc);
     return site ? site->realOpcode : JSOp(*pc);
 }
 
@@ -230,7 +230,7 @@ JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
-    if (BreakpointSite *site = script->compartment->getBreakpointSite(pc)) {
+    if (BreakpointSite *site = script->compartment()->getBreakpointSite(pc)) {
         site->clearTrap(cx, NULL, handlerp, Valueify(closurep));
     } else {
         if (handlerp)
@@ -243,7 +243,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    script->compartment->clearTraps(cx, script);
+    script->compartment()->clearTraps(cx, script);
 }
 
 JS_PUBLIC_API(void)
@@ -1089,9 +1089,9 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         nbytes += JS_GetObjectTotalSize(cx, script->u.object);
 
     nbytes += script->length * sizeof script->code[0];
-    nbytes += script->atomMap.length * sizeof script->atomMap.vector[0];
-    for (size_t i = 0; i < script->atomMap.length; i++)
-        nbytes += GetAtomTotalSize(cx, script->atomMap.vector[i]);
+    nbytes += script->natoms * sizeof script->atoms[0];
+    for (size_t i = 0; i < script->natoms; i++)
+        nbytes += GetAtomTotalSize(cx, script->atoms[i]);
 
     if (script->filename)
         nbytes += strlen(script->filename) + 1;
@@ -1712,6 +1712,7 @@ js_ResumeVtune()
 #else
 #include <sys/time.h>
 #endif
+#include "jstracer.h"
 
 #define ETHOGRAM_BUF_SIZE 65536
 
@@ -1867,7 +1868,7 @@ public:
 static char jstv_empty[] = "<null>";
 
 inline char *
-jstv_Filename(JSStackFrame *fp)
+jstv_Filename(StackFrame *fp)
 {
     while (fp && !fp->isScriptFrame())
         fp = fp->prev();
@@ -1876,11 +1877,12 @@ jstv_Filename(JSStackFrame *fp)
            : jstv_empty;
 }
 inline uintN
-jstv_Lineno(JSContext *cx, JSStackFrame *fp)
+jstv_Lineno(JSContext *cx, StackFrame *fp)
 {
     while (fp && fp->pcQuadratic(cx->stack) == NULL)
         fp = fp->prev();
-    return (fp && fp->pcQuadratic(cx->stack)) ? js_FramePCToLineNumber(cx, fp) : 0;
+    jsbytecode *pc = fp->pcQuadratic(cx->stack);
+    return (fp && pc) ? js_FramePCToLineNumber(cx, fp, pc) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */
@@ -1977,7 +1979,7 @@ ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
     }
     if (JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        filename = DeflateString(cx, str->chars(), str->length());
+        filename = DeflateString(cx, str->getChars(cx), str->length());
         if (!filename)
             return false;
     }
@@ -2178,13 +2180,18 @@ JS_DumpBytecode(JSContext *cx, JSScript *script)
 #endif
 }
 
+static void
+DumpBytecodeScriptCallback(JSContext *cx, void *data, void *thing,
+                           JSGCTraceKind traceKind, size_t thingSize)
+{
+    JS_ASSERT(traceKind == JSTRACE_SCRIPT);
+    JS_ASSERT(!data);
+    JSScript *script = static_cast<JSScript *>(thing);
+    JS_DumpBytecode(cx, script);
+}
+
 JS_PUBLIC_API(void)
 JS_DumpCompartmentBytecode(JSContext *cx)
 {
-    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
-         script != (JSScript *) &cx->compartment->scripts;
-         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
-    {
-        JS_DumpBytecode(cx, script);
-    }
+    IterateCells(cx, cx->compartment, gc::FINALIZE_SCRIPT, NULL, DumpBytecodeScriptCallback);
 }

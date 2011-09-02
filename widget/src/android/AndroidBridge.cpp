@@ -84,7 +84,7 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
      * to call dlclose() while we're already inside dlclose().
      * Conveniently, NSS has an env var that can prevent it from unloading.
      */
-    putenv(strdup("NSS_DISABLE_UNLOAD=1"));
+    putenv("NSS_DISABLE_UNLOAD=1"); 
 
     sBridge = new AndroidBridge();
     if (!sBridge->Init(jEnv, jGeckoAppShellClass)) {

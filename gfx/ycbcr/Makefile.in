@@ -25,8 +25,7 @@ CPPSRCS = yuv_convert.cpp \
           $(NULL)
 
 # Are we targeting x86 or x64?  If so, build yuv_convert_mmx.cpp and
-# yuv_convert_sse2.cpp. These files use MMX and SSE2 intrinsics, so they need
-# special compile flags on some compilers.
+# yuv_convert_sse2.cpp.
 ifneq (,$(INTEL_ARCHITECTURE))
 CPPSRCS += yuv_convert_sse2.cpp
 
@@ -38,19 +37,7 @@ endif
 else
 CPPSRCS += yuv_convert_mmx.cpp
 endif
-
-ifdef GNU_CC
-yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -mmmx
-yuv_convert_sse2.$(OBJ_SUFFIX): CXXFLAGS += -msse2
 endif
-
-ifdef SOLARIS_SUNPRO_CXX
-yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -xarch=mmx -xO4
-yuv_convert_sse2.$(OBJ_SUFFIX): CXXFLAGS += -xarch=sse2 -xO4
-endif
-
-endif
-
 
 ifdef _MSC_VER
 ifeq ($(OS_TEST),x86_64)
@@ -96,3 +83,17 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+# These files use MMX and SSE2 intrinsics, so they need special compile flags
+# on some compilers.
+ifneq (,$(INTEL_ARCHITECTURE))
+ifdef GNU_CC
+yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -mmmx
+yuv_convert_sse2.$(OBJ_SUFFIX): CXXFLAGS += -msse2
+endif
+
+ifdef SOLARIS_SUNPRO_CXX
+yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -xarch=mmx -xO4
+yuv_convert_sse2.$(OBJ_SUFFIX): CXXFLAGS += -xarch=sse2 -xO4
+endif
+endif

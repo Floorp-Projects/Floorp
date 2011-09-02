@@ -172,20 +172,22 @@ class TPSTestRunner(object):
   def make_xpi(self):
     """Build the test extension."""
 
+    tpsdir = os.path.join(self.extensionDir, "tps")
+
     if self.tpsxpi is None:
-      tpsxpi = os.path.join(self.extensionDir, "tps.xpi")
+      tpsxpi = os.path.join(tpsdir, "tps.xpi")
 
       if os.access(tpsxpi, os.F_OK):
         os.remove(tpsxpi)
-      if not os.access(os.path.join(self.extensionDir, "install.rdf"), os.F_OK):
-        raise Exception("extension code not found in %s" % self.extensionDir)
+      if not os.access(os.path.join(tpsdir, "install.rdf"), os.F_OK):
+        raise Exception("extension code not found in %s" % tpsdir)
 
       from zipfile import ZipFile
       z = ZipFile(tpsxpi, 'w')
-      self._zip_add_file(z, 'chrome.manifest', self.extensionDir)
-      self._zip_add_file(z, 'install.rdf', self.extensionDir)
-      self._zip_add_dir(z, 'components', self.extensionDir)
-      self._zip_add_dir(z, 'modules', self.extensionDir)
+      self._zip_add_file(z, 'chrome.manifest', tpsdir)
+      self._zip_add_file(z, 'install.rdf', tpsdir)
+      self._zip_add_dir(z, 'components', tpsdir)
+      self._zip_add_dir(z, 'modules', tpsdir)
       z.close()
 
       self.tpsxpi = tpsxpi
@@ -401,6 +403,7 @@ class TPSTestRunner(object):
 
     # build our tps.xpi extension
     self.extensions.append(self.make_xpi())
+    self.extensions.append(os.path.join(self.extensionDir, "mozmill"))
 
     # build the test list
     try:

@@ -190,6 +190,7 @@ ForkAndExec(
 #ifdef HAVE_CRT_EXTERNS_H
             childEnvp = *(_NSGetEnviron());
 #else
+            /* _NSGetEnviron() is not available on iOS. */
             PR_DELETE(process);
             PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
             return NULL;

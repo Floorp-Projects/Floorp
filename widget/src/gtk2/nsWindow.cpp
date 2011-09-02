@@ -1844,6 +1844,9 @@ nsWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_SHELLWIDGET:
         return (void *) mShell;
 
+    case NS_NATIVE_SHAREABLE_WINDOW:
+        return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
+
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nsnull;

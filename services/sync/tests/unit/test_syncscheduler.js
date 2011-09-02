@@ -12,6 +12,19 @@ Cu.import("resource://services-sync/status.js");
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
+function CatapultEngine() {
+  SyncEngine.call(this, "Catapult");
+}
+CatapultEngine.prototype = {
+  __proto__: SyncEngine.prototype,
+  exception: null, // tests fill this in
+  _sync: function _sync() {
+    throw this.exception;
+  }
+};
+
+Engines.register(CatapultEngine);
+
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {
     syncID: Service.syncID,
@@ -30,7 +43,8 @@ function sync_httpd_setup() {
     "/1.1/johndoe/info/collections": collectionsHelper.handler,
     "/1.1/johndoe/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler())
+    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler()),
+    "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "null")
   });
 }
 
@@ -43,7 +57,7 @@ function setUp() {
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.syncKeyBundle);
-  return serverKeys.upload(Service.cryptoKeysURL);
+  return serverKeys.upload(Service.cryptoKeysURL).success;
 }
 
 function run_test() {
@@ -484,4 +498,83 @@ add_test(function test_idle_adjustSyncInterval() {
 
   SyncScheduler.setDefaults();
   run_next_test();
+});
+
+add_test(function test_no_sync_node() {
+  // Test when Status.sync == NO_SYNC_NODE_FOUND
+  // it is not overwritten on sync:finish
+  let server = sync_httpd_setup();
+  setUp();
+
+  Service.serverURL = "http://localhost:8080/";
+
+  Service.sync();
+  do_check_eq(Status.sync, NO_SYNC_NODE_FOUND);
+  do_check_eq(SyncScheduler.syncTimer.delay, NO_SYNC_NODE_INTERVAL);
+
+  // Clean up.
+  Service.startOver();
+  Status.resetSync();
+  server.stop(run_next_test);
+});
+
+add_test(function test_sync_failed_partial_500s() {
+  _("Test a 5xx status calls handleSyncError.");
+  SyncScheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
+  let server = sync_httpd_setup();
+
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = {status: 500};
+
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+  do_check_true(setUp());
+
+  Service.sync();
+
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+
+  let maxInterval = SyncScheduler._syncErrors * (2 * MINIMUM_BACKOFF_INTERVAL);
+  do_check_eq(Status.backoffInterval, 0);
+  do_check_true(Status.enforceBackoff);
+  do_check_eq(SyncScheduler._syncErrors, 4);
+  do_check_true(SyncScheduler.nextSync <= (Date.now() + maxInterval));
+  do_check_true(SyncScheduler.syncTimer.delay <= maxInterval);
+
+  Status.resetSync();
+  Service.startOver();
+  server.stop(run_next_test);
+});
+
+add_test(function test_sync_failed_partial_400s() {
+  _("Test a non-5xx status doesn't call handleSyncError.");
+  SyncScheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
+  let server = sync_httpd_setup();
+
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = {status: 400};
+
+  // Have multiple devices for an active interval.
+  Clients._store.create({id: "foo", cleartext: "bar"});
+
+  do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+  do_check_true(setUp());
+
+  Service.sync();
+
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+  do_check_eq(SyncScheduler.syncInterval, SyncScheduler.activeInterval);
+
+  do_check_eq(Status.backoffInterval, 0);
+  do_check_false(Status.enforceBackoff);
+  do_check_eq(SyncScheduler._syncErrors, 0);
+  do_check_true(SyncScheduler.nextSync <= (Date.now() + SyncScheduler.activeInterval));
+  do_check_true(SyncScheduler.syncTimer.delay <= SyncScheduler.activeInterval);
+
+  Status.resetSync();
+  Service.startOver();
+  server.stop(run_next_test);
 });

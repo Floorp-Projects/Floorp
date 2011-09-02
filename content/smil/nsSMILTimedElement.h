@@ -525,6 +525,7 @@ protected:
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   PRBool            HasPlayed() const { return !mOldIntervals.IsEmpty(); }
+  PRBool            HaveResolvedEndTimes() const;
   PRBool            EndHasEventConditions() const;
 
   // Reset the current interval by first passing ownership to a temporary

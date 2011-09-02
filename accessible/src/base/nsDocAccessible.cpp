@@ -1417,11 +1417,9 @@ nsDocAccessible::RecreateAccessible(nsIContent* aContent)
   // coalescence with normal hide and show events. Note, in this case they
   // should be coalesced with normal show/hide events.
 
-  // Check if the node is in DOM still.
-  nsIContent* parentContent = aContent->GetParent();
-  if (parentContent && parentContent->IsInDoc()) {
-    nsAccessible* container = GetAccessibleOrContainer(parentContent);
-
+  // Check if the node is in accessible document.
+  nsAccessible* container = GetContainerAccessible(aContent);
+  if (container) {
     // Remove and reinsert.
     UpdateTree(container, aContent, false);
     container->UpdateChildren();
@@ -1440,8 +1438,6 @@ nsDocAccessible::ProcessInvalidationList()
     nsAccessible* accessible = GetAccessible(content);
     if (!accessible) {
       nsAccessible* container = GetContainerAccessible(content);
-      NS_ASSERTION(container,
-                   "Got a referenced element that is not in document!");
       if (container) {
         container->UpdateChildren();
         accessible = GetAccessible(content);

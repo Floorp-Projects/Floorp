@@ -441,6 +441,37 @@ WinTaskbar::SetGroupIdForWindow(nsIDOMWindow *aParent,
   return SetWindowAppUserModelProp(aParent, nsString(aIdentifier));
 }
 
+/* void prepareFullScreen(in nsIDOMWindow aWindow, in boolean aFullScreen); */
+NS_IMETHODIMP
+WinTaskbar::PrepareFullScreen(nsIDOMWindow *aWindow, PRBool aFullScreen) {
+  NS_ENSURE_ARG_POINTER(aWindow);
+
+  HWND toplevelHWND = ::GetAncestor(GetHWNDFromDOMWindow(aWindow), GA_ROOT);
+  if (!toplevelHWND)
+    return NS_ERROR_INVALID_ARG;
+  
+  return PrepareFullScreenHWND(toplevelHWND, aFullScreen);
+}
+
+/* void prepareFullScreen(in voidPtr aWindow, in boolean aFullScreen); */
+NS_IMETHODIMP
+WinTaskbar::PrepareFullScreenHWND(void *aHWND, PRBool aFullScreen) {
+  if (!Initialize())
+    return NS_ERROR_NOT_AVAILABLE;
+
+    NS_ENSURE_ARG_POINTER(aHWND);
+
+    if (!::IsWindow((HWND)aHWND)) 
+      return NS_ERROR_INVALID_ARG;
+
+    HRESULT hr = mTaskbar->MarkFullscreenWindow((HWND)aHWND, aFullScreen);
+    if (FAILED(hr)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    return NS_OK;
+}
+
 } // namespace widget
 } // namespace mozilla
 

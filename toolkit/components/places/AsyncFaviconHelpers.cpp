@@ -859,7 +859,7 @@ AsyncAssociateIconToPage::Run()
 
 // static
 nsresult
-AsyncGetFaviconURLForPage::start(nsIURI *aPageURI,
+AsyncGetFaviconURLForPage::start(nsIURI* aPageURI,
                                  nsCOMPtr<mozIStorageConnection>& aDBConn,
                                  nsIFaviconDataCallback* aCallback)
 {
@@ -924,6 +924,83 @@ AsyncGetFaviconURLForPage::Run()
   rv = NS_DispatchToMainThread(event);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// AsyncGetFaviconDataForPage
+
+// static
+nsresult
+AsyncGetFaviconDataForPage::start(nsIURI* aPageURI,
+                                  nsCOMPtr<mozIStorageConnection>& aDBConn,
+                                  nsIFaviconDataCallback* aCallback)
+{
+  NS_ENSURE_ARG(aCallback);
+  NS_ENSURE_ARG(aPageURI);
+  NS_PRECONDITION(NS_IsMainThread(),
+                  "This should be called on the main thread.");
+
+  nsRefPtr<nsFaviconService> fs = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(fs, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCAutoString pageSpec;
+  nsresult rv = aPageURI->GetSpec(pageSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFaviconDataCallback> callback = aCallback;
+  nsRefPtr<AsyncGetFaviconDataForPage> event =
+    new AsyncGetFaviconDataForPage(pageSpec, aDBConn, fs, callback);
+
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(aDBConn);
+  NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
+  rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+AsyncGetFaviconDataForPage::AsyncGetFaviconDataForPage(const nsACString& aPageSpec, 
+                                                       nsCOMPtr<mozIStorageConnection>& aDBConn, 
+                                                       nsRefPtr<nsFaviconService>& aFaviconSvc, 
+                                                       nsCOMPtr<nsIFaviconDataCallback>& aCallback)
+  : AsyncFaviconHelperBase(aDBConn, aFaviconSvc, aCallback)
+{
+  mPageSpec.Assign(aPageSpec);
+}
+
+AsyncGetFaviconDataForPage::~AsyncGetFaviconDataForPage()
+{
+}
+
+NS_IMETHODIMP
+AsyncGetFaviconDataForPage::Run()
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "This should not be called on the main thread.");
+
+  nsCAutoString iconSpec;
+  nsresult rv = FetchIconURL(mFaviconSvc->mSyncStatements,
+                             mPageSpec, iconSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!iconSpec.Length()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  IconData iconData;
+  iconData.spec.Assign(iconSpec);
+
+  PageData pageData;
+  pageData.spec.Assign(mPageSpec);
+
+  rv = FetchIconInfo(mFaviconSvc->mSyncStatements, iconData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRunnable> event =
+    new NotifyIconObservers(iconData, pageData, mDBConn,
+                            mFaviconSvc, mCallback);
+  rv = NS_DispatchToMainThread(event);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
