@@ -165,12 +165,12 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 bool
 LIRGeneratorX86::assignSnapshot(LInstruction *ins)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
+    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
     if (!snapshot)
         return false;
 
-    for (size_t i = 0; i < last_snapshot_->numOperands(); i++) {
-        MDefinition *ins = last_snapshot_->getOperand(i);
+    for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
+        MDefinition *ins = lastResumePoint_->getOperand(i);
         LAllocation *type = snapshot->getEntry(i * 2);
         LAllocation *payload = snapshot->getEntry(i * 2 + 1);
 

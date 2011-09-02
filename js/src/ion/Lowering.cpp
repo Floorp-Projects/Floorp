@@ -181,7 +181,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         bool willOptimize = true;
         for (MUseIterator iter(comp->usesBegin()); iter!= comp->usesEnd(); iter++) {
             MNode *node = iter->node();
-            if (node->isSnapshot() ||
+            if (node->isResumePoint() ||
                 (node->isDefinition() && !node->toDefinition()->isControlInstruction()))
             {
                 willOptimize = false;
@@ -469,9 +469,9 @@ LIRGenerator::visitCopy(MCopy *ins)
 }
 
 static void
-SpewSnapshot(MBasicBlock *block, MInstruction *ins, MSnapshot *snapshot)
+SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {
-    fprintf(IonSpewFile, "Current snapshot %p details:\n", (void *)snapshot);
+    fprintf(IonSpewFile, "Current resume point %p details:\n", (void *)resumePoint);
 
     if (ins) {
         fprintf(IonSpewFile, "    taken after: ");
@@ -481,10 +481,10 @@ SpewSnapshot(MBasicBlock *block, MInstruction *ins, MSnapshot *snapshot)
     }
     fprintf(IonSpewFile, "\n");
 
-    fprintf(IonSpewFile, "    pc: %p\n", snapshot->pc());
+    fprintf(IonSpewFile, "    pc: %p\n", resumePoint->pc());
 
-    for (size_t i = 0; i < snapshot->numOperands(); i++) {
-        MDefinition *in = snapshot->getOperand(i);
+    for (size_t i = 0; i < resumePoint->numOperands(); i++) {
+        MDefinition *in = resumePoint->getOperand(i);
         fprintf(IonSpewFile, "    slot%u: ", (unsigned)i);
         in->printName(IonSpewFile);
         fprintf(IonSpewFile, "\n");
@@ -499,7 +499,7 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     if (!ins->accept(this))
         return false;
 
-    if (ins->snapshot()) 
+    if (ins->resumePoint()) 
         updateResumeState(ins);
 
     if (gen->errored())
@@ -532,17 +532,17 @@ LIRGenerator::definePhis()
 void
 LIRGenerator::updateResumeState(MInstruction *ins)
 {
-    last_snapshot_ = ins->snapshot();
+    lastResumePoint_ = ins->resumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots))
-        SpewSnapshot(NULL, ins, last_snapshot_);
+        SpewResumePoint(NULL, ins, lastResumePoint_);
 }
 
 void
 LIRGenerator::updateResumeState(MBasicBlock *block)
 {
-    last_snapshot_ = block->entrySnapshot();
+    lastResumePoint_ = block->entryResumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots))
-        SpewSnapshot(block, NULL, last_snapshot_);
+        SpewResumePoint(block, NULL, lastResumePoint_);
 }
 
 bool

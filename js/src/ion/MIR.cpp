@@ -652,17 +652,17 @@ MUrsh::New(MDefinition *left, MDefinition *right)
     return new MUrsh(left, right);
 }
 
-MSnapshot *
-MSnapshot::New(MBasicBlock *block, jsbytecode *pc)
+MResumePoint *
+MResumePoint::New(MBasicBlock *block, jsbytecode *pc)
 {
-    MSnapshot *snapshot = new MSnapshot(block, pc);
-    if (!snapshot->init(block))
+    MResumePoint *resume = new MResumePoint(block, pc);
+    if (!resume->init(block))
         return NULL;
-    snapshot->inherit(block);
-    return snapshot;
+    resume->inherit(block);
+    return resume;
 }
 
-MSnapshot::MSnapshot(MBasicBlock *block, jsbytecode *pc)
+MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc)
   : MNode(block),
     stackDepth_(block->stackDepth()),
     pc_(pc)
@@ -670,7 +670,7 @@ MSnapshot::MSnapshot(MBasicBlock *block, jsbytecode *pc)
 }
 
 bool
-MSnapshot::init(MBasicBlock *block)
+MResumePoint::init(MBasicBlock *block)
 {
     operands_ = block->gen()->allocate<MDefinition *>(stackDepth());
     if (!operands_)
@@ -679,7 +679,7 @@ MSnapshot::init(MBasicBlock *block)
 }
 
 void
-MSnapshot::inherit(MBasicBlock *block)
+MResumePoint::inherit(MBasicBlock *block)
 {
     for (size_t i = 0; i < stackDepth(); i++)
         initOperand(i, block->getSlot(i));

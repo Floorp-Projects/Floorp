@@ -156,9 +156,9 @@ MBasicBlock::inherit(MBasicBlock *pred)
     if (pred)
         copySlots(pred);
 
-    // Create a snapshot using our initial stack state.
-    entrySnapshot_ = new MSnapshot(this, pc());
-    if (!entrySnapshot_->init(this))
+    // Create a resume point using our initial stack state.
+    entryResumePoint_ = new MResumePoint(this, pc());
+    if (!entryResumePoint_->init(this))
         return false;
 
     if (pred) {
@@ -166,7 +166,7 @@ MBasicBlock::inherit(MBasicBlock *pred)
             return false;
 
         for (size_t i = 0; i < stackDepth(); i++)
-            entrySnapshot()->initOperand(i, getSlot(i));
+            entryResumePoint()->initOperand(i, getSlot(i));
     }
 
     return true;
@@ -183,7 +183,7 @@ void
 MBasicBlock::initSlot(uint32 slot, MDefinition *ins)
 {
     slots_[slot].set(ins);
-    entrySnapshot()->initOperand(slot, ins);
+    entryResumePoint()->initOperand(slot, ins);
 }
 
 void
@@ -509,7 +509,7 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
                 }
 
                 setSlot(i, phi);
-                entrySnapshot()->replaceOperand(i, phi);
+                entryResumePoint()->replaceOperand(i, phi);
             }
 
             if (!phi->addInput(other))
@@ -552,7 +552,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
     JS_ASSERT(lastIns_);
     JS_ASSERT(pred->lastIns_);
     JS_ASSERT(pred->stackPosition_ == stackPosition_);
-    JS_ASSERT(entrySnapshot()->stackDepth() == stackPosition_);
+    JS_ASSERT(entryResumePoint()->stackDepth() == stackPosition_);
 
     // We must be a pending loop header
     JS_ASSERT(kind_ == PENDING_LOOP_HEADER);
@@ -565,7 +565,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
     // give every assignment its own unique SSA name. See
     // MBasicBlock::setVariable for more information.
     for (uint32 i = 0; i < stackPosition_; i++) {
-        MDefinition *entryDef = entrySnapshot()->getOperand(i);
+        MDefinition *entryDef = entryResumePoint()->getOperand(i);
         MDefinition *exitDef = pred->slots_[i].def;
 
         // If the entry def is a phi, it must not be a phi owned by this block,
@@ -721,7 +721,7 @@ MBasicBlock::inheritPhis(MBasicBlock *header)
 
         // If the entryDef is the same as exitDef, then we must propagate the
         // phi down to this successor. This chance was missed as part of
-        // setBackedge() because exits are not captured in snapshots.
+        // setBackedge() because exits are not captured in resume points.
         setSlot(phi->slot(), phi);
     }
 }
