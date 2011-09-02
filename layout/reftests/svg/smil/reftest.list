@@ -55,8 +55,6 @@ include event/reftest.list
 
 # General tests
 == anim-discrete-values-1.svg      anim-standard-ref.svg
-== anim-discrete-values-2.svg      anim-standard-ref.svg
-== anim-discrete-values-3.svg      anim-standard-ref.svg
 == anim-discrete-replace-sum-1.svg anim-standard-ref.svg
 == anim-discrete-sum-none-1.svg    anim-standard-ref.svg
 == anim-discrete-sum-sum-1.svg     anim-standard-ref.svg

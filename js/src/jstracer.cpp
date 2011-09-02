@@ -17171,6 +17171,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         stackPush(StackValue(v1.isConst && v2.isConst));
     } else if (op == JSOP_AND) {
         bool b = !!js_ValueToBoolean(cx->regs().sp[-1]);
+        StackValue v = stackAt(-1);
         if (b)
             stackPop();
     } else {

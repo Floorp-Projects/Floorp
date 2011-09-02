@@ -974,7 +974,7 @@ _cairo_round (double r)
     return floor (r + .5);
 }
 
-#if DISABLE_SOME_FLOATING_POINT || __STDC_VERSION__ < 199901L
+#if DISABLE_SOME_FLOATING_POINT
 cairo_private int
 _cairo_lround (double d) cairo_const;
 #else
