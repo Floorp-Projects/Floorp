@@ -3206,6 +3206,26 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 sn = NULL;
                 break;
 
+              case JSOP_PICK:
+              {
+                unsigned i = pc[1];
+                LOCAL_ASSERT(ss->top > i + 1);
+                unsigned bottom = ss->top - (i + 1);
+
+                ptrdiff_t pickedOffset = ss->offsets[bottom];
+                memmove(ss->offsets + bottom, ss->offsets + bottom + 1,
+                        i * sizeof(ss->offsets[0]));
+                ss->offsets[ss->top - 1] = pickedOffset;
+
+                jsbytecode pickedOpcode = ss->opcodes[bottom];
+                memmove(ss->opcodes + bottom, ss->opcodes + bottom + 1,
+                        i * sizeof(ss->opcodes[0]));
+                ss->opcodes[ss->top - 1] = pickedOpcode;
+
+                todo = -2;
+                break;
+              }
+
               case JSOP_ENTERWITH:
                 LOCAL_ASSERT(!js_GetSrcNote(jp->script, pc));
                 rval = PopStr(ss, op, &rvalpc);
@@ -3772,7 +3792,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      *     <<RHS>>
                      *     iter
                      * pc: goto C               [src_for_in(B, D)]
-                     *  A: <<LHS = iternext>>
+                     *  A: loophead
+                     *     iternext
+                     *     <<LHS = result_of_iternext>>
                      *  B: pop                  [maybe a src_decl_var/let]
                      *     <<S>>
                      *  C: moreiter
@@ -3795,13 +3817,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * JSOP_MOREITER or JSOP_IFNE, though we do quick asserts
                      * to check that they are there.
                      */
+                    LOCAL_ASSERT(pc[-JSOP_ITER_LENGTH] == JSOP_ITER);
+                    LOCAL_ASSERT(pc[js_CodeSpec[op].length] == JSOP_LOOPHEAD);
+                    LOCAL_ASSERT(pc[js_CodeSpec[op].length + JSOP_LOOPHEAD_LENGTH] == JSOP_ITERNEXT);
                     cond = GET_JUMP_OFFSET(pc);
                     next = js_GetSrcNoteOffset(sn, 0);
                     tail = js_GetSrcNoteOffset(sn, 1);
-                    JS_ASSERT(pc[next] == JSOP_POP);
-                    JS_ASSERT(pc[cond] == JSOP_LOOPENTRY);
+                    LOCAL_ASSERT(pc[next] == JSOP_POP);
+                    LOCAL_ASSERT(pc[cond] == JSOP_LOOPENTRY);
                     cond += JSOP_LOOPENTRY_LENGTH;
-                    JS_ASSERT(pc[cond] == JSOP_MOREITER);
+                    LOCAL_ASSERT(pc[cond] == JSOP_MOREITER);
                     DECOMPILE_CODE(pc + oplen, next - oplen);
                     lval = POP_STR();
 
@@ -3809,7 +3834,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * This string "<next>" comes from jsopcode.tbl. It stands
                      * for the result pushed by JSOP_ITERNEXT.
                      */
-                    JS_ASSERT(strcmp(lval + strlen(lval) - 9, " = <next>") == 0);
+                    LOCAL_ASSERT(strcmp(lval + strlen(lval) - 9, " = <next>") == 0);
                     const_cast<char *>(lval)[strlen(lval) - 9] = '\0';
                     LOCAL_ASSERT(ss->top >= 1);
 

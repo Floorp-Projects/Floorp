@@ -1721,12 +1721,10 @@ END_CASE(JSOP_MOREITER)
 
 BEGIN_CASE(JSOP_ITERNEXT)
 {
-    JS_ASSERT(regs.stackDepth() >= unsigned(GET_INT8(regs.pc)));
-    Value *itervp = regs.sp - GET_INT8(regs.pc);
-    JS_ASSERT(itervp->isObject());
+    JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
     MutableHandleValue res = MutableHandleValue::fromMarkedLocation(&regs.sp[-1]);
-    if (!IteratorNext(cx, &itervp->toObject(), res))
+    if (!IteratorNext(cx, &regs.sp[-2].toObject(), res))
         goto error;
 }
 END_CASE(JSOP_ITERNEXT)

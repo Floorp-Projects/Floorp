@@ -3509,7 +3509,8 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
       case PNK_LP:
         if (!EmitTree(cx, bce, lhs))
             return false;
-        offset++;
+        JS_ASSERT(lhs->pn_xflags & PNX_SETCALL);
+        offset += 2;
         break;
 #if JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
@@ -3584,8 +3585,13 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         if (!EmitTree(cx, bce, rhs))
             return false;
     } else {
-        /* The value to assign is the next enumeration value in a for-in loop. */
-        if (Emit2(cx, bce, JSOP_ITERNEXT, offset) < 0)
+        /*
+         * The value to assign is the next enumeration value in a for-in loop.
+         * That value is produced by a JSOP_ITERNEXT op, previously emitted.
+         * If offset == 1, that slot is already at the top of the
+         * stack. Otherwise, rearrange the stack to put that value on top.
+         */
+        if (offset != 1 && Emit2(cx, bce, JSOP_PICK, offset - 1) < 0)
             return false;
     }
 
@@ -4603,6 +4609,8 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * so that the decompiler can distinguish 'for (x in y)' from
      * 'for (var x in y)'.
      */
+    if (Emit1(cx, bce, JSOP_ITERNEXT) < 0)
+        return false;
     if (!EmitAssignment(cx, bce, forHead->pn_kid2, JSOP_NOP, NULL))
         return false;
 
