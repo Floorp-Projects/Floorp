@@ -303,15 +303,15 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // internal helper that is also used to enhance spew.
     MDefinition *getSlot(uint32 index);
 
-    MSnapshot *entrySnapshot() const {
-        return entrySnapshot_;
+    MResumePoint *entryResumePoint() const {
+        return entryResumePoint_;
     }
     size_t numEntrySlots() const {
-        return entrySnapshot()->numOperands();
+        return entryResumePoint()->numOperands();
     }
     MDefinition *getEntrySlot(size_t i) const {
         JS_ASSERT(i < numEntrySlots());
-        return entrySnapshot()->getOperand(i);
+        return entryResumePoint()->getOperand(i);
     }
 
     LBlock *lir() const {
@@ -347,7 +347,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     uint32 id_;
     LBlock *lir_;
     MStart *start_;
-    MSnapshot *entrySnapshot_;
+    MResumePoint *entryResumePoint_;
     MBasicBlock *successorWithPhis_;
     uint32 positionInPhiSuccessor_;
     Kind kind_;

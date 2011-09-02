@@ -164,7 +164,7 @@ LIRGeneratorARM::visitReturn(MReturn *ret)
 bool
 LIRGeneratorARM::assignSnapshot(LInstruction *ins)
 {
-    LSnapshot *snapshot = LSnapshot::New(gen, last_snapshot_);
+    LSnapshot *snapshot = LSnapshot::New(gen, lastResumePoint_);
     if (!snapshot)
         return false;
 

@@ -235,10 +235,10 @@ class IonBuilder : public MIRGenerator
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
     ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
 
-    // Please see the Big Honkin' Comment about how snapshots work in
+    // Please see the Big Honkin' Comment about how resume points work in
     // IonBuilder.cpp, near the definition for this function.
-    bool snapshotAt(MInstruction *ins, jsbytecode *pc);
-    bool snapshotAfter(MInstruction *ins);
+    bool resumeAt(MInstruction *ins, jsbytecode *pc);
+    bool resumeAfter(MInstruction *ins);
 
     bool pushConstant(const Value &v);
     bool jsop_bitnot();

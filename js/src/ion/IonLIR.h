@@ -746,15 +746,15 @@ class LSnapshot : public TempObject
   private:
     uint32 numSlots_;
     LAllocation *slots_;
-    MSnapshot *mir_;
+    MResumePoint *mir_;
     SnapshotOffset snapshotOffset_;
     BailoutId bailoutId_;
 
-    LSnapshot(MSnapshot *mir);
+    LSnapshot(MResumePoint *mir);
     bool init(MIRGenerator *gen);
 
   public:
-    static LSnapshot *New(MIRGenerator *gen, MSnapshot *snapshot);
+    static LSnapshot *New(MIRGenerator *gen, MResumePoint *snapshot);
 
     size_t numEntries() const {
         return numSlots_;
@@ -782,7 +782,7 @@ class LSnapshot : public TempObject
         JS_ASSERT(i < numSlots_);
         slots_[i] = alloc;
     }
-    MSnapshot *mir() const {
+    MResumePoint *mir() const {
         return mir_;
     }
     SnapshotOffset snapshotOffset() const {
