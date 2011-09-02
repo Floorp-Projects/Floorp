@@ -114,8 +114,8 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         JSAutoByteString filename(cx, str);
         if (!filename)
             return false;
-        JSObject *scriptObj = JS_CompileFile(cx, obj, filename.ptr());
-        if (!scriptObj || !JS_ExecuteScript(cx, obj, scriptObj, &result))
+        JSScript *script = JS_CompileFile(cx, obj, filename.ptr());
+        if (!script || !JS_ExecuteScript(cx, obj, script, &result))
             return false;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);

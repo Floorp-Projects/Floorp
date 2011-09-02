@@ -1323,6 +1323,9 @@ extern JS_PUBLIC_API(JSBool)
 JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AddNamedScriptRoot(JSContext *cx, JSScript **rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
 JS_AddNamedGCThingRoot(JSContext *cx, void **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
@@ -1333,6 +1336,9 @@ JS_RemoveStringRoot(JSContext *cx, JSString **rp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveObjectRoot(JSContext *cx, JSObject **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveScriptRoot(JSContext *cx, JSScript **rp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveGCThingRoot(JSContext *cx, void **rp);
@@ -2722,59 +2728,62 @@ extern JS_PUBLIC_API(JSBool)
 JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8,
                           JSObject *obj, const char *bytes, size_t length);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
                  const char *bytes, size_t length,
                  const char *filename, uintN lineno);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               JSPrincipals *principals,
                               const char *bytes, size_t length,
                               const char *filename, uintN lineno);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                      JSPrincipals *principals,
                                      const char *bytes, size_t length,
                                      const char *filename, uintN lineno,
                                      JSVersion version);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
                    const jschar *chars, size_t length,
                    const char *filename, uintN lineno);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals,
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        JSPrincipals *principals,
                                        const jschar *chars, size_t length,
                                        const char *filename, uintN lineno,
                                        JSVersion version);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
                      FILE *fh);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *fh,
                                   JSPrincipals *principals);
 
-extern JS_PUBLIC_API(JSObject *)
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          const char *filename, FILE *fh,
                                          JSPrincipals *principals,
                                          JSVersion version);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetObjectFromScript(JSScript *script);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
@@ -2811,7 +2820,7 @@ JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          JSVersion version);
 
 extern JS_PUBLIC_API(JSString *)
-JS_DecompileScriptObject(JSContext *cx, JSObject *scriptObj, const char *name, uintN indent);
+JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN indent);
 
 /*
  * API extension: OR this into indent to avoid pretty-printing the decompiled
@@ -2861,10 +2870,10 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
  * etc., entry points.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval);
+JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval,
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
                         JSVersion version);
 
 /*

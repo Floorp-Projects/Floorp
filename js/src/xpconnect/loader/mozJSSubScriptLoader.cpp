@@ -108,7 +108,7 @@ nsresult
 mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_obj,
                                  jschar *charset, const char *uriStr,
                                  nsIIOService *serv, nsIPrincipal *principal,
-                                 JSObject **scriptObjp)
+                                 JSScript **scriptp)
 {
     nsCOMPtr<nsIChannel>     chan;
     nsCOMPtr<nsIInputStream> instream;
@@ -164,13 +164,13 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
             return ReportError(cx, LOAD_ERROR_BADCHARSET);
         }
 
-        *scriptObjp =
+        *scriptp =
             JS_CompileUCScriptForPrincipals(cx, target_obj, jsPrincipals,
                                             reinterpret_cast<const jschar*>(script.get()),
                                             script.Length(), uriStr, 1);
     } else {
-        *scriptObjp = JS_CompileScriptForPrincipals(cx, target_obj, jsPrincipals, buf.get(),
-                                                         len, uriStr, 1);
+        *scriptp = JS_CompileScriptForPrincipals(cx, target_obj, jsPrincipals, buf.get(),
+                                                 len, uriStr, 1);
     }
 
     JSPRINCIPALS_DROP(cx, jsPrincipals);
@@ -398,26 +398,24 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     }
 
     bool writeScript = false;
-    JSObject *scriptObj = nsnull;
     JSVersion version = cx->findVersion();
     nsCAutoString cachePath;
     cachePath.AppendPrintf("jssubloader/%d", version);
     PathifyURI(uri, cachePath);
 
+    script = nsnull;
     if (cache)
-        rv = ReadCachedScript(cache, cachePath, cx, &scriptObj);
-    if (!scriptObj) {
+        rv = ReadCachedScript(cache, cachePath, cx, &script);
+    if (!script) {
         rv = ReadScript(uri, cx, target_obj, charset, (char *)uriStr.get(), serv,
-                        principal, &scriptObj);
+                        principal, &script);
         writeScript = true;
     }
 
-    if (NS_FAILED(rv) || !scriptObj)
+    if (NS_FAILED(rv) || !script)
         return rv;
 
-    ok = false;
-    if (scriptObj)
-        ok = JS_ExecuteScriptVersion(cx, target_obj, scriptObj, rval, version);
+    ok = JS_ExecuteScriptVersion(cx, target_obj, script, rval, version);
 
     if (ok) {
         JSAutoEnterCompartment rac;
@@ -426,7 +424,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     }
 
     if (cache && ok && writeScript) {
-        WriteCachedScript(cache, cachePath, cx, scriptObj);
+        WriteCachedScript(cache, cachePath, cx, script);
     }
 
     cc->SetReturnValueWasSet (ok);

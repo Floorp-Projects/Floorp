@@ -311,7 +311,7 @@ Load(JSContext *cx,
 {
     uintN i;
     JSString *str;
-    JSObject *scriptObj;
+    JSScript *script;
     jsval result;
     FILE *file;
 
@@ -333,14 +333,14 @@ Load(JSContext *cx,
             JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
             return JS_FALSE;
         }
-        scriptObj = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(), file,
-                                                      Environment(cx)->GetPrincipal());
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(), file,
+                                                   Environment(cx)->GetPrincipal());
         fclose(file);
-        if (!scriptObj)
+        if (!script)
             return JS_FALSE;
 
         if (!Environment(cx)->ShouldCompileOnly() &&
-            !JS_ExecuteScript(cx, obj, scriptObj, &result)) {
+            !JS_ExecuteScript(cx, obj, script, &result)) {
             return JS_FALSE;
         }
     }
@@ -582,7 +582,7 @@ ProcessFile(JSContext *cx,
     XPCShellEnvironment* env = Environment(cx);
     XPCShellEnvironment::AutoContextPusher pusher(env);
 
-    JSObject *scriptObj;
+    JSScript *script;
     jsval result;
     int lineno, startline;
     JSBool ok, hitEOF;
@@ -622,11 +622,11 @@ ProcessFile(JSContext *cx,
             return;
         }
 
-        JSObject* scriptObj =
+        JSScript* script =
             JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
                                               env->GetPrincipal());
-        if (scriptObj && !env->ShouldCompileOnly())
-            (void)JS_ExecuteScript(cx, obj, scriptObj, &result);
+        if (script && !env->ShouldCompileOnly())
+            (void)JS_ExecuteScript(cx, obj, script, &result);
 
         return;
     }
@@ -664,14 +664,14 @@ ProcessFile(JSContext *cx,
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        scriptObj =
+        script =
             JS_CompileScriptForPrincipals(cx, obj, env->GetPrincipal(), buffer,
                                           strlen(buffer), "typein", startline);
-        if (scriptObj) {
+        if (script) {
             JSErrorReporter older;
 
             if (!env->ShouldCompileOnly()) {
-                ok = JS_ExecuteScript(cx, obj, scriptObj, &result);
+                ok = JS_ExecuteScript(cx, obj, script, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS_ValueToString(). */
                     older = JS_SetErrorReporter(cx, NULL);
@@ -1237,11 +1237,11 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
       return false;
   }
 
-  JSObject* scriptObj =
+  JSScript* script =
       JS_CompileUCScriptForPrincipals(mCx, global, GetPrincipal(),
                                       aString.get(), aString.Length(),
                                       "typein", 0);
-  if (!scriptObj) {
+  if (!script) {
      return false;
   }
 
@@ -1251,7 +1251,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
       }
 
       jsval result;
-      JSBool ok = JS_ExecuteScript(mCx, global, scriptObj, &result);
+      JSBool ok = JS_ExecuteScript(mCx, global, script, &result);
       if (ok && result != JSVAL_VOID) {
           JSErrorReporter old = JS_SetErrorReporter(mCx, NULL);
           JSString* str = JS_ValueToString(mCx, result);

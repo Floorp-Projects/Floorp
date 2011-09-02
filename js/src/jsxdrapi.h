@@ -186,7 +186,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp);
+JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
