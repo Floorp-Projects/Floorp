@@ -263,113 +263,99 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
     return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
-static JSBool
+struct SuppressErrorsGuard
+{
+    JSContext *cx;
+    JSErrorReporter prevReporter;
+    JSExceptionState *prevState;
+
+    SuppressErrorsGuard(JSContext *cx)
+      : cx(cx),
+        prevReporter(JS_SetErrorReporter(cx, NULL)),
+        prevState(JS_SaveExceptionState(cx))
+    {}
+
+    ~SuppressErrorsGuard()
+    {
+        JS_RestoreExceptionState(cx, prevState);
+        JS_SetErrorReporter(cx, prevReporter);
+    }
+};
+
+struct AppendArg {
+    Vector<Value> &values;
+    AppendArg(Vector<Value> &values) : values(values) {}
+    bool operator()(uintN, Value *vp) {
+        return values.append(*vp);
+    }
+};
+
+static bool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                JSString *filename, uintN lineno, JSErrorReport *report, intN exnType)
 {
-    JSSecurityCallbacks *callbacks;
-    CheckAccessOp checkAccess;
-    JSErrorReporter older;
-    JSExceptionState *state;
-    jsid callerid;
-    size_t stackDepth, valueCount, size;
-    JSBool overflow;
-    JSExnPrivate *priv;
-    JSStackTraceElem *elem;
-    jsval *values;
+    JS_ASSERT(exnObject->isError());
+    JS_ASSERT(!exnObject->getPrivate());
 
-    JS_ASSERT(exnObject->getClass() == &ErrorClass);
+    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
+    CheckAccessOp checkAccess = callbacks
+                                ? Valueify(callbacks->checkObjectAccess)
+                                : NULL;
 
-    /*
-     * Prepare stack trace data.
-     *
-     * Set aside any error reporter for cx and save its exception state
-     * so we can suppress any checkAccess failures.  Such failures should stop
-     * the backtrace procedure, not result in a failure of this constructor.
-     */
-    callbacks = JS_GetSecurityCallbacks(cx);
-    checkAccess = callbacks
-                  ? Valueify(callbacks->checkObjectAccess)
-                  : NULL;
-    older = JS_SetErrorReporter(cx, NULL);
-    state = JS_SaveExceptionState(cx);
-
-    callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
-    stackDepth = 0;
-    valueCount = 0;
-    FrameRegsIter firstPass(cx);
-    for (; !firstPass.done(); ++firstPass) {
-        StackFrame *fp = firstPass.fp();
-        if (fp->compartment() != cx->compartment)
-            break;
-        if (fp->isNonEvalFunctionFrame()) {
-            Value v = NullValue();
-            if (checkAccess &&
-                !checkAccess(cx, &fp->callee(), callerid, JSACC_READ, &v)) {
+    Vector<JSStackTraceElem> frames(cx);
+    Vector<Value> values(cx);
+    {
+        SuppressErrorsGuard seg(cx);
+        for (FrameRegsIter i(cx); !i.done(); ++i) {
+            /*
+             * An exception object stores stack values from 'fp' which may be
+             * in a different compartment from 'exnObject'. Engine compartment
+             * invariants require such values to be wrapped. A simpler solution
+             * is to just cut off the backtrace at compartment boundaries.
+             * Also, avoid exposing values from different security principals.
+             */
+            StackFrame *fp = i.fp();
+            if (fp->compartment() != cx->compartment)
                 break;
+            if (checkAccess && fp->isNonEvalFunctionFrame()) {
+                Value v = NullValue();
+                jsid callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
+                if (!checkAccess(cx, &fp->callee(), callerid, JSACC_READ, &v))
+                    break;
             }
-            valueCount += fp->numActualArgs();
-        }
-        ++stackDepth;
-    }
-    JS_RestoreExceptionState(cx, state);
-    JS_SetErrorReporter(cx, older);
 
-    size = offsetof(JSExnPrivate, stackElems);
-    overflow = (stackDepth > ((size_t)-1 - size) / sizeof(JSStackTraceElem));
-    size += stackDepth * sizeof(JSStackTraceElem);
-    overflow |= (valueCount > ((size_t)-1 - size) / sizeof(jsval));
-    size += valueCount * sizeof(jsval);
-    if (overflow) {
-        js_ReportAllocationOverflow(cx);
-        return JS_FALSE;
+            if (!frames.growBy(1))
+                return false;
+            JSStackTraceElem &frame = frames.back();
+            if (fp->isNonEvalFunctionFrame()) {
+                frame.funName = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
+                frame.argc = fp->numActualArgs();
+                if (!fp->forEachCanonicalActualArg(AppendArg(values)))
+                    return false;
+            } else {
+                frame.funName = NULL;
+                frame.argc = 0;
+            }
+            if (fp->isScriptFrame()) {
+                frame.filename = fp->script()->filename;
+                frame.ulineno = js_FramePCToLineNumber(cx, fp, i.pc());
+            } else {
+                frame.ulineno = 0;
+                frame.filename = NULL;
+            }
+        }
     }
-    priv = (JSExnPrivate *)cx->malloc_(size);
+
+    /* Do not need overflow check: the vm stack is already bigger. */
+    JS_STATIC_ASSERT(sizeof(JSStackTraceElem) <= sizeof(StackFrame));
+
+    size_t nbytes = offsetof(JSExnPrivate, stackElems) +
+                    frames.length() * sizeof(JSStackTraceElem) +
+                    values.length() * sizeof(Value);
+
+    JSExnPrivate *priv = (JSExnPrivate *)cx->malloc_(nbytes);
     if (!priv)
-        return JS_FALSE;
-
-    /*
-     * We initialize errorReport with a copy of report after setting the
-     * private slot, to prevent GC accessing a junk value we clear the field
-     * here.
-     */
-    priv->errorReport = NULL;
-    priv->message = message;
-    priv->filename = filename;
-    priv->lineno = lineno;
-    priv->stackDepth = stackDepth;
-    priv->exnType = exnType;
-
-    values = GetStackTraceValueBuffer(priv);
-    elem = priv->stackElems;
-
-    for (FrameRegsIter iter(cx); iter != firstPass; ++iter) {
-        StackFrame *fp = iter.fp();
-        if (fp->compartment() != cx->compartment)
-            break;
-        if (!fp->isNonEvalFunctionFrame()) {
-            elem->funName = NULL;
-            elem->argc = 0;
-        } else {
-            elem->funName = fp->fun()->atom
-                            ? fp->fun()->atom
-                            : cx->runtime->emptyString;
-            elem->argc = fp->numActualArgs();
-            fp->forEachCanonicalActualArg(CopyTo(Valueify(values)));
-            values += elem->argc;
-        }
-        elem->ulineno = 0;
-        elem->filename = NULL;
-        if (fp->isScriptFrame()) {
-            elem->filename = fp->script()->filename;
-            elem->ulineno = js_FramePCToLineNumber(cx, fp, iter.pc());
-        }
-        ++elem;
-    }
-    JS_ASSERT(priv->stackElems + stackDepth == elem);
-    JS_ASSERT(GetStackTraceValueBuffer(priv) + valueCount == values);
-
-    exnObject->setPrivate(priv);
+        return false;
 
     if (report) {
         /*
@@ -380,12 +366,28 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
          */
         priv->errorReport = CopyErrorReport(cx, report);
         if (!priv->errorReport) {
-            /* The finalizer realeases priv since it is in the private slot. */
-            return JS_FALSE;
+            cx->free_(priv);
+            return false;
         }
+    } else {
+        priv->errorReport = NULL;
     }
 
-    return JS_TRUE;
+    priv->message = message;
+    priv->filename = filename;
+    priv->lineno = lineno;
+    priv->stackDepth = frames.length();
+    priv->exnType = exnType;
+
+    JSStackTraceElem *framesDest = priv->stackElems;
+    Value *valuesDest = reinterpret_cast<Value *>(framesDest + frames.length());
+    JS_ASSERT(valuesDest == Valueify(GetStackTraceValueBuffer(priv)));
+
+    PodCopy(framesDest, frames.begin(), frames.length());
+    PodCopy(valuesDest, values.begin(), values.length());
+
+    exnObject->setPrivate(priv);
+    return true;
 }
 
 static inline JSExnPrivate *
@@ -429,12 +431,9 @@ exn_trace(JSTracer *trc, JSObject *obj)
 static void
 exn_finalize(JSContext *cx, JSObject *obj)
 {
-    JSExnPrivate *priv;
-
-    priv = GetExnPrivate(obj);
-    if (priv) {
-        if (priv->errorReport)
-            cx->free_(priv->errorReport);
+    if (JSExnPrivate *priv = GetExnPrivate(obj)) {
+        if (JSErrorReport *report = priv->errorReport)
+            cx->free_(report);
         cx->free_(priv);
     }
 }
