@@ -43,6 +43,7 @@
   -moz-appearance: none;
   -moz-box-align: center;
   padding: 0;
+  background: @color_toolbar_background@;
   border: none;
   min-height: @touch_button_xlarge@;
 }
@@ -199,6 +200,7 @@ toolbarbutton.urlbar-button {
 
 #urlbar-edit,
 #urlbar-title {
+  background: @color_toolbar_background@;
   padding: @padding_xxxnormal@ 0px @padding_xsmall@ 0px;
   margin: 0px !important;
   min-height: @urlbar_edit_height@ !important;
@@ -311,7 +313,7 @@ toolbarbutton.urlbar-button {
   padding: 0;
   -moz-border-start: @border_width_large@ solid #262629;
   min-width: @sidebar_width_minimum@ !important;
-  background: @color_background_default@;
+  background: @color_toolbar_background@;
 }
 
 .button-control {
@@ -953,7 +955,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
   -moz-border-end: @border_width_large@ solid #262629;
-  background: @color_background_default@;
+  background: @color_toolbar_background@;
 }
 
 #tabs:-moz-locale-dir(rtl) {
