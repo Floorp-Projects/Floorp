@@ -9832,9 +9832,9 @@ TraceRecorder::unbox_object(Address addr, LIns* tag_ins, JSValueType type, VMSid
     guard(true, w.name(w.eqi(tag_ins, w.nameImmui(JSVAL_TAG_OBJECT)), "isObj"), exit);
     LIns *payload_ins = w.ldiValuePayload(addr);
     if (type == JSVAL_TYPE_FUNOBJ)
-        guardClass(payload_ins, &js_FunctionClass, exit, LOAD_NORMAL);
+        guardClass(payload_ins, &FunctionClass, exit, LOAD_NORMAL);
     else
-        guardNotClass(payload_ins, &js_FunctionClass, exit, LOAD_NORMAL);
+        guardNotClass(payload_ins, &FunctionClass, exit, LOAD_NORMAL);
     return payload_ins;
 }
 
@@ -9985,9 +9985,9 @@ TraceRecorder::unbox_object(LIns* v_ins, JSValueType type, VMSideExit* exit)
           exit);
     v_ins = unpack_ptr(v_ins);
     if (type == JSVAL_TYPE_FUNOBJ)
-        guardClass(v_ins, &js_FunctionClass, exit, LOAD_NORMAL);
+        guardClass(v_ins, &FunctionClass, exit, LOAD_NORMAL);
     else
-        guardNotClass(v_ins, &js_FunctionClass, exit, LOAD_NORMAL);
+        guardNotClass(v_ins, &FunctionClass, exit, LOAD_NORMAL);
     return v_ins;
 }
 
@@ -10194,13 +10194,13 @@ TraceRecorder::guardNotClass(LIns* obj_ins, Class* clasp, VMSideExit* exit, Load
 JS_REQUIRES_STACK void
 TraceRecorder::guardDenseArray(LIns* obj_ins, ExitType exitType)
 {
-    guardClass(obj_ins, &js_ArrayClass, snapshot(exitType), LOAD_NORMAL);
+    guardClass(obj_ins, &ArrayClass, snapshot(exitType), LOAD_NORMAL);
 }
 
 JS_REQUIRES_STACK void
 TraceRecorder::guardDenseArray(LIns* obj_ins, VMSideExit* exit)
 {
-    guardClass(obj_ins, &js_ArrayClass, exit, LOAD_NORMAL);
+    guardClass(obj_ins, &ArrayClass, exit, LOAD_NORMAL);
 }
 
 JS_REQUIRES_STACK bool
@@ -11065,7 +11065,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     JS_ASSERT(!pval.isPrimitive());
     JSObject *proto = &pval.toObject();
     JS_ASSERT(!proto->isDenseArray());
-    JS_ASSERT_IF(clasp != &js_ArrayClass, proto->getNewType(cx)->emptyShapes[0]->getClass() == clasp);
+    JS_ASSERT_IF(clasp != &ArrayClass, proto->getNewType(cx)->emptyShapes[0]->getClass() == clasp);
 
     proto_ins = w.immpObjGC(proto);
     return RECORD_CONTINUE;
@@ -11608,15 +11608,15 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     LIns* this_ins;
     if (mode == JSOP_NEW) {
         Class* clasp = fun->u.n.clasp;
-        JS_ASSERT(clasp != &js_SlowArrayClass);
+        JS_ASSERT(clasp != &SlowArrayClass);
         if (!clasp)
-            clasp = &js_ObjectClass;
+            clasp = &ObjectClass;
         JS_ASSERT(((jsuword) clasp & 3) == 0);
 
         // Abort on |new Function|. (FIXME: This restriction might not
         // unnecessary now that the constructor creates the new function object
         // itself.)
-        if (clasp == &js_FunctionClass)
+        if (clasp == &FunctionClass)
             RETURN_STOP("new Function");
 
         if (!IsFastTypedArrayClass(clasp) && !clasp->isNative())
@@ -12494,7 +12494,7 @@ TraceRecorder::recordInitPropertyOp(jsbytecode op)
     Value& l = stackval(-2);
     JSObject* obj = &l.toObject();
     LIns* obj_ins = get(&l);
-    JS_ASSERT(obj->getClass() == &js_ObjectClass);
+    JS_ASSERT(obj->getClass() == &ObjectClass);
 
     Value& v = stackval(-1);
     LIns* v_ins = get(&v);
@@ -12769,7 +12769,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
     // Shape::get contains a special case for With objects. We can elide it
     // here because With objects are, we claim, never on the operand stack
     // while recording.
-    JS_ASSERT(obj->getClass() != &js_WithClass);
+    JS_ASSERT(obj->getClass() != &WithClass);
 
     vp->setUndefined();
     if (!shape->getterOp()(cx, obj, SHAPE_USERID(shape), vp)) {
@@ -14823,8 +14823,8 @@ TraceRecorder::record_JSOP_MOREITER()
      * ni->flags (nor do we in unboxNextValue), because the different iteration
      * type will guarantee a different entry typemap.
      */
-    if (iterobj->hasClass(&js_IteratorClass)) {
-        guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+    if (iterobj->hasClass(&IteratorClass)) {
+        guardClass(iterobj_ins, &IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
 
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         if (ni->isKeyIter()) {
@@ -14837,7 +14837,7 @@ TraceRecorder::record_JSOP_MOREITER()
             return ARECORD_CONTINUE;
         }
     } else {
-        guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+        guardNotClass(iterobj_ins, &IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
     }
 
     enterDeepBailCall();
@@ -14922,8 +14922,8 @@ TraceRecorder::unboxNextValue(Value &iterobj_val, LIns* &v_ins)
     JSObject *iterobj = &iterobj_val.toObject();
     LIns* iterobj_ins = get(&iterobj_val);
 
-    if (iterobj->hasClass(&js_IteratorClass)) {
-        guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+    if (iterobj->hasClass(&IteratorClass)) {
+        guardClass(iterobj_ins, &IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
 
         LIns *ni_ins = w.ldpObjPrivate(iterobj_ins);
@@ -14966,7 +14966,7 @@ TraceRecorder::unboxNextValue(Value &iterobj_val, LIns* &v_ins)
             return ARECORD_CONTINUE;
         }
     } else {
-        guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+        guardNotClass(iterobj_ins, &IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
     }
 
 
@@ -16340,7 +16340,7 @@ TraceRecorder::record_JSOP_LENGTH()
             guardDenseArray(obj_ins, BRANCH_EXIT);
         } else {
             JS_ASSERT(obj->isSlowArray());
-            guardClass(obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
+            guardClass(obj_ins, &SlowArrayClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         }
         v_ins = w.lduiObjPrivate(obj_ins);
         if (obj->getArrayLength() <= JSVAL_INT_MAX) {

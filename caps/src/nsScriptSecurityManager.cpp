@@ -2423,7 +2423,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
     // avoid wasting time checking properties of their classes etc in
     // the loop.
 
-    if (jsClass == &js_FunctionClass) {
+    if (jsClass == &js::FunctionClass) {
         aObj = aObj->getParent();
 
         if (!aObj)
@@ -2431,7 +2431,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
 
         jsClass = aObj->getClass();
 
-        if (jsClass == &js_CallClass) {
+        if (jsClass == &js::CallClass) {
             aObj = aObj->getParent();
 
             if (!aObj)

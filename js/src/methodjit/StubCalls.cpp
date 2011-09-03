@@ -389,7 +389,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
         } else {
             shape = (Shape *)prop;
             JSObject *normalized = obj;
-            if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+            if (normalized->isWith() && !shape->hasDefaultGetter())
                 normalized = js_UnwrapWithObject(cx, normalized);
             NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
         }
@@ -1351,7 +1351,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 
     if (!baseobj) {
         gc::AllocKind kind = GuessObjectGCKind(0, false);
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             THROW();
         if (type)
@@ -2016,10 +2016,9 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      * static scope.
      */
     JSObject *obj2 = &fp->scopeChain();
-    Class *clasp;
-    while ((clasp = obj2->getClass()) == &js_WithClass)
+    while (obj2->isWith())
         obj2 = obj2->getParent();
-    if (clasp == &js_BlockClass &&
+    if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());
@@ -2049,7 +2048,7 @@ stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
      */
     JSObject *obj = &fp->scopeChain();
     if (obj->getProto() == blockChain) {
-        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        JS_ASSERT(obj->isBlock());
         if (!js_PutBlockObject(cx, JS_TRUE))
             THROW();
     }
