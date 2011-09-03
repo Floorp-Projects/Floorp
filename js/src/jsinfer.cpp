@@ -3214,9 +3214,6 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
          */
         if (script->analysis()->addsScopeObjects() ||
             js_GetOpcode(cx, script, script->code) == JSOP_GENERATOR) {
-            if (prev)
-                DetachNestingParent(prev);
-            DetachNestingParent(script);
             return access;
         }
 
@@ -3242,15 +3239,6 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
             access.index = index;
             return access;
         } else if (kind != NONE) {
-            return access;
-        }
-
-        /*
-         * If the names bound by the script are extensible (e.g. DEFFUN),
-         * do not do any further checking in nested parents of the script.
-         */
-        if (script->analysis()->extendsScope()) {
-            DetachNestingParent(script);
             return access;
         }
 
@@ -4113,16 +4101,38 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
     for (unsigned i = 0; i < script->nfixed; i++)
         TypeScript::LocalTypes(script, i)->addType(cx, Type::UndefinedType());
 
-    /*
-     * If a leaf function contains no free variables and no inner functions,
-     * we can immediately detach it from its parents (destroying its nesting),
-     * and do not need to maintain its active frame count or watch for
-     * reentrance in parents. Even if outdated activations of this function
-     * are live when the parent is called again, we do not need to consider
-     * this reentrance as no state in the parent's call object will be used.
-     */
-    if (script->hasFunction && !usesScopeChain() && script->nesting())
-        DetachNestingParent(script);
+    TypeScriptNesting *nesting = script->hasFunction ? script->nesting() : NULL;
+    if (nesting && nesting->parent) {
+        /*
+         * Check whether NAME accesses can be resolved in parent scopes, and
+         * detach from the parent if so. Even if outdated activations of this
+         * function are live when the parent is called again, we do not need to
+         * consider this reentrance as no state in the parent will be used.
+         */
+        if (!nesting->parent->ensureRanInference(cx))
+            return;
+
+        /* Don't track for leaf scripts which have no free variables. */
+        if (!usesScopeChain() && !script->isOuterFunction)
+            DetachNestingParent(script);
+
+        /*
+         * If the names bound by the script are extensible (DEFFUN, EVAL, ...),
+         * don't resolve NAME accesses into the parent.
+         */
+        if (nesting->parent && extendsScope())
+            DetachNestingParent(script);
+
+        /*
+         * Don't track for parents which add call objects or are generators,
+         * don't resolve NAME accesses into the parent.
+         */
+        if (nesting->parent &&
+            (nesting->parent->analysis()->addsScopeObjects() ||
+             js_GetOpcode(cx, nesting->parent, nesting->parent->code) == JSOP_GENERATOR)) {
+            DetachNestingParent(script);
+        }
+    }
 
     TypeInferenceState state(cx);
 
@@ -5276,15 +5286,6 @@ NestingEpilogue(StackFrame *fp)
 
     JS_ASSERT(nesting->activeFrames != 0);
     nesting->activeFrames--;
-
-    if (script->isOuterFunction) {
-        /*
-         * Now that the frame has finished, the call object has been put and
-         * holds the canonical slots for the call's arguments and variables.
-         */
-        nesting->argArray = nesting->activeCall->callObjArgArray();
-        nesting->varArray = nesting->activeCall->callObjVarArray();
-    }
 }
 
 } } /* namespace js::types */
