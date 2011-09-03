@@ -1023,7 +1023,7 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
         return;
 
     bool lastInterval = interval->index() == (interval->reg()->numIntervals() - 1);
-    if (alloc->isStackSlot() && (alloc != interval->reg()->canonicalSpill() || lastInterval)) {
+    if (alloc->isStackSlot() && (*alloc != *interval->reg()->canonicalSpill() || lastInterval)) {
         if (alloc->toStackSlot()->isDouble())
             stackAssignment.freeDoubleSlot(alloc->toStackSlot()->slot());
         else
@@ -1127,7 +1127,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         if (i->getAllocation()->isRegister()) {
             AnyRegister reg = i->getAllocation()->toRegister();
-            if (i->start() == current->start()) {
+            if (i->start().ins() == current->start().ins()) {
                 nextUsePos[reg.code()] = CodePosition::MIN;
                 IonSpew(IonSpew_LSRA, "   Disqualifying %s due to recency", reg.name());
             } else if (nextUsePos[reg.code()] != CodePosition::MIN) {
