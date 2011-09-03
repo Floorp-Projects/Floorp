@@ -105,8 +105,8 @@ WrappedJSDyingJSObjectFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     {
         if(wrapper->IsSubjectToFinalization())
         {
-            JS::AutoSwitchCompartment sc(data->cx,
-                                         wrapper->GetJSObjectPreserveColor());
+            js::SwitchToCompartment sc(data->cx,
+                                       wrapper->GetJSObjectPreserveColor());
             if(JS_IsAboutToBeFinalized(data->cx,
                                        wrapper->GetJSObjectPreserveColor()))
                 data->array->AppendElement(wrapper);
