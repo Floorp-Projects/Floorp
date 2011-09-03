@@ -94,9 +94,7 @@ def build_interface(iface, ifaces):
                                         reference=False)
 
         if isinstance(type, xpidl.Array):
-            # NB: For an Array<T> we pass down the iid_is to get the type of T.
-            #     This allows Arrays of InterfaceIs types to work.
-            return xpt.ArrayType(get_type(type.type, calltype, iid_is), size_is,
+            return xpt.ArrayType(get_type(type.type, calltype), size_is,
                                  #XXXkhuey length_is duplicates size_is (bug 677788),
                                  size_is)
 

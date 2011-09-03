@@ -52,7 +52,18 @@ VISIBILITY_FLAGS=
 CSRCS = jemalloc.c
 EXPORTS = jemalloc.h jemalloc_types.h
 LIBRARY_NAME = jemalloc
-FORCE_STATIC_LIB= 1
+
+ifeq (WINNT,$(OS_TARGET))
+FORCE_SHARED_LIB = 1
+
+MOZ_MEMORY_LDFLAGS = # Don't link against ourselves
+
+DEFFILE = $(srcdir)/jemalloc.def
+
+LDFLAGS += -ENTRY:DllMain
+
+NO_INSTALL_IMPORT_LIBRARY = 1
+else # Not Windows
 
 ifeq ($(OS_ARCH),SunOS)
 ifndef GNU_CC
@@ -60,10 +71,105 @@ MODULE_OPTIMIZE_FLAGS = -xO5
 endif
 endif
 
-ifeq (Linux,$(OS_TARGET))
+# Build jemalloc as a shared lib.  This is mandatory for Darwin, since a library
+# init function is used on that platform.
+ifeq ($(OS_ARCH),Darwin)
+FORCE_SHARED_LIB= 1
+else
+# On Android, we're going to link jemalloc into mozutils, and that only works
+# properly if we only build a fakelib, which won't happen if we DIST_INSTALL
+ifneq ($(OS_TARGET),Android)
+DIST_INSTALL = 1
+endif
+FORCE_STATIC_LIB= 1
+endif
+
 #XXX: PGO on Linux causes problems here
 # See bug 419470
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq (Darwin,$(OS_TARGET))
+LDFLAGS += -init _jemalloc_darwin_init
+endif
+
+ifeq (WINNT,$(OS_TARGET))
+# Roll our own custom logic here for the import library
+
+###############################################################################
+#
+# Linking Mozilla itself to jemalloc is not particularly difficult.  To do this
+# we avoid linking directly to the Microsoft-provided CRT import libraries.
+# Instead, we link to our own import library which we generate here.  To
+# replace the CRT's malloc/free/other memory management symbols we export
+# our own versions out of jemalloc.dll.  We then take the import library that
+# the compiler generates for jemalloc.dll and combine it with the MS CRT import
+# libraries.  We put our library on the command line first, and the CRT symbols
+# are discarded in favor of our versions!
+#
+# Unfortunately that was too easy.  The CRT import library is not a standard
+# import library that contains a list of symbols and whatnot.  It also includes
+# object files that are linked into generated programs.  One of these,
+# crtdll.obj is (as one might expect) linked into all DLLs that link against
+# the CRT.  This file does things like run static C++ constructors when the
+# DLL is attached, call DllMain, etc.
+#
+# In the CRT source all malloc/free calls are made to malloc_crt and free_crt.
+# In debug builds these are both defined to malloc_dbg and free_dbg.  In opt
+# builds malloc_crt is an actual function, implemented and exposed from the
+# CRT.  free_crt is, however, defined to be just plain old free.  This works
+# fine inside the CRT where malloc_crt and free operate on the same heap.
+# Outside the CRT malloc_crt is in the CRT's heap, but free is in jemalloc's
+# heap.  This causes much pain at shutdown :-(
+#
+# The obvious solution here is to override malloc_crt too.  Unfortunately,
+# that doesn't work because the CRT expects to be able to call msize on this
+# piece of memory deep inside the CRT, which will fail because it'll call the
+# CRT's msize on a pointer in jemalloc's heap.
+#
+# Our solution to this is quite devious.  We take apart the CRT's import lib
+# and remove the problematic object file.  We then poke at the object file's
+# symbol table and replace '__imp__free' (which means grab free from some
+# other DLL) with '__imp__frex'.  Then we define our own dummy no-op function
+# in jemalloc.dll and export it as frex.  Then we put the CRT import lib
+# back together with the patched crtdll.obj, glue it to the end of jemalloc's
+# import library and link the rest of Mozilla to that.
+#
+# The result?  A binary that uses jemalloc, doesn't crash, and leaks a tiny
+# amount of memory (32 words per DLL in the 2010 CRT) at shutdown.
+#
+###############################################################################
+
+libs:: mozcrt.lib
+	$(INSTALL) $(IFLAGS2) mozcrt.lib $(DIST)/lib
+
+# And finally combine that with the jemalloc import library to get an import
+# library that has our malloc/free/etc and the CRT's everything else
+mozcrt.lib: $(IMPORT_LIBRARY) msvc_modified.lib
+	lib -OUT:$@ $^
+
+# Put the fixed object file back in
+msvc_modified.lib: msvc_removed.lib crtdll_fixed.obj
+	lib -OUT:$@ $^
+
+# Fix the object file
+crtdll_fixed.obj: crtdll.obj
+	$(PYTHON) $(srcdir)/fixcrt.py
+
+# Find the path of crtdll.obj
+CRTDLL_FULLPATH=$(subst \,\\,$(shell lib -list msvc_combined.lib | grep crtdll\\.obj))
+
+# Remove the broken object file, only after we have extracted it
+msvc_removed.lib: msvc_combined.lib crtdll.obj
+	lib -OUT:$@ msvc_combined.lib -REMOVE:$(CRTDLL_FULLPATH)
+
+# Extract the broken object file out of the combined library
+crtdll.obj: msvc_combined.lib
+	lib -OUT:$@ $^ -EXTRACT:$(CRTDLL_FULLPATH)
+
+# Grab both CRT libraries and combine them into one library to simplify things
+msvc_combined.lib:
+	lib -OUT:$@ $(WIN32_CRT_LIBS)
+endif
