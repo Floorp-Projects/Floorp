@@ -33,10 +33,9 @@
 ;
 ; ***** END LICENSE BLOCK *****
 
-LIBRARY mozutils.dll
+LIBRARY jemalloc.dll
 
 EXPORTS
-#ifdef MOZ_MEMORY
   ; symbols that are actually useful
   malloc=je_malloc
   valloc=je_valloc
@@ -54,4 +53,3 @@ EXPORTS
   jemalloc_stats
   ; A hack to work around the CRT (see giant comment in Makefile.in)
   frex=je_dumb_free_thunk
-#endif
