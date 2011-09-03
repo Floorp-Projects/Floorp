@@ -1,2 +1,0 @@
-void _dummy(void) {
-}
