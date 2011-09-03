@@ -961,6 +961,16 @@ js_PutCallObject(StackFrame *fp)
                     callobj.setSlot(JSObject::CALL_RESERVED_SLOTS + nargs + e, fp->slots()[e]);
                 }
             }
+
+            /*
+             * Update the args and vars for the active call if this is an outer
+             * function in a script nesting.
+             */
+            types::TypeScriptNesting *nesting = script->nesting();
+            if (nesting && script->isOuterFunction) {
+                nesting->argArray = callobj.callObjArgArray();
+                nesting->varArray = callobj.callObjVarArray();
+            }
         }
 
         /* Clear private pointers to fp, which is about to go away (js_Invoke). */
