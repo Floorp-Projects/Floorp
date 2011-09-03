@@ -146,13 +146,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-static inline bool
-ENSURE_SLOW_ARRAY(JSContext *cx, JSObject *obj)
-{
-    return obj->getClass() == &SlowArrayClass ||
-           obj->makeDenseArraySlow(cx);
-}
-
 JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 {
@@ -1534,7 +1527,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
         return JS_TRUE;
 
     /* Finish out any remaining elements past the max array index. */
-    if (obj->isDenseArray() && !ENSURE_SLOW_ARRAY(cx, obj))
+    if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
         return JS_FALSE;
 
     JS_ASSERT(start == MAX_ARRAY_INDEX + 1);
