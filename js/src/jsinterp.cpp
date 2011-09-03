@@ -1206,10 +1206,10 @@ js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 
             if (fun->isConstructor()) {
                 args.thisv().setMagicWithObjectOrNullPayload(NULL);
-            Probes::calloutBegin(cx, fun);
-            bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
-            Probes::calloutEnd(cx, fun);
-            return ok;
+                Probes::calloutBegin(cx, fun);
+                bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
+                Probes::calloutEnd(cx, fun);
+                return ok;
             }
 
             if (!fun->isInterpretedConstructor())
