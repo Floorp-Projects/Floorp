@@ -277,7 +277,6 @@ _TEST_FILES = \
 		test_checked.html \
 		test_bug677658.html \
 		test_bug677463.html \
-		test_bug668819.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
