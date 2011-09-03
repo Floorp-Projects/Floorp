@@ -793,83 +793,69 @@ mjit::Compiler::jsop_typeof()
 bool
 mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 {
+    // JSOP_AND and JSOP_OR may leave the value on the stack (despite
+    // the frame.pop() below), so we need to sync it.
+    if (op == JSOP_AND || op == JSOP_OR) {
+        frame.syncForBranch(target, Uses(0));
+    } else {
+        JS_ASSERT(op == JSOP_IFEQ || op == JSOP_IFEQX ||
+                  op == JSOP_IFNE || op == JSOP_IFNEX);
+        frame.syncForBranch(target, Uses(1));
+    }
+
     FrameEntry *fe = frame.peek(-1);
-
-    MaybeRegisterID type;
-    MaybeRegisterID data;
-
-    if (!fe->isTypeKnown() && !frame.shouldAvoidTypeRemat(fe))
-        type.setReg(frame.copyTypeIntoReg(fe));
-    if (!fe->isType(JSVAL_TYPE_DOUBLE))
-        data.setReg(frame.copyDataIntoReg(fe));
-
-    frame.syncAndForgetEverything();
-
     Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
                                 ? Assembler::NonZero
                                 : Assembler::Zero;
-    Assembler::Condition ncond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
-                                 ? Assembler::Zero
-                                 : Assembler::NonZero;
 
-    /* Inline path: Boolean guard + call script. */
-    MaybeJump jmpNotBool;
-    MaybeJump jmpNotExecScript;
-    if (type.isSet()) {
-        jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual, type.reg()));
-    } else {
-        if (!fe->isTypeKnown()) {
-            jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual,
-                                                frame.addressOf(fe)));
-        } else if (fe->isNotType(JSVAL_TYPE_BOOLEAN) &&
-                   fe->isNotType(JSVAL_TYPE_INT32)) {
-            jmpNotBool.setJump(masm.jump());
-        }
+    // Load data register and pin it so that frame.testBoolean
+    // below cannot evict it.
+    MaybeRegisterID data;
+    if (!fe->isType(JSVAL_TYPE_DOUBLE)) {
+        data = frame.tempRegForData(fe);
+        frame.pinReg(data.reg());
     }
 
-    /* 
-     * TODO: We don't need the second jump if
-     * jumpInScript() can go from ool path to inline path.
-     */
+    // Test for boolean if needed.
+    bool needStub = false;
+    if (!fe->isType(JSVAL_TYPE_BOOLEAN) && !fe->isType(JSVAL_TYPE_INT32)) {
+        Jump notBool;
+        if (fe->mightBeType(JSVAL_TYPE_BOOLEAN))
+            notBool = frame.testBoolean(Assembler::NotEqual, fe);
+        else
+            notBool = masm.jump();
+
+        stubcc.linkExitForBranch(notBool);
+        needStub = true;
+    }
+    if (data.isSet())
+        frame.unpinReg(data.reg());
+
+    // Test + branch.
+    Jump branch;
     if (!fe->isType(JSVAL_TYPE_DOUBLE))
-        jmpNotExecScript.setJump(masm.branchTest32(ncond, data.reg(), data.reg()));
-    Label lblExecScript = masm.label();
-    Jump j = masm.jump();
+        branch = masm.branchTest32(cond, data.reg());
+    else
+        branch = masm.jump(); // dummy jump
 
+    // OOL path: call ValueToBoolean and branch.
+    if (needStub) {
+        stubcc.leave();
 
-    /* OOL path: Conversion to boolean. */
-    MaybeJump jmpCvtExecScript;
-    MaybeJump jmpCvtRejoin;
-    Label lblCvtPath = stubcc.masm.label();
-
-    if (!fe->isTypeKnown() ||
-        !(fe->isType(JSVAL_TYPE_BOOLEAN) || fe->isType(JSVAL_TYPE_INT32))) {
-        /* Note: this cannot overwrite slots holding loop invariants. */
+        // Note: this cannot overwrite slots holding loop invariants.
         stubcc.masm.infallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean),
                                      frame.totalDepth());
-
-        jmpCvtExecScript.setJump(stubcc.masm.branchTest32(cond, Registers::ReturnReg,
-                                                          Registers::ReturnReg));
-        jmpCvtRejoin.setJump(stubcc.masm.jump());
     }
 
-    /* Rejoin tag. */
-    Label lblAfterScript = masm.label();
+    Jump stubBranch = stubcc.masm.branchTest32(cond, Registers::ReturnReg);
 
-    /* Patch up jumps. */
-    if (jmpNotBool.isSet())
-        stubcc.linkExitDirect(jmpNotBool.getJump(), lblCvtPath);
-    if (jmpNotExecScript.isSet())
-        jmpNotExecScript.getJump().linkTo(lblAfterScript, &masm);
-
-    if (jmpCvtExecScript.isSet())
-        stubcc.crossJump(jmpCvtExecScript.getJump(), lblExecScript);
-    if (jmpCvtRejoin.isSet())
-        stubcc.crossJump(jmpCvtRejoin.getJump(), lblAfterScript);
+    // Rejoin from the stub call fallthrough.
+    if (needStub)
+        stubcc.rejoin(Changes(0));
 
     frame.pop();
 
-    return jumpAndTrace(j, target);
+    return jumpAndTrace(branch, target, &stubBranch);
 }
 
 bool
