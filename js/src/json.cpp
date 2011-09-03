@@ -74,7 +74,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-Class js::JSONClass = {
+Class js_JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
     PropertyStub,        /* addProperty */
@@ -344,17 +344,17 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
     if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
         Class *clasp = obj->getClass();
-        if (clasp == &NumberClass) {
+        if (clasp == &js_NumberClass) {
             double d;
             if (!ToNumber(cx, *vp, &d))
                 return false;
             vp->setNumber(d);
-        } else if (clasp == &StringClass) {
+        } else if (clasp == &js_StringClass) {
             JSString *str = js_ValueToString(cx, *vp);
             if (!str)
                 return false;
             vp->setString(str);
-        } else if (clasp == &BooleanClass) {
+        } else if (clasp == &js_BooleanClass) {
             *vp = obj->getPrimitiveThis();
             JS_ASSERT(vp->isBoolean());
         }
@@ -725,7 +725,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
     }
 
     /* Step 9. */
-    JSObject *wrapper = NewBuiltinClassInstance(cx, &ObjectClass);
+    JSObject *wrapper = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!wrapper)
         return false;
 
@@ -856,7 +856,7 @@ static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         return false;
 
@@ -910,7 +910,7 @@ static JSFunctionSpec json_static_methods[] = {
 JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &JSONClass, NULL, obj);
+    JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
     if (!JSON || !JSON->setSingletonType(cx))
         return NULL;
 
@@ -921,7 +921,7 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, JSON, json_static_methods))
         return NULL;
 
-    MarkStandardClassInitializedNoProto(obj, &JSONClass);
+    MarkStandardClassInitializedNoProto(obj, &js_JSONClass);
 
     return JSON;
 }
