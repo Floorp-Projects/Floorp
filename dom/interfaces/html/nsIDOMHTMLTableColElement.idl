@@ -50,13 +50,13 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(b0c8daa0-6b74-4436-b1ca-2de5d6d3fe33)]
+[scriptable, uuid(d61a4bf0-2ed9-41e9-b308-2ac575e24036)]
 interface nsIDOMHTMLTableColElement : nsIDOMHTMLElement
 {
            attribute DOMString        align;
            attribute DOMString        ch;
            attribute DOMString        chOff;
-           attribute long             span;
+           attribute unsigned long    span;
            attribute DOMString        vAlign;
            attribute DOMString        width;
 };
