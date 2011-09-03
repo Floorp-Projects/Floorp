@@ -1543,7 +1543,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     return obj->asGlobal()->initStandardClasses(cx);
 }
 
-#define CLASP(name)                 (&js_##name##Class)
+#define CLASP(name)                 (&name##Class)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArray::fastClasses[TypedArray::type])
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
@@ -1653,7 +1653,7 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js_ArrayBufferClass},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer),  &ArrayBufferClass},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},
@@ -2275,7 +2275,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           {
             JSObject  *obj = (JSObject *)thing;
             Class *clasp = obj->getClass();
-            if (clasp == &js_FunctionClass) {
+            if (clasp == &FunctionClass) {
                 JSFunction *fun = obj->getFunctionPrivate();
                 if (!fun) {
                     JS_snprintf(buf, bufsize, "<newborn>");
@@ -3064,9 +3064,9 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
 
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
-        clasp = &js_ObjectClass;    /* default class is Object */
+        clasp = &ObjectClass;    /* default class is Object */
 
-    JS_ASSERT(clasp != &js_FunctionClass);
+    JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     if (proto)
@@ -3093,9 +3093,9 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
 
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
-        clasp = &js_ObjectClass;    /* default class is Object */
+        clasp = &ObjectClass;    /* default class is Object */
 
-    JS_ASSERT(clasp != &js_FunctionClass);
+    JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
@@ -3168,7 +3168,7 @@ JS_ConstructObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *p
     assertSameCompartment(cx, proto, parent);
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
-        clasp = &js_ObjectClass;    /* default class is Object */
+        clasp = &ObjectClass;    /* default class is Object */
     return js_ConstructObject(cx, clasp, proto, parent, 0, NULL);
 }
 
@@ -3180,7 +3180,7 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *proto
     assertSameCompartment(cx, proto, parent, JSValueArray(argv, argc));
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
-        clasp = &js_ObjectClass;    /* default class is Object */
+        clasp = &ObjectClass;    /* default class is Object */
     return js_ConstructObject(cx, clasp, proto, parent, argc, Valueify(argv));
 }
 
@@ -3520,7 +3520,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
 
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
-        clasp = &js_ObjectClass;    /* default class is Object */
+        clasp = &ObjectClass;    /* default class is Object */
 
     JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj);
     if (!nobj)
@@ -4215,7 +4215,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         JS_ASSERT(parent);
     }
 
-    if (funobj->getClass() != &js_FunctionClass) {
+    if (!funobj->isFunction()) {
         /*
          * We cannot clone this object, so fail (we used to return funobj, bad
          * idea, but we changed incompatibly to teach any abusers a lesson!).
@@ -4306,7 +4306,7 @@ JS_GetFunctionArity(JSFunction *fun)
 JS_PUBLIC_API(JSBool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 {
-    return obj->getClass() == &js_FunctionClass;
+    return obj->isFunction();
 }
 
 JS_PUBLIC_API(JSBool)

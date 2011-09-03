@@ -75,7 +75,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-/* Forward declarations for js_ErrorClass's initializer. */
+/* Forward declarations for ErrorClass's initializer. */
 static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp);
 
@@ -89,7 +89,7 @@ static JSBool
 exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp);
 
-Class js_ErrorClass = {
+Class js::ErrorClass = {
     js_Error_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
@@ -278,7 +278,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JSStackTraceElem *elem;
     jsval *values;
 
-    JS_ASSERT(exnObject->getClass() == &js_ErrorClass);
+    JS_ASSERT(exnObject->getClass() == &ErrorClass);
 
     /*
      * Prepare stack trace data.
@@ -521,7 +521,7 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
     obj = JSVAL_TO_OBJECT(exn);
-    if (obj->getClass() != &js_ErrorClass)
+    if (!obj->isError())
         return NULL;
     priv = GetExnPrivate(obj);
     if (!priv)
@@ -722,7 +722,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     }
 
     JSObject *errProto = &protov.toObject();
-    JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
+    JSObject *obj = NewNativeClassInstance(cx, &ErrorClass, errProto, errProto->getParent());
     if (!obj)
         return JS_FALSE;
 
@@ -730,7 +730,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
      * If it's a new object of class Exception, then null out the private
      * data so that the finalizer doesn't attempt to free it.
      */
-    if (obj->getClass() == &js_ErrorClass)
+    if (obj->getClass() == &ErrorClass)
         obj->setPrivate(NULL);
 
     /* Set the 'message' property. */
@@ -777,7 +777,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     }
 
     intN exnType = callee.getReservedSlot(JSSLOT_ERROR_EXNTYPE).toInt32();
-    if (obj->getClass() == &js_ErrorClass &&
+    if (obj->getClass() == &ErrorClass &&
         !InitExnPrivate(cx, obj, message, filename, lineno, NULL, exnType)) {
         return JS_FALSE;
     }
@@ -1019,7 +1019,7 @@ InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
 {
     JSProtoKey key = GetExceptionProtoKey(type);
     JSAtom *name = cx->runtime->atomState.classAtoms[key];
-    JSObject *errorProto = global->createBlankPrototypeInheriting(cx, &js_ErrorClass, proto);
+    JSObject *errorProto = global->createBlankPrototypeInheriting(cx, &ErrorClass, proto);
     if (!errorProto)
         return NULL;
 
@@ -1041,7 +1041,7 @@ InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, &js_ErrorClass, name, 1);
+    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1);
     if (!ctor)
         return NULL;
     ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(type)));
@@ -1180,7 +1180,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
+    errObject = NewNativeClassInstance(cx, &ErrorClass, errProto, errProto->getParent());
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
@@ -1264,7 +1264,7 @@ js_ReportUncaughtException(JSContext *cx)
     }
 
     JSAutoByteString filename;
-    if (!reportp && exnObject && exnObject->getClass() == &js_ErrorClass) {
+    if (!reportp && exnObject && exnObject->isError()) {
         if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[2]))
             return false;
         if (JSVAL_IS_STRING(roots[2])) {
@@ -1368,7 +1368,7 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     JSObject *proto;
     if (!js_GetClassPrototype(cx, scope->getGlobal(), GetExceptionProtoKey(copy->exnType), &proto))
         return NULL;
-    JSObject *copyobj = NewNativeClassInstance(cx, &js_ErrorClass, proto, proto->getParent());
+    JSObject *copyobj = NewNativeClassInstance(cx, &ErrorClass, proto, proto->getParent());
     copyobj->setPrivate(copy);
     autoFree.p = NULL;
     return copyobj;

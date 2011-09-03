@@ -59,11 +59,15 @@
 #include "jsvector.h"
 #include "jscell.h"
 
+namespace nanojit { class ValidateWriter; }
+
 namespace js {
 
-class JSProxyHandler;
 class AutoPropDescArrayRooter;
+class JSProxyHandler;
+class RegExp;
 struct GCMarker;
+struct NativeIterator;
 
 namespace mjit { class Compiler; }
 
@@ -284,26 +288,54 @@ js_TypeOf(JSContext *cx, JSObject *obj);
 
 namespace js {
 
-struct NativeIterator;
-class RegExp;
-
-class GlobalObject;
-class ArgumentsObject;
-class NormalArgumentsObject;
-class StrictArgumentsObject;
-class StringObject;
-
 /* ES5 8.12.8. */
 extern JSBool
 DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
 
-}
+extern JS_FRIEND_DATA(Class) AnyNameClass;
+extern JS_FRIEND_DATA(Class) AttributeNameClass;
+extern JS_FRIEND_DATA(Class) CallClass;
+extern JS_FRIEND_DATA(Class) DeclEnvClass;
+extern JS_FRIEND_DATA(Class) FunctionClass;
+extern JS_FRIEND_DATA(Class) FunctionProxyClass;
+extern JS_FRIEND_DATA(Class) NamespaceClass;
+extern JS_FRIEND_DATA(Class) OuterWindowProxyClass;
+extern JS_FRIEND_DATA(Class) ObjectProxyClass;
+extern JS_FRIEND_DATA(Class) QNameClass;
+extern JS_FRIEND_DATA(Class) ScriptClass;
+extern JS_FRIEND_DATA(Class) XMLClass;
 
-struct JSFunction;
+extern Class ArrayClass;
+extern Class ArrayBufferClass;
+extern Class BlockClass;
+extern Class BooleanClass;
+extern Class CallableObjectClass;
+extern Class DateClass;
+extern Class ErrorClass;
+extern Class GeneratorClass;
+extern Class IteratorClass;
+extern Class JSONClass;
+extern Class MathClass;
+extern Class NumberClass;
+extern Class NormalArgumentsObjectClass;
+extern Class ObjectClass;
+extern Class ProxyClass;
+extern Class RegExpClass;
+extern Class SlowArrayClass;
+extern Class StopIterationClass;
+extern Class StringClass;
+extern Class StrictArgumentsObjectClass;
+extern Class WeakMapClass;
+extern Class WithClass;
+extern Class XMLFilterClass;
 
-namespace nanojit {
-class ValidateWriter;
-}
+class ArgumentsObject;
+class GlobalObject;
+class NormalArgumentsObject;
+class StrictArgumentsObject;
+class StringObject;
+
+}  /* namespace js */
 
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
@@ -376,9 +408,9 @@ struct JSObject : js::gc::Cell {
      */
     js::Shape           *lastProp;
 
+  private:
     js::Class           *clasp;
 
-  private:
     inline void setLastProperty(const js::Shape *shape);
     inline void removeLastProperty();
 
@@ -470,6 +502,7 @@ struct JSObject : js::gc::Cell {
     inline bool isNative() const;
     inline bool isNewborn() const;
 
+    void setClass(js::Class *c) { clasp = c; }
     js::Class *getClass() const { return clasp; }
     JSClass *getJSClass() const { return Jsvalify(clasp); }
 
@@ -1198,10 +1231,10 @@ struct JSObject : js::gc::Cell {
 
     /*
      * Slots for XML-related classes are as follows:
-     * - js_NamespaceClass.base reserves the *_NAME_* and *_NAMESPACE_* slots.
-     * - js_QNameClass.base, js_AttributeNameClass, js_AnyNameClass reserve
+     * - NamespaceClass.base reserves the *_NAME_* and *_NAMESPACE_* slots.
+     * - QNameClass.base, AttributeNameClass, AnyNameClass reserve
      *   the *_NAME_* and *_QNAME_* slots.
-     * - Others (js_XMLClass, js_XMLFilterClass) don't reserve any slots.
+     * - Others (XMLClass, js_XMLFilterClass) don't reserve any slots.
      */
   private:
     static const uint32 JSSLOT_NAME_PREFIX          = 0;   // shared
@@ -1431,43 +1464,57 @@ struct JSObject : js::gc::Cell {
 
     inline bool canHaveMethodBarrier() const;
 
-    inline bool isArguments() const;
-    inline bool isNormalArguments() const;
-    inline bool isStrictArguments() const;
-    inline bool isArray() const;
-    inline bool isDenseArray() const;
-    inline bool isSlowArray() const;
-    inline bool isNumber() const;
-    inline bool isBoolean() const;
-    inline bool isString() const;
-    inline bool isPrimitive() const;
-    inline bool isDate() const;
-    inline bool isFunction() const;
-    inline bool isObject() const;
-    inline bool isWith() const;
-    inline bool isBlock() const;
-    inline bool isStaticBlock() const;
-    inline bool isClonedBlock() const;
-    inline bool isCall() const;
-    inline bool isRegExp() const;
-    inline bool isScript() const;
-    inline bool isError() const;
-    inline bool isXML() const;
-    inline bool isXMLId() const;
-    inline bool isNamespace() const;
-    inline bool isQName() const;
-    inline bool isWeakMap() const;
+    inline bool isArguments() const { return isNormalArguments() || isStrictArguments(); }
+    inline bool isArrayBuffer() const { return clasp == &js::ArrayBufferClass; }
+    inline bool isNormalArguments() const { return clasp == &js::NormalArgumentsObjectClass; }
+    inline bool isStrictArguments() const { return clasp == &js::StrictArgumentsObjectClass; }
+    inline bool isArray() const { return isSlowArray() || isDenseArray(); }
+    inline bool isDenseArray() const { return clasp == &js::ArrayClass; }
+    inline bool isSlowArray() const { return clasp == &js::SlowArrayClass; }
+    inline bool isNumber() const { return clasp == &js::NumberClass; }
+    inline bool isBoolean() const { return clasp == &js::BooleanClass; }
+    inline bool isString() const { return clasp == &js::StringClass; }
+    inline bool isPrimitive() const { return isNumber() || isString() || isBoolean(); }
+    inline bool isDate() const { return clasp == &js::DateClass; }
+    inline bool isFunction() const { return clasp == &js::FunctionClass; }
+    inline bool isObject() const { return clasp == &js::ObjectClass; }
+    inline bool isWith() const { return clasp == &js::WithClass; }
+    inline bool isBlock() const { return clasp == &js::BlockClass; }
+    inline bool isStaticBlock() const { return isBlock() && !getProto(); }
+    inline bool isClonedBlock() const { return isBlock() && !!getProto(); }
+    inline bool isCall() const { return clasp == &js::CallClass; }
+    inline bool isDeclEnv() const { return clasp == &js::DeclEnvClass; }
+    inline bool isRegExp() const { return clasp == &js::RegExpClass; }
+    inline bool isScript() const { return clasp == &js::ScriptClass; }
+    inline bool isGenerator() const { return clasp == &js::GeneratorClass; }
+    inline bool isIterator() const { return clasp == &js::IteratorClass; }
+    inline bool isStopIteration() const { return clasp == &js::StopIterationClass; }
+    inline bool isError() const { return clasp == &js::ErrorClass; }
+    inline bool isXML() const { return clasp == &js::XMLClass; }
+    inline bool isNamespace() const { return clasp == &js::NamespaceClass; }
+    inline bool isWeakMap() const { return clasp == &js::WeakMapClass; }
+    inline bool isFunctionProxy() const { return clasp == &js::FunctionProxyClass; }
+    inline bool isProxy() const { return isObjectProxy() || isFunctionProxy(); }
 
-    inline bool isProxy() const;
-    inline bool isObjectProxy() const;
-    inline bool isFunctionProxy() const;
-    inline bool isArrayBuffer() const;
+    inline bool isXMLId() const {
+        return clasp == &js::QNameClass || clasp == &js::AttributeNameClass || clasp == &js::AnyNameClass;
+    }
+    inline bool isQName() const {
+        return clasp == &js::QNameClass || clasp == &js::AttributeNameClass || clasp == &js::AnyNameClass;
+    }
+    inline bool isObjectProxy() const {
+        return clasp == &js::ObjectProxyClass || clasp == &js::OuterWindowProxyClass;
+    }
 
     JS_FRIEND_API(bool) isWrapper() const;
     bool isCrossCompartmentWrapper() const;
     JS_FRIEND_API(JSObject *) unwrap(uintN *flagsp = NULL);
 
     inline void initArrayClass();
+
+    /*** For jit compiler: ***/
+
+    static size_t offsetOfClassPointer() { return offsetof(JSObject, clasp); }
 };
 
 /* Check alignment for any fixed slots allocated after the object. */
@@ -1566,42 +1613,8 @@ class ValueArray {
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
-extern js::Class js_ArrayClass, js_SlowArrayClass, js_ArrayBufferClass;
-
-inline bool
-JSObject::isDenseArray() const
-{
-    return getClass() == &js_ArrayClass;
-}
-
-inline bool
-JSObject::isSlowArray() const
-{
-    return getClass() == &js_SlowArrayClass;
-}
-
-inline bool
-JSObject::isArray() const
-{
-    return isDenseArray() || isSlowArray();
-}
-
-inline bool
-JSObject::isArrayBuffer() const
-{
-    return getClass() == &js_ArrayBufferClass;
-}
-
-extern js::Class js_ObjectClass;
-extern js::Class js_WithClass;
-extern js::Class js_BlockClass;
-
-inline bool JSObject::isObject() const { return getClass() == &js_ObjectClass; }
-inline bool JSObject::isWith() const   { return getClass() == &js_WithClass; }
-inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
-
 /*
- * Block scope object macros.  The slots reserved by js_BlockClass are:
+ * Block scope object macros.  The slots reserved by BlockClass are:
  *
  *   private              StackFrame *      active frame pointer or null
  *   JSSLOT_BLOCK_DEPTH   int               depth of block slots in frame
@@ -1825,9 +1838,6 @@ extern JSBool
 js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id,
                      const js::Value &descriptor, JSBool *bp);
 
-extern JS_FRIEND_DATA(js::Class) js_CallClass;
-extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
-
 namespace js {
 
 /*
@@ -1896,9 +1906,9 @@ IsCacheableNonGlobalScope(JSObject *obj)
     JS_ASSERT(obj->getParent());
 
     js::Class *clasp = obj->getClass();
-    bool cacheable = (clasp == &js_CallClass ||
-                      clasp == &js_BlockClass ||
-                      clasp == &js_DeclEnvClass);
+    bool cacheable = (clasp == &CallClass ||
+                      clasp == &BlockClass ||
+                      clasp == &DeclEnvClass);
 
     JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;
