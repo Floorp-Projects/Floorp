@@ -2049,7 +2049,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
         regs.sp[-2].setString(JSID_TO_STRING(id));
-        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+        if (!OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     }
 #endif
@@ -2805,7 +2805,7 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     if (JS_UNLIKELY(f.regs.sp[-2].isPrimitive()) && thisv.isObject()) {
         f.regs.sp[-2] = f.regs.sp[-1];
         f.regs.sp[-1].setObject(*thisObj);
-        if (!js_OnUnknownMethod(cx, f.regs.sp - 2))
+        if (!OnUnknownMethod(cx, f.regs.sp - 2))
             THROW();
     } else
 #endif
