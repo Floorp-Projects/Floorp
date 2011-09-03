@@ -1843,12 +1843,12 @@ stubs::InitMethod(VMFrame &f, JSAtom *atom)
 }
 
 void JS_FASTCALL
-stubs::IterNext(VMFrame &f)
+stubs::IterNext(VMFrame &f, int32 offset)
 {
-    JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
-    JS_ASSERT(f.regs.sp[-1].isObject());
+    JS_ASSERT(f.regs.sp - offset >= f.fp()->base());
+    JS_ASSERT(f.regs.sp[-offset].isObject());
 
-    JSObject *iterobj = &f.regs.sp[-1].toObject();
+    JSObject *iterobj = &f.regs.sp[-offset].toObject();
     f.regs.sp[0].setNull();
     f.regs.sp++;
     if (!js_IteratorNext(f.cx, iterobj, &f.regs.sp[-1]))
