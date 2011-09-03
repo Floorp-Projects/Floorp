@@ -1324,13 +1324,14 @@ ArenaCallback(JSContext *cx, void *vdata, js::gc::Arena *arena,
     IterateData *data = static_cast<IterateData *>(vdata);
     data->currCompartmentStats->gcHeapArenaHeaders +=
         sizeof(js::gc::ArenaHeader);
+    size_t allocationSpace = arena->thingsSpan(thingSize);
     data->currCompartmentStats->gcHeapArenaPadding +=
-        arena->thingsStartOffset(thingSize) - sizeof(js::gc::ArenaHeader);
+        js::gc::ArenaSize - allocationSpace - sizeof(js::gc::ArenaHeader);
     // We don't call the callback on unused things.  So we compute the
     // unused space like this:  arenaUnused = maxArenaUnused - arenaUsed.
     // We do this by setting arenaUnused to maxArenaUnused here, and then
     // subtracting thingSize for every used cell, in CellCallback().
-    data->currCompartmentStats->gcHeapArenaUnused += arena->thingsSpan(thingSize);
+    data->currCompartmentStats->gcHeapArenaUnused += allocationSpace;
 }
 
 void

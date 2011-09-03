@@ -773,7 +773,7 @@ NewCallObject(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *c
     Bindings &bindings = script->bindings;
     size_t argsVars = bindings.countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
-    gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
+    gc::AllocKind kind = gc::GetGCObjectKind(slots);
 
     JSObject *callobj = js_NewGCObject(cx, kind);
     if (!callobj)

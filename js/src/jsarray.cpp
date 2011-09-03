@@ -1068,7 +1068,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     js::Shape *oldMap = lastProp;
 
     /* Create a native scope. */
-    js::gc::FinalizeKind kind = js::gc::FinalizeKind(arenaHeader()->getThingKind());
+    gc::AllocKind kind = getAllocKind();
     if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getProto()->getNewType(cx), kind))
         return false;
 
@@ -3256,7 +3256,7 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
 {
     JS_ASSERT_IF(proto, proto->isArray());
 
-    gc::FinalizeKind kind = GuessObjectGCKind(length, true);
+    gc::AllocKind kind = GuessObjectGCKind(length, true);
     JSObject *obj = detail::NewObject<WithProto::Class, false>(cx, &js_ArrayClass, proto, NULL, kind);
     if (!obj)
         return NULL;

@@ -68,7 +68,7 @@ js::Shape::freeTable(JSContext *cx)
 
 inline js::EmptyShape *
 js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
-                                     /* gc::FinalizeKind */ unsigned kind)
+                                     gc::AllocKind kind)
 {
     JS_ASSERT(!singleton);
 
