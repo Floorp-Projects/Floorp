@@ -402,10 +402,8 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, Value *argv)
     return thisp;
 }
 
-namespace js {
-
 void
-ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
+js::ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
 {
     Value &thisv = vp[1];
 
@@ -448,7 +446,7 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
  * The alert should display "true".
  */
 bool
-BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
+js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 {
     /*
      * Check for SynthesizeFrame poisoning and fast constructors which
@@ -474,8 +472,6 @@ BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
         return !!js_PrimitiveToObject(cx, &thisv);
 
     return true;
-}
-
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -524,8 +520,8 @@ Class js_NoSuchMethodClass = {
  * call by name, and args is an Array containing this invocation's actual
  * parameters.
  */
-JSBool
-js_OnUnknownMethod(JSContext *cx, Value *vp)
+bool
+js::OnUnknownMethod(JSContext *cx, Value *vp)
 {
     JS_ASSERT(!vp[1].isPrimitive());
 
@@ -586,10 +582,8 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp)
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
 
-namespace js {
-
 JS_REQUIRES_STACK bool
-RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
+js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 {
     JS_ASSERT(script);
     JS_ASSERT(fp == cx->fp());
@@ -626,8 +620,8 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
  * required arguments, allocate declared local variables, and pop everything
  * when done.  Then push the return value.
  */
-JS_REQUIRES_STACK bool
-InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
+bool
+js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 {
     /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
 
@@ -790,8 +784,8 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
 }
 
 bool
-Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
-       Value *rval)
+js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
+           Value *rval)
 {
     LeaveTrace(cx);
 
@@ -823,7 +817,7 @@ Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *
 }
 
 bool
-InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
+js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
 {
     LeaveTrace(cx);
 
@@ -843,8 +837,8 @@ InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Val
 }
 
 bool
-InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
-                     Value *rval)
+js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
+                         Value *rval)
 {
     LeaveTrace(cx);
 
@@ -886,8 +880,8 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
 #endif
 
 bool
-ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
-              ExecuteType type, StackFrame *evalInFrame, Value *result)
+js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
+                  ExecuteType type, StackFrame *evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
 
@@ -928,7 +922,7 @@ ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value
 }
 
 bool
-Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
+js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
 {
     /* The scope chain could be anything, so innerize just in case. */
     JSObject *scopeChain = &scopeChainArg;
@@ -958,7 +952,7 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rval)
 }
 
 bool
-CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
+js::CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
 {
     JSObject *obj2;
     JSProperty *prop;
@@ -1029,7 +1023,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
 }
 
 JSBool
-HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+js::HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
@@ -1040,7 +1034,7 @@ HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 }
 
 bool
-LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result)
+js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result)
 {
 #if JS_HAS_XML_SUPPORT
     if (JS_UNLIKELY(lval.isObject() && lval.toObject().isXML()) ||
@@ -1111,7 +1105,7 @@ LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result
 }
 
 bool
-StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, JSBool *equal)
+js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, JSBool *equal)
 {
     Value lval = lref, rval = rref;
     if (SameType(lval, rval)) {
@@ -1163,7 +1157,7 @@ IsNaN(const Value &v)
 }
 
 bool
-SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same)
+js::SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same)
 {
     if (IsNegativeZero(v1)) {
         *same = IsNegativeZero(v2);
@@ -1181,7 +1175,7 @@ SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same)
 }
 
 JSType
-TypeOfValue(JSContext *cx, const Value &vref)
+js::TypeOfValue(JSContext *cx, const Value &vref)
 {
     Value v = vref;
     if (v.isNumber())
@@ -1198,8 +1192,8 @@ TypeOfValue(JSContext *cx, const Value &vref)
     return JSTYPE_BOOLEAN;
 }
 
-JS_REQUIRES_STACK bool
-InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
+bool
+js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 {
     JS_ASSERT(!FunctionClass.construct);
     CallArgs args = argsRef;
@@ -1239,8 +1233,8 @@ error:
 }
 
 bool
-InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
-                               uintN argc, Value *argv, Value *rval)
+js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
+                                   uintN argc, Value *argv, Value *rval)
 {
     LeaveTrace(cx);
 
@@ -1275,7 +1269,7 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
 }
 
 bool
-ValueToId(JSContext *cx, const Value &v, jsid *idp)
+js::ValueToId(JSContext *cx, const Value &v, jsid *idp)
 {
     int32_t i;
     if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
@@ -1296,14 +1290,12 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
     return js_ValueToStringId(cx, v, idp);
 }
 
-} /* namespace js */
-
 /*
  * Enter the new with scope using an object at sp[-1] and associate the depth
  * of the with block with sp + stackIndex.
  */
-JS_REQUIRES_STACK JSBool
-js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
+static bool
+EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
 {
     StackFrame *fp = cx->fp();
     Value *sp = cx->regs().sp;
@@ -1337,8 +1329,8 @@ js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
     return JS_TRUE;
 }
 
-JS_REQUIRES_STACK void
-js_LeaveWith(JSContext *cx)
+static void
+LeaveWith(JSContext *cx)
 {
     JSObject *withobj;
 
@@ -1350,42 +1342,34 @@ js_LeaveWith(JSContext *cx)
     cx->fp()->setScopeChainNoCallObj(*withobj->getParent());
 }
 
-JS_REQUIRES_STACK Class *
-js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
+bool
+js::IsActiveWithOrBlock(JSContext *cx, JSObject &obj, int stackDepth)
 {
-    Class *clasp;
-
-    clasp = obj->getClass();
-    if ((clasp == &WithClass || clasp == &BlockClass) &&
-        obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()) &&
-        OBJ_BLOCK_DEPTH(cx, obj) >= stackDepth) {
-        return clasp;
-    }
-    return NULL;
+    return (obj.isWith() || obj.isBlock()) &&
+           obj.getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()) &&
+           OBJ_BLOCK_DEPTH(cx, &obj) >= stackDepth;
 }
 
 /*
  * Unwind block and scope chains to match the given depth. The function sets
  * fp->sp on return to stackDepth.
  */
-JS_REQUIRES_STACK JSBool
-js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
+bool
+js::UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
 {
-    Class *clasp;
-
     JS_ASSERT(stackDepth >= 0);
     JS_ASSERT(cx->fp()->base() + stackDepth <= cx->regs().sp);
 
     StackFrame *fp = cx->fp();
     for (;;) {
-        clasp = js_IsActiveWithOrBlock(cx, &fp->scopeChain(), stackDepth);
-        if (!clasp)
+        JSObject &scopeChain = fp->scopeChain();
+        if (!IsActiveWithOrBlock(cx, scopeChain, stackDepth))
             break;
-        if (clasp == &BlockClass) {
+        if (scopeChain.isBlock()) {
             /* Don't fail until after we've updated all stacks. */
             normalUnwind &= js_PutBlockObject(cx, normalUnwind);
         } else {
-            js_LeaveWith(cx);
+            LeaveWith(cx);
         }
     }
 
@@ -1393,8 +1377,14 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
     return normalUnwind;
 }
 
-JSBool
-js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
+/*
+ * Find the results of incrementing or decrementing *vp. For pre-increments,
+ * both *vp and *vp2 will contain the result on return. For post-increments,
+ * vp will contain the original value converted to a number and vp2 will get
+ * the result. Both vp and vp2 must be roots.
+ */
+static bool
+DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 {
     if (cs->format & JOF_POST) {
         double d;
@@ -1717,10 +1707,8 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
 #endif
 }
 
-namespace js {
-
-JS_REQUIRES_STACK JS_NEVER_INLINE bool
-Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
+JS_NEVER_INLINE bool
+js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
@@ -2373,7 +2361,7 @@ BEGIN_CASE(JSOP_POPV)
 END_CASE(JSOP_POPV)
 
 BEGIN_CASE(JSOP_ENTERWITH)
-    if (!js_EnterWith(cx, -1, JSOP_ENTERWITH, JSOP_ENTERWITH_LENGTH))
+    if (!EnterWith(cx, -1, JSOP_ENTERWITH, JSOP_ENTERWITH_LENGTH))
         goto error;
 
     /*
@@ -2391,7 +2379,7 @@ END_CASE(JSOP_ENTERWITH)
 BEGIN_CASE(JSOP_LEAVEWITH)
     JS_ASSERT(regs.sp[-1].toObject() == regs.fp()->scopeChain());
     regs.sp--;
-    js_LeaveWith(cx);
+    LeaveWith(cx);
 END_CASE(JSOP_LEAVEWITH)
 
 BEGIN_CASE(JSOP_RETURN)
@@ -2432,7 +2420,7 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!regs.fp()->hasImacropc());
-        JS_ASSERT(!js_IsActiveWithOrBlock(cx, &regs.fp()->scopeChain(), 0));
+        JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
         /* The JIT inlines ScriptEpilogue. */
@@ -3511,7 +3499,7 @@ do_incop:
     } else {
         /* We need an extra root for the result. */
         PUSH_NULL();
-        if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
+        if (!DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
             goto error;
 
         {
@@ -3583,7 +3571,7 @@ BEGIN_CASE(JSOP_LOCALINC)
         PUSH_INT32(tmp + incr2);
     } else {
         PUSH_COPY(*vp);
-        if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
+        if (!DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
             goto error;
         TypeScript::MonitorOverflow(cx, script, regs.pc);
     }
@@ -3789,7 +3777,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
         LOAD_ATOM(0, atom);
         regs.sp[-2].setString(atom);
-        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+        if (!OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     }
 #endif
@@ -4065,10 +4053,10 @@ BEGIN_CASE(JSOP_CALLELEM)
 
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(regs.sp[-2].isPrimitive()) && thisv.isObject()) {
-        /* For js_OnUnknownMethod, sp[-2] is the index, and sp[-1] is the object missing it. */
+        /* For OnUnknownMethod, sp[-2] is the index, and sp[-1] is the object missing it. */
         regs.sp[-2] = regs.sp[-1];
         regs.sp[-1].setObject(*thisObj);
-        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+        if (!OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     } else
 #endif
@@ -5805,7 +5793,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
     bool cond = !regs.sp[-1].isMagic();
     if (cond) {
         /* Exit the "with" block left from the previous iteration. */
-        js_LeaveWith(cx);
+        LeaveWith(cx);
     }
     if (!js_StepXMLListFilter(cx, cond))
         goto error;
@@ -5815,7 +5803,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
          * temporaries.
          */
         JS_ASSERT(IsXML(regs.sp[-1]));
-        if (!js_EnterWith(cx, -2, JSOP_ENDFILTER, JSOP_ENDFILTER_LENGTH))
+        if (!EnterWith(cx, -2, JSOP_ENDFILTER, JSOP_ENDFILTER_LENGTH))
             goto error;
         regs.sp--;
         len = GET_JUMP_OFFSET(regs.pc);
@@ -6209,7 +6197,7 @@ END_CASE(JSOP_ARRAYPUSH)
              */
             regs.pc = (script)->main() + tn->start + tn->length;
 
-            JSBool ok = js_UnwindScope(cx, tn->stackDepth, JS_TRUE);
+            JSBool ok = UnwindScope(cx, tn->stackDepth, JS_TRUE);
             JS_ASSERT(regs.sp == regs.fp()->base() + tn->stackDepth);
             if (!ok) {
                 /*
@@ -6279,12 +6267,12 @@ END_CASE(JSOP_ARRAYPUSH)
   forced_return:
     /*
      * Unwind the scope making sure that interpReturnOK stays false even when
-     * js_UnwindScope returns true.
+     * UnwindScope returns true.
      *
      * When a trap handler returns JSTRAP_RETURN, we jump here with
      * interpReturnOK set to true bypassing any finally blocks.
      */
-    interpReturnOK &= js_UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
+    interpReturnOK &= UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
     JS_ASSERT(regs.sp == regs.fp()->base());
 
     if (entryFrame != regs.fp())
@@ -6318,7 +6306,7 @@ END_CASE(JSOP_ARRAYPUSH)
 #endif
 
     JS_ASSERT_IF(!regs.fp()->isGeneratorFrame(),
-                 !js_IsActiveWithOrBlock(cx, &regs.fp()->scopeChain(), 0));
+                 !IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
 
 #ifdef JS_METHODJIT
     /*
@@ -6338,5 +6326,3 @@ END_CASE(JSOP_ARRAYPUSH)
     }
     goto error;
 }
-
-} /* namespace js */
