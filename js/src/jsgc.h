@@ -1088,13 +1088,13 @@ struct ArenaLists {
 
 #ifdef JS_THREADSAFE
     static void backgroundFinalize(JSContext *cx, ArenaHeader *listHead);
+#endif
 
   private:
     inline void finalizeNow(JSContext *cx, AllocKind thingKind);
     inline void finalizeLater(JSContext *cx, AllocKind thingKind);
 
     inline void *allocateFromArena(JSContext *cx, AllocKind thingKind);
-#endif
 };
 
 /*
