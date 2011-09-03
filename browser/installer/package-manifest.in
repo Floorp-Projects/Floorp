@@ -45,7 +45,9 @@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@mozutils@DLL_SUFFIX@
+#ifdef MOZ_MEMORY_DARWIN
+@BINPATH@/@DLL_PREFIX@jemalloc@DLL_SUFFIX@
+#endif
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -58,6 +60,9 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
+#ifdef MOZ_MEMORY
+@BINPATH@/jemalloc.dll
+#endif
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll

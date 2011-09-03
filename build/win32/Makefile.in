@@ -62,8 +62,6 @@ CPPSRCS = crashinject.cpp
 
 endif # ENABLE_TESTS
 
-MOZ_UTILS_LDFLAGS =
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef WIN32_REDIST_DIR

@@ -111,6 +111,11 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS		+= $(LIBIDL_CFLAGS)
 
+# Do not link to jemalloc
+ifeq ($(OS_ARCH),SunOS)
+SOLARIS_JEMALLOC_LDFLAGS =
+endif
+
 # Compile directly against the static lib, so we can use xpidl during the build
 # without the shared library path being set.
 ifneq (,$(filter WINNT OS2,$(OS_ARCH)))

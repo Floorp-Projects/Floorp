@@ -47,7 +47,6 @@ ifdef MOZ_MEMORY
 DIRS += jemalloc
 endif
 
-DIRS += mozutils
 DIRS += mozalloc
 
 include $(topsrcdir)/config/rules.mk

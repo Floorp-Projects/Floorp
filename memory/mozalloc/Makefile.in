@@ -54,6 +54,12 @@ LIBRARY_NAME	= mozalloc
 FORCE_SHARED_LIB= 1
 DIST_INSTALL 	= 1
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),Darwin)
+EXTRA_DSO_LDOPTS += -L$(DIST)/lib -ljemalloc
+endif
+endif
+
 ifeq (,$(filter-out OS2,$(OS_ARCH)))
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES		+= -D_GNU_SOURCE
