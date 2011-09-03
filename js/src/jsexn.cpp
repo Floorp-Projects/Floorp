@@ -704,6 +704,8 @@ enum {
 static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /*
      * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
      * called as functions, without operator new.  But as we do not give
@@ -711,36 +713,28 @@ Exception(JSContext *cx, uintN argc, Value *vp)
      * NewNativeClassInstance to find the class prototype, we must get the
      * class prototype ourselves.
      */
-    JSObject &callee = vp[0].toObject();
     Value protov;
-    if (!callee.getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
-        return JS_FALSE;
+    jsid protoAtom = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
+    if (!args.callee().getProperty(cx, protoAtom, &protov))
+        return false;
 
     if (!protov.isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE, "Error");
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *errProto = &protov.toObject();
     JSObject *obj = NewNativeClassInstance(cx, &ErrorClass, errProto, errProto->getParent());
     if (!obj)
-        return JS_FALSE;
-
-    /*
-     * If it's a new object of class Exception, then null out the private
-     * data so that the finalizer doesn't attempt to free it.
-     */
-    if (obj->getClass() == &ErrorClass)
-        obj->setPrivate(NULL);
+        return false;
 
     /* Set the 'message' property. */
-    Value *argv = vp + 2;
     JSString *message;
-    if (argc != 0 && !argv[0].isUndefined()) {
-        message = js_ValueToString(cx, argv[0]);
+    if (args.argc() != 0 && !args[0].isUndefined()) {
+        message = js_ValueToString(cx, args[0]);
         if (!message)
-            return JS_FALSE;
-        argv[0].setString(message);
+            return false;
+        args[0].setString(message);
     } else {
         message = NULL;
     }
@@ -752,16 +746,16 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 
     /* Set the 'fileName' property. */
     JSString *filename;
-    if (argc > 1) {
-        filename = js_ValueToString(cx, argv[1]);
+    if (args.argc() > 1) {
+        filename = js_ValueToString(cx, args[1]);
         if (!filename)
-            return JS_FALSE;
-        argv[1].setString(filename);
+            return false;
+        args[1].setString(filename);
     } else {
         if (!iter.done()) {
             filename = FilenameToString(cx, iter.fp()->script()->filename);
             if (!filename)
-                return JS_FALSE;
+                return false;
         } else {
             filename = cx->runtime->emptyString;
         }
@@ -769,21 +763,19 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 
     /* Set the 'lineNumber' property. */
     uint32_t lineno;
-    if (argc > 2) {
-        if (!ValueToECMAUint32(cx, argv[2], &lineno))
-            return JS_FALSE;
+    if (args.argc() > 2) {
+        if (!ValueToECMAUint32(cx, args[2], &lineno))
+            return false;
     } else {
         lineno = iter.done() ? 0 : js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
     }
 
-    intN exnType = callee.getReservedSlot(JSSLOT_ERROR_EXNTYPE).toInt32();
-    if (obj->getClass() == &ErrorClass &&
-        !InitExnPrivate(cx, obj, message, filename, lineno, NULL, exnType)) {
-        return JS_FALSE;
-    }
+    intN exnType = args.callee().getReservedSlot(JSSLOT_ERROR_EXNTYPE).toInt32();
+    if (!InitExnPrivate(cx, obj, message, filename, lineno, NULL, exnType))
+        return false;
 
-    vp->setObject(*obj);
-    return JS_TRUE;
+    args.rval().setObject(*obj);
+    return true;
 }
 
 /*
