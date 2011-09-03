@@ -85,6 +85,8 @@ ifdef MOZ_APP_PROFILE
 DEFINES += -DMOZ_APP_PROFILE="$(MOZ_APP_PROFILE)"
 endif
 
+LIBS += $(JEMALLOC_LIBS)
+
 ifdef LIBXUL_SDK
 include $(topsrcdir)/config/rules.mk
 else

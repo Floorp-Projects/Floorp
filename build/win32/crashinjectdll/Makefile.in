@@ -50,6 +50,4 @@ USE_STATIC_LIBS = 1
 
 CPPSRCS = crashinjectdll.cpp
 
-MOZ_UTILS_LDFLAGS =
-
 include $(topsrcdir)/config/rules.mk
