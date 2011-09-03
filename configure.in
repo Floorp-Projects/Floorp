@@ -1352,35 +1352,8 @@ solaris*)
 BSD_386)
     HOST_OS_ARCH=BSD
     ;;
-dgux)
-    HOST_OS_ARCH=DGUX
-    ;;
-UNIX_SV)
-    if "`cat /etc/bcheckrc | grep -c NCR 2>/dev/null`" != "0"; then
-        HOST_OS_ARCH=NCR
-    else
-        HOST_OS_ARCH=UNIXWARE
-    fi
-    ;;
-ncr)
-    HOST_OS_ARCH=NCR
-    ;;
-UNIX_SYSTEM_V)
-    HOST_OS_ARCH=NEC
-    ;;
-OSF1)
-    ;;
 OS_2)
     HOST_OS_ARCH=OS2
-    ;;
-SCO_SV)
-    HOST_OS_ARCH=SCOOS
-    ;;
-SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
-    HOST_OS_ARCH=SINIX
-    ;;
-UnixWare)
-    HOST_OS_ARCH=UNIXWARE
     ;;
 esac
 
@@ -1423,51 +1396,9 @@ AIX)
 BSD_386)
     OS_ARCH=BSD
     ;;
-dgux)
-    OS_ARCH=DGUX
-    ;;
-UNIX_SV)
-    if "`cat /etc/bcheckrc | grep -c NCR 2>/dev/null`" != "0"; then
-        OS_ARCH=NCR
-    else
-        OS_ARCH=UNIXWARE
-        OS_RELEASE=`uname -v`
-    fi
-    ;;
-ncr)
-    OS_ARCH=NCR
-    ;;
-UNIX_SYSTEM_V)
-    OS_ARCH=NEC
-    ;;
-OSF1)
-    case `uname -v` in
-    148)
-        OS_RELEASE=V3.2C
-        ;;
-    564)
-        OS_RELEASE=V4.0B
-        ;;
-    878)
-        OS_RELEASE=V4.0D
-        ;;
-    esac
-    ;;
 OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
-    OS_RELEASE=`uname -v`
-    ;;
-SCO_SV)
-    OS_ARCH=SCOOS
-    OS_RELEASE=5.0
-    ;;
-SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
-    OS_ARCH=SINIX
-    OS_TEST=`uname -p`
-    ;;
-UnixWare)
-    OS_ARCH=UNIXWARE
     OS_RELEASE=`uname -v`
     ;;
 Darwin)
@@ -1489,12 +1420,6 @@ Darwin)
     esac
     ;;
 esac
-
-if test "$OS_ARCH" = "NCR"; then
-    changequote(,)
-    OS_RELEASE=`awk '{print $3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$/\2.\3/'`
-    changequote([,])
-fi
 
 # Only set CPU_ARCH if we recognize the value of OS_TEST
 
@@ -2566,15 +2491,6 @@ alpha*-*-osf*)
     AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     ;;
 
-*-sco*)
-    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
-    if test ! "$GNU_CC"; then
-       DSO_LDOPTS='-G'
-    fi
-    ;;
-
 *-solaris*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
@@ -2674,10 +2590,6 @@ alpha*-*-osf*)
     esac
     ;;
 
-*-sysv4.2uw7*)
-	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION -L/usr/ccs/lib -lcrt"
-    ;;
-
 *-os2*)
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     ;;
@@ -2734,9 +2646,6 @@ case "$target" in
           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
          fi
         fi
-        ;;
-    *-nto*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
@@ -3502,10 +3411,6 @@ then
 			;;
 
 	    *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
-	    *-*-nto*)
 			AC_DEFINE(_REENTRANT)
 			;;
 
