@@ -826,12 +826,6 @@ EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 endif
 
-ifdef MOZ_MEMORY
-ifeq ($(OS_ARCH),Darwin)
-LDFLAGS += -ljemalloc
-endif
-endif
-
 ifdef SOLARIS_SUNPRO_CXX
 ifeq ($(TARGET_CPU),sparc)
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
