@@ -1316,6 +1316,7 @@ ArenaLists::finalizeLater(JSContext *cx, AllocKind thingKind)
 #endif
 }
 
+#ifdef JS_THREADSAFE
 /*static*/ void
 ArenaLists::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
 {
@@ -1356,6 +1357,7 @@ ArenaLists::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
         lists->backgroundFinalizeState[thingKind] = BFS_DONE;
     }
 }
+#endif /* JS_THREADSAFE */
 
 void
 ArenaLists::finalizeObjects(JSContext *cx)
