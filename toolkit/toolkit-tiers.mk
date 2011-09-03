@@ -161,9 +161,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifndef MOZ_NATIVE_PNG
+tier_platform_dirs += modules/libimg/png
+endif
+
 tier_platform_dirs	+= \
 		uriloader \
-		modules/libimg \
 		caps \
 		parser \
 		gfx \
