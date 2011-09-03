@@ -323,7 +323,7 @@ class SetPropCompiler : public PICStubCompiler
                 return error();
         }
 
-        JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->getClass() == &js_CallClass);
+        JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->isCall());
 
         MaybeJump skipOver;
 
@@ -914,8 +914,8 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
 
         masm.loadObjClass(pic.objReg, pic.shapeReg);
-        Jump isDense = masm.testClass(Assembler::Equal, pic.shapeReg, &js_ArrayClass);
-        Jump notArray = masm.testClass(Assembler::NotEqual, pic.shapeReg, &js_SlowArrayClass);
+        Jump isDense = masm.testClass(Assembler::Equal, pic.shapeReg, &ArrayClass);
+        Jump notArray = masm.testClass(Assembler::NotEqual, pic.shapeReg, &SlowArrayClass);
 
         isDense.linkTo(masm.label(), &masm);
         masm.load32(Address(pic.objReg, offsetof(JSObject, privateData)), pic.objReg);
@@ -1494,7 +1494,7 @@ class ScopeNameCompiler : public PICStubCompiler
          * tree in ComputeImplicitThis.
          */
         if (pic.kind == ic::PICInfo::CALLNAME) {
-            JS_ASSERT(obj->getClass() == &js_CallClass);
+            JS_ASSERT(obj->isCall());
             Value *thisVp = &cx->regs().sp[1];
             Address thisSlot(JSFrameReg, StackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
             masm.storeValue(UndefinedValue(), thisSlot);
@@ -1597,7 +1597,7 @@ class ScopeNameCompiler : public PICStubCompiler
         if (obj != getprop.holder)
             return disable("property is on proto of a scope object");
 
-        if (obj->getClass() == &js_CallClass)
+        if (obj->isCall())
             return generateCallStub(obj);
 
         LookupStatus status = getprop.testForGet();
@@ -1641,7 +1641,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         const Shape *shape = getprop.shape;
         JSObject *normalized = obj;
-        if (obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+        if (obj->isWith() && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(cx, obj);
         NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp, return false);
         if (thisvp)

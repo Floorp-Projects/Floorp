@@ -186,7 +186,7 @@ static JSObject *
 DelegateObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->getPrivate()) {
-        JSObject *delegate = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, obj->getProto(), NULL);
+        JSObject *delegate = NewNonFunction<WithProto::Given>(cx, &ObjectClass, obj->getProto(), NULL);
         obj->setPrivate(delegate);
         return delegate;
     }
@@ -212,7 +212,7 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
 
     JS_ASSERT(obj->getClass() == &ArrayBuffer::slowClass);
     obj->setSharedNonNativeMap();
-    obj->clasp = &js_ArrayBufferClass;
+    obj->setClass(&ArrayBufferClass);
 
     /*
      * The first 8 bytes hold the length.
@@ -980,7 +980,7 @@ class TypedArrayTemplate
 
         JS_ASSERT(obj->getClass() == slowClass());
         obj->setSharedNonNativeMap();
-        obj->clasp = fastClass();
+        obj->setClass(fastClass());
 
         // FIXME Bug 599008: make it ok to call preventExtensions here.
         obj->flags |= JSObject::NOT_EXTENSIBLE;
@@ -1694,7 +1694,7 @@ Class ArrayBuffer::slowClass = {
     FinalizeStub
 };
 
-Class js_ArrayBufferClass = {
+Class js::ArrayBufferClass = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE |
     Class::NON_NATIVE |
@@ -1902,7 +1902,7 @@ InitArrayBufferClass(JSContext *cx, GlobalObject *global)
         return NULL;
 
     JSFunction *ctor =
-        global->createConstructor(cx, ArrayBuffer::class_constructor, &js_ArrayBufferClass,
+        global->createConstructor(cx, ArrayBuffer::class_constructor, &ArrayBufferClass,
                                   CLASS_ATOM(cx, ArrayBuffer), 1);
     if (!ctor)
         return NULL;
@@ -1953,7 +1953,7 @@ JS_FRIEND_API(JSBool)
 js_IsArrayBuffer(JSObject *obj)
 {
     JS_ASSERT(obj);
-    return obj->getClass() == &js_ArrayBufferClass;
+    return obj->isArrayBuffer();
 }
 
 namespace js {
