@@ -5435,8 +5435,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
             return OptionFailure("ion-regalloc", str);
     }
 
-    if (op->getBoolOption("ion-eager"))
+    if (op->getBoolOption("ion-eager")) {
+        ion::js_IonOptions.enabled = true;
         ion::js_IonOptions.setEagerCompilation();
+    }
 #endif
 
     /* |scriptArgs| gets bound on the global before any code is run. */
