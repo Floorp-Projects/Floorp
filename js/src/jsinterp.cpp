@@ -667,22 +667,6 @@ InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
     if (fun->isNative())
         return CallJSNative(cx, fun->u.n.native, args);
 
-    /* Handle the empty-script special case. */
-    JSScript *script = fun->script();
-    if (JS_UNLIKELY(script->isEmpty())) {
-        if (construct) {
-            bool newType = cx->typeInferenceEnabled() && cx->fp()->isScriptFrame() &&
-                UseNewType(cx, cx->fp()->script(), cx->regs().pc);
-            JSObject *obj = js_CreateThisForFunction(cx, &callee, newType);
-            if (!obj)
-                return false;
-            args.rval().setObject(*obj);
-        } else {
-            args.rval().setUndefined();
-        }
-        return true;
-    }
-
     TypeMonitorCall(cx, args, construct);
 
     /* Get pointer to new frame/slots, prepare arguments. */
@@ -699,7 +683,7 @@ InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
     JSBool ok;
     {
         AutoPreserveEnumerators preserve(cx);
-        ok = RunScript(cx, script, fp);
+        ok = RunScript(cx, fun->script(), fp);
     }
 
     args.rval() = fp->returnValue();
@@ -739,7 +723,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         if (fun->isNative())
             break;
         script_ = fun->script();
-        if (fun->isHeavyweight() || script_->isEmpty())
+        if (fun->isHeavyweight())
             break;
 
         /*
