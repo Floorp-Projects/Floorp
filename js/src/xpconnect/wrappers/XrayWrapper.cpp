@@ -556,7 +556,7 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
 
         if (desc->obj)
             desc->obj = wrapper;
-        return JS_WrapPropertyDescriptor(cx, desc_in);
+        return cx->compartment->wrap(cx, desc_in);
     }
 
     if (!this->resolveOwnProperty(cx, wrapper, id, set, desc_in))
@@ -627,7 +627,7 @@ XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, js
         }
 
         desc->obj = (desc->obj == wnObject) ? wrapper : nsnull;
-        return JS_WrapPropertyDescriptor(cx, desc_in);
+        return cx->compartment->wrap(cx, desc_in);
     }
 
     return this->resolveOwnProperty(cx, wrapper, id, set, desc_in);
@@ -649,7 +649,7 @@ XrayWrapper<Base>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
         if (!ac.enter(cx, wnObject))
             return false;
 
-        if (!JS_WrapPropertyDescriptor(cx, desc))
+        if (!cx->compartment->wrap(cx, desc))
             return false;
 
         return JS_DefinePropertyById(cx, wnObject, id, jsdesc->value, jsdesc->getter, jsdesc->setter,

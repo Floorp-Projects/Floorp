@@ -578,7 +578,7 @@ class Compiler : public BaseCompiler
     bool constantFoldBranch(jsbytecode *target, bool taken);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     bool iter(uintN flags);
-    void iterNext();
+    void iterNext(ptrdiff_t offset);
     bool iterMore(jsbytecode *target);
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID *fpReg, bool *allocated);

@@ -2666,10 +2666,11 @@ END_CASE(JSOP_MOREITER)
 
 BEGIN_CASE(JSOP_ITERNEXT)
 {
-    JS_ASSERT(regs.sp - 1 >= regs.fp()->base());
-    JS_ASSERT(regs.sp[-1].isObject());
+    Value *itervp = regs.sp - GET_INT8(regs.pc);
+    JS_ASSERT(itervp >= regs.fp()->base());
+    JS_ASSERT(itervp->isObject());
     PUSH_NULL();
-    if (!IteratorNext(cx, &regs.sp[-2].toObject(), &regs.sp[-1]))
+    if (!IteratorNext(cx, &itervp->toObject(), &regs.sp[-1]))
         goto error;
 }
 END_CASE(JSOP_ITERNEXT)

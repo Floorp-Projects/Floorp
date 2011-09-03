@@ -495,10 +495,9 @@ let Content = {
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri,
                                                   referrer: element.ownerDocument.documentURIObject.spec });
-        } else if (this._highlightElement) {
-          if (!this._formAssistant.open(element))
-            sendAsyncMessage("FindAssist:Hide", { });
-          this._sendMouseEvent("mousemove", this._highlightElement, x, y); 
+        } else if (!this._formAssistant.open(element) && this._highlightElement) {
+          sendAsyncMessage("FindAssist:Hide", { });
+          this._sendMouseEvent("mousemove", this._highlightElement, x, y);
           this._sendMouseEvent("mousedown", this._highlightElement, x, y);
           this._sendMouseEvent("mouseup", this._highlightElement, x, y);
         }
