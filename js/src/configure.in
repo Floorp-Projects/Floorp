@@ -501,40 +501,6 @@ if test "$target" != "$host"; then
         ;;
     esac
 
-    case "$target" in
-    *symbian*)
-        AC_ARG_WITH(symbian-sdk,
-        [  --with-symbian-sdk=SYMBIAN_SDK_DIR
-                          The path to the Symbian SDK],
-        SYMBIAN_SDK_DIR=$withval)
-
-        OS_EXE_CFLAGS="$OS_EXE_CFLAGS -D__EXE__"
-        CFLAGS="-MD -nostdinc"
-        SYMBIAN_SYS_INCLUDE="-I$SYMBIAN_SDK_DIR/Epoc32/include -I$SYMBIAN_SDK_DIR/Epoc32/include/variant -I$SYMBIAN_SDK_DIR/Epoc32/include/stdapis"
-
-        case "$target" in
-        *-symbianelf)
-            OS_TARGET=GCCE
-            CC=arm-none-symbianelf-gcc.exe
-            CXX=arm-none-symbianelf-g++.exe
-            LD=arm-none-symbianelf-ld.exe
-            AR=arm-none-symbianelf-ar.exe
-            CPP=arm-none-symbianelf-cpp.exe
-            CFLAGS="$CFLAGS -c -Wall -Wno-unknown-pragmas -fexceptions -march=armv5t -mapcs -pipe -msoft-float"
-            CXXFLAGS="$CFLAGS -Wno-ctor-dtor-privacy"
-            GCCE_INCLUDE="-include $SYMBIAN_SDK_DIR/EPOC32/INCLUDE/GCCE/GCCE.h -D__PRODUCT_INCLUDE__=$SYMBIAN_SDK_DIR/Epoc32/include/variant/Symbian_OS_v9.2.hrh"
-            CFLAGS="$CFLAGS ${GCCE_INCLUDE} -x c"
-            CXXFLAGS="$CXXFLAGS ${GCCE_INCLUDE} -x c++"
-            CPPFLAGS="$CPPFLAGS ${SYMBIAN_SYS_INCLUDE}"
-            ;;
-        *-symbianwinscw)
-            dnl TODO: add emulator build code
-            OS_TARGET=WINSCW
-            ;;
-        esac
-        ;;
-    esac
-
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", :)
     unset ac_cv_prog_CC
     AC_PROG_CC
@@ -2055,33 +2021,6 @@ ia64*-hpux*)
         MC=mc.exe
     fi
     ;;
-*-symbian*)
-
-    AC_DEFINE(XP_UNIX)
-    AC_DEFINE(SYMBIAN)
-    AC_DEFINE(__arm__)
-    AC_DEFINE(__SYMBIAN32__)
-    AC_DEFINE(_UNICODE)
-    AC_DEFINE(NDEBUG)
-    AC_DEFINE(__SUPPORT_CPP_EXCEPTIONS__)
-    AC_DEFINE(MOZ_STDERR_TO_STDOUT)
-    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    AC_DEFINE(HAVE_SOCKLEN_T)
-    AC_DEFINE(__GCCE__)
-
-    CPU_ARCH=ARM
-    OS_RELEASE=9.2
-    OS_ARCH=SYMBIAN
-    USE_PTHREADS=1
-    LIB_SUFFIX=lib
-    DLL_SUFFIX=dll
-    MKSHLIB=
-    DSO_LDOPTS=
-    DSO_CFLAGS=
-    VISIBILITY_FLAGS=
-    TARGET_NSPR_MDCPUCFG='\"md/_symbian.cfg\"'
-    RANLIB='echo no ranlib '
-;;
 
 *-mingw*)
     DSO_CFLAGS=
@@ -5064,10 +5003,6 @@ JS_DISABLE_SHELL=
 case "$target" in
 *-mingw*)
     NO_EDITLINE=1
-    ;;
-*-symbian*)
-    NO_EDITLINE=1
-    JS_DISABLE_SHELL=1
     ;;
 *)
     ;;

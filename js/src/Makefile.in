@@ -563,7 +563,6 @@ endif
 default::
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
-ifneq ($(OS_ARCH),SYMBIAN)
 # nsinstall doesn't get built until we enter config/ in the exports phase,
 # so we'll have to manually ensure it gets built here if we want to use
 # $(EXPORTS)
@@ -572,7 +571,6 @@ $(PUBLIC) $(SDK_PUBLIC): config/nsinstall$(HOST_BIN_SUFFIX)
 
 config/nsinstall$(HOST_BIN_SUFFIX): $(srcdir)/config/nsinstall.c $(srcdir)/config/pathsub.c
 	$(MAKE) -C config/ nsinstall$(HOST_BIN_SUFFIX)
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
