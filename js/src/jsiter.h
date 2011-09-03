@@ -231,15 +231,15 @@ js_LiveFrameIfGenerator(js::StackFrame *fp)
 
 #endif
 
-namespace js {
+extern js::Class js_GeneratorClass;
+extern js::Class js_IteratorClass;
+extern js::Class js_StopIterationClass;
 
 static inline bool
-IsStopIteration(const js::Value &v)
+js_ValueIsStopIteration(const js::Value &v)
 {
-    return v.isObject() && v.toObject().isStopIteration();
+    return v.isObject() && v.toObject().getClass() == &js_StopIterationClass;
 }
-
-}  /* namespace js */
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);

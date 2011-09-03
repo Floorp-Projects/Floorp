@@ -58,9 +58,11 @@
 #include "jsfun.h"
 #include "jsgcstats.h"
 #include "jscell.h"
-#include "jsxml.h"
 
 struct JSCompartment;
+
+extern "C" void
+js_TraceXML(JSTracer *trc, JSXML* thing);
 
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(limit, lval)  ((jsuword)(lval) < limit)
@@ -1511,7 +1513,7 @@ struct GCMarker : public JSTracer {
         color = newColor;
     }
 
-    void delayMarkingChildren(const js::gc::Cell *cell);
+    void delayMarkingChildren(const void *thing);
 
     void markDelayedChildren();
 

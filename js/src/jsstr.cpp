@@ -384,7 +384,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return JS_TRUE;
 }
 
-Class js::StringClass = {
+Class js_StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_CACHED_PROTO(JSProto_String),
@@ -401,7 +401,7 @@ Class js::StringClass = {
  * Returns a JSString * for the |this| value associated with vp, or throws a
  * TypeError if |this| is null or undefined.  This algorithm is the same as
  * calling CheckObjectCoercible(this), then returning ToString(this), as all
- * String.prototype.* methods do (other than toString and valueOf).
+ * String.prototype.* methods do.
  */
 static JS_ALWAYS_INLINE JSString *
 ThisToStringForStringProto(JSContext *cx, Value *vp)
@@ -413,9 +413,9 @@ ThisToStringForStringProto(JSContext *cx, Value *vp)
 
     if (vp[1].isObject()) {
         JSObject *obj = &vp[1].toObject();
-        if (obj->isString() &&
+        if (obj->getClass() == &js_StringClass &&
             ClassMethodIsNative(cx, obj,
-                                &StringClass,
+                                &js_StringClass,
                                 ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
                                 js_str_toString))
         {
@@ -3191,12 +3191,12 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 
     GlobalObject *global = obj->asGlobal();
 
-    JSObject *proto = global->createBlankPrototype(cx, &StringClass);
+    JSObject *proto = global->createBlankPrototype(cx, &js_StringClass);
     if (!proto || !proto->asString()->init(cx, cx->runtime->emptyString))
         return NULL;
 
     /* Now create the String function. */
-    JSFunction *ctor = global->createConstructor(cx, js_String, &StringClass,
+    JSFunction *ctor = global->createConstructor(cx, js_String, &js_StringClass,
                                                  CLASS_ATOM(cx, String), 1);
     if (!ctor)
         return NULL;

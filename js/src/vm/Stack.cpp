@@ -152,7 +152,7 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
         otherfp->flags_ &= ~HAS_CALL_OBJ;
         if (js_IsNamedLambda(fun())) {
             JSObject *env = obj.getParent();
-            JS_ASSERT(env->isDeclEnv());
+            JS_ASSERT(env->getClass() == &js_DeclEnvClass);
             env->setPrivate(this);
         }
     }

@@ -142,6 +142,30 @@ const uint32 JSSLOT_PROXY_EXTRA   = 2;
 const uint32 JSSLOT_PROXY_CALL = 3;
 const uint32 JSSLOT_PROXY_CONSTRUCT = 4;
 
+extern JS_FRIEND_API(js::Class) ObjectProxyClass;
+extern JS_FRIEND_API(js::Class) FunctionProxyClass;
+extern JS_FRIEND_API(js::Class) OuterWindowProxyClass;
+extern js::Class CallableObjectClass;
+
+}
+
+inline bool
+JSObject::isObjectProxy() const
+{
+    return getClass() == &js::ObjectProxyClass ||
+           getClass() == &js::OuterWindowProxyClass;
+}
+
+inline bool
+JSObject::isFunctionProxy() const
+{
+    return getClass() == &js::FunctionProxyClass;
+}
+
+inline bool
+JSObject::isProxy() const
+{
+    return isObjectProxy() || isFunctionProxy();
 }
 
 inline js::JSProxyHandler *
@@ -192,6 +216,8 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp);
 }
 
 JS_BEGIN_EXTERN_C
+
+extern js::Class js_ProxyClass;
 
 extern JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj);

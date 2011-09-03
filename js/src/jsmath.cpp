@@ -106,7 +106,7 @@ MathCache::MathCache() {
     JS_ASSERT(hash(-0.0) != hash(+0.0));
 }
 
-Class js::MathClass = {
+Class js_MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
     PropertyStub,         /* addProperty */
@@ -865,7 +865,7 @@ js_IsMathFunction(JSNative native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &MathClass, NULL, obj);
+    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj);
     if (!Math || !Math->setSingletonType(cx))
         return NULL;
 
@@ -879,7 +879,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
         return NULL;
 
-    MarkStandardClassInitializedNoProto(obj, &MathClass);
+    MarkStandardClassInitializedNoProto(obj, &js_MathClass);
 
     return Math;
 }

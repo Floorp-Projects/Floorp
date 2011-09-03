@@ -1572,8 +1572,9 @@ GCMarker::~GCMarker()
 }
 
 void
-GCMarker::delayMarkingChildren(const Cell *cell)
+GCMarker::delayMarkingChildren(const void *thing)
 {
+    const Cell *cell = reinterpret_cast<const Cell *>(thing);
     ArenaHeader *aheader = cell->arenaHeader();
     if (aheader->getMarkingDelay()->link) {
         /* Arena already scheduled to be marked later */

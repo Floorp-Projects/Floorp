@@ -368,12 +368,12 @@ class ReferenceFinder {
             JSObject *object = static_cast<JSObject *>(cell);
 
             /* Certain classes of object are for internal use only. */
-            if (object->isBlock() ||
-                object->isCall() ||
-                object->isWith() ||
-                object->isDeclEnv()) {
+            JSClass *clasp = JS_GET_CLASS(context, object);
+            if (clasp == Jsvalify(&js_BlockClass) ||
+                clasp == Jsvalify(&js_CallClass) ||
+                clasp == Jsvalify(&js_WithClass) ||
+                clasp == Jsvalify(&js_DeclEnvClass))
                 return JSVAL_VOID;
-            }
 
             /* Internal function objects should also not be revealed. */
             if (JS_ObjectIsFunction(context, object) && IsInternalFunctionObject(object))
