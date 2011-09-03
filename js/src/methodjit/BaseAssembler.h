@@ -204,8 +204,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {
-        return branchPtr(cond, Address(fun, JSObject::offsetOfClassPointer()),
-                         ImmPtr(&FunctionClass));
+        return branchPtr(cond, Address(fun, offsetof(JSObject, clasp)),
+                         ImmPtr(&js_FunctionClass));
     }
 
     /*
@@ -811,7 +811,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     void loadObjClass(RegisterID objReg, RegisterID destReg) {
-        loadPtr(Address(objReg, JSObject::offsetOfClassPointer()), destReg);
+        loadPtr(Address(objReg, offsetof(JSObject, clasp)), destReg);
     }
 
     Jump testClass(Condition cond, RegisterID claspReg, js::Class *clasp) {
@@ -819,7 +819,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     Jump testObjClass(Condition cond, RegisterID objReg, js::Class *clasp) {
-        return branchPtr(cond, Address(objReg, JSObject::offsetOfClassPointer()), ImmPtr(clasp));
+        return branchPtr(cond, Address(objReg, offsetof(JSObject, clasp)), ImmPtr(clasp));
     }
 
     void branchValue(Condition cond, RegisterID reg, int32 value, RegisterID result)
@@ -1289,7 +1289,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         }
 
         storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
-        storePtr(ImmPtr(templateObject->getClass()), Address(result, JSObject::offsetOfClassPointer()));
+        storePtr(ImmPtr(templateObject->clasp), Address(result, offsetof(JSObject, clasp)));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
         store32(Imm32(templateObject->objShape), Address(result, offsetof(JSObject, objShape)));
         storePtr(ImmPtr(templateObject->newType), Address(result, offsetof(JSObject, newType)));

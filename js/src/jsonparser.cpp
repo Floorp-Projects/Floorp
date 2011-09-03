@@ -634,7 +634,7 @@ JSONParser::parse(Value *vp)
               }
 
               case ObjectOpen: {
-                JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
+                JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
                 if (!obj || !valueStack.append(ObjectValue(*obj)))
                     return false;
                 token = advanceAfterObjectOpen();

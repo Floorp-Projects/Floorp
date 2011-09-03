@@ -170,7 +170,7 @@ struct JSFunction : public JSObject_Slots2
 
   private:
     /*
-     * FunctionClass reserves two slots, which are free in JSObject::fslots
+     * js_FunctionClass reserves two slots, which are free in JSObject::fslots
      * without requiring dslots allocation. Null closures that can be joined to
      * a compiler-created function object use the first one to hold a mutable
      * methodAtom() state variable, needed for correct foo.caller handling.
@@ -255,6 +255,22 @@ struct JSFunction : public JSObject_Slots2
     JS_FN(name, fastcall, nargs, flags)
 #endif
 
+extern JS_PUBLIC_DATA(js::Class) js_CallClass;
+extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
+extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
+
+inline bool
+JSObject::isCall() const
+{
+    return getClass() == &js_CallClass;
+}
+
+inline bool
+JSObject::isFunction() const
+{
+    return getClass() == &js_FunctionClass;
+}
+
 inline JSFunction *
 JSObject::getFunctionPrivate() const
 {
@@ -315,7 +331,7 @@ IsNativeFunction(const js::Value &v, Native native)
 /*
  * When we have an object of a builtin class, we don't quite know what its
  * valueOf/toString methods are, since these methods may have been overwritten
- * or shadowed. However, we can still do better than the general case by
+ * or shadowed. However, we can still do better than js_TryMethod by
  * hard-coding the necessary properties for us to find the native we expect.
  *
  * TODO: a per-thread shape-based cache would be faster and simpler.

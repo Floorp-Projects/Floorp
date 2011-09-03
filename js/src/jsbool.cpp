@@ -63,7 +63,7 @@
 using namespace js;
 using namespace js::types;
 
-Class js::BooleanClass = {
+Class js_BooleanClass = {
     "Boolean",
     JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
@@ -138,7 +138,7 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
     bool b = argc != 0 ? js_ValueToBoolean(argv[0]) : false;
 
     if (IsConstructing(vp)) {
-        JSObject *obj = NewBuiltinClassInstance(cx, &BooleanClass);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_BooleanClass);
         if (!obj)
             return false;
         obj->setPrimitiveThis(BooleanValue(b));
@@ -152,7 +152,7 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
 JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &BooleanClass, Boolean, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
                                    NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;

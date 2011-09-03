@@ -782,7 +782,7 @@ JSStructuredCloneReader::startRead(Value *vp)
       case SCTAG_OBJECT_OBJECT: {
         JSObject *obj = (tag == SCTAG_ARRAY_OBJECT)
                         ? NewDenseEmptyArray(context())
-                        : NewBuiltinClassInstance(context(), &ObjectClass);
+                        : NewBuiltinClassInstance(context(), &js_ObjectClass);
         if (!obj || !objs.append(ObjectValue(*obj)) ||
             !allObjs.append(ObjectValue(*obj)))
             return false;

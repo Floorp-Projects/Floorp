@@ -354,13 +354,13 @@ Probes::resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize)
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char *ObjectClassname(JSObject *obj) {
-    if (!obj)
+    if (! obj)
         return "(null object)";
     Class *clasp = obj->getClass();
-    if (!clasp)
+    if (! clasp)
         return "(null)";
     const char *class_name = clasp->name;
-    if (!class_name)
+    if (! class_name)
         return "(null class name)";
     return class_name;
 }

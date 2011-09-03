@@ -57,6 +57,8 @@
 using namespace js;
 using namespace js::gc;
 
+namespace js {
+
 static inline const Value &
 GetCall(JSObject *proxy) {
     JS_ASSERT(proxy->isFunctionProxy());
@@ -411,7 +413,7 @@ ValueToBool(JSContext *cx, const Value &v, bool *bp)
     return true;
 }
 
-static bool
+bool
 ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
 {
     JS_ASSERT(props.length() == 0);
@@ -1025,7 +1027,7 @@ proxy_TypeOf(JSContext *cx, JSObject *proxy)
     return JSProxy::typeOf(cx, proxy);
 }
 
-JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
+JS_FRIEND_API(Class) ObjectProxyClass = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
     PropertyStub,         /* addProperty */
@@ -1060,7 +1062,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
     }
 };
 
-JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
+JS_FRIEND_API(Class) OuterWindowProxyClass = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
     PropertyStub,         /* addProperty */
@@ -1100,7 +1102,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
     }
 };
 
-static JSBool
+JSBool
 proxy_Call(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *proxy = &JS_CALLEE(cx, vp).toObject();
@@ -1108,7 +1110,7 @@ proxy_Call(JSContext *cx, uintN argc, Value *vp)
     return JSProxy::call(cx, proxy, argc, vp);
 }
 
-static JSBool
+JSBool
 proxy_Construct(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *proxy = &JS_CALLEE(cx, vp).toObject();
@@ -1117,7 +1119,7 @@ proxy_Construct(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
+JS_FRIEND_API(Class) FunctionProxyClass = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(5),
     PropertyStub,         /* addProperty */
@@ -1133,7 +1135,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
     proxy_Call,
     proxy_Construct,
     NULL,                 /* xdrObject   */
-    FunctionClass.hasInstance,
+    js_FunctionClass.hasInstance,
     proxy_TraceFunction,  /* trace       */
     JS_NULL_CLASS_EXT,
     {
@@ -1153,7 +1155,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
 };
 
 JS_FRIEND_API(JSObject *)
-js::NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObject *proto,
+NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObject *proto,
                JSObject *parent, JSObject *call, JSObject *construct)
 {
     JS_ASSERT_IF(proto, cx->compartment == proto->compartment());
@@ -1309,6 +1311,8 @@ static JSFunctionSpec static_methods[] = {
     JS_FS_END
 };
 
+extern Class CallableObjectClass;
+
 static const uint32 JSSLOT_CALLABLE_CALL = 0;
 static const uint32 JSSLOT_CALLABLE_CONSTRUCT = 1;
 
@@ -1351,7 +1355,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
 
-        JSObject *newobj = NewNativeClassInstance(cx, &ObjectClass, proto, proto->getParent());
+        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent());
         if (!newobj)
             return false;
 
@@ -1372,7 +1376,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-Class js::CallableObjectClass = {
+Class CallableObjectClass = {
     "Function",
     JSCLASS_HAS_RESERVED_SLOTS(2),
     PropertyStub,         /* addProperty */
@@ -1390,7 +1394,7 @@ Class js::CallableObjectClass = {
 };
 
 JS_FRIEND_API(JSBool)
-js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
+FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
 {
     if (OperationInProgress(cx, proxy)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROXY_FIX);
@@ -1411,7 +1415,7 @@ js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
 
     JSObject *proto = proxy->getProto();
     JSObject *parent = proxy->getParent();
-    Class *clasp = proxy->isFunctionProxy() ? &CallableObjectClass : &ObjectClass;
+    Class *clasp = proxy->isFunctionProxy() ? &CallableObjectClass : &js_ObjectClass;
 
     /*
      * Make a blank object from the recipe fix provided to us.  This must have
@@ -1444,7 +1448,9 @@ js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
     return true;
 }
 
-Class js::ProxyClass = {
+}
+
+Class js_ProxyClass = {
     "Proxy",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
     PropertyStub,         /* addProperty */
@@ -1459,7 +1465,7 @@ Class js::ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *module = NewNonFunction<WithProto::Class>(cx, &ProxyClass, NULL, obj);
+    JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj);
     if (!module || !module->setSingletonType(cx))
         return NULL;
 
@@ -1470,7 +1476,7 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, module, static_methods))
         return NULL;
 
-    MarkStandardClassInitializedNoProto(obj, &ProxyClass);
+    MarkStandardClassInitializedNoProto(obj, &js_ProxyClass);
 
     return module;
 }

@@ -360,19 +360,34 @@ class InterpreterFrames {
     const InterruptEnablerBase &enabler;
 };
 
+} /* namespace js */
+
+extern JS_REQUIRES_STACK JSBool
+js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen);
+
+extern JS_REQUIRES_STACK void
+js_LeaveWith(JSContext *cx);
+
+/*
+ * Find the results of incrementing or decrementing *vp. For pre-increments,
+ * both *vp and *vp2 will contain the result on return. For post-increments,
+ * vp will contain the original value converted to a number and vp2 will get
+ * the result. Both vp and vp2 must be roots.
+ */
+extern JSBool
+js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, js::Value *vp, js::Value *vp2);
+
 /*
  * Unwind block and scope chains to match the given depth. The function sets
  * fp->sp on return to stackDepth.
  */
-extern bool
-UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
+extern JS_REQUIRES_STACK JSBool
+js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
 
-extern bool
-OnUnknownMethod(JSContext *cx, js::Value *vp);
+extern JSBool
+js_OnUnknownMethod(JSContext *cx, js::Value *vp);
 
-extern bool
-IsActiveWithOrBlock(JSContext *cx, JSObject &obj, int stackDepth);
-
-}  /* namespace js */
+extern JS_REQUIRES_STACK js::Class *
+js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
 
 #endif /* jsinterp_h___ */
