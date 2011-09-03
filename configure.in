@@ -1876,12 +1876,6 @@ case "$host" in
     MOZ_FIX_LINK_PATHS=
     ;;
 
-*-osf*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
-    HOST_NSPR_MDCPUCFG='\"md/_osf1.cfg\"'
-    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
-    ;;
-
 *)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
@@ -2462,33 +2456,6 @@ ia64*-hpux*)
     if test "$ac_os2_declspec" != "yes"; then
         AC_MSG_ERROR([Compiler does not support __declspec(dllexport), install GCC-4.3.2 or newer])
     fi
-    ;;
-
-alpha*-*-osf*)
-    if test "$GNU_CC"; then
-      MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$@ -o $@'
-      MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$@ -o $@'
-
-    else
-	MOZ_DEBUG_FLAGS='-g'
-	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g'
-	CFLAGS="$CFLAGS -ieee"
-	CXXFLAGS="$CXXFLAGS "'-noexceptions -ieee  -ptr $(DIST)/cxx_repository'
-	DSO_LDOPTS='-shared -msym -expect_unresolved \* -update_registry $(DIST)/so_locations'
-	DSO_CFLAGS=
-	DSO_PIC_CFLAGS=
-	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -soname $@ -o $@'
-	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -soname $@ -o $@'
-	MKSHLIB_FORCE_ALL='-all'
-	MKSHLIB_UNFORCE_ALL='-none'
-	dnl Might fix the libxpcom.so breakage on this platform as well....
-	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    fi
-    if test -z "$GNU_CXX"; then
-      COMPAQ_CXX=1
-    fi
-    AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     ;;
 
 *-solaris*)
@@ -3419,10 +3386,6 @@ then
 			;;
 
 	    *-hpux11.*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
-	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
 			;;
 
@@ -7719,13 +7682,7 @@ fi
 
 AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
 
-# OSF native compilers do not like exception declarations
-# when exceptions are disabled
-if test -n "$COMPAQ_CXX" -o -n "$VACPP"; then
-    AC_DEFINE(CPP_THROW_NEW, [])
-else
-    AC_DEFINE(CPP_THROW_NEW, [throw()])
-fi
+AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
 dnl ========================================================
