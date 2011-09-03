@@ -300,7 +300,7 @@ GetScopeChainFull(JSContext *cx, StackFrame *fp, JSObject *blockChain)
          * to, but not including, that prototype.
          */
         limitClone = &fp->scopeChain();
-        while (limitClone->getClass() == &js_WithClass)
+        while (limitClone->isWith())
             limitClone = limitClone->getParent();
         JS_ASSERT(limitClone);
 
@@ -413,11 +413,11 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
     if (thisv.isObject()) {
         JS_ASSERT(thisv.toObject().getClass() != clasp);
     } else if (thisv.isString()) {
-        JS_ASSERT(clasp != &js_StringClass);
+        JS_ASSERT(clasp != &StringClass);
     } else if (thisv.isNumber()) {
-        JS_ASSERT(clasp != &js_NumberClass);
+        JS_ASSERT(clasp != &NumberClass);
     } else if (thisv.isBoolean()) {
-        JS_ASSERT(clasp != &js_BooleanClass);
+        JS_ASSERT(clasp != &BooleanClass);
     } else {
         JS_ASSERT(thisv.isUndefined() || thisv.isNull());
     }
@@ -648,7 +648,7 @@ InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
     Class *clasp = callee.getClass();
 
     /* Invoke non-functions. */
-    if (JS_UNLIKELY(clasp != &js_FunctionClass)) {
+    if (JS_UNLIKELY(clasp != &FunctionClass)) {
 #if JS_HAS_NO_SUCH_METHOD
         if (JS_UNLIKELY(clasp == &js_NoSuchMethodClass))
             return NoSuchMethod(cx, args.argc(), args.base());
@@ -733,7 +733,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         if (!calleev.isObject())
             break;
         JSObject &callee = calleev.toObject();
-        if (callee.getClass() != &js_FunctionClass)
+        if (callee.getClass() != &FunctionClass)
             break;
         JSFunction *fun = callee.getFunctionPrivate();
         if (fun->isNative())
@@ -1217,13 +1217,13 @@ TypeOfValue(JSContext *cx, const Value &vref)
 JS_REQUIRES_STACK bool
 InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
 {
-    JS_ASSERT(!js_FunctionClass.construct);
+    JS_ASSERT(!FunctionClass.construct);
     CallArgs args = argsRef;
 
     if (args.calleev().isObject()) {
         JSObject *callee = &args.callee();
         Class *clasp = callee->getClass();
-        if (clasp == &js_FunctionClass) {
+        if (clasp == &FunctionClass) {
             JSFunction *fun = callee->getFunctionPrivate();
 
             if (fun->isConstructor()) {
@@ -1273,7 +1273,7 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
     Class *clasp = callee.getClass();
     JSFunction *fun;
     bool ok;
-    if (clasp == &js_FunctionClass && (fun = callee.getFunctionPrivate())->isConstructor()) {
+    if (clasp == &FunctionClass && (fun = callee.getFunctionPrivate())->isConstructor()) {
         args.thisv().setMagicWithObjectOrNullPayload(thisobj);
         Probes::calloutBegin(cx, fun);
         ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
@@ -1359,7 +1359,7 @@ js_LeaveWith(JSContext *cx)
     JSObject *withobj;
 
     withobj = &cx->fp()->scopeChain();
-    JS_ASSERT(withobj->getClass() == &js_WithClass);
+    JS_ASSERT(withobj->getClass() == &WithClass);
     JS_ASSERT(withobj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     withobj->setPrivate(NULL);
@@ -1372,7 +1372,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
     Class *clasp;
 
     clasp = obj->getClass();
-    if ((clasp == &js_WithClass || clasp == &js_BlockClass) &&
+    if ((clasp == &WithClass || clasp == &BlockClass) &&
         obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()) &&
         OBJ_BLOCK_DEPTH(cx, obj) >= stackDepth) {
         return clasp;
@@ -1397,7 +1397,7 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
         clasp = js_IsActiveWithOrBlock(cx, &fp->scopeChain(), stackDepth);
         if (!clasp)
             break;
-        if (clasp == &js_BlockClass) {
+        if (clasp == &BlockClass) {
             /* Don't fail until after we've updated all stacks. */
             normalUnwind &= js_PutBlockObject(cx, normalUnwind);
         } else {
@@ -1685,7 +1685,7 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 static inline bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
-    if (iterobj->getClass() == &js_IteratorClass) {
+    if (iterobj->isIterator()) {
         NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
@@ -1701,7 +1701,7 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
-    if (iterobj->getClass() == &js_IteratorClass) {
+    if (iterobj->isIterator()) {
         NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
@@ -2371,15 +2371,12 @@ BEGIN_CASE(JSOP_POPN)
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - regs.fp()->base()));
     for (obj = &regs.fp()->scopeChain(); obj; obj = obj->getParent()) {
-        Class *clasp = obj->getClass();
-        if (clasp != &js_BlockClass && clasp != &js_WithClass)
+        if (!obj->isBlock() || !obj->isWith())
             continue;
         if (obj->getPrivate() != js_FloatingFrameIfGenerator(cx, regs.fp()))
             break;
         JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj)
-                             + ((clasp == &js_BlockClass)
-                                ? OBJ_BLOCK_COUNT(cx, obj)
-                                : 1)
+                  + (obj->isBlock() ? OBJ_BLOCK_COUNT(cx, obj) : 1)
                   <= regs.sp);
     }
 #endif
@@ -4323,7 +4320,7 @@ BEGIN_CASE(JSOP_CALLNAME)
     } else {
         shape = (Shape *)prop;
         JSObject *normalized = obj;
-        if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+        if (normalized->getClass() == &WithClass && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(cx, normalized);
         NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval);
     }
@@ -5021,7 +5018,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                     const Value &lref = regs.sp[-1];
                     JS_ASSERT(lref.isObject());
                     JSObject *obj2 = &lref.toObject();
-                    JS_ASSERT(obj2->getClass() == &js_ObjectClass);
+                    JS_ASSERT(obj2->isObject());
 #endif
 
                     fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
@@ -5238,7 +5235,7 @@ BEGIN_CASE(JSOP_NEWINIT)
         obj = NewDenseEmptyArray(cx);
     } else {
         gc::AllocKind kind = GuessObjectGCKind(0, false);
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
     }
 
     if (!obj)
@@ -5961,10 +5958,9 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      * static scope.
      */
     JSObject *obj2 = &regs.fp()->scopeChain();
-    Class *clasp;
-    while ((clasp = obj2->getClass()) == &js_WithClass)
+    while (obj2->isWith())
         obj2 = obj2->getParent();
-    if (clasp == &js_BlockClass &&
+    if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp())) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());

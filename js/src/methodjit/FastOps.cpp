@@ -1570,7 +1570,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     ic.slowPathStart = stubcc.syncExit(Uses(3));
 
     // Guard obj is a dense array.
-    ic.claspGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, &js_ArrayClass);
+    ic.claspGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, &ArrayClass);
     stubcc.linkExitDirect(ic.claspGuard, ic.slowPathStart);
 
     // Guard in range of initialized length.
@@ -2120,7 +2120,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
         }
 
         // Guard on the clasp.
-        ic.claspGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, &js_ArrayClass);
+        ic.claspGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, &ArrayClass);
         stubcc.linkExitDirect(ic.claspGuard, ic.slowPathStart);
 
         Int32Key key = id->isConstant()
