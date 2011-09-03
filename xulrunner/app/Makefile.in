@@ -130,6 +130,8 @@ endif
 RCFLAGS += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 endif
 
+LIBS += $(JEMALLOC_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"

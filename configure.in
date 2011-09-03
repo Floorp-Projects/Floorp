@@ -2602,6 +2602,7 @@ dnl ========================================================
 case "$target" in
     *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
+        MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS='-rdynamic -Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/jemalloc-standalone-linkage-version-script'
         ;;
     *-solaris*)
         if test -z "$GNU_CC"; then
@@ -6951,21 +6952,6 @@ if test "$NS_TRACE_MALLOC"; then
     MOZ_MEMORY=
 fi
 
-if test "${OS_TARGET}" = "Android"; then
-  dnl On Android, we use WRAP_LDFLAGS to link everything to mozutils
-  :
-elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
-  dnl On Windows, OSX and OS2, we want to link all our binaries against mozutils
-  MOZ_UTILS_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib)'
-else
-  dnl On other Unix systems, we only want to link executables against mozutils
-  MOZ_UTILS_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
-  if test -n "$GNU_CC"; then
-    dnl And we need mozutils symbols to be exported.
-    MOZ_UTILS_PROGRAM_LDFLAGS="$MOZ_UTILS_PROGRAM_LDFLAGS -rdynamic"
-  fi
-fi
-
 if test -z "$MOZ_MEMORY"; then
   case "${target}" in
     *-mingw*)
@@ -7015,7 +7001,6 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
-    MOZ_UTILS_LDFLAGS=
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7037,12 +7022,14 @@ else
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_UTILS_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      MOZ_MEMORY_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+    else
+      MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
     fi
     rm crtdll.obj
 
     dnl Also pass this to NSPR/NSS
-    DLLFLAGS="$DLLFLAGS $MOZ_UTILS_LDFLAGS"
+    DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
     ;;
   *)
@@ -7058,8 +7045,7 @@ else
   AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_UTILS_LDFLAGS)
-AC_SUBST(MOZ_UTILS_PROGRAM_LDFLAGS)
+AC_SUBST(MOZ_MEMORY_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
@@ -8468,6 +8454,7 @@ AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
+AC_SUBST(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
@@ -9041,11 +9028,8 @@ ac_configure_args="$ac_configure_args --prefix=$dist"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
-   if test -n "$MOZ_UTILS_LDFLAGS"; then
-     export MOZ_UTILS_LDFLAGS
-   fi
-   if test -n "$MOZ_UTILS_PROGRAM_LDFLAGS"; then
-     export MOZ_UTILS_PROGRAM_LDFLAGS
+   if test -n "$MOZ_MEMORY_LDFLAGS"; then
+     export MOZ_MEMORY_LDFLAGS
    fi
 fi
 export MOZ_APP_NAME
