@@ -1236,10 +1236,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
      */
     Jump getNewObject(JSContext *cx, RegisterID result, JSObject *templateObject)
     {
-        unsigned thingKind = templateObject->arenaHeader()->getThingKind();
+        gc::AllocKind allocKind = templateObject->getAllocKind();
 
-        JS_ASSERT(thingKind >= gc::FINALIZE_OBJECT0 && thingKind <= gc::FINALIZE_OBJECT_LAST);
-        size_t thingSize = gc::GCThingSizeMap[thingKind];
+        JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+        size_t thingSize = gc::Arena::thingSize(allocKind);
 
         JS_ASSERT(cx->typeInferenceEnabled());
         JS_ASSERT(!templateObject->hasSlotsArray());
@@ -1253,7 +1253,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
          * Inline FreeSpan::allocate. Only the case where the current freelist
          * span is not empty is handled.
          */
-        gc::FreeSpan *list = &cx->compartment->freeLists.lists[thingKind];
+        gc::FreeSpan *list = const_cast<gc::FreeSpan *>
+                             (cx->compartment->arenas.getFreeList(allocKind));
         loadPtr(&list->first, result);
 
         Jump jump = branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result);

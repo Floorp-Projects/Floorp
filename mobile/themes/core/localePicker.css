@@ -50,6 +50,12 @@
   background-position: center center;
 }
 
+#main-page:not([mode="loading"]) #loading-label,
+#main-page[mode] #continue-in-button,
+#main-page[mode] #change-language {
+  visibility: hidden;
+}
+
 #picker-title {
   font-weight: bold;
   font-size: @font_normal@;

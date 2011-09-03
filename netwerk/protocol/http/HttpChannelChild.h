@@ -170,8 +170,11 @@ private:
   bool mSendResumeAt;
 
   bool mIPCOpen;
-  bool mKeptAlive;
+  bool mKeptAlive;            // IPC kept open, but only for security info
   ChannelEventQueue mEventQ;
+
+  // true after successful AsyncOpen until OnStopRequest completes.
+  bool RemoteChannelExists() { return mIPCOpen && !mKeptAlive; }
 
   void AssociateApplicationCache(const nsCString &groupID,
                                  const nsCString &clientID);
