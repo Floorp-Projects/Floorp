@@ -48,7 +48,6 @@ LIBRARY_NAME	= xptcmd
 EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
-
 #
 # The default is this buildable, but non-functioning code.
 #
@@ -176,13 +175,6 @@ endif
 ######################################################################
 # Alpha
 ######################################################################
-#
-# Tru64/Alpha
-#
-ifeq ($(OS_ARCH)$(OS_TEST),OSF1alpha)
-CPPSRCS		:= xptcinvoke_osf1_alpha.cpp xptcstubs_osf1_alpha.cpp
-ASFILES		:= xptcinvoke_asm_osf1_alpha.s xptcstubs_asm_osf1_alpha.s
-endif
 #
 # Linux/Alpha
 #
