@@ -187,7 +187,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
     return rv;
 }
 
-#elif defined(XP_UNIX) && !defined(__SYMBIAN32__)
+#elif defined(XP_UNIX)
 NS_IMETHODIMP
 nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 {
