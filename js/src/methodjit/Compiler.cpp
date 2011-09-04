@@ -2740,9 +2740,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UNBRAND)
 
           BEGIN_CASE(JSOP_UNBRANDTHIS)
-            jsop_this();
-            jsop_unbrand();
-            frame.pop();
+            prepareStubCall(Uses(1));
+            INLINE_STUBCALL(stubs::UnbrandThis, REJOIN_FALLTHROUGH);
           END_CASE(JSOP_UNBRANDTHIS)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
@@ -5576,6 +5575,16 @@ mjit::Compiler::jsop_this()
                 OOL_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
                 stubcc.rejoin(Changes(1));
             }
+
+            /*
+             * Watch out for an obscure case where we don't know we are pushing
+             * an object: the script has not yet had a 'this' value assigned,
+             * so no pushed 'this' type has been inferred. Don't mark the type
+             * as known in this case, preserving the invariant that compiler
+             * types reflect inferred types.
+             */
+            if (cx->typeInferenceEnabled() && knownPushedType(0) != JSVAL_TYPE_OBJECT)
+                return;
 
             // Now we know that |this| is an object.
             frame.pop();
