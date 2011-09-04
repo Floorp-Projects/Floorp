@@ -1700,6 +1700,11 @@ public:
    */
   static PRBool IsFocusedContent(const nsIContent *aContent);
 
+  /**
+   * Returns PR_TRUE if the DOM full-screen API is enabled.
+   */
+  static PRBool IsFullScreenApiEnabled();
+
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
   static void GetMetaText(nsAString& text);
@@ -1864,6 +1869,7 @@ private:
 
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
+  static PRBool sIsFullScreenApiEnabled;
 
   static nsHtml5Parser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
