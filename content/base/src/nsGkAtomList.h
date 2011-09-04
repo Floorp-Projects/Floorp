@@ -63,6 +63,7 @@
 
 GK_ATOM(_empty, "")
 GK_ATOM(moz, "_moz")
+GK_ATOM(mozallowfullscreen, "mozallowfullscreen")
 GK_ATOM(moztype, "_moz-type")
 GK_ATOM(mozdirty, "_moz_dirty")
 GK_ATOM(mozdonotsend, "moz-do-not-send")
