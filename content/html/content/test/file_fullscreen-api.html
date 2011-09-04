@@ -1,0 +1,131 @@
+ <!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=545812
+
+Test DOM full-screen API.
+
+-->
+<head>
+  <title>Test for Bug 545812</title>
+  <style>
+  body:-moz-full-screen, div:-moz-full-screen {
+    background-color: red;
+  }
+  </style>
+</head>
+<body onload="document.body.mozRequestFullScreen();">
+
+<script type="application/javascript">
+
+/** Test for Bug 545812 **/
+
+function ok(condition, msg) {
+  opener.ok(condition, msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, msg);
+}
+
+/*
+<html>
+  <body onload='document.body.mozRequestFullScreen();'>
+  </body>
+</html>
+*/
+var iframeContents = "data:text/html;charset=utf-8,<html>%0D%0A  <body onload%3D'document.body.mozRequestFullScreen()%3B'>%0D%0A  <%2Fbody>%0D%0A<%2Fhtml>";
+
+var iframe = null;
+var outOfDocElement = null;
+var inDocElement = null;
+
+var fullScreenChangeCount = 0;
+
+function fullScreenChange(event) {
+  switch (fullScreenChangeCount) {
+    case 0: {
+      ok(document.mozFullScreen, "Should be in full-screen mode (first time)");
+      is(event.target, document.body, "Event target should be full-screen element");
+      is(document.mozFullScreenElement, document.body,
+         "Full-screen element should be body element.");
+      document.mozCancelFullScreen();
+      break;
+    }
+    case 1: {
+      ok(!document.mozFullScreen, "Should have left full-screen mode (first time)");
+      is(event.target, document.body, "Event target should be full-screen element");
+      is(document.mozFullScreenElement, null, "Full-screen element should be null.");
+      iframe = document.createElement("iframe");
+      iframe.mozAllowFullScreen = true;
+      document.body.appendChild(iframe);
+      iframe.src = iframeContents;
+      break;
+    }
+    case 2: {
+      ok(document.mozFullScreen, "Should be back in full-screen mode (second time)");
+      is(event.target, iframe,
+         "Event target should be full-screen element container");
+      is(document.mozFullScreenElement, iframe,
+        "Full-screen element should be iframe element.");
+      document.mozCancelFullScreen();
+      break;
+    }
+    case 3: {
+      ok(!document.mozFullScreen, "Should be back in non-full-screen mode (second time)");
+      is(event.target, iframe,
+         "Event target should be full-screen element container");
+      is(document.mozFullScreenElement, null, "Full-screen element should be null.");
+      document.body.removeChild(iframe);
+      iframe = null;
+      outOfDocElement = document.createElement("div");
+      outOfDocElement.mozRequestFullScreen();
+      break;
+    }
+    case 4: {
+      ok(document.mozFullScreen, "Should be back in full-screen mode (third time)");
+      is(event.target, document, "Event target should be document");
+      is(document.mozFullScreenElement, null,
+        "Should not have a full-screen element when element not in document requests full-screen.");
+       
+      // Set another element to be the full-screen element. It should immediately
+      // become the current full-screen element.
+      inDocElement = document.createElement("div");
+      document.body.appendChild(inDocElement);
+      inDocElement.mozRequestFullScreen();
+       
+      ok(document.mozFullScreen, "Should remain in full-screen mode (third and a half time)");
+      is(document.mozFullScreenElement, inDocElement,
+        "Full-screen element should be in doc again.");
+
+      // Remove full-screen element from document before exiting full screen.
+      document.body.removeChild(inDocElement);
+      ok(document.mozFullScreen,
+         "Should remain in full-screen mode after removing full-screen element from document");
+      is(document.mozFullScreenElement, null,
+        "Should not have a full-screen element again.");
+
+      document.mozCancelFullScreen();
+      break;
+    }
+    case 5: {
+      ok(!document.mozFullScreen, "Should be back in non-full-screen mode (third time)");
+      
+      // Set timeout for calling finish(), so that any pending "mozfullscreenchange" events
+      // would have a chance to fire.
+      setTimeout(function(){opener.finish();}, 0);
+      break;
+    }
+    default: {
+      ok(false, "Should not receive any more fullscreenchange events!");
+    }
+  }
+  fullScreenChangeCount++;
+}
+
+document.addEventListener("mozfullscreenchange", fullScreenChange, false);
+
+</script>
+</pre>
+</body>
+</html>
