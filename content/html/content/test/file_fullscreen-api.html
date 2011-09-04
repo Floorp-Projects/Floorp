@@ -143,7 +143,7 @@ function fullScreenChange(event) {
       ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");      
       // Set timeout for calling finish(), so that any pending "mozfullscreenchange" events
       // would have a chance to fire.
-      setTimeout(function(){opener.finish();}, 0);
+      setTimeout(function(){opener.apiTestFinished();}, 0);
       break;
     }
     default: {

@@ -125,10 +125,9 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-
 #define NS_IDOCUMENT_IID      \
-{ 0x15d92ce2, 0x472a, 0x4ea7,  \
- { 0xaf, 0x29, 0x47, 0x7b, 0xac, 0x98, 0xa0, 0x43 } }
+{ 0x170d5a75, 0xff0b, 0x4599,  \
+ { 0x9b, 0x68, 0x18, 0xb7, 0x42, 0xe0, 0xf9, 0xf7 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -759,6 +758,12 @@ public:
    * and move into full-screen mode.
    */
   virtual void RequestFullScreen(Element* aElement) = 0;
+
+  /**
+   * Requests that the document, and all documents in its hierarchy exit
+   * from DOM full-screen mode.
+   */
+  virtual void CancelFullScreen() = 0;
 
   /**
    * Updates the full-screen status on this document, setting the full-screen

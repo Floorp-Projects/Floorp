@@ -944,6 +944,7 @@ public:
   virtual void ResetFullScreenElement();
   virtual Element* GetFullScreenElement();
   virtual void RequestFullScreen(Element* aElement);
+  virtual void CancelFullScreen();
   virtual void UpdateFullScreenStatus(PRBool aIsFullScreen);
   virtual PRBool IsFullScreenDoc();
 
