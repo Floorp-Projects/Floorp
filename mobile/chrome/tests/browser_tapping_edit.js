@@ -244,3 +244,36 @@ gTests.push({
     plainEdit.dispatchEvent(event);
   }
 });
+
+//------------------------------------------------------------------------------
+gTests.push({
+  desc: "Test that tapping on input box causes mouse events to fire",
+
+  run: function() {
+    let browser = gCurrentTab.browser;
+    let plainEdit = browser.contentDocument.getElementById("plain-edit");
+    plainEdit.blur();
+    plainEdit.value = '';
+
+    let eventArray = ['mouseover', 'mousedown', 'mouseup', 'click'];
+
+  while (eventArray.length > 0) {
+    let currentEventType = eventArray.shift();
+    browser.contentWindow.addEventListener(currentEventType, function(e) {
+      browser.contentWindow.removeEventListener(currentEventType, arguments.callee, true);
+      ok(e.target == plainEdit, e.type + " should fire over input id=" + plainEdit.id);
+      plainEdit.value += e.type + ' ';
+
+      if (e.type == 'click') {
+        ok(plainEdit.value == 'mouseover mousedown mouseup click ', 
+                              'Events should fire in this order: mouseover mousedown mouseup click ');
+        runNextTest();
+      }
+    } , true);
+  }
+
+    EventUtils.synthesizeMouse(plainEdit, browser.getBoundingClientRect().left + plainEdit.getBoundingClientRect().left + 2, 
+                                          browser.getBoundingClientRect().top + plainEdit.getBoundingClientRect().top + 2, {});
+  }
+});
+
