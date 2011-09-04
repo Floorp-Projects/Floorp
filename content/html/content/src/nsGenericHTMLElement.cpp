@@ -3381,7 +3381,13 @@ nsGenericHTMLElement::Focus()
 
 nsresult nsGenericHTMLElement::MozRequestFullScreen()
 {
-  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+  // Only grant full-screen requests if this is called from inside a trusted
+  // event handler (i.e. inside an event handler for a user initiated event).
+  // This stops the full-screen from being abused similar to the popups of old,
+  // and it also makes it harder for bad guys' script to go full-screen and
+  // spoof the browser chrome/window and phish logins etc.
+  if (!nsContentUtils::IsFullScreenApiEnabled() ||
+      !nsContentUtils::IsRequestFullScreenAllowed()) {
     return NS_OK;
   }
 
