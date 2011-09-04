@@ -2346,28 +2346,6 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
     code.typeBarriers = barrier;
 }
 
-static void
-PrintScriptTypeCallback(JSContext *cx, void *data, void *thing,
-                        JSGCTraceKind traceKind, size_t thingSize)
-{
-    JS_ASSERT(!data);
-    JS_ASSERT(traceKind == JSTRACE_SCRIPT);
-    JSScript *script = static_cast<JSScript *>(thing);
-    if (script->hasAnalysis() && script->analysis()->ranInference())
-        script->analysis()->printTypes(cx);
-}
-
-#ifdef DEBUG
-static void
-PrintObjectCallback(JSContext *cx, void *data, void *thing,
-                    JSGCTraceKind traceKind, size_t thingSize)
-{
-    JS_ASSERT(traceKind == JSTRACE_OBJECT);
-    TypeObject *object = (TypeObject *) thing;
-    object->print(cx);
-}
-#endif
-
 void
 TypeCompartment::print(JSContext *cx, bool force)
 {
@@ -2376,15 +2354,16 @@ TypeCompartment::print(JSContext *cx, bool force)
     if (!force && !InferSpewActive(ISpewResult))
         return;
 
-    {
-        AutoUnlockGC unlock(cx->runtime);
-        IterateCells(cx, compartment, gc::FINALIZE_SCRIPT, cx, PrintScriptTypeCallback);
+    for (gc::CellIter i(cx, compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->hasAnalysis() && script->analysis()->ranInference())
+            script->analysis()->printTypes(cx);
     }
 
 #ifdef DEBUG
-    {
-        AutoUnlockGC unlock(cx->runtime);
-        IterateCells(cx, compartment, gc::FINALIZE_TYPE_OBJECT, NULL, PrintObjectCallback);
+    for (gc::CellIter i(cx, compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+        TypeObject *object = i.get<TypeObject>();
+        object->print(cx);
     }
 #endif
 
