@@ -264,6 +264,7 @@ nsString* nsContentUtils::sModifierSeparator = nsnull;
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 PRBool nsContentUtils::sIsFullScreenApiEnabled = PR_FALSE;
 PRBool nsContentUtils::sTrustedFullScreenOnly = PR_TRUE;
+PRBool nsContentUtils::sFullScreenKeyInputRestricted = PR_TRUE;
 
 nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
@@ -392,6 +393,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sTrustedFullScreenOnly,
                                "full-screen-api.allow-trusted-requests-only");
+
+  Preferences::AddBoolVarCache(&sFullScreenKeyInputRestricted,
+                               "full-screen-api.key-input-restricted");
 
   sInitialized = PR_TRUE;
 
@@ -5715,4 +5719,10 @@ nsContentUtils::IsFullScreenApiEnabled()
 PRBool nsContentUtils::IsRequestFullScreenAllowed()
 {
   return !sTrustedFullScreenOnly || nsEventStateManager::IsHandlingUserInput();
+}
+
+PRBool
+nsContentUtils::IsFullScreenKeyInputRestricted()
+{
+  return sFullScreenKeyInputRestricted;
 }
