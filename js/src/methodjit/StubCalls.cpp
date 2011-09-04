@@ -2196,6 +2196,19 @@ stubs::Unbrand(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::UnbrandThis(VMFrame &f)
+{
+    if (!ComputeThis(f.cx, f.fp()))
+        THROW();
+    Value &thisv = f.fp()->thisValue();
+    if (!thisv.isObject())
+        return;
+    JSObject *obj = &thisv.toObject();
+    if (obj->isNative())
+        obj->unbrand(f.cx);
+}
+
+void JS_FASTCALL
 stubs::Pos(VMFrame &f)
 {
     if (!ToNumber(f.cx, &f.regs.sp[-1]))
