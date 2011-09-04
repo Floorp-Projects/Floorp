@@ -46,8 +46,6 @@
 #define JSON_MAX_DEPTH  2048
 #define JSON_PARSER_BUFSIZE 1024
 
-extern js::Class js_JSONClass;
-
 extern JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj);
 
