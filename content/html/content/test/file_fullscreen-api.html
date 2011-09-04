@@ -8,6 +8,7 @@ Test DOM full-screen API.
 -->
 <head>
   <title>Test for Bug 545812</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <style>
   body:-moz-full-screen, div:-moz-full-screen {
     background-color: red;
@@ -39,8 +40,17 @@ var iframeContents = "data:text/html;charset=utf-8,<html>%0D%0A  <body onload%3D
 var iframe = null;
 var outOfDocElement = null;
 var inDocElement = null;
+var button = null;
 
 var fullScreenChangeCount = 0;
+
+function sendMouseClick(element) {
+  synthesizeMouseAtCenter(element, {});
+}
+
+function setRequireTrustedContext(value) {
+  opener.SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", value);
+}
 
 function fullScreenChange(event) {
   switch (fullScreenChangeCount) {
@@ -110,7 +120,27 @@ function fullScreenChange(event) {
     }
     case 5: {
       ok(!document.mozFullScreen, "Should be back in non-full-screen mode (third time)");
-      
+      setRequireTrustedContext(true);
+      document.body.mozRequestFullScreen();
+      ok(!document.mozFullScreen, "Should still be in normal mode, because calling context isn't trusted.");
+
+      button = document.createElement("button");
+      button.onclick = function(){document.body.mozRequestFullScreen();}
+      document.body.appendChild(button);
+      sendMouseClick(button);
+      break;
+    }
+    case 6: {
+      ok(document.mozFullScreen, "Moved to full-screen after mouse click");
+      document.mozCancelFullScreen();
+      ok(document.mozFullScreen, "Should still be in full-screen mode, because calling context isn't trusted.");
+      setRequireTrustedContext(false);
+      document.mozCancelFullScreen();
+      ok(!document.mozFullScreen, "Should have left full-screen mode.");
+      break;
+    }
+    case 7: {
+      ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");      
       // Set timeout for calling finish(), so that any pending "mozfullscreenchange" events
       // would have a chance to fire.
       setTimeout(function(){opener.finish();}, 0);
