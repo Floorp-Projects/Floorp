@@ -366,7 +366,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
         JSObject *obj = JSVAL_TO_OBJECT(v);
         Class *clasp = obj->getClass();
 
-        if (clasp == &js_BlockClass) {
+        if (clasp == &BlockClass) {
             char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
             if (!source)
                 return false;
@@ -393,7 +393,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             return true;
         }
 
-        if (clasp == &js_FunctionClass) {
+        if (clasp == &FunctionClass) {
             JSFunction *fun = obj->getFunctionPrivate();
             JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (!str)
@@ -401,7 +401,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             return bytes->encode(cx, str);
         }
 
-        if (clasp == &js_RegExpClass) {
+        if (clasp == &RegExpClass) {
             AutoValueRooter tvr(cx);
             if (!js_regexp_toString(cx, obj, tvr.addr()))
                 return false;

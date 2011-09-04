@@ -552,7 +552,7 @@ struct JSScript : public js::gc::Cell {
 
     union {
         /*
-         * A script object of class js_ScriptClass, to ensure the script is GC'd.
+         * A script object of class ScriptClass, to ensure the script is GC'd.
          * - All scripts returned by JSAPI functions (JS_CompileScript,
          *   JS_CompileFile, etc.) have these objects.
          * - Function scripts never have script objects; such scripts are owned
@@ -843,7 +843,6 @@ StackDepth(JSScript *script)
         }                                                                     \
     JS_END_MACRO
 
-extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
@@ -965,12 +964,6 @@ js_CloneScript(JSContext *cx, JSScript *script);
  */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
-
-inline bool
-JSObject::isScript() const
-{
-    return getClass() == &js_ScriptClass;
-}
 
 inline JSScript *
 JSObject::getScript() const

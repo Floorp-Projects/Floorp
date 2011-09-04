@@ -559,7 +559,7 @@ static JSFunctionSpec number_functions[] = {
     JS_FS_END
 };
 
-Class js_NumberClass = {
+Class js::NumberClass = {
     js_Number_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
     PropertyStub,         /* addProperty */
@@ -588,7 +588,7 @@ Number(JSContext *cx, uintN argc, Value *vp)
     if (!isConstructing)
         return true;
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &NumberClass);
     if (!obj)
         return false;
     obj->setPrimitiveThis(vp[0]);
@@ -612,7 +612,7 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     }
 
     char buf[64];
-    JS_snprintf(buf, sizeof buf, "(new %s(%s))", js_NumberClass.name, numStr);
+    JS_snprintf(buf, sizeof buf, "(new %s(%s))", NumberClass.name, numStr);
     JSString *str = js_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
@@ -1106,7 +1106,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    proto = js_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1,
+    proto = js_InitClass(cx, obj, NULL, &NumberClass, Number, 1,
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;

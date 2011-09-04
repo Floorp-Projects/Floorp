@@ -115,7 +115,7 @@ using namespace js::types;
 
 JS_FRIEND_DATA(js::Shape) Shape::sharedNonNative(SHAPELESS);
 
-Class js_ObjectClass = {
+Class js::ObjectClass = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     PropertyStub,         /* addProperty */
@@ -1800,7 +1800,7 @@ PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
 bool
 PropDesc::makeObject(JSContext *cx)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj)
         return false;
 
@@ -2630,7 +2630,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, proto,
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &ObjectClass, proto,
                                                      vp->toObject().getGlobal());
     if (!obj)
         return JS_FALSE;
@@ -2913,8 +2913,8 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
     if (!obj) {
         /* Make an object whether this was called with 'new' or not. */
         JS_ASSERT(!argc || vp[2].isNull() || vp[2].isUndefined());
-        gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
+        obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             return JS_FALSE;
         TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Object);
@@ -2966,8 +2966,8 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 {
     Class *clasp = callee->getClass();
 
-    Class *newclasp = &js_ObjectClass;
-    if (clasp == &js_FunctionClass) {
+    Class *newclasp = &ObjectClass;
+    if (clasp == &FunctionClass) {
         JSFunction *fun = callee->getFunctionPrivate();
         if (fun->isNative() && fun->u.n.clasp)
             newclasp = fun->u.n.clasp;
@@ -3002,7 +3002,7 @@ CreateThisForFunctionWithType(JSContext *cx, types::TypeObject *type, JSObject *
         return res;
     }
 
-    gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+    gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
     return NewObjectWithType(cx, type, parent, kind);
 }
 
@@ -3018,8 +3018,8 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
             return NULL;
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
     } else {
-        gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-        res = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
+        gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
+        res = NewNonFunction<WithProto::Class>(cx, &ObjectClass, proto, callee->getParent(), kind);
     }
 
     if (res && cx->typeInferenceEnabled())
@@ -3065,8 +3065,8 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
-    JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
-    return NewObjectWithClassProto(cx, &js_ObjectClass, proto, FINALIZE_OBJECT8);
+    JS_ASSERT(!(ObjectClass.flags & JSCLASS_HAS_PRIVATE));
+    return NewObjectWithClassProto(cx, &ObjectClass, proto, FINALIZE_OBJECT8);
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
@@ -3078,7 +3078,7 @@ js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
 {
     if (!baseobj) {
         gc::AllocKind kind = GuessObjectGCKind(0, false);
-        return NewObjectWithClassProto(cx, &js_ObjectClass, proto, kind);
+        return NewObjectWithClassProto(cx, &ObjectClass, proto, kind);
     }
 
     /* :FIXME: bug 637856 new Objects do not have the right type when created on trace. */
@@ -3129,8 +3129,8 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
             return NULL;
     }
 
-    gc::AllocKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-    return NewNativeClassInstance(cx, &js_ObjectClass, proto, parent, kind);
+    gc::AllocKind kind = NewObjectGCKind(cx, &ObjectClass);
+    return NewNativeClassInstance(cx, &ObjectClass, proto, parent, kind);
 }
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, OBJECT, UINTN, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -3309,7 +3309,7 @@ with_ThisObject(JSContext *cx, JSObject *obj)
     return obj->getWithThis();
 }
 
-Class js_WithClass = {
+Class js::WithClass = {
     "With",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
@@ -3359,7 +3359,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, &js_WithClass, type, parent, priv, false);
+    obj->init(cx, &WithClass, type, parent, priv, false);
 
     EmptyShape *emptyWithShape = EmptyShape::getEmptyWithShape(cx);
     if (!emptyWithShape)
@@ -3393,7 +3393,7 @@ js_NewBlockObject(JSContext *cx)
     EmptyShape *emptyBlockShape = EmptyShape::getEmptyBlockShape(cx);
     if (!emptyBlockShape)
         return NULL;
-    blockObj->init(cx, &js_BlockClass, &emptyTypeObject, NULL, NULL, false);
+    blockObj->init(cx, &BlockClass, &emptyTypeObject, NULL, NULL, false);
     blockObj->setMap(emptyBlockShape);
 
     return blockObj;
@@ -3483,7 +3483,7 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     /* Values are in slots immediately following the class-reserved ones. */
-    JS_ASSERT(obj->getSlot(JSSLOT_FREE(&js_BlockClass) + index) == *vp);
+    JS_ASSERT(obj->getSlot(JSSLOT_FREE(&BlockClass) + index) == *vp);
     return true;
 }
 
@@ -3516,7 +3516,7 @@ JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index)
     JS_ASSERT(isStaticBlock());
 
     /* Use JSPROP_ENUMERATE to aid the disassembler. */
-    uint32 slot = JSSLOT_FREE(&js_BlockClass) + index;
+    uint32 slot = JSSLOT_FREE(&BlockClass) + index;
     const Shape *shape = addProperty(cx, id,
                                      block_getProperty, block_setProperty,
                                      slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -3985,7 +3985,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
 #endif
 
-Class js_BlockClass = {
+Class js::BlockClass = {
     "Block",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
     PropertyStub,         /* addProperty */
@@ -4000,7 +4000,7 @@ Class js_BlockClass = {
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &ObjectClass, js_Object, 1,
                                    object_props, object_methods, NULL, object_static_methods);
     if (!proto)
         return NULL;
@@ -4102,10 +4102,10 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
      *    otherwise-uninitialized global.
      *
      * 3. NewObject allocating a JSFunction-sized GC-thing when clasp is
-     *    &js_FunctionClass, not a JSObject-sized (smaller) GC-thing.
+     *    &FunctionClass, not a JSObject-sized (smaller) GC-thing.
      *
      * The JS_NewObjectForGivenProto and JS_NewObject APIs also allow clasp to
-     * be &js_FunctionClass (we could break compatibility easily). But fixing
+     * be &FunctionClass (we could break compatibility easily). But fixing
      * (3) is not enough without addressing the bootstrapping dependency on (1)
      * and (2).
      */
@@ -4124,7 +4124,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (!proto->setSingletonType(cx))
         return NULL;
 
-    if (clasp == &js_ArrayClass && !proto->makeDenseArraySlow(cx))
+    if (clasp == &ArrayClass && !proto->makeDenseArraySlow(cx))
         return NULL;
 
     TypeObject *type = proto->getNewType(cx);
@@ -5098,7 +5098,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
     if (!shape) {
         /* Add a new property, or replace an existing one of the same id. */
         if (defineHow & DNP_SET_METHOD) {
-            JS_ASSERT(clasp == &js_ObjectClass);
+            JS_ASSERT(clasp == &ObjectClass);
             JS_ASSERT(IsFunctionObject(value));
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
             JS_ASSERT(!getter && !setter);
@@ -5400,10 +5400,9 @@ js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
         if (prop) {
 #ifdef DEBUG
             if (parent) {
-                Class *clasp = obj->getClass();
                 JS_ASSERT(pobj->isNative());
-                JS_ASSERT(pobj->getClass() == clasp);
-                if (clasp == &js_BlockClass) {
+                JS_ASSERT(pobj->getClass() == obj->getClass());
+                if (obj->isBlock()) {
                     /*
                      * A block instance on the scope chain is immutable and
                      * shares its shape with the compile-time prototype. Thus
@@ -6296,9 +6295,9 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
     Class *clasp = obj->getClass();
     if (hint == JSTYPE_STRING) {
         /* Optimize (new String(...)).toString(). */
-        if (clasp == &js_StringClass &&
+        if (clasp == &StringClass &&
             ClassMethodIsNative(cx, obj,
-                                 &js_StringClass,
+                                 &StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
                                  js_str_toString)) {
             *vp = obj->getPrimitiveThis();
@@ -6316,12 +6315,12 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
     } else {
         /* Optimize (new String(...)).valueOf(). */
-        if ((clasp == &js_StringClass &&
-             ClassMethodIsNative(cx, obj, &js_StringClass,
+        if ((clasp == &StringClass &&
+             ClassMethodIsNative(cx, obj, &StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
                                  js_str_toString)) ||
-            (clasp == &js_NumberClass &&
-             ClassMethodIsNative(cx, obj, &js_NumberClass,
+            (clasp == &NumberClass &&
+             ClassMethodIsNative(cx, obj, &NumberClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
                                  js_num_valueOf))) {
             *vp = obj->getPrimitiveThis();
@@ -6390,7 +6389,7 @@ CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     JSSecurityCallbacks *callbacks;
     CheckAccessOp check;
 
-    while (JS_UNLIKELY(obj->getClass() == &js_WithClass))
+    while (JS_UNLIKELY(obj->isWith()))
         obj = obj->getProto();
 
     writing = (mode & JSACC_WRITE) != 0;
@@ -6542,7 +6541,7 @@ PrimitiveToObject(JSContext *cx, const Value &v)
         return StringObject::create(cx, v.toString());
 
     JS_ASSERT(v.isNumber() || v.isBoolean());
-    Class *clasp = v.isNumber() ? &js_NumberClass : &js_BooleanClass;
+    Class *clasp = v.isNumber() ? &NumberClass : &BooleanClass;
     JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (!obj)
         return NULL;
@@ -6940,7 +6939,7 @@ dumpValue(const Value &v)
         Class *clasp = obj->getClass();
         fprintf(stderr, "<%s%s at %p>",
                 clasp->name,
-                (clasp == &js_ObjectClass) ? "" : " object",
+                (clasp == &ObjectClass) ? "" : " object",
                 (void *) obj);
     } else if (v.isBoolean()) {
         if (v.toBoolean())
