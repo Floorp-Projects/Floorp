@@ -99,7 +99,7 @@ namespace js {
 //        removing entries whose keys this function leaves unmarked should never
 //        make future lookups fail.
 //
-//        A typical definition of markIteratively would be:
+//        A typical definition of markEntryIfLive would be:
 //
 //          if (keyMarked(k) && !valueMarked(v)) {
 //              markObject(*v, "WeakMap entry value");
@@ -117,11 +117,12 @@ namespace js {
 //        in such a table could be live even when its key is not marked. The
 //        markEntryIfLive function for such a table would generally mark both k and v.
 //
-//     void markEntry(Key &k, Value &v)
-//        Mark the table entry's key and value, k and v, as reachable by the
-//        collector. WeakMap uses this function for non-marking tracers: other
-//        code using the GC heap tracing functions to map the heap for some
-//        purpose or other.
+//     void markEntry(Value &v)
+//        Mark the table entry's value v as reachable by the collector. WeakMap
+//        uses this function for non-marking tracers: other code using the GC
+//        heap tracing functions to map the heap for some purpose or other.
+//        This provides a conservative approximation of the true reachability
+//        relation of the heap graph.
 //
 //   If omitted, the MarkPolicy parameter defaults to js::DefaultMarkPolicy<Key,
 //   Value>, a policy template with the obvious definitions for some typical
@@ -197,7 +198,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     void nonMarkingTrace(JSTracer *tracer) {
         MarkPolicy t(tracer);
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            t.markEntry(r.front().key, r.front().value);
+            t.markEntry(r.front().value);
     }
 
     bool markIteratively(JSTracer *tracer) {
@@ -281,8 +282,7 @@ class DefaultMarkPolicy<JSObject *, Value> {
         markUnmarkedValue(v);
         return true;
     }
-    void markEntry(JSObject *k, const Value &v) {
-        js::gc::MarkObject(tracer, *k, "WeakMap entry key");
+    void markEntry(const Value &v) {
         js::gc::MarkValue(tracer, v, "WeakMap entry value");
     }
 };
@@ -302,8 +302,7 @@ class DefaultMarkPolicy<JSObject *, JSObject *> {
         }
         return false;
     }
-    void markEntry(JSObject *k, JSObject *v) {
-        js::gc::MarkObject(tracer, *k, "WeakMap entry key");
+    void markEntry(JSObject *v) {
         js::gc::MarkObject(tracer, *v, "WeakMap entry value");
     }
 };
