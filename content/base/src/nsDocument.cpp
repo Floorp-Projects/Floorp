@@ -8574,6 +8574,7 @@ NS_IMETHODIMP
 nsDocument::MozCancelFullScreen()
 {
   if (!nsContentUtils::IsFullScreenApiEnabled() ||
+      !nsContentUtils::IsRequestFullScreenAllowed() ||
       !IsFullScreenDoc() ||
       !GetWindow()) {
     return NS_OK;

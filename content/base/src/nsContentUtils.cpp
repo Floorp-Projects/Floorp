@@ -176,6 +176,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
 #include "nsIViewManager.h"
+#include "nsEventStateManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -262,6 +263,7 @@ nsString* nsContentUtils::sModifierSeparator = nsnull;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 PRBool nsContentUtils::sIsFullScreenApiEnabled = PR_FALSE;
+PRBool nsContentUtils::sTrustedFullScreenOnly = PR_TRUE;
 
 nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
@@ -387,6 +389,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsFullScreenApiEnabled,
                                "full-screen-api.enabled");
+
+  Preferences::AddBoolVarCache(&sTrustedFullScreenOnly,
+                               "full-screen-api.allow-trusted-requests-only");
 
   sInitialized = PR_TRUE;
 
@@ -5705,4 +5710,9 @@ PRBool
 nsContentUtils::IsFullScreenApiEnabled()
 {
   return sIsFullScreenApiEnabled;
+}
+
+PRBool nsContentUtils::IsRequestFullScreenAllowed()
+{
+  return !sTrustedFullScreenOnly || nsEventStateManager::IsHandlingUserInput();
 }

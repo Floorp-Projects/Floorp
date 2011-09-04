@@ -1705,6 +1705,14 @@ public:
    */
   static PRBool IsFullScreenApiEnabled();
 
+  /**
+   * Returns PR_TRUE if requests for full-screen are allowed in the current
+   * context. Requests are only allowed if the user initiated them (like with
+   * a mouse-click or key press), unless this check has been disabled by
+   * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
+   */
+  static PRBool IsRequestFullScreenAllowed();
+
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
   static void GetMetaText(nsAString& text);
@@ -1870,6 +1878,7 @@ private:
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
   static PRBool sIsFullScreenApiEnabled;
+  static PRBool sTrustedFullScreenOnly;
 
   static nsHtml5Parser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
