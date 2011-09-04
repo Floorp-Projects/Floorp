@@ -1659,6 +1659,10 @@ JSVAL_TRACE_KIND(jsval v)
  * internal implementation-specific traversal kind. In the latter case the only
  * operations on thing that the callback can do is to call JS_TraceChildren or
  * DEBUG-only JS_PrintTraceThingInfo.
+ *
+ * If eagerlyTraceWeakMaps is true, when we trace a WeakMap visit all
+ * of its mappings.  This should be used in cases where the tracer
+ * wants to use the existing liveness of entries.
  */
 typedef void
 (* JSTraceCallback)(JSTracer *trc, void *thing, JSGCTraceKind kind);
@@ -1669,6 +1673,7 @@ struct JSTracer {
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
+    JSBool              eagerlyTraceWeakMaps;
 };
 
 /*
@@ -1768,6 +1773,7 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
         (trc)->debugPrinter = NULL;                                           \
         (trc)->debugPrintArg = NULL;                                          \
         (trc)->debugPrintIndex = (size_t)-1;                                  \
+        (trc)->eagerlyTraceWeakMaps = JS_TRUE;                                \
     JS_END_MACRO
 
 extern JS_PUBLIC_API(void)

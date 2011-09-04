@@ -1555,6 +1555,12 @@ GCMarker::GCMarker(JSContext *cx)
     conservativeDumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
     memset(&conservativeStats, 0, sizeof(conservativeStats));
 #endif
+
+    /*
+     * The GC is recomputing the liveness of WeakMap entries, so we
+     * delay visting entries.
+     */
+    eagerlyTraceWeakMaps = JS_FALSE;
 }
 
 GCMarker::~GCMarker()
@@ -1579,7 +1585,7 @@ GCMarker::delayMarkingChildren(const void *thing)
 }
 
 static void
-MarkDelayedChildren(JSTracer *trc, Arena *a)
+MarkDelayedChildren(GCMarker *trc, Arena *a)
 {
     AllocKind allocKind = a->aheader.getAllocKind();
     JSGCTraceKind traceKind = MapAllocToTraceKind(allocKind);
