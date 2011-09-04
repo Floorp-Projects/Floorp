@@ -3379,6 +3379,29 @@ nsGenericHTMLElement::Focus()
   return fm ? fm->SetFocus(elem, 0) : NS_OK;
 }
 
+nsresult nsGenericHTMLElement::MozRequestFullScreen()
+{
+  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+    return NS_OK;
+  }
+
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ENSURE_STATE(doc);
+  doc->RequestFullScreen(this);
+#ifdef DEBUG
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(doc->GetWindow());
+  NS_ENSURE_STATE(window);
+  PRBool fullscreen;
+  window->GetFullScreen(&fullscreen);
+  NS_ASSERTION(fullscreen, "Windows should report fullscreen");
+  nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(doc));
+  domDocument->GetMozFullScreen(&fullscreen);
+  NS_ASSERTION(fullscreen, "Document should report fullscreen");
+  NS_ASSERTION(doc->IsFullScreenDoc(), "Should be in full screen state!");
+#endif
+  return NS_OK;
+}
+
 nsresult nsGenericHTMLElement::Click()
 {
   if (HasFlag(NODE_HANDLING_CLICK))

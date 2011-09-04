@@ -127,8 +127,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x455e4d79, 0x756b, 0x4f73,  \
- { 0x95, 0xea, 0x3f, 0xf6, 0x0c, 0x6a, 0x8c, 0xa6 } }
+{ 0x15d92ce2, 0x472a, 0x4ea7,  \
+ { 0xaf, 0x29, 0x47, 0x7b, 0xac, 0x98, 0xa0, 0x43 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -741,6 +741,37 @@ public:
   virtual void RemoveFromIdTable(Element* aElement, nsIAtom* aId) = 0;
   virtual void AddToNameTable(Element* aElement, nsIAtom* aName) = 0;
   virtual void RemoveFromNameTable(Element* aElement, nsIAtom* aName) = 0;
+
+  /**
+   * Resets the current full-screen element to nsnull.
+   */
+  virtual void ResetFullScreenElement() = 0;
+
+  /**
+   * Returns the element which either is the full-screen element, or
+   * contains the full-screen element if a child of this document contains
+   * the fullscreen element.
+   */
+  virtual Element* GetFullScreenElement() = 0;
+
+  /**
+   * Requests that the document make aElement the full-screen element,
+   * and move into full-screen mode.
+   */
+  virtual void RequestFullScreen(Element* aElement) = 0;
+
+  /**
+   * Updates the full-screen status on this document, setting the full-screen
+   * mode to aIsFullScreen. This doesn't affect the window's full-screen mode,
+   * this updates the document's internal state which determines whether the
+   * document reports as being in full-screen mode.
+   */
+  virtual void UpdateFullScreenStatus(PRBool aIsFullScreen) = 0;
+
+  /**
+   * Returns PR_TRUE if this document is in full-screen mode.
+   */
+  virtual PRBool IsFullScreenDoc() = 0;
 
   //----------------------------------------------------------------------
 
