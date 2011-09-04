@@ -277,6 +277,8 @@ _TEST_FILES = \
 		test_checked.html \
 		test_bug677658.html \
 		test_bug677463.html \
+		file_fullscreen-api.html \
+		test_fullscreen-api.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -1,0 +1,67 @@
+ <!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 545812</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545812">Mozilla Bug 545812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 545812 **/
+var testWindow = null;
+
+/*
+<html>
+  <body onload='document.body.mozRequestFullScreen();'>
+  </body>
+</html>
+*/
+var requestFullScreenContents = "data:text/html;charset=utf-8,<html>%0D%0A  <body onload%3D'document.body.mozRequestFullScreen()%3B'>%0D%0A  <%2Fbody>%0D%0A<%2Fhtml>";
+
+
+function run() {
+  // Ensure the full-screen api is enabled, and will be disabled on test exit.
+  var prevValue = SpecialPowers.getBoolPref("full-screen-api.enabled");
+  SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+
+  window.addEventListener("unload", function() {
+    SpecialPowers.setBoolPref("full-screen-api.enabled", prevValue);
+  }, false);
+
+  document.addEventListener("mozfullscreenchange",
+    function(){ok(false, "Should never receive a fullscreenchange event in the main window.");},
+    false);
+  
+  // Load an iframe whose contents requests full-screen. This request should
+  // fail, and we should never receive a "mozfullscreenchange" event, because the
+  // iframe doesn't have a mozallowfullscreen attribute.
+  var iframe = document.createElement("iframe");
+  iframe.src = requestFullScreenContents;
+  document.body.appendChild(iframe);
+ 
+  // Run the tests which go full-screen in a new window, as mochitests normally
+  // run in an iframe, which by default will not have the mozallowfullscreen
+  // attribute set, so full-screen won't work.
+  testWindow = window.open("file_fullscreen-api.html", "", "width=500,height=500");
+}
+
+function finish() {
+  testWindow.close();
+  SimpleTest.finish();
+}
+
+addLoadEvent(run);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
