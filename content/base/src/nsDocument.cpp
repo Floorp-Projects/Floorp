@@ -181,6 +181,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "nsDOMNavigationTiming.h"
+#include "nsEventStateManager.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -8516,6 +8517,9 @@ UpdateFullScreenStatusInDocTree(nsIDocument* aDoc, PRBool aIsFullScreen)
 void
 nsDocument::ResetFullScreenElement()
 {
+  if (mFullScreenElement) {
+    nsEventStateManager::SetFullScreenState(mFullScreenElement, PR_FALSE);
+  }
   mFullScreenElement = nsnull;
 }
 
@@ -8577,11 +8581,16 @@ nsDocument::RequestFullScreen(Element* aElement)
     // down the document hierarchy, the full-screen element (or its container)
     // is not visible there.
     mFullScreenElement = aElement;
+    // Set the full-screen state on the element, so the css-pseudo class
+    // applies to the element.
+    nsEventStateManager::SetFullScreenState(mFullScreenElement, PR_TRUE);
     nsIDocument* child = this;
     nsIDocument* parent;
     while (parent = child->GetParentDocument()) {
       nsIContent* content = parent->FindContentForSubDocument(child);
       nsCOMPtr<Element> element(do_QueryInterface(content));
+      // Containing frames also need the css-pseudo class applied.
+      nsEventStateManager::SetFullScreenState(element, PR_TRUE);
       static_cast<nsDocument*>(parent)->mFullScreenElement = element;
       child = parent;
     }
