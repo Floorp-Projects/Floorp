@@ -203,6 +203,10 @@ public:
   // if aContent is non-null, marks the object as active.
   static void SetActiveManager(nsEventStateManager* aNewESM,
                                nsIContent* aContent);
+
+  // Sets the full-screen event state on aElement to aIsFullScreen.
+  static void SetFullScreenState(mozilla::dom::Element* aElement, PRBool aIsFullScreen);
+
 protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
