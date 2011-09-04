@@ -599,9 +599,26 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
 #endif
 
-    if (!activeAnalysis) {
+#ifdef JS_METHODJIT
+    if (types.inferenceEnabled)
+        mjit::ClearAllFrames(this);
+#endif
+
+    if (activeAnalysis) {
         /*
-         * Clear the analysis pool, but don't releas its data yet. While
+         * Analysis information is in use, so don't clear the analysis pool.
+         * jitcode still needs to be released, if this is a shape-regenerating
+         * GC then shape numbers baked into the code may change.
+         */
+        if (types.inferenceEnabled) {
+            for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+                JSScript *script = i.get<JSScript>();
+                mjit::ReleaseScriptCode(cx, script);
+            }
+        }
+    } else {
+        /*
+         * Clear the analysis pool, but don't release its data yet. While
          * sweeping types any live data will be allocated into the pool.
          */
         JSArenaPool oldPool;
@@ -613,9 +630,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * enabled in the compartment.
          */
         if (types.inferenceEnabled) {
-#ifdef JS_METHODJIT
-            mjit::ClearAllFrames(this);
-#endif
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->types) {

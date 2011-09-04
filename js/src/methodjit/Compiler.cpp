@@ -133,6 +133,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     inlining_(false),
     hasGlobalReallocation(false),
     oomInVector(false),
+    gcNumber(cx->runtime->gcNumber),
     applyTricks(NoApplyTricks),
     pcLengths(NULL)
 {
@@ -884,6 +885,13 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
      * of compiling due to, e.g. standard class initialization.
      */
     if (globalSlots && globalObj->getRawSlots() != globalSlots)
+        return Compile_Retry;
+
+    /*
+     * Watch for GCs which occurred during compilation. These may have
+     * renumbered shapes baked into the jitcode.
+     */
+    if (cx->runtime->gcNumber != gcNumber)
         return Compile_Retry;
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
