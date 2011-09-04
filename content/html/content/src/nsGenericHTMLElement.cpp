@@ -3385,6 +3385,21 @@ nsresult nsGenericHTMLElement::MozRequestFullScreen()
     return NS_OK;
   }
 
+  // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
+  // boolean attribute set.
+  nsINode* node = static_cast<nsINode*>(this);
+  do {
+    nsIContent* content = static_cast<nsIContent*>(node);
+    if (content->IsHTML(nsGkAtoms::iframe) &&
+        !content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
+      // The node requesting fullscreen, or one of its crossdoc ancestors,
+      // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
+      // This request is not authorized by the parent document.
+      return NS_OK;
+    }
+    node = nsContentUtils::GetCrossDocParentNode(node);
+  } while (node);
+
   nsIDocument* doc = GetOwnerDoc();
   NS_ENSURE_STATE(doc);
   doc->RequestFullScreen(this);
