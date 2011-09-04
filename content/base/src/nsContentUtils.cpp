@@ -261,6 +261,7 @@ nsString* nsContentUtils::sAltText = nsnull;
 nsString* nsContentUtils::sModifierSeparator = nsnull;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
+PRBool nsContentUtils::sIsFullScreenApiEnabled = PR_FALSE;
 
 nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
@@ -383,6 +384,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
+
+  Preferences::AddBoolVarCache(&sIsFullScreenApiEnabled,
+                               "full-screen-api.enabled");
 
   sInitialized = PR_TRUE;
 
@@ -5695,4 +5699,10 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                                   aValue.Length(), &idx, JS_TRUE, &rval);
 
   return res == JS_FALSE || rval != JSVAL_NULL;
+}
+
+PRBool
+nsContentUtils::IsFullScreenApiEnabled()
+{
+  return sIsFullScreenApiEnabled;
 }
