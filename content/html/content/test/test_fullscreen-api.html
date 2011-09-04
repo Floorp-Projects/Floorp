@@ -26,6 +26,8 @@ var testWindow = null;
 */
 var requestFullScreenContents = "data:text/html;charset=utf-8,<html>%0D%0A  <body onload%3D'document.body.mozRequestFullScreen()%3B'>%0D%0A  <%2Fbody>%0D%0A<%2Fhtml>";
 
+var prevTrusted = false;
+var prevEnabled = false;
 
 function run() {
   document.addEventListener("mozfullscreenchange",
@@ -33,10 +35,10 @@ function run() {
     false);
 
   // Ensure the full-screen api is enabled, and will be disabled on test exit.
-  var prevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
+  prevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
   SpecialPowers.setBoolPref("full-screen-api.enabled", true);
 
-  var prevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
+  prevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
 
   // Request full-screen from a non trusted context (this script isn't a user
   // generated event!). We should not receive a "mozfullscreenchange" event.
@@ -46,12 +48,7 @@ function run() {
   // Disable the requirement for trusted contexts only, so the tests are easier
   // to write.
   SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
-  
-  window.addEventListener("unload", function() {
-    SpecialPowers.setBoolPref("full-screen-api.enabled", prevEnabled);
-    SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", prevTrusted);	
-  }, false);
-  
+
   // Load an iframe whose contents requests full-screen. This request should
   // fail, and we should never receive a "mozfullscreenchange" event, because the
   // iframe doesn't have a mozallowfullscreen attribute.
@@ -65,8 +62,15 @@ function run() {
   testWindow = window.open("file_fullscreen-api.html", "", "width=500,height=500");
 }
 
-function finish() {
+function apiTestFinished() {
   testWindow.close();
+  testWindow = window.open("file_fullscreen-api-keys.html", "", "width=500,height=500");
+}
+
+function keysTestFinished() {
+  testWindow.close();
+  SpecialPowers.setBoolPref("full-screen-api.enabled", prevEnabled);
+  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", prevTrusted);	
   SimpleTest.finish();
 }
 
