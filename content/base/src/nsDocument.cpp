@@ -8485,9 +8485,39 @@ GetRootDocument(nsIDocument* aDoc)
   return rpc->Document();
 }
 
+class nsDispatchFullScreenChange : public nsRunnable
+{
+public:
+  nsDispatchFullScreenChange(nsIDocument *aDoc)
+    : mDoc(aDoc)
+  {
+    mTarget = aDoc->GetFullScreenElement();
+    if (!mTarget) {
+      mTarget = aDoc;
+    }
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsContentUtils::DispatchTrustedEvent(mDoc,
+                                         mTarget,
+                                         NS_LITERAL_STRING("mozfullscreenchange"),
+                                         PR_TRUE,
+                                         PR_FALSE);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> mDoc;
+  nsCOMPtr<nsISupports> mTarget;
+};
+
 void
 nsDocument::UpdateFullScreenStatus(PRBool aIsFullScreen)
 {
+  if (mIsFullScreen != aIsFullScreen) {
+    nsCOMPtr<nsIRunnable> event(new nsDispatchFullScreenChange(this));
+    NS_DispatchToCurrentThread(event);
+  }
   mIsFullScreen = aIsFullScreen;
   if (!mIsFullScreen) {
     // Full-screen is being turned off. Reset the full-screen element, to
