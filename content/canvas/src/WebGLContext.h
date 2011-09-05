@@ -502,9 +502,7 @@ protected:
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
     PRBool ValidateStencilParamsForDrawCall();
     
-    bool ValidateGLSLVariableName(const nsAString& name, const char *info);
-    bool ValidateGLSLCharacter(PRUnichar c);
-    bool ValidateGLSLString(const nsAString& string, const char *info);
+    bool  ValidateGLSLIdentifier(const nsAString& name, const char *info);
 
     static PRUint32 GetTexelSize(WebGLenum format, WebGLenum type);
 

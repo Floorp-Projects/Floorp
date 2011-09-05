@@ -2579,3 +2579,48 @@ panel[dimmed="true"] {
   box-shadow: 0 0 0 1px black;
   outline-color: white;
 }
+
+/* Highlighter toolbar */
+
+#inspector-toolbar {
+  -moz-appearance: none;
+  height: 32px;
+  padding: 0 3px;
+  border-top: 1px solid hsla(210, 8%, 5%, .65);
+  box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
+  background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+}
+
+#inspector-inspect-toolbutton,
+#inspector-tools > toolbarbutton {
+  -moz-appearance: none;
+  width: 78px;
+  margin: 3px 5px;
+  color: hsl(210,30%,85%);
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  border: 1px solid hsla(210,8%,5%,.45);
+  border-radius: @toolbarbuttonCornerRadius@;
+  background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1));
+  background-clip: padding-box;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton:not([checked]):hover:active,
+#inspector-tools > toolbarbutton:not([checked]):hover:active {
+  border-color: hsla(210,8%,5%,.6);
+  background: -moz-linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
+  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton[checked],
+#inspector-tools > toolbarbutton[checked] {
+  color: hsl(208,100%,60%) !important;
+  border-color: hsla(210,8%,5%,.6);
+  background: -moz-linear-gradient(hsla(220,6%,10%,.6), hsla(210,11%,18%,.45) 75%, hsla(210,11%,30%,.4));
+  box-shadow: 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton[checked]:hover:active,
+#inspector-tools > toolbarbutton[checked]:hover:active {
+  background-color: hsla(210,8%,5%,.2);
+}
