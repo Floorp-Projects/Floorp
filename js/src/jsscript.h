@@ -674,8 +674,9 @@ struct JSScript : public js::gc::Cell {
         return JITScript_Valid;
     }
 
-    // This method is implemented in MethodJIT.h.
-    JS_FRIEND_API(size_t) jitDataSize();/* Size of the JITScript and all sections */
+    /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.h.) */
+    JS_FRIEND_API(size_t) jitDataSize(size_t(*mus)(void *));
+    
 #endif
 
     jsbytecode *main() {

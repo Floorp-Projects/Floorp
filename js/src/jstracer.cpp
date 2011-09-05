@@ -183,9 +183,9 @@ using namespace js::tjit;
  *
  * FIXME: Bug 624590 is open to get rid of all this.
  */
-static const size_t DataReserveSize  = 12500 * sizeof(uintptr_t);
-static const size_t TraceReserveSize =  5000 * sizeof(uintptr_t);
-static const size_t TempReserveSize  =  1000 * sizeof(uintptr_t);
+static const size_t DataReserveSize  =  8192 * sizeof(uintptr_t);
+static const size_t TraceReserveSize =   512 * sizeof(uintptr_t);
+static const size_t TempReserveSize  =  4096 * sizeof(uintptr_t);
 
 void*
 nanojit::Allocator::allocChunk(size_t nbytes, bool fallible)

@@ -478,6 +478,8 @@ struct JSObject : js::gc::Cell {
         jsuword initializedLength;
     };
 
+    JS_FRIEND_API(size_t) sizeOfSlotsArray(size_t(*mus)(void *));
+
     JSObject    *parent;                    /* object's parent */
     void        *privateData;               /* private data */
     jsuword     capacity;                   /* total number of available slots */

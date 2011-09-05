@@ -176,6 +176,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
 #include "nsIViewManager.h"
+#include "nsEventStateManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -261,6 +262,9 @@ nsString* nsContentUtils::sAltText = nsnull;
 nsString* nsContentUtils::sModifierSeparator = nsnull;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
+PRBool nsContentUtils::sIsFullScreenApiEnabled = PR_FALSE;
+PRBool nsContentUtils::sTrustedFullScreenOnly = PR_TRUE;
+PRBool nsContentUtils::sFullScreenKeyInputRestricted = PR_TRUE;
 
 nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
@@ -383,6 +387,15 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
+
+  Preferences::AddBoolVarCache(&sIsFullScreenApiEnabled,
+                               "full-screen-api.enabled");
+
+  Preferences::AddBoolVarCache(&sTrustedFullScreenOnly,
+                               "full-screen-api.allow-trusted-requests-only");
+
+  Preferences::AddBoolVarCache(&sFullScreenKeyInputRestricted,
+                               "full-screen-api.key-input-restricted");
 
   sInitialized = PR_TRUE;
 
@@ -5695,4 +5708,21 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                                   aValue.Length(), &idx, JS_TRUE, &rval);
 
   return res == JS_FALSE || rval != JSVAL_NULL;
+}
+
+PRBool
+nsContentUtils::IsFullScreenApiEnabled()
+{
+  return sIsFullScreenApiEnabled;
+}
+
+PRBool nsContentUtils::IsRequestFullScreenAllowed()
+{
+  return !sTrustedFullScreenOnly || nsEventStateManager::IsHandlingUserInput();
+}
+
+PRBool
+nsContentUtils::IsFullScreenKeyInputRestricted()
+{
+  return sFullScreenKeyInputRestricted;
 }
