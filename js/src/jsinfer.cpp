@@ -2042,9 +2042,9 @@ TypeCompartment::nukeTypes(JSContext *cx)
      */
 
 #ifdef JS_THREADSAFE
-    Maybe<AutoLockGC> maybeLock;
+    AutoLockGC maybeLock;
     if (!cx->runtime->gcMarkAndSweep)
-        maybeLock.construct(cx->runtime);
+        maybeLock.lock(cx->runtime);
 #endif
 
     inferenceEnabled = false;
@@ -4385,7 +4385,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
         return;
 
     /* Strawman object to add properties to and watch for duplicates. */
-    JSObject *baseobj = NewBuiltinClassInstance(cx, &js_ObjectClass, gc::FINALIZE_OBJECT16);
+    JSObject *baseobj = NewBuiltinClassInstance(cx, &ObjectClass, gc::FINALIZE_OBJECT16);
     if (!baseobj) {
         if (type->newScript)
             type->clearNewScript(cx);
@@ -4411,7 +4411,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
         return;
     }
 
-    gc::FinalizeKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
+    gc::AllocKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
 
     /* We should not have overflowed the maximum number of fixed slots for an object. */
     JS_ASSERT(gc::GetGCKindSlots(kind) >= baseobj->slotSpan());
@@ -4441,7 +4441,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
     }
 
     type->newScript->script = script;
-    type->newScript->finalizeKind = unsigned(kind);
+    type->newScript->allocKind = kind;
     type->newScript->shape = baseobj->lastProperty();
 
     type->newScript->initializerList = (TypeNewScript::Initializer *)
@@ -5480,7 +5480,7 @@ TypeCompartment::sweep(JSContext *cx)
             const AllocationSiteKey &key = e.front().key;
             TypeObject *object = e.front().value;
 
-            if (key.script->isAboutToBeFinalized(cx) || !object->isMarked())
+            if (IsAboutToBeFinalized(cx, key.script) || !object->isMarked())
                 e.removeFront();
         }
     }
@@ -5520,7 +5520,7 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
     unsigned num = NumTypeSets(script);
     TypeSet *typeArray = script->types->typeArray();
 
-    if (script->isAboutToBeFinalized(cx)) {
+    if (IsAboutToBeFinalized(cx, script)) {
         /* Release all memory associated with the persistent type sets. */
         for (unsigned i = 0; i < num; i++)
             typeArray[i].clearObjects();

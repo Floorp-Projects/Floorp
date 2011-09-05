@@ -140,6 +140,10 @@ CSS_STATE_PSEUDO_CLASS(target, ":target", NS_EVENT_STATE_URLTARGET)
 CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate",
                        NS_EVENT_STATE_INDETERMINATE)
 
+// Matches the element which is being displayed full-screen, and
+// any containing frames.
+CSS_STATE_PSEUDO_CLASS(mozFullScreen, ":-moz-full-screen", NS_EVENT_STATE_FULL_SCREEN)
+
 // Matches if the element is focused and should show a focus ring
 CSS_STATE_PSEUDO_CLASS(mozFocusRing, ":-moz-focusring", NS_EVENT_STATE_FOCUSRING)
 

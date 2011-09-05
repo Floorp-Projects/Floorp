@@ -5,16 +5,17 @@
 %define color_background_default_window #fff
 %define color_background_default rgba(255,255,255,0.95)
 %define color_text_default #222222
+%define color_toolbar_background #eaeaea
 %define color_divider_border #333333
-%define color_button_border #5a5a5a
+%define color_button_border rgb(207,207,207)
 %define color_background_dialog #fff
 %define color_text_dialog #000
 %define color_dialog_border #5a5a5a
 %define color_background_dlgbuttons #9a9a9a
 %define color_background_panel #d6d6d6
 %define color_text_panel #000
-%define color_background_header #292929
-%define color_text_header #999999
+%define color_background_header #6699ff
+%define color_text_header #fff
 %define color_background_scroller #9a9a9a
 %define color_background_textbox #fff
 %define color_text_textbox #000
@@ -22,11 +23,15 @@
 %define color_text_disabled #808080
 %define color_text_placeholder #808080
 %define color_text_as_link #febc2b
+%define color_background_panelrow #c8c8c8
+%define color_text_panelrow #222222
 
 %define color_background_highlight #a7c5f4
 %define color_background_highlight_overlay rgba(167, 197, 244, 0.8)
 %define color_text_highlight #000
 %define color_selection #c0e49a
+%define color_shadow #6699ff
+%define color_shadow_light rgba(102,153,255, 0.2)
 
 %define color_subtext_default #aaaaaa
 
@@ -79,9 +84,11 @@
 %define border_radius_small 0.64mozmm
 %define border_radius_tiny 0.21mozmm
 
-%define shadow_width_xlarge 1.06mozmm
-%define shadow_width_large 0.64mozmm
+%define shadow_width_xlarge 3.06mozmm
+%define shadow_width_large 2.64mozmm
+%define shadow_width_medium 0.75mozmm
 %define shadow_width_small 0.21mozmm
+%define shadow_width_tiny 0.1mozmm
 
 %define textbox_height 5.08mozmm
 
@@ -103,9 +110,10 @@
 %define placelabel_padding 8.47mozmm
 %define placeitem_padding 4.23mozmm
 
+%define awesome_header_maxwidth 25mozmm
 %define autocomplete_item_container_image_padding 0.53mozmm
 %define autocomplete_item_container_position 0.21mozmm
-%define autocomplete_item_container_size 2.75mozmm
+%define autocomplete_item_container_size 4mozmm
 %define autocomplete_item_container_padding 5.08mozmm
 
 %define autocomplete_item_subtitle_margin 2.75mozmm
@@ -170,9 +178,11 @@
 %define border_radius_small 6px
 %define border_radius_tiny 2px
 
-%define shadow_width_xlarge 10px
+%define shadow_width_xlarge 15px
 %define shadow_width_large 6px
+%define shadow_width_medium 4px
 %define shadow_width_small 2px
+%define shadow_width_tiny 1px
 
 %define textbox_height 48px
 
@@ -194,6 +204,7 @@
 %define placelabel_padding 80px
 %define placeitem_padding 40px
 
+%define awesome_header_maxwidth 100px
 %define autocomplete_item_container_image_padding 5px
 %define autocomplete_item_container_position 2px
 %define autocomplete_item_container_size 26px

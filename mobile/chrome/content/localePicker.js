@@ -8,15 +8,16 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource:///modules/LocaleRepository.jsm");
 
 let stringPrefs = [
-  { selector: "#continue-in-button", pref: "continueIn", data: ["CURRENT_LANGUAGE"] },
+  { selector: "#continue-in-button", pref: "continueIn", data: ["CURRENT_LOCALE"] },
   { selector: "#change-language", pref: "choose", data: null },
   { selector: "#picker-title", pref: "chooseLanguage", data: null },
   { selector: "#continue-button", pref: "continue", data: null },
   { selector: "#cancel-button", pref: "cancel", data: null },
-  { selector: "#intalling-message", pref: "installing", data: ["CURRENT_LANGUAGE"]  },
+  { selector: "#intalling-message", pref: "installing", data: ["CURRENT_LOCALE"]  },
   { selector: "#cancel-install-button", pref: "cancel", data: null },
   { selector: "#installing-error", pref: "installerror", data: null },
-  { selector: "#install-continue", pref: "continue", data: null }
+  { selector: "#install-continue", pref: "continue", data: null },
+  { selector: "#loading-label", pref: "loading", data: null }
 ];
 
 let LocaleUI = {
@@ -52,6 +53,26 @@ let LocaleUI = {
     return this._deck = document.getElementById("language-deck");
   },
 
+  _availableLocales: null,
+  get availableLocales() {
+    if (!this._availableLocales) {
+      let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+      chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
+      let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
+      let availableLocales = chrome.getLocalesForPackage("browser");
+
+      this._availableLocales = [];
+      while (availableLocales.hasMore()) {
+        let locale = availableLocales.getNext();
+        let label = locale;
+        try { label = strings.GetStringFromName(locale); }
+        catch (e) { }
+        this._availableLocales.push({ addon: { id: locale, name: label, targetLocale: locale }});
+      }
+    }
+    return this._availableLocales;
+  },
+
   _currentInstall: null, // used to cancel an install
 
   get selectedPanel() {
@@ -75,7 +96,7 @@ let LocaleUI = {
     description.appendChild(document.createTextNode(aText));
     description.setAttribute('flex', 1);
     item.appendChild(description);
-    item.setAttribute("locale", getTargetLanguage(aLocale.addon));
+    item.setAttribute("locale", getTargetLocale(aLocale.addon));
 
     if (aLocale) {
       item.locale = aLocale.addon;
@@ -94,12 +115,12 @@ let LocaleUI = {
     let bestMatch = NO_MATCH;
 
     for each (let locale in aLocales) {
-      let targetLang = getTargetLanguage(locale.addon);
-      if (document.querySelector('[locale="' + targetLang + '"]'))
+      let targetLocale = getTargetLocale(locale.addon);
+      if (document.querySelector('[locale="' + targetLocale + '"]'))
         continue;
 
-      let item = this._createItem(targetLang, locale.addon.name, locale);
-      let match = localesMatch(targetLang, this.language);
+      let item = this._createItem(targetLocale, locale.addon.name, locale);
+      let match = localesMatch(targetLocale, this.locale);
       if (match > bestMatch) {
         bestMatch = match;
         selectedItem = item;
@@ -126,27 +147,27 @@ let LocaleUI = {
   closePicker: function() {
     if (this._currentInstall) {
       Services.prefs.setBoolPref("intl.locale.matchOS", false);
-      Services.prefs.setCharPref("general.useragent.locale", getTargetLanguage(this._currentInstall));
+      Services.prefs.setCharPref("general.useragent.locale", getTargetLocale(this._currentInstall));
     }
     this.selectedPanel = this._mainPage;
   },
 
-  _language: "",
+  _locale: "",
 
-  set language(aVal) {
-    if (aVal == this._language)
+  set locale(aVal) {
+    if (aVal == this._locale)
       return;
 
     Services.prefs.setBoolPref("intl.locale.matchOS", false);
     Services.prefs.setCharPref("general.useragent.locale", aVal);
-    this._language = aVal;
+    this._locale = aVal;
 
     this.strings = null;
     this.updateStrings();
   },
 
-  get language() {
-    return this._language;
+  get locale() {
+    return this._locale;
   },
 
   set installStatus(aVal) {
@@ -158,13 +179,13 @@ let LocaleUI = {
     this.selectedPanel = this._pickerPage;
   },
 
-  selectLanguage: function(aEvent) {
+  selectLocale: function(aEvent) {
     let locale = this.list.selectedItem.locale;
     if (locale.install) {
       LocaleUI.strings = new FakeStringBundle(locale);
       this.updateStrings();
     } else {
-      this.language = getTargetLanguage(locale);
+      this.locale = getTargetLocale(locale);
       if (this._currentInstall)
         this._currentInstall = null;
     }
@@ -187,12 +208,14 @@ let LocaleUI = {
     if (this._currentInstall)
       this._currentInstall = null;
     // restore the last known "good" locale
-    this.language = this.defaultLanguage;
+    this.locale = this.defaultLocale;
     this.updateStrings();
     this.closePicker();
   },
 
   closeWindow : function() {
+    var buildID =  Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).platformBuildID;
+    Services.prefs.setCharPref("extensions.compatability.locales.buildid", buildID);
     // Trying to close this window and open a new one results in a corrupt UI.
     if (LocaleUI._currentInstall) {
       // a new locale was installed, restart the browser
@@ -202,7 +225,6 @@ let LocaleUI = {
       if (cancelQuit.data == false) {
         let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
         appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eForceQuit);
-        Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", false);
       }
     } else {
       // selected locale is already installed, just open the window
@@ -223,7 +245,7 @@ let LocaleUI = {
       catch(ex) { }
       LocaleUI._currentInstall = null;
 
-      this.language = this.defaultLanguage;
+      this.locale = this.defaultLocale;
     }
   },
 
@@ -241,10 +263,10 @@ let LocaleUI = {
   }
 }
 
-// Gets the target language for a locale addon
+// Gets the target locale for an addon
 // For now this returns the targetLocale, although if and addon doesn't
 // specify a targetLocale we could attempt to guess the locale from the addon's name
-function getTargetLanguage(aAddon) {
+function getTargetLocale(aAddon) {
   return aAddon.targetLocale;
 }
 
@@ -256,7 +278,7 @@ function getString(aStringName, aDataSet, aAddon) {
   if (aDataSet) {
     let databundle = aDataSet.map(function(aData) {
       switch (aData) {
-        case "CURRENT_LANGUAGE" :
+        case "CURRENT_LOCALE" :
           if (aAddon)
             return aAddon.name;
           try { return LocaleUI.strings.GetStringFromName("name"); }
@@ -289,8 +311,8 @@ let installListener = {
   },
   onInstallStarted: function(install) { },
   onInstallEnded: function(install, addon) {
-    LocaleUI.updateStrings();
-    LocaleUI.closePicker();
+    LocaleUI.locale = getTargetLocale(LocaleUI._currentInstall);
+    LocaleUI.closeWindow();
   },
   onInstallCancelled: function(install) {
     LocaleUI.cancelInstall();
@@ -322,25 +344,68 @@ function start() {
 
   // if we have gotten this far, we can assume that we don't have anything matching the system
   // locale and we should show the locale picker
+  LocaleUI._mainPage.setAttribute("mode", "loading");
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
   chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
-  let availableLocales = chrome.getLocalesForPackage("browser");
-  let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
-  LocaleUI.availableLocales = [];
-  while (availableLocales.hasMore()) {
-    let locale = availableLocales.getNext();
-
-    let label = locale;
-    try { label = strings.GetStringFromName(locale); }
-    catch (e) { }
-    LocaleUI.availableLocales.push({addon: { id: locale, name: label, targetLocale: locale }});
-  }
-
-  LocaleUI._language = chrome.getSelectedLocale("browser");
+  LocaleUI._locale = chrome.getSelectedLocale("browser");
   LocaleUI.updateStrings();
 
+  // if we haven't gotten the list of available locales from AMO within 5 seconds, we give up
+  // users can try downloading the list again by selecting "Choose another locale"
+  let timeout = setTimeout(function() {
+    LocaleUI._mainPage.removeAttribute("mode");
+    timeout = null;
+  }, 5000);
+
+  // Look on AMO for something that matches the system locale
+  LocaleRepository.getLocales(function lp_initalDownload(aLocales) {
+    if (!LocaleUI._mainPage.hasAttribute("mode")) return;
+
+    clearTimeout(timeout);
+    LocaleUI._mainPage.removeAttribute("mode");
+
+    let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].getService(Ci.nsILocaleService);
+    let currentLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
+    if (Services.prefs.prefHasUserValue("general.useragent.locale")) {
+      currentLocale = Services.prefs.getCharPref("general.useragent.locale");
+    }
+
+    let match = NO_MATCH;
+    let matchingLocale = null;
+
+    for each (let locale in aLocales) {
+      let targetLocale = getTargetLocale(locale.addon);
+      let newMatch = localesMatch(targetLocale, currentLocale);
+      if (newMatch > match) {
+        matchingLocale = locale;
+        match = newMatch;
+      }
+    }
+
+    if (matchingLocale) {
+      // if we found something, try to install it automatically
+      AddonManager.getAddonByID(matchingLocale.addon.id, function (aAddon) {
+        // if this locale is already installed, but is user disabled,
+        // bail out of here.
+        if (aAddon && aAddon.userDisabled) {
+          Services.prefs.clearUserPref("general.useragent.locale");
+          LocaleUI.closeWindow();
+          return;
+        }
+        // if we found something, try to install it automatically
+        LocaleUI.strings = new FakeStringBundle(matchingLocale.addon);
+        LocaleUI.updateStrings();
+        LocaleUI._currentInstall = matchingLocale.addon;
+  
+        LocaleUI.selectedPanel = LocaleUI._installerPage;
+        matchingLocale.addon.install.addListener(installListener);
+        matchingLocale.addon.install.install();
+      });
+    }
+  });
+
   // update the page strings and show the correct page
-  LocaleUI.defaultLanguage = LocaleUI._language;
+  LocaleUI.defaultLocale = LocaleUI._locale;
   window.addEventListener("resize", resizeHandler, false);
 }
 
