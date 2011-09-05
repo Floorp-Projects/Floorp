@@ -4871,6 +4871,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     if (!report) {
         fprintf(gErrFile, "%s\n", message);
+        fflush(gErrFile);
         return;
     }
 
@@ -4933,6 +4934,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
+    fflush(gErrFile);
     if (!JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;
