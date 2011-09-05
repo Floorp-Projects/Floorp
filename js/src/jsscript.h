@@ -541,12 +541,10 @@ struct JSScript : public js::gc::Cell {
      * the script with 4 bytes. We use them to store tiny scripts like empty
      * scripts.
      */
-#if JS_BITS_PER_WORD == 32
-#define JS_SCRIPT_INLINE_DATA_LIMIT 0
-#else
+#if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
-#endif
     uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
+#endif
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
