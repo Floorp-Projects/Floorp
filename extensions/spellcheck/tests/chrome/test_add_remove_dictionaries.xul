@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Add and remove dictionaries test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <title>Add and remove dictionaries test</title>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function getMisspelledWords(editor) {
+  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
+}
+
+function getDictionaryList(editor) {
+  var spellchecker = editor.getInlineSpellChecker(true).spellChecker;
+  var o1 = {};
+  spellchecker.GetDictionaryList(o1, {});
+  return o1.value;
+}
+
+function getCurrentDictionary(editor) {
+  var spellchecker = editor.getInlineSpellChecker(true).spellChecker;
+  return spellchecker.GetCurrentDictionary();
+}
+
+function setCurrentDictionary(editor, dictionary) {
+  var spellchecker = editor.getInlineSpellChecker(true).spellChecker;
+  spellchecker.SetCurrentDictionary(dictionary);
+}
+
+function RunTest() {
+  var editor = document.getElementById('textbox').editor;
+
+  var dir = Components.classes["@mozilla.org/file/directory_service;1"].
+            getService(Components.interfaces.nsIProperties).
+            get("CurWorkD", Components.interfaces.nsIFile);
+  dir.append("chrome");
+  dir.append("extensions");
+  dir.append("spellcheck");
+  dir.append("tests");
+  dir.append("chrome");
+
+  var hunspell = Components
+    .classes["@mozilla.org/spellchecker/engine;1"]
+    .getService(Components.interfaces.mozISpellCheckingEngine);
+
+  // install base dictionary
+  var base = dir.clone();
+  base.append("base");
+  ok(base.exists());
+  hunspell.addDirectory(base);
+
+  // install map dictionary
+  var map = dir.clone();
+  map.append("map");
+  ok(map.exists());
+  hunspell.addDirectory(map);
+
+  // test that base and map dictionaries are available
+  var dicts = getDictionaryList(editor);
+  isnot(dicts.indexOf("base_utf"), -1, "base is available");
+  isnot(dicts.indexOf("maputf"), -1, "map is available");
+
+  // select base dictionary
+  setCurrentDictionary(editor, "base_utf");
+
+  SimpleTest.executeSoon(function() {
+    // test that base dictionary is in use
+    is(getMisspelledWords(editor), "Frühstück" + "qwertyu", "base misspellings");
+    is(getCurrentDictionary(editor), "base_utf", "current dictionary");
+
+    // select map dictionary
+    setCurrentDictionary(editor, "maputf");
+
+    SimpleTest.executeSoon(function() {
+      // test that map dictionary is in use
+      is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
+      is(getCurrentDictionary(editor), "maputf", "current dictionary");
+
+      // uninstall map dictionary
+      hunspell.removeDirectory(map);
+
+      SimpleTest.executeSoon(function() {
+        // test that map dictionary is not in use
+        isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
+        isnot(getCurrentDictionary(editor), "maputf", "current dictionary");
+
+        // test that base dictionary is available and map dictionary is unavailable
+        var dicts = getDictionaryList(editor);
+        isnot(dicts.indexOf("base_utf"), -1, "base is available");
+        is(dicts.indexOf("maputf"), -1, "map is unavailable");
+
+        // uninstall base dictionary
+        hunspell.removeDirectory(base);
+
+        SimpleTest.finish();
+      });
+    });
+  });
+}
+  ]]>
+  </script>
+  <textbox id="textbox" spellcheck="true" value="created imply Frühstück tomorrow qwertyu"/>
+</window>

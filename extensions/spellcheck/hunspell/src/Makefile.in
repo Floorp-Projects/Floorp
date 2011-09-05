@@ -71,6 +71,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+INCLUDES        += -I$(topsrcdir)/extensions/spellcheck/src
+
 ifdef MOZ_NATIVE_HUNSPELL
 CXXFLAGS += $(MOZ_HUNSPELL_CFLAGS)
 endif

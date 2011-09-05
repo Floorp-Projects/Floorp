@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jesper Kristensen <mail@jesperkristensen.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,7 +41,7 @@
 interface nsIFile;
 interface mozIPersonalDictionary;
 
-[scriptable, uuid(6eb307d6-3567-481a-971a-feb666b8ae72)]
+[scriptable, uuid(8ba643a4-7ddc-4662-b976-7ec123843f10)]
 
 /**
  * This interface represents a SpellChecker.
@@ -49,11 +50,22 @@ interface mozIPersonalDictionary;
 interface mozISpellCheckingEngine : nsISupports {
   /**
    * The name of the current dictionary
+   *
+   * Whenever getDictionaryList is not empty, this attribute contains a value
+   * from that list. Whenever getDictionaryList is empty, this attribute
+   * contains the empty string. Setting this attribute to a value not in
+   * getDictionaryList will throw NS_ERROR_FILE_NOT_FOUND.
+   *
+   * The spellcheck engine will send a notification with
+   * "spellcheck-dictionary-update" as topic when this changes.
    */
   attribute wstring dictionary;
 
   /**
    * The language this spellchecker is using when checking
+   *
+   * The spellcheck engine will send a notification with
+   * "spellcheck-dictionary-update" as topic when this changes.
    */
   readonly attribute wstring language;
 
@@ -89,11 +101,17 @@ interface mozISpellCheckingEngine : nsISupports {
 
   /**
    * check a word
+   *
+   * The spellcheck engine will send a notification with
+   * "spellcheck-dictionary-update" as topic when this changes.
    */
   boolean check(in wstring word);
 
   /**
    * get a list of suggestions for a misspelled word
+   *
+   * The spellcheck engine will send a notification with
+   * "spellcheck-dictionary-update" as topic when this changes.
    */
   void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out PRUint32 count);
 
@@ -101,9 +119,22 @@ interface mozISpellCheckingEngine : nsISupports {
    * Load dictionaries from the specified dir
    */
   void loadDictionariesFromDir(in nsIFile dir);
+
+  /**
+   * Add dictionaries from a directory to the spell checker
+   */
+  void addDirectory(in nsIFile dir);
+
+  /**
+   * Remove dictionaries from a directory from the spell checker
+   */
+  void removeDirectory(in nsIFile dir);
 };
 
 %{C++
 #define DICTIONARY_SEARCH_DIRECTORY "DictD"
 #define DICTIONARY_SEARCH_DIRECTORY_LIST "DictDL"
+
+#define SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION \
+  "spellcheck-dictionary-update"
 %}
