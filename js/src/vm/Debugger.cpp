@@ -347,9 +347,9 @@ JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGSCRIPT_OWNE
 Debugger *
 Debugger::fromChildJSObject(JSObject *obj)
 {
-    JS_ASSERT(obj->clasp == &DebuggerFrame_class ||
-              obj->clasp == &DebuggerObject_class ||
-              obj->clasp == &DebuggerScript_class);
+    JS_ASSERT(obj->getClass() == &DebuggerFrame_class ||
+              obj->getClass() == &DebuggerObject_class ||
+              obj->getClass() == &DebuggerScript_class);
     JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
     return fromJSObject(dbgobj);
 }
@@ -523,9 +523,9 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, Value *vp)
     assertSameCompartment(cx, object, *vp);
     if (vp->isObject()) {
         JSObject *dobj = &vp->toObject();
-        if (dobj->clasp != &DebuggerObject_class) {
+        if (dobj->getClass() != &DebuggerObject_class) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
-                                 "Debugger", "Debugger.Object", dobj->clasp->name);
+                                 "Debugger", "Debugger.Object", dobj->getClass()->name);
             return false;
         }
 
@@ -587,7 +587,7 @@ Debugger::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
         return true;
     }
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj ||
         !wrapDebuggeeValue(cx, &val) ||
         !DefineNativeProperty(cx, obj, key, val, PropertyStub, StrictPropertyStub,
@@ -1479,7 +1479,7 @@ Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
      */
     JSObject *obj = NonNullObject(cx, v);
     if (obj) {
-        if (obj->clasp == &DebuggerObject_class) {
+        if (obj->getClass() == &DebuggerObject_class) {
             Value rv = v;
             if (!unwrapDebuggeeValue(cx, &rv))
                 return NULL;
@@ -1977,7 +1977,7 @@ DebuggerScript_check(JSContext *cx, const Value &v, const char *clsname, const c
         return NULL;
     }
     JSObject *thisobj = &v.toObject();
-    if (thisobj->clasp != &DebuggerScript_class) {
+    if (thisobj->getClass() != &DebuggerScript_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              clsname, fnname, thisobj->getClass()->name);
         return NULL;
@@ -2947,7 +2947,7 @@ DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
     /* If evalWithBindings, create the inner scope object. */
     if (mode == WithBindings) {
         /* TODO - Should probably create a With object here. */
-        scobj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, NULL, scobj);
+        scobj = NewNonFunction<WithProto::Given>(cx, &ObjectClass, NULL, scobj);
         if (!scobj)
             return false;
         for (size_t i = 0; i < keys.length(); i++) {
@@ -3040,7 +3040,7 @@ DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
         return NULL;
     }
     JSObject *thisobj = &args.thisv().toObject();
-    if (thisobj->clasp != &DebuggerObject_class) {
+    if (thisobj->getClass() != &DebuggerObject_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Object", fnname, thisobj->getClass()->name);
         return NULL;
@@ -3098,7 +3098,7 @@ static JSBool
 DebuggerObject_getClass(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get class", args, refobj);
-    const char *s = refobj->clasp->name;
+    const char *s = refobj->getClass()->name;
     JSAtom *str = js_Atomize(cx, s, strlen(s));
     if (!str)
         return false;

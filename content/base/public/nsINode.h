@@ -282,8 +282,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x5572c8a9, 0xbda9, 0x4b78, \
-  { 0xb4, 0x1a, 0xdb, 0x1a, 0x83, 0xef, 0x53, 0x7e } }
+{ 0xb59269fe, 0x7f60, 0x4672, \
+  { 0x8e, 0x56, 0x01, 0x84, 0xb2, 0x58, 0x14, 0xb0 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -1084,6 +1084,14 @@ public:
   {
     return GetNextNodeImpl(aRoot, PR_TRUE);
   }
+
+  /**
+   * Returns true if 'this' is either document or element or
+   * document fragment and aOther is a descendant in the same
+   * anonymous tree.
+   */
+  PRBool Contains(const nsINode* aOther) const;
+  nsresult Contains(nsIDOMNode* aOther, PRBool* aReturn);
 
 private:
 

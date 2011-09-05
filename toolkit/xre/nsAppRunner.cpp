@@ -51,11 +51,11 @@
 #if defined(MOZ_WIDGET_QT)
 #include <QtGui/QApplication>
 #include <QtCore/QScopedPointer>
-#include <QtGui/QApplication>
 #include <QtGui/QInputContextFactory>
 #include <QtGui/QInputContext>
 #ifdef MOZ_ENABLE_MEEGOTOUCH
 #include <MComponentData>
+#include <MozMeegoAppService.h>
 #endif // MOZ_ENABLE_MEEGOTOUCH
 #endif // MOZ_WIDGET_QT
 
@@ -3003,7 +3003,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef MOZ_ENABLE_MEEGOTOUCH
     gArgv[gArgc] = strdup("-software");
     gArgc++;
-    QScopedPointer<MComponentData> meegotouch(new MComponentData(gArgc, gArgv));
+    QScopedPointer<MComponentData> meegotouch(new MComponentData(gArgc, gArgv,"", new  MApplicationService("")));
 #endif
 
 #if MOZ_PLATFORM_MAEMO > 5

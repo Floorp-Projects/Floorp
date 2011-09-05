@@ -52,7 +52,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(29a95243-c73e-454c-a996-272f6727b03c)]
+[scriptable, uuid(af9b19f7-7c88-4d16-9a3a-97390f824c58)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -146,4 +146,6 @@ interface nsIDOMNode : nsISupports
                                  in nsIDOMUserDataHandler handler);
   // Introduced in DOM Level 3:
   nsIVariant         getUserData(in DOMString key);
+
+  boolean            contains(in nsIDOMNode aOther);
 };
