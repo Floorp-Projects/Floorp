@@ -299,14 +299,16 @@ let Content = {
       // let's send it back to the chrome process to have it handle shortcuts
       case "keypress":
         let timer = new Util.Timeout(function() {
+          if(aEvent.getPreventDefault())
+            return;
+
           let eventData = {
             ctrlKey: aEvent.ctrlKey,
             altKey: aEvent.altKey,
             shiftKey: aEvent.shiftKey,
             metaKey: aEvent.metaKey,
             keyCode: aEvent.keyCode,
-            charCode: aEvent.charCode,
-            preventDefault: aEvent.getPreventDefault()
+            charCode: aEvent.charCode
           };
           sendAsyncMessage("Browser:KeyPress", eventData);
         });
