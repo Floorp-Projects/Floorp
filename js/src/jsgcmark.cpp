@@ -415,7 +415,7 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
         Mark(trc, reinterpret_cast<Shape *>(thing));
         break;
       case JSTRACE_TYPE_OBJECT:
-        Mark(trc, reinterpret_cast<types::TypeObject *>(thing));
+        MarkTypeObject(trc, reinterpret_cast<types::TypeObject *>(thing), "type_stack");
         break;
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
