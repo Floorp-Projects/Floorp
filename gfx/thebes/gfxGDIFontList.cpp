@@ -213,17 +213,20 @@ FontTypeToOutPrecision(PRUint8 fontType)
  *
  */
 
-GDIFontEntry::GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                                   PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData) : 
-    gfxFontEntry(aFaceName), 
-    mWindowsFamily(0), mWindowsPitch(0),
-    mFontType(aFontType),
-    mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
-    mCharset(), mUnicodeRanges()
+GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
+                           gfxWindowsFontType aFontType,
+                           PRBool aItalic, PRUint16 aWeight, PRInt16 aStretch,
+                           gfxUserFontData *aUserFontData)
+    : gfxFontEntry(aFaceName),
+      mWindowsFamily(0), mWindowsPitch(0),
+      mFontType(aFontType),
+      mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
+      mCharset(), mUnicodeRanges()
 {
     mUserFontData = aUserFontData;
     mItalic = aItalic;
     mWeight = aWeight;
+    mStretch = aStretch;
     if (IsType1())
         mForceGDI = PR_TRUE;
     mIsUserFont = aUserFontData != nsnull;
@@ -318,8 +321,8 @@ GDIFontEntry::GetFontTable(PRUint32 aTableTag,
 
 void
 GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
-                              PRUint16 aWeight, gfxFloat aSize,
-                              PRBool aUseCleartype)
+                          PRUint16 aWeight, gfxFloat aSize,
+                          PRBool aUseCleartype)
 {
     memcpy(aLogFont, &mLogFont, sizeof(LOGFONTW));
 
@@ -414,7 +417,7 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
 
 void
 GDIFontEntry::InitLogFont(const nsAString& aName,
-                              gfxWindowsFontType aFontType)
+                          gfxWindowsFontType aFontType)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
@@ -444,14 +447,15 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
 }
 
 GDIFontEntry* 
-GDIFontEntry::CreateFontEntry(const nsAString& aName, gfxWindowsFontType aFontType, 
-                                  PRBool aItalic, PRUint16 aWeight, 
-                                  gfxUserFontData* aUserFontData)
+GDIFontEntry::CreateFontEntry(const nsAString& aName,
+                              gfxWindowsFontType aFontType, PRBool aItalic,
+                              PRUint16 aWeight, PRInt16 aStretch,
+                              gfxUserFontData* aUserFontData)
 {
     // jtdfix - need to set charset, unicode ranges, pitch/family
 
-    GDIFontEntry *fe = new GDIFontEntry(aName, aFontType, aItalic, aWeight,
-                                        aUserFontData);
+    GDIFontEntry *fe = new GDIFontEntry(aName, aFontType, aItalic,
+                                        aWeight, aStretch, aUserFontData);
 
     return fe;
 }
@@ -500,8 +504,10 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         }
     }
 
-    fe = GDIFontEntry::CreateFontEntry(nsDependentString(lpelfe->elfFullName), feType, (logFont.lfItalic == 0xFF),
-                                       (PRUint16) (logFont.lfWeight), nsnull);
+    fe = GDIFontEntry::CreateFontEntry(nsDependentString(lpelfe->elfFullName),
+                                       feType, (logFont.lfItalic == 0xFF),
+                                       (PRUint16) (logFont.lfWeight), 0,
+                                       nsnull);
     if (!fe)
         return 1;
 
@@ -747,7 +753,7 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     gfxFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
         PRUint32(aProxyEntry->mItalic ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL), 
-        w, nsnull);
+        w, aProxyEntry->mStretch, nsnull);
         
     if (!fe)
         return nsnull;
@@ -966,7 +972,7 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName, 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
         PRUint32(aProxyEntry->mItalic ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL), 
-        w, winUserFontData);
+        w, aProxyEntry->mStretch, winUserFontData);
 
     if (!fe)
         return fe;
