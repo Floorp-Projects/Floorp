@@ -59,39 +59,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozHunspellDirProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSpellChecker, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellI18NManager)
-
-// This special constructor for the inline spell checker asks the inline
-// spell checker if we can create spell checking objects at all (ie, if there
-// are any dictionaries loaded) before trying to create one. The static
-// CanEnableInlineSpellChecking caches the value so this will be faster (we
-// have to run this code for every edit box we create, as well as for every
-// right click in those edit boxes).
-static nsresult
-mozInlineSpellCheckerConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                 void **aResult)
-{
-  if (! mozInlineSpellChecker::CanEnableInlineSpellChecking())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv;
-
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-
-  mozInlineSpellChecker* inst = new mozInlineSpellChecker();
-  if (NULL == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    return rv;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozInlineSpellChecker)
 
 NS_DEFINE_NAMED_CID(MOZ_HUNSPELL_CID);
 NS_DEFINE_NAMED_CID(HUNSPELLDIRPROVIDER_CID);
