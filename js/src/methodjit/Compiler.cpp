@@ -7092,7 +7092,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
                 } else {
                     JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
                 }
-            } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+            } else if (vt.type == JSVAL_TYPE_DOUBLE) {
                 fixedDoubleToAnyEntries.append(newv->slot);
                 frame.syncAndForgetFe(fe);
                 frame.forgetLoopReg(fe);
