@@ -48,11 +48,13 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_TEST_FILES = \
   browser_styleinspector.js \
   browser_styleinspector_webconsole.js \
+  browser_bug683672.js \
   head.js \
   $(NULL)
 
 _BROWSER_TEST_PAGES = \
   browser_styleinspector_webconsole.htm \
+  browser_bug683672.html \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
