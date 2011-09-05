@@ -640,7 +640,7 @@ struct JITScript {
 
     void trace(JSTracer *trc);
 
-    size_t scriptDataSize();
+    size_t scriptDataSize(size_t(*mus)(void *));
 
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline) const;
 

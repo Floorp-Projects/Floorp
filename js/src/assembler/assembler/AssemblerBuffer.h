@@ -191,7 +191,11 @@ namespace JSC {
 
         void grow(int extraCapacity = 0)
         {
-            int newCapacity = m_capacity + m_capacity / 2 + extraCapacity;
+            /*
+             * If |extraCapacity| is zero (as it almost always is) this is an
+             * allocator-friendly doubling growth strategy.
+             */
+            int newCapacity = m_capacity + m_capacity + extraCapacity;
             char* newBuffer;
 
             if (m_buffer == m_inlineBuffer) {

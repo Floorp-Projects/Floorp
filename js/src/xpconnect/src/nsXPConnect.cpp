@@ -733,8 +733,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     JSGCTraceKind traceKind = js_GetGCThingTraceKind(p);
-    JSObject *obj;
-    js::Class *clazz;
+    JSObject *obj = nsnull;
+    js::Class *clazz = nsnull;
 
     // We do not want to add wrappers to the cycle collector if they're not
     // explicitly marked as main thread only, because the cycle collector isn't
@@ -794,8 +794,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         char name[72];
         if(traceKind == JSTRACE_OBJECT)
         {
-            JSObject *obj = static_cast<JSObject*>(p);
-            js::Class *clazz = obj->getClass();
             XPCNativeScriptableInfo* si = nsnull;
             if(IS_PROTO_CLASS(clazz))
             {

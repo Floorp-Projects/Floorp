@@ -2717,6 +2717,15 @@ obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
     return obj->preventExtensions(cx, &props);
 }
 
+size_t
+JSObject::sizeOfSlotsArray(size_t(*mus)(void *))
+{
+    if (!hasSlotsArray())
+        return 0;
+    size_t usable = mus((void *)slots);
+    return usable ? usable : numSlots() * sizeof(js::Value);
+}
+
 bool
 JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 {

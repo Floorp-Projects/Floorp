@@ -4070,13 +4070,13 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_METHODJIT
 
 static void
-SumJitDataSizeCallabck(JSContext *cx, void *data, void *thing,
+SumJitDataSizeCallback(JSContext *cx, void *data, void *thing,
                        JSGCTraceKind traceKind, size_t thingSize)
 {
     size_t *sump = static_cast<size_t *>(data);
     JS_ASSERT(traceKind == JSTRACE_SCRIPT);
     JSScript *script = static_cast<JSScript *>(thing);
-    *sump += script->jitDataSize();
+    *sump += script->jitDataSize(NULL);
 }
 
 #endif
@@ -4086,7 +4086,7 @@ MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     size_t n = 0;
-    IterateCells(cx, NULL, gc::FINALIZE_TYPE_OBJECT, &n, SumJitDataSizeCallabck);
+    IterateCells(cx, NULL, gc::FINALIZE_TYPE_OBJECT, &n, SumJitDataSizeCallback);
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -4871,6 +4871,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     if (!report) {
         fprintf(gErrFile, "%s\n", message);
+        fflush(gErrFile);
         return;
     }
 
@@ -4933,6 +4934,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
+    fflush(gErrFile);
     if (!JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;

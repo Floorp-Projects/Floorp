@@ -139,6 +139,7 @@ public:
   virtual nsresult InsertAdjacentHTML(const nsAString& aPosition,
                                       const nsAString& aText);
   nsresult ScrollIntoView(PRBool aTop, PRUint8 optional_argc);
+  nsresult MozRequestFullScreen();
   // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetHidden(),
   // SetHidden(), GetSpellcheck(), SetSpellcheck(), and GetDraggable() such that
   // classes that inherit interfaces with those methods properly override them.
