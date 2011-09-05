@@ -41,6 +41,7 @@
  *                 Harri Pitkanen
  *                 Andras Timar
  *                 Tor Lillqvist
+ *                 Jesper Kristensen (mail@jesperkristensen.dk)
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,6 +65,7 @@
 #include "mozIPersonalDictionary.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsIObserver.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
@@ -109,6 +111,10 @@ protected:
   nsInterfaceHashtable<nsStringHashKey, nsIFile> mDictionaries;
   nsString  mDictionary;
   nsString  mLanguage;
+  nsCString mAffixFileName;
+
+  // dynamic dirs used to search for dictionaries
+  nsCOMArray<nsIFile> mDynamicDirectories;
 
   Hunspell  *mHunspell;
 

@@ -321,10 +321,8 @@ nsContextMenu.prototype = {
     var onMisspelling = InlineSpellCheckerUI.overMisspelling;
     this.showItem("spell-check-enabled", canSpell);
     this.showItem("spell-separator", canSpell || this.onEditableArea);
-    if (canSpell) {
-      document.getElementById("spell-check-enabled")
-              .setAttribute("checked", InlineSpellCheckerUI.enabled);
-    }
+    document.getElementById("spell-check-enabled")
+            .setAttribute("checked", canSpell && InlineSpellCheckerUI.enabled);
 
     this.showItem("spell-add-to-dictionary", onMisspelling);
 
