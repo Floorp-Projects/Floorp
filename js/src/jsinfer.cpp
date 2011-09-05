@@ -3178,7 +3178,7 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
         return access;
     JSAtom *atom = JSID_TO_ATOM(id);
 
-    JSScript *script = this->script, *prev = NULL;
+    JSScript *script = this->script;
     while (script->hasFunction && script->nesting()) {
         if (!script->ensureRanInference(cx))
             return access;
@@ -3223,7 +3223,6 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
 
         if (!script->nesting()->parent)
             return access;
-        prev = script;
         script = script->nesting()->parent;
     }
 
@@ -4091,25 +4090,32 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         if (!nesting->parent->ensureRanInference(cx))
             return;
 
+        bool detached = false;
+
         /* Don't track for leaf scripts which have no free variables. */
-        if (!usesScopeChain() && !script->isOuterFunction)
+        if (!usesScopeChain() && !script->isOuterFunction) {
             DetachNestingParent(script);
+            detached = true;
+        }
 
         /*
          * If the names bound by the script are extensible (DEFFUN, EVAL, ...),
          * don't resolve NAME accesses into the parent.
          */
-        if (nesting->parent && extendsScope())
+        if (!detached && extendsScope()) {
             DetachNestingParent(script);
+            detached = true;
+        }
 
         /*
          * Don't track for parents which add call objects or are generators,
          * don't resolve NAME accesses into the parent.
          */
-        if (nesting->parent &&
+        if (!detached &&
             (nesting->parent->analysis()->addsScopeObjects() ||
              js_GetOpcode(cx, nesting->parent, nesting->parent->code) == JSOP_GENERATOR)) {
             DetachNestingParent(script);
+            detached = true;
         }
     }
 
