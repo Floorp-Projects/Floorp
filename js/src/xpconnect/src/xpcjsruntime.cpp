@@ -1346,7 +1346,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         case JSTRACE_OBJECT:
         {
             JSObject *obj = static_cast<JSObject *>(thing);
-            curr->objectSlots += JS_ObjectCountDynamicSlots(obj) * sizeof(js::Value);
+            curr->objectSlots += obj->sizeOfSlotsArray(moz_malloc_usable_size);
             break;
         }
         case JSTRACE_STRING:
@@ -1359,15 +1359,19 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         {
             js::Shape *shape = static_cast<js::Shape *>(thing);
             if(shape->hasTable())
-                curr->propertyTables += shape->getTable()->sizeOf();
+                curr->propertyTables +=
+                    shape->getTable()->sizeOf(moz_malloc_usable_size);
             break;
         }
         case JSTRACE_SCRIPT:
         {
             JSScript *script = static_cast<JSScript *>(thing);
-            curr->scriptData += script->dataSize();
+            if (script->data != script->inlineData) {
+                size_t usable = moz_malloc_usable_size(script->data);
+                curr->scriptData += usable ? usable : script->dataSize();
+            }
 #ifdef JS_METHODJIT
-            curr->mjitData += script->jitDataSize();
+            curr->mjitData += script->jitDataSize(moz_malloc_usable_size);
 #endif
             break;
         }
@@ -1628,6 +1632,8 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
         for(js::ThreadDataIter i(rt); !i.empty(); i.popFront())
             data->stackSize += i.threadData()->stackSpace.committedSize();
 
+        size_t usable = moz_malloc_usable_size(rt);
+        data->runtimeObjectSize += usable ? usable : sizeof(JSRuntime);
         data->atomsTableSize += rt->atomState.atoms.tableSize();
     }
 
@@ -1673,6 +1679,9 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
 
     return true;
 }
+
+#define SLOP_BYTES_STRING \
+    " The measurement includes slop bytes caused by the heap allocator rounding up request sizes."
 
 static void
 ReportCompartmentStats(const CompartmentStats &stats,
@@ -1736,7 +1745,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "gc-heap/shapes"),
+                                              "gc-heap/type-objects"),
                        JS_GC_HEAP_KIND, stats.gcHeapKinds[JSTRACE_TYPE_OBJECT],
     "Memory on the compartment's garbage-collected JavaScript heap that holds "
     "type inference information.",
@@ -1756,7 +1765,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
     "which are used to represent object properties.  Some objects also "
     "contain a fixed number of slots which are stored on the compartment's "
     "JavaScript heap; those slots are not counted here, but in "
-    "'gc-heap/objects' instead.",
+    "'gc-heap/objects' instead." SLOP_BYTES_STRING,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
@@ -1774,7 +1783,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        nsIMemoryReporter::KIND_HEAP, stats.propertyTables,
     "Memory allocated for the compartment's property tables.  A property "
     "table is an internal data structure that makes JavaScript property "
-    "accesses fast.",
+    "accesses fast." SLOP_BYTES_STRING,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
@@ -1785,19 +1794,10 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "scripts"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.gcHeapKinds[JSTRACE_SCRIPT],
-    "Memory allocated for the compartment's JSScripts.  A JSScript is created "
-    "for each user-defined function in a script.  One is also created for "
-    "the top-level code in a script.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "script-data"),
                        nsIMemoryReporter::KIND_HEAP, stats.scriptData,
     "Memory allocated for JSScript bytecode and various variable-length "
-    "tables.",
+    "tables." SLOP_BYTES_STRING,
                        callback, closure);
 
 #ifdef JS_METHODJIT
@@ -1824,7 +1824,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                                               "mjit-data"),
                        nsIMemoryReporter::KIND_HEAP, stats.mjitData,
     "Memory used by the method JIT for the compartment's compilation data: "
-    "JITScripts, native maps, and inline cache structs.",
+    "JITScripts, native maps, and inline cache structs." SLOP_BYTES_STRING,
                        callback, closure);
 #endif
 #ifdef JS_TRACER
@@ -1884,11 +1884,11 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "type-inference-temporary"),
+                                              "analysis-temporary"),
                        nsIMemoryReporter::KIND_HEAP,
                        stats.typeInferenceMemory.temporary,
-    "Memory used during type inference to hold transient analysis "
-    "information.  Cleared on GC.",
+    "Memory used during type inference and compilation to hold transient "
+    "analysis information.  Cleared on GC.",
                        callback, closure);
 }
 
@@ -1906,8 +1906,8 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
     }
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
-                      nsIMemoryReporter::KIND_NONHEAP, sizeof(JSRuntime),
-    "Memory used by the JSRuntime object.",
+                      nsIMemoryReporter::KIND_NONHEAP, data.runtimeObjectSize,
+    "Memory used by the JSRuntime object." SLOP_BYTES_STRING,
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
