@@ -71,7 +71,6 @@ ConservativeGCStats::dump(FILE *fp)
     fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(counter[CGCT_NOTCHUNK]));
     fprintf(fp, "     not within arena range: %lu\n", ULSTAT(counter[CGCT_NOTARENA]));
     fprintf(fp, "       points to free arena: %lu\n", ULSTAT(counter[CGCT_FREEARENA]));
-    fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(counter[CGCT_WRONGTAG]));
     fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(counter[CGCT_NOTLIVE]));
     fprintf(fp, "            valid GC things: %lu\n", ULSTAT(counter[CGCT_VALID]));
     fprintf(fp, "      valid but not aligned: %lu\n", ULSTAT(unaligned));
@@ -204,7 +203,7 @@ GCMarker::dumpConservativeRoots()
 
 volatile GCTimer::JSGCReason gcReason = GCTimer::NOREASON;
 const char *gcReasons[] = {"  API", "Maybe", "LastC", "DestC", "Compa", "LastD",
-                          "Malloc", "Alloc", "Chunk", "Shape", "  None"};
+                           "Malloc", "Refill", "Chunk", "Shape", "  None"};
 
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;

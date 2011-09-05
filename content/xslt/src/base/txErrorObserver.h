@@ -40,9 +40,6 @@
 #define MITRE_ERROROBSERVER_H
 
 #include "txCore.h"
-#ifdef TX_EXE
-#include <iostream.h>
-#endif
 
 /**
  * A simple interface for observing errors
@@ -74,39 +71,4 @@ public:
 
 }; //-- ErrorObserver
 
-#ifdef TX_EXE
-/**
- * A simple ErrorObserver which allows printing error messages to a stream
-**/
-class SimpleErrorObserver : public ErrorObserver {
-
-public:
-
-    /**
-     * Creates a new SimpleErrorObserver.
-     * All errors will be printed to the console (cout).
-    **/
-    SimpleErrorObserver();
-
-    /**
-     * Creates a new SimpleErrorObserver.
-     * All errors will be printed to the given ostream.
-    **/
-    SimpleErrorObserver(ostream& errStream);
-
-    /**
-     *  Notifies this Error observer of a new error aRes
-    **/
-    void receiveError(const nsAString& errorMessage, nsresult aRes);
-
-    virtual void suppressWarnings(MBool suppress);
-
-private:
-
-    ostream* errStream;
-    MBool hideWarnings;
-}; //-- SimpleErrorObserver
 #endif
-
-#endif
-

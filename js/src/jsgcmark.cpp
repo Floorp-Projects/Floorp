@@ -66,7 +66,7 @@
  * MarkString, etc. These functions check if an object is in the compartment
  * currently being GCed. If it is, they call PushMarkStack. Roots are pushed
  * this way as well as pointers traversed inside trace hooks (for things like
- * js_IteratorClass). It it always valid to call a MarkX function instead of
+ * IteratorClass). It it always valid to call a MarkX function instead of
  * PushMarkStack, although it may be slower.
  *
  * The MarkX functions also handle non-GC object traversal. In this case, they
@@ -708,7 +708,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
      */
     Class *clasp = obj->getClass();
     if (clasp->trace) {
-        if (clasp == &js_ArrayClass) {
+        if (clasp == &ArrayClass) {
             if (obj->getDenseArrayInitializedLength() > LARGE_OBJECT_CHUNK_SIZE) {
                 if (!gcmarker->largeStack.push(LargeMarkItem(obj)))
                     clasp->trace(gcmarker, obj);
@@ -1011,13 +1011,10 @@ GCMarker::drainMarkStack()
 } /* namespace js */
 
 JS_PUBLIC_API(void)
-JS_TraceChildren(JSTracer *trc, void *thing, uint32 kindIndex)
+JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
-    JS_ASSERT(kindIndex <= JSTRACE_LAST);
-    JSGCTraceKind kind = JSGCTraceKind(kindIndex);
     switch (kind) {
-      default:
-        JS_ASSERT(kind == JSTRACE_OBJECT);
+      case JSTRACE_OBJECT:
 	MarkChildren(trc, static_cast<JSObject *>(thing));
         break;
 

@@ -15,7 +15,7 @@ function runNextTest() {
   }
   else {
     // Close the awesome panel just in case
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
 
     for (let iTab=0; iTab<newTabs.length; iTab++)
       Browser.closeTab(newTabs[iTab], { forceClose: true });
@@ -174,7 +174,7 @@ gTests.push({
 
   onFinish: function() {
     Browser.hideSidebars();
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
     runNextTest();
   }
 });

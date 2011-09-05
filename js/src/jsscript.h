@@ -552,7 +552,7 @@ struct JSScript : public js::gc::Cell {
 
     union {
         /*
-         * A script object of class js_ScriptClass, to ensure the script is GC'd.
+         * A script object of class ScriptClass, to ensure the script is GC'd.
          * - All scripts returned by JSAPI functions (JS_CompileScript,
          *   JS_CompileFile, etc.) have these objects.
          * - Function scripts never have script objects; such scripts are owned
@@ -629,8 +629,6 @@ struct JSScript : public js::gc::Cell {
     inline bool hasAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    inline bool isAboutToBeFinalized(JSContext *cx);
-
   private:
     bool makeTypes(JSContext *cx);
     bool makeAnalysis(JSContext *cx);
@@ -676,8 +674,9 @@ struct JSScript : public js::gc::Cell {
         return JITScript_Valid;
     }
 
-    // This method is implemented in MethodJIT.h.
-    JS_FRIEND_API(size_t) jitDataSize();/* Size of the JITScript and all sections */
+    /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.h.) */
+    JS_FRIEND_API(size_t) jitDataSize(size_t(*mus)(void *));
+    
 #endif
 
     jsbytecode *main() {
@@ -845,7 +844,6 @@ StackDepth(JSScript *script)
         }                                                                     \
     JS_END_MACRO
 
-extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
@@ -967,12 +965,6 @@ js_CloneScript(JSContext *cx, JSScript *script);
  */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
-
-inline bool
-JSObject::isScript() const
-{
-    return getClass() == &js_ScriptClass;
-}
 
 inline JSScript *
 JSObject::getScript() const

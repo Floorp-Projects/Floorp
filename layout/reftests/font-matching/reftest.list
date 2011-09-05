@@ -62,3 +62,6 @@ HTTP(..) == weightmapping-478.html weightmapping-478-ref.html
 HTTP(..) == weightmapping-7.html weightmapping-7-ref.html
 HTTP(..) == weightmapping-12579.html weightmapping-12579-ref.html
 
+# test for font-stretch using @font-face
+HTTP(..) == font-stretch-1.html font-stretch-1-ref.html
+

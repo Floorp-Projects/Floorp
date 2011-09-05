@@ -76,6 +76,8 @@ nsresult nsDeflateConverter::Init()
         case WRAP_GZIP:
             window += 16;
             break;
+        default:
+            break;
     }
 
     zerr = deflateInit2(&mZstream, mLevel, Z_DEFLATED, window, 8,

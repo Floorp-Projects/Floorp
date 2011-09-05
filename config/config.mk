@@ -463,6 +463,9 @@ endif # MOZ_OPTIMIZE == 1
 endif # MOZ_OPTIMIZE
 endif # CROSS_COMPILE
 
+CFLAGS += $(MOZ_FRAMEPTR_FLAGS)
+CXXFLAGS += $(MOZ_FRAMEPTR_FLAGS)
+
 # Check for FAIL_ON_WARNINGS & FAIL_ON_WARNINGS_DEBUG (Shorthand for Makefiles
 # to request that we use the 'warnings as errors' compile flags)
 
