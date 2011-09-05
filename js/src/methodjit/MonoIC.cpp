@@ -1354,7 +1354,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
     JSC::CodeLocationLabel cs = linker.finalize();
 
     JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%lu bytes)\n",
-               cs.executableAddress(), masm.size());
+               cs.executableAddress(), (unsigned long)masm.size());
 
     Repatcher repatch(jit);
     repatch.relink(jit->argsCheckJump, cs);
