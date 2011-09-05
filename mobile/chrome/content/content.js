@@ -497,8 +497,13 @@ let Content = {
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri,
                                                   referrer: element.ownerDocument.documentURIObject.spec });
-        } else if (!this._formAssistant.open(element) && this._highlightElement) {
+          break;
+        }
+
+        if (!this._formAssistant.open(element))
           sendAsyncMessage("FindAssist:Hide", { });
+
+        if (this._highlightElement) {
           this._sendMouseEvent("mousemove", this._highlightElement, x, y);
           this._sendMouseEvent("mousedown", this._highlightElement, x, y);
           this._sendMouseEvent("mouseup", this._highlightElement, x, y);
