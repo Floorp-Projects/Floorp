@@ -1328,7 +1328,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
-    JS_ASSERT(jit->scriptDataSize() == dataSize);
+    /* Pass in NULL here -- we don't want slop bytes to be counted. */
+    JS_ASSERT(jit->scriptDataSize(NULL) == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
