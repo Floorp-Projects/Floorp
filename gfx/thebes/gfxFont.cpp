@@ -581,12 +581,28 @@ StyleDistance(gfxFontEntry *aFontEntry,
     // and the given fontEntry,
     // considering italicness and font-stretch but not weight.
 
-    // TODO (refine CSS spec...): discuss priority of italic vs stretch;
-    // whether penalty for stretch mismatch should depend on actual difference in values;
-    // whether a sign mismatch in stretch should increase the effective distance
-
-    return (aFontEntry->IsItalic() != anItalic ? 1 : 0) +
-           (aFontEntry->mStretch != aStretch ? 10 : 0);
+    PRInt32 distance = 0;
+    if (aStretch != aFontEntry->mStretch) {
+        // stretch values are in the range -4 .. +4
+        // if aStretch is positive, we prefer more-positive values;
+        // if zero or negative, prefer more-negative
+        if (aStretch > 0) {
+            distance = (aFontEntry->mStretch - aStretch) * 2;
+        } else {
+            distance = (aStretch - aFontEntry->mStretch) * 2;
+        }
+        // if the computed "distance" here is negative, it means that
+        // aFontEntry lies in the "non-preferred" direction from aStretch,
+        // so we treat that as larger than any preferred-direction distance
+        // (max possible is 8) by adding an extra 10 to the absolute value
+        if (distance < 0) {
+            distance = -distance + 10;
+        }
+    }
+    if (aFontEntry->IsItalic() != anItalic) {
+        distance += 1;
+    }
+    return PRUint32(distance);
 }
 
 PRBool
@@ -609,9 +625,11 @@ gfxFontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
                 aFontsForWeights[wt] = fe;
                 ++foundWeights;
             } else {
-                PRUint32 prevDistance = StyleDistance(aFontsForWeights[wt], anItalic, aStretch);
+                PRUint32 prevDistance =
+                    StyleDistance(aFontsForWeights[wt], anItalic, aStretch);
                 if (prevDistance >= distance) {
-                    // replacing a weight we already found, so don't increment foundWeights
+                    // replacing a weight we already found,
+                    // so don't increment foundWeights
                     aFontsForWeights[wt] = fe;
                 }
             }
