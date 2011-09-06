@@ -659,12 +659,6 @@ js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construc
     if (fun->isNative())
         return CallJSNative(cx, fun->u.n.native, args);
 
-#ifdef JS_TRACER
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "attempt to reenter VM while recording");
-    LeaveTrace(cx);
-#endif
-
     TypeMonitorCall(cx, args, construct);
 
     /* Get pointer to new frame/slots, prepare arguments. */
@@ -693,8 +687,6 @@ bool
 js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
            Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
@@ -725,8 +717,6 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Val
 bool
 js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
@@ -1142,8 +1132,6 @@ bool
 js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
                                    uintN argc, Value *argv, Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return JS_FALSE;

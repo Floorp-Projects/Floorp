@@ -2074,7 +2074,6 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
                         const FlatMatch &fm)
 {
     JS_ASSERT(fm.match() >= 0);
-    LeaveTrace(cx);
 
     JSString *matchStr = js_NewDependentString(cx, rdata.str, fm.match(), fm.patternLength());
     if (!matchStr)
