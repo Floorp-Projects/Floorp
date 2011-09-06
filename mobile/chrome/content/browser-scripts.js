@@ -93,6 +93,7 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["AnimatedZoom", "chrome://browser/content/AnimatedZoom.js"],
   ["AppMenu", "chrome://browser/content/AppMenu.js"],
   ["AwesomePanel", "chrome://browser/content/AwesomePanel.js"],
+  ["AwesomeScreen", "chrome://browser/content/AwesomePanel.js"],
   ["BookmarkHelper", "chrome://browser/content/BookmarkHelper.js"],
   ["BookmarkPopup", "chrome://browser/content/BookmarkPopup.js"],
   ["CommandUpdater", "chrome://browser/content/commandUtil.js"],

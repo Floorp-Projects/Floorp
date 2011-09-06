@@ -187,9 +187,8 @@
 #endif // !defined(WINABLEAPI)
 #endif // defined(ACCESSIBILITY)
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 #include "nsIWinTaskbar.h"
-#endif
+#define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 #if defined(NS_ENABLE_TSF)
 #include "nsTextStore.h"
@@ -2703,12 +2702,21 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
+  // taskbarInfo will be NULL pre Windows 7 until Bug 680227 is resolved.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
+    do_GetService(NS_TASKBAR_CONTRACTID);
+
   mFullscreenMode = aFullScreen;
   if (aFullScreen) {
     if (mSizeMode == nsSizeMode_Fullscreen)
       return NS_OK;
     mOldSizeMode = mSizeMode;
     SetSizeMode(nsSizeMode_Fullscreen);
+
+    // Notify the taskbar that we will be entering full screen mode.
+    if (taskbarInfo) {
+      taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
+    }
   } else {
     SetSizeMode(mOldSizeMode);
   }
@@ -2727,6 +2735,11 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   if (visible) {
     Show(PR_TRUE);
     Invalidate(PR_FALSE);
+  }
+
+  // Notify the taskbar that we have exited full screen mode.
+  if (!aFullScreen && taskbarInfo) {
+    taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
   }
 
   // Let the dom know via web shell window

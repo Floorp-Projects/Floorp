@@ -503,7 +503,7 @@ date_convert(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
  * Other Support routines and definitions
  */
 
-Class js_DateClass = {
+Class js::DateClass = {
     js_Date_str,
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::DATE_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
@@ -1226,7 +1226,7 @@ GetUTCTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
 {
     if (!obj->isDate()) {
         if (vp)
-            ReportIncompatibleMethod(cx, vp, &js_DateClass);
+            ReportIncompatibleMethod(cx, vp, &DateClass);
         return false;
     }
     *dp = obj->getDateUTCTime().toNumber();
@@ -1408,7 +1408,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *time = N
         return false;
     if (!obj->isDate()) {
         if (vp)
-            ReportIncompatibleMethod(cx, vp, &js_DateClass);
+            ReportIncompatibleMethod(cx, vp, &DateClass);
         return false;
     }
 
@@ -1701,7 +1701,7 @@ date_setTime(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     if (!obj->isDate()) {
-        ReportIncompatibleMethod(cx, vp, &js_DateClass);
+        ReportIncompatibleMethod(cx, vp, &DateClass);
         return false;
     }
 
@@ -2607,7 +2607,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 {
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &DateClass, js_Date, MAXARGS,
                                    NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;
@@ -2638,7 +2638,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &DateClass);
     if (!obj || !obj->ensureSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
         return NULL;
     if (!SetUTCTime(cx, obj, msec_time))

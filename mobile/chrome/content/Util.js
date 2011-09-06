@@ -195,6 +195,14 @@ let Util = {
   get displayDPI() {
     delete this.displayDPI;
     return this.displayDPI = this.getWindowUtils(window).displayDPI;
+  },
+
+  LOCALE_DIR_RTL: -1,
+  LOCALE_DIR_LTR: 1,
+  get localeDir() {
+    // determine browser dir first to know which direction to snap to
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+    return chromeReg.isLocaleRTL("global") ? this.LOCALE_DIR_RTL : this.LOCALE_DIR_LTR;
   }
 };
 

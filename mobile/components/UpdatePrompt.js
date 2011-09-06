@@ -238,6 +238,9 @@ UpdatePrompt.prototype = {
           aLocale.addon.install.install();
         }
       }, this);
+      // store the buildid of these locales so that we can disable locales when the
+      // user updates through a non-updater channel
+      Services.prefs.setCharPref("extensions.compatability.locales.buildid", aUpdate.buildID);
     }).bind(this), { buildID: aUpdate.buildID });
   },
 

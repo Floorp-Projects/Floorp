@@ -119,18 +119,36 @@ function showPanelWhenReady(aWindow, aPage) {
 }
 
 function haveSystemLocale() {
+  let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].getService(Ci.nsILocaleService);
+  let systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
+  return isLocaleAvailable(systemLocale);
+}
+
+function checkCurrentLocale() {
+  if (Services.prefs.prefHasUserValue("general.useragent.locale")) {
+    // if the user has a compatable locale from a different buildid, we need to update
+    var buildID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).appBuildID;
+    let localeBuildID = Services.prefs.getCharPref("extensions.compatability.locales.buildid");
+    if (buildID != localeBuildID)
+      return false;
+
+    let currentLocale = Services.prefs.getCharPref("general.useragent.locale");
+    return isLocaleAvailable(currentLocale);
+  }
+  return true;
+}
+
+function isLocaleAvailable(aLocale) {
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
   chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
   let availableLocales = chrome.getLocalesForPackage("browser");
-
-  let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].getService(Ci.nsILocaleService);
-  let systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE");
-  systemLocale = systemLocale.split("-")[0];
-  let systemLocaleRegEx = new RegExp("^" + systemLocale);
-
+ 
+  let locale = aLocale.split("-")[0];
+  let localeRegEx = new RegExp("^" + locale);
+ 
   while (availableLocales.hasMore()) {
     let locale = availableLocales.getNext();
-    if (systemLocaleRegEx.test(locale))
+    if (localeRegEx.test(locale))
       return true;
   }
   return false;
@@ -227,9 +245,9 @@ BrowserCLH.prototype = {
           uris = uris.slice(1);
         }
 
-        // Show the locale selector if we have a new profile
-        if (needHomepageOverride() == "new profile" && Services.prefs.getBoolPref("browser.firstrun.show.localepicker") && !haveSystemLocale()) {
-
+        // Show the locale selector if we have a new profile, or if the selected locale is no longer compatible
+        let showLocalePicker = Services.prefs.getBoolPref("browser.firstrun.show.localepicker")
+        if ((needHomepageOverride() == "new profile" && showLocalePicker && !haveSystemLocale()) || !checkCurrentLocale()) {
           browserWin = openWindow(null, "chrome://browser/content/localePicker.xul", "_blank", "chrome,dialog=no,all", defaultURL);
           aCmdLine.preventDefault = true;
           return;

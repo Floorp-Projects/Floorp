@@ -98,10 +98,50 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
   return 0;
 }
 
+static void EnsureWindowVisible(HWND hwnd) 
+{
+  // Obtain the monitor which has the largest area of intersection 
+  // with the window, or NULL if there is no intersection.
+  HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
+  if (!monitor) {
+    // The window is not visible, we should reposition it to the same place as its parent
+    HWND parentHwnd = GetParent(hwnd);
+    RECT parentRect;
+    GetWindowRect(parentHwnd, &parentRect);
+    BOOL b = SetWindowPos(hwnd, NULL, 
+                          parentRect.left, 
+                          parentRect.top, 0, 0, 
+                          SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
+  }
+}
+
+// Callback hook which will ensure that the window is visible
+static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
+                                        WPARAM wParam, LPARAM lParam) 
+{
+  if (msg == WM_NOTIFY) {
+    LPOFNOTIFYW lpofn = (LPOFNOTIFYW) lParam;
+    if (!lpofn || !lpofn->lpOFN) {
+      return 0;
+    }
+    
+    if (CDN_INITDONE == lpofn->hdr.code) {
+      // The Window will be automatically moved to the last position after
+      // CDN_INITDONE.  We post a message to ensure the window will be visible
+      // so it will be done after the automatic last position window move.
+      PostMessage(hwnd, MOZ_WM_ENSUREVISIBLE, 0, 0);
+    }
+  } else if (msg == MOZ_WM_ENSUREVISIBLE) {
+    EnsureWindowVisible(GetParent(hwnd));
+  }
+  return 0;
+}
+
+
 // Callback hook which will dynamically allocate a buffer large
 // enough for the file picker dialog.
-static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
-                                        WPARAM wParam, LPARAM lParam)
+static UINT_PTR CALLBACK MultiFilePickerHook(HWND hwnd, UINT msg,
+                                             WPARAM wParam, LPARAM lParam)
 {
   switch (msg) {
     case WM_INITDIALOG:
@@ -118,6 +158,9 @@ static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
     case WM_NOTIFY:
       {
         LPOFNOTIFYW lpofn = (LPOFNOTIFYW) lParam;
+        if (!lpofn || !lpofn->lpOFN) {
+          return 0;
+        }
         // CDN_SELCHANGE is sent when the selection in the list box of the file
         // selection dialog changes
         if (lpofn->hdr.code == CDN_SELCHANGE) {
@@ -163,7 +206,8 @@ static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
       }
       break;
   }
-  return 0;
+
+  return FilePickerHook(hwnd, msg, wParam, lParam);
 }
 
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
@@ -246,7 +290,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
     ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
-                OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+                OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_ENABLESIZING | 
+                OFN_EXPLORER | OFN_ENABLEHOOK;
+    ofn.lpfnHook = FilePickerHook;
 
     // Handle add to recent docs settings
     nsCOMPtr<nsIPrivateBrowsingService> pbs =
@@ -305,8 +351,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         result = ::GetOpenFileNameW(&ofn);
       }
       else if (mMode == modeOpenMultiple) {
-        ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | 
-                     OFN_EXPLORER | OFN_ENABLEHOOK;
+        ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
 
         // The hook set here ensures that the buffer returned will always be
         // long enough to hold all selected files.  The hook may modify the
@@ -314,7 +359,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         // to (fileBuffer). The hook assumes that the passed in value is heap 
         // allocated and that the returned value should be freed by the caller.
         // If the hook changes the buffer, it will deallocate the old buffer.
-        ofn.lpfnHook = FilePickerHook;
+        ofn.lpfnHook = MultiFilePickerHook;
         fileBuffer.forget();
         result = ::GetOpenFileNameW(&ofn);
         fileBuffer = ofn.lpstrFile;

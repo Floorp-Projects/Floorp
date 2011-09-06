@@ -94,7 +94,7 @@ gTests.push({
     let tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 4, "All tags are associated with specified bookmark");
 
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
 
     Browser.closeTab(gCurrentTest._currentTab);
 
@@ -143,7 +143,7 @@ gTests.push({
     let tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 4, "Bookmark still has same number of tags");
 
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
 
     runNextTest();
   }
@@ -186,7 +186,7 @@ gTests.push({
     let tagsarray = PlacesUtils.tagging.getTagsForURI(makeURI(testURL_02), {});
     is(tagsarray.length, 3, "Tag is successfully deleted");
 
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
     runNextTest();
   }
 });

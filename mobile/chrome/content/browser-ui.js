@@ -161,7 +161,7 @@ var BrowserUI = {
 
   _updateToolbar: function _updateToolbar() {
     let mode = Elements.urlbarState.getAttribute("mode");
-    if (mode == "edit" && this.activePanel)
+    if (mode == "edit" && AwesomeScreen.activePanel)
       return;
 
     if (Browser.selectedTab.isLoading() && mode != "loading")
@@ -202,7 +202,7 @@ var BrowserUI = {
   },
 
   _setURL: function _setURL(aURL) {
-    if (this.activePanel)
+    if (AwesomeScreen.activePanel)
       this._edit.defaultValue = aURL;
     else
       this._edit.value = aURL;
@@ -228,12 +228,12 @@ var BrowserUI = {
     // During an awesome search we always show the popup_autocomplete/AllPagesList
     // panel since this looks in every places and the rationale behind typing
     // is to find something, whereever it is.
-    if (this.activePanel != AllPagesList) {
+    if (AwesomeScreen.activePanel != AllPagesList) {
       let inputField = this._edit;
       let oldClickSelectsAll = inputField.clickSelectsAll;
       inputField.clickSelectsAll = false;
 
-      this.activePanel = AllPagesList;
+      AwesomeScreen.activePanel = AllPagesList;
 
       // changing the searchString property call updateAwesomeHeader again
       inputField.controller.searchString = aString;
@@ -249,68 +249,14 @@ var BrowserUI = {
 
   _closeOrQuit: function _closeOrQuit() {
     // Close active dialog, if we have one. If not then close the application.
-    if (this.activePanel) {
-      this.activePanel = null;
+    if (AwesomeScreen.activePanel) {
+      AwesomeScreen.activePanel = null;
     } else if (this.activeDialog) {
       this.activeDialog.close();
     } else {
       // Check to see if we should really close the window
       if (Browser.closing())
         window.close();
-    }
-  },
-
-  _activePanel: null,
-  get activePanel() {
-    return this._activePanel;
-  },
-
-  set activePanel(aPanel) {
-    if (this._activePanel == aPanel)
-      return;
-
-    let awesomePanel = document.getElementById("awesome-panels");
-    let awesomeHeader = document.getElementById("awesome-header");
-
-    let willHidePanel = (this._activePanel && !aPanel);
-    if (willHidePanel) {
-      awesomePanel.hidden = true;
-      awesomeHeader.hidden = false;
-      this._edit.reset();
-      this._edit.detachController();
-    }
-
-    if (this._activePanel) {
-      this.popDialog();
-      this._activePanel.close();
-    }
-
-    let willShowPanel = (!this._activePanel && aPanel);
-    if (willShowPanel) {
-      this._edit.attachController();
-      this._editURI();
-      awesomePanel.hidden = awesomeHeader.hidden = false;
-    };
-
-    if (aPanel) {
-      this.pushDialog(aPanel);
-      aPanel.open();
-
-      if (this._edit.value == "")
-        this._showURI();
-    }
-
-    // If the keyboard will cover the full screen, we do not want to show it right away.
-    let isReadOnly = (aPanel != AllPagesList || this._isKeyboardFullscreen() || (!willShowPanel && this._edit.readOnly));
-    this._edit.readOnly = isReadOnly;
-    if (isReadOnly)
-      this._edit.blur();
-
-    this._activePanel = aPanel;
-    if (willHidePanel || willShowPanel) {
-      let event = document.createEvent("UIEvents");
-      event.initUIEvent("NavigationPanel" + (willHidePanel ? "Hidden" : "Shown"), true, true, window, false);
-      window.dispatchEvent(event);
     }
   },
 
@@ -441,12 +387,7 @@ var BrowserUI = {
   sizeControls: function(windowW, windowH) {
     // tabs
     document.getElementById("tabs").resize();
-
-    // awesomebar and related panels
-    let popup = document.getElementById("awesome-panels");
-    popup.top = this.toolbarH;
-    popup.height = windowH - this.toolbarH;
-    popup.width = windowW;
+    AwesomeScreen.doResize(windowW, windowH);
 
     // content navigator helper
     document.getElementById("content-navigator").contentHasChanged();
@@ -724,18 +665,18 @@ var BrowserUI = {
     this._hidePopup();
     if (this.activeDialog)
       this.activeDialog.close();
-    this.activePanel = AllPagesList;
+    AwesomeScreen.activePanel = AllPagesList;
   },
 
   closeAutoComplete: function closeAutoComplete() {
     if (this.isAutoCompleteOpen())
       this._edit.popup.closePopup();
 
-    this.activePanel = null;
+    AwesomeScreen.activePanel = null;
   },
 
   isAutoCompleteOpen: function isAutoCompleteOpen() {
-    return this.activePanel == AllPagesList;
+    return AwesomeScreen.activePanel == AllPagesList;
   },
 
   doOpenSearch: function doOpenSearch(aName) {
@@ -820,7 +761,7 @@ var BrowserUI = {
   },
 
   selectTab: function selectTab(aTab) {
-    this.activePanel = null;
+    AwesomeScreen.activePanel = null;
     Browser.selectedTab = aTab;
   },
 
@@ -841,8 +782,8 @@ var BrowserUI = {
   },
 
   showPanel: function showPanel(aPanelId) {
-    if (this.activePanel)
-      this.activePanel = null; // Hide the awesomescreen.
+    if (AwesomeScreen.activePanel)
+      AwesomeScreen.activePanel = null; // Hide the awesomescreen.
 
     Elements.panelUI.left = 0;
     Elements.panelUI.hidden = false;
@@ -892,14 +833,14 @@ var BrowserUI = {
 
     // Check open dialogs
     let dialog = this.activeDialog;
-    if (dialog && dialog != this.activePanel) {
+    if (dialog && dialog != AwesomeScreen.activePanel) {
       dialog.close();
       return;
     }
 
     // Check active panel
-    if (this.activePanel) {
-      this.activePanel = null;
+    if (AwesomeScreen.activePanel) {
+      AwesomeScreen.activePanel = null;
       return;
     }
 
@@ -992,7 +933,7 @@ var BrowserUI = {
             this.doCommand("cmd_menu");
             break;
           case "Search":
-            if (!this.activePanel)
+            if (!AwesomeScreen.activePanel)
               AllPagesList.doCommand();
             else
               this.doCommand("cmd_opensearch");
@@ -1256,16 +1197,16 @@ var BrowserUI = {
         BrowserSearch.toggle();
         break;
       case "cmd_bookmarks":
-        this.activePanel = BookmarkList;
+        AwesomeScreen.activePanel = BookmarkList;
         break;
       case "cmd_history":
-        this.activePanel = HistoryList;
+        AwesomeScreen.activePanel = HistoryList;
         break;
       case "cmd_remoteTabs":
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
           // We have to set activePanel before showing sync's dialog
           // to make the sure the dialog stacking is correct.
-          this.activePanel = RemoteTabsList;
+          AwesomeScreen.activePanel = RemoteTabsList;
           WeaveGlue.open();
         } else if (!Weave.Service.isLoggedIn && !Services.prefs.getBoolPref("browser.sync.enabled")) {
           // unchecked the relative command button
@@ -1282,7 +1223,7 @@ var BrowserUI = {
             }, 0);
           }
         } else {
-          this.activePanel = RemoteTabsList;
+          AwesomeScreen.activePanel = RemoteTabsList;
         }
 
         break;

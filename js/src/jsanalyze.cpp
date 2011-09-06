@@ -916,9 +916,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                             ensureVariable(lifetimes[i], startOffset - 1);
                     }
 
-#ifdef DEBUG
                     found = true;
-#endif
                     break;
                 }
             }
