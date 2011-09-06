@@ -76,6 +76,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJUMPLISTITEM
 
+  static const char kJumpListCacheDir[];
+
 protected:
   short Type() { return mItemType; }
   short mItemType;

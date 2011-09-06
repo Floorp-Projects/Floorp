@@ -50,6 +50,9 @@
 #include "nsIMutableArray.h"
 #include "nsWidgetsCID.h"
 #include "WinTaskbar.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsISimpleEnumerator.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace widget {
@@ -62,8 +65,9 @@ static NS_DEFINE_CID(kJumpListShortcutCID, NS_WIN_JUMPLISTSHORTCUT_CID);
 extern const wchar_t *gMozillaJumpListIDGeneric;
 
 PRPackedBool JumpListBuilder::sBuildingList = PR_FALSE;
+const char kPrefTaskbarEnabled[] = "browser.taskbar.lists.enabled";
 
-NS_IMPL_ISUPPORTS1(JumpListBuilder, nsIJumpListBuilder)
+NS_IMPL_ISUPPORTS2(JumpListBuilder, nsIJumpListBuilder, nsIObserver)
 
 JumpListBuilder::JumpListBuilder() :
   mMaxItems(0),
@@ -73,10 +77,13 @@ JumpListBuilder::JumpListBuilder() :
   
   CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER,
                    IID_ICustomDestinationList, getter_AddRefs(mJumpListMgr));
+
+  Preferences::AddStrongObserver(this, kPrefTaskbarEnabled);
 }
 
 JumpListBuilder::~JumpListBuilder()
 {
+  Preferences::RemoveObserver(this, kPrefTaskbarEnabled);
   mJumpListMgr = nsnull;
   ::CoUninitialize();
 }
@@ -197,6 +204,50 @@ nsresult JumpListBuilder::RemoveIconCacheForItems(nsIMutableArray *items)
     }
 
   } // end for
+}
+
+// Ensures that we have no old ICO files left in the jump list cache
+nsresult JumpListBuilder::RemoveIconCacheForAllItems() 
+{
+  // Construct the path of our jump list cache
+  nsCOMPtr<nsIFile> jumpListCacheDir;
+  nsresult rv = NS_GetSpecialDirectory("ProfLDS", 
+                                       getter_AddRefs(jumpListCacheDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = jumpListCacheDir->AppendNative(nsDependentCString(JumpListItem::kJumpListCacheDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  rv = jumpListCacheDir->GetDirectoryEntries(getter_AddRefs(entries));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // Loop through each directory entry and remove all ICO files found
+  do {
+    PRBool hasMore = PR_FALSE;
+    if (NS_FAILED(entries->HasMoreElements(&hasMore)) || !hasMore)
+      break;
+
+    nsCOMPtr<nsISupports> supp;
+    if (NS_FAILED(entries->GetNext(getter_AddRefs(supp))))
+      break;
+
+    nsCOMPtr<nsIFile> currFile(do_QueryInterface(supp));
+    nsAutoString path;
+    if (NS_FAILED(currFile->GetPath(path)))
+      continue;
+
+    PRInt32 len = path.Length();
+    if (StringTail(path, 4).LowerCaseEqualsASCII(".ico")) {
+      // Check if the cached ICO file exists
+      PRBool exists;
+      if (NS_FAILED(currFile->Exists(&exists)) || !exists)
+        continue;
+
+      // We found an ICO file that exists, so we should remove it
+      currFile->Remove(PR_FALSE);
+    }
+  } while(true);
+
+  return NS_OK;
 }
 
 /* boolean addListToBuild(in short aCatType, [optional] in nsIArray items, [optional] in AString catName); */
@@ -452,6 +503,19 @@ nsresult JumpListBuilder::TransferIObjectArrayToIMutableArray(IObjectArray *objA
 
     if (NS_SUCCEEDED(rv)) {
       removedItems->AppendElement(item, PR_FALSE);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP JumpListBuilder::Observe(nsISupports* aSubject,
+                                        const char* aTopic,
+                                        const PRUnichar* aData)
+{
+  if (nsDependentString(aData).EqualsASCII(kPrefTaskbarEnabled)) {
+    PRBool enabled = Preferences::GetBool(kPrefTaskbarEnabled, true);
+    if (!enabled) {
+      RemoveIconCacheForAllItems();
     }
   }
   return NS_OK;
