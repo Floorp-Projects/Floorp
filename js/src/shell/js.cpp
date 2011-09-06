@@ -73,6 +73,7 @@
 #include "jsreflect.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jstracer.h"
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
 #include "jsxml.h"
@@ -1363,7 +1364,7 @@ typedef struct JSCountHeapNode JSCountHeapNode;
 
 struct JSCountHeapNode {
     void                *thing;
-    int32               kind;
+    JSGCTraceKind       kind;
     JSCountHeapNode     *next;
 };
 
@@ -1376,7 +1377,7 @@ typedef struct JSCountHeapTracer {
 } JSCountHeapTracer;
 
 static void
-CountHeapNotify(JSTracer *trc, void *thing, uint32 kind)
+CountHeapNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     JSCountHeapTracer *countTracer;
     JSDHashEntryStub *entry;
@@ -1418,7 +1419,7 @@ static JSBool
 CountHeap(JSContext *cx, uintN argc, jsval *vp)
 {
     void* startThing;
-    int32 startTraceKind;
+    JSGCTraceKind startTraceKind;
     jsval v;
     int32 traceKind, i;
     JSString *str;
@@ -1439,7 +1440,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     };
 
     startThing = NULL;
-    startTraceKind = 0;
+    startTraceKind = JSTRACE_OBJECT;
     if (argc > 0) {
         v = JS_ARGV(cx, vp)[0];
         if (JSVAL_IS_TRACEABLE(v)) {
@@ -1559,9 +1560,9 @@ ValueToScript(JSContext *cx, jsval v)
         JSObject *obj = JSVAL_TO_OBJECT(v);
         JSClass *clasp = JS_GET_CLASS(cx, obj);
 
-        if (clasp == Jsvalify(&js_ScriptClass)) {
+        if (clasp == Jsvalify(&ScriptClass)) {
             script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == Jsvalify(&js_GeneratorClass)) {
+        } else if (clasp == Jsvalify(&GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->floatingFrame()->fun();
             script = fun->script();
@@ -1619,8 +1620,8 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
         v = argv[0];
         intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
-            (JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&js_FunctionClass) ||
-             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&js_ScriptClass))) {
+            (JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass) ||
+             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&ScriptClass))) {
             script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
@@ -2369,7 +2370,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     void* startThing;
-    uint32 startTraceKind;
+    JSGCTraceKind startTraceKind;
     const char *badTraceArg;
     void *thingToFind;
     size_t maxDepth;
@@ -2395,7 +2396,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     startThing = NULL;
-    startTraceKind = 0;
+    startTraceKind = JSTRACE_OBJECT;
     if (argc > 1) {
         v = JS_ARGV(cx, vp)[1];
         if (JSVAL_IS_TRACEABLE(v)) {
@@ -4069,13 +4070,13 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_METHODJIT
 
 static void
-SumJitDataSizeCallabck(JSContext *cx, void *data, void *thing,
+SumJitDataSizeCallback(JSContext *cx, void *data, void *thing,
                        JSGCTraceKind traceKind, size_t thingSize)
 {
     size_t *sump = static_cast<size_t *>(data);
     JS_ASSERT(traceKind == JSTRACE_SCRIPT);
     JSScript *script = static_cast<JSScript *>(thing);
-    *sump += script->jitDataSize();
+    *sump += script->jitDataSize(NULL);
 }
 
 #endif
@@ -4085,7 +4086,7 @@ MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     size_t n = 0;
-    IterateCells(cx, NULL, gc::FINALIZE_TYPE_OBJECT, &n, SumJitDataSizeCallabck);
+    IterateCells(cx, NULL, gc::FINALIZE_TYPE_OBJECT, &n, SumJitDataSizeCallback);
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -4870,6 +4871,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     if (!report) {
         fprintf(gErrFile, "%s\n", message);
+        fflush(gErrFile);
         return;
     }
 
@@ -4932,6 +4934,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     fputs("^\n", gErrFile);
  out:
+    fflush(gErrFile);
     if (!JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;
@@ -5108,7 +5111,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     ToString valstr(cx, *vp, JS_TRUE);
     if (valstr.threw())
         return JS_FALSE;
-#if defined XP_WIN || defined HPUX || defined OSF1 || defined IRIX
+#if defined XP_WIN || defined HPUX || defined OSF1
     {
         char *waste = JS_smprintf("%s=%s", idstr.getBytes(), valstr.getBytes());
         if (!waste) {

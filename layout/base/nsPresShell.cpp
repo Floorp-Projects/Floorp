@@ -6988,6 +6988,43 @@ static PRBool CanHandleContextMenuEvent(nsMouseEvent* aMouseEvent,
   return PR_TRUE;
 }
 
+static PRBool
+IsFullScreenAndRestrictedKeyEvent(nsIContent* aTarget, const nsEvent* aEvent)
+{
+  NS_ABORT_IF_FALSE(aEvent, "Must have an event to check.");
+
+  // Bail out if the event is not a key event, or the target's document is
+  // not in DOM full screen mode, or full-screen key input is not restricted.
+  nsIDocument *doc;
+  if (!aTarget ||
+      (aEvent->message != NS_KEY_DOWN &&
+      aEvent->message != NS_KEY_UP &&
+      aEvent->message != NS_KEY_PRESS) ||
+      !(doc = aTarget->GetOwnerDoc()) ||
+      !doc->IsFullScreenDoc() ||
+      !nsContentUtils::IsFullScreenKeyInputRestricted()) {
+    return PR_FALSE;
+  }
+
+  // Key input is restricted. Determine if the key event has a restricted
+  // key code. Non-restricted codes are:
+  //   DOM_VK_CANCEL to DOM_VK_CAPS_LOCK, inclusive
+  //   DOM_VK_SPACE to DOM_VK_DELETE, inclusive
+  //   DOM_VK_SEMICOLON to DOM_VK_EQUALS, inclusive
+  //   DOM_VK_MULTIPLY to DOM_VK_META, inclusive
+  int key = static_cast<const nsKeyEvent*>(aEvent)->keyCode;
+  if ((key >= NS_VK_CANCEL && key <= NS_VK_CAPS_LOCK) ||
+      (key >= NS_VK_SPACE && key <= NS_VK_DELETE) ||
+      (key >= NS_VK_SEMICOLON && key <= NS_VK_EQUALS) ||
+      (key >= NS_VK_MULTIPLY && key <= NS_VK_META)) {
+    return PR_FALSE;
+  }
+
+  // Otherwise, fullscreen is enabled, key input is restricted, and the key
+  // code is not an allowed key code.
+  return PR_TRUE;
+}
+
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                nsEventStatus* aStatus)
@@ -7029,11 +7066,21 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     // XXX How about IME events and input events for plugins?
     if (NS_IS_TRUSTED_EVENT(aEvent)) {
       switch (aEvent->message) {
-      case NS_MOUSE_BUTTON_DOWN:
-      case NS_MOUSE_BUTTON_UP:
       case NS_KEY_PRESS:
       case NS_KEY_DOWN:
       case NS_KEY_UP:
+        if (IsFullScreenAndRestrictedKeyEvent(mCurrentEventContent, aEvent) &&
+            aEvent->message == NS_KEY_DOWN) {
+          // We're in DOM full-screen mode, and a key with a restricted key
+          // code has been pressed. Exit full-screen mode.
+          NS_DispatchToCurrentThread(
+            NS_NewRunnableMethod(mCurrentEventContent->GetOwnerDoc(),
+                                 &nsIDocument::CancelFullScreen));
+        }
+        // Else not full-screen mode or key code is unrestricted, fall
+        // through to normal handling.
+      case NS_MOUSE_BUTTON_DOWN:
+      case NS_MOUSE_BUTTON_UP:
         isHandlingUserInput = PR_TRUE;
         break;
       case NS_DRAGDROP_DROP:

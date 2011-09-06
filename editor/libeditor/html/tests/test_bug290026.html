@@ -40,7 +40,7 @@ addLoadEvent(function() {
   var twoindent = '<p></p><ul style="margin-left: 80px;"><li>Item 1</li><li>Item 2</li></ul><p></p>';
   is(editor.innerHTML, twoindent, "a twice indented bulleted list");
   document.execCommand("outdent", false, false);
-  todo_is(editor.innerHTML, oneindent, "outdenting a twice indented bulleted list");
+  is(editor.innerHTML, oneindent, "outdenting a twice indented bulleted list");
 
   // done
   SimpleTest.finish();

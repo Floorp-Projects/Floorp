@@ -446,6 +446,15 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
+void
+nsHTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState)
+{
+  nsHyperTextAccessibleWrap::ApplyARIAState(aState);
+
+  nsStateMapEntry::MapToStates(mContent, aState, eARIAAutoComplete);
+
+}
+
 PRUint64
 nsHTMLTextFieldAccessible::NativeState()
 {

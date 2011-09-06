@@ -1712,6 +1712,7 @@ js_ResumeVtune()
 #else
 #include <sys/time.h>
 #endif
+#include "jstracer.h"
 
 #define ETHOGRAM_BUF_SIZE 65536
 
@@ -1867,7 +1868,7 @@ public:
 static char jstv_empty[] = "<null>";
 
 inline char *
-jstv_Filename(JSStackFrame *fp)
+jstv_Filename(StackFrame *fp)
 {
     while (fp && !fp->isScriptFrame())
         fp = fp->prev();
@@ -1876,11 +1877,12 @@ jstv_Filename(JSStackFrame *fp)
            : jstv_empty;
 }
 inline uintN
-jstv_Lineno(JSContext *cx, JSStackFrame *fp)
+jstv_Lineno(JSContext *cx, StackFrame *fp)
 {
     while (fp && fp->pcQuadratic(cx->stack) == NULL)
         fp = fp->prev();
-    return (fp && fp->pcQuadratic(cx->stack)) ? js_FramePCToLineNumber(cx, fp) : 0;
+    jsbytecode *pc = fp->pcQuadratic(cx->stack);
+    return (fp && pc) ? js_FramePCToLineNumber(cx, fp, pc) : 0;
 }
 
 /* Collect states here and distribute to a matching buffer, if any */
@@ -1977,7 +1979,7 @@ ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
     }
     if (JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        filename = DeflateString(cx, str->chars(), str->length());
+        filename = DeflateString(cx, str->getChars(cx), str->length());
         if (!filename)
             return false;
     }

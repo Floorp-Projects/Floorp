@@ -67,6 +67,9 @@
       testStates("combobox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
       testStates("combobox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
 
+      testStates("htmltext_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("htmltextarea_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
       // aria-busy
       testStates("textbox_busy_false", 0, 0, STATE_BUSY);
       testStates("textbox_busy_true", STATE_BUSY);
@@ -152,6 +155,11 @@
      title="Unify ARIA state attributes mapping rules">
     Mozilla Bug 499653
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=681674"
+     title="aria-autocomplete not supported on standard form text input controls">
+    Mozilla Bug 681674
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -163,6 +171,9 @@
   <div id="combobox_autocomplete_inline" role="combobox" aria-autocomplete="inline"></div>
   <div id="combobox_autocomplete_list" role="combobox" aria-autocomplete="list"></div>
   <div id="combobox_autocomplete_both" role="combobox" aria-autocomplete="both"></div>
+
+  <input id="htmltext_autocomplete_list" type="text" aria-autocomplete="list" />
+  <textarea id="htmltextarea_autocomplete_list" aria-autocomplete="list"></textarea>
 
   <div id="textbox_busy_false" role="textbox" aria-busy="false"></div>
   <div id="textbox_busy_true" role="textbox" aria-busy="true"></div>

@@ -201,7 +201,7 @@ class PrimitiveBehavior<JSString *> {
   public:
     static inline bool isType(const Value &v) { return v.isString(); }
     static inline JSString *extract(const Value &v) { return v.toString(); }
-    static inline Class *getClass() { return &js_StringClass; }
+    static inline Class *getClass() { return &StringClass; }
 };
 
 template<>
@@ -209,7 +209,7 @@ class PrimitiveBehavior<bool> {
   public:
     static inline bool isType(const Value &v) { return v.isBoolean(); }
     static inline bool extract(const Value &v) { return v.toBoolean(); }
-    static inline Class *getClass() { return &js_BooleanClass; }
+    static inline Class *getClass() { return &BooleanClass; }
 };
 
 template<>
@@ -217,7 +217,7 @@ class PrimitiveBehavior<double> {
   public:
     static inline bool isType(const Value &v) { return v.isNumber(); }
     static inline double extract(const Value &v) { return v.toNumber(); }
-    static inline Class *getClass() { return &js_NumberClass; }
+    static inline Class *getClass() { return &NumberClass; }
 };
 
 } // namespace detail
