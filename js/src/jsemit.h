@@ -262,7 +262,7 @@ struct JSStmtInfo {
  */
 #define TCF_IN_WITH             0x10000000
 
-/* 
+/*
  * This function does something that can extend the set of bindings in its
  * call objects --- it does a direct eval in non-strict code, or includes a
  * function statement (as opposed to a function definition).
@@ -426,7 +426,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     inline bool needStrictChecks();
 
-    /* 
+    /*
      * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
      * The parser calls ensureSharpSlots to allocate these two stack locals.
      */
@@ -678,7 +678,7 @@ struct JSCodeGenerator : public JSTreeContext
 
     /*
      * Adds a use of a variable that is statically known to exist on the
-     * global object. 
+     * global object.
      *
      * The actual slot of the variable on the global object is not known
      * until after compilation. Properties must be resolved before being
