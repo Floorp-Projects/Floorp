@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!--
+  XUL Widget Test for preferences window. This particular test ensures that
+  a checkbox with a command attribute properly updates even though the command
+  event gets retargeted.
+-->
+<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="preferences window"
+            windowtype="test:preferences"
+            buttons="accept,cancel"
+            onload="RunTest(window.arguments)">
+  <script type="application/javascript">
+  <![CDATA[
+    function RunTest(aArgs)
+    {
+      aArgs[0](this);
+      document.documentElement.cancelDialog();
+    }
+  ]]>
+  </script>
+
+  <prefpane id="sample_pane" label="Sample Prefpane">
+    <preferences id="sample_preferences">
+      <preference id="tests.static_preference_bool"
+                  name="tests.static_preference_bool"
+                  type="bool"/>
+    </preferences>
+
+    <commandset>
+      <command id="cmd_test" preference="tests.static_preference_bool"/>
+    </commandset>
+
+    <checkbox id="checkbox" label="Enable Option" preference="tests.static_preference_bool" command="cmd_test"/>
+  </prefpane>
+</prefwindow>
