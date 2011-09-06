@@ -138,7 +138,9 @@ function initRow(aPartId)
 
   var checkbox = document.getElementById(aPartId + "Def");
   var command  = document.getElementById("cmd_" + aPartId + "Toggle");
-  var perm = permissionManager.testPermission(gPermURI, aPartId);
+  // Geolocation permission consumers use testExactPermission, not testPermission. 
+  var perm = aPartId == "geo" ? permissionManager.testExactPermission(gPermURI, aPartId) :
+                                permissionManager.testPermission(gPermURI, aPartId);
   if (perm) {
     checkbox.checked = false;
     command.removeAttribute("disabled");
