@@ -223,7 +223,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
                                      : fopen(dumpName, "w");
                     if(dumpFile)
                     {
-                        JS_DumpHeap(ccx, dumpFile, nsnull, 0, nsnull,
+                        JS_DumpHeap(ccx, dumpFile, nsnull, JSTRACE_OBJECT, nsnull,
                                     static_cast<size_t>(-1), nsnull);
                         if(dumpFile != stdout)
                             fclose(dumpFile);
@@ -619,7 +619,7 @@ xpc_GCThingIsGrayCCThing(void *thing)
  * re-coloring.
  */
 static void
-UnmarkGrayChildren(JSTracer *trc, void *thing, uint32 kind)
+UnmarkGrayChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     int stackDummy;
     if (!JS_CHECK_STACK_SIZE(trc->context->stackLimit, &stackDummy)) {
@@ -675,7 +675,7 @@ struct TraversalTracer : public JSTracer
 };
 
 static void
-NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
+NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     if(AddToCCKind(kind))
     {
@@ -732,9 +732,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
-    uint32 traceKind = js_GetGCThingTraceKind(p);
-    JSObject *obj;
-    js::Class *clazz;
+    JSGCTraceKind traceKind = js_GetGCThingTraceKind(p);
+    JSObject *obj = nsnull;
+    js::Class *clazz = nsnull;
 
     // We do not want to add wrappers to the cycle collector if they're not
     // explicitly marked as main thread only, because the cycle collector isn't
@@ -794,8 +794,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         char name[72];
         if(traceKind == JSTRACE_OBJECT)
         {
-            JSObject *obj = static_cast<JSObject*>(p);
-            js::Class *clazz = obj->getClass();
             XPCNativeScriptableInfo* si = nsnull;
             if(IS_PROTO_CLASS(clazz))
             {
@@ -808,7 +806,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
                             clazz->name, si->GetJSClass()->name);
             }
-            else if(clazz == &js_ScriptClass)
+            else if(clazz == &js::ScriptClass)
             {
                 JSScript* script = (JSScript*) xpc_GetJSPrivate(obj);
                 if(script->filename)
@@ -822,7 +820,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                     JS_snprintf(name, sizeof(name), "JS Object (Script)");
                 }
             }
-            else if(clazz == &js_FunctionClass)
+            else if(clazz == &js::FunctionClass)
             {
                 JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
                 JSString* str = JS_GetFunctionId(fun);
@@ -845,11 +843,15 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
         else
         {
-            static const char trace_types[JSTRACE_LIMIT][7] = {
+            static const char trace_types[][11] = {
                 "Object",
                 "String",
-                "Xml"
+                "Script",
+                "Xml",
+                "Shape",
+                "TypeObject",
             };
+            JS_STATIC_ASSERT(JS_ARRAY_LENGTH(trace_types) == JSTRACE_LAST + 1);
             JS_snprintf(name, sizeof(name), "JS %s", trace_types[traceKind]);
         }
 

@@ -175,7 +175,7 @@ public:
     return refcount;
   }
 
-  void stabilizeForDeletion(nsISupports *owner)
+  void stabilizeForDeletion(nsISupports*)
   {
     mTagged = NS_CCAR_TAGGED_STABILIZED_REFCNT;
   }

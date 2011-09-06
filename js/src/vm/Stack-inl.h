@@ -358,7 +358,7 @@ StackFrame::callObj() const
     JS_ASSERT_IF(isNonEvalFunctionFrame() || isStrictEvalFrame(), hasCallObj());
 
     JSObject *pobj = &scopeChain();
-    while (JS_UNLIKELY(pobj->getClass() != &js_CallClass)) {
+    while (JS_UNLIKELY(!pobj->isCall())) {
         JS_ASSERT(IsCacheableNonGlobalScope(pobj) || pobj->isWith());
         pobj = pobj->getParent();
     }
@@ -584,7 +584,7 @@ ContextStack::currentScript(jsbytecode **ppc) const
         JS_ASSERT(inlined->inlineIndex < fp->jit()->nInlineFrames);
         mjit::InlineFrame *frame = &fp->jit()->inlineFrames()[inlined->inlineIndex];
         JSScript *script = frame->fun->script();
-        if (script->compartment != cx_->compartment)
+        if (script->compartment() != cx_->compartment)
             return NULL;
         if (ppc)
             *ppc = script->code + inlined->pcOffset;
@@ -593,7 +593,7 @@ ContextStack::currentScript(jsbytecode **ppc) const
 #endif
 
     JSScript *script = fp->script();
-    if (script->compartment != cx_->compartment)
+    if (script->compartment() != cx_->compartment)
         return NULL;
 
     if (ppc)

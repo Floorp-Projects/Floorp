@@ -46,14 +46,6 @@
 
 #include "jsobj.h"
 
-extern js::Class js_DateClass;
-
-inline bool
-JSObject::isDate() const
-{
-    return getClass() == &js_DateClass;
-}
-
 #define HalfTimeDomain  8.64e15
 
 #define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \

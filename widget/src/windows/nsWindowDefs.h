@@ -64,6 +64,9 @@
 #define MOZ_WM_MOUSEHWHEEL                (WM_APP+0x0311)
 #define MOZ_WM_VSCROLL                    (WM_APP+0x0312)
 #define MOZ_WM_HSCROLL                    (WM_APP+0x0313)
+// Internal message for ensuring the file picker is visible on multi monitor
+// systems, and when the screen resolution changes.
+#define MOZ_WM_ENSUREVISIBLE              (WM_APP + 14159)
 
 // GetWindowsVersion constants
 #define WIN2K_VERSION                     0x500

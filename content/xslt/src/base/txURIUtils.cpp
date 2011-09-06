@@ -38,8 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txURIUtils.h"
-
-#ifndef TX_EXE
 #include "nsNetUtil.h"
 #include "nsIAttribute.h"
 #include "nsIScriptSecurityManager.h"
@@ -48,118 +46,11 @@
 #include "nsIContent.h"
 #include "nsIPrincipal.h"
 #include "nsINodeInfo.h"
-#endif
 
 /**
  * URIUtils
  * A set of utilities for handling URIs
 **/
-
-#ifdef TX_EXE
-//- Constants -/
-
-const char   URIUtils::HREF_PATH_SEP  = '/';
-
-/**
- * Implementation of utility functions for parsing URLs.
- * Just file paths for now.
- */
-void
-txParsedURL::init(const nsAFlatString& aSpec)
-{
-    mPath.Truncate();
-    mName.Truncate();
-    mRef.Truncate();
-    PRUint32 specLength = aSpec.Length();
-    if (!specLength) {
-        return;
-    }
-    const PRUnichar* start = aSpec.get();
-    const PRUnichar* end = start + specLength;
-    const PRUnichar* c = end - 1;
-
-    // check for #ref
-    for (; c >= start; --c) {
-        if (*c == '#') {
-            // we could eventually unescape this, too.
-            mRef = Substring(c + 1, end);
-            end = c;
-            --c;
-            if (c == start) {
-                // we're done,
-                return;
-            }
-            break;
-        }
-    }
-    for (c = end - 1; c >= start; --c) {
-        if (*c == '/') {
-            mName = Substring(c + 1, end);
-            mPath = Substring(start, c + 1);
-            return;
-        }
-    }
-    mName = Substring(start, end);
-}
-
-void
-txParsedURL::resolve(const txParsedURL& aRef, txParsedURL& aDest)
-{
-    /*
-     * No handling of absolute URLs now.
-     * These aren't really URLs yet, anyway, but paths with refs
-     */
-    aDest.mPath = mPath + aRef.mPath;
-
-    if (aRef.mName.IsEmpty() && aRef.mPath.IsEmpty()) {
-        // the relative URL is just a fragment identifier
-        aDest.mName = mName;
-        if (aRef.mRef.IsEmpty()) {
-            // and not even that, keep the base ref
-            aDest.mRef = mRef;
-            return;
-        }
-        aDest.mRef = aRef.mRef;
-        return;
-    }
-    aDest.mName = aRef.mName;
-    aDest.mRef = aRef.mRef;
-}
-
-/**
- * Returns an InputStream for the file represented by the href
- * argument
- * @param href the href of the file to get the input stream for.
- * @return an InputStream to the desired resource
- * @exception java.io.FileNotFoundException when the file could not be
- * found
-**/
-istream* URIUtils::getInputStream(const nsAString& href, nsAString& errMsg)
-{
-    return new ifstream(NS_LossyConvertUTF16toASCII(href).get(), ios::in);
-} //-- getInputStream
-
-/**
-    * Returns the document base of the href argument
-    * @return the document base of the given href
-**/
-void URIUtils::getDocumentBase(const nsAFlatString& href, nsAString& dest)
-{
-    if (href.IsEmpty()) {
-        return;
-    }
-
-    nsAFlatString::const_char_iterator temp;
-    href.BeginReading(temp);
-    PRUint32 iter = href.Length();
-    while (iter > 0) {
-        if (temp[--iter] == HREF_PATH_SEP) {
-            dest.Append(StringHead(href, iter));
-            break;
-        }
-    }
-}
-#endif
 
 /**
  * Resolves the given href argument, using the given documentBase
@@ -176,8 +67,6 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
         dest.Append(base);
         return;
     }
-
-#ifndef TX_EXE
     nsCOMPtr<nsIURI> pURL;
     nsAutoString resultHref;
     nsresult result = NS_NewURI(getter_AddRefs(pURL), base);
@@ -185,22 +74,7 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
         NS_MakeAbsoluteURI(resultHref, href, pURL);
         dest.Append(resultHref);
     }
-#else
-    nsAutoString documentBase;
-    getDocumentBase(PromiseFlatString(base), documentBase);
-
-    //-- join document base + href
-    if (!documentBase.IsEmpty()) {
-        dest.Append(documentBase);
-        if (documentBase.CharAt(documentBase.Length()-1) != HREF_PATH_SEP)
-            dest.Append(PRUnichar(HREF_PATH_SEP));
-    }
-    dest.Append(href);
-
-#endif
 } //-- resolveHref
-
-#ifndef TX_EXE
 
 // static
 void
@@ -245,5 +119,3 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
           sourceDoc->GetDocumentCharacterSetSource());
     aNewDoc->SetDocumentCharacterSet(sourceDoc->GetDocumentCharacterSet());
 }
-
-#endif /* TX_EXE */

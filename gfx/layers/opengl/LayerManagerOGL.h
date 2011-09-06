@@ -407,8 +407,6 @@ public:
   gfxMatrix& GetWorldTransform(void);
   void WorldTransformRect(nsIntRect& aRect);
 
-  void SetRenderFPS(bool aRenderFPS) { mRenderFPS = aRenderFPS; };
-
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
@@ -505,7 +503,7 @@ private:
       void DrawFPS(GLContext*, CopyProgram*);
   } mFPS;
 
-  bool mRenderFPS;
+  static PRBool sDrawFPS;
 };
 
 /**

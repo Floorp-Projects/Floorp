@@ -94,4 +94,5 @@ INCLUDES	+= \
 		-I$(topsrcdir)/content/base/src \
 		-I$(topsrcdir)/content/events/src \
 		-I$(topsrcdir)/layout/style \
+		-I$(topsrcdir)/extensions/spellcheck/src \
 		$(NULL)

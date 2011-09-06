@@ -2042,9 +2042,9 @@ TypeCompartment::nukeTypes(JSContext *cx)
      */
 
 #ifdef JS_THREADSAFE
-    Maybe<AutoLockGC> maybeLock;
+    AutoLockGC maybeLock;
     if (!cx->runtime->gcMarkAndSweep)
-        maybeLock.construct(cx->runtime);
+        maybeLock.lock(cx->runtime);
 #endif
 
     inferenceEnabled = false;
@@ -2063,16 +2063,14 @@ TypeCompartment::nukeTypes(JSContext *cx)
     mjit::ExpandInlineFrames(compartment);
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
-    for (JSCList *cursor = compartment->scripts.next;
-         cursor != &compartment->scripts;
-         cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+
+    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
         if (script->hasJITCode()) {
             mjit::Recompiler recompiler(cx, script);
             recompiler.recompile();
         }
     }
-
 #endif /* JS_METHODJIT */
 
 }
@@ -2140,40 +2138,6 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
         ObjectStateChange(cx, script->function()->type(), false, true);
 }
 
-/*
- * State for keeping track of which property type sets contain an object we are
- * scrubbing from all properties in the compartment. We make a list of
- * properties to update and fix them afterwards, as adding types can't be done
- * with the GC locked (as is done in IterateCells), and can potentially make
- * new type objects as well.
- */
-struct MarkSetsUnknownState
-{
-    TypeObject *target;
-    Vector<TypeSet *> pending;
-
-    MarkSetsUnknownState(JSContext *cx, TypeObject *target)
-        : target(target), pending(cx)
-    {}
-};
-
-static void
-MarkObjectSetsUnknownCallback(JSContext *cx, void *data, void *thing,
-                              size_t traceKind, size_t thingSize)
-{
-    MarkSetsUnknownState *state = (MarkSetsUnknownState *) data;
-    TypeObject *object = (TypeObject *) thing;
-
-    unsigned count = object->getPropertyCount();
-    for (unsigned i = 0; i < count; i++) {
-        Property *prop = object->getProperty(i);
-        if (prop && prop->types.hasType(Type::ObjectType(state->target))) {
-            if (!state->pending.append(&prop->types))
-                cx->compartment->types.setPendingNukeTypes(cx);
-        }
-    }
-}
-
 void
 TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
 {
@@ -2190,20 +2154,30 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
      * a generic object type. It is not sufficient to mark just the persistent
      * sets, as analysis of individual opcodes can pull type objects from
      * static information (like initializer objects at various offsets).
+     * 
+     * We make a list of properties to update and fix them afterwards, as adding
+     * types can't be done while iterating over cells as it can potentially make
+     * new type objects as well or trigger GC.
      */
+    Vector<TypeSet *> pending(cx);
+    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+        TypeObject *object = i.get<TypeObject>();
 
-    MarkSetsUnknownState state(cx, target);
+        unsigned count = object->getPropertyCount();
+        for (unsigned i = 0; i < count; i++) {
+            Property *prop = object->getProperty(i);
+            if (prop && prop->types.hasType(Type::ObjectType(target))) {
+                if (!pending.append(&prop->types))
+                    cx->compartment->types.setPendingNukeTypes(cx);
+            }
+        }
+    }
 
-    IterateCells(cx, cx->compartment, gc::FINALIZE_TYPE_OBJECT,
-                 (void *) &state, MarkObjectSetsUnknownCallback);
+    for (unsigned i = 0; i < pending.length(); i++)
+        pending[i]->addType(cx, Type::AnyObjectType());
 
-    for (unsigned i = 0; i < state.pending.length(); i++)
-        state.pending[i]->addType(cx, Type::AnyObjectType());
-
-    for (JSCList *cursor = cx->compartment->scripts.next;
-         cursor != &cx->compartment->scripts;
-         cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
         if (script->types) {
             unsigned count = TypeScript::NumTypeSets(script);
             TypeSet *typeArray = script->types->typeArray();
@@ -2306,11 +2280,23 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
     code.typeBarriers = barrier;
 }
 
+static void
+PrintScriptTypeCallback(JSContext *cx, void *data, void *thing,
+                        JSGCTraceKind traceKind, size_t thingSize)
+{
+    JS_ASSERT(!data);
+    JS_ASSERT(traceKind == JSTRACE_SCRIPT);
+    JSScript *script = static_cast<JSScript *>(thing);
+    if (script->hasAnalysis() && script->analysis()->ranInference())
+        script->analysis()->printTypes(cx);
+}
+
 #ifdef DEBUG
 static void
 PrintObjectCallback(JSContext *cx, void *data, void *thing,
-                    size_t traceKind, size_t thingSize)
+                    JSGCTraceKind traceKind, size_t thingSize)
 {
+    JS_ASSERT(traceKind == JSTRACE_OBJECT);
     TypeObject *object = (TypeObject *) thing;
     object->print(cx);
 }
@@ -2321,17 +2307,12 @@ TypeCompartment::print(JSContext *cx, bool force)
 {
     JSCompartment *compartment = this->compartment();
 
-    if (JS_CLIST_IS_EMPTY(&compartment->scripts))
-        return;
-
     if (!force && !InferSpewActive(ISpewResult))
         return;
 
-    for (JSScript *script = (JSScript *)compartment->scripts.next;
-         &script->links != &compartment->scripts;
-         script = (JSScript *)script->links.next) {
-        if (script->hasAnalysis() && script->analysis()->ranInference())
-            script->analysis()->printTypes(cx);
+    {
+        AutoUnlockGC unlock(cx->runtime);
+        IterateCells(cx, compartment, gc::FINALIZE_SCRIPT, cx, PrintScriptTypeCallback);
     }
 
 #ifdef DEBUG
@@ -4163,6 +4144,9 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
         return false;
     }
 
+    if (script->hasClearedGlobal())
+        return false;
+
     if (!script->ensureRanInference(cx)) {
         *pbaseobj = NULL;
         cx->compartment->types.setPendingNukeTypes(cx);
@@ -4401,7 +4385,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
         return;
 
     /* Strawman object to add properties to and watch for duplicates. */
-    JSObject *baseobj = NewBuiltinClassInstance(cx, &js_ObjectClass, gc::FINALIZE_OBJECT16);
+    JSObject *baseobj = NewBuiltinClassInstance(cx, &ObjectClass, gc::FINALIZE_OBJECT16);
     if (!baseobj) {
         if (type->newScript)
             type->clearNewScript(cx);
@@ -4427,7 +4411,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
         return;
     }
 
-    gc::FinalizeKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
+    gc::AllocKind kind = gc::GetGCObjectKind(baseobj->slotSpan());
 
     /* We should not have overflowed the maximum number of fixed slots for an object. */
     JS_ASSERT(gc::GetGCKindSlots(kind) >= baseobj->slotSpan());
@@ -4457,7 +4441,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script)
     }
 
     type->newScript->script = script;
-    type->newScript->finalizeKind = unsigned(kind);
+    type->newScript->allocKind = kind;
     type->newScript->shape = baseobj->lastProperty();
 
     type->newScript->initializerList = (TypeNewScript::Initializer *)
@@ -4473,7 +4457,7 @@ void
 ScriptAnalysis::printTypes(JSContext *cx)
 {
     AutoEnterAnalysis enter(cx);
-    TypeCompartment *compartment = &script->compartment->types;
+    TypeCompartment *compartment = &script->compartment()->types;
 
     /*
      * Check if there are warnings for used values with unknown types, and build
@@ -5011,7 +4995,6 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
                                                                 JSProto_Function, fun->getProto());
         if (!type)
             return false;
-        AutoTypeRooter root(cx, type);
 
         fun->setType(type);
         type->functionScript = this;
@@ -5497,7 +5480,7 @@ TypeCompartment::sweep(JSContext *cx)
             const AllocationSiteKey &key = e.front().key;
             TypeObject *object = e.front().value;
 
-            if (key.script->isAboutToBeFinalized(cx) || !object->isMarked())
+            if (IsAboutToBeFinalized(cx, key.script) || !object->isMarked())
                 e.removeFront();
         }
     }
@@ -5531,13 +5514,13 @@ TypeCompartment::~TypeCompartment()
 /* static */ void
 TypeScript::Sweep(JSContext *cx, JSScript *script)
 {
-    JSCompartment *compartment = script->compartment;
+    JSCompartment *compartment = script->compartment();
     JS_ASSERT(compartment->types.inferenceEnabled);
 
     unsigned num = NumTypeSets(script);
     TypeSet *typeArray = script->types->typeArray();
 
-    if (script->isAboutToBeFinalized(cx)) {
+    if (IsAboutToBeFinalized(cx, script)) {
         /* Release all memory associated with the persistent type sets. */
         for (unsigned i = 0; i < num; i++)
             typeArray[i].clearObjects();
@@ -5617,7 +5600,7 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats)
     if (!script->types)
         return;
 
-    if (!script->compartment->types.inferenceEnabled) {
+    if (!script->compartment()->types.inferenceEnabled) {
         stats->scripts += sizeof(TypeScript);
         return;
     }
@@ -5653,12 +5636,8 @@ JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
     /* Pending arrays are cleared on GC along with the analysis pool. */
     stats->temporary += sizeof(TypeCompartment::PendingWork) * compartment->types.pendingCapacity;
 
-    for (JSCList *cursor = compartment->scripts.next;
-         cursor != &compartment->scripts;
-         cursor = cursor->next) {
-        JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        GetScriptMemoryStats(script, stats);
-    }
+    for (gc::CellIter i(cx, compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next())
+        GetScriptMemoryStats(i.get<JSScript>(), stats);
 
     if (compartment->types.allocationSiteTable)
         stats->tables += compartment->types.allocationSiteTable->allocatedSize();

@@ -92,6 +92,7 @@ static const char* const sEventNames[] = {
   "MozAfterPaint",
   "MozBeforePaint",
   "MozBeforeResize",
+  "mozfullscreenchange",
   "MozSwipeGesture",
   "MozMagnifyGestureStart",
   "MozMagnifyGestureUpdate",
@@ -1366,6 +1367,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_devicemotion];
   case NS_DEVICE_ORIENTATION:
     return sEventNames[eDOMEvents_deviceorientation];
+  case NS_FULLSCREENCHANGE:
+    return sEventNames[eDOMEvents_mozfullscreenchange];
   default:
     break;
   }

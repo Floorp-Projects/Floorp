@@ -210,7 +210,7 @@ class CompartmentChecker
 
     void check(JSScript *script) {
         if (script) {
-            check(script->compartment);
+            check(script->compartment());
             if (script->u.object)
                 check(script->u.object);
         }
@@ -334,12 +334,10 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, const CallArgs &args)
      *
      * (new Object(Object)) returns the callee.
      */
-    extern JSBool proxy_Construct(JSContext *, uintN, Value *);
-    extern JSBool callable_Construct(JSContext *, uintN, Value *);
-    JS_ASSERT_IF(native != proxy_Construct &&
-                 native != callable_Construct &&
+    JS_ASSERT_IF(native != FunctionProxyClass.construct &&
+                 native != CallableObjectClass.construct &&
                  native != js::CallOrConstructBoundFunction &&
-                 (!callee.isFunction() || callee.getFunctionPrivate()->u.n.clasp != &js_ObjectClass),
+                 (!callee.isFunction() || callee.getFunctionPrivate()->u.n.clasp != &ObjectClass),
                  !args.rval().isPrimitive() && callee != args.rval().toObject());
 
     return true;

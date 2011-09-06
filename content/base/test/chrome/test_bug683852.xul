@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=683852
+-->
+<window title="Mozilla Bug 683852"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <button value="testbutton" id="testbutton"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=683852"
+     target="_blank" id="link">Mozilla Bug 683852</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 683852 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function startTest() {
+    is(document.contains(document), false, "Document should not contain itself!");
+
+    var tb = document.getElementById("testbutton");
+    is(document.contains(tb), true, "Document should contain element in it!");
+    var anon = document.getAnonymousElementByAttribute(tb, "anonid", "button-box");
+    is(document.contains(anon), false, "Document should not contain anonymous element in it!");
+    is(tb.contains(anon), false, "Element should not contain anonymous element in it!");
+    is(document.documentElement.contains(tb), true, "Element should contain element in it!");
+    is(document.contains(document.createElement("foo")), false, "Document shouldn't contain element which is't in the document");
+    is(document.contains(document.createTextNode("foo")), false, "Document shouldn't contain text node which is't in the document");
+
+    var link = document.getElementById("link");
+    is(document.contains(link.firstChild), true,
+       "Document should contain a text node in it.");
+    is(link.contains(link.firstChild), true,
+       "Element should contain a text node in it.");
+    is(link.firstChild.contains(link), false, "text node shouldn't contain its parent.");
+
+    is(document.contains(null), false, "Document shouldn't contain null.");
+
+    var pi = document.createProcessingInstruction("adf", "asd");
+    is(pi.contains(document), false, "Processing instruction shouldn't contain document");
+    document.documentElement.appendChild(pi);
+    document.contains(pi, true, "Document should contain processing instruction");
+
+    var df = document.createRange().createContextualFragment("<div>foo</div>");
+    is(df.contains(df.firstChild), true, "Document fragment should contain its child");
+    is(df.contains(df.firstChild.firstChild), true,
+       "Document fragment should contain its descendant");
+    is(df.contains(df), false, "Document fragment shouldn't contain itself.");
+
+    var d = document.implementation.createHTMLDocument("");
+    is(document.contains(d), false,
+       "Document shouldn't contain another document.");
+    is(document.contains(d.createElement("div")), false,
+       "Document shouldn't contain an element from another document.");
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(startTest);
+  ]]>
+  </script>
+</window>

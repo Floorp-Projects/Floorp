@@ -46,14 +46,6 @@
 
 #include "jsobj.h"
 
-extern js::Class js_ErrorClass;
-
-inline bool
-JSObject::isError() const
-{
-    return clasp == &js_ErrorClass;
-}
-
 /*
  * Initialize the exception constructor/prototype hierarchy.
  */

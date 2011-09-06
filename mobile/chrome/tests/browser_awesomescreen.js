@@ -29,7 +29,7 @@ function runNextTest() {
   }
   else {
     // Close the awesome panel just in case
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
     finish();
   }
 }
@@ -55,7 +55,7 @@ gTests.push({
   },
 
   onPopupShown: function() {
-    is(BrowserUI.activePanel, AllPagesList, "AllPagesList should be visible");
+    is(AwesomeScreen.activePanel, AllPagesList, "AllPagesList should be visible");
     ok(!BrowserUI._edit.collapsed, "The urlbar edit element is visible");
     ok(BrowserUI._title.collapsed, "The urlbar title element is not visible");
 
@@ -64,7 +64,7 @@ gTests.push({
   },
 
   onPopupHidden: function() {
-    is(BrowserUI.activePanel, null, "AllPagesList should be dismissed");
+    is(AwesomeScreen.activePanel, null, "AllPagesList should be dismissed");
     ok(BrowserUI._edit.collapsed, "The urlbar edit element is not visible");
     ok(!BrowserUI._title.collapsed, "The urlbar title element is visible");
 
@@ -84,7 +84,7 @@ gTests.push({
   },
 
   onPopupReady: function() {
-    is(BrowserUI.activePanel == AllPagesList, true, "AllPagesList should be visible");
+    is(AwesomeScreen.activePanel == AllPagesList, true, "AllPagesList should be visible");
 
     let awesomeHeader = document.getElementById("awesome-header");
     is(awesomeHeader.hidden, false, "Awesome header should be visible");
@@ -133,7 +133,7 @@ gTests.push({
   onSearchBegin: function() {
     let awesomeHeader = document.getElementById("awesome-header");
     is(awesomeHeader.hidden, true, "Awesome header should be hidden");
-    is(BrowserUI.activePanel == AllPagesList, true, "AllPagesList should be opened on a keydown");
+    is(AwesomeScreen.activePanel == AllPagesList, true, "AllPagesList should be opened on a keydown");
     is(BrowserUI._edit.readOnly, false, "urlbar should not be readonly after an input");
 
     waitForNavigationPanel(gCurrentTest.onPopupHidden, true);
@@ -141,7 +141,7 @@ gTests.push({
   },
 
   onPopupHidden: function() {
-    is(BrowserUI.activePanel == null, true, "VK_ESCAPE should have dismissed the awesome panel");
+    is(AwesomeScreen.activePanel == null, true, "VK_ESCAPE should have dismissed the awesome panel");
     runNextTest();
   }
 });
@@ -171,7 +171,7 @@ gTests.push({
     let firstPanel = true;
     Panels.forEach(function(aPanel) {
       aPanel.doCommand();
-      is(BrowserUI.activePanel, aPanel, "The panel " + aPanel.panel.id + " should be selected");
+      is(AwesomeScreen.activePanel, aPanel, "The panel " + aPanel.panel.id + " should be selected");
       if (firstPanel) {
         // First panel will have selected text, if we are in portrait
         is(edit.readOnly, BrowserUI._isKeyboardFullscreen(), "urlbar input textbox is readonly if keyboard is fullscreen, editable otherwise");
@@ -186,7 +186,7 @@ gTests.push({
     });
 
     setTimeout(function() {
-      BrowserUI.activePanel = null;
+      AwesomeScreen.activePanel = null;
       runNextTest();
     }, 0);
   }
@@ -281,7 +281,7 @@ gTests.push({
 
     edit.clickSelectsAll = oldClickSelectsAll;
 
-    BrowserUI.activePanel = null;
+    AwesomeScreen.activePanel = null;
 
     // Ensure the tab is well closed before doing the rest of the code, otherwise
     // this cause some bugs with the composition events
@@ -347,7 +347,7 @@ gTests.push({
         self.onPopupReady();
       }, 500);
     } else {
-      BrowserUI.activePanel = null;
+      AwesomeScreen.activePanel = null;
       runNextTest();
     }
   }

@@ -41,10 +41,6 @@
 
 #include "txCore.h"
 
-#ifdef TX_EXE
-#include <iostream.h>
-#endif
-
 class txXPathNode;
 
 /**
@@ -60,12 +56,4 @@ extern "C" nsresult
 txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
                        nsAString& aErrMsg, txXPathNode** aResult);
 
-#ifdef TX_EXE
-/**
- * Parse a document from the given stream
- */
-extern "C" nsresult
-txParseFromStream(istream& aInputStream, const nsAString& aUri,
-                  nsAString& aErrorString, txXPathNode** aResult);
-#endif
 #endif

@@ -597,9 +597,9 @@ class GeckoSurfaceView
 
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
-                return onKeyDown(keyCode, event);
+                return processKeyDown(keyCode, event, true);
             case KeyEvent.ACTION_UP:
-                return onKeyUp(keyCode, event);
+                return processKeyUp(keyCode, event, true);
             case KeyEvent.ACTION_MULTIPLE:
                 return onKeyMultiple(keyCode, event.getRepeatCount(), event);
         }
@@ -608,6 +608,10 @@ class GeckoSurfaceView
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return processKeyDown(keyCode, event, false);
+    }
+
+    private boolean processKeyDown(int keyCode, KeyEvent event, boolean isPreIme) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 if (event.getRepeatCount() == 0) {
@@ -644,6 +648,11 @@ class GeckoSurfaceView
             default:
                 break;
         }
+
+        if (isPreIme && mIMEState != IME_STATE_DISABLED)
+            // Let active IME process pre-IME key events
+            return false;
+
         // KeyListener returns true if it handled the event for us.
         if (mIMEState == IME_STATE_DISABLED ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
@@ -656,6 +665,10 @@ class GeckoSurfaceView
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        return processKeyUp(keyCode, event, false);
+    }
+
+    private boolean processKeyUp(int keyCode, KeyEvent event, boolean isPreIme) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 if (!event.isTracking() || event.isCanceled())
@@ -664,6 +677,11 @@ class GeckoSurfaceView
             default:
                 break;
         }
+
+        if (isPreIme && mIMEState != IME_STATE_DISABLED)
+            // Let active IME process pre-IME key events
+            return false;
+
         if (mIMEState == IME_STATE_DISABLED ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_DEL ||

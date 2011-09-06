@@ -2,6 +2,7 @@
 
 == wrapper.html?invalid-signature.bmp about:blank
 == wrapper.html?invalid-bpp.bmp about:blank
+== wrapper.html?os2-invalid-bpp.bmp about:blank
 # Tests for an unsupported compression value
 == wrapper.html?invalid-compression.bmp about:blank
 # Tests for RLE4 with an invalid BPP

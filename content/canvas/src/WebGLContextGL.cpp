@@ -62,7 +62,6 @@
 #endif
 
 #include "WebGLTexelConversions.h"
-#include "WebGLValidateStrings.h"
 
 using namespace mozilla;
 
@@ -183,8 +182,8 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
     if (!GetGLName<WebGLProgram>("bindAttribLocation: program", pobj, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
-        return NS_OK;
+    if (name.IsEmpty())
+        return ErrorInvalidValue("BindAttribLocation: name can't be null or empty");
 
     if (!ValidateAttribIndex(location, "bindAttribLocation"))
         return NS_OK;
@@ -201,8 +200,13 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
 {
     WebGLuint bufname;
     WebGLBuffer* buf;
-    PRBool isNull;
-    if (!GetConcreteObjectAndGLName("bindBuffer", bobj, &buf, &bufname, &isNull))
+    PRBool isNull; // allow null objects
+    PRBool isDeleted; // allow deleted objects
+    if (!GetConcreteObjectAndGLName("bindBuffer", bobj, &buf, &bufname, &isNull, &isDeleted))
+        return NS_OK;
+
+    // silently ignore a deleted buffer
+    if (isDeleted)
         return NS_OK;
 
     if (target != LOCAL_GL_ARRAY_BUFFER &&
@@ -237,13 +241,18 @@ NS_IMETHODIMP
 WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
 {
     WebGLuint framebuffername;
-    PRBool isNull;
+    PRBool isNull; // allow null objects
+    PRBool isDeleted; // allow deleted objects
     WebGLFramebuffer *wfb;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("BindFramebuffer: target must be GL_FRAMEBUFFER");
 
-    if (!GetConcreteObjectAndGLName("bindFramebuffer", fbobj, &wfb, &framebuffername, &isNull))
+    if (!GetConcreteObjectAndGLName("bindFramebuffer", fbobj, &wfb, &framebuffername, &isNull, &isDeleted))
+        return NS_OK;
+
+    // silently ignore a deleted frame buffer
+    if (isDeleted)
         return NS_OK;
 
     MakeContextCurrent();
@@ -264,13 +273,18 @@ NS_IMETHODIMP
 WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
 {
     WebGLuint renderbuffername;
-    PRBool isNull;
+    PRBool isNull; // allow null objects
+    PRBool isDeleted; // allow deleted objects
     WebGLRenderbuffer *wrb;
 
     if (target != LOCAL_GL_RENDERBUFFER)
         return ErrorInvalidEnumInfo("bindRenderbuffer: target", target);
 
-    if (!GetConcreteObjectAndGLName("bindRenderBuffer", rbobj, &wrb, &renderbuffername, &isNull))
+    if (!GetConcreteObjectAndGLName("bindRenderBuffer", rbobj, &wrb, &renderbuffername, &isNull, &isDeleted))
+        return NS_OK;
+
+    // silently ignore a deleted buffer
+    if (isDeleted)
         return NS_OK;
 
     if (!isNull)
@@ -290,8 +304,13 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
 {
     WebGLuint texturename;
     WebGLTexture *tex;
-    PRBool isNull; // allow null object
-    if (!GetConcreteObjectAndGLName("bindTexture", tobj, &tex, &texturename, &isNull))
+    PRBool isNull; // allow null objects
+    PRBool isDeleted; // allow deleted objects
+    if (!GetConcreteObjectAndGLName("bindTexture", tobj, &tex, &texturename, &isNull, &isDeleted))
+        return NS_OK;
+
+    // silently ignore a deleted texture
+    if (isDeleted)
         return NS_OK;
 
     if (target == LOCAL_GL_TEXTURE_2D) {
@@ -746,16 +765,8 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
         if (!ValidateTexFormatAndType(internalformat, LOCAL_GL_UNSIGNED_BYTE, -1, &texelSize, info))
             return NS_OK;
 
-        CheckedUint32 checked_plainRowSize = CheckedUint32(width) * texelSize;
-
-        PRUint32 unpackAlignment = mPixelStoreUnpackAlignment;
-
-        // alignedRowSize = row size rounded up to next multiple of packAlignment
-        CheckedUint32 checked_alignedRowSize
-            = ((checked_plainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
-
-        CheckedUint32 checked_neededByteLength
-            = (height-1) * checked_alignedRowSize + checked_plainRowSize;
+        CheckedUint32 checked_neededByteLength = 
+            GetImageSize(height, width, texelSize, mPixelStoreUnpackAlignment);
 
         if (!checked_neededByteLength.valid())
             return ErrorInvalidOperation("%s: integer overflow computing the needed buffer size", info);
@@ -1063,6 +1074,9 @@ WebGLContext::DeleteFramebuffer(nsIWebGLFramebuffer *fbobj)
     fbuf->Delete();
     mMapFramebuffers.Remove(fbufname);
 
+    if (mBoundFramebuffer && mBoundFramebuffer->GLName() == fbufname)
+        mBoundFramebuffer = NULL;
+
     return NS_OK;
 }
 
@@ -1093,9 +1107,11 @@ WebGLContext::DeleteRenderbuffer(nsIWebGLRenderbuffer *rbobj)
     */
 
     gl->fDeleteRenderbuffers(1, &rbufname);
-
     rbuf->Delete();
     mMapRenderbuffers.Remove(rbufname);
+
+    if (mBoundRenderbuffer && mBoundRenderbuffer->GLName() == rbufname)
+        mBoundRenderbuffer = NULL;
 
     return NS_OK;
 }
@@ -1840,7 +1856,7 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
     if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLVariableName(name, "getAttribLocation"))
+    if (!ValidateGLSLIdentifier(name, "getAttribLocation"))
         return NS_OK; 
 
     MakeContextCurrent();
@@ -2197,10 +2213,6 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
                 wrval->SetAsInt32(LOCAL_GL_NONE);
                 break;
 
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-                wrval->SetAsEmpty();
-                break;
-
             default:
                 return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
         }
@@ -2340,14 +2352,8 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
         {
             GLint i = 0;
 #ifdef XP_MACOSX
-            if (pname == LOCAL_GL_VALIDATE_STATUS &&
-                gl->Vendor() == gl::GLContext::VendorNVIDIA)
-            {
-                // See comment in ValidateProgram below.
-                i = 1;
-            } else {
-                gl->fGetProgramiv(progname, pname, &i);
-            }
+            // See comment in ValidateProgram below.
+            i = 1;
 #else
             gl->fGetProgramiv(progname, pname, &i);
 #endif
@@ -2665,7 +2671,7 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
     if (!GetConcreteObjectAndGLName("getUniformLocation: program", pobj, &prog, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLVariableName(name, "getUniformLocation"))
+    if (!ValidateGLSLIdentifier(name, "getUniformLocation"))
         return NS_OK; 
 
     MakeContextCurrent();
@@ -3000,16 +3006,13 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (badType)
         return ErrorInvalidEnumInfo("ReadPixels: type", type);
 
+    CheckedUint32 checked_neededByteLength =
+        GetImageSize(height, width, size, mPixelStorePackAlignment);
+
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
 
-    PRUint32 packAlignment = mPixelStorePackAlignment;
-
-    // alignedRowSize = row size rounded up to next multiple of packAlignment
-    CheckedUint32 checked_alignedRowSize
-        = ((checked_plainRowSize + packAlignment-1) / packAlignment) * packAlignment;
-
-    CheckedUint32 checked_neededByteLength
-        = (height-1) * checked_alignedRowSize + checked_plainRowSize;
+    CheckedUint32 checked_alignedRowSize = 
+        RoundedToNextMultipleOf(checked_plainRowSize, mPixelStorePackAlignment);
 
     if (!checked_neededByteLength.valid())
         return ErrorInvalidOperation("ReadPixels: integer overflow computing the needed buffer size");
@@ -3070,8 +3073,9 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
         // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
         PRUint32 subrect_plainRowSize = subrect_width * size;
-        PRUint32 subrect_alignedRowSize = (subrect_plainRowSize + packAlignment-1) &
-            ~PRUint32(packAlignment-1);
+	// There are checks above to ensure that this doesn't overflow.
+        PRUint32 subrect_alignedRowSize = 
+            RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
         PRUint32 subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
 
         // create subrect buffer, call glReadPixels, copy pixels into destination buffer, delete subrect buffer
@@ -4133,10 +4137,7 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("shaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
-
-    if (!ValidateGLSLString(source, "shaderSource"))
-        return NS_OK;
-
+    
     const nsPromiseFlatString& flatSource = PromiseFlatString(source);
 
     if (!NS_IsAscii(flatSource.get()))
@@ -4290,7 +4291,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
             return ErrorInvalidEnumInfo("texImage2D: target", target);
     }
 
-    switch (internalformat) {
+    switch (format) {
         case LOCAL_GL_RGB:
         case LOCAL_GL_RGBA:
         case LOCAL_GL_ALPHA:
@@ -4331,16 +4332,13 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     if (!ValidateTexFormatAndType(format, type, jsArrayType, &texelSize, "texImage2D"))
         return NS_OK;
 
+    CheckedUint32 checked_neededByteLength = 
+        GetImageSize(height, width, texelSize, mPixelStoreUnpackAlignment); 
+
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * texelSize;
 
-    PRUint32 unpackAlignment = mPixelStoreUnpackAlignment;
-
-    // alignedRowSize = row size rounded up to next multiple of packAlignment
-    CheckedUint32 checked_alignedRowSize
-        = ((checked_plainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
-
-    CheckedUint32 checked_neededByteLength
-        = (height-1) * checked_alignedRowSize + checked_plainRowSize;
+    CheckedUint32 checked_alignedRowSize =
+        RoundedToNextMultipleOf(checked_plainRowSize.value(), mPixelStoreUnpackAlignment);
 
     if (!checked_neededByteLength.valid())
         return ErrorInvalidOperation("texImage2D: integer overflow computing the needed buffer size");
@@ -4531,16 +4529,13 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     if (width == 0 || height == 0)
         return NS_OK; // ES 2.0 says it has no effect, we better return right now
 
+    CheckedUint32 checked_neededByteLength = 
+        GetImageSize(height, width, texelSize, mPixelStoreUnpackAlignment);
+
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * texelSize;
 
-    PRUint32 unpackAlignment = mPixelStoreUnpackAlignment;
-
-    // alignedRowSize = row size rounded up to next multiple of packAlignment
-    CheckedUint32 checked_alignedRowSize
-        = ((checked_plainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
-
-    CheckedUint32 checked_neededByteLength
-        = (height-1) * checked_alignedRowSize + checked_plainRowSize;
+    CheckedUint32 checked_alignedRowSize = 
+        RoundedToNextMultipleOf(checked_plainRowSize.value(), mPixelStoreUnpackAlignment);
 
     if (!checked_neededByteLength.valid())
         return ErrorInvalidOperation("texSubImage2D: integer overflow computing the needed buffer size");
@@ -4571,7 +4566,8 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
     size_t dstPlainRowSize = texelSize * width;
-    size_t dstStride = ((dstPlainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
+    // There are checks above to ensure that this won't overflow.
+    size_t dstStride = RoundedToNextMultipleOf(dstPlainRowSize, mPixelStoreUnpackAlignment).value();
 
     if (actualSrcFormat == dstFormat &&
         srcPremultiplied == mPixelStorePremultiplyAlpha &&

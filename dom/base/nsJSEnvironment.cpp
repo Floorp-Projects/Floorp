@@ -1844,7 +1844,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     JSObject *obj = static_cast<JSObject *>(aHandler);
     if (obj->isFunctionProxy())
       obj = obj->unwrap(NULL);
-    JSString *id = JS_GetFunctionId(GET_FUNCTION_PRIVATE(mContext, obj));
+    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
@@ -2259,14 +2259,8 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
   mGlobalObjectRef = aGlobalObject;
 
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
-  PRUint32 flags = 0;
 
   if (chromeWindow) {
-    // Flag this window's global object and objects under it as "system",
-    // for optional automated XPCNativeWrapper construction when chrome JS
-    // views a content DOM.
-    flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
-
     // Always enable E4X for XUL and other chrome content -- there is no
     // need to preserve the <!-- script hiding hack from JS-in-HTML daze
     // (introduced in 1995 for graceful script degradation in Netscape 1,

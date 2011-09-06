@@ -1216,32 +1216,7 @@ TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
         setFlags(cx, flags);
 }
 
-class AutoTypeRooter : private AutoGCRooter {
-  public:
-    AutoTypeRooter(JSContext *cx, TypeObject *type
-                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, TYPE), type(type)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
-
-  private:
-    TypeObject *type;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 } } /* namespace js::types */
-
-inline bool
-JSScript::isAboutToBeFinalized(JSContext *cx)
-{
-    return isCachedEval ||
-        (u.object && IsAboutToBeFinalized(cx, u.object)) ||
-        (hasFunction && IsAboutToBeFinalized(cx, function()));
-}
 
 inline bool
 JSScript::ensureHasTypes(JSContext *cx)

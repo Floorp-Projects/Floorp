@@ -508,7 +508,7 @@ mjit::Compiler::compileArrayWithArgs(uint32 argc)
     stubcc.linkExit(emptyFreeList, Uses(0));
 
     for (unsigned i = 0; i < argc; i++) {
-        FrameEntry *arg = frame.peek(-argc + i);
+        FrameEntry *arg = frame.peek(-(int)argc + i);
         frame.storeTo(arg, Address(result, JSObject::getFixedSlotOffset(i)), /* popped = */ true);
     }
 
