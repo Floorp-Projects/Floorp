@@ -217,24 +217,35 @@ class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
     MBasicBlock *ifFalse() const {
         return ifFalse_;
     }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestDAndBranch : public LInstructionHelper<0, 1, 1>
 {
-    MBasicBlock *ifTrue;
-    MBasicBlock *ifFalse;
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(TestDAndBranch);
 
-    LTestDAndBranch(const LAllocation &in, const LDefinition &temp,
-                    MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : ifTrue(ifTrue),
-        ifFalse(ifFalse)
+    LTestDAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : ifTrue_(ifTrue),
+        ifFalse_(ifFalse)
     {
         setOperand(0, in);
-        setTemp(0, temp);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
+    }
+    const LAllocation *input() {
+        return getOperand(0);
     }
 };
 
@@ -266,54 +277,69 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
 
 class LCompareI : public LInstructionHelper<1, 2, 0>
 {
-    Assembler::Condition cond_;
+    JSOp jsop_;
 
   public:
     LIR_HEADER(CompareI);
-    LCompareI(Assembler::Condition cond,
-              const LAllocation &left, const LAllocation &right)
-      : cond_(cond)
+    LCompareI(JSOp jsop, const LAllocation &left, const LAllocation &right)
+      : jsop_(jsop)
     {
         setOperand(0, left);
         setOperand(1, right);
     }
 
-    Assembler::Condition condition() {
-        return cond_;
+    JSOp jsop() const {
+        return jsop_;
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
 };
 
 class LCompareD : public LInstructionHelper<1, 2, 0>
 {
-    Assembler::Condition cond_;
+    JSOp jsop_;
 
   public:
     LIR_HEADER(CompareD);
-    LCompareD(Assembler::Condition cond,
-              const LAllocation &left, const LAllocation &right)
-      : cond_(cond)
+    LCompareD(JSOp jsop, const LAllocation &left, const LAllocation &right)
+      : jsop_(jsop)
     {
         setOperand(0, left);
         setOperand(1, right);
     }
 
-    Assembler::Condition condition() {
-        return cond_;
+    JSOp jsop() const {
+        return jsop_;
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
 };
 
 class LCompareIAndBranch : public LInstructionHelper<0, 2, 0>
 {
-    Assembler::Condition cond_;
+    JSOp jsop_;
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(CompareIAndBranch);
-    LCompareIAndBranch(Assembler::Condition cond,
-                       const LAllocation &left, const LAllocation &right,
+    LCompareIAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : cond_(cond),
+      : jsop_(jsop),
         ifTrue_(ifTrue),
         ifFalse_(ifFalse)
     {
@@ -321,30 +347,34 @@ class LCompareIAndBranch : public LInstructionHelper<0, 2, 0>
         setOperand(1, right);
     }
 
-    Assembler::Condition condition() {
-        return cond_;
+    JSOp jsop() const {
+        return jsop_;
     }
-
     MBasicBlock *ifTrue() const {
         return ifTrue_;
     }
     MBasicBlock *ifFalse() const {
         return ifFalse_;
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
     }
 };
 
 class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
 {
-    Assembler::Condition cond_;
+    JSOp jsop_;
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(CompareDAndBranch);
-    LCompareDAndBranch(Assembler::Condition cond,
-                       const LAllocation &left, const LAllocation &right,
+    LCompareDAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : cond_(cond),
+      : jsop_(jsop),
         ifTrue_(ifTrue),
         ifFalse_(ifFalse)
     {
@@ -352,15 +382,20 @@ class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
         setOperand(1, right);
     }
 
-    Assembler::Condition condition() {
-        return cond_;
+    JSOp jsop() const {
+        return jsop_;
     }
-
     MBasicBlock *ifTrue() const {
         return ifTrue_;
     }
     MBasicBlock *ifFalse() const {
         return ifFalse_;
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
     }
 };
 
