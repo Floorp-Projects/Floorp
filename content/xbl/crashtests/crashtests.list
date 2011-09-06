@@ -31,7 +31,7 @@ load 464863-1.xhtml
 load 472260-1.xhtml
 load 477878-1.html
 load 492978-1.xul
-load 493123-1.xhtml
+asserts-if(Android,2) load 493123-1.xhtml
 load 495354-1.xhtml
 load 507628-1.xhtml
 load 507991-1.xhtml

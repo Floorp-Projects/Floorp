@@ -71,7 +71,7 @@ load 372376-1.xhtml
 load 373859-1.html
 load 373868-1.xhtml
 load 379217-1.xhtml
-asserts(2) load 379217-2.xhtml # Bug 439204
+asserts(1-2) load 379217-2.xhtml # Bug 439204
 load 379917-1.xhtml
 load 380012-1.html
 load 381152-1.html
@@ -124,7 +124,7 @@ load 393956-4.html
 load 394237-1.html
 load 394820-1.html
 load 394818-1.html
-load 394818-2.html
+asserts-if(Android,1) load 394818-2.html
 load 395316-1.html
 load 395450-1.xhtml
 load 397007-1.html
@@ -183,8 +183,8 @@ load 413085-2.html
 load 413582-1.xhtml
 load 413582-2.html
 load 413712-1.xhtml
-load 414061-1.html
-asserts(6) load 414180-1.xul # Bug 439258
+asserts-if(Android,6) load 414061-1.html
+asserts-if(!Android,6) load 414180-1.xul # Bug 439258
 load 414719-1.html
 load 415685-1.html
 load 416264-1.html
@@ -280,7 +280,7 @@ load 477928.html
 load 478131-1.html
 load 478170-1.html
 load 478185-1.html
-asserts(1) load 479938-1.html # Bug 575011
+asserts-if(!Android,1) load 479938-1.html # Bug 575011
 load 480345-1.html
 skip-if(Android) load 481921.html
 load 489462-1.html
@@ -368,7 +368,7 @@ load text-overflow-bug666751-2.html
 asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 436470
 load text-overflow-bug671796.xhtml
 load 667025.html
-asserts(14) load 673770.html # bug 569193 and bug 459597
+asserts(14) asserts-if(Android,8) load 673770.html # bug 569193 and bug 459597
 load 679933-1.html
 load 682649-1.html
 load 683702-1.xhtml
