@@ -650,6 +650,14 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
   return mSpellChecker->SetCurrentDictionary(aDictionary);
 }
 
+NS_IMETHODIMP
+nsEditorSpellCheck::GetSpellChecker(nsISpellChecker **aSpellChecker)
+{
+  *aSpellChecker = mSpellChecker;
+  NS_IF_ADDREF(*aSpellChecker);
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsEditorSpellCheck::UninitSpellChecker()
 {
@@ -818,11 +826,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
     if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
       rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
       if (NS_FAILED(rv)) {
-        nsTArray<nsString> dictList;
-        rv = mSpellChecker->GetDictionaryList(&dictList);
-        if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
-          SetCurrentDictionary(dictList[0]);
-        }
+        mSpellChecker->CheckCurrentDictionary();
       }
     }
   }

@@ -66,6 +66,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsIViewManager.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIObserver.h"
 
 class nsIDOMCharacterData;
 class nsIDOMRange;
@@ -100,6 +101,7 @@ class nsIDOMNSEvent;
 class nsEditor : public nsIEditor,
                  public nsIEditorIMESupport,
                  public nsSupportsWeakReference,
+                 public nsIObserver,
                  public nsIPhonetic
 {
 public:
@@ -153,6 +155,9 @@ public:
   /* ------------ nsIEditorIMESupport methods -------------- */
   NS_DECL_NSIEDITORIMESUPPORT
   
+  /* ------------ nsIObserver methods -------------- */
+  NS_DECL_NSIOBSERVER
+
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
 

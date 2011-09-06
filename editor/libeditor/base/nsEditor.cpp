@@ -24,6 +24,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Mats Palmgren <matspal@gmail.com>
+ *   Jesper Kristensen <mail@jesperkristensen.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,6 +49,11 @@
 #include "nsFocusManager.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+#include "mozISpellCheckingEngine.h"
+#include "nsIEditorSpellCheck.h"
+#include "mozInlineSpellChecker.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
@@ -207,6 +213,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEditor)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
  NS_INTERFACE_MAP_ENTRY(nsIEditorIMESupport)
  NS_INTERFACE_MAP_ENTRY(nsIEditor)
+ NS_INTERFACE_MAP_ENTRY(nsIObserver)
  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditor)
 NS_INTERFACE_MAP_END
 
@@ -300,6 +307,13 @@ nsEditor::PostCreate()
     // update the UI with our state
     NotifyDocumentListeners(eDocumentCreated);
     NotifyDocumentListeners(eDocumentStateChanged);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->AddObserver(this,
+                       SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION,
+                       PR_FALSE);
+    }
   }
 
   // update nsTextStateManager and caret if we have focus
@@ -411,6 +425,12 @@ nsEditor::PreDestroy(PRBool aDestroyingFrames)
 {
   if (mDidPreDestroy)
     return NS_OK;
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this,
+                        SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION);
+  }
 
   // Let spellchecker clean up its observers etc. It is important not to
   // actually free the spellchecker here, since the spellchecker could have
@@ -1283,6 +1303,13 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
     return autoCreate ? NS_ERROR_NOT_AVAILABLE : NS_OK;
   }
 
+  // We don't want to show the spell checking UI if there are no spell check dictionaries available.
+  PRBool canSpell = mozInlineSpellChecker::CanEnableInlineSpellChecking();
+  if (!canSpell) {
+    *aInlineSpellChecker = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
   if (!mInlineSpellChecker && autoCreate) {
     mInlineSpellChecker = do_CreateInstance(MOZ_INLINESPELLCHECKER_CONTRACTID, &rv);
@@ -1301,17 +1328,49 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsEditor::Observe(nsISupports* aSubj, const char *aTopic,
+                                const PRUnichar *aData)
+{
+  NS_ASSERTION(!strcmp(aTopic,
+                       SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION),
+               "Unexpected observer topic");
+
+  // When mozInlineSpellChecker::CanEnableInlineSpellChecking changes
+  SyncRealTimeSpell();
+
+  // When nsIEditorSpellCheck::GetCurrentDictionary changes
+  if (mInlineSpellChecker) {
+    // if the current dictionary is no longer available, find another one
+    nsCOMPtr<nsIEditorSpellCheck> editorSpellCheck;
+    mInlineSpellChecker->GetSpellChecker(getter_AddRefs(editorSpellCheck));
+    if (editorSpellCheck) {
+      nsCOMPtr<nsISpellChecker> spellChecker;
+      editorSpellCheck->GetSpellChecker(getter_AddRefs(spellChecker));
+      spellChecker->CheckCurrentDictionary();
+    }
+
+    // update the inline spell checker to reflect the new current dictionary
+    mInlineSpellChecker->SpellCheckRange(nsnull); // causes recheck
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsEditor::SyncRealTimeSpell()
 {
   NS_TIME_FUNCTION;
 
   PRBool enable = GetDesiredSpellCheckState();
 
+  // Initializes mInlineSpellChecker
   nsCOMPtr<nsIInlineSpellChecker> spellChecker;
   GetInlineSpellChecker(enable, getter_AddRefs(spellChecker));
 
-  if (spellChecker) {
-    spellChecker->SetEnableRealTimeSpell(enable);
+  if (mInlineSpellChecker) {
+    // We might have a mInlineSpellChecker even if there are no dictionaries
+    // available since we don't destroy the mInlineSpellChecker when the last
+    // dictionariy is removed, but in that case spellChecker is null
+    mInlineSpellChecker->SetEnableRealTimeSpell(enable && spellChecker);
   }
 
   return NS_OK;

@@ -193,20 +193,37 @@ AddonAuthor.prototype = {
  *
  * @param  aURL
  *         The URL to the full version of the screenshot
+ * @param  aWidth
+ *         The width in pixels of the screenshot
+ * @param  aHeight
+ *         The height in pixels of the screenshot
  * @param  aThumbnailURL
  *         The URL to the thumbnail version of the screenshot
+ * @param  aThumbnailWidth
+ *         The width in pixels of the thumbnail version of the screenshot
+ * @param  aThumbnailHeight
+ *         The height in pixels of the thumbnail version of the screenshot
  * @param  aCaption
  *         The caption of the screenshot
  */
-function AddonScreenshot(aURL, aThumbnailURL, aCaption) {
+function AddonScreenshot(aURL, aWidth, aHeight, aThumbnailURL,
+                         aThumbnailWidth, aThumbnailHeight, aCaption) {
   this.url = aURL;
-  this.thumbnailURL = aThumbnailURL;
-  this.caption = aCaption;
+  if (aWidth) this.width = aWidth;
+  if (aHeight) this.height = aHeight;
+  if (aThumbnailURL) this.thumbnailURL = aThumbnailURL;
+  if (aThumbnailWidth) this.thumbnailWidth = aThumbnailWidth;
+  if (aThumbnailHeight) this.thumbnailHeight = aThumbnailHeight;
+  if (aCaption) this.caption = aCaption;
 }
 
 AddonScreenshot.prototype = {
   url: null,
+  width: null,
+  height: null,
   thumbnailURL: null,
+  thumbnailWidth: null,
+  thumbnailHeight: null,
   caption: null,
 
   // Returns the screenshot URL, defaulting to the empty string
