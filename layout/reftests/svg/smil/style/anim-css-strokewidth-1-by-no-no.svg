@@ -3,7 +3,7 @@
      class="reftest-wait"
      onload="go()">
   <style>
-    rect { stroke: blue; stroke-width: 10; }
+    rect { stroke: blue; stroke-width: 10; shape-rendering: crispEdges; }
   </style>
   <script xlink:href="../smil-grid.js" type="text/javascript"/>
   <script xlink:href="../smil-util.js" type="text/javascript"/>
