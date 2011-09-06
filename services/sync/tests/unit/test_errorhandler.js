@@ -767,7 +767,7 @@ add_test(function test_sync_engine_generic_fail() {
   let engine = Engines.get("catapult");
   engine.enabled = true;
   engine.sync = function sync() {
-    Svc.Obs.notify("weave:engine:sync:error", "", "steam");
+    Svc.Obs.notify("weave:engine:sync:error", "", "catapult");
   };
 
   let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
@@ -775,6 +775,12 @@ add_test(function test_sync_engine_generic_fail() {
 
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
     Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+
+    // Put these checks here, not after sync(), so that we aren't racing the
+    // log handler... which resets everything just a few lines below!
+    _("Status.engines: " + JSON.stringify(Status.engines));
+    do_check_eq(Status.engines["catapult"], ENGINE_UNKNOWN_FAIL);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
     // Test Error log was written on SYNC_FAILED_PARTIAL.
     let entries = logsdir.directoryEntries;
@@ -789,14 +795,11 @@ add_test(function test_sync_engine_generic_fail() {
     server.stop(run_next_test);
   });
 
-  do_check_eq(Status.engines["steam"], undefined);
+  do_check_eq(Status.engines["catapult"], undefined);
 
   do_check_true(setUp());
 
   Service.sync();
-
-  do_check_eq(Status.engines["steam"], ENGINE_UNKNOWN_FAIL);
-  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 });
 
 // This test should be the last one since it monkeypatches the engine object
@@ -808,7 +811,7 @@ add_test(function test_engine_applyFailed() {
   engine.enabled = true;
   delete engine.exception;
   engine.sync = function sync() {
-    Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "steam");
+    Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "catapult");
   };
 
   let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
@@ -816,6 +819,9 @@ add_test(function test_engine_applyFailed() {
 
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
     Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+
+    do_check_eq(Status.engines["catapult"], ENGINE_APPLY_FAIL);
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
     // Test Error log was written on SYNC_FAILED_PARTIAL.
     let entries = logsdir.directoryEntries;
@@ -830,12 +836,9 @@ add_test(function test_engine_applyFailed() {
     server.stop(run_next_test);
   });
 
-  do_check_eq(Status.engines["steam"], undefined);
+  do_check_eq(Status.engines["catapult"], undefined);
 
   do_check_true(setUp());
 
   Service.sync();
-
-  do_check_eq(Status.engines["steam"], ENGINE_APPLY_FAIL);
-  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 });
