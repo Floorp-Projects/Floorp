@@ -84,6 +84,7 @@ _TEST_FILES = 	findbar_window.xul \
 		window_preferences.xul \
 		window_preferences2.xul \
 		window_preferences3.xul \
+		window_preferences_commandretarget.xul \
 		test_autocomplete2.xul \
 		test_autocomplete3.xul \
 		test_autocomplete4.xul \
