@@ -40,19 +40,10 @@
 
 interface nsIEditor;
 interface nsITextServicesFilter;
-%{C++
-#include "nsISpellChecker.h"
-%}
-[ptr] native nsISpellChecker(nsISpellChecker);
 
-[scriptable, uuid(334946c3-0e93-4aac-b662-e1b56f95d68b)]
+[scriptable, uuid(af84da62-588f-409f-847d-feecc991bd93)]
 interface nsIEditorSpellCheck : nsISupports
 {
-
-  /**
-   * Get the spell checker used by this editor.
-   */
-  [noscript] readonly attribute nsISpellChecker spellChecker;
 
  /**
    * Returns true if we can enable spellchecking. If there are no available
