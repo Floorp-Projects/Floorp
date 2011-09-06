@@ -184,8 +184,13 @@ function test_shortcuts()
   handlerApp.appendParameter("-test");
 
   sc.iconIndex = 1;
-
   do_check_eq(sc.iconIndex, 1);
+
+  var iconImageUri = Cc["@mozilla.org/network/simple-uri;1"]
+                    .createInstance(Ci.nsIURI);
+  iconImageUri.spec = "http://www.123.com/";
+  sc.iconImageUri = iconImageUri;
+  do_check_eq(sc.iconImageUri, iconImageUri);
 
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                   getService(Ci.nsIProperties).
