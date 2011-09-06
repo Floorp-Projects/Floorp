@@ -17,7 +17,7 @@ function test() {
 function checkTitle(title) {
 
   ctx.loadsDone++;
-  ok(/^bug592641_img\.jpg \(JPEG Image, 1500x1500 pixels\)/.test(title),
+  ok(/^bug592641_img\.jpg \(JPEG Image, 1500\u00A0\u00D7\u00A01500 pixels\)/.test(title),
      "Title should be correct on load #" + ctx.loadsDone);
 }
 
