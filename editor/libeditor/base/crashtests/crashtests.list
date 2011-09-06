@@ -6,5 +6,5 @@ load 407256-1.html
 load 430624-1.html
 load 459613.html
 load 475132-1.xhtml
-load 633709.xhtml
-asserts(6) load 636074-1.html # Bug 439258, charged to the wrong test due to bug 635550
+asserts-if(Android,6) load 633709.xhtml
+asserts-if(!Android,6) load 636074-1.html # Bug 439258, charged to the wrong test due to bug 635550
