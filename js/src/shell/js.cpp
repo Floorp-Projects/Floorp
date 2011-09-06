@@ -4086,7 +4086,7 @@ MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     size_t n = 0;
-    IterateCells(cx, NULL, gc::FINALIZE_TYPE_OBJECT, &n, SumJitDataSizeCallback);
+    IterateCells(cx, NULL, gc::FINALIZE_SCRIPT, &n, SumJitDataSizeCallback);
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
