@@ -61,8 +61,7 @@ enum MIRType
     MIRType_Object,
     MIRType_Value,
     MIRType_Any,        // Any type.
-    MIRType_None,       // Invalid, used as a placeholder.
-    MIRType_Slots       // A slots vector
+    MIRType_None        // Invalid, used as a placeholder.
 };
 
 class TypeOracle

@@ -380,9 +380,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DECLOCAL:
         return jsop_localinc(op);
 
-      case JSOP_GETGLOBAL:
-        return jsop_getglobal(op);
-
       case JSOP_LT:
       case JSOP_LE:
       case JSOP_GT:
@@ -1749,16 +1746,5 @@ IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
         return false;
     ins->setResumePoint(resumePoint);
     return true;
-}
-
-bool
-IonBuilder::jsop_getglobal(JSOp op)
-{
-    JSObject *globalObj = script->global();
-    MConstant *global = MConstant::New(ObjectValue(*globalObj));
-    current->add(global);
-
-    uint32 slot = script->getGlobalSlot(GET_SLOTNO(pc));
-    MLoad *load = MLoadSlot::New(global, slot);
 }
 
