@@ -570,6 +570,10 @@ arrowbox {
   border: none;
 }
 
+.panel-arrow {
+  min-height: 18px;
+}
+
 .arrowbox-dark .panel-arrowcontent {
   padding: @padding_normal@; /* core spacing */
 }

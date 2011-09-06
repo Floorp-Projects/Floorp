@@ -12,6 +12,7 @@ conformance/gl-getshadersource.html
 conformance/gl-uniform-bool.html
 conformance/glsl-conformance.html
 conformance/glsl-long-variable-names.html
+conformance/invalid-passed-params.html
 conformance/premultiplyalpha-test.html
 conformance/read-pixels-test.html
 conformance/uninitialized-test.html

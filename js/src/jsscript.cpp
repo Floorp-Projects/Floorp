@@ -669,9 +669,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         uint32 isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
             Class *clasp = (*objp)->getClass();
-            JS_ASSERT(clasp == &js_FunctionClass ||
-                      clasp == &js_BlockClass);
-            isBlock = (clasp == &js_BlockClass) ? 1 : 0;
+            JS_ASSERT(clasp == &FunctionClass ||
+                      clasp == &BlockClass);
+            isBlock = (clasp == &BlockClass) ? 1 : 0;
         }
         if (!JS_XDRUint32(xdr, &isBlock))
             goto error;
@@ -779,7 +779,7 @@ script_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-Class js_ScriptClass = {
+Class js::ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -1392,7 +1392,7 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(!script->u.object);
 
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &ScriptClass, NULL, NULL);
     if (!obj)
         return NULL;
     obj->setPrivate(script);

@@ -149,11 +149,14 @@ public:
     static PRUint8 FcSlantToThebesStyle(int aFcSlant);
     static PRUint8 GetThebesStyle(FcPattern *aPattern); // slant
     static PRUint16 GetThebesWeight(FcPattern *aPattern);
+    static PRInt16 GetThebesStretch(FcPattern *aPattern);
 
     static int GetFcSlant(const gfxFontStyle& aFontStyle);
     // Returns a precise FC_WEIGHT from |aBaseWeight|,
     // which is a CSS absolute weight / 100.
     static int FcWeightForBaseWeight(PRInt8 aBaseWeight);
+
+    static int FcWidthForThebesStretch(PRInt16 aStretch);
 
     static PRBool GetFullnameFromFamilyAndStyle(FcPattern *aFont,
                                                 nsACString *aFullname);

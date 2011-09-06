@@ -204,8 +204,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {
-        return branchPtr(cond, Address(fun, offsetof(JSObject, clasp)),
-                         ImmPtr(&js_FunctionClass));
+        return branchPtr(cond, Address(fun, JSObject::offsetOfClassPointer()),
+                         ImmPtr(&FunctionClass));
     }
 
     /*
@@ -811,7 +811,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     void loadObjClass(RegisterID objReg, RegisterID destReg) {
-        loadPtr(Address(objReg, offsetof(JSObject, clasp)), destReg);
+        loadPtr(Address(objReg, JSObject::offsetOfClassPointer()), destReg);
     }
 
     Jump testClass(Condition cond, RegisterID claspReg, js::Class *clasp) {
@@ -819,7 +819,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     Jump testObjClass(Condition cond, RegisterID objReg, js::Class *clasp) {
-        return branchPtr(cond, Address(objReg, offsetof(JSObject, clasp)), ImmPtr(clasp));
+        return branchPtr(cond, Address(objReg, JSObject::offsetOfClassPointer()), ImmPtr(clasp));
     }
 
     void branchValue(Condition cond, RegisterID reg, int32 value, RegisterID result)
@@ -1236,10 +1236,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
      */
     Jump getNewObject(JSContext *cx, RegisterID result, JSObject *templateObject)
     {
-        unsigned thingKind = templateObject->arenaHeader()->getThingKind();
+        gc::AllocKind allocKind = templateObject->getAllocKind();
 
-        JS_ASSERT(thingKind >= gc::FINALIZE_OBJECT0 && thingKind <= gc::FINALIZE_OBJECT_LAST);
-        size_t thingSize = gc::GCThingSizeMap[thingKind];
+        JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+        size_t thingSize = gc::Arena::thingSize(allocKind);
 
         JS_ASSERT(cx->typeInferenceEnabled());
         JS_ASSERT(!templateObject->hasSlotsArray());
@@ -1253,7 +1253,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
          * Inline FreeSpan::allocate. Only the case where the current freelist
          * span is not empty is handled.
          */
-        gc::FreeSpan *list = &cx->compartment->freeLists.lists[thingKind];
+        gc::FreeSpan *list = const_cast<gc::FreeSpan *>
+                             (cx->compartment->arenas.getFreeList(allocKind));
         loadPtr(&list->first, result);
 
         Jump jump = branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result);
@@ -1288,7 +1289,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         }
 
         storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
-        storePtr(ImmPtr(templateObject->clasp), Address(result, offsetof(JSObject, clasp)));
+        storePtr(ImmPtr(templateObject->getClass()), Address(result, JSObject::offsetOfClassPointer()));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
         store32(Imm32(templateObject->objShape), Address(result, offsetof(JSObject, objShape)));
         storePtr(ImmPtr(templateObject->newType), Address(result, offsetof(JSObject, newType)));

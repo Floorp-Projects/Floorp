@@ -51,11 +51,11 @@
 #if defined(MOZ_WIDGET_QT)
 #include <QtGui/QApplication>
 #include <QtCore/QScopedPointer>
-#include <QtGui/QApplication>
 #include <QtGui/QInputContextFactory>
 #include <QtGui/QInputContext>
 #ifdef MOZ_ENABLE_MEEGOTOUCH
 #include <MComponentData>
+#include <MozMeegoAppService.h>
 #endif // MOZ_ENABLE_MEEGOTOUCH
 #endif // MOZ_WIDGET_QT
 

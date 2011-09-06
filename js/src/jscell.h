@@ -50,6 +50,38 @@ namespace gc {
 struct ArenaHeader;
 struct Chunk;
 
+/* The GC allocation kinds. */
+enum AllocKind {
+    FINALIZE_OBJECT0,
+    FINALIZE_OBJECT0_BACKGROUND,
+    FINALIZE_OBJECT2,
+    FINALIZE_OBJECT2_BACKGROUND,
+    FINALIZE_OBJECT4,
+    FINALIZE_OBJECT4_BACKGROUND,
+    FINALIZE_OBJECT8,
+    FINALIZE_OBJECT8_BACKGROUND,
+    FINALIZE_OBJECT12,
+    FINALIZE_OBJECT12_BACKGROUND,
+    FINALIZE_OBJECT16,
+    FINALIZE_OBJECT16_BACKGROUND,
+    FINALIZE_OBJECT_LAST = FINALIZE_OBJECT16_BACKGROUND,
+    FINALIZE_FUNCTION,
+    FINALIZE_FUNCTION_AND_OBJECT_LAST = FINALIZE_FUNCTION,
+    FINALIZE_SCRIPT,
+    FINALIZE_SHAPE,
+    FINALIZE_TYPE_OBJECT,
+#if JS_HAS_XML_SUPPORT
+    FINALIZE_XML,
+#endif
+    FINALIZE_SHORT_STRING,
+    FINALIZE_STRING,
+    FINALIZE_EXTERNAL_STRING,
+    FINALIZE_IONCODE,
+    FINALIZE_LAST = FINALIZE_IONCODE
+};
+
+const size_t FINALIZE_LIMIT = FINALIZE_LAST + 1;
+
 /*
  * Live objects are marked black. How many other additional colors are available
  * depends on the size of the GCThing.
@@ -67,6 +99,7 @@ struct Cell {
     inline uintptr_t address() const;
     inline ArenaHeader *arenaHeader() const;
     inline Chunk *chunk() const;
+    inline AllocKind getAllocKind() const;
 
     JS_ALWAYS_INLINE bool isMarked(uint32 color = BLACK) const;
     JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color = BLACK) const;

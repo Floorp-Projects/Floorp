@@ -839,6 +839,12 @@ customMethodCalls = {
         'thisType': 'nsINode',
         'canFail': False
         },
+    'nsIDOMNode_Contains': {
+        'thisType': 'nsINode',
+        'arg0Type': 'nsINode',
+        'code': '    PRBool result = self->Contains(arg0);',
+        'canFail': False
+        },
     'nsIDOMNSHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
         },

@@ -2000,7 +2000,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     if (depth < 0)
         return false;
 
-    uintN base = JSSLOT_FREE(&js_BlockClass);
+    uintN base = JSSLOT_FREE(&BlockClass);
     for (uintN slot = base, limit = base + OBJ_BLOCK_COUNT(cx, blockObj); slot < limit; slot++) {
         const Value &v = blockObj->getSlot(slot);
 
@@ -4891,8 +4891,8 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
       case TOK_RC: {
         JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
-        gc::FinalizeKind kind = GuessObjectGCKind(pn_count, false);
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        gc::AllocKind kind = GuessObjectGCKind(pn_count, false);
+        JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             return false;
 
@@ -7084,8 +7084,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         JSObject *obj = NULL;
         if (!cg->hasSharps() && cg->compileAndGo()) {
-            gc::FinalizeKind kind = GuessObjectGCKind(pn->pn_count, false);
-            obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+            gc::AllocKind kind = GuessObjectGCKind(pn->pn_count, false);
+            obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
             if (!obj)
                 return JS_FALSE;
         }
