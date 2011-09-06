@@ -72,7 +72,29 @@ function nextTest() {
 function InitializeCacheDevices(memDevice, diskDevice) {
     this.start = function() {
         prefService.setBoolPref("browser.cache.memory.enable", memDevice);
+        if (memDevice) {
+            try {
+                cap = prefService.getIntPref("browser.cache.memory.capacity");
+            }
+            catch(ex) {
+                cap = 0;
+            }
+            if (cap == 0) {
+                prefService.setIntPref("browser.cache.memory.capacity", 1024);
+            }
+        }
         prefService.setBoolPref("browser.cache.disk.enable", diskDevice);
+        if (diskDevice) {
+            try {
+                cap = prefService.getIntPref("browser.cache.disk.capacity");
+            }
+            catch(ex) {
+                cap = 0;
+            }
+            if (cap == 0) {
+                prefService.setIntPref("browser.cache.disk.capacity", 1024);
+            }
+        }
         var channel = setupChannel("/bug650995", "Initial value");
         channel.asyncOpen(new ChannelListener(
             nextTest, null),
