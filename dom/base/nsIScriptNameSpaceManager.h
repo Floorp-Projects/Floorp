@@ -51,6 +51,9 @@
 #define JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY \
   "JavaScript-global-privileged-property"
 
+#define JAVASCRIPT_NAVIGATOR_PROPERTY_CATEGORY \
+  "JavaScript-navigator-property"
+
 #define JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY \
   "JavaScript-global-static-nameset"
 

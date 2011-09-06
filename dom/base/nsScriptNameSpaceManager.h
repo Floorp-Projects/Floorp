@@ -75,6 +75,7 @@ struct nsGlobalNameStruct
     eTypeNotInitialized,
     eTypeInterface,
     eTypeProperty,
+    eTypeNavigatorProperty,
     eTypeExternalConstructor,
     eTypeStaticNameSet,
     eTypeDynamicNameSet,
@@ -128,6 +129,12 @@ public:
   nsresult LookupName(const nsAString& aName,
                       const nsGlobalNameStruct **aNameStruct,
                       const PRUnichar **aClassName = nsnull);
+  // Returns a nsGlobalNameStruct for the navigator property aName, or
+  // null if one is not found. The returned nsGlobalNameStruct is only
+  // guaranteed to be valid until the next call to any of the methods
+  // in this class.
+  nsresult LookupNavigatorName(const nsAString& aName,
+                               const nsGlobalNameStruct **aNameStruct);
 
   nsresult RegisterClassName(const char *aClassName,
                              PRInt32 aDOMClassInfoID,
@@ -161,7 +168,7 @@ protected:
   // that aKey will be mapped to. If mType in the returned
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
   // already existed.
-  nsGlobalNameStruct *AddToHash(const char *aKey,
+  nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const char *aKey,
                                 const PRUnichar **aClassName = nsnull);
 
   nsresult FillHash(nsICategoryManager *aCategoryManager,
@@ -184,9 +191,8 @@ protected:
                                   const char* aCategory,
                                   nsISupports* aEntry);
 
-  // Inline PLDHashTable, init with PL_DHashTableInit() and delete
-  // with PL_DHashTableFinish().
   PLDHashTable mGlobalNames;
+  PLDHashTable mNavigatorNames;
 
   PRPackedBool mIsInitialized;
 };
