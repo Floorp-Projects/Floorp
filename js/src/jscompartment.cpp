@@ -137,9 +137,6 @@ JSCompartment::~JSCompartment()
 bool
 JSCompartment::init(JSContext *cx)
 {
-    for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
-        arenas[i].init();
-
     activeAnalysis = activeInference = false;
     types.init(cx);
 
@@ -148,7 +145,6 @@ JSCompartment::init(JSContext *cx)
 
     JS_InitArenaPool(&pool, "analysis", 4096 - ARENA_HEADER_SIZE_HACK, 8);
 
-    freeLists.init();
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -218,16 +214,6 @@ JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) 
 }
 #endif
 
-bool
-JSCompartment::arenaListsAreEmpty()
-{
-  for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
-       if (!arenas[i].isEmpty())
-           return false;
-  }
-  return true;
-}
-
 static bool
 IsCrossCompartmentWrapper(JSObject *wrapper)
 {
@@ -291,7 +277,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             return true;
 
         /* Translate StopIteration singleton. */
-        if (obj->getClass() == &js_StopIterationClass)
+        if (obj->isStopIteration())
             return js_FindClassObject(cx, NULL, JSProto_StopIteration, vp);
 
         /* Don't unwrap an outer window proxy. */
@@ -544,10 +530,10 @@ JSCompartment::markTypes(JSTracer *trc)
         MarkScript(trc, script, "mark_types_script");
     }
 
-    for (unsigned thingKind = FINALIZE_OBJECT0;
+    for (size_t thingKind = FINALIZE_OBJECT0;
          thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
          thingKind++) {
-        for (CellIterUnderGC i(this, FinalizeKind(thingKind)); !i.done(); i.next()) {
+        for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
             if (!object->isNewborn() && object->hasSingletonType())
                 MarkObject(trc, *object, "mark_types_singleton");
@@ -694,7 +680,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 void
 JSCompartment::purge(JSContext *cx)
 {
-    freeLists.purge();
+    arenas.purge();
     dtoaCache.purge();
 
     /*

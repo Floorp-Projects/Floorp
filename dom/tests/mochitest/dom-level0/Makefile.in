@@ -55,6 +55,7 @@ _TEST_FILES	= \
 		test_location.html \
 		test_innerWidthHeight_script.html \
 		innerWidthHeight_script.html \
+		test_location_setters.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

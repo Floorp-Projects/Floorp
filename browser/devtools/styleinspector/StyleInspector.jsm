@@ -55,7 +55,13 @@ var StyleInspector = {
     return Services.prefs.getBoolPref("devtools.styleinspector.enabled");
   },
 
-  createPanel: function SI_createPanel()
+  /**
+   * Factory method to create the actual style panel
+   * @param {Boolean} aPreserveOnHide Prevents destroy from being called
+   * onpopuphide. USE WITH CAUTION: When this value is set to true then you are
+   * responsible to manually call destroy from outside the style inspector.
+   */
+  createPanel: function SI_createPanel(aPreserveOnHide)
   {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let popupSet = win.document.getElementById("mainPopupSet");
@@ -98,7 +104,10 @@ var StyleInspector = {
     hbox.appendChild(resizer);
     popupSet.appendChild(panel);
 
-    panel.addEventListener("popupshown", function SI_popup_shown() {
+    /**
+     * Initialize the popup when it is first shown
+     */
+    function SI_popupShown() {
       if (!this.cssHtmlTree) {
         this.cssLogic = new CssLogic();
         this.cssHtmlTree = new CssHtmlTree(iframe, this.cssLogic, this);
@@ -107,12 +116,23 @@ var StyleInspector = {
       this.cssLogic.highlight(this.selectedNode);
       this.cssHtmlTree.highlight(this.selectedNode);
       Services.obs.notifyObservers(null, "StyleInspector-opened", null);
-    }, false);
+    }
 
-    panel.addEventListener("popuphidden", function SI_popup_hidden() {
-      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
-    }, false);
-    
+    /**
+     * Hide the popup and conditionally destroy it
+     */
+    function SI_popupHidden() {
+      if (panel.preserveOnHide) {
+        Services.obs.notifyObservers(null, "StyleInspector-closed", null);
+      } else {
+        panel.destroy();
+      }
+    }
+
+    panel.addEventListener("popupshown", SI_popupShown);
+    panel.addEventListener("popuphidden", SI_popupHidden);
+    panel.preserveOnHide = !!aPreserveOnHide;
+
     /**
      * Check if the style inspector is open
      */
@@ -136,6 +156,19 @@ var StyleInspector = {
         let win = Services.wm.getMostRecentWindow("navigator:browser");
         this.openPopup(win.gBrowser.selectedBrowser, "end_before", 0, 0, false, false);
       }
+    };
+
+    /**
+     * Destroy the style panel, remove listeners etc.
+     */
+    panel.destroy = function SI_destroy()
+    {
+      this.cssLogic = null;
+      this.cssHtmlTree = null;
+      this.removeEventListener("popupshown", SI_popupShown);
+      this.removeEventListener("popuphidden", SI_popupHidden);
+      this.parentNode.removeChild(this);
+      Services.obs.notifyObservers(null, "StyleInspector-closed", null);
     };
 
     /**

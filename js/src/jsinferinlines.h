@@ -1219,14 +1219,6 @@ TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
 } } /* namespace js::types */
 
 inline bool
-JSScript::isAboutToBeFinalized(JSContext *cx)
-{
-    return isCachedEval ||
-        (u.object && IsAboutToBeFinalized(cx, u.object)) ||
-        (hasFunction && IsAboutToBeFinalized(cx, function()));
-}
-
-inline bool
 JSScript::ensureHasTypes(JSContext *cx)
 {
     return types || makeTypes(cx);
