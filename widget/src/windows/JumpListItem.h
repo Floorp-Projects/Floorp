@@ -56,6 +56,8 @@
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
 
+class nsIThread;
+
 namespace mozilla {
 namespace widget {
 
@@ -139,22 +141,25 @@ public:
   NS_IMETHOD Equals(nsIJumpListItem *item, PRBool *_retval);
   NS_DECL_NSIJUMPLISTSHORTCUT
 
-  static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IShellLinkW>& aShellLink);
+  static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 
+                               nsRefPtr<IShellLinkW>& aShellLink, 
+                               nsCOMPtr<nsIThread> &aIOThread);
   static nsresult GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJumpListShortcut>& aShortcut);
-  static nsresult RemoveCacheIcon(nsCOMPtr<nsIURI> aURI);
+  static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI, 
+                                    nsCOMPtr<nsIFile> &aICOFile);
 
 protected:
   PRInt32 mIconIndex;
-  nsCOMPtr<nsIURI> mIconImageURI;
+  nsCOMPtr<nsIURI> mFaviconPageURI;
   nsCOMPtr<nsILocalHandlerApp> mHandlerApp;
 
   PRBool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
-  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aIconURI, 
-                                       nsString &aICOFilePath);
-  static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aIconURI, 
-                                    nsCOMPtr<nsIFile> &aICOFile);
-  static nsresult CacheIconFileFromIconURI(nsCOMPtr<nsIURI> aIconURI, 
-                                           nsCOMPtr<nsIFile> aICOFile);
+  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI, 
+                                       nsString &aICOFilePath,
+                                       nsCOMPtr<nsIThread> &aIOThread);
+  static nsresult CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI, 
+                                                   nsCOMPtr<nsIFile> aICOFile,
+                                                   nsCOMPtr<nsIThread> &aIOThread);
 };
 
 } // namespace widget
