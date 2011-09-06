@@ -86,6 +86,38 @@
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 using namespace mozilla;
 
+class nsDiskCacheDeviceDeactivateEntryEvent : public nsRunnable {
+public:
+    nsDiskCacheDeviceDeactivateEntryEvent(nsDiskCacheDevice *device,
+                                          nsCacheEntry * entry,
+                                          nsDiskCacheBinding * binding)
+        : mCanceled(PR_FALSE),
+          mEntry(entry),
+          mDevice(device),
+          mBinding(binding)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+        nsCacheServiceAutoLock lock;
+#ifdef PR_LOGGING
+        CACHE_LOG_DEBUG(("nsDiskCacheDeviceDeactivateEntryEvent[%p]\n", this));
+#endif
+        if (!mCanceled) {
+            (void) mDevice->DeactivateEntry_Private(mEntry, mBinding);
+        }
+        return NS_OK;
+    }
+
+    void CancelEvent() { mCanceled = PR_TRUE; }
+private:
+    PRBool mCanceled;
+    nsCacheEntry *mEntry;
+    nsDiskCacheDevice *mDevice;
+    nsDiskCacheBinding *mBinding;
+};
+
 /******************************************************************************
  *  nsDiskCacheEvictor
  *
@@ -141,6 +173,12 @@ nsDiskCacheEvictor::VisitRecord(nsDiskCacheRecord *  mapRecord)
     
     nsDiskCacheBinding * binding = mBindery->FindActiveBinding(mapRecord->HashNumber());
     if (binding) {
+        // If the entry is pending deactivation, cancel deactivation and doom
+        // the entry
+        if (binding->mDeactivateEvent) {
+            binding->mDeactivateEvent->CancelEvent();
+            binding->mDeactivateEvent = nsnull;
+        }
         // We are currently using this entry, so all we can do is doom it.
         // Since we're enumerating the records, we don't want to call
         // DeleteRecord when nsCacheService::DoomEntry() calls us back.
@@ -453,39 +491,6 @@ nsDiskCacheDevice::GetDeviceID()
     return DISK_CACHE_DEVICE_ID;
 }
 
-class nsDiskCacheDeviceDeactivateEntryEvent : public nsRunnable {
-public:
-    nsDiskCacheDeviceDeactivateEntryEvent(nsDiskCacheDevice *device,
-                                          nsCacheEntry * entry,
-                                          nsDiskCacheBinding * binding)
-        : mCanceled(PR_FALSE),
-          mEntry(entry),
-          mDevice(device),
-          mBinding(binding)
-    {
-    }
-
-    NS_IMETHOD Run()
-    {
-        nsCacheServiceAutoLock lock;
-#ifdef PR_LOGGING
-        CACHE_LOG_DEBUG(("nsDiskCacheDeviceDeactivateEntryEvent[%p]\n", this));
-#endif
-        if (!mCanceled) {
-            (void) mDevice->DeactivateEntry_Private(mEntry, mBinding);
-        }
-        return NS_OK;
-    }
-    
-    void CancelEvent() { mCanceled = PR_TRUE; }
-private:
-    PRBool mCanceled;
-    nsCacheEntry *mEntry;
-    nsDiskCacheDevice *mDevice;
-    nsDiskCacheBinding *mBinding;
-};
-
-
 /**
  *  FindEntry -
  *
@@ -635,6 +640,11 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     if (binding) {
         NS_ASSERTION(!binding->mCacheEntry->Key()->Equals(*entry->Key()),
                      "BindEntry called for already bound entry!");
+        // If the entry is pending deactivation, cancel deactivation
+        if (binding->mDeactivateEvent) {
+            binding->mDeactivateEvent->CancelEvent();
+            binding->mDeactivateEvent = nsnull;
+        }
         nsCacheService::DoomEntry(binding->mCacheEntry);
         binding = nsnull;
     }
@@ -676,6 +686,11 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
                 // XXX if debug : compare keys for hashNumber collision
 
                 if (!oldBinding->mCacheEntry->IsDoomed()) {
+                    // If the old entry is pending deactivation, cancel deactivation
+                    if (oldBinding->mDeactivateEvent) {
+                        oldBinding->mDeactivateEvent->CancelEvent();
+                        oldBinding->mDeactivateEvent = nsnull;
+                    }
                 // we've got a live one!
                     nsCacheService::DoomEntry(oldBinding->mCacheEntry);
                     // storage will be delete when oldBinding->mCacheEntry is Deactivated
