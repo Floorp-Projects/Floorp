@@ -65,7 +65,7 @@ namespace widget {
 // need to call it on win7+.
 JumpListLink::SHCreateItemFromParsingNamePtr JumpListLink::createItemFromParsingName = nsnull;
 const PRUnichar JumpListLink::kSehllLibraryName[] =  L"shell32.dll";
-const char kJumpListCacheDir[] = "jumpListCache";
+const char JumpListItem::kJumpListCacheDir[] = "jumpListCache";
 HMODULE JumpListLink::sShellDll = nsnull;
 
 // ISUPPORTS Impl's
@@ -451,7 +451,7 @@ nsresult JumpListShortcut::GetOutputIconPath(nsCOMPtr<nsIURI> aIconURI,
   // Obtain the local profile directory and construct the output icon file path
   rv = NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(aICOFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aICOFile->AppendNative(nsDependentCString(kJumpListCacheDir));
+  rv = aICOFile->AppendNative(nsDependentCString(JumpListItem::kJumpListCacheDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Try to create the directory if it's not there yet
@@ -710,7 +710,7 @@ static nsresult IsPathInOurIconCache(nsCOMPtr<nsIJumpListShortcut>& aShortcut,
   nsCOMPtr<nsIFile> jumpListCache;
   nsresult rv = NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(jumpListCache));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = jumpListCache->AppendNative(nsDependentCString(kJumpListCacheDir));
+  rv = jumpListCache->AppendNative(nsDependentCString(JumpListItem::kJumpListCacheDir));
   NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString jumpListCachePath;
   rv = jumpListCache->GetPath(jumpListCachePath);

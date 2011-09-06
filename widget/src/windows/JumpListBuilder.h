@@ -55,15 +55,18 @@
 #include "nsIJumpListBuilder.h"
 #include "nsIJumpListItem.h"
 #include "JumpListItem.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 namespace widget {
 
-class JumpListBuilder : public nsIJumpListBuilder
+class JumpListBuilder : public nsIJumpListBuilder, 
+                        public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJUMPLISTBUILDER
+  NS_DECL_NSIOBSERVER
 
   JumpListBuilder();
   virtual ~JumpListBuilder();
@@ -79,6 +82,7 @@ private:
   PRBool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
   nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
   nsresult RemoveIconCacheForItems(nsIMutableArray *removedItems);
+  nsresult RemoveIconCacheForAllItems();
 
   friend class WinTaskbar;
 };
