@@ -5,6 +5,7 @@
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545812">Mozilla Bug 545812</a>
@@ -37,6 +38,23 @@ function run() {
   // Ensure the full-screen api is enabled, and will be disabled on test exit.
   prevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
   SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+
+  // Test requesting full-screen mode in a long-running user-generated event handler.
+  // The request in the key handler should not be granted.
+  window.addEventListener("keypress", keyHandler, false);
+  synthesizeKey("VK_A", {});
+}
+
+function keyHandler(event) {
+  window.removeEventListener("keypress", keyHandler, false);
+  
+  // Busy loop until 2s has passed. We should then be past the 1 second threshold, and so
+  // our request for full-screen mode should be rejected.
+  var end = (new Date()).getTime() + 2000;
+  while ((new Date()).getTime() < end) {
+    ; // Wait...
+  }
+  document.body.mozRequestFullScreen();
 
   prevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
 
