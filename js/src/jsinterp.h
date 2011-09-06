@@ -188,32 +188,6 @@ InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc
                      Value *rval);
 
 /*
- * Natives like sort/forEach/replace call Invoke repeatedly with the same
- * callee, this, and number of arguments. To optimize this, such natives can
- * start an "invoke session" to factor out much of the dynamic setup logic
- * required by a normal Invoke. Usage is:
- *
- *   InvokeSessionGuard session(cx);
- *   if (!session.start(cx, callee, thisp, argc, &session))
- *     ...
- *
- *   while (...) {
- *     // write actual args (not callee, this)
- *     session[0] = ...
- *     ...
- *     session[argc - 1] = ...
- *
- *     if (!session.invoke(cx, session))
- *       ...
- *
- *     ... = session.rval();
- *   }
- *
- *   // session ended by ~InvokeSessionGuard
- */
-class InvokeSessionGuard;
-
-/*
  * InvokeConstructor* implement a function call from a constructor context
  * (e.g. 'new') handling the the creation of the new 'this' object.
  */

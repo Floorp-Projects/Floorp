@@ -1836,10 +1836,11 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
 struct CompareArgs
 {
     JSContext          *context;
-    InvokeSessionGuard session;
+    InvokeArgsGuard    args;
+    Value              fval;
 
-    CompareArgs(JSContext *cx)
-      : context(cx)
+    CompareArgs(JSContext *cx, Value fval)
+      : context(cx), fval(fval)
     {}
 };
 
@@ -1860,15 +1861,21 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    InvokeSessionGuard &session = ca->session;
-    session[0] = *av;
-    session[1] = *bv;
+    InvokeArgsGuard &args = ca->args;
+    if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, 2, &args))
+        return JS_FALSE;
+        
+    args.calleeHasBeenReset();
+    args.calleev() = ca->fval;
+    args.thisv() = UndefinedValue();
+    args[0] = *av;
+    args[1] = *bv;
 
-    if (!session.invoke(cx))
+    if (!Invoke(cx, args))
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ToNumber(cx, session.rval(), &cmp))
+    if (!ToNumber(cx, args.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2105,10 +2112,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                 } while (++i != newlen);
             }
         } else {
-            CompareArgs ca(cx);
-            if (!ca.session.start(cx, fval, UndefinedValue(), 2))
-                return false;
-
+            CompareArgs ca(cx, fval);
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
                               comparator_stack_cast(sort_compare),
                               &ca, mergesort_tmp,
@@ -2962,16 +2966,13 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
      */
     argc = 3 + REDUCE_MODE(mode);
 
-    InvokeSessionGuard session;
-    if (!session.start(cx, ObjectValue(*callable), thisv, argc))
-        return JS_FALSE;
-
     MUST_FLOW_THROUGH("out");
     JSBool ok = JS_TRUE;
     JSBool cond;
 
     Value objv = ObjectValue(*obj);
     AutoValueRooter tvr(cx);
+    InvokeArgsGuard args;
     for (jsuint i = start; i != end; i += step) {
         JSBool hole;
         ok = JS_CHECK_OPERATION_LIMIT(cx) &&
@@ -2981,23 +2982,29 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
         if (hole)
             continue;
 
+        if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
+            return false;
+
         /*
          * Push callable and 'this', then args. We must do this for every
          * iteration around the loop since Invoke clobbers its arguments.
          */
+        args.calleeHasBeenReset();
+        args.calleev() = ObjectValue(*callable);
+        args.thisv() = thisv;
         uintN argi = 0;
         if (REDUCE_MODE(mode))
-            session[argi++] = *vp;
-        session[argi++] = tvr.value();
-        session[argi++] = Int32Value(i);
-        session[argi]   = objv;
+            args[argi++] = *vp;
+        args[argi++] = tvr.value();
+        args[argi++] = Int32Value(i);
+        args[argi]   = objv;
 
         /* Do the call. */
-        ok = session.invoke(cx);
+        ok = Invoke(cx, args);
         if (!ok)
             break;
 
-        const Value &rval = session.rval();
+        const Value &rval = args.rval();
 
         if (mode > MAP)
             cond = js_ValueToBoolean(rval);
