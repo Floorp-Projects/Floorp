@@ -5846,10 +5846,14 @@ void PresShell::UpdateCanvasBackground()
     // style frame but we don't have access to the canvasframe here. It isn't
     // a problem because only a few frames can return something other than true
     // and none of them would be a canvas frame or root element style frame.
+    PRBool drawBackgroundImage;
+    PRBool drawBackgroundColor;
     mCanvasBackgroundColor =
       nsCSSRendering::DetermineBackgroundColor(mPresContext, bgStyle,
-                                               rootStyleFrame);
-    if (GetPresContext()->IsRootContentDocument() &&
+                                               rootStyleFrame,
+                                               drawBackgroundImage,
+                                               drawBackgroundColor);
+    if (drawBackgroundColor && GetPresContext()->IsRootContentDocument() &&
         !IsTransparentContainerElement(mPresContext)) {
       mCanvasBackgroundColor =
         NS_ComposeColors(mPresContext->DefaultBackgroundColor(), mCanvasBackgroundColor);

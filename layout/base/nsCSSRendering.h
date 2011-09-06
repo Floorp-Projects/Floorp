@@ -211,7 +211,9 @@ struct nsCSSRendering {
   static nscolor
   DetermineBackgroundColor(nsPresContext* aPresContext,
                            nsStyleContext* aStyleContext,
-                           nsIFrame* aFrame);
+                           nsIFrame* aFrame,
+                           PRBool& aDrawBackgroundImage,
+                           PRBool& aDrawBackgroundColor);
 
   /**
    * Render the background for an element using css rendering rules
