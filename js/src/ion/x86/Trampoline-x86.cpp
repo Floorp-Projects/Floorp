@@ -73,7 +73,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
-    // Save old stack frame pointer, set new stack fram pointer.
+    // Save old stack frame pointer, set new stack frame pointer.
     masm.push(ebp);
     masm.movl(esp, ebp);
 

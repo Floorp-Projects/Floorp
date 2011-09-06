@@ -181,9 +181,12 @@ IonCompartment::generateReturnError(JSContext *cx)
     MacroAssembler masm(cx);
 
     // Pop arguments off the stack.
-    // eax <- 8*argc (size of all arugments we pushed on the stack)
+    // eax <- 8*argc (size of all arguments we pushed on the stack)
     masm.pop(r14);
     masm.addq(r14, rsp);
+
+    // Discard pushed vp.
+    masm.pop(r11);
 
     GenerateReturn(masm, JS_FALSE);
     
