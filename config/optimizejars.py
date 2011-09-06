@@ -303,6 +303,7 @@ def optimizejar(jar, outjar, inlog = None):
         print("WARNING: Found %d duplicate files taking %d bytes"%(dups_found, dupe_bytes))
 
     dirend.cdir_size = len(cdir_data)
+    dirend.disk_entries = dirend.cdir_entries
     dirend_data = dirend.pack()
     assert_true(size_of(cdir_end) == len(dirend_data), "Failed to serialize directory end correctly. Serialized size;%d, expected:%d"%(len(dirend_data), size_of(cdir_end)));
 
