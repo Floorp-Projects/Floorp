@@ -65,6 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=434998
             threw = true;
           }
           ok(!threw, "The execCommand API should work on <xul:editor>");
+          progress.removeProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
           SimpleTest.finish();
         }
       }
