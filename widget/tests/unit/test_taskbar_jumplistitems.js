@@ -186,11 +186,11 @@ function test_shortcuts()
   sc.iconIndex = 1;
   do_check_eq(sc.iconIndex, 1);
 
-  var iconImageUri = Cc["@mozilla.org/network/simple-uri;1"]
+  var faviconPageUri = Cc["@mozilla.org/network/simple-uri;1"]
                     .createInstance(Ci.nsIURI);
-  iconImageUri.spec = "http://www.123.com/";
-  sc.iconImageUri = iconImageUri;
-  do_check_eq(sc.iconImageUri, iconImageUri);
+  faviconPageUri.spec = "http://www.123.com/";
+  sc.faviconPageUri = faviconPageUri;
+  do_check_eq(sc.faviconPageUri, faviconPageUri);
 
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                   getService(Ci.nsIProperties).

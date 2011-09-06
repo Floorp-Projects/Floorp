@@ -52,11 +52,9 @@
 #include "nsNetCID.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCycleCollectionParticipant.h"
-#include "imgIContainer.h"
-#include "imgITools.h"
-#include "nsIFaviconService.h"
+#include "mozIAsyncFavicons.h"
 #include "mozilla/Preferences.h"
-#include "nsStringStream.h"
+#include "JumpListBuilder.h"
 
 namespace mozilla {
 namespace widget {
@@ -273,16 +271,16 @@ NS_IMETHODIMP JumpListShortcut::SetIconIndex(PRInt32 aIconIndex)
 }
 
 /* attribute long iconURI; */
-NS_IMETHODIMP JumpListShortcut::GetIconImageUri(nsIURI **aIconImageURI)
+NS_IMETHODIMP JumpListShortcut::GetFaviconPageUri(nsIURI **aFaviconPageURI)
 {
-  NS_IF_ADDREF(*aIconImageURI = mIconImageURI);
+  NS_IF_ADDREF(*aFaviconPageURI = mFaviconPageURI);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::SetIconImageUri(nsIURI *aIconImageURI)
+NS_IMETHODIMP JumpListShortcut::SetFaviconPageUri(nsIURI *aFaviconPageURI)
 {
-  mIconImageURI = aIconImageURI;
+  mFaviconPageURI = aFaviconPageURI;
   return NS_OK;
 }
 
@@ -387,14 +385,17 @@ static PRInt32 GetICOCacheSecondsTimeout() {
   return icoReCacheSecondsTimeout;
 }
 
-// (static) Obtains the ICO data on disk for the specified aIconURI and
-// fills the path where the ICO file data was stored to.
-nsresult JumpListShortcut::ObtainCachedIconFile(nsCOMPtr<nsIURI> aIconURI,
-                                                nsString &aICOFilePath)
+// (static) If the data is available, will return the path on disk where 
+// the favicon for page aFaviconPageURI is stored.  If the favicon does not
+// exist, or its cache is expired, this method will kick off an async request
+// for the icon so that next time the method is called it will be available. 
+nsresult JumpListShortcut::ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
+                                                nsString &aICOFilePath,
+                                                nsCOMPtr<nsIThread> &aIOThread)
 {
   // Obtain the ICO file path
   nsCOMPtr<nsIFile> icoFile;
-  nsresult rv = GetOutputIconPath(aIconURI, icoFile);
+  nsresult rv = GetOutputIconPath(aFaviconPageURI, icoFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check if the cached ICO file already exists
@@ -413,15 +414,18 @@ nsresult JumpListShortcut::ObtainCachedIconFile(nsCOMPtr<nsIURI> aIconURI,
 
     // If the last mod call failed or the icon is old then re-cache it
     // This check is in case the favicon of a page changes
+    // the next time we try to build the jump list, the data will be available.
     if (NS_FAILED(rv) ||
         (nowTime - fileModTime) > icoReCacheSecondsTimeout) {
-      rv = CacheIconFileFromIconURI(aIconURI, icoFile);
-      NS_ENSURE_SUCCESS(rv, rv);
+      CacheIconFileFromFaviconURIAsync(aFaviconPageURI, icoFile, aIOThread);
+      return NS_ERROR_NOT_AVAILABLE;
     }
   } else {
-    // The file does not exist yet, cache it
-    rv = CacheIconFileFromIconURI(aIconURI, icoFile);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    // The file does not exist yet, obtain it async from the favicon service so that
+    // the next time we try to build the jump list it'll be available.
+    CacheIconFileFromFaviconURIAsync(aFaviconPageURI, icoFile, aIOThread);
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // The icoFile is filled with a path that exists, get its path
@@ -429,16 +433,17 @@ nsresult JumpListShortcut::ObtainCachedIconFile(nsCOMPtr<nsIURI> aIconURI,
   return rv;
 }
 
-// (static) Obtains the ICO file for the aIconURI that should be used
+// (static) Obtains the ICO file for the favicon at page aFaviconPageURI
 // If successful, the file path on disk is in the format:
-// <ProfLDS>\jumpListCache\<aIconURI_Hash>.ico
-nsresult JumpListShortcut::GetOutputIconPath(nsCOMPtr<nsIURI> aIconURI,
+// <ProfLDS>\jumpListCache\<hash(aFaviconPageURI)>.ico
+nsresult JumpListShortcut::GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
                                              nsCOMPtr<nsIFile> &aICOFile) 
 {
   // Hash the input URI and replace any / with _
   nsCAutoString inputURIHash;
   nsCOMPtr<nsICryptoHash> cryptoHash;
-  nsresult rv = JumpListItem::HashURI(cryptoHash, aIconURI, inputURIHash);
+  nsresult rv = JumpListItem::HashURI(cryptoHash, aFaviconPageURI,
+                                      inputURIHash);
   NS_ENSURE_SUCCESS(rv, rv);
   char* cur = inputURIHash.BeginWriting();
   char* end = inputURIHash.EndWriting();
@@ -467,124 +472,29 @@ nsresult JumpListShortcut::GetOutputIconPath(nsCOMPtr<nsIURI> aIconURI,
   return rv;
 }
 
-// (static) Creates a cached ICO file on disk for an the image at aIconURI
-// and stores it to disk at the path of aICOFile
-nsresult JumpListShortcut::CacheIconFileFromIconURI(nsCOMPtr<nsIURI> aIconURI, 
-                                                    nsCOMPtr<nsIFile> aICOFile) 
+// (static) Asynchronously creates a cached ICO file on disk for the favicon of
+// page aFaviconPageURI and stores it to disk at the path of aICOFile.
+nsresult 
+JumpListShortcut::CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI,
+                                                   nsCOMPtr<nsIFile> aICOFile,
+                                                   nsCOMPtr<nsIThread> &aIOThread)
 {
   // Obtain the favicon service and get the favicon for the specified page
-  nsCOMPtr<nsIFaviconService> favIconSvc(
+  nsCOMPtr<mozIAsyncFavicons> favIconSvc(
                       do_GetService("@mozilla.org/browser/favicon-service;1"));
   NS_ENSURE_TRUE(favIconSvc, NS_ERROR_FAILURE);
 
-  // Get the favicon data for the passed in URL from the favicon service
-  nsCString mimeType;
-  PRUint32 dataLength;
-  PRUint8 *data;
-  // Careful! data needs to be freed, GetFaviconData is a pretty unsafe function
-  nsresult rv = favIconSvc->GetFaviconData(aIconURI, mimeType, 
-                                           &dataLength, &data);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoArrayPtr<PRUint8> freeMeWhenScopeEnds(data);
-  if(dataLength == 0 || !data) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsIFaviconDataCallback> callback = 
+    new AsyncFaviconDataReady(aFaviconPageURI, aIOThread);
 
-  // Convert the obtained favicon data to an input stream
-  nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                             reinterpret_cast<const char*>(data), dataLength,
-                             NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Decode the image from the format it was returned to us in (probably PNG)
-  nsCOMPtr<imgIContainer> container;
-  nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
-  rv = imgtool->DecodeImageData(stream, mimeType, getter_AddRefs(container));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the recommended icon width and height, or if failure to obtain 
-  // these settings, fall back to 16x16 ICOs.  These values can be different
-  // if the user has a different DPI setting other than 100%.
-  // Windows would scale the 16x16 icon themselves, but it's better
-  // we let our ICO encoder do it.
-  PRInt32 systemIconWidth = GetSystemMetrics(SM_CXSMICON);
-  PRInt32 systemIconHeight = GetSystemMetrics(SM_CYSMICON);
-  if (systemIconWidth == 0 || systemIconHeight == 0) {
-    systemIconWidth = 16;
-    systemIconHeight = 16;
-  }
-  // Scale the image to the needed size and in ICO format
-  mimeType.AssignLiteral("image/vnd.microsoft.icon");
-  nsCOMPtr<nsIInputStream> iconStream;
-  rv = imgtool->EncodeScaledImage(container, mimeType,
-                                  systemIconWidth,
-                                  systemIconHeight,
-                                  getter_AddRefs(iconStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Setup the output stream for the ICO file on disk
-  nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), aICOFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Obtain the ICO buffer size from the re-encoded ICO stream
-  PRUint32 bufSize;
-  rv = iconStream->Available(&bufSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Setup a buffered output stream from the stream object
-  // so that we can simply use WriteFrom with the stream object
-  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                                  outputStream, bufSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Write out the icon stream to disk and make sure we wrote everything
-  PRUint32 wrote;
-  rv = bufferedOutputStream->WriteFrom(iconStream, bufSize, &wrote);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if(bufSize != wrote) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Cleanup
-  bufferedOutputStream->Close();
-  outputStream->Close();
-
-  return NS_OK;
-}
-
-// (static) Removes the cached icon file
-// Assumes that the local file path is stored inside the nsIURI
-nsresult JumpListShortcut::RemoveCacheIcon(nsCOMPtr<nsIURI> aUri)
-{
-  // Get the nsIURI spec which stores the local path for the icon to remove
-  nsCAutoString spec;
-  nsresult rv = aUri->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Construct the parent path of the passed in path
-  nsCOMPtr<nsILocalFile> icoFile = do_CreateInstance("@mozilla.org/file/local;1");
-  NS_ENSURE_TRUE(icoFile, NS_ERROR_FAILURE);
-  rv = icoFile->InitWithPath(NS_ConvertUTF8toUTF16(spec));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check if the cached ICO file exists
-  PRBool exists;
-  rv = icoFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If the file exists, remove it
-  if (exists) {
-    icoFile->Remove(PR_FALSE);
-  }
-
+  favIconSvc->GetFaviconDataForPage(aFaviconPageURI, callback);
   return NS_OK;
 }
 
 // (static) Creates a ShellLink that encapsulate a shortcut to local apps.
-nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IShellLinkW>& aShellLink)
+nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 
+                                        nsRefPtr<IShellLinkW>& aShellLink,
+                                        nsCOMPtr<nsIThread> &aIOThread)
 {
   HRESULT hr;
   IShellLinkW* psl;
@@ -648,7 +558,7 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item, nsRefPt
   shortcut->GetIconIndex(&appIconIndex);
   
   nsCOMPtr<nsIURI> iconUri;
-  rv = shortcut->GetIconImageUri(getter_AddRefs(iconUri));
+  rv = shortcut->GetFaviconPageUri(getter_AddRefs(iconUri));
   if (NS_SUCCEEDED(rv) && iconUri) {
     useUriIcon = PR_TRUE;
   }
@@ -677,7 +587,7 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item, nsRefPt
 
   if (useUriIcon) {
     nsString icoFilePath;
-    rv = ObtainCachedIconFile(iconUri, icoFilePath);
+    rv = ObtainCachedIconFile(iconUri, icoFilePath, aIOThread);
     if (NS_SUCCEEDED(rv)) {
       // Always use the first icon in the ICO file
       // our encoded icon only has 1 resource
@@ -795,7 +705,7 @@ nsresult JumpListShortcut::GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJ
       nsAutoString path(buf);
       rv = NS_NewURI(getter_AddRefs(iconUri), path);
       if (NS_SUCCEEDED(rv)) {
-        aShortcut->SetIconImageUri(iconUri);
+        aShortcut->SetFaviconPageUri(iconUri);
       }
     }
   }
