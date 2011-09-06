@@ -107,8 +107,10 @@ let SyncScheduler = {
   observe: function observe(subject, topic, data) {
     switch(topic) {
       case "weave:engine:score:updated":
-        Utils.namedTimer(this.calculateScore, SCORE_UPDATE_DELAY, this,
-                         "_scoreTimer");
+        if (Status.login == LOGIN_SUCCEEDED) {
+          Utils.namedTimer(this.calculateScore, SCORE_UPDATE_DELAY, this,
+                           "_scoreTimer");
+        }
         break;
       case "network:offline-status-changed":
         // Whether online or offline, we'll reschedule syncs
