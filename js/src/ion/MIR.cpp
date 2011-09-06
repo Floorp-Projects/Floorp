@@ -393,27 +393,6 @@ MCompare::New(MDefinition *left, MDefinition *right, JSOp op)
     return new MCompare(left, right, op);
 }
 
-void
-MCompare::setCondition(JSOp op)
-{
-    switch (op) {
-      case JSOP_LT:
-        cond_ = Assembler::LessThan;
-        return;
-      case JSOP_LE:
-        cond_ = Assembler::LessThanOrEqual;
-        return;
-      case JSOP_GT:
-        cond_ = Assembler::GreaterThan;
-        return;
-      case JSOP_GE:
-        cond_ = Assembler::GreaterThanOrEqual;
-        return;
-      default:
-        JS_NOT_REACHED("Unrecognized comparison operation");
-    }
-}
-
 MTableSwitch *
 MTableSwitch::New(MDefinition *ins, int32 low, int32 high)
 {

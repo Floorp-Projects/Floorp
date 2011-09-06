@@ -284,3 +284,4 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
 
     return true;
 }
+

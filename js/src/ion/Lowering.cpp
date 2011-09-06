@@ -123,13 +123,6 @@ LIRGenerator::visitTest(MTest *test)
     MBasicBlock *ifTrue = test->ifTrue();
     MBasicBlock *ifFalse = test->ifFalse();
 
-    if (opd->isConstant()) {
-        MConstant *ins = opd->toConstant();
-        JSBool truthy = js_ValueToBoolean(ins->value());
-        MBasicBlock *target = truthy ? ifTrue : ifFalse;
-        return add(new LGoto(target));
-    }
-
     if (opd->type() == MIRType_Value) {
         LTestVAndBranch *lir = new LTestVAndBranch(ifTrue, ifFalse, tempFloat());
         if (!useBox(lir, LTestVAndBranch::Input, opd))
@@ -151,18 +144,18 @@ LIRGenerator::visitTest(MTest *test)
         MDefinition *right = comp->getOperand(1);
 
         if (comp->specialization() == MIRType_Int32) {
-            return add(new LCompareIAndBranch(comp->condition(), useRegister(left), use(right),
+            return add(new LCompareIAndBranch(comp->jsop(), useRegister(left), use(right),
                                               ifTrue, ifFalse));
         }
         if (comp->specialization() == MIRType_Double) {
-            return add(new LCompareDAndBranch(comp->condition(), useRegister(left), use(right),
-                                              ifTrue, ifFalse));
+            return add(new LCompareDAndBranch(comp->jsop(), useRegister(left),
+                                              useRegister(right), ifTrue, ifFalse));
         }
         // :TODO: implment LCompareVAndBranch. Bug: 679804
     }
 
     if (opd->type() == MIRType_Double)
-        return add(new LTestDAndBranch(useRegister(opd), temp(LDefinition::DOUBLE), ifTrue, ifFalse));
+        return add(new LTestDAndBranch(useRegister(opd), ifTrue, ifFalse));
 
     return add(new LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
 }
@@ -193,10 +186,10 @@ LIRGenerator::visitCompare(MCompare *comp)
             return emitAtUses(comp);
 
         if (comp->specialization() == MIRType_Int32)
-            return define(new LCompareI(comp->condition(), useRegister(left), use(right)), comp);
+            return define(new LCompareI(comp->jsop(), useRegister(left), use(right)), comp);
 
         if (comp->specialization() == MIRType_Double)
-            return define(new LCompareD(comp->condition(), useRegister(left), use(right)), comp);
+            return define(new LCompareD(comp->jsop(), useRegister(left), useRegister(right)), comp);
     }
 
     // :TODO: implement LCompareV. Bug: 679804
