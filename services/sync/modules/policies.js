@@ -625,7 +625,7 @@ let ErrorHandler = {
       return true;
     }
 
-    return (Status.sync != SERVER_MAINTENANCE &&
+    return ([Status.login, Status.sync].indexOf(SERVER_MAINTENANCE) == -1 &&
             [Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) == -1);
   },
 
@@ -652,7 +652,11 @@ let ErrorHandler = {
       case 504:
         Status.enforceBackoff = true;
         if (resp.status == 503 && resp.headers["retry-after"]) {
-          Status.sync = SERVER_MAINTENANCE;
+          if (Weave.Service.isLoggedIn) {
+            Status.sync = SERVER_MAINTENANCE;
+          } else {
+            Status.login = SERVER_MAINTENANCE;
+          }
           Svc.Obs.notify("weave:service:backoff:interval",
                          parseInt(resp.headers["retry-after"], 10));
         }
@@ -668,7 +672,11 @@ let ErrorHandler = {
       case Cr.NS_ERROR_PROXY_CONNECTION_REFUSED:
         // The constant says it's about login, but in fact it just
         // indicates general network error.
-        Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+        if (Weave.Service.isLoggedIn) {
+          Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+        } else {
+          Status.login = LOGIN_FAILED_NETWORK_ERROR;
+        }
         break;
     }
   },
