@@ -1700,12 +1700,12 @@ DrawBackgroundColor(BackgroundClipState& aClipState, gfxContext *aCtx,
   aCtx->Restore();
 }
 
-static nscolor
-DetermineBackgroundColorInternal(nsPresContext* aPresContext,
-                                 nsStyleContext* aStyleContext,
-                                 nsIFrame* aFrame,
-                                 PRBool& aDrawBackgroundImage,
-                                 PRBool& aDrawBackgroundColor)
+nscolor
+nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
+                                         nsStyleContext* aStyleContext,
+                                         nsIFrame* aFrame,
+                                         PRBool& aDrawBackgroundImage,
+                                         PRBool& aDrawBackgroundColor)
 {
   aDrawBackgroundImage = PR_TRUE;
   aDrawBackgroundColor = PR_TRUE;
@@ -1735,20 +1735,6 @@ DetermineBackgroundColorInternal(nsPresContext* aPresContext,
   }
 
   return bgColor;
-}
-
-nscolor
-nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
-                                         nsStyleContext* aStyleContext,
-                                         nsIFrame* aFrame)
-{
-  PRBool drawBackgroundImage;
-  PRBool drawBackgroundColor;
-  return DetermineBackgroundColorInternal(aPresContext,
-                                          aStyleContext,
-                                          aFrame,
-                                          drawBackgroundImage,
-                                          drawBackgroundColor);
 }
 
 static gfxFloat
@@ -2318,11 +2304,11 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   PRBool drawBackgroundImage;
   PRBool drawBackgroundColor;
 
-  nscolor bgColor = DetermineBackgroundColorInternal(aPresContext,
-                                                     aBackgroundSC,
-                                                     aForFrame,
-                                                     drawBackgroundImage,
-                                                     drawBackgroundColor);
+  nscolor bgColor = DetermineBackgroundColor(aPresContext,
+                                             aBackgroundSC,
+                                             aForFrame,
+                                             drawBackgroundImage,
+                                             drawBackgroundColor);
 
   // At this point, drawBackgroundImage and drawBackgroundColor are
   // true if and only if we are actually supposed to paint an image or
