@@ -1279,6 +1279,69 @@ class MMul : public MBinaryArithInstruction
     }
 };
 
+// Returns obj->slots.
+class MSlots : public MUnaryInstruction
+{
+    MSlots(MDefinition *from, uint32 slot)
+      : MUnaryInstruction(from)
+    {
+        setResultType(MIRType_Slots);
+        setIdempotent();
+        JS_ASSERT(from->type() == MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Slots);
+
+    static MSlots *New(MDefinition *from, uint32 slot) {
+        return new MSlots(from, slot);
+    }
+};
+
+// Load from vp[slot]
+class MLoad : public MUnaryInstruction
+{
+    uint32 slot_;
+
+    MLoad(MDefinition *from, uint32 slot)
+      : MUnaryInstruction(from),
+        slot_(slot)
+    {
+        setResultType(MIRType_Value);
+        setIdempotent();
+        JS_ASSERT(from->type() == MIRType_Slots);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Load);
+
+    static MLoad *New(MDefinition *from, uint32 slot) {
+        return new MLoad(from, slot);
+    }
+};
+
+// Load from an object's inline slots.
+class MLoadInline : public MUnaryInstruction
+{
+    uint32 slot_;
+
+    MLoadInline(MDefinition *from, uint32 slot)
+      : MUnaryInstruction(from),
+        slot_(slot)
+    {
+        setResultType(MIRType_Value);
+        setIdempotent();
+        JS_ASSERT(from->type() == MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadInline);
+
+    static MLoadInline *New(MDefinition *from, uint32 slot) {
+        return new MLoadInline(from, slot);
+    }
+};
+
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;

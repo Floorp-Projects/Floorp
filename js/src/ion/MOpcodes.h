@@ -70,7 +70,10 @@ namespace ion {
     _(ToDouble)                                                             \
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
-    _(Start)
+    _(Start)                                                                \
+    _(Slots)                                                                \
+    _(Load)                                                                 \
+    _(LoadInline)
 
 
 // Forward declarations of MIR types.

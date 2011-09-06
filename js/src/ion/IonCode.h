@@ -88,7 +88,7 @@ class IonCode : public gc::Cell
         return insnSize_;
     }
     uint32 relocTableOffset() const {
-        return dataOffset() + relocTableSize_;
+        return dataOffset() + dataSize_;
     }
 
   public:
