@@ -879,8 +879,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     JSAutoByteString value(cx, valstr);
     if (!value)
         return JS_FALSE;
-#if defined XP_WIN || defined HPUX || defined OSF1 || defined IRIX \
-    || defined SCO
+#if defined XP_WIN || defined HPUX || defined OSF1 || defined SCO
     {
         char *waste = JS_smprintf("%s=%s", name.ptr(), value.ptr());
         if (!waste) {

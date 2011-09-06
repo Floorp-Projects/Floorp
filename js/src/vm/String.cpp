@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -49,7 +49,7 @@ using namespace js;
 bool
 JSString::isShort() const
 {
-    bool is_short = arenaHeader()->getThingKind() == gc::FINALIZE_SHORT_STRING;
+    bool is_short = (getAllocKind() == gc::FINALIZE_SHORT_STRING);
     JS_ASSERT_IF(is_short, isFlat());
     return is_short;
 }
@@ -69,7 +69,7 @@ JSString::isInline() const
 bool
 JSString::isExternal() const
 {
-    bool is_external = arenaHeader()->getThingKind() == gc::FINALIZE_EXTERNAL_STRING;
+    bool is_external = (getAllocKind() == gc::FINALIZE_EXTERNAL_STRING);
     JS_ASSERT_IF(is_external, isFixed());
     return is_external;
 }

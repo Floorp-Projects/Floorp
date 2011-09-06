@@ -56,11 +56,11 @@ SnapshotErrorStack();
 void
 SaveCrashData(uint64 tag, void *ptr, size_t size);
 
-template<size_t size, char marker>
+template<size_t size, unsigned char marker>
 class StackBuffer {
   private:
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-    volatile char buffer[size + 4];
+    volatile unsigned char buffer[size + 4];
 
   public:
     StackBuffer(void *data JS_GUARD_OBJECT_NOTIFIER_PARAM) {
@@ -71,7 +71,7 @@ class StackBuffer {
 
         for (size_t i = 0; i < size; i++) {
             if (data)
-                buffer[i + 2] = ((char *)data)[i];
+                buffer[i + 2] = ((unsigned char *)data)[i];
             else
                 buffer[i + 2] = 0;
         }

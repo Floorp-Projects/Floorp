@@ -1700,6 +1700,26 @@ public:
    */
   static PRBool IsFocusedContent(const nsIContent *aContent);
 
+  /**
+   * Returns PR_TRUE if the DOM full-screen API is enabled.
+   */
+  static PRBool IsFullScreenApiEnabled();
+
+  /**
+   * Returns PR_TRUE if requests for full-screen are allowed in the current
+   * context. Requests are only allowed if the user initiated them (like with
+   * a mouse-click or key press), unless this check has been disabled by
+   * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
+   */
+  static PRBool IsRequestFullScreenAllowed();
+
+  /**
+   * Returns PR_TRUE if key input is restricted in DOM full-screen mode
+   * to non-alpha-numeric key codes only. This mirrors the
+   * "full-screen-api.key-input-restricted" pref.
+   */
+  static PRBool IsFullScreenKeyInputRestricted();
+
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
   static void GetMetaText(nsAString& text);
@@ -1864,6 +1884,9 @@ private:
 
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
+  static PRBool sIsFullScreenApiEnabled;
+  static PRBool sTrustedFullScreenOnly;
+  static PRBool sFullScreenKeyInputRestricted;
 
   static nsHtml5Parser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
