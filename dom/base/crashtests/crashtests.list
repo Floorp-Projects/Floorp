@@ -1,4 +1,4 @@
-load 90613-1.html
+asserts-if(Android,1) load 90613-1.html
 load 244933-1.html
 load 275912-1.html
 load 327571-1.html
@@ -21,7 +21,7 @@ load 473284.xul
 load 499006-1.html
 load 499006-2.html
 load 502617.html
-asserts(1) load 504224.html # bug 564098
+asserts(1-2) load 504224.html # bug 564098
 load 603531.html
 load 601247.html
 load 609560-1.xhtml
