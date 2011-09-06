@@ -644,6 +644,7 @@ ContextStack::popSegment()
 bool
 ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
 {
+    LeaveTrace(cx);
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
     uintN nvars = 2 + argc;
