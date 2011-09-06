@@ -856,13 +856,13 @@ class MCompare
   : public MBinaryInstruction,
     public ComparePolicy
 {
-    Assembler::Condition cond_;
+    JSOp jsop_;
 
-    MCompare(MDefinition *left, MDefinition *right, JSOp op)
-      : MBinaryInstruction(left, right)
+    MCompare(MDefinition *left, MDefinition *right, JSOp jsop)
+      : MBinaryInstruction(left, right),
+        jsop_(jsop)
     {
         setResultType(MIRType_Boolean);
-        setCondition(op);
     }
 
   public:
@@ -874,16 +874,12 @@ class MCompare
         return specialization_;
     }
 
-    Assembler::Condition condition() {
-        return cond_;
+    JSOp jsop() const {
+        return jsop_;
     }
-
     TypePolicy *typePolicy() {
         return this;
     }
-
-  private:
-    void setCondition(JSOp op);
 };
 
 // Wraps an SSA name in a new SSA name. This is used for correctness while

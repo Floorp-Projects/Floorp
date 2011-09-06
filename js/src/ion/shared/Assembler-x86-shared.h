@@ -102,7 +102,7 @@ class AssemblerX86Shared
     {
     }
 
-    static Condition inverseCondition(Condition cond);
+    static Condition InvertCondition(Condition cond);
 
     static void TraceRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -629,6 +629,11 @@ class AssemblerX86Shared
     }
     void pop(const Register &src) {
         masm.pop_r(src.code());
+    }
+
+    // Zero-extend byte to 32-bit integer.
+    void movzxbl(const Register &src, const Register &dest) {
+        masm.movzbl_rr(src.code(), dest.code());
     }
 
     void unpcklps(const FloatRegister &src, const FloatRegister &dest) {

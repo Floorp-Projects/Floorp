@@ -95,8 +95,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitValue(LValue *value);
     bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);
-    bool visitCompareD(LCompareD *comp);
-    bool visitCompareDAndBranch(LCompareDAndBranch *comp);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

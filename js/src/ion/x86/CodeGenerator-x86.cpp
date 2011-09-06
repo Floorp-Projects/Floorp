@@ -245,16 +245,3 @@ CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
     return truthy ? Assembler::NonZero : Assembler::Zero;
 }
 
-bool
-CodeGeneratorX86::visitCompareD(LCompareD *comp)
-{
-    JS_NOT_REACHED("Codegen for CompareD NYI");
-    return false;
-}
-
-bool
-CodeGeneratorX86::visitCompareDAndBranch(LCompareDAndBranch *comp)
-{
-    JS_NOT_REACHED("Codegen for CompareDAndBranch NYI");
-    return false;
-}
