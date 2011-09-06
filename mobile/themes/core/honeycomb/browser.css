@@ -43,6 +43,7 @@
   -moz-appearance: none;
   -moz-box-align: center;
   padding: 0;
+  background: @color_toolbar_background@;
   border: none;
   min-height: @touch_button_xlarge@;
 }
@@ -199,6 +200,7 @@ toolbarbutton.urlbar-button {
 
 #urlbar-edit,
 #urlbar-title {
+  background: @color_toolbar_background@;
   padding: @padding_xxxnormal@ 0px @padding_xsmall@ 0px;
   margin: 0px !important;
   min-height: @urlbar_edit_height@ !important;
@@ -311,7 +313,7 @@ toolbarbutton.urlbar-button {
   padding: 0;
   -moz-border-start: @border_width_large@ solid #262629;
   min-width: @sidebar_width_minimum@ !important;
-  background: @color_background_default@;
+  background: @color_toolbar_background@;
 }
 
 .button-control {
@@ -414,19 +416,35 @@ toolbarbutton.urlbar-button {
 
 /* awesomescreen buttons --------------------------------------------------- */
 toolbarbutton.choice-all {
-  list-style-image: url(chrome://browser/skin/images/allpages-48.png);
+  list-style-image: url("chrome://browser/skin/images/autocomplete-all-hdpi.png");
+}
+
+toolbarbutton.choice-all[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/autocomplete-all-selected-hdpi.png");
 }
 
 toolbarbutton.choice-bookmarks {
-  list-style-image: url(chrome://browser/skin/images/bookmarks-48.png);
+  list-style-image: url("chrome://browser/skin/images/autocomplete-bookmarked-hdpi.png");
+}
+
+toolbarbutton.choice-bookmarks[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/autocomplete-bookmarked-selected-hdpi.png");
 }
 
 toolbarbutton.choice-history {
-  list-style-image: url(chrome://browser/skin/images/history-48.png);
+  list-style-image: url("chrome://browser/skin/images/autocomplete-history-hdpi.png");
+}
+
+toolbarbutton.choice-history[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/autocomplete-history-selected-hdpi.png");
 }
 
 toolbarbutton.choice-remotetabs {
-  list-style-image: url(chrome://browser/skin/images/remotetabs-48.png);
+  list-style-image: url("chrome://browser/skin/images/autocomplete-desktop-hdpi.png");
+}
+
+toolbarbutton.choice-remotetabs[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/autocomplete-desktop-selected-hdpi.png");
 }
 
 /* awesomescreen panels ---------------------------------------------------- */
@@ -469,8 +487,8 @@ remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
   margin: 0;
   padding: @padding_small@ @padding_normal@ @padding_normal@ @padding_normal@;
   font-weight: bold;
-  color: @color_text_default@ !important;
-  background-image: url(images/row-header-bg.png);
+  background-color: @color_background_header@;
+  color: @color_text_header@ !important;
   background-repeat: repeat-x;
   background-size: auto 100%;
 }
@@ -615,6 +633,20 @@ richlistitem[isDisabled="true"] image {
   white-space: pre-wrap;
 }
 
+/* awesome screens */
+.place-list {
+  background-image: url(chrome://browser/skin/images/menu-top-insideglow.png);
+  background-repeat: repeat-x;
+  background-position: top left;
+  background-color: @color_background_default@;
+}
+
+.remotetabs-list-children,
+.history-list-children,
+.place-list-children {
+  background-color: transparent;
+}
+
 /* folders navigation row */
 .place-list-parents placelabel {
   visibility: collapse;
@@ -627,21 +659,20 @@ richlistitem[isDisabled="true"] image {
 /* be consistent with the size of placeitem */
 placelabel {
   -moz-box-align: center;
-  -moz-padding-end: @placelabel_padding@;
-  background-image: url(images/arrowup-16.png), url("images/row-header-bg.png");
-  background-repeat: no-repeat, repeat-x;
-  background-position: 98% 50%, top left;
-  background-size: auto auto, auto 100%;
-  color: black; /* force */
+  padding: 0 @padding_large@;
+  background-color: @color_background_header@;
+  color: @color_text_header@;
   min-height: @touch_row@; /* row size */
+  background-image: url(images/arrowup-16.png);
+  background-repeat: no-repeat;
+  background-position: -moz-calc(100% - @padding_large@) 50%;
 }
 
 placelabel:-moz-locale-dir(rtl) {
-  background-position: 2% 50%, top left;
+  background-position: @padding_large@ 50%;
 }
 
 placelabel:hover:active {
-  background-image: url(images/arrowup-16.png);
   background-color: @color_background_highlight@;
   color: @color_text_highlight@;
 }
@@ -693,22 +724,38 @@ placeitem[ui="manage"] > .bookmark-manage textbox[anonid="uri"]:-moz-locale-dir(
   text-align: right;
 }
 
-/* force the richlistboxes to have a white background */
-.autocomplete-items,
-.place-list-children,
-.history-list-children,
-.remotetabs-list-children {
-  background-color: white; /* force */
+#awesome-panels {
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
 }
 
+#awesome-header .panel-row-button {
+  -moz-padding-end: 0px;
+  padding: @padding_normal@ !important;
+  border: none !important;
+}
+
+#awesome-header {
+  background-image: url(chrome://browser/skin/images/menu-top-insideglow.png);
+  background-repeat: repeat-x;
+  background-position: top left;
+}
+
+#awesome-header .panel-row-button[checked="true"]:first-child {
+  background-image: url(chrome://browser/skin/images/menu-top-insideglow.png);
+  background-repeat: repeat-x;
+  background-position: top left;
+}
+
+/* force the richlistboxes to have a white background */
 autocompleteresult,
 placeitem {
   -moz-user-focus: ignore;
-  color: black; /* force */
-  background-color: white; /* force */
+  background-color: transparent;
   padding: @padding_xsmall@ @padding_small@;
-  border-bottom: @border_width_tiny@ solid rgb(207,207,207);
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
   min-height: @touch_row@; /* row size */
+  margin: 0px @margin_large@;
+  -moz-box-pack: center;
 }
 
 #popup_autocomplete autocompleteresult:hover:active,
@@ -724,11 +771,12 @@ remotetabslist autocompleteresult:hover:active:not([selected="true"]):not([class
 .bookmark-item-container {
   margin: 0;
   padding: 0;
+  -moz-box-align: center;
 }
 
 .autocomplete-item-label,
 .bookmark-item-label {
-  font-size: @font_normal@ !important;
+  font-size: @font_snormal@ !important;
   font-weight: normal;
   -moz-margin-end: @margin_normal@;
 }
@@ -766,11 +814,11 @@ placeitem[src=""] .bookmark-item-container > image {
 }
 
 .autocomplete-item-container[favorite="true"] {
-  background-image: url("chrome://browser/skin/images/autocomplete-bookmarked-hdpi.png");
+  background-image: url("chrome://browser/skin/images/autocomplete-bookmarked-selected-hdpi.png");
 }
 
 .autocomplete-item-container[remote="true"] {
-  background-image: url("chrome://browser/skin/images/autocomplete-desktop-hdpi.png");
+  background-image: url("chrome://browser/skin/images/autocomplete-desktop-selected-hdpi.png");
 }
 
 .autocomplete-item-container[search="true"] {
@@ -778,8 +826,8 @@ placeitem[src=""] .bookmark-item-container > image {
 }
 
 .autocomplete-item-container[favorite="true"][remote="true"] {
-  background-image: url("chrome://browser/skin/images/autocomplete-bookmarked-hdpi.png"),
-                    url("chrome://browser/skin/images/autocomplete-desktop-hdpi.png");
+  background-image: url("chrome://browser/skin/images/autocomplete-bookmarked-selected-hdpi.png"),
+                    url("chrome://browser/skin/images/autocomplete-desktop-selected-hdpi.png");
   background-position: 100% @autocomplete_item_container_position@,
                         94% @autocomplete_item_container_position@;
   -moz-padding-end: @autocomplete_item_container_padding@;
@@ -797,8 +845,8 @@ placeitem[src=""] .bookmark-item-container > image {
 
 .autocomplete-item-subtitle,
 .bookmark-item-url {
-  color: blue; /* force */
-  font-size: @font_small@ !important;
+  color: @color_text_placeholder@; /* force */
+  font-size: @font_xtiny@ !important;
   -moz-margin-end: @autocomplete_item_subtitle_margin@;
 }
 
@@ -850,21 +898,15 @@ autocompleteresult:not([badge]) .autocomplete-item-badge,
 autocompleteresult[class="history-item-title"],
 autocompleteresult[class="remotetabs-item-title"] {
   min-height: 0;
-  color: @color_text_default@;
-  font-size: smaller;
-  font-weight: bold;
-  background-color: transparent;
-  margin: 0;
-  padding: @autocompleteresult_padding@ @padding_xnormal@;
-  background-image: url(images/row-header-bg.png);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-color: @color_background_header@;
+  color: @color_text_header@;
+  padding: @autocompleteresult_padding@ @padding_large@;
+  margin: 0px !important;
 }
 
 autocompleteresult[class="history-item-title"] .autocomplete-item-label,
 autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-label {
-  font-size: @font_small@ !important;
-  font-weight: bold !important;
+  font-size: @font_tiny@ !important;
 }
 
 autocompleteresult[class="history-item-title"] .autocomplete-item-subtitle,
@@ -913,7 +955,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
   -moz-border-end: @border_width_large@ solid #262629;
-  background: @color_background_default@;
+  background: @color_toolbar_background@;
 }
 
 #tabs:-moz-locale-dir(rtl) {
@@ -1115,6 +1157,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 .action-button,
 .context-command,
 pageaction {
+  background-color: none;
   -moz-border-top-colors: white;
   -moz-border-right-colors: rgb(175,175,175);
   -moz-border-bottom-colors: rgb(175,175,175);
@@ -1231,11 +1274,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
   visibility: collapse;
 }
 
-#search-engines-list > .action-button > .button-box > .button-text {
-  text-align: start;
-  -moz-box-flex: 1; /* Needed for the crop attribute to have an effect */
-}
-
 #search-engines-list > .action-button > .button-box > .button-icon {
   width: 32px;
   height: 32px;
@@ -1327,7 +1365,6 @@ setting {
   background-color: #5e6166;
   border: @border_width_small@ solid #767973;
   border-radius: @border_radius_normal@;
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
   padding: @padding_normal@; /* core spacing on top/bottom */
   margin-bottom: @margin_large@;
   -moz-transition-property: opacity;
@@ -1479,7 +1516,7 @@ setting {
   margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
 }
 
-#appmenu-overflow-commands > .appmenu-button {
+#appmenu-overflow-appcommands > .appmenu-button {
   color: @color_text_default@;
   background: transparent;
   font-size: @font_normal@ !important;
@@ -1489,9 +1526,88 @@ setting {
   -moz-box-align: center;
 }
 
-#appmenu-overflow-commands > .appmenu-button:hover:active {
+#appmenu-overflow-appcommands > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
+}
+
+#appmenu-popup-appcommands {
+  padding: @padding_normal@ !important;
+  background-color: transparent;
+}
+
+#appmenu-popup-appcommands richlistitem {
+  -moz-box-align: center;
+  border-top: @border_width_tiny@ solid @color_button_border@;
+  border-bottom: none;
+  background-color: transparent;
+}
+
+#appmenu-popup-appcommands richlistitem:hover:active {
+  background-color: @color_background_highlight_overlay@;
+}
+
+#appmenu-popup-sitecommands {
+  display: block;
+  max-width: -moz-calc(4.51 * @touch_button_xlarge@ + 2 * @padding_normal@) !important;
+  width: -moz-calc(4.51 * @touch_button_xlarge@ + 2 * @padding_normal@) !important;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction {
+  font-size: @font_tiny@;
+  display: inline-block;
+  min-height: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  min-width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  max-width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  width: -moz-calc(1.5 * @touch_button_xlarge@) !important;
+  border-radius: 0px;
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+  text-align: center;
+  background-repeat: no-repeat;
+  background-position: 50% -moz-calc(50% - 1em);
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction > label {
+  padding-top: @touch_button_small@;
+}
+
+#appmenu-popup-sitecommands > .appmenu-site-button {
+  background-image: url("chrome://browser/skin/images/appmenu-site-hdpi.png");
+}
+
+#appmenu-popup-sitecommands > .appmenu-share-button {
+  background-image: url("chrome://browser/skin/images/appmenu-share-hdpi.png");
+}
+
+#appmenu-popup-sitecommands > .appmenu-findinpage-button {
+  background-image: url("chrome://browser/skin/images/appmenu-findinpage-hdpi.png");
+}
+
+#appmenu-popup-sitecommands > .appmenu-saveas-button {
+  background-image: url("chrome://browser/skin/images/appmenu-saveas-hdpi.png");
+}
+
+#appmenu-popup-sitecommands {
+  padding: @padding_normal@ !important;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction:not(:nth-child(3n+3)):-moz-locale-dir(ltr) {
+  border-right: @border_width_tiny@ solid @color_button_border@;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction:not(:nth-child(3n+3)):-moz-locale-dir(rtl) {
+  border-left: @border_width_tiny@ solid @color_button_border@;
+}
+
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+1):last-child,
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+1):nth-last-child(-3n+2),
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+1):nth-last-child(-3n+3),
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+2):last-child,
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+2):nth-last-child(-3n+2),
+#appmenu-popup-sitecommands > .appmenu-pageaction:nth-child(3n+3):last-child {
+  border-bottom: none;
 }
 
 /* Sync setup ------------------------------------------------------------- */
@@ -1636,4 +1752,65 @@ setting {
   #toolbar-main {
     -moz-padding-start: @padding_xxxnormal@;
   }
+
+  #awesome-header {
+    -moz-box-orient: vertical;
+  }
+
+  #awesome-panels {
+    -moz-box-orient: horizontal;
+  }
+
+  #awesome-header .panel-row-button {
+    -moz-box-orient: vertical;
+    max-width: @awesome_header_maxwidth@;
+    min-height: @awesome_header_maxwidth@;
+    -moz-box-flex: 0;
+    padding: @padding_small@;
+  }
+
+  #search-engines-list {
+    padding: @padding_normal@ !important;
+    max-width: -moz-calc(4 * @touch_button_xlarge@ + 2 * @padding_normal@);
+    -moz-box-pack: center;
+    -moz-box-align: center;
+  }
+  
+  #search-engines-list > .action-button {
+    border-radius: 0px;
+    min-width: -moz-calc(2 * @touch_button_xlarge@);
+    max-width: -moz-calc(2 * @touch_button_xlarge@);
+    width: -moz-calc(2 * @touch_button_xlarge@);
+    border: none;
+    border-bottom: @border_width_tiny@ solid @color_button_border@;
+  }
+
+  #search-engines-list > .action-button > .button-box {
+    -moz-box-orient: vertical;
+  }
+  
+  #search-engines-list > .action-button:nth-child(odd):-moz-locale-dir(ltr) {
+    border-right: @border_width_tiny@ solid @color_button_border@;
+  }
+
+  #search-engines-list > .action-button:nth-child(odd):-moz-locale-dir(rtl) {
+    border-left: @border_width_tiny@ solid @color_button_border@;
+  }
+
+  #search-engines-list > .action-button:nth-child(odd):last-child {
+    max-width: -moz-calc(4 * @touch_button_xlarge@);
+    width: -moz-calc(4 * @touch_button_xlarge@);
+    border: none;
+  }
+  
+  #search-engines-list > .action-button:nth-last-child(-2n+2):nth-child(odd),
+  #search-engines-list > .action-button:last-child {
+    border-bottom: none;
+  }
+  
+  #search-engines-list > .action-button > .button-box > .button-text {
+    text-align: start;
+    font-size: @font_tiny@ !important;
+  }
+
 }

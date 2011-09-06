@@ -2484,8 +2484,8 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                     aFrame->PresContext(),
                                                     dummy, bounds, aFactor);
   } else {
-     NS_ASSERTION(aFrame->Preserves3DChildren(),
-                  "If we don't have a transform, then we must be at least preserving transforms of our children");
+     NS_ASSERTION(aFrame->GetStyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D,
+                  "If we don't have a transform, then we must be at least attempting to preserve the transforms of our children");
   }
 
   const nsStyleDisplay* parentDisp = nsnull;

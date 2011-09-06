@@ -142,7 +142,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
 
     /* Once a script starts getting really hot we will inline calls in it. */
     if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
-        (outerScript->useCount() >= USES_BEFORE_INLINING ||
+        (outerScript->getUseCount() >= USES_BEFORE_INLINING ||
          cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
         inlining_ = true;
     }
@@ -183,6 +183,11 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::checkAnalysis(JSScript *script)
 {
+    if (script->hasClearedGlobal()) {
+        JaegerSpew(JSpew_Abort, "script has a cleared global\n");
+        return Compile_Abort;
+    }
+
     if (!script->ensureRanBytecode(cx))
         return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
@@ -860,7 +865,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                       jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool;
-    uint8 *result = (uint8 *)script->compartment->jaegerCompartment()->execAlloc()->
+    uint8 *result = (uint8 *)script->compartment()->jaegerCompartment()->execAlloc()->
                     alloc(codeSize, &execPool, JSC::METHOD_CODE);
     if (!result) {
         js_ReportOutOfMemory(cx);
@@ -1323,7 +1328,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
-    JS_ASSERT(jit->scriptDataSize() == dataSize);
+    /* Pass in NULL here -- we don't want slop bytes to be counted. */
+    JS_ASSERT(jit->scriptDataSize(NULL) == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -2817,7 +2823,7 @@ mjit::Compiler::fullAtomIndex(jsbytecode *pc)
 
     /* If we ever enable INDEXBASE garbage, use this below. */
 #if 0
-    return GET_SLOTNO(pc) + (atoms - script->atomMap.vector);
+    return GET_SLOTNO(pc) + (atoms - script->atoms);
 #endif
 }
 
@@ -5497,7 +5503,7 @@ mjit::Compiler::iter(uintN flags)
     frame.unpinReg(reg);
 
     /* Fetch the most recent iterator. */
-    masm.loadPtr(&script->compartment->nativeIterCache.last, ioreg);
+    masm.loadPtr(&script->compartment()->nativeIterCache.last, ioreg);
 
     /* Test for NULL. */
     Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);
@@ -5589,7 +5595,7 @@ mjit::Compiler::iterNext(ptrdiff_t offset)
     frame.unpinReg(reg);
 
     /* Test clasp */
-    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, &js_IteratorClass);
+    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, &IteratorClass);
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
@@ -5644,7 +5650,7 @@ mjit::Compiler::iterMore(jsbytecode *target)
     RegisterID tempreg = frame.allocReg();
 
     /* Test clasp */
-    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, &js_IteratorClass);
+    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, &IteratorClass);
     stubcc.linkExitForBranch(notFast);
 
     /* Get private from iter obj. */
@@ -5683,7 +5689,7 @@ mjit::Compiler::iterEnd()
     frame.unpinReg(reg);
 
     /* Test clasp */
-    Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, &js_IteratorClass);
+    Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, &IteratorClass);
     stubcc.linkExit(notIterator, Uses(1));
 
     /* Get private from iter obj. */

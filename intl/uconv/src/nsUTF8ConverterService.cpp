@@ -76,7 +76,7 @@ ToUTF8(const nsACString &aString, const char *aCharset, nsACString &aResult)
 
   rv = unicodeDecoder->Convert(inStr.get(), &srcLen, ustr, &dstLen);
   if (NS_SUCCEEDED(rv)){
-    // Tru64 Cxx and IRIX MIPSpro 7.3  need an explicit get()
+    // Tru64 Cxx needs an explicit get()
     CopyUTF16toUTF8(Substring(ustr.get(), ustr + dstLen), aResult);
   }
   return rv;

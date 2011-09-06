@@ -715,6 +715,11 @@ area {
   display: none ! important;
 }
 
+iframe:-moz-full-screen {
+  /* iframes in full-screen mode don't show a border. */
+  border: none;
+}
+
 /* media elements */
 video > xul|videocontrols, audio > xul|videocontrols {
   display: -moz-box;

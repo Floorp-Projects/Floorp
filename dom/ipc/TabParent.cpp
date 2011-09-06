@@ -627,7 +627,7 @@ TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
         vm->GetRootWidget(getter_AddRefs(widget));
         if (widget) {
           *aValue = reinterpret_cast<WindowsHandle>(
-            widget->GetNativeData(NS_NATIVE_WINDOW));
+            widget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW));
           return true;
         }
       }

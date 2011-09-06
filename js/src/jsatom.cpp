@@ -645,19 +645,16 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
 JS_STATIC_ASSERT(TEMP_SIZE_START >= sizeof(JSHashTable));
 
 void
-js_InitAtomMap(JSContext *cx, JSAtomMap *map, AtomIndexMap *indices)
+js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
 {
-    /* Map length must already be initialized. */
-    JS_ASSERT(indices->count() == map->length);
-
     if (indices->isMap()) {
         typedef AtomIndexMap::WordMap WordMap;
         const WordMap &wm = indices->asMap();
         for (WordMap::Range r = wm.all(); !r.empty(); r.popFront()) {
             JSAtom *atom = r.front().key;
             jsatomid index = r.front().value;
-            JS_ASSERT(index < map->length);
-            map->vector[index] = atom;
+            JS_ASSERT(index < indices->count());
+            atoms[index] = atom;
         }
     } else {
         for (const AtomIndexMap::InlineElem *it = indices->asInline(), *end = indices->inlineEnd();
@@ -665,8 +662,8 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, AtomIndexMap *indices)
             JSAtom *atom = it->key;
             if (!atom)
                 continue;
-            JS_ASSERT(it->value < map->length);
-            map->vector[it->value] = atom;
+            JS_ASSERT(it->value < indices->count());
+            atoms[it->value] = atom;
         }
     }
 }

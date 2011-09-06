@@ -117,6 +117,24 @@ WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
     firstTime = PR_FALSE;
 }
 
+CheckedUint32
+WebGLContext::GetImageSize(WebGLsizei height, 
+                           WebGLsizei width, 
+                           PRUint32 pixelSize,
+                           PRUint32 packOrUnpackAlignment)
+{
+    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * pixelSize;
+
+    // alignedRowSize = row size rounded up to next multiple of packAlignment
+    CheckedUint32 checked_alignedRowSize = RoundedToNextMultipleOf(checked_plainRowSize, packOrUnpackAlignment);
+
+    // if height is 0, we don't need any memory to store this; without this check, we'll get an overflow
+    CheckedUint32 checked_neededByteLength
+        = height <= 0 ? 0 : (height-1) * checked_alignedRowSize + checked_plainRowSize;
+
+    return checked_neededByteLength;
+}
+
 nsresult
 WebGLContext::SynthesizeGLError(WebGLenum err)
 {
