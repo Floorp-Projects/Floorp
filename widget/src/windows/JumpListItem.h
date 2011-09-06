@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Jim Mathies <jmathies@mozilla.com>
+ *   Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,6 +79,9 @@ public:
 protected:
   short Type() { return mItemType; }
   short mItemType;
+
+  static nsresult HashURI(nsCOMPtr<nsICryptoHash> &aCryptoHash,
+                          nsIURI *aUri, nsACString& aUriHash);
 };
 
 class JumpListSeparator : public JumpListItem, public nsIJumpListSeparator
@@ -118,8 +122,6 @@ protected:
   static const PRUnichar kSehllLibraryName[];
   static HMODULE sShellDll;
   static SHCreateItemFromParsingNamePtr createItemFromParsingName;
-
-  nsresult HashURI(nsIURI *uri, nsACString& aUriHas);
 };
 
 class JumpListShortcut : public JumpListItem, public nsIJumpListShortcut
@@ -137,12 +139,20 @@ public:
 
   static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IShellLinkW>& aShellLink);
   static nsresult GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJumpListShortcut>& aShortcut);
+  static nsresult RemoveCacheIcon(nsCOMPtr<nsIURI> aURI);
 
 protected:
   PRInt32 mIconIndex;
+  nsCOMPtr<nsIURI> mIconImageURI;
   nsCOMPtr<nsILocalHandlerApp> mHandlerApp;
 
   PRBool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
+  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aIconURI, 
+                                       nsString &aICOFilePath);
+  static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aIconURI, 
+                                    nsCOMPtr<nsIFile> &aICOFile);
+  static nsresult CacheIconFileFromIconURI(nsCOMPtr<nsIURI> aIconURI, 
+                                           nsCOMPtr<nsIFile> aICOFile);
 };
 
 } // namespace widget

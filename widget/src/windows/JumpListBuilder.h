@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Jim Mathies <jmathies@mozilla.com>
+ *   Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,6 +78,7 @@ private:
 
   PRBool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
   nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
+  nsresult RemoveIconCacheForItems(nsIMutableArray *removedItems);
 
   friend class WinTaskbar;
 };

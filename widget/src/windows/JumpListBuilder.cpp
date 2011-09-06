@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Jim Mathies <jmathies@mozilla.com>
+ *   Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -145,12 +146,57 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, PRBo
       TransferIObjectArrayToIMutableArray(objArray, removedItems);
       objArray->Release();
     }
+
+    RemoveIconCacheForItems(removedItems);
+
     sBuildingList = PR_TRUE;
     *_retval = PR_TRUE;
     return NS_OK;
   }
 
   return NS_OK;
+}
+
+// Ensures that we don't have old ICO files that aren't in our jump lists 
+// anymore left over in the cache.
+nsresult JumpListBuilder::RemoveIconCacheForItems(nsIMutableArray *items) 
+{
+  NS_ENSURE_ARG_POINTER(items);
+  
+  nsresult rv;
+  PRUint32 length;
+  items->GetLength(&length);
+  for (PRUint32 i = 0; i < length; ++i) {
+
+    //Obtain an IJumpListItem and get the type
+    nsCOMPtr<nsIJumpListItem> item = do_QueryElementAt(items, i);
+    if (!item) {
+      continue;
+    }
+    PRInt16 type;
+    if (NS_FAILED(item->GetType(&type))) {
+      continue;
+    }
+
+    // If the item is a shortcut, remove its associated icon if any
+    if (type == nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT) {
+      nsCOMPtr<nsIJumpListShortcut> shortcut = do_QueryInterface(item);
+      if (shortcut) {
+        nsCOMPtr<nsIURI> uri;
+        rv = shortcut->GetIconImageUri(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri) {
+          JumpListShortcut::RemoveCacheIcon(uri); // doesn't matter if it fails
+
+          // The shortcut was generated from an IShellLinkW so IShellLinkW can
+          // only tell us what the original icon is and not the URI.
+          // So this field was used only temporarily as the actual icon file
+          // path.  It should be cleared.
+          shortcut->SetIconImageUri(nsnull);
+        }
+      }
+    }
+
+  } // end for
 }
 
 /* boolean addListToBuild(in short aCatType, [optional] in nsIArray items, [optional] in AString catName); */

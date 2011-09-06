@@ -129,7 +129,7 @@ interface nsIJumpListLink : nsIJumpListItem
  * A generic application shortcut with command line support.
  */
 
-[scriptable, uuid(9664389E-11D6-4bea-B68C-D70232162068)]
+[scriptable, uuid(CBE3A37C-BCE1-4fec-80A5-5FFBC7F33EEA)]
 interface nsIJumpListShortcut : nsIJumpListItem
 {
   /**
@@ -147,5 +147,15 @@ interface nsIJumpListShortcut : nsIJumpListItem
    * within the the handler executable.
    */
   attribute long iconIndex;
+
+  /**
+   * Set or get the URI  of an image to use as the jump list item icon.
+   * The image will be retrieved, scaled to the needed size and converted
+   * to the needed format.
+   *
+   * If there is an error setting the iconImageUri, the
+   * app and iconIndex will be used to generate the icon.
+   */
+  attribute nsIURI iconImageUri;
 };
 
