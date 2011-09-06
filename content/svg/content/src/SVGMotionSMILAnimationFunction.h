@@ -85,7 +85,8 @@ protected:
   NS_OVERRIDE virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
                                          nsSMILValueArray& aResult);
   NS_OVERRIDE virtual void CheckValueListDependentAttrs(PRUint32 aNumValues);
-  NS_OVERRIDE virtual PRBool TreatSingleValueAsStatic() const;
+
+  NS_OVERRIDE virtual PRBool IsToAnimation() const;
 
   void     CheckKeyPoints();
   nsresult SetKeyPoints(const nsAString& aKeyPoints, nsAttrValue& aResult);
