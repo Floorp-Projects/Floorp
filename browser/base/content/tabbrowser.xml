@@ -4039,11 +4039,14 @@
       <handler event="dragstart" phase="capturing">
         this.style.MozUserFocus = '';
       </handler>
-      <handler event="mousedown">
+      <handler event="mousedown" phase="capturing">
       <![CDATA[
         if (this.selected) {
           this.style.MozUserFocus = 'ignore';
           this.clientTop; // just using this to flush style updates
+        } else if (this.mOverCloseButton) {
+          // Prevent tabbox.xml from selecting the tab.
+          event.stopPropagation();
         }
       ]]>
       </handler>
