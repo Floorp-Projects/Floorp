@@ -1622,8 +1622,7 @@ struct ReplaceData
     jsint              leftIndex;      /* left context index in str->chars */
     JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
     bool               calledBack;     /* record whether callback has been called */
-    InvokeSessionGuard session;        /* arguments for repeated lambda Invoke call */
-    InvokeArgsGuard    singleShot;     /* arguments for single lambda Invoke call */
+    InvokeArgsGuard    args;           /* arguments for lambda call */
     StringBuffer       sb;             /* buffer built during DoMatch */
 };
 
@@ -1750,6 +1749,10 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
     JSObject *lambda = rdata.lambda;
     if (lambda) {
+        PreserveRegExpStatics staticsGuard(res);
+        if (!staticsGuard.init(cx))
+            return false;
+
         /*
          * In the lambda case, not only do we find the replacement string's
          * length, we compute repstr and return it via rdata for use within
@@ -1761,36 +1764,33 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         uintN p = res->parenCount();
         uintN argc = 1 + p + 2;
 
-        InvokeSessionGuard &session = rdata.session;
-        if (!session.started()) {
-            Value lambdav = ObjectValue(*lambda);
-            if (!session.start(cx, lambdav, UndefinedValue(), argc))
-                return false;
-        }
-
-        PreserveRegExpStatics staticsGuard(res);
-        if (!staticsGuard.init(cx))
+        InvokeArgsGuard &args = rdata.args;
+        if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
             return false;
+
+        args.calleeHasBeenReset();
+        args.calleev() = ObjectValue(*lambda);
+        args.thisv() = UndefinedValue();
 
         /* Push $&, $1, $2, ... */
         uintN argi = 0;
-        if (!res->createLastMatch(cx, &session[argi++]))
+        if (!res->createLastMatch(cx, &args[argi++]))
             return false;
 
         for (size_t i = 0; i < res->parenCount(); ++i) {
-            if (!res->createParen(cx, i + 1, &session[argi++]))
+            if (!res->createParen(cx, i + 1, &args[argi++]))
                 return false;
         }
 
         /* Push match index and input string. */
-        session[argi++].setInt32(res->matchStart());
-        session[argi].setString(rdata.str);
+        args[argi++].setInt32(res->matchStart());
+        args[argi].setString(rdata.str);
 
-        if (!session.invoke(cx))
+        if (!Invoke(cx, args))
             return false;
 
         /* root repstr: rdata is on the stack, so scanned by conservative gc. */
-        JSString *repstr = ValueToString_TestForStringInline(cx, session.rval());
+        JSString *repstr = ValueToString_TestForStringInline(cx, args.rval());
         if (!repstr)
             return false;
         rdata.repstr = repstr->ensureLinear(cx);
@@ -2082,10 +2082,10 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     /* lambda(matchStr, matchStart, textstr) */
     static const uint32 lambdaArgc = 3;
-    if (!cx->stack.pushInvokeArgs(cx, lambdaArgc, &rdata.singleShot))
+    if (!cx->stack.pushInvokeArgs(cx, lambdaArgc, &rdata.args))
         return false;
 
-    CallArgs &args = rdata.singleShot;
+    CallArgs &args = rdata.args;
     args.calleev().setObject(*rdata.lambda);
     args.thisv().setUndefined();
 
@@ -2094,7 +2094,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
     sp[1].setInt32(fm.match());
     sp[2].setString(rdata.str);
 
-    if (!Invoke(cx, rdata.singleShot))
+    if (!Invoke(cx, rdata.args))
         return false;
 
     JSString *repstr = js_ValueToString(cx, args.rval());
