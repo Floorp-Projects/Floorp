@@ -981,57 +981,6 @@ var gCSSProperties = {
 						 "border", "center red", "right diagonal",
 						 "#00ffff bottom"]
 	},
-    "-moz-perspective-origin": {
-        domProp: "MozPerspectiveOrigin",
-        inherited: false,
-        type: CSS_TYPE_LONGHAND,
-        /* no subproperties */
-        prerequisites: { "width": "10px", "height": "10px", "display": "block"},
-        initial_values: [ "50% 50%", "center", "center center" ],
-        other_values: [ "25% 25%", "5px 5px", "20% 3em", "0 0", "0in 1in",
-                        "top", "bottom","top left", "top right",
-                        "top center", "center left", "center right",
-                        "bottom left", "bottom right", "bottom center",
-                        "20% center", "5px center", "13in bottom",
-                        "left 50px", "right 13%", "center 40px",
-                        "-moz-calc(20px)",
-                        "-moz-calc(20px) 10px",
-                        "10px -moz-calc(20px)",
-                        "-moz-calc(20px) 25%",
-                        "25% -moz-calc(20px)",
-                        "-moz-calc(20px) -moz-calc(20px)",
-                        "-moz-calc(20px + 1em) -moz-calc(20px / 2)",
-                        "-moz-calc(20px + 50%) -moz-calc(50% - 10px)",
-                        "-moz-calc(-20px) -moz-calc(-50%)",
-                        "-moz-calc(-20%) -moz-calc(-50%)" ],
-        invalid_values: [ "red", "auto", "none", "0.5 0.5", "40px #0000ff",
-                          "border", "center red", "right diagonal",
-                          "#00ffff bottom"]
-    },
-    "-moz-perspective": {
-		domProp: "MozPerspective",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none", "0" ],
-		other_values: [ "1000px", "500.2px", "-100px", "-27.2em" ],
-		invalid_values: [ "pants", "200" ]
-	},
-    "-moz-backface-visibility": {
-        domProp: "MozBackfaceVisibility",
-        inherited: false,
-        type: CSS_TYPE_LONGHAND,
-        initial_values: [ "visible" ],
-        other_values: [ "hidden" ],
-        invalid_values: [ "collapse" ]
-    },
-	"-moz-transform-style": {
-		domProp: "MozTransformStyle",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "flat" ],
-		other_values: [ "preserve-3d" ],
-		invalid_values: []
-	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,

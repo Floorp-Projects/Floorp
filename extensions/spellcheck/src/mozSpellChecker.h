@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): David Einstein Deinst@world.std.com
+ *   Jesper Kristensen <mail@jesperkristensen.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@
 #define mozSpellChecker_h__
 
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsISpellChecker.h"
 #include "nsString.h"
 #include "nsITextServicesDocument.h"
@@ -75,17 +77,13 @@ public:
   NS_IMETHOD GetDictionaryList(nsTArray<nsString> *aDictionaryList);
   NS_IMETHOD GetCurrentDictionary(nsAString &aDictionary);
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary);
+  NS_IMETHOD CheckCurrentDictionary();
 
 protected:
   nsCOMPtr<mozISpellI18NUtil> mConverter;
   nsCOMPtr<nsITextServicesDocument> mTsDoc;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
 
-  // Hastable maps directory name to the spellchecker contract ID
-  nsClassHashtable<nsStringHashKey, nsCString> mDictionariesMap;
-
-  nsString mDictionaryName;
-  nsCString *mCurrentEngineContractId;
   nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
   PRBool mFromStart;
 
@@ -93,6 +91,6 @@ protected:
 
   nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
 
-  nsresult InitSpellCheckDictionaryMap();
+  nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
 };
 #endif // mozSpellChecker_h__

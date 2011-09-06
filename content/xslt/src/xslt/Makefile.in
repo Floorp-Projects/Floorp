@@ -46,8 +46,6 @@ MODULE = transformiix
 LIBRARY_NAME = txxslt_s
 LIBXUL_LIBRARY = 1
 
-
-
 CPPSRCS = \
         txNodeSorter.cpp \
         txXPathResultComparator.cpp \
@@ -74,20 +72,11 @@ CPPSRCS = \
         txFormatNumberFunctionCall.cpp \
         txGenerateIdFunctionCall.cpp \
         txKeyFunctionCall.cpp \
-        txXSLTEnvironmentFunctionCall.cpp
-
-ifdef MOZ_XSLT_STANDALONE
-CPPSRCS += txHTMLOutput.cpp	\
-           txStandaloneXSLTProcessor.cpp \
-           txStandaloneStylesheetCompiler.cpp \
-           txTextOutput.cpp \
-           txXMLOutput.cpp
-else
-CPPSRCS += txMozillaStylesheetCompiler.cpp \
-           txMozillaTextOutput.cpp \
-           txMozillaXMLOutput.cpp \
-           txMozillaXSLTProcessor.cpp
-endif
+        txXSLTEnvironmentFunctionCall.cpp \
+        txMozillaStylesheetCompiler.cpp \
+        txMozillaTextOutput.cpp \
+        txMozillaXMLOutput.cpp \
+        txMozillaXSLTProcessor.cpp
 
 # For nsDependentJSString
 LOCAL_INCLUDES += \
@@ -113,8 +102,4 @@ INCLUDES += \
 	-I$(srcdir)/../../../base/src \
 	$(NULL)
 
-ifdef MOZ_XSLT_STANDALONE
-DEFINES	 += -DXML_DTD -DXML_UNICODE
-else
 DEFINES += -D_IMPL_NS_LAYOUT
-endif

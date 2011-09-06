@@ -3290,6 +3290,8 @@ pref("layers.acceleration.disabled", false);
 // Whether to force acceleration on, ignoring blacklists.
 pref("layers.acceleration.force-enabled", false);
 
+pref("layers.acceleration.draw-fps", false);
+
 #ifdef XP_WIN
 // Whether to disable the automatic detection and use of direct2d.
 #ifdef MOZ_E10S_COMPAT
@@ -3344,6 +3346,11 @@ pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 pref("alerts.disableSlidingEffect", false);
+
+// DOM full-screen API.
+pref("full-screen-api.enabled", false);
+pref("full-screen-api.allow-trusted-requests-only", true);
+pref("full-screen-api.key-input-restricted", true);
  
 //3D Transforms
 pref("layout.3d-transforms.enabled", false);

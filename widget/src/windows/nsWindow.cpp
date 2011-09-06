@@ -187,9 +187,8 @@
 #endif // !defined(WINABLEAPI)
 #endif // defined(ACCESSIBILITY)
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 #include "nsIWinTaskbar.h"
-#endif
+#define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 #if defined(NS_ENABLE_TSF)
 #include "nsTextStore.h"
@@ -559,6 +558,12 @@ nsWindow::Create(nsIWidget *aParent,
     GetWindowPopupClass(className);
   } else {
     GetWindowClass(className);
+  }
+  // Plugins are created in the disabled state so that they can't
+  // steal focus away from our main window.  This is especially
+  // important if the plugin has loaded in a background tab.
+  if(aInitData->mWindowType == eWindowType_plugin) {
+    style |= WS_DISABLED;
   }
   mWnd = ::CreateWindowExW(extendedStyle,
                            className.get(),
@@ -2697,12 +2702,21 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
+  // taskbarInfo will be NULL pre Windows 7 until Bug 680227 is resolved.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
+    do_GetService(NS_TASKBAR_CONTRACTID);
+
   mFullscreenMode = aFullScreen;
   if (aFullScreen) {
     if (mSizeMode == nsSizeMode_Fullscreen)
       return NS_OK;
     mOldSizeMode = mSizeMode;
     SetSizeMode(nsSizeMode_Fullscreen);
+
+    // Notify the taskbar that we will be entering full screen mode.
+    if (taskbarInfo) {
+      taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
+    }
   } else {
     SetSizeMode(mOldSizeMode);
   }
@@ -2721,6 +2735,11 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   if (visible) {
     Show(PR_TRUE);
     Invalidate(PR_FALSE);
+  }
+
+  // Notify the taskbar that we have exited full screen mode.
+  if (!aFullScreen && taskbarInfo) {
+    taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
   }
 
   // Let the dom know via web shell window
@@ -2785,6 +2804,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_PLUGIN_PORT:
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
+    case NS_NATIVE_SHAREABLE_WINDOW:
       return (void*)mWnd;
     case NS_NATIVE_GRAPHIC:
       // XXX:  This is sleezy!!  Remember to Release the DC after using it!
@@ -7304,6 +7324,17 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     }
   }
 
+  // If a plugin is not visibile, especially if it is in a background tab,
+  // it should not be able to steal keyboard focus.  This code checks whether
+  // the region that the plugin is being clipped to is NULLREGION.  If it is,
+  // the plugin window gets disabled.
+  if(mWindowType == eWindowType_plugin) {
+    if(NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
+      ::EnableWindow(mWnd, FALSE);
+    } else {
+      ::EnableWindow(mWnd, TRUE);
+    }
+  }
   if (!::SetWindowRgn(mWnd, dest, TRUE)) {
     ::DeleteObject(dest);
     return NS_ERROR_FAILURE;

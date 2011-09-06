@@ -1972,13 +1972,7 @@ case "$target" in
 *-darwin*)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    # If we're building with --enable-profiling, we need a frame pointer.
-    if test -z "$MOZ_PROFILING"; then
-        MOZ_FRAMEPTR_FLAGS="-fomit-frame-pointer"
-    else
-        MOZ_FRAMEPTR_FLAGS="-fno-omit-frame-pointer"
-    fi
-    MOZ_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS -fno-stack-protector"
+    MOZ_OPTIMIZE_FLAGS="-O3 -fno-stack-protector"
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -fno-common"
     CXXFLAGS="$CXXFLAGS -fpascal-strings -fno-common"
@@ -2083,13 +2077,7 @@ ia64*-hpux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    # If we're building with --enable-profiling, we need a frame pointer.
-    if test -z "$MOZ_PROFILING"; then
-        MOZ_FRAMEPTR_FLAGS="-fomit-frame-pointer"
-    else
-        MOZ_FRAMEPTR_FLAGS="-fno-omit-frame-pointer"
-    fi
-    MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks -fno-reorder-functions $MOZ_FRAMEPTR_FLAGS"
+    MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks -fno-reorder-functions"
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
@@ -2109,14 +2097,8 @@ ia64*-hpux*)
             # -Os is broken on gcc 4.1.x 4.2.x, 4.5.x we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
-        # If we're building with --enable-profiling, we need a frame pointer.
-        if test -z "$MOZ_PROFILING"; then
-            MOZ_FRAMEPTR_FLAGS="-fomit-frame-pointer"
-        else
-            MOZ_FRAMEPTR_FLAGS="-fno-omit-frame-pointer"
-        fi
-        MOZ_PGO_OPTIMIZE_FLAGS="-O3 $MOZ_FRAMEPTR_FLAGS"
-        MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK $MOZ_FRAMEPTR_FLAGS"
+        MOZ_PGO_OPTIMIZE_FLAGS="-O3"
+        MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -2236,13 +2218,7 @@ ia64*-hpux*)
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
-        # If we're building with --enable-profiling, we need -Oy-, which forces a frame pointer.
-        if test -z "$MOZ_PROFILING"; then
-            MOZ_FRAMEPTR_FLAGS=
-        else
-            MOZ_FRAMEPTR_FLAGS='-Oy-'
-        fi
-        MOZ_OPTIMIZE_FLAGS="-O2 $MOZ_FRAMEPTR_FLAGS"
+        MOZ_OPTIMIZE_FLAGS="-O2"
         MOZ_JS_LIBS='$(libdir)/mozjs.lib'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
@@ -4393,6 +4369,8 @@ else
     MOZ_OPTIMIZE=
 fi ], MOZ_OPTIMIZE=1)
 
+MOZ_SET_FRAMEPTR_FLAGS
+
 if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_OPTIMIZE"; then
     AC_MSG_CHECKING([for valid optimization flags])
@@ -4411,6 +4389,7 @@ fi
 fi # COMPILE_ENVIRONMENT
 
 AC_SUBST(MOZ_OPTIMIZE)
+AC_SUBST(MOZ_FRAMEPTR_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)

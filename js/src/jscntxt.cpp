@@ -41,6 +41,9 @@
 /*
  * JS execution context.
  */
+
+#include <limits.h> /* make sure that <features.h> is included and we can use
+                       __GLIBC__ to detect glibc presence */
 #include <new>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -114,6 +117,9 @@ ThreadData::ThreadData()
     pendingProxyOperation(NULL),
     interpreterFrames(NULL)
 {
+#ifdef DEBUG
+    noGCOrAllocationCheck = 0;
+#endif
 }
 
 ThreadData::~ThreadData()
@@ -210,13 +216,12 @@ js_CurrentThreadAndLockGC(JSRuntime *rt)
     }
     JS_ASSERT(thread->id == id);
 
-#ifdef DEBUG
-    char* gnsb = (char*) GetNativeStackBase();
-    JS_ASSERT(gnsb + 0      == (char*) thread->data.nativeStackBase ||
-              /* Work around apparent glibc bug; see bug 608526. */
-              gnsb + 0x1000 == (char*) thread->data.nativeStackBase ||
-              gnsb + 0x2000 == (char*) thread->data.nativeStackBase ||
-              gnsb + 0x3000 == (char*) thread->data.nativeStackBase);
+    /*
+     * We skip the assert under glibc due to an apparent bug there, see
+     * bug 608526.
+     */
+#ifndef __GLIBC__
+    JS_ASSERT(GetNativeStackBase() == thread->data.nativeStackBase);
 #endif
 
     return thread;

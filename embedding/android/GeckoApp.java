@@ -141,7 +141,6 @@ abstract public class GeckoApp
         final Intent i = intent;
         new Thread() {
             public void run() {
-                long startup_time = System.currentTimeMillis();
                 try {
                     if (mLibLoadThread != null)
                         mLibLoadThread.join();
@@ -460,14 +459,23 @@ abstract public class GeckoApp
     protected void unpackComponents()
         throws IOException, FileNotFoundException
     {
-        ZipFile zip;
-        InputStream listStream;
-
+        File applicationPackage = new File(getApplication().getPackageResourcePath());
         File componentsDir = new File(sGREDir, "components");
-        componentsDir.mkdir();
-        zip = new ZipFile(getApplication().getPackageResourcePath());
+        if (componentsDir.lastModified() == applicationPackage.lastModified())
+            return;
 
-        byte[] buf = new byte[8192];
+        componentsDir.mkdir();
+        componentsDir.setLastModified(applicationPackage.lastModified());
+
+        surfaceView.mSplashStatusMsg =
+                    getResources().getString(R.string.splash_firstrun);
+        surfaceView.drawSplashScreen();
+
+        GeckoAppShell.killAnyZombies();
+
+        ZipFile zip = new ZipFile(applicationPackage);
+
+        byte[] buf = new byte[32768];
         try {
             if (unpackFile(zip, buf, null, "removed-files"))
                 removeFiles();
@@ -518,8 +526,6 @@ abstract public class GeckoApp
         
     }
 
-    boolean haveKilledZombies = false;
-
     private boolean unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry,
                             String name)
         throws IOException, FileNotFoundException
@@ -531,22 +537,12 @@ abstract public class GeckoApp
                                             zip.getName());
 
         File outFile = new File(sGREDir, name);
-        if (outFile.exists() &&
-            outFile.lastModified() == fileEntry.getTime() &&
+        if (outFile.lastModified() == fileEntry.getTime() &&
             outFile.length() == fileEntry.getSize())
             return false;
 
-        surfaceView.mSplashStatusMsg =
-                    getResources().getString(R.string.splash_firstrun);
-        surfaceView.drawSplashScreen();
-
-        if (!haveKilledZombies) {
-            haveKilledZombies = true;
-            GeckoAppShell.killAnyZombies();
-        }
-
         File dir = outFile.getParentFile();
-        if (!outFile.exists())
+        if (!dir.exists())
             dir.mkdirs();
 
         InputStream fileStream;

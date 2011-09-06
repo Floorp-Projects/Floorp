@@ -308,7 +308,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     PodZero(escapedSlots, numSlots);
 
-    if (script->usesEval || script->usesArguments || script->compartment->debugMode()) {
+    if (script->usesEval || script->usesArguments || script->compartment()->debugMode()) {
         for (unsigned i = 0; i < nargs; i++)
             escapedSlots[ArgSlot(i)] = true;
     } else {
@@ -319,7 +319,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         }
     }
 
-    if (script->usesEval || script->compartment->debugMode()) {
+    if (script->usesEval || script->compartment()->debugMode()) {
         for (unsigned i = 0; i < script->nfixed; i++) {
             escapedSlots[LocalSlot(script, i)] = true;
             setLocal(i, LOCAL_USE_BEFORE_DEF);
@@ -612,7 +612,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script->main - script->code + tn->start;
+                unsigned startOffset = script->mainOffset + tn->start;
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 
@@ -894,7 +894,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script->main - script->code + tn->start;
+                unsigned startOffset = script->mainOffset + tn->start;
                 if (startOffset + tn->length == offset) {
                     /*
                      * Extend all live variables at exception entry to the start of
@@ -905,9 +905,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                             ensureVariable(lifetimes[i], startOffset - 1);
                     }
 
-#ifdef DEBUG
                     found = true;
-#endif
                     break;
                 }
             }
@@ -1674,7 +1672,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script->main - script->code + tn->start;
+                unsigned startOffset = script->mainOffset + tn->start;
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 

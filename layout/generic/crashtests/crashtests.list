@@ -370,3 +370,5 @@ load text-overflow-bug671796.xhtml
 load 667025.html
 asserts(14) load 673770.html # bug 569193 and bug 459597
 load 679933-1.html
+load 682649-1.html
+load 683702-1.xhtml
