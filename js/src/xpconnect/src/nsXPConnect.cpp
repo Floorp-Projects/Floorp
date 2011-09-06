@@ -847,6 +847,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 "Object",
                 "String",
                 "Script",
+		"IonCode",
                 "Xml",
                 "Shape",
                 "TypeObject",
