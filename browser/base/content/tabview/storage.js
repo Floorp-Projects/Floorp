@@ -99,47 +99,27 @@ let Storage = {
   saveTab: function Storage_saveTab(tab, data) {
     Utils.assert(tab, "tab");
 
-    if (data != null) {
-      let imageData = data.imageData;
-      // Remove imageData from payload
-      delete data.imageData;
-
-      if (imageData != null)
-        ThumbnailStorage.saveThumbnail(tab, imageData);
-    }
-
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
       JSON.stringify(data));
   },
 
   // ----------
   // Function: getTabData
-  // Load tab data from session store and return it. Asynchrously loads the tab's
-  // thumbnail from the cache and calls <callback>(imageData) when done.
-  getTabData: function Storage_getTabData(tab, callback) {
+  // Load tab data from session store and return it.
+  getTabData: function Storage_getTabData(tab) {
     Utils.assert(tab, "tab");
-    Utils.assert(typeof callback == "function", "callback arg must be a function");
 
     let existingData = null;
 
     try {
       let tabData = this._sessionStore.getTabValue(tab, this.TAB_DATA_IDENTIFIER);
-      if (tabData != "") {
+      if (tabData != "")
         existingData = JSON.parse(tabData);
-      }
     } catch (e) {
       // getTabValue will fail if the property doesn't exist.
       Utils.log(e);
     }
 
-    if (existingData) {
-      ThumbnailStorage.loadThumbnail(
-        tab, existingData.url,
-        function(status, imageData) { 
-          callback(imageData);
-        }
-      );
-    }
     return existingData;
   },
 

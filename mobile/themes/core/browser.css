@@ -730,6 +730,7 @@ remotetabslist autocompleteresult:hover:active:not([selected="true"]):not([class
 .bookmark-item-container {
   margin: 0;
   padding: 0;
+  -moz-box-align: center;
 }
 
 .autocomplete-item-label,
@@ -1469,7 +1470,7 @@ setting {
   margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
 }
 
-#appmenu-overflow-commands > .appmenu-button {
+#appmenu-overflow-appcommands > .appmenu-button {
   color: #000;
   background: transparent;
   font-size: @font_normal@ !important;
@@ -1479,9 +1480,13 @@ setting {
   -moz-box-align: center;
 }
 
-#appmenu-overflow-commands > .appmenu-button:hover:active {
+#appmenu-overflow-appcommands > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
+}
+
+#appmenu-popup-sitecommands {
+  -moz-box-orient: vertical;
 }
 
 /* Sync setup ------------------------------------------------------------- */
@@ -1589,9 +1594,6 @@ setting {
 #toolbar-main[tablet="true"] > .button-actionbar {
   visibility: visible;
 }
-#toolbar-main[tablet="true"][mode="edit"] > .button-actionbar {
-  visibility: collapse;
-}
 
 #controls-scrollbox[tablet="true"] > #controls-sidebar {
   visibility: collapse;
@@ -1631,3 +1633,11 @@ setting {
   list-style-image: url("chrome://browser/skin/images/handle-end.png");
 }
 
+@media (min-width: @tablet_panel_minwidth@) {
+  #awesome-panels {
+    -moz-box-shadow: 0px 0px @shadow_width_small@ black;
+  }
+  #search-engines-popup {
+    max-width: -moz-calc(@tablet_panel_minwidth@);
+  }
+}

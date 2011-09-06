@@ -659,8 +659,8 @@ struct TypeNewScript
 {
     JSFunction *fun;
 
-    /* Finalize kind to use for newly constructed objects. */
-    /* gc::FinalizeKind */ unsigned finalizeKind;
+    /* Allocation kind to use for newly constructed objects. */
+    gc::AllocKind allocKind;
 
     /*
      * Shape to use for newly constructed objects. Reflects all definite
@@ -819,8 +819,7 @@ struct TypeObject : gc::Cell
      * used as the scope of a new object whose prototype is |proto|.
      */
     inline bool canProvideEmptyShape(js::Class *clasp);
-    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp,
-                                         /* gc::FinalizeKind */ unsigned kind);
+    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp, gc::AllocKind kind);
 
     /*
      * Get or create a property of this object. Only call this for properties which

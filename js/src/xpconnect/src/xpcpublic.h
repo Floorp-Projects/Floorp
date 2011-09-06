@@ -227,7 +227,8 @@ struct CompartmentStats
 struct IterateData
 {
     IterateData()
-      : atomsTableSize(0),
+      : runtimeObjectSize(0),
+        atomsTableSize(0),
         stackSize(0),
         gcHeapChunkTotal(0),
         gcHeapChunkCleanUnused(0),
@@ -238,6 +239,7 @@ struct IterateData
         compartmentStatsVector(),
         currCompartmentStats(NULL) { }
 
+    PRInt64 runtimeObjectSize;
     PRInt64 atomsTableSize;
     PRInt64 stackSize;
     PRInt64 gcHeapChunkTotal;

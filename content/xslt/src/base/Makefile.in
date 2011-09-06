@@ -46,19 +46,11 @@ MODULE = transformiix
 LIBRARY_NAME = txbase_s
 LIBXUL_LIBRARY = 1
 
-
-
 CPPSRCS	= txDouble.cpp \
 	txList.cpp \
 	txExpandedNameMap.cpp \
 	txNamespaceMap.cpp \
 	txURIUtils.cpp
-
-ifdef MOZ_XSLT_STANDALONE
-CPPSRCS += txSimpleErrorObserver.cpp \
-	txStringUtils.cpp \
-	txAtoms.cpp
-endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

@@ -811,9 +811,22 @@ toolbar[mode="icons"] #zoom-in-button {
   background-clip: padding-box;
 }
 
-#urlbar:-moz-window-inactive,
-.searchbar-textbox:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
+@media (-moz-mac-lion-theme) {
+  #urlbar,
+  .searchbar-textbox {
+    background-image: -moz-linear-gradient(hsl(0,0%,97%), hsl(0,0%,100%));
+    border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.15);
+    box-shadow: 0 1px 0 hsla(0,0%,100%,.2),
+                inset 0 0 1px hsla(0,0%,0%,.05),
+                inset 0 1px 2px hsla(0,0%,0%,.1);
+  }
+}
+
+@media not all and (-moz-mac-lion-theme) {
+  #urlbar:-moz-window-inactive,
+  .searchbar-textbox:-moz-window-inactive {
+    border-color: @toolbarbuttonInactiveBorderColor@;
+  }
 }
 
 #urlbar[focused="true"],
@@ -2565,4 +2578,49 @@ panel[dimmed="true"] {
 #highlighter-veil-transparentbox[locked] {
   box-shadow: 0 0 0 1px black;
   outline-color: white;
+}
+
+/* Highlighter toolbar */
+
+#inspector-toolbar {
+  -moz-appearance: none;
+  height: 32px;
+  padding: 0 3px;
+  border-top: 1px solid hsla(210, 8%, 5%, .65);
+  box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
+  background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+}
+
+#inspector-inspect-toolbutton,
+#inspector-tools > toolbarbutton {
+  -moz-appearance: none;
+  width: 78px;
+  margin: 3px 5px;
+  color: hsl(210,30%,85%);
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  border: 1px solid hsla(210,8%,5%,.45);
+  border-radius: @toolbarbuttonCornerRadius@;
+  background: -moz-linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1));
+  background-clip: padding-box;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton:not([checked]):hover:active,
+#inspector-tools > toolbarbutton:not([checked]):hover:active {
+  border-color: hsla(210,8%,5%,.6);
+  background: -moz-linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
+  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton[checked],
+#inspector-tools > toolbarbutton[checked] {
+  color: hsl(208,100%,60%) !important;
+  border-color: hsla(210,8%,5%,.6);
+  background: -moz-linear-gradient(hsla(220,6%,10%,.6), hsla(210,11%,18%,.45) 75%, hsla(210,11%,30%,.4));
+  box-shadow: 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+#inspector-inspect-toolbutton[checked]:hover:active,
+#inspector-tools > toolbarbutton[checked]:hover:active {
+  background-color: hsla(210,8%,5%,.2);
 }

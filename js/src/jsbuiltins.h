@@ -84,8 +84,8 @@ enum {
  * 'i': an integer argument
  * 's': a JSString* argument
  * 'o': a JSObject* argument
- * 'r': a JSObject* argument that is of class js_RegExpClass
- * 'f': a JSObject* argument that is of class js_FunctionClass
+ * 'r': a JSObject* argument that is of class RegExpClass
+ * 'f': a JSObject* argument that is of class FunctionClass
  * 'v': a value argument: on 32-bit, a Value*, on 64-bit, a jsval
  */
 struct JSSpecializedNative {

@@ -39,61 +39,22 @@
 #define TRANSFRMX_URIUTILS_H
 
 #include "txCore.h"
-#ifdef TX_EXE
-#include <fstream.h>
-#include <iostream.h>
-#include "nsString.h"
-#else
+
 class nsIDocument;
 class nsIDOMNode;
-
-#endif
 
 /**
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
 **/
 
-#ifdef TX_EXE
-class txParsedURL
-{
-public:
-    void init(const nsAFlatString& aSpec);
-    void resolve(const txParsedURL& aRef, txParsedURL& aDest);
-    void getFile(nsString& aResult) const
-    {
-        aResult = mPath + mName;
-    }
-    nsString mPath, mName, mRef;
-};
-#endif
-
 class URIUtils {
 public:
-
-#ifdef TX_EXE
-    /**
-     * the path separator for an URI
-    **/
-    static const char HREF_PATH_SEP;
-
-    static istream* getInputStream
-        (const nsAString& href, nsAString& errMsg);
-
-    /**
-     * Returns the document base of the href argument
-     * The document base will be appended to the given dest String
-    **/
-    static void getDocumentBase(const nsAFlatString& href, nsAString& dest);
-
-#else /* TX_EXE */
 
     /**
      * Reset the given document with the document of the source node
      */
     static void ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode);
-
-#endif /* TX_EXE */
 
     /**
      * Resolves the given href argument, using the given documentBase
