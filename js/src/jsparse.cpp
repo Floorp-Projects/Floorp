@@ -320,7 +320,7 @@ bool
 JSFunctionBox::inAnyDynamicScope() const
 {
     for (const JSFunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_CALLS_EVAL))
+        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_EXTENSIBLE_SCOPE))
             return true;
     }
     return false;
