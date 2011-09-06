@@ -201,6 +201,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
 #include "nsDOMTouchEvent.h"
 #include "nsIScriptElement.h"
+#include "prdtoa.h"
 
 #include "mozilla/Preferences.h"
 
@@ -266,6 +267,8 @@ PRBool nsContentUtils::sIsFullScreenApiEnabled = PR_FALSE;
 PRBool nsContentUtils::sTrustedFullScreenOnly = PR_TRUE;
 PRBool nsContentUtils::sFullScreenKeyInputRestricted = PR_TRUE;
 
+PRUint32 nsContentUtils::sHandlingInputTimeout = 1000;
+
 nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nsnull;
@@ -318,6 +321,13 @@ class nsSameOriginChecker : public nsIChannelEventSink,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
 };
+
+/* static */
+TimeDuration
+nsContentUtils::HandlingUserInputTimeout()
+{
+  return TimeDuration::FromMilliseconds(sHandlingInputTimeout);
+}
 
 // static
 nsresult
@@ -396,6 +406,10 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sFullScreenKeyInputRestricted,
                                "full-screen-api.key-input-restricted");
+
+  Preferences::AddUintVarCache(&sHandlingInputTimeout,
+                               "dom.event.handling-user-input-time-limit",
+                               1000);
 
   sInitialized = PR_TRUE;
 
