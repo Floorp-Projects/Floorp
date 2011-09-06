@@ -76,6 +76,7 @@ struct nsStyleFont;
 class nsSVGEnum;
 class nsISVGChildFrame;
 class nsSVGGeometryFrame;
+class nsSVGPathGeometryFrame;
 class nsSVGDisplayContainerFrame;
 
 namespace mozilla {
@@ -564,6 +565,8 @@ public:
    */
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                                nsSVGGeometryFrame* aFrame);
+  static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
+                                               nsSVGPathGeometryFrame* aFrame);
 
   /**
    * Convert a floating-point value to a 32-bit integer value, clamping to

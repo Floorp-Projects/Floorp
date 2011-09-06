@@ -1974,30 +1974,6 @@ NS_IMETHODIMP nsAccessible::GetHelp(nsAString& _retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIAccessible getAccessibleToRight(); */
-NS_IMETHODIMP nsAccessible::GetAccessibleToRight(nsIAccessible **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIAccessible getAccessibleToLeft(); */
-NS_IMETHODIMP nsAccessible::GetAccessibleToLeft(nsIAccessible **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIAccessible getAccessibleAbove(); */
-NS_IMETHODIMP nsAccessible::GetAccessibleAbove(nsIAccessible **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIAccessible getAccessibleBelow(); */
-NS_IMETHODIMP nsAccessible::GetAccessibleBelow(nsIAccessible **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsIContent*
 nsAccessible::GetAtomicRegion() const
 {
