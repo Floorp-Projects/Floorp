@@ -272,7 +272,11 @@ function do_check_author(aActual, aExpected) {
 function do_check_screenshot(aActual, aExpected) {
   do_check_eq(aActual.toString(), aExpected.url);
   do_check_eq(aActual.url, aExpected.url);
+  do_check_eq(aActual.width, aExpected.width);
+  do_check_eq(aActual.height, aExpected.height);
   do_check_eq(aActual.thumbnailURL, aExpected.thumbnailURL);
+  do_check_eq(aActual.thumbnailWidth, aExpected.thumbnailWidth);
+  do_check_eq(aActual.thumbnailHeight, aExpected.thumbnailHeight);
   do_check_eq(aActual.caption, aExpected.caption);
 }
 
