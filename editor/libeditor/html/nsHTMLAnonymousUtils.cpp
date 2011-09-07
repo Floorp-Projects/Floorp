@@ -368,9 +368,11 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   }
 
   // now, let's display all contextual UI for good
+  nsIContent* hostContent = GetActiveEditingHost();
+  nsCOMPtr<nsIDOMNode> hostNode = do_QueryInterface(hostContent);
 
   if (mIsObjectResizingEnabled && focusElement &&
-      IsModifiableNode(focusElement)) {
+      IsModifiableNode(focusElement) && focusElement != hostNode) {
     if (nsEditProperty::img == focusTagAtom)
       mResizedObjectIsAnImage = PR_TRUE;
     if (mResizedObject)
@@ -381,7 +383,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   }
 
   if (mIsAbsolutelyPositioningEnabled && absPosElement &&
-      IsModifiableNode(absPosElement)) {
+      IsModifiableNode(absPosElement) && absPosElement != hostNode) {
     if (mAbsolutelyPositionedObject)
       res = RefreshGrabber();
     else
@@ -390,7 +392,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   }
 
   if (mIsInlineTableEditingEnabled && cellElement &&
-      IsModifiableNode(cellElement)) {
+      IsModifiableNode(cellElement) && cellElement != hostNode) {
     if (mInlineEditedCell)
       res = RefreshInlineTableEditingUI();
     else
