@@ -18,14 +18,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=597809
 
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var cm = Components.classes["@mozilla.org/categorymanager;1"]
-                   .getService(Components.interfaces.nsICategoryManager);
-cm.addCategoryEntry("JavaScript-global-property", "testSNSM", "@mozilla.org/embedcomp/prompt-service;1",
+SpecialPowers.addCategoryEntry("JavaScript-global-property", "testSNSM", "@mozilla.org/embedcomp/prompt-service;1",
                     false, true);
 
 SimpleTest.executeSoon(function () {
-  ok(window.testSNSM, "testSNSM should returns an object");
+  ok(window.testSNSM, "testSNSM should return an object");
   SimpleTest.finish();
 });
 
