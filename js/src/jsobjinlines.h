@@ -266,7 +266,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(fun == funobj);
     JS_ASSERT(fun->isNullClosure());
 
-    funobj = CloneFunctionObject(cx, fun, funobj->getParent(), true);
+    funobj = CloneFunctionObject(cx, fun);
     if (!funobj)
         return NULL;
     funobj->setMethodObj(*this);
