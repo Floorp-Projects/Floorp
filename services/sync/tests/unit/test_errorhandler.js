@@ -812,8 +812,10 @@ add_test(function test_crypto_keys_login_server_maintenance_error() {
   setUp();
 
   Service.clusterURL = "http://localhost:8080/maintenance/";
-
   Service.username = "foo";
+  // Force re-download of keys
+  CollectionKeys.clear();
+
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -941,8 +943,10 @@ add_test(function test_crypto_keys_login_prolonged_server_maintenance_error(){
   setUp();
 
   Service.clusterURL = "http://localhost:8080/maintenance/";
-
   Service.username = "foo";
+  // Force re-download of keys
+  CollectionKeys.clear();
+
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -1067,8 +1071,10 @@ add_test(function test_crypto_keys_login_syncAndReportErrors_server_maintenance_
   setUp();
 
   Service.clusterURL = "http://localhost:8080/maintenance/";
-
   Service.username = "foo";
+  // Force re-download of keys
+  CollectionKeys.clear();
+
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
@@ -1193,8 +1199,10 @@ add_test(function test_crypto_keys_login_syncAndReportErrors_prolonged_server_ma
   setUp();
 
   Service.clusterURL = "http://localhost:8080/maintenance/";
-
   Service.username = "foo";
+  // Force re-download of keys
+  CollectionKeys.clear();
+
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
     Svc.Obs.remove("weave:service:backoff:interval", observe);
