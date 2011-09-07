@@ -7,13 +7,13 @@
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="documenttab">
-    <content>
+    <content observes="bcast_urlbarState">
       <xul:stack anonid="page" class="documenttab-container" flex="1">
         <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" moz-opaque="true" empty="true"
-          onclick="document.getBindingParent(this)._onClick()"/>
-        <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();"/>
-        <xul:hbox anonid="close-container" class="documenttab-close-container" start="-16" top="0" align="center" onclick="document.getBindingParent(this)._onClose()">
-          <xul:image anonid="close" class="documenttab-close" mousethrough="always"/>
+          onclick="document.getBindingParent(this)._onClick()" observes="bcast_urlbarState"/>
+        <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();" observes="bcast_urlbarState"/>
+        <xul:hbox anonid="close-container" class="documenttab-close-container" top="0" align="center" onclick="document.getBindingParent(this)._onClose()" observes="bcast_urlbarState">
+          <xul:image anonid="close" class="documenttab-close" mousethrough="always" observes="bcast_urlbarState"/>
         </xul:hbox>
       </xul:stack>
     </content>
@@ -27,16 +27,40 @@
 
       <constructor>
         <![CDATA[
-          let thumbnail = this.thumbnail;
-          let reload = this._reload;
-          let closeContainer = this._closeContainer;
-
-          thumbnail.width = reload.width = 104;
-          thumbnail.height = reload.height = 65;
-          closeContainer.width = 55;
-          closeContainer.height = 65;
+          this.updateTabletLayout(this.thumbnail);
         ]]>
       </constructor>
+
+      <method name="updateTabletLayout">
+        <parameter name="thumbnail"/>
+        <body>
+          <![CDATA[
+            let tabWidth, tabHeight, closeWidth, closeHeight;
+
+            if (Util.isTablet()) {
+              tabWidth = 176;
+              tabHeight = 110;
+              closeWidth = 41;
+              closeHeight = 117;
+            } else {
+              tabWidth = 104;
+              tabHeight = 65;
+              closeWidth = 55;
+              closeHeight = 65;
+            }
+
+            if (tabWidth != thumbnail.width) {
+              let reload = this._reload;
+              let closeContainer = this._closeContainer;
+
+              thumbnail.width = reload.width = tabWidth;
+              thumbnail.height = reload.height = tabHeight;
+              closeContainer.width = closeWidth;
+              closeContainer.height = closeHeight;
+            }
+          ]]>
+        </body>
+      </method>
 
       <method name="_onClick">
         <body>
@@ -77,14 +101,18 @@
         <body>
           <![CDATA[
             let thumbnail = this.thumbnail;
+            // Ensure the thumbnail will have the correct
+            // dimensions for tablet and phone modes
+            this.updateTabletLayout(thumbnail);
+
             if (browser.currentURI.spec == "about:blank") {
               thumbnail.setAttribute("empty", "true");
               return;
             }
             thumbnail.removeAttribute("empty");
 
-            const tabWidth = 104;
-            const tabHeight = 65;
+            const tabWidth = thumbnail.width;
+            const tabHeight = thumbnail.height;
 
             let ratio = tabHeight / tabWidth;
             if (browser.contentDocumentWidth > 0)

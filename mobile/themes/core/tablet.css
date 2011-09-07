@@ -30,6 +30,70 @@
   visibility: collapse;
 }
 
+#tabs-container[tablet="true"] {
+  -moz-border-end: 0px;
+  background: #000;
+}
+
+#tabs[tablet="true"] > scrollbox {
+  max-width: 200px;
+}
+
+#tabs[tablet="true"] .tabs-list {
+  -moz-column-width: 200px;
+  -moz-padding-end: 0px;
+  -moz-padding-start: 0px;
+}
+
+documenttab[tablet="true"] {
+  width: 200px;
+  padding: @padding_xxnormal@;
+  -moz-margin-start: 0px;
+  background: none;
+}
+
+documenttab[tablet="true"][selected="true"] {
+  background: none;
+}
+
+.documenttab-thumbnail[tablet="true"] {
+  border-radius: @border_radius_tiny@;
+}
+
+.documenttab-close-container[tablet="true"] {
+  left: 0px;
+  -moz-margin-end: 0px;
+  -moz-margin-start: 135px;
+  -moz-box-pack: end;
+  -moz-box-align: center;
+}
+
+documenttab[selected="true"] > stack > .documenttab-close-container[tablet="true"] {
+  background: url("chrome://browser/skin/images/close-background-hdpi.png");
+  background-repeat: no-repeat;
+  background-position: right;
+  -moz-margin-end: -@padding_xxnormal@;
+  padding-right: 2px;
+}
+
+.documenttab-close[tablet="true"] {
+  width: 30px;
+  height: 44px;
+  list-style-image: url("chrome://browser/skin/images/close-inactive-tab-tablet-hdpi.png");
+}
+
+documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet="true"] {
+  list-style-image: url("chrome://browser/skin/images/close-default-tablet-hdpi.png");
+}
+
+.documenttab-close-container:hover:active > .documenttab-close[tablet="true"] {
+  list-style-image: url("chrome://browser/skin/images/close-active-tablet-hdpi.png");
+}
+
+#newtab-button[tablet="true"] {
+  list-style-image: url("images/newtab-default-tablet-hdpi.png");
+}
+
 @media (@orientation@: portrait) {
   #toolbar-main[tablet="true"] > #tool-tabs {
     visibility: visible;
