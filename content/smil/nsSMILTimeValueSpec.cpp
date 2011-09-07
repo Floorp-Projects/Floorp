@@ -531,7 +531,7 @@ nsSMILTimeValueSpec::ConvertBetweenTimeContainers(
     return docTime;
 
   NS_ABORT_IF_FALSE(docTime.IsDefinite(),
-    "ContainerToParentTime gave us an unresolved time");
+    "ContainerToParentTime gave us an unresolved or indefinite time");
 
   return dstContainer->ParentToContainerTime(docTime.GetMillis());
 }

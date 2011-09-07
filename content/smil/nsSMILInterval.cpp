@@ -111,7 +111,7 @@ void
 nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
 {
   NS_ABORT_IF_FALSE(aBegin.Time().IsDefinite(),
-      "Attempting to set unresolved begin time on interval");
+      "Attempting to set unresolved or indefinite begin time on interval");
   NS_ABORT_IF_FALSE(!mBeginFixed,
       "Attempting to set begin time but the begin point is fixed");
   // Check that we're not making an instance time dependent on itself. Such an
