@@ -287,7 +287,10 @@ class TPSTestRunner(object):
     } [phase.status](phase.errline)
     logstr = "\n%s | %s%s\n" % (result[0], testname, (' | %s' % result[1] if result[1] else ''))
 
-    repoinfo = self.firefoxRunner.get_respository_info()
+    try:
+      repoinfo = self.firefoxRunner.runner.get_repositoryInfo()
+    except:
+      repoinfo = {}
     apprepo = repoinfo.get('application_repository', '')
     appchangeset = repoinfo.get('application_changeset', '')
 
