@@ -627,12 +627,10 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   //
   nsRequestInfo *info = GetRequestInfo(aRequest);
   if (info) {
-    if (info->mLastStatus) {
-      // Null it out now so we don't find it when looking for status
-      // from now on.  This destroys the nsStatusInfo and hence
-      // removes it from our list.
-      info->mLastStatus = nsnull;
-    }
+    // Null out mLastStatus now so we don't find it when looking for
+    // status from now on.  This destroys the nsStatusInfo and hence
+    // removes it from our list.
+    info->mLastStatus = nsnull;
 
     PRInt64 oldMax = info->mMaxProgress;
 
