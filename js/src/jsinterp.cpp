@@ -623,8 +623,6 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 bool
 js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 {
-    /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
-
     CallArgs args = argsRef;
     JS_ASSERT(args.argc() <= StackSpace::ARGS_LENGTH_MAX);
 
@@ -789,8 +787,6 @@ bool
 js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
            Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
@@ -821,8 +817,6 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Val
 bool
 js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
@@ -1244,8 +1238,6 @@ bool
 js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
                                    uintN argc, Value *argv, Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return JS_FALSE;
