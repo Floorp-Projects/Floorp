@@ -670,7 +670,7 @@ js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construc
 
     /* Now that the new frame is rooted, maybe create a call object. */
     StackFrame *fp = ifg.fp();
-    if (fun->isHeavyweight() && !CreateFunCallObject(cx, fp))
+    if (!fp->functionPrologue(cx))
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
@@ -717,7 +717,9 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         if (fun->isNative())
             break;
         script_ = fun->script();
-        if (fun->isHeavyweight())
+        if (!script_->ensureRanAnalysis(cx, fun, callee.getParent()))
+            return false;
+        if (FunctionNeedsPrologue(cx, fun) || script_->isEmpty())
             break;
 
         /*
@@ -909,12 +911,18 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 
     Probes::startExecution(cx, script);
 
+    if (!script->ensureRanAnalysis(cx, NULL, &scopeChain))
+        return false;
+
     TypeScript::SetThis(cx, script, fp->thisValue());
 
     AutoPreserveEnumerators preserve(cx);
     JSBool ok = RunScript(cx, script, fp);
     if (result && ok)
         *result = fp->returnValue();
+
+    if (fp->isStrictEvalFrame())
+        js_PutCallObject(fp);
 
     Probes::stopExecution(cx, script);
 
@@ -4176,15 +4184,16 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 
     RESTORE_INTERP_VARS();
 
-    /* Only create call object after frame is rooted. */
-    if (fun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp()))
+    if (!regs.fp()->functionPrologue(cx))
         goto error;
 
     RESET_USE_METHODJIT();
     TRACE_0(EnterFrame);
 
+    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+
 #ifdef JS_METHODJIT
-    {
+    if (!newType) {
         /* Try to ensure methods are method JIT'd.  */
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
@@ -4202,7 +4211,6 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     }
 #endif
 
-    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
     if (!ScriptPrologue(cx, regs.fp(), newType))
         goto error;
 
