@@ -1706,16 +1706,14 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
 }
   
 PRInt32
-nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine)
+nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
   
   nsTableRowFrame *rowFrame = do_QueryFrame(aFrame);
   NS_ASSERTION(rowFrame, "RowGroup contains a frame that is not a row");
 
-  PRInt32 rowIndexInGroup = rowFrame->GetRowIndex() - GetStartRowIndex();
-
-  return rowIndexInGroup >= aStartLine ? rowIndexInGroup : -1;
+  return rowFrame->GetRowIndex() - GetStartRowIndex();
 }
 
 #ifdef IBMBIDI

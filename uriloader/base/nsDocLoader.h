@@ -59,7 +59,6 @@
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
-#include "prclist.h"
 
 struct nsRequestInfo;
 struct nsListenerInfo;
@@ -234,8 +233,6 @@ protected:
 
     PLDHashTable mRequestInfoHash;
     PRInt64 mCompletedTotalProgress;
-
-    PRCList mStatusInfoList;
 
     /*
      * This flag indicates that the loader is loading a document.  It is set

@@ -626,16 +626,15 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
 }
 
 PRInt32
-nsLineIterator::FindLineContaining(nsIFrame* aFrame, PRInt32 aStartLine)
+nsLineIterator::FindLineContaining(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aStartLine <= mNumLines, "Bogus line numbers");
-  PRInt32 lineNumber = aStartLine;
+  nsLineBox* line = mLines[0];
+  PRInt32 lineNumber = 0;
   while (lineNumber != mNumLines) {
-    nsLineBox* line = mLines[lineNumber];
     if (line->Contains(aFrame)) {
       return lineNumber;
     }
-    ++lineNumber;
+    line = mLines[++lineNumber];
   }
   return -1;
 }
