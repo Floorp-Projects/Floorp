@@ -92,6 +92,15 @@ JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto)
      * does not nuke type information for the object.
      */
     CHECK_REQUEST(cx);
+
+    if (!obj->hasSingletonType()) {
+        /*
+         * We can see non-singleton objects when trying to splice prototypes
+         * due to mutable __proto__ (ugh).
+         */
+        return JS_SetPrototype(cx, obj, proto);
+    }
+
     return obj->splicePrototype(cx, proto);
 }
 
