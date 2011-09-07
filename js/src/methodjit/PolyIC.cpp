@@ -149,9 +149,11 @@ class PICStubCompiler : public BaseCompiler
     uint32 gcNumber;
 
   public:
+    bool canCallHook;
+
     PICStubCompiler(const char *type, VMFrame &f, JSScript *script, ic::PICInfo &pic, void *stub)
       : BaseCompiler(f.cx), type(type), f(f), script(script), pic(pic), stub(stub),
-        gcNumber(f.cx->runtime->gcNumber)
+        gcNumber(f.cx->runtime->gcNumber), canCallHook(pic.canCallHook)
     { }
 
     bool isCallOp() const {
@@ -800,10 +802,19 @@ struct GetPropertyHelper {
 
     LookupStatus testForGet() {
         if (!shape->hasDefaultGetter()) {
-            if (!shape->isMethod())
-                return ic.disable(cx, "getter");
-            if (!ic.isCallOp())
-                return ic.disable(cx, "method valued shape");
+            if (shape->isMethod()) {
+                if (!ic.isCallOp())
+                    return ic.disable(cx, "method valued shape");
+            } else {
+                if (shape->hasGetterValue())
+                    return ic.disable(cx, "getter value shape");
+                if (shape->hasSlot() && holder != obj)
+                    return ic.disable(cx, "slotful getter hook through prototype");
+                if (!ic.canCallHook)
+                    return ic.disable(cx, "can't call getter hook");
+                if (f.regs.inlined())
+                    return ic.disable(cx, "hook called from inline frame");
+            }
         } else if (!shape->hasSlot()) {
             return ic.disable(cx, "no slot");
         }
@@ -1001,6 +1012,8 @@ class GetPropCompiler : public PICStubCompiler
             return status;
         if (getprop.obj != getprop.holder)
             return disable("proto walk on String.prototype");
+        if (!getprop.shape->hasDefaultGetterOrIsMethod())
+            return disable("getter hook on String.prototype");
         if (hadGC())
             return Lookup_Uncacheable;
 
@@ -1142,6 +1155,93 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
+    void generateGetterStub(Assembler &masm, const Shape *shape,
+                            Label start, const Vector<Jump, 8> &shapeMismatches)
+    {
+        /*
+         * Getter hook needs to be called from the stub. The state is fully
+         * synced and no registers are live except the result registers.
+         */
+        JS_ASSERT(pic.canCallHook);
+        PropertyOp getter = shape->getterOp();
+
+        if (cx->typeInferenceEnabled()) {
+            masm.storePtr(ImmPtr((void *) REJOIN_NATIVE_GETTER),
+                          FrameAddress(offsetof(VMFrame, stubRejoin)));
+        }
+
+        Registers tempRegs = Registers::tempCallRegMask();
+        if (tempRegs.hasReg(Registers::ClobberInCall))
+            tempRegs.takeReg(Registers::ClobberInCall);
+
+        /* Get a register to hold obj while we set up the rest of the frame. */
+        RegisterID holdObjReg = pic.objReg;
+        if (tempRegs.hasReg(pic.objReg)) {
+            tempRegs.takeReg(pic.objReg);
+        } else {
+            holdObjReg = tempRegs.takeAnyReg().reg();
+            masm.move(pic.objReg, holdObjReg);
+        }
+
+        RegisterID t0 = tempRegs.takeAnyReg().reg();
+        masm.bumpStubCounter(f.script(), f.pc(), t0);
+
+        /*
+         * Initialize vp, which is either a slot in the object (the holder,
+         * actually, which must equal the object here) or undefined.
+         * Use vp == sp (which for CALLPROP will actually be the original
+         * sp + 1), to avoid clobbering stack values.
+         */
+        int32 vpOffset = (char *) f.regs.sp - (char *) f.fp();
+        if (shape->hasSlot()) {
+            masm.loadObjProp(obj, holdObjReg, shape,
+                             Registers::ClobberInCall, t0);
+            masm.storeValueFromComponents(Registers::ClobberInCall, t0, Address(JSFrameReg, vpOffset));
+        } else {
+            masm.storeValue(UndefinedValue(), Address(JSFrameReg, vpOffset));
+        }
+
+        int32 initialFrameDepth = f.regs.sp - f.fp()->slots();
+        masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
+
+        /* Grab cx. */
+#ifdef JS_CPU_X86
+        RegisterID cxReg = tempRegs.takeAnyReg().reg();
+#else
+        RegisterID cxReg = Registers::ArgReg0;
+#endif
+        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
+
+        /* Grap vp. */
+        RegisterID vpReg = t0;
+        masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
+
+        masm.restoreStackBase();
+        masm.setupABICall(Registers::NormalCall, 4);
+        masm.storeArg(3, vpReg);
+        masm.storeArg(2, ImmPtr((void *) JSID_BITS(shape->propid)));
+        masm.storeArg(1, holdObjReg);
+        masm.storeArg(0, cxReg);
+
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, getter), false);
+
+        NativeStubLinker::FinalJump done;
+        if (!NativeStubEpilogue(f, masm, &done, 0, vpOffset, pic.shapeReg, pic.objReg))
+            return;
+        NativeStubLinker linker(masm, f.jit(), f.regs.pc, done);
+        if (!linker.init(f.cx))
+            THROW();
+
+        if (!linker.verifyRange(f.jit())) {
+            disable("code memory is out of range");
+            return;
+        }
+
+        linker.patchJump(pic.fastPathRejoin);
+
+        linkerEpilogue(linker, start, shapeMismatches);
+    }
+
     LookupStatus generateStub(JSObject *holder, const Shape *shape)
     {
         Vector<Jump, 8> shapeMismatches(cx);
@@ -1196,6 +1296,13 @@ class GetPropCompiler : public PICStubCompiler
             pic.secondShapeGuard = 0;
         }
 
+        if (!shape->hasDefaultGetterOrIsMethod()) {
+            generateGetterStub(masm, shape, start, shapeMismatches);
+            if (setStubShapeOffset)
+                pic.getPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
+            return Lookup_Cacheable;
+        }
+
         /* Load the value out of the object. */
         masm.loadObjProp(holder, holderReg, shape, pic.shapeReg, pic.objReg);
         Jump done = masm.jump();
@@ -1211,12 +1318,22 @@ class GetPropCompiler : public PICStubCompiler
             return disable("code memory is out of range");
         }
 
+        // The final exit jumps to the store-back in the inline stub.
+        buffer.link(done, pic.fastPathRejoin);
+
+        linkerEpilogue(buffer, start, shapeMismatches);
+
+        if (setStubShapeOffset)
+            pic.getPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
+        return Lookup_Cacheable;
+    }
+
+    void linkerEpilogue(LinkerHelper &buffer, Label start, const Vector<Jump, 8> &shapeMismatches)
+    {
         // The guard exit jumps to the original slow case.
         for (Jump *pj = shapeMismatches.begin(); pj != shapeMismatches.end(); ++pj)
             buffer.link(*pj, pic.slowPathStart);
 
-        // The final exit jumps to the store-back in the inline stub.
-        buffer.link(done, pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalize();
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
@@ -1225,15 +1342,10 @@ class GetPropCompiler : public PICStubCompiler
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, start);
 
-        if (setStubShapeOffset)
-            pic.getPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
-
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
         if (obj->isDenseArray())
             disable("dense array");
-
-        return Lookup_Cacheable;
     }
 
     void patchPreviousToHere(CodeLocationLabel cs)
@@ -1249,8 +1361,14 @@ class GetPropCompiler : public PICStubCompiler
             shapeGuardJumpOffset = pic.getPropLabels().getStubShapeJumpOffset();
         else
             shapeGuardJumpOffset = pic.shapeGuard + pic.getPropLabels().getInlineShapeJumpOffset();
+        int secondGuardOffset = getLastStubSecondShapeGuard();
+
+        JaegerSpew(JSpew_PICs, "Patching previous (%d stubs) (start %p) (offset %d) (second %d)\n",
+                   (int) pic.stubsGenerated, label.executableAddress(),
+                   shapeGuardJumpOffset, secondGuardOffset);
+
         repatcher.relink(label.jumpAtOffset(shapeGuardJumpOffset), cs);
-        if (int secondGuardOffset = getLastStubSecondShapeGuard())
+        if (secondGuardOffset)
             repatcher.relink(label.jumpAtOffset(secondGuardOffset), cs);
     }
 
@@ -1265,8 +1383,11 @@ class GetPropCompiler : public PICStubCompiler
         if (hadGC())
             return Lookup_Uncacheable;
 
-        if (obj == getprop.holder && !pic.inlinePathPatched)
+        if (obj == getprop.holder &&
+            getprop.shape->hasDefaultGetterOrIsMethod() &&
+            !pic.inlinePathPatched) {
             return patchInline(getprop.holder, getprop.shape);
+        }
 
         return generateStub(getprop.holder, getprop.shape);
     }
@@ -2015,6 +2136,11 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
             NATIVE_GET(cx, &objv.toObject(), obj2, shape, JSGET_NO_METHOD_BARRIER, &rval,
                        THROW());
         }
+        /*
+         * Adjust the stack to reflect the height after the GETPROP, here and
+         * below. Getter hook ICs depend on this to know which value of sp they
+         * are updating for consistent rejoins, don't modify this!
+         */
         regs.sp++;
         regs.sp[-2] = rval;
         regs.sp[-1] = lval;

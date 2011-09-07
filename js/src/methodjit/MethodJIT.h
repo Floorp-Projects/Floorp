@@ -258,10 +258,12 @@ enum RejoinState {
     /*
      * As for REJOIN_FALLTHROUGH, but holds a reference on the compartment's
      * orphaned native pools which needs to be reclaimed by InternalInterpret.
-     * The return value needs to be adjusted if REJOIN_NATIVE_LOWERED.
+     * The return value needs to be adjusted if REJOIN_NATIVE_LOWERED, and
+     * REJOIN_NATIVE_GETTER is for ABI calls made for property accesses.
      */
     REJOIN_NATIVE,
     REJOIN_NATIVE_LOWERED,
+    REJOIN_NATIVE_GETTER,
 
     /*
      * Dummy rejoin stored in VMFrames to indicate they return into a native
@@ -553,6 +555,30 @@ struct PCLengthEntry {
     double          picsLength; /* amount of PIC stub code generated */
 };
 
+/*
+ * Pools and patch locations for managing stubs for non-FASTCALL C++ calls made
+ * from native call and PropertyOp stubs. Ownership of these may be transferred
+ * into the orphanedNativePools for the compartment.
+ */
+struct NativeCallStub {
+    /* PC for the stub. Native call stubs cannot be added for inline frames. */
+    jsbytecode *pc;
+
+    /* Pool for the stub, NULL if it has been removed from the script. */
+    JSC::ExecutablePool *pool;
+
+    /*
+     * Fallthrough jump returning to jitcode which may be patched during
+     * recompilation. On x64 this is an indirect jump to avoid issues with far
+     * jumps on relative branches.
+     */
+#ifdef JS_CPU_X64
+    JSC::CodeLocationDataLabelPtr jump;
+#else
+    JSC::CodeLocationJump jump;
+#endif
+};
+
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
@@ -610,6 +636,9 @@ struct JITScript {
     typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
     ExecPoolVector execPools;
 #endif
+
+    // Additional ExecutablePools for native call and getter stubs.
+    Vector<NativeCallStub, 0, SystemAllocPolicy> nativeCallStubs;
 
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;

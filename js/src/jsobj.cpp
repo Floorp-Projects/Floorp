@@ -5602,6 +5602,16 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         return true;
     }
 
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc);
+    if (script) {
+        if (!script->ensureRanBytecode(cx))
+            return false;
+        analyze::Bytecode *code = script->analysis()->maybeCode(pc);
+        if (code)
+            code->accessGetter = true;
+    }
+
     sample = cx->runtime->propertyRemovals;
     if (!shape->get(cx, receiver, obj, pobj, vp))
         return false;
@@ -5613,9 +5623,6 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
             return false;
         pobj->nativeSetSlot(slot, *vp);
     }
-
-    /* Record values produced by shapes without a default getter. */
-    AddTypePropertyId(cx, obj, shape->propid, *vp);
 
     return true;
 }

@@ -216,7 +216,6 @@ struct CallICInfo {
     enum PoolIndex {
         Pool_ScriptStub,
         Pool_ClosureStub,
-        Pool_NativeStub,
         Total_Pools
     };
 
@@ -239,17 +238,6 @@ struct CallICInfo {
 
     /* Inline to OOL jump, redirected by stubs. */
     JSC::CodeLocationJump funJump;
-
-    /*
-     * Native stub fallthrough jump which may be patched during recompilation.
-     * On x64 this is an indirect jump to avoid issues with far jumps on
-     * relative branches.
-     */
-#ifdef JS_CPU_X64
-    JSC::CodeLocationDataLabelPtr nativeJump;
-#else
-    JSC::CodeLocationJump nativeJump;
-#endif
 
     /* Offset to inline scripted call, from funGuard. */
     uint32 hotJumpOffset   : 16;
@@ -281,13 +269,12 @@ struct CallICInfo {
         fastGuardedNative = NULL;
         hit = false;
         hasJsFunCheck = false;
-        pools[0] = pools[1] = pools[2] = NULL;
+        PodArrayZero(pools);
     }
 
     inline void releasePools() {
         releasePool(Pool_ScriptStub);
         releasePool(Pool_ClosureStub);
-        releasePool(Pool_NativeStub);
     }
 
     inline void releasePool(PoolIndex index) {

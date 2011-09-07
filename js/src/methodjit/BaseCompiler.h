@@ -175,6 +175,40 @@ class LinkerHelper : public JSC::LinkBuffer
     }
 };
 
+class NativeStubLinker : public LinkerHelper
+{
+  public:
+#ifdef JS_CPU_X64
+    typedef JSC::MacroAssembler::DataLabelPtr FinalJump;
+#else
+    typedef JSC::MacroAssembler::Jump FinalJump;
+#endif
+
+    NativeStubLinker(Assembler &masm, JITScript *jit, jsbytecode *pc, FinalJump done)
+        : LinkerHelper(masm, JSC::METHOD_CODE), jit(jit), pc(pc), done(done)
+    {}
+
+    bool init(JSContext *cx);
+
+    void patchJump(JSC::CodeLocationLabel target) {
+#ifdef JS_CPU_X64
+        patch(done, target);
+#else
+        link(done, target);
+#endif
+    }
+
+  private:
+    JITScript *jit;
+    jsbytecode *pc;
+    FinalJump done;
+};
+
+bool
+NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJump *result,
+                   int32 initialFrameDepth, int32 vpOffset,
+                   MaybeRegisterID typeReg, MaybeRegisterID dataReg);
+
 /*
  * On ARM, we periodically flush a constant pool into the instruction stream
  * where constants are found using PC-relative addressing. This is necessary
