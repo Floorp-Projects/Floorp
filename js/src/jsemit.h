@@ -601,11 +601,6 @@ class JSGCConstList {
 
 struct JSCodeGenerator : public JSTreeContext
 {
-    JSArenaPool     *codePool;      /* pointer to thread code arena pool */
-    JSArenaPool     *notePool;      /* pointer to thread srcnote arena pool */
-    void            *codeMark;      /* low watermark in cg->codePool */
-    void            *noteMark;      /* low watermark in cg->notePool */
-
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
@@ -665,14 +660,7 @@ struct JSCodeGenerator : public JSTreeContext
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
     uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
-    /*
-     * Initialize cg to allocate bytecode space from codePool, source note
-     * space from notePool, and all other arena-allocated temporaries from
-     * parser->context->tempPool.
-     */
-    JSCodeGenerator(js::Parser *parser,
-                    JSArenaPool *codePool, JSArenaPool *notePool,
-                    uintN lineno);
+    JSCodeGenerator(js::Parser *parser, uintN lineno);
     bool init(JSContext *cx, JSTreeContext::InitBehavior ib = USED_AS_CODE_GENERATOR);
 
     JSContext *context() {
