@@ -596,12 +596,14 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * jitcode still needs to be released, if this is a shape-regenerating
          * GC then shape numbers baked into the code may change.
          */
+#ifdef JS_METHODJIT
         if (types.inferenceEnabled) {
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 mjit::ReleaseScriptCode(cx, script);
             }
         }
+#endif
     } else {
         /*
          * Clear the analysis pool, but don't release its data yet. While
