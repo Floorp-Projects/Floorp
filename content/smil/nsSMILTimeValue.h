@@ -69,6 +69,17 @@
  * 1) The time is resolved and has a definite millisecond value
  * 2) The time is resolved and indefinite
  * 3) The time is unresolved
+ *
+ * In summary:
+ *
+ * State      | GetMillis       | IsDefinite | IsIndefinite | IsResolved
+ * -----------+-----------------+------------+--------------+------------
+ * Definite   | nsSMILTimeValue | PR_TRUE    | PR_FALSE     | PR_TRUE
+ * -----------+-----------------+------------+--------------+------------
+ * Indefinite | --              | PR_FALSE   | PR_TRUE      | PR_TRUE
+ * -----------+-----------------+------------+--------------+------------
+ * Unresolved | --              | PR_FALSE   | PR_FALSE     | PR_FALSE
+ *
  */
 
 class nsSMILTimeValue
@@ -101,6 +112,7 @@ public:
     mMilliseconds = kUnresolvedMillis;
   }
 
+  PRBool IsResolved() const { return mState != STATE_UNRESOLVED; }
   void SetUnresolved()
   {
     mState = STATE_UNRESOLVED;
