@@ -388,6 +388,14 @@ function _load_files(aFiles) {
 /************** Functions to be used from the tests **************/
 
 /**
+ * Prints a message to the output log.
+ */
+function do_print(msg) {
+  var caller_stack = Components.stack.caller;
+  _dump("TEST-INFO | " + caller_stack.filename + " | " + msg + "\n");
+}
+
+/**
  * Calls the given function at least the specified number of milliseconds later.
  * The callback will not undershoot the given time, but it might overshoot --
  * don't expect precision!
