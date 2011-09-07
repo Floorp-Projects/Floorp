@@ -228,6 +228,8 @@ browser.jar:
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
         skin/classic/aero/browser/tabview/tabview-inverted.png       (tabview/tabview-inverted.png)
         skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
+        skin/classic/aero/browser/devtools/arrows.png                (devtools/arrows.png)
+        skin/classic/aero/browser/devtools/csshtmltree.css           (devtools/csshtmltree.css)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png
