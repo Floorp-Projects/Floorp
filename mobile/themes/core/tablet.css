@@ -1,0 +1,70 @@
+
+.spacer-actionbar,
+.button-actionbar {
+  visibility: collapse;
+}
+
+.button-actionbar[disabled="true"] {
+  opacity: 0.5;
+}
+
+%ifndef honeycomb
+.button-actionbar:hover:active {
+  background-color: #8db8d8;
+}
+%endif
+
+#toolbar-main[tablet="true"] > .spacer-actionbar,
+#toolbar-main[tablet="true"] > .button-actionbar {
+  visibility: visible;
+}
+#toolbar-main[tablet="true"] > #tool-tabs {
+  visibility: collapse;
+}
+
+#controls-scrollbox[tablet="true"] > #controls-sidebar {
+  visibility: collapse;
+}
+
+#tabs-spacer[tablet="true"]  {
+  visibility: collapse;
+}
+
+@media (@orientation@: portrait) {
+  #toolbar-main[tablet="true"] > #tool-tabs {
+    visibility: visible;
+  }
+
+  #controls-scrollbox[tablet="true"] > #tabs-sidebar {
+    border: none;
+%ifdef honeycomb
+    top: @touch_button_xlarge@;
+%else
+    top: -moz-calc(@touch_button_xlarge@ + @margin_normal@);
+%endif
+    visibility: collapse;
+  }
+
+  #controls-scrollbox[tablet="true"] > #tabs-sidebar:-moz-locale-dir(ltr) {
+    left: 0;
+  }
+  #controls-scrollbox[tablet="true"] > #tabs-sidebar:-moz-locale-dir(rtl) {
+    right: 0;
+  }
+
+  #controls-scrollbox[tablet="true"] > #tabs-sidebar[open] {
+    position: fixed;
+    visibility: visible;
+  }
+}
+
+%ifndef honeycomb
+@media (min-width: @tablet_panel_minwidth@) {
+  #awesome-panels {
+    -moz-box-shadow: 0px 0px @shadow_width_small@ black;
+  }
+  #search-engines-popup {
+    max-width: -moz-calc(@tablet_panel_minwidth@);
+  }
+}
+%endif
