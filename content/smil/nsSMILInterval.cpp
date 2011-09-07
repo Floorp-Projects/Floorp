@@ -110,7 +110,7 @@ nsSMILInterval::End()
 void
 nsSMILInterval::SetBegin(nsSMILInstanceTime& aBegin)
 {
-  NS_ABORT_IF_FALSE(aBegin.Time().IsResolved(),
+  NS_ABORT_IF_FALSE(aBegin.Time().IsDefinite(),
       "Attempting to set unresolved begin time on interval");
   NS_ABORT_IF_FALSE(!mBeginFixed,
       "Attempting to set begin time but the begin point is fixed");
