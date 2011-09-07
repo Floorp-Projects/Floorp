@@ -2582,7 +2582,7 @@ PRBool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                aBuilder->ToReferenceFrame(mFrame);
   }
   nsRegion untransformedVisible = untransformedVisibleRect;
-  // Call RecomputeVisiblity instead of ComputeVisibilty since
+  // Call RecomputeVisiblity instead of ComputeVisibility since
   // nsDisplayItem::ComputeVisibility should only be called from
   // nsDisplayList::ComputeVisibility (which sets mVisibleRect on the item)
   mStoredList.RecomputeVisibility(aBuilder, &untransformedVisible);

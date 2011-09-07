@@ -53,7 +53,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc,
   // aSrc is interpreted as UTF16, 3 is normally enough.
   // But when previous buffer only contains part of the surrogate pair, we 
   // need to complete it here. If the first word in following buffer is not
-  // in valid surrogate rang, we need to convert the remaining of last buffer 
+  // in valid surrogate range, we need to convert the remaining of last buffer
   // to 3 bytes.
   *aDestLength = 3*aSrcLength + 3;
   return NS_OK;
