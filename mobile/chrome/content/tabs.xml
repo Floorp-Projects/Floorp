@@ -9,10 +9,10 @@
   <binding id="documenttab">
     <content>
       <xul:stack anonid="page" class="documenttab-container" flex="1">
-        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" width="104" height="65" moz-opaque="true" empty="true"
+        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" moz-opaque="true" empty="true"
           onclick="document.getBindingParent(this)._onClick()"/>
-        <xul:hbox class="documenttab-reload" left="0" top="0" width="104" height="65" onclick="document.getBindingParent(this)._onUndo();"/>
-        <xul:hbox class="documenttab-close-container" start="-16" top="0" height="65" width="55" align="center" onclick="document.getBindingParent(this)._onClose()">
+        <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();"/>
+        <xul:hbox anonid="close-container" class="documenttab-close-container" start="-16" top="0" align="center" onclick="document.getBindingParent(this)._onClose()">
           <xul:image anonid="close" class="documenttab-close" mousethrough="always"/>
         </xul:hbox>
       </xul:stack>
@@ -20,8 +20,24 @@
 
     <implementation>
       <field name="ignoreUndo">false</field>
-      <field name="thumbnail">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
-      <field name="_container">this.parentNode.parentNode;</field>
+      <field name="thumbnail" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
+      <field name="_reload" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "reload");</field>
+      <field name="_closeContainer" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "close-container");</field>
+      <field name="_container" readonly="true">this.parentNode.parentNode;</field>
+
+      <constructor>
+        <![CDATA[
+          let thumbnail = this.thumbnail;
+          let reload = this._reload;
+          let closeContainer = this._closeContainer;
+
+          thumbnail.width = reload.width = 104;
+          thumbnail.height = reload.height = 65;
+          closeContainer.width = 55;
+          closeContainer.height = 65;
+        ]]>
+      </constructor>
+
       <method name="_onClick">
         <body>
           <![CDATA[
