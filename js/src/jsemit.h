@@ -612,7 +612,7 @@ struct JSCodeGenerator : public JSTreeContext
         jsbytecode  *next;          /* pointer to next free bytecode */
         jssrcnote   *notes;         /* source notes, see below */
         uintN       noteCount;      /* number of source notes so far */
-        uintN       noteMask;       /* growth increment for notes */
+        uintN       noteLimit;      /* limit number for source notes in notePool */
         ptrdiff_t   lastNoteOffset; /* code offset for last source note */
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
@@ -761,7 +761,7 @@ struct JSCodeGenerator : public JSTreeContext
 
 #define CG_NOTES(cg)            ((cg)->current->notes)
 #define CG_NOTE_COUNT(cg)       ((cg)->current->noteCount)
-#define CG_NOTE_MASK(cg)        ((cg)->current->noteMask)
+#define CG_NOTE_LIMIT(cg)       ((cg)->current->noteLimit)
 #define CG_LAST_NOTE_OFFSET(cg) ((cg)->current->lastNoteOffset)
 #define CG_CURRENT_LINE(cg)     ((cg)->current->currentLine)
 
