@@ -41,10 +41,10 @@ load 265736-1.html
 load 265736-2.html
 asserts(2) load 265899-1.html # bug 575011
 load 265973-1.html
-asserts(8-12) load 265986-1.html # Bug 512405
-asserts(4) load 265999-1.html # bug 575011
+asserts(6-12) load 265986-1.html # Bug 512405
+asserts(2-4) load 265999-1.html # bug 575011
 load 266222-1.html
-asserts(5-7) load 266360-1.html # bug 575011 / bug 576358
+asserts(3-7) load 266360-1.html # bug 575011 / bug 576358
 asserts(4) load 266445-1.html # Bug 575011
 load 268157-1.html
 load 269566-1.html
@@ -257,12 +257,12 @@ load 469861-2.xhtml
 load 471594-1.xhtml
 load 479114-1.html
 load 477333-1.xhtml
-load 477731-1.html
+asserts-if(Android,6) load 477731-1.html
 # 479360-1.xhtml will assert 6 times due to bug 439258 and then make the test
 # after the test after it also assert 6 times.
-asserts(6) load 479360-1.xhtml # Bug 439258
-load 480686-1.html
-asserts(6) load 481806-1.html  # Bug 439258
+asserts-if(!Android,6) load 479360-1.xhtml # Bug 439258
+asserts-if(Android,6) load 480686-1.html
+asserts-if(!Android,6) load 481806-1.html  # Bug 439258
 load 483604-1.xhtml
 load 485501-1.html
 load 487544-1.html
