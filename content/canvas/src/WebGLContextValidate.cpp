@@ -328,31 +328,14 @@ PRBool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
     }
 }
 
-bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *info)
+bool WebGLContext::ValidateGLSLIdentifier(const nsAString& name, const char *info)
 {
-    const PRUint32 maxSize = 255;
+    const PRUint32 maxSize = 4095;
     if (name.Length() > maxSize) {
         ErrorInvalidValue("%s: identifier is %d characters long, exceeds the maximum allowed length of %d characters",
                           info, name.Length(), maxSize);
         return false;
     }
-
-    if (!ValidateGLSLString(name, info)) {
-        return false;
-    }
-
-    return true;
-}
-
-bool WebGLContext::ValidateGLSLString(const nsAString& string, const char *info)
-{
-    for (PRUint32 i = 0; i < string.Length(); ++i) {
-        if (!ValidateGLSLCharacter(string.CharAt(i))) {
-             ErrorInvalidValue("%s: string contains the illegal character '%d'", info, string.CharAt(i));
-             return false;
-        }
-    }
-
     return true;
 }
 
