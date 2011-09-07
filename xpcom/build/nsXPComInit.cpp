@@ -150,7 +150,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "base/message_loop.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
-#include "mozilla/MapsMemoryReporter.h"
 
 using base::AtExitManager;
 using mozilla::ipc::BrowserProcessSubThread;
@@ -527,8 +526,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 #ifdef XP_WIN
     ScheduleMediaCacheRemover();
 #endif
-
-    mozilla::MapsMemoryReporter::Init();
 
     return NS_OK;
 }
