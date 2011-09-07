@@ -186,7 +186,7 @@ var BrowserUI = {
   },
 
   lockToolbar: function lockToolbar() {
-    if (Elements.urlbarState.getAttribute("tablet"))
+    if (Util.isTablet())
       return;
     this._toolbarLocked++;
     document.getElementById("toolbar-moveable-container").top = "0";
@@ -549,8 +549,7 @@ var BrowserUI = {
   },
 
   updateTabletLayout: function updateTabletLayout() {
-    let tabletPref = Services.prefs.getIntPref("browser.ui.layout.tablet");
-    if (tabletPref == 1 || (tabletPref == -1 && Util.isTablet())) {
+    if (Util.isTablet({ forceUpdate: true })) {
       this.unlockToolbar();
       Elements.urlbarState.setAttribute("tablet", "true");
     } else {

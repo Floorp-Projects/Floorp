@@ -1038,7 +1038,7 @@ var Browser = {
   },
 
   tryFloatToolbar: function tryFloatToolbar(dx, dy) {
-    if (this.floatedWhileDragging || Elements.urlbarState.getAttribute("tablet"))
+    if (this.floatedWhileDragging || Util.isTablet())
       return;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
@@ -1289,7 +1289,7 @@ Browser.MainDragger.prototype = {
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
     this._stopAtSidebar = 0;
-    this._panToolbars = !Elements.urlbarState.getAttribute("tablet");
+    this._panToolbars = !Util.isTablet();
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
       this._sidebarTimeout = null;
@@ -1908,7 +1908,7 @@ const ContentTouchHandler = {
     // or if the urlbar is showing
     this.canCancelPan = (aX >= rect.left + kSafetyX) && (aX <= rect.right - kSafetyX) &&
                         (aY >= rect.top  + kSafetyY) &&
-                        (bcr.top == 0 || Elements.urlbarState.getAttribute("tablet"));
+                        (bcr.top == 0 || Util.isTablet());
   },
 
   tapDown: function tapDown(aX, aY) {
@@ -3151,7 +3151,7 @@ function rendererFactory(aBrowser, aCanvas) {
 var ViewableAreaObserver = {
   get width() {
     let width = this._width || window.innerWidth;
-    if (Elements.urlbarState.getAttribute("tablet")) {
+    if (Util.isTablet()) {
       let sidebarWidth = Math.round(Elements.tabs.getBoundingClientRect().width);
       width -= sidebarWidth;
     }
@@ -3160,7 +3160,7 @@ var ViewableAreaObserver = {
 
   get height() {
     let height = (this._height || window.innerHeight);
-    if (Elements.urlbarState.getAttribute("tablet"))
+    if (Util.isTablet())
       height -= BrowserUI.toolbarH;
     return height;
   },
