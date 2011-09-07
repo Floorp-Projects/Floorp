@@ -126,7 +126,7 @@ function haveSystemLocale() {
 
 function checkCurrentLocale() {
   if (Services.prefs.prefHasUserValue("general.useragent.locale")) {
-    // if the user has a compatable locale from a different buildid, we need to update
+    // if the user has a compatible locale from a different buildid, we need to update
     var buildID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).appBuildID;
     let localeBuildID = Services.prefs.getCharPref("extensions.compatability.locales.buildid");
     if (buildID != localeBuildID)

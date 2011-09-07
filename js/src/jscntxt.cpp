@@ -646,7 +646,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
      *
      * If an exception was raised, then we call the debugErrorHook
      * (if present) to give it a chance to see the error before it
-     * propagates out of scope.  This is needed for compatability
+     * propagates out of scope.  This is needed for compatibility
      * with the old scheme.
      */
     if (!JS_IsRunning(cx) ||
