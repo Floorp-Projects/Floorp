@@ -986,6 +986,7 @@ documenttab[selected="true"] > stack > .documenttab-thumbnail {
 .documenttab-close-container {
   position: relative;
   left: -16px;
+  -moz-margin-start: -16px;
   -moz-margin-end: 49px;
 }
 
