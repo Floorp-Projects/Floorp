@@ -250,26 +250,6 @@ extern "C" int extractLibs = 1;
 extern "C" int extractLibs = 0;
 #endif
 
-static uint32_t simple_write(int fd, const void *buf, uint32_t count)
-{
-  uint32_t out_offset = 0;
-  while (out_offset < count) {
-    uint32_t written = write(fd, (const char *)buf + out_offset,
-                             count - out_offset);
-    if (written == -1) {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
-        continue;
-      else {
-        __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "simple_write failed");
-        break;
-      }
-    }
-
-    out_offset += written;
-  }
-  return out_offset;
-}
-
 static void
 extractFile(const char * path, const struct cdir_entry *entry, void * data)
 {
@@ -287,8 +267,14 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
     return;
   }
 
-  void * buf = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (ftruncate(fd, size) == -1) {
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't ftruncate %s to decompress library", path);
+    close(fd);
+    return;
+  }
+
+  void * buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
+                    MAP_SHARED, fd, 0);
   if (buf == (void *)-1) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't mmap decompression buffer");
     close(fd);
@@ -301,7 +287,7 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
     total_in: 0,
 
     next_out: (Bytef *)buf,
-    avail_out: 4096,
+    avail_out: size,
     total_out: 0
   };
 
@@ -310,14 +296,7 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
   if (ret != Z_OK)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateInit failed: %s", strm.msg);
 
-  while ((ret = inflate(&strm, Z_SYNC_FLUSH)) != Z_STREAM_END) {
-    simple_write(fd, buf, 4096 - strm.avail_out);
-    strm.next_out = (Bytef *)buf;
-    strm.avail_out = 4096;
-  }
-  simple_write(fd, buf, 4096 - strm.avail_out);
-
-  if (ret != Z_STREAM_END)
+  if (inflate(&strm, Z_FINISH) != Z_STREAM_END)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflate failed: %s", strm.msg);
 
   if (strm.total_out != size)
@@ -328,7 +307,7 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateEnd failed: %s", strm.msg);
 
   close(fd);
-  munmap(buf, 4096);
+  munmap(buf, size);
 }
 
 static void
