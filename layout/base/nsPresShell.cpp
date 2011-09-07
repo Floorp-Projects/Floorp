@@ -1434,6 +1434,9 @@ public:
 protected:
   void QueryIsActive();
   nsresult UpdateImageLockingState();
+
+private:
+  nscolor GetDefaultBackgroundColorToDraw();
 };
 
 NS_IMPL_ISUPPORTS1(PresShell::MemoryReporter, nsIMemoryMultiReporter)
@@ -5851,6 +5854,14 @@ static PRBool IsTransparentContainerElement(nsPresContext* aPresContext)
          containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
 }
 
+nscolor PresShell::GetDefaultBackgroundColorToDraw()
+{
+  if (!mPresContext || !mPresContext->GetBackgroundColorDraw()) {
+    return NS_RGB(255,255,255);
+  }
+  return mPresContext->DefaultBackgroundColor();
+}
+
 void PresShell::UpdateCanvasBackground()
 {
   // If we have a frame tree and it has style information that
@@ -5870,7 +5881,7 @@ void PresShell::UpdateCanvasBackground()
     if (GetPresContext()->IsRootContentDocument() &&
         !IsTransparentContainerElement(mPresContext)) {
       mCanvasBackgroundColor =
-        NS_ComposeColors(mPresContext->DefaultBackgroundColor(), mCanvasBackgroundColor);
+        NS_ComposeColors(GetDefaultBackgroundColorToDraw(), mCanvasBackgroundColor);
     }
   }
 
@@ -5878,7 +5889,7 @@ void PresShell::UpdateCanvasBackground()
   // then the document's background color does not get drawn; cache the
   // color we actually draw.
   if (!FrameConstructor()->GetRootElementFrame()) {
-    mCanvasBackgroundColor = mPresContext->DefaultBackgroundColor();
+    mCanvasBackgroundColor = GetDefaultBackgroundColorToDraw();
   }
 }
 
@@ -5893,7 +5904,7 @@ nscolor PresShell::ComputeBackstopColor(nsIView* aDisplayRoot)
   // Within an opaque widget (or no widget at all), so the backstop
   // color must be totally opaque. The user's default background
   // as reported by the prescontext is guaranteed to be opaque.
-  return GetPresContext()->DefaultBackgroundColor();
+  return GetDefaultBackgroundColorToDraw();
 }
 
 struct PaintParams {
