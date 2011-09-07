@@ -827,10 +827,14 @@ nsBaseWidget::GetShouldAccelerate()
 
   bool whitelisted = false;
 
-  // bug 655578: on X11 at least, we must always call GetFeatureStatus (even if we don't need that information)
-  // as that's what causes GfxInfo initialization which kills the zombie 'glxtest' process.
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
+    // bug 655578: on X11 at least, we must always call GetData (even if we don't need that information)
+    // as that's what causes GfxInfo initialization which kills the zombie 'glxtest' process.
+    // initially we relied on the fact that GetFeatureStatus calls GetData for us, but bug 681026 showed
+    // that assumption to be unsafe.
+    gfxInfo->GetData();
+
     PRInt32 status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
       if (status == nsIGfxInfo::FEATURE_NO_INFO) {
