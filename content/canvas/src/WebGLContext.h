@@ -502,7 +502,9 @@ protected:
     PRBool ValidateAttribIndex(WebGLuint index, const char *info);
     PRBool ValidateStencilParamsForDrawCall();
     
-    bool  ValidateGLSLIdentifier(const nsAString& name, const char *info);
+    bool ValidateGLSLVariableName(const nsAString& name, const char *info);
+    bool ValidateGLSLCharacter(PRUnichar c);
+    bool ValidateGLSLString(const nsAString& string, const char *info);
 
     static PRUint32 GetTexelSize(WebGLenum format, WebGLenum type);
 
@@ -1366,12 +1368,12 @@ public:
     void IncrementAttachCount() { mAttachCount++; }
     void DecrementAttachCount() { mAttachCount--; }
 
-    void SetSource(const nsCString& src) {
+    void SetSource(const nsAString& src) {
         // XXX do some quick gzip here maybe -- getting this will be very rare
         mSource.Assign(src);
     }
 
-    const nsCString& Source() const { return mSource; }
+    const nsString& Source() const { return mSource; }
 
     void SetNeedsTranslation() { mNeedsTranslation = true; }
     bool NeedsTranslation() const { return mNeedsTranslation; }
@@ -1382,7 +1384,7 @@ public:
     }
 
     void SetTranslationFailure(const nsCString& msg) {
-        mTranslationLog.Assign(msg);
+        mTranslationLog.Assign(msg); 
     }
 
     const nsCString& TranslationLog() const { return mTranslationLog; }
@@ -1393,7 +1395,7 @@ protected:
     WebGLuint mName;
     PRBool mDeleted;
     WebGLenum mType;
-    nsCString mSource;
+    nsString mSource;
     nsCString mTranslationLog;
     bool mNeedsTranslation;
     PRUint32 mAttachCount;

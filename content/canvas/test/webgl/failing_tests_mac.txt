@@ -2,11 +2,9 @@ conformance/context-attributes-alpha-depth-stencil-antialias.html
 conformance/drawingbuffer-static-canvas-test.html
 conformance/drawingbuffer-test.html
 conformance/framebuffer-object-attachment.html
-conformance/gl-getshadersource.html
 conformance/gl-object-get-calls.html
 conformance/glsl-conformance.html
 conformance/glsl-long-variable-names.html
-conformance/invalid-passed-params.html
 conformance/premultiplyalpha-test.html
 conformance/program-test.html
 conformance/read-pixels-test.html
