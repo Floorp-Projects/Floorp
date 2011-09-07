@@ -1401,11 +1401,12 @@ var SelectionHandler = {
         let selection = contentWindow.getSelection();
         selection.removeAllRanges();
 
+          // Position the caret using a fake mouse click
+          utils.sendMouseEventToWindow("mousedown", x, y, 0, 1, 0, true);
+          utils.sendMouseEventToWindow("mouseup", x, y, 0, 1, 0, true);
+
         try {
-          let caretPos = contentWindow.document.caretPositionFromPoint(json.x - scrollOffset.x, json.y - scrollOffset.y);
           let selcon = currentDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
-          let sel = selcon.getSelection(1);
-          sel.collapse(caretPos.offsetNode, caretPos.offset);
 
           // Select the word nearest the caret
           selcon.wordMove(false, false);
@@ -1466,37 +1467,32 @@ var SelectionHandler = {
         if (!this.contentWindow)
           return;
 
-        let x = json.x - scrollOffset.x;
-        let y = json.y - scrollOffset.y;
+        // Hack to avoid setting focus in a textbox [Bugs 654352 & 667243]
+        let elemUnder = elementFromPoint(json.x - scrollOffset.x, json.y - scrollOffset.y);
+        if (elemUnder && elemUnder instanceof Ci.nsIDOMHTMLInputElement || elemUnder instanceof Ci.nsIDOMHTMLTextAreaElement)
 
-        try {
-          let caretPos = this.contentWindow.document.caretPositionFromPoint(x, y);
-          if (caretPos.offsetNode == null ||
-              caretPos.offsetNode instanceof Ci.nsIDOMHTMLInputElement || 
-              caretPos.offsetNode instanceof Ci.nsIDOMHTMLTextAreaElement ||
-              caretPos.offsetNode.ownerDocument.defaultView != this.contentWindow)
-            return;
-
-          // Keep the cache in "client" coordinates
-          if (json.type == "end")
-            this.cache.end = { x: json.x, y: json.y };
-          else
-            this.cache.start = { x: json.x, y: json.y };
-
-          let currentDocShell = this.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
-          let selcon = currentDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
-          let sel = selcon.getSelection(1);
-          if (json.type != "end") {
-            let focusOffset = sel.focusOffset;
-            let focusNode = sel.focusNode;
-            sel.collapse(caretPos.offsetNode, caretPos.offset);
-            sel.extend(focusNode, focusOffset);
-          } else {
-            sel.extend(caretPos.offsetNode, caretPos.offset);
-          }
-        } catch(e) {
-          Cu.reportError(e);
+        // Limit the selection to the initial content window (don't leave or enter iframes)
+        if (elemUnder && elemUnder.ownerDocument.defaultView != this.contentWindow)
           return;
+        
+        // Use fake mouse events to update the selection
+        if (json.type == "end") {
+          // Keep the cache in "client" coordinates, but translate for the mouse event
+          this.cache.end = { x: json.x, y: json.y };
+          let end = { x: this.cache.end.x - scrollOffset.x, y: this.cache.end.y - scrollOffset.y };
+          utils.sendMouseEventToWindow("mousedown", end.x, end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+          utils.sendMouseEventToWindow("mouseup", end.x, end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+        } else {
+          // Keep the cache in "client" coordinates, but translate for the mouse event
+          this.cache.start = { x: json.x, y: json.y };
+          let start = { x: this.cache.start.x - scrollOffset.x, y: this.cache.start.y - scrollOffset.y };
+          let end = { x: this.cache.end.x - scrollOffset.x, y: this.cache.end.y - scrollOffset.y };
+        
+          utils.sendMouseEventToWindow("mousedown", start.x, start.y, 0, 0, 0, true);
+          utils.sendMouseEventToWindow("mouseup", start.x, start.y, 0, 0, 0, true);
+        
+          utils.sendMouseEventToWindow("mousedown", end.x, end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+          utils.sendMouseEventToWindow("mouseup", end.x, end.y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
         }
 
         // Cache the selected text since the selection might be gone by the time we get the "end" message
