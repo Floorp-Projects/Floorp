@@ -1248,6 +1248,7 @@ add_test(function test_sync_engine_generic_fail() {
                 LOG_PREFIX_ERROR);
 
     clean();
+    server.stop(run_next_test);
   });
 
   do_check_eq(Status.engines["catapult"], undefined);
