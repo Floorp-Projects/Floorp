@@ -1038,7 +1038,7 @@ var Browser = {
   },
 
   tryFloatToolbar: function tryFloatToolbar(dx, dy) {
-    if (this.floatedWhileDragging)
+    if (this.floatedWhileDragging || Elements.urlbarState.getAttribute("tablet"))
       return;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
@@ -2899,7 +2899,6 @@ Tab.prototype = {
     let notification = this._notification = document.createElement("notificationbox");
     notification.classList.add("inputHandler");
 
-    // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
     browser.setAttribute("class", "viewable-width viewable-height");
     this._chromeTab.linkedBrowser = browser;
@@ -3155,15 +3154,18 @@ function rendererFactory(aBrowser, aCanvas) {
  */
 var ViewableAreaObserver = {
   get width() {
-    return this._width || window.innerWidth;
+    let width = this._width || window.innerWidth;
+    if (Elements.urlbarState.getAttribute("tablet")) {
+      let sidebarWidth = Math.round(Elements.tabs.getBoundingClientRect().width);
+      width -= sidebarWidth;
+    }
+    return width;
   },
 
   get height() {
     let height = (this._height || window.innerHeight);
-    if (Elements.urlbarState.getAttribute("tablet")) {
-      let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
-      height -= toolbarHeight;
-    }
+    if (Elements.urlbarState.getAttribute("tablet"))
+      height -= BrowserUI.toolbarH;
     return height;
   },
 
