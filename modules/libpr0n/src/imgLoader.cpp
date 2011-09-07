@@ -591,7 +591,7 @@ void imgCacheEntry::UpdateCache(PRInt32 diff /* = 0 */)
   // about our size or usage.
   if (!Evicted() && HasNoProxies()) {
     nsCOMPtr<nsIURI> uri;
-    mRequest->GetKeyURI(getter_AddRefs(uri));
+    mRequest->GetURI(getter_AddRefs(uri));
     imgLoader::CacheEntriesChanged(uri, diff);
   }
 }
@@ -600,7 +600,7 @@ void imgCacheEntry::SetHasNoProxies(PRBool hasNoProxies)
 {
 #if defined(PR_LOGGING)
   nsCOMPtr<nsIURI> uri;
-  mRequest->GetKeyURI(getter_AddRefs(uri));
+  mRequest->GetURI(getter_AddRefs(uri));
   nsCAutoString spec;
   if (uri)
     uri->GetSpec(spec);
@@ -796,7 +796,7 @@ void imgCacheExpirationTracker::NotifyExpired(imgCacheEntry *entry)
   nsRefPtr<imgRequest> req(entry->GetRequest());
   if (req) {
     nsCOMPtr<nsIURI> uri;
-    req->GetKeyURI(getter_AddRefs(uri));
+    req->GetURI(getter_AddRefs(uri));
     nsCAutoString spec;
     uri->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(gImgLog, "imgCacheExpirationTracker::NotifyExpired", "entry", spec.get());
@@ -1185,7 +1185,7 @@ void imgLoader::CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue)
     nsRefPtr<imgRequest> req(entry->GetRequest());
     if (req) {
       nsCOMPtr<nsIURI> uri;
-      req->GetKeyURI(getter_AddRefs(uri));
+      req->GetURI(getter_AddRefs(uri));
       nsCAutoString spec;
       uri->GetSpec(spec);
       LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::CheckCacheLimits", "entry", spec.get());
@@ -1492,7 +1492,7 @@ PRBool imgLoader::RemoveFromCache(imgCacheEntry *entry)
   nsRefPtr<imgRequest> request(getter_AddRefs(entry->GetRequest()));
   if (request) {
     nsCOMPtr<nsIURI> key;
-    if (NS_SUCCEEDED(request->GetKeyURI(getter_AddRefs(key))) && key) {
+    if (NS_SUCCEEDED(request->GetURI(getter_AddRefs(key))) && key) {
       imgCacheTable &cache = GetCache(key);
       imgCacheQueue &queue = GetCacheQueue(key);
       nsCAutoString spec;

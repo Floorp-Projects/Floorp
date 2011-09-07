@@ -164,7 +164,6 @@ private:
   void RemoveFromCache();
 
   nsresult GetURI(nsIURI **aURI);
-  nsresult GetKeyURI(nsIURI **aURI);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
 
   inline const char *GetMimeType() const {
