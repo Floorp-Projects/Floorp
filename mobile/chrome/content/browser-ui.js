@@ -186,6 +186,8 @@ var BrowserUI = {
   },
 
   lockToolbar: function lockToolbar() {
+    if (Elements.urlbarState.getAttribute("tablet"))
+      return;
     this._toolbarLocked++;
     document.getElementById("toolbar-moveable-container").top = "0";
     if (this._toolbarLocked == 1)
@@ -379,11 +381,6 @@ var BrowserUI = {
     return this._toolbarH;
   },
 
-  get sidebarW() {
-    delete this._sidebarW;
-    return this._sidebarW = Elements.controls.getBoundingClientRect().width;
-  },
-
   sizeControls: function(windowW, windowH) {
     // tabs
     document.getElementById("tabs").resize();
@@ -553,10 +550,12 @@ var BrowserUI = {
 
   updateTabletLayout: function updateTabletLayout() {
     let tabletPref = Services.prefs.getIntPref("browser.ui.layout.tablet");
-    if (tabletPref == 1 || (tabletPref == -1 && Util.isTablet()))
+    if (tabletPref == 1 || (tabletPref == -1 && Util.isTablet())) {
+      this.unlockToolbar();
       Elements.urlbarState.setAttribute("tablet", "true");
-    else
+    } else {
       Elements.urlbarState.removeAttribute("tablet");
+    }
   },
 
   update: function(aState) {
