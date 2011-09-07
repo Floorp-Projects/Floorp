@@ -388,6 +388,15 @@ struct Registers {
 # error "Unsupported platform"
 #endif
 
+    /* Temp reg that can be clobbered when setting up a fallible fast or ABI call. */
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    static const RegisterID ClobberInCall = JSC::X86Registers::ecx;
+#elif defined(JS_CPU_ARM)
+    static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
+#elif defined(JS_CPU_SPARC)
+    static const RegisterID ClobberInCall = JSC::SparcRegisters::l1;
+#endif
+
     static const uint32 AvailFPRegs = TempFPRegs;
 
     static inline uint32 maskReg(FPRegisterID reg) {
@@ -410,6 +419,20 @@ struct Registers {
         regs.takeReg(Registers::ArgReg0);
         regs.takeReg(Registers::ArgReg1);
         return regs.takeAnyReg().reg();
+    }
+
+    /* Get a register which is not live before a normal ABI call with at most four args. */
+    static inline Registers tempCallRegMask() {
+        Registers regs(AvailRegs);
+#ifndef JS_CPU_X86
+        regs.takeReg(ArgReg0);
+        regs.takeReg(ArgReg1);
+        regs.takeReg(ArgReg2);
+#ifdef JS_CPU_SPARC
+        regs.takeReg(ArgReg3);
+#endif
+#endif
+        return regs;
     }
 
     Registers(uint32 freeMask)

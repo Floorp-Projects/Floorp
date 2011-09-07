@@ -2027,7 +2027,6 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_TOID)
 
           BEGIN_CASE(JSOP_SETELEM)
-          BEGIN_CASE(JSOP_SETHOLE)
           {
             jsbytecode *next = &PC[JSOP_SETELEM_LENGTH];
             bool pop = (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next));
@@ -4447,6 +4446,18 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         shapeReg = frame.allocReg();
     }
 
+    /*
+     * If this access has been on a shape with a getter hook, make preparations
+     * so that we can generate a stub to call the hook directly (rather than be
+     * forced to make a stub call). Sync the stack up front and kill all
+     * registers so that PIC stubs can contain calls, and always generate a
+     * type barrier if inference is enabled (known property types do not
+     * reflect properties with getter hooks).
+     */
+    pic.canCallHook = usePropCache && analysis->getCode(PC).accessGetter;
+    if (pic.canCallHook)
+        frame.syncAndKillEverything();
+
     pic.shapeReg = shapeReg;
     pic.atom = atom;
 
@@ -4497,7 +4508,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
 
     pic.objReg = objReg;
     frame.pushRegs(shapeReg, objReg, knownType);
-    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg);
+    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg, false, false,
+                                       /* force = */ pic.canCallHook);
 
     stubcc.rejoin(Changes(1));
     pics.append(pic);
@@ -4546,6 +4558,10 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     pic.objReg = objReg;
     pic.shapeReg = shapeReg;
     pic.atom = atom;
+
+    pic.canCallHook = analysis->getCode(PC).accessGetter;
+    if (pic.canCallHook)
+        frame.syncAndKillEverything();
 
     /*
      * Store the type and object back. Don't bother keeping them in registers,
@@ -4611,7 +4627,8 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     /* Adjust the frame. */
     frame.pop();
     frame.pushRegs(shapeReg, objReg, knownPushedType(0));
-    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg);
+    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg, false, false,
+                                       /* force = */ pic.canCallHook);
 
     pushSyncedEntry(1);
 
@@ -4710,6 +4727,10 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
         objReg = frame.copyDataIntoReg(top);
     }
 
+    pic.canCallHook = analysis->getCode(PC).accessGetter;
+    if (pic.canCallHook)
+        frame.syncAndKillEverything();
+
     /* Guard on shape. */
     masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
@@ -4749,7 +4770,8 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
      */
     frame.dup();
     frame.storeRegs(-2, shapeReg, objReg, knownPushedType(0));
-    BarrierState barrier = testBarrier(shapeReg, objReg);
+    BarrierState barrier = testBarrier(shapeReg, objReg, false, false,
+                                       /* force = */ pic.canCallHook);
 
     /*
      * Assert correctness of hardcoded offsets.
@@ -7236,11 +7258,6 @@ mjit::Compiler::hasTypeBarriers(jsbytecode *pc)
     if (!cx->typeInferenceEnabled())
         return false;
 
-#if 0
-    /* Stress test. */
-    return js_CodeSpec[*pc].format & JOF_TYPESET;
-#endif
-
     return analysis->typeBarriers(pc) != NULL;
 }
 
@@ -7440,7 +7457,7 @@ mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterI
 
 mjit::Compiler::BarrierState
 mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
-                            bool testUndefined, bool testReturn)
+                            bool testUndefined, bool testReturn, bool force)
 {
     BarrierState state;
     state.typeReg = typeReg;
@@ -7462,17 +7479,11 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg,
         JS_ASSERT(!testUndefined);
         if (!analysis->getCode(PC).monitoredTypesReturn)
             return state;
-    } else if (!hasTypeBarriers(PC)) {
+    } else if (!hasTypeBarriers(PC) && !force) {
         if (testUndefined && !types->hasType(types::Type::UndefinedType()))
             state.jump.setJump(masm.testUndefined(Assembler::Equal, typeReg));
         return state;
     }
-
-#if 0
-    /* Stress test. */
-    state.jump.setJump(masm.testInt32(Assembler::NotEqual, typeReg));
-    return state;
-#endif
 
     types->addFreeze(cx);
 

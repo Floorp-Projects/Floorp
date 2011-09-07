@@ -3967,7 +3967,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_SETELEM:
-              case JSOP_SETHOLE:
                 rval = POP_STR();
                 op = JSOP_NOP;          /* turn off parens */
                 xval = POP_STR();

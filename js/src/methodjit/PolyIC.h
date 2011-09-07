@@ -93,6 +93,9 @@ struct BaseIC : public MacroAssemblerTypedefs {
     bool hit : 1;
     bool slowCallPatched : 1;
 
+    // Whether getter/setter hooks can be called from IC stubs.
+    bool canCallHook : 1;
+
     // Number of stubs generated.
     uint32 stubsGenerated : 5;
 

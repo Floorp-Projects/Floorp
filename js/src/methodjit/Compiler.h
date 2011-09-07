@@ -184,7 +184,7 @@ class Compiler : public BaseCompiler
     };
 
     struct BaseICInfo {
-        BaseICInfo(JSOp op) : op(op)
+        BaseICInfo(JSOp op) : op(op), canCallHook(false)
         { }
         Label fastPathStart;
         Label fastPathRejoin;
@@ -192,12 +192,14 @@ class Compiler : public BaseCompiler
         Call slowPathCall;
         DataLabelPtr paramAddr;
         JSOp op;
+        bool canCallHook;
 
         void copyTo(ic::BaseIC &to, JSC::LinkBuffer &full, JSC::LinkBuffer &stub) {
             to.fastPathStart = full.locationOf(fastPathStart);
             to.fastPathRejoin = full.locationOf(fastPathRejoin);
             to.slowPathStart = stub.locationOf(slowPathStart);
             to.slowPathCall = stub.locationOf(slowPathCall);
+            to.canCallHook = canCallHook;
             to.op = op;
             JS_ASSERT(to.op == op);
         }
@@ -565,7 +567,8 @@ class Compiler : public BaseCompiler
     BarrierState pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
                                          bool testUndefined = false);
     BarrierState testBarrier(RegisterID typeReg, RegisterID dataReg,
-                             bool testUndefined = false, bool testReturn = false);
+                             bool testUndefined = false, bool testReturn = false,
+                             bool force = false);
     void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which);
 
     /* Non-emitting helpers. */
