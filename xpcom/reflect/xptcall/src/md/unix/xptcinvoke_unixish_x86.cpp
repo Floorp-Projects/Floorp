@@ -78,6 +78,7 @@ NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
                  PRUint32 paramCount, nsXPTCVariant* params)
 {
 #ifdef __GNUC__            /* Gnu compiler. */
+  PRUint32 methodIndexReg = methodIndex;
   PRUint32 result;
   /* Each param takes at most 2, 4-byte words
      It doesn't matter if we push too many words, and calculating the exact
@@ -165,7 +166,8 @@ NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
       "=m" (saved_esp)      /* %3 */
 #endif
     : "g" (that),           /* %4 */
-      "g" (methodIndex),    /* %5 */
+      /* Must be in a register since we modify esp in the assembly. */
+      "r" (methodIndexReg), /* %5 */
       "1" (paramCount),     /* %6 */
       "2" (params),         /* %7 */
 #ifdef KEEP_STACK_16_BYTE_ALIGNED
