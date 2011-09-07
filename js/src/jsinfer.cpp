@@ -3688,7 +3688,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       }
 
       case JSOP_SETELEM:
-      case JSOP_SETHOLE:
         poppedTypes(pc, 1)->addSetElement(cx, script, pc, poppedTypes(pc, 2), poppedTypes(pc, 0));
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
@@ -6016,6 +6015,13 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script);
 #endif
+
+    /*
+     * Use counts for scripts are reset on GC. After discarding code we need to
+     * let it warm back up to get information like which opcodes are setting
+     * array holes or accessing getter properties.
+     */
+    script->resetUseCount();
 }
 
 void

@@ -1820,7 +1820,6 @@ LoopState::analyzeLoopBody(unsigned frame)
             skipAnalysis = true;
             break;
 
-          case JSOP_SETHOLE:
           case JSOP_SETELEM: {
             SSAValue objValue = analysis->poppedValue(pc, 2);
             SSAValue elemValue = analysis->poppedValue(pc, 1);
@@ -1844,7 +1843,7 @@ LoopState::analyzeLoopBody(unsigned frame)
                     continue;
                 if (!addModifiedProperty(object, JSID_VOID))
                     return;
-                if (op == JSOP_SETHOLE && !addGrowArray(object))
+                if (analysis->getCode(pc).arrayWriteHole && !addGrowArray(object))
                     return;
             }
 
