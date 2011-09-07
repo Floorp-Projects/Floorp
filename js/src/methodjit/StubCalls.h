@@ -113,8 +113,6 @@ void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
-void JS_FASTCALL PutActivationObjects(VMFrame &f);
-void JS_FASTCALL CreateFunCallObject(VMFrame &f);
 #if JS_MONOIC
 void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::TraceICInfo *tic);
 #else
@@ -202,6 +200,7 @@ JSBool JS_FASTCALL InstanceOf(VMFrame &f);
 void JS_FASTCALL FastInstanceOf(VMFrame &f);
 void JS_FASTCALL ArgCnt(VMFrame &f);
 void JS_FASTCALL Unbrand(VMFrame &f);
+void JS_FASTCALL UnbrandThis(VMFrame &f);
 
 /*
  * Helper for triggering recompilation should a name read miss a type barrier,
@@ -226,6 +225,11 @@ template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value 
 void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);
 
 void JS_FASTCALL Exception(VMFrame &f);
+
+void JS_FASTCALL FunctionFramePrologue(VMFrame &f);
+void JS_FASTCALL FunctionFrameEpilogue(VMFrame &f);
+
+void JS_FASTCALL AnyFrameEpilogue(VMFrame &f);
 
 JSObject * JS_FASTCALL
 NewDenseUnallocatedArray(VMFrame &f, uint32 length);

@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>font-stretch mapping tests</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-family: Verdana, sans-serif;
+}
+
+h3, h4 { font-weight: normal; }
+
+table {
+  border-collapse: collapse;
+  font-size: 28px;
+}
+
+td {
+  padding: 0; margin: 0;
+  font-family: test;
+}
+
+th {
+  font-weight: inherit;
+}
+
+p { width: 300px; }
+
+.red { color: red; }
+
+thead { font-weight: 400; font-size: 75%; }
+
+/* make all the spans blocks to avoid influence of what's outside them
+   on line-height calculations */
+span { display: block; }
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-thin.ttf);
+  font-weight: 100;
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: 400;
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-light.ttf);
+  font-weight: 200;
+  font-stretch: condensed;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-heavy.ttf);
+  font-weight: 800;
+  font-stretch: condensed;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-medium.ttf);
+  font-weight: 500;
+  font-stretch: expanded;
+}
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-black.ttf);
+  font-weight: 900;
+  font-stretch: expanded;
+}
+
+@font-face {
+  font-family: test100;
+  src: url(../fonts/mplus/mplus-1p-thin.ttf);
+  font-weight: 100;
+}
+
+@font-face {
+  font-family: test200;
+  src: url(../fonts/mplus/mplus-1p-light.ttf);
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: test400;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: test500;
+  src: url(../fonts/mplus/mplus-1p-medium.ttf);
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: test800;
+  src: url(../fonts/mplus/mplus-1p-heavy.ttf);
+  font-weight: 800;
+}
+
+@font-face {
+  font-family: test900;
+  src: url(../fonts/mplus/mplus-1p-black.ttf);
+  font-weight: 900;
+}
+
+.w1 { font-weight: 100; }
+.w2 { font-weight: 200; }
+.w3 { font-weight: 300; }
+.w4 { font-weight: 400; }
+.w5 { font-weight: 500; }
+.w6 { font-weight: 600; }
+.w7 { font-weight: 700; }
+.w8 { font-weight: 800; }
+.w9 { font-weight: 900; }
+
+.fs1 { font-stretch: ultra-condensed; }
+.fs2 { font-stretch: extra-condensed; }
+.fs3 { font-stretch: condensed; }
+.fs4 { font-stretch: semi-condensed; }
+.fs5 { font-stretch: normal; }
+.fs6 { font-stretch: semi-expanded; }
+.fs7 { font-stretch: expanded; }
+.fs8 { font-stretch: extra-expanded; }
+.fs9 { font-stretch: ultra-expanded; }
+
+</style>
+</head>
+<body>
+
+<p>Font family with ultra-condensed 100, 400, condensed 200, 800 and expanded 500, 900</p>
+
+<table>
+<thead>
+<th></th>
+<th class="red">1</th>
+<th>2</th>
+<th class="red">3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th class="red">7</th>
+<th>8</th>
+<th>9</th>
+</thead>
+<tr class="w1">
+<th>100</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w2">
+<th>200</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w3">
+<th>300</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w4">
+<th>400</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w5">
+<th>500</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w6">
+<th>600</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w7">
+<th>700</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w8">
+<th>800</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+<tr class="w9">
+<th>900</th>
+<td class="fs1"><span>か</span></td>
+<td class="fs2"><span>か</span></td>
+<td class="fs3"><span>か</span></td>
+<td class="fs4"><span>か</span></td>
+<td class="fs5"><span>か</span></td>
+<td class="fs6"><span>か</span></td>
+<td class="fs7"><span>か</span></td>
+<td class="fs8"><span>か</span></td>
+<td class="fs9"><span>か</span></td>
+</tr>
+</table>
+
+</body>
+</html>

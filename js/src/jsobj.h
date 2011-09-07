@@ -733,6 +733,7 @@ struct JSObject : js::gc::Cell {
 
   private:
     inline js::Value* fixedSlots() const;
+    inline bool hasContiguousSlots(size_t start, size_t count) const;
 
   public:
     /* Minimum size for dynamically allocated slots. */
@@ -793,12 +794,22 @@ struct JSObject : js::gc::Cell {
 
     void rollbackProperties(JSContext *cx, uint32 slotSpan);
 
-    js::Value& getSlotRef(uintN slot) {
-        JS_ASSERT(slot < capacity);
+    js::Value *getSlotAddress(uintN slot) {
+        /*
+         * This can be used to get the address of the end of the slots for the
+         * object, which may be necessary when fetching zero-length arrays of
+         * slots (e.g. for callObjVarArray).
+         */
+        JS_ASSERT(slot <= capacity);
         size_t fixed = numFixedSlots();
         if (slot < fixed)
-            return fixedSlots()[slot];
-        return slots[slot - fixed];
+            return fixedSlots() + slot;
+        return slots + (slot - fixed);
+    }
+
+    js::Value &getSlotRef(uintN slot) {
+        JS_ASSERT(slot < capacity);
+        return *getSlotAddress(slot);
     }
 
     inline js::Value &nativeGetSlotRef(uintN slot);
@@ -888,10 +899,10 @@ struct JSObject : js::gc::Cell {
     inline void clearType();
     inline void setType(js::types::TypeObject *newType);
 
-    inline js::types::TypeObject *getNewType(JSContext *cx, JSScript *script = NULL,
+    inline js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
                                              bool markUnknown = false);
   private:
-    void makeNewType(JSContext *cx, JSScript *script, bool markUnknown);
+    void makeNewType(JSContext *cx, JSFunction *fun, bool markUnknown);
   public:
 
     /* Set a new prototype for an object with a singleton type. */
@@ -1097,6 +1108,14 @@ struct JSObject : js::gc::Cell {
     /* Returns the variable at the given index. */
     inline const js::Value &callObjVar(uintN i) const;
     inline void setCallObjVar(uintN i, const js::Value &v);
+
+    /*
+     * Get the actual arrays of arguments and variables. Only call if type
+     * inference is enabled, where we ensure that call object variables are in
+     * contiguous slots (see NewCallObject).
+     */
+    inline js::Value *callObjArgArray();
+    inline js::Value *callObjVarArray();
 
     /*
      * Date-specific getters and setters.

@@ -604,7 +604,7 @@ PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
 {
     NPRemoteWindow window;
     mWindowType = aWindow->type;
-    window.window = reinterpret_cast<uintptr_t>(aWindow->window);
+    window.window = reinterpret_cast<uint64_t>(aWindow->window);
     window.x = aWindow->x;
     window.y = aWindow->y;
     window.width = aWindow->width;
@@ -911,7 +911,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     else {
         SubclassPluginWindow(reinterpret_cast<HWND>(aWindow->window));
 
-        window.window = reinterpret_cast<uintptr_t>(aWindow->window);
+        window.window = reinterpret_cast<uint64_t>(aWindow->window);
         window.x = aWindow->x;
         window.y = aWindow->y;
         window.width = aWindow->width;
@@ -919,7 +919,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
         window.type = aWindow->type;
     }
 #else
-    window.window = reinterpret_cast<unsigned long>(aWindow->window);
+    window.window = reinterpret_cast<uint64_t>(aWindow->window);
     window.x = aWindow->x;
     window.y = aWindow->y;
     window.width = aWindow->width;
