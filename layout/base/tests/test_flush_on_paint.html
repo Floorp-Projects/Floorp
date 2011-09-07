@@ -20,13 +20,6 @@ var lastPaintCount;
 var expectedWidth;
 
 var toggle = true;
-function invalidationLoop() {
-  toggle = !toggle;
-  var color = toggle ? "8F" : "00";
-  plugin.setColor("FFFFFF" + color);
-  setTimeout(invalidationLoop, 20);
-}
-invalidationLoop();
 
 function doIteration() {
   lastPaintCount = window.mozPaintCount;
@@ -34,7 +27,7 @@ function doIteration() {
 
   expectedWidth = 201 + iterations;
   plugin.style.width = expectedWidth + "px";
-  checkDone();
+  setTimeout(checkDone, 60);
 }
 
 function checkDone() {
@@ -51,7 +44,7 @@ function checkDone() {
      "Check that we set width before painting");
 
   ++iterations;
-  if (iterations < 100) {
+  if (iterations < 25) {
     doIteration();
   } else {
     SimpleTest.finish();
