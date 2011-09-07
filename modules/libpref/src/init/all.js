@@ -3346,6 +3346,15 @@ pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 pref("alerts.disableSlidingEffect", false);
+
+// DOM full-screen API.
+pref("full-screen-api.enabled", false);
+pref("full-screen-api.allow-trusted-requests-only", true);
+pref("full-screen-api.key-input-restricted", true);
+
+// Time limit, in milliseconds, for nsEventStateManager::IsHandlingUserInput().
+// Used to detect long running handlers of user-generated events.
+pref("dom.event.handling-user-input-time-limit", 1000);
  
 //3D Transforms
 pref("layout.3d-transforms.enabled", false);

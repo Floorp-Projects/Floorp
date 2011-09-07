@@ -68,6 +68,7 @@ _TEST_FILES = \
 		test_framedhistoryframes.html \
 		test_windowedhistoryframes.html \
 		test_focusrings.xul \
+		file_moving_xhr.html \
 		$(NULL)
 
 _CHROME_FILES = \

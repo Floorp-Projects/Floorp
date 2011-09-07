@@ -811,9 +811,22 @@ toolbar[mode="icons"] #zoom-in-button {
   background-clip: padding-box;
 }
 
-#urlbar:-moz-window-inactive,
-.searchbar-textbox:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
+@media (-moz-mac-lion-theme) {
+  #urlbar,
+  .searchbar-textbox {
+    background-image: -moz-linear-gradient(hsl(0,0%,97%), hsl(0,0%,100%));
+    border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.15);
+    box-shadow: 0 1px 0 hsla(0,0%,100%,.2),
+                inset 0 0 1px hsla(0,0%,0%,.05),
+                inset 0 1px 2px hsla(0,0%,0%,.1);
+  }
+}
+
+@media not all and (-moz-mac-lion-theme) {
+  #urlbar:-moz-window-inactive,
+  .searchbar-textbox:-moz-window-inactive {
+    border-color: @toolbarbuttonInactiveBorderColor@;
+  }
 }
 
 #urlbar[focused="true"],

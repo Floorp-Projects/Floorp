@@ -15,12 +15,13 @@
     <vbox id="main-page" class="pane" flex="1">
       <spacer flex="1"/>
       <button class="continue" id="continue-in-button" onclick="LocaleUI.closeWindow();" crop="center"/>
+      <label class="loadingLabel" id="loading-label"/>
       <description id="change-language" class="link" onclick="LocaleUI.showPicker();" role="button"/>
     </vbox>
 
     <vbox id="picker-page" class="pane" flex="1">
       <description id="picker-title"/>
-      <richlistbox id="language-list" onclick="LocaleUI.selectLanguage(event);" flex="1" class="window-width"/>
+      <richlistbox id="language-list" onclick="LocaleUI.selectLocale(event);" flex="1" class="window-width"/>
       <hbox class="footer">
         <button id="cancel-button" class="cancel" onclick="LocaleUI.cancelPicker();" crop="center"/>
         <button id="continue-button" class="continue" onclick="LocaleUI.installAddon();" crop="center"/>

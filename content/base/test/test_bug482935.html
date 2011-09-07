@@ -38,51 +38,6 @@ function testCancelInPhase4() {
 
           xhr2.addEventListener("load", function() {
             is(xhr2.responseText, "0", "Received fresh value for second request");
-            testCancelBeforePhase4();
-          }, false);
-
-          xhr2.open("GET", url);
-          xhr2.setRequestHeader("X-Request", "1", false);
-
-          try { xhr2.send(); }
-          catch(e) {
-            is(xhr2.status, "200", "Exception!");
-          }
-        }, 0);
-      }, false);
-
-      xhr.abort();
-    }
-  }, false);
-
-  xhr.open("GET", url, true);
-  xhr.setRequestHeader("X-Request", "0", false);
-  try { xhr.send(); }
-  catch(e) {
-    is("Nothing", "Exception", "Boom: " + e);
-  }
-}
-
-// Tests that response is NOT cached if the request is cancelled
-// before it has reached state 4
-function testCancelBeforePhase4() {
-
-  clearCache();
-
-  // First request - should be loaded from server
-  var xhr = new XMLHttpRequest();
-  xhr.addEventListener("readystatechange", function(e) {
-    if (xhr.readyState == 3) {
-      xhr.addEventListener("abort", function() {
-        setTimeout(function() {
-          // This request was cancelled, so the responseText should be empty string
-          is(xhr.responseText, "", "Expected empty response to cancelled request");
-
-          // Second request - should be found in cache
-          var xhr2 = new XMLHttpRequest();
-
-          xhr2.addEventListener("load", function() {
-            is(xhr2.responseText, "1", "Received cached value for second request");
             SimpleTest.finish();
           }, false);
 

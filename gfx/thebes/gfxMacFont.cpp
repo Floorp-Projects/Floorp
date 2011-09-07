@@ -57,9 +57,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
       mFontFace(nsnull),
       mScaledFont(nsnull)
 {
-    if (aNeedsBold) {
-        mSyntheticBoldOffset = 1;  // devunit offset when double-striking text to fake boldness
-    }
+    mApplySyntheticBold = aNeedsBold;
 
     mCGFont = aFontEntry->GetFontRef();
     if (!mCGFont) {
@@ -167,7 +165,7 @@ gfxMacFont::InitTextRun(gfxContext *aContext,
                                      aRunStart, aRunLength, aRunScript,
         static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout());
 
-    aTextRun->AdjustAdvancesForSyntheticBold(aRunStart, aRunLength);
+    aTextRun->AdjustAdvancesForSyntheticBold(aContext, aRunStart, aRunLength);
 
     return ok;
 }
@@ -320,8 +318,10 @@ gfxMacFont::InitMetrics()
             mMetrics.aveCharWidth = mMetrics.maxAdvance;
         }
     }
-    mMetrics.aveCharWidth += mSyntheticBoldOffset;
-    mMetrics.maxAdvance += mSyntheticBoldOffset;
+    if (IsSyntheticBold()) {
+        mMetrics.aveCharWidth += GetSyntheticBoldOffset();
+        mMetrics.maxAdvance += GetSyntheticBoldOffset();
+    }
 
     mMetrics.spaceWidth = GetCharWidth(cmap, ' ', &glyphID, cgConvFactor);
     if (glyphID == 0) {

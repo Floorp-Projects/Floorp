@@ -775,7 +775,7 @@ class CallCompiler : public BaseCompiler
         RegisterID t0 = tempRegs.takeAnyReg().reg();
 
         /* Guard that it's actually a function object. */
-        Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, &js_FunctionClass);
+        Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, &FunctionClass);
 
         /* Guard that it's the same function. */
         JSFunction *fun = obj->getFunctionPrivate();
@@ -1354,7 +1354,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
     JSC::CodeLocationLabel cs = linker.finalize();
 
     JaegerSpew(JSpew_PICs, "generated ARGS CHECK stub %p (%lu bytes)\n",
-               cs.executableAddress(), masm.size());
+               cs.executableAddress(), (unsigned long)masm.size());
 
     Repatcher repatch(jit);
     repatch.relink(jit->argsCheckJump, cs);

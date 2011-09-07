@@ -2259,14 +2259,8 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
   mGlobalObjectRef = aGlobalObject;
 
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
-  PRUint32 flags = 0;
 
   if (chromeWindow) {
-    // Flag this window's global object and objects under it as "system",
-    // for optional automated XPCNativeWrapper construction when chrome JS
-    // views a content DOM.
-    flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
-
     // Always enable E4X for XUL and other chrome content -- there is no
     // need to preserve the <!-- script hiding hack from JS-in-HTML daze
     // (introduced in 1995 for graceful script degradation in Netscape 1,

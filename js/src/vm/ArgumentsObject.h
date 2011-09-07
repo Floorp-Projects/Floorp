@@ -151,7 +151,7 @@ class ArgumentsObject : public ::JSObject
     static const uint32 INITIAL_LENGTH_SLOT = 0;
     static const uint32 DATA_SLOT = 1;
 
-  protected:
+  public:
     static const uint32 RESERVED_SLOTS = 2;
 
   private:
@@ -240,8 +240,6 @@ class ArgumentsObject : public ::JSObject
  */
 class NormalArgumentsObject : public ArgumentsObject
 {
-    static js::Class jsClass;
-
     friend bool JSObject::isNormalArguments() const;
     friend struct EmptyShape; // for EmptyShape::getEmptyArgumentsShape
     friend ArgumentsObject *
@@ -266,20 +264,12 @@ class NormalArgumentsObject : public ArgumentsObject
  */
 class StrictArgumentsObject : public ArgumentsObject
 {
-    static js::Class jsClass;
-
     friend bool JSObject::isStrictArguments() const;
     friend ArgumentsObject *
     ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee);
 };
 
 } // namespace js
-
-inline bool
-JSObject::isNormalArguments() const
-{
-    return getClass() == &js::NormalArgumentsObject::jsClass;
-}
 
 js::NormalArgumentsObject *
 JSObject::asNormalArguments()
@@ -288,23 +278,11 @@ JSObject::asNormalArguments()
     return reinterpret_cast<js::NormalArgumentsObject *>(this);
 }
 
-inline bool
-JSObject::isStrictArguments() const
-{
-    return getClass() == &js::StrictArgumentsObject::jsClass;
-}
-
 js::StrictArgumentsObject *
 JSObject::asStrictArguments()
 {
     JS_ASSERT(isStrictArguments());
     return reinterpret_cast<js::StrictArgumentsObject *>(this);
-}
-
-inline bool
-JSObject::isArguments() const
-{
-    return isNormalArguments() || isStrictArguments();
 }
 
 js::ArgumentsObject *

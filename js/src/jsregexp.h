@@ -52,8 +52,6 @@
 #include "jsdhash.h"
 #endif
 
-extern js::Class js_RegExpClass;
-
 namespace js {
 
 class RegExpStatics
@@ -387,12 +385,6 @@ JSObject::setRegExpSticky(bool sticky)
 }
 
 namespace js { class AutoStringRooter; }
-
-inline bool
-JSObject::isRegExp() const
-{
-    return getClass() == &js_RegExpClass;
-}
 
 extern JS_FRIEND_API(JSBool)
 js_ObjectIsRegExp(JSObject *obj);

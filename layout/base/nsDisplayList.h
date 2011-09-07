@@ -2080,6 +2080,7 @@ public:
     nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aList)
   {
     MOZ_COUNT_CTOR(nsDisplayTransform);
+    NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   }
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
@@ -2087,6 +2088,7 @@ public:
   nsDisplayItem(aBuilder, aFrame), mStoredList(aBuilder, aFrame, aItem)
   {
     MOZ_COUNT_CTOR(nsDisplayTransform);
+    NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING

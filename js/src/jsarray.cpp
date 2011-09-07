@@ -44,7 +44,7 @@
  * Array objects begin as "dense" arrays, optimized for index-only property
  * access over a vector of slots with high load factor.  Array methods
  * optimize for denseness by testing that the object's class is
- * &js_ArrayClass, and can then directly manipulate the slots for efficiency.
+ * &ArrayClass, and can then directly manipulate the slots for efficiency.
  *
  * We track these pieces of metadata for arrays in dense mode:
  *  - The array's length property as a uint32, accessible with
@@ -81,7 +81,7 @@
  * known to have no hole values below its initialized length, then it is a
  * "packed" array and can be accessed much faster by JIT code.
  *
- * Arrays are converted to use js_SlowArrayClass when any of these conditions
+ * Arrays are converted to use SlowArrayClass when any of these conditions
  * are met:
  *  - there are more than MIN_SPARSE_INDEX slots total and the load factor
  *    (COUNT / capacity) is less than 0.25
@@ -93,7 +93,7 @@
  * properties in the order they were created.  We could instead maintain the
  * scope to track property enumeration order, but still use the fast slot
  * access.  That would have the same memory cost as just using a
- * js_SlowArrayClass, but have the same performance characteristics as a dense
+ * SlowArrayClass, but have the same performance characteristics as a dense
  * array for slot accesses, at some cost in code complexity.
  */
 #include <stdlib.h>
@@ -145,13 +145,6 @@
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
-
-static inline bool
-ENSURE_SLOW_ARRAY(JSContext *cx, JSObject *obj)
-{
-    return obj->getClass() == &js_SlowArrayClass ||
-           obj->makeDenseArraySlow(cx);
-}
 
 JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
@@ -246,14 +239,11 @@ static JSBool
 BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
              jsid *idp)
 {
-    jschar buf[10], *start;
-    Class *clasp;
-    JSAtom *atom;
     JS_STATIC_ASSERT((jsuint)-1 == 4294967295U);
-
     JS_ASSERT(index > JSID_INT_MAX);
 
-    start = JS_ARRAY_END(buf);
+    jschar buf[10];
+    jschar *start = JS_ARRAY_END(buf);
     do {
         --start;
         *start = (jschar)('0' + index % 10);
@@ -264,14 +254,11 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
      * Skip the atomization if the class is known to store atoms corresponding
      * to big indexes together with elements. In such case we know that the
      * array does not have an element at the given index if its atom does not
-     * exist.  Fast arrays (clasp == &js_ArrayClass) don't use atoms for
-     * any indexes, though it would be rare to see them have a big index
-     * in any case.
+     * exist.  Dense arrays don't use atoms for any indexes, though it would be
+     * rare to see them have a big index in any case.
      */
-    if (!createAtom &&
-        ((clasp = obj->getClass()) == &js_SlowArrayClass ||
-         obj->isArguments() ||
-         clasp == &js_ObjectClass)) {
+    JSAtom *atom;
+    if (!createAtom && (obj->isSlowArray() || obj->isArguments() || obj->isObject())) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom) {
             *idp = JSID_VOID;
@@ -501,13 +488,13 @@ JSBool JS_FASTCALL
 js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
 {
 #ifdef DEBUG
-    Class *origObjClasp = obj->clasp;
+    Class *origObjClasp = obj->getClass();
 #endif
     jsuint u = jsuint(i);
     JSBool ret = (obj->ensureDenseArrayElements(cx, u, 1) == JSObject::ED_OK);
 
     /* Partially check the CallInfo's storeAccSet is correct. */
-    JS_ASSERT(obj->clasp == origObjClasp);
+    JS_ASSERT(obj->getClass() == origObjClasp);
     return ret;
 }
 /* This function and its callees do not touch any object's .clasp field. */
@@ -989,7 +976,7 @@ array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
     return true;
 }
 
-Class js_ArrayClass = {
+Class js::ArrayClass = {
     "Array",
     Class::NON_NATIVE | JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     PropertyStub,         /* addProperty */
@@ -1024,7 +1011,7 @@ Class js_ArrayClass = {
     }
 };
 
-Class js_SlowArrayClass = {
+Class js::SlowArrayClass = {
     "Array",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
@@ -1068,8 +1055,8 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     js::Shape *oldMap = lastProp;
 
     /* Create a native scope. */
-    js::gc::FinalizeKind kind = js::gc::FinalizeKind(arenaHeader()->getThingKind());
-    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, getProto()->getNewType(cx), kind))
+    gc::AllocKind kind = getAllocKind();
+    if (!InitScopeForObject(cx, this, &SlowArrayClass, getProto()->getNewType(cx), kind))
         return false;
 
     backfillDenseArrayHoles(cx);
@@ -1090,7 +1077,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         JS_ASSERT(!denseArrayHasInlineSlots());
     }
     capacity = numFixedSlots() + arrayCapacity;
-    clasp = &js_SlowArrayClass;
+    clasp = &SlowArrayClass;
 
     /*
      * Root all values in the array during conversion, as SlowArrayClass only
@@ -1110,7 +1097,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         setMap(oldMap);
         capacity = arrayCapacity;
         initializedLength = arrayInitialized;
-        clasp = &js_ArrayClass;
+        clasp = &ArrayClass;
         return false;
     }
 
@@ -1133,7 +1120,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
             setMap(oldMap);
             capacity = arrayCapacity;
             initializedLength = arrayInitialized;
-            clasp = &js_ArrayClass;
+            clasp = &ArrayClass;
             return false;
         }
 
@@ -1144,7 +1131,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /*
      * Finally, update class. If |this| is Array.prototype, then js_InitClass
-     * will create an emptyShape whose class is &js_SlowArrayClass, to ensure
+     * will create an emptyShape whose class is &SlowArrayClass, to ensure
      * that delegating instances can share shapes in the tree rooted at the
      * proto's empty shape.
      */
@@ -1211,7 +1198,7 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return false;
     if (!obj->isArray()) {
-        ReportIncompatibleMethod(cx, vp, &js_ArrayClass);
+        ReportIncompatibleMethod(cx, vp, &ArrayClass);
         return false;
     }
 
@@ -1540,7 +1527,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
         return JS_TRUE;
 
     /* Finish out any remaining elements past the max array index. */
-    if (obj->isDenseArray() && !ENSURE_SLOW_ARRAY(cx, obj))
+    if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
         return JS_FALSE;
 
     JS_ASSERT(start == MAX_ARRAY_INDEX + 1);
@@ -1849,10 +1836,11 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
 struct CompareArgs
 {
     JSContext          *context;
-    InvokeSessionGuard session;
+    InvokeArgsGuard    args;
+    Value              fval;
 
-    CompareArgs(JSContext *cx)
-      : context(cx)
+    CompareArgs(JSContext *cx, Value fval)
+      : context(cx), fval(fval)
     {}
 };
 
@@ -1873,15 +1861,21 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    InvokeSessionGuard &session = ca->session;
-    session[0] = *av;
-    session[1] = *bv;
+    InvokeArgsGuard &args = ca->args;
+    if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, 2, &args))
+        return JS_FALSE;
+        
+    args.calleeHasBeenReset();
+    args.calleev() = ca->fval;
+    args.thisv() = UndefinedValue();
+    args[0] = *av;
+    args[1] = *bv;
 
-    if (!session.invoke(cx))
+    if (!Invoke(cx, args))
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ToNumber(cx, session.rval(), &cmp))
+    if (!ToNumber(cx, args.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2118,10 +2112,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                 } while (++i != newlen);
             }
         } else {
-            CompareArgs ca(cx);
-            if (!ca.session.start(cx, fval, UndefinedValue(), 2))
-                return false;
-
+            CompareArgs ca(cx, fval);
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
                               comparator_stack_cast(sort_compare),
                               &ca, mergesort_tmp,
@@ -2975,16 +2966,13 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
      */
     argc = 3 + REDUCE_MODE(mode);
 
-    InvokeSessionGuard session;
-    if (!session.start(cx, ObjectValue(*callable), thisv, argc))
-        return JS_FALSE;
-
     MUST_FLOW_THROUGH("out");
     JSBool ok = JS_TRUE;
     JSBool cond;
 
     Value objv = ObjectValue(*obj);
     AutoValueRooter tvr(cx);
+    InvokeArgsGuard args;
     for (jsuint i = start; i != end; i += step) {
         JSBool hole;
         ok = JS_CHECK_OPERATION_LIMIT(cx) &&
@@ -2994,23 +2982,29 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
         if (hole)
             continue;
 
+        if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
+            return false;
+
         /*
          * Push callable and 'this', then args. We must do this for every
          * iteration around the loop since Invoke clobbers its arguments.
          */
+        args.calleeHasBeenReset();
+        args.calleev() = ObjectValue(*callable);
+        args.thisv() = thisv;
         uintN argi = 0;
         if (REDUCE_MODE(mode))
-            session[argi++] = *vp;
-        session[argi++] = tvr.value();
-        session[argi++] = Int32Value(i);
-        session[argi]   = objv;
+            args[argi++] = *vp;
+        args[argi++] = tvr.value();
+        args[argi++] = Int32Value(i);
+        args[argi]   = objv;
 
         /* Do the call. */
-        ok = session.invoke(cx);
+        ok = Invoke(cx, args);
         if (!ok)
             break;
 
-        const Value &rval = session.rval();
+        const Value &rval = args.rval();
 
         if (mode > MAP)
             cond = js_ValueToBoolean(rval);
@@ -3217,12 +3211,12 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 
     GlobalObject *global = obj->asGlobal();
 
-    JSObject *arrayProto = global->createBlankPrototype(cx, &js_SlowArrayClass);
+    JSObject *arrayProto = global->createBlankPrototype(cx, &SlowArrayClass);
     if (!arrayProto || !AddLengthProperty(cx, arrayProto))
         return NULL;
     arrayProto->setArrayLength(cx, 0);
 
-    JSFunction *ctor = global->createConstructor(cx, js_Array, &js_ArrayClass,
+    JSFunction *ctor = global->createConstructor(cx, js_Array, &ArrayClass,
                                                  CLASS_ATOM(cx, Array), 1);
     if (!ctor)
         return NULL;
@@ -3256,8 +3250,8 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
 {
     JS_ASSERT_IF(proto, proto->isArray());
 
-    gc::FinalizeKind kind = GuessObjectGCKind(length, true);
-    JSObject *obj = detail::NewObject<WithProto::Class, false>(cx, &js_ArrayClass, proto, NULL, kind);
+    gc::AllocKind kind = GuessObjectGCKind(length, true);
+    JSObject *obj = detail::NewObject<WithProto::Class, false>(cx, &ArrayClass, proto, NULL, kind);
     if (!obj)
         return NULL;
 
@@ -3346,7 +3340,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseUnallocatedArray, CONTEXT, UINT32, 
 JSObject *
 NewSlowEmptyArray(JSContext *cx)
 {
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_SlowArrayClass, NULL, NULL);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &SlowArrayClass, NULL, NULL);
     if (!obj || !AddLengthProperty(cx, obj))
         return NULL;
 

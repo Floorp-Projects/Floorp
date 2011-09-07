@@ -55,7 +55,7 @@ namespace js {
 inline StringObject *
 StringObject::create(JSContext *cx, JSString *str)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &StringClass);
     if (!obj)
         return NULL;
     StringObject *strobj = obj->asString();
@@ -67,8 +67,8 @@ StringObject::create(JSContext *cx, JSString *str)
 inline StringObject *
 StringObject::createWithProto(JSContext *cx, JSString *str, JSObject &proto)
 {
-    JS_ASSERT(gc::FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&js_StringClass)));
-    JSObject *obj = NewObjectWithClassProto(cx, &js_StringClass, &proto, gc::FINALIZE_OBJECT2);
+    JS_ASSERT(gc::FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&StringClass)));
+    JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, gc::FINALIZE_OBJECT2);
     if (!obj)
         return NULL;
     StringObject *strobj = obj->asString();

@@ -281,7 +281,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
 {
     JSObject2WrappedJSMap* map;
     JSObject* rootJSObj;
-    nsXPCWrappedJS* root;
+    nsXPCWrappedJS* root = nsnull;
     nsXPCWrappedJS* wrapper = nsnull;
     nsXPCWrappedJSClass* clazz = nsnull;
     XPCJSRuntime* rt = ccx.GetRuntime();

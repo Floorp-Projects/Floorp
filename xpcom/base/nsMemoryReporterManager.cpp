@@ -308,30 +308,22 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     KIND_OTHER,
     UNITS_BYTES,
     GetHeapCommitted,
-    "This number reported only for completeness; it is not particularly "
-    "meaningful. On Windows, all mapped memory is committed (because jemalloc's "
-    "MALLOC_DECOMMIT flag is set). Thus heap-committed should equal "
-    "heap-allocated + heap-unallocated. Elsewhere, jemalloc uses "
-    "madvise(DONT_NEED) to instruct the OS to drop the physical memory backing "
-    "pages the allocator doesn't need.  In this case, jemalloc counts the memory "
-    "as 'committed', but it's not taking up any space in physical memory or in "
-    "the swap file.")
+    "Memory mapped by the heap allocator that is committed, i.e. in physical "
+    "memory or paged to disk.  When heap-committed is larger than "
+    "heap-allocated, the difference between the two values is likely due to "
+    "external fragmentation; that is, the allocator allocated a large block of "
+    "memory and is unable to decommit it because a small part of that block is "
+    "currently in use.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
     "heap-dirty",
     KIND_OTHER,
     UNITS_BYTES,
     GetHeapDirty,
-    "Memory mapped by the heap allocator that was once part of an allocation "
-    "but which is now not allocated to the application.  Since the application "
-    "may have modified the memory while it was allocated, we count this memory "
-    "as \"committed\", that is, as taking up space in physical memory or the "
-    "swap file.  If memory is fragmented, and the allocator is unable to return "
-    "some mostly-free pages to the operating system because they contain a few "
-    "live objects, you might see a large value here.  But even in the absence "
-    "of fragmentation, the allocator might not return some dirty memory to the "
-    "OS as an optimization, under the assumption that the application will need "
-    "the memory again soon.")
+    "Memory which the allocator could return to the operating system, but "
+    "hasn't.  The allocator keeps this memory around as an optimization, so it "
+    "doesn't have to ask the OS the next time it needs to fulfill a request. "
+    "This value is typically not larger than a few megabytes.")
 
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
 #include <malloc/malloc.h>
@@ -446,8 +438,19 @@ nsMemoryReporterManager::Init()
     REGISTER(Private);
 #endif
 
-#if defined(HAVE_JEMALLOC_STATS)
+#if defined(HAVE_JEMALLOC_STATS) && defined(XP_WIN)
+    // heap-committed is only meaningful where we have MALLOC_DECOMMIT defined
+    // (currently, just on Windows).  Elsewhere, it's the same as
+    // stats->mapped, which is heap-allocated + heap-unallocated.
+    //
+    // Ideally, we'd check for MALLOC_DECOMMIT in the #if defined above, but
+    // MALLOC_DECOMMIT is defined in jemalloc.c, not a header, so we'll just
+    // have to settle for the OS check for now.
+
     REGISTER(HeapCommitted);
+#endif
+
+#if defined(HAVE_JEMALLOC_STATS)
     REGISTER(HeapDirty);
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
     REGISTER(HeapZone0Committed);

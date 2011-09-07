@@ -511,12 +511,18 @@ struct JSScript : public js::gc::Cell {
                                                    undefined properties in this
                                                    script */
     bool            hasSingletons:1;  /* script has singleton objects */
-    bool            hasFunction:1;    /* function is active in 'where' union */
+    bool            hasFunction:1;       /* script has an associated function */
+    bool            isHeavyweightFunction:1; /* function is heavyweight */
+    bool            isOuterFunction:1;       /* function is heavyweight, with inner functions */
+    bool            isInnerFunction:1;       /* function is directly nested in a heavyweight
+                                              * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
     bool            createdArgs:1;    /* script has had arguments objects created */
     bool            uninlineable:1;   /* script is considered uninlineable by analysis */
+    bool            reentrantOuterFunction:1; /* outer function marked reentrant */
+    bool            typesPurged:1;    /* TypeScript has been purged at some point */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
@@ -535,8 +541,10 @@ struct JSScript : public js::gc::Cell {
      * the script with 4 bytes. We use them to store tiny scripts like empty
      * scripts.
      */
+#if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
     uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
+#endif
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
@@ -552,7 +560,7 @@ struct JSScript : public js::gc::Cell {
 
     union {
         /*
-         * A script object of class js_ScriptClass, to ensure the script is GC'd.
+         * A script object of class ScriptClass, to ensure the script is GC'd.
          * - All scripts returned by JSAPI functions (JS_CompileScript,
          *   JS_CompileFile, etc.) have these objects.
          * - Function scripts never have script objects; such scripts are owned
@@ -572,19 +580,6 @@ struct JSScript : public js::gc::Cell {
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
 
-    union {
-        /* Function this script is the body for, if there is one. */
-        JSFunction *fun;
-
-        /* Global object for this script, if compileAndGo. */
-        js::GlobalObject *global;
-    } where;
-
-    inline JSFunction *function() const {
-        JS_ASSERT(hasFunction);
-        return where.fun;
-    }
-
 #ifdef JS_CRASH_DIAGNOSTICS
     JSObject        *ownerObject;
 
@@ -593,17 +588,6 @@ struct JSScript : public js::gc::Cell {
 #endif
 
     void setOwnerObject(JSObject *owner);
-
-    /*
-     * Associates this script with a specific function, constructing a new type
-     * object for the function.
-     */
-    bool typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton = false);
-
-    inline bool hasGlobal() const;
-    inline js::GlobalObject *global() const;
-
-    inline bool hasClearedGlobal() const;
 
 #ifdef DEBUG
     /*
@@ -620,19 +604,41 @@ struct JSScript : public js::gc::Cell {
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
 
-    /* Ensure the script has types, bytecode and/or type inference results. */
-    inline bool ensureHasTypes(JSContext *cx);
-    inline bool ensureRanBytecode(JSContext *cx);
+    /* Ensure the script has a TypeScript. */
+    inline bool ensureHasTypes(JSContext *cx, JSFunction *fun = NULL);
+
+    /*
+     * Ensure the script has scope and bytecode analysis information.
+     * Performed when the script first runs, or first runs after a TypeScript
+     * GC purge. If fun/scope are NULL then the script must already have types
+     * with scope information.
+     */
+    inline bool ensureRanAnalysis(JSContext *cx, JSFunction *fun = NULL, JSObject *scope = NULL);
+
+    /* Ensure the script has type inference analysis information. */
     inline bool ensureRanInference(JSContext *cx);
 
-    /* Filled in by one of the above. */
     inline bool hasAnalysis();
+    inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    inline bool isAboutToBeFinalized(JSContext *cx);
+    /*
+     * Associates this script with a specific function, constructing a new type
+     * object for the function if necessary.
+     */
+    bool typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton = false);
+
+    inline bool hasGlobal() const;
+    inline bool hasClearedGlobal() const;
+
+    inline JSFunction *function() const;
+    inline js::GlobalObject *global() const;
+    inline js::types::TypeScriptNesting *nesting() const;
+
+    inline void clearNesting();
 
   private:
-    bool makeTypes(JSContext *cx);
+    bool makeTypes(JSContext *cx, JSFunction *fun);
     bool makeAnalysis(JSContext *cx);
   public:
 
@@ -676,8 +682,9 @@ struct JSScript : public js::gc::Cell {
         return JITScript_Valid;
     }
 
-    // This method is implemented in MethodJIT.h.
-    JS_FRIEND_API(size_t) jitDataSize();/* Size of the JITScript and all sections */
+    /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.h.) */
+    JS_FRIEND_API(size_t) jitDataSize(size_t(*mus)(void *));
+    
 #endif
 
     jsbytecode *main() {
@@ -845,7 +852,6 @@ StackDepth(JSScript *script)
         }                                                                     \
     JS_END_MACRO
 
-extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
@@ -967,12 +973,6 @@ js_CloneScript(JSContext *cx, JSScript *script);
  */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
-
-inline bool
-JSObject::isScript() const
-{
-    return getClass() == &js_ScriptClass;
-}
 
 inline JSScript *
 JSObject::getScript() const

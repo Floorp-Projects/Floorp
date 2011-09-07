@@ -174,7 +174,7 @@ struct DebugOnly
 #else
     DebugOnly() {}
     DebugOnly(const T&) {}
-    DebugOnly& operator=(const T&) {}   
+    DebugOnly& operator=(const T&) { return *this; }
 #endif
 
     /*

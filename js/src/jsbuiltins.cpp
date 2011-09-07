@@ -251,7 +251,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
         if (pobj->getOps()->lookupProperty)
             return JS_NEITHER;
         Class* clasp = pobj->getClass();
-        if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
+        if (clasp->resolve != JS_ResolveStub && clasp != &StringClass)
             return JS_NEITHER;
     }
 
@@ -320,7 +320,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    if (!closure->initSharingEmptyShape(cx, &js_FunctionClass, type, parent,
+    if (!closure->initSharingEmptyShape(cx, &FunctionClass, type, parent,
                                         fun, gc::FINALIZE_OBJECT2)) {
         return NULL;
     }

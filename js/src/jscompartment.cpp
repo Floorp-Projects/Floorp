@@ -129,9 +129,6 @@ JSCompartment::~JSCompartment()
 bool
 JSCompartment::init(JSContext *cx)
 {
-    for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
-        arenas[i].init();
-
     activeAnalysis = activeInference = false;
     types.init(cx);
 
@@ -140,7 +137,6 @@ JSCompartment::init(JSContext *cx)
 
     JS_InitArenaPool(&pool, "analysis", 4096 - ARENA_HEADER_SIZE_HACK, 8);
 
-    freeLists.init();
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -187,16 +183,6 @@ JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) 
     }
 }
 #endif
-
-bool
-JSCompartment::arenaListsAreEmpty()
-{
-  for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
-       if (!arenas[i].isEmpty())
-           return false;
-  }
-  return true;
-}
 
 static bool
 IsCrossCompartmentWrapper(JSObject *wrapper)
@@ -261,7 +247,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             return true;
 
         /* Translate StopIteration singleton. */
-        if (obj->getClass() == &js_StopIterationClass)
+        if (obj->isStopIteration())
             return js_FindClassObject(cx, NULL, JSProto_StopIteration, vp);
 
         /* Don't unwrap an outer window proxy. */
@@ -505,10 +491,10 @@ JSCompartment::markTypes(JSTracer *trc)
         MarkScript(trc, script, "mark_types_script");
     }
 
-    for (unsigned thingKind = FINALIZE_OBJECT0;
+    for (size_t thingKind = FINALIZE_OBJECT0;
          thingKind <= FINALIZE_FUNCTION_AND_OBJECT_LAST;
          thingKind++) {
-        for (CellIterUnderGC i(this, FinalizeKind(thingKind)); !i.done(); i.next()) {
+        for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
             if (!object->isNewborn() && object->hasSingletonType())
                 MarkObject(trc, *object, "mark_types_singleton");
@@ -599,9 +585,26 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
 #endif
 
-    if (!activeAnalysis) {
+#ifdef JS_METHODJIT
+    if (types.inferenceEnabled)
+        mjit::ClearAllFrames(this);
+#endif
+
+    if (activeAnalysis) {
         /*
-         * Clear the analysis pool, but don't releas its data yet. While
+         * Analysis information is in use, so don't clear the analysis pool.
+         * jitcode still needs to be released, if this is a shape-regenerating
+         * GC then shape numbers baked into the code may change.
+         */
+        if (types.inferenceEnabled) {
+            for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+                JSScript *script = i.get<JSScript>();
+                mjit::ReleaseScriptCode(cx, script);
+            }
+        }
+    } else {
+        /*
+         * Clear the analysis pool, but don't release its data yet. While
          * sweeping types any live data will be allocated into the pool.
          */
         JSArenaPool oldPool;
@@ -613,9 +616,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * enabled in the compartment.
          */
         if (types.inferenceEnabled) {
-#ifdef JS_METHODJIT
-            mjit::ClearAllFrames(this);
-#endif
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->types) {
@@ -629,6 +629,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
                     if (discardScripts) {
                         script->types->destroy();
                         script->types = NULL;
+                        script->typesPurged = true;
                     }
                 }
             }
@@ -638,8 +639,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            if (script->types)
-                script->types->analysis = NULL;
+            script->clearAnalysis();
         }
 
         /* Reset the analysis pool, releasing all analysis and intermediate type data. */
@@ -652,7 +652,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 void
 JSCompartment::purge(JSContext *cx)
 {
-    freeLists.purge();
+    arenas.purge();
     dtoaCache.purge();
 
     /*

@@ -83,6 +83,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsHtml5Parser.h"
 #include "nsIFragmentContentSink.h"
 #include "nsMathUtils.h"
+#include "mozilla/TimeStamp.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -189,6 +190,7 @@ class nsContentUtils
 {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
   typedef mozilla::dom::Element Element;
+  typedef mozilla::TimeDuration TimeDuration;
 
 public:
   static nsresult Init();
@@ -1700,6 +1702,33 @@ public:
    */
   static PRBool IsFocusedContent(const nsIContent *aContent);
 
+  /**
+   * Returns PR_TRUE if the DOM full-screen API is enabled.
+   */
+  static PRBool IsFullScreenApiEnabled();
+
+  /**
+   * Returns PR_TRUE if requests for full-screen are allowed in the current
+   * context. Requests are only allowed if the user initiated them (like with
+   * a mouse-click or key press), unless this check has been disabled by
+   * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
+   */
+  static PRBool IsRequestFullScreenAllowed();
+
+  /**
+   * Returns PR_TRUE if key input is restricted in DOM full-screen mode
+   * to non-alpha-numeric key codes only. This mirrors the
+   * "full-screen-api.key-input-restricted" pref.
+   */
+  static PRBool IsFullScreenKeyInputRestricted();
+
+  /**
+   * Returns the time limit on handling user input before
+   * nsEventStateManager::IsHandlingUserInput() stops returning PR_TRUE.
+   * This enables us to detect long running user-generated event handlers.
+   */
+  static TimeDuration HandlingUserInputTimeout();
+
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
   static void GetMetaText(nsAString& text);
@@ -1864,6 +1893,10 @@ private:
 
   static PRBool sIsHandlingKeyBoardEvent;
   static PRBool sAllowXULXBL_for_file;
+  static PRBool sIsFullScreenApiEnabled;
+  static PRBool sTrustedFullScreenOnly;
+  static PRBool sFullScreenKeyInputRestricted;
+  static PRUint32 sHandlingInputTimeout;
 
   static nsHtml5Parser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;

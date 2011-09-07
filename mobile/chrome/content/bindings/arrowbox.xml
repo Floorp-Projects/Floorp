@@ -149,6 +149,7 @@
       <field name="anchorNode">null</field>
       <method name="anchorTo">
          <parameter name="aAnchorNode"/>
+         <parameter name="aPosition"/>
          <body>
             <![CDATA[
               if (!aAnchorNode) {
@@ -159,13 +160,84 @@
               this.anchorNode = aAnchorNode;
 
               let anchorRect = aAnchorNode.getBoundingClientRect();
-              let popupRect = this.firstChild.getBoundingClientRect();
+              let popupRect = new Rect(0,0,0,0);
+              for (let i = 0; i < this.childNodes.length; i++) {
+                popupRect.expandToContain(Rect.fromRect(this.childNodes[i].getBoundingClientRect()));
+              }
               let offset = this.offset;
+              let horizPos = 0;
+              let vertPos = 0;
 
-              let horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :
-                             (Math.round(popupRect.left) >= Math.round(anchorRect.right - offset)) ? 1 : 0;
-              let vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
-                            (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
+              if (aPosition) {
+                let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+                let isRtl = chromeReg.isLocaleRTL("global");
+                let left = 0;
+                let top = 0;
+
+                switch (aPosition) {
+                  case "before_start":
+                    left = isRtl ? anchorRect.right - popupRect.width : anchorRect.left;
+                    top = anchorRect.top + offset - popupRect.height;
+                    vertPos = -1;
+                    break;
+                  case "before_end":
+                    left = isRtl ? anchorRect.left : anchorRect.right - popupRect.width;
+                    top = anchorRect.top + offset - popupRect.height;
+                    vertPos = -1;
+                    break;
+                  case "after_start":
+                    left = isRtl ? anchorRect.right - popupRect.width : anchorRect.left;
+                    top = anchorRect.bottom - offset;
+                    vertPos = 1;
+                    break;
+                  case "after_end":
+                    left = isRtl ? anchorRect.left : anchorRect.right - popupRect.width;
+                    top = anchorRect.bottom - offset;
+                    vertPos = 1;
+                    break;
+                  case "start_before":
+                    left = isRtl ? anchorRect.right : anchorRect.left - popupRect.width - offset;
+                    top = anchorRect.top;
+                    horizPos = -1;
+                    break;
+                  case "start_after":
+                    left = isRtl ? anchorRect.right : anchorRect.left - popupRect.width - offset;
+                    top = anchorRect.bottom - popupRect.height;
+                    horizPos = -1;
+                    break;
+                  case "end_before":
+                    left = isRtl ? anchorRect.left - popupRect.width - offset : anchorRect.right;
+                    top = anchorRect.top;
+                    horizPos = 1;
+                    break;
+                  case "end_after":
+                    left = isRtl ? anchorRect.left - popupRect.width - offset : anchorRect.right;
+                    top = anchorRect.bottom - popupRect.height;
+                    horizPos = 1;
+                    break;
+                  case "overlap":
+                    left = isRtl ? anchorRect.right - popupRect.width + offset : anchorRect.left + offset ;
+                    top = anchorRect.top + offset ;
+                    break;
+                }
+                if (top == 0) top = 1;
+                if (left == 0) left = 1;
+
+                if (left + popupRect.width > window.innerWidth)
+                  left = window.innerWidth - popupRect.width;
+                else if (left < 0)
+                  left = 1;
+
+                popupRect.left = left;
+                this.setAttribute("left", left);
+                popupRect.top = top;
+                this.setAttribute("top", top);
+              } else {
+                horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :
+                               (Math.round(popupRect.left) >= Math.round(anchorRect.right - offset)) ? 1 : 0;
+                vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
+                              (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
+              }
 
               this._updateArrow(popupRect, anchorRect, horizPos, vertPos);
             ]]>

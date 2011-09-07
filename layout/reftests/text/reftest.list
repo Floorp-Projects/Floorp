@@ -49,7 +49,7 @@ skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixe
 == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
-fails-if(Android) HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html

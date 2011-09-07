@@ -2546,10 +2546,16 @@ var gDetailView = {
 
     var screenshot = document.getElementById("detail-screenshot");
     if (aAddon.screenshots && aAddon.screenshots.length > 0) {
-      if (aAddon.screenshots[0].thumbnailURL)
+      if (aAddon.screenshots[0].thumbnailURL) {
         screenshot.src = aAddon.screenshots[0].thumbnailURL;
-      else
+        screenshot.width = aAddon.screenshots[0].thumbnailWidth;
+        screenshot.height = aAddon.screenshots[0].thumbnailHeight;
+      } else {
         screenshot.src = aAddon.screenshots[0].url;
+        screenshot.width = aAddon.screenshots[0].width;
+        screenshot.height = aAddon.screenshots[0].height;
+      }
+      screenshot.setAttribute("loading", "true");
       screenshot.hidden = false;
     } else {
       screenshot.hidden = true;
