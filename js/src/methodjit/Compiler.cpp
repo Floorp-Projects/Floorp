@@ -4056,7 +4056,7 @@ mjit::Compiler::addCallSite(const InternalCallSite &site)
 }
 
 void
-mjit::Compiler::inlineStubCall(void *stub, RejoinState rejoin)
+mjit::Compiler::inlineStubCall(void *stub, RejoinState rejoin, Uses uses)
 {
     DataLabelPtr inlinePatch;
     Call cl = emitStubCall(stub, &inlinePatch);
@@ -4066,7 +4066,7 @@ mjit::Compiler::inlineStubCall(void *stub, RejoinState rejoin)
     if (loop && loop->generatingInvariants()) {
         Jump j = masm.jump();
         Label l = masm.label();
-        loop->addInvariantCall(j, l, false, false, callSites.length());
+        loop->addInvariantCall(j, l, false, false, callSites.length(), uses);
     }
     addCallSite(site);
 }

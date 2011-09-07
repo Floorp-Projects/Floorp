@@ -137,8 +137,8 @@ class StubCompiler
     bool jumpInScript(Jump j, jsbytecode *target);
     unsigned crossJump(Jump j, Label l);
 
-    Call emitStubCall(void *ptr, RejoinState rejoin);
-    Call emitStubCall(void *ptr, RejoinState rejoin, int32 slots);
+    Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses);
+    Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32 slots);
 
     void patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg);
 };

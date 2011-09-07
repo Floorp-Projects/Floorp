@@ -634,7 +634,7 @@ mjit::Compiler::jsop_not()
           default:
           {
             prepareStubCall(Uses(1));
-            INLINE_STUBCALL(stubs::ValueToBoolean, REJOIN_NONE);
+            INLINE_STUBCALL_USES(stubs::ValueToBoolean, REJOIN_NONE, Uses(1));
 
             RegisterID reg = Registers::ReturnReg;
             frame.takeReg(reg);
@@ -2344,9 +2344,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         prepareStubCall(Uses(2));
 
         if (op == JSOP_STRICTEQ)
-            INLINE_STUBCALL(stubs::StrictEq, REJOIN_NONE);
+            INLINE_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
         else
-            INLINE_STUBCALL(stubs::StrictNe, REJOIN_NONE);
+            INLINE_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
 
         frame.popn(2);
         frame.pushSynced(JSVAL_TYPE_BOOLEAN);
@@ -2398,9 +2398,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if (needStub) {
         stubcc.leave();
         if (op == JSOP_STRICTEQ)
-            OOL_STUBCALL(stubs::StrictEq, REJOIN_NONE);
+            OOL_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
         else
-            OOL_STUBCALL(stubs::StrictNe, REJOIN_NONE);
+            OOL_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
     }
 
     frame.popn(2);
@@ -2413,9 +2413,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     prepareStubCall(Uses(2));
 
     if (op == JSOP_STRICTEQ)
-        INLINE_STUBCALL(stubs::StrictEq, REJOIN_NONE);
+        INLINE_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
     else
-        INLINE_STUBCALL(stubs::StrictNe, REJOIN_NONE);
+        INLINE_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
 
     frame.popn(2);
     frame.pushSynced(JSVAL_TYPE_BOOLEAN);

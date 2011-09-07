@@ -195,7 +195,7 @@ LoopState::addJoin(unsigned index, bool script)
 }
 
 void
-LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex)
+LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, Uses uses)
 {
     RestoreInvariantCall call;
     call.jump = jump;
@@ -203,7 +203,7 @@ LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsign
     call.ool = ool;
     call.entry = entry;
     call.patchIndex = patchIndex;
-    call.temporaryCopies = frame.getTemporaryCopies();
+    call.temporaryCopies = frame.getTemporaryCopies(uses);
 
     restoreInvariantCalls.append(call);
 }
