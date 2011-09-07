@@ -524,8 +524,8 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               NS_HTML5_CONTINUE(stateloop);
             }
             default: {
-              contentIndex = -1;
-              charsetIndex = -1;
+              contentIndex = PR_INT32_MAX;
+              charsetIndex = PR_INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_CONTINUE(stateloop);
             }
