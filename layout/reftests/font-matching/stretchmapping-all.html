@@ -1,0 +1,505 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>font-stretch matching tests</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+body {
+  margin: 50px;
+  font-family: Calibri, Verdana, sans-serif;
+}
+
+p { margin: 0; padding: 0; }
+
+table {
+  border-collapse: collapse;
+}
+
+th { 
+  font-weight: normal;
+  background-color: #eee;
+}
+
+th, td { width: 3em; text-align: left; }
+tr th { text-align: left; }
+
+.fstest-full { font-family: fstest-full; }
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd1.ttf);
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd2.ttf);
+  font-stretch: extra-condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd3.ttf);
+  font-stretch: condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd4.ttf);
+  font-stretch: semi-condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd5.ttf);
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd6.ttf);
+  font-stretch: semi-expanded;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd7.ttf);
+  font-stretch: expanded;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd8.ttf);
+  font-stretch: extra-expanded;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd9.ttf);
+  font-stretch: ultra-expanded;
+}
+
+.fstest-1-3 { font-family: fstest-1-3; }
+
+@font-face {
+  font-family: fstest-1-3;
+  src: url(../fonts/csstest-widths-wd1.ttf);
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: fstest-1-3;
+  src: url(../fonts/csstest-widths-wd3.ttf);
+  font-stretch: condensed;
+}
+
+.fstest-1-4 { font-family: fstest-1-4; }
+
+@font-face {
+  font-family: fstest-1-4;
+  src: url(../fonts/csstest-widths-wd1.ttf);
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: fstest-1-4;
+  src: url(../fonts/csstest-widths-wd4.ttf);
+  font-stretch: semi-condensed;
+}
+
+.fstest-1-5 { font-family: fstest-1-5; }
+
+@font-face {
+  font-family: fstest-1-5;
+  src: url(../fonts/csstest-widths-wd1.ttf);
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: fstest-1-5;
+  src: url(../fonts/csstest-widths-wd5.ttf);
+  font-stretch: normal;
+}
+
+.fstest-2-6 { font-family: fstest-2-6; }
+
+@font-face {
+  font-family: fstest-2-6;
+  src: url(../fonts/csstest-widths-wd2.ttf);
+  font-stretch: extra-condensed;
+}
+
+@font-face {
+  font-family: fstest-2-6;
+  src: url(../fonts/csstest-widths-wd6.ttf);
+  font-stretch: semi-expanded;
+}
+
+.fstest-4-6 { font-family: fstest-4-6; }
+
+@font-face {
+  font-family: fstest-4-6;
+  src: url(../fonts/csstest-widths-wd4.ttf);
+  font-stretch: semi-condensed;
+}
+
+@font-face {
+  font-family: fstest-4-6;
+  src: url(../fonts/csstest-widths-wd6.ttf);
+  font-stretch: semi-expanded;
+}
+
+.fstest-4-7 { font-family: fstest-4-7; }
+
+@font-face {
+  font-family: fstest-4-7;
+  src: url(../fonts/csstest-widths-wd4.ttf);
+  font-stretch: semi-condensed;
+}
+
+@font-face {
+  font-family: fstest-4-7;
+  src: url(../fonts/csstest-widths-wd7.ttf);
+  font-stretch: expanded;
+}
+
+.fstest-6-7 { font-family: fstest-6-7; }
+
+@font-face {
+  font-family: fstest-6-7;
+  src: url(../fonts/csstest-widths-wd6.ttf);
+  font-stretch: semi-expanded;
+}
+
+@font-face {
+  font-family: fstest-6-7;
+  src: url(../fonts/csstest-widths-wd7.ttf);
+  font-stretch: expanded;
+}
+
+.fstest-7-9 { font-family: fstest-7-9; }
+
+@font-face {
+  font-family: fstest-7-9;
+  src: url(../fonts/csstest-widths-wd7.ttf);
+  font-stretch: expanded;
+}
+
+@font-face {
+  font-family: fstest-7-9;
+  src: url(../fonts/csstest-widths-wd9.ttf);
+  font-stretch: ultra-expanded;
+}
+
+.fstest-8-9 { font-family: fstest-8-9; }
+
+@font-face {
+  font-family: fstest-8-9;
+  src: url(../fonts/csstest-widths-wd8.ttf);
+  font-stretch: extra-expanded;
+}
+
+@font-face {
+  font-family: fstest-8-9;
+  src: url(../fonts/csstest-widths-wd9.ttf);
+  font-stretch: ultra-expanded;
+}
+
+.fs1 { font-stretch: ultra-condensed; }
+.fs2 { font-stretch: extra-condensed; }
+.fs3 { font-stretch: condensed; }
+.fs4 { font-stretch: semi-condensed; }
+.fs5 { font-stretch: normal; }
+.fs6 { font-stretch: semi-expanded; }
+.fs7 { font-stretch: expanded; }
+.fs8 { font-stretch: extra-expanded; }
+.fs9 { font-stretch: ultra-expanded; }
+
+</style>
+  
+<script type="text/javascript">
+
+</script>
+  
+</head>
+<body>
+
+<p>font-stretch mapping with different font family sets</p>
+<p>(only numbers should appear in the body of the table)</p>
+
+<table>
+<thead>
+<th>width</th>
+<th>full</th>
+<th>1-3</th>
+<th>1-4</th>
+<th>1-5</th>
+<th>2-6</th>
+<th>4-6</th>
+<th>4-7</th>
+<th>6-7</th>
+<th>7-9</th>
+<th>8-9</th>
+</thead>
+<tr class="fs1">
+<th>1</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs2">
+<th>2</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs3">
+<th>3</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs4">
+<th>4</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs5">
+<th>5</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs6">
+<th>6</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs7">
+<th>7</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs8">
+<th>8</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+<tr class="fs9">
+<th>9</th>
+<td class="fstest-full">F</td>
+<td class="fstest-1-3">F</td>
+<td class="fstest-1-4">F</td>
+<td class="fstest-1-5">F</td>
+<td class="fstest-2-6">F</td>
+<td class="fstest-4-6">F</td>
+<td class="fstest-4-7">F</td>
+<td class="fstest-6-7">F</td>
+<td class="fstest-7-9">F</td>
+<td class="fstest-8-9">F</td>
+</tr>
+</table>
+
+<!--
+
+<p>Results based on spec logic:</p>
+
+<table>
+<thead>
+<th>width</th>
+<th>full</th>
+<th>1-3</th>
+<th>1-4</th>
+<th>1-5</th>
+<th>2-6</th>
+<th>4-6</th>
+<th>4-7</th>
+<th>6-7</th>
+<th>7-9</th>
+<th>8-9</th>
+</thead>
+<tr class="fs1">
+<th>1</th>
+<td class="fstest-full">1</td>
+<td class="fstest-1-3">1</td>
+<td class="fstest-1-4">1</td>
+<td class="fstest-1-5">1</td>
+<td class="fstest-2-6">2</td>
+<td class="fstest-4-6">4</td>
+<td class="fstest-4-7">4</td>
+<td class="fstest-6-7">6</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs2">
+<th>2</th>
+<td class="fstest-full">2</td>
+<td class="fstest-1-3">1</td>
+<td class="fstest-1-4">1</td>
+<td class="fstest-1-5">1</td>
+<td class="fstest-2-6">2</td>
+<td class="fstest-4-6">4</td>
+<td class="fstest-4-7">4</td>
+<td class="fstest-6-7">6</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs3">
+<th>3</th>
+<td class="fstest-full">3</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">1</td>
+<td class="fstest-1-5">1</td>
+<td class="fstest-2-6">2</td>
+<td class="fstest-4-6">4</td>
+<td class="fstest-4-7">4</td>
+<td class="fstest-6-7">6</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs4">
+<th>4</th>
+<td class="fstest-full">4</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">4</td>
+<td class="fstest-1-5">1</td>
+<td class="fstest-2-6">2</td>
+<td class="fstest-4-6">4</td>
+<td class="fstest-4-7">4</td>
+<td class="fstest-6-7">6</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs5">
+<th>5</th>
+<td class="fstest-full">5</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">4</td>
+<td class="fstest-1-5">5</td>
+<td class="fstest-2-6">2</td>
+<td class="fstest-4-6">4</td>
+<td class="fstest-4-7">4</td>
+<td class="fstest-6-7">6</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs6">
+<th>6</th>
+<td class="fstest-full">6</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">4</td>
+<td class="fstest-1-5">5</td>
+<td class="fstest-2-6">6</td>
+<td class="fstest-4-6">6</td>
+<td class="fstest-4-7">7</td>
+<td class="fstest-6-7">6</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs7">
+<th>7</th>
+<td class="fstest-full">7</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">4</td>
+<td class="fstest-1-5">5</td>
+<td class="fstest-2-6">6</td>
+<td class="fstest-4-6">6</td>
+<td class="fstest-4-7">7</td>
+<td class="fstest-6-7">7</td>
+<td class="fstest-7-9">7</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs8">
+<th>8</th>
+<td class="fstest-full">8</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">4</td>
+<td class="fstest-1-5">5</td>
+<td class="fstest-2-6">6</td>
+<td class="fstest-4-6">6</td>
+<td class="fstest-4-7">7</td>
+<td class="fstest-6-7">7</td>
+<td class="fstest-7-9">9</td>
+<td class="fstest-8-9">8</td>
+</tr>
+<tr class="fs9">
+<th>9</th>
+<td class="fstest-full">9</td>
+<td class="fstest-1-3">3</td>
+<td class="fstest-1-4">4</td>
+<td class="fstest-1-5">5</td>
+<td class="fstest-2-6">6</td>
+<td class="fstest-4-6">6</td>
+<td class="fstest-4-7">7</td>
+<td class="fstest-6-7">7</td>
+<td class="fstest-7-9">9</td>
+<td class="fstest-8-9">9</td>
+</tr>
+</table>
+
+-->
+
+</body>
+</html>

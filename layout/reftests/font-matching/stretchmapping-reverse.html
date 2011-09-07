@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Assure OS/2 usWidthClass isn't referenced</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd9.ttf);
+  font-stretch: ultra-condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd8.ttf);
+  font-stretch: extra-condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd7.ttf);
+  font-stretch: condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd6.ttf);
+  font-stretch: semi-condensed;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd5.ttf);
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd4.ttf);
+  font-stretch: semi-expanded;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd3.ttf);
+  font-stretch: expanded;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd2.ttf);
+  font-stretch: extra-expanded;
+}
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd1.ttf);
+  font-stretch: ultra-expanded;
+}
+
+body {
+  margin: 50px;
+}
+
+p.test {
+  font-family: fstest-full;
+  font-size: 24px;
+}
+
+.fs9 { font-stretch: ultra-condensed; }
+.fs8 { font-stretch: extra-condensed; }
+.fs7 { font-stretch: condensed; }
+.fs6 { font-stretch: semi-condensed; }
+.fs5 { font-stretch: normal; }
+.fs4 { font-stretch: semi-expanded; }
+.fs3 { font-stretch: expanded; }
+.fs2 { font-stretch: extra-expanded; }
+.fs1 { font-stretch: ultra-expanded; }
+
+</style>
+  
+</head>
+<body>
+
+<p>The numbers below should appear in ascending sequence:</p>
+
+<p class="test">
+<span class="fs1">F</span>
+<span class="fs2">F</span>
+<span class="fs3">F</span>
+<span class="fs4">F</span>
+<span class="fs5">F</span>
+<span class="fs6">F</span>
+<span class="fs7">F</span>
+<span class="fs8">F</span>
+<span class="fs9">F</span>
+</p>
+
+</body>
+</html>
