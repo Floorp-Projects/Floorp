@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=639720
+-->
+<head>
+  <title>Test for Bug 639720</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=639720">Mozilla Bug 639720</a>
+<p id="display">
+  <iframe id="f"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 639720 **/
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+ { url: "data:text/plain,1" },
+ { url: "data:text/plain,2",
+   useDocument: true },
+ { prepURL: "http://www.example.com",
+   url: "data:text/plain,3" }
+];
+
+var currentTest = 0;
+
+function checkTest() {
+  is($("f").contentWindow.location.href, tests[currentTest].url,
+     "href of content window's location should match url of current test");
+  ++currentTest;
+  runNextTest();
+}
+
+function runCurrentTest() {
+  var test = tests[currentTest];
+  $("f").onload = checkTest;
+  if (test.useDocument) {
+    $("f").contentDocument.location = test.url;
+  } else {
+    $("f").contentWindow.location = test.url;
+  }
+  is(typeof($("f").contentWindow.location), "object",
+     "Location should not have become string");
+}
+
+function prepComplete() {
+  runCurrentTest();
+}
+
+function runNextTest() {
+  if (currentTest == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests[currentTest];
+  if ("prepURL" in test) {
+    $("f").onload = prepComplete;
+    $("f").src = test.prepURL;
+    return;
+  }
+
+  runCurrentTest();
+}
+
+addLoadEvent(runNextTest);
+</script>
+</pre>
+</body>
+</html>

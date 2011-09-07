@@ -38,7 +38,7 @@ addLoadEvent(function() {
   var expected = '<ul style="margin-left: 40px;"><li>Item 1</li><ul><li>Item 2</li><li>Item 3</li></ul><li>Item 4</li></ul>';
   is(editor.innerHTML, expected, "indenting part of an already indented bulleted list");
   document.execCommand("outdent", false, false);
-  todo_is(editor.innerHTML, original, "outdenting the partially indented part of an already indented bulleted list"); 
+  is(editor.innerHTML, original, "outdenting the partially indented part of an already indented bulleted list"); 
 
   // done
   SimpleTest.finish();

@@ -83,14 +83,12 @@ let observer = {
           gDownloadLastDirFile = readLastDirPref();
         else if (aData == "exit") {
           gDownloadLastDirFile = null;
-          gDownloadLastDirStore = new Dict();
         }
         break;
       case "browser:purge-session-history":
         gDownloadLastDirFile = null;
         if (Services.prefs.prefHasUserValue(LAST_DIR_PREF))
           Services.prefs.clearUserPref(LAST_DIR_PREF);
-        gDownloadLastDirStore = new Dict();
         Services.contentPrefs.removePrefsByName(LAST_DIR_PREF);
         break;
     }
@@ -112,21 +110,13 @@ function readLastDirPref() {
 }
 
 let gDownloadLastDirFile = readLastDirPref();
-let gDownloadLastDirStore = new Dict();
 let gDownloadLastDir = {
   // compat shims
   get file() { return this.getFile(); },
   set file(val) { this.setFile(null, val); },
   getFile: function (aURI) {
     if (aURI) {
-      let lastDir;
-      if (pbSvc && pbSvc.privateBrowsingEnabled) {
-        let group = Services.contentPrefs.grouper.group(aURI);
-        lastDir = gDownloadLastDirStore.get(group, null);
-      }
-      if (!lastDir) {
-        lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF);
-      }
+      let lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF);
       if (lastDir) {
         var lastDirFile = Components.classes["@mozilla.org/file/local;1"]
                                     .createInstance(Components.interfaces.nsILocalFile);
@@ -144,12 +134,7 @@ let gDownloadLastDir = {
   },
   setFile: function (aURI, aFile) {
     if (aURI) {
-      if (pbSvc && pbSvc.privateBrowsingEnabled) {
-        let group = Services.contentPrefs.grouper.group(aURI);
-        gDownloadLastDirStore.set(group, aFile.path);
-      } else {
-        Services.contentPrefs.setPref(aURI, LAST_DIR_PREF, aFile.path);
-      }
+      Services.contentPrefs.setPref(aURI, LAST_DIR_PREF, aFile.path);
     }
     if (pbSvc && pbSvc.privateBrowsingEnabled) {
       if (aFile instanceof Components.interfaces.nsIFile)

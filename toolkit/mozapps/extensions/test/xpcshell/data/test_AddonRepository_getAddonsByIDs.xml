@@ -32,8 +32,12 @@
     </compatible_applications>
     <previews>
       <preview primary="1">
-        <full type="image/png">http://localhost:4444/full1-1.png</full>
-        <thumbnail type="image/png">http://localhost:4444/thumbnail1-1.png</thumbnail>
+        <full type="image/png" width="400" height="300">
+          http://localhost:4444/full1-1.png
+        </full>
+        <thumbnail type="image/png" width="200" height="150">
+          http://localhost:4444/thumbnail1-1.png
+        </thumbnail>
         <caption>Caption 1 - 1</caption>
       </preview>
       <preview primary="0">

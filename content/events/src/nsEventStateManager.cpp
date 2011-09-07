@@ -175,6 +175,8 @@ static PRUint32 gPixelScrollDeltaTimeout = 0;
 static nscoord
 GetScrollableLineHeight(nsIFrame* aTargetFrame);
 
+TimeStamp nsEventStateManager::sHandlingInputStart;
+
 static inline PRBool
 IsMouseEventReal(nsEvent* aEvent)
 {
@@ -4382,6 +4384,14 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
     }
   }
   return nsnull;
+}
+
+/* static */
+void
+nsEventStateManager::SetFullScreenState(Element* aElement,
+                                        PRBool aIsFullScreen)
+{
+  DoStateChange(aElement, NS_EVENT_STATE_FULL_SCREEN, aIsFullScreen);
 }
 
 /* static */

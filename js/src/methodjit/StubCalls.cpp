@@ -389,7 +389,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
         } else {
             shape = (Shape *)prop;
             JSObject *normalized = obj;
-            if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+            if (normalized->isWith() && !shape->hasDefaultGetter())
                 normalized = js_UnwrapWithObject(cx, normalized);
             NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
         }
@@ -552,7 +552,7 @@ stubs::CallElem(VMFrame &f)
     if (JS_UNLIKELY(regs.sp[-2].isPrimitive()) && thisv.isObject()) {
         regs.sp[-2] = regs.sp[-1];
         regs.sp[-1].setObject(*thisObj);
-        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+        if (!OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     } else
 #endif
@@ -1350,8 +1350,8 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     TypeObject *type = (TypeObject *) f.scratch;
 
     if (!baseobj) {
-        gc::FinalizeKind kind = GuessObjectGCKind(0, false);
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        gc::AllocKind kind = GuessObjectGCKind(0, false);
+        JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             THROW();
         if (type)
@@ -1740,7 +1740,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
         regs.sp[-2].setString(origAtom);
-        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+        if (!OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     }
 #endif
@@ -2016,10 +2016,9 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      * static scope.
      */
     JSObject *obj2 = &fp->scopeChain();
-    Class *clasp;
-    while ((clasp = obj2->getClass()) == &js_WithClass)
+    while (obj2->isWith())
         obj2 = obj2->getParent();
-    if (clasp == &js_BlockClass &&
+    if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
         JSObject *youngestProto = obj2->getProto();
         JS_ASSERT(youngestProto->isStaticBlock());
@@ -2049,7 +2048,7 @@ stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
      */
     JSObject *obj = &fp->scopeChain();
     if (obj->getProto() == blockChain) {
-        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        JS_ASSERT(obj->isBlock());
         if (!js_PutBlockObject(cx, JS_TRUE))
             THROW();
     }
@@ -2188,6 +2187,19 @@ void JS_FASTCALL
 stubs::Unbrand(VMFrame &f)
 {
     const Value &thisv = f.regs.sp[-1];
+    if (!thisv.isObject())
+        return;
+    JSObject *obj = &thisv.toObject();
+    if (obj->isNative())
+        obj->unbrand(f.cx);
+}
+
+void JS_FASTCALL
+stubs::UnbrandThis(VMFrame &f)
+{
+    if (!ComputeThis(f.cx, f.fp()))
+        THROW();
+    Value &thisv = f.fp()->thisValue();
     if (!thisv.isObject())
         return;
     JSObject *obj = &thisv.toObject();
@@ -2519,6 +2531,27 @@ stubs::Exception(VMFrame &f)
 
     f.regs.sp[0] = f.cx->getPendingException();
     f.cx->clearPendingException();
+}
+
+void JS_FASTCALL
+stubs::FunctionFramePrologue(VMFrame &f)
+{
+    if (!f.fp()->functionPrologue(f.cx))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::FunctionFrameEpilogue(VMFrame &f)
+{
+    f.fp()->functionEpilogue();
+}
+
+void JS_FASTCALL
+stubs::AnyFrameEpilogue(VMFrame &f)
+{
+    if (f.fp()->isNonEvalFunctionFrame())
+        f.fp()->functionEpilogue();
+    stubs::ScriptDebugEpilogue(f);
 }
 
 template <bool Clamped>

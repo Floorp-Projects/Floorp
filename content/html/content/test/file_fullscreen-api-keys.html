@@ -1,0 +1,250 @@
+ <!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=545812
+
+Test that restricted key pressed drop documents out of DOM full-screen mode.
+
+-->
+<head>
+  <title>Test for Bug 545812</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body onload="document.body.mozRequestFullScreen();">
+
+<script type="application/javascript">
+
+/** Test for Bug 545812 **/
+
+// List of key codes, and whether they're restricted in full-screen mode.
+var keyList = [
+  // Allowed: DOM_VK_CANCEL to DOM_VK_CAPS_LOCK, inclusive
+  { code: "VK_CANCEL",        allowed: true},
+  { code: "VK_HELP",          allowed: true},
+  { code: "VK_BACK_SPACE",    allowed: true},
+  { code: "VK_TAB",           allowed: true},
+  { code: "VK_CLEAR",         allowed: true},
+  { code: "VK_RETURN",        allowed: true},
+  { code: "VK_ENTER",         allowed: true},
+  { code: "VK_SHIFT",         allowed: true},
+  { code: "VK_CONTROL",       allowed: true},
+  { code: "VK_ALT",           allowed: true},
+  { code: "VK_PAUSE",         allowed: true},
+  { code: "VK_CAPS_LOCK",     allowed: true},
+
+  { code: "VK_KANA",          allowed: false},
+  { code: "VK_HANGUL",        allowed: false},
+  { code: "VK_JUNJA",         allowed: false},
+  { code: "VK_FINAL",         allowed: false},
+  { code: "VK_HANJA",         allowed: false},
+  { code: "VK_KANJI",         allowed: false},
+  { code: "VK_ESCAPE",        allowed: false},
+  { code: "VK_CONVERT",       allowed: false},
+  { code: "VK_NONCONVERT",    allowed: false},
+  { code: "VK_ACCEPT",        allowed: false},
+  { code: "VK_MODECHANGE",    allowed: false},
+
+  // Allowed: DOM_VK_SPACE to DOM_VK_DELETE, inclusive
+  { code: "VK_SPACE",         allowed: true},
+  { code: "VK_PAGE_UP",       allowed: true},
+  { code: "VK_PAGE_DOWN",     allowed: true},
+  { code: "VK_END",           allowed: true},
+  { code: "VK_HOME",          allowed: true},
+  { code: "VK_LEFT",          allowed: true},
+  { code: "VK_UP",            allowed: true},
+  { code: "VK_RIGHT",         allowed: true},
+  { code: "VK_DOWN",          allowed: true},
+  { code: "VK_SELECT",        allowed: true},
+  { code: "VK_PRINT",         allowed: true},
+  { code: "VK_EXECUTE",       allowed: true},
+  { code: "VK_PRINTSCREEN",   allowed: true},
+  { code: "VK_INSERT",        allowed: true},
+  { code: "VK_DELETE",        allowed: true},
+
+  { code: "VK_0",             allowed: false},
+  { code: "VK_1",             allowed: false},
+  { code: "VK_2",             allowed: false},
+  { code: "VK_3",             allowed: false},
+  { code: "VK_4",             allowed: false},
+  { code: "VK_5",             allowed: false},
+  { code: "VK_6",             allowed: false},
+  { code: "VK_7",             allowed: false},
+  { code: "VK_8",             allowed: false},
+  { code: "VK_9",             allowed: false},
+
+  // Allowed: DOM_VK_SPACE to DOM_VK_DELETE, inclusive
+  { code: "VK_SEMICOLON",     allowed: true},
+  { code: "VK_EQUALS",        allowed: true},
+
+  { code: "VK_A",             allowed: false},
+  { code: "VK_B",             allowed: false},
+  { code: "VK_C",             allowed: false},
+  { code: "VK_D",             allowed: false},
+  { code: "VK_E",             allowed: false},
+  { code: "VK_F",             allowed: false},
+  { code: "VK_G",             allowed: false},
+  { code: "VK_H",             allowed: false},
+  { code: "VK_I",             allowed: false},
+  { code: "VK_J",             allowed: false},
+  { code: "VK_K",             allowed: false},
+  { code: "VK_L",             allowed: false},
+  { code: "VK_M",             allowed: false},
+  { code: "VK_N",             allowed: false},
+  { code: "VK_O",             allowed: false},
+  { code: "VK_P",             allowed: false},
+  { code: "VK_Q",             allowed: false},
+  { code: "VK_R",             allowed: false},
+  { code: "VK_S",             allowed: false},
+  { code: "VK_T",             allowed: false},
+  { code: "VK_U",             allowed: false},
+  { code: "VK_V",             allowed: false},
+  { code: "VK_W",             allowed: false},
+  { code: "VK_X",             allowed: false},
+  { code: "VK_Y",             allowed: false},
+  { code: "VK_Z",             allowed: false},
+  { code: "VK_CONTEXT_MENU",  allowed: false},
+  { code: "VK_SLEEP",         allowed: false},
+  { code: "VK_NUMPAD0",       allowed: false},
+  { code: "VK_NUMPAD1",       allowed: false},
+  { code: "VK_NUMPAD2",       allowed: false},
+  { code: "VK_NUMPAD3",       allowed: false},
+  { code: "VK_NUMPAD4",       allowed: false},
+  { code: "VK_NUMPAD5",       allowed: false},
+  { code: "VK_NUMPAD6",       allowed: false},
+  { code: "VK_NUMPAD7",       allowed: false},
+  { code: "VK_NUMPAD8",       allowed: false},
+  { code: "VK_NUMPAD9",       allowed: false},
+
+  // Allowed: DOM_VK_MULTIPLY to DOM_VK_META, inclusive
+  { code: "VK_MULTIPLY",      allowed: true},
+  { code: "VK_ADD",           allowed: true},
+  { code: "VK_SEPARATOR",     allowed: true},
+  { code: "VK_SUBTRACT",      allowed: true},
+  { code: "VK_DECIMAL",       allowed: true},
+  { code: "VK_DIVIDE",        allowed: true},
+  { code: "VK_F1",            allowed: true},
+  { code: "VK_F2",            allowed: true},
+  { code: "VK_F3",            allowed: true},
+  { code: "VK_F4",            allowed: true},
+  { code: "VK_F5",            allowed: true},
+  { code: "VK_F6",            allowed: true},
+  { code: "VK_F7",            allowed: true},
+  { code: "VK_F8",            allowed: true},
+  { code: "VK_F9",            allowed: true},
+  { code: "VK_F10",           allowed: true},
+  { code: "VK_F11",           allowed: true},
+  { code: "VK_F12",           allowed: true},
+  { code: "VK_F13",           allowed: true},
+  { code: "VK_F14",           allowed: true},
+  { code: "VK_F15",           allowed: true},
+  { code: "VK_F16",           allowed: true},
+  { code: "VK_F17",           allowed: true},
+  { code: "VK_F18",           allowed: true},
+  { code: "VK_F19",           allowed: true},
+  { code: "VK_F20",           allowed: true},
+  { code: "VK_F21",           allowed: true},
+  { code: "VK_F22",           allowed: true},
+  { code: "VK_F23",           allowed: true},
+  { code: "VK_F24",           allowed: true},
+  { code: "VK_NUM_LOCK",      allowed: true},
+  { code: "VK_SCROLL_LOCK",   allowed: true},
+  { code: "VK_COMMA",         allowed: true},
+  { code: "VK_PERIOD",        allowed: true},
+  { code: "VK_SLASH",         allowed: true},
+  { code: "VK_BACK_QUOTE",    allowed: true},
+  { code: "VK_OPEN_BRACKET",  allowed: true},
+  { code: "VK_BACK_SLASH",    allowed: true},
+  { code: "VK_CLOSE_BRACKET", allowed: true},
+  { code: "VK_QUOTE",         allowed: true},
+  { code: "VK_META",          allowed: true},
+];
+
+function ok(condition, msg) {
+  opener.ok(condition, msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, msg);
+}
+
+var gKeyTestIndex = 0;
+var gKeyName;
+var gKeyCode;
+var gKeyAllowed;
+var gKeyReceived = false;
+
+function keyHandler(event) {
+  event.preventDefault()
+  gKeyReceived = true;
+}
+
+function checkKeyEffect() {
+  is(document.mozFullScreen, gKeyAllowed,
+     (gKeyAllowed ? ("Should remain in full-screen mode for allowed key press " + gKeyName)
+                  : ("Should drop out of full-screen mode for restricted key press " + gKeyName)));
+
+  if (gKeyTestIndex < keyList.length) {
+    setTimeout(testNextKey, 0);
+  } else {
+    opener.keysTestFinished();
+  }
+}
+
+function testTrustedKeyEvents() {
+  document.body.focus();
+  gKeyReceived = false;
+  synthesizeKey(gKeyName, {});
+  setTimeout(checkKeyEffect, 0);
+}
+
+function testScriptInitiatedKeyEvents() {
+  // Script initiated untrusted key events should not be blocked.
+  document.body.focus();
+  gKeyReceived = false;
+  var evt = document.createEvent("KeyEvents");
+  evt.initKeyEvent("keydown", true, true, window,
+                   false, false, false, false,
+                   gKeyCode, 0);
+  document.body.dispatchEvent(evt);
+
+  evt = document.createEvent("KeyEvents");
+  evt.initKeyEvent("keypress", true, true, window,
+                   false, false, false, false,
+                   gKeyCode, 0);
+  document.body.dispatchEvent(evt);
+
+  evt = document.createEvent("KeyEvents");
+  evt.initKeyEvent("keyup", true, true, window,
+                   false, false, false, false,
+                   gKeyCode, 0);
+  document.body.dispatchEvent(evt);
+  
+  ok(gKeyReceived, "dispatchEvent should dispatch events synchronously");
+  ok(document.mozFullScreen,
+     "Should remain in full-screen mode for script initiated key events for " + gKeyName);
+}
+
+function testNextKey() {
+  if (!document.mozFullScreen) {
+    document.body.mozRequestFullScreen();
+  }
+  ok(document.mozFullScreen, "Must be in full-screen mode");
+
+  gKeyName = keyList[gKeyTestIndex].code;
+  gKeyCode = KeyEvent["DOM_" + gKeyName];
+  gKeyAllowed = keyList[gKeyTestIndex].allowed;
+  gKeyTestIndex++;
+
+  testScriptInitiatedKeyEvents();
+  testTrustedKeyEvents();
+}
+
+window.addEventListener("keydown", keyHandler, true);
+window.addEventListener("keyup", keyHandler, true);
+window.addEventListener("keypress", keyHandler, true);
+setTimeout(testNextKey, 0);
+
+</script>
+</pre>
+</body>
+</html>

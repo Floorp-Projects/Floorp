@@ -177,6 +177,66 @@ gfxFontconfigUtils::FcWeightForBaseWeight(PRInt8 aBaseWeight)
     return aBaseWeight < 2 ? FC_WEIGHT_THIN : FC_WEIGHT_EXTRABLACK;
 }
 
+/* static */ PRInt16
+gfxFontconfigUtils::GetThebesStretch(FcPattern *aPattern)
+{
+    int width;
+    if (FcPatternGetInteger(aPattern, FC_WIDTH, 0, &width) != FcResultMatch) {
+        return NS_FONT_STRETCH_NORMAL;
+    }
+
+    if (width <= (FC_WIDTH_ULTRACONDENSED + FC_WIDTH_EXTRACONDENSED) / 2) {
+        return NS_FONT_STRETCH_ULTRA_CONDENSED;
+    }
+    if (width <= (FC_WIDTH_EXTRACONDENSED + FC_WIDTH_CONDENSED) / 2) {
+        return NS_FONT_STRETCH_EXTRA_CONDENSED;
+    }
+    if (width <= (FC_WIDTH_CONDENSED + FC_WIDTH_SEMICONDENSED) / 2) {
+        return NS_FONT_STRETCH_CONDENSED;
+    }
+    if (width <= (FC_WIDTH_SEMICONDENSED + FC_WIDTH_NORMAL) / 2) {
+        return NS_FONT_STRETCH_SEMI_CONDENSED;
+    }
+    if (width <= (FC_WIDTH_NORMAL + FC_WIDTH_SEMIEXPANDED) / 2) {
+        return NS_FONT_STRETCH_NORMAL;
+    }
+    if (width <= (FC_WIDTH_SEMIEXPANDED + FC_WIDTH_EXPANDED) / 2) {
+        return NS_FONT_STRETCH_SEMI_EXPANDED;
+    }
+    if (width <= (FC_WIDTH_EXPANDED + FC_WIDTH_EXTRAEXPANDED) / 2) {
+        return NS_FONT_STRETCH_EXPANDED;
+    }
+    if (width <= (FC_WIDTH_EXTRAEXPANDED + FC_WIDTH_ULTRAEXPANDED) / 2) {
+        return NS_FONT_STRETCH_EXTRA_EXPANDED;
+    }
+    return NS_FONT_STRETCH_ULTRA_EXPANDED;
+}
+
+/* static */ int
+gfxFontconfigUtils::FcWidthForThebesStretch(PRInt16 aStretch)
+{
+    switch (aStretch) {
+        default: // this will catch "normal" (0) as well as out-of-range values
+            return FC_WIDTH_NORMAL;
+        case NS_FONT_STRETCH_ULTRA_CONDENSED:
+            return FC_WIDTH_ULTRACONDENSED;
+        case NS_FONT_STRETCH_EXTRA_CONDENSED:
+            return FC_WIDTH_EXTRACONDENSED;
+        case NS_FONT_STRETCH_CONDENSED:
+            return FC_WIDTH_CONDENSED;
+        case NS_FONT_STRETCH_SEMI_CONDENSED:
+            return FC_WIDTH_SEMICONDENSED;
+        case NS_FONT_STRETCH_SEMI_EXPANDED:
+            return FC_WIDTH_SEMIEXPANDED;
+        case NS_FONT_STRETCH_EXPANDED:
+            return FC_WIDTH_EXPANDED;
+        case NS_FONT_STRETCH_EXTRA_EXPANDED:
+            return FC_WIDTH_EXTRAEXPANDED;
+        case NS_FONT_STRETCH_ULTRA_EXPANDED:
+            return FC_WIDTH_ULTRAEXPANDED;
+    }
+}
+
 // This makes a guess at an FC_WEIGHT corresponding to a base weight and
 // offset (without any knowledge of which weights are available).
 
@@ -244,6 +304,7 @@ gfxFontconfigUtils::NewPattern(const nsTArray<nsString>& aFamilies,
     FcPatternAddDouble(pattern, FC_PIXEL_SIZE, aFontStyle.size);
     FcPatternAddInteger(pattern, FC_SLANT, GetFcSlant(aFontStyle));
     FcPatternAddInteger(pattern, FC_WEIGHT, GuessFcWeight(aFontStyle));
+    FcPatternAddInteger(pattern, FC_WIDTH, FcWidthForThebesStretch(aFontStyle.stretch));
 
     if (aLang) {
         AddString(pattern, FC_LANG, aLang);

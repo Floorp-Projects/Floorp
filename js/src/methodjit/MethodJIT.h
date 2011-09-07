@@ -285,12 +285,15 @@ enum RejoinState {
 
     /*
      * Type check on arguments failed during prologue, need stack check and
-     * call object creation before script can execute.
+     * the rest of the JIT prologue before the script can execute.
      */
     REJOIN_CHECK_ARGUMENTS,
 
-    /* A GC while making a call object occurred, discarding the script's jitcode. */
-    REJOIN_CREATE_CALL_OBJECT,
+    /*
+     * The script's jitcode was discarded after marking an outer function as
+     * reentrant or due to a GC while creating a call object.
+     */
+    REJOIN_FUNCTION_PROLOGUE,
 
     /*
      * State after calling a stub which returns a JIT code pointer for a call
@@ -640,7 +643,7 @@ struct JITScript {
 
     void trace(JSTracer *trc);
 
-    size_t scriptDataSize();
+    size_t scriptDataSize(size_t(*mus)(void *));
 
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline) const;
 
@@ -687,9 +690,9 @@ inline void
 ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
     if (script->jitCtor)
-        mjit::ReleaseScriptCode(cx, script, CONSTRUCT);
+        mjit::ReleaseScriptCode(cx, script, true);
     if (script->jitNormal)
-        mjit::ReleaseScriptCode(cx, script, NO_CONSTRUCT);
+        mjit::ReleaseScriptCode(cx, script, false);
 }
 
 // Expand all stack frames inlined by the JIT within a compartment.

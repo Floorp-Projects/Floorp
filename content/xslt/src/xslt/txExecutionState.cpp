@@ -86,7 +86,9 @@ txLoadedDocumentsHash::~txLoadedDocumentsHash()
 
 txExecutionState::txExecutionState(txStylesheet* aStylesheet,
                                    PRBool aDisableLoads)
-    : mStylesheet(aStylesheet),
+    : mOutputHandler(nsnull),
+      mResultHandler(nsnull),
+      mStylesheet(aStylesheet),
       mNextInstruction(nsnull),
       mLocalVariables(nsnull),
       mRecursionDepth(0),
@@ -198,6 +200,9 @@ txExecutionState::end(nsresult aResult)
                  "Didn't clean up template rules properly");
     if (NS_SUCCEEDED(aResult)) {
         popTemplateRule();
+    }
+    else if (!mOutputHandler) {
+        return NS_OK;
     }
     return mOutputHandler->endDocument(aResult);
 }

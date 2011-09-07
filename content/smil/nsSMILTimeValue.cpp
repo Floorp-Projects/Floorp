@@ -53,12 +53,12 @@ nsSMILTimeValue::CompareTo(const nsSMILTimeValue& aOther) const
 {
   PRInt8 result;
 
-  if (mState == STATE_RESOLVED) {
-    result = (aOther.mState == STATE_RESOLVED)
+  if (mState == STATE_DEFINITE) {
+    result = (aOther.mState == STATE_DEFINITE)
            ? Cmp(mMilliseconds, aOther.mMilliseconds)
            : -1;
   } else if (mState == STATE_INDEFINITE) {
-    if (aOther.mState == STATE_RESOLVED)
+    if (aOther.mState == STATE_DEFINITE)
       result = 1;
     else if (aOther.mState == STATE_INDEFINITE)
       result = 0;

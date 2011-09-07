@@ -3379,6 +3379,50 @@ nsGenericHTMLElement::Focus()
   return fm ? fm->SetFocus(elem, 0) : NS_OK;
 }
 
+nsresult nsGenericHTMLElement::MozRequestFullScreen()
+{
+  // Only grant full-screen requests if this is called from inside a trusted
+  // event handler (i.e. inside an event handler for a user initiated event).
+  // This stops the full-screen from being abused similar to the popups of old,
+  // and it also makes it harder for bad guys' script to go full-screen and
+  // spoof the browser chrome/window and phish logins etc.
+  if (!nsContentUtils::IsFullScreenApiEnabled() ||
+      !nsContentUtils::IsRequestFullScreenAllowed()) {
+    return NS_OK;
+  }
+
+  // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
+  // boolean attribute set.
+  nsINode* node = static_cast<nsINode*>(this);
+  do {
+    nsIContent* content = static_cast<nsIContent*>(node);
+    if (content->IsHTML(nsGkAtoms::iframe) &&
+        !content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
+      // The node requesting fullscreen, or one of its crossdoc ancestors,
+      // is an iframe which doesn't have the "mozalllowfullscreen" attribute.
+      // This request is not authorized by the parent document.
+      return NS_OK;
+    }
+    node = nsContentUtils::GetCrossDocParentNode(node);
+  } while (node);
+
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ENSURE_STATE(doc);
+  doc->RequestFullScreen(this);
+#ifdef DEBUG
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(doc->GetWindow());
+  NS_ENSURE_STATE(window);
+  PRBool fullscreen;
+  window->GetFullScreen(&fullscreen);
+  NS_ASSERTION(fullscreen, "Windows should report fullscreen");
+  nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(doc));
+  domDocument->GetMozFullScreen(&fullscreen);
+  NS_ASSERTION(fullscreen, "Document should report fullscreen");
+  NS_ASSERTION(doc->IsFullScreenDoc(), "Should be in full screen state!");
+#endif
+  return NS_OK;
+}
+
 nsresult nsGenericHTMLElement::Click()
 {
   if (HasFlag(NODE_HANDLING_CLICK))

@@ -57,9 +57,13 @@ var GET_RESULTS = [{
   eula:                   "Test EULA 1",
   iconURL:                BASE_URL + "/icon1.png",
   screenshots:            [{
-                            url:          BASE_URL + "/full1-1.png",
-                            thumbnailURL: BASE_URL + "/thumbnail1-1.png",
-                            caption:      "Caption 1 - 1"
+                            url:             BASE_URL + "/full1-1.png",
+                            width:           400,
+                            height:          300,
+                            thumbnailURL:    BASE_URL + "/thumbnail1-1.png",
+                            thumbnailWidth:  200,
+                            thumbnailHeight: 150,
+                            caption:         "Caption 1 - 1"
                           }, {
                             url:          BASE_URL + "/full2-1.png",
                             thumbnailURL: BASE_URL + "/thumbnail2-1.png",

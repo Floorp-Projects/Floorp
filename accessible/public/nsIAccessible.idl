@@ -56,7 +56,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(c7ac764a-b4c5-4479-9fb7-06e3c9f3db34)]
+[scriptable, uuid(3126544c-826c-4694-a2ed-67bfe56a1f37)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -220,26 +220,6 @@ interface nsIAccessible : nsISupports
    * Nth accessible child using zero-based index or last child if index less than zero
    */
   nsIAccessible getChildAt(in long aChildIndex);
-
-  /**
-   * Accessible node geometrically to the right of this one
-   */
-  nsIAccessible getAccessibleToRight();
-
-  /**
-   * Accessible node geometrically to the left of this one
-   */
-  nsIAccessible getAccessibleToLeft();
-
-  /**
-   * Accessible node geometrically above this one
-   */
-  nsIAccessible getAccessibleAbove();
-
-  /**
-   * Accessible node geometrically below this one
-   */
-  nsIAccessible getAccessibleBelow();
 
   /**
    * Return accessible relation by the given relation type (see.

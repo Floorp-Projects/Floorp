@@ -68,7 +68,7 @@ js::Shape::freeTable(JSContext *cx)
 
 inline js::EmptyShape *
 js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
-                                     /* gc::FinalizeKind */ unsigned kind)
+                                     gc::AllocKind kind)
 {
     JS_ASSERT(!singleton);
 
@@ -288,7 +288,7 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
      * |with (it) color;| ends up here, as do XML filter-expressions.
      * Avoid exposing the With object to native getters.
      */
-    if (obj->getClass() == &js_WithClass)
+    if (obj->isWith())
         obj = js_UnwrapWithObject(cx, obj);
     return js::CallJSPropertyOp(cx, getterOp(), receiver, SHAPE_USERID(this), vp);
 }
@@ -307,7 +307,7 @@ Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
         return js_ReportGetterOnlyAssignment(cx);
 
     /* See the comment in js::Shape::get as to why we check for With. */
-    if (obj->getClass() == &js_WithClass)
+    if (obj->isWith())
         obj = js_UnwrapWithObject(cx, obj);
     return js::CallJSPropertyOpSetter(cx, setterOp(), obj, SHAPE_USERID(this), strict, vp);
 }
@@ -364,37 +364,37 @@ EmptyShape::EmptyShape(JSCompartment *comp, js::Class *aclasp)
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyArgumentsShape(JSContext *cx)
 {
-    return ensure(cx, &NormalArgumentsObject::jsClass, &cx->compartment->emptyArgumentsShape);
+    return ensure(cx, &NormalArgumentsObjectClass, &cx->compartment->emptyArgumentsShape);
 }
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyBlockShape(JSContext *cx)
 {
-    return ensure(cx, &js_BlockClass, &cx->compartment->emptyBlockShape);
+    return ensure(cx, &BlockClass, &cx->compartment->emptyBlockShape);
 }
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyCallShape(JSContext *cx)
 {
-    return ensure(cx, &js_CallClass, &cx->compartment->emptyCallShape);
+    return ensure(cx, &CallClass, &cx->compartment->emptyCallShape);
 }
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyDeclEnvShape(JSContext *cx)
 {
-    return ensure(cx, &js_DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
+    return ensure(cx, &DeclEnvClass, &cx->compartment->emptyDeclEnvShape);
 }
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyEnumeratorShape(JSContext *cx)
 {
-    return ensure(cx, &js_IteratorClass, &cx->compartment->emptyEnumeratorShape);
+    return ensure(cx, &IteratorClass, &cx->compartment->emptyEnumeratorShape);
 }
 
 /* static */ inline EmptyShape *
 EmptyShape::getEmptyWithShape(JSContext *cx)
 {
-    return ensure(cx, &js_WithClass, &cx->compartment->emptyWithShape);
+    return ensure(cx, &WithClass, &cx->compartment->emptyWithShape);
 }
 
 } /* namespace js */

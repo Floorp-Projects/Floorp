@@ -149,8 +149,18 @@ InvokeSessionGuard::invoke(JSContext *cx)
         return Invoke(cx, args_);
 #endif
 
-    /* Clear any garbage left from the last Invoke. */
     StackFrame *fp = ifg_.fp();
+
+    /*
+     * Clear any activation objects on the frame. Normally the frame should not
+     * have any, but since we leave it on the stack between calls to invoke()
+     * the debugger can start operating on it. See markFunctionEpilogueDone()
+     * calls below. :XXX: this is pretty gross, and slows us down. Can the
+     * debugger be prevented from observing this frame?
+     */
+    fp->functionEpilogue(/* activationOnly = */ true);
+    fp->markFunctionEpilogueDone(/* activationOnly = */ true);
+
     fp->resetCallFrame(script_);
 
     JSBool ok;
@@ -164,10 +174,19 @@ InvokeSessionGuard::invoke(JSContext *cx)
 #else
         cx->regs().pc = script_->code;
         ok = Interpret(cx, cx->fp());
+
+        /* Interpret does not perform the entry frame's epilogue, unlike EnterMethodJIT. */
+        cx->fp()->functionEpilogue();
 #endif
         Probes::exitJSFun(cx, fp->fun(), script_);
         args_.setInactive();
     }
+
+    /*
+     * Clear activation object flags, for the functionEpilogue() call in the
+     * next invoke().
+     */
+    fp->markFunctionEpilogueDone(/* activationOnly = */ true);
 
     /* Don't clobber callee with rval; rval gets read from fp->rval. */
     return ok;
@@ -182,7 +201,7 @@ class PrimitiveBehavior<JSString *> {
   public:
     static inline bool isType(const Value &v) { return v.isString(); }
     static inline JSString *extract(const Value &v) { return v.toString(); }
-    static inline Class *getClass() { return &js_StringClass; }
+    static inline Class *getClass() { return &StringClass; }
 };
 
 template<>
@@ -190,7 +209,7 @@ class PrimitiveBehavior<bool> {
   public:
     static inline bool isType(const Value &v) { return v.isBoolean(); }
     static inline bool extract(const Value &v) { return v.toBoolean(); }
-    static inline Class *getClass() { return &js_BooleanClass; }
+    static inline Class *getClass() { return &BooleanClass; }
 };
 
 template<>
@@ -198,7 +217,7 @@ class PrimitiveBehavior<double> {
   public:
     static inline bool isType(const Value &v) { return v.isNumber(); }
     static inline double extract(const Value &v) { return v.toNumber(); }
-    static inline Class *getClass() { return &js_NumberClass; }
+    static inline Class *getClass() { return &NumberClass; }
 };
 
 } // namespace detail
@@ -329,6 +348,20 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
     if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
         return NULL;
     return pobj;
+}
+
+inline bool
+FunctionNeedsPrologue(JSContext *cx, JSFunction *fun)
+{
+    /* Heavyweight functions need call objects created. */
+    if (fun->isHeavyweight())
+        return true;
+
+    /* Outer and inner functions need to preserve nesting invariants. */
+    if (cx->typeInferenceEnabled() && fun->script()->nesting())
+        return true;
+
+    return false;
 }
 
 inline bool

@@ -801,6 +801,19 @@
   max-height: 300px;
 }
 
+#detail-screenshot[loading] {
+  background-image: url("chrome://global/skin/icons/loading_16.png"),
+                    -moz-linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  border-radius: 3px;
+}
+
+#detail-screenshot[loading="error"] {
+  background-image: url("chrome://global/skin/media/error.png"),
+                    -moz-linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+}
+
 #detail-desc-container {
   margin-bottom: 2em;
 }

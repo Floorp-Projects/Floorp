@@ -103,6 +103,7 @@ var PreferencesView = {
     this._loadHomePage();
 
     MasterPasswordUI.updatePreference();
+    WeaveGlue.init();
   },
 
   _loadLocales: function _loadLocales() {

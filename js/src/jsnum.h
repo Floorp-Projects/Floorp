@@ -160,14 +160,6 @@ FinishRuntimeNumberState(JSRuntime *rt);
 } /* namespace js */
 
 /* Initialize the Number class, returning its prototype object. */
-extern js::Class js_NumberClass;
-
-inline bool
-JSObject::isNumber() const
-{
-    return getClass() == &js_NumberClass;
-}
-
 extern JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj);
 

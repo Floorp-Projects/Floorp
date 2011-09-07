@@ -537,11 +537,19 @@ public:
   }
 
   static nsGlobalWindow* GetOuterWindowWithId(PRUint64 aWindowID) {
+    if (!sWindowsById) {
+      return nsnull;
+    }
+
     nsGlobalWindow* outerWindow = sWindowsById->Get(aWindowID);
     return outerWindow && !outerWindow->IsInnerWindow() ? outerWindow : nsnull;
   }
 
   static nsGlobalWindow* GetInnerWindowWithId(PRUint64 aInnerWindowID) {
+    if (!sWindowsById) {
+      return nsnull;
+    }
+
     nsGlobalWindow* innerWindow = sWindowsById->Get(aInnerWindowID);
     return innerWindow && innerWindow->IsInnerWindow() ? innerWindow : nsnull;
   }

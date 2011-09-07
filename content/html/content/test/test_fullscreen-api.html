@@ -1,0 +1,101 @@
+ <!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 545812</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=545812">Mozilla Bug 545812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 545812 **/
+var testWindow = null;
+
+/*
+<html>
+  <body onload='document.body.mozRequestFullScreen();'>
+  </body>
+</html>
+*/
+var requestFullScreenContents = "data:text/html;charset=utf-8,<html>%0D%0A  <body onload%3D'document.body.mozRequestFullScreen()%3B'>%0D%0A  <%2Fbody>%0D%0A<%2Fhtml>";
+
+var prevTrusted = false;
+var prevEnabled = false;
+
+function run() {
+  document.addEventListener("mozfullscreenchange",
+    function(){ok(false, "Should never receive a mozfullscreenchange event in the main window.");},
+    false);
+
+  // Ensure the full-screen api is enabled, and will be disabled on test exit.
+  prevEnabled = SpecialPowers.getBoolPref("full-screen-api.enabled");
+  SpecialPowers.setBoolPref("full-screen-api.enabled", true);
+
+  // Test requesting full-screen mode in a long-running user-generated event handler.
+  // The request in the key handler should not be granted.
+  window.addEventListener("keypress", keyHandler, false);
+  synthesizeKey("VK_A", {});
+}
+
+function keyHandler(event) {
+  window.removeEventListener("keypress", keyHandler, false);
+  
+  // Busy loop until 2s has passed. We should then be past the 1 second threshold, and so
+  // our request for full-screen mode should be rejected.
+  var end = (new Date()).getTime() + 2000;
+  while ((new Date()).getTime() < end) {
+    ; // Wait...
+  }
+  document.body.mozRequestFullScreen();
+
+  prevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requests-only");
+
+  // Request full-screen from a non trusted context (this script isn't a user
+  // generated event!). We should not receive a "mozfullscreenchange" event.
+  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", true);
+  document.body.mozRequestFullScreen();
+
+  // Disable the requirement for trusted contexts only, so the tests are easier
+  // to write.
+  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
+
+  // Load an iframe whose contents requests full-screen. This request should
+  // fail, and we should never receive a "mozfullscreenchange" event, because the
+  // iframe doesn't have a mozallowfullscreen attribute.
+  var iframe = document.createElement("iframe");
+  iframe.src = requestFullScreenContents;
+  document.body.appendChild(iframe);
+ 
+  // Run the tests which go full-screen in a new window, as mochitests normally
+  // run in an iframe, which by default will not have the mozallowfullscreen
+  // attribute set, so full-screen won't work.
+  testWindow = window.open("file_fullscreen-api.html", "", "width=500,height=500");
+}
+
+function apiTestFinished() {
+  testWindow.close();
+  testWindow = window.open("file_fullscreen-api-keys.html", "", "width=500,height=500");
+}
+
+function keysTestFinished() {
+  testWindow.close();
+  SpecialPowers.setBoolPref("full-screen-api.enabled", prevEnabled);
+  SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", prevTrusted);	
+  SimpleTest.finish();
+}
+
+addLoadEvent(run);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

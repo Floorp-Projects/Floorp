@@ -317,9 +317,6 @@ class DefaultMarkPolicy<JSObject *, JSObject *> {
 //
 typedef DefaultMarkPolicy<JSObject *, JSObject *> CrossCompartmentMarkPolicy;
 
-// The class of JavaScript WeakMap objects.
-extern Class WeakMapClass;
-
 }
 
 extern JSObject *

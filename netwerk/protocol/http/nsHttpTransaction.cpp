@@ -649,13 +649,17 @@ nsHttpTransaction::Close(nsresult reason)
         // the server has not sent the final \r\n terminating the header
         // section, and there may still be a header line unparsed.  let's make
         // sure we parse the remaining header line, and then hopefully, the
-        // response will be usable (see bug 88792).  related to that, we may
-        // also have an empty response containing no headers.  we should treat
-        // that as an empty HTTP/0.9 response (see bug 300613).
+        // response will be usable (see bug 88792).
         if (!mHaveAllHeaders) {
             char data = '\n';
             PRUint32 unused;
             ParseHead(&data, 1, &unused);
+
+            if (mResponseHead->Version() == NS_HTTP_VERSION_0_9) {
+                // Reject 0 byte HTTP/0.9 Responses - bug 423506
+                LOG(("nsHttpTransaction::Close %p 0 Byte 0.9 Response", this));
+                reason = NS_ERROR_NET_RESET;
+            }
         }
 
         // honor the sticky connection flag...
