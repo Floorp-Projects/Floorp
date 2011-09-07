@@ -66,36 +66,9 @@
  *
  * Objects of this class may be in one of three states:
  *
- * 1) The time is resolved and has a millisecond value
- * 2) The time is indefinite
- * 3) The time in unresolved
- *
- * There is considerable chance for confusion with regards to the indefinite
- * state. Is it resolved? We adopt the convention that it is NOT resolved (but
- * nor is it unresolved). This simplifies implementation as you can then write:
- *
- * if (time.IsResolved())
- *    x = time.GetMillis()
- *
- * instead of:
- *
- * if (time.IsResolved() && !time.IsIndefinite())
- *    x = time.GetMillis()
- *
- * Testing if a time is unresolved becomes more complicated but this is tested
- * much less often.
- *
- * In summary:
- *
- * State         |  GetMillis         |  IsResolved        |  IsIndefinite
- * --------------+--------------------+--------------------+-------------------
- * Resolved      |  The millisecond   |  PR_TRUE           |  PR_FALSE
- *               |  time              |                    |
- * --------------+--------------------+--------------------+-------------------
- * Indefinite    |  LL_MAXINT         |  PR_FALSE          |  PR_TRUE
- * --------------+--------------------+--------------------+-------------------
- * Unresolved    |  LL_MAXINT         |  PR_FALSE          |  PR_FALSE
- *
+ * 1) The time is resolved and has a definite millisecond value
+ * 2) The time is resolved and indefinite
+ * 3) The time is unresolved
  */
 
 class nsSMILTimeValue
@@ -110,7 +83,7 @@ public:
   // Creates a resolved time value
   explicit nsSMILTimeValue(nsSMILTime aMillis)
   : mMilliseconds(aMillis),
-    mState(STATE_RESOLVED)
+    mState(STATE_DEFINITE)
   { }
 
   // Named constructor to create an indefinite time value
@@ -128,24 +101,24 @@ public:
     mMilliseconds = kUnresolvedMillis;
   }
 
-  PRBool IsResolved() const { return mState == STATE_RESOLVED; }
   void SetUnresolved()
   {
     mState = STATE_UNRESOLVED;
     mMilliseconds = kUnresolvedMillis;
   }
 
+  PRBool IsDefinite() const { return mState == STATE_DEFINITE; }
   nsSMILTime GetMillis() const
   {
-    NS_ABORT_IF_FALSE(mState == STATE_RESOLVED,
-       "GetMillis() called for unresolved time");
+    NS_ABORT_IF_FALSE(mState == STATE_DEFINITE,
+       "GetMillis() called for unresolved or indefinite time");
 
-    return mState == STATE_RESOLVED ? mMilliseconds : kUnresolvedMillis;
+    return mState == STATE_DEFINITE ? mMilliseconds : kUnresolvedMillis;
   }
 
   void SetMillis(nsSMILTime aMillis)
   {
-    mState = STATE_RESOLVED;
+    mState = STATE_DEFINITE;
     mMilliseconds = aMillis;
   }
 
@@ -172,9 +145,9 @@ public:
 private:
   static nsSMILTime kUnresolvedMillis;
 
-  nsSMILTime        mMilliseconds;
+  nsSMILTime mMilliseconds;
   enum {
-    STATE_RESOLVED,
+    STATE_DEFINITE,
     STATE_INDEFINITE,
     STATE_UNRESOLVED
   } mState;
