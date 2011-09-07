@@ -436,7 +436,6 @@ static const char *sExtensionNames[] = {
     "GL_ARB_ES2_compatibility",
     "GL_OES_texture_float",
     "GL_ARB_texture_float",
-    "GL_EXT_unpack_subimage",
     NULL
 };
 
@@ -1840,17 +1839,9 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                         GetAddressAlignment((ptrdiff_t)stride)));
 
 #ifndef USE_GLES2
-    bool useUnpackRowLength = true;
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, stride/pixelsize);
 #else
-    // A Khronos extension, GL_EXT_unpack_subimage, that restores support
-    // for GL_UNPACK_ROW_LENGTH, GL_UNPACK_SKIP_ROWS and GL_UNPACK_SKIP_PIXELS
-    // exists on Tegra 2 (and possibly other chipsets)
-    bool useUnpackRowLength = IsExtensionSupported(EXT_unpack_subimage);
-#endif
-
-    if (useUnpackRowLength)
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, stride/pixelsize);
-    else if (stride != width * pixelsize) {
+    if (stride != width * pixelsize) {
         // Not using the whole row of texture data and GLES doesn't 
         // support GL_UNPACK_ROW_LENGTH. We need to upload each row
         // separately.
@@ -1882,6 +1873,7 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
         fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
         return;
     }
+#endif
 
     fTexImage2D(target,
                 level,
@@ -1893,8 +1885,9 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                 type,
                 pixels);
 
-    if (useUnpackRowLength)
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+#ifndef USE_GLES2
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+#endif
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
