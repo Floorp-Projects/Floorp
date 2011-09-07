@@ -133,6 +133,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     inlining_(false),
     hasGlobalReallocation(false),
     oomInVector(false),
+    gcNumber(cx->runtime->gcNumber),
     applyTricks(NoApplyTricks),
     pcLengths(NULL)
 {
@@ -188,7 +189,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
         return Compile_Abort;
     }
 
-    if (!script->ensureRanBytecode(cx))
+    if (!script->ensureRanAnalysis(cx))
         return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
         return Compile_Error;
@@ -334,6 +335,11 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
 
             /* Watch for excessively deep nesting of inlined frames. */
             if (nextDepth + script->nslots >= stackLimit) {
+                okay = false;
+                break;
+            }
+
+            if (!script->types || !script->types->hasScope()) {
                 okay = false;
                 break;
             }
@@ -742,27 +748,60 @@ mjit::Compiler::generatePrologue()
             }
         }
 
-        /* Create the call object. */
+        types::TypeScriptNesting *nesting = script->nesting();
+
+        /*
+         * Run the function prologue if necessary. This is always done in a
+         * stub for heavyweight functions (including nesting outer functions).
+         */
+        JS_ASSERT_IF(nesting && nesting->children, script->function()->isHeavyweight());
         if (script->function()->isHeavyweight()) {
             prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::CreateFunCallObject, REJOIN_CREATE_CALL_OBJECT);
-        }
-
-        j.linkTo(masm.label(), &masm);
-
-        if (analysis->usesScopeChain() && !script->function()->isHeavyweight()) {
+            INLINE_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
+        } else {
             /*
-             * Load the scope chain into the frame if necessary.  The scope chain
-             * is always set for global and eval frames, and will have been set by
+             * Load the scope chain into the frame if it will be needed by NAME
+             * opcodes or by the nesting prologue below. The scope chain is
+             * always set for global and eval frames, and will have been set by
              * CreateFunCallObject for heavyweight function frames.
              */
-            RegisterID t0 = Registers::ReturnReg;
-            Jump hasScope = masm.branchTest32(Assembler::NonZero,
-                                              FrameFlagsAddress(), Imm32(StackFrame::HAS_SCOPECHAIN));
-            masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->function())), t0);
-            masm.loadPtr(Address(t0, offsetof(JSObject, parent)), t0);
-            masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
-            hasScope.linkTo(masm.label(), &masm);
+            if (analysis->usesScopeChain() || nesting) {
+                RegisterID t0 = Registers::ReturnReg;
+                Jump hasScope = masm.branchTest32(Assembler::NonZero,
+                                                  FrameFlagsAddress(), Imm32(StackFrame::HAS_SCOPECHAIN));
+                masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->function())), t0);
+                masm.loadPtr(Address(t0, offsetof(JSObject, parent)), t0);
+                masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
+                hasScope.linkTo(masm.label(), &masm);
+            }
+
+            if (nesting) {
+                /*
+                 * Inline the common case for the nesting prologue: the
+                 * function is a non-heavyweight inner function with no
+                 * children of its own. We ensure during inference that the
+                 * outer function does not add scope objects for 'let' or
+                 * 'with', so that the frame's scope chain will be
+                 * the parent's call object, and if it differs from the
+                 * parent's current activation then the parent is reentrant.
+                 */
+                JSScript *parent = nesting->parent;
+                JS_ASSERT(parent);
+                JS_ASSERT_IF(parent->hasAnalysis() && parent->analysis()->ranBytecode(),
+                             !parent->analysis()->addsScopeObjects());
+
+                RegisterID t0 = Registers::ReturnReg;
+                masm.move(ImmPtr(&parent->nesting()->activeCall), t0);
+                masm.loadPtr(Address(t0), t0);
+
+                Address scopeChain(JSFrameReg, StackFrame::offsetOfScopeChain());
+                Jump mismatch = masm.branchPtr(Assembler::NotEqual, t0, scopeChain);
+                masm.add32(Imm32(1), AbsoluteAddress(&nesting->activeFrames));
+
+                stubcc.linkExitDirect(mismatch, stubcc.masm.label());
+                OOL_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
+                stubcc.crossJump(stubcc.masm.jump(), masm.label());
+            }
         }
 
         if (outerScript->usesArguments && !script->function()->isHeavyweight()) {
@@ -780,6 +819,8 @@ mjit::Compiler::generatePrologue()
                           Address(JSFrameReg, StackFrame::offsetOfArgs()));
             hasArgs.linkTo(masm.label(), &masm);
         }
+
+        j.linkTo(masm.label(), &masm);
     }
 
     if (cx->typeInferenceEnabled()) {
@@ -844,6 +885,13 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
      * of compiling due to, e.g. standard class initialization.
      */
     if (globalSlots && globalObj->getRawSlots() != globalSlots)
+        return Compile_Retry;
+
+    /*
+     * Watch for GCs which occurred during compilation. These may have
+     * renumbered shapes baked into the jitcode.
+     */
+    if (cx->runtime->gcNumber != gcNumber)
         return Compile_Retry;
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
@@ -2701,9 +2749,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UNBRAND)
 
           BEGIN_CASE(JSOP_UNBRANDTHIS)
-            jsop_this();
-            jsop_unbrand();
-            frame.pop();
+            prepareStubCall(Uses(1));
+            INLINE_STUBCALL(stubs::UnbrandThis, REJOIN_FALLTHROUGH);
           END_CASE(JSOP_UNBRANDTHIS)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
@@ -3112,22 +3159,31 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
      * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
      * out the entry frame's activation objects.
      */
-    if (script->hasFunction && script->function()->isHeavyweight()) {
-        /* There will always be a call object. */
-        prepareStubCall(Uses(fe ? 1 : 0));
-        INLINE_STUBCALL(stubs::PutActivationObjects, REJOIN_NONE);
-    } else {
-        /* if (hasCallObj() || hasArgsObj()) */
-        Jump putObjs = masm.branchTest32(Assembler::NonZero,
-                                         Address(JSFrameReg, StackFrame::offsetOfFlags()),
-                                         Imm32(StackFrame::HAS_CALL_OBJ | StackFrame::HAS_ARGS_OBJ));
-        stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
+    if (script->hasFunction) {
+        types::TypeScriptNesting *nesting = script->nesting();
+        if (script->function()->isHeavyweight() || (nesting && nesting->children)) {
+            prepareStubCall(Uses(fe ? 1 : 0));
+            INLINE_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
+        } else {
+            /* if (hasCallObj() || hasArgsObj()) */
+            Jump putObjs = masm.branchTest32(Assembler::NonZero,
+                                             Address(JSFrameReg, StackFrame::offsetOfFlags()),
+                                             Imm32(StackFrame::HAS_CALL_OBJ | StackFrame::HAS_ARGS_OBJ));
+            stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
 
-        stubcc.leave();
-        OOL_STUBCALL(stubs::PutActivationObjects, REJOIN_NONE);
+            stubcc.leave();
+            OOL_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
 
-        emitReturnValue(&stubcc.masm, fe);
-        emitFinalReturn(stubcc.masm);
+            emitReturnValue(&stubcc.masm, fe);
+            emitFinalReturn(stubcc.masm);
+
+            /*
+             * Do frame count balancing inline for inner functions in a nesting
+             * with no children of their own.
+             */
+            if (nesting)
+                masm.sub32(Imm32(1), AbsoluteAddress(&nesting->activeFrames));
+        }
     }
 
     emitReturnValue(&masm, fe);
@@ -5040,6 +5096,22 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
     }
 
     /*
+     * If this is a SETNAME to a variable of a non-reentrant outer function,
+     * set the variable's slot directly for the active call object.
+     */
+    if (cx->typeInferenceEnabled() && js_CodeSpec[*PC].format & JOF_NAME) {
+        ScriptAnalysis::NameAccess access =
+            analysis->resolveNameAccess(cx, ATOM_TO_JSID(atom), true);
+        if (access.nesting) {
+            Address address = frame.loadNameAddress(access);
+            frame.storeTo(rhs, address, popGuaranteed);
+            frame.shimmy(1);
+            frame.freeReg(address.base);
+            return true;
+        }
+    }
+
+    /*
      * Set the property directly if we are accessing a known object which
      * always has the property in a particular inline slot.
      */
@@ -5201,6 +5273,26 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
 void
 mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
 {
+    /*
+     * If this is a NAME for a variable of a non-reentrant outer function, get
+     * the variable's slot directly for the active call object. We always need
+     * to check for undefined, however.
+     */
+    if (cx->typeInferenceEnabled()) {
+        ScriptAnalysis::NameAccess access =
+            analysis->resolveNameAccess(cx, ATOM_TO_JSID(atom), true);
+        if (access.nesting) {
+            Address address = frame.loadNameAddress(access);
+            JSValueType type = knownPushedType(0);
+            BarrierState barrier = pushAddressMaybeBarrier(address, type, true,
+                                                           /* testUndefined = */ true);
+            finishBarrier(barrier, REJOIN_GETTER, 0);
+            if (isCall)
+                jsop_callgname_epilogue();
+            return;
+        }
+    }
+
     PICGenInfo pic(isCall ? ic::PICInfo::CALLNAME : ic::PICInfo::NAME, JSOp(*PC), true);
 
     RESERVE_IC_SPACE(masm);
@@ -5258,6 +5350,24 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
 bool
 mjit::Compiler::jsop_xname(JSAtom *atom)
 {
+    /*
+     * If this is a GETXPROP for a variable of a non-reentrant outer function,
+     * treat in the same way as a NAME.
+     */
+    if (cx->typeInferenceEnabled()) {
+        ScriptAnalysis::NameAccess access =
+            analysis->resolveNameAccess(cx, ATOM_TO_JSID(atom), true);
+        if (access.nesting) {
+            frame.pop();
+            Address address = frame.loadNameAddress(access);
+            JSValueType type = knownPushedType(0);
+            BarrierState barrier = pushAddressMaybeBarrier(address, type, true,
+                                                           /* testUndefined = */ true);
+            finishBarrier(barrier, REJOIN_GETTER, 0);
+            return true;
+        }
+    }
+
     PICGenInfo pic(ic::PICInfo::XNAME, JSOp(*PC), true);
 
     FrameEntry *fe = frame.peek(-1);
@@ -5317,6 +5427,23 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 void
 mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 {
+    /*
+     * If this is a BINDNAME for a variable of a non-reentrant outer function,
+     * the object is definitely the outer function's active call object.
+     */
+    if (cx->typeInferenceEnabled()) {
+        ScriptAnalysis::NameAccess access =
+            analysis->resolveNameAccess(cx, ATOM_TO_JSID(atom), true);
+        if (access.nesting) {
+            RegisterID reg = frame.allocReg();
+            JSObject **pobj = &access.nesting->activeCall;
+            masm.move(ImmPtr(pobj), reg);
+            masm.loadPtr(Address(reg), reg);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
+            return;
+        }
+    }
+
     PICGenInfo pic(ic::PICInfo::BIND, JSOp(*PC), usePropCache);
 
     // This code does not check the frame flags to see if scopeChain has been
@@ -5457,6 +5584,16 @@ mjit::Compiler::jsop_this()
                 OOL_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
                 stubcc.rejoin(Changes(1));
             }
+
+            /*
+             * Watch out for an obscure case where we don't know we are pushing
+             * an object: the script has not yet had a 'this' value assigned,
+             * so no pushed 'this' type has been inferred. Don't mark the type
+             * as known in this case, preserving the invariant that compiler
+             * types reflect inferred types.
+             */
+            if (cx->typeInferenceEnabled() && knownPushedType(0) != JSVAL_TYPE_OBJECT)
+                return;
 
             // Now we know that |this| is an object.
             frame.pop();
@@ -5908,7 +6045,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     /* Paths for known object callee. */
     if (fval->isConstant()) {
         JSObject *obj = &fval->getValue().toObject();
-        if (obj->getParent() == globalObj) {
+        if (obj->getGlobal() == globalObj) {
             frame.push(UndefinedValue());
         } else {
             prepareStubCall(Uses(1));
@@ -5916,6 +6053,20 @@ mjit::Compiler::jsop_callgname_epilogue()
             frame.pushSynced(JSVAL_TYPE_UNKNOWN);
         }
         return;
+    }
+
+    /*
+     * Fast path for functions whose global is statically known to be the
+     * current global. This is primarily for calls on inner functions within
+     * nestings, whose direct parent is a call object rather than the global
+     * and which will make a stub call in the path below.
+     */
+    if (cx->typeInferenceEnabled()) {
+        types::TypeSet *types = analysis->pushedTypes(PC, 0);
+        if (types->hasGlobalObject(cx, globalObj)) {
+            frame.push(UndefinedValue());
+            return;
+        }
     }
 
     /*
@@ -6942,7 +7093,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
                 } else {
                     JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
                 }
-            } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+            } else if (vt.type == JSVAL_TYPE_DOUBLE) {
                 fixedDoubleToAnyEntries.append(newv->slot);
                 frame.syncAndForgetFe(fe);
                 frame.forgetLoopReg(fe);

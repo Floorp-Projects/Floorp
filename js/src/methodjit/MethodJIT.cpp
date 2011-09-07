@@ -925,7 +925,8 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     }
 
     /* See comment in mjit::Compiler::emitReturn. */
-    fp->markActivationObjectsAsPut();
+    if (fp->isFunctionFrame())
+        fp->markFunctionEpilogueDone();
 
     return ok ? Jaeger_Returned : Jaeger_Throwing;
 }

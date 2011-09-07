@@ -953,6 +953,12 @@ class FrameState
     inline void syncAndForgetFe(FrameEntry *fe, bool markSynced = false);
     inline void forgetLoopReg(FrameEntry *fe);
 
+    /*
+     * Get an address for the specified name access in another script.
+     * The compiler owns the result's base register.
+     */
+    inline Address loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access);
+
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);
     inline void forgetReg(AnyRegisterID reg);
