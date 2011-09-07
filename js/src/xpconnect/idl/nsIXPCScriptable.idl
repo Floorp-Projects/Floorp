@@ -108,6 +108,7 @@ interface nsIXPCScriptable : nsISupports
     const PRUint32 DONT_REFLECT_INTERFACE_NAMES     = 1 << 27;
     const PRUint32 WANT_EQUALITY                    = 1 << 28;
     const PRUint32 WANT_OUTER_OBJECT                = 1 << 29;
+    const PRUint32 USE_STUB_EQUALITY_HOOK           = 1 << 30;
 
     // The high order bit is RESERVED for consumers of these flags. 
     // No implementor of this interface should ever return flags 
