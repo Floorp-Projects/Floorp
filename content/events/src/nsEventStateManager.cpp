@@ -175,6 +175,8 @@ static PRUint32 gPixelScrollDeltaTimeout = 0;
 static nscoord
 GetScrollableLineHeight(nsIFrame* aTargetFrame);
 
+TimeStamp nsEventStateManager::sHandlingInputStart;
+
 static inline PRBool
 IsMouseEventReal(nsEvent* aEvent)
 {

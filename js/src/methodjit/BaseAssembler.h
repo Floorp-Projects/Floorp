@@ -1239,7 +1239,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         gc::AllocKind allocKind = templateObject->getAllocKind();
 
         JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
-        size_t thingSize = gc::Arena::thingSize(allocKind);
+        int thingSize = (int)gc::Arena::thingSize(allocKind);
 
         JS_ASSERT(cx->typeInferenceEnabled());
         JS_ASSERT(!templateObject->hasSlotsArray());
@@ -1280,7 +1280,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         if (templateObject->isDenseArray()) {
             JS_ASSERT(!templateObject->initializedLength);
             addPtr(Imm32(-thingSize + sizeof(JSObject)), result);
-            storePtr(result, Address(result, -sizeof(JSObject) + JSObject::offsetOfSlots()));
+            storePtr(result, Address(result, -(int)sizeof(JSObject) + JSObject::offsetOfSlots()));
             addPtr(Imm32(-(int)sizeof(JSObject)), result);
         } else {
             JS_ASSERT(!templateObject->newType);
