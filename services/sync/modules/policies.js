@@ -495,9 +495,9 @@ let ErrorHandler = {
         if (this.shouldReportError()) {
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                             LOG_PREFIX_ERROR);
-          Svc.Obs.notify("weave:ui:login:error");
+          this.notifyOnNextTick("weave:ui:login:error");
         } else {
-          Svc.Obs.notify("weave:ui:clear-error");
+          this.notifyOnNextTick("weave:ui:clear-error");
         }
 
         this.dontIgnoreErrors = false;
@@ -510,9 +510,9 @@ let ErrorHandler = {
         if (this.shouldReportError()) {
           this.resetFileLog(Svc.Prefs.get("log.appender.file.logOnError"),
                             LOG_PREFIX_ERROR);
-          Svc.Obs.notify("weave:ui:sync:error");
+          this.notifyOnNextTick("weave:ui:sync:error");
         } else {
-          Svc.Obs.notify("weave:ui:sync:finish");
+          this.notifyOnNextTick("weave:ui:sync:finish");
         }
 
         this.dontIgnoreErrors = false;
@@ -525,7 +525,7 @@ let ErrorHandler = {
 
           if (this.shouldReportError()) {
             this.dontIgnoreErrors = false;
-            Svc.Obs.notify("weave:ui:sync:error");
+            this.notifyOnNextTick("weave:ui:sync:error");
             break;
           }
         } else {
@@ -533,9 +533,13 @@ let ErrorHandler = {
                             LOG_PREFIX_SUCCESS);
         }
         this.dontIgnoreErrors = false;
-        Svc.Obs.notify("weave:ui:sync:finish");
+        this.notifyOnNextTick("weave:ui:sync:finish");
         break;
     }
+  },
+
+  notifyOnNextTick: function notifyOnNextTick(topic) {
+    Utils.nextTick(function() Svc.Obs.notify(topic));
   },
 
   /**
