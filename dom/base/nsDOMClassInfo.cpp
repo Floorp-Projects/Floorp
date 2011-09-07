@@ -6378,25 +6378,19 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
   nsresult rv = xpcomObj->GetLocation(getter_AddRefs(location));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We have to wrap location into vp before null-checking location, to
-  // avoid assigning the wrong thing into the slot.
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), location,
-                  &NS_GET_IID(nsIDOMLocation), PR_TRUE, vp,
-                  getter_AddRefs(holder));
-
-  if (!location) {
-    // Make this a no-op
-    return NS_OK;
-  }
-
   JSString *val = ::JS_ValueToString(cx, *vp);
   NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
   nsDependentJSString depStr;
   NS_ENSURE_TRUE(depStr.init(cx, val), NS_ERROR_UNEXPECTED);
   
-  return location->SetHref(depStr);
+  rv = location->SetHref(depStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  return WrapNative(cx, JS_GetGlobalForScopeChain(cx), location,
+                    &NS_GET_IID(nsIDOMLocation), PR_TRUE, vp,
+                    getter_AddRefs(holder));
 }
 
 template<class Interface>
