@@ -40,114 +40,31 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 MODULE		= xpcom
 
-INTERNAL_TOOLS	= 1
+SDK_BINARY = \
+  $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+  $(topsrcdir)/xpcom/idl-parser/xpidllex.py \
+  $(topsrcdir)/xpcom/idl-parser/xpidlyacc.py \
+  $(topsrcdir)/xpcom/idl-parser/header.py \
+  $(topsrcdir)/xpcom/idl-parser/typelib.py \
+  $(NULL)
 
-# glib and libIDL link against the non-debug msvcrt
-MOZ_NO_DEBUG_RTL=1
+$(SDK_BIN_DIR)/ply::
+	$(NSINSTALL) -D $@
 
-XPIDL_CSRCS	= \
-		xpidl.c \
-		xpidl_idl.c \
-		xpidl_util.c \
-		xpidl_header.c \
-		xpidl_typelib.c \
-		xpidl_doc.c \
-		xpidl_java.c \
-		$(NULL)
+PLY_SRCS = \
+  $(topsrcdir)/other-licenses/ply/ply/__init__.py \
+  $(topsrcdir)/other-licenses/ply/ply/lex.py \
+  $(topsrcdir)/other-licenses/ply/ply/yacc.py \
+  $(NULL)
 
-ifdef CROSS_COMPILE
-
-HOST_PROGRAM	= host_xpidl$(HOST_BIN_SUFFIX)
-HOST_CSRCS	= $(XPIDL_CSRCS)
-
-ifdef LIBIDL_LIBS
-BUILD_TARGET = 1
-endif
-
-else # CROSS_COMPILE
-
-BUILD_TARGET = 1
-
-endif # CROSS_COMPILE
-
-ifdef BUILD_TARGET
-PROGRAM		= xpidl$(BIN_SUFFIX)
-CSRCS 		= $(XPIDL_CSRCS)
-SDK_BINARY  	= $(PROGRAM)
-CFLAGS         += LIBIDL_CFLAGS
-LIBS           += LIBIDL_LIBS
-endif
-
-USE_STATIC_LIBS = 1
-
-ifeq ($(OS_ARCH),Darwin)
-# The only reason to not always strip the SDK out is that the libraries
-# in / on ppc currently aren't fat, preventing the target xpidl from linking
-# on a ppc->x86 build.  The SDK, presumably 10.4u, must be included in that
-# case in order to successfully link.  Because the target xpidl isn't
-# currently built in a cross compile, though, this point is moot for the
-# time being.
-_STRIP_SDK = 1
-
-ifneq (,$(_STRIP_SDK)$(MACOS_SDK_DIR))
-# libIDL is configured for the system's headers, with no SDK involved.
-# There may be header conflicts if the SDK used for the Mozilla build
-# is used here.  There are very few specific cases where the SDK needs to
-# remain set to build xpidl.
-NEXT_ROOT=
-OS_CFLAGS := $(shell echo $(OS_CFLAGS)|sed -E -e "s%((-I|-isystem )$(MACOS_SDK_DIR)/usr/(include|lib/gcc)[^ ]*)|-F$(MACOS_SDK_DIR)(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot $(MACOS_SDK_DIR)%%g")
-OS_CFLAGS := $(patsubst -I$(MACOS_SDK_DIR)%,-I%,$(OS_CFLAGS))
-OS_LIBS := $(patsubst -L$(MACOS_SDK_DIR)/usr/lib%,,$(OS_LIBS))
-LDFLAGS := $(shell echo $(LDFLAGS)|sed -E -e "s%-Wl,-syslibroot,$(MACOS_SDK_DIR)%%g")
-endif # _STRIP_SDK
-
-endif # Darwin
+export:: $(PLY_SRCS) $(SDK_BIN_DIR)/ply
+	$(INSTALL) $(IFLAGS2) $^
 
 include $(topsrcdir)/config/rules.mk
-
-CFLAGS		+= $(LIBIDL_CFLAGS)
-
-# Compile directly against the static lib, so we can use xpidl during the build
-# without the shared library path being set.
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-DEFINES		+= -DEXPORT_XPT_API
-ifndef GNU_CC
-LDFLAGS += \
-	-SUBSYSTEM:CONSOLE \
-	-NODEFAULTLIB:MSVCRTD \
-	-NODEFAULTLIB:LIBC \
-	$(NULL)
-
-ifneq (,$(filter-out 1700 1710,$(_MSC_VER)))
-LDFLAGS += -SAFESEH:NO
-endif
-
-ifdef STATIC_LIBIDL
-LDFLAGS += -NODEFAULTLIB:MSVCRT
-endif
-
-endif
-endif
-
-# Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
-LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) $(LIBIDL_LIBS)
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
-
-ifdef CROSS_COMPILE
-
-HOST_CFLAGS	+= $(HOST_LIBIDL_CFLAGS)
-HOST_LIBS	= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX) $(HOST_LIBIDL_LIBS)
-HOST_EXTRA_DEPS	= $(wildcard $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.*)
-
-ifdef HOST_NSPR_MDCPUCFG
-HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
-endif
-
-endif
 
 export::
 	@$(MAKE) libs
