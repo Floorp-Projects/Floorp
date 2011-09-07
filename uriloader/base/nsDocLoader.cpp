@@ -94,12 +94,38 @@ void GetURIStringFromRequest(nsIRequest* request, nsACString &name)
 }
 #endif /* DEBUG */
 
+struct nsStatusInfo : public PRCList
+{
+  nsString mStatusMessage;
+  nsresult mStatusCode;
+  // Weak mRequest is ok; we'll be told if it decides to go away.
+  nsIRequest * const mRequest;
+
+  nsStatusInfo(nsIRequest *aRequest) :
+    mRequest(aRequest)
+  {
+    MOZ_COUNT_CTOR(nsStatusInfo);
+    PR_INIT_CLIST(this);
+  }
+  ~nsStatusInfo()
+  {
+    MOZ_COUNT_DTOR(nsStatusInfo);
+    PR_REMOVE_LINK(this);
+  }
+};
+
 struct nsRequestInfo : public PLDHashEntryHdr
 {
   nsRequestInfo(const void *key)
     : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(PR_FALSE)
-   , mIsDone(PR_FALSE)
+    , mLastStatus(nsnull)
   {
+    MOZ_COUNT_CTOR(nsRequestInfo);
+  }
+
+  ~nsRequestInfo()
+  {
+    MOZ_COUNT_DTOR(nsRequestInfo);
   }
 
   nsIRequest* Request() {
@@ -111,9 +137,7 @@ struct nsRequestInfo : public PLDHashEntryHdr
   PRInt64 mMaxProgress;
   PRBool mUploading;
 
-  PRBool mIsDone;
-  nsString mLastStatus;
-  nsresult mLastStatusCode;
+  nsAutoPtr<nsStatusInfo> mLastStatus;
 };
 
 
@@ -185,6 +209,8 @@ nsDocLoader::nsDocLoader()
   }
 
   ClearInternalProgress();
+
+  PR_INIT_CLIST(&mStatusInfoList);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: created.\n", this));
@@ -601,7 +627,12 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   //
   nsRequestInfo *info = GetRequestInfo(aRequest);
   if (info) {
-    info->mIsDone = PR_TRUE;
+    if (info->mLastStatus) {
+      // Null it out now so we don't find it when looking for status
+      // from now on.  This destroys the nsStatusInfo and hence
+      // removes it from our list.
+      info->mLastStatus = nsnull;
+    }
 
     PRInt64 oldMax = info->mMaxProgress;
 
@@ -875,24 +906,6 @@ void nsDocLoader::doStartURLLoad(nsIRequest *request)
                     NS_OK);
 }
 
-// PLDHashTable enumeration callback that finds a RequestInfo that's not done
-// yet.
-static PLDHashOperator
-FindUnfinishedRequestCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                              PRUint32 number, void *arg)
-{
-  nsRequestInfo* info = static_cast<nsRequestInfo *>(hdr);
-  nsRequestInfo** retval = static_cast<nsRequestInfo**>(arg);
-
-  if (!info->mIsDone && !info->mLastStatus.IsEmpty()) {
-    *retval = info;
-    return PL_DHASH_STOP;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-
 void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
@@ -911,15 +924,14 @@ void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
                     nsIWebProgressListener::STATE_IS_REQUEST,
                     aStatus);
 
-  // Fire a status change message for a random unfinished request to make sure
-  // that the displayed status is not outdated.
-  nsRequestInfo* unfinishedRequest = nsnull;
-  PL_DHashTableEnumerate(&mRequestInfoHash, FindUnfinishedRequestCallback,
-                         &unfinishedRequest);
-  if (unfinishedRequest) {
-    FireOnStatusChange(this, unfinishedRequest->Request(),
-                       unfinishedRequest->mLastStatusCode,
-                       unfinishedRequest->mLastStatus.get());
+  // Fire a status change message for the most recent unfinished
+  // request to make sure that the displayed status is not outdated.
+  if (!PR_CLIST_IS_EMPTY(&mStatusInfoList)) {
+    nsStatusInfo* statusInfo =
+      static_cast<nsStatusInfo*>(PR_LIST_HEAD(&mStatusInfoList));
+    FireOnStatusChange(this, statusInfo->mRequest,
+                       statusInfo->mStatusCode,
+                       statusInfo->mStatusMessage.get());
   }
 }
 
@@ -1189,8 +1201,17 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
     // don't display, for example, "Transferring" messages for requests that are
     // already done.
     if (info) {
-      info->mLastStatus = msg;
-      info->mLastStatusCode = aStatus;
+      if (!info->mLastStatus) {
+        info->mLastStatus = new nsStatusInfo(aRequest);
+      } else {
+        // We're going to move it to the front of the list, so remove
+        // it from wherever it is now.
+        PR_REMOVE_LINK(info->mLastStatus);
+      }
+      info->mLastStatus->mStatusMessage = msg;
+      info->mLastStatus->mStatusCode = aStatus;
+      // Put the info at the front of the list
+      PR_INSERT_LINK(info->mLastStatus, &mStatusInfoList);
     }
     FireOnStatusChange(this, aRequest, aStatus, msg);
   }
