@@ -5604,9 +5604,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
 
     jsbytecode *pc;
     JSScript *script = cx->stack.currentScript(&pc);
-    if (script) {
-        if (!script->ensureRanBytecode(cx))
-            return false;
+    if (script && script->hasAnalysis()) {
         analyze::Bytecode *code = script->analysis()->maybeCode(pc);
         if (code)
             code->accessGetter = true;

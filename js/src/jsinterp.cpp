@@ -4101,9 +4101,8 @@ BEGIN_CASE(JSOP_SETELEM)
                 obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
-                if (!script->ensureRanBytecode(cx))
-                    goto error;
-                script->analysis()->getCode(regs.pc).arrayWriteHole = true;
+                if (script->hasAnalysis())
+                    script->analysis()->getCode(regs.pc).arrayWriteHole = true;
             }
         }
     } while (0);
