@@ -76,6 +76,8 @@ public:
   using GfxInfoBase::GetWebGLParameter;
 
   virtual nsresult Init();
+  
+  virtual void GetData();
 
 protected:
 
@@ -91,7 +93,6 @@ private:
   int mMajorVersion, mMinorVersion, mRevisionVersion;
 
   void AddCrashReportAnnotations();
-  void GetData();
 };
 
 } // namespace widget
