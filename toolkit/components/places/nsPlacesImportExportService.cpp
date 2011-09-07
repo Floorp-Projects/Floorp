@@ -49,7 +49,7 @@
  *   Old version used this to set attributes on the bookmarks RDF root, such
  *   as the last modified date. We only use H1 to check for the attribute
  *   PLACES_ROOT, which tells us that this hierarchy root is the places root.
- *   For backwards compatability, if we don't find this, we assume that the
+ *   For backwards compatibility, if we don't find this, we assume that the
  *   hierarchy is rooted at the bookmarks menu.
  * Heading := any heading other than h1
  *   Old version used this to set attributes on the current container. We only
