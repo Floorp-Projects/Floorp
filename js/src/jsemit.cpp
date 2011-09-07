@@ -158,7 +158,7 @@ JSCodeGenerator::~JSCodeGenerator()
 }
 
 static ptrdiff_t
-EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
+EmitCheck(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t delta)
 {
     jsbytecode *base, *limit, *next;
     ptrdiff_t offset, length;
@@ -263,7 +263,7 @@ UpdateDecomposeLength(JSCodeGenerator *cg, uintN start)
 ptrdiff_t
 js_Emit1(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 {
-    ptrdiff_t offset = EmitCheck(cx, cg, op, 1);
+    ptrdiff_t offset = EmitCheck(cx, cg, 1);
 
     if (offset >= 0) {
         *CG_NEXT(cg)++ = (jsbytecode)op;
@@ -275,7 +275,7 @@ js_Emit1(JSContext *cx, JSCodeGenerator *cg, JSOp op)
 ptrdiff_t
 js_Emit2(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1)
 {
-    ptrdiff_t offset = EmitCheck(cx, cg, op, 2);
+    ptrdiff_t offset = EmitCheck(cx, cg, 2);
 
     if (offset >= 0) {
         jsbytecode *next = CG_NEXT(cg);
@@ -291,7 +291,7 @@ ptrdiff_t
 js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
          jsbytecode op2)
 {
-    ptrdiff_t offset = EmitCheck(cx, cg, op, 3);
+    ptrdiff_t offset = EmitCheck(cx, cg, 3);
 
     if (offset >= 0) {
         jsbytecode *next = CG_NEXT(cg);
@@ -307,7 +307,7 @@ js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
 ptrdiff_t
 js_Emit5(JSContext *cx, JSCodeGenerator *cg, JSOp op, uint16 op1, uint16 op2)
 {
-    ptrdiff_t offset = EmitCheck(cx, cg, op, 5);
+    ptrdiff_t offset = EmitCheck(cx, cg, 5);
 
     if (offset >= 0) {
         jsbytecode *next = CG_NEXT(cg);
@@ -326,7 +326,7 @@ ptrdiff_t
 js_EmitN(JSContext *cx, JSCodeGenerator *cg, JSOp op, size_t extra)
 {
     ptrdiff_t length = 1 + (ptrdiff_t)extra;
-    ptrdiff_t offset = EmitCheck(cx, cg, op, length);
+    ptrdiff_t offset = EmitCheck(cx, cg, length);
 
     if (offset >= 0) {
         jsbytecode *next = CG_NEXT(cg);
