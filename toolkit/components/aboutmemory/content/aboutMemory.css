@@ -69,15 +69,3 @@
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
 }
 
-h2.tree {
-  cursor: pointer;
-  background: #ddd;
-  padding-left: .1em;
-}
-
-pre.tree {
-}
-
-pre.collapsed {
-  display: none;
-}
