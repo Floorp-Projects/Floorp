@@ -416,10 +416,10 @@ inline void
 JSAtom::finalize(JSRuntime *rt)
 {
     JS_ASSERT(isAtom());
-    if (arenaHeader()->getThingKind() == js::gc::FINALIZE_STRING)
+    if (getAllocKind() == js::gc::FINALIZE_STRING)
         asFlat().finalize(rt);
     else
-        JS_ASSERT(arenaHeader()->getThingKind() == js::gc::FINALIZE_SHORT_STRING);
+        JS_ASSERT(getAllocKind() == js::gc::FINALIZE_SHORT_STRING);
 }
 
 inline void

@@ -236,7 +236,9 @@ nsDeviceMotion::DeviceMotionChanged(PRUint32 type, double x, double y, double z)
     // check to see if this window is in the background.  if
     // it is, don't send any device motion to it.
     nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(mWindowListeners[i]);
-    if (!pwindow || pwindow->GetOuterWindow()->IsBackground())
+    if (!pwindow ||
+        !pwindow->GetOuterWindow() ||
+        pwindow->GetOuterWindow()->IsBackground())
       continue;
 
     nsCOMPtr<nsIDOMDocument> domdoc;

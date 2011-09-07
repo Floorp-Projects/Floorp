@@ -299,14 +299,16 @@ let Content = {
       // let's send it back to the chrome process to have it handle shortcuts
       case "keypress":
         let timer = new Util.Timeout(function() {
+          if(aEvent.getPreventDefault())
+            return;
+
           let eventData = {
             ctrlKey: aEvent.ctrlKey,
             altKey: aEvent.altKey,
             shiftKey: aEvent.shiftKey,
             metaKey: aEvent.metaKey,
             keyCode: aEvent.keyCode,
-            charCode: aEvent.charCode,
-            preventDefault: aEvent.getPreventDefault()
+            charCode: aEvent.charCode
           };
           sendAsyncMessage("Browser:KeyPress", eventData);
         });
@@ -495,8 +497,13 @@ let Content = {
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri,
                                                   referrer: element.ownerDocument.documentURIObject.spec });
-        } else if (!this._formAssistant.open(element) && this._highlightElement) {
+          break;
+        }
+
+        if (!this._formAssistant.open(element))
           sendAsyncMessage("FindAssist:Hide", { });
+
+        if (this._highlightElement) {
           this._sendMouseEvent("mousemove", this._highlightElement, x, y);
           this._sendMouseEvent("mousedown", this._highlightElement, x, y);
           this._sendMouseEvent("mouseup", this._highlightElement, x, y);

@@ -182,7 +182,7 @@ var Browser = {
     /* handles web progress management for open browsers */
     Elements.browsers.webProgress = new Browser.WebProgress();
 
-    this.keyFilter = new KeyFilter(Elements.browsers);
+    this.keySender = new ContentCustomKeySender(Elements.browsers);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule(Elements.browsers);
     let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
@@ -1226,19 +1226,14 @@ var Browser = {
         break;
       }
 
-      case "Browser:KeyPress": {
-        let keyset = document.getElementById("mainKeyset");
-        keyset.setAttribute("disabled", "false");
-        if (json.preventDefault)
-          break;
-
+      case "Browser:KeyPress":
         let event = document.createEvent("KeyEvents");
         event.initKeyEvent("keypress", true, true, null,
                            json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
                            json.keyCode, json.charCode);
-        keyset.dispatchEvent(event);
+        document.getElementById("mainKeyset").dispatchEvent(event);
         break;
-      }
+
       case "Browser:ZoomToPoint:Return":
         if (json.zoomTo) {
           let rect = Rect.fromRect(json.zoomTo);
@@ -1979,26 +1974,47 @@ const ContentTouchHandler = {
 };
 
 
-/** Prevent chrome from consuming key events before remote content has a chance. */
-function KeyFilter(container) {
+/** Watches for mouse events in chrome and sends them to content. */
+function ContentCustomKeySender(container) {
   container.addEventListener("keypress", this, false);
   container.addEventListener("keyup", this, false);
   container.addEventListener("keydown", this, false);
 }
 
-KeyFilter.prototype = {
+ContentCustomKeySender.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (Elements.contentShowing.getAttribute("disabled") == "true")
       return;
 
     let browser = getBrowser();
     if (browser && browser.active && browser.getAttribute("remote") == "true") {
-        document.getElementById("mainKeyset").setAttribute("disabled", "true");
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
+
+      let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+      fl.sendCrossProcessKeyEvent(aEvent.type,
+                                  aEvent.keyCode,
+                                  (aEvent.type != "keydown") ? aEvent.charCode : null,
+                                  this._parseModifiers(aEvent));
     }
   },
 
+  _parseModifiers: function _parseModifiers(aEvent) {
+    const masks = Ci.nsIDOMNSEvent;
+    let mval = 0;
+    if (aEvent.shiftKey)
+      mval |= masks.SHIFT_MASK;
+    if (aEvent.ctrlKey)
+      mval |= masks.CONTROL_MASK;
+    if (aEvent.altKey)
+      mval |= masks.ALT_MASK;
+    if (aEvent.metaKey)
+      mval |= masks.META_MASK;
+    return mval;
+  },
+
   toString: function toString() {
-    return "[KeyFilter] { }";
+    return "[ContentCustomKeySender] { }";
   }
 };
 
@@ -2901,6 +2917,7 @@ Tab.prototype = {
 
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     fl.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    fl.eventMode = Ci.nsIFrameLoader.EVENT_MODE_DONT_FORWARD_TO_CHILD;
 
     return browser;
   },

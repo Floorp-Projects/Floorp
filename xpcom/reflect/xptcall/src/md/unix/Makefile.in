@@ -68,10 +68,14 @@ ifeq (Darwin,$(OS_ARCH))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 ifneq (x86_64,$(OS_TEST))
 # If we compile xptcinvoke_unixish_x86.cpp with -fomit-frame-pointer
-# we end up crashing on startup, presumably because of the %esp munging we do
-# when KEEP_STACK_16_BYTE_ALIGNED.  So let's not use that flag here.
-# NOTE: MODULE_OPTIMIZE_FLAGS must be set before including config.mk
-MODULE_OPTIMIZE_FLAGS=-O3
+# we end up crashing on startup. This is because
+# "movl  %5, %%eax\n\t"   /* function index */
+# becomes
+# mov    0x1c(%esp),%eax
+# but we have modified esp.
+# NOTE: MOZ_FRAMEPTR_FLAGS must be set before including config.mk
+# FIXME: change the file instead of using this hack.
+MOZ_FRAMEPTR_FLAGS=-fno-omit-frame-pointer
 endif
 endif
 endif

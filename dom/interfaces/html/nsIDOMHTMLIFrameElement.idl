@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(33dfbcdc-4edf-4e6a-acf4-c6b5bbb61caf)]
+[scriptable, uuid(31969911-36fb-42ee-9a00-018c3ff78cfb)]
 interface nsIDOMHTMLIFrameElement : nsIDOMHTMLElement
 {
            attribute DOMString        align;
@@ -65,4 +65,9 @@ interface nsIDOMHTMLIFrameElement : nsIDOMHTMLElement
            attribute DOMString        width;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument   contentDocument;
+
+  // iframe elements require the mozAllowFullScreen attribute to be present
+  // if they're to allow content in the sub document to go into DOM full-screen
+  // mode. See https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI
+           attribute boolean          mozAllowFullScreen;
 };

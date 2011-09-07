@@ -1193,8 +1193,12 @@ public:
     // This is called by the default Draw() implementation above.
     virtual PRBool SetupCairoFont(gfxContext *aContext) = 0;
 
-    PRBool IsSyntheticBold() { return mSyntheticBoldOffset != 0; }
-    PRUint32 GetSyntheticBoldOffset() { return mSyntheticBoldOffset; }
+    PRBool IsSyntheticBold() { return mApplySyntheticBold; }
+
+    // Amount by which synthetic bold "fattens" the glyphs: 1/16 of the em-size
+    gfxFloat GetSyntheticBoldOffset() {
+        return GetAdjustedSize() * (1.0 / 16.0);
+    }
 
     gfxFontEntry *GetFontEntry() { return mFontEntry.get(); }
     PRBool HasCharacter(PRUint32 ch) {
@@ -1224,6 +1228,11 @@ protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
 
     PRPackedBool               mIsValid;
+
+    // use synthetic bolding for environments where this is not supported
+    // by the platform
+    PRPackedBool               mApplySyntheticBold;
+
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
@@ -1231,9 +1240,6 @@ protected:
     gfxFloat                   mAdjustedSize;
 
     float                      mFUnitsConvFactor; // conversion factor from font units to dev units
-
-    // synthetic bolding for environments where this is not supported by the platform
-    PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
 
     // the AA setting requested for this font - may affect glyph bounds
     AntialiasOption            mAntialiasOption;
@@ -2043,7 +2049,9 @@ public:
 #endif
 
     // post-process glyph advances to deal with synthetic bolding
-    void AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength);
+    void AdjustAdvancesForSyntheticBold(gfxContext *aContext,
+                                        PRUint32 aStart,
+                                        PRUint32 aLength);
 
 protected:
     /**

@@ -427,7 +427,7 @@ struct JSRuntime {
     int64               gcNextFullGCTime;
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
-    volatile bool       gcIsNeeded;
+    volatile jsuword    gcIsNeeded;
     js::WeakMapBase     *gcWeakMapList;
 
     /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
@@ -512,14 +512,6 @@ struct JSRuntime {
     volatile ptrdiff_t  gcMallocBytes;
 
   public:
-    js::GCChunkAllocator    *gcChunkAllocator;
-
-    void setCustomGCChunkAllocator(js::GCChunkAllocator *allocator) {
-        JS_ASSERT(allocator);
-        JS_ASSERT(state == JSRTS_DOWN);
-        gcChunkAllocator = allocator;
-    }
-
     /*
      * The trace operation and its data argument to trace embedding-specific
      * GC roots.
@@ -1496,8 +1488,7 @@ class AutoGCRooter {
         DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
-        OBJVECTOR =   -16, /* js::AutoObjectVector */
-        TYPE =        -17  /* js::types::AutoTypeRooter */
+        OBJVECTOR =   -16  /* js::AutoObjectVector */
     };
 
     private:
@@ -1794,17 +1785,33 @@ class AutoXMLRooter : private AutoGCRooter {
 
 class AutoLockGC {
   public:
-    explicit AutoLockGC(JSRuntime *rt
+    explicit AutoLockGC(JSRuntime *rt = NULL
                         JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : rt(rt)
+      : runtime(rt)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
+        if (rt)
+            JS_LOCK_GC(rt);
+    }
+
+    bool locked() const {
+        return !!runtime;
+    }
+
+    void lock(JSRuntime *rt) {
+        JS_ASSERT(rt);
+        JS_ASSERT(!runtime);
+        runtime = rt;
         JS_LOCK_GC(rt);
     }
-    ~AutoLockGC() { JS_UNLOCK_GC(rt); }
+
+    ~AutoLockGC() {
+        if (runtime)
+            JS_UNLOCK_GC(runtime);
+    }
 
   private:
-    JSRuntime *rt;
+    JSRuntime *runtime;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

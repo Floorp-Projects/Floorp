@@ -275,14 +275,15 @@ public:
     virtual PRBool TestCharacterMap(PRUint32 aCh);
 
     // create a font entry for a font with a given name
-    static GDIFontEntry* CreateFontEntry(const nsAString& aName, 
-                                      gfxWindowsFontType aFontType, 
-                                      PRBool aItalic, PRUint16 aWeight, 
-                                      gfxUserFontData* aUserFontData);
+    static GDIFontEntry* CreateFontEntry(const nsAString& aName,
+                                         gfxWindowsFontType aFontType,
+                                         PRBool aItalic,
+                                         PRUint16 aWeight, PRInt16 aStretch,
+                                         gfxUserFontData* aUserFontData);
 
     // create a font entry for a font referenced by its fullname
     static GDIFontEntry* LoadLocalFont(const gfxProxyFontEntry &aProxyEntry,
-                                    const nsAString& aFullname);
+                                       const nsAString& aFullname);
 
     PRUint8 mWindowsFamily;
     PRUint8 mWindowsPitch;
@@ -298,7 +299,8 @@ protected:
     friend class gfxWindowsFont;
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                     PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData);
+                 PRBool aItalic, PRUint16 aWeight, PRInt16 aStretch,
+                 gfxUserFontData *aUserFontData);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 

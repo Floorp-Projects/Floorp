@@ -67,7 +67,7 @@ const DEFAULT_CACHE_TYPES = "extension,theme,locale";
 
 const KEY_PROFILEDIR = "ProfD";
 const FILE_DATABASE  = "addons.sqlite";
-const DB_SCHEMA      = 1;
+const DB_SCHEMA      = 2;
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   this.__defineGetter__(aName, function() {
@@ -959,13 +959,25 @@ var AddonRepository = {
         case "previews":
           let previewNodes = node.getElementsByTagName("preview");
           Array.forEach(previewNodes, function(aPreviewNode) {
-            let full = self._getDescendantTextContent(aPreviewNode, "full");
+            let full = self._getUniqueDescendant(aPreviewNode, "full");
             if (full == null)
               return;
 
-            let thumbnail = self._getDescendantTextContent(aPreviewNode, "thumbnail");
+            let fullURL = self._getTextContent(full);
+            let fullWidth = full.getAttribute("width");
+            let fullHeight = full.getAttribute("height");
+
+            let thumbnailURL, thumbnailWidth, thumbnailHeight;
+            let thumbnail = self._getUniqueDescendant(aPreviewNode, "thumbnail");
+            if (thumbnail) {
+              thumbnailURL = self._getTextContent(thumbnail);
+              thumbnailWidth = thumbnail.getAttribute("width");
+              thumbnailHeight = thumbnail.getAttribute("height");
+            }
             let caption = self._getDescendantTextContent(aPreviewNode, "caption");
-            let screenshot = new AddonManagerPrivate.AddonScreenshot(full, thumbnail, caption);
+            let screenshot = new AddonManagerPrivate.AddonScreenshot(fullURL, fullWidth, fullHeight,
+                                                                     thumbnailURL, thumbnailWidth,
+                                                                     thumbnailHeight, caption);
 
             if (addon.screenshots == null)
               addon.screenshots = [];
@@ -1252,7 +1264,8 @@ var AddonDatabase = {
     getAllDevelopers: "SELECT addon_internal_id, name, url FROM developer " +
                       "ORDER BY addon_internal_id, num",
 
-    getAllScreenshots: "SELECT addon_internal_id, url, thumbnailURL, caption " +
+    getAllScreenshots: "SELECT addon_internal_id, url, width, height, " +
+                       "thumbnailURL, thumbnailWidth, thumbnailHeight, caption " +
                        "FROM screenshot ORDER BY addon_internal_id, num",
 
     insertAddon: "INSERT INTO addon VALUES (NULL, :id, :type, :name, :version, " +
@@ -1265,8 +1278,14 @@ var AddonDatabase = {
     insertDeveloper:  "INSERT INTO developer VALUES (:addon_internal_id, " +
                       ":num, :name, :url)",
 
-    insertScreenshot: "INSERT INTO screenshot VALUES (:addon_internal_id, " +
-                      ":num, :url, :thumbnailURL, :caption)",
+    // We specify column names here because the columns
+    // could be out of order due to schema changes.
+    insertScreenshot: "INSERT INTO screenshot (addon_internal_id, " +
+                      "num, url, width, height, thumbnailURL, " +
+                      "thumbnailWidth, thumbnailHeight, caption) " +
+                      "VALUES (:addon_internal_id, " +
+                      ":num, :url, :width, :height, :thumbnailURL, " +
+                      ":thumbnailWidth, :thumbnailHeight, :caption)",
 
     emptyAddon:       "DELETE FROM addon"
   },
@@ -1307,6 +1326,16 @@ var AddonDatabase = {
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     let dbMissing = !dbfile.exists();
 
+    function tryAgain() {
+      LOG("Deleting database, and attempting openConnection again");
+      this.initialized = false;
+      if (this.connection.connectionReady)
+        this.connection.close();
+      if (dbfile.exists())
+        dbfile.remove(false);
+      return this.openConnection(true);
+    }
+
     try {
       this.connection = Services.storage.openUnsharedDatabase(dbfile);
     } catch (e) {
@@ -1316,15 +1345,37 @@ var AddonDatabase = {
         this.databaseOk = false;
         throw e;
       }
-
-      LOG("Deleting database, and attempting openConnection again");
-      dbfile.remove(false);
-      return this.openConnection(true);
+      return tryAgain();
     }
 
     this.connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
-    if (dbMissing || this.connection.schemaVersion == 0)
+    if (dbMissing)
       this._createSchema();
+
+    switch (this.connection.schemaVersion) {
+      case 0:
+        this._createSchema();
+        break;
+      case 1:
+        try {
+          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN width INTEGER");
+          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN height INTEGER");
+          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailWidth INTEGER");
+          this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailHeight INTEGER");
+          this._createIndices();
+          this.connection.schemaVersion = DB_SCHEMA;
+        } catch (e) {
+          ERROR("Failed to create database schema", e);
+          this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
+          this.connection.rollbackTransaction();
+          return tryAgain();
+        }
+        break;
+      case 2:
+        break;
+      default:
+        return tryAgain();
+    }
 
     return this.connection;
   },
@@ -1733,7 +1784,11 @@ var AddonDatabase = {
     bp.bindByName("addon_internal_id", aInternalID);
     bp.bindByName("num", aIndex);
     bp.bindByName("url", aScreenshot.url);
+    bp.bindByName("width", aScreenshot.width);
+    bp.bindByName("height", aScreenshot.height);
     bp.bindByName("thumbnailURL", aScreenshot.thumbnailURL);
+    bp.bindByName("thumbnailWidth", aScreenshot.thumbnailWidth);
+    bp.bindByName("thumbnailHeight", aScreenshot.thumbnailHeight);
     bp.bindByName("caption", aScreenshot.caption);
     aParams.addParams(bp);
   },
@@ -1796,9 +1851,14 @@ var AddonDatabase = {
    */
   _makeScreenshotFromAsyncRow: function AD__makeScreenshotFromAsyncRow(aRow) {
     let url = aRow.getResultByName("url");
+    let width = aRow.getResultByName("width");
+    let height = aRow.getResultByName("height");
     let thumbnailURL = aRow.getResultByName("thumbnailURL");
-    let caption =aRow.getResultByName("caption");
-    return new AddonManagerPrivate.AddonScreenshot(url, thumbnailURL, caption);
+    let thumbnailWidth = aRow.getResultByName("thumbnailWidth");
+    let thumbnailHeight = aRow.getResultByName("thumbnailHeight");
+    let caption = aRow.getResultByName("caption");
+    return new AddonManagerPrivate.AddonScreenshot(url, width, height, thumbnailURL,
+                                                   thumbnailWidth, thumbnailHeight, caption);
   },
 
   /**
@@ -1849,9 +1909,15 @@ var AddonDatabase = {
                                   "addon_internal_id INTEGER, " +
                                   "num INTEGER, " +
                                   "url TEXT, " +
+                                  "width INTEGER, " +
+                                  "height INTEGER, " +
                                   "thumbnailURL TEXT, " +
+                                  "thumbnailWidth INTEGER, " +
+                                  "thumbnailHeight INTEGER, " +
                                   "caption TEXT, " +
                                   "PRIMARY KEY (addon_internal_id, num)");
+
+      this._createIndices();
 
       this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
         "ON addon BEGIN " +
@@ -1867,5 +1933,15 @@ var AddonDatabase = {
       this.connection.rollbackTransaction();
       throw e;
     }
+  },
+
+  /**
+   * Synchronously creates the indices in the database.
+   */
+  _createIndices: function AD__createIndices() {
+      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS developer_idx " +
+                                       "ON developer (addon_internal_id)");
+      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS screenshot_idx " +
+                                       "ON screenshot (addon_internal_id)");
   }
 };

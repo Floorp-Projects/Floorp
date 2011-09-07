@@ -78,12 +78,6 @@ WeakMapBase::sweepAll(JSTracer *tracer)
 
 } /* namespace js */
 
-bool
-JSObject::isWeakMap() const
-{
-    return getClass() == &WeakMapClass;
-}
-
 typedef WeakMap<JSObject *, Value> ObjectValueMap;
 
 static ObjectValueMap *
@@ -264,9 +258,7 @@ WeakMap_construct(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-namespace js {
-
-Class WeakMapClass = {
+Class js::WeakMapClass = {
     "WeakMap",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
@@ -286,8 +278,6 @@ Class WeakMapClass = {
     NULL,                 /* hasInstance */
     WeakMap_mark
 };
-
-}
 
 static JSFunctionSpec weak_map_methods[] = {
     JS_FN("has",    WeakMap_has, 1, 0),

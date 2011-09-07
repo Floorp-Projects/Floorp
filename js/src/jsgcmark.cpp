@@ -66,7 +66,7 @@
  * MarkString, etc. These functions check if an object is in the compartment
  * currently being GCed. If it is, they call PushMarkStack. Roots are pushed
  * this way as well as pointers traversed inside trace hooks (for things like
- * js_IteratorClass). It it always valid to call a MarkX function instead of
+ * IteratorClass). It it always valid to call a MarkX function instead of
  * PushMarkStack, although it may be slower.
  *
  * The MarkX functions also handle non-GC object traversal. In this case, they
@@ -234,8 +234,8 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
     if (IS_GC_MARKING_TRACER(trc)) {
         if (type->singleton)
             MarkObject(trc, *type->singleton, "type_singleton");
-        if (type->functionScript)
-            MarkScript(trc, type->functionScript, "functionScript");
+        if (type->interpretedFunction)
+            MarkObject(trc, *type->interpretedFunction, "type_function");
     }
 }
 
@@ -415,7 +415,7 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
         Mark(trc, reinterpret_cast<Shape *>(thing));
         break;
       case JSTRACE_TYPE_OBJECT:
-        Mark(trc, reinterpret_cast<types::TypeObject *>(thing));
+        MarkTypeObject(trc, reinterpret_cast<types::TypeObject *>(thing), "type_stack");
         break;
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
@@ -708,7 +708,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
      */
     Class *clasp = obj->getClass();
     if (clasp->trace) {
-        if (clasp == &js_ArrayClass) {
+        if (clasp == &ArrayClass) {
             if (obj->getDenseArrayInitializedLength() > LARGE_OBJECT_CHUNK_SIZE) {
                 if (!gcmarker->largeStack.push(LargeMarkItem(obj)))
                     clasp->trace(gcmarker, obj);
@@ -851,13 +851,14 @@ MarkChildren(JSTracer *trc, JSScript *script)
 
     if (!script->isCachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
-    if (script->hasFunction)
-        MarkObject(trc, *script->function(), "script_fun");
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 
     script->bindings.trace(trc);
+
+    if (script->types)
+        script->types->trace(trc);
 
 #ifdef JS_METHODJIT
     if (script->jitNormal)
@@ -913,7 +914,7 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
         PushMarkStack(gcmarker, type->proto);
 
     if (type->newScript) {
-        PushMarkStack(gcmarker, type->newScript->script);
+        PushMarkStack(gcmarker, type->newScript->fun);
         PushMarkStack(gcmarker, type->newScript->shape);
     }
 
@@ -953,12 +954,12 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
         MarkObject(trc, *type->singleton, "type_singleton");
 
     if (type->newScript) {
-        MarkScript(trc, type->newScript->script, "type_new_script");
+        MarkObject(trc, *type->newScript->fun, "type_new_function");
         MarkShape(trc, type->newScript->shape, "type_new_shape");
     }
 
-    if (type->functionScript)
-        MarkScript(trc, type->functionScript, "functionScript");
+    if (type->interpretedFunction)
+        MarkObject(trc, *type->interpretedFunction, "type_function");
 }
 
 #ifdef JS_HAS_XML_SUPPORT

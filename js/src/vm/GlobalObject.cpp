@@ -227,8 +227,8 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom
 static JSObject *
 CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &global)
 {
-    JS_ASSERT(clasp != &js_ObjectClass);
-    JS_ASSERT(clasp != &js_FunctionClass);
+    JS_ASSERT(clasp != &ObjectClass);
+    JS_ASSERT(clasp != &FunctionClass);
 
     JSObject *blankProto = NewNonFunction<WithProto::Given>(cx, clasp, &proto, &global);
     if (!blankProto || !blankProto->setSingletonType(cx))
@@ -300,7 +300,7 @@ GlobalObject::getDebuggers()
     Value debuggers = getReservedSlot(DEBUGGERS);
     if (debuggers.isUndefined())
         return NULL;
-    JS_ASSERT(debuggers.toObject().clasp == &GlobalDebuggees_class);
+    JS_ASSERT(debuggers.toObject().getClass() == &GlobalDebuggees_class);
     return (DebuggerVector *) debuggers.toObject().getPrivate();
 }
 
