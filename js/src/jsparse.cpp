@@ -8454,7 +8454,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
       case TOK_LC:
       {
-        JSBool afterComma;
         JSParseNode *pnval;
 
         /*
@@ -8476,7 +8475,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         pn->pn_op = JSOP_NEWINIT;
         pn->makeEmpty();
 
-        afterComma = JS_FALSE;
         for (;;) {
             JSAtom *atom;
             tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
@@ -8635,7 +8633,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CURLY_AFTER_LIST);
                 return NULL;
             }
-            afterComma = JS_TRUE;
         }
 
       end_obj_init:
