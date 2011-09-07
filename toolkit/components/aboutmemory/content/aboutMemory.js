@@ -320,6 +320,10 @@ function update()
   text += "</div>";
 
   text += "<div>" +
+          "<span class='option'><a href='about:support'>Troubleshooting information</a></span>" +
+          "</div>";
+
+  text += "<div>" +
           "<span class='legend'>Hover the pointer over the name of a memory " +
           "reporter to see a detailed description of what it measures. Click a " +
           "heading to expand or collapse its tree.</span>" +
