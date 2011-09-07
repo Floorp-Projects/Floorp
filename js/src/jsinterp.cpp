@@ -4812,6 +4812,7 @@ BEGIN_CASE(JSOP_DEFFUN)
         obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             goto error;
+        JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
     }
 
     /*
@@ -4945,6 +4946,8 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         }
     }
 
+    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
+
     uint32 slot = GET_SLOTNO(regs.pc);
     TRACE_2(DefLocalFunSetSlot, slot, obj);
 
@@ -5063,6 +5066,8 @@ BEGIN_CASE(JSOP_LAMBDA)
     } while (0);
 
     JS_ASSERT(obj->getProto());
+    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
+
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
@@ -5075,6 +5080,7 @@ BEGIN_CASE(JSOP_LAMBDA_FC)
     JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         goto error;
+    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
     PUSH_OBJECT(*obj);
 }

@@ -463,6 +463,24 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     return js_CloneFunctionObject(cx, fun, parent, proto);
 }
 
+inline JSObject *
+CloneFunctionObject(JSContext *cx, JSFunction *fun)
+{
+    /*
+     * Variant which makes an exact clone of fun, preserving parent and proto.
+     * Calling the above version CloneFunctionObject(cx, fun, fun->getParent())
+     * is not equivalent: API clients, including XPConnect, can reparent
+     * objects so that fun->getGlobal() != fun->getProto()->getGlobal().
+     * See ReparentWrapperIfFound.
+     */
+    JS_ASSERT(fun->getParent() && fun->getProto());
+
+    if (fun->hasSingletonType())
+        return fun;
+
+    return js_CloneFunctionObject(cx, fun, fun->getParent(), fun->getProto());
+}
+
 extern JSObject * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 

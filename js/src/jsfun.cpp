@@ -1317,7 +1317,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
              * track of the method, so we associate it with the first barriered
              * object found starting from thisp on the prototype chain.
              */
-            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent(), true);
+            JSObject *newfunobj = CloneFunctionObject(cx, fun);
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);

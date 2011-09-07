@@ -792,6 +792,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             THROW();
+        JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
     }
 
     /*
@@ -1442,6 +1443,8 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         }
     }
 
+    JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
+
     return obj;
 }
 
@@ -1556,6 +1559,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (!obj)
         THROWV(NULL);
 
+    JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
     return obj;
 }
 
