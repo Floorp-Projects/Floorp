@@ -75,11 +75,8 @@ xpc_LocalizeContext(JSContext *cx);
 nsresult
 xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph);
 
-extern JSBool
-XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
-
 #define IS_WRAPPER_CLASS(clazz)                                               \
-    (clazz->ext.equality == js::Valueify(XPC_WN_Equality))
+    ((clazz)->ext.isWrappedNative)
 
 inline JSBool
 DebugCheckWrapperClass(JSObject* obj)

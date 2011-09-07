@@ -1548,8 +1548,17 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
         ops->typeOf = XPC_WN_JSOp_TypeOf_Object;
     }
 
-    // Equality is a required hook.
-    mJSClass.base.ext.equality = js::Valueify(XPC_WN_Equality);
+    if(mFlags.UseStubEqualityHook())
+    {
+        NS_ASSERTION(!mFlags.WantEquality(),
+                     "If you want an Equality callback, you can't use a stub "
+                     "equality hook");
+        mJSClass.base.ext.equality = nsnull;
+    }
+    else
+    {
+        mJSClass.base.ext.equality = js::Valueify(XPC_WN_Equality);
+    }
 
     if(mFlags.WantHasInstance())
         mJSClass.base.hasInstance = js::Valueify(XPC_WN_Helper_HasInstance);

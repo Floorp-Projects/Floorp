@@ -2108,18 +2108,6 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
                              JSVERSION_DEFAULT, returnStringOnly, rval);
 }
 
-/* void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality); */
-NS_IMETHODIMP
-nsXPConnect::GetXPCWrappedNativeJSClassInfo(JSEqualityOp *equality)
-{
-    // Expose the equality pointer used by IS_WRAPPER_CLASS(). If that macro
-    // ever changes, this function needs to stay in sync.
-
-    *equality = &XPC_WN_Equality;
-
-    return NS_OK;
-}
-
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
 NS_IMETHODIMP 
 nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, 

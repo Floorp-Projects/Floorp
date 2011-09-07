@@ -1966,6 +1966,7 @@ public:
     JSBool AllowPropModsToPrototype()     GET_IT(ALLOW_PROP_MODS_TO_PROTOTYPE)
     JSBool DontSharePrototype()           GET_IT(DONT_SHARE_PROTOTYPE)
     JSBool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
+    JSBool UseStubEqualityHook()          GET_IT(USE_STUB_EQUALITY_HOOK)
 
 #undef GET_IT
 };
