@@ -135,7 +135,6 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     memset(&main, 0, sizeof main);
     current = &main;
     firstLine = prolog.currentLine = main.currentLine = lineno;
-    prolog.noteMask = main.noteMask = SRCNOTE_CHUNK - 1;
 }
 
 bool
@@ -7445,22 +7444,20 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
 static intN
 AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
 {
-    intN index;
-    JSArenaPool *pool;
-    size_t size;
-
-    index = CG_NOTE_COUNT(cg);
-    if (((uintN)index & CG_NOTE_MASK(cg)) == 0) {
-        pool = cg->notePool;
-        size = SRCNOTE_SIZE(CG_NOTE_MASK(cg) + 1);
+    intN index = CG_NOTE_COUNT(cg);
+    if ((uintN)index == CG_NOTE_LIMIT(cg)) {
         if (!CG_NOTES(cg)) {
-            /* Allocate the first note array lazily; leave noteMask alone. */
-            JS_ARENA_ALLOCATE_CAST(CG_NOTES(cg), jssrcnote *, pool, size);
-        } else {
-            /* Grow by doubling note array size; update noteMask on success. */
-            JS_ARENA_GROW_CAST(CG_NOTES(cg), jssrcnote *, pool, size, size);
+            /* Allocate the first note array lazily. */
+            size_t size = SRCNOTE_SIZE(SRCNOTE_CHUNK);
+            JS_ARENA_ALLOCATE_CAST(CG_NOTES(cg), jssrcnote *, cg->notePool, size);
             if (CG_NOTES(cg))
-                CG_NOTE_MASK(cg) = (CG_NOTE_MASK(cg) << 1) | 1;
+                CG_NOTE_LIMIT(cg) = SRCNOTE_CHUNK;
+        } else {
+            /* Grow by doubling note array size. */
+            size_t size = SRCNOTE_SIZE(CG_NOTE_LIMIT(cg));
+            JS_ARENA_GROW_CAST(CG_NOTES(cg), jssrcnote *, cg->notePool, size, size);
+            if (CG_NOTES(cg))
+                CG_NOTE_LIMIT(cg) *= 2;
         }
         if (!CG_NOTES(cg)) {
             js_ReportOutOfMemory(cx);
@@ -7556,15 +7553,15 @@ GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
     JSArenaPool *pool;
     size_t size;
 
-    /* Grow by doubling note array size; update noteMask on success. */
+    /* Grow by doubling note array size; update noteLimit on success. */
     pool = cg->notePool;
-    size = SRCNOTE_SIZE(CG_NOTE_MASK(cg) + 1);
+    size = SRCNOTE_SIZE(CG_NOTE_LIMIT(cg));
     JS_ARENA_GROW_CAST(CG_NOTES(cg), jssrcnote *, pool, size, size);
     if (!CG_NOTES(cg)) {
         js_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    CG_NOTE_MASK(cg) = (CG_NOTE_MASK(cg) << 1) | 1;
+    CG_NOTE_LIMIT(cg) *= 2;
     return JS_TRUE;
 }
 
@@ -7589,7 +7586,7 @@ js_AddToSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, jssrcnote *sn,
         SN_SET_DELTA(sn, newdelta);
     } else {
         index = sn - cg->main.notes;
-        if ((cg->main.noteCount & cg->main.noteMask) == 0) {
+        if (cg->main.noteCount == cg->main.noteLimit) {
             if (!GrowSrcNotes(cx, cg))
                 return NULL;
             sn = cg->main.notes + index;
@@ -7664,11 +7661,11 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
             index = sn - CG_NOTES(cg);
 
             /*
-             * Simultaneously test to see if the source note array must grow to
-             * accommodate either the first or second byte of additional storage
-             * required by this 3-byte offset.
+             * Test to see if the source note array must grow to accommodate
+             * either the first or second byte of additional storage required
+             * by this 3-byte offset.
              */
-            if (((CG_NOTE_COUNT(cg) + 1) & CG_NOTE_MASK(cg)) <= 1) {
+            if (CG_NOTE_COUNT(cg) + 1 >= CG_NOTE_LIMIT(cg)) {
                 if (!GrowSrcNotes(cx, cg))
                     return JS_FALSE;
                 sn = CG_NOTES(cg) + index;
