@@ -555,6 +555,21 @@ var BrowserUI = {
     } else {
       Elements.urlbarState.removeAttribute("tablet");
     }
+
+    // Tablet mode changes the size of the thumbnails
+    // in the tabs container. Hence we have to force a
+    // thumbnail update on all tabs.
+    setTimeout(function(self) {
+      self._updateAllTabThumbnails();
+    }, 0, this);
+  },
+
+  _updateAllTabThumbnails: function() {
+    let tabs = Browser.tabs;
+
+    tabs.forEach(function(tab) {
+      tab.updateThumbnail({ force: true });
+    });
   },
 
   update: function(aState) {
