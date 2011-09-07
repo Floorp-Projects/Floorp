@@ -124,11 +124,6 @@ function onAlertLoad()
 
   sizeToContent();
 
-  // Work around a bug where sizeToContent() leaves a border outside of the content
-  var contentDim = document.getElementById("alertBox").boxObject;
-  if (window.innerWidth == contentDim.width + 1)
-    --window.innerWidth;
-
   // Start with a 1px width/height, because 0 causes trouble with gtk1/2
   gCurrentSize = 1;
 
