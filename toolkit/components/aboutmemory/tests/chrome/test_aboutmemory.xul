@@ -105,17 +105,6 @@
           f("perc2",            OTHER,   PERCENTAGE, 10000);
           f("perc1",            OTHER,   PERCENTAGE, 4567);
        }
-     },
-     { collectReports: function(cbObj, closure) {
-          // The amounts are given in pages, so multiply here by 4kb.
-          function f(p, a) { cbObj.callback("", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
-          f("map/vsize/a",     24);
-          f("map/swap/a",       1);
-          f("map/swap/a",       2);
-          f("map/vsize/a",      19);
-          f("map/swap/b/c",     10);
-          f("map/resident/a",   42);
-       }
      }
   ];
   for (var i = 0; i < fakeReporters.length; i++) {
@@ -203,20 +192,6 @@ Explicit Allocations\n\
 ├───11.00 MB (01.76%) -- heap-unclassified\n\
 └────0.58 MB (00.09%) -- (2 omitted)\n\
 \n\
-Resident Set Size (RSS) Breakdown\n\
-0.16 MB (100.0%) -- resident\n\
-└──0.16 MB (100.0%) -- a\n\
-\n\
-Virtual Size Breakdown\n\
-0.17 MB (100.0%) -- vsize\n\
-└──0.17 MB (100.0%) -- a [2]\n\
-\n\
-Swap Usage Breakdown\n\
-0.05 MB (100.0%) -- swap\n\
-├──0.04 MB (76.92%) -- b\n\
-│  └──0.04 MB (76.92%) -- c\n\
-└──0.01 MB (23.08%) -- a [2]\n\
-\n\
 Other Measurements\n\
 500.00 MB -- heap-allocated\n\
 100.00 MB -- heap-unallocated\n\
@@ -238,15 +213,6 @@ Explicit Allocations\n\
 ├────200.00 MB (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mo...)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
-Resident Set Size (RSS) Breakdown\n\
-0.00 MB (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0.00 MB (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0.00 MB (100.0%) -- swap\n\
-\n\
 Other Measurements\n\
   666.00 MB -- danger<script>window.alert(1)</script>\n\
 1,000.00 MB -- heap-allocated\n\
@@ -262,15 +228,6 @@ Explicit Allocations\n\
 │  ├──333.00 MB (42.86%) -- b\n\
 │  └────0.00 MB (00.00%) -- (1 omitted)\n\
 └────0.00 MB (00.00%) -- (2 omitted)\n\
-\n\
-Resident Set Size (RSS) Breakdown\n\
-0.00 MB (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0.00 MB (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0.00 MB (100.0%) -- swap\n\
 \n\
 Other Measurements\n\
 0.00 MB -- heap-allocated [*]\n\
@@ -307,20 +264,6 @@ Explicit Allocations\n\
 ├──────510,976 B (00.08%) -- d\n\
 └──────102,400 B (00.02%) -- e\n\
 \n\
-Resident Set Size (RSS) Breakdown\n\
-172,032 B (100.0%) -- resident\n\
-└──172,032 B (100.0%) -- a\n\
-\n\
-Virtual Size Breakdown\n\
-176,128 B (100.0%) -- vsize\n\
-└──176,128 B (100.0%) -- a [2]\n\
-\n\
-Swap Usage Breakdown\n\
-53,248 B (100.0%) -- swap\n\
-├──40,960 B (76.92%) -- b\n\
-│  └──40,960 B (76.92%) -- c\n\
-└──12,288 B (23.08%) -- a [2]\n\
-\n\
 Other Measurements\n\
 524,288,000 B -- heap-allocated\n\
 104,857,600 B -- heap-unallocated\n\
@@ -342,15 +285,6 @@ Explicit Allocations\n\
 ├────209,715,200 B (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
-Resident Set Size (RSS) Breakdown\n\
-0 B (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0 B (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0 B (100.0%) -- swap\n\
-\n\
 Other Measurements\n\
   698,351,616 B -- danger<script>window.alert(1)</script>\n\
 1,048,576,000 B -- heap-allocated\n\
@@ -367,15 +301,6 @@ Explicit Allocations\n\
 │  └────────────0 B (00.00%) -- d [*] [2]\n\
 ├────────────0 B (00.00%) -- b [*]\n\
 └────────────0 B (00.00%) -- heap-unclassified [*]\n\
-\n\
-Resident Set Size (RSS) Breakdown\n\
-0 B (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0 B (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0 B (100.0%) -- swap\n\
 \n\
 Other Measurements\n\
 0 B -- heap-allocated [*]\n\
@@ -403,44 +328,22 @@ Other Measurements\n\
     SimpleTest.finish();
   }
 
-  function check(actual, expected) {
-    var a = actual.QueryInterface(Ci.nsISupportsString).data;
-    if (a != expected) {
-      dump("*******ACTUAL*******\n");
-      dump(a);
-      dump("******EXPECTED******\n");
-      dump(expected);
-      dump("********************\n");
-      return false;
-    }
-    return true;
-  }
-
   // Cut+paste the entire page and check that the cut text matches what we
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
   function test(aFrame, aExpectedText, aNext) {
-    // Click all h2.collapsed elements so they expand.
-    var win = document.querySelector("#" + aFrame).contentWindow;
-    var nodes = win.document.querySelectorAll("pre.collapsed");
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].classList.toggle('collapsed');
-    }
-
-    SimpleTest.executeSoon(function() {
-      document.querySelector("#" + aFrame).focus();
-      SimpleTest.waitForClipboard(function(actual) { return check(actual, aExpectedText) },
-        function() {
-          synthesizeKey("A", {accelKey: true});
-          synthesizeKey("C", {accelKey: true});
-        },
-        aNext,
-        function() {
-          ok(false, "pasted text doesn't match for " + aFrame);
-          finish();
-        }
-      );
-    });
+    document.querySelector("#" + aFrame).focus();
+    SimpleTest.waitForClipboard(aExpectedText,
+      function() {
+        synthesizeKey("A", {accelKey: true});
+        synthesizeKey("C", {accelKey: true});
+      },
+      aNext,
+      function() {
+        ok(false, "pasted text doesn't match for " + aFrame);
+        finish();
+      }
+    );
   }
 
   addLoadEvent(function() {
