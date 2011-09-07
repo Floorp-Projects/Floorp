@@ -140,7 +140,6 @@ _TEST_FILES	= \
 		test_bug642026.html \
 		test_bug648465.html \
 		test_bug654137.html \
-		test_bug684544.html \
 		test_window_bar.html \
 		file_window_bar.html \
 		test_resize_move_windows.html \
