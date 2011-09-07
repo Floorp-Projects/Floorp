@@ -62,6 +62,7 @@
 #endif
 
 #include "WebGLTexelConversions.h"
+#include "WebGLValidateStrings.h"
 
 using namespace mozilla;
 
@@ -182,8 +183,8 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
     if (!GetGLName<WebGLProgram>("bindAttribLocation: program", pobj, &progname))
         return NS_OK;
 
-    if (name.IsEmpty())
-        return ErrorInvalidValue("BindAttribLocation: name can't be null or empty");
+    if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
+        return NS_OK;
 
     if (!ValidateAttribIndex(location, "bindAttribLocation"))
         return NS_OK;
@@ -1856,7 +1857,7 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
     if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLIdentifier(name, "getAttribLocation"))
+    if (!ValidateGLSLVariableName(name, "getAttribLocation"))
         return NS_OK; 
 
     MakeContextCurrent();
@@ -2671,7 +2672,7 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
     if (!GetConcreteObjectAndGLName("getUniformLocation: program", pobj, &prog, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLIdentifier(name, "getUniformLocation"))
+    if (!ValidateGLSLVariableName(name, "getUniformLocation"))
         return NS_OK; 
 
     MakeContextCurrent();
@@ -3970,8 +3971,25 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
                                        gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT,
                                        &resources);
 
-        nsPromiseFlatCString src(shader->Source());
-        const char *s = src.get();
+        // We're storing an actual instance of StripComments because, if we don't, the 
+        // cleanSource nsAString instance will be destroyed before the reference is
+        // actually used.
+        StripComments stripComments(shader->Source());
+        const nsAString& cleanSource = nsString(stripComments.result().Elements(), stripComments.length());
+        if (!ValidateGLSLString(cleanSource, "compileShader"))
+            return NS_OK;
+
+        const nsPromiseFlatString& flatSource = PromiseFlatString(cleanSource);
+
+        // shaderSource() already checks that the source stripped of comments is in the
+        // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
+        const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
+    
+        const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
+        if (sourceCString.Length() > maxSourceLength)
+            return ErrorInvalidValue("compileShader: source has more than %d characters", maxSourceLength);
+
+        const char *s = sourceCString.get();
 
         if (!ShCompile(compiler, &s, 1, SH_OBJECT_CODE)) {
             int len = 0;
@@ -4012,15 +4030,10 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         shader->SetTranslationSuccess();
 
         ShDestruct(compiler);
-    } else
-#endif
-    {
-        const char *s = nsDependentCString(shader->Source()).get();
-        gl->fShaderSource(shadername, 1, &s, NULL);
-        shader->SetTranslationSuccess();
-    }
 
-    gl->fCompileShader(shadername);
+        gl->fCompileShader(shadername);
+    }
+#endif
 
     return NS_OK;
 }
@@ -4119,7 +4132,7 @@ WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
     if (!GetConcreteObjectAndGLName("getShaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
 
-    CopyASCIItoUTF16(shader->Source(), retval);
+    retval.Assign(shader->Source());
 
     return NS_OK;
 }
@@ -4131,19 +4144,16 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("shaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
-    
-    const nsPromiseFlatString& flatSource = PromiseFlatString(source);
 
-    if (!NS_IsAscii(flatSource.get()))
-        return ErrorInvalidValue("shaderSource: non-ascii characters found in source");
+    // We're storing an actual instance of StripComments because, if we don't, the 
+    // cleanSource nsAString instance will be destroyed before the reference is
+    // actually used.
+    StripComments stripComments(source);
+    const nsAString& cleanSource = nsString(stripComments.result().Elements(), stripComments.length());
+    if (!ValidateGLSLString(cleanSource, "compileShader"))
+        return NS_OK;
 
-    const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
-    
-    const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
-    if (sourceCString.Length() > maxSourceLength)
-        return ErrorInvalidValue("shaderSource: source has more than %d characters", maxSourceLength);
-    
-    shader->SetSource(sourceCString);
+    shader->SetSource(source);
 
     shader->SetNeedsTranslation();
 

@@ -1,10 +1,8 @@
 conformance/drawingbuffer-static-canvas-test.html
 conformance/drawingbuffer-test.html
 conformance/framebuffer-object-attachment.html
-conformance/gl-getshadersource.html
 conformance/glsl-conformance.html
 conformance/glsl-long-variable-names.html
-conformance/invalid-passed-params.html
 conformance/premultiplyalpha-test.html
 conformance/read-pixels-test.html
 conformance/more/conformance/quickCheckAPI.html
