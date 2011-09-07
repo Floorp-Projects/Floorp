@@ -1212,15 +1212,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->upvarMap.clear();
     }
 
-    /* Set global for compileAndGo scripts. */
-    if (script->compileAndGo) {
-        GlobalScope *globalScope = cg->compiler()->globalScope;
-        if (globalScope->globalObj && globalScope->globalObj->isGlobal())
-            script->where.global = globalScope->globalObj->asGlobal();
-        else if (cx->globalObject->isGlobal())
-            script->where.global = cx->globalObject->asGlobal();
-    }
-
     if (cg->globalUses.length()) {
         memcpy(script->globals()->vector, &cg->globalUses[0],
                cg->globalUses.length() * sizeof(GlobalSlotArray::Entry));

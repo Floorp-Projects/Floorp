@@ -2195,6 +2195,19 @@ stubs::Unbrand(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::UnbrandThis(VMFrame &f)
+{
+    if (!ComputeThis(f.cx, f.fp()))
+        THROW();
+    Value &thisv = f.fp()->thisValue();
+    if (!thisv.isObject())
+        return;
+    JSObject *obj = &thisv.toObject();
+    if (obj->isNative())
+        obj->unbrand(f.cx);
+}
+
+void JS_FASTCALL
 stubs::Pos(VMFrame &f)
 {
     if (!ToNumber(f.cx, &f.regs.sp[-1]))
@@ -2518,6 +2531,27 @@ stubs::Exception(VMFrame &f)
 
     f.regs.sp[0] = f.cx->getPendingException();
     f.cx->clearPendingException();
+}
+
+void JS_FASTCALL
+stubs::FunctionFramePrologue(VMFrame &f)
+{
+    if (!f.fp()->functionPrologue(f.cx))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::FunctionFrameEpilogue(VMFrame &f)
+{
+    f.fp()->functionEpilogue();
+}
+
+void JS_FASTCALL
+stubs::AnyFrameEpilogue(VMFrame &f)
+{
+    if (f.fp()->isNonEvalFunctionFrame())
+        f.fp()->functionEpilogue();
+    stubs::ScriptDebugEpilogue(f);
 }
 
 template <bool Clamped>

@@ -3018,11 +3018,10 @@ CreateThisForFunctionWithType(JSContext *cx, types::TypeObject *type, JSObject *
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
-    JSScript *calleeScript = callee->getFunctionPrivate()->script();
     JSObject *res;
 
     if (proto) {
-        types::TypeObject *type = proto->getNewType(cx, calleeScript);
+        types::TypeObject *type = proto->getNewType(cx, callee->getFunctionPrivate());
         if (!type)
             return NULL;
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
@@ -3032,7 +3031,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
     }
 
     if (res && cx->typeInferenceEnabled())
-        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(res));
+        TypeScript::SetThis(cx, callee->getFunctionPrivate()->script(), types::Type::ObjectType(res));
 
     return res;
 }
@@ -3740,6 +3739,10 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(!a->isDenseArray() && !b->isDenseArray());
     JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
 
+    /* New types for a JSObject need to be stable when trading guts. */
+    TypeObject *newTypeA = a->newType;
+    TypeObject *newTypeB = b->newType;
+
     /* Trade the guts of the objects. */
     const size_t size = a->structSize();
     if (size == b->structSize()) {
@@ -3810,6 +3813,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         reserved.newaslots = NULL;
         reserved.newbslots = NULL;
     }
+
+    a->newType = newTypeA;
+    b->newType = newTypeB;
 }
 
 /*
@@ -4418,6 +4424,14 @@ bool
 JSObject::growSlots(JSContext *cx, size_t newcap)
 {
     /*
+     * Slots are only allocated for call objects when new properties are
+     * added to them, which can only happen while the call is still on the
+     * stack (and an eval, DEFFUN, etc. happens). We thus do not need to
+     * worry about updating any active outer function args/vars.
+     */
+    JS_ASSERT_IF(isCall(), maybeCallObjStackFrame() != NULL);
+
+    /*
      * When an object with CAPACITY_DOUBLING_MAX or fewer slots needs to
      * grow, double its capacity, to add N elements in amortized O(N) time.
      *
@@ -4483,6 +4497,15 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
 void
 JSObject::shrinkSlots(JSContext *cx, size_t newcap)
 {
+    /*
+     * Refuse to shrink slots for call objects. This only happens in a very
+     * obscure situation (deleting names introduced by a direct 'eval') and
+     * allowing the slots pointer to change may require updating pointers in
+     * the function's active args/vars information.
+     */
+    if (isCall())
+        return;
+
     uint32 oldcap = numSlots();
     JS_ASSERT(newcap <= oldcap);
     JS_ASSERT(newcap >= slotSpan());
