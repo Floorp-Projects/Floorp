@@ -903,7 +903,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
                         JSString *source /* = NULL */,
                         uintN staticLevel /* = 0 */)
 {
-    JSArenaPool codePool, notePool;
     TokenKind tt;
     JSParseNode *pn;
     JSScript *script;
@@ -923,13 +922,10 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!compiler.init(chars, length, filename, lineno, version))
         return NULL;
 
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
-
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
-    JSCodeGenerator cg(&parser, &codePool, &notePool, tokenStream.getLineno());
+    JSCodeGenerator cg(&parser, tokenStream.getLineno());
     if (!cg.init(cx, JSTreeContext::USED_AS_TREE_CONTEXT))
         return NULL;
 
@@ -1118,8 +1114,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         script = NULL;
 
   out:
-    JS_FinishArenaPool(&codePool);
-    JS_FinishArenaPool(&notePool);
     Probes::compileScriptEnd(cx, script, filename, lineno);
     return script;
 
@@ -1774,15 +1768,10 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     if (!compiler.init(chars, length, filename, lineno, version))
         return false;
 
-    /* No early return from after here until the js_FinishArenaPool calls. */
-    JSArenaPool codePool, notePool;
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
-
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
 
-    JSCodeGenerator funcg(&parser, &codePool, &notePool, tokenStream.getLineno());
+    JSCodeGenerator funcg(&parser, tokenStream.getLineno());
     if (!funcg.init(cx, JSTreeContext::USED_AS_TREE_CONTEXT))
         return false;
 
@@ -1852,9 +1841,6 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
         }
     }
 
-    /* Restore saved state and release code generation arenas. */
-    JS_FinishArenaPool(&codePool);
-    JS_FinishArenaPool(&notePool);
     return pn != NULL;
 }
 
