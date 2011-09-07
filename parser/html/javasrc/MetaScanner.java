@@ -578,8 +578,8 @@ public abstract class MetaScanner {
                                 state = MetaScanner.ATTRIBUTE_NAME;
                                 continue stateloop;
                             default:
-                                contentIndex = -1;
-                                charsetIndex = -1;
+                                contentIndex = Integer.MAX_VALUE;
+                                charsetIndex = Integer.MAX_VALUE;
                                 state = MetaScanner.ATTRIBUTE_NAME;
                                 continue stateloop;
                         }
