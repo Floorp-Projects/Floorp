@@ -198,7 +198,7 @@
   <stack flex="1" id="stack">
     <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1" observes="bcast_urlbarState">
       <vbox id="tabs-sidebar" class="sidebar" observes="bcast_uidiscovery">
-        <spacer class="toolbar-height"/>
+        <spacer class="toolbar-height" id="tabs-spacer" observes="bcast_urlbarState"/>
         <!-- Left toolbar -->
         <vbox id="tabs-container" class="panel-dark" flex="1">
           <vbox id="tabs" flex="1"
@@ -213,7 +213,7 @@
       </vbox>
 
       <!-- Page Area -->
-      <stack>
+      <stack id="page-stack" observes="bcast_urlbarState">
         <scrollbox id="page-scrollbox">
           <vbox>
             <!-- Main Toolbar -->
