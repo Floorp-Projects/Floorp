@@ -221,17 +221,6 @@ var ExtensionsView = {
     let os = Services.obs;
     os.addObserver(this, "addon-update-started", false);
     os.addObserver(this, "addon-update-ended", false);
-
-    if (!Services.prefs.getBoolPref("extensions.hideUpdateButton"))
-      document.getElementById("addons-update-all").hidden = false;
-
-#ifdef ANDROID
-    // Hide the notification
-    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
-    if (progressListener)
-      progressListener.onCancel(ADDONS_NOTIFICATION_NAME);
-#endif
   },
 
   delayedInit: function ev__delayedInit() {
@@ -259,6 +248,9 @@ var ExtensionsView = {
     this._strings["addonType.locale"] = strings.GetStringFromName("addonType.8");
     this._strings["addonType.search"] = strings.GetStringFromName("addonType.1024");
 
+    if (!Services.prefs.getBoolPref("extensions.hideUpdateButton"))
+      document.getElementById("addons-update-all").hidden = false;
+
     let self = this;
     setTimeout(function() {
       self.getAddonsFromLocal();
@@ -272,6 +264,8 @@ var ExtensionsView = {
     os.removeObserver(this, "addon-update-ended");
 
     AddonManager.removeInstallListener(this._dloadmgr);
+
+    this.hideAlerts();
   },
 
   hideOnSelect: function ev_handleEvent(aEvent) {
@@ -840,6 +834,10 @@ var ExtensionsView = {
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
         alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
                                      aMessage, true, "", observer, ADDONS_NOTIFICATION_NAME);
+
+        // Use a preference to help us cleanup this notification in case we don't shutdown correctly
+        Services.prefs.setBoolPref("browser.notifications.pending.addons", true);
+        Services.prefs.savePrefFile(null);
       }
     }
   },
@@ -848,8 +846,12 @@ var ExtensionsView = {
 #ifdef ANDROID
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
-    progressListener.onCancel(ADDONS_NOTIFICATION_NAME);
+    if (progressListener)
+      progressListener.onCancel(ADDONS_NOTIFICATION_NAME);
 #endif
+
+    // Keep our preference in sync
+    Services.prefs.clearUserPref("browser.notifications.pending.addons");
   },
 };
 
@@ -999,8 +1001,10 @@ AddonInstallListener.prototype = {
 #ifdef ANDROID
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
-    progressListener.onProgress(ADDONS_NOTIFICATION_NAME, aInstall.progress, aInstall.maxProgress);
+    if (progressListener)
+      progressListener.onProgress(ADDONS_NOTIFICATION_NAME, aInstall.progress, aInstall.maxProgress);
 #endif
+
     if (!element)
       return;
 
