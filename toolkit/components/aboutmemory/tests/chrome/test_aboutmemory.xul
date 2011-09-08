@@ -144,7 +144,7 @@
     f("2nd", "explicit/a/b/c",  HEAP,      1 * MB), // dup: merge
     f("2nd", "explicit/flip\\the\\backslashes",
                                 HEAP,    200 * MB),
-    f("2nd", "explicit/compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)",
+    f("2nd", "explicit/compartment(compartment-url)",
                                 HEAP,    200 * MB),
     // The escaping of compartment names must prevent this script from running.
     f("2nd", "danger<script>window.alert(1)</script>",
@@ -235,7 +235,7 @@ Explicit Allocations\n\
 │    └──499.00 MB (49.90%) -- b\n\
 │       └──499.00 MB (49.90%) -- c [3]\n\
 ├────200.00 MB (20.00%) -- flip/the/backslashes\n\
-├────200.00 MB (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mo...)\n\
+├────200.00 MB (20.00%) -- compartment(compartment-url)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
 Resident Set Size (RSS) Breakdown\n\
@@ -339,7 +339,7 @@ Explicit Allocations\n\
 │    └──523,239,424 B (49.90%) -- b\n\
 │       └──523,239,424 B (49.90%) -- c [3]\n\
 ├────209,715,200 B (20.00%) -- flip/the/backslashes\n\
-├────209,715,200 B (20.00%) -- compartment(this-will-be-truncated-in-non-verbose-mode-abcdefghijklmnopqrstuvwxyz)\n\
+├────209,715,200 B (20.00%) -- compartment(compartment-url)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
 Resident Set Size (RSS) Breakdown\n\

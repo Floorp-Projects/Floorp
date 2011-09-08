@@ -287,6 +287,11 @@ function update()
   content.parentNode.replaceChild(content.cloneNode(false), content);
   content = $("content");
 
+  if (gVerbose)
+    content.parentNode.classList.add('verbose');
+  else
+    content.parentNode.classList.add('non-verbose');
+
   // Generate output for one process at a time.  Always start with the
   // Main process.
   var reportersByProcess = getReportersByProcess();
@@ -804,17 +809,9 @@ function flipBackslashes(aStr)
   return aStr.replace(/\\/g, '/');
 }
 
-// Truncate the URL in a compartment name if not in verbose mode.
-function truncateCompartmentName(aStr)
-{
-  return (gVerbose)
-       ? aStr
-       : aStr.replace(/compartment\((.{40}).*\)/, 'compartment($1...)');
-}
-
 function prepName(aStr)
 {
-  return escapeAll(flipBackslashes(truncateCompartmentName(aStr)));
+  return escapeAll(flipBackslashes(aStr));
 }
 
 function prepDesc(aStr)
