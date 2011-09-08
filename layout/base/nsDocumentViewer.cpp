@@ -3299,8 +3299,17 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width, height),
-                     NS_ERROR_FAILURE);
+   /* presContext's size was calculated in app units and has already been
+      rounded to the equivalent pixels (so the width/height calculation
+      we just performed was probably exact, though it was based on
+      values already rounded during ResizeReflow). In a surprising
+      number of instances, this rounding makes a window which for want
+      of one extra pixel's width ends up wrapping the longest line of
+      text during actual window layout. This makes the window too short,
+      generally clipping the OK/Cancel buttons. Here we add one pixel
+      to the calculated width, to circumvent this problem. */
+   NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width+1, height),
+      NS_ERROR_FAILURE);
 
    return NS_OK;
 }
