@@ -35,12 +35,17 @@
   background: #000;
 }
 
-#tabs[tablet="true"] > scrollbox {
+#tabs[tablet="true"] > .tabs-scrollbox {
   max-width: 200px;
+  -moz-box-orient: vertical;
 }
 
 #tabs[tablet="true"] .tabs-list {
-  -moz-column-width: 200px;
+}
+
+#tabs[tablet="true"] .tabs-list {
+  width: 200px;
+  -moz-column-width: auto;
   -moz-padding-end: 0px;
   -moz-padding-start: 0px;
 }
