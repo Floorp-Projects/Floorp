@@ -1213,15 +1213,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->upvarMap.clear();
     }
 
-    /* Set global for compileAndGo scripts. */
-    if (script->compileAndGo) {
-        GlobalScope *globalScope = cg->compiler()->globalScope;
-        if (globalScope->globalObj && globalScope->globalObj->isGlobal())
-            script->where.global = globalScope->globalObj->asGlobal();
-        else if (cx->globalObject->isGlobal())
-            script->where.global = cx->globalObject->asGlobal();
-    }
-
     if (cg->globalUses.length()) {
         memcpy(script->globals()->vector, &cg->globalUses[0],
                cg->globalUses.length() * sizeof(GlobalSlotArray::Entry));
@@ -1297,6 +1288,18 @@ JSScript::dataSize()
     uint8 *dataEnd = code + length * sizeof(jsbytecode) + numNotes() * sizeof(jssrcnote);
     JS_ASSERT(dataEnd >= data);
     return dataEnd - data;
+}
+
+size_t
+JSScript::dataSize(JSUsableSizeFun usf)
+{
+#if JS_SCRIPT_INLINE_DATA_LIMIT
+    if (data == inlineData)
+        return 0;
+#endif
+
+    size_t usable = usf(data);
+    return usable ? usable : dataSize();
 }
 
 void

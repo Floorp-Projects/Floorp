@@ -244,8 +244,8 @@ MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
     if (IS_GC_MARKING_TRACER(trc)) {
         if (type->singleton)
             MarkObject(trc, *type->singleton, "type_singleton");
-        if (type->functionScript)
-            MarkScript(trc, type->functionScript, "functionScript");
+        if (type->interpretedFunction)
+            MarkObject(trc, *type->interpretedFunction, "type_function");
     }
 }
 
@@ -435,7 +435,7 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
         Mark(trc, reinterpret_cast<Shape *>(thing));
         break;
       case JSTRACE_TYPE_OBJECT:
-        Mark(trc, reinterpret_cast<types::TypeObject *>(thing));
+        MarkTypeObject(trc, reinterpret_cast<types::TypeObject *>(thing), "type_stack");
         break;
       case JSTRACE_IONCODE:
         Mark(trc, reinterpret_cast<ion::IonCode *>(thing));
@@ -445,8 +445,8 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
         Mark(trc, static_cast<JSXML *>(thing));
         break;
 #endif
-        default:
-            JS_ASSERT(false);
+      default:
+        JS_NOT_REACHED("unknown trace kind");
     }
 }
 
@@ -882,8 +882,6 @@ MarkChildren(JSTracer *trc, JSScript *script)
 
     if (!script->isCachedEval && script->u.object)
         MarkObject(trc, *script->u.object, "object");
-    if (script->hasFunction)
-        MarkObject(trc, *script->function(), "script_fun");
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
@@ -893,6 +891,9 @@ MarkChildren(JSTracer *trc, JSScript *script)
 #endif
 
     script->bindings.trace(trc);
+
+    if (script->types)
+        script->types->trace(trc);
 
 #ifdef JS_METHODJIT
     if (script->jitNormal)
@@ -948,7 +949,7 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
         PushMarkStack(gcmarker, type->proto);
 
     if (type->newScript) {
-        PushMarkStack(gcmarker, type->newScript->script);
+        PushMarkStack(gcmarker, type->newScript->fun);
         PushMarkStack(gcmarker, type->newScript->shape);
     }
 
@@ -988,12 +989,12 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
         MarkObject(trc, *type->singleton, "type_singleton");
 
     if (type->newScript) {
-        MarkScript(trc, type->newScript->script, "type_new_script");
+        MarkObject(trc, *type->newScript->fun, "type_new_function");
         MarkShape(trc, type->newScript->shape, "type_new_shape");
     }
 
-    if (type->functionScript)
-        MarkScript(trc, type->functionScript, "functionScript");
+    if (type->interpretedFunction)
+        MarkObject(trc, *type->interpretedFunction, "type_function");
 }
 
 void

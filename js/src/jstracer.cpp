@@ -2502,33 +2502,43 @@ TraceMonitor::getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_s
 }
 
 size_t
-TraceMonitor::getVMAllocatorsMainSize() const
+TraceMonitor::getVMAllocatorsMainSize(JSUsableSizeFun usf) const
 {
     size_t n = 0;
     if (dataAlloc)
-        n += dataAlloc->getBytesAllocated();
+        n += dataAlloc->getBytesAllocated(usf);
     if (traceAlloc)
-        n += traceAlloc->getBytesAllocated();
+        n += traceAlloc->getBytesAllocated(usf);
     if (tempAlloc)
-        n += tempAlloc->getBytesAllocated();
+        n += tempAlloc->getBytesAllocated(usf);
     return n;
 }
 
 size_t
-TraceMonitor::getVMAllocatorsReserveSize() const
+TraceMonitor::getVMAllocatorsReserveSize(JSUsableSizeFun usf) const
 {
-    return dataAlloc->mReserveSize +
-           traceAlloc->mReserveSize +
-           tempAlloc->mReserveSize;
+    size_t usable = usf(dataAlloc->mReserve) +
+                    usf(traceAlloc->mReserve) +
+                    usf(tempAlloc->mReserve);
+    return usable ? usable : dataAlloc->mReserveSize +
+                             traceAlloc->mReserveSize +
+                             tempAlloc->mReserveSize;
 }
 
 size_t
-TraceMonitor::getTraceMonitorSize() const
+TraceMonitor::getTraceMonitorSize(JSUsableSizeFun usf) const
 {
-    return sizeof(TraceMonitor) +           // TraceMonitor
-           sizeof(*storage) +               // TraceNativeStorage
-           recordAttempts->tableSize() +    // RecordAttemptMap
-           loopProfiles->tableSize();       // LoopProfileMap
+    /*
+     * Measures: TraceMonitor, TraceNativeStorage, RecordAttemptMap,
+     * LoopProfileMap.  |countMe| is true for both sizeOf() calls because the
+     * two HashMaps are not inline in TraceMonitor.
+     */
+    size_t usableTM  = usf((void *)this);
+    size_t usableTNS = usf(storage);
+    return (usableTM  ? usableTM  : sizeof(*this)) +
+           (usableTNS ? usableTNS : sizeof(*storage)) +
+           recordAttempts->sizeOf(usf, /* countMe */true) +
+           loopProfiles->sizeOf(usf, /* countMe */true);
 }
 
 /*

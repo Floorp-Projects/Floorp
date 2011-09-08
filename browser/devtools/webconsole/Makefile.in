@@ -45,11 +45,14 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
-		HUDService.jsm \
 		PropertyPanel.jsm \
 		NetworkHelper.jsm \
 		AutocompletePopup.jsm \
 		gcli.jsm \
+		$(NULL)
+
+EXTRA_PP_JS_MODULES = \
+		HUDService.jsm \
 		$(NULL)
 
 ifdef ENABLE_TESTS
