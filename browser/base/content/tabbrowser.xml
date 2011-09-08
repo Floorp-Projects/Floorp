@@ -3676,12 +3676,9 @@
         <body><![CDATA[
           if (tab.parentNode != this)
             return;
+          tab._fullyOpen = true;
 
           this.adjustTabstrip();
-
-          if (tab._fullyOpen)
-            return;
-          tab._fullyOpen = true;
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
@@ -3724,10 +3721,14 @@
 
         var tab = event.target;
 
-        if (tab.getAttribute("fadein") == "true")
-          this._handleNewTab(tab);
-        else if (tab.closing)
+        if (tab.getAttribute("fadein") == "true") {
+          if (tab._fullyOpen)
+            this.adjustTabstrip();
+          else
+            this._handleNewTab(tab);
+        } else if (tab.closing) {
           this.tabbrowser._endRemoveTab(tab);
+        }
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
