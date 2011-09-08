@@ -96,6 +96,10 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet="true"] 
   list-style-image: url("chrome://browser/skin/images/close-active-tablet-hdpi.png");
 }
 
+.documenttab-reload[tablet="true"] {
+  background: url("chrome://browser/skin/images/tab-reopen-tablet-hdpi.png");
+}
+
 #newtab-button[tablet="true"] {
   list-style-image: url("images/newtab-default-tablet-hdpi.png");
 }
