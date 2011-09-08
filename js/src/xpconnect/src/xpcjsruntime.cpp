@@ -1448,41 +1448,7 @@ MakeMemoryReporterPath(const nsACString &pathPrefix,
 
 } // anonymous namespace
 
-class XPConnectGCChunkAllocator
-    : public js::GCChunkAllocator
-{
-public:
-    XPConnectGCChunkAllocator() {}
-
-private:
-    virtual void *doAlloc() {
-        void *chunk;
-#ifdef MOZ_MEMORY
-        // posix_memalign returns zero on success, nonzero on failure.
-        if (posix_memalign(&chunk, js::GC_CHUNK_SIZE, js::GC_CHUNK_SIZE))
-            chunk = 0;
-#else
-        chunk = js::AllocGCChunk();
-#endif
-        return chunk;
-    }
-
-    virtual void doFree(void *chunk) {
-#ifdef MOZ_MEMORY
-        free(chunk);
-#else
-        js::FreeGCChunk(chunk);
-#endif
-    }
-};
-
-static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
-
-#ifdef MOZ_MEMORY
-#define JS_GC_HEAP_KIND  nsIMemoryReporter::KIND_HEAP
-#else
 #define JS_GC_HEAP_KIND  nsIMemoryReporter::KIND_NONHEAP
-#endif
 
 // We have per-compartment GC heap totals, so we can't put the total GC heap
 // size in the explicit allocations tree.  But it's a useful figure, so put it
@@ -2089,8 +2055,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
             NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
 
         mJSRuntime->setActivityCallback(ActivityCallback, this);
-
-        mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));

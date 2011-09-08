@@ -665,7 +665,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsNavigatorSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
+                           nsIXPCScriptable::WANT_PRECREATE |
+                           nsIXPCScriptable::WANT_NEWRESOLVE)
   NS_DEFINE_CLASSINFO_DATA(Plugin, nsPluginSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PluginArray, nsPluginArraySH,
@@ -2014,7 +2015,8 @@ CutPrefix(const char *aName) {
 nsresult
 nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
 {
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   nameSpaceManager->RegisterClassName(sClassInfoData[aClassInfoID].mName,
@@ -2030,7 +2032,8 @@ nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
 nsresult
 nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
 {
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
   PRBool found_old;
 
@@ -2082,7 +2085,8 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
 nsresult
 nsDOMClassInfo::RegisterExternalClasses()
 {
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIComponentRegistrar> registrar;
@@ -5531,7 +5535,8 @@ private:
   {
     *aNameStruct = nsnull;
 
-    nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+    nsScriptNameSpaceManager *nameSpaceManager =
+      nsJSRuntime::GetNameSpaceManager();
     if (!nameSpaceManager) {
       NS_ERROR("Can't get namespace manager.");
       return NS_ERROR_UNEXPECTED;
@@ -5739,7 +5744,8 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
   NS_ASSERTION(nameSpaceManager, "Can't get namespace manager?");
 
   const nsIID *class_iid;
@@ -6092,7 +6098,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 {
   *did_resolve = PR_FALSE;
 
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   nsDependentJSString name(id);
@@ -7020,6 +7027,77 @@ nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 }
 
 // DOM Navigator helper
+
+NS_IMETHODIMP
+nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, jsid id, PRUint32 flags,
+                          JSObject **objp, PRBool *_retval)
+{
+  if (!JSID_IS_STRING(id) || (flags & JSRESOLVE_ASSIGNING)) {
+    return NS_OK;
+  }
+
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+
+  nsDependentJSString name(id);
+
+  const nsGlobalNameStruct *name_struct = nsnull;
+
+  nameSpaceManager->LookupNavigatorName(name, &name_struct);
+
+  if (!name_struct) {
+    return NS_OK;
+  }
+  NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeNavigatorProperty,
+               "unexpected type");
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  jsval prop_val = JSVAL_VOID; // Property value.
+
+  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
+
+  if (gpi) {
+    JSObject *global = JS_GetGlobalForObject(cx, obj);
+
+    nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(globalNative);
+
+    if (!window) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    rv = gpi->Init(window, &prop_val);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (JSVAL_IS_PRIMITIVE(prop_val)) {
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = WrapNative(cx, obj, native, PR_TRUE, &prop_val,
+                    getter_AddRefs(holder));
+
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!JS_WrapValue(cx, &prop_val)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val, nsnull, nsnull,
+                                      JSPROP_ENUMERATE);
+
+  *_retval = PR_TRUE;
+  *objp = obj;
+
+  return ok ? NS_OK : NS_ERROR_FAILURE;
+}
+
+// static
 nsresult
 nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                          JSObject *globalObj, JSObject **parentObj)

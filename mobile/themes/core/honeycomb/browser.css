@@ -37,6 +37,7 @@
 
 %filter substitution
 %include defines.inc
+%define honeycomb 1
 
 /* main toolbar (URL bar) -------------------------------------------------- */
 #toolbar-main {
@@ -1018,6 +1019,7 @@ documenttab[selected="true"] > stack > .documenttab-thumbnail {
 .documenttab-close-container {
   position: relative;
   left: -16px;
+  -moz-margin-start: -16px;
   -moz-margin-end: 49px;
 }
 
@@ -1694,42 +1696,6 @@ setting {
   to { -moz-transform: translateX(0); }
 }
 
-/* Tablet mode */
-
-.spacer-actionbar,
-.button-actionbar {
-  visibility: collapse;
-}
-
-.button-actionbar[disabled="true"] {
-  opacity: 0.5;
-}
-
-#toolbar-main[tablet="true"] > .spacer-actionbar,
-#toolbar-main[tablet="true"] > .button-actionbar {
-  visibility: visible;
-}
-
-#controls-scrollbox[tablet="true"] > #controls-sidebar {
-  visibility: collapse;
-}
-
-#controls-scrollbox[tablet="true"] > #tabs-sidebar {
-  border: none;
-  position: fixed;
-  top: @touch_button_xlarge@;
-  visibility: collapse;
-}
-#controls-scrollbox[tablet="true"] > #tabs-sidebar:-moz-locale-dir(ltr) {
-  left: 0;
-}
-#controls-scrollbox[tablet="true"] > #tabs-sidebar:-moz-locale-dir(rtl) {
-  right: 0;
-}
-#controls-scrollbox[tablet="true"] > #tabs-sidebar[open] {
-  visibility: visible;
-}
-
 /* Text selection handles */
 
 #selectionhandle-start,
@@ -1814,3 +1780,5 @@ setting {
   }
 
 }
+
+%include ../tablet.css
