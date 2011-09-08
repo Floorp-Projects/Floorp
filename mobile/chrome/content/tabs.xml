@@ -162,7 +162,7 @@
 
   <binding id="tablist">
     <content>
-      <xul:scrollbox anonid="tabs-scrollbox" flex="1">
+      <xul:scrollbox anonid="tabs-scrollbox" class="tabs-scrollbox" flex="1">
         <xul:vbox class="tabs-list" anonid="tabs-children" />
       </xul:scrollbox>
       <xul:box class="tabs-list" anonid="tabs-undo"/>
@@ -285,7 +285,7 @@
             // We can't rely on getBoundingClientRect() for this.children height
             // it is not synced (sometimes, especially during resize) with the 
             // style.height rule
-            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(parseInt(this.children.style.height) / (firstBox.height + 4)));
+            let columnsCount = Util.isTablet() ? 1 : Math.ceil(this.children.childNodes.length / Math.floor(parseInt(this.children.style.height) / (firstBox.height + 4)));
             if (this._columnsCount != columnsCount && window.innerWidth > 1) { // > 1 to ignore column resizing while the main window is loading
               let width = columnsCount * (COLUMN_MARGIN + firstBox.width);
               this.children.style.width = width + "px";
