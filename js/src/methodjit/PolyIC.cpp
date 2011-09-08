@@ -1219,7 +1219,7 @@ class GetPropCompiler : public PICStubCompiler
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 4);
         masm.storeArg(3, vpReg);
-        masm.storeArg(2, ImmPtr((void *) JSID_BITS(shape->propid)));
+        masm.storeArg(2, ImmPtr((void *) JSID_BITS(SHAPE_USERID(shape))));
         masm.storeArg(1, holdObjReg);
         masm.storeArg(0, cxReg);
 
