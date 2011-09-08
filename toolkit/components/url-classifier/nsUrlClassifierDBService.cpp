@@ -179,10 +179,6 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define UPDATE_DELAY_TIME           "urlclassifier.updatetime"
 #define UPDATE_DELAY_TIME_DEFAULT   60
 
-// XOR value for encoding domains-present in the prefix tree,
-// to distinguish them from completely blocked domains.
-#define ENCODE_DOMAIN_MAGIC 0xAF154126
-
 class nsUrlClassifierDBServiceWorker;
 
 // Singleton instance.
@@ -513,7 +509,6 @@ protected:
   nsCOMPtr<mozIStorageStatement> mPartialEntriesBeforeStatement;
 
   nsCOMPtr<mozIStorageStatement> mAllPrefixStatement;
-  nsCOMPtr<mozIStorageStatement> mDomainPrefixStatement;
 };
 
 nsresult
@@ -576,12 +571,6 @@ nsUrlClassifierStore::Init(nsUrlClassifierDBServiceWorker *worker,
      getter_AddRefs(mAllPrefixStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mConnection->CreateStatement
-    (NS_LITERAL_CSTRING("SELECT domain FROM ") + entriesName +
-     NS_LITERAL_CSTRING(" GROUP BY domain"),
-     getter_AddRefs(mDomainPrefixStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -601,7 +590,6 @@ nsUrlClassifierStore::Close()
   mLastPartialEntriesStatement = nsnull;
 
   mAllPrefixStatement = nsnull;
-  mDomainPrefixStatement = nsnull;
 
   mConnection = nsnull;
 }
@@ -1033,6 +1021,12 @@ nsUrlClassifierSubStore::Close()
 static nsresult GetHostKeys(const nsACString &spec,
                             nsTArray<nsCString> &hostKeys);
 
+// take a lookup string (www.hostname.com/path/to/resource.html) and
+// expand it into the set of fragments that should be searched for in an
+// entry
+static nsresult GetLookupFragments(const nsCSubstring& spec,
+                                   nsTArray<nsCString>& fragments);
+
 // Check for a canonicalized IP address.
 static PRBool IsCanonicalizedIP(const nsACString& host);
 
@@ -1168,12 +1162,6 @@ private:
 
   // Reset the in-progress update
   void ResetUpdate();
-
-  // take a lookup string (www.hostname.com/path/to/resource.html) and
-  // expand it into the set of fragments that should be searched for in an
-  // entry
-  nsresult GetLookupFragments(const nsCSubstring& spec,
-                              nsTArray<nsCString>& fragments);
 
   // Get the database key for a given URI.  This is the top three
   // domain components if they exist, otherwise the top two.
@@ -1397,28 +1385,28 @@ nsUrlClassifierDBServiceWorker::QueueLookup(const nsACString& spec,
 }
 
 nsresult
-nsUrlClassifierDBService::CheckCleanHost(const nsACString &spec,
-                                         PRBool* clean)
+nsUrlClassifierDBService::CheckClean(const nsACString &spec,
+                                     PRBool *clean)
 {
-  nsAutoTArray<nsCString, 2> lookupHosts;
-  nsresult rv = GetHostKeys(spec, lookupHosts);
+  // Get the set of fragments to look up.
+  nsTArray<nsCString> fragments;
+  nsresult rv = GetLookupFragments(spec, fragments);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *clean = PR_TRUE;
 
-  for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
-    nsUrlClassifierDomainHash hostKeyHash;
-    hostKeyHash.FromPlaintext(lookupHosts[i], mHash);
+  for (PRUint32 i = 0; i < fragments.Length(); i++) {
+    nsUrlClassifierDomainHash fragmentKeyHash;
+    fragmentKeyHash.FromPlaintext(fragments[i], mHash);
 
-    // First probe the PrefixSet for presence
-    PRUint32 domainkey = hostKeyHash.ToUint32() ^ ENCODE_DOMAIN_MAGIC;
+    PRUint32 fragkey = fragmentKeyHash.ToUint32();
 
     PRBool found;
     PRBool ready = PR_FALSE;  /* opportunistic probe */
-    rv = mPrefixSet->Probe(domainkey, &ready, &found);
+    rv = mPrefixSet->Probe(fragkey, &ready, &found);
     NS_ENSURE_SUCCESS(rv, rv);
-    LOG(("CheckCleanHost Probed %X ready: %d found: %d ",
-         domainkey, ready, found));
+    LOG(("CheckClean Probed %X ready: %d found: %d ",
+         fragkey, ready, found));
     if (found || !ready) {
       *clean = PR_FALSE;
     }
@@ -1427,9 +1415,65 @@ nsUrlClassifierDBService::CheckCleanHost(const nsACString &spec,
   return NS_OK;
 }
 
+static nsresult GetHostKeys(const nsACString &spec,
+                            nsTArray<nsCString> &hostKeys)
+{
+  nsACString::const_iterator begin, end, iter;
+  spec.BeginReading(begin);
+  spec.EndReading(end);
+
+  iter = begin;
+  if (!FindCharInReadable('/', iter, end)) {
+    return NS_OK;
+  }
+
+  const nsCSubstring& host = Substring(begin, iter);
+
+  if (IsCanonicalizedIP(host)) {
+    nsCString *key = hostKeys.AppendElement();
+    if (!key)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    key->Assign(host);
+    key->Append("/");
+    return NS_OK;
+  }
+
+  nsTArray<nsCString> hostComponents;
+  ParseString(PromiseFlatCString(host), '.', hostComponents);
+
+  if (hostComponents.Length() < 2) {
+    // no host or toplevel host, this won't match anything in the db
+    return NS_OK;
+  }
+
+  // First check with two domain components
+  PRInt32 last = PRInt32(hostComponents.Length()) - 1;
+  nsCString *lookupHost = hostKeys.AppendElement();
+  if (!lookupHost)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  lookupHost->Assign(hostComponents[last - 1]);
+  lookupHost->Append(".");
+  lookupHost->Append(hostComponents[last]);
+  lookupHost->Append("/");
+
+  // Now check with three domain components
+  if (hostComponents.Length() > 2) {
+    nsCString *lookupHost2 = hostKeys.AppendElement();
+    if (!lookupHost2)
+      return NS_ERROR_OUT_OF_MEMORY;
+    lookupHost2->Assign(hostComponents[last - 2]);
+    lookupHost2->Append(".");
+    lookupHost2->Append(*lookupHost);
+  }
+
+ return NS_OK;
+}
+
 nsresult
-nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
-                                                   nsTArray<nsCString>& fragments)
+GetLookupFragments(const nsACString& spec,
+                   nsTArray<nsCString>& fragments)
 {
   fragments.Clear();
 
@@ -1534,71 +1578,68 @@ nsresult
 nsUrlClassifierDBServiceWorker::Check(const nsACString& spec,
                                       nsTArray<nsUrlClassifierLookupResult>& results)
 {
+  PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
+
+  // Get list of host keys to look up
+  nsAutoTArray<nsCString, 2> lookupHosts;
+  nsresult rv = GetHostKeys(spec, lookupHosts);
+
+  nsTArray<nsUrlClassifierEntry> mCachedEntries;
+
+  // Gather host's prefixes
+  for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
+    // Find the corresponding host key
+    nsUrlClassifierDomainHash hostKey;
+    nsresult rv = GetKey(lookupHosts[i], hostKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // Read the entries for this fragments host from SQLite
+    mMainStore.ReadAddEntries(hostKey, mCachedEntries);
+  }
+
   // Now get the set of fragments to look up.
   nsTArray<nsCString> fragments;
-  nsresult rv = GetLookupFragments(spec, fragments);
+  rv = GetLookupFragments(spec, fragments);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt64 now = (PR_Now() / PR_USEC_PER_SEC);
 
   // Now check each lookup fragment against the entries in the DB.
   for (PRUint32 i = 0; i < fragments.Length(); i++) {
     nsUrlClassifierCompleteHash lookupHash;
     lookupHash.FromPlaintext(fragments[i], mCryptoHash);
 
-    PRUint32 fragmentkey = lookupHash.ToUint32();
-    PRBool treeReady = PR_TRUE; /* force wait for set loaded */
-    PRBool foundPrefix;
-    rv = mPrefixSet->Probe(fragmentkey, &treeReady, &foundPrefix);
-    NS_ENSURE_SUCCESS(rv, rv);
-    LOG(("Worker Check probed: %X ready: %d found: %d",
-         fragmentkey, treeReady, foundPrefix));
+    for (PRUint32 j = 0; j < mCachedEntries.Length(); j++) {
+      nsUrlClassifierEntry &entry = mCachedEntries[j];
+      if (entry.Match(lookupHash)) {
+        // If the entry doesn't contain a complete hash, we need to
+        // save it here so that it can be compared against the
+        // complete hash.  However, we don't set entry.mHaveComplete
+        // because it isn't a verified part of the entry yet.
+        nsUrlClassifierLookupResult *result = results.AppendElement();
+        if (!result)
+          return NS_ERROR_OUT_OF_MEMORY;
 
-    if (foundPrefix) {
-      // Find the corresponding host key
-      nsUrlClassifierDomainHash hostKey;
-      nsresult rv = GetKey(fragments[i], hostKey);
-      NS_ENSURE_SUCCESS(rv, rv);
+        result->mLookupFragment = lookupHash;
+        result->mEntry = entry;
 
-      // Read the entries for this fragments host from SQLite
-      nsTArray<nsUrlClassifierEntry> mCachedEntries;
-      mMainStore.ReadAddEntries(hostKey, mCachedEntries);
+        // Fill in the table name.
+        GetTableName(entry.mTableId, result->mTableName);
 
-      for (PRUint32 j = 0; j < mCachedEntries.Length(); j++) {
-        nsUrlClassifierEntry &entry = mCachedEntries[j];
-        if (entry.Match(lookupHash)) {
-          // If the entry doesn't contain a complete hash, we need to
-          // save it here so that it can be compared against the
-          // complete hash.  However, we don't set entry.mHaveComplete
-          // because it isn't a verified part of the entry yet.
-          nsUrlClassifierLookupResult *result = results.AppendElement();
-          if (!result)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-          result->mLookupFragment = lookupHash;
-          result->mEntry = entry;
-
-          // Fill in the table name.
-          GetTableName(entry.mTableId, result->mTableName);
-
-          PRBool fresh;
-          PRInt64 tableUpdateTime;
-          if (mTableFreshness.Get(result->mTableName, &tableUpdateTime)) {
-            LOG(("tableUpdateTime: %lld, now: %lld, freshnessGuarantee: %d\n",
-                 tableUpdateTime, now, gFreshnessGuarantee));
-            fresh = ((now - tableUpdateTime) <= gFreshnessGuarantee);
-          } else {
-            LOG(("No expiration time for this table.\n"));
-            fresh = PR_FALSE;
-          }
-
-          // This is a confirmed result if we match a complete fragment in
-          // an up-to-date table.
-          result->mConfirmed = entry.mHaveComplete && fresh;
-
-          LOG(("Found a result.  complete=%d, fresh=%d",
-               entry.mHaveComplete, fresh));
+        PRBool fresh;
+        PRInt64 tableUpdateTime;
+        if (mTableFreshness.Get(result->mTableName, &tableUpdateTime)) {
+          LOG(("tableUpdateTime: %lld, now: %lld, freshnessGuarantee: %d\n",
+               tableUpdateTime, now, gFreshnessGuarantee));
+          fresh = ((now - tableUpdateTime) <= gFreshnessGuarantee);
+        } else {
+          LOG(("No expiration time for this table.\n"));
+          fresh = PR_FALSE;
         }
+
+        // This is a confirmed result if we match a complete fragment in
+        // an up-to-date table.
+        result->mConfirmed = entry.mHaveComplete && fresh;
+
+        LOG(("Found a result.  complete=%d, fresh=%d",
+             entry.mHaveComplete, fresh));
       }
     }
   }
@@ -1843,7 +1884,6 @@ nsUrlClassifierDBServiceWorker::GetTableName(PRUint32 tableId,
   mozStorageStatementScoper findScoper(mGetTableNameStatement);
   nsresult rv = mGetTableNameStatement->BindInt32ByIndex(0, tableId);
   NS_ENSURE_SUCCESS(rv, rv);
-
   PRBool exists;
   rv = mGetTableNameStatement->ExecuteStep(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2012,62 +2052,6 @@ nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
   lookupHost.Append("/");
 
   return hash.FromPlaintext(lookupHost, mCryptoHash);
-}
-
-static nsresult GetHostKeys(const nsACString &spec,
-                            nsTArray<nsCString> &hostKeys)
-{
-  nsACString::const_iterator begin, end, iter;
-  spec.BeginReading(begin);
-  spec.EndReading(end);
-
-  iter = begin;
-  if (!FindCharInReadable('/', iter, end)) {
-    return NS_OK;
-  }
-
-  const nsCSubstring& host = Substring(begin, iter);
-
-  if (IsCanonicalizedIP(host)) {
-    nsCString *key = hostKeys.AppendElement();
-    if (!key)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    key->Assign(host);
-    key->Append("/");
-    return NS_OK;
-  }
-
-  nsTArray<nsCString> hostComponents;
-  ParseString(PromiseFlatCString(host), '.', hostComponents);
-
-  if (hostComponents.Length() < 2) {
-    // no host or toplevel host, this won't match anything in the db
-    return NS_OK;
-  }
-
-  // First check with two domain components
-  PRInt32 last = PRInt32(hostComponents.Length()) - 1;
-  nsCString *lookupHost = hostKeys.AppendElement();
-  if (!lookupHost)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  lookupHost->Assign(hostComponents[last - 1]);
-  lookupHost->Append(".");
-  lookupHost->Append(hostComponents[last]);
-  lookupHost->Append("/");
-
-  // Now check with three domain components
-  if (hostComponents.Length() > 2) {
-    nsCString *lookupHost2 = hostKeys.AppendElement();
-    if (!lookupHost2)
-      return NS_ERROR_OUT_OF_MEMORY;
-    lookupHost2->Assign(hostComponents[last - 2]);
-    lookupHost2->Append(".");
-    lookupHost2->Append(*lookupHost);
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -3447,30 +3431,9 @@ nsUrlClassifierDBServiceWorker::OpenDb()
 nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array)
 {
   mozStorageStatementScoper scoper(mAllPrefixStatement);
-  mozStorageStatementScoper scopertoo(mDomainPrefixStatement);
   PRBool hasMoreData;
-  PRUint32 dcnt = 0;
   PRUint32 pcnt = 0;
   PRUint32 fcnt = 0;
-
-  while (NS_SUCCEEDED(mDomainPrefixStatement->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    PRUint32 domainval;
-    PRUint32 size;
-
-    const PRUint8 *blobdomain = mDomainPrefixStatement->AsSharedBlob(0, &size);
-    if (!blobdomain || (size != DOMAIN_LENGTH))
-      return PR_FALSE;
-
-    domainval = *(reinterpret_cast<const PRUint32*>(blobdomain));
-
-    // Encode that the domain is present.
-    // We need to encode this so it will not match with
-    // the same entry with an empty path.
-    domainval ^= ENCODE_DOMAIN_MAGIC;
-
-    array.AppendElement(domainval);
-    dcnt++;
-  }
 
   while (NS_SUCCEEDED(mAllPrefixStatement->ExecuteStep(&hasMoreData)) && hasMoreData) {
     PRUint32 prefixval;
@@ -3500,7 +3463,7 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array)
     pcnt++;
   }
 
-  LOG(("SB domains: %d prefixes: %d fulldomain: %d\n", dcnt, pcnt, fcnt));
+  LOG(("SB prefixes: %d fulldomain: %d\n", pcnt, fcnt));
 
   return NS_OK;
 }
@@ -4106,10 +4069,10 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
   if (forceLookup) {
     *didLookup = PR_TRUE;
   } else {
-    // Check if the URI is on a clean host.  If so, we don't need to
-    // bother queueing up a lookup, we can just return.
+    // Check if the URI is clean.  If so, we don't need to
+    // bother queueing up a lookup, we can just return.;
     PRBool clean;
-    rv = CheckCleanHost(key, &clean);
+    rv = CheckClean(key, &clean);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!clean) {

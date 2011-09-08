@@ -106,8 +106,8 @@ private:
   nsresult Shutdown();
 
   // Check if the key is on a known-clean host.
-  nsresult CheckCleanHost(const nsACString &lookupKey,
-                          PRBool *clean);
+  nsresult CheckClean(const nsACString &lookupKey,
+                      PRBool *clean);
 
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> mWorkerProxy;
