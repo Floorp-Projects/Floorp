@@ -186,8 +186,6 @@ var BrowserUI = {
   },
 
   lockToolbar: function lockToolbar() {
-    if (Util.isTablet())
-      return;
     this._toolbarLocked++;
     document.getElementById("toolbar-moveable-container").top = "0";
     if (this._toolbarLocked == 1)
@@ -381,6 +379,11 @@ var BrowserUI = {
     return this._toolbarH;
   },
 
+  get sidebarW() {
+    delete this._sidebarW;
+    return this._sidebarW = Elements.controls.getBoundingClientRect().width;
+  },
+
   sizeControls: function(windowW, windowH) {
     // tabs
     document.getElementById("tabs").resize();
@@ -549,27 +552,11 @@ var BrowserUI = {
   },
 
   updateTabletLayout: function updateTabletLayout() {
-    if (Util.isTablet({ forceUpdate: true })) {
-      this.unlockToolbar();
+    let tabletPref = Services.prefs.getIntPref("browser.ui.layout.tablet");
+    if (tabletPref == 1 || (tabletPref == -1 && Util.isTablet()))
       Elements.urlbarState.setAttribute("tablet", "true");
-    } else {
+    else
       Elements.urlbarState.removeAttribute("tablet");
-    }
-
-    // Tablet mode changes the size of the thumbnails
-    // in the tabs container. Hence we have to force a
-    // thumbnail update on all tabs.
-    setTimeout(function(self) {
-      self._updateAllTabThumbnails();
-    }, 0, this);
-  },
-
-  _updateAllTabThumbnails: function() {
-    let tabs = Browser.tabs;
-
-    tabs.forEach(function(tab) {
-      tab.updateThumbnail({ force: true });
-    });
   },
 
   update: function(aState) {
