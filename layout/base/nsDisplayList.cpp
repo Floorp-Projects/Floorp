@@ -2624,6 +2624,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
   /* Now, apply the transform and pass it down the channel. */
   nsRect resultingRect;
   if (aRect.width == 1 && aRect.height == 1) {
+    // Magic width/height indicating we're hit testing a point, not a rect
     gfxPoint point = matrix.Inverse().ProjectPoint(
                        gfxPoint(NSAppUnitsToFloatPixels(aRect.x, factor),
                                 NSAppUnitsToFloatPixels(aRect.y, factor)));

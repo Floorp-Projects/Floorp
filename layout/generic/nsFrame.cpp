@@ -1546,13 +1546,20 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRect = aDirtyRect;
 
   PRBool inTransform = aBuilder->IsInTransform();
-  /* If we're being transformed, we need to invert the matrix transform so that we don't 
-   * grab points in the wrong coordinate system!
-   */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
-    /* If we have a complex transform, just grab the entire overflow rect instead. */
+    // Transform dirtyRect into our frame's local coordinate space. Note that
+    // the new value is the bounds of the old value's transformed vertices, so
+    // the area covered by dirtyRect may increase here.
+    //
+    // Although we don't bother to check for and maintain the 1x1 size of the
+    // magic rect indicating a hit test point, in reality this is extremely
+    // unlikely to matter. The rect starts off with dimensions of 1x1 *app*
+    // units, and it would require a very large number of elements with
+    // transforms along a parent chain to noticably expand this by an entire
+    // device pixel.
     if (Preserves3DChildren() || !nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
+      // we have a singular transform - just grab the entire overflow rect
       dirtyRect = GetVisualOverflowRectRelativeToSelf();
     }
     inTransform = PR_TRUE;
@@ -1653,20 +1660,23 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // resultList was emptied
     resultList.AppendToTop(item);
   }
- 
-  /* If there are any SVG effects, wrap up the list in an effects list. */
+
+  /* If there are any SVG effects, wrap the list up in an SVG effects item
+   * (which also handles CSS group opacity). Note that we create an SVG effects
+   * item even if resultList is empty, since a filter can produce graphical
+   * output even if the element being filtered wouldn't otherwise do so.
+   */
   if (usingSVGEffects) {
     /* List now emptied, so add the new list to the top. */
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
       return rv;
-  } else
-
-  /* If there is any opacity, wrap it up in an opacity list.
-   * If there's nothing in the list, don't add anything.
+  }
+  /* Else, if the list is non-empty and there is CSS group opacity without SVG
+   * effects, wrap it up in an opacity item.
    */
-  if (disp->mOpacity < 1.0f && !resultList.IsEmpty()) {
+  else if (disp->mOpacity < 1.0f && !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
@@ -1869,8 +1879,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     PRBool applyAbsPosClipping =
         ApplyAbsPosClipping(aBuilder, disp, aChild, &clipRect);
     // A pseudo-stacking context (e.g., a positioned element with z-index auto).
-    // we allow positioned descendants of this element to escape to our
-    // container's positioned descendant list, because they might be
+    // We allow positioned descendants of the child to escape to our parent
+    // stacking context's positioned descendant list, because they might be
     // z-index:non-auto
     nsDisplayListCollection pseudoStack;
     nsRect clippedDirtyRect = dirty;
