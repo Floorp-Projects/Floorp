@@ -50,8 +50,12 @@ namespace js {
 namespace ion {
 
 static const Register rax = { JSC::X86Registers::eax };
+static const Register rbx = { JSC::X86Registers::ebx };
 static const Register rcx = { JSC::X86Registers::ecx };
 static const Register rdx = { JSC::X86Registers::edx };
+static const Register rsi = { JSC::X86Registers::esi };
+static const Register rdi = { JSC::X86Registers::edi };
+static const Register rbp = { JSC::X86Registers::ebp };
 static const Register r8  = { JSC::X86Registers::r8  };
 static const Register r9  = { JSC::X86Registers::r9  };
 static const Register r10 = { JSC::X86Registers::r10 };
@@ -60,15 +64,17 @@ static const Register r12 = { JSC::X86Registers::r12 };
 static const Register r13 = { JSC::X86Registers::r13 };
 static const Register r14 = { JSC::X86Registers::r14 };
 static const Register r15 = { JSC::X86Registers::r15 };
-static const Register rdi = { JSC::X86Registers::edi };
-static const Register rsi = { JSC::X86Registers::esi };
-static const Register rbx = { JSC::X86Registers::ebx };
-static const Register rbp = { JSC::X86Registers::ebp };
 static const Register rsp = { JSC::X86Registers::esp };
 
-// Aliased x86 registers for common assertions.
+// X86-common synonyms.
 static const Register eax = rax;
+static const Register ebx = rbx;
+static const Register ecx = rcx;
 static const Register edx = rdx;
+static const Register esi = rsi;
+static const Register edi = rdi;
+static const Register ebp = rbp;
+static const Register esp = rsp;
 
 static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
@@ -78,6 +84,8 @@ static const Register JSReturnReg = rcx;
 static const Register ReturnReg = rax;
 static const Register ScratchReg = r11;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm15 };
+
+static const Register ArgumentsRectifierReg = { JSC::X86Registers::r8 };
 
 // Different argument registers for WIN64
 #if defined(_WIN64)

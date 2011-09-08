@@ -82,15 +82,8 @@ FrameSizeClass::frameSize() const
 bool
 CodeGeneratorX64::visitValue(LValue *value)
 {
-    jsval_layout jv;
-    jv.asBits = JSVAL_BITS(Jsvalify(value->value()));
-
     LDefinition *reg = value->getDef(0);
-
-    if (value->value().isMarkable())
-        masm.movq(ImmGCPtr(jv.asPtr), ToRegister(reg));
-    else
-        masm.movq(ImmWord(jv.asBits), ToRegister(reg));
+    masm.moveValue(value->value(), ToRegister(reg));
     return true;
 }
 

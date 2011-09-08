@@ -103,6 +103,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(Operand op, const Register &dest) {
         movq(op, dest);
     }
+    void moveValue(const Value &val, const Register &dest) {
+        movq(ImmWord((void *)val.asRawBits()), dest);
+    }
 
     /////////////////////////////////////////////////////////////////
     // Common interface.
