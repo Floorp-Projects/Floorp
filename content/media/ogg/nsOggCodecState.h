@@ -273,7 +273,7 @@ public:
 };
 
 // Returns 1 if the Theora info struct is decoding a media of Theora
-// verion (maj,min,sub) or later, otherwise returns 0.
+// version (maj,min,sub) or later, otherwise returns 0.
 int TheoraVersion(th_info* info,
                   unsigned char maj,
                   unsigned char min,

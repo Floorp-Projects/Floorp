@@ -600,9 +600,9 @@ nsresult mozInlineSpellChecker::Cleanup(PRBool aDestroyingFrames)
 //    do that and caches the result so we don't have to keep allocating those
 //    objects if there are no dictionaries or spellchecking.
 //
-//    Whenever dictionaries are added or removed at runtime, this value must be
-//    updated before an observer notification is sent out about the change, to
-//    avoid editors getting a wrong cached result.
+//    This caching will prevent adding dictionaries at runtime if we start out
+//    with no dictionaries! Installing dictionaries as extensions will require
+//    a restart anyway, so it shouldn't be a problem.
 
 PRBool // static
 mozInlineSpellChecker::CanEnableInlineSpellChecking()
@@ -623,12 +623,6 @@ mozInlineSpellChecker::CanEnableInlineSpellChecking()
       gCanEnableSpellChecking = SpellCheck_Available;
   }
   return (gCanEnableSpellChecking == SpellCheck_Available);
-}
-
-void // static
-mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking()
-{
-  gCanEnableSpellChecking = SpellCheck_Uninitialized;
 }
 
 // mozInlineSpellChecker::RegisterEventListeners

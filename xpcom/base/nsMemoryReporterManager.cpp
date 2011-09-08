@@ -308,30 +308,22 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapCommitted,
     KIND_OTHER,
     UNITS_BYTES,
     GetHeapCommitted,
-    "This number reported only for completeness; it is not particularly "
-    "meaningful. On Windows, all mapped memory is committed (because jemalloc's "
-    "MALLOC_DECOMMIT flag is set). Thus heap-committed should equal "
-    "heap-allocated + heap-unallocated. Elsewhere, jemalloc uses "
-    "madvise(DONT_NEED) to instruct the OS to drop the physical memory backing "
-    "pages the allocator doesn't need.  In this case, jemalloc counts the memory "
-    "as 'committed', but it's not taking up any space in physical memory or in "
-    "the swap file.")
+    "Memory mapped by the heap allocator that is committed, i.e. in physical "
+    "memory or paged to disk.  When heap-committed is larger than "
+    "heap-allocated, the difference between the two values is likely due to "
+    "external fragmentation; that is, the allocator allocated a large block of "
+    "memory and is unable to decommit it because a small part of that block is "
+    "currently in use.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapDirty,
     "heap-dirty",
     KIND_OTHER,
     UNITS_BYTES,
     GetHeapDirty,
-    "Memory mapped by the heap allocator that was once part of an allocation "
-    "but which is now not allocated to the application.  Since the application "
-    "may have modified the memory while it was allocated, we count this memory "
-    "as \"committed\", that is, as taking up space in physical memory or the "
-    "swap file.  If memory is fragmented, and the allocator is unable to return "
-    "some mostly-free pages to the operating system because they contain a few "
-    "live objects, you might see a large value here.  But even in the absence "
-    "of fragmentation, the allocator might not return some dirty memory to the "
-    "OS as an optimization, under the assumption that the application will need "
-    "the memory again soon.")
+    "Memory which the allocator could return to the operating system, but "
+    "hasn't.  The allocator keeps this memory around as an optimization, so it "
+    "doesn't have to ask the OS the next time it needs to fulfill a request. "
+    "This value is typically not larger than a few megabytes.")
 
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
 #include <malloc/malloc.h>
@@ -446,8 +438,19 @@ nsMemoryReporterManager::Init()
     REGISTER(Private);
 #endif
 
-#if defined(HAVE_JEMALLOC_STATS)
+#if defined(HAVE_JEMALLOC_STATS) && defined(XP_WIN)
+    // heap-committed is only meaningful where we have MALLOC_DECOMMIT defined
+    // (currently, just on Windows).  Elsewhere, it's the same as
+    // stats->mapped, which is heap-allocated + heap-unallocated.
+    //
+    // Ideally, we'd check for MALLOC_DECOMMIT in the #if defined above, but
+    // MALLOC_DECOMMIT is defined in jemalloc.c, not a header, so we'll just
+    // have to settle for the OS check for now.
+
     REGISTER(HeapCommitted);
+#endif
+
+#if defined(HAVE_JEMALLOC_STATS)
     REGISTER(HeapDirty);
 #elif defined(XP_MACOSX) && !defined(MOZ_MEMORY)
     REGISTER(HeapZone0Committed);
@@ -572,7 +575,10 @@ public:
                         const nsACString &aDescription,
                         nsISupports *aWrappedMRs)
     {
-        if (aKind == nsIMemoryReporter::KIND_NONHEAP && aAmount != PRInt64(-1)) {
+        if (aKind == nsIMemoryReporter::KIND_NONHEAP &&
+            PromiseFlatCString(aPath).Find("explicit") == 0 &&
+            aAmount != PRInt64(-1)) {
+
             MemoryReportsWrapper *wrappedMRs =
                 static_cast<MemoryReportsWrapper *>(aWrappedMRs);
             MemoryReport mr(aPath, aAmount);
@@ -605,7 +611,7 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
     PRInt64 heapUsed = PRInt64(-1);
 
     // Get "heap-allocated" and all the KIND_NONHEAP measurements from vanilla
-    // reporters.
+    // "explicit" reporters.
     nsCOMPtr<nsISimpleEnumerator> e;
     EnumerateReporters(getter_AddRefs(e));
 
@@ -618,10 +624,14 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
         nsresult rv = r->GetKind(&kind);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (kind == nsIMemoryReporter::KIND_NONHEAP) {
-            nsCString path;
-            rv = r->GetPath(path);
-            NS_ENSURE_SUCCESS(rv, rv);
+        nsCString path;
+        rv = r->GetPath(path);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // We're only interested in NONHEAP explicit reporters and
+        // the 'heap-allocated' reporter.
+        if (kind == nsIMemoryReporter::KIND_NONHEAP &&
+            path.Find("explicit") == 0) {
 
             PRInt64 amount;
             rv = r->GetAmount(&amount);
@@ -633,20 +643,14 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
                 MemoryReport mr(path, amount);
                 nonheap.AppendElement(mr);
             }
-        } else {
-            nsCString path;
-            rv = r->GetPath(path);
+        } else if (path.Equals("heap-allocated")) {
+            rv = r->GetAmount(&heapUsed);
             NS_ENSURE_SUCCESS(rv, rv);
-
-            if (path.Equals("heap-allocated")) {
-                rv = r->GetAmount(&heapUsed);
-                NS_ENSURE_SUCCESS(rv, rv);
-                // If "heap-allocated" fails, we give up, because the result
-                // would be horribly inaccurate.
-                if (heapUsed == PRInt64(-1)) {
-                    *aExplicit = PRInt64(-1);
-                    return NS_OK;
-                }
+            // If "heap-allocated" fails, we give up, because the result
+            // would be horribly inaccurate.
+            if (heapUsed == PRInt64(-1)) {
+                *aExplicit = PRInt64(-1);
+                return NS_OK;
             }
         }
     }
@@ -656,6 +660,8 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
     EnumerateMultiReporters(getter_AddRefs(e2));
     nsRefPtr<MemoryReportsWrapper> wrappedMRs =
         new MemoryReportsWrapper(&nonheap);
+
+    // This callback adds only NONHEAP explicit reporters.
     nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback();
 
     while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
@@ -666,8 +672,8 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
 
     // Ignore (by zeroing its amount) any reporter that is a child of another
     // reporter.  Eg. if we have "explicit/a" and "explicit/a/b", zero the
-    // latter.  This is quadratic in the number of NONHEAP reporters, but there
-    // shouldn't be many.
+    // latter.  This is quadratic in the number of explicit NONHEAP reporters,
+    // but there shouldn't be many.
     for (PRUint32 i = 0; i < nonheap.Length(); i++) {
         const nsCString &iPath = nonheap[i].path;
         for (PRUint32 j = i + 1; j < nonheap.Length(); j++) {

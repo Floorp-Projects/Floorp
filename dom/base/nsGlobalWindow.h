@@ -537,6 +537,10 @@ public:
   }
 
   static nsGlobalWindow* GetOuterWindowWithId(PRUint64 aWindowID) {
+    if (!sWindowsById) {
+      return nsnull;
+    }
+
     nsGlobalWindow* outerWindow = sWindowsById->Get(aWindowID);
     return outerWindow && !outerWindow->IsInnerWindow() ? outerWindow : nsnull;
   }

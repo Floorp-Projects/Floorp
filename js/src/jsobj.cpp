@@ -2718,11 +2718,11 @@ obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
 }
 
 size_t
-JSObject::sizeOfSlotsArray(size_t(*mus)(void *))
+JSObject::sizeOfSlotsArray(JSUsableSizeFun usf)
 {
     if (!hasSlotsArray())
         return 0;
-    size_t usable = mus((void *)slots);
+    size_t usable = usf((void *)slots);
     return usable ? usable : numSlots() * sizeof(js::Value);
 }
 
@@ -3018,11 +3018,10 @@ CreateThisForFunctionWithType(JSContext *cx, types::TypeObject *type, JSObject *
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
-    JSScript *calleeScript = callee->getFunctionPrivate()->script();
     JSObject *res;
 
     if (proto) {
-        types::TypeObject *type = proto->getNewType(cx, calleeScript);
+        types::TypeObject *type = proto->getNewType(cx, callee->getFunctionPrivate());
         if (!type)
             return NULL;
         res = CreateThisForFunctionWithType(cx, type, callee->getParent());
@@ -3032,7 +3031,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
     }
 
     if (res && cx->typeInferenceEnabled())
-        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(res));
+        TypeScript::SetThis(cx, callee->getFunctionPrivate()->script(), types::Type::ObjectType(res));
 
     return res;
 }
@@ -3270,9 +3269,28 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
+with_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+                   JSProperty **propp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_LookupProperty(cx, obj, id, objp, propp);
+}
+
+static JSBool
 with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     return obj->getProto()->getProperty(cx, id, vp);
+}
+
+static JSBool
+with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_GetProperty(cx, obj, receiver, id, vp);
 }
 
 static JSBool
@@ -3282,9 +3300,27 @@ with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict
 }
 
 static JSBool
+with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_SetProperty(cx, obj, id, vp, strict);
+}
+
+static JSBool
 with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     return obj->getProto()->getAttributes(cx, id, attrsp);
+}
+
+static JSBool
+with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_GetAttributes(cx, obj, id, attrsp);
 }
 
 static JSBool
@@ -3294,9 +3330,27 @@ with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
+with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_SetAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
 with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     return obj->getProto()->deleteProperty(cx, id, rval, strict);
+}
+
+static JSBool
+with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_DeleteProperty(cx, obj, id, rval, strict);
 }
 
 static JSBool
@@ -3339,12 +3393,19 @@ Class js::WithClass = {
     JS_NULL_CLASS_EXT,
     {
         with_LookupProperty,
+        with_LookupElement,
         NULL,             /* defineProperty */
+        NULL,             /* defineElement */
         with_GetProperty,
+        with_GetElement,
         with_SetProperty,
+        with_SetElement,
         with_GetAttributes,
+        with_GetElementAttributes,
         with_SetAttributes,
+        with_SetElementAttributes,
         with_DeleteProperty,
+        with_DeleteElement,
         with_Enumerate,
         with_TypeOf,
         NULL,             /* fix   */
@@ -3740,6 +3801,10 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     JS_ASSERT(!a->isDenseArray() && !b->isDenseArray());
     JS_ASSERT(!a->isArrayBuffer() && !b->isArrayBuffer());
 
+    /* New types for a JSObject need to be stable when trading guts. */
+    TypeObject *newTypeA = a->newType;
+    TypeObject *newTypeB = b->newType;
+
     /* Trade the guts of the objects. */
     const size_t size = a->structSize();
     if (size == b->structSize()) {
@@ -3810,6 +3875,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         reserved.newaslots = NULL;
         reserved.newbslots = NULL;
     }
+
+    a->newType = newTypeA;
+    b->newType = newTypeB;
 }
 
 /*
@@ -4418,6 +4486,14 @@ bool
 JSObject::growSlots(JSContext *cx, size_t newcap)
 {
     /*
+     * Slots are only allocated for call objects when new properties are
+     * added to them, which can only happen while the call is still on the
+     * stack (and an eval, DEFFUN, etc. happens). We thus do not need to
+     * worry about updating any active outer function args/vars.
+     */
+    JS_ASSERT_IF(isCall(), maybeCallObjStackFrame() != NULL);
+
+    /*
      * When an object with CAPACITY_DOUBLING_MAX or fewer slots needs to
      * grow, double its capacity, to add N elements in amortized O(N) time.
      *
@@ -4483,6 +4559,15 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
 void
 JSObject::shrinkSlots(JSContext *cx, size_t newcap)
 {
+    /*
+     * Refuse to shrink slots for call objects. This only happens in a very
+     * obscure situation (deleting names introduced by a direct 'eval') and
+     * allowing the slots pointer to change may require updating pointers in
+     * the function's active args/vars information.
+     */
+    if (isCall())
+        return;
+
     uint32 oldcap = numSlots();
     JS_ASSERT(newcap <= oldcap);
     JS_ASSERT(newcap >= slotSpan());
