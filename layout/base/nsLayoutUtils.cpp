@@ -1297,7 +1297,7 @@ nsLayoutUtils::GetRemoteContentIds(nsIFrame* aFrame,
   builder.LeavePresShell(aFrame, aTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<nsIFrame*> outFrames;
+  nsAutoTArray<nsIFrame*,8> outFrames;
   nsDisplayItem::HitTestState hitTestState(&aOutIDs);
   list.HitTest(&builder, aTarget, &hitTestState, &outFrames);
   list.DeleteAll();
@@ -1311,7 +1311,7 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
                                 PRBool aIgnoreRootScrollFrame)
 {
   nsresult rv;
-  nsTArray<nsIFrame*> outFrames;
+  nsAutoTArray<nsIFrame*,8> outFrames;
   rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames,
                         aShouldIgnoreSuppression, aIgnoreRootScrollFrame);
   NS_ENSURE_SUCCESS(rv, nsnull);
