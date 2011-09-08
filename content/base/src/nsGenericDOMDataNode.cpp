@@ -748,7 +748,8 @@ nsGenericDOMDataNode::SplitData(PRUint32 aOffset, nsIContent** aReturn,
   CharacterDataChangeInfo::Details details = {
     CharacterDataChangeInfo::Details::eSplit, newContent
   };
-  rv = SetTextInternal(cutStartOffset, cutLength, nsnull, 0, PR_TRUE, &details);
+  rv = SetTextInternal(cutStartOffset, cutLength, nsnull, 0, PR_TRUE,
+                       aCloneAfterOriginal ? &details : nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }
