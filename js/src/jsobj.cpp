@@ -4491,7 +4491,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
      * stack (and an eval, DEFFUN, etc. happens). We thus do not need to
      * worry about updating any active outer function args/vars.
      */
-    JS_ASSERT_IF(isCall(), maybeCallObjStackFrame() != NULL);
+    JS_ASSERT_IF(isCall(), asCall().maybeStackFrame() != NULL);
 
     /*
      * When an object with CAPACITY_DOUBLING_MAX or fewer slots needs to

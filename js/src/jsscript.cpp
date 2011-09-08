@@ -120,7 +120,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     uint16 *indexp;
     PropertyOp getter;
     StrictPropertyOp setter;
-    uint32 slot = JSObject::CALL_RESERVED_SLOTS;
+    uint32 slot = CallObject::RESERVED_SLOTS;
 
     if (kind == ARGUMENT) {
         JS_ASSERT(nvars == 0);
