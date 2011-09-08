@@ -731,13 +731,6 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     // Mark !IonFramePrefix::isEntryFrame().
     uint32 size_descriptor = stack_size << 1;
 
-    // If insufficient arguments are passed, bail.
-    // Bug 685099: Instead of bailing, create a new frame with |undefined| padding.
-    masm.load16(Operand(tokreg, offsetof(JSFunction, nargs)), nargsreg);
-    masm.cmpl(nargsreg, Imm32(call->nargs()));
-    if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
-        return false;
-
     // Nestle %esp up to the argument vector.
     if (unused_stack)
         masm.addPtr(Imm32(unused_stack), StackPointer);
@@ -746,10 +739,35 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     masm.push(tokreg);
     masm.push(Imm32(size_descriptor));
 
-    // Finally, call.
-    masm.movePtr(Operand(objreg, offsetof(IonScript, method_)), objreg);
-    masm.movePtr(Operand(objreg, IonCode::OffsetOfCode()), objreg);
-    masm.call(objreg);
+    // Call the function, padding with |undefined| in case of insufficient args.
+    {
+        Label thunk, rejoin;
+
+        // Get the address of the argumentsRectifier code.
+        IonCompartment *ion = gen->ionCompartment();
+        IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
+        if (!argumentsRectifier)
+            return false;
+
+        // Check whether the provided arguments satisfy target argc.
+        masm.load16(Operand(tokreg, offsetof(JSFunction, nargs)), nargsreg);
+        masm.cmpl(nargsreg, Imm32(call->nargs()));
+        masm.j(Assembler::Above, &thunk);
+
+        // No argument fixup needed. Call the function normally.
+        masm.movePtr(Operand(objreg, offsetof(IonScript, method_)), objreg);
+        masm.movePtr(Operand(objreg, IonCode::OffsetOfCode()), objreg);
+        masm.call(objreg);
+        masm.jump(&rejoin);
+
+        // Argument fixup needed. Create a frame with correct |nargs| and then call.
+        masm.bind(&thunk);
+        masm.mov(Imm32(call->nargs()), ArgumentsRectifierReg);
+        masm.movePtr(ImmWord(argumentsRectifier->raw()), ecx); // safe to take: return reg.
+        masm.call(ecx);
+
+        masm.bind(&rejoin);
+    }
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     int prefix_garbage = 2 * sizeof(void *);

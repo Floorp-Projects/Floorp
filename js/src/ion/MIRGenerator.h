@@ -45,7 +45,10 @@
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
 
+#include "jscntxt.h"
+#include "jscompartment.h"
 #include "IonAllocPolicy.h"
+#include "IonCompartment.h"
 
 namespace js {
 namespace ion {
@@ -109,6 +112,9 @@ class MIRGenerator
     }
     bool ensureBallast() {
         return temp().ensureBallast();
+    }
+    IonCompartment *ionCompartment() const {
+        return cx->compartment->ionCompartment();
     }
 
     template <typename T>

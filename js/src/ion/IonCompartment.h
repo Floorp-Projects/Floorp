@@ -79,8 +79,13 @@ class IonCompartment
     // Error-returning thunk.
     IonCode *returnError_;
 
+    // Argument-rectifying thunk, in the case of insufficient arguments passed
+    // to a function call site. Pads with |undefined|.
+    IonCode *argumentsRectifier_;
+
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateReturnError(JSContext *cx);
+    IonCode *generateArgumentsRectifier(JSContext *cx);
     IonCode *generateBailoutTable(JSContext *cx, uint32 frameClass);
     IonCode *generateBailoutHandler(JSContext *cx);
 
@@ -108,6 +113,16 @@ class IonCompartment
 
     // Infallible; does not generate a table.
     IonCode *getBailoutTable(const FrameSizeClass &frameClass);
+
+    // Fallible; generates a thunk and returns the target.
+    IonCode *getArgumentsRectifier(JSContext *cx) {
+        if (!argumentsRectifier_) {
+            argumentsRectifier_ = generateArgumentsRectifier(cx);
+            if (!argumentsRectifier_)
+                return NULL;
+        }
+        return argumentsRectifier_;
+    }
 
     EnterIonCode enterJIT(JSContext *cx) {
         if (!enterJIT_) {
@@ -169,8 +184,8 @@ class IonActivation
     }
 };
 
-} // namespace js
 } // namespace ion
+} // namespace js
 
 #endif // jsion_ion_compartment_h__
 

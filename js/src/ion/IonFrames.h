@@ -63,15 +63,14 @@ namespace ion {
 
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
-class IonFrameData
+struct IonFrameData
 {
-  protected:
     void *returnAddress_;
     uintptr_t sizeDescriptor_;
     void *calleeToken_;
 };
 
-class IonFramePrefix : public IonFrameData
+class IonFramePrefix : protected IonFrameData
 {
   public:
     // True if this is the frame passed into EnterIonCode.

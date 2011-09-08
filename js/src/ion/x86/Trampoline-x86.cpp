@@ -196,6 +196,92 @@ IonCompartment::generateReturnError(JSContext *cx)
     return linker.newCode(cx);
 }
 
+IonCode *
+IonCompartment::generateArgumentsRectifier(JSContext *cx)
+{
+    MacroAssembler masm(cx);
+
+    // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
+    // Including |this|, there are (|nargs| + 1) arguments to copy.
+    JS_ASSERT(ArgumentsRectifierReg == esi);
+
+    // Load the number of |undefined|s to push into %ecx.
+    masm.movl(Operand(esp, offsetof(IonFrameData, calleeToken_)), eax);
+    masm.load16(Operand(eax, offsetof(JSFunction, nargs)), ecx);
+    masm.subl(esi, ecx);
+
+    masm.moveValue(UndefinedValue(), ebx, edi);
+
+    masm.movl(esp, ebp); // Save %esp.
+
+    // Push undefined.
+    {
+        Label undefLoopTop;
+        masm.bind(&undefLoopTop);
+
+        masm.push(ebx); // type(undefined);
+        masm.push(edi); // payload(undefined);
+        masm.subl(Imm32(1), ecx);
+
+        masm.testl(ecx, ecx);
+        masm.j(Assembler::NonZero, &undefLoopTop);
+    }
+
+    // Get the topmost argument.
+    masm.movl(esi, edi);
+    masm.shll(Imm32(3), edi); // edi <- nargs * sizeof(Value);
+
+    masm.movl(ebp, ecx);
+    masm.addl(Imm32(sizeof(IonFrameData)), ecx);
+    masm.addl(edi, ecx);
+
+    // Push arguments, |nargs| + 1 times (to include |this|).
+    {
+        Label copyLoopTop, initialSkip;
+
+        masm.jump(&initialSkip);
+
+        masm.bind(&copyLoopTop);
+        masm.subl(Imm32(sizeof(Value)), ecx);
+        masm.subl(Imm32(1), esi);
+        masm.bind(&initialSkip);
+
+        masm.mov(Operand(ecx, sizeof(Value)/2), edx);
+        masm.push(edx);
+        masm.mov(Operand(ecx, 0x0), edx);
+        masm.push(edx);
+
+        masm.testl(esi, esi);
+        masm.j(Assembler::NonZero, &copyLoopTop);
+    }
+
+    masm.subl(esp, ebp);
+    masm.shll(Imm32(1), ebp); // construct sizeDescriptor.
+
+    // Construct IonFrameData.
+    masm.push(eax); // calleeToken
+    masm.push(ebp); // sizeDescriptor
+
+    // Call the target function.
+    // Note that this assumes the function is JITted.
+    masm.movl(Operand(eax, offsetof(JSFunction, u.i.script)), eax);
+    masm.movl(Operand(eax, offsetof(JSScript, ion)), eax);
+    masm.movl(Operand(eax, offsetof(IonScript, method_)), eax);
+    masm.movl(Operand(eax, IonCode::OffsetOfCode()), eax);
+    masm.call(eax);
+
+    // Remove the rectifier frame.
+    masm.pop(ebx);            // ebx <- sizeDescriptor
+    masm.shrl(Imm32(1), ebx); // ebx <- size of pushed arguments
+    masm.pop(edi);            // Discard calleeToken
+    masm.addl(ebx, esp);      // Discard pushed arguments.
+
+    masm.ret();
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
 static void
 GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 {
