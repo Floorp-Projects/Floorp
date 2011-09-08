@@ -7,6 +7,8 @@ interface nsIUrlClassifierPrefixSet : nsISupports
 {
   void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
                    in unsigned long aLength);
-
+  void addPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
+                   in unsigned long aLength);
   boolean contains(in unsigned long aPrefix);
+  PRUint32 estimateSize();
 };

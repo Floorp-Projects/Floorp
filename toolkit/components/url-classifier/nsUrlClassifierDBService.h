@@ -45,6 +45,7 @@
 #include "nsID.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIObserver.h"
+#include "nsIUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierHashCompleter.h"
 #include "nsIUrlClassifierDBService.h"
 #include "nsIURIClassifier.h"
@@ -123,6 +124,9 @@ private:
 
   // The list of tables that can use the default hash completer object.
   nsTArray<nsCString> mGethashWhitelist;
+
+  // Set of prefixes known to be in the database
+  nsCOMPtr<nsIUrlClassifierPrefixSet> mPrefixSet;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;
