@@ -89,6 +89,7 @@ var StyleInspector = {
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("src", "chrome://browser/content/csshtmltree.xhtml");
+    iframe.addEventListener("load", SI_iframeOnload, true);
     vbox.appendChild(iframe);
 
     let hbox = win.document.createElement("hbox");
@@ -105,17 +106,31 @@ var StyleInspector = {
     popupSet.appendChild(panel);
 
     /**
+     * Iframe's onload event
+     */
+    let iframeReady = false;
+    function SI_iframeOnload() {
+      iframe.removeEventListener("load", SI_iframeOnload, true);
+      panel.cssLogic = new CssLogic();
+      panel.cssHtmlTree = new CssHtmlTree(iframe, panel.cssLogic, panel);
+      iframeReady = true;
+      if (panelReady) {
+        SI_popupShown.call(panel);
+      }
+    }
+
+    /**
      * Initialize the popup when it is first shown
      */
+    let panelReady = false;
     function SI_popupShown() {
-      if (!this.cssHtmlTree) {
-        this.cssLogic = new CssLogic();
-        this.cssHtmlTree = new CssHtmlTree(iframe, this.cssLogic, this);
+      panelReady = true;
+      if (iframeReady) {
+        let selectedNode = this.selectedNode || null;
+        this.cssLogic.highlight(selectedNode);
+        this.cssHtmlTree.highlight(selectedNode);
+        Services.obs.notifyObservers(null, "StyleInspector-opened", null);
       }
-
-      this.cssLogic.highlight(this.selectedNode);
-      this.cssHtmlTree.highlight(this.selectedNode);
-      Services.obs.notifyObservers(null, "StyleInspector-opened", null);
     }
 
     /**

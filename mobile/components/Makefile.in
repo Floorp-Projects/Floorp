@@ -56,6 +56,7 @@ EXTRA_PP_COMPONENTS = \
         MobileComponents.manifest \
         AboutRedirector.js \
         BrowserCLH.js \
+        BrowserStartup.js \
         DirectoryProvider.js\
         HelperAppDialog.js \
         Sidebar.js \
@@ -64,7 +65,6 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_COMPONENTS = \
         AlertsService.js \
-        BrowserStartup.js \
         ContentPermissionPrompt.js \
         XPIDialogService.js \
         DownloadManagerUI.js \

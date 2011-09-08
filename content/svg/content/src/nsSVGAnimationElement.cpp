@@ -216,7 +216,7 @@ nsSVGAnimationElement::GetStartTime(float* retval)
   FlushAnimations();
 
   nsSMILTimeValue startTime = mTimedElement.GetStartTime();
-  if (!startTime.IsResolved())
+  if (!startTime.IsDefinite())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   *retval = float(double(startTime.GetMillis()) / PR_MSEC_PER_SEC);
@@ -246,7 +246,7 @@ nsSVGAnimationElement::GetSimpleDuration(float* retval)
   // Not necessary to call FlushAnimations() for this
 
   nsSMILTimeValue simpleDur = mTimedElement.GetSimpleDuration();
-  if (!simpleDur.IsResolved()) {
+  if (!simpleDur.IsDefinite()) {
     *retval = 0.f;
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }

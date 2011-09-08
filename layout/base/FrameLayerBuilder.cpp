@@ -1903,26 +1903,29 @@ InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
     foundContainerLayer = PR_TRUE;
   }
 
-  nsIFrame* frame = aFrame;
-  while (frame) {
-    nsIFrame::ChildListIterator lists(frame);
-    for (; !lists.IsDone(); lists.Next()) {
-      nsFrameList::Enumerator childFrames(lists.CurrentList());
-      for (; !childFrames.AtEnd(); childFrames.Next()) {
-        if (InternalInvalidateThebesLayersInSubtree(childFrames.get())) {
-          foundContainerLayer = PR_TRUE;
-        }
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  if (!aFrame->GetFirstPrincipalChild()) {
+    nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(aFrame);
+    if (subdocumentFrame) {
+      // Descend into the subdocument
+      nsIFrame* root = subdocumentFrame->GetSubdocumentRootFrame();
+      if (root) {
+        childListArray.AppendElement(nsIFrame::ChildList(
+          nsFrameList(root, nsLayoutUtils::GetLastSibling(root)),
+          nsIFrame::kPrincipalList));
       }
     }
-    if (frame == aFrame && !frame->GetFirstPrincipalChild()) {
-      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(frame);
-      if (subdocumentFrame) {
-        // Descend into the subdocument
-        frame = subdocumentFrame->GetSubdocumentRootFrame();
-        continue;
+  }
+
+  aFrame->GetChildLists(&childListArray);
+  nsIFrame::ChildListArrayIterator lists(childListArray);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      if (InternalInvalidateThebesLayersInSubtree(childFrames.get())) {
+        foundContainerLayer = PR_TRUE;
       }
     }
-    break;
   }
 
   if (!foundContainerLayer) {
