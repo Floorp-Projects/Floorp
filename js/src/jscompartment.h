@@ -285,9 +285,9 @@ struct TraceMonitor {
     bool outOfMemory() const;
 
     JS_FRIEND_API(void) getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_size) const;
-    JS_FRIEND_API(size_t) getVMAllocatorsMainSize() const;
-    JS_FRIEND_API(size_t) getVMAllocatorsReserveSize() const;
-    JS_FRIEND_API(size_t) getTraceMonitorSize() const;
+    JS_FRIEND_API(size_t) getVMAllocatorsMainSize(JSUsableSizeFun usf) const;
+    JS_FRIEND_API(size_t) getVMAllocatorsReserveSize(JSUsableSizeFun usf) const;
+    JS_FRIEND_API(size_t) getTraceMonitorSize(JSUsableSizeFun usf) const;
 };
 
 namespace mjit {

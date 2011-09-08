@@ -204,6 +204,7 @@ struct CompartmentStats
     PRInt64 objectSlots;
     PRInt64 stringChars;
     PRInt64 propertyTables;
+    PRInt64 shapeKids;
     PRInt64 scriptData;
 
 #ifdef JS_METHODJIT

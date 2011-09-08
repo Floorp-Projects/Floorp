@@ -643,7 +643,8 @@ struct JITScript {
 
     void trace(JSTracer *trc);
 
-    size_t scriptDataSize(size_t(*mus)(void *));
+    /* |usf| can be NULL here, in which case the fallback size computation will be used. */
+    size_t scriptDataSize(JSUsableSizeFun usf);
 
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline) const;
 
