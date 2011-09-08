@@ -66,11 +66,15 @@ public:
   // Do a lookup in the PrefixSet
   // if aReady is set, we will block until there are any entries
   // if not set, we will return in aReady whether we were ready or not
-  NS_IMETHOD Probe(PRUint32 aPrefix, PRBool* aReady, PRBool* aFound);
+  NS_IMETHOD Probe(PRUint32 aPrefix, PRUint32 aKey, PRBool* aReady, PRBool* aFound);
+  // Return the estimated size of the set on disk and in memory,
+  // in bytes
   NS_IMETHOD EstimateSize(PRUint32* aSize);
   NS_IMETHOD IsEmpty(PRBool * aEmpty);
-  NS_IMETHOD LoadFromFile(nsIFile * aFile);
-  NS_IMETHOD StoreToFile(nsIFile * aFile);
+  NS_IMETHOD LoadFromFile(nsIFile* aFile);
+  NS_IMETHOD StoreToFile(nsIFile* aFile);
+  // Return a key that is used to randomize the collisions in the prefixes
+  NS_IMETHOD GetKey(PRUint32* aKey);
 
   NS_DECL_ISUPPORTS
 
@@ -85,10 +89,13 @@ protected:
   PRUint32 BinSearch(PRUint32 start, PRUint32 end, PRUint32 target);
   nsresult LoadFromFd(mozilla::AutoFDClose & fileFd);
   nsresult StoreToFd(mozilla::AutoFDClose & fileFd);
+  nsresult InitKey();
 
   // boolean indicating whether |setPrefixes| has been
   // called with a non-empty array.
   PRBool mHasPrefixes;
+  // key used to randomize hash collisions
+  PRUint32 mRandomKey;
   // the prefix for each index.
   nsTArray<PRUint32> mIndexPrefixes;
   // the value corresponds to the beginning of the run

@@ -488,7 +488,7 @@ public:
                             nsTArray<nsUrlClassifierEntry> &entries);
 
   // Return an array with all Prefixes known
-  nsresult ReadPrefixes(nsTArray<PRUint32>& array);
+  nsresult ReadPrefixes(nsTArray<PRUint32>& array, PRUint32 aKey);
 
 protected:
   nsresult ReadEntries(mozIStorageStatement *statement,
@@ -1030,6 +1030,22 @@ static nsresult GetLookupFragments(const nsCSubstring& spec,
 // Check for a canonicalized IP address.
 static PRBool IsCanonicalizedIP(const nsACString& host);
 
+// Get the database key for a given URI.  This is the top three
+// domain components if they exist, otherwise the top two.
+//  hostname.com/foo/bar -> hostname.com
+//  mail.hostname.com/foo/bar -> mail.hostname.com
+//  www.mail.hostname.com/foo/bar -> mail.hostname.com
+static nsresult GetKey(const nsACString& spec, nsUrlClassifierDomainHash& hash,
+                       nsICryptoHash * aCryptoHash);
+
+// We have both a prefix and a domain. Drop the domain, but
+// hash the domain, the prefix and a random value together,
+// ensuring any collisions happens at a different points for
+// different users.
+static nsresult KeyedHash(PRUint32 aPref, PRUint32 aDomain,
+                          PRUint32 aKey, PRUint32 *aOut);
+
+
 // -------------------------------------------------------------------------
 // Actual worker implemenatation
 class nsUrlClassifierDBServiceWorker : public nsIUrlClassifierDBServiceWorker
@@ -1162,13 +1178,6 @@ private:
 
   // Reset the in-progress update
   void ResetUpdate();
-
-  // Get the database key for a given URI.  This is the top three
-  // domain components if they exist, otherwise the top two.
-  //  hostname.com/foo/bar -> hostname.com
-  //  mail.hostname.com/foo/bar -> mail.hostname.com
-  //  www.mail.hostname.com/foo/bar -> mail.hostname.com
-  nsresult GetKey(const nsACString& spec, nsUrlClassifierDomainHash& hash);
 
   // Look for a given lookup string (www.hostname.com/path/to/resource.html)
   // Returns a list of entries that match.
@@ -1393,20 +1402,37 @@ nsUrlClassifierDBService::CheckClean(const nsACString &spec,
   nsresult rv = GetLookupFragments(spec, fragments);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRUint32 prefixkey;
+  rv = mPrefixSet->GetKey(&prefixkey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *clean = PR_TRUE;
 
   for (PRUint32 i = 0; i < fragments.Length(); i++) {
     nsUrlClassifierDomainHash fragmentKeyHash;
     fragmentKeyHash.FromPlaintext(fragments[i], mHash);
 
+    // Find the corresponding host key
+    nsUrlClassifierDomainHash hostkey;
+    rv = GetKey(fragments[i], hostkey, mHash);
+    if (NS_FAILED(rv)) {
+      /* This happens for hosts on the local network,
+         can't check these against the DB */
+      continue;
+    }
+
+    PRUint32 hostprefix = hostkey.ToUint32();
     PRUint32 fragkey = fragmentKeyHash.ToUint32();
+    PRUint32 codedkey;
+    rv = KeyedHash(fragkey, hostprefix, prefixkey, &codedkey);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool found;
     PRBool ready = PR_FALSE;  /* opportunistic probe */
-    rv = mPrefixSet->Probe(fragkey, &ready, &found);
+    rv = mPrefixSet->Probe(codedkey, prefixkey, &ready, &found);
     NS_ENSURE_SUCCESS(rv, rv);
     LOG(("CheckClean Probed %X ready: %d found: %d ",
-         fragkey, ready, found));
+         codedkey, ready, found));
     if (found || !ready) {
       *clean = PR_FALSE;
     }
@@ -1590,7 +1616,7 @@ nsUrlClassifierDBServiceWorker::Check(const nsACString& spec,
   for (PRUint32 i = 0; i < lookupHosts.Length(); i++) {
     // Find the corresponding host key
     nsUrlClassifierDomainHash hostKey;
-    nsresult rv = GetKey(lookupHosts[i], hostKey);
+    nsresult rv = GetKey(lookupHosts[i], hostKey, mCryptoHash);
     NS_ENSURE_SUCCESS(rv, rv);
     // Read the entries for this fragments host from SQLite
     mMainStore.ReadAddEntries(hostKey, mCachedEntries);
@@ -2010,9 +2036,10 @@ IsCanonicalizedIP(const nsACString& host)
   return PR_FALSE;
 }
 
-nsresult
-nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
-                                       nsUrlClassifierDomainHash& hash)
+static nsresult
+GetKey(const nsACString& spec,
+       nsUrlClassifierDomainHash& hash,
+       nsICryptoHash * aCryptoHash)
 {
   nsACString::const_iterator begin, end, iter;
   spec.BeginReading(begin);
@@ -2029,7 +2056,7 @@ nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
     nsCAutoString key;
     key.Assign(host);
     key.Append("/");
-    return hash.FromPlaintext(key, mCryptoHash);
+    return hash.FromPlaintext(key, aCryptoHash);
   }
 
   nsTArray<nsCString> hostComponents;
@@ -2051,7 +2078,7 @@ nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
   lookupHost.Append(hostComponents[last]);
   lookupHost.Append("/");
 
-  return hash.FromPlaintext(lookupHost, mCryptoHash);
+  return hash.FromPlaintext(lookupHost, aCryptoHash);
 }
 
 nsresult
@@ -2204,7 +2231,7 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
         entryStr = lines[i];
       }
 
-      rv = GetKey(entryStr, entry->mKey);
+      rv = GetKey(entryStr, entry->mKey, mCryptoHash);
       NS_ENSURE_SUCCESS(rv, rv);
 
       entry->mTableId = tableId;
@@ -3428,12 +3455,78 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   return NS_OK;
 }
 
-nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array)
+// We have both a prefix and a domain. Drop the domain, but
+// hash the domain, the prefix and a random value together,
+// ensuring any collisions happens at a different points for
+// different users.
+// We need to calculate +- 500k hashes each update.
+// The extensive initialization and finalization of normal
+// cryptographic hashes, as well as fairly low speed, causes them
+// to be prohibitively slow here, hence we can't use them.
+// We use MurmurHash3 instead because it's reasonably well
+// researched, trusted inside some other big projects, extremely
+// fast and with a specific a 32-bit output version, and fairly
+// compact. Upon testing with the actual prefix data, it does
+// not appear to increase the number of collisions by any
+// meaningful amount.
+static nsresult KeyedHash(PRUint32 aPref, PRUint32 aDomain,
+                          PRUint32 aKey, PRUint32 *aOut)
+{
+  // This is a reimplementation of MurmurHash3 32-bit
+  // based on the public domain C++ sources.
+  // http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
+  // for nblocks = 2
+  PRUint32 c1 = 0xCC9E2D51;
+  PRUint32 c2 = 0x1B873593;
+  PRUint32 c3 = 0xE6546B64;
+  PRUint32 c4 = 0x85EBCA6B;
+  PRUint32 c5 = 0xC2B2AE35;
+  PRUint32 h1 = aPref; // seed
+  PRUint32 k1;
+  PRUint32 karr[2];
+
+  karr[0] = aDomain;
+  karr[1] = aKey;
+
+  for (PRUint32 i = 0; i < 2; i++) {
+    k1 = karr[i];
+    k1 *= c1;
+    k1 = (k1 << 15) | (k1 >> (32-15));
+    k1 *= c2;
+
+    h1 ^= k1;
+    h1 = (h1 << 13) | (h1 >> (32-13));
+    h1 *= 5;
+    h1 += c3;
+  }
+
+  h1 ^= 2; // len
+  // fmix
+  h1 ^= h1 >> 16;
+  h1 *= c4;
+  h1 ^= h1 >> 13;
+  h1 *= c5;
+  h1 ^= h1 >> 16;
+
+  *aOut = h1;
+
+  return NS_OK;
+}
+
+nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array,
+                                            PRUint32 aKey)
 {
   mozStorageStatementScoper scoper(mAllPrefixStatement);
   PRBool hasMoreData;
   PRUint32 pcnt = 0;
   PRUint32 fcnt = 0;
+
+#if defined(PR_LOGGING)
+  PRIntervalTime clockStart = 0;
+  if (LOG_ENABLED()) {
+    clockStart = PR_IntervalNow();
+  }
+#endif
 
   while (NS_SUCCEEDED(mAllPrefixStatement->ExecuteStep(&hasMoreData)) && hasMoreData) {
     PRUint32 prefixval;
@@ -3459,11 +3552,23 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array)
       prefixval = *(reinterpret_cast<const PRUint32*>(blobprefix));
     }
 
-    array.AppendElement(prefixval);
+    PRUint32 keyedVal;
+    nsresult rv = KeyedHash(prefixval, domainval, aKey, &keyedVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    array.AppendElement(keyedVal);
     pcnt++;
   }
 
   LOG(("SB prefixes: %d fulldomain: %d\n", pcnt, fcnt));
+
+#if defined(PR_LOGGING)
+  if (LOG_ENABLED()) {
+    PRIntervalTime clockEnd = PR_IntervalNow();
+    LOG(("Gathering took %dms\n",
+         PR_IntervalToMilliseconds(clockEnd - clockStart)));
+  }
+#endif
 
   return NS_OK;
 }
@@ -3471,9 +3576,24 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array)
 nsresult
 nsUrlClassifierDBServiceWorker::ConstructPrefixSet()
 {
-  nsTArray<PRUint32> array;
-  nsresult rv = mMainStore.ReadPrefixes(array);
+  PRUint32 key;
+  nsresult rv = mPrefixSet->GetKey(&key);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<PRUint32> array;
+  rv = mMainStore.ReadPrefixes(array, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef HASHFUNCTION_COLLISION_TEST
+  array.Sort();
+  PRUint32 collisions = 0;
+  for (int i = 1; i < array.Length(); i++) {
+    if (array[i - 1] == array[i]) {
+      collisions++;
+    }
+  }
+  LOG(("%d collisions in the set", collisions));
+#endif
 
   // clear old tree
   rv = mPrefixSet->SetPrefixes(nsnull, 0);
@@ -3509,6 +3629,13 @@ nsUrlClassifierDBServiceWorker::LoadPrefixSet(nsCOMPtr<nsIFile> & aFile)
   rv = aFile->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#if defined(PR_LOGGING)
+  PRIntervalTime clockStart = 0;
+  if (LOG_ENABLED()) {
+    clockStart = PR_IntervalNow();
+  }
+#endif
+
   if (exists) {
     LOG(("stored PrefixSet exists, loading from disk"));
     rv = mPrefixSet->LoadFromFile(aFile);
@@ -3523,6 +3650,13 @@ nsUrlClassifierDBServiceWorker::LoadPrefixSet(nsCOMPtr<nsIFile> & aFile)
   rv = mPrefixSet->EstimateSize(&size);
   LOG(("SB tree done, size = %d bytes\n", size));
   NS_ENSURE_SUCCESS(rv, rv);
+#endif
+#if defined(PR_LOGGING)
+  if (LOG_ENABLED()) {
+    PRIntervalTime clockEnd = PR_IntervalNow();
+    LOG(("Loading took %dms\n",
+         PR_IntervalToMilliseconds(clockEnd - clockStart)));
+  }
 #endif
 
   return NS_OK;
@@ -3757,6 +3891,9 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
         // things.
         result.mTableName = tableName;
         NS_WARNING("Accepting a gethash with an invalid table name or chunk id");
+        LOG(("Tablename: %s ?= %s, ChunkId %d ?= %d",
+             result.mTableName.get(), PromiseFlatCString(tableName).get(),
+             result.mEntry.mChunkId, chunkId));
       }
     }
   }
