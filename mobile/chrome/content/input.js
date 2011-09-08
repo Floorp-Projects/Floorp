@@ -1209,6 +1209,7 @@ GestureModule.prototype = {
     let delta = 0;
     let browser = AnimatedZoom.browser;
     let oldScale = browser.scale;
+    let bcr = this._browserBCR;
 
     // Accumulate pinch delta. Small changes are just jitter.
     this._pinchDelta += aEvent.delta;
@@ -1223,13 +1224,13 @@ GestureModule.prototype = {
     let newScale = Browser.selectedTab.clampZoomLevel(oldScale * (1 + delta / this._scalingFactor));
     let startScale = AnimatedZoom.startScale;
     let scaleRatio = startScale / newScale;
-    let cX = aEvent.clientX - this._browserBCR.left;
-    let cY = aEvent.clientY - this._browserBCR.top;
+    let cX = aEvent.clientX - bcr.left;
+    let cY = aEvent.clientY - bcr.top;
 
     // Calculate the new zoom rect.
     let rect = AnimatedZoom.zoomFrom.clone();
-    rect.translate(this._pinchStartX - cX + (1-scaleRatio) * cX * rect.width / window.innerWidth,
-                   this._pinchStartY - cY + (1-scaleRatio) * cY * rect.height / window.innerHeight);
+    rect.translate(this._pinchStartX - cX + (1-scaleRatio) * cX * rect.width / bcr.width,
+                   this._pinchStartY - cY + (1-scaleRatio) * cY * rect.height / bcr.height);
 
     rect.width *= scaleRatio;
     rect.height *= scaleRatio;

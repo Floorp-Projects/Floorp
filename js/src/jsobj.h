@@ -66,6 +66,7 @@ namespace js {
 class AutoPropDescArrayRooter;
 class JSProxyHandler;
 class RegExp;
+class CallObject;
 struct GCMarker;
 struct NativeIterator;
 
@@ -733,6 +734,8 @@ struct JSObject : js::gc::Cell {
 
   private:
     inline js::Value* fixedSlots() const;
+
+  protected:
     inline bool hasContiguousSlots(size_t start, size_t count) const;
 
   public:
@@ -1065,58 +1068,10 @@ struct JSObject : js::gc::Cell {
     inline js::NormalArgumentsObject *asNormalArguments();
     inline js::StrictArgumentsObject *asStrictArguments();
 
-  private:
-    /*
-     * Reserved slot structure for Call objects:
-     *
-     * private               - the stack frame corresponding to the Call object
-     *                         until js_PutCallObject or its on-trace analog
-     *                         is called, null thereafter
-     * JSSLOT_CALL_CALLEE    - callee function for the stack frame, or null if
-     *                         the stack frame is for strict mode eval code
-     * JSSLOT_CALL_ARGUMENTS - arguments object for non-strict mode eval stack
-     *                         frames (not valid for strict mode eval frames)
-     */
-    static const uint32 JSSLOT_CALL_CALLEE = 0;
-    static const uint32 JSSLOT_CALL_ARGUMENTS = 1;
+  public:
+    inline js::CallObject &asCall();
 
   public:
-    /* Number of reserved slots. */
-    static const uint32 CALL_RESERVED_SLOTS = 2;
-
-    /* True if this is for a strict mode eval frame or for a function call. */
-    inline bool callIsForEval() const;
-
-    /* The stack frame for this Call object, if the frame is still active. */
-    inline js::StackFrame *maybeCallObjStackFrame() const;
-
-    /*
-     * The callee function if this Call object was created for a function
-     * invocation, or null if it was created for a strict mode eval frame.
-     */
-    inline JSObject *getCallObjCallee() const;
-    inline JSFunction *getCallObjCalleeFunction() const; 
-    inline void setCallObjCallee(JSObject *callee);
-
-    inline const js::Value &getCallObjArguments() const;
-    inline void setCallObjArguments(const js::Value &v);
-
-    /* Returns the formal argument at the given index. */
-    inline const js::Value &callObjArg(uintN i) const;
-    inline void setCallObjArg(uintN i, const js::Value &v);
-
-    /* Returns the variable at the given index. */
-    inline const js::Value &callObjVar(uintN i) const;
-    inline void setCallObjVar(uintN i, const js::Value &v);
-
-    /*
-     * Get the actual arrays of arguments and variables. Only call if type
-     * inference is enabled, where we ensure that call object variables are in
-     * contiguous slots (see NewCallObject).
-     */
-    inline js::Value *callObjArgArray();
-    inline js::Value *callObjVarArray();
-
     /*
      * Date-specific getters and setters.
      */
@@ -1926,10 +1881,7 @@ IsCacheableNonGlobalScope(JSObject *obj)
 {
     JS_ASSERT(obj->getParent());
 
-    js::Class *clasp = obj->getClass();
-    bool cacheable = (clasp == &CallClass ||
-                      clasp == &BlockClass ||
-                      clasp == &DeclEnvClass);
+    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
 
     JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;
