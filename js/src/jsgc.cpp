@@ -2260,7 +2260,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      */
     while (WatchpointMap::markAllIteratively(&gcmarker) ||
            WeakMapBase::markAllIteratively(&gcmarker) ||
-           Debugger::markAllIteratively(&gcmarker, gckind))
+           Debugger::markAllIteratively(&gcmarker))
     {
         gcmarker.drainMarkStack();
     }
