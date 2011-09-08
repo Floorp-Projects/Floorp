@@ -1062,7 +1062,7 @@ LoginManagerStorage_legacy.prototype = {
                 // Line is unused filler for future use
                 case STATE.FILLER:
                     // Save the line's value (so we can dump it back out when
-                    // we save the file next time) for forwards compatability.
+                    // we save the file next time) for forwards compatibility.
                     entry.wrappedJSObject.filler = line.value;
                     processEntry = true;
 
