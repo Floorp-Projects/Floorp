@@ -503,6 +503,10 @@ private: // data
   nsRefPtr<imgDecodeWorker>      mWorker;
   PRUint32                       mBytesDecoded;
 
+  // How many times we've decoded this image.
+  // This is currently only used for statistics
+  PRInt32                        mDecodeCount;
+
 #ifdef DEBUG
   PRUint32                       mFramesNotified;
 #endif
