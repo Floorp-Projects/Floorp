@@ -106,33 +106,42 @@ nsUrlClassifierPrefixSet::AddPrefixes(const PRUint32 * prefixes, PRUint32 aLengt
     return NS_OK;
   }
 
-  MutexAutoLock lock(mPrefixTreeLock);
+  nsTArray<PRUint32> mNewIndexPrefixes(mIndexPrefixes);
+  nsTArray<PRUint32> mNewIndexStarts(mIndexStarts);
+  nsTArray<PRUint16> mNewDeltas(mDeltas);
 
-  mIndexPrefixes.AppendElement(prefixes[0]);
-  mIndexStarts.AppendElement(mDeltas.Length());
+  mNewIndexPrefixes.AppendElement(prefixes[0]);
+  mNewIndexStarts.AppendElement(mNewDeltas.Length());
 
   PRUint32 numOfDeltas = 0;
   PRUint32 currentItem = prefixes[0];
   for (PRUint32 i = 1; i < aLength; i++) {
     if ((numOfDeltas >= DELTAS_LIMIT) ||
           (prefixes[i] - currentItem >= MAX_INDEX_DIFF)) {
-      mIndexStarts.AppendElement(mDeltas.Length());
-      mIndexPrefixes.AppendElement(prefixes[i]);
+      mNewIndexStarts.AppendElement(mNewDeltas.Length());
+      mNewIndexPrefixes.AppendElement(prefixes[i]);
       numOfDeltas = 0;
     } else {
       PRUint16 delta = prefixes[i] - currentItem;
-      mDeltas.AppendElement(delta);
+      mNewDeltas.AppendElement(delta);
       numOfDeltas++;
     }
     currentItem = prefixes[i];
   }
 
-  mIndexPrefixes.Compact();
-  mIndexStarts.Compact();
-  mDeltas.Compact();
+  mNewIndexPrefixes.Compact();
+  mNewIndexStarts.Compact();
+  mNewDeltas.Compact();
 
-  LOG(("Total number of indices: %d", mIndexPrefixes.Length()));
-  LOG(("Total number of deltas: %d", mDeltas.Length()));
+  LOG(("Total number of indices: %d", mNewIndexPrefixes.Length()));
+  LOG(("Total number of deltas: %d", mNewDeltas.Length()));
+
+  MutexAutoLock lock(mPrefixTreeLock);
+
+  // This just swaps some pointers
+  mIndexPrefixes.SwapElements(mNewIndexPrefixes);
+  mIndexStarts.SwapElements(mNewIndexStarts);
+  mDeltas.SwapElements(mNewDeltas);
 
   mHasPrefixes = PR_TRUE;
   mTreeIsReady.NotifyAll();
@@ -141,12 +150,12 @@ nsUrlClassifierPrefixSet::AddPrefixes(const PRUint32 * prefixes, PRUint32 aLengt
 }
 
 PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
-                                              PRUint32 end,
-                                              PRUint32 target)
+                                             PRUint32 end,
+                                             PRUint32 target)
 {
   while (start != end && end >= start) {
-    int i = start + ((end - start) >> 1);
-    int value = mIndexPrefixes[i];
+    PRUint32 i = start + ((end - start) >> 1);
+    PRUint32 value = mIndexPrefixes[i];
     if (value < target) {
       start = i + 1;
     } else if (value > target) {
