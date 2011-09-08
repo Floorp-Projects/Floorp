@@ -88,8 +88,6 @@ private:
 nsresult
 nsINIParser::Init(nsILocalFile* aFile)
 {
-    nsresult rv;
-
     /* open the file. Don't use OpenANSIFileDesc, because you mustn't
        pass FILE* across shared library boundaries, which may be using
        different CRTs */
@@ -98,13 +96,13 @@ nsINIParser::Init(nsILocalFile* aFile)
 
 #ifdef XP_WIN
     nsAutoString path;
-    rv = aFile->GetPath(path);
+    nsresult rv = aFile->GetPath(path);
     NS_ENSURE_SUCCESS(rv, rv);
 
     fd = _wfopen(path.get(), READ_BINARYMODE);
 #else
     nsCAutoString path;
-    rv = aFile->GetNativePath(path);
+    aFile->GetNativePath(path);
 
     fd = fopen(path.get(), READ_BINARYMODE);
 #endif

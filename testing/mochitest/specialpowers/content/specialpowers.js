@@ -401,6 +401,12 @@ SpecialPowers.prototype = {
   closeLogFile: function() {
     this._mfl.close();
   },
+
+  addCategoryEntry: function(category, entry, value, persists, replace) {
+    Cc["@mozilla.org/categorymanager;1"].
+      getService(Components.interfaces.nsICategoryManager).
+      addCategoryEntry(category, entry, value, persists, replace);
+  },
 };
 
 // Expose everything but internal APIs (starting with underscores) to
@@ -436,13 +442,6 @@ function SpecialPowersManager() {
 SpecialPowersManager.prototype = {
   handleEvent: function handleEvent(aEvent) {
     var window = aEvent.target.defaultView;
-
-    // only add SpecialPowers to data pages, not about:*
-    var uri = window.document.documentURIObject;
-    if (uri.spec.split(":")[0] == "about") {
-      return;
-    }
-
     attachSpecialPowersToWindow(window);
   }
 };

@@ -621,7 +621,7 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
 
     // The trampoline wrote the return value but did not set the HAS_RVAL flag.
     fp->setReturnValue(result);
-    fp->markActivationObjectsAsPut();
+    fp->markFunctionEpilogueDone();
 
     return !!ok;
 }

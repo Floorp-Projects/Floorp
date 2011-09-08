@@ -225,7 +225,10 @@ BreakpointSite::clearTrap(JSContext *cx, BreakpointSiteMap::Enum *e,
     trapClosure.setUndefined();
     if (enabledCount == 0) {
         *pc = realOpcode;
-        recompile(cx, true);  /* ignore failure */
+        if (!cx->runtime->gcRunning) {
+            /* If the GC is running then the script is being destroyed. */
+            recompile(cx, true);  /* ignore failure */
+        }
         destroyIfEmpty(cx->runtime, e);
     }
 }

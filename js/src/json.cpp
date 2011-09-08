@@ -302,7 +302,6 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
             if (!keyStr)
                 return false;
 
-            LeaveTrace(cx);
             InvokeArgsGuard args;
             if (!cx->stack.pushInvokeArgs(cx, 1, &args))
                 return false;
