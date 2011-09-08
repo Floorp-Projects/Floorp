@@ -3900,7 +3900,7 @@ BEGIN_CASE(JSOP_GETELEM)
             if (arg < argsobj->initialLength()) {
                 copyFrom = &argsobj->element(arg);
                 if (!copyFrom->isMagic(JS_ARGS_HOLE)) {
-                    if (StackFrame *afp = reinterpret_cast<StackFrame *>(argsobj->getPrivate()))
+                    if (StackFrame *afp = argsobj->maybeStackFrame())
                         copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }
