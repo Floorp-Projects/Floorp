@@ -5534,8 +5534,10 @@ nsGenericElement::SizeOf() const
 PRBool
 nsINode::Contains(const nsINode* aOther) const
 {
+  if (aOther == this) {
+    return PR_TRUE;
+  }
   if (!aOther ||
-      aOther == this ||
       GetOwnerDoc() != aOther->GetOwnerDoc() ||
       IsInDoc() != aOther->IsInDoc() ||
       !(aOther->IsElement() ||
