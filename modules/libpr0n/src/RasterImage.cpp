@@ -42,6 +42,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/histogram.h"
 #include "nsComponentManagerUtils.h"
 #include "imgIContainerObserver.h"
 #include "ImageErrors.h"
@@ -191,6 +192,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
+  mDecodeCount(0),
 #ifdef DEBUG
   mFramesNotified(0),
 #endif
@@ -208,6 +210,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   // Set up the discard tracker node.
   mDiscardTrackerNode.curr = this;
   mDiscardTrackerNode.prev = mDiscardTrackerNode.next = nsnull;
+  Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(0);
 
   // Statistics
   num_containers++;
@@ -2197,6 +2200,12 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
 
   // Create a decode worker
   mWorker = new imgDecodeWorker(this);
+
+  if (!aDoSizeDecode) {
+    Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Subtract(mDecodeCount);
+    mDecodeCount++;
+    Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(mDecodeCount);
+  }
   CONTAINER_ENSURE_TRUE(mWorker, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
