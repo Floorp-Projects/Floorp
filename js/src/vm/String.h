@@ -411,7 +411,7 @@ class JSString : public js::gc::Cell
 
     /* Gets the number of bytes that the chars take on the heap. */
 
-    JS_FRIEND_API(size_t) charsHeapSize();
+    JS_FRIEND_API(size_t) charsHeapSize(JSUsableSizeFun usf);
 
     /* Offsets for direct field from jit code. */
 
