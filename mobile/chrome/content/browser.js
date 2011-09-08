@@ -1038,7 +1038,7 @@ var Browser = {
   },
 
   tryFloatToolbar: function tryFloatToolbar(dx, dy) {
-    if (this.floatedWhileDragging)
+    if (this.floatedWhileDragging || Util.isTablet())
       return;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
@@ -1289,7 +1289,7 @@ Browser.MainDragger.prototype = {
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
     this._stopAtSidebar = 0;
-    this._panToolbars = !Elements.urlbarState.getAttribute("tablet");
+    this._panToolbars = !Util.isTablet();
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
       this._sidebarTimeout = null;
@@ -1908,7 +1908,7 @@ const ContentTouchHandler = {
     // or if the urlbar is showing
     this.canCancelPan = (aX >= rect.left + kSafetyX) && (aX <= rect.right - kSafetyX) &&
                         (aY >= rect.top  + kSafetyY) &&
-                        (bcr.top == 0 || Elements.urlbarState.getAttribute("tablet"));
+                        (bcr.top == 0 || Util.isTablet());
   },
 
   tapDown: function tapDown(aX, aY) {
@@ -2899,7 +2899,6 @@ Tab.prototype = {
     let notification = this._notification = document.createElement("notificationbox");
     notification.classList.add("inputHandler");
 
-    // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
     browser.setAttribute("class", "viewable-width viewable-height");
     this._chromeTab.linkedBrowser = browser;
@@ -3155,15 +3154,18 @@ function rendererFactory(aBrowser, aCanvas) {
  */
 var ViewableAreaObserver = {
   get width() {
-    return this._width || window.innerWidth;
+    let width = this._width || window.innerWidth;
+    if (Util.isTablet()) {
+      let sidebarWidth = Math.round(Elements.tabs.getBoundingClientRect().width);
+      width -= sidebarWidth;
+    }
+    return width;
   },
 
   get height() {
     let height = (this._height || window.innerHeight);
-    if (Elements.urlbarState.getAttribute("tablet")) {
-      let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
-      height -= toolbarHeight;
-    }
+    if (Util.isTablet())
+      height -= BrowserUI.toolbarH;
     return height;
   },
 

@@ -95,6 +95,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
+#include "vm/CallObject-inl.h"
 
 #ifdef MOZ_VALGRIND
 # define JS_VALGRIND
