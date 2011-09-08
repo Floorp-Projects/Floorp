@@ -75,6 +75,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMStrings.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "prnetdb.h"
@@ -1397,6 +1398,8 @@ nsresult
 nsUrlClassifierDBService::CheckClean(const nsACString &spec,
                                      PRBool *clean)
 {
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_LOOKUP_TIME> timer;
+
   // Get the set of fragments to look up.
   nsTArray<nsCString> fragments;
   nsresult rv = GetLookupFragments(spec, fragments);
@@ -3576,6 +3579,8 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array,
 nsresult
 nsUrlClassifierDBServiceWorker::ConstructPrefixSet()
 {
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_CONSTRUCT_TIME> timer;
+
   PRUint32 key;
   nsresult rv = mPrefixSet->GetKey(&key);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3637,6 +3642,7 @@ nsUrlClassifierDBServiceWorker::LoadPrefixSet(nsCOMPtr<nsIFile> & aFile)
 #endif
 
   if (exists) {
+    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FILELOAD_TIME> timer;
     LOG(("stored PrefixSet exists, loading from disk"));
     rv = mPrefixSet->LoadFromFile(aFile);
   }
