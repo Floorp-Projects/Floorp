@@ -50,7 +50,7 @@
   -moz-padding-start: 0px;
 }
 
-documenttab[tablet="true"] {
+#tabs[tablet="true"] documenttab {
   /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
   width: 200px;
   padding: 12px;
@@ -58,7 +58,7 @@ documenttab[tablet="true"] {
   background: none;
 }
 
-documenttab[tablet="true"][selected="true"] {
+#tabs[tablet="true"] documenttab[selected="true"] {
   background: none;
 }
 
