@@ -623,8 +623,6 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 bool
 js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 {
-    /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
-
     CallArgs args = argsRef;
     JS_ASSERT(args.argc() <= StackSpace::ARGS_LENGTH_MAX);
 
@@ -670,7 +668,7 @@ js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construc
 
     /* Now that the new frame is rooted, maybe create a call object. */
     StackFrame *fp = ifg.fp();
-    if (fun->isHeavyweight() && !CreateFunCallObject(cx, fp))
+    if (!fp->functionPrologue(cx))
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
@@ -686,109 +684,9 @@ js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construc
 }
 
 bool
-InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &thisv, uintN argc)
-{
-#ifdef JS_TRACER
-    if (TRACE_RECORDER(cx))
-        AbortRecording(cx, "attempt to reenter VM while recording");
-    LeaveTrace(cx);
-#endif
-
-    /* Always push arguments, regardless of optimized/normal invoke. */
-    ContextStack &stack = cx->stack;
-    if (!stack.pushInvokeArgs(cx, argc, &args_))
-        return false;
-
-    /* Callees may clobber 'this' or 'callee'. */
-    savedCallee_ = args_.calleev() = calleev;
-    savedThis_ = args_.thisv() = thisv;
-
-    /* If anyone (through jsdbgapi) finds this frame, make it safe. */
-    MakeRangeGCSafe(args_.argv(), args_.argc());
-
-    do {
-        /* Hoist dynamic checks from scripted Invoke. */
-        if (!calleev.isObject())
-            break;
-        JSObject &callee = calleev.toObject();
-        if (callee.getClass() != &FunctionClass)
-            break;
-        JSFunction *fun = callee.getFunctionPrivate();
-        if (fun->isNative())
-            break;
-        script_ = fun->script();
-        if (fun->isHeavyweight())
-            break;
-
-        /*
-         * The frame will remain pushed even when the callee isn't active which
-         * will affect the observable current global, so avoid any change.
-         */
-        if (callee.getGlobal() != GetGlobalForScopeChain(cx))
-            break;
-
-        /* Push the stack frame once for the session. */
-        if (!stack.pushInvokeFrame(cx, args_, INITIAL_NONE, &ifg_))
-            return false;
-
-        /*
-         * Update the 'this' type of the callee according to the value given,
-         * along with the types of any missing arguments. These will be the
-         * same across all calls.
-         */
-        TypeScript::SetThis(cx, script_, thisv);
-        for (unsigned i = argc; i < fun->nargs; i++)
-            TypeScript::SetArgument(cx, script_, i, types::Type::UndefinedType());
-
-        StackFrame *fp = ifg_.fp();
-#ifdef JS_METHODJIT
-        /* Hoist dynamic checks from RunScript. */
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, false,
-                                                        mjit::CompileRequest_JIT);
-        if (status == mjit::Compile_Error)
-            return false;
-        if (status != mjit::Compile_Okay)
-            break;
-        /* Cannot also cache the raw code pointer; it can change. */
-
-        /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
-        JS_CHECK_RECURSION(cx, return false);
-        stackLimit_ = stack.space().getStackLimit(cx, REPORT_ERROR);
-        if (!stackLimit_)
-            return false;
-
-        stop_ = script_->code + script_->length - 1;
-        JS_ASSERT(*stop_ == JSOP_STOP);
-#endif
-
-        /* Cached to avoid canonicalActualArg in InvokeSessionGuard::operator[]. */
-        nformals_ = fp->numFormalArgs();
-        formals_ = fp->formalArgs();
-        actuals_ = args_.argv();
-        JS_ASSERT(actuals_ == fp->actualArgs());
-        return true;
-    } while (0);
-
-    /*
-     * Use the normal invoke path.
-     *
-     * The callee slot gets overwritten during an unoptimized Invoke, so we
-     * cache it here and restore it before every Invoke call. The 'this' value
-     * does not get overwritten, so we can fill it here once.
-     */
-    if (ifg_.pushed())
-        ifg_.pop();
-    formals_ = actuals_ = args_.argv();
-    nformals_ = (unsigned)-1;
-    return true;
-}
-
-bool
 js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
            Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
@@ -819,8 +717,6 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Val
 bool
 js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return false;
@@ -909,12 +805,18 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 
     Probes::startExecution(cx, script);
 
+    if (!script->ensureRanAnalysis(cx, NULL, &scopeChain))
+        return false;
+
     TypeScript::SetThis(cx, script, fp->thisValue());
 
     AutoPreserveEnumerators preserve(cx);
     JSBool ok = RunScript(cx, script, fp);
     if (result && ok)
         *result = fp->returnValue();
+
+    if (fp->isStrictEvalFrame())
+        js_PutCallObject(fp);
 
     Probes::stopExecution(cx, script);
 
@@ -1236,8 +1138,6 @@ bool
 js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
                                    uintN argc, Value *argv, Value *rval)
 {
-    LeaveTrace(cx);
-
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return JS_FALSE;
@@ -4176,15 +4076,16 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 
     RESTORE_INTERP_VARS();
 
-    /* Only create call object after frame is rooted. */
-    if (fun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp()))
+    if (!regs.fp()->functionPrologue(cx))
         goto error;
 
     RESET_USE_METHODJIT();
     TRACE_0(EnterFrame);
 
+    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+
 #ifdef JS_METHODJIT
-    {
+    if (!newType) {
         /* Try to ensure methods are method JIT'd.  */
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
@@ -4202,7 +4103,6 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     }
 #endif
 
-    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
     if (!ScriptPrologue(cx, regs.fp(), newType))
         goto error;
 

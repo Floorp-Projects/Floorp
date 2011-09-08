@@ -638,8 +638,7 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
-  : gcChunkAllocator(&defaultGCChunkAllocator),
-    trustedPrincipals_(NULL)
+  : trustedPrincipals_(NULL)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);

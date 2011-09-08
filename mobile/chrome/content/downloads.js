@@ -350,7 +350,7 @@ var DownloadsView = {
     }
     else if (today - end < (24 * 60 * 60 * 1000)) {
       // Download finished after yesterday started, show yesterday
-      dateTime = strings.GetStringFromName("donwloadsYesterday");
+      dateTime = strings.GetStringFromName("downloadsYesterday");
     }
     else if (today - end < (6 * 24 * 60 * 60 * 1000)) {
       // Download finished after last week started, show day of week

@@ -321,8 +321,10 @@ nsContextMenu.prototype = {
     var onMisspelling = InlineSpellCheckerUI.overMisspelling;
     this.showItem("spell-check-enabled", canSpell);
     this.showItem("spell-separator", canSpell || this.onEditableArea);
-    document.getElementById("spell-check-enabled")
-            .setAttribute("checked", canSpell && InlineSpellCheckerUI.enabled);
+    if (canSpell) {
+      document.getElementById("spell-check-enabled")
+              .setAttribute("checked", InlineSpellCheckerUI.enabled);
+    }
 
     this.showItem("spell-add-to-dictionary", onMisspelling);
 
@@ -1034,7 +1036,7 @@ nsContextMenu.prototype = {
     MailIntegration.sendMessage( this.linkURL, "" );
   },
 
-  // Backwards-compatability wrapper
+  // Backwards-compatibility wrapper
   saveImage : function() {
     if (this.onCanvas || this.onImage)
         this.saveMedia();
@@ -1060,7 +1062,7 @@ nsContextMenu.prototype = {
     }
   },
 
-  // Backwards-compatability wrapper
+  // Backwards-compatibility wrapper
   sendImage : function() {
     if (this.onCanvas || this.onImage)
         this.sendMedia();

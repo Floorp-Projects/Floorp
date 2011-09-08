@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Assure OS/2 usWidthClass isn't referenced</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+<style type="text/css">
+
+@font-face {
+  font-family: fstest-full;
+  src: url(../fonts/csstest-widths-wd5.ttf);
+  font-stretch: normal;
+}
+
+body {
+  margin: 50px;
+}
+
+p.test {
+  font-family: fstest-full;
+  font-size: 24px;
+}
+
+.fs9 { font-stretch: ultra-condensed; }
+.fs8 { font-stretch: extra-condensed; }
+.fs7 { font-stretch: condensed; }
+.fs6 { font-stretch: semi-condensed; }
+.fs5 { font-stretch: normal; }
+.fs4 { font-stretch: semi-expanded; }
+.fs3 { font-stretch: expanded; }
+.fs2 { font-stretch: extra-expanded; }
+.fs1 { font-stretch: ultra-expanded; }
+
+</style>
+  
+</head>
+<body>
+
+<p>The numbers below should appear in ascending sequence:</p>
+
+<p class="test">
+<span class="fs1">1</span>
+<span class="fs2">2</span>
+<span class="fs3">3</span>
+<span class="fs4">4</span>
+<span class="fs5">5</span>
+<span class="fs6">6</span>
+<span class="fs7">7</span>
+<span class="fs8">8</span>
+<span class="fs9">9</span>
+</p>
+
+</body>
+</html>

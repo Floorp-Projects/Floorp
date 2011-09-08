@@ -262,7 +262,7 @@ struct JSStmtInfo {
  */
 #define TCF_IN_WITH             0x10000000
 
-/* 
+/*
  * This function does something that can extend the set of bindings in its
  * call objects --- it does a direct eval in non-strict code, or includes a
  * function statement (as opposed to a function definition).
@@ -426,7 +426,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     inline bool needStrictChecks();
 
-    /* 
+    /*
      * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
      * The parser calls ensureSharpSlots to allocate these two stack locals.
      */
@@ -601,18 +601,13 @@ class JSGCConstList {
 
 struct JSCodeGenerator : public JSTreeContext
 {
-    JSArenaPool     *codePool;      /* pointer to thread code arena pool */
-    JSArenaPool     *notePool;      /* pointer to thread srcnote arena pool */
-    void            *codeMark;      /* low watermark in cg->codePool */
-    void            *noteMark;      /* low watermark in cg->notePool */
-
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
         jsbytecode  *next;          /* pointer to next free bytecode */
         jssrcnote   *notes;         /* source notes, see below */
         uintN       noteCount;      /* number of source notes so far */
-        uintN       noteMask;       /* growth increment for notes */
+        uintN       noteLimit;      /* limit number for source notes in notePool */
         ptrdiff_t   lastNoteOffset; /* code offset for last source note */
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
@@ -665,14 +660,7 @@ struct JSCodeGenerator : public JSTreeContext
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
     uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
-    /*
-     * Initialize cg to allocate bytecode space from codePool, source note
-     * space from notePool, and all other arena-allocated temporaries from
-     * parser->context->tempPool.
-     */
-    JSCodeGenerator(js::Parser *parser,
-                    JSArenaPool *codePool, JSArenaPool *notePool,
-                    uintN lineno);
+    JSCodeGenerator(js::Parser *parser, uintN lineno);
     bool init(JSContext *cx, JSTreeContext::InitBehavior ib = USED_AS_CODE_GENERATOR);
 
     JSContext *context() {
@@ -690,7 +678,7 @@ struct JSCodeGenerator : public JSTreeContext
 
     /*
      * Adds a use of a variable that is statically known to exist on the
-     * global object. 
+     * global object.
      *
      * The actual slot of the variable on the global object is not known
      * until after compilation. Properties must be resolved before being
@@ -761,7 +749,7 @@ struct JSCodeGenerator : public JSTreeContext
 
 #define CG_NOTES(cg)            ((cg)->current->notes)
 #define CG_NOTE_COUNT(cg)       ((cg)->current->noteCount)
-#define CG_NOTE_MASK(cg)        ((cg)->current->noteMask)
+#define CG_NOTE_LIMIT(cg)       ((cg)->current->noteLimit)
 #define CG_LAST_NOTE_OFFSET(cg) ((cg)->current->lastNoteOffset)
 #define CG_CURRENT_LINE(cg)     ((cg)->current->currentLine)
 
