@@ -6,7 +6,7 @@
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/I
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -561,7 +561,7 @@ public:
   /**
    * Destroys this frame and each of its child frames (recursively calls
    * Destroy() for each child). If this frame is a first-continuation, this
-   * also removes the frame from the primary frame man and clears undisplayed
+   * also removes the frame from the primary frame map and clears undisplayed
    * content for its content node.
    * If the frame is a placeholder, it also ensures the out-of-flow frame's
    * removal and destruction.
