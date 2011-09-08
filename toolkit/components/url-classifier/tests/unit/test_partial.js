@@ -87,12 +87,12 @@ compareQueries: function(fragments)
   for (var i = 0; i < fragments.length; i++) {
     expectedQueries.push(this.getHash(fragments[i]).slice(0, 4));
   }
+  do_check_eq(this.queries.length, expectedQueries.length);
   expectedQueries.sort();
   this.queries.sort();
   for (var i = 0; i < this.queries.length; i++) {
     do_check_eq(this.queries[i], expectedQueries[i]);
   }
-  do_check_eq(this.queries.length, expectedQueries.length);
 }
 };
 
