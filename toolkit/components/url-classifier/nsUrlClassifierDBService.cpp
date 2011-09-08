@@ -162,6 +162,9 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define UPDATE_CACHE_SIZE_PREF    "urlclassifier.updatecachemax"
 #define UPDATE_CACHE_SIZE_DEFAULT -1
 
+#define LOOKUP_CACHE_SIZE_PREF    "urlclassifier.lookupcachemax"
+#define LOOKUP_CACHE_SIZE_DEFAULT -1
+
 // Amount of time to spend updating before committing and delaying, in
 // seconds.  This is checked after each update stream, so the actual
 // time spent can be higher than this, depending on update stream size.
@@ -191,6 +194,7 @@ static PRBool gShuttingDownThread = PR_FALSE;
 static PRInt32 gFreshnessGuarantee = CONFIRM_AGE_DEFAULT_SEC;
 
 static PRInt32 gUpdateCacheSize = UPDATE_CACHE_SIZE_DEFAULT;
+static PRInt32 gLookupCacheSize = LOOKUP_CACHE_SIZE_DEFAULT;
 
 static PRInt32 gWorkingTimeThreshold = UPDATE_WORKING_TIME_DEFAULT;
 static PRInt32 gDelayTime = UPDATE_DELAY_TIME_DEFAULT;
@@ -1190,6 +1194,10 @@ private:
 
   // Construct a Prefix Tree with known prefixes
   nsresult ConstructPrefixTree();
+
+  // Set the SQLite cache size
+  nsresult SetCacheSize(mozIStorageConnection * aConnection,
+                        PRInt32 aCacheSize);
 
   nsCOMPtr<nsIFile> mDBFile;
 
@@ -3060,6 +3068,26 @@ nsUrlClassifierDBServiceWorker::FinishStream()
 }
 
 nsresult
+nsUrlClassifierDBServiceWorker::SetCacheSize(
+  mozIStorageConnection * aConnection, PRInt32 aCacheSize)
+{
+  mozStorageStatementScoper scoper(mGetPageSizeStatement);
+  PRBool hasResult;
+  nsresult rv = mGetPageSizeStatement->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(hasResult, "Should always be able to get page size from sqlite");
+  PRUint32 pageSize = mGetPageSizeStatement->AsInt32(0);
+  PRUint32 cachePages = aCacheSize / pageSize;
+  nsCAutoString cacheSizePragma("PRAGMA cache_size=");
+  cacheSizePragma.AppendInt(cachePages);
+  rv = aConnection->ExecuteSimpleSQL(cacheSizePragma);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
 nsUrlClassifierDBServiceWorker::SetupUpdate()
 {
   LOG(("nsUrlClassifierDBServiceWorker::SetupUpdate"));
@@ -3075,18 +3103,11 @@ nsUrlClassifierDBServiceWorker::SetupUpdate()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (gUpdateCacheSize > 0) {
-    PRBool hasResult;
-    rv = mGetPageSizeStatement->ExecuteStep(&hasResult);
+    rv = SetCacheSize(mConnection, gUpdateCacheSize);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ASSERTION(hasResult, "Should always be able to get page size from sqlite");
-    PRUint32 pageSize = mGetPageSizeStatement->AsInt32(0);
-    PRUint32 cachePages = gUpdateCacheSize / pageSize;
-    nsCAutoString cacheSizePragma("PRAGMA cache_size=");
-    cacheSizePragma.AppendInt(cachePages);
-    rv = mConnection->ExecuteSimpleSQL(cacheSizePragma);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mGrewCache = PR_TRUE;
+    if (gUpdateCacheSize != gLookupCacheSize) {
+      mGrewCache = PR_TRUE;
+    }
   }
 
   return NS_OK;
@@ -3337,6 +3358,14 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous=OFF"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = connection->CreateStatement
+    (NS_LITERAL_CSTRING("PRAGMA page_size"),
+     getter_AddRefs(mGetPageSizeStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetCacheSize(connection, gLookupCacheSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (newDB) {
     rv = connection->SetSchemaVersion(IMPLEMENTATION_VERSION);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3389,11 +3418,6 @@ nsUrlClassifierDBServiceWorker::OpenDb()
     (NS_LITERAL_CSTRING("INSERT INTO moz_tables(id, name, add_chunks, sub_chunks)"
                         " VALUES (null, ?1, null, null)"),
      getter_AddRefs(mInsertTableIdStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = connection->CreateStatement
-    (NS_LITERAL_CSTRING("PRAGMA page_size"),
-     getter_AddRefs(mGetPageSizeStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mConnection = connection;
@@ -3928,6 +3952,9 @@ nsUrlClassifierDBService::Init()
     rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
     PR_ATOMIC_SET(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
 
+    rv = prefs->GetIntPref(LOOKUP_CACHE_SIZE_PREF, &tmpint);
+    PR_ATOMIC_SET(&gLookupCacheSize, NS_SUCCEEDED(rv) ? tmpint : LOOKUP_CACHE_SIZE_DEFAULT);
+
     rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
     PR_ATOMIC_SET(&gWorkingTimeThreshold,
                   NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
@@ -4234,6 +4261,10 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
       PR_ATOMIC_SET(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+    } else if (NS_LITERAL_STRING(LOOKUP_CACHE_SIZE_PREF).Equals(aData)) {
+      PRInt32 tmpint;
+      rv = prefs->GetIntPref(LOOKUP_CACHE_SIZE_PREF, &tmpint);
+      PR_ATOMIC_SET(&gLookupCacheSize, NS_SUCCEEDED(rv) ? tmpint : LOOKUP_CACHE_SIZE_DEFAULT);
     } else if (NS_LITERAL_STRING(UPDATE_WORKING_TIME).Equals(aData)) {
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
