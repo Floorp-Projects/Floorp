@@ -50,6 +50,7 @@
 
 @class CellDrawView;
 @class NSProgressBarCell;
+@class ContextAwareSearchFieldCell;
 class nsDeviceContext;
 struct SegmentedControlRenderSettings;
 
@@ -155,7 +156,7 @@ private:
   NSButtonCell* mPushButtonCell;
   NSButtonCell* mRadioButtonCell;
   NSButtonCell* mCheckboxCell;
-  NSSearchFieldCell* mSearchFieldCell;
+  ContextAwareSearchFieldCell* mSearchFieldCell;
   NSPopUpButtonCell* mDropdownCell;
   NSComboBoxCell* mComboBoxCell;
   NSProgressBarCell* mProgressBarCell;
