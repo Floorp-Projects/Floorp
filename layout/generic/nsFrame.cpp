@@ -1652,7 +1652,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // 8, 9: non-negative z-index children
   resultList.AppendToTop(set.PositionedDescendants());
 
-  if (applyAbsPosClipping) {
+  /* If we have absolute position clipping and we have, or will have, items to
+   * be clipped, wrap the list in a clip wrapper.
+   */
+  if (applyAbsPosClipping &&
+      (!resultList.IsEmpty() || usingSVGEffects)) {
     nsAbsPosClipWrapper wrapper(absPosClip);
     nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
     if (!item)
