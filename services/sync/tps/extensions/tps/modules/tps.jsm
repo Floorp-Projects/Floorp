@@ -342,64 +342,70 @@ var TPS =
   },
 
   HandleBookmarks: function (bookmarks, action) {
-    let items = [];
-    for (folder in bookmarks) {
-      let last_item_pos = -1;
-      for each (bookmark in bookmarks[folder]) {
-        Logger.clearPotentialError();
-        let placesItem;
-        bookmark['location'] = folder;
-        if (last_item_pos != -1)
-          bookmark['last_item_pos'] = last_item_pos;
-        let item_id = -1;
-        if (action != ACTION_MODIFY && action != ACTION_DELETE)
-          Logger.logInfo("executing action " + action.toUpperCase() + 
-                         " on bookmark " + JSON.stringify(bookmark));
-        if ("uri" in bookmark)
-          placesItem = new Bookmark(bookmark);
-        else if ("folder" in bookmark)
-          placesItem = new BookmarkFolder(bookmark);
-        else if ("livemark" in bookmark)
-          placesItem = new Livemark(bookmark);
-        else if ("separator" in bookmark)
-          placesItem = new Separator(bookmark);
-        if (action == ACTION_ADD) {
-          item_id = placesItem.Create();
-        }
-        else {
-          item_id = placesItem.Find();
-          if (action == ACTION_VERIFY_NOT) {
-            Logger.AssertTrue(item_id == -1,
-              "places item exists but it shouldn't: " +
-              JSON.stringify(bookmark));
+    try {
+      let items = [];
+      for (folder in bookmarks) {
+        let last_item_pos = -1;
+        for each (bookmark in bookmarks[folder]) {
+          Logger.clearPotentialError();
+          let placesItem;
+          bookmark['location'] = folder;
+          if (last_item_pos != -1)
+            bookmark['last_item_pos'] = last_item_pos;
+          let item_id = -1;
+          if (action != ACTION_MODIFY && action != ACTION_DELETE)
+            Logger.logInfo("executing action " + action.toUpperCase() + 
+                           " on bookmark " + JSON.stringify(bookmark));
+          if ("uri" in bookmark)
+            placesItem = new Bookmark(bookmark);
+          else if ("folder" in bookmark)
+            placesItem = new BookmarkFolder(bookmark);
+          else if ("livemark" in bookmark)
+            placesItem = new Livemark(bookmark);
+          else if ("separator" in bookmark)
+            placesItem = new Separator(bookmark);
+          if (action == ACTION_ADD) {
+            item_id = placesItem.Create();
           }
-          else
-            Logger.AssertTrue(item_id != -1, "places item not found", true);
-        }
-        
-        last_item_pos = placesItem.GetItemIndex();
-        items.push(placesItem);
-      }
-    }
-
-    if (action == ACTION_DELETE || action == ACTION_MODIFY) {
-      for each (item in items) {
-        Logger.logInfo("executing action " + action.toUpperCase() + 
-                       " on bookmark " + JSON.stringify(item));
-        switch(action) {
-          case ACTION_DELETE:
-            item.Remove();
-            break;
-          case ACTION_MODIFY:
-            if (item.updateProps != null)
-              item.Update();
-            break;
+          else {
+            item_id = placesItem.Find();
+            if (action == ACTION_VERIFY_NOT) {
+              Logger.AssertTrue(item_id == -1,
+                "places item exists but it shouldn't: " +
+                JSON.stringify(bookmark));
+            }
+            else
+              Logger.AssertTrue(item_id != -1, "places item not found", true);
+          }
+          
+          last_item_pos = placesItem.GetItemIndex();
+          items.push(placesItem);
         }
       }
-    }
 
-    Logger.logPass("executing action " + action.toUpperCase() +
-      " on bookmarks");
+      if (action == ACTION_DELETE || action == ACTION_MODIFY) {
+        for each (item in items) {
+          Logger.logInfo("executing action " + action.toUpperCase() + 
+                         " on bookmark " + JSON.stringify(item));
+          switch(action) {
+            case ACTION_DELETE:
+              item.Remove();
+              break;
+            case ACTION_MODIFY:
+              if (item.updateProps != null)
+                item.Update();
+              break;
+          }
+        }
+      }
+
+      Logger.logPass("executing action " + action.toUpperCase() +
+        " on bookmarks");
+    }
+    catch(e) {
+      DumpBookmarks();
+      throw(e);
+    }
   },
 
   MozmillEndTestListener: function TPS__MozmillEndTestListener(obj) {
