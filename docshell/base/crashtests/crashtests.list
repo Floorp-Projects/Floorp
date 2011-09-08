@@ -5,8 +5,8 @@ load 430124-1.html
 load 430628-1.html
 load 432114-1.html
 load 432114-2.html
-load 436900-1.html
-asserts(0-2) load 436900-2.html # bug 566159
+asserts-if(Android,2) load 436900-1.html
+asserts(0-3) load 436900-2.html # bug 566159
 load 500328-1.html
 load 514779-1.xhtml
 load 614499-1.html

@@ -723,6 +723,16 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     return proto->lookupProperty(cx, id, objp, propp);
 }
 
+static JSBool
+array_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+                    JSProperty **propp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_lookupProperty(cx, obj, id, objp, propp);
+}
+
 JSBool
 js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
@@ -790,6 +800,15 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
 }
 
 static JSBool
+array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_getProperty(cx, obj, receiver, id, vp);
+}
+
+static JSBool
 slowarray_addProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     jsuint index, length;
@@ -844,6 +863,15 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
     return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
 }
 
+static JSBool
+array_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_setProperty(cx, obj, id, vp, strict);
+}
+
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 {
@@ -868,6 +896,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 
 namespace js {
 
+/* non-static for direct definition of array elements within the engine */
 JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs)
@@ -903,6 +932,17 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
+/* non-static for direct definition of array elements within the engine */
+JSBool
+array_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_defineProperty(cx, obj, id, value, getter, setter, attrs);
+}
+
 } // namespace js
 
 static JSBool
@@ -914,6 +954,15 @@ array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
+array_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_getAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
 array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -921,8 +970,18 @@ array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
     return JS_FALSE;
 }
 
+static JSBool
+array_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_setAttributes(cx, obj, id, attrsp);
+}
+
 namespace js {
 
+/* non-static for direct deletion of array elements within the engine */
 JSBool
 array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
@@ -946,6 +1005,16 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 
     rval->setBoolean(true);
     return JS_TRUE;
+}
+
+/* non-static for direct deletion of array elements within the engine */
+JSBool
+array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return array_deleteProperty(cx, obj, id, rval, strict);
 }
 
 } // namespace js
@@ -997,12 +1066,19 @@ Class js::ArrayClass = {
     JS_NULL_CLASS_EXT,
     {
         array_lookupProperty,
+        array_lookupElement,
         array_defineProperty,
+        array_defineElement,
         array_getProperty,
+        array_getElement,
         array_setProperty,
+        array_setElement,
         array_getAttributes,
+        array_getElementAttributes,
         array_setAttributes,
+        array_setElementAttributes,
         array_deleteProperty,
+        array_deleteElement,
         NULL,       /* enumerate      */
         array_typeOf,
         array_fix,
@@ -1836,10 +1912,11 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
 struct CompareArgs
 {
     JSContext          *context;
-    InvokeSessionGuard session;
+    InvokeArgsGuard    args;
+    Value              fval;
 
-    CompareArgs(JSContext *cx)
-      : context(cx)
+    CompareArgs(JSContext *cx, Value fval)
+      : context(cx), fval(fval)
     {}
 };
 
@@ -1860,15 +1937,21 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    InvokeSessionGuard &session = ca->session;
-    session[0] = *av;
-    session[1] = *bv;
+    InvokeArgsGuard &args = ca->args;
+    if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, 2, &args))
+        return JS_FALSE;
+        
+    args.calleeHasBeenReset();
+    args.calleev() = ca->fval;
+    args.thisv() = UndefinedValue();
+    args[0] = *av;
+    args[1] = *bv;
 
-    if (!session.invoke(cx))
+    if (!Invoke(cx, args))
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ToNumber(cx, session.rval(), &cmp))
+    if (!ToNumber(cx, args.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2105,10 +2188,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                 } while (++i != newlen);
             }
         } else {
-            CompareArgs ca(cx);
-            if (!ca.session.start(cx, fval, UndefinedValue(), 2))
-                return false;
-
+            CompareArgs ca(cx, fval);
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
                               comparator_stack_cast(sort_compare),
                               &ca, mergesort_tmp,
@@ -2962,16 +3042,13 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
      */
     argc = 3 + REDUCE_MODE(mode);
 
-    InvokeSessionGuard session;
-    if (!session.start(cx, ObjectValue(*callable), thisv, argc))
-        return JS_FALSE;
-
     MUST_FLOW_THROUGH("out");
     JSBool ok = JS_TRUE;
     JSBool cond;
 
     Value objv = ObjectValue(*obj);
     AutoValueRooter tvr(cx);
+    InvokeArgsGuard args;
     for (jsuint i = start; i != end; i += step) {
         JSBool hole;
         ok = JS_CHECK_OPERATION_LIMIT(cx) &&
@@ -2981,23 +3058,29 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
         if (hole)
             continue;
 
+        if (!args.pushed() && !cx->stack.pushInvokeArgs(cx, argc, &args))
+            return false;
+
         /*
          * Push callable and 'this', then args. We must do this for every
          * iteration around the loop since Invoke clobbers its arguments.
          */
+        args.calleeHasBeenReset();
+        args.calleev() = ObjectValue(*callable);
+        args.thisv() = thisv;
         uintN argi = 0;
         if (REDUCE_MODE(mode))
-            session[argi++] = *vp;
-        session[argi++] = tvr.value();
-        session[argi++] = Int32Value(i);
-        session[argi]   = objv;
+            args[argi++] = *vp;
+        args[argi++] = tvr.value();
+        args[argi++] = Int32Value(i);
+        args[argi]   = objv;
 
         /* Do the call. */
-        ok = session.invoke(cx);
+        ok = Invoke(cx, args);
         if (!ok)
             break;
 
-        const Value &rval = session.rval();
+        const Value &rval = args.rval();
 
         if (mode > MAP)
             cond = js_ValueToBoolean(rval);

@@ -54,12 +54,8 @@
 
 #include "nsIComponentManager.h"
 #include "nsIContentPrefService.h"
-#include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIChromeRegistry.h"
-#include "nsIPrivateBrowsingService.h"
-#include "nsIContentURIGrouper.h"
-#include "nsNetCID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsITextServicesFilter.h"
@@ -87,16 +83,11 @@ class UpdateDictionnaryHolder {
 
 #define CPS_PREF_NAME NS_LITERAL_STRING("spellcheck.lang")
 
-class LastDictionary : public nsIObserver, public nsSupportsWeakReference {
+class LastDictionary {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  LastDictionary();
-
   /**
    * Store current dictionary for editor document url. Use content pref
-   * service. Or, if in private mode, store this information in memory.
+   * service.
    */
   NS_IMETHOD StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDictionary);
 
@@ -115,25 +106,7 @@ public:
    *
    */
   static nsresult GetDocumentURI(nsIEditor* aEditor, nsIURI * *aURI);
-
-  PRBool mInPrivateBrowsing;
-
-  // During private browsing, dictionaries are stored in memory
-  nsDataHashtable<nsStringHashKey, nsString> mMemoryStorage;
 };
-
-NS_IMPL_ISUPPORTS2(LastDictionary, nsIObserver, nsISupportsWeakReference)
-
-LastDictionary::LastDictionary():
-  mInPrivateBrowsing(PR_FALSE)
-{  
-  nsCOMPtr<nsIPrivateBrowsingService> pbService =
-    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbService) {
-    pbService->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
-    mMemoryStorage.Init();
-  }
-}
 
 // static
 nsresult
@@ -168,21 +141,6 @@ LastDictionary::FetchLastDictionary(nsIEditor* aEditor, nsAString& aDictionary)
   rv = GetDocumentURI(aEditor, getter_AddRefs(docUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mInPrivateBrowsing) {
-    nsCOMPtr<nsIContentURIGrouper> hostnameGrouperService =
-      do_GetService(NS_HOSTNAME_GROUPER_SERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(hostnameGrouperService, NS_ERROR_NOT_AVAILABLE);
-    nsString group;
-    hostnameGrouperService->Group(docUri, group);
-    nsAutoString lastDict;
-    if (mMemoryStorage.Get(group, &lastDict)) {
-      aDictionary.Assign(lastDict);
-    } else {
-      aDictionary.Truncate();
-    }
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIContentPrefService> contentPrefService =
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_AVAILABLE);
@@ -214,20 +172,6 @@ LastDictionary::StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDic
   rv = GetDocumentURI(aEditor, getter_AddRefs(docUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
- if (mInPrivateBrowsing) {
-    nsCOMPtr<nsIContentURIGrouper> hostnameGrouperService =
-      do_GetService(NS_HOSTNAME_GROUPER_SERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(hostnameGrouperService, NS_ERROR_NOT_AVAILABLE);
-    nsString group;
-    hostnameGrouperService->Group(docUri, group);
-
-    if (mMemoryStorage.Put(group, nsString(aDictionary))) {
-      return NS_OK;
-    } else {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   nsCOMPtr<nsIWritableVariant> uri = do_CreateInstance(NS_VARIANT_CONTRACTID);
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   uri->SetAsISupports(docUri);
@@ -254,18 +198,6 @@ LastDictionary::ClearCurrentDictionary(nsIEditor* aEditor)
   rv = GetDocumentURI(aEditor, getter_AddRefs(docUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContentURIGrouper> hostnameGrouperService =
-      do_GetService(NS_HOSTNAME_GROUPER_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(hostnameGrouperService, NS_ERROR_NOT_AVAILABLE);
-
-  nsString group;
-  hostnameGrouperService->Group(docUri, group);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mMemoryStorage.IsInitialized()) {
-    mMemoryStorage.Remove(group);
-  }
-
   nsCOMPtr<nsIWritableVariant> uri = do_CreateInstance(NS_VARIANT_CONTRACTID);
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   uri->SetAsISupports(docUri);
@@ -275,22 +207,6 @@ LastDictionary::ClearCurrentDictionary(nsIEditor* aEditor)
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_INITIALIZED);
 
   return contentPrefService->RemovePref(uri, CPS_PREF_NAME);
-}
-
-NS_IMETHODIMP
-LastDictionary::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
-{
-  if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
-    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
-      mInPrivateBrowsing = PR_TRUE;
-    } else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
-      mInPrivateBrowsing = PR_FALSE;
-      if (mMemoryStorage.IsInitialized()) {
-        mMemoryStorage.Clear();
-      }
-    }
-  } 
-  return NS_OK;
 }
 
 LastDictionary* nsEditorSpellCheck::gDictionaryStore = nsnull;
@@ -358,14 +274,6 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
 
   if (!gDictionaryStore) {
     gDictionaryStore = new LastDictionary();
-    if (gDictionaryStore) {
-      NS_ADDREF(gDictionaryStore);
-      nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-      if (observerService) {
-        observerService->AddObserver(gDictionaryStore, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
-      }
-    }
   }
 
 
@@ -650,14 +558,6 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
   return mSpellChecker->SetCurrentDictionary(aDictionary);
 }
 
-NS_IMETHODIMP
-nsEditorSpellCheck::GetSpellChecker(nsISpellChecker **aSpellChecker)
-{
-  *aSpellChecker = mSpellChecker;
-  NS_IF_ADDREF(*aSpellChecker);
-  return NS_OK;
-}
-
 NS_IMETHODIMP    
 nsEditorSpellCheck::UninitSpellChecker()
 {
@@ -826,7 +726,11 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
     if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
       rv = SetCurrentDictionary(NS_LITERAL_STRING("en-US"));
       if (NS_FAILED(rv)) {
-        mSpellChecker->CheckCurrentDictionary();
+        nsTArray<nsString> dictList;
+        rv = mSpellChecker->GetDictionaryList(&dictList);
+        if (NS_SUCCEEDED(rv) && dictList.Length() > 0) {
+          SetCurrentDictionary(dictList[0]);
+        }
       }
     }
   }
@@ -843,5 +747,5 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
 
 void 
 nsEditorSpellCheck::ShutDown() {
-  NS_IF_RELEASE(gDictionaryStore);
+  delete gDictionaryStore;
 }

@@ -644,6 +644,7 @@ ContextStack::popSegment()
 bool
 ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
 {
+    LeaveTrace(cx);
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
     uintN nvars = 2 + argc;
@@ -778,7 +779,8 @@ ContextStack::popFrame(const FrameGuard &fg)
     JS_ASSERT(space().firstUnused() == fg.regs_.sp);
     JS_ASSERT(&fg.regs_ == &seg_->regs());
 
-    fg.regs_.fp()->putActivationObjects();
+    if (fg.regs_.fp()->isNonEvalFunctionFrame())
+        fg.regs_.fp()->functionEpilogue();
 
     seg_->popRegs(fg.prevRegs_);
     if (fg.pushedSeg_)
@@ -1014,13 +1016,6 @@ StackIter::settleOnNewState()
         if (containsFrame && (!containsCall || (Value *)fp_ >= calls_->argv())) {
             /* Nobody wants to see dummy frames. */
             if (fp_->isDummyFrame()) {
-                popFrame();
-                continue;
-            }
-
-            /* Censor pushed-but-not-active frames from InvokeSessionGuard. */
-            if (containsCall && !calls_->active() && fp_->hasArgs() &&
-                calls_->argv() == fp_->actualArgs()) {
                 popFrame();
                 continue;
             }

@@ -878,6 +878,19 @@ FrameState::syncAndForgetFe(FrameEntry *fe, bool markSynced)
     fe->data.setMemory();
 }
 
+inline JSC::MacroAssembler::Address
+FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access)
+{
+    JS_ASSERT(access.script && access.nesting);
+
+    RegisterID reg = allocReg();
+    Value **pbase = access.arg ? &access.nesting->argArray : &access.nesting->varArray;
+    masm.move(ImmPtr(pbase), reg);
+    masm.loadPtr(Address(reg), reg);
+
+    return Address(reg, access.index * sizeof(Value));
+}
+
 inline void
 FrameState::forgetLoopReg(FrameEntry *fe)
 {

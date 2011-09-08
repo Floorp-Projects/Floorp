@@ -985,7 +985,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 #ifdef MOZ_WIDGET_GTK2
     if (gtk_check_version(2,18,7) != NULL) { // older
         if (aWindow.type == NPWindowTypeWindow) {
-            GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
+            GdkWindow* socket_window = gdk_window_lookup(static_cast<GdkNativeWindow>(aWindow.window));
             if (socket_window) {
                 // A GdkWindow for the socket already exists.  Need to
                 // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
@@ -1039,7 +1039,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
           if (!CreatePluginWindow())
               return false;
 
-          ReparentPluginWindow((HWND)aWindow.window);
+          ReparentPluginWindow(reinterpret_cast<HWND>(aWindow.window));
           SizePluginWindow(aWindow.width, aWindow.height);
 
           mWindow.window = (void*)mPluginWindowHWND;
