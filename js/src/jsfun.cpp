@@ -1852,7 +1852,6 @@ fun_toSource(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_fun_call(JSContext *cx, uintN argc, Value *vp)
 {
-    LeaveTrace(cx);
     Value fval = vp[1];
 
     if (!js_IsCallable(fval)) {
@@ -1917,8 +1916,6 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     jsuint length;
     if (!js_GetLengthProperty(cx, aobj, &length))
         return false;
-
-    LeaveTrace(cx);
 
     /* Step 6. */
     if (length > StackSpace::ARGS_LENGTH_MAX) {
@@ -2026,8 +2023,6 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->isFunction());
     JS_ASSERT(obj->isBoundFunction());
-
-    LeaveTrace(cx);
 
     bool constructing = IsConstructing(vp);
 

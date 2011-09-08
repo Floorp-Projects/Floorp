@@ -573,6 +573,8 @@ pref("ui.dragThresholdY", 25);
 
 #if MOZ_PLATFORM_MAEMO == 6
 pref("layers.acceleration.disabled", false);
+#elifdef ANDROID
+pref("layers.acceleration.disabled", false);
 #else
 pref("layers.acceleration.disabled", true);
 #endif
