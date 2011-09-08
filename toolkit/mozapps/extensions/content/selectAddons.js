@@ -38,6 +38,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -70,10 +71,17 @@ function showButtons(aCancel, aBack, aNext, aDone) {
   document.getElementById("done").hidden = !aDone;
 }
 
+function isAddonDistroInstalled(aID) {
+  let branch = Services.prefs.getBranch("extensions.installedDistroAddon.");
+  if (!branch.prefHasUserValue(aID))
+    return false;
+
+  return branch.getBoolPref(aID);
+}
+
 function orderForScope(aScope) {
   switch (aScope) {
   case AddonManager.SCOPE_PROFILE:
-    return 2;
   case AddonManager.SCOPE_APPLICATION:
     return 1;
   default:
@@ -175,7 +183,8 @@ var gChecking = {
       row.setAttribute("id", aEntry.addon.id);
       row.setAttribute("class", "addon");
       rows.appendChild(row);
-      row.setAddon(aEntry.addon, aEntry.install, aEntry.wasActive);
+      row.setAddon(aEntry.addon, aEntry.install, aEntry.wasActive,
+                   isAddonDistroInstalled(aEntry.addon.id));
 
       if (aEntry.install)
         aEntry.install.addListener(gUpdate);
