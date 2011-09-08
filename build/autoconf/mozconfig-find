@@ -69,17 +69,17 @@ abspath() {
 }
 
 if [ -n "$MOZCONFIG" ] && ! [ -f "$MOZCONFIG" ]; then
-  echo "Specified MOZCONFIG \"$MOZCONFIG\" does not exist!"
+  echo "Specified MOZCONFIG \"$MOZCONFIG\" does not exist!" 1>&2
   exit 1
 fi
 
 if [ -n "$MOZ_MYCONFIG" ]; then
-  echo "Your environment currently has the MOZ_MYCONFIG variable set to \"$MOZ_MYCONFIG\". MOZ_MYCONFIG is no longer supported. Please use MOZCONFIG instead."
+  echo "Your environment currently has the MOZ_MYCONFIG variable set to \"$MOZ_MYCONFIG\". MOZ_MYCONFIG is no longer supported. Please use MOZCONFIG instead." 1>&2
   exit 1
 fi
 
 if [ -z "$MOZCONFIG" ] && [ -f "$topsrcdir/.mozconfig" ] && [ -f "$topsrcdir/mozconfig" ]; then
-  echo "Both \$topsrcdir/.mozconfig and \$topsrcdir/mozconfig are supported, but you must choose only one. Please remove the other."
+  echo "Both \$topsrcdir/.mozconfig and \$topsrcdir/mozconfig are supported, but you must choose only one. Please remove the other." 1>&2
   exit 1
 fi
 
@@ -103,7 +103,7 @@ for _config in "$topsrcdir/mozconfig.sh" \
                "$HOME/.mozmyconfig.sh"
 do
   if test -f "$_config"; then
-    echo "You currently have a mozconfig at \"$_config\". This implicit location is no longer supported. Please move it to $topsrcdir/.mozconfig or specify it explicitly via \$MOZCONFIG.";
+    echo "You currently have a mozconfig at \"$_config\". This implicit location is no longer supported. Please move it to $topsrcdir/.mozconfig or specify it explicitly via \$MOZCONFIG." 1>&2
     exit 1
   fi
 done
