@@ -1277,6 +1277,7 @@ var TouchEventHandler = {
 
     if (!content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners) {
       sendAsyncMessage("Browser:CaptureEvents", {
+        type: null,
         messageId: json.messageId,
         click: false, panning: false,
         contentMightCaptureMouse: false
