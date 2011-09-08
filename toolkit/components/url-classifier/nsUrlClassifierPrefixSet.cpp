@@ -49,6 +49,8 @@
 #include "mozilla/Mutex.h"
 #include "prlog.h"
 
+using namespace mozilla;
+
 // NSPR_LOG_MODULES=UrlClassifierPrefixSet:5
 #if defined(PR_LOGGING)
 static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nsnull;
@@ -62,7 +64,9 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet);
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
-  : mHasPrefixes(PR_FALSE)
+  : mPrefixTreeLock("mPrefixTreeLock"),
+    mTreeIsReady(mPrefixTreeLock, "mTreeIsReady"),
+    mHasPrefixes(PR_FALSE)
 {
 #if defined(PR_LOGGING)
   if (!gUrlClassifierPrefixSetLog)
@@ -71,14 +75,18 @@ nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   LOG(("Instantiating PrefixSet"));
 }
 
-nsresult
+NS_IMETHODIMP
 nsUrlClassifierPrefixSet::SetPrefixes(const PRUint32 * aArray, PRUint32 aLength)
 {
-  if (mHasPrefixes) {
-    mDeltas.Clear();
-    mIndexPrefixes.Clear();
-    mIndexStarts.Clear();
-    mHasPrefixes = PR_FALSE;
+  {
+    MutexAutoLock lock(mPrefixTreeLock);
+    if (mHasPrefixes) {
+      LOG(("Clearing PrefixSet"));
+      mDeltas.Clear();
+      mIndexPrefixes.Clear();
+      mIndexStarts.Clear();
+      mHasPrefixes = PR_FALSE;
+    }
   }
   if (aLength > 0) {
     // Ensure they are sorted before adding
@@ -91,12 +99,14 @@ nsUrlClassifierPrefixSet::SetPrefixes(const PRUint32 * aArray, PRUint32 aLength)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsUrlClassifierPrefixSet::AddPrefixes(const PRUint32 * prefixes, PRUint32 aLength)
 {
   if (aLength == 0) {
     return NS_OK;
   }
+
+  MutexAutoLock lock(mPrefixTreeLock);
 
   mIndexPrefixes.AppendElement(prefixes[0]);
   mIndexStarts.AppendElement(mDeltas.Length());
@@ -125,6 +135,7 @@ nsUrlClassifierPrefixSet::AddPrefixes(const PRUint32 * prefixes, PRUint32 aLengt
   LOG(("Total number of deltas: %d", mDeltas.Length()));
 
   mHasPrefixes = PR_TRUE;
+  mTreeIsReady.NotifyAll();
 
   return NS_OK;
 }
@@ -147,7 +158,7 @@ PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
   return end;
 }
 
-nsresult
+NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, PRBool * aFound)
 {
   *aFound = PR_FALSE;
@@ -194,14 +205,42 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, PRBool * aFound)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsUrlClassifierPrefixSet::EstimateSize(PRUint32 * aSize)
 {
+  MutexAutoLock lock(mPrefixTreeLock);
   *aSize = sizeof(PRBool);
   if (mHasPrefixes) {
     *aSize += sizeof(PRUint16) * mDeltas.Length();
     *aSize += sizeof(PRUint32) * mIndexPrefixes.Length();
     *aSize += sizeof(PRUint32) * mIndexStarts.Length();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRBool * aReady, PRBool * aFound)
+{
+  MutexAutoLock lock(mPrefixTreeLock);
+
+  // check whether we are opportunistically probing or should wait
+  if (*aReady) {
+    // we should block until we are ready
+    while (!mHasPrefixes) {
+      LOG(("Tree is empty, probe must wait"));
+      mTreeIsReady.Wait();
+    }
+  } else {
+    // opportunistic probe -> check if set is loaded
+    if (mHasPrefixes) {
+      *aReady = PR_TRUE;
+    } else {
+      return NS_OK;
+    }
+  }
+
+  nsresult rv = Contains(aPrefix, aFound);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
