@@ -44,6 +44,7 @@
 #include "nsTArray.h"
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierPrefixSet.h"
+#include "nsIRandomGenerator.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsToolkitCompsCID.h"
@@ -70,13 +71,36 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSe
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   : mPrefixSetLock("mPrefixSetLock"),
     mSetIsReady(mPrefixSetLock, "mSetIsReady"),
-    mHasPrefixes(PR_FALSE)
+    mHasPrefixes(PR_FALSE),
+    mRandomKey(0)
 {
 #if defined(PR_LOGGING)
   if (!gUrlClassifierPrefixSetLog)
     gUrlClassifierPrefixSetLog = PR_NewLogModule("UrlClassifierPrefixSet");
 #endif
-  LOG(("Instantiating PrefixSet"));
+
+  nsresult rv = InitKey();
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to initialize PrefixSet"));
+  }
+}
+
+nsresult
+nsUrlClassifierPrefixSet::InitKey()
+{
+  nsCOMPtr<nsIRandomGenerator> rg =
+    do_GetService("@mozilla.org/security/random-generator;1");
+  NS_ENSURE_STATE(rg);
+
+  PRUint8 *temp;
+  nsresult rv = rg->GenerateRandomBytes(sizeof(mRandomKey), &temp);
+  NS_ENSURE_SUCCESS(rv, rv);
+  memcpy(&mRandomKey, temp, sizeof(mRandomKey));
+  NS_Free(temp);
+
+  LOG(("Initialized PrefixSet, key = %X", mRandomKey));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -196,7 +220,7 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, PRBool * aFound)
   // Because of this, we need to check if the target lies before the beginning
   // of the indices.
 
-  int i = BinSearch(0, mIndexPrefixes.Length() - 1, target);
+  PRUint32 i = BinSearch(0, mIndexPrefixes.Length() - 1, target);
   if (mIndexPrefixes[i] > target && i > 0) {
     i--;
   }
@@ -240,9 +264,29 @@ nsUrlClassifierPrefixSet::IsEmpty(PRBool * aEmpty)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRBool * aReady, PRBool * aFound)
+nsUrlClassifierPrefixSet::GetKey(PRUint32 * aKey)
+ {
+   MutexAutoLock lock(mPrefixSetLock);
+   *aKey = mRandomKey;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRUint32 aKey,
+                                PRBool* aReady, PRBool* aFound)
 {
   MutexAutoLock lock(mPrefixSetLock);
+
+  // We might have raced here with a LoadPrefixSet call,
+  // loading a saved PrefixSet with another key than the one used to probe us.
+  // This must occur exactly between the GetKey call and the Probe call.
+  // This could cause a false negative immediately after browser start.
+  // Claim we are still busy loading instead.
+  if (aKey != mRandomKey) {
+    LOG(("Potential race condition detected, avoiding"));
+    *aReady = PR_FALSE;
+    return NS_OK;
+  }
 
   // check whether we are opportunistically probing or should wait
   if (*aReady) {
@@ -279,6 +323,8 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose & fileFd)
     PRUint32 indexSize;
     PRUint32 deltaSize;
 
+    read = PR_Read(fileFd, &mRandomKey, sizeof(PRUint32));
+    NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
     read = PR_Read(fileFd, &indexSize, sizeof(PRUint32));
     NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
     read = PR_Read(fileFd, &deltaSize, sizeof(PRUint32));
@@ -344,6 +390,9 @@ nsUrlClassifierPrefixSet::StoreToFd(AutoFDClose & fileFd)
   PRInt32 written;
   PRUint32 magic = PREFIXSET_VERSION_MAGIC;
   written = PR_Write(fileFd, &magic, sizeof(PRUint32));
+  NS_ENSURE_TRUE(written > 0, NS_ERROR_FAILURE);
+
+  written = PR_Write(fileFd, &mRandomKey, sizeof(PRUint32));
   NS_ENSURE_TRUE(written > 0, NS_ERROR_FAILURE);
 
   PRUint32 indexSize = mIndexStarts.Length();
