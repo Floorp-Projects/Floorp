@@ -48,6 +48,8 @@
 
 #include "jsscriptinlines.h"
 #include "ArgumentsObject-inl.h"
+#include "CallObject-inl.h"
+
 #include "methodjit/MethodJIT.h"
 
 namespace js {
@@ -340,15 +342,15 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
 }
 
 inline void
-StackFrame::setScopeChainWithOwnCallObj(JSObject &obj)
+StackFrame::setScopeChainWithOwnCallObj(CallObject &obj)
 {
     JS_ASSERT(&obj != NULL);
-    JS_ASSERT(!hasCallObj() && obj.isCall() && obj.getPrivate() == this);
+    JS_ASSERT(!hasCallObj() && obj.maybeStackFrame() == this);
     scopeChain_ = &obj;
     flags_ |= HAS_SCOPECHAIN | HAS_CALL_OBJ;
 }
 
-inline JSObject &
+inline CallObject &
 StackFrame::callObj() const
 {
     JS_ASSERT_IF(isNonEvalFunctionFrame() || isStrictEvalFrame(), hasCallObj());
@@ -358,7 +360,7 @@ StackFrame::callObj() const
         JS_ASSERT(IsCacheableNonGlobalScope(pobj) || pobj->isWith());
         pobj = pobj->getParent();
     }
-    return *pobj;
+    return pobj->asCall();
 }
 
 inline bool
@@ -415,11 +417,11 @@ inline void
 StackFrame::markFunctionEpilogueDone(bool activationOnly)
 {
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
-        if (hasArgsObj() && !argsObj().getPrivate()) {
+        if (hasArgsObj() && !argsObj().maybeStackFrame()) {
             args.nactual = args.obj->initialLength();
             flags_ &= ~HAS_ARGS_OBJ;
         }
-        if (hasCallObj() && !callObj().getPrivate()) {
+        if (hasCallObj() && !callObj().maybeStackFrame()) {
             /*
              * For function frames, the call object may or may not have have an
              * enclosing DeclEnv object, so we use the callee's parent, since
@@ -687,8 +689,7 @@ ArgumentsObject::getElement(uint32 i, Value *vp)
      * If this arguments object was created on trace the actual argument value
      * could be in a register or something, so we can't optimize.
      */
-    StackFrame *fp = reinterpret_cast<StackFrame *>(getPrivate());
-    if (fp == JS_ARGUMENTS_OBJECT_ON_TRACE)
+    if (onTrace())
         return false;
 
     /*
@@ -696,6 +697,7 @@ ArgumentsObject::getElement(uint32 i, Value *vp)
      * the canonical argument value.  Note that strict arguments objects do not
      * alias named arguments and never have a stack frame.
      */
+    StackFrame *fp = maybeStackFrame();
     JS_ASSERT_IF(isStrictArguments(), !fp);
     if (fp)
         *vp = fp->canonicalActualArg(i);
@@ -711,7 +713,7 @@ ArgumentsObject::getElements(uint32 start, uint32 count, Value *vp)
     if (start > length || start + count > length)
         return false;
 
-    StackFrame *fp = reinterpret_cast<StackFrame *>(getPrivate());
+    StackFrame *fp = maybeStackFrame();
 
     /* If there's no stack frame for this, argument values are in elements(). */
     if (!fp) {
@@ -727,7 +729,7 @@ ArgumentsObject::getElements(uint32 start, uint32 count, Value *vp)
     }
 
     /* If we're on trace, there's no canonical location for elements: fail. */
-    if (fp == JS_ARGUMENTS_OBJECT_ON_TRACE)
+    if (onTrace())
         return false;
 
     /* Otherwise, element values are on the stack. */
