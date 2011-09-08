@@ -270,6 +270,7 @@ class CellIterImpl
     }
 
     void init(JSCompartment *comp, AllocKind kind) {
+        JS_ASSERT(comp->arenas.isSynchronizedFreeList(kind));
         firstThingOffset = Arena::firstThingOffset(kind);
         thingSize = Arena::thingSize(kind);
         aheader = comp->arenas.getFirstArena(kind);
@@ -322,7 +323,6 @@ class CellIterUnderGC : public CellIterImpl {
   public:
     CellIterUnderGC(JSCompartment *comp, AllocKind kind) {
         JS_ASSERT(comp->rt->gcRunning);
-        comp->arenas.checkEmptyFreeList(kind);
         init(comp, kind);
     }
 };
