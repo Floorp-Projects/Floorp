@@ -84,6 +84,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return Operand(Register::FromCode(base.base()),
                        base.disp() + sizeof(void *));
     }
+    void moveValue(const Value &val, const Register &type, const Register &data) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(val));
+        movl(Imm32(jv.s.tag), type);
+        movl(Imm32(jv.s.payload.i32), data);
+    }
 
     /////////////////////////////////////////////////////////////////
     // X86/X64-common interface.

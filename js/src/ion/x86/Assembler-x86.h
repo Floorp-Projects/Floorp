@@ -68,6 +68,8 @@ static const Register StackPointer = esp;
 static const Register ReturnReg = eax;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
 
+static const Register ArgumentsRectifierReg = { JSC::X86Registers::esi };
+
 struct ImmTag : public Imm32
 {
     ImmTag(JSValueTag mask)

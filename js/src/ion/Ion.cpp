@@ -139,7 +139,8 @@ IonCompartment::IonCompartment()
   : execAlloc_(NULL),
     enterJIT_(NULL),
     bailoutHandler_(NULL),
-    returnError_(NULL)
+    returnError_(NULL),
+    argumentsRectifier_(NULL)
 {
 }
 
@@ -184,6 +185,8 @@ IonCompartment::sweep(JSContext *cx)
         bailoutHandler_ = NULL;
     if (returnError_ && IsAboutToBeFinalized(cx, returnError_))
         returnError_ = NULL;
+    if (argumentsRectifier_ && IsAboutToBeFinalized(cx, argumentsRectifier_))
+        argumentsRectifier_ = NULL;
 
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i] && IsAboutToBeFinalized(cx, bailoutTables_[i]))
