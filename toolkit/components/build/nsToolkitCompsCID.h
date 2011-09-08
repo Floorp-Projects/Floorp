@@ -81,6 +81,9 @@
 #define NS_PARENTALCONTROLSSERVICE_CONTRACTID \
     "@mozilla.org/parental-controls-service;1"
 
+#define NS_URLCLASSIFIERPREFIXSET_CONTRACTID \
+  "@mozilla.org/url-classifier/prefixset;1"
+
 #define NS_URLCLASSIFIERDBSERVICE_CONTRACTID \
     "@mozilla.org/url-classifier/dbservice;1"
 
@@ -156,7 +159,11 @@
 // {e7f70966-9a37-48d7-8aeb-35998f31090e}
 #define NS_TYPEAHEADFIND_CID \
 { 0xe7f70966, 0x9a37, 0x48d7, { 0x8a, 0xeb, 0x35, 0x99, 0x8f, 0x31, 0x09, 0x0e} }
-  
+
+// {61a2318e-0a7a-483e-9105-367d4827f288}
+#define NS_URLCLASSIFIERPREFIXSET_CID \
+{ 0x61a2318e, 0x0a7a, 0x483e, { 0x91, 0x05, 0x36, 0x7d, 0x48, 0x27, 0xf2, 0x88} }
+
 // {5eb7c3c1-ec1f-4007-87cc-eefb37d68ce6}
 #define NS_URLCLASSIFIERDBSERVICE_CID \
 { 0x5eb7c3c1, 0xec1f, 0x4007, { 0x87, 0xcc, 0xee, 0xfb, 0x37, 0xd6, 0x8c, 0xe6} }
