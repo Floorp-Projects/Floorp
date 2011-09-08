@@ -601,7 +601,7 @@ stubs::SetElem(VMFrame &f)
                 obj->setDenseArrayElementWithType(cx, i, rval);
                 goto end_setelem;
             } else {
-                if (!f.script()->hasAnalysis())
+                if (f.script()->hasAnalysis())
                     f.script()->analysis()->getCode(f.pc()).arrayWriteHole = true;
             }
         }
