@@ -42,6 +42,7 @@
 #define GlobalObject_h___
 
 #include "jsfun.h"
+#include "jsiter.h"
 #include "jsvector.h"
 
 extern JSObject *
@@ -87,7 +88,8 @@ class GlobalObject : public ::JSObject {
 
     /* One-off properties stored after slots for built-ins. */
     static const uintN THROWTYPEERROR          = STANDARD_CLASS_SLOTS;
-    static const uintN REGEXP_STATICS          = THROWTYPEERROR + 1;
+    static const uintN GENERATOR_PROTO         = THROWTYPEERROR + 1;
+    static const uintN REGEXP_STATICS          = GENERATOR_PROTO + 1;
     static const uintN FUNCTION_NS             = REGEXP_STATICS + 1;
     static const uintN RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
     static const uintN EVAL                    = RUNTIME_CODEGEN_ENABLED + 1;
@@ -150,6 +152,14 @@ class GlobalObject : public ::JSObject {
         return &getSlot(THROWTYPEERROR).toObject();
     }
 
+    JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
+        Value &v = getSlotRef(GENERATOR_PROTO);
+        if (!v.isObject() && !js_InitIteratorClasses(cx, this))
+            return NULL;
+        JS_ASSERT(v.toObject().isGenerator());
+        return &v.toObject();
+    }
+
     Value getRegExpStatics() const {
         return getSlot(REGEXP_STATICS);
     }
@@ -176,6 +186,7 @@ class GlobalObject : public ::JSObject {
 
     bool getFunctionNamespace(JSContext *cx, Value *vp);
 
+    bool initGeneratorClass(JSContext *cx);
     bool initStandardClasses(JSContext *cx);
 
     typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;

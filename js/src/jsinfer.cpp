@@ -3967,7 +3967,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_GENERATOR:
         if (script->hasFunction) {
             if (script->hasGlobal()) {
-                TypeObject *object = TypeScript::StandardType(cx, script, JSProto_Generator);
+                JSObject *proto = script->global()->getOrCreateGeneratorPrototype(cx);
+                if (!proto)
+                    return false;
+                TypeObject *object = proto->getNewType(cx);
                 if (!object)
                     return false;
                 TypeScript::ReturnTypes(script)->addType(cx, Type::ObjectType(object));
