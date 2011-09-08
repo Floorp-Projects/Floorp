@@ -316,7 +316,7 @@
     </arrowbox>
 
     <!-- popup for site identity information -->
-    <arrowbox id="identity-container" hidden="true" mode="unknownIdentity" offset="18" flex="1">
+    <arrowbox id="identity-container" hidden="true" mode="unknownIdentity" offset="18" flex="1" type="dialog">
       <hbox id="identity-popup-container" flex="1" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box" flex="1">
@@ -359,7 +359,7 @@
       </hbox>
     </arrowbox>
 
-    <arrowbox id="bookmark-popup" hidden="true" align="stretch" offset="12">
+    <arrowbox id="bookmark-popup" hidden="true" align="stretch" offset="12" type="dialog">
       <hbox id="bookmark-popup-title">
         <label value="&bookmarkPopup.label;"/>
       </hbox>
@@ -391,7 +391,7 @@
       </dialog>
     </box>
 
-    <arrowbox id="appmenu-popup" hidden="true">
+    <arrowbox id="appmenu-popup" hidden="true" type="dialog">
       <box id="appmenu-popup-sitecommands"/>
       <richlistbox id="appmenu-popup-appcommands"/>
     </arrowbox>

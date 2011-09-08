@@ -45,7 +45,7 @@
     <content orient="vertical">
       <xul:box anonid="container" class="panel-arrowcontainer" flex="1">
         <xul:box anonid="arrowbox" class="panel-arrowbox" dir="ltr">
-          <xul:image anonid="arrow" class="panel-arrow"/>
+          <xul:image anonid="arrow" class="panel-arrow" xbl:inherits="type"/>
         </xul:box>
         <xul:scrollbox anonid="arrowcontent" class="panel-arrowcontent" flex="1">
           <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack,flex">
