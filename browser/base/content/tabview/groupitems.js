@@ -711,8 +711,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this._createUndoButton();
     } else
       this.close();
-    
-    this._makeClosestTabActive();
+
+    this._makeLastActiveGroupItemActive();
   },
   
   // ----------
@@ -725,6 +725,17 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let closestTabItem = UI.getClosestTab(closeCenter);
     if (closestTabItem)
       UI.setActive(closestTabItem);
+  },
+
+  // ----------
+  // Function: _makeLastActiveGroupItemActive
+  // Makes the last active group item active.
+  _makeLastActiveGroupItemActive: function GroupItem__makeLastActiveGroupItemActive() {
+    let groupItem = GroupItems.getLastActiveGroupItem();
+    if (groupItem)
+      UI.setActive(groupItem);
+    else
+      this._makeClosestTabActive();
   },
 
   // ----------
@@ -1149,9 +1160,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         options.dontClose = true;
 
       let closed = options.dontClose ? false : this.closeIfEmpty();
-      if (closed)
-        this._makeClosestTabActive();
-      else if (!options.dontArrange) {
+      if (closed) {
+        this._makeLastActiveGroupItemActive();
+      } else if (!options.dontArrange) {
         this.arrange({animate: !options.immediately});
         this._unfreezeItemSize({dontArrange: true});
       }
@@ -1944,6 +1955,7 @@ let GroupItems = {
   _autoclosePaused: false,
   minGroupHeight: 110,
   minGroupWidth: 125,
+  _lastActiveList: null,
 
   // ----------
   // Function: toString
@@ -1968,6 +1980,8 @@ let GroupItems = {
       if (idx != -1)
         self._delayedModUpdates.splice(idx, 1);
     }
+
+    this._lastActiveList = new MRUList();
 
     AllTabs.register("attrModified", handleAttrModified);
     AllTabs.register("close", handleClose);
@@ -2312,6 +2326,7 @@ let GroupItems = {
       return groupItem != pending.groupItem;
     });
 
+    this._lastActiveList.remove(groupItem);
     UI.updateTabButton();
   },
 
@@ -2423,8 +2438,19 @@ let GroupItems = {
 
     iQ(groupItem.container).addClass('activeGroupItem');
 
+    this._lastActiveList.update(groupItem);
     this._activeGroupItem = groupItem;
     this._save();
+  },
+
+  // ----------
+  // Function: getLastActiveGroupItem
+  // Gets last active group item.
+  // Returns the <groupItem>. If nothing is found, return null.
+  getLastActiveGroupItem: function GroupItem_getLastActiveGroupItem() {
+    return this._lastActiveList.peek(function(groupItem) {
+      return (groupItem && !groupItem.hidden && groupItem.getChildren().length > 0)
+    });
   },
 
   // ----------

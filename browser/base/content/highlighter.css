@@ -12,9 +12,10 @@
   overflow: hidden;
 }
 
-.highlighter-veil,
-#highlighter-veil-middlebox,
-#highlighter-veil-transparentbox {
+#highlighter-veil-container:not([locked]) > .highlighter-veil,
+#highlighter-veil-container:not([locked]) > #highlighter-veil-middlebox,
+#highlighter-veil-container:not([locked]) > #highlighter-veil-middlebox > .highlighter-veil,
+#highlighter-veil-container:not([locked]) > #highlighter-veil-middlebox > #highlighter-veil-transparentbox {
   -moz-transition-property: width, height;
   -moz-transition-duration: 0.1s;
   -moz-transition-timing-function: linear;

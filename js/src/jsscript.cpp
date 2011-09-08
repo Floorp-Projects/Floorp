@@ -1289,6 +1289,18 @@ JSScript::dataSize()
     return dataEnd - data;
 }
 
+size_t
+JSScript::dataSize(JSUsableSizeFun usf)
+{
+#if JS_SCRIPT_INLINE_DATA_LIMIT
+    if (data == inlineData)
+        return 0;
+#endif
+
+    size_t usable = usf(data);
+    return usable ? usable : dataSize();
+}
+
 void
 JSScript::setOwnerObject(JSObject *owner)
 {

@@ -20,11 +20,11 @@ load 367587-1.html
 load 370703-1.html
 load 370940-1.html
 load 373586-1.xhtml
-asserts(8-10) load 378413-1.xhtml # bug 424225, bug 402850?
+asserts(5-10) load 378413-1.xhtml # bug 424225, bug 402850?
 load 380116-1.xhtml
 load 382212-1.xhtml
 load 382610-1.html
-asserts-if(winWidget,1) load 383887-1.html # bug 576434
+asserts-if(winWidget||Android,1) load 383887-1.html # bug 576434
 load 386554-1.html
 load 388374-1.xhtml
 load 388374-2.html
