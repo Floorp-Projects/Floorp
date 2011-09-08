@@ -2718,11 +2718,11 @@ obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
 }
 
 size_t
-JSObject::sizeOfSlotsArray(size_t(*mus)(void *))
+JSObject::sizeOfSlotsArray(JSUsableSizeFun usf)
 {
     if (!hasSlotsArray())
         return 0;
-    size_t usable = mus((void *)slots);
+    size_t usable = usf((void *)slots);
     return usable ? usable : numSlots() * sizeof(js::Value);
 }
 
