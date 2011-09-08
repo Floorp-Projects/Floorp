@@ -11,8 +11,10 @@ interface nsIUrlClassifierPrefixSet : nsISupports
   void addPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
                    in unsigned long aLength);
   boolean contains(in unsigned long aPrefix);
-  boolean probe(in unsigned long aPrefix, inout boolean aReady);
+  boolean probe(in unsigned long aPrefix, in unsigned long aKey,
+                inout boolean aReady);
   PRUint32 estimateSize();
+  PRUint32 getKey();
   boolean isEmpty();
   void loadFromFile(in nsIFile aFile);
   void storeToFile(in nsIFile aFile);
