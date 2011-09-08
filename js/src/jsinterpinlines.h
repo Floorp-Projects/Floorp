@@ -71,108 +71,6 @@ class AutoPreserveEnumerators {
     }
 };
 
-class InvokeSessionGuard
-{
-    InvokeArgsGuard args_;
-    InvokeFrameGuard ifg_;
-    Value savedCallee_, savedThis_;
-    Value *formals_, *actuals_;
-    unsigned nformals_;
-    JSScript *script_;
-    Value *stackLimit_;
-    jsbytecode *stop_;
-
-    bool optimized() const { return ifg_.pushed(); }
-
-  public:
-    InvokeSessionGuard() : args_(), ifg_() {}
-    ~InvokeSessionGuard() {}
-
-    bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
-    bool invoke(JSContext *cx);
-
-    bool started() const {
-        return args_.pushed();
-    }
-
-    Value &operator[](unsigned i) const {
-        JS_ASSERT(i < argc());
-        Value &arg = i < nformals_ ? formals_[i] : actuals_[i];
-        JS_ASSERT_IF(optimized(), &arg == &ifg_.fp()->canonicalActualArg(i));
-        JS_ASSERT_IF(!optimized(), &arg == &args_[i]);
-        return arg;
-    }
-
-    uintN argc() const {
-        return args_.argc();
-    }
-
-    const Value &rval() const {
-        return optimized() ? ifg_.fp()->returnValue() : args_.rval();
-    }
-};
-
-inline bool
-InvokeSessionGuard::invoke(JSContext *cx)
-{
-    /* N.B. Must be kept in sync with Invoke */
-
-    /* Refer to canonical (callee, this) for optimized() sessions. */
-    formals_[-2] = savedCallee_;
-    formals_[-1] = savedThis_;
-
-    /* Prevent spurious accessing-callee-after-rval assert. */
-    args_.calleeHasBeenReset();
-
-    if (!optimized())
-        return Invoke(cx, args_);
-
-    /*
-     * Update the types of each argument. The 'this' type and missing argument
-     * types were handled when the invoke session was created.
-     */
-    for (unsigned i = 0; i < Min(argc(), nformals_); i++)
-        types::TypeScript::SetArgument(cx, script_, i, (*this)[i]);
-
-#ifdef JS_METHODJIT
-    mjit::JITScript *jit = script_->getJIT(false /* !constructing */);
-    if (!jit) {
-        /* Watch in case the code was thrown away due a recompile. */
-        mjit::CompileStatus status = mjit::TryCompile(cx, script_, false);
-        if (status == mjit::Compile_Error)
-            return false;
-        JS_ASSERT(status == mjit::Compile_Okay);
-        jit = script_->getJIT(false);
-    }
-    void *code;
-    if (!(code = jit->invokeEntry))
-        return Invoke(cx, args_);
-#endif
-
-    /* Clear any garbage left from the last Invoke. */
-    StackFrame *fp = ifg_.fp();
-    fp->resetCallFrame(script_);
-
-    JSBool ok;
-    {
-        AutoPreserveEnumerators preserve(cx);
-        args_.setActive();  /* From js::Invoke(InvokeArgsGuard) overload. */
-        Probes::enterJSFun(cx, fp->fun(), script_);
-#ifdef JS_METHODJIT
-        ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_, /* partial = */ false);
-        cx->regs().pc = stop_;
-#else
-        cx->regs().pc = script_->code;
-        ok = Interpret(cx, cx->fp());
-#endif
-        Probes::exitJSFun(cx, fp->fun(), script_);
-        args_.setInactive();
-    }
-
-    /* Don't clobber callee with rval; rval gets read from fp->rval. */
-    return ok;
-}
-
 namespace detail {
 
 template<typename T> class PrimitiveBehavior { };
@@ -329,6 +227,20 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
     if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
         return NULL;
     return pobj;
+}
+
+inline bool
+FunctionNeedsPrologue(JSContext *cx, JSFunction *fun)
+{
+    /* Heavyweight functions need call objects created. */
+    if (fun->isHeavyweight())
+        return true;
+
+    /* Outer and inner functions need to preserve nesting invariants. */
+    if (cx->typeInferenceEnabled() && fun->script()->nesting())
+        return true;
+
+    return false;
 }
 
 inline bool

@@ -291,8 +291,16 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
     ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
                 OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_ENABLESIZING | 
-                OFN_EXPLORER | OFN_ENABLEHOOK;
-    ofn.lpfnHook = FilePickerHook;
+                OFN_EXPLORER;
+
+    // Windows Vista and up won't allow you to use the new looking dialogs with
+    // a hook procedure.  The hook procedure fixes a problem on XP dialogs for
+    // file picker visibility.  Vista and up automatically ensures the file 
+    // picker is always visible.
+    if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
+      ofn.lpfnHook = FilePickerHook;
+      ofn.Flags |= OFN_ENABLEHOOK;
+    }
 
     // Handle add to recent docs settings
     nsCOMPtr<nsIPrivateBrowsingService> pbs =
@@ -354,15 +362,24 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
 
         // The hook set here ensures that the buffer returned will always be
-        // long enough to hold all selected files.  The hook may modify the
+        // large enough to hold all selected files.  The hook may modify the
         // value of ofn.lpstrFile and deallocate the old buffer that it pointed
         // to (fileBuffer). The hook assumes that the passed in value is heap 
         // allocated and that the returned value should be freed by the caller.
         // If the hook changes the buffer, it will deallocate the old buffer.
-        ofn.lpfnHook = MultiFilePickerHook;
-        fileBuffer.forget();
-        result = ::GetOpenFileNameW(&ofn);
-        fileBuffer = ofn.lpstrFile;
+        // This fix would be nice to have in Vista and up, but it would force
+        // the file picker to use the old style dialogs because hooks are not
+        // allowed in the new file picker UI.  We need to eventually move to
+        // the new Common File Dialogs for Vista and up.
+        if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
+          ofn.lpfnHook = MultiFilePickerHook;
+          fileBuffer.forget();
+          result = ::GetOpenFileNameW(&ofn);
+          fileBuffer = ofn.lpstrFile;
+        }
+        else {
+          result = ::GetOpenFileNameW(&ofn);
+        }
       }
       else if (mMode == modeSave) {
         ofn.Flags |= OFN_NOREADONLYRETURN;

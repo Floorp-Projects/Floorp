@@ -4070,6 +4070,12 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_METHODJIT
 
+static size_t
+zero_usable_size(void *p)
+{
+    return 0;
+}
+
 static void
 SumJitDataSizeCallback(JSContext *cx, void *data, void *thing,
                        JSGCTraceKind traceKind, size_t thingSize)
@@ -4077,7 +4083,11 @@ SumJitDataSizeCallback(JSContext *cx, void *data, void *thing,
     size_t *sump = static_cast<size_t *>(data);
     JS_ASSERT(traceKind == JSTRACE_SCRIPT);
     JSScript *script = static_cast<JSScript *>(thing);
-    *sump += script->jitDataSize(NULL);
+    /*
+     * Passing in zero_usable_size causes jitDataSize to fall back to its
+     * secondary size computation.
+     */
+    *sump += script->jitDataSize(zero_usable_size);
 }
 
 #endif
@@ -4087,7 +4097,7 @@ MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     size_t n = 0;
-    IterateCells(cx, NULL, gc::FINALIZE_TYPE_OBJECT, &n, SumJitDataSizeCallback);
+    IterateCells(cx, NULL, gc::FINALIZE_SCRIPT, &n, SumJitDataSizeCallback);
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);

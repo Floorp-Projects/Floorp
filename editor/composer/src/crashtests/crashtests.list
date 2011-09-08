@@ -1,6 +1,6 @@
-load 351236-1.html
+asserts-if(Android,2) load 351236-1.html
 load 407062-1.html
 load 419563-1.xhtml
 skip-if(winWidget) load 428844-1.html # bug 471185
 load 461049-1.html
-asserts(0-1) asserts-if(winWidget,0-2) load removing-editable-xslt.html # bug 500847
+asserts(0-1) asserts-if(winWidget||Android,0-2) load removing-editable-xslt.html # bug 500847

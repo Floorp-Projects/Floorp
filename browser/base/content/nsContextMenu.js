@@ -1036,7 +1036,7 @@ nsContextMenu.prototype = {
     MailIntegration.sendMessage( this.linkURL, "" );
   },
 
-  // Backwards-compatability wrapper
+  // Backwards-compatibility wrapper
   saveImage : function() {
     if (this.onCanvas || this.onImage)
         this.saveMedia();
@@ -1062,7 +1062,7 @@ nsContextMenu.prototype = {
     }
   },
 
-  // Backwards-compatability wrapper
+  // Backwards-compatibility wrapper
   sendImage : function() {
     if (this.onCanvas || this.onImage)
         this.sendMedia();

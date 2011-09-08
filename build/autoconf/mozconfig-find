@@ -40,8 +40,10 @@
 # mozconfigfind - Loads options from .mozconfig onto configure's
 #    command-line. The .mozconfig file is searched for in the 
 #    order:
-#       if $MOZCONFIG is set, use that.
-#       Otherwise, use $TOPSRCDIR/.mozconfig
+#       If $MOZCONFIG is set, use that.
+#       If one of $TOPSRCDIR/.mozconfig or $TOPSRCDIR/mozconfig exists, use it.
+#       If both exist, or if various legacy locations contain a mozconfig, error.
+#       Otherwise, use the default build options.
 #
 topsrcdir=$1
 
@@ -76,8 +78,14 @@ if [ -n "$MOZ_MYCONFIG" ]; then
   exit 1
 fi
 
+if [ -z "$MOZCONFIG" ] && [ -f "$topsrcdir/.mozconfig" ] && [ -f "$topsrcdir/mozconfig" ]; then
+  echo "Both \$topsrcdir/.mozconfig and \$topsrcdir/mozconfig are supported, but you must choose only one. Please remove the other."
+  exit 1
+fi
+
 for _config in "$MOZCONFIG" \
-               "$topsrcdir/.mozconfig"
+               "$topsrcdir/.mozconfig" \
+               "$topsrcdir/mozconfig"
 do
   if test -f "$_config"; then
     echo `abspath $_config`
@@ -88,8 +96,7 @@ done
 # We used to support a number of other implicit .mozconfig locations. We now
 # detect if we were about to use any of these locations and issue an error if we
 # find any.
-for _config in "$topsrcdir/mozconfig" \
-               "$topsrcdir/mozconfig.sh" \
+for _config in "$topsrcdir/mozconfig.sh" \
                "$topsrcdir/myconfig.sh" \
                "$HOME/.mozconfig" \
                "$HOME/.mozconfig.sh" \
