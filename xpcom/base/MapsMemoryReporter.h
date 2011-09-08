@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 ci et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is about:memory.
+ * The Original Code is Mozilla.org code.
  *
  * The Initial Developer of the Original Code is the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Nicholas Nethercote <nnethercote@mozilla.com>
+ *   Justin Lebar <justin.lebar@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,56 +37,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.mrValue {
-  font-weight: bold;
-  color: #400;
-}
+#ifndef mozilla_MapsMemoryReporter_h_
+#define mozilla_MapsMemoryReporter_h_
 
-.mrPerc {
-}
+namespace mozilla {
+namespace MapsMemoryReporter {
 
-.mrName {
-  color: #004;
-}
+// This only works on Linux, but to make callers' lives easier, we stub out
+// empty functions on other platforms.
 
-.hasDesc:hover {
-  text-decoration: underline;
-}
+#if defined(XP_LINUX)
+  void Init();
+#else
+  void Init() {}
+#endif
 
-.mrStar {
-  color: #604;
-}
+} // namespace MapsMemoryReporter
+} // namespace mozilla
 
-.treeLine {
-  color: #888;
-}
-
-.option {
-  font-size: 80%;
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
-}
-
-.legend {
-  font-size: 80%;
-  -moz-user-select: none;  /* no need to include this when cutting+pasting */
-}
-
-body.verbose {
-  /* override setting in about.css */
-  max-width: 100% !important;
-}
-
-h2.tree {
-  cursor: pointer;
-  background: #ddd;
-  padding-left: .1em;
-}
-
-body.non-verbose pre.tree {
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-}
-
-pre.collapsed {
-  display: none;
-}
+#endif

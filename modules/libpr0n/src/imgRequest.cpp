@@ -411,19 +411,6 @@ nsresult imgRequest::GetURI(nsIURI **aURI)
   return NS_ERROR_FAILURE;
 }
 
-nsresult imgRequest::GetKeyURI(nsIURI **aKeyURI)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetKeyURI");
-
-  if (mURI) {
-    *aKeyURI = mURI;
-    NS_ADDREF(*aKeyURI);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 nsresult imgRequest::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
   LOG_FUNC(gImgLog, "imgRequest::GetSecurityInfo");
