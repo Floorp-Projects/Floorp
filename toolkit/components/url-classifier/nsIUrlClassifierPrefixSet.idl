@@ -1,0 +1,12 @@
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+[scriptable, uuid(6e9f759a-3f8d-4552-99ed-dbf0ea0a5f67)]
+interface nsIUrlClassifierPrefixSet : nsISupports
+{
+  void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
+                   in unsigned long aLength);
+
+  boolean contains(in unsigned long aPrefix);
+};
