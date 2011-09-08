@@ -132,7 +132,10 @@ JSCompartment::init(JSContext *cx)
     activeAnalysis = activeInference = false;
     types.init(cx);
 
-    JS_InitArenaPool(&pool, "analysis", 4096, 8);
+    /* Duplicated from jscntxt.cpp. :XXX: bug 675150 fix hack. */
+    static const size_t ARENA_HEADER_SIZE_HACK = 40;
+
+    JS_InitArenaPool(&pool, "analysis", 4096 - ARENA_HEADER_SIZE_HACK, 8);
 
     if (!crossCompartmentWrappers.init())
         return false;
