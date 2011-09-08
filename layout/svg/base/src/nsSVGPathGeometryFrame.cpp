@@ -196,50 +196,6 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
-  // XXX why are we adding in markers here each time someone gets the covered
-  // region? Isn't UpdateCoveredRegion called whenever markers change?
-  // And why are the answers to these questions not documented here??!!
-
-  if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
-    MarkerProperties properties = GetMarkerProperties(this);
-
-    if (!properties.MarkersExist())
-      return mRect;
-
-    nsRect rect(mRect);
-
-    float strokeWidth = GetStrokeWidth();
-
-    nsTArray<nsSVGMark> marks;
-    static_cast<nsSVGPathGeometryElement*>(mContent)->GetMarkPoints(&marks);
-
-    PRUint32 num = marks.Length();
-
-    if (num) {
-      nsSVGMarkerFrame *frame = properties.GetMarkerStartFrame();
-      if (frame) {
-        nsRect mark = frame->RegionMark(this, &marks[0], strokeWidth);
-        rect.UnionRect(rect, mark);
-      }
-
-      frame = properties.GetMarkerMidFrame();
-      if (frame) {
-        for (PRUint32 i = 1; i < num - 1; i++) {
-          nsRect mark = frame->RegionMark(this, &marks[i], strokeWidth);
-          rect.UnionRect(rect, mark);
-        }
-      }
-
-      frame = properties.GetMarkerEndFrame();
-      if (frame) {
-        nsRect mark = frame->RegionMark(this, &marks[num-1], strokeWidth);
-        rect.UnionRect(rect, mark);
-      }
-    }
-
-    return rect;
-  }
-
   return mRect;
 }
 
@@ -288,7 +244,39 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   }
 
   // Add in markers
-  mRect = GetCoveredRegion();
+  if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
+
+    float strokeWidth = GetStrokeWidth();
+    MarkerProperties properties = GetMarkerProperties(this);
+
+    if (properties.MarkersExist()) {
+      nsTArray<nsSVGMark> marks;
+      static_cast<nsSVGPathGeometryElement*>(mContent)->GetMarkPoints(&marks);
+      PRUint32 num = marks.Length();
+
+      if (num) {
+        nsSVGMarkerFrame *frame = properties.GetMarkerStartFrame();
+        if (frame) {
+          nsRect rect = frame->RegionMark(this, &marks[0], strokeWidth);
+          mRect.UnionRect(mRect, rect);
+        }
+
+        frame = properties.GetMarkerMidFrame();
+        if (frame) {
+          for (PRUint32 i = 1; i < num - 1; i++) {
+            nsRect rect = frame->RegionMark(this, &marks[i], strokeWidth);
+            mRect.UnionRect(mRect, rect);
+          }
+        }
+
+        frame = properties.GetMarkerEndFrame();
+        if (frame) {
+          nsRect rect = frame->RegionMark(this, &marks[num-1], strokeWidth);
+          mRect.UnionRect(mRect, rect);
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }
