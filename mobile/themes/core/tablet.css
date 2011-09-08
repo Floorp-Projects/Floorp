@@ -51,8 +51,9 @@
 }
 
 documenttab[tablet="true"] {
+  /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
   width: 200px;
-  padding: @padding_xxnormal@;
+  padding: 12px;
   -moz-margin-start: 0px;
   background: none;
 }
@@ -77,7 +78,7 @@ documenttab[selected="true"] > stack > .documenttab-close-container[tablet="true
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-end: -@padding_xxnormal@;
+  -moz-margin-end: -12px;
   padding-right: 2px;
 }
 
