@@ -138,6 +138,9 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 // and we start over.
 #define IMPLEMENTATION_VERSION 7
 
+// Name of the persistent PrefixSet storage
+#define PREFIXSET_FILENAME  "urlclassifier.pset"
+
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
 
@@ -1192,14 +1195,16 @@ private:
                     PRInt32 count,
                     nsTArray<nsUrlClassifierLookupResult>& results);
 
-  // Construct a Prefix Tree with known prefixes
-  nsresult ConstructPrefixTree();
+  // Construct a Prefix Set with known prefixes
+  nsresult LoadPrefixSet(nsCOMPtr<nsIFile> & aFile);
+  nsresult ConstructPrefixSet();
 
   // Set the SQLite cache size
   nsresult SetCacheSize(mozIStorageConnection * aConnection,
                         PRInt32 aCacheSize);
 
   nsCOMPtr<nsIFile> mDBFile;
+  nsCOMPtr<nsIFile> mPSFile;
 
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
@@ -1360,7 +1365,13 @@ nsUrlClassifierDBServiceWorker::Init(PRInt32 gethashNoise,
 
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
+  rv = mDBFile->Clone(getter_AddRefs(mPSFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = mDBFile->Append(NS_LITERAL_STRING(DATABASE_FILENAME));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPSFile->Append(NS_LITERAL_STRING(PREFIXSET_FILENAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   ResetUpdate();
@@ -1399,7 +1410,7 @@ nsUrlClassifierDBService::CheckCleanHost(const nsACString &spec,
     nsUrlClassifierDomainHash hostKeyHash;
     hostKeyHash.FromPlaintext(lookupHosts[i], mHash);
 
-    // First probe the Prefix Tree for presence
+    // First probe the PrefixSet for presence
     PRUint32 domainkey = hostKeyHash.ToUint32() ^ ENCODE_DOMAIN_MAGIC;
 
     PRBool found;
@@ -3131,7 +3142,7 @@ nsUrlClassifierDBServiceWorker::ApplyUpdate()
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     // Reconstruct the prefix tree from the DB
-    nsresult rv = ConstructPrefixTree();
+    nsresult rv = ConstructPrefixSet();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3219,6 +3230,7 @@ nsUrlClassifierDBServiceWorker::ResetDatabase()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDBFile->Remove(PR_FALSE);
+  mPSFile->Remove(PR_FALSE);
 
   return NS_OK;
 }
@@ -3425,9 +3437,8 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("SB construcing Prefix Tree\n"));
-
-  rv = ConstructPrefixTree();
+  LOG(("loading Prefix Set\n"));
+  rv = LoadPrefixSet(mPSFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -3495,7 +3506,7 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array)
 }
 
 nsresult
-nsUrlClassifierDBServiceWorker::ConstructPrefixTree()
+nsUrlClassifierDBServiceWorker::ConstructPrefixSet()
 {
   nsTArray<PRUint32> array;
   nsresult rv = mMainStore.ReadPrefixes(array);
@@ -3511,6 +3522,39 @@ nsUrlClassifierDBServiceWorker::ConstructPrefixTree()
   // construct new one
   rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // store the new tree to disk
+  rv = mPrefixSet->StoreToFile(mPSFile);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to store the prefixset");
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::LoadPrefixSet(nsCOMPtr<nsIFile> & aFile)
+{
+  PRBool empty;
+  nsresult rv = mPrefixSet->IsEmpty(&empty);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!empty) {
+    LOG(("PrefixSet already loaded, not loading again"));
+    return NS_OK;
+  }
+
+  PRBool exists;
+  rv = aFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    LOG(("stored PrefixSet exists, loading from disk"));
+    rv = mPrefixSet->LoadFromFile(aFile);
+  }
+  if (!exists || NS_FAILED(rv)) {
+    LOG(("no (usable) stored PrefixSet found, constructing from store"));
+    ConstructPrefixSet();
+  }
+
 #ifdef DEBUG
   PRUint32 size = 0;
   rv = mPrefixSet->EstimateSize(&size);
@@ -4310,6 +4354,7 @@ nsUrlClassifierDBService::Shutdown()
   if (mWorker) {
     rv = mWorkerProxy->CancelUpdate();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post cancel update event");
+
     rv = mWorkerProxy->CloseDb();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post close db event");
   }
