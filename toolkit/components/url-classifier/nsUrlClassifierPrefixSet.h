@@ -45,6 +45,8 @@
 #include "nsID.h"
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsToolkitCompsCID.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/CondVar.h"
 
 class nsUrlClassifierPrefixSet : public nsIUrlClassifierPrefixSet
 {
@@ -53,12 +55,17 @@ public:
   virtual ~nsUrlClassifierPrefixSet() {};
 
   // Can send an empty Array to clean the tree
-  virtual nsresult SetPrefixes(const PRUint32*, PRUint32);
+  NS_IMETHOD SetPrefixes(const PRUint32* aArray, PRUint32 aLength);
   // Given prefixes must be in sorted order and bigger than
   // anything currently in the Prefix Tree
-  virtual nsresult AddPrefixes(const PRUint32*, PRUint32);
-  virtual nsresult Contains(PRUint32, PRBool*);
-  virtual nsresult EstimateSize(PRUint32*);
+  NS_IMETHOD AddPrefixes(const PRUint32* aArray, PRUint32 aLength);
+  // Does the PrefixSet contain this prefix? not thread-safe
+  NS_IMETHOD Contains(PRUint32 aPrefix, PRBool* aFound);
+  // Do a lookup in the PrefixSet
+  // if aReady is set, we will block until there are any entries
+  // if not set, we will return in aReady whether we were ready or not
+  NS_IMETHOD Probe(PRUint32 aPrefix, PRBool* aReady, PRBool* aFound);
+  NS_IMETHOD EstimateSize(PRUint32* aSize);
 
   NS_DECL_ISUPPORTS
 
@@ -66,18 +73,21 @@ protected:
   static const PRUint32 DELTAS_LIMIT = 100;
   static const PRUint32 MAX_INDEX_DIFF = (1 << 16);
 
+  mozilla::Mutex mPrefixTreeLock;
+  mozilla::CondVar mTreeIsReady;
+
   PRUint32 BinSearch(PRUint32 start, PRUint32 end, PRUint32 target);
 
- //  boolean indicating whether |setPrefixes| has been
+  // boolean indicating whether |setPrefixes| has been
   // called with a non-empty array.
   PRBool mHasPrefixes;
-  // array containing deltas from indices.
-  nsTArray<PRUint16> mDeltas;
   // the prefix for each index.
   nsTArray<PRUint32> mIndexPrefixes;
   // the value corresponds to the beginning of the run
   // (an index in |_deltas|) for the index
   nsTArray<PRUint32> mIndexStarts;
+  // array containing deltas from indices.
+  nsTArray<PRUint16> mDeltas;
 };
 
 #endif

@@ -136,12 +136,27 @@ function testLargeSet() {
   doRandomLookups(pset, arr, 1000);
 }
 
+function testTinySet() {
+  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
+               .createInstance(Ci.nsIUrlClassifierPrefixSet);
+  let prefixes = [1];
+  pset.setPrefixes(prefixes, prefixes.length);
+
+  do_check_true(pset.contains(1));
+  do_check_false(pset.contains(100000));
+
+  prefixes = [];
+  pset.setPrefixes(prefixes, prefixes.length);
+  do_check_false(pset.contains(1));
+}
+
 let tests = [testBasicPset,
              testSimplePset,
              testUnsortedPset,
              testReSetPrefixes,
              testLargeSet,
-             testDuplicates];
+             testDuplicates,
+             testTinySet];
 
 function run_test() {
   // None of the tests use |executeSoon| or any sort of callbacks, so we can

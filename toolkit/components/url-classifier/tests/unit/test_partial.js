@@ -421,15 +421,23 @@ function testInvalidHashSize()
           }],
         12); // only 4 and 32 are legal hash sizes
 
+  var addUrls2 = [ "zaz.com/a", "xyz.com/b" ];
+  var update2 = buildPhishingUpdate(
+        [
+          { "chunkNum" : 2,
+            "urls" : addUrls2
+          }],
+        4);
+
   var completer = installCompleter('test-phish-simple', [[1, addUrls]], []);
 
   var assertions = {
-    "tableData" : "",
+    "tableData" : "test-phish-simple;a:2",
     "urlsDontExist" : addUrls
   };
 
   // A successful update will trigger an error
-  doUpdateTest([update], assertions, updateError, runNextTest);
+  doUpdateTest([update2, update], assertions, updateError, runNextTest);
 }
 
 function testWrongTable()
