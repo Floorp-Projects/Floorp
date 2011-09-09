@@ -196,8 +196,6 @@ symbol ":"                    "\n\t" \
     "br $31,$SharedStub..ng"  "\n\t" \
     ".end " symbol
 
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
-
 #define STUB_ENTRY(n) \
 __asm__( \
     ".if "#n" < 10"                                              "\n\t" \
@@ -211,14 +209,6 @@ __asm__( \
     ".endif" \
     );
 
-#else /* not G++ V3 ABI */
-
-#define STUB_ENTRY(n) \
-__asm__( \
-    STUB_MANGLED_ENTRY(n, "Stub"#n"__14nsXPTCStubBase") \
-    );
-
-#endif /* G++ V3 ABI */
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
