@@ -47,7 +47,7 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(3ab3e856-361d-435a-8a4d-b462799945cd)]
+[scriptable, uuid(efe95e19-f5df-4349-89fb-804ba016f0a2)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;
@@ -66,6 +66,7 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   readonly attribute nsIDOMHTMLCollection plugins;
   readonly attribute nsIDOMHTMLCollection links;
   readonly attribute nsIDOMHTMLCollection forms;
+  readonly attribute nsIDOMHTMLCollection scripts;
   nsIDOMNodeList            getElementsByName(in DOMString elementName);
 
   // If aContentType is not something supported by nsHTMLDocument and
