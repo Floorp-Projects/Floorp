@@ -813,8 +813,10 @@ public:
     PRBool CopyDataIfElementArray(const void* data) {
         if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
             mData = realloc(mData, mByteLength);
-            if (!mData)
+            if (!mData) {
+                mByteLength = 0;
                 return PR_FALSE;
+            }
             memcpy(mData, data, mByteLength);
         }
         return PR_TRUE;
@@ -824,8 +826,10 @@ public:
     PRBool ZeroDataIfElementArray() {
         if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
             mData = realloc(mData, mByteLength);
-            if (!mData)
+            if (!mData) {
+                mByteLength = 0;
                 return PR_FALSE;
+            }
             memset(mData, 0, mByteLength);
         }
         return PR_TRUE;
@@ -833,7 +837,7 @@ public:
 
     // same comments as for CopyElementArrayData
     void CopySubDataIfElementArray(GLuint byteOffset, GLuint byteLength, const void* data) {
-        if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
+        if (mTarget == LOCAL_GL_ELEMENT_ARRAY_BUFFER && mByteLength) {
             memcpy((void*) (size_t(mData)+byteOffset), data, byteLength);
         }
     }
