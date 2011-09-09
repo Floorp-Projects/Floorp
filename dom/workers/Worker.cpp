@@ -112,27 +112,6 @@ public:
     return proto;
   }
 
-  static void
-  ClearPrivateSlot(JSContext* aCx, JSObject* aObj)
-  {
-    JS_ASSERT(!JS_IsExceptionPending(aCx));
-
-    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
-    JS_ASSERT(worker);
-
-    for (int index = 0; index < STRING_COUNT; index++) {
-      const char* name = sEventStrings[index];
-      jsval listener;
-      if (!worker->GetEventListenerOnEventTarget(aCx, name + 2, &listener) ||
-          !JS_DefineProperty(aCx, aObj, name, listener, NULL, NULL,
-                             (PROPERTY_FLAGS & ~JSPROP_SHARED))) {
-        JS_ClearPendingException(aCx);
-      }
-    }
-
-    SetJSPrivateSafeish(aCx, aObj, NULL);
-  }
-
 protected:
   static WorkerPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
@@ -358,12 +337,6 @@ public:
     return proto;
   }
 
-  static void
-  ClearPrivateSlot(JSContext* aCx, JSObject* aObj)
-  {
-    Worker::ClearPrivateSlot(aCx, aObj);
-  }
-
 private:
   // No instance of this class should ever be created so these are explicitly
   // left without an implementation to prevent linking in case someone tries to
@@ -450,20 +423,6 @@ InitClass(JSContext* aCx, JSObject* aGlobal, JSObject* aProto,
           bool aMainRuntime)
 {
   return Worker::InitClass(aCx, aGlobal, aProto, aMainRuntime);
-}
-
-void
-ClearPrivateSlot(JSContext* aCx, JSObject* aObj)
-{
-  JSClass* clasp = JS_GET_CLASS(aCx, aObj);
-  JS_ASSERT(clasp == Worker::Class() || clasp == ChromeWorker::Class());
-
-  if (clasp == ChromeWorker::Class()) {
-    ChromeWorker::ClearPrivateSlot(aCx, aObj);
-  }
-  else {
-    Worker::ClearPrivateSlot(aCx, aObj);
-  }
 }
 
 } // namespace worker

@@ -46,11 +46,13 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPrincipal.h"
 #include "nsIJSContextStack.h"
+#include "nsIMemoryReporter.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
 #include "nsPIDOMWindow.h"
 
+#include "jsprf.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
@@ -285,6 +287,61 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
   return workerCx;
 }
 
+class WorkerMemoryReporter : public nsIMemoryMultiReporter
+{
+  WorkerPrivate* mWorkerPrivate;
+  nsCString mPathPrefix;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
+  {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    nsCString escapedDomain(aWorkerPrivate->Domain());
+    escapedDomain.ReplaceChar('/', '\\');
+
+    NS_ConvertUTF16toUTF8 escapedURL(aWorkerPrivate->ScriptURL());
+    escapedURL.ReplaceChar('/', '\\');
+
+    // 64bit address plus '0x' plus null terminator.
+    char address[21];
+    JSUint32 addressSize =
+      JS_snprintf(address, sizeof(address), "0x%llx", aWorkerPrivate);
+    if (addressSize == JSUint32(-1)) {
+      NS_WARNING("JS_snprintf failed!");
+      address[0] = '\0';
+      addressSize = 0;
+    }
+
+    mPathPrefix = NS_LITERAL_CSTRING("explicit/dom/workers(") +
+                  escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
+                  escapedURL + NS_LITERAL_CSTRING(", ") +
+                  nsDependentCString(address, addressSize) +
+                  NS_LITERAL_CSTRING(")/");
+  }
+
+  NS_IMETHOD
+  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
+                 nsISupports* aClosure)
+  {
+    AssertIsOnMainThread();
+
+    IterateData data;
+    if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&data)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
+
+    return NS_OK;
+  }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
+
 class WorkerThreadRunnable : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
@@ -311,9 +368,23 @@ public:
       return NS_ERROR_FAILURE;
     }
 
+    nsRefPtr<WorkerMemoryReporter> reporter =
+      new WorkerMemoryReporter(workerPrivate);
+    if (NS_FAILED(NS_RegisterMemoryMultiReporter(reporter))) {
+      NS_WARNING("Failed to register memory reporter!");
+      reporter = nsnull;
+    }
+
     {
       JSAutoRequest ar(cx);
       workerPrivate->DoRunLoop(cx);
+    }
+
+    if (reporter) {
+      if (NS_FAILED(NS_UnregisterMemoryMultiReporter(reporter))) {
+        NS_WARNING("Failed to unregister memory reporter!");
+      }
+      reporter = nsnull;
     }
 
     JSRuntime* rt = JS_GetRuntime(cx);
