@@ -1,0 +1,61 @@
+# HG changeset patch
+# Parent f9711acdf40de5fa6b18bc82f5549cf50fe9196e
+
+diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
+--- a/gfx/angle/src/compiler/preprocessor/atom.c
++++ b/gfx/angle/src/compiler/preprocessor/atom.c
+@@ -48,16 +48,18 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+ 
+ #include "compiler/compilerdebug.h"
+ #include "compiler/preprocessor/slglobals.h"
+ 
++#include "../../../../../memory/mozalloc/mozalloc.h"
++
+ #undef malloc
+ #undef realloc
+ #undef free
+ 
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////// String table: //////////////////////////////////////
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ 
+@@ -318,31 +320,23 @@ static int AddAtomFixed(AtomTable *atabl
+  */
+ 
+ static int GrowAtomTable(AtomTable *atable, int size)
+ {
+     int *newmap, *newrev;
+ 
+     if (atable->size < size) {
+         if (atable->amap) {
+-            newmap = realloc(atable->amap, sizeof(int)*size);
+-            newrev = realloc(atable->arev, sizeof(int)*size);
++            newmap = moz_xrealloc(atable->amap, sizeof(int)*size);
++            newrev = moz_xrealloc(atable->arev, sizeof(int)*size);
+         } else {
+-            newmap = malloc(sizeof(int)*size);
+-            newrev = malloc(sizeof(int)*size);
++            newmap = moz_xmalloc(sizeof(int)*size);
++            newrev = moz_xmalloc(sizeof(int)*size);
+             atable->size = 0;
+         }
+-        if (!newmap || !newrev) {
+-            /* failed to grow -- error */
+-            if (newmap)
+-                atable->amap = newmap;
+-            if (newrev)
+-                atable->arev = newrev;
+-            return -1;
+-        }
+         memset(&newmap[atable->size], 0, (size - atable->size) * sizeof(int));
+         memset(&newrev[atable->size], 0, (size - atable->size) * sizeof(int));
+         atable->amap = newmap;
+         atable->arev = newrev;
+         atable->size = size;
+     }
+     return 0;
+ } // GrowAtomTable
