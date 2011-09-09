@@ -73,7 +73,7 @@ nsBMPDecoder::nsBMPDecoder()
     mState = eRLEStateInitial;
     mStateData = 0;
     mLOH = WIN_HEADER_LENGTH;
-    mUseAlphaData = PR_FALSE;
+    mUseAlphaData = mHaveAlphaData = PR_FALSE;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
@@ -141,6 +141,15 @@ nsBMPDecoder::GetCompressedImageSize() const
   PRInt32 pixelArraySize = rowSize * abs(mBIH.height); 
   return pixelArraySize;
 }
+
+// Obtains whether or not a BMP file had alpha data in its 4th byte
+// for 32BPP bitmaps.  Only use after the bitmap has been processed.
+PRBool 
+nsBMPDecoder::HasAlphaData() const 
+{
+  return mHaveAlphaData;
+}
+
 
 void
 nsBMPDecoder::FinishInternal()
@@ -488,9 +497,21 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                       case 32:
                         while (lpos > 0) {
                           if (mUseAlphaData) {
-                            SetPixel(d, p[2], p[1], p[0], p[3]);
-                          }
-                          else {
+                            if (!mHaveAlphaData && p[3]) {
+                              // Non-zero alpha byte detected! Clear previous
+                              // pixels that we have already processed.
+                              // This works because we know that if we 
+                              // are reaching here then the alpha data in byte 
+                              // 4 has been right all along.  And we know it
+                              // has been set to 0 the whole time, so that 
+                              // means that everything is transparent so far.
+                              memset(mImageData + (mCurLine - 1) * GetWidth(), 0, 
+                                     (GetHeight() - mCurLine + 1) * 
+                                     GetWidth() * sizeof(PRUint32));
+                              mHaveAlphaData = PR_TRUE;
+                            }
+                            SetPixel(d, p[2], p[1], p[0], mHaveAlphaData ? p[3] : 0xFF);
+                          } else {
                             SetPixel(d, p[2], p[1], p[0]);
                           }
                           p += 4;
