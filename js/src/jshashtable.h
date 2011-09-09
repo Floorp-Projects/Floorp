@@ -650,8 +650,14 @@ class HashTable : private AllocPolicy
         return gen;
     }
 
-    size_t tableSize() const {
-        return tableCapacity * sizeof(Entry);
+    /*
+     * This counts the HashTable's |table| array.  If |countMe| is true is also
+     * counts the HashTable object itself.
+     */
+    size_t sizeOf(JSUsableSizeFun usf, bool countMe) const {
+        size_t usable = usf(table) + (countMe ? usf((void*)this) : 0);
+        return usable ? usable
+                      : (tableCapacity * sizeof(Entry)) + (countMe ? sizeof(HashTable) : 0);
     }
 
     Ptr lookup(const Lookup &l) const {
@@ -1082,7 +1088,7 @@ class HashMap
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
     size_t count() const                              { return impl.count(); }
-    size_t tableSize() const                          { return impl.tableSize(); }
+    size_t sizeOf(JSUsableSizeFun usf, bool cm) const { return impl.sizeOf(usf, cm); }
 
     /*
      * Typedef for the enumeration class. An Enum may be used to examine and
@@ -1284,7 +1290,7 @@ class HashSet
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
     size_t count() const                              { return impl.count(); }
-    size_t tableSize() const                          { return impl.tableSize(); }
+    size_t sizeOf(JSUsableSizeFun usf, bool cm) const { return impl.sizeOf(usf, cm); }
 
     /*
      * Typedef for the enumeration class. An Enum may be used to examine and

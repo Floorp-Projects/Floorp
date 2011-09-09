@@ -949,18 +949,32 @@ typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
+(* DefineElementOp)(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+typedef JSBool
+(* ElementIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp);
 typedef JSBool
 (* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
+(* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
+typedef JSBool
 (* DeleteIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
+(* DeleteElementOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
 typedef JSBool
 (* LookupPropOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  JSProperty **propp);
 typedef JSBool
+(* LookupElementOp)(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+                    JSProperty **propp);
+typedef JSBool
 (* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+typedef JSBool
+(* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 typedef JSType
 (* TypeOfOp)(JSContext *cx, JSObject *obj);
 typedef JSObject *
@@ -1058,12 +1072,20 @@ struct ClassExtension {
 
 struct ObjectOps {
     js::LookupPropOp        lookupProperty;
+    js::LookupElementOp     lookupElement;
     js::DefinePropOp        defineProperty;
+    js::DefineElementOp     defineElement;
     js::PropertyIdOp        getProperty;
+    js::ElementIdOp         getElement;
     js::StrictPropertyIdOp  setProperty;
+    js::StrictElementIdOp   setElement;
     js::AttributesOp        getAttributes;
+    js::ElementAttributesOp getElementAttributes;
     js::AttributesOp        setAttributes;
+    js::ElementAttributesOp setElementAttributes;
     js::DeleteIdOp          deleteProperty;
+    js::DeleteElementOp     deleteElement;
+
     js::NewEnumerateOp      enumerate;
     js::TypeOfOp            typeOf;
     js::FixOp               fix;
@@ -1071,7 +1093,9 @@ struct ObjectOps {
     js::FinalizeOp          clear;
 };
 
-#define JS_NULL_OBJECT_OPS  {NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL}
+#define JS_NULL_OBJECT_OPS                                                    \
+    {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,   \
+     NULL,NULL,NULL,NULL,NULL}
 
 struct Class {
     JS_CLASS_MEMBERS;

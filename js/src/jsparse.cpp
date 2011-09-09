@@ -320,7 +320,7 @@ bool
 JSFunctionBox::inAnyDynamicScope() const
 {
     for (const JSFunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_CALLS_EVAL))
+        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_EXTENSIBLE_SCOPE))
             return true;
     }
     return false;
@@ -6734,7 +6734,7 @@ class GenexpGuard {
 
     void endBody();
     bool checkValidBody(JSParseNode *pn);
-    bool maybeNoteGenerator();
+    bool maybeNoteGenerator(JSParseNode *pn);
 };
 
 void
@@ -6780,13 +6780,20 @@ GenexpGuard::checkValidBody(JSParseNode *pn)
  * generator expression.
  */
 bool
-GenexpGuard::maybeNoteGenerator()
+GenexpGuard::maybeNoteGenerator(JSParseNode *pn)
 {
     if (tc->yieldCount > 0) {
         tc->flags |= TCF_FUN_IS_GENERATOR;
         if (!tc->inFunction()) {
             tc->parser->reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
                                           js_yield_str);
+            return false;
+        }
+        if (tc->flags & TCF_RETURN_EXPR) {
+            /* At the time we saw the yield, we might not have set TCF_FUN_IS_GENERATOR yet. */
+            ReportBadReturn(tc->parser->context, tc, pn, JSREPORT_ERROR,
+                            JSMSG_BAD_GENERATOR_RETURN,
+                            JSMSG_BAD_ANON_GENERATOR_RETURN);
             return false;
         }
     }
@@ -7129,7 +7136,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid, bool isGenexp,
             if (!guard.checkValidBody(pn2))
                 return NULL;
         } else {
-            if (!guard.maybeNoteGenerator())
+            if (!guard.maybeNoteGenerator(pn2))
                 return NULL;
         }
 
@@ -7359,7 +7366,7 @@ Parser::argumentList(JSParseNode *listNode)
             }
         } else
 #endif
-        if (arg0 && !guard.maybeNoteGenerator())
+        if (arg0 && !guard.maybeNoteGenerator(argNode))
             return JS_FALSE;
 
         arg0 = false;
@@ -8454,7 +8461,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
       case TOK_LC:
       {
-        JSBool afterComma;
         JSParseNode *pnval;
 
         /*
@@ -8476,7 +8482,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         pn->pn_op = JSOP_NEWINIT;
         pn->makeEmpty();
 
-        afterComma = JS_FALSE;
         for (;;) {
             JSAtom *atom;
             tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
@@ -8635,7 +8640,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CURLY_AFTER_LIST);
                 return NULL;
             }
-            afterComma = JS_TRUE;
         }
 
       end_obj_init:
@@ -8980,7 +8984,7 @@ Parser::parenExpr(JSBool *genexp)
     } else
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
-    if (!guard.maybeNoteGenerator())
+    if (!guard.maybeNoteGenerator(pn))
         return NULL;
 
     return pn;

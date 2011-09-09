@@ -35,19 +35,25 @@
   background: #000;
 }
 
-#tabs[tablet="true"] > scrollbox {
+#tabs[tablet="true"] > .tabs-scrollbox {
   max-width: 200px;
+  -moz-box-orient: vertical;
 }
 
 #tabs[tablet="true"] .tabs-list {
-  -moz-column-width: 200px;
+}
+
+#tabs[tablet="true"] .tabs-list {
+  width: 200px;
+  -moz-column-width: auto;
   -moz-padding-end: 0px;
   -moz-padding-start: 0px;
 }
 
 documenttab[tablet="true"] {
+  /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
   width: 200px;
-  padding: @padding_xxnormal@;
+  padding: 12px;
   -moz-margin-start: 0px;
   background: none;
 }
@@ -72,7 +78,7 @@ documenttab[selected="true"] > stack > .documenttab-close-container[tablet="true
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-end: -@padding_xxnormal@;
+  -moz-margin-end: -12px;
   padding-right: 2px;
 }
 
@@ -88,6 +94,10 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet="true"] 
 
 .documenttab-close-container:hover:active > .documenttab-close[tablet="true"] {
   list-style-image: url("chrome://browser/skin/images/close-active-tablet-hdpi.png");
+}
+
+.documenttab-reload[tablet="true"] {
+  background: url("chrome://browser/skin/images/tab-reopen-tablet-hdpi.png");
 }
 
 #newtab-button[tablet="true"] {

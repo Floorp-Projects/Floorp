@@ -1,2 +1,2 @@
-asserts-if(Android,10) load data:text/html,
+asserts-if(Android,8-10) load data:text/html,
 load data:text/html,PASS

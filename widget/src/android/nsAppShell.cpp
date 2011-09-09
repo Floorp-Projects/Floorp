@@ -446,10 +446,6 @@ nsAppShell::PeekNextEvent()
 void
 nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 {
-    if (ae->Type() == AndroidGeckoEvent::ACTIVITY_STOPPING) {
-        PostEvent(new AndroidGeckoEvent(AndroidGeckoEvent::SURFACE_DESTROYED));
-    }
-
     {
         MutexAutoLock lock(mQueueLock);
         if (ae->Type() == AndroidGeckoEvent::SURFACE_DESTROYED) {

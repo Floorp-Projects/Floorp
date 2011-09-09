@@ -53,20 +53,24 @@
 #define BEHAVIOR_NOFOREIGN 3
 
 // From nsIContentPolicy
-static const char *kTypeString[NUMBER_OF_TYPES] = {"other", 
-                                                   "script",
-                                                   "image",
-                                                   "stylesheet",
-                                                   "object",
-                                                   "document",
-                                                   "subdocument",
-                                                   "refresh",
-                                                   "xbl",
-                                                   "ping",
-                                                   "xmlhttprequest",
-                                                   "objectsubrequest",
-                                                   "dtd"};
+static const char *kTypeString[] = {"other",
+                                    "script",
+                                    "image",
+                                    "stylesheet",
+                                    "object",
+                                    "document",
+                                    "subdocument",
+                                    "refresh",
+                                    "xbl",
+                                    "ping",
+                                    "xmlhttprequest",
+                                    "objectsubrequest",
+                                    "dtd",
+                                    "font",
+                                    "media"};
 
+#define NUMBER_OF_TYPES NS_ARRAY_LENGTH(kTypeString)
+PRUint8 nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
 
 NS_IMPL_ISUPPORTS3(nsContentBlocker, 
                    nsIContentPolicy,

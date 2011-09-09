@@ -110,6 +110,37 @@ ArgumentsObject::setElement(uint32 i, const js::Value &v)
     data()->slots[i] = v;
 }
 
+inline js::StackFrame *
+ArgumentsObject::maybeStackFrame() const
+{
+    return reinterpret_cast<js::StackFrame *>(getPrivate());
+}
+
+inline void
+ArgumentsObject::setStackFrame(StackFrame *frame)
+{
+    return setPrivate(frame);
+}
+
+#define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
+inline bool
+ArgumentsObject::onTrace() const
+{
+    return getPrivate() == JS_ARGUMENTS_OBJECT_ON_TRACE;
+}
+
+inline void
+ArgumentsObject::setOnTrace()
+{
+    return setPrivate(JS_ARGUMENTS_OBJECT_ON_TRACE);
+}
+
+inline void
+ArgumentsObject::clearOnTrace()
+{
+    return setPrivate(NULL);
+}
+
 inline const js::Value &
 NormalArgumentsObject::callee() const
 {

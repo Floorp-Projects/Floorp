@@ -129,6 +129,11 @@ using namespace QtMobility;
 
 #ifdef MOZ_X11
 #include "keysym2ucs.h"
+#if MOZ_PLATFORM_MAEMO == 6
+#include <X11/Xatom.h>
+static Atom sPluginIMEAtom;
+#define PLUGIN_VKB_REQUEST_PROP "_NPAPI_PLUGIN_REQUEST_VKB"
+#endif
 #endif //MOZ_X11
 
 #include <QtOpenGL/QGLWidget>
@@ -248,6 +253,9 @@ nsWindow::nsWindow()
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
 
+#if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
+        sPluginIMEAtom = XInternAtom(QX11Info::display(), PLUGIN_VKB_REQUEST_PROP, False);
+#endif
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
     }
@@ -3118,36 +3126,119 @@ nsWindow::AreBoundsSane(void)
     return PR_FALSE;
 }
 
+#if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
+typedef enum {
+    VKBUndefined,
+    VKBOpen,
+    VKBClose
+} PluginVKBState;
+
+static QCoreApplication::EventFilter previousEventFilter = NULL;
+
+static PluginVKBState
+GetPluginVKBState(Window aWinId)
+{
+    // Set default value as unexpected error
+    PluginVKBState imeState = VKBUndefined;
+    Display *display = QX11Info::display();
+
+    Atom actualType;
+    int actualFormat;
+    unsigned long nitems;
+    unsigned long bytes;
+    union {
+        unsigned char* asUChar;
+        unsigned long* asLong;
+    } data = {0};
+    int status = XGetWindowProperty(display, aWinId, sPluginIMEAtom,
+                                    0, 1, False, AnyPropertyType,
+                                    &actualType, &actualFormat, &nitems,
+                                    &bytes, &data.asUChar);
+
+    if (status == Success && actualType == XA_CARDINAL && actualFormat == 32 && nitems == 1) {
+        // Assume that plugin set value false - close VKB, true - open VKB
+        imeState = data.asLong[0] ? VKBOpen : VKBClose;
+    }
+
+    if (status == Success) {
+        XFree(data.asUChar);
+    }
+
+    return imeState;
+}
+
+static void
+SetVKBState(Window aWinId, PluginVKBState aState)
+{
+    Display *display = QX11Info::display();
+    if (aState != VKBUndefined) {
+        unsigned long isOpen = aState == VKBOpen ? 1 : 0;
+        XChangeProperty(display, aWinId, sPluginIMEAtom, XA_CARDINAL, 32,
+                        PropModeReplace, (unsigned char *) &isOpen, 1);
+    } else {
+        XDeleteProperty(display, aWinId, sPluginIMEAtom);
+    }
+    XSync(display, False);
+}
+
+static bool
+x11EventFilter(void* message, long* result)
+{
+    XEvent* event = static_cast<XEvent*>(message);
+    if (event->type == PropertyNotify) {
+        if (event->xproperty.atom == sPluginIMEAtom) {
+            PluginVKBState state = GetPluginVKBState(event->xproperty.window);
+            if (state == VKBOpen) {
+                MozQWidget::requestVKB();
+            } else if (state == VKBClose) {
+                MozQWidget::hideVKB();
+            }
+            return true;
+        }
+    }
+    if (previousEventFilter) {
+        return previousEventFilter(message, result);
+    }
+
+    return false;
+}
+#endif
+
 NS_IMETHODIMP
 nsWindow::SetInputMode(const IMEContext& aContext)
 {
     NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
 
+    // SetSoftwareKeyboardState uses mIMEContext,
+    // so, before calling that, record aContext in mIMEContext.
     mIMEContext = aContext;
 
-     // Ensure that opening the virtual keyboard is allowed for this specific
-     // IMEContext depending on the content.ime.strict.policy pref
-     if (aContext.mStatus != nsIWidget::IME_STATUS_DISABLED && 
-         aContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
-       if (Preferences::GetBool("content.ime.strict_policy", PR_FALSE) &&
-           !aContext.FocusMovedByUser() &&
-           aContext.FocusMovedInContentProcess()) {
-         return NS_OK;
-       }
-     }
+#if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
+    static QCoreApplication::EventFilter currentEventFilter = NULL;
+    if (mIMEContext.mStatus == nsIWidget::IME_STATUS_PLUGIN && currentEventFilter != x11EventFilter) {
+        // Install event filter for listening Plugin IME state changes
+        previousEventFilter = QCoreApplication::instance()->setEventFilter(x11EventFilter);
+        currentEventFilter = x11EventFilter;
+    } else if (mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN && currentEventFilter == x11EventFilter) {
+        // Remove event filter
+        QCoreApplication::instance()->setEventFilter(previousEventFilter);
+        currentEventFilter = previousEventFilter;
+        previousEventFilter = NULL;
+        QWidget* view = GetViewWidget();
+        if (view) {
+            SetVKBState(view->winId(), VKBUndefined);
+        }
+    }
+#endif
 
-    switch (aContext.mStatus) {
+    switch (mIMEContext.mStatus) {
         case nsIWidget::IME_STATUS_ENABLED:
         case nsIWidget::IME_STATUS_PASSWORD:
         case nsIWidget::IME_STATUS_PLUGIN:
-            {
-                PRInt32 openDelay =
-                    Preferences::GetInt("ui.vkb.open.delay", 200);
-                mWidget->requestVKB(openDelay);
-            }
+            SetSoftwareKeyboardState(PR_TRUE);
             break;
         default:
-            mWidget->hideVKB();
+            SetSoftwareKeyboardState(PR_FALSE);
             break;
     }
 
@@ -3162,6 +3253,44 @@ nsWindow::GetInputMode(IMEContext& aContext)
 }
 
 void
+nsWindow::SetSoftwareKeyboardState(PRBool aOpen)
+{
+    if (aOpen) {
+        NS_ENSURE_TRUE(mIMEContext.mStatus != nsIWidget::IME_STATUS_DISABLED,);
+
+        // Ensure that opening the virtual keyboard is allowed for this specific
+        // IMEContext depending on the content.ime.strict.policy pref
+        if (mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
+            if (Preferences::GetBool("content.ime.strict_policy", PR_FALSE) &&
+                !mIMEContext.FocusMovedByUser() &&
+                mIMEContext.FocusMovedInContentProcess()) {
+                return;
+            }
+        }
+#if defined(MOZ_X11) && (MOZ_PLATFORM_MAEMO == 6)
+        // doen't open VKB if plugin did set closed state
+        else {
+            QWidget* view = GetViewWidget();
+            if (view && GetPluginVKBState(view->winId()) == VKBClose) {
+                return;
+            }
+        }
+#endif
+    }
+
+    if (aOpen) {
+        // VKB open need to be delayed in order to give
+        // to plugins chance prevent VKB from opening
+        PRInt32 openDelay =
+            Preferences::GetInt("ui.vkb.open.delay", 200);
+        MozQWidget::requestVKB(openDelay, mWidget);
+    } else {
+        MozQWidget::hideVKB();
+    }
+    return;
+}
+
+void
 nsWindow::UserActivity()
 {
   if (!mIdleService) {
@@ -3172,4 +3301,3 @@ nsWindow::UserActivity()
     mIdleService->ResetIdleTimeOut();
   }
 }
-
