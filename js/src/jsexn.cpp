@@ -726,7 +726,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 
     /* Set the 'message' property. */
     JSString *message;
-    if (args.argc() != 0 && !args[0].isUndefined()) {
+    if (args.length() != 0 && !args[0].isUndefined()) {
         message = js_ValueToString(cx, args[0]);
         if (!message)
             return false;
@@ -742,7 +742,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 
     /* Set the 'fileName' property. */
     JSString *filename;
-    if (args.argc() > 1) {
+    if (args.length() > 1) {
         filename = js_ValueToString(cx, args[1]);
         if (!filename)
             return false;
@@ -759,7 +759,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 
     /* Set the 'lineNumber' property. */
     uint32_t lineno;
-    if (args.argc() > 2) {
+    if (args.length() > 2) {
         if (!ValueToECMAUint32(cx, args[2], &lineno))
             return false;
     } else {

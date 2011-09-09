@@ -1383,13 +1383,14 @@ class TypedArrayTemplate
     static JSBool
     fun_subarray(JSContext *cx, uintN argc, Value *vp)
     {
-        JSObject *obj = ToObject(cx, &vp[1]);
+        CallArgs args = CallArgsFromVp(argc, vp);
+        JSObject *obj = ToObject(cx, &args.thisv());
         if (!obj)
             return false;
 
         if (obj->getClass() != fastClass()) {
             // someone tried to apply this subarray() to the wrong class
-            ReportIncompatibleMethod(cx, vp, fastClass());
+            ReportIncompatibleMethod(cx, args, fastClass());
             return false;
         }
 
@@ -1401,9 +1402,8 @@ class TypedArrayTemplate
         int32_t begin = 0, end = getLength(tarray);
         int32_t length = int32(getLength(tarray));
 
-        if (argc > 0) {
-            Value *argv = JS_ARGV(cx, vp);
-            if (!ValueToInt32(cx, argv[0], &begin))
+        if (args.length() > 0) {
+            if (!ValueToInt32(cx, args[0], &begin))
                 return false;
             if (begin < 0) {
                 begin += length;
@@ -1413,8 +1413,8 @@ class TypedArrayTemplate
                 begin = length;
             }
 
-            if (argc > 1) {
-                if (!ValueToInt32(cx, argv[1], &end))
+            if (args.length() > 1) {
+                if (!ValueToInt32(cx, args[1], &end))
                     return false;
                 if (end < 0) {
                     end += length;
@@ -1432,7 +1432,7 @@ class TypedArrayTemplate
         JSObject *nobj = createSubarray(cx, tarray, begin, end);
         if (!nobj)
             return false;
-        vp->setObject(*nobj);
+        args.rval().setObject(*nobj);
         return true;
     }
 
@@ -1440,13 +1440,14 @@ class TypedArrayTemplate
     static JSBool
     fun_set(JSContext *cx, uintN argc, Value *vp)
     {
-        JSObject *obj = ToObject(cx, &vp[1]);
+        CallArgs args = CallArgsFromVp(argc, vp);
+        JSObject *obj = ToObject(cx, &args.thisv());
         if (!obj)
             return false;
 
         if (obj->getClass() != fastClass()) {
             // someone tried to apply this set() to the wrong class
-            ReportIncompatibleMethod(cx, vp, fastClass());
+            ReportIncompatibleMethod(cx, args, fastClass());
             return false;
         }
 
@@ -1457,9 +1458,8 @@ class TypedArrayTemplate
         // these are the default values
         int32_t off = 0;
 
-        Value *argv = JS_ARGV(cx, vp);
-        if (argc > 1) {
-            if (!ValueToInt32(cx, argv[1], &off))
+        if (args.length() > 1) {
+            if (!ValueToInt32(cx, args[1], &off))
                 return false;
 
             if (off < 0 || uint32_t(off) > getLength(tarray)) {
@@ -1473,13 +1473,13 @@ class TypedArrayTemplate
         uint32 offset(off);
 
         // first arg must be either a typed array or a JS array
-        if (argc == 0 || !argv[0].isObject()) {
+        if (args.length() == 0 || !args[0].isObject()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
         }
 
-        JSObject *arg0 = argv[0].toObjectOrNull();
+        JSObject *arg0 = args[0].toObjectOrNull();
         if (js_IsTypedArray(arg0)) {
             JSObject *src = TypedArray::getTypedArray(arg0);
             if (!src ||
@@ -1508,7 +1508,7 @@ class TypedArrayTemplate
                 return false;
         }
 
-        vp->setUndefined();
+        args.rval().setUndefined();
         return true;
     }
 

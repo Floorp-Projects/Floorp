@@ -79,7 +79,7 @@ GetScopeChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen);
  * vector is not compatible with the specified class.
  */
 void
-ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
+ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
 
 /*
  * Given a context and a vector of [callee, this, args...] for a function
@@ -90,7 +90,7 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
  * type, and throw an error otherwise.
  */
 template <typename T>
-bool GetPrimitiveThis(JSContext *cx, Value *vp, T *v);
+bool GetPrimitiveThis(JSContext *cx, CallReceiver call, T *v);
 
 /*
  * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
@@ -154,7 +154,7 @@ enum MaybeConstruct {
  * have already been marked 'active'.
  */
 extern bool
-InvokeKernel(JSContext *cx, const CallArgs &args, MaybeConstruct construct = NO_CONSTRUCT);
+InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
  * Invoke assumes that 'args' has been pushed (via ContextStack::pushInvokeArgs)

@@ -103,11 +103,11 @@ class PrimitiveBehavior<double> {
 
 template <typename T>
 inline bool
-GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
+GetPrimitiveThis(JSContext *cx, CallReceiver call, T *v)
 {
     typedef detail::PrimitiveBehavior<T> Behavior;
 
-    const Value &thisv = vp[1];
+    const Value &thisv = call.thisv();
     if (Behavior::isType(thisv)) {
         *v = Behavior::extract(thisv);
         return true;
@@ -118,7 +118,7 @@ GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
         return true;
     }
 
-    ReportIncompatibleMethod(cx, vp, Behavior::getClass());
+    ReportIncompatibleMethod(cx, call, Behavior::getClass());
     return false;
 }
 

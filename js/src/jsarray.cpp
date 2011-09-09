@@ -1438,11 +1438,12 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
     if (!obj->isArray()) {
-        ReportIncompatibleMethod(cx, vp, &ArrayClass);
+        ReportIncompatibleMethod(cx, args, &ArrayClass);
         return false;
     }
 
@@ -1516,7 +1517,7 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    JS_SET_RVAL(cx, vp, StringValue(str));
+    args.rval().setString(str);
     return true;
 }
 #endif

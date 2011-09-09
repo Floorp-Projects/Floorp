@@ -592,16 +592,16 @@ date_msecFromDate(jsdouble year, jsdouble mon, jsdouble mday, jsdouble hour,
 #define MAXARGS        7
 
 static JSBool
-date_msecFromArgs(JSContext *cx, uintN argc, Value *argv, jsdouble *rval)
+date_msecFromArgs(JSContext *cx, CallArgs args, double *rval)
 {
     uintN loop;
     jsdouble array[MAXARGS];
     jsdouble msec_time;
 
     for (loop = 0; loop < MAXARGS; loop++) {
-        if (loop < argc) {
+        if (loop < args.length()) {
             jsdouble d;
-            if (!ToNumber(cx, argv[loop], &d))
+            if (!ToNumber(cx, args[loop], &d))
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
@@ -634,14 +634,15 @@ date_msecFromArgs(JSContext *cx, uintN argc, Value *argv, jsdouble *rval)
 static JSBool
 date_UTC(JSContext *cx, uintN argc, Value *vp)
 {
-    jsdouble msec_time;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!date_msecFromArgs(cx, argc, vp + 2, &msec_time))
+    jsdouble msec_time;
+    if (!date_msecFromArgs(cx, args, &msec_time))
         return JS_FALSE;
 
     msec_time = TIMECLIP(msec_time);
 
-    vp->setNumber(msec_time);
+    args.rval().setNumber(msec_time);
     return JS_TRUE;
 }
 
@@ -1224,11 +1225,10 @@ date_now_tn(JSContext*)
  * Date type.
  */
 static JSBool
-GetUTCTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
+GetUTCTime(JSContext *cx, JSObject *obj, CallReceiver call, jsdouble *dp)
 {
     if (!obj->isDate()) {
-        if (vp)
-            ReportIncompatibleMethod(cx, vp, &DateClass);
+        ReportIncompatibleMethod(cx, call, &DateClass);
         return false;
     }
     *dp = obj->getDateUTCTime().toNumber();
@@ -1403,36 +1403,47 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
 }
 
 /* Cache the local times in obj, if necessary. */
-static inline JSBool
-GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *time = NULL)
+static inline bool
+GetAndCacheLocalTime(JSContext *cx, JSObject *obj)
 {
-    if (!obj)
-        return false;
-    if (!obj->isDate()) {
-        if (vp)
-            ReportIncompatibleMethod(cx, vp, &DateClass);
-        return false;
-    }
+    JS_ASSERT(obj->isDate());
 
     /* If the local time is undefined, we need to fill in the cached values. */
     if (obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).isUndefined()) {
         if (!FillLocalTimes(cx, obj))
             return false;
     }
-
-    if (time)
-        *time = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
-
     return true;
 }
 
 static inline bool
-GetThisUTCTime(JSContext *cx, Value *vp, jsdouble *dp)
+GetAndCacheLocalTime(JSContext *cx, JSObject *obj, CallArgs args)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj->isDate()) {
+        ReportIncompatibleMethod(cx, args, &DateClass);
+        return false;
+    }
+
+    return GetAndCacheLocalTime(cx, obj);
+}
+
+static inline bool
+GetAndCacheLocalTime(JSContext *cx, JSObject *obj, double *time)
+{
+    if (!obj || !GetAndCacheLocalTime(cx, obj))
+        return false;
+
+    *time = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
+    return true;
+}
+
+static inline bool
+GetThisUTCTime(JSContext *cx, CallReceiver call, jsdouble *dp)
+{
+    JSObject *obj = ToObject(cx, &call.thisv());
     if (!obj)
         return false;
-    return GetUTCTime(cx, obj, vp, dp);
+    return GetUTCTime(cx, obj, call, dp);
 }
 
 /*
@@ -1441,30 +1452,33 @@ GetThisUTCTime(JSContext *cx, Value *vp, jsdouble *dp)
 static JSBool
 date_getTime(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_getYear(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
     Value yearVal = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
     if (yearVal.isInt32()) {
         /* Follow ECMA-262 to the letter, contrary to IE JScript. */
         jsint year = yearVal.toInt32() - 1900;
-        vp->setInt32(year);
+        args.rval().setInt32(year);
     } else {
-        *vp = yearVal;
+        args.rval() = yearVal;
     }
 
     return true;
@@ -1473,168 +1487,186 @@ date_getYear(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_getFullYear(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return JS_FALSE;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
     return JS_TRUE;
 }
 
 static JSBool
 date_getUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = YearFromTime(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_getMonth(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH);
     return true;
 }
 
 static JSBool
 date_getUTCMonth(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = MonthFromTime(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_getDate(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE);
     return true;
 }
 
 static JSBool
 date_getUTCDate(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = DateFromTime(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_getDay(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY);
     return true;
 }
 
 static JSBool
 date_getUTCDay(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = WeekDay(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_getHours(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS);
     return true;
 }
 
 static JSBool
 date_getUTCHours(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = HourFromTime(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return JS_TRUE;
 }
 
 static JSBool
 date_getMinutes(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES);
     return true;
 }
 
 static JSBool
 date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = MinFromTime(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
@@ -1643,14 +1675,15 @@ date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetAndCacheLocalTime(cx, obj, vp))
+    if (!GetAndCacheLocalTime(cx, obj, args))
         return false;
 
-    *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS);
+    args.rval() = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS);
     return true;
 }
 
@@ -1659,30 +1692,33 @@ date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_getUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble result;
-    if (!GetThisUTCTime(cx, vp, &result))
+    if (!GetThisUTCTime(cx, args, &result))
         return false;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = msFromTime(result);
 
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
     jsdouble utctime;
-    if (!GetUTCTime(cx, obj, vp, &utctime))
+    if (!GetUTCTime(cx, obj, args, &utctime))
         return false;
 
     jsdouble localtime;
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime))
+    if (!GetAndCacheLocalTime(cx, obj, &localtime))
         return false;
 
     /*
@@ -1691,56 +1727,50 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
      * daylight savings time.
      */
     jsdouble result = (utctime - localtime) / msPerMinute;
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
 static JSBool
 date_setTime(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
     if (!obj->isDate()) {
-        ReportIncompatibleMethod(cx, vp, &DateClass);
+        ReportIncompatibleMethod(cx, args, &DateClass);
         return false;
     }
 
-    if (argc == 0) {
-        SetDateToNaN(cx, obj, vp);
+    if (args.length() == 0) {
+        SetDateToNaN(cx, obj, &args.rval());
         return true;
     }
 
     jsdouble result;
-    if (!ToNumber(cx, vp[2], &result))
+    if (!ToNumber(cx, args[0], &result))
         return false;
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), vp);
+    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
 }
 
 static JSBool
 date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 {
-    Value *argv;
-    uintN i;
-    jsdouble args[4], *argp, *stop;
-    jsdouble hour, min, sec, msec;
-    jsdouble lorutime; /* Local or UTC version of *date */
-
-    jsdouble msec_time;
-    jsdouble result;
-
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetUTCTime(cx, obj, vp, &result))
+    double result;
+    if (!GetUTCTime(cx, obj, args, &result))
         return false;
 
     /* just return NaN if the date is already NaN */
     if (!JSDOUBLE_IS_FINITE(result)) {
-        vp->setNumber(result);
+        args.rval().setNumber(result);
         return true;
     }
 
@@ -1753,63 +1783,63 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
      * if it's not given.  This means that "d = new Date();
      * d.setMilliseconds()" returns NaN.  Blech.
      */
-    if (argc == 0) {
-        SetDateToNaN(cx, obj, vp);
+    if (args.length() == 0) {
+        SetDateToNaN(cx, obj, &args.rval());
         return true;
     }
-    if (argc > maxargs)
-        argc = maxargs;  /* clamp argc */
-    JS_ASSERT(argc <= 4);
 
-    argv = vp + 2;
-    for (i = 0; i < argc; i++) {
-        if (!ToNumber(cx, argv[i], &args[i]))
+    uintN numNums = Min(args.length(), maxargs);
+    JS_ASSERT(numNums <= 4);
+    double nums[4];
+    for (uintN i = 0; i < numNums; i++) {
+        if (!ToNumber(cx, args[i], &nums[i]))
             return false;
-        if (!JSDOUBLE_IS_FINITE(args[i])) {
-            SetDateToNaN(cx, obj, vp);
+        if (!JSDOUBLE_IS_FINITE(nums[i])) {
+            SetDateToNaN(cx, obj, &args.rval());
             return true;
         }
-        args[i] = js_DoubleToInteger(args[i]);
+        nums[i] = js_DoubleToInteger(nums[i]);
     }
 
+    double lorutime;  /* Local or UTC version of *date */
     if (local)
         lorutime = LocalTime(result, cx);
     else
         lorutime = result;
 
-    argp = args;
-    stop = argp + argc;
+    double *argp = nums;
+    double *stop = argp + numNums;
+    double hour;
     if (maxargs >= 4 && argp < stop)
         hour = *argp++;
     else
         hour = HourFromTime(lorutime);
 
+    double min;
     if (maxargs >= 3 && argp < stop)
         min = *argp++;
     else
         min = MinFromTime(lorutime);
 
+    double sec;
     if (maxargs >= 2 && argp < stop)
         sec = *argp++;
     else
         sec = SecFromTime(lorutime);
 
+    double msec;
     if (maxargs >= 1 && argp < stop)
         msec = *argp;
     else
         msec = msFromTime(lorutime);
 
-    msec_time = MakeTime(hour, min, sec, msec);
+    double msec_time = MakeTime(hour, min, sec, msec);
     result = MakeDate(Day(lorutime), msec_time);
-
-/*     fprintf(stderr, "%f\n", result); */
 
     if (local)
         result = UTC(result, cx);
 
-/*     fprintf(stderr, "%f\n", result); */
-
-    return SetUTCTime(cx, obj, TIMECLIP(result), vp);
+    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
 }
 
 static JSBool
@@ -1863,45 +1893,42 @@ date_setUTCHours(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 {
-    Value *argv;
-    uintN i;
-    jsdouble lorutime; /* local or UTC version of *date */
-    jsdouble args[3], *argp, *stop;
-    jsdouble year, month, day;
-    jsdouble result;
-
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!GetUTCTime(cx, obj, vp, &result))
+    double result;
+    if (!GetUTCTime(cx, obj, args, &result))
         return false;
 
     /* see complaint about ECMA in date_MakeTime */
-    if (argc == 0) {
-        SetDateToNaN(cx, obj, vp);
+    if (args.length() == 0) {
+        SetDateToNaN(cx, obj, &args.rval());
         return true;
     }
-    if (argc > maxargs)
-        argc = maxargs;   /* clamp argc */
-    JS_ASSERT(1 <= argc && argc <= 3);
 
-    argv = vp + 2;
-    for (i = 0; i < argc; i++) {
-        if (!ToNumber(cx, argv[i], &args[i]))
+    uintN numNums = Min(args.length(), maxargs);
+    JS_ASSERT(1 <= numNums && numNums <= 3);
+    double nums[3];
+    for (uintN i = 0; i < numNums; i++) {
+        if (!ToNumber(cx, args[i], &nums[i]))
             return JS_FALSE;
-        if (!JSDOUBLE_IS_FINITE(args[i])) {
-            SetDateToNaN(cx, obj, vp);
+        if (!JSDOUBLE_IS_FINITE(nums[i])) {
+            SetDateToNaN(cx, obj, &args.rval());
             return true;
         }
-        args[i] = js_DoubleToInteger(args[i]);
+        nums[i] = js_DoubleToInteger(nums[i]);
     }
 
-    /* return NaN if date is NaN and we're not setting the year,
-     * If we are, use 0 as the time. */
+    /*
+     * return NaN if date is NaN and we're not setting the year, If we are, use
+     * 0 as the time.
+     */
+    double lorutime; /* local or UTC version of *date */
     if (!(JSDOUBLE_IS_FINITE(result))) {
         if (maxargs < 3) {
-            vp->setDouble(result);
+            args.rval().setDouble(result);
             return true;
         }
         lorutime = +0.;
@@ -1909,18 +1936,21 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
         lorutime = local ? LocalTime(result, cx) : result;
     }
 
-    argp = args;
-    stop = argp + argc;
+    double *argp = nums;
+    double *stop = argp + numNums;
+    double year;
     if (maxargs >= 3 && argp < stop)
         year = *argp++;
     else
         year = YearFromTime(lorutime);
 
+    double month;
     if (maxargs >= 2 && argp < stop)
         month = *argp++;
     else
         month = MonthFromTime(lorutime);
 
+    double day;
     if (maxargs >= 1 && argp < stop)
         day = *argp++;
     else
@@ -1932,7 +1962,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
     if (local)
         result = UTC(result, cx);
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), vp);
+    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
 }
 
 static JSBool
@@ -1974,25 +2004,26 @@ date_setUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_setYear(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
     jsdouble result;
-    if (!GetUTCTime(cx, obj, vp, &result))
+    if (!GetUTCTime(cx, obj, args, &result))
         return false;
 
-    if (argc == 0) {
+    if (args.length() == 0) {
         /* Call this only after GetUTCTime has verified that obj is Date. */
-        SetDateToNaN(cx, obj, vp);
+        SetDateToNaN(cx, obj, &args.rval());
         return true;
     }
 
     jsdouble year;
-    if (!ToNumber(cx, vp[2], &year))
+    if (!ToNumber(cx, args[0], &year))
         return false;
     if (!JSDOUBLE_IS_FINITE(year)) {
-        SetDateToNaN(cx, obj, vp);
+        SetDateToNaN(cx, obj, &args.rval());
         return true;
     }
     year = js_DoubleToInteger(year);
@@ -2004,7 +2035,7 @@ date_setYear(JSContext *cx, uintN argc, Value *vp)
     result = MakeDate(day, TimeWithinDay(t));
     result = UTC(result, cx);
 
-    return SetUTCTime(cx, obj, TIMECLIP(result), vp);
+    return SetUTCTime(cx, obj, TIMECLIP(result), &args.rval());
 }
 
 /* constants for toString, toUTCString */
@@ -2048,11 +2079,11 @@ print_iso_string(char* buf, size_t size, jsdouble utctime)
 }
 
 static JSBool
-date_utc_format(JSContext *cx, Value *vp,
+date_utc_format(JSContext *cx, CallReceiver call,
                 void (*printFunc)(char*, size_t, jsdouble))
 {
     jsdouble utctime;
-    if (!GetThisUTCTime(cx, vp, &utctime))
+    if (!GetThisUTCTime(cx, call, &utctime))
         return false;
 
     char buf[100];
@@ -2070,20 +2101,20 @@ date_utc_format(JSContext *cx, Value *vp,
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    vp->setString(str);
+    call.rval().setString(str);
     return true;
 }
 
 static JSBool
 date_toGMTString(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_utc_format(cx, vp, print_gmt_string);
+    return date_utc_format(cx, CallReceiverFromVp(vp), print_gmt_string);
 }
 
 static JSBool
 date_toISOString(JSContext *cx, uintN argc, Value *vp)
 {
-    return date_utc_format(cx, vp, print_iso_string);
+    return date_utc_format(cx, CallReceiverFromVp(vp), print_iso_string);
 }
 
 /* ES5 15.9.5.44. */
@@ -2161,7 +2192,7 @@ typedef enum formatspec {
 
 /* helper function */
 static JSBool
-date_format(JSContext *cx, jsdouble date, formatspec format, Value *rval)
+date_format(JSContext *cx, jsdouble date, formatspec format, CallReceiver call)
 {
     char buf[100];
     JSString *str;
@@ -2269,19 +2300,19 @@ date_format(JSContext *cx, jsdouble date, formatspec format, Value *rval)
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
-    rval->setString(str);
+    call.rval().setString(str);
     return JS_TRUE;
 }
 
 static JSBool
-date_toLocaleHelper(JSContext *cx, JSObject *obj, const char *format, Value *vp)
+date_toLocaleHelper(JSContext *cx, JSObject *obj, const char *format, CallReceiver call)
 {
     char buf[100];
     JSString *str;
     PRMJTime split;
     jsdouble utctime;
 
-    if (!GetUTCTime(cx, obj, vp, &utctime))
+    if (!GetUTCTime(cx, obj, call, &utctime))
         return false;
 
     if (!JSDOUBLE_IS_FINITE(utctime)) {
@@ -2296,7 +2327,7 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, const char *format, Value *vp)
 
         /* If it failed, default to toString. */
         if (result_len == 0)
-            return date_format(cx, utctime, FORMATSPEC_FULL, vp);
+            return date_format(cx, utctime, FORMATSPEC_FULL, call);
 
         /* Hacked check against undesired 2-digit year 00/00/00 form. */
         if (strcmp(format, "%x") == 0 && result_len >= 6 &&
@@ -2314,19 +2345,20 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, const char *format, Value *vp)
     }
 
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
-        return cx->localeCallbacks->localeToUnicode(cx, buf, vp);
+        return cx->localeCallbacks->localeToUnicode(cx, buf, &call.rval());
 
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    vp->setString(str);
+    call.rval().setString(str);
     return true;
 }
 
 static JSBool
 date_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
@@ -2340,13 +2372,14 @@ date_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 #else
                                    "%c"
 #endif
-                               , vp);
+                               , args);
 }
 
 static JSBool
 date_toLocaleDateString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
@@ -2360,17 +2393,18 @@ date_toLocaleDateString(JSContext *cx, uintN argc, Value *vp)
 #else
                                    "%x"
 #endif
-                               , vp);
+                               , args);
 }
 
 static JSBool
 date_toLocaleTimeString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    return date_toLocaleHelper(cx, obj, "%X", vp);
+    return date_toLocaleHelper(cx, obj, "%X", args);
 }
 
 static JSBool
@@ -2379,37 +2413,42 @@ date_toLocaleFormat(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0)
         return date_toLocaleString(cx, argc, vp);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    JSString *fmt = js_ValueToString(cx, vp[2]);
+    JSString *fmt = js_ValueToString(cx, args[0]);
     if (!fmt)
         return false;
-    vp[2].setString(fmt);
+    args[0].setString(fmt);
     JSAutoByteString fmtbytes(cx, fmt);
     if (!fmtbytes)
         return false;
 
-    return date_toLocaleHelper(cx, obj, fmtbytes.ptr(), vp);
+    return date_toLocaleHelper(cx, obj, fmtbytes.ptr(), args);
 }
 
 static JSBool
 date_toTimeString(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble utctime;
-    if (!GetThisUTCTime(cx, vp, &utctime))
+    if (!GetThisUTCTime(cx, args, &utctime))
         return false;
-    return date_format(cx, utctime, FORMATSPEC_TIME, vp);
+    return date_format(cx, utctime, FORMATSPEC_TIME, args);
 }
 
 static JSBool
 date_toDateString(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble utctime;
-    if (!GetThisUTCTime(cx, vp, &utctime))
+    if (!GetThisUTCTime(cx, args, &utctime))
         return false;
-    return date_format(cx, utctime, FORMATSPEC_DATE, vp);
+    return date_format(cx, utctime, FORMATSPEC_DATE, args);
 }
 
 #if JS_HAS_TOSOURCE
@@ -2419,8 +2458,10 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_toSource(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble utctime;
-    if (!GetThisUTCTime(cx, vp, &utctime))
+    if (!GetThisUTCTime(cx, args, &utctime))
         return false;
 
     ToCStringBuf cbuf;
@@ -2440,7 +2481,7 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
     cx->free_(bytes);
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 #endif
@@ -2448,11 +2489,13 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_toString(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsdouble utctime;
-    if (!GetThisUTCTime(cx, vp, &utctime))
+    if (!GetThisUTCTime(cx, args, &utctime))
         return false;
 
-    return date_format(cx, utctime, FORMATSPEC_FULL, vp);
+    return date_format(cx, utctime, FORMATSPEC_FULL, args);
 }
 
 static JSBool
@@ -2553,28 +2596,28 @@ static JSFunctionSpec date_methods[] = {
 JSBool
 js_Date(JSContext *cx, uintN argc, Value *vp)
 {
-    /* Date called as function. */
-    if (!IsConstructing(vp))
-        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    Value *argv = vp + 2;
+    /* Date called as function. */
+    if (!IsConstructing(args))
+        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, args);
 
     /* Date called as constructor. */
     jsdouble d;
-    if (argc == 0) {
+    if (args.length() == 0) {
         d = NowAsMillis();
-    } else if (argc == 1) {
-        if (!argv[0].isString()) {
+    } else if (args.length() == 1) {
+        if (!args[0].isString()) {
             /* the argument is a millisecond number */
-            if (!ToNumber(cx, argv[0], &d))
+            if (!ToNumber(cx, args[0], &d))
                 return false;
             d = TIMECLIP(d);
         } else {
             /* the argument is a string; parse it. */
-            JSString *str = js_ValueToString(cx, argv[0]);
+            JSString *str = js_ValueToString(cx, args[0]);
             if (!str)
                 return false;
-            argv[0].setString(str);
+            args[0].setString(str);
             JSLinearString *linearStr = str->ensureLinear(cx);
             if (!linearStr)
                 return false;
@@ -2586,7 +2629,7 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
         }
     } else {
         jsdouble msec_time;
-        if (!date_msecFromArgs(cx, argc, argv, &msec_time))
+        if (!date_msecFromArgs(cx, args, &msec_time))
             return false;
 
         if (JSDOUBLE_IS_FINITE(msec_time)) {
@@ -2599,8 +2642,8 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = js_NewDateObjectMsec(cx, d);
     if (!obj)
         return false;
-    vp->setObject(*obj);
 
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -2682,8 +2725,7 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
 JS_FRIEND_API(JSBool)
 js_DateIsValid(JSContext *cx, JSObject* obj)
 {
-    jsdouble utctime;
-    return GetUTCTime(cx, obj, NULL, &utctime) && !JSDOUBLE_IS_NaN(utctime);
+    return obj->isDate() && !JSDOUBLE_IS_NaN(obj->getDateUTCTime().toNumber());
 }
 
 JS_FRIEND_API(int)
@@ -2692,7 +2734,7 @@ js_DateGetYear(JSContext *cx, JSObject* obj)
     jsdouble localtime;
 
     /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+    if (!GetAndCacheLocalTime(cx, obj, &localtime) ||
         JSDOUBLE_IS_NaN(localtime)) {
         return 0;
     }
@@ -2705,7 +2747,7 @@ js_DateGetMonth(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+    if (!GetAndCacheLocalTime(cx, obj, &localtime) ||
         JSDOUBLE_IS_NaN(localtime)) {
         return 0;
     }
@@ -2718,7 +2760,7 @@ js_DateGetDate(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+    if (!GetAndCacheLocalTime(cx, obj, &localtime) ||
         JSDOUBLE_IS_NaN(localtime)) {
         return 0;
     }
@@ -2731,7 +2773,7 @@ js_DateGetHours(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+    if (!GetAndCacheLocalTime(cx, obj, &localtime) ||
         JSDOUBLE_IS_NaN(localtime)) {
         return 0;
     }
@@ -2744,7 +2786,7 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 {
     jsdouble localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime) ||
+    if (!GetAndCacheLocalTime(cx, obj, &localtime) ||
         JSDOUBLE_IS_NaN(localtime)) {
         return 0;
     }
@@ -2755,21 +2797,19 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj)
 {
-    jsdouble utctime;
-
-    if (!GetUTCTime(cx, obj, NULL, &utctime) || JSDOUBLE_IS_NaN(utctime))
+    if (!obj->isDate()) 
         return 0;
-
+    
+    double utctime = obj->getDateUTCTime().toNumber();
+    if (JSDOUBLE_IS_NaN(utctime))
+        return 0;
     return (int) SecFromTime(utctime);
 }
 
 JS_FRIEND_API(jsdouble)
 js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
 {
-    jsdouble utctime;
-    if (!GetUTCTime(cx, obj, NULL, &utctime))
-        return 0;
-    return utctime;
+    return obj->isDate() ? obj->getDateUTCTime().toNumber() : 0;
 }
 
 #ifdef JS_THREADSAFE

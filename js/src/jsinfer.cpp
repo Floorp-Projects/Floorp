@@ -4885,7 +4885,7 @@ TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
      * accessed through the arguments object, which is monitored.
      */
     unsigned arg = 0;
-    for (; arg < args.argc() && arg < nargs; arg++)
+    for (; arg < args.length() && arg < nargs; arg++)
         TypeScript::SetArgument(cx, script, arg, args[arg]);
 
     /* Watch for fewer actuals than formals to the call. */
