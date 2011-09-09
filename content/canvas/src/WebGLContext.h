@@ -1049,10 +1049,6 @@ protected:
             (mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
     }
 
-    PRBool DoesMinFilterRequireMipmap() const {
-        return !(mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_LINEAR);
-    }
-
     PRBool AreBothWrapModesClampToEdge() const {
         return mWrapS == LOCAL_GL_CLAMP_TO_EDGE && mWrapT == LOCAL_GL_CLAMP_TO_EDGE;
     }
@@ -1155,6 +1151,12 @@ public:
     void SetWrapT(WebGLenum aWrapT) {
         mWrapT = aWrapT;
         SetDontKnowIfNeedFakeBlack();
+    }
+    
+    WebGLenum MinFilter() const { return mMinFilter; }
+
+    PRBool DoesMinFilterRequireMipmap() const {
+        return !(mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_LINEAR);
     }
 
     void SetGeneratedMipmap() {
