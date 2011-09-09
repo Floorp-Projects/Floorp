@@ -709,3 +709,52 @@ nsXPLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
+
+namespace mozilla {
+
+// static
+nsresult
+LookAndFeel::GetColor(ColorID aID, nscolor* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  return nsLookAndFeel::GetInstance()->GetColor((nsILookAndFeel::nsColorID)aID, *aResult);
+}
+
+// static
+nsresult
+LookAndFeel::GetInt(IntID aID, PRInt32* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  return nsLookAndFeel::GetInstance()->GetMetric((nsILookAndFeel::nsMetricID)aID, *aResult);
+}
+
+// static
+nsresult
+LookAndFeel::GetFloat(FloatID aID, float* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  return nsLookAndFeel::GetInstance()->GetMetric((nsILookAndFeel::nsMetricFloatID)aID, *aResult);
+}
+
+// static
+PRUnichar
+LookAndFeel::GetPasswordCharacter()
+{
+  return nsLookAndFeel::GetInstance()->GetPasswordCharacter();
+}
+
+// static
+PRBool
+LookAndFeel::GetEchoPassword()
+{
+  return nsLookAndFeel::GetInstance()->GetEchoPassword();
+}
+
+// static
+void
+LookAndFeel::Refresh()
+{
+  nsLookAndFeel::GetInstance()->LookAndFeelChanged();
+}
+
+} // namespace mozilla
