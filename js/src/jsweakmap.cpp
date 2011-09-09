@@ -103,13 +103,12 @@ static JSBool
 WeakMap_has(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isWeakMap()) {
-        ReportIncompatibleMethod(cx, args, &WeakMapClass);
-        return false;
-    }
+        return ok;
+
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.has", "0", "s");
@@ -135,13 +134,12 @@ static JSBool
 WeakMap_get(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isWeakMap()) {
-        ReportIncompatibleMethod(cx, args, &WeakMapClass);
-        return false;
-    }
+        return ok;
+
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.get", "0", "s");
@@ -167,13 +165,12 @@ static JSBool
 WeakMap_delete(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isWeakMap()) {
-        ReportIncompatibleMethod(cx, args, &WeakMapClass);
-        return false;
-    }
+        return ok;
+
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.delete", "0", "s");
@@ -200,13 +197,12 @@ static JSBool
 WeakMap_set(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &WeakMapClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isWeakMap()) {
-        ReportIncompatibleMethod(cx, args, &WeakMapClass);
-        return false;
-    }
+        return ok;
+
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "WeakMap.set", "0", "s");

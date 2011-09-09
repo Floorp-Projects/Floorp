@@ -716,20 +716,20 @@ static JSBool
 iterator_next(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &IteratorClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isIterator()) {
-        ReportIncompatibleMethod(cx, args, &IteratorClass);
-        return false;
-    }
+        return ok;
 
     if (!js_IteratorMore(cx, obj, &args.rval()))
         return false;
+
     if (!args.rval().toBoolean()) {
         js_ThrowStopIteration(cx);
         return false;
     }
+
     return js_IteratorNext(cx, obj, &args.rval());
 }
 
@@ -1345,13 +1345,11 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     LeaveTrace(cx);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &GeneratorClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isGenerator()) {
-        ReportIncompatibleMethod(cx, args, &GeneratorClass);
-        return false;
-    }
+        return ok;
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {

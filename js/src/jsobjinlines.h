@@ -1684,6 +1684,69 @@ PropDesc::checkSetter(JSContext *cx)
     return true;
 }
 
+namespace detail {
+
+template<typename T> class PrimitiveBehavior { };
+
+template<>
+class PrimitiveBehavior<JSString *> {
+  public:
+    static inline bool isType(const Value &v) { return v.isString(); }
+    static inline JSString *extract(const Value &v) { return v.toString(); }
+    static inline Class *getClass() { return &StringClass; }
+};
+
+template<>
+class PrimitiveBehavior<bool> {
+  public:
+    static inline bool isType(const Value &v) { return v.isBoolean(); }
+    static inline bool extract(const Value &v) { return v.toBoolean(); }
+    static inline Class *getClass() { return &BooleanClass; }
+};
+
+template<>
+class PrimitiveBehavior<double> {
+  public:
+    static inline bool isType(const Value &v) { return v.isNumber(); }
+    static inline double extract(const Value &v) { return v.toNumber(); }
+    static inline Class *getClass() { return &NumberClass; }
+};
+
+} /* namespace detail */
+
+inline JSObject *
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok)
+{
+    const Value &thisv = args.thisv();
+    if (thisv.isObject()) {
+        JSObject &obj = thisv.toObject();
+        if (obj.getClass() == clasp)
+            return &obj;
+    }
+
+    *ok = HandleNonGenericMethodClassMismatch(cx, args, clasp);
+    return NULL;
+}
+
+template <typename T>
+inline bool
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
+{
+    typedef detail::PrimitiveBehavior<T> Behavior;
+
+    const Value &thisv = args.thisv();
+    if (Behavior::isType(thisv)) {
+        *v = Behavior::extract(thisv);
+        return true;
+    }
+
+    if (!NonGenericMethodGuard(cx, args, Behavior::getClass(), ok))
+        return false;
+
+    *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
+    return true;
+}
+
 } /* namespace js */
 
 inline JSObject *

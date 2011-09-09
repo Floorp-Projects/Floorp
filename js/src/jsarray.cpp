@@ -133,7 +133,6 @@
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
@@ -1442,10 +1441,8 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
-    if (!obj->isArray()) {
-        ReportIncompatibleMethod(cx, args, &ArrayClass);
-        return false;
-    }
+    if (!obj->isArray())
+        return HandleNonGenericMethodClassMismatch(cx, args, &ArrayClass);
 
     ArraySharpDetector detector(cx);
     if (!detector.init(obj))

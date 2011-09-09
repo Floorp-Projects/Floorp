@@ -79,7 +79,6 @@
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
@@ -605,8 +604,9 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     double d;
-    if (!GetPrimitiveThis(cx, args, &d))
-        return false;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &d, &ok))
+        return ok;
 
     ToCStringBuf cbuf;
     char *numStr = NumberToCString(cx, &cbuf, d);
@@ -718,8 +718,9 @@ num_toString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     double d;
-    if (!GetPrimitiveThis(cx, args, &d))
-        return false;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &d, &ok))
+        return ok;
 
     int32 base = 10;
     if (args.length() != 0 && !args[0].isUndefined()) {
@@ -868,8 +869,9 @@ js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     double d;
-    if (!GetPrimitiveThis(cx, args, &d))
-        return false;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &d, &ok))
+        return ok;
 
     args.rval().setNumber(d);
     return true;
@@ -888,8 +890,9 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
     char *numStr;
 
     double d;
-    if (!GetPrimitiveThis(cx, args, &d))
-        return false;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &d, &ok))
+        return ok;
 
     double precision;
     if (args.length() == 0) {
