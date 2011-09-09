@@ -176,95 +176,6 @@ mjit::Compiler::compileMathSqrt(FrameEntry *arg)
 }
 
 CompileStatus
-mjit::Compiler::compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
-                                        Assembler::DoubleCondition cond)
-{
-    FPRegisterID fpReg1;
-    FPRegisterID fpReg2;
-    bool allocate1;
-    bool allocate2;
-
-    DebugOnly<MaybeJump> notNumber = loadDouble(arg1, &fpReg1, &allocate1);
-    JS_ASSERT(!((MaybeJump)notNumber).isSet());
-
-    if (!allocate1) {
-        FPRegisterID fpResultReg = frame.allocFPReg();
-        masm.moveDouble(fpReg1, fpResultReg);
-        fpReg1 = fpResultReg;
-    }
-
-    DebugOnly<MaybeJump> notNumber2 = loadDouble(arg2, &fpReg2, &allocate2);
-    JS_ASSERT(!((MaybeJump)notNumber2).isSet());
-
-    Jump ifTrue = masm.branchDouble(cond, fpReg1, fpReg2);
-    masm.moveDouble(fpReg2, fpReg1);
-
-    ifTrue.linkTo(masm.label(), &masm);
-
-    /* We would need to handle cases like Math.min(0, -0) correctly */    
-    masm.zeroDouble(Registers::FPConversionTemp);
-    Jump isZero = masm.branchDouble(Assembler::DoubleEqual, fpReg1, Registers::FPConversionTemp);
-    stubcc.linkExit(isZero, Uses(4));
-
-    if (allocate2)
-        frame.freeReg(fpReg2);
-
-    stubcc.leave();
-    stubcc.masm.move(Imm32(2), Registers::ArgReg1);
-    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
-
-    frame.popn(4);
-    frame.pushDouble(fpReg1);
-
-    stubcc.rejoin(Changes(1));
-    return Compile_Okay;
-}
-
-CompileStatus
-mjit::Compiler::compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2, Assembler::Condition cond)
-{
-    /* Get this case out of the way */
-    if (arg1->isConstant() && arg2->isConstant()) {
-        int32 a = arg1->getValue().toInt32();
-        int32 b = arg2->getValue().toInt32();
-
-        frame.popn(4);
-        if (cond == Assembler::LessThan)
-            frame.push(Int32Value(a < b ? a : b));
-        else
-            frame.push(Int32Value(a > b ? a : b));
-        return Compile_Okay;
-    }
-
-    Jump ifTrue;
-    RegisterID reg;
-    if (arg1->isConstant()) {
-        reg = frame.copyDataIntoReg(arg2);
-        int32_t v = arg1->getValue().toInt32();
-
-        ifTrue = masm.branch32(cond, reg, Imm32(v));
-        masm.move(Imm32(v), reg);
-    } else if (arg2->isConstant()) {
-        reg = frame.copyDataIntoReg(arg1);
-        int32_t v = arg2->getValue().toInt32();
-
-        ifTrue = masm.branch32(cond, reg, Imm32(v));
-        masm.move(Imm32(v), reg);
-    } else {
-        reg = frame.copyDataIntoReg(arg1);
-        RegisterID regB = frame.tempRegForData(arg2);
-
-        ifTrue = masm.branch32(cond, reg, regB);
-        masm.move(regB, reg);
-    }
-
-    ifTrue.linkTo(masm.label(), &masm);
-    frame.popn(4);
-    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-    return Compile_Okay;
-}
-
-CompileStatus
 mjit::Compiler::compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2)
 {
     FPRegisterID fpScratchReg = frame.allocFPReg();
@@ -743,21 +654,6 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
             Value arg2Value = arg2->getValue();
             if (arg2Value.toDouble() == -0.5 || arg2Value.toDouble() == 0.5)
                 return compileMathPowSimple(arg1, arg2);
-        }
-        if ((native == js_math_min || native == js_math_max)) {
-            if (arg1Type == JSVAL_TYPE_INT32 && arg2Type == JSVAL_TYPE_INT32 &&
-                type == JSVAL_TYPE_INT32) {
-                return compileMathMinMaxInt(arg1, arg2, 
-                        native == js_math_min ? Assembler::LessThan : Assembler::GreaterThan);
-            }
-            if ((arg1Type == JSVAL_TYPE_INT32 || arg1Type == JSVAL_TYPE_DOUBLE) &&
-                (arg2Type == JSVAL_TYPE_INT32 || arg2Type == JSVAL_TYPE_DOUBLE) &&
-                type == JSVAL_TYPE_DOUBLE) {
-                return compileMathMinMaxDouble(arg1, arg2,
-                        (native == js_math_min)
-                        ? Assembler::DoubleGreaterThanOrEqualOrUnordered
-                        : Assembler::DoubleLessThanOrEqualOrUnordered);
-            }
         }
     }
     return Compile_InlineAbort;
