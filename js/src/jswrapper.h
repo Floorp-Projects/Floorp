@@ -84,6 +84,7 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, JSObject *wrapper, uintN argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, Value *rval);
+    virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args);
     virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp);
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
@@ -144,6 +145,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, JSObject *wrapper, uintN argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, Value *rval);
+    virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args);
     virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp);
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);

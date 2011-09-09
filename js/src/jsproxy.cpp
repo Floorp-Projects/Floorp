@@ -290,6 +290,14 @@ ProxyHandler::construct(JSContext *cx, JSObject *proxy,
 }
 
 bool
+ProxyHandler::nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args)
+{
+    JS_ASSERT(OperationInProgress(cx, proxy));
+    ReportIncompatibleMethod(cx, args, clasp);
+    return false;
+}
+
+bool
 ProxyHandler::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
@@ -832,6 +840,14 @@ Proxy::construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Value 
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->construct(cx, proxy, argc, argv, rval);
+}
+
+bool
+Proxy::nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    AutoPendingProxyOperation pending(cx, proxy);
+    return proxy->getProxyHandler()->nativeCall(cx, proxy, clasp, native, args);
 }
 
 bool

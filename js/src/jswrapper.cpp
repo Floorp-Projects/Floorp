@@ -735,6 +735,47 @@ CrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc,
 }
 
 bool
+CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs srcArgs)
+{
+    JS_ASSERT(srcArgs.callee().getFunctionPrivate()->native() == native);
+    JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
+    JS_ASSERT(!wrapper->unwrap(NULL)->isProxy());
+
+    JSObject *wrapped = wrappedObject(wrapper);
+    AutoCompartment call(cx, wrapped);
+    if (!call.enter())
+        return false;
+
+    InvokeArgsGuard dstArgs;
+    if (!cx->stack.pushInvokeArgs(cx, srcArgs.length(), &dstArgs))
+        return false;
+
+    Value *src = srcArgs.base(); 
+    Value *srcend = srcArgs.array() + srcArgs.length();
+    Value *dst = dstArgs.base();
+    for (; src != srcend; ++src, ++dst) {
+        *dst = *src;
+        if (!call.destination->wrap(cx, dst))
+            return false;
+    }
+
+    if (!Wrapper::nativeCall(cx, wrapper, clasp, native, dstArgs))
+        return false;
+
+    dstArgs.pop();
+    call.leave();
+    srcArgs.rval() = dstArgs.rval();
+    return call.origin->wrap(cx, &srcArgs.rval());
+}
+
+bool
+Wrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args)
+{
+    const jsid id = JSID_VOID;
+    CHECKED(CallJSNative(cx, native, args), CALL);
+}
+
+bool
 CrossCompartmentWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
 {
     AutoCompartment call(cx, wrappedObject(wrapper));
