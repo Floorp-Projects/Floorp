@@ -51,9 +51,6 @@ JSObject*
 InitClass(JSContext* aCx, JSObject* aGlobal, JSObject* aProto,
           bool aMainRuntime);
 
-void
-ClearPrivateSlot(JSContext* aCx, JSObject* aObj);
-
 } // namespace worker
 
 namespace chromeworker {

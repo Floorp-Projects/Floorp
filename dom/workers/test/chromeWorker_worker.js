@@ -6,11 +6,6 @@ if (!("ctypes" in self)) {
   throw "No ctypes!";
 }
 
-// Go ahead and verify that the ctypes lazy getter actually works.
-if (ctypes.toString() != "[object ctypes]") {
-  throw "Bad ctypes object: " + ctypes.toString();
-}
-
 onmessage = function(event) {
   let worker = new ChromeWorker("chromeWorker_subworker.js");
   worker.onmessage = function(event) {

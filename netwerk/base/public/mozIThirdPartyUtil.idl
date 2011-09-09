@@ -45,7 +45,7 @@ interface nsIChannel;
  * Utility functions for determining whether a given URI, channel, or window
  * hierarchy is third party with respect to a known URI.
  */
-[scriptable, uuid(d994fd1d-d2fe-4372-9ae7-88b08b7d9d90)]
+[scriptable, uuid(55385caa-1b94-4376-a34c-b47c51ef0837)]
 interface mozIThirdPartyUtil : nsISupports
 {
   /**
@@ -155,24 +155,6 @@ interface mozIThirdPartyUtil : nsISupports
    * @see isThirdPartyWindow
    */
   boolean isThirdPartyChannel(in nsIChannel aChannel, [optional] in nsIURI aURI);
-
-  /**
-   * getBaseDomain
-   *
-   * Get the base domain for aHostURI; e.g. for "www.bbc.co.uk", this would be
-   * "bbc.co.uk". Only properly-formed URI's are tolerated, though a trailing
-   * dot may be present. If aHostURI is an IP address, an alias such as
-   * 'localhost', an eTLD such as 'co.uk', or the empty string, aBaseDomain will
-   * be the exact host. The result of this function should only be used in exact
-   * string comparisons, since substring comparisons will not be valid for the
-   * special cases elided above.
-   *
-   * @param aHostURI
-   *        The URI to analyze.
-   *
-   * @return the base domain.
-   */
-  AUTF8String getBaseDomain(in nsIURI aHostURI);
 };
 
 %{ C++
