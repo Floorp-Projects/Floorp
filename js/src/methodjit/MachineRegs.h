@@ -118,7 +118,7 @@ struct Registers {
 #elif defined(JS_CPU_X64)
     static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
-    static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
+    static const RegisterID JSFrameReg = JSC::ARMRegisters::r10;
 #elif defined(JS_CPU_SPARC)
     static const RegisterID JSFrameReg = JSC::SparcRegisters::l0;
 #endif
@@ -225,9 +225,8 @@ struct Registers {
         | (1 << JSC::ARMRegisters::r6)
         | (1 << JSC::ARMRegisters::r7)
     // r8 is reserved as a scratch register for the assembler.
-        | (1 << JSC::ARMRegisters::r9)
-        | (1 << JSC::ARMRegisters::r10);
-    // r11 is reserved for JSFrameReg.
+        | (1 << JSC::ARMRegisters::r9);
+    // r10 is reserved for JSFrameReg.
     // r13 is SP and must always point to VMFrame whilst in generated code.
     // r14 is LR and is used for return sequences.
     // r15 is PC (program counter).

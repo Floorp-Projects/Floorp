@@ -2151,6 +2151,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     ic.fastPathRejoin = masm.label();
 
+    CHECK_IC_SPACE();
+
     frame.popn(2);
     frame.pushRegs(ic.typeReg, ic.objReg, knownPushedType(0));
     BarrierState barrier = testBarrier(ic.typeReg, ic.objReg, false);
