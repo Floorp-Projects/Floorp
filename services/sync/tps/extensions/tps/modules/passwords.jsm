@@ -40,7 +40,7 @@
   * listed symbols will exposed on import, and only when and where imported. 
   */
 
-var EXPORTED_SYMBOLS = ["Password"];
+var EXPORTED_SYMBOLS = ["Password", "DumpPasswords"];
 
 const CC = Components.classes;
 const CI = Components.interfaces;
@@ -53,6 +53,18 @@ let nsLoginInfo = new Components.Constructor(
                       "@mozilla.org/login-manager/loginInfo;1",  
                       CI.nsILoginInfo,  
                       "init");  
+
+var DumpPasswords = function TPS__Passwords__DumpPasswords() {
+  let logins = Services.logins.getAllLogins();
+  Logger.logInfo("\ndumping password list\n", true);
+  for (var i = 0; i < logins.length; i++) {
+    Logger.logInfo("* host=" + logins[i].hostname + ", submitURL=" + logins[i].formSubmitURL +
+                   ", realm=" + logins[i].httpRealm + ", password=" + logins[i].password +
+                   ", passwordField=" + logins[i].passwordField + ", username=" +
+                   logins[i].username + ", usernameField=" + logins[i].usernameField, true);
+  }
+  Logger.logInfo("\n\nend password list\n", true);
+};
 
 /**
  * PasswordProps object; holds password properties.
@@ -121,9 +133,10 @@ Password.prototype = {
    * @return the guid of the password if found, otherwise -1
    */
   Find: function() {
-    let logins = Services.logins.findLogins({}, this.props.hostname,
-                                         this.props.submitURL,
-                                         this.props.realm);
+    let logins = Services.logins.findLogins({},
+                                            this.props.hostname,
+                                            this.props.submitURL,
+                                            this.props.realm);
     for (var i = 0; i < logins.length; i++) {
       if (logins[i].username == this.props.username &&
           logins[i].password == this.props.password &&
