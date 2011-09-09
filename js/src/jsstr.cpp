@@ -77,7 +77,6 @@
 #include "jsversion.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 #include "jsautooplen.h"        // generated headers last
@@ -460,8 +459,9 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JSString *str;
-    if (!GetPrimitiveThis(cx, args, &str))
-        return false;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &str, &ok))
+        return ok;
 
     str = js_QuoteString(cx, str, '"');
     if (!str)
@@ -507,8 +507,10 @@ js_str_toString(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JSString *str;
-    if (!GetPrimitiveThis(cx, args, &str))
-        return false;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &str, &ok))
+        return ok;
+
     args.rval().setString(str);
     return true;
 }

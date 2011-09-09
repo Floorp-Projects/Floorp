@@ -75,24 +75,6 @@ extern JSObject *
 GetScopeChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen);
 
 /*
- * Report an error that the this value passed as |this| in the given arguments
- * vector is not compatible with the specified class.
- */
-void
-ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
-
-/*
- * Given a context and a vector of [callee, this, args...] for a function
- * whose JSFUN_PRIMITIVE_THIS flag is set, set |*v| to the primitive value
- * of |this|. If |this| is an object, insist that it be an instance of the
- * appropriate wrapper class for T, and set |*v| to its private slot value.
- * If |this| is a primitive, unbox it into |*v| if it's of the required
- * type, and throw an error otherwise.
- */
-template <typename T>
-bool GetPrimitiveThis(JSContext *cx, CallReceiver call, T *v);
-
-/*
  * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
  * must be called before the script executes. ScriptEpilogue must be called
  * after the script returns or exits via exception.

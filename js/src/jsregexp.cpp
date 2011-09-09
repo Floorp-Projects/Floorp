@@ -560,13 +560,11 @@ static JSBool
 regexp_toString(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, args, &RegExpClass);
-        return false;
-    }
+        return ok;
 
     return js_regexp_toString(cx, obj, &args.rval());
 }
@@ -638,15 +636,13 @@ enum ExecType { RegExpExec, RegExpTest };
 static JSBool
 ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
 {
-    /* Step 1. */
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    /* Step 1. */
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, args, &RegExpClass);
-        return false;
-    }
+        return ok;
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re)
@@ -791,13 +787,12 @@ static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = ToObject(cx, &args.thisv());
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &RegExpClass, &ok);
     if (!obj)
-        return false;
-    if (!obj->isRegExp()) {
-        ReportIncompatibleMethod(cx, args, &RegExpClass);
-        return false;
-    }
+        return ok;
+
     return CompileRegExpAndSwap(cx, obj, args.length(), args.array(), &args.rval());
 }
 
