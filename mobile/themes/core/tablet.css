@@ -129,6 +129,16 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
   }
 }
 
+#identity-container[tablet] #identity-popup-container {
+  -moz-stack-sizing: ignore;
+  max-width: -moz-calc(0.75 * @urlbar_max_width@);
+  min-width: -moz-calc(0.75 * @urlbar_max_width@);
+}
+
+#identity-container[tablet] pageaction {
+  width: 100%;
+}
+
 %ifndef honeycomb
 @media (min-width: @tablet_panel_minwidth@) {
   #awesome-panels {

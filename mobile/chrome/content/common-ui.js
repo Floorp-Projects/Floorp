@@ -393,8 +393,9 @@ var PageActions = {
     for (let i = 0; i < visibleCount; i++)
       visibleNodes[i].classList.remove("odd-last-child");
 
+    visibleNodes[visibleCount - 1].classList.add("last-child");
     if (visibleCount % 2)
-      visibleNodes[visibleCount - 1].classList.add("odd-last-child");
+      visibleNodes[visibleCount - 1].classList.add("odd");
   }
 };
 

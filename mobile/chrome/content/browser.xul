@@ -316,27 +316,27 @@
     </arrowbox>
 
     <!-- popup for site identity information -->
-    <arrowbox id="identity-container" hidden="true" mode="unknownIdentity" offset="18" flex="1" type="dialog">
-      <hbox id="identity-popup-container" flex="1" align="top">
+    <arrowbox id="identity-container" hidden="true" mode="unknownIdentity" offset="18" flex="1" type="dialog" observes="bcast_urlbarState">
+      <box id="identity-popup-container" flex="1" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box" flex="1">
-          <hbox flex="1">
+          <box id="identity-popup-connected-box" flex="1">
             <label id="identity-popup-connectedToLabel" value="&identity.connectedTo2;"/>
             <label id="identity-popup-connectedToLabel2" flex="1">&identity.unverifiedsite2;</label>
             <description id="identity-popup-content-host" flex="1"/>
-          </hbox>
-          <hbox id="identity-popup-runBy-box">
+          </box>
+          <box id="identity-popup-runBy-box">
             <label id="identity-popup-runByLabel" value="&identity.runBy2;"/>
             <description id="identity-popup-content-owner"/>
             <description id="identity-popup-content-supplemental"/>
-          </hbox>
+          </box>
           <description id="identity-popup-content-verifier"/>
         </vbox>
-        <vbox align="center" pack="start">
+        <box id="identity-popup-encryption-box">
           <image id="identity-popup-encryption-icon"/>
           <description id="identity-popup-encryption-label"/>
-        </vbox>
-      </hbox>
+        </box>
+      </box>
 
       <hbox id="pageactions-container" hidden="true">
 #ifndef ANDROID

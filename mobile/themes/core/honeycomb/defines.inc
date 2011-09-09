@@ -32,6 +32,8 @@
 %define color_selection #c0e49a
 %define color_shadow #6699ff
 %define color_shadow_light rgba(102,153,255, 0.2)
+%define color_shadow_green rgba(137,251,21, 0.2)
+%define color_shadow_grey rgba(200,200,200, 0.5)
 
 %define color_subtext_default #aaaaaa
 
