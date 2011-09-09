@@ -76,6 +76,7 @@
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
+#include "Worker.h"
 #include "WorkerFeature.h"
 #include "WorkerScope.h"
 
@@ -1873,7 +1874,7 @@ WorkerPrivateParent<Derived>::FinalizeInstance(JSContext* aCx)
 
   if (mJSObject) {
     // Decouple the object from the private now.
-    SetJSPrivateSafeish(aCx, mJSObject, nsnull);
+    worker::ClearPrivateSlot(aCx, mJSObject);
 
     // Clear the JS object.
     mJSObject = nsnull;
