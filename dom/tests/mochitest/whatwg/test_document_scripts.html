@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=685774
+-->
+<head>
+  <title>Test for document.scripts (Bug 685774)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=685774">Mozilla Bug 685774</a>
+<script type="application/javascript">
+
+/** Test for Bug 685774 **/
+
+function testSameCollection(a, b, c) {
+  is(a.length, c, "unexpected count of script elements");
+  is(b.length, c, "unexpected count of script elements");
+  for (var i = 0; i < a.length; i++) {
+    is(a[i], b[i], "document.scripts is not supported");
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+testSameCollection(document.scripts, document.getElementsByTagName("script"), 3);
+
+</script>
+<script type="application/javascript">
+
+testSameCollection(document.scripts, document.getElementsByTagName("script"), 4);
+
+function start() {
+  testSameCollection(document.scripts, document.getElementsByTagName("script"), 5);
+
+  var e = document.createElement("script");
+  testSameCollection(document.scripts, document.getElementsByTagName("script"), 5);
+  document.body.appendChild(e);
+  testSameCollection(document.scripts, document.getElementsByTagName("script"), 6);
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(start);
+
+</script>
+<script type="application/javascript">
+
+testSameCollection(document.scripts, document.getElementsByTagName("script"), 5);
+
+</script>
+</body>
+</html>
