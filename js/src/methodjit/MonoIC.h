@@ -301,9 +301,6 @@ JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
 void GenerateArgumentCheckStub(VMFrame &f);
 
-void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll);
-
 } /* namespace ic */
 } /* namespace mjit */
 } /* namespace js */

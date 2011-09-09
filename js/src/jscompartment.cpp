@@ -506,7 +506,7 @@ JSCompartment::markTypes(JSTracer *trc)
 }
 
 void
-JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
+JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 {
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
@@ -545,49 +545,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         traceMonitor()->sweep(cx);
 #endif
 
-# if defined JS_METHODJIT && defined JS_POLYIC
-    /*
-     * Purge all PICs in the compartment. These can reference type data and
-     * need to know which types are pending collection.
-     */
-    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->hasJITCode())
-            mjit::ic::PurgePICs(cx, script);
-    }
-# endif
-
-    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
-
-#if defined JS_METHODJIT && defined JS_MONOIC
-
-    /*
-     * The release interval is the frequency with which we should try to destroy
-     * executable pools by releasing all JIT code in them, zero to never destroy pools.
-     * Initialize counter so that the first pool will be destroyed, and eventually drive
-     * the amount of JIT code in never-used compartments to zero. Don't discard anything
-     * for compartments which currently have active stack frames.
-     */
-    uint32 counter = 1;
-    if (discardScripts)
-        hasDebugModeCodeToDrop = false;
-
-    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->hasJITCode()) {
-            mjit::ic::SweepCallICs(cx, script, discardScripts);
-            if (discardScripts) {
-                ScriptTryDestroyCode(cx, script, true, releaseInterval, counter);
-                ScriptTryDestroyCode(cx, script, false, releaseInterval, counter);
-            }
-        }
-    }
-
-#endif
-
 #ifdef JS_METHODJIT
-    if (types.inferenceEnabled)
-        mjit::ClearAllFrames(this);
+    mjit::ClearAllFrames(this);
 #endif
 
     if (activeAnalysis) {
@@ -597,11 +556,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * GC then shape numbers baked into the code may change.
          */
 #ifdef JS_METHODJIT
-        if (types.inferenceEnabled) {
-            for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-                JSScript *script = i.get<JSScript>();
-                mjit::ReleaseScriptCode(cx, script);
-            }
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            mjit::ReleaseScriptCode(cx, script);
         }
 #endif
     } else {
@@ -618,17 +575,19 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * enabled in the compartment.
          */
         if (types.inferenceEnabled) {
+            if (active)
+                releaseTypes = false;
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->types) {
                     types::TypeScript::Sweep(cx, script);
 
                     /*
-                     * On each 1/8 lifetime, release observed types for all scripts.
-                     * This is always safe to do when there are no frames for the
-                     * compartment on the stack.
+                     * Periodically release observed types for all scripts.
+                     * This is always safe to do when there are no frames for
+                     * the compartment on the stack.
                      */
-                    if (discardScripts) {
+                    if (releaseTypes) {
                         script->types->destroy();
                         script->types = NULL;
                         script->typesPurged = true;
@@ -683,20 +642,6 @@ JSCompartment::purge(JSContext *cx)
     if (cx->runtime->gcRegenShapes)
         if (hasTraceMonitor())
             traceMonitor()->needFlush = JS_TRUE;
-#endif
-
-#if defined JS_METHODJIT && defined JS_MONOIC
-    /*
-     * MICs do not refer to data which can be GC'ed and do not generate stubs
-     * which might need to be discarded, but are sensitive to shape regeneration.
-     */
-    if (cx->runtime->gcRegenShapes) {
-        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-            if (script->hasJITCode())
-                mjit::ic::PurgeMICs(cx, script);
-        }
-    }
 #endif
 }
 
