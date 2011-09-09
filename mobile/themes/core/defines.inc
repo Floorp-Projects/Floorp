@@ -59,6 +59,7 @@
 
 %define urlbar_edit_height 6.35mozmm
 %define urlbar_edit_indent 0.85mozmm
+%define urlbar_max_width   96mozmm
 
 %define scroller_thickness 0.64mozmm
 %define scroller_minimum 1.27mozmm
@@ -147,6 +148,7 @@
 
 %define urlbar_edit_height 60px
 %define urlbar_edit_indent 8px
+%define urlbar_max_width 596px
 
 %define scroller_thickness 6px
 %define scroller_minimum 12px
