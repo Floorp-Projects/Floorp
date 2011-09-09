@@ -270,14 +270,14 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
                 AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
                     if (flags & JSITER_HIDDEN) {
-                        if (!JSProxy::getOwnPropertyNames(cx, pobj, proxyProps))
+                        if (!Proxy::getOwnPropertyNames(cx, pobj, proxyProps))
                             return false;
                     } else {
-                        if (!JSProxy::keys(cx, pobj, proxyProps))
+                        if (!Proxy::keys(cx, pobj, proxyProps))
                             return false;
                     }
                 } else {
-                    if (!JSProxy::enumerate(cx, pobj, proxyProps))
+                    if (!Proxy::enumerate(cx, pobj, proxyProps))
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
@@ -646,7 +646,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
       miss:
         if (obj->isProxy()) {
             types::MarkIteratorUnknown(cx);
-            return JSProxy::iterate(cx, obj, flags, vp);
+            return Proxy::iterate(cx, obj, flags, vp);
         }
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;

@@ -846,7 +846,7 @@ JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj)
 {
     if (obj->isProxy())
-        return JSProxy::obj_toString(cx, obj);
+        return Proxy::obj_toString(cx, obj);
 
     const char *clazz = obj->getClass()->name;
     size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
@@ -1496,7 +1496,7 @@ js_HasOwnPropertyHelper(JSContext *cx, LookupPropOp lookup, uintN argc,
     JSProperty *prop;
     if (obj->isProxy()) {
         bool has;
-        if (!JSProxy::hasOwn(cx, obj, id, &has))
+        if (!Proxy::hasOwn(cx, obj, id, &has))
             return false;
         vp->setBoolean(has);
         return true;
@@ -1838,7 +1838,7 @@ bool
 GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescriptor *desc)
 {
     if (obj->isProxy())
-        return JSProxy::getOwnPropertyDescriptor(cx, obj, id, false, desc);
+        return Proxy::getOwnPropertyDescriptor(cx, obj, id, false, desc);
 
     JSObject *pobj;
     JSProperty *prop;
@@ -2485,7 +2485,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &des
 
     if (obj->getOps()->lookupProperty) {
         if (obj->isProxy())
-            return JSProxy::defineProperty(cx, obj, id, desc.pd);
+            return Proxy::defineProperty(cx, obj, id, desc.pd);
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
     }
 
@@ -3721,7 +3721,7 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
 
     size_t n = 0;
     if (from->isWrapper() &&
-        (JSWrapper::wrapperHandler(from)->flags() & JSWrapper::CROSS_COMPARTMENT)) {
+        (Wrapper::wrapperHandler(from)->flags() & Wrapper::CROSS_COMPARTMENT)) {
         to->setSlot(0, from->getSlot(0));
         to->setSlot(1, from->getSlot(1));
         n = 2;
@@ -5906,7 +5906,7 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
 
     if (!obj2->isNative()) {
         return obj2->isProxy()
-               ? JSProxy::get(cx, obj2, receiver, id, vp)
+               ? Proxy::get(cx, obj2, receiver, id, vp)
                : obj2->getGeneric(cx, id, vp);
     }
 
@@ -6094,7 +6094,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (!pobj->isNative()) {
             if (pobj->isProxy()) {
                 AutoPropertyDescriptorRooter pd(cx);
-                if (!JSProxy::getPropertyDescriptor(cx, pobj, id, true, &pd))
+                if (!Proxy::getPropertyDescriptor(cx, pobj, id, true, &pd))
                     return false;
 
                 if ((pd.attrs & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {

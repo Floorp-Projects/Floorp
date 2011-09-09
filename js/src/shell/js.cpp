@@ -3018,7 +3018,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
         JSAutoEnterCompartment ac;
         uintN flags;
         JSObject *unwrapped = sobj->unwrap(&flags);
-        if (flags & JSWrapper::CROSS_COMPARTMENT) {
+        if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
             if (!ac.enter(cx, sobj))
                 return false;
@@ -3162,7 +3162,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         propFlags = shape->getFlags();
    } else if (referent->isProxy()) {
         PropertyDescriptor desc;
-        if (!JSProxy::getOwnPropertyDescriptor(cx, referent, id, false, &desc))
+        if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, false, &desc))
             return false;
         if (!desc.obj)
             return true;
@@ -4006,8 +4006,8 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
-                                       &JSWrapper::singleton);
+    JSObject *wrapped = Wrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
+                                     &Wrapper::singleton);
     if (!wrapped)
         return false;
 

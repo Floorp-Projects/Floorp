@@ -188,7 +188,7 @@ static bool
 IsCrossCompartmentWrapper(JSObject *wrapper)
 {
     return wrapper->isWrapper() &&
-           !!(JSWrapper::wrapperHandler(wrapper)->flags() & JSWrapper::CROSS_COMPARTMENT);
+           !!(Wrapper::wrapperHandler(wrapper)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
 bool

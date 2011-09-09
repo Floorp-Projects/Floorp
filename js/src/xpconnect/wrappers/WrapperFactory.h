@@ -44,7 +44,7 @@ namespace xpc {
 
 class WrapperFactory {
   public:
-    enum { WAIVE_XRAY_WRAPPER_FLAG = JSWrapper::LAST_USED_FLAG << 1,
+    enum { WAIVE_XRAY_WRAPPER_FLAG = js::Wrapper::LAST_USED_FLAG << 1,
            IS_XRAY_WRAPPER_FLAG    = WAIVE_XRAY_WRAPPER_FLAG << 1,
            SCRIPT_ACCESS_ONLY_FLAG = IS_XRAY_WRAPPER_FLAG << 1,
            PARTIALLY_TRANSPARENT   = SCRIPT_ACCESS_ONLY_FLAG << 1,
@@ -99,6 +99,6 @@ class WrapperFactory {
     static JSObject *WrapSOWObject(JSContext *cx, JSObject *obj);
 };
 
-extern JSWrapper WaiveXrayWrapperWrapper;
+extern js::Wrapper WaiveXrayWrapperWrapper;
 
 }

@@ -66,7 +66,7 @@ namespace nanojit { class ValidateWriter; }
 namespace js {
 
 class AutoPropDescArrayRooter;
-class JSProxyHandler;
+class ProxyHandler;
 class RegExp;
 class CallObject;
 struct GCMarker;
@@ -1293,12 +1293,12 @@ struct JSObject : js::gc::Cell {
      * Proxy-specific getters and setters.
      */
 
-    inline js::JSProxyHandler *getProxyHandler() const;
+    inline js::ProxyHandler *getProxyHandler() const;
     inline const js::Value &getProxyPrivate() const;
     inline void setProxyPrivate(const js::Value &priv);
     inline const js::Value &getProxyExtra() const;
     inline void setProxyExtra(const js::Value &extra);
-    inline JSWrapper *getWrapperHandler() const;
+    inline js::Wrapper *getWrapperHandler() const;
 
     /*
      * With object-specific getters and setters.
