@@ -45,6 +45,8 @@
 struct nsSize;
 #endif
 
+class nsLookAndFeel;
+
 typedef enum {
   nsLookAndFeelTypeInt,
   nsLookAndFeelTypeFloat,
@@ -86,6 +88,10 @@ public:
   virtual ~nsXPLookAndFeel();
 
   NS_DECL_ISUPPORTS
+
+  static nsLookAndFeel* GetAddRefedInstance();
+  static nsLookAndFeel* GetInstance();
+  static void Shutdown();
 
   void Init();
 
@@ -130,8 +136,9 @@ protected:
   static PRInt32 sCachedColors[nsILookAndFeel::eColor_LAST_COLOR];
   static PRInt32 sCachedColorBits[COLOR_CACHE_SIZE];
   static PRBool sUseNativeColors;
-};
 
-extern nsresult NS_NewXPLookAndFeel(nsILookAndFeel**);
+  static nsXPLookAndFeel* sInstance;
+  static PRBool sShutdown;
+};
 
 #endif
