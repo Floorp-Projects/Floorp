@@ -3233,7 +3233,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
             return js_GetDenseArrayElementValue(cx, obj2, id, vp);
         if (obj2->isProxy()) {
             AutoPropertyDescriptorRooter desc(cx);
-            if (!JSProxy::getPropertyDescriptor(cx, obj2, id, false, &desc))
+            if (!Proxy::getPropertyDescriptor(cx, obj2, id, false, &desc))
                 return false;
             if (!(desc.attrs & JSPROP_SHARED)) {
                 *vp = desc.value;
@@ -3609,8 +3609,8 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);
             return own
-                   ? JSProxy::getOwnPropertyDescriptor(cx, obj2, id, false, desc)
-                   : JSProxy::getPropertyDescriptor(cx, obj2, id, false, desc);
+                   ? Proxy::getOwnPropertyDescriptor(cx, obj2, id, false, desc)
+                   : Proxy::getPropertyDescriptor(cx, obj2, id, false, desc);
         }
         if (!obj2->getAttributes(cx, id, &desc->attrs))
             return false;
