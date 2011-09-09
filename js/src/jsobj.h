@@ -2209,10 +2209,10 @@ eval(JSContext *cx, uintN argc, Value *vp);
 /*
  * Performs a direct eval for the given arguments, which must correspond to the
  * currently-executing stack frame, which must be a script frame. On completion
- * the result is returned in call.rval.
+ * the result is returned in args.rval.
  */
 extern JS_REQUIRES_STACK bool
-DirectEval(JSContext *cx, const CallArgs &call);
+DirectEval(JSContext *cx, const CallArgs &args);
 
 /*
  * True iff |v| is the built-in eval function for the global object that
@@ -2227,7 +2227,7 @@ IsAnyBuiltinEval(JSFunction *fun);
 
 /* 'call' should be for the eval/Function native invocation. */
 extern JSPrincipals *
-PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx);
+PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);

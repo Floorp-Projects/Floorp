@@ -239,8 +239,8 @@ class CallArgs : public CallReceiver
     friend CallArgs CallArgsFromArgv(uintN, Value *);
     friend CallArgs CallArgsFromSp(uintN, Value *);
     Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
-    Value *argv() const { return argv_; }
-    uintN argc() const { return argc_; }
+    Value *array() const { return argv_; }
+    uintN length() const { return argc_; }
     Value *end() const { return argv_ + argc_; }
 };
 
@@ -1388,11 +1388,11 @@ class StackSegment
     }
 
     Value *callArgv() const {
-        return calls_->argv();
+        return calls_->array();
     }
 
     Value *maybeCallArgv() const {
-        return calls_ ? calls_->argv() : NULL;
+        return calls_ ? calls_->array() : NULL;
     }
 
     StackSegment *prevInContext() const {

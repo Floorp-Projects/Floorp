@@ -82,8 +82,10 @@ Class js::BooleanClass = {
 static JSBool
 bool_toSource(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     bool b;
-    if (!GetPrimitiveThis(cx, vp, &b))
+    if (!GetPrimitiveThis(cx, args, &b))
         return false;
 
     char buf[32];
@@ -91,7 +93,7 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 #endif
@@ -99,27 +101,27 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 bool_toString(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     bool b;
-    if (!GetPrimitiveThis(cx, vp, &b))
+    if (!GetPrimitiveThis(cx, args, &b))
         return false;
 
-    JSAtom *atom = cx->runtime->atomState.booleanAtoms[b ? 1 : 0];
-    JSString *str = atom;
-    if (!str)
-        return JS_FALSE;
-    vp->setString(str);
-    return JS_TRUE;
+    args.rval().setString(cx->runtime->atomState.booleanAtoms[b ? 1 : 0]);
+    return true;
 }
 
 static JSBool
 bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     bool b;
-    if (!GetPrimitiveThis(cx, vp, &b))
+    if (!GetPrimitiveThis(cx, args, &b))
         return false;
 
-    vp->setBoolean(b);
-    return JS_TRUE;
+    args.rval().setBoolean(b);
+    return true;
 }
 
 static JSFunctionSpec boolean_methods[] = {
