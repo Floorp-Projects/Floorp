@@ -558,6 +558,11 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp)
 {
     JS_ASSERT(ion::IsEnabled());
 
+    if (cx->compartment->debugMode()) {
+        IonSpew(IonSpew_Abort, "debugging");
+        return Method_CantCompile;
+    }
+
     if (!CheckFrame(fp))
         return Method_CantCompile;
 
