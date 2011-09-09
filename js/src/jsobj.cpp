@@ -1151,7 +1151,7 @@ enum EvalType { DIRECT_EVAL = EXECUTE_DIRECT_EVAL, INDIRECT_EVAL = EXECUTE_INDIR
  * On success, store the completion value in call.rval and return true.
  */
 static bool
-EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *caller,
+EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *caller,
            JSObject &scopeobj)
 {
     JS_ASSERT((evalType == INDIRECT_EVAL) == (caller == NULL));
@@ -1163,15 +1163,15 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
     }
 
     /* ES5 15.1.2.1 step 1. */
-    if (call.argc() < 1) {
-        call.rval().setUndefined();
+    if (args.length() < 1) {
+        args.rval().setUndefined();
         return true;
     }
-    if (!call[0].isString()) {
-        call.rval() = call[0];
+    if (!args[0].isString()) {
+        args.rval() = args[0];
         return true;
     }
-    JSString *str = call[0].toString();
+    JSString *str = args[0].toString();
 
     /* ES5 15.1.2.1 steps 2-8. */
 
@@ -1199,7 +1199,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
     } else {
-        JS_ASSERT(call.callee().getGlobal() == &scopeobj);
+        JS_ASSERT(args.callee().getGlobal() == &scopeobj);
         staticLevel = 0;
 
         /* Use the global as 'this', modulo outerization. */
@@ -1250,7 +1250,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
                     return false;
                 if (tmp.isUndefined())
                     break;
-                call.rval() = tmp;
+                args.rval() = tmp;
                 return true;
             }
         }
@@ -1258,7 +1258,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
 
     EvalScriptGuard esg(cx, linearStr);
 
-    JSPrincipals *principals = PrincipalsForCompiledCode(call, cx);
+    JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
 
     if (evalType == DIRECT_EVAL && caller->isNonEvalFunctionFrame())
         esg.lookupInEvalCache(caller, staticLevel, principals, scopeobj);
@@ -1280,7 +1280,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
     }
 
     return ExecuteKernel(cx, esg.script(), scopeobj, thisv, ExecuteType(evalType),
-                         NULL /* evalInFrame */, &call.rval());
+                         NULL /* evalInFrame */, &args.rval());
 }
 
 /*
@@ -1289,9 +1289,9 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
  * authors will know that support for eval(s, o) has been removed.
  */
 static inline bool
-WarnOnTooManyArgs(JSContext *cx, const CallArgs &call)
+WarnOnTooManyArgs(JSContext *cx, const CallArgs &args)
 {
-    if (call.argc() > 1) {
+    if (args.length() > 1) {
         if (JSScript *script = cx->stack.currentScript()) {
             if (!script->warnedAboutTwoArgumentEval) {
                 static const char TWO_ARGUMENT_WARNING[] =
@@ -1322,28 +1322,28 @@ namespace js {
 JSBool
 eval(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs call = CallArgsFromVp(argc, vp);
-    return WarnOnTooManyArgs(cx, call) &&
-           EvalKernel(cx, call, INDIRECT_EVAL, NULL, *call.callee().getGlobal());
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return WarnOnTooManyArgs(cx, args) &&
+           EvalKernel(cx, args, INDIRECT_EVAL, NULL, *args.callee().getGlobal());
 }
 
 bool
-DirectEval(JSContext *cx, const CallArgs &call)
+DirectEval(JSContext *cx, const CallArgs &args)
 {
     /* Direct eval can assume it was called from an interpreted frame. */
     StackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
-    JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), call.calleev()));
+    JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), args.calleev()));
     JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
 
-    AutoFunctionCallProbe callProbe(cx, call.callee().getFunctionPrivate(), caller->script());
+    AutoFunctionCallProbe callProbe(cx, args.callee().getFunctionPrivate(), caller->script());
 
     JSObject *scopeChain =
         GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
 
     return scopeChain &&
-           WarnOnTooManyArgs(cx, call) &&
-           EvalKernel(cx, call, DIRECT_EVAL, caller, *scopeChain);
+           WarnOnTooManyArgs(cx, args) &&
+           EvalKernel(cx, args, DIRECT_EVAL, caller, *scopeChain);
 }
 
 bool
@@ -1359,7 +1359,7 @@ IsAnyBuiltinEval(JSFunction *fun)
 }
 
 JSPrincipals *
-PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx)
+PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
 {
     JS_ASSERT(IsAnyBuiltinEval(call.callee().getFunctionPrivate()) ||
               IsBuiltinFunctionConstructor(call.callee().getFunctionPrivate()));
@@ -1610,21 +1610,21 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 JS_FRIEND_API(JSBool)
 js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs call = CallArgsFromVp(argc, vp);
-    if (!BoxNonStrictThis(cx, call))
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!BoxNonStrictThis(cx, args))
         return false;
-    JSObject *obj = &call.thisv().toObject();
+    JSObject *obj = &args.thisv().toObject();
 
-    if (argc <= 1 || !js_IsCallable(call[1])) {
+    if (args.length() <= 1 || !js_IsCallable(args[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_getter_str);
         return JS_FALSE;
     }
-    PropertyOp getter = CastAsPropertyOp(&call[1].toObject());
+    PropertyOp getter = CastAsPropertyOp(&args[1].toObject());
 
     jsid id;
-    if (!ValueToId(cx, call[0], &id))
+    if (!ValueToId(cx, args[0], &id))
         return JS_FALSE;
     if (!CheckRedeclaration(cx, obj, id, JSPROP_GETTER))
         return JS_FALSE;
@@ -1636,7 +1636,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-    call.rval().setUndefined();
+    args.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
@@ -1644,21 +1644,21 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
 JS_FRIEND_API(JSBool)
 js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs call = CallArgsFromVp(argc, vp);
-    if (!BoxNonStrictThis(cx, call))
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!BoxNonStrictThis(cx, args))
         return false;
-    JSObject *obj = &call.thisv().toObject();
+    JSObject *obj = &args.thisv().toObject();
 
-    if (argc <= 1 || !js_IsCallable(call[1])) {
+    if (args.length() <= 1 || !js_IsCallable(args[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_setter_str);
         return JS_FALSE;
     }
-    StrictPropertyOp setter = CastAsStrictPropertyOp(&call[1].toObject());
+    StrictPropertyOp setter = CastAsStrictPropertyOp(&args[1].toObject());
 
     jsid id;
-    if (!ValueToId(cx, call[0], &id))
+    if (!ValueToId(cx, args[0], &id))
         return JS_FALSE;
     if (!CheckRedeclaration(cx, obj, id, JSPROP_SETTER))
         return JS_FALSE;
@@ -1670,7 +1670,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-    call.rval().setUndefined();
+    args.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), JS_PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }

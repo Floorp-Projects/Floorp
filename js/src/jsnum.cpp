@@ -602,8 +602,10 @@ Number(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 num_toSource(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     double d;
-    if (!GetPrimitiveThis(cx, vp, &d))
+    if (!GetPrimitiveThis(cx, args, &d))
         return false;
 
     ToCStringBuf cbuf;
@@ -618,7 +620,7 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     JSString *str = js_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 #endif
@@ -713,14 +715,16 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base);
 static JSBool
 num_toString(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     double d;
-    if (!GetPrimitiveThis(cx, vp, &d))
+    if (!GetPrimitiveThis(cx, args, &d))
         return false;
 
     int32 base = 10;
-    if (argc != 0 && !vp[2].isUndefined()) {
+    if (args.length() != 0 && !args[0].isUndefined()) {
         jsdouble d2;
-        if (!ToInteger(cx, vp[2], &d2))
+        if (!ToInteger(cx, args[0], &d2))
             return false;
 
         if (d2 < 2 || d2 > 36) {
@@ -735,7 +739,7 @@ num_toString(JSContext *cx, uintN argc, Value *vp)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    vp->setString(str);
+    args.rval().setString(str);
     return JS_TRUE;
 }
 
@@ -861,11 +865,13 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     double d;
-    if (!GetPrimitiveThis(cx, vp, &d))
+    if (!GetPrimitiveThis(cx, args, &d))
         return false;
 
-    vp->setNumber(d);
+    args.rval().setNumber(d);
     return true;
 }
 
@@ -875,22 +881,22 @@ js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
        jsint precisionMin, jsint precisionMax, jsint precisionOffset,
-       uintN argc, Value *vp)
+       CallArgs args)
 {
     /* Use MAX_PRECISION+1 because precisionOffset can be 1. */
     char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION+1)];
     char *numStr;
 
     double d;
-    if (!GetPrimitiveThis(cx, vp, &d))
+    if (!GetPrimitiveThis(cx, args, &d))
         return false;
 
     double precision;
-    if (argc == 0) {
+    if (args.length() == 0) {
         precision = 0.0;
         oneArgMode = zeroArgMode;
     } else {
-        if (!ToInteger(cx, vp[2], &precision))
+        if (!ToInteger(cx, args[0], &precision))
             return false;
         if (precision < precisionMin || precision > precisionMax) {
             ToCStringBuf cbuf;
@@ -910,7 +916,7 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
     JSString *str = js_NewStringCopyZ(cx, numStr);
     if (!str)
         return JS_FALSE;
-    vp->setString(str);
+    args.rval().setString(str);
     return JS_TRUE;
 }
 
@@ -922,14 +928,14 @@ static JSBool
 num_toFixed(JSContext *cx, uintN argc, Value *vp)
 {
     return num_to(cx, DTOSTR_FIXED, DTOSTR_FIXED, -20, MAX_PRECISION, 0,
-                  argc, vp);
+                  CallArgsFromVp(argc, vp));
 }
 
 static JSBool
 num_toExponential(JSContext *cx, uintN argc, Value *vp)
 {
     return num_to(cx, DTOSTR_STANDARD_EXPONENTIAL, DTOSTR_EXPONENTIAL, 0, MAX_PRECISION, 1,
-                  argc, vp);
+                  CallArgsFromVp(argc, vp));
 }
 
 static JSBool
@@ -938,7 +944,7 @@ num_toPrecision(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0 || vp[2].isUndefined())
         return num_toString(cx, 0, vp);
     return num_to(cx, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
-                  argc, vp);
+                  CallArgsFromVp(argc, vp));
 }
 
 #ifdef JS_TRACER

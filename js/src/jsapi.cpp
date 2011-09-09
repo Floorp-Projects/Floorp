@@ -2913,7 +2913,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 #endif
     if (!obj || obj->getJSClass() != clasp) {
         if (argv)
-            ReportIncompatibleMethod(cx, argv - 2, Valueify(clasp));
+            ReportIncompatibleMethod(cx, CallReceiverFromArgv(argv), Valueify(clasp));
         return false;
     }
     return true;
@@ -5061,7 +5061,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 
     args.calleev().setObject(*ctor);
     args.thisv().setNull();
-    memcpy(args.argv(), argv, argc * sizeof(jsval));
+    memcpy(args.array(), argv, argc * sizeof(jsval));
 
     if (!InvokeConstructor(cx, args))
         return NULL;
