@@ -51,7 +51,7 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS2(nsXPLookAndFeel, nsILookAndFeel, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsXPLookAndFeel, nsILookAndFeel)
 
 nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
 {
@@ -217,6 +217,7 @@ nsXPLookAndFeel::nsXPLookAndFeel() : nsILookAndFeel()
 {
 }
 
+// static
 void
 nsXPLookAndFeel::IntPrefChanged (nsLookAndFeelIntPref *data)
 {
@@ -236,6 +237,7 @@ nsXPLookAndFeel::IntPrefChanged (nsLookAndFeelIntPref *data)
 #endif
 }
 
+// static
 void
 nsXPLookAndFeel::FloatPrefChanged (nsLookAndFeelFloatPref *data)
 {
@@ -255,6 +257,7 @@ nsXPLookAndFeel::FloatPrefChanged (nsLookAndFeelFloatPref *data)
 #endif
 }
 
+// static
 void
 nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
 {
@@ -330,37 +333,37 @@ nsXPLookAndFeel::InitColorFromPref(PRInt32 i)
   }
 }
 
-NS_IMETHODIMP
-nsXPLookAndFeel::Observe(nsISupports*     aSubject,
-                         const char*      aTopic,
-                         const PRUnichar* aData)
+// static
+int
+nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure)
 {
 
   // looping in the same order as in ::Init
 
+  nsDependentCString prefName(aPref);
   unsigned int i;
   for (i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
-    if (nsDependentString(aData).EqualsASCII(sIntPrefs[i].name)) {
+    if (prefName.Equals(sIntPrefs[i].name)) {
       IntPrefChanged(&sIntPrefs[i]);
-      return NS_OK;
+      return 0;
     }
   }
 
   for (i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
-    if (nsDependentString(aData).EqualsASCII(sFloatPrefs[i].name)) {
+    if (prefName.Equals(sFloatPrefs[i].name)) {
       FloatPrefChanged(&sFloatPrefs[i]);
-      return NS_OK;
+      return 0;
     }
   }
 
   for (i = 0; i < NS_ARRAY_LENGTH(sColorPrefs); ++i) {
-    if (nsDependentString(aData).EqualsASCII(sColorPrefs[i])) {
+    if (prefName.Equals(sColorPrefs[i])) {
       ColorPrefChanged(i, sColorPrefs[i]);
-      return NS_OK;
+      return 0;
     }
   }
 
-  return NS_OK;
+  return 0;
 }
 
 //
@@ -376,20 +379,23 @@ nsXPLookAndFeel::Init()
   // protects against some other process writing to our static variables.
   sInitialized = PR_TRUE;
 
+  // XXX If we could reorganize the pref names, we should separate the branch
+  //     for each types.  Then, we could reduce the unnecessary loop from
+  //     nsXPLookAndFeel::OnPrefChanged().
+  Preferences::RegisterCallback(OnPrefChanged, "ui.");
+  Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
+
   unsigned int i;
   for (i = 0; i < NS_ARRAY_LENGTH(sIntPrefs); ++i) {
     InitFromPref(&sIntPrefs[i]);
-    Preferences::AddStrongObserver(this, sIntPrefs[i].name);
   }
 
   for (i = 0; i < NS_ARRAY_LENGTH(sFloatPrefs); ++i) {
     InitFromPref(&sFloatPrefs[i]);
-    Preferences::AddStrongObserver(this, sFloatPrefs[i].name);
   }
 
   for (i = 0; i < NS_ARRAY_LENGTH(sColorPrefs); ++i) {
     InitColorFromPref(i);
-    Preferences::AddStrongObserver(this, sColorPrefs[i]);
   }
 
   PRBool val;
