@@ -76,6 +76,7 @@ const AnimatedZoom = {
   start: function start() {
     this.tab = Browser.selectedTab;
     this.browser = this.tab.browser;
+    this.bcr = this.browser.getBoundingClientRect();
     this.zoomFrom = this.zoomRect || this.getStartRect();
     this.startScale = this.browser.scale;
     this.beginTime = mozAnimationStartTime;
@@ -84,14 +85,13 @@ const AnimatedZoom = {
   /** Get the visible rect, in device pixels relative to the content origin. */
   getStartRect: function getStartRect() {
     let browser = this.browser;
-    let bcr = browser.getBoundingClientRect();
     let scroll = browser.getRootView().getPosition();
-    return new Rect(scroll.x, scroll.y, bcr.width, bcr.height);
+    return new Rect(scroll.x, scroll.y, this.bcr.width, this.bcr.height);
   },
 
   /** Update the visible rect, in device pixels relative to the content origin. */
   updateTo: function(nextRect) {
-    let zoomRatio = window.innerWidth / nextRect.width;
+    let zoomRatio = this.bcr.width / nextRect.width;
     let scale = this.startScale * zoomRatio;
     let scrollX = nextRect.left * zoomRatio;
     let scrollY = nextRect.top * zoomRatio;

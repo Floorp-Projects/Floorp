@@ -51,7 +51,7 @@
  * in sync.
  */
 typedef enum {
- 	url_All       = 0         /**< %-escape every byte uncondtionally */
+ 	url_All       = 0         /**< %-escape every byte unconditionally */
 ,	url_XAlphas   = PR_BIT(0) /**< Normal escape - leave alphas intact, escape the rest */
 ,	url_XPAlphas  = PR_BIT(1) /**< As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B */
 ,	url_Path      = PR_BIT(2) /**< As url_XAlphas, but don't escape slash ('/') */

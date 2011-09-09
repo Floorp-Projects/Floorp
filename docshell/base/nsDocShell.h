@@ -731,7 +731,11 @@ protected:
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mOSHE;
     // Reference to the SHEntry for this docshell until the page is loaded
-    // Somebody give me better name
+    // Somebody give me better name.
+    // If mLSHE is non-null, non-pushState subframe loads don't create separate
+    // root history entries. That is, frames loaded during the parent page
+    // load don't generate history entries the way frame navigation after the
+    // parent has loaded does. (This isn't the only purpose of mLSHE.)
     nsCOMPtr<nsISHEntry>       mLSHE;
 
     // Holds a weak pointer to a RestorePresentationEvent object if any that

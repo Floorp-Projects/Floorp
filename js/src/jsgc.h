@@ -1480,11 +1480,10 @@ struct GCMarker : public JSTracer {
     uint32 color;
 
   public:
-    /* See comments before delayMarkingChildren is jsgc.cpp. */
+    /* Pointer to the top of the stack of arenas we are delaying marking on. */
     js::gc::ArenaHeader *unmarkedArenaStackTop;
-#ifdef DEBUG
-    size_t              markLaterArenas;
-#endif
+    /* Count of arenas that are currently in the stack. */
+    DebugOnly<size_t> markLaterArenas;
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     js::gc::ConservativeGCStats conservativeStats;

@@ -1796,7 +1796,7 @@ const ContentTouchHandler = {
           case "TapUp":
             if (aEvent.isClick) {
               if (!Browser.selectedTab.allowZoom) {
-                this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
+                this.tapSingle(aEvent.clientX, aEvent.clientY, Util.modifierMaskFromEvent(aEvent));
                 aEvent.preventDefault();
               }
             }
@@ -2852,8 +2852,10 @@ Tab.prototype = {
 
     try {
       let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      let postData = aParams.postData ? aParams.postData.value : null;
-      browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, postData);
+      let postData = "postData" in aParams ? aParams.postData.value : null;
+      let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+      let charset = "charset" in aParams ? aParams.charset : null;
+      browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
     } catch(e) {
       dump("Error: " + e + "\n");
     }
@@ -3047,6 +3049,8 @@ Tab.prototype = {
   get allowZoom() {
     return this.metadata.allowZoom && !Util.isURLEmpty(this.browser.currentURI.spec);
   },
+
+  _thumbnailWindowId: null,
 
   updateThumbnail: function updateThumbnail(options) {
     let options = options || {};

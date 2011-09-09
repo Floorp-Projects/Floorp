@@ -632,6 +632,27 @@ dialog {
   text-align: start;
 }
 
+.panel-arrow[side="top"]:not([type="dialog"]) {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
+  margin-bottom: -@margin_normal@;
+}
+
+.panel-arrow[side="bottom"]:not([type="dialog"]) {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
+  margin-top: -@margin_normal@;
+}
+
+.panel-arrow[side="left"]:not([type="dialog"]) {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-right: -@margin_normal@;
+  -moz-transform: scaleX(-1);
+}
+
+.panel-arrow[side="right"]:not([type="dialog"]) {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-left: -@margin_normal@;
+}
+
 /*.panel-row-header ------------------------------------------------------------ */
 .panel-row-header {
   background-color: @color_background_panelrow@ !important;

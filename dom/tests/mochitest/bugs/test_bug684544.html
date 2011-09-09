@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug  **/
+
+var f = document.createElement("iframe");
+document.body.appendChild(f);
+var win = f.contentWindow;
+
+// Set location once to make sure it's resolved
+win.location = "data:text/html,1";
+
+// Now try to make the location object go away.
+f.parentNode.removeChild(f);
+
+// Check that location is now null.  If it's not, the test needs changing
+// (e.g. to use window.close() so that it's null).
+is("location" in win, true, "Should still have a location property");
+todo_is(win.location, null, "There should be no location object now");
+
+// Just set the location.  This should not crash.
+win.location = "data:text/html,2";
+
+// And check that we didn't override the slot in the process.
+is(typeof(win.location), "object", "Location should not have become a string");
+is(win.location, null,
+   "There should be no location object for real after the set");
+
+</script>
+</pre>
+</body>
+</html>

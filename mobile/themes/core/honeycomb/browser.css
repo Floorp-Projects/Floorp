@@ -963,7 +963,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
   -moz-box-align: start;
 }
 
-#tabs > scrollbox {
+#tabs > .tabs-scrollbox {
   max-width: 350px;
 }
 
