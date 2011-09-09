@@ -519,9 +519,9 @@ static const char kDOMStringBundleURL[] =
  (nsIXPCScriptable::WANT_GETPROPERTY |                                        \
   nsIXPCScriptable::WANT_PRECREATE |                                          \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
-  nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
+  nsIXPCScriptable::USE_STUB_EQUALITY_HOOK |                                  \
   nsIXPCScriptable::WANT_OUTER_OBJECT)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
@@ -6915,37 +6915,6 @@ nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
   sgo->OnFinalize(obj);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowSH::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                     JSObject * obj, const jsval &val, PRBool *bp)
-{
-  *bp = PR_FALSE;
-
-  if (JSVAL_IS_PRIMITIVE(val)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedNative> other_wrapper;
-  nsContentUtils::XPConnect()->
-    GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
-                               getter_AddRefs(other_wrapper));
-  if (!other_wrapper) {
-    // Not equal.
-
-    return NS_OK;
-  }
-
-  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-
-  nsCOMPtr<nsPIDOMWindow> other = do_QueryWrappedNative(other_wrapper);
-
-  if (other) {
-    *bp = win->GetOuterWindow() == other->GetOuterWindow();
-  }
 
   return NS_OK;
 }
