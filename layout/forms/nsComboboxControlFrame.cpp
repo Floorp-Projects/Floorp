@@ -198,6 +198,7 @@ NS_IMETHODIMP DestroyWidgetRunnable::Run()
   if (view && mWidget && mWidget == currentWidget) {
     view->DestroyWidget();
   }
+  return NS_OK;
 }
 
 nsIWidget* DestroyWidgetRunnable::GetWidget(nsIView** aOutView) const
