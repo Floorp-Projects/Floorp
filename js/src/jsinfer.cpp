@@ -1891,10 +1891,8 @@ TypeCompartment::init(JSContext *cx)
 {
     PodZero(this);
 
-#ifndef JS_CPU_ARM
     if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE)
         inferenceEnabled = true;
-#endif
 }
 
 TypeObject *
