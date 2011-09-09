@@ -120,6 +120,16 @@ nsresult nsPartChannel::SendOnStopRequest(nsISupports* aContext,
     return listener->OnStopRequest(this, aContext, aStatus);
 }
 
+void nsPartChannel::SetContentDisposition(const nsACString& aContentDispositionHeader)
+{
+    mContentDispositionHeader = aContentDispositionHeader;
+    nsCOMPtr<nsIURI> uri;
+    GetURI(getter_AddRefs(uri));
+    NS_GetFilenameFromDisposition(mContentDispositionFilename,
+                                  mContentDispositionHeader, uri);
+    mContentDisposition = NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
+}
+
 //
 // nsISupports implementation...
 //
@@ -337,16 +347,32 @@ nsPartChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentDisposition(nsACString &aContentDisposition)
+nsPartChannel::GetContentDisposition(PRUint32 *aContentDisposition)
 {
-    aContentDisposition = mContentDisposition;
+    if (mContentDispositionHeader.IsEmpty())
+        return NS_ERROR_NOT_AVAILABLE;
+
+    *aContentDisposition = mContentDisposition;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentDisposition(const nsACString &aContentDisposition)
+nsPartChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
 {
-    mContentDisposition = aContentDisposition;
+    if (mContentDispositionFilename.IsEmpty())
+        return NS_ERROR_NOT_AVAILABLE;
+
+    aContentDispositionFilename = mContentDispositionFilename;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
+{
+    if (mContentDispositionHeader.IsEmpty())
+        return NS_ERROR_NOT_AVAILABLE;
+
+    aContentDispositionHeader = mContentDispositionHeader;
     return NS_OK;
 }
 
@@ -799,8 +825,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = mPartChannel->SetContentLength(mContentLength); // XXX Truncates 64-bit!
     if (NS_FAILED(rv)) return rv;
 
-    rv = mPartChannel->SetContentDisposition(mContentDisposition);
-    if (NS_FAILED(rv)) return rv;
+    mPartChannel->SetContentDisposition(mContentDisposition);
 
     nsLoadFlags loadFlags = 0;
     mPartChannel->GetLoadFlags(&loadFlags);
