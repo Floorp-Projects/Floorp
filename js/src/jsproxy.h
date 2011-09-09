@@ -79,6 +79,7 @@ class JS_FRIEND_API(ProxyHandler) {
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Value *rval);
+    virtual bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
     virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
@@ -126,6 +127,7 @@ class Proxy {
     /* Spidermonkey extensions. */
     static bool call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp);
     static bool construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Value *rval);
+    static bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
     static bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     static JSType typeOf(JSContext *cx, JSObject *proxy);
     static JSString *obj_toString(JSContext *cx, JSObject *proxy);
