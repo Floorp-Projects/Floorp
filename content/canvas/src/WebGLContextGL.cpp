@@ -3584,19 +3584,13 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     // validated for cross-domain use.
     // if res.mPrincipal == null, no need for the origin check. See DoDrawImageSecurityCheck.
     // this case happens in the mochitest for images served from mochi.test:8888
-    if (res.mPrincipal) {
+    if (res.mPrincipal && !res.mCORSUsed) {
         PRBool subsumes;
         nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
         if (NS_FAILED(rv) || !subsumes) {
-            PRInt32 corsmode;
-            if (!res.mImageRequest || NS_FAILED(res.mImageRequest->GetCORSMode(&corsmode))) {
-                corsmode = imgIRequest::CORS_NONE;
-            }
-            if (corsmode == imgIRequest::CORS_NONE) {
-                LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
-                                    "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
-                return NS_ERROR_DOM_SECURITY_ERR;
-            }
+            LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return NS_ERROR_DOM_SECURITY_ERR;
         }
     }
 
