@@ -1282,7 +1282,7 @@ if test -n "$CROSS_COMPILE"; then
         kfreebsd*-gnu) OS_ARCH=GNU_kFreeBSD OS_TARGET=GNU_kFreeBSD ;;
         gnu*)         OS_ARCH=GNU ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
-        mingw*)       OS_ARCH=WINNT ;;
+        mingw*)       OS_ARCH=WINNT OS_TARGET=WINNT ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
     case "${target}" in
