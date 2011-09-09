@@ -179,6 +179,11 @@ toolbarbutton.urlbar-button {
   background-color: #6579e3;
 }
 
+#identity-popup-runBy-box,
+#identity-popup-connected-box {
+  -moz-box-orient: vertical;
+}
+
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
@@ -1074,74 +1079,104 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 /* Identity popup   -------------------------------------------------------- */
+#identity-container .panel-arrowcontent {
+  background-image: url("chrome://browser/skin/images/menu-top-insideglow-grey.png");
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_grey@;
+}
+
+#identity-container[mode="verifiedIdentity"] .panel-arrowcontent {
+  background-image: url("chrome://browser/skin/images/menu-top-insideglow-green.png");
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_green@;
+}
+
+#identity-container[mode="verifiedDomain"] .panel-arrowcontent {
+  background-image: url("chrome://browser/skin/images/menu-top-insideglow.png");
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
+}
+
 #identity-popup-container {
-  background-color: @color_background_panel@;
-  padding: @padding_normal@; /* core spacing */
-  padding-bottom: @padding_xxxnormal@;
-  color: @color_text_panel@;
+  -moz-box-orient: vertical;
+  background-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
+  background-position: @padding_large@ @padding_large@;
+  background-repeat: no-repeat;
+  padding: @padding_large@ @padding_large@ @padding_large@ -moz-calc(2 * @padding_large@ + 48px);
 }
 
 /* Popup Icons */
 #identity-popup-icon {
-  padding: 0;
-  padding-top: @padding_snormal@; /* align to top of text */
-  list-style-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
+  display: none;
 }
 
-#identity-container[mode="verifiedIdentity"] > hbox > #identity-popup-icon {
-  list-style-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
+#identity-popup-content-box label,
+#identity-popup-content-box description {
+  padding: 0px;
+  margin: 0px;
 }
 
-#identity-container[mode="verifiedDomain"] > hbox > #identity-popup-icon {
-  list-style-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
+#identity-popup-content-verifier,
+#identity-popup-runBy-box,
+#identity-popup-content-supplemental,
+#identity-popup-encryption-box {
+  padding-top: @padding_xnormal@ !important;
+}
+
+#identity-container[mode="verifiedIdentity"] > #identity-popup-container {
+  background-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
+}
+
+#identity-container[mode="verifiedDomain"] > #identity-popup-container {
+  background-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
 }
 
 /* Popup Body Text */
 #identity-popup-content-box {
-  -moz-padding-start: @padding_normal@; /* core spacing */
-  font-size: @font_small@ !important;
+  padding: 0px;
+  margin: 0px;
+  font-size: @font_tiny@;
   white-space: pre-wrap;
 }
 
-/* let the text flow into a second row, if needed */
-#identity-popup-runBy-box {
-  display: block;
-}
-
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-connectedToLabel,
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-runByLabel,
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-host,
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-owner,
-#identity-popup-content-box.verifiedIdentity > hbox > #identity-popup-connectedToLabel2,
-#identity-popup-content-box.verifiedDomain > hbox > #identity-popup-connectedToLabel2 {
+#identity-popup-content-box.unknownIdentity > box > #identity-popup-connectedToLabel,
+#identity-popup-content-box.unknownIdentity > #identity-popup-runBy-box,
+#identity-popup-content-box.unknownIdentity > box > #identity-popup-content-host,
+#identity-popup-content-box.verifiedIdentity > box > #identity-popup-connectedToLabel2,
+#identity-popup-content-box.verifiedDomain > box > #identity-popup-connectedToLabel2 {
   display: none;
 }
 
 #identity-popup-encryption-label,
 #identity-popup-content-verifier {
+  color: @color_text_placeholder@;
   font-size: @font_tiny@ !important;
 }
 
 #identity-popup-content-host,
 #identity-popup-content-owner {
   font-weight: bold;
+  padding: 0px;
+  margin: 0px;
+  font-size: @font_xsmall@ !important;
 }
 
 #identity-popup-encryption-icon {
-  padding-top: @padding_snormal@; /* align to top of text */
   list-style-image: url("chrome://browser/skin/images/unlocked-hdpi.png");
 }
 
-#identity-container[mode="verifiedIdentity"] > hbox > vbox > #identity-popup-encryption-icon ,
-#identity-container[mode="verifiedDomain"] > hbox > vbox > #identity-popup-encryption-icon {
+#identity-container[mode="verifiedIdentity"] > box > box > #identity-popup-encryption-icon ,
+#identity-container[mode="verifiedDomain"] > box > box > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/images/locked-hdpi.png");
+}
+
+#identity-popup-encryption-box {
+  -moz-box-orient: horizontal;
+  -moz-box-align: baseline;
+  -moz-box-pack: start;
 }
 
 /* Page Actions, Prompt, and Context Menu popups --------------------------- */
 .action-buttons,
 #context-commands,
 #pageactions-container {
-  border-top: @border_width_tiny@ solid rgb(205,205,205);
   padding: 0;
   -moz-user-focus: ignore;
 }
@@ -1159,17 +1194,25 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 .action-button,
 .context-command,
 pageaction {
-  background-color: none;
-  -moz-border-top-colors: white;
-  -moz-border-right-colors: rgb(175,175,175);
-  -moz-border-bottom-colors: rgb(175,175,175);
-  -moz-border-left-colors: white;
-  border-style: solid;
-  border-width: @border_width_tiny@ !important;
   height: @touch_button_xlarge@;
   min-height: @touch_button_xlarge@;
   width: 100%;
   min-width: @touch_action_minwidth@; /* keep the button from being too narrow */
+}
+
+pageaction {
+  padding: 0px @padding_normal@ !important;
+  border-bottom: -moz-calc(3 * @border_width_tiny@) solid white;
+}
+
+pageaction.last-child {
+  border-bottom: @border_width_tiny@ solid white !important;
+}
+
+pageaction > vbox {
+  border-top: @border_width_tiny@ solid lightgray;
+  -moz-box-flex: 1 !important;
+  margin-top: -moz-calc(-2 * @border_width_tiny@);
 }
 
 /* Override richlistbox and richlistitem styles */
@@ -1217,7 +1260,7 @@ pageaction {
   }
 
   .action-button:last-child:nth-child(odd),
-  pageaction.odd-last-child {
+  pageaction.odd.last-child {
     width: 100%;
   }
 }
