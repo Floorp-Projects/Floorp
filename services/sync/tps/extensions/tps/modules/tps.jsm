@@ -512,6 +512,9 @@ var TPS =
       prefs.setCharPref('tps.account.username', this.config.account.username);
       prefs.setCharPref('tps.account.password', this.config.account.password);
       prefs.setCharPref('tps.account.passphrase', this.config.account.passphrase);
+      if (this.config.account['serverURL']) {
+        prefs.setCharPref('tps.account.serverURL', this.config.account.serverURL);
+      }
 
       // start processing the test actions
       this._currentAction = 0;
