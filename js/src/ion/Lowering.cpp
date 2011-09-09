@@ -368,11 +368,34 @@ LIRGenerator::visitAdd(MAdd *ins)
 }
 
 bool
+LIRGenerator::visitSub(MSub *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    JS_ASSERT(lhs->type() == rhs->type());
+
+    if (ins->specialization() == MIRType_Int32) {
+        JS_ASSERT(lhs->type() == MIRType_Int32);
+        LSubI *lir = new LSubI;
+        if (!assignSnapshot(lir))
+            return false;
+        return lowerForALU(lir, ins, lhs, rhs);
+    }
+    if (ins->specialization() == MIRType_Double) {
+        JS_ASSERT(lhs->type() == MIRType_Double);
+        return lowerForFPU(new LMathD(JSOP_SUB), ins, lhs, rhs);
+    }
+
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
 LIRGenerator::visitMul(MMul *ins)
 {
-    MDefinition *lhs = ins->getOperand(0);
-    MDefinition *rhs = ins->getOperand(1);
-
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
     JS_ASSERT(lhs->type() == rhs->type());
 
     if (ins->specialization() == MIRType_Int32) {

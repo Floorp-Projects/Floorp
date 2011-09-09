@@ -1349,6 +1349,12 @@ class MBinaryArithInstruction
     MIRType specialization() const {
         return specialization_;
     }
+    MDefinition *lhs() const {
+        return getOperand(0);
+    }
+    MDefinition *rhs() const {
+        return getOperand(1);
+    }
 
     MDefinition *foldsTo(bool useValueNumbers);
 
@@ -1369,6 +1375,25 @@ class MAdd : public MBinaryArithInstruction
     INSTRUCTION_HEADER(Add);
     static MAdd *New(MDefinition *left, MDefinition *right) {
         return new MAdd(left, right);
+    }
+
+    double getIdentity() {
+        return 0;
+    }
+};
+
+class MSub : public MBinaryArithInstruction
+{
+    MSub(MDefinition *left, MDefinition *right)
+      : MBinaryArithInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Sub);
+    static MSub *New(MDefinition *left, MDefinition *right) {
+        return new MSub(left, right);
     }
 
     double getIdentity() {

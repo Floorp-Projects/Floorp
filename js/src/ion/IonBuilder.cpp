@@ -368,6 +368,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_bitop(op);
 
       case JSOP_ADD:
+      case JSOP_SUB:
       case JSOP_MUL:
       	return jsop_binary(op);
 
@@ -1603,6 +1604,10 @@ IonBuilder::jsop_binary(JSOp op)
     switch (op) {
       case JSOP_ADD:
         ins = MAdd::New(left, right);
+        break;
+
+      case JSOP_SUB:
+        ins = MSub::New(left, right);
         break;
 
       case JSOP_MUL:
