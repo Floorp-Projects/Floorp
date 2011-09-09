@@ -108,7 +108,7 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
 };
 
 
-// This array MUST be kept in the same order as the color list in nsILookAndFeel.h.
+// This array MUST be kept in the same order as the color list in LookAndFeel.h.
 /* XXX If you add any strings longer than
  * "ui.IMESelectedConvertedTextBackground"
  * to the following array then you MUST update the
