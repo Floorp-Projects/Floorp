@@ -362,25 +362,34 @@ CodeGeneratorX86Shared::visitOutOfLineBailout(OutOfLineBailout *ool)
 bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {
-    const LAllocation *lhs = ins->getOperand(0);
-    const LAllocation *rhs = ins->getOperand(1);
-
-    if (rhs->isConstant())
-        masm.addl(Imm32(ToInt32(rhs)), ToOperand(lhs));
+    if (ins->rhs()->isConstant())
+        masm.addl(Imm32(ToInt32(ins->rhs())), ToOperand(ins->lhs()));
     else
-        masm.addl(ToOperand(rhs), ToRegister(lhs));
+        masm.addl(ToOperand(ins->rhs()), ToRegister(ins->lhs()));
 
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
         return false;
+    return true;
+}
 
+bool
+CodeGeneratorX86Shared::visitSubI(LSubI *ins)
+{
+    if (ins->rhs()->isConstant())
+        masm.subl(Imm32(ToInt32(ins->rhs())), ToOperand(ins->lhs()));
+    else
+        masm.subl(ToOperand(ins->rhs()), ToRegister(ins->lhs()));
+
+    if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        return false;
     return true;
 }
 
 bool
 CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 {
-    const LAllocation *lhs = ins->getOperand(0);
-    const LAllocation *rhs = ins->getOperand(1);
+    const LAllocation *lhs = ins->lhs();
+    const LAllocation *rhs = ins->rhs();
     MMul *mul = ins->mir();
 
     if (rhs->isConstant()) {
@@ -718,6 +727,9 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
     switch (math->jsop()) {
       case JSOP_ADD:
         masm.addsd(ToFloatRegister(input), ToFloatRegister(output));
+        break;
+      case JSOP_SUB:
+        masm.subsd(ToFloatRegister(input), ToFloatRegister(output));
         break;
       case JSOP_MUL:
         masm.mulsd(ToFloatRegister(input), ToFloatRegister(output));

@@ -106,6 +106,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     // Instruction visitors.
     virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
+    virtual bool visitSubI(LSubI *ins);
     virtual bool visitMulI(LMulI *ins);
     virtual bool visitBitNot(LBitNot *ins);
     virtual bool visitBitOp(LBitOp *ins);
