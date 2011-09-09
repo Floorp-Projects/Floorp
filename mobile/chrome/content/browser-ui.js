@@ -549,7 +549,12 @@ var BrowserUI = {
   },
 
   updateTabletLayout: function updateTabletLayout() {
-    if (Util.isTablet({ forceUpdate: true })) {
+    let wasTablet = Elements.urlbarState.hasAttribute("tablet");
+    let isTablet = Util.isTablet({ forceUpdate: true });
+    if (wasTablet == isTablet)
+      return;
+
+    if (isTablet) {
       this.unlockToolbar();
       Elements.urlbarState.setAttribute("tablet", "true");
     } else {
