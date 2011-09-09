@@ -145,11 +145,7 @@ NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
     "addw  #12, %%sp\n\t"
     "movel %1, %%sp@-\n\t"
     "movel %1@, %%a0\n\t"
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
     "movel %%a0@(%2:l:4), %%a0\n\t"
-#else /* not V3 */
-    "movel %%a0@(8,%2:l:4), %%a0\n\t"
-#endif
     "jbsr  %%a0@\n\t"         /* safe to not cleanup sp */
     "lea   %%sp@(4,%5:l), %%sp\n\t"
     "movel %%d0, %0"
