@@ -506,6 +506,9 @@ _TEST_FILES2 = \
 		test_bug675121.html \
 		file_bug675121.sjs \
 		test_bug654352.html \
+		test_bug682592.html \
+		bug682592-subframe.html \
+		bug682592-subframe-ref.html \
 		$(NULL)
 
 _CHROME_FILES =	\
