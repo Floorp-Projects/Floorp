@@ -53,7 +53,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIEditorMailSupport.h"
-#include "nsILookAndFeel.h"
 #include "nsFocusManager.h"
 #include "nsEventListenerManager.h"
 #include "mozilla/Preferences.h"
