@@ -39,21 +39,19 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = content/canvas/test/webgl
+relativesrcdir  = content/canvas/test/crossorigin
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
-  test_webgl_conformance_test_suite.html \
-  00_test_list.txt \
-  failing_tests_linux.txt \
-  failing_tests_windows.txt \
-  failing_tests_mac.txt \
-  $(NULL)
+	image-allow-credentials.png \
+	image-allow-credentials.png^headers^ \
+	image-allow-star.png \
+	image-allow-star.png^headers^ \
+	image.png \
+	test_canvas2d_crossorigin.html \
+	test_webgl_crossorigin_textures.html \
+	$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-	$(TAR) -cf - -C $(srcdir) \
-	  resources \
-	  conformance \
-	  | $(TAR) -xf - -C $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
