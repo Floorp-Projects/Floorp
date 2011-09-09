@@ -516,15 +516,37 @@ class LReturn : public LInstructionHelper<0, BOX_PIECES, 0>
     LIR_HEADER(Return);
 };
 
+template <size_t Temps>
+class LBinaryMath : public LInstructionHelper<1, 2, Temps>
+{
+  public:
+    const LAllocation *lhs() {
+        return this->getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return this->getOperand(1);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
 // Adds two integers, returning an integer value.
-class LAddI : public LInstructionHelper<1, 2, 0>
+class LAddI : public LBinaryMath<0>
 {
   public:
     LIR_HEADER(AddI);
 };
 
+// Subtracts two integers, returning an integer value.
+class LSubI : public LBinaryMath<0>
+{
+  public:
+    LIR_HEADER(SubI);
+};
+
 // Adds two integers, returning an integer value.
-class LMulI : public LInstructionHelper<1, 2, 0>
+class LMulI : public LBinaryMath<0>
 {
     MMul *mir_;
 
@@ -541,7 +563,7 @@ class LMulI : public LInstructionHelper<1, 2, 0>
 };
 
 // Performs an add, sub, mul, or div on two double values.
-class LMathD : public LInstructionHelper<1, 2, 0>
+class LMathD : public LBinaryMath<0>
 {
     JSOp jsop_;
 

@@ -65,6 +65,7 @@ namespace ion {
     _(Rsh)                                                                  \
     _(Ursh)                                                                 \
     _(Add)                                                                  \
+    _(Sub)                                                                  \
     _(Mul)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \

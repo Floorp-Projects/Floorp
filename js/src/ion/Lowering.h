@@ -117,6 +117,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRsh(MRsh *ins);
     bool visitUrsh(MUrsh *ins);
     bool visitAdd(MAdd *ins);
+    bool visitSub(MSub *ins);
     bool visitMul(MMul *ins);
     bool visitStart(MStart *start);
     bool visitToDouble(MToDouble *convert);

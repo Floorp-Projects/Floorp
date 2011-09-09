@@ -84,36 +84,39 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
     js::Value ret;
 
     switch(ins->op()) {
-        case MDefinition::Op_BitAnd:
-            ret = Int32Value(lhs.toInt32() & rhs.toInt32());
-            break;
-        case MDefinition::Op_BitOr:
-            ret = Int32Value(lhs.toInt32() | rhs.toInt32());
-            break;
-        case MDefinition::Op_BitXor:
-            ret = Int32Value(lhs.toInt32() ^ rhs.toInt32());
-            break;
-        case MDefinition::Op_Lsh:
-            ret = Int32Value(lhs.toInt32() << (rhs.toInt32() & 0x1F));
-            break;
-        case MDefinition::Op_Rsh:
-            ret = Int32Value(lhs.toInt32() >> (rhs.toInt32() & 0x1F));
-            break;
-        case MDefinition::Op_Ursh: {
-            if (lhs.toInt32() < 0 && rhs.toInt32() == 0)
-                return NULL;
-            uint32 unsignedLhs = (uint32_t)lhs.toInt32();
-            ret = Int32Value(uint32(unsignedLhs >> (rhs.toInt32() & 0x1F)));
-            break;
-        }
-        case MDefinition::Op_Add:
-            ret.setNumber(lhs.toNumber() + rhs.toNumber());
-            break;
-        case MDefinition::Op_Mul:
-            ret.setNumber(lhs.toNumber() * rhs.toNumber());
-            break;
-        default:
-            JS_NOT_REACHED("NYI");
+      case MDefinition::Op_BitAnd:
+        ret = Int32Value(lhs.toInt32() & rhs.toInt32());
+        break;
+      case MDefinition::Op_BitOr:
+        ret = Int32Value(lhs.toInt32() | rhs.toInt32());
+        break;
+      case MDefinition::Op_BitXor:
+        ret = Int32Value(lhs.toInt32() ^ rhs.toInt32());
+        break;
+      case MDefinition::Op_Lsh:
+        ret = Int32Value(lhs.toInt32() << (rhs.toInt32() & 0x1F));
+        break;
+      case MDefinition::Op_Rsh:
+        ret = Int32Value(lhs.toInt32() >> (rhs.toInt32() & 0x1F));
+        break;
+      case MDefinition::Op_Ursh: {
+        if (lhs.toInt32() < 0 && rhs.toInt32() == 0)
+            return NULL;
+        uint32 unsignedLhs = (uint32_t)lhs.toInt32();
+        ret = Int32Value(uint32(unsignedLhs >> (rhs.toInt32() & 0x1F)));
+        break;
+      }
+      case MDefinition::Op_Add:
+        ret.setNumber(lhs.toNumber() + rhs.toNumber());
+        break;
+      case MDefinition::Op_Sub:
+        ret.setNumber(lhs.toNumber() - rhs.toNumber());
+        break;
+      case MDefinition::Op_Mul:
+        ret.setNumber(lhs.toNumber() * rhs.toNumber());
+        break;
+      default:
+        JS_NOT_REACHED("NYI");
     }
 
     if (ins->type() != MIRTypeFromValue(ret))
