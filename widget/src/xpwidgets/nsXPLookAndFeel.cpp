@@ -38,6 +38,7 @@
 #include "nscore.h"
 
 #include "nsXPLookAndFeel.h"
+#include "nsLookAndFeel.h"
 #include "nsCRT.h"
 #include "nsFont.h"
 #include "mozilla/Preferences.h"
@@ -212,6 +213,45 @@ PRInt32 nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
 PRBool nsXPLookAndFeel::sUseNativeColors = PR_TRUE;
+
+nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nsnull;
+PRBool nsXPLookAndFeel::sShutdown = PR_FALSE;
+
+// static
+nsLookAndFeel*
+nsXPLookAndFeel::GetAddRefedInstance()
+{
+  nsLookAndFeel* lookAndFeel = GetInstance();
+  NS_IF_ADDREF(lookAndFeel);
+  return lookAndFeel;
+}
+
+// static
+nsLookAndFeel*
+nsXPLookAndFeel::GetInstance()
+{
+  if (sInstance) {
+    return static_cast<nsLookAndFeel*>(sInstance);
+  }
+
+  NS_ENSURE_TRUE(!sShutdown, nsnull);
+
+  NS_ADDREF(sInstance = new nsLookAndFeel());
+  return static_cast<nsLookAndFeel*>(sInstance);
+}
+
+// static
+void
+nsXPLookAndFeel::Shutdown()
+{
+  if (sShutdown) {
+    return;
+  }
+  sShutdown = PR_TRUE;
+  if (sInstance) {
+    sInstance->Release();
+  }
+}
 
 nsXPLookAndFeel::nsXPLookAndFeel() : nsILookAndFeel()
 {
@@ -406,6 +446,9 @@ nsXPLookAndFeel::Init()
 
 nsXPLookAndFeel::~nsXPLookAndFeel()
 {
+  NS_ASSERTION(sInstance == this,
+               "This destroying instance isn't the singleton instance");
+  sInstance = nsnull;
 }
 
 PRBool

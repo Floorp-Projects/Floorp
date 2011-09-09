@@ -80,7 +80,8 @@ using namespace mozilla::widget;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsLookAndFeel,
+                                         nsLookAndFeel::GetAddRefedInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceWin)
@@ -222,6 +223,13 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { NULL }
 };
 
+static void
+nsWidgetWindowsModuleDtor()
+{
+  nsLookAndFeel::Shutdown();
+  nsAppShellShutdown();
+}
+
 static const mozilla::Module kWidgetModule = {
   mozilla::Module::kVersion,
   kWidgetCIDs,
@@ -229,7 +237,7 @@ static const mozilla::Module kWidgetModule = {
   NULL,
   NULL,
   nsAppShellInit,
-  nsAppShellShutdown
+  nsWidgetWindowsModuleDtor
 };
 
 NSMODULE_DEFN(nsWidgetModule) = &kWidgetModule;

@@ -83,7 +83,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPopupWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsLookAndFeel,
+                                         nsLookAndFeel::GetAddRefedInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
@@ -248,6 +249,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetQtModuleDtor()
 {
+    nsLookAndFeel::Shutdown();
     nsSound::Shutdown();
     nsWindow::ReleaseGlobals();
     nsAppShellShutdown();
