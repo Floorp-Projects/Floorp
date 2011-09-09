@@ -58,7 +58,6 @@
 #include "vm/GlobalObject.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -84,9 +83,9 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool b;
-    if (!GetPrimitiveThis(cx, args, &b))
-        return false;
+    bool b, ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &b, &ok))
+        return ok;
 
     char buf[32];
     JS_snprintf(buf, sizeof buf, "(new Boolean(%s))", JS_BOOLEAN_STR(b));
@@ -103,9 +102,9 @@ bool_toString(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool b;
-    if (!GetPrimitiveThis(cx, args, &b))
-        return false;
+    bool b, ok;
+    if (!BoxedPrimitiveMethodGuard<bool>(cx, args, &b, &ok))
+        return ok;
 
     args.rval().setString(cx->runtime->atomState.booleanAtoms[b ? 1 : 0]);
     return true;
@@ -116,9 +115,9 @@ bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool b;
-    if (!GetPrimitiveThis(cx, args, &b))
-        return false;
+    bool b, ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, &b, &ok))
+        return ok;
 
     args.rval().setBoolean(b);
     return true;
