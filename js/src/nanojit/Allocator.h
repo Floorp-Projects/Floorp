@@ -90,7 +90,7 @@ namespace nanojit
             return p;
         }
 
-        size_t getBytesAllocated();
+        size_t getBytesAllocated(size_t(*my_malloc_usable_size)(void *));
 
     protected:
         void* allocSlow(size_t nbytes, bool fallible = false);

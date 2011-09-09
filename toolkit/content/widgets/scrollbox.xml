@@ -490,6 +490,12 @@
         }
 
         event.stopPropagation();
+        event.preventDefault();
+      ]]></handler>
+
+      <handler event="MozMousePixelScroll"><![CDATA[
+        event.stopPropagation();
+        event.preventDefault();
       ]]></handler>
 
       <handler event="underflow" phase="capturing"><![CDATA[

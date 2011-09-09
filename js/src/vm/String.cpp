@@ -83,7 +83,7 @@ JSLinearString::mark(JSTracer *)
 }
 
 size_t
-JSString::charsHeapSize()
+JSString::charsHeapSize(JSUsableSizeFun usf)
 {
     /* JSRope: do nothing, we'll count all children chars when we hit the leaf strings. */
     if (isRope())
@@ -98,8 +98,11 @@ JSString::charsHeapSize()
     JS_ASSERT(isFlat());
 
     /* JSExtensibleString: count the full capacity, not just the used space. */
-    if (isExtensible())
-        return asExtensible().capacity() * sizeof(jschar);
+    if (isExtensible()) {
+        JSExtensibleString &extensible = asExtensible();
+        size_t usable = usf((void *)extensible.chars());
+        return usable ? usable : asExtensible().capacity() * sizeof(jschar);
+    }
 
     JS_ASSERT(isFixed());
 
@@ -116,7 +119,9 @@ JSString::charsHeapSize()
         return 0;
 
     /* JSAtom, JSFixedString: count the chars. */
-    return length() * sizeof(jschar);
+    JSFixedString &fixed = asFixed();
+    size_t usable = usf((void *)fixed.chars());
+    return usable ? usable : length() * sizeof(jschar);
 }
 
 static JS_ALWAYS_INLINE bool

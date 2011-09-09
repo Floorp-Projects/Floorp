@@ -42,7 +42,7 @@ add_test(function() {
 
     info("Clicking 'Enable' button");
     EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
-    is(Services.prefs.prefHasUserValue(pref), false, "Check Compatability pref should be cleared");
+    is(Services.prefs.prefHasUserValue(pref), false, "Check Compatibility pref should be cleared");
     is_element_hidden(hbox, "Check Compatibility warning hbox should be hidden");
     is_element_hidden(button, "Check Compatibility warning button should be hidden");
 

@@ -83,7 +83,7 @@ nsInternetCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString
     {
       aOutString.Append(gt);
       // No space between >: this is ">>> " style quoting, for
-      // compatability with RFC 2646 and format=flowed.
+      // compatibility with RFC 2646 and format=flowed.
       if (*beginIter != gt)
         aOutString.Append(space);
     }

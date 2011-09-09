@@ -460,7 +460,7 @@ GetClass(PRUnichar u)
    } else if (((0x3200 <= u) && (u <= 0xA4CF)) || // CJK and Yi
               ((0xAC00 <= h) && (h <= 0xD7FF)) || // Hangul
               ((0xf900 <= h) && (h <= 0xfaff))) {
-     c = CLASS_BREAKABLE; // CJK character, Han, and Han Compatability
+     c = CLASS_BREAKABLE; // CJK character, Han, and Han Compatibility
    } else if (0xff00 == h) {
      if (l < 0x0060) { // Fullwidth ASCII variant
        c = GETCLASSFROMTABLE(gLBClass00, (l+0x20));

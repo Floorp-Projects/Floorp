@@ -313,6 +313,9 @@ NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
     case EVENT_MENU_POPUP:
       sound = L"MenuPopup";
       break;
+    case EVENT_EDITOR_MAX_LEN:
+      sound = L".Default";
+      break;
     default:
       // Win32 plays no sounds at NS_SYSSOUND_PROMPT_DIALOG and
       // NS_SYSSOUND_SELECT_DIALOG.

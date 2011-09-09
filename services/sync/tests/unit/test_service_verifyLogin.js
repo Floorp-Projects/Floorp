@@ -79,14 +79,15 @@ function run_test() {
     Service.username = "janedoe";
     do_check_false(Status.enforceBackoff);
     let backoffInterval;    
-    Svc.Obs.add("weave:service:backoff:interval", function(subject, data) {
+    Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
       backoffInterval = subject;
     });
     do_check_false(Service.verifyLogin());
     do_check_true(Status.enforceBackoff);
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
-    do_check_eq(Status.login, LOGIN_FAILED_SERVER_ERROR);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
 
     _("Ensure a network error when finding the cluster sets the right Status bits.");
     Status.resetSync();

@@ -503,10 +503,10 @@ js_PutCallObjectOnTrace(JSObject *scopeChain, uint32 nargs, js::Value *argv,
 
 namespace js {
 
-JSObject *
+CallObject *
 CreateFunCallObject(JSContext *cx, StackFrame *fp);
 
-JSObject *
+CallObject *
 CreateEvalCallObject(JSContext *cx, StackFrame *fp);
 
 extern JSBool

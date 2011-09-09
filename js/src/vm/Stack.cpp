@@ -159,9 +159,9 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
     if (hasArgsObj()) {
         ArgumentsObject &argsobj = argsObj();
         if (argsobj.isNormalArguments())
-            argsobj.setPrivate(this);
+            argsobj.setStackFrame(this);
         else
-            JS_ASSERT(!argsobj.getPrivate());
+            JS_ASSERT(!argsobj.maybeStackFrame());
         otherfp->flags_ &= ~HAS_ARGS_OBJ;
     }
 }

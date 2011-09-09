@@ -482,7 +482,7 @@ stubs::GetElem(VMFrame &f)
             if (arg < argsobj->initialLength()) {
                 copyFrom = &argsobj->element(arg);
                 if (!copyFrom->isMagic()) {
-                    if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
+                    if (StackFrame *afp = argsobj->maybeStackFrame())
                         copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }

@@ -1138,21 +1138,21 @@ mjit::JITScript::~JITScript()
 }
 
 size_t
-JSScript::jitDataSize(size_t(*mus)(void *))
+JSScript::jitDataSize(JSUsableSizeFun usf)
 {
     size_t n = 0;
     if (jitNormal)
-        n += jitNormal->scriptDataSize(mus); 
+        n += jitNormal->scriptDataSize(usf); 
     if (jitCtor)
-        n += jitCtor->scriptDataSize(mus); 
+        n += jitCtor->scriptDataSize(usf); 
     return n;
 }
 
 /* Please keep in sync with Compiler::finishThisUp! */
 size_t
-mjit::JITScript::scriptDataSize(size_t(*mus)(void *))
+mjit::JITScript::scriptDataSize(JSUsableSizeFun usf)
 {
-    size_t usable = mus ? mus(this) : 0;
+    size_t usable = usf ? usf(this) : 0;
     return usable ? usable :
         sizeof(JITScript) +
         sizeof(NativeMapEntry) * nNmapPairs +

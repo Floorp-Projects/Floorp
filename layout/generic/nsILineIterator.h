@@ -104,9 +104,12 @@ public:
 
   /**
    * Given a frame that's a child of the block, find which line its on
-   * and return that line index. Returns -1 if the frame cannot be found.
+   * and return that line index, as long as it's at least as big as
+   * aStartLine.  Returns -1 if the frame cannot be found on lines
+   * starting with aStartLine.
    */
-  virtual PRInt32 FindLineContaining(nsIFrame* aFrame) = 0;
+  virtual PRInt32 FindLineContaining(nsIFrame* aFrame,
+                                     PRInt32 aStartLine = 0) = 0;
 
   // Given a line number and an X coordinate, find the frame on the
   // line that is nearest to the X coordinate. The

@@ -378,6 +378,8 @@
       <field name="_contentViewManager">null</field>
 
       <!-- Dimensions of content window -->
+      <field name="_contentWindowWidth">0</field>
+      <field name="_contentWindowHeight">0</field>
       <property name="contentWindowWidth"
                 onget="return this._contentWindowWidth;"
                 readonly="true"/>

@@ -164,7 +164,7 @@ void MozQWidget::focusInEvent(QFocusEvent* aEvent)
     // to open it, because there was no focused window yet so we do it now by
     // requesting the VKB without any timeout.
     if (gFailedOpenKeyboard)
-        requestVKB(0);
+        requestVKB(0, this);
 }
 
 #ifdef MOZ_ENABLE_QTMOBILITY
@@ -566,15 +566,16 @@ QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
   If the request is not canceled when the timer runs out, the VKB is actually
   shown.
 */
-void MozQWidget::requestVKB(int aTimeout)
+void MozQWidget::requestVKB(int aTimeout, QObject* aWidget)
 {
     if (!gPendingVKBOpen) {
         gPendingVKBOpen = true;
 
-        if (aTimeout == 0)
+        if (aTimeout == 0 || !aWidget) {
             showVKB();
-        else
-            QTimer::singleShot(aTimeout, this, SLOT(showVKB()));
+        } else {
+            QTimer::singleShot(aTimeout, aWidget, SLOT(showVKB()));
+        }
     }
 }
 
@@ -583,8 +584,9 @@ void MozQWidget::requestVKB(int aTimeout)
 void MozQWidget::showVKB()
 {
     // skip showing of keyboard if not pending
-    if (!gPendingVKBOpen)
+    if (!gPendingVKBOpen) {
         return;
+    }
 
     gPendingVKBOpen = false;
 

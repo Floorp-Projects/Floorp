@@ -64,15 +64,6 @@ class TPSFirefoxRunner(object):
     if self.installdir:
       shutil.rmtree(self.installdir, True)
 
-  @property
-  def names(self):
-      if sys.platform == 'darwin':
-          return ['firefox', 'minefield']
-      if (sys.platform == 'linux2') or (sys.platform in ('sunos5', 'solaris')):
-          return ['firefox', 'mozilla-firefox', 'minefield']
-      if os.name == 'nt' or sys.platform == 'cygwin':
-          return ['firefox']
-
   def download_build(self, installdir='downloadedbuild',
                      appname='firefox', macAppName='Minefield.app'):
     self.installdir = os.path.abspath(installdir)
@@ -109,28 +100,6 @@ class TPSFirefoxRunner(object):
                                '.exe' if platform['name'] == 'Windows' else '')
 
     return binary
-
-  def get_respository_info(self):
-    """Read repository information from application.ini and platform.ini."""
-    import ConfigParser
-
-    config = ConfigParser.RawConfigParser()
-    dirname = os.path.dirname(self.runner.binary)
-    repository = { }
-
-    for entry in [['application', 'App'], ['platform', 'Build']]:
-        (file, section) = entry
-        config.read(os.path.join(dirname, '%s.ini' % file))
-
-        for entry in [['SourceRepository', 'repository'], ['SourceStamp', 'changeset']]:
-            (key, id) = entry
-
-            try:
-                repository['%s_%s' % (file, id)] = config.get(section, key);
-            except:
-                repository['%s_%s' % (file, id)] = None
-
-    return repository
 
   def run(self, profile=None, timeout=PROCESS_TIMEOUT, env=None, args=None):
     """Runs the given FirefoxRunner with the given Profile, waits

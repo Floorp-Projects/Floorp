@@ -394,7 +394,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         PRInt32 type = -1;
         rv = prefBranch->GetIntPref(PROXY_PREF("type"), &type);
         if (NS_SUCCEEDED(rv)) {
-            // bug 115720 - for ns4.x backwards compatability
+            // bug 115720 - for ns4.x backwards compatibility
             if (type == PROXYCONFIG_DIRECT4X) {
                 type = PROXYCONFIG_DIRECT;
                 // Reset the type so that the dialog looks correct, and we

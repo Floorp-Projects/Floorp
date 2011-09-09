@@ -195,34 +195,38 @@ extern NS_TLS mozilla::threads::ID gTLSThreadID;
 PRThread* gCycleCollectorThread = nsnull;
 #endif
 
+// If PR_TRUE, always log cycle collector graphs.
+const PRBool gAlwaysLogCCGraphs = PR_FALSE;
+
 // Various parameters of this collector can be tuned using environment
 // variables.
 
 struct nsCycleCollectorParams
 {
     PRBool mDoNothing;
+    PRBool mLogGraphs;
 #ifdef DEBUG_CC
     PRBool mReportStats;
     PRBool mHookMalloc;
-    PRBool mDrawGraphs;
     PRBool mFaultIsFatal;
     PRBool mLogPointers;
-
     PRUint32 mShutdownCollections;
 #endif
     
     nsCycleCollectorParams() :
 #ifdef DEBUG_CC
         mDoNothing     (PR_GetEnv("XPCOM_CC_DO_NOTHING") != NULL),
+        mLogGraphs     (gAlwaysLogCCGraphs ||
+                        PR_GetEnv("XPCOM_CC_DRAW_GRAPHS") != NULL),
         mReportStats   (PR_GetEnv("XPCOM_CC_REPORT_STATS") != NULL),
         mHookMalloc    (PR_GetEnv("XPCOM_CC_HOOK_MALLOC") != NULL),
-        mDrawGraphs    (PR_GetEnv("XPCOM_CC_DRAW_GRAPHS") != NULL),
         mFaultIsFatal  (PR_GetEnv("XPCOM_CC_FAULT_IS_FATAL") != NULL),
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
 
         mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS)
 #else
-        mDoNothing     (PR_FALSE)
+        mDoNothing     (PR_FALSE),
+        mLogGraphs     (gAlwaysLogCCGraphs)
 #endif
     {
 #ifdef DEBUG_CC
@@ -2904,14 +2908,11 @@ nsCycleCollector::Shutdown()
     // Here we want to run a final collection and then permanently
     // disable the collector because the program is shutting down.
 
-#ifdef DEBUG_CC
-    if (sCollector->mParams.mDrawGraphs) {
-        nsCOMPtr<nsICycleCollectorListener> listener =
-            new nsCycleCollectorLogger();
-        Collect(SHUTDOWN_COLLECTIONS(mParams), listener);
-    } else
-#endif
-    Collect(SHUTDOWN_COLLECTIONS(mParams), nsnull);
+    nsCOMPtr<nsCycleCollectorLogger> listener;
+    if (mParams.mLogGraphs) {
+        listener = new nsCycleCollectorLogger();
+    }
+    Collect(SHUTDOWN_COLLECTIONS(mParams), listener);
 
 #ifdef DEBUG_CC
     GCGraphBuilder builder(mGraph, mRuntimes, nsnull);
@@ -3592,11 +3593,9 @@ nsCycleCollector_collect(nsICycleCollectorListener *aListener)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsICycleCollectorListener> listener(aListener);
-#ifdef DEBUG_CC
-    if (!aListener && sCollector && sCollector->mParams.mDrawGraphs) {
+    if (!aListener && sCollector && sCollector->mParams.mLogGraphs) {
         listener = new nsCycleCollectorLogger();
     }
-#endif
 
     if (sCollectorRunner)
         return sCollectorRunner->Collect(listener);
