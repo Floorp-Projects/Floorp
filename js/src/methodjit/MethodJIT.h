@@ -605,7 +605,6 @@ struct JITScript {
     bool            singleStepMode:1;   /* compiled in "single step mode" */
     uint32          nInlineFrames;
     uint32          nCallSites;
-    uint32          nRootedObjects;
 #ifdef JS_MONOIC
     uint32          nGetGlobalNames;
     uint32          nSetGlobalNames;
@@ -643,7 +642,6 @@ struct JITScript {
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
-    JSObject **rootedObjects() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
@@ -666,11 +664,6 @@ struct JITScript {
     }
 
     void nukeScriptDependentICs();
-    void sweepCallICs(JSContext *cx, bool purgeAll);
-    void purgeMICs();
-    void purgePICs();
-
-    void trace(JSTracer *trc);
 
     /* |usf| can be NULL here, in which case the fallback size computation will be used. */
     size_t scriptDataSize(JSUsableSizeFun usf);

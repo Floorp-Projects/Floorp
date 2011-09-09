@@ -122,7 +122,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
-    rootedObjects(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame),
     debugMode_(cx->compartment->debugMode()),
 #if defined JS_TRACER
@@ -942,7 +941,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
                       sizeof(CallSite) * callSites.length() +
-                      sizeof(JSObject *) * rootedObjects.length() +
 #if defined JS_MONOIC
                       sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
                       sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
@@ -1073,13 +1071,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         if (from.loopPatch.hasPatch)
             stubCode.patch(from.loopPatch.codePatch, result + codeOffset);
     }
-
-    /* Build the list of objects rooted by the script. */
-    JSObject **jitRooted = (JSObject **)cursor;
-    jit->nRootedObjects = rootedObjects.length();
-    cursor += sizeof(JSObject *) * jit->nRootedObjects;
-    for (size_t i = 0; i < jit->nRootedObjects; i++)
-        jitRooted[i] = rootedObjects[i];
 
 #if defined JS_MONOIC
     JS_INIT_CLIST(&jit->callers);
@@ -4660,12 +4651,6 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     JSObject *obj;
     if (!js_GetClassPrototype(cx, globalObj, JSProto_String, &obj))
         return false;
-
-    /*
-     * Root the proto, since JS_ClearScope might overwrite the global object's
-     * copy.
-     */
-    rootedObjects.append(obj);
 
     /* Force into a register because getprop won't expect a constant. */
     RegisterID reg = frame.allocReg();
