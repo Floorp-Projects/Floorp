@@ -93,7 +93,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsLookAndFeel,
+                                         nsLookAndFeel::GetAddRefedInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -181,6 +182,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetOS2ModuleDtor()
 {
+  nsLookAndFeel::Shutdown();
   nsWindow::ReleaseGlobals();
   nsFilePicker::ReleaseGlobals();
   nsAppShellShutdown();

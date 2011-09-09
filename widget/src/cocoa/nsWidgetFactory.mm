@@ -70,7 +70,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsLookAndFeel,
+                                         nsLookAndFeel::GetAddRefedInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -193,6 +194,13 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { NULL }
 };
 
+static void
+nsWidgetCocoaModuleDtor()
+{
+  nsLookAndFeel::Shutdown();
+  nsAppShellShutdown();
+}
+
 static const mozilla::Module kWidgetModule = {
   mozilla::Module::kVersion,
   kWidgetCIDs,
@@ -200,7 +208,7 @@ static const mozilla::Module kWidgetModule = {
   NULL,
   NULL,
   nsAppShellInit,
-  nsAppShellShutdown
+  nsWidgetCocoaModuleDtor
 };
 
 NSMODULE_DEFN(nsWidgetMacModule) = &kWidgetModule;

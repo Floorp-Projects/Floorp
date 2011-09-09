@@ -92,7 +92,8 @@ static NS_DEFINE_CID(kNativeFilePickerCID, NS_FILEPICKER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsLookAndFeel,
+                                         nsLookAndFeel::GetAddRefedInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -339,6 +340,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetGtk2ModuleDtor()
 {
+  nsLookAndFeel::Shutdown();
   nsFilePicker::Shutdown();
   nsSound::Shutdown();
   nsWindow::ReleaseGlobals();
