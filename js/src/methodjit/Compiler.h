@@ -756,6 +756,10 @@ class Compiler : public BaseCompiler
     CompileStatus compileMathAbsInt(FrameEntry *arg);
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
+    CompileStatus compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
+                                          Assembler::DoubleCondition cond); 
+    CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2, 
+                                       Assembler::Condition cond);                                       
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
     CompileStatus compileArrayPop(FrameEntry *thisv, bool isPacked);
