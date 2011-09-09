@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * This file lists Telemetry histograms collected by Firefox.  The format is
+ * This file lists Telemetry histograms collected by Mozilla. The format is
  *
  *    HISTOGRAM(id, minimum, maximum, bucket count, histogram kind,
  *              human-readable description for about:telemetry)
@@ -45,6 +45,8 @@
  * This file is the master list of telemetry histograms reported to Mozilla servers.
  * The other data reported by telemetry is listed on https://wiki.mozilla.org/Privacy/Reviews/Telemetry/Measurements
  *
+ * Please note that only BOOLEAN histograms are allowed to have a minimum value
+ * of zero, and that bucket counts should be >= 3.
  */
 
 /**
@@ -193,3 +195,12 @@ HISTOGRAM(PLACES_DATABASE_PAGESIZE_B, 1024, 32768, 10, EXPONENTIAL, "PLACES: Dat
 HISTOGRAM(PLACES_DATABASE_SIZE_PER_PAGE_B, 500, 10240, 20, EXPONENTIAL, "PLACES: Average size of a place in the database (bytes)")
 HISTOGRAM(PLACES_EXPIRATION_STEPS_TO_CLEAN, 1, 10, 10, LINEAR, "PLACES: Expiration steps to cleanup the database")
 HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLACES: Time for first autocomplete result if > 50ms (ms)")
+
+/**
+ * Thunderbird-specific telemetry.
+ */
+#ifdef MOZ_THUNDERBIRD
+HISTOGRAM(THUNDERBIRD_GLODA_SIZE_MB, 1, 1000, 40, LINEAR, "Gloda: size of global-messages-db.sqlite (MB)")
+HISTOGRAM(THUNDERBIRD_CONVERSATIONS_TIME_TO_2ND_GLODA_QUERY_MS, 1, 10000, 30, EXPONENTIAL, "Conversations: time between the moment we click and the second gloda query returns (ms)")
+HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: indexing rate (message/s)")
+#endif
