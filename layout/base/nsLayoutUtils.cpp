@@ -4118,6 +4118,11 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     ctx->Paint();
   }
 
+  PRInt32 corsmode;
+  if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
+    result.mCORSUsed = (corsmode != imgIRequest::CORS_NONE);
+  }
+
   result.mSurface = gfxsurf;
   result.mSize = gfxIntSize(imgWidth, imgHeight);
   result.mPrincipal = principal.forget();
