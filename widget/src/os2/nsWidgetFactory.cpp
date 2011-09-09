@@ -93,8 +93,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsLookAndFeel,
-                                         nsLookAndFeel::GetAddRefedInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -116,7 +114,6 @@ NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
-NS_DEFINE_NAMED_CID(NS_LOOKANDFEEL_CID);
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
@@ -139,7 +136,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor },
     { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor },
     { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
-    { &kNS_LOOKANDFEEL_CID, false, NULL, nsLookAndFeelConstructor },
     { &kNS_SOUND_CID, false, NULL, nsSoundConstructor },
     { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
     { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
@@ -163,7 +159,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },
   { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID },
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
-  { "@mozilla.org/widget/lookandfeel;1", &kNS_LOOKANDFEEL_CID },
   { "@mozilla.org/sound;1", &kNS_SOUND_CID },
   { "@mozilla.org/widget/toolkit/os2;1", &kNS_TOOLKIT_CID },
   { "@mozilla.org/widget/window/os2;1", &kNS_WINDOW_CID },
