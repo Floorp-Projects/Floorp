@@ -254,6 +254,7 @@ private:
     void correctDeltas(int insnSize)
     {
         m_maxDistance -= insnSize;
+        ASSERT(m_maxDistance >= 0);
         m_lastConstDelta -= insnSize;
         if (m_lastConstDelta < 0)
             m_lastConstDelta = 0;
@@ -264,6 +265,7 @@ private:
         correctDeltas(insnSize);
 
         m_maxDistance -= m_lastConstDelta;
+        ASSERT(m_maxDistance >= 0);
         m_lastConstDelta = constSize;
     }
 
@@ -304,12 +306,16 @@ private:
         m_loadOffsets.clear();
         m_numConsts = 0;
         m_maxDistance = maxPoolSize;
+        ASSERT(m_maxDistance >= 0);
+
     }
 
     void flushIfNoSpaceFor(int nextInsnSize)
     {
-        if (m_numConsts == 0)
+        if (m_numConsts == 0) {
+            m_maxDistance = maxPoolSize;
             return;
+        }
         int lastConstDelta = m_lastConstDelta > nextInsnSize ? m_lastConstDelta - nextInsnSize : 0;
         if ((m_maxDistance < nextInsnSize + lastConstDelta + barrierSize + (int)sizeof(uint32_t)))
             flushConstantPool();
@@ -317,8 +323,10 @@ private:
 
     void flushIfNoSpaceFor(int nextInsnSize, int nextConstSize)
     {
-        if (m_numConsts == 0)
+        if (m_numConsts == 0) {
+            m_maxDistance = maxPoolSize;
             return;
+        }
         if ((m_maxDistance < nextInsnSize + m_lastConstDelta + nextConstSize + barrierSize + (int)sizeof(uint32_t)) ||
             (m_numConsts * sizeof(uint32_t) + nextConstSize >= maxPoolSize))
             flushConstantPool();
