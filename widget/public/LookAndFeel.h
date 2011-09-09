@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsILookAndFeel
-#define __nsILookAndFeel
+#ifndef __LookAndFeel
+#define __LookAndFeel
 
 #ifndef MOZILLA_INTERNAL_API
 #error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
@@ -905,4 +905,4 @@ public:
 #define NS_ALERT_LEFT       2
 #define NS_ALERT_TOP        4
 
-#endif /* __nsILookAndFeel */
+#endif /* __LookAndFeel */

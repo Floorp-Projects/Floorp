@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsMargin.h"
-#include "nsILookAndFeel.h"
 #include "nsWidgetAtoms.h"
 #include "nsEventStates.h"
 #include "nsTArray.h"

@@ -442,7 +442,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             appBarData.cbSize = sizeof(appBarData);
             if (gSHAppBarMessage(ABM_GETTASKBARPOS, &appBarData))
             {
-              // Set alert origin as a bit field - see nsILookAndFeel.h
+              // Set alert origin as a bit field - see LookAndFeel.h
               // 0 represents bottom right, sliding vertically.
               switch(appBarData.uEdge)
               {

@@ -38,7 +38,7 @@
 #ifndef __nsXPLookAndFeel
 #define __nsXPLookAndFeel
 
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsCOMPtr.h"
 
 #ifdef NS_DEBUG
