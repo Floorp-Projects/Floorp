@@ -3221,6 +3221,14 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
             return access;
         }
 
+        /*
+         * The script's bindings do not contain a name for the function itself,
+         * don't resolve name accesses on lambdas in DeclEnv objects on the
+         * scope chain.
+         */
+        if (atom == CallObjectLambdaName(script->function()))
+            return access;
+
         if (!script->nesting()->parent)
             return access;
         script = script->nesting()->parent;
