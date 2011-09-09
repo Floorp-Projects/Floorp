@@ -45,6 +45,7 @@
 #include "nsIDocument.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIJSContextStack.h"
+#include "nsIMemoryReporter.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -57,6 +58,7 @@
 
 #include "jscntxt.h"
 #include "jsdbgapi.h"
+#include "jsprf.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -139,6 +141,87 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
     static_cast<typename ISupportsBaseInfo<T>::ISupportsBase*>(raw);
   dest->swap(rawSupports);
 }
+
+class WorkerMemoryReporter : public nsIMemoryMultiReporter
+{
+  WorkerPrivate* mWorkerPrivate;
+  nsCString mAddressString;
+  nsCString mPathPrefix;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
+  {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    nsCString escapedDomain(aWorkerPrivate->Domain());
+    escapedDomain.ReplaceChar('/', '\\');
+
+    NS_ConvertUTF16toUTF8 escapedURL(aWorkerPrivate->ScriptURL());
+    escapedURL.ReplaceChar('/', '\\');
+
+    {
+      // 64bit address plus '0x' plus null terminator.
+      char address[21];
+      JSUint32 addressSize =
+        JS_snprintf(address, sizeof(address), "0x%llx", aWorkerPrivate);
+      if (addressSize != JSUint32(-1)) {
+        mAddressString.Assign(address, addressSize);
+      }
+      else {
+        NS_WARNING("JS_snprintf failed!");
+        mAddressString.AssignLiteral("<unknown address>");
+      }
+    }
+
+    mPathPrefix = NS_LITERAL_CSTRING("explicit/dom/workers(") +
+                  escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
+                  escapedURL + NS_LITERAL_CSTRING(", ") + mAddressString +
+                  NS_LITERAL_CSTRING(")/");
+  }
+
+  NS_IMETHOD
+  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
+                 nsISupports* aClosure)
+  {
+    AssertIsOnMainThread();
+
+    IterateData data;
+
+    if (mWorkerPrivate) {
+      bool disabled;
+      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&data, &disabled)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Don't ever try to talk to the worker again.
+      if (disabled) {
+#ifdef DEBUG
+        {
+          nsCAutoString message("Unable to report memory for ");
+          if (mWorkerPrivate->IsChromeWorker()) {
+            message.AppendLiteral("Chrome");
+          }
+          message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
+                     NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
+                                        "the process of being destroyed");
+          NS_WARNING(message.get());
+        }
+#endif
+        mWorkerPrivate = nsnull;
+      }
+    }
+
+    // Always report, even if we're disabled, so that we at least get an entry
+    // in about::memory.
+    ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
+    return NS_OK;
+  }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
 
 struct WorkerStructuredCloneCallbacks
 {
@@ -1282,19 +1365,19 @@ class CollectRuntimeStatsRunnable : public WorkerControlRunnable
   typedef mozilla::Mutex Mutex;
   typedef mozilla::CondVar CondVar;
 
-  Mutex* mMutex;
-  CondVar* mCondVar;
-  volatile bool* mDoneFlag;
+  Mutex mMutex;
+  CondVar mCondVar;
+  volatile bool mDone;
   IterateData* mData;
-  volatile bool* mSucceeded;
+  bool* mSucceeded;
 
 public:
-  CollectRuntimeStatsRunnable(WorkerPrivate* aWorkerPrivate, Mutex* aMutex,
-                              CondVar* aCondVar, volatile bool* aDoneFlag,
-                              IterateData* aData, volatile bool* aSucceeded)
+  CollectRuntimeStatsRunnable(WorkerPrivate* aWorkerPrivate, IterateData* aData,
+                              bool* aSucceeded)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
-    mMutex(aMutex), mCondVar(aCondVar), mDoneFlag(aDoneFlag), mData(aData),
-    mSucceeded(aSucceeded)
+    mMutex("CollectRuntimeStatsRunnable::mMutex"),
+    mCondVar(mMutex, "CollectRuntimeStatsRunnable::mCondVar"), mDone(false),
+    mData(aData), mSucceeded(aSucceeded)
   { }
 
   bool
@@ -1312,6 +1395,26 @@ public:
   }
 
   bool
+  DispatchInternal()
+  {
+    AssertIsOnMainThread();
+
+    if (!WorkerControlRunnable::DispatchInternal()) {
+      NS_WARNING("Failed to dispatch runnable!");
+      return false;
+    }
+
+    {
+      MutexAutoLock lock(mMutex);
+      while (!mDone) {
+        mCondVar.Wait();
+      }
+    }
+
+    return true;
+  }
+
+  bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     JSAutoSuspendRequest asr(aCx);
@@ -1319,12 +1422,9 @@ public:
     *mSucceeded = CollectCompartmentStatsForRuntime(JS_GetRuntime(aCx), mData);
 
     {
-      MutexAutoLock lock(*mMutex);
-
-      NS_ASSERTION(!*mDoneFlag, "Should be false!");
-
-      *mDoneFlag = true;
-      mCondVar->Notify();
+      MutexAutoLock lock(mMutex);
+      mDone = true;
+      mCondVar.Notify();
     }
 
     return true;
@@ -2101,7 +2201,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
   mJSContext(nsnull), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
   mStatus(Pending), mSuspended(false), mTimerRunning(false),
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
-  mCloseHandlerFinished(false)
+  mCloseHandlerFinished(false), mMemoryReporterRunning(false),
+  mMemoryReporterDisabled(false)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate);
 }
@@ -2308,6 +2409,13 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     mStatus = Running;
   }
 
+  mMemoryReporter = new WorkerMemoryReporter(this);
+
+  if (NS_FAILED(NS_RegisterMemoryMultiReporter(mMemoryReporter))) {
+    NS_WARNING("Failed to register memory reporter!");
+    mMemoryReporter = nsnull;
+  }
+
   for (;;) {
     Status currentStatus;
     nsIRunnable* event;
@@ -2358,6 +2466,17 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
       // If we're supposed to die then we should exit the loop.
       if (currentStatus == Killing) {
+        // Call this before unregistering the reporter as we may be racing with
+        // the main thread.
+        DisableMemoryReporter();
+
+        if (mMemoryReporter) {
+          if (NS_FAILED(NS_UnregisterMemoryMultiReporter(mMemoryReporter))) {
+            NS_WARNING("Failed to unregister memory reporter!");
+          }
+          mMemoryReporter = nsnull;
+        }
+
         StopAcceptingEvents();
         return;
       }
@@ -2376,21 +2495,7 @@ WorkerPrivate::OperationCallback(JSContext* aCx)
 
   for (;;) {
     // Run all control events now.
-    for (;;) {
-      nsIRunnable* event;
-      {
-        MutexAutoLock lock(mMutex);
-        if (!mControlQueue.Pop(event)) {
-          break;
-        }
-      }
-
-      if (NS_FAILED(event->Run())) {
-        mayContinue = false;
-      }
-
-      NS_RELEASE(event);
-    }
+    mayContinue = ProcessAllControlRunnables();
 
     if (!mayContinue || !mSuspended) {
       break;
@@ -2457,33 +2562,84 @@ WorkerPrivate::ScheduleDeletion(bool aWasPending)
 }
 
 bool
-WorkerPrivate::BlockAndCollectRuntimeStats(IterateData* aData)
+WorkerPrivate::BlockAndCollectRuntimeStats(IterateData* aData, bool* aDisabled)
 {
   AssertIsOnMainThread();
-  mMutex.AssertNotCurrentThreadOwns();
   NS_ASSERTION(aData, "Null data!");
 
-  mozilla::Mutex mutex("BlockAndCollectRuntimeStats mutex");
-  mozilla::CondVar condvar(mutex, "BlockAndCollectRuntimeStats condvar");
-  volatile bool doneFlag = false;
-  volatile bool succeeded = false;
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (mMemoryReporterDisabled) {
+      *aDisabled = true;
+      return true;
+    }
+
+    *aDisabled = false;
+    mMemoryReporterRunning = true;
+  }
+
+  bool succeeded;
 
   nsRefPtr<CollectRuntimeStatsRunnable> runnable =
-    new CollectRuntimeStatsRunnable(this, &mutex, &condvar, &doneFlag, aData,
-                                    &succeeded);
+    new CollectRuntimeStatsRunnable(this, aData, &succeeded);
   if (!runnable->Dispatch(nsnull)) {
     NS_WARNING("Failed to dispatch runnable!");
-    return false;
+    succeeded = false;
   }
 
   {
-    MutexAutoLock lock(mutex);
-    while (!doneFlag) {
-      condvar.Wait();
-    }
+    MutexAutoLock lock(mMutex);
+    mMemoryReporterRunning = false;
   }
 
   return succeeded;
+}
+
+bool
+WorkerPrivate::DisableMemoryReporter()
+{
+  AssertIsOnWorkerThread();
+
+  bool result = true;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    mMemoryReporterDisabled = true;
+
+    while (mMemoryReporterRunning) {
+      MutexAutoUnlock unlock(mMutex);
+      result = ProcessAllControlRunnables() && result;
+    }
+  }
+
+  return result;
+}
+
+bool
+WorkerPrivate::ProcessAllControlRunnables()
+{
+  AssertIsOnWorkerThread();
+
+  bool result = true;
+
+  for (;;) {
+    nsIRunnable* event;
+    {
+      MutexAutoLock lock(mMutex);
+      if (!mControlQueue.Pop(event)) {
+        break;
+      }
+    }
+
+    if (NS_FAILED(event->Run())) {
+      result = false;
+    }
+
+    NS_RELEASE(event);
+  }
+  return result;
 }
 
 bool
