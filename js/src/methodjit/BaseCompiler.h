@@ -184,8 +184,8 @@ class NativeStubLinker : public LinkerHelper
     typedef JSC::MacroAssembler::Jump FinalJump;
 #endif
 
-    NativeStubLinker(Assembler &masm, JITScript *jit, jsbytecode *pc, FinalJump done)
-        : LinkerHelper(masm, JSC::METHOD_CODE), jit(jit), pc(pc), done(done)
+    NativeStubLinker(Assembler &masm, JITScript *jit, jsbytecode *pc, CallSite *inlined, FinalJump done)
+        : LinkerHelper(masm, JSC::METHOD_CODE), jit(jit), pc(pc), inlined(inlined), done(done)
     {}
 
     bool init(JSContext *cx);
@@ -201,6 +201,7 @@ class NativeStubLinker : public LinkerHelper
   private:
     JITScript *jit;
     jsbytecode *pc;
+    CallSite *inlined;
     FinalJump done;
 };
 

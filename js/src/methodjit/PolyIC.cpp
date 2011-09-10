@@ -812,8 +812,6 @@ struct GetPropertyHelper {
                     return ic.disable(cx, "slotful getter hook through prototype");
                 if (!ic.canCallHook)
                     return ic.disable(cx, "can't call getter hook");
-                if (f.regs.inlined())
-                    return ic.disable(cx, "hook called from inline frame");
             }
         } else if (!shape->hasSlot()) {
             return ic.disable(cx, "no slot");
@@ -1202,7 +1200,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         int32 initialFrameDepth = f.regs.sp - f.fp()->slots();
-        masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
+        masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.pc(), f.regs.inlined(), initialFrameDepth);
 
         /* Grab cx. */
 #ifdef JS_CPU_X86
@@ -1228,7 +1226,7 @@ class GetPropCompiler : public PICStubCompiler
         NativeStubLinker::FinalJump done;
         if (!NativeStubEpilogue(f, masm, &done, 0, vpOffset, pic.shapeReg, pic.objReg))
             return;
-        NativeStubLinker linker(masm, f.jit(), f.regs.pc, done);
+        NativeStubLinker linker(masm, f.jit(), f.pc(), f.regs.inlined(), done);
         if (!linker.init(f.cx))
             THROW();
 
@@ -3231,6 +3229,25 @@ ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
 
 template void JS_FASTCALL ic::SetElement<true>(VMFrame &f, SetElementIC *ic);
 template void JS_FASTCALL ic::SetElement<false>(VMFrame &f, SetElementIC *ic);
+
+void
+JITScript::purgeGetterPICs()
+{
+    Repatcher repatcher(this);
+    PICInfo *pics_ = pics();
+    for (uint32 i = 0; i < nPICs; i++) {
+        PICInfo &pic = pics_[i];
+        switch (pic.kind) {
+          case PICInfo::CALL: /* fall-through */
+          case PICInfo::GET:
+            GetPropCompiler::reset(repatcher, pic);
+            pic.reset();
+            break;
+          default:
+            break;
+        }
+    }
+}
 
 #endif /* JS_POLYIC */
 

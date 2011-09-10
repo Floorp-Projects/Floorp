@@ -3204,7 +3204,7 @@ mjit::Compiler::emitStubCall(void *ptr, DataLabelPtr *pinline)
     masm.bumpStubCounter(script, PC, Registers::tempCallReg());
 
     Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
-                                  ptr, outerPC(), pinline, frame.totalDepth());
+                                  ptr, outerPC(), NULL, pinline, frame.totalDepth());
     JaegerSpew(JSpew_Insns, " ---- END STUB CALL ---- \n");
     return cl;
 }

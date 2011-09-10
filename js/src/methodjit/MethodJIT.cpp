@@ -1081,8 +1081,6 @@ static inline void Destroy(T &t)
 
 mjit::JITScript::~JITScript()
 {
-    code.release();
-
     if (pcLengths)
         Foreground::free_(pcLengths);
 
@@ -1116,25 +1114,18 @@ mjit::JITScript::~JITScript()
     }
 
     ic::CallICInfo *callICs_ = callICs();
-    for (uint32 i = 0; i < nCallICs; i++) {
-        callICs_[i].releasePools();
-        if (callICs_[i].fastGuardedObject)
-            callICs_[i].purgeGuardedObject();
-    }
+    for (uint32 i = 0; i < nCallICs; i++)
+        callICs_[i].purge();
 
     // Fixup any ICs still referring to this JIT.
     while (!JS_CLIST_IS_EMPTY(&callers)) {
         JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
         ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
-
-        uint8 *start = (uint8 *)ic->funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
-
-        repatch.repatch(ic->funGuard, NULL);
-        repatch.relink(ic->funJump, ic->slowPathStart);
-        ic->purgeGuardedObject();
+        ic->purge();
     }
 #endif
+
+    code.release();
 }
 
 size_t

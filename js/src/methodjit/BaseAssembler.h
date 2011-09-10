@@ -606,7 +606,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     Call callWithVMFrame(bool inlining, type stub, jsbytecode *pc,                       \
                          DataLabelPtr *pinlined, uint32 fd) {                            \
         return fallibleVMCall(inlining, JS_FUNC_TO_DATA_PTR(void *, stub),               \
-                              pc, pinlined, fd);                                         \
+                              pc, NULL, pinlined, fd);                                   \
     }
 
     STUB_CALL_TYPE(JSObjStub);
@@ -638,7 +638,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         move(MacroAssembler::stackPointerRegister, Registers::ArgReg0);
     }
 
-    void setupFallibleVMFrame(bool inlining, jsbytecode *pc,
+    void setupFallibleVMFrame(bool inlining, jsbytecode *pc, CallSite *inlined,
                               DataLabelPtr *pinlined, int32 frameDepth) {
         setupInfallibleVMFrame(frameDepth);
 
@@ -650,26 +650,28 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
 
         if (inlining) {
             /* inlined -> regs->inlined :( */
-            DataLabelPtr ptr = storePtrWithPatch(ImmPtr(NULL),
-                                                 FrameAddress(VMFrame::offsetOfInlined));
-            if (pinlined)
-                *pinlined = ptr;
+            if (inlined) {
+                storePtr(ImmPtr(inlined), FrameAddress(VMFrame::offsetOfInlined));
+            } else {
+                DataLabelPtr ptr = storePtrWithPatch(ImmPtr(NULL),
+                                                     FrameAddress(VMFrame::offsetOfInlined));
+                if (pinlined)
+                    *pinlined = ptr;
+            }
         }
 
         restoreStackBase();
     }
 
-    void setupFallibleABICall(bool inlining, jsbytecode *pc, int32 frameDepth) {
+    void setupFallibleABICall(bool inlining, jsbytecode *pc, CallSite *inlined, int32 frameDepth) {
         setupFrameDepth(frameDepth);
 
-        /* Store fp and pc */
+        /* Store fp/pc/inlined */
         storePtr(JSFrameReg, FrameAddress(VMFrame::offsetOfFp));
         storePtr(ImmPtr(pc), FrameAddress(offsetof(VMFrame, regs.pc)));
 
-        if (inlining) {
-            /* ABI calls cannot be made from inlined frames. */
-            storePtr(ImmPtr(NULL), FrameAddress(VMFrame::offsetOfInlined));
-        }
+        if (inlining)
+            storePtr(ImmPtr(inlined), FrameAddress(VMFrame::offsetOfInlined));
     }
 
     void restoreStackBase() {
@@ -697,8 +699,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     // parameter) that needs the entire VMFrame to be coherent, meaning that
     // |pc|, |inlined| and |fp| are guaranteed to be up-to-date.
     Call fallibleVMCall(bool inlining, void *ptr, jsbytecode *pc,
-                        DataLabelPtr *pinlined, int32 frameDepth) {
-        setupFallibleVMFrame(inlining, pc, pinlined, frameDepth);
+                        CallSite *inlined, DataLabelPtr *pinlined, int32 frameDepth) {
+        setupFallibleVMFrame(inlining, pc, inlined, pinlined, frameDepth);
         Call call = wrapVMCall(ptr);
 
         // Restore the frame pointer from the VM.
