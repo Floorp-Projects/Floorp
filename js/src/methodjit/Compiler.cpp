@@ -4190,6 +4190,7 @@ mjit::Compiler::jsop_getprop_slow(JSAtom *atom, bool usePropCache)
     prepareStubCall(Uses(1));
     if (usePropCache) {
         INLINE_STUBCALL(stubs::GetProp, rejoin);
+        testPushedType(rejoin, -1, /* ool = */ false);
     } else {
         masm.move(ImmPtr(atom), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::GetPropNoCache, rejoin);
@@ -4205,6 +4206,7 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
     prepareStubCall(Uses(1));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     INLINE_STUBCALL(stubs::CallProp, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -1, /* ool = */ false);
     frame.pop();
     pushSyncedEntry(0);
     pushSyncedEntry(1);
@@ -4300,6 +4302,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
                 stubcc.linkExit(notObject, Uses(1));
                 stubcc.leave();
                 OOL_STUBCALL(stubs::GetProp, rejoin);
+                if (rejoin == REJOIN_GETTER)
+                    testPushedType(rejoin, -1);
             }
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
@@ -4320,6 +4324,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
                 stubcc.linkExit(notObject, Uses(1));
                 stubcc.leave();
                 OOL_STUBCALL(stubs::GetProp, rejoin);
+                if (rejoin == REJOIN_GETTER)
+                    testPushedType(rejoin, -1);
             }
             RegisterID reg = frame.copyDataIntoReg(top);
             frame.pop();
@@ -4382,6 +4388,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
                 stubcc.linkExit(notObject, Uses(1));
                 stubcc.leave();
                 OOL_STUBCALL(stubs::GetProp, rejoin);
+                if (rejoin == REJOIN_GETTER)
+                    testPushedType(rejoin, -1);
             }
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
@@ -4445,7 +4453,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      * type barrier if inference is enabled (known property types do not
      * reflect properties with getter hooks).
      */
-    pic.canCallHook = usePropCache && JSOp(*PC) == JSOP_GETPROP && analysis->getCode(PC).accessGetter;
+    pic.canCallHook = pic.forcedTypeBarrier =
+        usePropCache && JSOp(*PC) == JSOP_GETPROP && analysis->getCode(PC).accessGetter;
     if (pic.canCallHook)
         frame.syncAndKillEverything();
 
@@ -4469,6 +4478,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     passICAddress(&pic);
     pic.slowPathCall = OOL_STUBCALL(usePropCache ? ic::GetProp : ic::GetPropNoCache, rejoin);
     CHECK_OOL_SPACE();
+    if (rejoin == REJOIN_GETTER)
+        testPushedType(rejoin, -1);
 
     /* Load the base slot address. */
     Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
@@ -4552,7 +4563,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     pic.shapeReg = shapeReg;
     pic.atom = atom;
 
-    pic.canCallHook = analysis->getCode(PC).accessGetter;
+    pic.canCallHook = pic.forcedTypeBarrier = analysis->getCode(PC).accessGetter;
     if (pic.canCallHook)
         frame.syncAndKillEverything();
 
@@ -4589,6 +4600,8 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     passICAddress(&pic);
     pic.slowPathCall = OOL_STUBCALL(ic::CallProp, REJOIN_FALLTHROUGH);
     CHECK_OOL_SPACE();
+
+    testPushedType(REJOIN_FALLTHROUGH, -1);
 
     /* Load the base slot address. */
     Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
@@ -4716,7 +4729,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
         objReg = frame.copyDataIntoReg(top);
     }
 
-    pic.canCallHook = analysis->getCode(PC).accessGetter;
+    pic.canCallHook = pic.forcedTypeBarrier = analysis->getCode(PC).accessGetter;
     if (pic.canCallHook)
         frame.syncAndKillEverything();
 
@@ -4737,6 +4750,8 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     passICAddress(&pic);
     pic.slowPathCall = OOL_STUBCALL(ic::CallProp, REJOIN_FALLTHROUGH);
     CHECK_OOL_SPACE();
+
+    testPushedType(REJOIN_FALLTHROUGH, -1);
 
     /* Load the base slot address. */
     Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
@@ -5029,6 +5044,7 @@ mjit::Compiler::jsop_callprop_dispatch(JSAtom *atom)
     stubcc.leave();
     stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
     OOL_STUBCALL(stubs::CallProp, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -1);
 
     frame.dup();
     // THIS THIS
@@ -5059,6 +5075,7 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
             stubcc.leave();
             stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
             OOL_STUBCALL(stubs::CallProp, REJOIN_FALLTHROUGH);
+            testPushedType(REJOIN_FALLTHROUGH, -1);
         }
 
         // THIS
@@ -5329,6 +5346,7 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
         passICAddress(&pic);
         pic.slowPathCall = OOL_STUBCALL(isCall ? ic::CallName : ic::Name, rejoin);
         CHECK_OOL_SPACE();
+        testPushedType(rejoin, 0);
     }
     pic.fastPathRejoin = masm.label();
 
@@ -5416,6 +5434,7 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
         passICAddress(&pic);
         pic.slowPathCall = OOL_STUBCALL(ic::XName, REJOIN_GETTER);
         CHECK_OOL_SPACE();
+        testPushedType(REJOIN_GETTER, -1);
     }
 
     pic.fastPathRejoin = masm.label();
@@ -5512,7 +5531,8 @@ void
 mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
 {
     prepareStubCall(Uses(0));
-        INLINE_STUBCALL(isCall ? stubs::CallName : stubs::Name, REJOIN_FALLTHROUGH);
+    INLINE_STUBCALL(isCall ? stubs::CallName : stubs::Name, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, 0, /* ool = */ false);
     frame.pushSynced(type);
     if (isCall)
         frame.pushSynced(JSVAL_TYPE_UNKNOWN);
@@ -5888,6 +5908,7 @@ mjit::Compiler::jsop_getgname_slow(uint32 index)
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::GetGlobalName, REJOIN_GETTER);
+    testPushedType(REJOIN_GETTER, 0, /* ool = */ false);
     frame.pushSynced(JSVAL_TYPE_UNKNOWN);
 }
 
@@ -6001,6 +6022,10 @@ mjit::Compiler::jsop_getgname(uint32 index)
     passMICAddress(ic);
     ic.slowPathCall = OOL_STUBCALL(ic::GetGlobalName, REJOIN_GETTER);
 
+    CHECK_IC_SPACE();
+
+    testPushedType(REJOIN_GETTER, 0);
+
     /* Garbage value. */
     uint32 slot = 1 << 24;
 
@@ -6013,8 +6038,6 @@ mjit::Compiler::jsop_getgname(uint32 index)
     RegisterID dreg = objReg;
 
     ic.load = masm.loadValueWithAddressOffsetPatch(address, treg, dreg);
-
-    CHECK_IC_SPACE();
 
     frame.pushRegs(treg, dreg, type);
 
@@ -6274,6 +6297,7 @@ mjit::Compiler::jsop_getelem_slow()
 {
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -2, /* ool = */ false);
     frame.popn(2);
     pushSyncedEntry(0);
 }
@@ -7018,6 +7042,7 @@ mjit::Compiler::jsop_callelem_slow()
 {
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stubs::CallElem, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -2, /* ool = */ false);
     frame.popn(2);
     pushSyncedEntry(0);
     pushSyncedEntry(1);
@@ -7519,4 +7544,39 @@ mjit::Compiler::finishBarrier(const BarrierState &barrier, RejoinState rejoin, u
     stubcc.masm.move(ImmPtr((void *) which), Registers::ArgReg1);
     OOL_STUBCALL(stubs::TypeBarrierHelper, rejoin);
     stubcc.rejoin(Changes(0));
+}
+
+void
+mjit::Compiler::testPushedType(RejoinState rejoin, int which, bool ool)
+{
+    if (!cx->typeInferenceEnabled() || !(js_CodeSpec[*PC].format & JOF_TYPESET))
+        return;
+
+    types::TypeSet *types = analysis->bytecodeTypes(PC);
+    if (types->unknown())
+        return;
+
+    Assembler &masm = ool ? stubcc.masm : this->masm;
+
+    JS_ASSERT(which <= 0);
+    Address address = (which == 0) ? frame.addressOfTop() : frame.addressOf(frame.peek(which));
+
+    Vector<Jump> mismatches(cx);
+    if (!masm.generateTypeCheck(cx, address, types, &mismatches)) {
+        oomInVector = true;
+        return;
+    }
+
+    Jump j = masm.jump();
+
+    for (unsigned i = 0; i < mismatches.length(); i++)
+        mismatches[i].linkTo(masm.label(), &masm);
+
+    masm.move(Imm32(which), Registers::ArgReg1);
+    if (ool)
+        OOL_STUBCALL(stubs::StubTypeHelper, rejoin);
+    else
+        INLINE_STUBCALL(stubs::StubTypeHelper, rejoin);
+
+    j.linkTo(masm.label(), &masm);
 }

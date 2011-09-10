@@ -1360,10 +1360,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         /* Release this reference on the orphaned native stub. */
         RemoveOrphanedNative(cx, fp);
 
-        /*
-         * Note: there is no need to monitor the result of the native, the stub
-         * will always do a type check before finishing.
-         */
         f.regs.pc = nextpc;
         break;
       }
@@ -1581,6 +1577,16 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     if (nextDepth == uint32(-1))
         nextDepth = analysis->getCode(f.regs.pc).stackDepth;
     f.regs.sp = fp->base() + nextDepth;
+
+    /*
+     * Monitor the result of the previous op when finishing a JOF_TYPESET op.
+     * The result may not have been marked if we bailed out while inside a stub
+     * for the op.
+     */
+    if (js_CodeSpec[op].format & JOF_TYPESET) {
+        int which = (js_CodeSpec[op].format & JOF_CALLOP) ? -2 : -1;  /* Yuck. */
+        types::TypeScript::Monitor(cx, script, pc, f.regs.sp[which]);
+    }
 
     /* Mark the entry frame as unfinished, and update the regs to resume at. */
     JaegerStatus status = skipTrap ? Jaeger_UnfinishedAtTrap : Jaeger_Unfinished;
