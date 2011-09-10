@@ -3921,12 +3921,12 @@ BEGIN_CASE(JSOP_GETELEM)
         }
     }
 
+    if (JSID_IS_STRING(id) && script->hasAnalysis())
+        script->analysis()->getCode(regs.pc).getStringElement = true;
+
     if (!obj->getProperty(cx, id, &rval))
         goto error;
     copyFrom = &rval;
-
-    if (!JSID_IS_INT(id))
-        TypeScript::MonitorUnknown(cx, script, regs.pc);
 
   end_getelem:
     regs.sp--;
@@ -3965,8 +3965,6 @@ BEGIN_CASE(JSOP_CALLELEM)
         regs.sp[-1] = thisv;
     }
 
-    if (!JSID_IS_INT(id))
-        TypeScript::MonitorUnknown(cx, script, regs.pc);
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
 }
 END_CASE(JSOP_CALLELEM)
