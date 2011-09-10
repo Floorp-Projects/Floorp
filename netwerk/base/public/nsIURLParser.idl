@@ -42,7 +42,7 @@
  * nsIURLParser specifies the interface to an URL parser that attempts to
  * follow the definitions of RFC 2396.
  */
-[scriptable, uuid(7281076d-cf37-464a-815e-698235802604)]
+[scriptable, uuid(78c5d19f-f5d2-4732-8d3d-d5a7d7133bc0)]
 interface nsIURLParser : nsISupports
 {
     /**
