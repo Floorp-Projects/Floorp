@@ -241,7 +241,9 @@ MapsReporter::ParseMapping(
   unsigned long long addrStart, addrEnd;
   char perms[5];
   unsigned long long offset;
-  unsigned int devMajor, devMinor, inode;
+  char devMajor[3];
+  char devMinor[3];
+  unsigned int inode;
   char path[1025];
 
   // A path might not be present on this line; set it to the empty string.
@@ -252,17 +254,18 @@ MapsReporter::ParseMapping(
   // with or without a path, but we don't want to look to a new line for the
   // path.  Thus we have %u%1024[^\n] at the end of the pattern.  This will
   // capture into the path some leading whitespace, which we'll later trim off.
-  int numRead = fscanf(aFile, "%llx-%llx %4s %llx %u:%u %u%1024[^\n]",
-                       &addrStart, &addrEnd, perms, &offset, &devMajor,
-                       &devMinor, &inode, path);
+  int numRead = fscanf(aFile, "%llx-%llx %4s %llx %2s:%2s %u%1024[^\n]",
+                       &addrStart, &addrEnd, perms, &offset, devMajor,
+                       devMinor, &inode, path);
 
   // Eat up any whitespace at the end of this line, including the newline.
   fscanf(aFile, " ");
 
   // We might or might not have a path, but the rest of the arguments should be
   // there.
-  if (numRead != argCount && numRead != argCount - 1)
+  if (numRead != argCount && numRead != argCount - 1) {
     return NS_ERROR_FAILURE;
+  }
 
   nsCAutoString name, description;
   GetReporterNameAndDescription(path, perms, name, description);
