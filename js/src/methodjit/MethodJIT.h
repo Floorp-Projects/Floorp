@@ -561,8 +561,9 @@ struct PCLengthEntry {
  * into the orphanedNativePools for the compartment.
  */
 struct NativeCallStub {
-    /* PC for the stub. Native call stubs cannot be added for inline frames. */
+    /* pc/inlined location of the stub. */
     jsbytecode *pc;
+    CallSite *inlined;
 
     /* Pool for the stub, NULL if it has been removed from the script. */
     JSC::ExecutablePool *pool;
@@ -664,6 +665,7 @@ struct JITScript {
     }
 
     void nukeScriptDependentICs();
+    void purgeGetterPICs();
 
     /* |usf| can be NULL here, in which case the fallback size computation will be used. */
     size_t scriptDataSize(JSUsableSizeFun usf);

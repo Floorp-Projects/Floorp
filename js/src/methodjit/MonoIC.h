@@ -284,13 +284,7 @@ struct CallICInfo {
         }
     }
 
-    inline void purgeGuardedObject() {
-        JS_ASSERT(fastGuardedObject);
-        releasePool(CallICInfo::Pool_ClosureStub);
-        hasJsFunCheck = false;
-        fastGuardedObject = NULL;
-        JS_REMOVE_LINK(&links);
-    }
+    void purge();
 };
 
 void * JS_FASTCALL New(VMFrame &f, ic::CallICInfo *ic);

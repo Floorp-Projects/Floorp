@@ -122,7 +122,7 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
 
     /* Perform the frame epilogue. */
-    masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::AnyFrameEpilogue), NULL, NULL, 0);
+    masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::AnyFrameEpilogue), NULL, NULL, NULL, 0);
 
     /* Store any known return value */
     masm.loadValueAsComponents(UndefinedValue(), JSReturnReg_Type, JSReturnReg_Data);
