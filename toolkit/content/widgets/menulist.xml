@@ -30,10 +30,13 @@
 
       <handler event="popupshowing">
         <![CDATA[
-          if (event.target.parentNode == this && this.selectedItem)
-            // Not ready for auto-setting the active child in hierarchies yet.
-            // For now, only do this when the outermost menupopup opens.
-            this.menuBoxObject.activeChild = this.mSelectedInternal;
+          if (event.target.parentNode == this) {
+            this.menuBoxObject.activeChild = null;
+            if (this.selectedItem)
+              // Not ready for auto-setting the active child in hierarchies yet.
+              // For now, only do this when the outermost menupopup opens.
+              this.menuBoxObject.activeChild = this.mSelectedInternal;
+          }
         ]]>
       </handler>
 
@@ -579,6 +582,7 @@
             if (document.commandDispatcher.focusedElement != this.inputField)
               this.inputField.focus();
 
+            this.menuBoxObject.activeChild = null;
             if (this.selectedItem)
               // Not ready for auto-setting the active child in hierarchies yet.
               // For now, only do this when the outermost menupopup opens.
