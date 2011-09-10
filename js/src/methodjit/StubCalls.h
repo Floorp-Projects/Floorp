@@ -210,7 +210,8 @@ void JS_FASTCALL TypeBarrierHelper(VMFrame &f, uint32 which);
 void JS_FASTCALL TypeBarrierReturn(VMFrame &f, Value *vp);
 void JS_FASTCALL NegZeroHelper(VMFrame &f);
 
-void JS_FASTCALL CallPropSwap(VMFrame &f);
+void JS_FASTCALL StubTypeHelper(VMFrame &f, int32 which);
+
 void JS_FASTCALL CheckArgumentTypes(VMFrame &f);
 
 #ifdef DEBUG

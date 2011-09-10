@@ -1938,11 +1938,9 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                 THROW();
             JSString *str = f.regs.sp[-1].toString();
             f.regs.sp[-1].setInt32(str->length());
-            types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-1]);
             return;
         } else if (f.regs.sp[-1].isMagic(JS_LAZY_ARGUMENTS)) {
             f.regs.sp[-1].setInt32(f.regs.fp()->numActualArgs());
-            types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-1]);
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
@@ -1967,14 +1965,11 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                     JSString *str = obj->getPrimitiveThis().toString();
                     f.regs.sp[-1].setInt32(str->length());
                 }
-                types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-1]);
                 return;
             }
         }
         atom = f.cx->runtime->atomState.lengthAtom;
     }
-
-    bool usePropCache = pic->usePropCache;
 
     /*
      * ValueToObject can trigger recompilations if it lazily initializes any
@@ -2001,16 +1996,6 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     Value v;
     if (!obj->getProperty(f.cx, ATOM_TO_JSID(atom), &v))
         THROW();
-
-    /*
-     * Ignore undefined reads for the 'prototype' property in constructors,
-     * which will be at the start of the script and are never holes due to fun_resolve.
-     * Any undefined value was explicitly stored here, and is known by inference.
-     * :FIXME: looking under the usePropCache abstraction, which is only unset for
-     * reads of the prototype.
-     */
-    if (usePropCache)
-        types::TypeScript::Monitor(f.cx, f.script(), f.pc(), v);
 
     f.regs.sp[-1] = v;
 }
@@ -2181,8 +2166,6 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), regs.sp[-2]);
-
     if (monitor.recompiled())
         return;
 
@@ -2232,8 +2215,6 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
     if (!cc.retrieve(&rval, NULL, PICInfo::XNAME))
         THROW();
     f.regs.sp[-1] = rval;
-
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), rval);
 }
 
 void JS_FASTCALL
@@ -2251,8 +2232,6 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
     if (!cc.retrieve(&rval, NULL, PICInfo::NAME))
         THROW();
     f.regs.sp[0] = rval;
-
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), rval);
 }
 
 static void JS_FASTCALL
@@ -2278,8 +2257,6 @@ ic::CallName(VMFrame &f, ic::PICInfo *pic)
 
     f.regs.sp[0] = rval;
     f.regs.sp[1] = thisval;
-
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), rval);
 }
 
 static void JS_FASTCALL
@@ -2453,6 +2430,12 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     LookupStatus status = getprop.lookupAndTest();
     if (status != Lookup_Cacheable)
         return status;
+
+    // With TI enabled, string property stubs can only be added to an opcode if
+    // the value read will go through a type barrier afterwards. TI only
+    // accounts for integer-valued properties accessed by GETELEM/CALLELEM.
+    if (cx->typeInferenceEnabled() && !forcedTypeBarrier)
+        return disable(cx, "string element access may not have type barrier");
 
     Assembler masm;
 
@@ -2917,9 +2900,6 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             f.regs.sp[-1].setObject(*thisObj);
-            if (!JSID_IS_INT(id))
-                types::TypeScript::MonitorUnknown(f.cx, f.script(), f.pc());
-            types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-2]);
             return;
         }
     }
@@ -2939,9 +2919,6 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     {
         f.regs.sp[-1] = thisv;
     }
-    if (!JSID_IS_INT(id))
-        types::TypeScript::MonitorUnknown(f.cx, f.script(), f.pc());
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-2]);
 }
 
 void JS_FASTCALL
@@ -2983,18 +2960,12 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
-            if (!JSID_IS_INT(id))
-                types::TypeScript::MonitorUnknown(f.cx, f.script(), f.pc());
-            types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-2]);
             return;
         }
     }
 
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
-    if (!JSID_IS_INT(id))
-        types::TypeScript::MonitorUnknown(f.cx, f.script(), f.pc());
-    types::TypeScript::Monitor(f.cx, f.script(), f.pc(), f.regs.sp[-2]);
 }
 
 #define APPLY_STRICTNESS(f, s)                          \
