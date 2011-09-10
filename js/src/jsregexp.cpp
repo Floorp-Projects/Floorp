@@ -198,7 +198,7 @@ js_ObjectIsRegExp(JSObject *obj)
 void
 RegExp::reportPCREError(JSContext *cx, int error)
 {
-#define REPORT(msg_) \ 
+#define REPORT(msg_) \
     JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
     return
     switch (error) {
