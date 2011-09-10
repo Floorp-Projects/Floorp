@@ -555,6 +555,25 @@ SlowNewFromIC(VMFrame &f, ic::CallICInfo *ic)
     return NULL;
 }
 
+void
+CallICInfo::purge()
+{
+    uint8 *start = (uint8 *)funGuard.executableAddress();
+    JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
+
+    repatch.repatch(funGuard, NULL);
+    repatch.relink(funJump, slowPathStart);
+
+    releasePools();
+    fastGuardedNative = NULL;
+
+    if (fastGuardedObject) {
+        hasJsFunCheck = false;
+        fastGuardedObject = NULL;
+        JS_REMOVE_LINK(&links);
+    }
+}
+
 bool
 NativeStubLinker::init(JSContext *cx)
 {
@@ -564,6 +583,7 @@ NativeStubLinker::init(JSContext *cx)
 
     NativeCallStub stub;
     stub.pc = pc;
+    stub.inlined = inlined;
     stub.pool = pool;
     stub.jump = locationOf(done);
     if (!jit->nativeCallStubs.append(stub)) {
@@ -635,7 +655,7 @@ mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJum
             mismatches[i].linkTo(masm.label(), &masm);
         masm.addPtr(Imm32(vpOffset), JSFrameReg, Registers::ArgReg1);
         masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::TypeBarrierReturn),
-                            f.regs.pc, NULL, initialFrameDepth);
+                            f.regs.pc, f.regs.inlined(), NULL, initialFrameDepth);
         masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
         masm.jump().linkTo(finished, &masm);
     }
@@ -766,15 +786,15 @@ class CallCompiler : public BaseCompiler
 
         /* Try and compile. On success we get back the nmap pointer. */
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
-        DataLabelPtr inlined;
         if (ic.frameSize.isStatic()) {
             masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
-                                compilePtr, f.regs.pc, &inlined, ic.frameSize.staticLocalSlots());
+                                compilePtr, f.regs.pc, f.regs.inlined(), NULL,
+                                ic.frameSize.staticLocalSlots());
         } else {
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
-                                compilePtr, f.regs.pc, &inlined, -1);
+                                compilePtr, f.regs.pc, f.regs.inlined(), NULL, -1);
         }
 
         Jump notCompiled = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
@@ -811,11 +831,6 @@ class CallCompiler : public BaseCompiler
 
         JaegerSpew(JSpew_PICs, "generated CALL stub %p (%lu bytes)\n", cs.executableAddress(),
                    (unsigned long) masm.size());
-
-        if (f.regs.inlined()) {
-            JSC::LinkBuffer code((uint8 *) cs.executableAddress(), masm.size(), JSC::METHOD_CODE);
-            code.patch(inlined, f.regs.inlined());
-        }
 
         Repatcher repatch(from);
         JSC::CodeLocationJump oolJump = ic.slowPathStart.jumpAtOffset(ic.oolJumpOffset);
@@ -953,10 +968,6 @@ class CallCompiler : public BaseCompiler
         if (ic.fastGuardedNative || ic.hasJsFunCheck)
             return true;
 
-        /* Don't generate native MICs within inlined frames, we can't recompile them yet. */
-        if (f.regs.inlined())
-            return true;
-
         /* Native MIC needs to warm up first. */
         if (!ic.hit) {
             ic.hit = true;
@@ -985,7 +996,7 @@ class CallCompiler : public BaseCompiler
             masm.bumpStubCounter(f.script(), f.pc(), Registers::tempCallReg());
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                 JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
-                                f.regs.pc, NULL, initialFrameDepth);
+                                f.pc(), NULL, NULL, initialFrameDepth);
         }
 
         Registers tempRegs = Registers::tempCallRegMask();
@@ -993,7 +1004,7 @@ class CallCompiler : public BaseCompiler
         masm.bumpStubCounter(f.script(), f.pc(), t0);
 
         int32 storeFrameDepth = ic.frameSize.isStatic() ? initialFrameDepth : -1;
-        masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, storeFrameDepth);
+        masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.pc(), f.regs.inlined(), storeFrameDepth);
 
         /* Grab cx. */
 #ifdef JS_CPU_X86
@@ -1055,7 +1066,7 @@ class CallCompiler : public BaseCompiler
         NativeStubLinker::FinalJump done;
         if (!NativeStubEpilogue(f, masm, &done, initialFrameDepth, vpOffset, MaybeRegisterID(), MaybeRegisterID()))
             return false;
-        NativeStubLinker linker(masm, f.jit(), f.regs.pc, done);
+        NativeStubLinker linker(masm, f.jit(), f.pc(), f.regs.inlined(), done);
         if (!linker.init(f.cx))
             THROWV(true);
 
