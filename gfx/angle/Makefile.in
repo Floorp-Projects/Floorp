@@ -128,6 +128,8 @@ CSRCS   = \
 
 DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
 
+EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB)
+
 ifdef MOZ_ANGLE
 
 # libEGL depends on (links against!) libGLESv2!
