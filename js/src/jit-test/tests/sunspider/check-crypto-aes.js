@@ -176,7 +176,8 @@ function AESEncryptCtr(plaintext, password, nBits) {
   // block counter in 2nd 8 bytes
   var blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
   var counterBlock = new Array(blockSize);  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-  var nonce = (new Date()).getTime();  // milliseconds since 1-Jan-1970
+  var nonce = (new Date("2000-01-01")).getTime();  // milliseconds since 1-Jan-1970;
+                                                   // fixed for repeatability
 
   // encode nonce in two stages to cater for JavaScript 32-bit limit on bitwise ops
   for (var i=0; i<4; i++) counterBlock[i] = (nonce >>> i*8) & 0xff;

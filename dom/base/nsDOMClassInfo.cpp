@@ -519,13 +519,14 @@ static const char kDOMStringBundleURL[] =
  (nsIXPCScriptable::WANT_GETPROPERTY |                                        \
   nsIXPCScriptable::WANT_PRECREATE |                                          \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
-  nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
+  nsIXPCScriptable::USE_STUB_EQUALITY_HOOK |                                  \
   nsIXPCScriptable::WANT_OUTER_OBJECT)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
+   nsIXPCScriptable::USE_STUB_EQUALITY_HOOK |                                 \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
@@ -6385,19 +6386,30 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
   nsresult rv = xpcomObj->GetLocation(getter_AddRefs(location));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Grab the value we're being set to before we stomp on |vp|
   JSString *val = ::JS_ValueToString(cx, *vp);
   NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
+
+  // Make sure |val| stays alive below
+  JS::Anchor<JSString *> anchor(val);
+
+  // We have to wrap location into vp before null-checking location, to
+  // avoid assigning the wrong thing into the slot.
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), location,
+                  &NS_GET_IID(nsIDOMLocation), PR_TRUE, vp,
+                  getter_AddRefs(holder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!location) {
+    // Make this a no-op
+    return NS_OK;
+  }
 
   nsDependentJSString depStr;
   NS_ENSURE_TRUE(depStr.init(cx, val), NS_ERROR_UNEXPECTED);
   
-  rv = location->SetHref(depStr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  return WrapNative(cx, JS_GetGlobalForScopeChain(cx), location,
-                    &NS_GET_IID(nsIDOMLocation), PR_TRUE, vp,
-                    getter_AddRefs(holder));
+  return location->SetHref(depStr);
 }
 
 template<class Interface>
@@ -6903,37 +6915,6 @@ nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
   sgo->OnFinalize(obj);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowSH::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                     JSObject * obj, const jsval &val, PRBool *bp)
-{
-  *bp = PR_FALSE;
-
-  if (JSVAL_IS_PRIMITIVE(val)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedNative> other_wrapper;
-  nsContentUtils::XPConnect()->
-    GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
-                               getter_AddRefs(other_wrapper));
-  if (!other_wrapper) {
-    // Not equal.
-
-    return NS_OK;
-  }
-
-  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-
-  nsCOMPtr<nsPIDOMWindow> other = do_QueryWrappedNative(other_wrapper);
-
-  if (other) {
-    *bp = win->GetOuterWindow() == other->GetOuterWindow();
-  }
 
   return NS_OK;
 }

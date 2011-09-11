@@ -20,7 +20,7 @@ if (typeof findReferences == "function") {
     assertEq(referencesVia(returnBlock(o), 'parent; w', o), true);
 
     function returnWithObj(v) { with(v) return function withObj() { return u; }; }
-    assertEq(referencesVia(returnWithObj(o), 'parent; type_proto', o), true);
+    assertEq(referencesVia(returnWithObj(o), 'parent; type; type_proto', o), true);
 
     reportCompare(true, true);
 } else {

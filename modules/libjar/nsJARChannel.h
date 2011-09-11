@@ -96,6 +96,10 @@ private:
     nsCOMPtr<nsISupports>           mListenerContext;
     nsCString                       mContentType;
     nsCString                       mContentCharset;
+    nsCString                       mContentDispositionHeader;
+    /* mContentDisposition is uninitialized if mContentDispositionHeader is
+     * empty */
+    PRUint32                        mContentDisposition;
     PRInt32                         mContentLength;
     PRUint32                        mLoadFlags;
     nsresult                        mStatus;

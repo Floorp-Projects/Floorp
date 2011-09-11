@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script type="text/javascript">
+    function init() {
+      var editor = document.querySelector("div[contenteditable]");
+      editor.addEventListener("focus", function() {
+        setTimeout(function() {
+          document.documentElement.className = "";
+        }, 0);
+      }, false);
+      editor.focus();
+    }
+  </script>
+  <style type="text/css">
+    html, body, div {
+      margin: 0;
+      padding: 0;
+    }
+    div {
+      border: 1px solid black;
+      margin: 50px;
+      height: 200px;
+      width: 200px;
+    }
+  </style>
+</head>
+<body onload="init()">
+  <div contenteditable style="position: absolute">
+    this editable container should be neither draggable nor resizable.
+  </div>
+</body>
+</html>

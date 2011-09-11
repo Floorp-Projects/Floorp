@@ -3967,7 +3967,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_GENERATOR:
         if (script->hasFunction) {
             if (script->hasGlobal()) {
-                TypeObject *object = TypeScript::StandardType(cx, script, JSProto_Generator);
+                JSObject *proto = script->global()->getOrCreateGeneratorPrototype(cx);
+                if (!proto)
+                    return false;
+                TypeObject *object = proto->getNewType(cx);
                 if (!object)
                     return false;
                 TypeScript::ReturnTypes(script)->addType(cx, Type::ObjectType(object));
@@ -5055,8 +5058,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
      * The scope object must be the initial one for the script, before any call
      * object has been created in the heavyweight case.
      */
-    JS_ASSERT_IF(scope && scope->isCall() && !scope->callIsForEval(),
-                 scope->getCallObjCalleeFunction() != fun);
+    JS_ASSERT_IF(scope && scope->isCall() && !scope->asCall().isForEval(),
+                 scope->asCall().getCalleeFunction() != fun);
 
     if (!script->compileAndGo) {
         script->types->global = NULL;
@@ -5089,11 +5092,13 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     while (!scope->isCall())
         scope = scope->getParent();
 
+    CallObject &call = scope->asCall();
+
     /* The isInnerFunction test ensures there is no intervening strict eval call object. */
-    JS_ASSERT(!scope->callIsForEval());
+    JS_ASSERT(!call.isForEval());
 
     /* Don't track non-heavyweight parents, NAME ops won't reach into them. */
-    JSFunction *parentFun = scope->getCallObjCalleeFunction();
+    JSFunction *parentFun = call.getCalleeFunction();
     if (!parentFun || !parentFun->isHeavyweight())
         return true;
     JSScript *parent = parentFun->script();
@@ -5121,8 +5126,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
         if (!SetScope(cx, parent, scope->getParent()))
             return false;
         parent->nesting()->activeCall = scope;
-        parent->nesting()->argArray = scope->callObjArgArray();
-        parent->nesting()->varArray = scope->callObjVarArray();
+        parent->nesting()->argArray = call.argArray();
+        parent->nesting()->varArray = call.varArray();
     }
 
     JS_ASSERT(!script->types->nesting);
@@ -5212,7 +5217,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
     JSScript *parent = script->nesting()->parent;
     JS_ASSERT(parent);
 
-    while (!scope->isCall() || scope->getCallObjCalleeFunction()->script() != parent)
+    while (!scope->isCall() || scope->asCall().getCalleeFunction()->script() != parent)
         scope = scope->getParent();
 
     if (scope != parent->nesting()->activeCall) {

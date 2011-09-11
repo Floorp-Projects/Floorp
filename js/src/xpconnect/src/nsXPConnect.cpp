@@ -1061,7 +1061,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     *global = tempGlobal;
     *compartment = tempGlobal->compartment();
 
-    js::SwitchToCompartment sc(cx, *compartment);
+    JS::AutoSwitchCompartment sc(cx, *compartment);
     JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
     return true;
 }
@@ -1093,7 +1093,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     }
     else
     {
-        js::SwitchToCompartment sc(cx, *compartment);
+        JS::AutoSwitchCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1130,7 +1130,7 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
     }
     else
     {
-        js::SwitchToCompartment sc(cx, *compartment);
+        JS::AutoSwitchCompartment sc(cx, *compartment);
 
         JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -2108,18 +2108,6 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
                              JSVERSION_DEFAULT, returnStringOnly, rval);
 }
 
-/* void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality); */
-NS_IMETHODIMP
-nsXPConnect::GetXPCWrappedNativeJSClassInfo(JSEqualityOp *equality)
-{
-    // Expose the equality pointer used by IS_WRAPPER_CLASS(). If that macro
-    // ever changes, this function needs to stay in sync.
-
-    *equality = &XPC_WN_Equality;
-
-    return NS_OK;
-}
-
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
 NS_IMETHODIMP 
 nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, 
@@ -2563,7 +2551,7 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
         js::CompartmentVector &vector = rt->compartments;
         for (JSCompartment **p = vector.begin(); p != vector.end(); ++p) {
             JSCompartment *comp = *p;
-            if (!comp->principals) {
+            if (!JS_GetCompartmentPrincipals(comp)) {
                 /* Ignore special compartments (atoms, JSD compartments) */
                 continue;
             }

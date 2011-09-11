@@ -143,7 +143,7 @@ var TPS =
             Weave.Service.logout();
             Utils.nextTick(this.RunNextTestAction, this);
           }
-          else {
+          else if (this._waitingForSync) {
             // ...otherwise abort the test
             this.DumpError("sync error; aborting test");
             return;
@@ -342,64 +342,70 @@ var TPS =
   },
 
   HandleBookmarks: function (bookmarks, action) {
-    let items = [];
-    for (folder in bookmarks) {
-      let last_item_pos = -1;
-      for each (bookmark in bookmarks[folder]) {
-        Logger.clearPotentialError();
-        let placesItem;
-        bookmark['location'] = folder;
-        if (last_item_pos != -1)
-          bookmark['last_item_pos'] = last_item_pos;
-        let item_id = -1;
-        if (action != ACTION_MODIFY && action != ACTION_DELETE)
-          Logger.logInfo("executing action " + action.toUpperCase() + 
-                         " on bookmark " + JSON.stringify(bookmark));
-        if ("uri" in bookmark)
-          placesItem = new Bookmark(bookmark);
-        else if ("folder" in bookmark)
-          placesItem = new BookmarkFolder(bookmark);
-        else if ("livemark" in bookmark)
-          placesItem = new Livemark(bookmark);
-        else if ("separator" in bookmark)
-          placesItem = new Separator(bookmark);
-        if (action == ACTION_ADD) {
-          item_id = placesItem.Create();
-        }
-        else {
-          item_id = placesItem.Find();
-          if (action == ACTION_VERIFY_NOT) {
-            Logger.AssertTrue(item_id == -1,
-              "places item exists but it shouldn't: " +
-              JSON.stringify(bookmark));
+    try {
+      let items = [];
+      for (folder in bookmarks) {
+        let last_item_pos = -1;
+        for each (bookmark in bookmarks[folder]) {
+          Logger.clearPotentialError();
+          let placesItem;
+          bookmark['location'] = folder;
+          if (last_item_pos != -1)
+            bookmark['last_item_pos'] = last_item_pos;
+          let item_id = -1;
+          if (action != ACTION_MODIFY && action != ACTION_DELETE)
+            Logger.logInfo("executing action " + action.toUpperCase() + 
+                           " on bookmark " + JSON.stringify(bookmark));
+          if ("uri" in bookmark)
+            placesItem = new Bookmark(bookmark);
+          else if ("folder" in bookmark)
+            placesItem = new BookmarkFolder(bookmark);
+          else if ("livemark" in bookmark)
+            placesItem = new Livemark(bookmark);
+          else if ("separator" in bookmark)
+            placesItem = new Separator(bookmark);
+          if (action == ACTION_ADD) {
+            item_id = placesItem.Create();
           }
-          else
-            Logger.AssertTrue(item_id != -1, "places item not found", true);
-        }
-        
-        last_item_pos = placesItem.GetItemIndex();
-        items.push(placesItem);
-      }
-    }
-
-    if (action == ACTION_DELETE || action == ACTION_MODIFY) {
-      for each (item in items) {
-        Logger.logInfo("executing action " + action.toUpperCase() + 
-                       " on bookmark " + JSON.stringify(item));
-        switch(action) {
-          case ACTION_DELETE:
-            item.Remove();
-            break;
-          case ACTION_MODIFY:
-            if (item.updateProps != null)
-              item.Update();
-            break;
+          else {
+            item_id = placesItem.Find();
+            if (action == ACTION_VERIFY_NOT) {
+              Logger.AssertTrue(item_id == -1,
+                "places item exists but it shouldn't: " +
+                JSON.stringify(bookmark));
+            }
+            else
+              Logger.AssertTrue(item_id != -1, "places item not found", true);
+          }
+          
+          last_item_pos = placesItem.GetItemIndex();
+          items.push(placesItem);
         }
       }
-    }
 
-    Logger.logPass("executing action " + action.toUpperCase() +
-      " on bookmarks");
+      if (action == ACTION_DELETE || action == ACTION_MODIFY) {
+        for each (item in items) {
+          Logger.logInfo("executing action " + action.toUpperCase() + 
+                         " on bookmark " + JSON.stringify(item));
+          switch(action) {
+            case ACTION_DELETE:
+              item.Remove();
+              break;
+            case ACTION_MODIFY:
+              if (item.updateProps != null)
+                item.Update();
+              break;
+          }
+        }
+      }
+
+      Logger.logPass("executing action " + action.toUpperCase() +
+        " on bookmarks");
+    }
+    catch(e) {
+      DumpBookmarks();
+      throw(e);
+    }
   },
 
   MozmillEndTestListener: function TPS__MozmillEndTestListener(obj) {
@@ -471,7 +477,7 @@ var TPS =
         this.DumpError("Sync logged in on startup...profile may be dirty");
         return;
       }
-      
+
       // setup observers
       Services.obs.addObserver(this, "weave:service:sync:finish", true);
       Services.obs.addObserver(this, "weave:service:sync:error", true);
@@ -498,7 +504,15 @@ var TPS =
       // wipe the server at the end of the final test phase
       if (this.phases["phase" + (parseInt(this._currentPhase) + 1)] == undefined)
         this_phase.push([this.WipeServer]);
-      
+
+      // Store account details as prefs so they're accessible to the mozmill
+      // framework.
+      let prefs = CC["@mozilla.org/preferences-service;1"]
+                  .getService(CI.nsIPrefBranch);
+      prefs.setCharPref('tps.account.username', this.config.account.username);
+      prefs.setCharPref('tps.account.password', this.config.account.password);
+      prefs.setCharPref('tps.account.passphrase', this.config.account.passphrase);
+
       // start processing the test actions
       this._currentAction = 0;
     }

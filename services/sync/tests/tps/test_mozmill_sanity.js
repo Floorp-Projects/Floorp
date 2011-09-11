@@ -16,7 +16,6 @@ var phases = { "phase1": "profile1",
 
 Phase('phase1', [
   [RunMozmillTest, 'mozmill_sanity.js'],
-  [Sync, SYNC_WIPE_SERVER]
 ]);
 
 Phase('phase2', [

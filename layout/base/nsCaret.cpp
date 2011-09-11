@@ -58,7 +58,6 @@
 #include "nsIPresShell.h"
 #include "nsRenderingContext.h"
 #include "nsPresContext.h"
-#include "nsILookAndFeel.h"
 #include "nsBlockFrame.h"
 #include "nsISelectionController.h"
 #include "nsDisplayList.h"
@@ -69,6 +68,7 @@
 #include "nsTextFragment.h"
 #include "nsThemeConstants.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
@@ -181,27 +181,18 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   mPresShell = do_GetWeakReference(inPresShell);    // the presshell owns us, so no addref
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
-  // get nsILookAndFeel from the pres context, which has one cached.
-  nsILookAndFeel *lookAndFeel = nsnull;
-  nsPresContext *presContext = inPresShell->GetPresContext();
-  
-  // XXX we should just do this nsILookAndFeel consultation every time
+  // XXX we should just do this LookAndFeel consultation every time
   // we need these values.
-  mCaretWidthCSSPx = 1;
-  mCaretAspectRatio = 0;
-  if (presContext && (lookAndFeel = presContext->LookAndFeel())) {
-    PRInt32 tempInt;
-    float tempFloat;
-    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretWidth, tempInt)))
-      mCaretWidthCSSPx = (nscoord)tempInt;
-    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_CaretAspectRatio, tempFloat)))
-      mCaretAspectRatio = tempFloat;
-    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
-      mBlinkRate = (PRUint32)tempInt;
-    if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, tempInt)))
-      mShowDuringSelection = tempInt ? PR_TRUE : PR_FALSE;
-  }
-  
+  mCaretWidthCSSPx = LookAndFeel::GetInt(LookAndFeel::eIntID_CaretWidth, 1);
+  mCaretAspectRatio =
+    LookAndFeel::GetFloat(LookAndFeel::eFloatID_CaretAspectRatio, 0.0f);
+
+  mBlinkRate = static_cast<PRUint32>(
+    LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, mBlinkRate));
+  mShowDuringSelection =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ShowCaretDuringSelection,
+                        mShowDuringSelection ? 1 : 0) != 0;
+
   // get the selection from the pres shell, and set ourselves up as a selection
   // listener
 
@@ -552,10 +543,10 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   if (GetHookRect().IsEmpty() && presContext) {
     nsITheme *theme = presContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(presContext, aForFrame, NS_THEME_TEXTFIELD_CARET)) {
-      nsILookAndFeel* lookAndFeel = presContext->LookAndFeel();
       nscolor fieldText;
-      if (NS_SUCCEEDED(lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_fieldtext, fieldText)) &&
-          fieldText == foregroundColor) {
+      nsresult rv = LookAndFeel::GetColor(LookAndFeel::eColorID__moz_fieldtext,
+                                          &fieldText);
+      if (NS_SUCCEEDED(rv) && fieldText == foregroundColor) {
         theme->DrawWidgetBackground(aCtx, aForFrame, NS_THEME_TEXTFIELD_CARET,
                                     drawCaretRect, drawCaretRect);
         return;

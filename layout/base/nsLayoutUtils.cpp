@@ -1297,7 +1297,7 @@ nsLayoutUtils::GetRemoteContentIds(nsIFrame* aFrame,
   builder.LeavePresShell(aFrame, aTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<nsIFrame*> outFrames;
+  nsAutoTArray<nsIFrame*,8> outFrames;
   nsDisplayItem::HitTestState hitTestState(&aOutIDs);
   list.HitTest(&builder, aTarget, &hitTestState, &outFrames);
   list.DeleteAll();
@@ -1311,7 +1311,7 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
                                 PRBool aIgnoreRootScrollFrame)
 {
   nsresult rv;
-  nsTArray<nsIFrame*> outFrames;
+  nsAutoTArray<nsIFrame*,8> outFrames;
   rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames,
                         aShouldIgnoreSuppression, aIgnoreRootScrollFrame);
   NS_ENSURE_SUCCESS(rv, nsnull);
@@ -4116,6 +4116,11 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
     ctx->SetSource(framesurf);
     ctx->Paint();
+  }
+
+  PRInt32 corsmode;
+  if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
+    result.mCORSUsed = (corsmode != imgIRequest::CORS_NONE);
   }
 
   result.mSurface = gfxsurf;
