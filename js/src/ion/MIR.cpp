@@ -565,15 +565,13 @@ MDiv::foldsTo(bool useValueNumbers)
     if (specialization_ == MIRType_None)
         return this;
 
-    MDefinition *lhs = getOperand(0);
-    MDefinition *rhs = getOperand(1);
     if (MDefinition *folded = EvaluateConstantOperands(this))
         return folded;
 
     // 0 / x -> 0
     // x / 1 -> x
-    if (IsConstant(lhs, 0) || IsConstant(rhs, 1))
-        return lhs;
+    if (IsConstant(lhs(), 0) || IsConstant(rhs(), 1))
+        return lhs();
 
     return this;
 }

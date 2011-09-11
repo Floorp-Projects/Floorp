@@ -4,8 +4,6 @@
 // contributed by Ian Osgood
 
 function A(i,j) {
-  //var t = (i+j)*(i+j+1);
-  //var k = 2+i+1;
   return 1/((i+j)*(i+j+1)/2+i+1);
 }
 
