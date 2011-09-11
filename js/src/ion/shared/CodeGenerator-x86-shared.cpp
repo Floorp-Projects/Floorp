@@ -455,6 +455,9 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
 
+    JS_ASSERT(remainder == edx);
+    JS_ASSERT(lhs == eax);
+
     // Prevent divide by zero.
     masm.testl(rhs, rhs);
     if (!bailoutIf(Assembler::Zero, ins->snapshot()))
