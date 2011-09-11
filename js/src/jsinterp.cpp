@@ -3921,7 +3921,7 @@ BEGIN_CASE(JSOP_GETELEM)
         }
     }
 
-    if (JSID_IS_STRING(id) && script->hasAnalysis())
+    if (JSID_IS_STRING(id) && script->hasAnalysis() && !regs.fp()->hasImacropc())
         script->analysis()->getCode(regs.pc).getStringElement = true;
 
     if (!obj->getProperty(cx, id, &rval))
@@ -3991,7 +3991,7 @@ BEGIN_CASE(JSOP_SETELEM)
                 obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
-                if (script->hasAnalysis())
+                if (script->hasAnalysis() && !regs.fp()->hasImacropc())
                     script->analysis()->getCode(regs.pc).arrayWriteHole = true;
             }
         }
