@@ -364,6 +364,13 @@ nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
 }
 
 NS_IMETHODIMP
+nsDOMAttribute::GetParentElement(nsIDOMElement** aParentElement)
+{
+  *aParentElement = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsIDocument* document = GetOwnerDoc();
