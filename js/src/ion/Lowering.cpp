@@ -416,6 +416,26 @@ LIRGenerator::visitMul(MMul *ins)
 }
 
 bool
+LIRGenerator::visitDiv(MDiv *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+    JS_ASSERT(lhs->type() == rhs->type());
+
+    if (ins->specialization() == MIRType_Int32) {
+        JS_ASSERT(lhs->type() == MIRType_Int32);
+        return lowerDivI(ins);
+    }
+    if (ins->specialization() == MIRType_Double) {
+        JS_ASSERT(lhs->type() == MIRType_Double);
+        return lowerForFPU(new LMathD(JSOP_DIV), ins, lhs, rhs);
+    }
+
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
 LIRGenerator::visitStart(MStart *start)
 {
     // This is a no-op.

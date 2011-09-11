@@ -213,3 +213,10 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
     lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
 
+bool
+LIRGeneratorX64::lowerDivI(MDiv *div)
+{
+    LDivI *lir = new LDivI(useFixed(div->lhs(), rax), useRegister(div->lhs()), tempFixed(rdx));
+    return defineReuseInput(lir, div) && assignSnapshot(lir);
+}
+

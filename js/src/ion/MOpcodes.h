@@ -67,6 +67,7 @@ namespace ion {
     _(Add)                                                                  \
     _(Sub)                                                                  \
     _(Mul)                                                                  \
+    _(Div)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \

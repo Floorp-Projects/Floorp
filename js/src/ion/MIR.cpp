@@ -115,6 +115,9 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
       case MDefinition::Op_Mul:
         ret.setNumber(lhs.toNumber() * rhs.toNumber());
         break;
+      case MDefinition::Op_Div:
+        ret.setNumber(lhs.toNumber() / rhs.toNumber());
+        break;
       default:
         JS_NOT_REACHED("NYI");
     }
@@ -551,6 +554,25 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
         return rhs; // x op id => x
 
     if (IsConstant(rhs, getIdentity()))
+        return lhs;
+
+    return this;
+}
+
+MDefinition *
+MDiv::foldsTo(bool useValueNumbers)
+{
+    if (specialization_ == MIRType_None)
+        return this;
+
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+    if (MDefinition *folded = EvaluateConstantOperands(this))
+        return folded;
+
+    // 0 / x -> 0
+    // x / 1 -> x
+    if (IsConstant(lhs, 0) || IsConstant(rhs, 1))
         return lhs;
 
     return this;

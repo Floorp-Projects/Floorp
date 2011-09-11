@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -39,15 +39,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_lir_opcodes_x86_h__
-#define jsion_lir_opcodes_x86_h__
+#ifndef jsion_lir_x86_shared_h__
+#define jsion_lir_x86_shared_h__
 
-#define LIR_CPU_OPCODE_LIST(_)  \
-    _(Unbox)                    \
-    _(UnboxDouble)              \
-    _(Box)                      \
-    _(BoxDouble)                \
-    _(DivI)
+namespace js {
+namespace ion {
 
-#endif // jsion_lir_opcodes_x86_h__
+class LDivI : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(DivI);
+
+    LDivI(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *remainder() {
+        return getTemp(0);
+    }
+};
+
+} // namespace ion
+} // namespace js
+
+#endif // jsion_lir_x86_shared_h__
 
