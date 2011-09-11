@@ -63,7 +63,7 @@ interface nsIDOMCaretPosition;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(903493d3-72b6-4416-b930-fbfc17ef1d87)]
+[scriptable, uuid(48ef69c6-844f-41ba-af66-17b338177a8b)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
