@@ -96,11 +96,19 @@ TypeOracle::Binary
 TypeInferenceOracle::binaryOp(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script == this->script);
+    
+    JSOp op = (JSOp)*pc;
 
     Binary res;
-    res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 1));
-    res.rhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
-    res.rval = getMIRType(script->analysis()->pushedTypes(pc, 0));
+    if (js_CodeSpec[op].format & JOF_INCDEC) {
+        res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
+        res.rhs = MIRType_Int32;
+        res.rval = res.lhs;
+    } else {
+        res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 1));
+        res.rhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
+        res.rval = getMIRType(script->analysis()->pushedTypes(pc, 0));
+    }
     return res;
 }
 

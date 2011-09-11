@@ -579,25 +579,20 @@ MDiv::foldsTo(bool useValueNumbers)
 void
 MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
 {
-    if (b.lhs == MIRType_Int32 && b.rhs == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setIdempotent();
-        setCommutative();
-        setResultType(specialization_);
-    } else if (b.lhs == MIRType_Double && b.rhs == MIRType_Double) {
-        specialization_ = MIRType_Double;
-        setIdempotent();
-        setCommutative();
-        setResultType(specialization_);
-    } else if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
-        specialization_ = MIRType_Any;
-        if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))
-            setResultType(MIRType_Double);
-        else
-            setResultType(MIRType_Int32);
-    } else {
+    // Anything complex - strings and objects - are not specialized.
+    if (b.lhs >= MIRType_String || b.rhs >= MIRType_String) {
         specialization_ = MIRType_None;
+        return;
     }
+
+    if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))
+        specialization_ = MIRType_Double;
+    else
+        specialization_ = MIRType_Int32;
+
+    setIdempotent();
+    setCommutative();
+    setResultType(specialization_);
 }
 
 void
