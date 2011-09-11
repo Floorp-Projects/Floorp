@@ -155,6 +155,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		CallObject.cpp \
 		Debugger.cpp \
 		GlobalObject.cpp \
 		Stack.cpp \
@@ -191,7 +192,6 @@ INSTALLED_HEADERS = \
 		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
-		jscompartment.h \
 		jshash.h \
 		jsinfer.h \
 		jsinferinlines.h \
@@ -247,6 +247,7 @@ EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
+		CallObject.h \
 		GlobalObject.h \
 		Stack.h \
 		String.h \
@@ -390,22 +391,20 @@ CPPSRCS += 	checks.cc \
 # END enclude sources for V8 dtoa
 #############################################
 
+# For architectures without YARR JIT, PCRE is faster than the YARR
+# interpreter (bug 684559).
+
 ifeq (,$(filter arm% sparc %86 x86_64,$(TARGET_CPU)))
 
-VPATH +=	$(srcdir)/assembler \
-		$(srcdir)/assembler/wtf \
-		$(srcdir)/yarr\
+VPATH +=        $(srcdir)/yarr/pcre \
 		$(NULL)
 
 CPPSRCS += \
-		Assertions.cpp \
-		OSAllocatorOS2.cpp \
-		OSAllocatorPosix.cpp \
-		OSAllocatorWin.cpp \
-		PageBlock.cpp \
-		YarrInterpreter.cpp \
-		YarrPattern.cpp \
-		YarrSyntaxChecker.cpp \
+                pcre_compile.cpp \
+                pcre_exec.cpp \
+                pcre_tables.cpp \
+                pcre_xclass.cpp \
+                pcre_ucp_searchfuncs.cpp \
 		$(NULL)
 else
 

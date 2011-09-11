@@ -267,6 +267,13 @@ static JS_INLINE void js_free(void* p) {
 }
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
+/* 
+ * This signature is for malloc_usable_size-like functions used to measure
+ * memory usage.  A return value of zero indicates that the size is unknown,
+ * and so a fall-back computation should be done for the size.
+ */
+typedef size_t(*JSUsableSizeFun)(void *p);
+
 JS_END_EXTERN_C
 
 

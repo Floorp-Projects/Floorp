@@ -371,15 +371,19 @@ XRE_InitChildProcess(int aArgc,
   // on windows and mac, |crashReporterArg| is the named pipe on which the
   // server is listening for requests, or "-" if crash reporting is
   // disabled.
-  if (0 != strcmp("-", crashReporterArg)
-      && !XRE_SetRemoteExceptionHandler(crashReporterArg))
-    return 1;
+  if (0 != strcmp("-", crashReporterArg) && 
+      !XRE_SetRemoteExceptionHandler(crashReporterArg)) {
+    // Bug 684322 will add better visibility into this condition
+    NS_WARNING("Could not setup crash reporting\n");
+  }
 #  elif defined(OS_LINUX)
   // on POSIX, |crashReporterArg| is "true" if crash reporting is
   // enabled, false otherwise
-  if (0 != strcmp("false", crashReporterArg)
-      && !XRE_SetRemoteExceptionHandler(NULL))
-    return 1;
+  if (0 != strcmp("false", crashReporterArg) && 
+      !XRE_SetRemoteExceptionHandler(NULL)) {
+    // Bug 684322 will add better visibility into this condition
+    NS_WARNING("Could not setup crash reporting\n");
+  }
 #  else
 #    error "OOP crash reporting unsupported on this platform"
 #  endif   

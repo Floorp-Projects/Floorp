@@ -93,6 +93,45 @@ extern JS_FRIEND_API(void)
 JS_GetTypeInferenceObjectStats(/*TypeObject*/ void *object,
                                TypeInferenceMemoryStats *stats);
 
+extern JS_FRIEND_API(JSPrincipals *)
+JS_GetCompartmentPrincipals(JSCompartment *compartment);
+
+#ifdef __cplusplus
+
+extern JS_FRIEND_API(JSBool)
+JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
+
+#endif
+
 JS_END_EXTERN_C
+
+#ifdef __cplusplus
+
+namespace JS {
+
+class JS_FRIEND_API(AutoPreserveCompartment) {
+  private:
+    JSContext *cx;
+    JSCompartment *oldCompartment;
+  public:
+    AutoPreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoPreserveCompartment();
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class JS_FRIEND_API(AutoSwitchCompartment) {
+  private:
+    JSContext *cx;
+    JSCompartment *oldCompartment;
+  public:
+    AutoSwitchCompartment(JSContext *cx, JSCompartment *newCompartment
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM);
+    AutoSwitchCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoSwitchCompartment();
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+}
+#endif
 
 #endif /* jsfriendapi_h___ */

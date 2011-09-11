@@ -45,10 +45,13 @@
 #include "nsID.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIObserver.h"
+#include "nsUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierHashCompleter.h"
 #include "nsIUrlClassifierDBService.h"
 #include "nsIURIClassifier.h"
 #include "nsToolkitCompsCID.h"
+#include "nsICryptoHash.h"
+#include "nsICryptoHMAC.h"
 
 // The hash length for a domain key.
 #define DOMAIN_LENGTH 4
@@ -99,9 +102,13 @@ private:
   nsresult LookupURI(nsIURI* uri, nsIUrlClassifierCallback* c,
                      PRBool forceCheck, PRBool *didCheck);
 
-  // Close db connection and join the background thread if it exists. 
+  // Close db connection and join the background thread if it exists.
   nsresult Shutdown();
-  
+
+  // Check if the key is on a known-clean host.
+  nsresult CheckClean(const nsACString &lookupKey,
+                      PRBool *clean);
+
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> mWorkerProxy;
 
@@ -123,6 +130,10 @@ private:
 
   // The list of tables that can use the default hash completer object.
   nsTArray<nsCString> mGethashWhitelist;
+
+  // Set of prefixes known to be in the database
+  nsRefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
+  nsCOMPtr<nsICryptoHash> mHash;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;

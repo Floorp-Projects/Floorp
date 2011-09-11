@@ -47,7 +47,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
 
-var EXPORTED_SYMBOLS = ["CssHtmlTree"];
+var EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
 
 /**
  * CssHtmlTree is a panel that manages the display of a table sorted by style.
@@ -342,7 +342,7 @@ PropertyView.prototype = {
 
   /**
    * Compute the title of the property view. The title includes the number of
-   * rules that hold the current property.
+   * selectors that match the currently selected element.
    *
    * @param {nsIDOMElement} aElement reference to the DOM element where the rule
    * title needs to be displayed.
@@ -351,23 +351,23 @@ PropertyView.prototype = {
   ruleTitle: function PropertyView_ruleTitle(aElement)
   {
     let result = "";
-    let matchedRuleCount = this.propertyInfo.matchedRuleCount;
+    let matchedSelectorCount = this.propertyInfo.matchedSelectors.length;
 
-    if (matchedRuleCount > 0) {
+    if (matchedSelectorCount > 0) {
       aElement.classList.add("rule-count");
       aElement.firstElementChild.className = "expander";
 
-      let str = CssHtmlTree.l10n("property.numberOfRules");
-      result = PluralForm.get(matchedRuleCount, str)
-          .replace("#1", matchedRuleCount);
+      let str = CssHtmlTree.l10n("property.numberOfSelectors");
+      result = PluralForm.get(matchedSelectorCount, str)
+          .replace("#1", matchedSelectorCount);
     } else if (this.showUnmatchedLink) {
       aElement.classList.add("rule-unmatched");
       aElement.firstElementChild.className = "expander";
 
-      let unmatchedRuleCount = this.propertyInfo.unmatchedRuleCount;
-      let str = CssHtmlTree.l10n("property.numberOfUnmatchedRules");
-      result = PluralForm.get(unmatchedRuleCount, str)
-          .replace("#1", unmatchedRuleCount);
+      let unmatchedSelectorCount = this.propertyInfo.unmatchedSelectors.length;
+      let str = CssHtmlTree.l10n("property.numberOfUnmatchedSelectors");
+      result = PluralForm.get(unmatchedSelectorCount, str)
+          .replace("#1", unmatchedSelectorCount);
     }
     return result;
   },
@@ -429,8 +429,9 @@ PropertyView.prototype = {
   get showUnmatchedLinkText()
   {
     let smur = CssHtmlTree.l10n("rule.showUnmatchedLink");
-    let plural = PluralForm.get(this.propertyInfo.unmatchedRuleCount, smur);
-    return plural.replace("#1", this.propertyInfo.unmatchedRuleCount);
+    let unmatchedSelectorCount = this.propertyInfo.unmatchedSelectors.length;
+    let plural = PluralForm.get(unmatchedSelectorCount, smur);
+    return plural.replace("#1", unmatchedSelectorCount);
   },
 
   /**

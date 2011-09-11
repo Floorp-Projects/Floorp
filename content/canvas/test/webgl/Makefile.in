@@ -56,5 +56,4 @@ libs:: $(_TEST_FILES)
 	$(TAR) -cf - -C $(srcdir) \
 	  resources \
 	  conformance \
-          crossorigin \
 	  | $(TAR) -xf - -C $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

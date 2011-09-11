@@ -130,6 +130,17 @@ void Histogram::Add(int value) {
   Accumulate(value, 1, index);
 }
 
+void Histogram::Subtract(int value) {
+  if (value > kSampleType_MAX - 1)
+    value = kSampleType_MAX - 1;
+  if (value < 0)
+    value = 0;
+  size_t index = BucketIndex(value);
+  DCHECK_GE(value, ranges(index));
+  DCHECK_LT(value, ranges(index + 1));
+  Accumulate(value, -1, index);
+}
+
 void Histogram::AddBoolean(bool value) {
   DCHECK(false);
 }

@@ -53,7 +53,6 @@
 #include "nsIFrame.h"
 #include "nsEventStates.h"
 #include "nsINameSpaceManager.h"
-#include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsMenuFrame.h"
 #include "nsWidgetAtoms.h"
