@@ -426,42 +426,6 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     return true;
 }
 
-#if defined JS_METHODJIT && defined JS_MONOIC
-/*
- * Check if the pool containing the code for jit should be destroyed, per the
- * heuristics in JSCompartment::sweep.
- */
-static inline bool
-ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
-                    uint32 releaseInterval, uint32 &counter)
-{
-    JSC::ExecutablePool *pool = jit->code.m_executablePool;
-    if (pool->m_gcNumber != cx->runtime->gcNumber) {
-        /*
-         * The m_destroy flag may have been set in a previous GC for a pool which had
-         * references we did not remove (e.g. from the compartment's ExecutableAllocator)
-         * and is still around. Forget we tried to destroy it in such cases.
-         */
-        pool->m_destroy = false;
-        pool->m_gcNumber = cx->runtime->gcNumber;
-        if (--counter == 0) {
-            pool->m_destroy = true;
-            counter = releaseInterval;
-        }
-    }
-    return pool->m_destroy;
-}
-
-static inline void
-ScriptTryDestroyCode(JSContext *cx, JSScript *script, bool normal,
-                     uint32 releaseInterval, uint32 &counter)
-{
-    mjit::JITScript *jit = normal ? script->jitNormal : script->jitCtor;
-    if (jit && ScriptPoolDestroyed(cx, jit, releaseInterval, counter))
-        mjit::ReleaseScriptCode(cx, script, !normal);
-}
-#endif // JS_METHODJIT && JS_MONOIC
-
 /*
  * This method marks pointers that cross compartment boundaries. It should be
  * called only for per-compartment GCs, since full GCs naturally follow pointers
@@ -594,6 +558,13 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
                     }
                 }
             }
+        } else {
+#ifdef JS_METHODJIT
+            for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+                JSScript *script = i.get<JSScript>();
+                mjit::ReleaseScriptCode(cx, script);
+            }
+#endif
         }
 
         types.sweep(cx);
