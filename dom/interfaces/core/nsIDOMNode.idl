@@ -52,7 +52,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(45e7ac3c-27d9-49bc-b3a3-dfc573f6f649)]
+[scriptable, uuid(c8ac3f81-63e1-4c31-8543-70a656642789)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
