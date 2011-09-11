@@ -646,6 +646,13 @@ class AssemblerX86Shared
         masm.movzbl_rr(src.code(), dest.code());
     }
 
+    void cdq() {
+        masm.cdq();
+    }
+    void idiv(Register dest) {
+        masm.idivl_r(dest.code());
+    }
+
     void unpcklps(const FloatRegister &src, const FloatRegister &dest) {
         masm.unpcklps_rr(src.code(), dest.code());
     }
@@ -710,6 +717,9 @@ class AssemblerX86Shared
     }
     void mulsd(const FloatRegister &src, const FloatRegister &dest) {
         masm.mulsd_rr(src.code(), dest.code());
+    }
+    void divsd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.divsd_rr(src.code(), dest.code());
     }
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());

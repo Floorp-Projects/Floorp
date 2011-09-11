@@ -1437,6 +1437,27 @@ class MMul : public MBinaryArithInstruction
     }
 };
 
+class MDiv : public MBinaryArithInstruction
+{
+    MDiv(MDefinition *left, MDefinition *right)
+      : MBinaryArithInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Div);
+    static MDiv *New(MDefinition *left, MDefinition *right) {
+        return new MDiv(left, right);
+    }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+    double getIdentity() {
+        JS_NOT_REACHED("not used");
+        return 1;
+    }
+};
+
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
