@@ -48,7 +48,8 @@
     _(UnboxInteger)                 \
     _(UnboxDouble)                  \
     _(UnboxObject)                  \
-    _(UnboxString)
+    _(UnboxString)                  \
+    _(DivI)
 
 #endif // jsion_lir_opcodes_x64_h__
 

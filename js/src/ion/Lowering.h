@@ -119,6 +119,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitAdd(MAdd *ins);
     bool visitSub(MSub *ins);
     bool visitMul(MMul *ins);
+    bool visitDiv(MDiv *ins);
     bool visitStart(MStart *start);
     bool visitToDouble(MToDouble *convert);
     bool visitToInt32(MToInt32 *convert);

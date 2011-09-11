@@ -110,6 +110,7 @@ class LIRGeneratorShared : public MInstructionVisitor
     // These create temporary register requests.
     inline LDefinition temp(LDefinition::Type type);
     inline LDefinition tempFloat();
+    inline LDefinition tempFixed(Register reg);
 
     template <size_t Ops, size_t Temps>
     inline bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,

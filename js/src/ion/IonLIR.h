@@ -947,10 +947,13 @@ LAllocation::toRegister() const
     }
 
 #include "LIR-Common.h"
-#if defined(JS_CPU_X86)
-# include "x86/LIR-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/LIR-x64.h"
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+# if defined(JS_CPU_X86)
+#  include "x86/LIR-x86.h"
+# elif defined(JS_CPU_X64)
+#  include "x64/LIR-x64.h"
+# endif
+# include "shared/LIR-x86-shared.h"
 #elif defined(JS_CPU_ARM)
 # include "arm/LIR-arm.h"
 #endif

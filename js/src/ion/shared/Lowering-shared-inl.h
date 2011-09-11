@@ -236,6 +236,14 @@ LIRGeneratorShared::temp(LDefinition::Type type)
 }
 
 LDefinition
+LIRGeneratorShared::tempFixed(Register reg)
+{
+    LDefinition t = temp(LDefinition::INTEGER);
+    t.setOutput(LGeneralReg(reg));
+    return t;
+}
+
+LDefinition
 LIRGeneratorShared::tempFloat()
 {
     return temp(LDefinition::DOUBLE);

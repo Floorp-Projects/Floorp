@@ -265,3 +265,10 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
     payload->setOperand(inputPosition, LUse(VirtualRegisterOfPayload(operand), LUse::ANY));
 }
 
+bool
+LIRGeneratorX86::lowerDivI(MDiv *div)
+{
+    LDivI *lir = new LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
+    return defineReuseInput(lir, div) && assignSnapshot(lir);
+}
+

@@ -449,6 +449,48 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitDivI(LDivI *ins)
+{
+    Register remainder = ToRegister(ins->remainder());
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+
+    // Prevent divide by zero.
+    masm.testl(rhs, rhs);
+    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+        return false;
+
+    // Prevent an integer overflow exception from -2147483648 / -1.
+    Label notmin;
+    masm.cmpl(lhs, Imm32(INT_MIN));
+    masm.j(Assembler::NotEqual, &notmin);
+    masm.cmpl(rhs, Imm32(-1));
+    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+        return false;
+    masm.bind(&notmin);
+
+    // Prevent negative 0.
+    Label nonzero;
+    masm.testl(lhs, lhs);
+    masm.j(Assembler::NonZero, &nonzero);
+    masm.cmpl(rhs, Imm32(0));
+    if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
+        return false;
+    masm.bind(&nonzero);
+
+    // Sign extend lhs (eax) to (eax:edx) since idiv is 64-bit.
+    masm.cdq();
+    masm.idiv(rhs);
+
+    // If the remainder is > 0, bailout since this must be a double.
+    masm.testl(remainder, remainder);
+    if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
+        return false;
+
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitBitNot(LBitNot *ins)
 {
     const LAllocation *input = ins->getOperand(0);
@@ -733,6 +775,9 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
         break;
       case JSOP_MUL:
         masm.mulsd(ToFloatRegister(input), ToFloatRegister(output));
+        break;
+      case JSOP_DIV:
+        masm.divsd(ToFloatRegister(input), ToFloatRegister(output));
         break;
       default:
         JS_NOT_REACHED("unexpected opcode");
