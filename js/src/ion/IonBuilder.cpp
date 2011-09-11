@@ -693,7 +693,8 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
     // including the successor.
     if (!state.loop.entry->setBackedge(current))
         return ControlStatus_Error;
-    successor->inheritPhis(state.loop.entry);
+    if (successor)
+        successor->inheritPhis(state.loop.entry);
 
     if (state.loop.breaks) {
         // Propagate phis placed in the header to individual break exit points.
@@ -708,11 +709,13 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
         if (!block)
             return ControlStatus_Error;
 
-        // Finally, create an unconditional edge from the successor to the catch
-        // block.
-        successor->end(MGoto::New(block));
-        if (!block->addPredecessor(successor))
-            return ControlStatus_Error;
+        if (successor) {
+            // Finally, create an unconditional edge from the successor to the
+            // catch block.
+            successor->end(MGoto::New(block));
+            if (!block->addPredecessor(successor))
+                return ControlStatus_Error;
+        }
         successor = block;
     }
 
