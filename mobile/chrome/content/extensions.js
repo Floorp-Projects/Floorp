@@ -864,7 +864,7 @@ function searchFailed() {
 
   let failLabel = strings.formatStringFromName("addonsSearchFail.label",
                                              [brand.GetStringFromName("brandShortName")], 1);
-  let failButton = strings.GetStringFromName("addonsSearchFail.button");
+  let failButton = strings.GetStringFromName("addonsSearchFail.retryButton");
   ExtensionsView.displaySectionMessage("repo", failLabel, failButton, true);
 }
 
