@@ -66,6 +66,10 @@ static const Register rbx = { JSC::X86Registers::ebx };
 static const Register rbp = { JSC::X86Registers::ebp };
 static const Register rsp = { JSC::X86Registers::esp };
 
+// Aliased x86 registers for common assertions.
+static const Register eax = rax;
+static const Register edx = rdx;
+
 static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
