@@ -739,4 +739,28 @@ js_IsRuntimeLocked(JSRuntime *rt)
     return js_CurrentThreadId() == rt->rtLockOwner;
 }
 #endif /* DEBUG */
+
+static PRStatus
+CallOnce(void *func)
+{
+    JSInitCallback init = JS_DATA_TO_FUNC_PTR(JSInitCallback, func);
+    return init() ? PR_FAILURE : PR_SUCCESS;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
+{
+    return PR_CallOnceWithArg(once, CallOnce, JS_FUNC_TO_DATA_PTR(void *, func)) == PR_SUCCESS;
+}
+#else /* JS_THREADSAFE */
+JS_PUBLIC_API(JSBool)
+JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
+{
+    if (!*once) {
+        *once = true;
+        return func();
+    } else {
+        return JS_TRUE;
+    }
+}
 #endif /* JS_THREADSAFE */
