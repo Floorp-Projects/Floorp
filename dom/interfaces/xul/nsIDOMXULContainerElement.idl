@@ -39,7 +39,7 @@
 #include "nsIDOMXULElement.idl"
 interface nsIDOMXULContainerElement;
 
-[scriptable, uuid(608d604f-79b4-4fe0-8a2c-49a007496642)]
+[scriptable, uuid(e5457dc5-878b-4587-9b90-428303408df4)]
 interface nsIDOMXULContainerItemElement : nsIDOMXULElement
 {
   /**
@@ -48,7 +48,7 @@ interface nsIDOMXULContainerItemElement : nsIDOMXULElement
   readonly attribute nsIDOMXULContainerElement parentContainer;
 };
 
-[scriptable, uuid(73acdda3-c6a5-4a89-a01a-0f776eba870d)]
+[scriptable, uuid(1ab35621-3a7f-4aa8-b9b8-222dea0b0536)]
 interface nsIDOMXULContainerElement : nsIDOMXULContainerItemElement
 {
   /**
