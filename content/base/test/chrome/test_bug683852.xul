@@ -21,13 +21,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
   SimpleTest.waitForExplicitFinish();
 
   function startTest() {
-    is(document.contains(document), false, "Document should not contain itself!");
+    is(document.contains(document), true, "Document should contain itself!");
 
     var tb = document.getElementById("testbutton");
     is(document.contains(tb), true, "Document should contain element in it!");
+    is(tb.contains(tb), true, "Element should contain itself.")
     var anon = document.getAnonymousElementByAttribute(tb, "anonid", "button-box");
     is(document.contains(anon), false, "Document should not contain anonymous element in it!");
     is(tb.contains(anon), false, "Element should not contain anonymous element in it!");
+    is(anon.contains(anon), true, "Anonymous element should contain itself.")
     is(document.documentElement.contains(tb), true, "Element should contain element in it!");
     is(document.contains(document.createElement("foo")), false, "Document shouldn't contain element which is't in the document");
     is(document.contains(document.createTextNode("foo")), false, "Document shouldn't contain text node which is't in the document");
@@ -50,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
     is(df.contains(df.firstChild), true, "Document fragment should contain its child");
     is(df.contains(df.firstChild.firstChild), true,
        "Document fragment should contain its descendant");
-    is(df.contains(df), false, "Document fragment shouldn't contain itself.");
+    is(df.contains(df), true, "Document fragment should contain itself.");
 
     var d = document.implementation.createHTMLDocument("");
     is(document.contains(d), false,

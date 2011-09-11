@@ -159,6 +159,17 @@
   list-style-image: url("chrome://global/skin/icons/webconsole.png");
 }
 
+.webconsole-filter-button > .toolbarbutton-menubutton-button,
+.webconsole-filter-button > .toolbarbutton-menubutton-button:hover:active {
+  -moz-padding-start: 6px;
+  -moz-padding-end: 3px;
+}
+
+.webconsole-filter-button {
+  -moz-margin-start: 3px;
+  -moz-margin-end: 3px;
+}
+
 /* Network styles */
 .webconsole-filter-button[category="net"] {
   -moz-image-region: rect(0, 8px, 8px, 0);
@@ -314,7 +325,7 @@
 }
 
 .hud-console-filter-toolbar {
-  padding: 1px 0px;
+  padding: 1px 2px;
   -moz-box-align: center;
   -moz-appearance: none;
   background-color: -moz-dialog;

@@ -70,11 +70,6 @@
 /* XXX the following CID's are not in order. This needs
    to be fixed. */
 
-/* A61E6398-2057-40fd-9C81-873B908D24E7 */
-#define NS_LOOKANDFEEL_CID \
-{ 0xa61e6398, 0x2057, 0x40fd,  \
-    { 0x9c, 0x81, 0x87, 0x3b, 0x90, 0x8d, 0x24, 0xe7 } }
-
 //-----------------------------------------------------------
 // Menus 
 //-----------------------------------------------------------

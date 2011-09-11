@@ -69,3 +69,22 @@
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
 }
 
+body.verbose {
+  /* override setting in about.css */
+  max-width: 100% !important;
+}
+
+h2.tree {
+  cursor: pointer;
+  background: #ddd;
+  padding-left: .1em;
+}
+
+body.non-verbose pre.tree {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+pre.collapsed {
+  display: none;
+}

@@ -393,8 +393,9 @@ var PageActions = {
     for (let i = 0; i < visibleCount; i++)
       visibleNodes[i].classList.remove("odd-last-child");
 
+    visibleNodes[visibleCount - 1].classList.add("last-child");
     if (visibleCount % 2)
-      visibleNodes[visibleCount - 1].classList.add("odd-last-child");
+      visibleNodes[visibleCount - 1].classList.add("odd");
   }
 };
 
@@ -1349,21 +1350,6 @@ var SelectionHelper = {
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "PanBegin":
-        window.removeEventListener("PanBegin", this, true);
-        window.removeEventListener("TapUp", this, true);
-        window.addEventListener("PanFinished", this, true);
-        this._start.hidden = true;
-        this._end.hidden = true;
-        break;
-      case "PanFinished":
-        window.removeEventListener("PanFinished", this, true);
-        try {
-          this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionMeasure", {});
-        } catch (e) {
-          Cu.reportError(e);
-        }
-        break
       case "TapDown":
         if (aEvent.target == this._start || aEvent.target == this._end) {
           this.target = aEvent.target;
@@ -1371,22 +1357,14 @@ var SelectionHelper = {
           this.deltaY = (aEvent.clientY - this.target.top);
           window.addEventListener("TapMove", this, true);
         } else {
-          window.addEventListener("PanBegin", this, true);
-          window.addEventListener("TapUp", this, true);
-          this.target = null;
+          this.hide(aEvent);
         }
         break;
       case "TapUp":
-        if (this.target) {
-          window.removeEventListener("TapMove", this, true);
-          this.target = null;
-          this.deltaX = -1;
-          this.deltaY = -1;
-        } else {
-          window.removeEventListener("PanBegin", this, true);
-          window.removeEventListener("TapUp", this, true);
-          this.hide(aEvent);
-        }
+        window.removeEventListener("TapMove", this, true);
+        this.target = null;
+        this.deltaX = -1;
+        this.deltaY = -1;
         break;
       case "TapMove":
         if (this.target) {
@@ -1406,14 +1384,6 @@ var SelectionHelper = {
       case "resize":
       case "SizeChanged":
       case "ZoomChanged":
-      {
-        try {
-          this.popupState.target.messageManager.sendAsyncMessage("Browser:SelectionMeasure", {});
-        } catch (e) {
-          Cu.reportError(e);
-        }
-        break        
-      }
       case "URLChanged":
       case "keypress":
         this.hide(aEvent);

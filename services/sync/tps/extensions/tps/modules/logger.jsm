@@ -57,6 +57,15 @@ var Logger =
       return;
     }
 
+    let prefs = CC["@mozilla.org/preferences-service;1"]
+                .getService(CI.nsIPrefBranch);
+    if (path) {
+      prefs.setCharPref("tps.logfile", path);
+    }
+    else {
+      path = prefs.getCharPref("tps.logfile");
+    }
+
     this._file = CC["@mozilla.org/file/local;1"]
                  .createInstance(CI.nsILocalFile);
     this._file.initWithPath(path);

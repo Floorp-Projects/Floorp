@@ -403,7 +403,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
 
 PRBool RectArea::IsInside(nscoord x, nscoord y) const
 {
-  if (mNumCoords >= 4) {       // Note: > is for nav compatability
+  if (mNumCoords >= 4) {       // Note: > is for nav compatibility
     nscoord x1 = mCoords[0];
     nscoord y1 = mCoords[1];
     nscoord x2 = mCoords[2];
@@ -638,7 +638,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
 
 PRBool CircleArea::IsInside(nscoord x, nscoord y) const
 {
-  // Note: > is for nav compatability
+  // Note: > is for nav compatibility
   if (mNumCoords >= 3) {
     nscoord x1 = mCoords[0];
     nscoord y1 = mCoords[1];

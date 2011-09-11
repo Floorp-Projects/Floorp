@@ -84,17 +84,11 @@ function cordicsincos() {
 function cordic( runs ) {
   var actual;
 
-  var start = new Date();
-
   for ( var i = 0 ; i < runs ; i++ ) {
     actual = cordicsincos();
   }
 
-  var end = new Date();
-
   assertEq(actual, 1834995.3515519998)
-
-  return end.getTime() - start.getTime();
 }
 
 cordic(25000);

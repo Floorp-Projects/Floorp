@@ -95,6 +95,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
+#include "vm/CallObject-inl.h"
 
 #ifdef MOZ_VALGRIND
 # define JS_VALGRIND
@@ -238,9 +239,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize)
     FreeSpan *newListTail = &newListHead;
     uintptr_t newFreeSpanStart = 0;
     bool allClear = true;
-#ifdef DEBUG
-    size_t nmarked = 0;
-#endif
+    DebugOnly<size_t> nmarked = 0;
     for (;; thing += thingSize) {
         JS_ASSERT(thing <= lastByte + 1);
         if (thing == nextFree.first) {
@@ -257,9 +256,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize)
             T *t = reinterpret_cast<T *>(thing);
             if (t->isMarked()) {
                 allClear = false;
-#ifdef DEBUG
                 nmarked++;
-#endif
                 if (newFreeSpanStart) {
                     JS_ASSERT(thing >= thingsStart(thingKind) + thingSize);
                     newListTail->first = newFreeSpanStart;
@@ -1557,9 +1554,7 @@ GCMarker::GCMarker(JSContext *cx)
     largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
 {
     JS_TRACER_INIT(this, cx, NULL);
-#ifdef DEBUG
     markLaterArenas = 0;
-#endif
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     conservativeDumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
     memset(&conservativeStats, 0, sizeof(conservativeStats));
@@ -1584,9 +1579,7 @@ GCMarker::delayMarkingChildren(const void *thing)
     }
     aheader->getMarkingDelay()->link = unmarkedArenaStackTop;
     unmarkedArenaStackTop = aheader;
-#ifdef DEBUG
     markLaterArenas++;
-#endif
 }
 
 static void
@@ -1617,10 +1610,8 @@ GCMarker::markDelayedChildren()
         unmarkedArenaStackTop = aheader->getMarkingDelay()->link;
         JS_ASSERT(unmarkedArenaStackTop);
         aheader->getMarkingDelay()->link = NULL;
-#ifdef DEBUG
         JS_ASSERT(markLaterArenas);
         markLaterArenas--;
-#endif
         MarkDelayedChildren(this, aheader);
     }
     JS_ASSERT(!markLaterArenas);
@@ -2269,7 +2260,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      */
     while (WatchpointMap::markAllIteratively(&gcmarker) ||
            WeakMapBase::markAllIteratively(&gcmarker) ||
-           Debugger::markAllIteratively(&gcmarker, gckind))
+           Debugger::markAllIteratively(&gcmarker))
     {
         gcmarker.drainMarkStack();
     }

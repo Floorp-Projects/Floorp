@@ -55,9 +55,7 @@
 #include "nsMenuBarFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
-#include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
-#include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsBindingManager.h"
@@ -79,6 +77,7 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 
@@ -89,8 +88,6 @@ using namespace mozilla;
 #endif
 
 static PRInt32 gEatMouseMove = PR_FALSE;
-
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 const PRInt32 kBlinkDelay = 67; // milliseconds
 
@@ -520,11 +517,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     // past the menu. This conditional check ensures that only menus have this
     // behaviour
     if (!IsDisabled() && IsMenu() && !IsOpen() && !mOpenTimer && !mMenuParent->IsMenuBar()) {
-      PRInt32 menuDelay = 300;   // ms
-
-      nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID));
-      if (lookAndFeel)
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
+      PRInt32 menuDelay =
+        LookAndFeel::GetInt(LookAndFeel::eIntID_SubmenuDelay, 300); // ms
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -1161,11 +1155,8 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
 PRBool
 nsMenuFrame::ShouldBlink()
 {
-  PRInt32 shouldBlink = 0;
-  nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID));
-  if (lookAndFeel) {
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ChosenMenuItemsShouldBlink, shouldBlink);
-  }
+  PRInt32 shouldBlink =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ChosenMenuItemsShouldBlink, 0);
   if (!shouldBlink)
     return PR_FALSE;
 

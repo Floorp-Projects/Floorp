@@ -227,7 +227,9 @@ gfxFT2FontList::FindFonts()
             AppendFacesFromFontFile(nsPromiseFlatCString(s).get());
         }
     }
-
+    if (d) {
+      closedir(d);
+    }
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
 

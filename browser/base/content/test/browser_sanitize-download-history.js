@@ -73,7 +73,7 @@ function test()
     // Add download to DB
     let file = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
-    file.append("satitize-dm-test.file");
+    file.append("sanitize-dm-test.file");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
     let testPath = Services.io.newFileURI(file).spec;
     let data = {
