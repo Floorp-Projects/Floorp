@@ -198,8 +198,7 @@ function openSubmenu()
     synthesizeKey("5", {});
 }
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(doTest);
+SimpleTest.waitForFocus(doTest);
 
 ]]></script>
 </window>
