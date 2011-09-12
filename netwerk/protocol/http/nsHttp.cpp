@@ -42,6 +42,7 @@
 #include "mozilla/Mutex.h"
 #include "nsCRT.h"
 #include "prbit.h"
+#include "nsStaticAtom.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gHttpLog = nsnull;
@@ -59,6 +60,23 @@ enum {
     NUM_HTTP_ATOMS
 };
 #undef HTTP_ATOM
+
+// define all method atoms
+#define HTTP_METHOD_ATOM(name_, value_) nsIAtom* nsHttp::name_;
+#include "nsHttpAtomList.h"
+#undef HTTP_METHOD_ATOM
+
+#define HTTP_METHOD_ATOM(name_, value_) \
+    NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#include "nsHttpAtomList.h"
+#undef HTTP_METHOD_ATOM
+
+static const nsStaticAtom methodAtomsInfo[] = {
+#define HTTP_METHOD_ATOM(name_, value_) \
+    NS_STATIC_ATOM(name_##_buffer, &nsHttp::name_),
+#include "nsHttpAtomList.h"
+#undef HTTP_METHOD_ATOM
+};
 
 using namespace mozilla;
 
@@ -182,6 +200,12 @@ nsHttp::DestroyAtomTable()
         delete sLock;
         sLock = nsnull;
     }
+}
+
+void
+nsHttp::CreateMethodAtoms()
+{
+    NS_RegisterStaticAtoms(methodAtomsInfo, NS_ARRAY_LENGTH(methodAtomsInfo));
 }
 
 // this function may be called from multiple threads
