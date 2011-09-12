@@ -10802,6 +10802,11 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
   nsIFrame* parentFrame = aInitialInline->GetParent();
 
   // Resolve the right style context for our anonymous blocks.
+  // The distinction in styles is needed because of CSS 2.1, section
+  // 9.2.1.1, which says:
+  //   When such an inline box is affected by relative positioning, any
+  //   resulting translation also affects the block-level box contained
+  //   in the inline box.
   nsRefPtr<nsStyleContext> blockSC =
     mPresShell->StyleSet()->
       ResolveAnonymousBoxStyle(aIsPositioned ?

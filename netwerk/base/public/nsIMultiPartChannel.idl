@@ -45,20 +45,13 @@ interface nsIChannel;
  * associated with a MultiPartChannel.
  */
 
-[scriptable, uuid(ba78db7b-b88c-4b76-baf9-3c2296a585ae)]
+[scriptable, uuid(4b04e835-d131-42af-8bf0-74289f99374f)]
 interface nsIMultiPartChannel : nsISupports
 {
     /**
      * readonly attribute to access the underlying channel
      */
     readonly attribute nsIChannel baseChannel;
-
-    /**
-     * Access to the Content-Disposition header field of this part of
-     * a multipart message.  This allows getting the preferred
-     * handling method, preferred filename, etc.  See RFC 2183.
-     */
-    attribute ACString contentDisposition;
 
     /**
      * Attribute guaranteed to be different for different parts of

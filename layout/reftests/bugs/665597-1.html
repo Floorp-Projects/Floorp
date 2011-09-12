@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<title>Test that overflowing margins and padding on scrollable element add</title>
+<style>
+#scroll {
+  overflow: scroll; background: yellow;
+  height: 100px; width: 100px;
+  padding: 4px 5px 7px 11px;
+}
+
+#content {
+  margin-top: 19px;
+  margin-bottom: 35px;
+  height: 200px;
+  background: aqua;
+}
+
+</style>
+<div id="scroll"><div id="content"></div></div>
+<script>
+document.getElementById("scroll").scrollTop = "1000";
+</script>

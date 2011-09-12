@@ -347,7 +347,7 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
     if (!IndexToId(cx, this, i, &hole, &id))
         return false;
 
-    const Shape *shape = nativeLookup(id);
+    const Shape *shape = nativeLookup(cx, id);
     if (!shape || !shape->isDataDescriptor())
         vp->setMagic(JS_ARRAY_HOLE);
     else
@@ -1104,7 +1104,7 @@ static bool
 AddLengthProperty(JSContext *cx, JSObject *obj)
 {
     const jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    JS_ASSERT(!obj->nativeLookup(lengthId));
+    JS_ASSERT(!obj->nativeLookup(cx, lengthId));
 
     return obj->addProperty(cx, lengthId, array_length_getter, array_length_setter,
                             SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0);

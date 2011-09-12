@@ -102,6 +102,27 @@
     <span id="text-notabs">&aboutHome.noTabs;</span>
     <span id="text-noaddons">&aboutHome.noAddons;</span>
   </div>
+  
+  <!-- Lightbox -->
+  <div id="lightbox">
+    <div id="lightbox-background"></div>
+    <div id="lightbox-wrapper">
+      <div id="lightbox-container">
+        <img id="lightbox-logo" src="chrome://browser/skin/images/aurora-lightbox-logo.png"/>
+        <div id="lightbox-message">
+           <p class="title">&aboutHome.getInBeforeBeta;</p>
+           <p class="message">&aboutHome.tryAurora;</p>
+        </div>
+        <a id="lightbox-link">
+          <div id="lightbox-button">
+            <p class="title">&aboutHome.downloadAurora;</p>
+            <p class="sub-title">&aboutHome.forAndroid;</p>
+          </div>
+        </a>
+        <img id="lightbox-close" src="chrome://browser/skin/images/aurora-lightbox-close.png" alt="Aurora Close"/>
+      </div>
+    </div>
+  </div>
 
   <script type="application/javascript;version=1.8"><![CDATA[
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
@@ -148,6 +169,8 @@
       } else {
         endDiscovery();
       }
+
+      initLightbox();
     }
 
     function uninit() {
@@ -428,6 +451,45 @@
      setTimeout(function() {
        document.getElementById("content").removeAttribute("hidden");
      }, 0);
+   }
+   
+   function initLightbox() {
+
+     let prefs = getChromeWin().Services.prefs;
+     let channel = prefs.getCharPref("app.update.channel");
+     let startupCount = 0;
+     try {
+       startupCount = prefs.getIntPref("app.promo.aurora");
+       if(startupCount != 6)
+         prefs.setIntPref("app.promo.aurora", ++startupCount);
+     } catch(e) {
+       prefs.setIntPref("app.promo.aurora", 1);
+     }
+
+     // This should appear only on "beta" channel on the fifth launch.
+     if ((channel == "beta") && (startupCount == 5)) {
+       let close = document.getElementById("lightbox-close");
+       close.addEventListener("click", function() {
+         document.getElementById("lightbox").style.display = "none";
+       }, false);
+       
+       let link = document.getElementById("lightbox-link");
+       link.addEventListener("click", function(event) {
+         event.preventDefault();
+         document.getElementById("lightbox").style.display = "none";
+
+         let BrowserUI = getChromeWin().BrowserUI;
+         let owner = getChromeWin().Browser.selectedTab;
+         let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+         let linkUrl = formatter.formatURLPref("app.channelURL");
+         BrowserUI.newTab(linkUrl, owner);
+       }, false);
+
+       // Giving a chance for any page transitions to happen, if any, before displaying the lightbox
+       setTimeout(function() {
+         document.getElementById("lightbox").style.display = "block";
+       }, 300);
+     }
    }
   ]]></script>
 </body>

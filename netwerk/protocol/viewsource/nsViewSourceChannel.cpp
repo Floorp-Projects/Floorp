@@ -372,6 +372,30 @@ nsViewSourceChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->GetContentDisposition(aContentDisposition);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->GetContentDispositionFilename(aContentDispositionFilename);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->GetContentDispositionHeader(aContentDispositionHeader);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetContentLength(PRInt32 *aContentLength)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);

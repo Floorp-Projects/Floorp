@@ -104,6 +104,10 @@ unsigned char *_mbsstr( const unsigned char *str,
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
 #endif
 
+ILCreateFromPathWPtr nsLocalFile::sILCreateFromPathW = NULL;
+SHOpenFolderAndSelectItemsPtr nsLocalFile::sSHOpenFolderAndSelectItems = NULL;
+PRLibrary *nsLocalFile::sLibShell = NULL;
+
 class nsDriveEnumerator : public nsISimpleEnumerator
 {
 public:
@@ -2688,32 +2692,113 @@ nsLocalFile::Reveal()
     nsresult rv = ResolveAndStat();
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
         return rv;
+
+    // First try revealing with the shell, and if that fails fall back
+    // to the classic way using explorer.exe command line parameters
+    rv = RevealUsingShell();
+    if (NS_FAILED(rv)) {
+      rv = RevealClassic();
+    }
+
+    return rv;
+}
+
+nsresult
+nsLocalFile::RevealClassic()
+{
+  // use the full path to explorer for security
+  nsCOMPtr<nsILocalFile> winDir;
+  nsresult rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(winDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString explorerPath;
+  rv = winDir->GetPath(explorerPath);  
+  NS_ENSURE_SUCCESS(rv, rv);
+  explorerPath.AppendLiteral("\\explorer.exe");
+
+  // Always open a new window for files because Win2K doesn't appear to select
+  // the file if a window showing that folder was already open. If the resolved 
+  // path is a directory then instead of opening the parent and selecting it, 
+  // we open the directory itself.
+  nsAutoString explorerParams;
+  if (mFileInfo64.type != PR_FILE_DIRECTORY) // valid because we ResolveAndStat above
+    explorerParams.AppendLiteral("/n,/select,");
+  explorerParams.Append(L'\"');
+  explorerParams.Append(mResolvedPath);
+  explorerParams.Append(L'\"');
+
+  if (::ShellExecuteW(NULL, L"open", explorerPath.get(), explorerParams.get(),
+    NULL, SW_SHOWNORMAL) <= (HINSTANCE) 32)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult 
+nsLocalFile::RevealUsingShell()
+{
+  // All of these shell32.dll related pointers should be non NULL 
+  // on XP and later.
+  if (!sLibShell || !sILCreateFromPathW || !sSHOpenFolderAndSelectItems) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRBool isDirectory;
+  nsresult rv = IsDirectory(&isDirectory);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  HRESULT hr;
+  if (isDirectory) {
+    // We have a directory so we should open the directory itself.
+    ITEMIDLIST *dir = sILCreateFromPathW(mResolvedPath.get());
+    if (!dir) {
+      return NS_ERROR_FAILURE;
+    }
+
+    const ITEMIDLIST* selection[] = { dir };
+    UINT count = PR_ARRAY_SIZE(selection);
+
+    //Perform the open of the directory.
+    hr = sSHOpenFolderAndSelectItems(dir, count, selection, 0);
+    CoTaskMemFree(dir);
+  }
+  else {
+    // Obtain the parent path of the item we are revealing.
+    nsCOMPtr<nsIFile> parentDirectory;
+    rv = GetParent(getter_AddRefs(parentDirectory));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoString parentDirectoryPath;
+    rv = parentDirectory->GetPath(parentDirectoryPath);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // We have a file so we should open the parent directory.
+    ITEMIDLIST *dir = sILCreateFromPathW(parentDirectoryPath.get());
+    if (!dir) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Set the item in the directory to select to the file we want to reveal.
+    ITEMIDLIST *item = sILCreateFromPathW(mResolvedPath.get());
+    if (!item) {
+      CoTaskMemFree(dir);
+      return NS_ERROR_FAILURE;
+    }
     
-    // use the full path to explorer for security
-    nsCOMPtr<nsILocalFile> winDir;
-    rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(winDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsAutoString explorerPath;
-    rv = winDir->GetPath(explorerPath);  
-    NS_ENSURE_SUCCESS(rv, rv);
-    explorerPath.Append(L"\\explorer.exe");
+    const ITEMIDLIST* selection[] = { item };
+    UINT count = PR_ARRAY_SIZE(selection);
 
-    // Always open a new window for files because Win2K doesn't appear to select
-    // the file if a window showing that folder was already open. If the resolved 
-    // path is a directory then instead of opening the parent and selecting it, 
-    // we open the directory itself.
-    nsAutoString explorerParams;
-    if (mFileInfo64.type != PR_FILE_DIRECTORY) // valid because we ResolveAndStat above
-        explorerParams.Append(L"/n,/select,");
-    explorerParams.Append(L'\"');
-    explorerParams.Append(mResolvedPath);
-    explorerParams.Append(L'\"');
+    //Perform the selection of the file.
+    hr = sSHOpenFolderAndSelectItems(dir, count, selection, 0);
 
-    if (::ShellExecuteW(NULL, L"open", explorerPath.get(), explorerParams.get(),
-                        NULL, SW_SHOWNORMAL) <= (HINSTANCE) 32)
-        return NS_ERROR_FAILURE;
-
+    CoTaskMemFree(dir);
+    CoTaskMemFree(item);
+  }
+  
+  if (SUCCEEDED(hr)) {
     return NS_OK;
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 NS_IMETHODIMP
@@ -3009,11 +3094,29 @@ nsLocalFile::GlobalInit()
 {
     nsresult rv = NS_CreateShortcutResolver();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
+
+    // shell32.dll should be loaded already, so we are not actually 
+    // loading the library here.
+    sLibShell = PR_LoadLibrary("shell32.dll");
+    if (sLibShell) {
+      // ILCreateFromPathW is available in XP and up.
+      sILCreateFromPathW = (ILCreateFromPathWPtr) 
+                           PR_FindFunctionSymbol(sLibShell, 
+                                                 "ILCreateFromPathW");
+
+      // SHOpenFolderAndSelectItems is available in XP and up.
+      sSHOpenFolderAndSelectItems = (SHOpenFolderAndSelectItemsPtr) 
+                                     PR_FindFunctionSymbol(sLibShell, 
+                                                           "SHOpenFolderAndSelectItems");
+    }
 }
 
 void
 nsLocalFile::GlobalShutdown()
 {
+    if (sLibShell) {
+      PR_UnloadLibrary(sLibShell);
+    }
     NS_DestroyShortcutResolver();
 }
 

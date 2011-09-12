@@ -8,11 +8,9 @@ conformance/shaders/glsl-features/../../glsl-features.html?feature=abs-vert-vec4
 conformance/shaders/glsl-features/../../glsl-features.html?feature=sign-frag-vec4&reffs=shaders/glsl-features/sign-vec4-ref.frag&testfs=shaders/glsl-features/sign-vec4.frag
 conformance/shaders/glsl-features/../../glsl-features.html?feature=sign-vert-vec4&refvs=shaders/glsl-features/sign-vec4-ref.vert&testvs=shaders/glsl-features/sign-vec4.vert
 conformance/gl-get-active-attribute.html
-conformance/gl-getshadersource.html
 conformance/gl-uniform-bool.html
 conformance/glsl-conformance.html
 conformance/glsl-long-variable-names.html
-conformance/invalid-passed-params.html
 conformance/premultiplyalpha-test.html
 conformance/read-pixels-test.html
 conformance/uninitialized-test.html

@@ -5,6 +5,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/status.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
@@ -19,25 +20,25 @@ let collectionsHelper = track_collections_helper();
 let upd = collectionsHelper.with_updated_collection;
 
 function sync_httpd_setup() {
-  let handlers = {};  
+  let handlers = {};
 
-  handlers["/1.1/johndoe/storage/meta/global"] = 
+  handlers["/1.1/johndoe/storage/meta/global"] =
     new ServerWBO("global", {}).handler();
-  handlers["/1.1/johndoe/storage/steam"] = 
+  handlers["/1.1/johndoe/storage/steam"] =
     new ServerWBO("steam", {}).handler();
 
   handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
   delete collectionsHelper.collections.crypto;
   delete collectionsHelper.collections.meta;
-  
+
   let cr = new ServerWBO("keys");
   handlers["/1.1/johndoe/storage/crypto/keys"] =
     upd("crypto", cr.handler());
-  
+
   let cl = new ServerCollection();
   handlers["/1.1/johndoe/storage/clients"] =
     upd("clients", cl.handler());
-  
+
   return httpd_setup(handlers);
 }
 
@@ -93,6 +94,7 @@ add_test(function test_sync_triggered() {
     server.stop(run_next_test);
   });
 
+  do_check_eq(Status.login, LOGIN_SUCCEEDED);
   tracker.score += SCORE_INCREMENT_XLARGE;
 });
 
@@ -115,6 +117,36 @@ add_test(function test_clients_engine_sync_triggered() {
   });
 
   SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
+  do_check_eq(Status.login, LOGIN_SUCCEEDED);
   Clients._tracker.score += SCORE_INCREMENT_XLARGE;
 });
 
+add_test(function test_incorrect_credentials_sync_not_triggered() {
+  _("Ensure that score changes don't trigger a sync if Status.login != LOGIN_SUCCEEDED.");
+  let server = sync_httpd_setup();
+  setUp();
+
+  // Ensure we don't actually try to sync.
+  function onSyncStart() {
+    do_throw("Should not get here!");
+  }
+  Svc.Obs.add("weave:service:sync:start", onSyncStart);
+
+  // First wait >100ms (nsITimers can take up to that much time to fire, so
+  // we can account for the timer in delayedAutoconnect) and then one event
+  // loop tick (to account for a possible call to weave:service:sync:start).
+  Utils.namedTimer(function() {
+    Utils.nextTick(function() {
+      Svc.Obs.remove("weave:service:sync:start", onSyncStart);
+
+      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+
+      Service.startOver();
+      server.stop(run_next_test);
+    });
+  }, 150, {}, "timer");
+
+  // Faking incorrect credentials to prevent score update.
+  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+  tracker.score += SCORE_INCREMENT_XLARGE;
+});
