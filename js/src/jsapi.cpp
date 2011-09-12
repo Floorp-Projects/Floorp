@@ -1657,7 +1657,6 @@ static JSStdName standard_class_names[] = {
 
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
 #endif
 
     /* Typed Arrays */
@@ -1811,7 +1810,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
      * Since ES5 15.1.1.3 undefined can't be deleted.
      */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (!obj->nativeContains(ATOM_TO_JSID(atom)) &&
+    if (!obj->nativeContains(cx, ATOM_TO_JSID(atom)) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
                              PropertyStub, StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -1887,7 +1886,7 @@ static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
                     jsint *ip, JSBool *foundp)
 {
-    *foundp = obj->nativeContains(ATOM_TO_JSID(atom));
+    *foundp = obj->nativeContains(cx, ATOM_TO_JSID(atom));
     if (*foundp)
         ida = AddAtomToArray(cx, atom, ida, ip);
     return ida;
@@ -3362,7 +3361,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foun
         return JS_TRUE;
     }
 
-    *foundp = obj->nativeContains(id);
+    *foundp = obj->nativeContains(cx, id);
     return JS_TRUE;
 }
 

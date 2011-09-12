@@ -22,3 +22,4 @@ load 612565-1.html
 asserts(0-6) load 615015-1.html # Bug 439258
 load 615450-1.html
 load 643786-1.html
+load 682650-1.html

@@ -55,7 +55,7 @@
 interface nsIDOMFile;
 interface nsIVariant;
 
-[scriptable, uuid(010d8e6f-86ba-47ad-a04f-1a4d75f1caf8)]
+[scriptable, uuid(b00ad90f-b83a-400d-87b8-704503a65061)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute unsigned long width;

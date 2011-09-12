@@ -70,7 +70,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
      * Check for fill from js_SetPropertyHelper where the setter removed shape
      * from pobj (via unwatch or delete, e.g.).
      */
-    if (!pobj->nativeContains(*shape)) {
+    if (!pobj->nativeContains(cx, *shape)) {
         PCMETER(oddfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -399,7 +399,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
         jsid id = ATOM_TO_JSID(atom);
 
         id = js_CheckForStringIndex(id);
-        JS_ASSERT(pobj->nativeContains(id));
+        JS_ASSERT(pobj->nativeContains(cx, id));
 #endif
         *pobjp = pobj;
         return NULL;

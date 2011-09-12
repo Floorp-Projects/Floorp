@@ -756,16 +756,16 @@ TypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target, FilterKind filter)
 
 /* If id is a normal slotful 'own' property of an object, get its shape. */
 static inline const Shape *
-GetSingletonShape(JSObject *obj, jsid id)
+GetSingletonShape(JSContext *cx, JSObject *obj, jsid id)
 {
-    const Shape *shape = obj->nativeLookup(id);
+    const Shape *shape = obj->nativeLookup(cx, id);
     if (shape && shape->hasDefaultGetterOrIsMethod() && shape->slot != SHAPE_INVALID_SLOT)
         return shape;
     return NULL;
 }
 
 void
-ScriptAnalysis::pruneTypeBarriers(uint32 offset)
+ScriptAnalysis::pruneTypeBarriers(JSContext *cx, uint32 offset)
 {
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
@@ -777,7 +777,7 @@ ScriptAnalysis::pruneTypeBarriers(uint32 offset)
         }
         if (barrier->singleton) {
             JS_ASSERT(barrier->type.isPrimitive(JSVAL_TYPE_UNDEFINED));
-            const Shape *shape = GetSingletonShape(barrier->singleton, barrier->singletonId);
+            const Shape *shape = GetSingletonShape(cx, barrier->singleton, barrier->singletonId);
             if (shape && !barrier->singleton->nativeGetSlot(shape->slot).isUndefined()) {
                 /*
                  * When we analyzed the script the singleton had an 'own'
@@ -805,7 +805,7 @@ static const uint32 BARRIER_OBJECT_LIMIT = 10;
 
 void ScriptAnalysis::breakTypeBarriers(JSContext *cx, uint32 offset, bool all)
 {
-    pruneTypeBarriers(offset);
+    pruneTypeBarriers(cx, offset);
 
     TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
     while (*pbarrier) {
@@ -1004,7 +1004,7 @@ PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *obje
                  * to remove the barrier after the property becomes defined,
                  * even if no undefined value is ever observed at pc.
                  */
-                const Shape *shape = GetSingletonShape(object->singleton, id);
+                const Shape *shape = GetSingletonShape(cx, object->singleton, id);
                 if (shape && object->singleton->nativeGetSlot(shape->slot).isUndefined())
                     script->analysis()->addSingletonTypeBarrier(cx, pc, target, object->singleton, id);
             }
@@ -2728,7 +2728,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
                 shape = shape->previous();
             }
         } else {
-            const Shape *shape = singleton->nativeLookup(id);
+            const Shape *shape = singleton->nativeLookup(cx, id);
             if (shape)
                 UpdatePropertyType(cx, &base->types, singleton, shape, false);
         }
@@ -3299,6 +3299,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /* Nop bytecodes. */
       case JSOP_POP:
       case JSOP_NOP:
+      case JSOP_NOTEARG:
       case JSOP_TRACE:
       case JSOP_NOTRACE:
       case JSOP_GOTO:
@@ -3967,7 +3968,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_GENERATOR:
         if (script->hasFunction) {
             if (script->hasGlobal()) {
-                TypeObject *object = TypeScript::StandardType(cx, script, JSProto_Generator);
+                JSObject *proto = script->global()->getOrCreateGeneratorPrototype(cx);
+                if (!proto)
+                    return false;
+                TypeObject *object = proto->getNewType(cx);
                 if (!object)
                     return false;
                 TypeScript::ReturnTypes(script)->addType(cx, Type::ObjectType(object));
@@ -5055,8 +5059,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
      * The scope object must be the initial one for the script, before any call
      * object has been created in the heavyweight case.
      */
-    JS_ASSERT_IF(scope && scope->isCall() && !scope->callIsForEval(),
-                 scope->getCallObjCalleeFunction() != fun);
+    JS_ASSERT_IF(scope && scope->isCall() && !scope->asCall().isForEval(),
+                 scope->asCall().getCalleeFunction() != fun);
 
     if (!script->compileAndGo) {
         script->types->global = NULL;
@@ -5089,11 +5093,13 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     while (!scope->isCall())
         scope = scope->getParent();
 
+    CallObject &call = scope->asCall();
+
     /* The isInnerFunction test ensures there is no intervening strict eval call object. */
-    JS_ASSERT(!scope->callIsForEval());
+    JS_ASSERT(!call.isForEval());
 
     /* Don't track non-heavyweight parents, NAME ops won't reach into them. */
-    JSFunction *parentFun = scope->getCallObjCalleeFunction();
+    JSFunction *parentFun = call.getCalleeFunction();
     if (!parentFun || !parentFun->isHeavyweight())
         return true;
     JSScript *parent = parentFun->script();
@@ -5121,8 +5127,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
         if (!SetScope(cx, parent, scope->getParent()))
             return false;
         parent->nesting()->activeCall = scope;
-        parent->nesting()->argArray = scope->callObjArgArray();
-        parent->nesting()->varArray = scope->callObjVarArray();
+        parent->nesting()->argArray = call.argArray();
+        parent->nesting()->varArray = call.varArray();
     }
 
     JS_ASSERT(!script->types->nesting);
@@ -5212,7 +5218,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
     JSScript *parent = script->nesting()->parent;
     JS_ASSERT(parent);
 
-    while (!scope->isCall() || scope->getCallObjCalleeFunction()->script() != parent)
+    while (!scope->isCall() || scope->asCall().getCalleeFunction()->script() != parent)
         scope = scope->getParent();
 
     if (scope != parent->nesting()->activeCall) {

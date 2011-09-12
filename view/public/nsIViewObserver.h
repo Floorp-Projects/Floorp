@@ -45,6 +45,9 @@
 
 class nsRenderingContext;
 class nsGUIEvent;
+class nsIWidget;
+class nsRegion;
+class nsIntRegion;
 
 #define NS_IVIEWOBSERVER_IID  \
   { 0xdc283a18, 0x61cb, 0x468c, \

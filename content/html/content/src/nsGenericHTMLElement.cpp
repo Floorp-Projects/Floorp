@@ -785,6 +785,11 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
                                                   getter_AddRefs(df));
     nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
     if (NS_SUCCEEDED(rv)) {
+      // Suppress assertion about node removal mutation events that can't have
+      // listeners anyway, because no one has had the chance to register mutation
+      // listeners on the fragment that comes from the parser.
+      nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
+
       static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
     }
   }

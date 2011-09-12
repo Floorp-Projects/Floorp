@@ -37,8 +37,6 @@
 
 /* Platform specific code to invoke XPCOM methods on native objects */
 
-#ifdef __GNUC__            /* Gnu compiler. */
-
 #include "xptcprivate.h"
 #include "xptc_platforms_unixish_x86.h"
 #include "xptc_gcc_x86_unix.h"
@@ -68,27 +66,6 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
     }
 }
 } // extern "C"
-
-// NOTE! See xptc_gcc_x86_unix.h for the reason why this function exists.
-#if (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ == 0))
-PRUint32
-xptc_invoke_copy_to_stack_keeper (void)
-{
-    PRUint32 dummy1;
-    void ATTRIBUTE_USED __attribute__ ((regparm(3))) (*dummy2)
-	(PRUint32, nsXPTCVariant*, PRUint32*) = invoke_copy_to_stack;
-
-// dummy2 references invoke_copy_to_stack, now we have to "use" it
-    __asm__ __volatile__ (
-	""
-	: "=&a" (dummy1)
-	: "g"   (dummy2)
-    );
-
-    return dummy1 & 0xF0F00000;
-}
-#endif
-
 
 /*
   EXPORT_XPCOM_API(nsresult)
@@ -187,11 +164,7 @@ __asm__ (
 	"pushl %ecx\n\t"
 	"movl  (%ecx), %edx\n\t"
 	"movl  0x0c(%ebp), %eax\n\t"    /* function index */
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 	"leal  (%edx,%eax,4), %edx\n\t"
-#else /* not G++ V3 ABI  */
-	"leal  8(%edx,%eax,4), %edx\n\t"
-#endif /* G++ V3 ABI */
 #endif
 	"call  *(%edx)\n\t"
 #ifdef MOZ_PRESERVE_PIC
@@ -204,7 +177,3 @@ __asm__ (
 	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
 #endif
 );
-
-#else
-#error "can't find a compiler to use"
-#endif /* __GNUC__ */
