@@ -104,9 +104,7 @@
 #include "nsIServiceManager.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
-#include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
 #include "nsUnicharUtils.h"
 #include "nsLayoutErrors.h"
 #include "nsContentErrors.h"
@@ -124,11 +122,10 @@
 #include "CSSCalc.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
-
-static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -1061,22 +1058,17 @@ private:
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
 {
-  nscolor color = NS_RGB(255, 255, 255);
-  
-  nsILookAndFeel::nsColorID colorID;
+  LookAndFeel::ColorID colorID;
   nsresult result;
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
-    colorID = nsILookAndFeel::eColor_TextSelectBackground;
+    colorID = LookAndFeel::eColorID_TextSelectBackground;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
-    colorID = nsILookAndFeel::eColor_TextSelectBackgroundAttention;
+    colorID = LookAndFeel::eColorID_TextSelectBackgroundAttention;
   } else {
-    colorID = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
+    colorID = LookAndFeel::eColorID_TextSelectBackgroundDisabled;
   }
 
-  nsCOMPtr<nsILookAndFeel> look;
-  look = do_GetService(kLookAndFeelCID, &result);
-  if (NS_SUCCEEDED(result) && look)
-    look->GetColor(colorID, color);
+  nscolor color = LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255));
 
   gfxRGBA c(color);
   c.a = .5;
@@ -1546,13 +1538,20 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRect = aDirtyRect;
 
   PRBool inTransform = aBuilder->IsInTransform();
-  /* If we're being transformed, we need to invert the matrix transform so that we don't 
-   * grab points in the wrong coordinate system!
-   */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
-    /* If we have a complex transform, just grab the entire overflow rect instead. */
+    // Transform dirtyRect into our frame's local coordinate space. Note that
+    // the new value is the bounds of the old value's transformed vertices, so
+    // the area covered by dirtyRect may increase here.
+    //
+    // Although we don't bother to check for and maintain the 1x1 size of the
+    // magic rect indicating a hit test point, in reality this is extremely
+    // unlikely to matter. The rect starts off with dimensions of 1x1 *app*
+    // units, and it would require a very large number of elements with
+    // transforms along a parent chain to noticably expand this by an entire
+    // device pixel.
     if (Preserves3DChildren() || !nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
+      // we have a singular transform - just grab the entire overflow rect
       dirtyRect = GetVisualOverflowRectRelativeToSelf();
     }
     inTransform = PR_TRUE;
@@ -1645,7 +1644,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // 8, 9: non-negative z-index children
   resultList.AppendToTop(set.PositionedDescendants());
 
-  if (applyAbsPosClipping) {
+  /* If we have absolute position clipping and we have, or will have, items to
+   * be clipped, wrap the list in a clip wrapper.
+   */
+  if (applyAbsPosClipping &&
+      (!resultList.IsEmpty() || usingSVGEffects)) {
     nsAbsPosClipWrapper wrapper(absPosClip);
     nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
     if (!item)
@@ -1653,20 +1656,23 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // resultList was emptied
     resultList.AppendToTop(item);
   }
- 
-  /* If there are any SVG effects, wrap up the list in an effects list. */
+
+  /* If there are any SVG effects, wrap the list up in an SVG effects item
+   * (which also handles CSS group opacity). Note that we create an SVG effects
+   * item even if resultList is empty, since a filter can produce graphical
+   * output even if the element being filtered wouldn't otherwise do so.
+   */
   if (usingSVGEffects) {
     /* List now emptied, so add the new list to the top. */
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
       return rv;
-  } else
-
-  /* If there is any opacity, wrap it up in an opacity list.
-   * If there's nothing in the list, don't add anything.
+  }
+  /* Else, if the list is non-empty and there is CSS group opacity without SVG
+   * effects, wrap it up in an opacity item.
    */
-  if (disp->mOpacity < 1.0f && !resultList.IsEmpty()) {
+  else if (disp->mOpacity < 1.0f && !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
@@ -1809,11 +1815,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects.
-  PRBool isComposited = disp->mOpacity != 1.0f || aChild->IsTransformed()
+  PRBool isVisuallyAtomic = disp->mOpacity != 1.0f
+    || aChild->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild);
 
   PRBool isPositioned = disp->IsPositioned();
-  if (isComposited || isPositioned || disp->IsFloating() ||
+  if (isVisuallyAtomic || isPositioned || disp->IsFloating() ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // If you change this, also change IsPseudoStackingContextFromStyle()
     pseudoStackingContext = PR_TRUE;
@@ -1858,7 +1865,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsDisplayList extraPositionedDescendants;
   const nsStylePosition* pos = aChild->GetStylePosition();
   if ((isPositioned && pos->mZIndex.GetUnit() == eStyleUnit_Integer) ||
-      isComposited || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
+      isVisuallyAtomic || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // True stacking context
     rv = aChild->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
     if (NS_SUCCEEDED(rv)) {
@@ -1869,8 +1876,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     PRBool applyAbsPosClipping =
         ApplyAbsPosClipping(aBuilder, disp, aChild, &clipRect);
     // A pseudo-stacking context (e.g., a positioned element with z-index auto).
-    // we allow positioned descendants of this element to escape to our
-    // container's positioned descendant list, because they might be
+    // We allow positioned descendants of the child to escape to our parent
+    // stacking context's positioned descendant list, because they might be
     // z-index:non-auto
     nsDisplayListCollection pseudoStack;
     nsRect clippedDirtyRect = dirty;
@@ -1910,7 +1917,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   }
   NS_ENSURE_SUCCESS(rv, rv);
     
-  if (isPositioned || isComposited ||
+  if (isPositioned || isVisuallyAtomic ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.

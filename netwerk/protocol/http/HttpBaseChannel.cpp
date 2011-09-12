@@ -377,6 +377,51 @@ HttpBaseChannel::SetContentCharset(const nsACString& aContentCharset)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+{
+  nsresult rv;
+  nsCString header;
+
+  rv = GetContentDispositionHeader(header);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *aContentDisposition = NS_GetContentDispositionFromHeader(header, this);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetContentDispositionFilename(nsAString& aContentDispositionFilename)
+{
+  aContentDispositionFilename.Truncate();
+
+  nsresult rv;
+  nsCString header;
+
+  rv = GetContentDispositionHeader(header);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_GetFilenameFromDisposition(aContentDispositionFilename,
+                                       header, mURI);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetContentDispositionHeader(nsACString& aContentDispositionHeader)
+{
+  if (!mResponseHead)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  nsresult rv = mResponseHead->GetHeader(nsHttp::Content_Disposition,
+                                         aContentDispositionHeader);
+  if (NS_FAILED(rv) || aContentDispositionHeader.IsEmpty())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetContentLength(PRInt32 *aContentLength)
 {
   NS_ENSURE_ARG_POINTER(aContentLength);

@@ -3071,16 +3071,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  // geckoEvent must be initialized now (while anEvent is still available),
-  // but we also need to access it (and modify it) in the following "block"
-  // (the trackingHandler passed to [NSEvent trackSwipeEventWithOptions:...]).
-  // Normally we'd give it the '__block' keyword, but this makes the compiler
-  // crash :-(  Without the '__block' keyword, it becomes immutable from
-  // trackingHandler.  So trackingHandler must make a copy of it and modify
-  // that.
-  nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
-  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-
   __block BOOL animationCancelled = NO;
   // At this point, anEvent is the first scroll wheel event in a two-finger
   // horizontal gesture that we've decided to treat as a swipe.  When we call
@@ -3093,6 +3083,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // information is passed to trackingHandler.  We must be careful to only
   // call [NSEvent maybeTrackScrollEventAsSwipe:...] on a "real" swipe --
   // otherwise two-finger scrolling performance will suffer significantly.
+  // Note that we use anEvent inside the block. This extends the lifetime of
+  // the anEvent object because it's retained by the block, see bug 682445.
+  // The block will release it when the block goes away at the end of the
+  // animation, or when the animation is canceled.
   [anEvent trackSwipeEventWithOptions:0
              dampenAmountThresholdMin:-1
                                   max:1
@@ -3112,13 +3106,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // bug 678891.
       if (phase == NSEventPhaseEnded) {
         if (gestureAmount) {
-          nsSimpleGestureEvent geckoEventCopy(geckoEvent);
+          nsSimpleGestureEvent geckoEvent(PR_TRUE, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
+          [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
           if (gestureAmount > 0) {
-            geckoEventCopy.direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+            geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
           } else {
-            geckoEventCopy.direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+            geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
           }
-          mGeckoChild->DispatchWindowEvent(geckoEventCopy);
+          mGeckoChild->DispatchWindowEvent(geckoEvent);
         }
         mSwipeAnimationCancelled = nil;
       } else if (phase == NSEventPhaseCancelled) {

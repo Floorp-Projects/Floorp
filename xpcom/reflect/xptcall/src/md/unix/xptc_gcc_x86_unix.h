@@ -55,38 +55,5 @@
 #define SYMBOL_UNDERSCORE
 #endif
 
-/*
-  What are those keeper functions?
 
-  The problem: gcc doesn't know that the assembler routines call
-  static functions so gcc may not emit the definition (i.e., the
-  code) for these functions. In gcc 3.1 and up
-    "__attribute__ ((used))" exists and solves the problem.
-  For older gcc versions it's not so easy. One could use the
-  -fkeep-inline-functions but that keeps a surprising number of
-  functions which bloats the compiled library. It seems otherwise
-  harmless, though. Alternatively, one could use
-  -fno-inline-functions which works right now but might cause a
-  slowdown under some circumstances. The problem with these methods
-  is that they do not automatically adapt to the compiler used.
-
-  The best solution seems to be to create dummy functions that
-  reference the appropriate static functions. It's then necessary
-  to "use" these functions in a way that gcc will not optimize
-  away. The keeper functions use assembly code to confuse gcc.
-
-  One drawback is that the keeper functions are externally visible
-  so they shouldn't do anything harmful.
-
-  With the right linker, one could make the keeper functions local
-  so they wouldn't be visible.
- */
-
-
-// gcc 3.1 and up
-#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
 #define ATTRIBUTE_USED __attribute__ ((__used__))
-#else
-#define ATTRIBUTE_USED
-#endif
-

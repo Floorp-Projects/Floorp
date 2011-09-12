@@ -41,7 +41,7 @@
 interface nsIDOMSVGAnimatedLengthList;
 interface nsIDOMSVGAnimatedNumberList;
 
-[scriptable, uuid(92b911b3-d822-4805-b6a3-7a698f88e720)]
+[scriptable, uuid(9e91bf1d-c1ae-468d-9053-fa683e713beb)]
 interface nsIDOMSVGTextPositioningElement : nsIDOMSVGTextContentElement
 { 
   readonly attribute nsIDOMSVGAnimatedLengthList x;

@@ -41,7 +41,7 @@
   */
 
 var EXPORTED_SYMBOLS = ["PlacesItem", "Bookmark", "Separator", "Livemark",
-                        "BookmarkFolder"];
+                        "BookmarkFolder", "DumpBookmarks"];
 
 const CC = Components.classes;
 const CI = Components.interfaces;
@@ -50,6 +50,26 @@ const CU = Components.utils;
 CU.import("resource://tps/logger.jsm");
 CU.import("resource://gre/modules/Services.jsm");
 CU.import("resource://gre/modules/PlacesUtils.jsm");
+
+
+var DumpBookmarks = function TPS_Bookmarks__DumpBookmarks() {
+  let writer = {
+    value: "",
+    write: function PlacesItem__dump__write(aStr, aLen) {
+      this.value += aStr;
+    }
+  };
+
+  let options = PlacesUtils.history.getNewQueryOptions();
+  options.queryType = options.QUERY_TYPE_BOOKMARKS;
+  let query = PlacesUtils.history.getNewQuery();
+  query.setFolders([PlacesUtils.placesRootId], 1);
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+  PlacesUtils.serializeNodeAsJSONToOutputStream(root, writer, true, false);
+  let value = JSON.parse(writer.value);
+  Logger.logInfo("dumping bookmarks\n\n" + JSON.stringify(value, null, ' ') + "\n\n");
+};
 
 /**
  * extend, causes a child object to inherit from a parent

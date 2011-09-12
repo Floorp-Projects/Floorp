@@ -39,7 +39,7 @@
 #include "nsIDOMXULLabeledControlEl.idl"
 interface nsIDOMHTMLInputElement;
 
-[scriptable, uuid(806a706e-2bae-4aec-a53e-5432eb4a7025)]
+[scriptable, uuid(741d87d2-2495-4a5c-9460-1e7d1128586d)]
 interface nsIDOMXULTextBoxElement : nsIDOMXULControlElement
 {
   // inputField may be any type of editable field, such as an
