@@ -1591,7 +1591,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
      * The result may not have been marked if we bailed out while inside a stub
      * for the op.
      */
-    if (js_CodeSpec[op].format & JOF_TYPESET) {
+    if (f.regs.pc == nextpc && (js_CodeSpec[op].format & JOF_TYPESET)) {
         int which = (js_CodeSpec[op].format & JOF_CALLOP) ? -2 : -1;  /* Yuck. */
         types::TypeScript::Monitor(cx, script, pc, f.regs.sp[which]);
     }
