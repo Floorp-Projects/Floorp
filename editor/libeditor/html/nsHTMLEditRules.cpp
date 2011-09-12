@@ -1612,7 +1612,7 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   }
   
   nsCOMPtr<nsIDOMNode> listItem = IsInListItem(blockParent);
-  if (listItem)
+  if (listItem && listItem != hostNode)
   {
     res = ReturnInListItem(aSelection, listItem, node, offset);
     *aHandled = PR_TRUE;
@@ -6507,6 +6507,7 @@ nsHTMLEditRules::MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes,
 ///////////////////////////////////////////////////////////////////////////
 // IsInListItem: if aNode is the descendant of a listitem, return that li.
 //               But table element boundaries are stoppers on the search.
+//               Also stops on the active editor host (contenteditable).
 //               Also test if aNode is an li itself.
 //                       
 nsCOMPtr<nsIDOMNode> 
@@ -6520,6 +6521,7 @@ nsHTMLEditRules::IsInListItem(nsIDOMNode *aNode)
   
   while (parent)
   {
+    if (!mHTMLEditor->IsNodeInActiveEditor(parent)) return nsnull;
     if (nsHTMLEditUtils::IsTableElement(parent)) return nsnull;
     if (nsHTMLEditUtils::IsListItem(parent)) return parent;
     tmp=parent; tmp->GetParentNode(getter_AddRefs(parent));
