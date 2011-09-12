@@ -234,7 +234,7 @@ nsIOService::Init()
     if (observerService) {
         observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
         observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
-        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+        observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, PR_TRUE);
         observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, PR_TRUE);
     }
     else
@@ -969,7 +969,7 @@ nsIOService::Observe(nsISupports *subject,
             }
         } 
     }
-    else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    else if (!strcmp(topic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID)) {
         // Remember we passed XPCOM shutdown notification to prevent any
         // changes of the offline status from now. We must not allow going
         // online after this point.

@@ -78,6 +78,7 @@ LOCAL_INCLUDES += \
 LOCAL_INCLUDES += -I$(topsrcdir)/layout/svg/base/src
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # Because imgFrame.cpp includes "cairo.h"
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

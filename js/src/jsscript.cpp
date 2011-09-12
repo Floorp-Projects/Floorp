@@ -89,7 +89,7 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
         return NONE;
 
     Shape *shape =
-        SHAPE_FETCH(Shape::search(cx->runtime, const_cast<Shape **>(&lastBinding),
+        SHAPE_FETCH(Shape::search(cx, const_cast<Shape **>(&lastBinding),
                     ATOM_TO_JSID(name)));
     if (!shape)
         return NONE;
@@ -121,7 +121,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     uint16 *indexp;
     PropertyOp getter;
     StrictPropertyOp setter;
-    uint32 slot = JSObject::CALL_RESERVED_SLOTS;
+    uint32 slot = CallObject::RESERVED_SLOTS;
 
     if (kind == ARGUMENT) {
         JS_ASSERT(nvars == 0);

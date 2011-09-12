@@ -76,6 +76,9 @@ public:
     PRUint32* GetImageData();
     // Obtains the size of the compressed image resource
     PRInt32 GetCompressedImageSize() const;
+    // Obtains whether or not a BMP file had alpha data in its 4th byte
+    // for 32BPP bitmaps.  Only use after the bitmap has been processed.
+    PRBool HasAlphaData() const;
 
     virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
     virtual void FinishInternal();
@@ -116,15 +119,17 @@ private:
      * data to native data as necessary */
     void ProcessInfoHeader();
 
-    // Stores whether the image data stores alpha data, or if
-    // the alpha data is unspecified and filled with a 
-    // padding byte of 0.
+    // Stores whether the image data may store alpha data, or if
+    // the alpha data is unspecified and filled with a padding byte of 0. 
     // When a 32BPP bitmap is stored in an ICO or CUR file, its 4th byte
     // is used for alpha transparency.  When it is stored in a BMP, its
     // 4th byte is reserved and is always 0.
     // Reference: 
     // http://en.wikipedia.org/wiki/ICO_(file_format)#cite_note-9
+    // Bitmaps where the alpha bytes are all 0 should be fully visible.
     PRPackedBool mUseAlphaData;
+    // Whether the 4th byte alpha data was found to be non zero and hence used.
+    PRPackedBool mHaveAlphaData;
 };
 
 /** Sets the pixel data in aDecoded to the given values.

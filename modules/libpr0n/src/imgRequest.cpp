@@ -994,10 +994,9 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
 #endif
 
+    nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
     if (mContentType.IsEmpty()) {
       LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
-
-      nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
       rv = NS_ERROR_FAILURE;
       if (chan) {
@@ -1041,14 +1040,8 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
     /* set our content disposition as a property */
     nsCAutoString disposition;
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
-    if (httpChannel) {
-      httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), disposition);
-    } else {
-      nsCOMPtr<nsIMultiPartChannel> multiPartChannel(do_QueryInterface(aRequest));
-      if (multiPartChannel) {
-        multiPartChannel->GetContentDisposition(disposition);
-      }
+    if (chan) {
+      chan->GetContentDispositionHeader(disposition);
     }
     if (!disposition.IsEmpty()) {
       nsCOMPtr<nsISupportsCString> contentDisposition(do_CreateInstance("@mozilla.org/supports-cstring;1"));
@@ -1114,6 +1107,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
     if (imageType == imgIContainer::TYPE_RASTER) {
       /* Use content-length as a size hint for http channels. */
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
       if (httpChannel) {
         nsCAutoString contentLength;
         rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),

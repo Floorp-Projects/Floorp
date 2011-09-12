@@ -45,6 +45,8 @@
 #include "nsWindow.h"
 #include "nsUXThemeConstants.h"
 
+using namespace mozilla;
+
 const PRUnichar
 nsUXThemeData::kThemeLibraryName[] = L"uxtheme.dll";
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
@@ -372,14 +374,14 @@ const THEMELIST knownColors[] = {
   { L"metallic",    WINTHEMECOLOR_METALLIC }
 };
 
-nsILookAndFeel::WindowsThemeIdentifier
-nsUXThemeData::sThemeId = nsILookAndFeel::eWindowsTheme_Generic;
+LookAndFeel::WindowsTheme
+nsUXThemeData::sThemeId = LookAndFeel::eWindowsTheme_Generic;
 
 PRBool
 nsUXThemeData::sIsDefaultWindowsTheme = PR_FALSE;
 
 // static
-nsILookAndFeel::WindowsThemeIdentifier
+LookAndFeel::WindowsTheme
 nsUXThemeData::GetNativeThemeId()
 {
   return sThemeId;
@@ -399,10 +401,10 @@ nsUXThemeData::UpdateNativeThemeInfo()
   sTitlebarInfoPopulatedThemed = (nsWindow::GetWindowsVersion() < VISTA_VERSION);
 
   sIsDefaultWindowsTheme = PR_FALSE;
-  sThemeId = nsILookAndFeel::eWindowsTheme_Generic;
+  sThemeId = LookAndFeel::eWindowsTheme_Generic;
 
   if (!IsAppThemed() || !getCurrentThemeName) {
-    sThemeId = nsILookAndFeel::eWindowsTheme_Classic;
+    sThemeId = LookAndFeel::eWindowsTheme_Classic;
     return;
   }
 
@@ -413,7 +415,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
                                  themeColor,
                                  MAX_PATH,
                                  NULL, 0))) {
-    sThemeId = nsILookAndFeel::eWindowsTheme_Classic;
+    sThemeId = LookAndFeel::eWindowsTheme_Classic;
     return;
   }
 
@@ -437,13 +439,13 @@ nsUXThemeData::UpdateNativeThemeInfo()
   if (theme != WINTHEME_LUNA) {
     switch(theme) {
       case WINTHEME_AERO:
-        sThemeId = nsILookAndFeel::eWindowsTheme_Aero;
+        sThemeId = LookAndFeel::eWindowsTheme_Aero;
         return;
       case WINTHEME_ZUNE:
-        sThemeId = nsILookAndFeel::eWindowsTheme_Zune;
+        sThemeId = LookAndFeel::eWindowsTheme_Zune;
         return;
       case WINTHEME_ROYALE:
-        sThemeId = nsILookAndFeel::eWindowsTheme_Royale;
+        sThemeId = LookAndFeel::eWindowsTheme_Royale;
         return;
       default:
         NS_WARNING("unhandled theme type.");
@@ -462,13 +464,13 @@ nsUXThemeData::UpdateNativeThemeInfo()
 
   switch(color) {
     case WINTHEMECOLOR_NORMAL:
-      sThemeId = nsILookAndFeel::eWindowsTheme_LunaBlue;
+      sThemeId = LookAndFeel::eWindowsTheme_LunaBlue;
       return;
     case WINTHEMECOLOR_HOMESTEAD:
-      sThemeId = nsILookAndFeel::eWindowsTheme_LunaOlive;
+      sThemeId = LookAndFeel::eWindowsTheme_LunaOlive;
       return;
     case WINTHEMECOLOR_METALLIC:
-      sThemeId = nsILookAndFeel::eWindowsTheme_LunaSilver;
+      sThemeId = LookAndFeel::eWindowsTheme_LunaSilver;
       return;
     default:
       NS_WARNING("unhandled theme color.");

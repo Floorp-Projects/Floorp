@@ -75,7 +75,7 @@
 #include "nsThemeConstants.h"
 #include "nsContentErrors.h"
 #include "nsIMediaList.h"
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsStyleUtil.h"
 #include "nsIPrincipal.h"
 #include "prprf.h"
@@ -89,7 +89,7 @@
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
@@ -1222,13 +1222,11 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   } else if (value.GetUnit() == eCSSUnit_EnumColor) {
     PRInt32 intValue = value.GetIntValue();
     if (intValue >= 0) {
-      nsCOMPtr<nsILookAndFeel> lfSvc = do_GetService("@mozilla.org/widget/lookandfeel;1");
-      if (lfSvc) {
-        nscolor rgba;
-        rv = lfSvc->GetColor((nsILookAndFeel::nsColorID) value.GetIntValue(), rgba);
-        if (NS_SUCCEEDED(rv))
-          (*aColor) = rgba;
-      }
+      nscolor rgba;
+      rv = LookAndFeel::GetColor((LookAndFeel::ColorID) value.GetIntValue(),
+                                 &rgba);
+      if (NS_SUCCEEDED(rv))
+        (*aColor) = rgba;
     } else {
       // XXX - this is NS_COLOR_CURRENTCOLOR, NS_COLOR_MOZ_HYPERLINKTEXT, etc.
       // which we don't handle as per the ParseColorString definition.  Should

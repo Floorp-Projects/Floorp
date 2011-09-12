@@ -15,16 +15,15 @@
             android:layout_height="25dp"
             android:scaleType="fitCenter" />
         <TextView android:id="@+id/notificationTitle"
+            android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent.Title"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:singleLine="true"
             android:ellipsize="marquee"
             android:fadingEdge="horizontal"
-            android:textStyle="bold"
-            android:textSize="18sp"
             android:paddingLeft="4dp"
-            android:textColor="#ff000000" />
+            />
     </LinearLayout>
 
     <ProgressBar android:id="@+id/notificationProgressbar"
@@ -38,9 +37,10 @@
         android:layout_centerHorizontal="true" />
 
     <TextView android:id="@+id/notificationText"
+        android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="4dp"
-        android:textColor="#ff000000" />
+        />
 
 </LinearLayout>

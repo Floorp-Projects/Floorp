@@ -1,0 +1,21 @@
+#include "nsISupports.idl"
+#include "nsIFile.idl"
+
+interface nsIArray;
+
+[scriptable, uuid(42ef1d52-3351-4973-98f8-d18f089bccfa)]
+interface nsIUrlClassifierPrefixSet : nsISupports
+{
+  void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
+                   in unsigned long aLength);
+  void addPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
+                   in unsigned long aLength);
+  boolean contains(in unsigned long aPrefix);
+  boolean probe(in unsigned long aPrefix, in unsigned long aKey,
+                inout boolean aReady);
+  PRUint32 estimateSize();
+  PRUint32 getKey();
+  boolean isEmpty();
+  void loadFromFile(in nsIFile aFile);
+  void storeToFile(in nsIFile aFile);
+};
