@@ -14,6 +14,41 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
+// test receiving as JSON
+function testJSON(aJsonStr, invalid) {
+  var errorThrown = false;
+  var anotherErrorThrown = false;
+  var xhr = new XMLHttpRequest();
+  
+  var didthrow = false;
+  try { xhr.responseType = 'moz-json'; } catch (e) { didthrow = true; }
+  ok(didthrow, 
+     "should have thrown when setting responseType to moz-json before open");
+
+  xhr.open("POST", 'responseIdentical.sjs', false);
+  xhr.responseType = 'moz-json';
+  xhr.send(aJsonStr);
+
+  if (!invalid) {
+    is(JSON.stringify(xhr.response), aJsonStr);
+    is(xhr.response, xhr.response, "returning the same object on each access");
+  }
+  else {
+    var didThrow = false;
+    try { xhr.response } catch(ex) { didThrow = true; }
+    ok(didThrow, "accessing response should throw");
+
+    didThrow = false;
+    try { xhr.response } catch(ex) { didThrow = true; }
+    ok(didThrow, "accessing response should throw");
+  } 
+}
+
+var jsonStr = '{"title":"aBook","author":"john"}';
+testJSON(jsonStr, false);
+var invalidJson = '{ "abc": }'
+testJSON(invalidJson, true);
+
 var path = "/tests/content/base/test/";
 
 var passFiles = [['file_XHR_pass1.xml', 'GET'],

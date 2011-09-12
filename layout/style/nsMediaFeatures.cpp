@@ -45,8 +45,10 @@
 #include "nsCSSValue.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsCSSRuleProcessor.h"
+
+using namespace mozilla;
 
 static const PRInt32 kOrientationKeywords[] = {
   eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT,
@@ -62,19 +64,19 @@ static const PRInt32 kScanKeywords[] = {
 
 #ifdef XP_WIN
 struct WindowsThemeName {
-    nsILookAndFeel::WindowsThemeIdentifier id;
+    LookAndFeel::WindowsTheme id;
     const wchar_t* name;
 };
 
 // Windows theme identities used in the -moz-windows-theme media query.
 const WindowsThemeName themeStrings[] = {
-    { nsILookAndFeel::eWindowsTheme_Aero,       L"aero" },
-    { nsILookAndFeel::eWindowsTheme_LunaBlue,   L"luna-blue" },
-    { nsILookAndFeel::eWindowsTheme_LunaOlive,  L"luna-olive" },
-    { nsILookAndFeel::eWindowsTheme_LunaSilver, L"luna-silver" },
-    { nsILookAndFeel::eWindowsTheme_Royale,     L"royale" },
-    { nsILookAndFeel::eWindowsTheme_Zune,       L"zune" },
-    { nsILookAndFeel::eWindowsTheme_Generic,    L"generic" }
+    { LookAndFeel::eWindowsTheme_Aero,       L"aero" },
+    { LookAndFeel::eWindowsTheme_LunaBlue,   L"luna-blue" },
+    { LookAndFeel::eWindowsTheme_LunaOlive,  L"luna-olive" },
+    { LookAndFeel::eWindowsTheme_LunaSilver, L"luna-silver" },
+    { LookAndFeel::eWindowsTheme_Royale,     L"royale" },
+    { LookAndFeel::eWindowsTheme_Zune,       L"zune" },
+    { LookAndFeel::eWindowsTheme_Generic,    L"generic" }
 };
 #endif
 
@@ -325,7 +327,7 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
         nsCSSRuleProcessor::GetWindowsThemeIdentifier();
 
     // Classic mode should fail to match.
-    if (windowsThemeId == nsILookAndFeel::eWindowsTheme_Classic)
+    if (windowsThemeId == LookAndFeel::eWindowsTheme_Classic)
         return NS_OK;
 
     // Look up the appropriate theme string

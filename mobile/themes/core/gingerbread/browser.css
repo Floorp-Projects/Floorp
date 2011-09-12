@@ -995,6 +995,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   padding: @padding_normal@; /* core spacing */
   padding-bottom: @padding_xxxnormal@;
   color: @color_text_panel@;
+  -moz-box-orient: horizontal;
 }
 
 /* Popup Icons */
@@ -1004,11 +1005,11 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   list-style-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
 }
 
-#identity-container[mode="verifiedIdentity"] > hbox > #identity-popup-icon {
+#identity-container[mode="verifiedIdentity"] > box > #identity-popup-icon {
   list-style-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
 }
 
-#identity-container[mode="verifiedDomain"] > hbox > #identity-popup-icon {
+#identity-container[mode="verifiedDomain"] > box > #identity-popup-icon {
   list-style-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
 }
 
@@ -1024,12 +1025,15 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   display: block;
 }
 
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-connectedToLabel,
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-runByLabel,
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-host,
-#identity-popup-content-box.unknownIdentity > hbox > #identity-popup-content-owner,
-#identity-popup-content-box.verifiedIdentity > hbox > #identity-popup-connectedToLabel2,
-#identity-popup-content-box.verifiedDomain > hbox > #identity-popup-connectedToLabel2 {
+#identity-popup-connected-box {
+  -moz-box-orient: horizontal;
+}
+
+#identity-popup-content-box.unknownIdentity > box > #identity-popup-connectedToLabel,
+#identity-popup-content-box.unknownIdentity > #identity-popup-runBy-box,
+#identity-popup-content-box.unknownIdentity > box > #identity-popup-content-host,
+#identity-popup-content-box.verifiedIdentity > box > #identity-popup-connectedToLabel2,
+#identity-popup-content-box.verifiedDomain > box > #identity-popup-connectedToLabel2 {
   display: none;
 }
 
@@ -1048,9 +1052,19 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   list-style-image: url("chrome://browser/skin/images/unlocked-hdpi.png");
 }
 
-#identity-container[mode="verifiedIdentity"] > hbox > vbox > #identity-popup-encryption-icon ,
-#identity-container[mode="verifiedDomain"] > hbox > vbox > #identity-popup-encryption-icon {
+#identity-container[mode="verifiedIdentity"] > box > box > #identity-popup-encryption-icon ,
+#identity-container[mode="verifiedDomain"] > box > box > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/images/locked-hdpi.png");
+}
+
+#identity-popup-encryption-box {
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  -moz-box-pack: start;
+}
+
+#identity-popup-content-supplemental {
+  white-space: normal;
 }
 
 /* Page Actions, Prompt, and Context Menu popups --------------------------- */
@@ -1132,7 +1146,7 @@ pageaction {
   }
 
   .action-button:last-child:nth-child(odd),
-  pageaction.odd-last-child {
+  pageaction.odd.last-child {
     width: 100%;
   }
 }
@@ -1228,6 +1242,10 @@ setting {
   min-height: @touch_row@; /* row size */
   -moz-box-align: center;
   -moz-box-orient: horizontal;
+}
+
+setting:hover:active {
+  background-color: @color_background_highlight@;
 }
 
 .setting-label {

@@ -61,7 +61,6 @@ F19OFF=FRAMESZ-(10*SZREG)
 
 #define SENTINEL_ENTRY(n)         /* defined in cpp file, not here */
 
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 #define STUB_ENTRY(x)                                   \
     .if x < 10;                                         \
     MAKE_STUB(x, _ZN14nsXPTCStubBase5Stub ##x ##Ev);    \
@@ -72,10 +71,6 @@ F19OFF=FRAMESZ-(10*SZREG)
     .else;                                              \
     .err;                                               \
     .endif
-#else /* not G++ V3 ABI */
-#define STUB_ENTRY(x)                                   \
-    MAKE_STUB(x, Stub ##x ##__14nsXPTCStubBase)
-#endif /* G++ V3 ABI */
 
 #define MAKE_STUB(x, name)                              \
     .globl   name;                                      \

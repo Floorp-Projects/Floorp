@@ -48,7 +48,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULMenuListElement.h"
-#include "nsILookAndFeel.h"
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"

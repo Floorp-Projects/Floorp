@@ -58,7 +58,7 @@
 #include "nsIObserver.h"
 #include "nsNetUtil.h"
 
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
 
@@ -1852,9 +1852,9 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
                                          nsRenderingContext* aCtx)
 {
   // get color to use for selection from the look&feel object
-  nscolor bgColor = NS_RGB(0, 0, 0);
-  mFrame->PresContext()->LookAndFeel()->
-      GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
+  nscolor bgColor =
+    LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectBackground,
+                          NS_RGB(0, 0, 0));
   aCtx->SetColor(bgColor);
   aCtx->FillRect(mRect + ToReferenceFrame());
 }
@@ -2056,8 +2056,8 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   nscolor fgColor = styleContext->GetStyleColor()->mColor;
   if (aIsSelected) {
     // get color to use for selection from the look&feel object
-    aPresContext->LookAndFeel()->
-      GetColor(nsILookAndFeel::eColor_TextSelectForeground, fgColor);
+    fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
+                                    fgColor);
   }
   aRenderingContext.SetColor(fgColor);
 

@@ -96,7 +96,8 @@ nsLookAndFeel::~nsLookAndFeel()
     g_object_unref(mStyle);
 }
 
-nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
+nsresult
+nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
 {
     nsresult res = NS_OK;
 
@@ -104,236 +105,236 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         // These colors don't seem to be used for anything anymore in Mozilla
         // (except here at least TextSelectBackground and TextSelectForeground)
         // The CSS2 colors below are used.
-    case eColor_WindowBackground:
+    case eColorID_WindowBackground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
-    case eColor_WindowForeground:
+    case eColorID_WindowForeground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
         break;
-    case eColor_WidgetBackground:
+    case eColorID_WidgetBackground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor_WidgetForeground:
+    case eColorID_WidgetForeground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
-    case eColor_WidgetSelectBackground:
+    case eColorID_WidgetSelectBackground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
         break;
-    case eColor_WidgetSelectForeground:
+    case eColorID_WidgetSelectForeground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
         break;
-    case eColor_Widget3DHighlight:
+    case eColorID_Widget3DHighlight:
         aColor = NS_RGB(0xa0,0xa0,0xa0);
         break;
-    case eColor_Widget3DShadow:
+    case eColorID_Widget3DShadow:
         aColor = NS_RGB(0x40,0x40,0x40);
         break;
-    case eColor_TextBackground:
+    case eColorID_TextBackground:
         // not used?
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
-    case eColor_TextForeground: 
+    case eColorID_TextForeground: 
         // not used?
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
         break;
-    case eColor_TextSelectBackground:
-    case eColor_IMESelectedRawTextBackground:
-    case eColor_IMESelectedConvertedTextBackground:
+    case eColorID_TextSelectBackground:
+    case eColorID_IMESelectedRawTextBackground:
+    case eColorID_IMESelectedConvertedTextBackground:
         // still used
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
         break;
-    case eColor_TextSelectForeground:
-    case eColor_IMESelectedRawTextForeground:
-    case eColor_IMESelectedConvertedTextForeground:
+    case eColorID_TextSelectForeground:
+    case eColorID_IMESelectedRawTextForeground:
+    case eColorID_IMESelectedConvertedTextForeground:
         // still used
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
         break;
-    case eColor_IMERawInputBackground:
-    case eColor_IMEConvertedTextBackground:
+    case eColorID_IMERawInputBackground:
+    case eColorID_IMEConvertedTextBackground:
         aColor = NS_TRANSPARENT;
         break;
-    case eColor_IMERawInputForeground:
-    case eColor_IMEConvertedTextForeground:
+    case eColorID_IMERawInputForeground:
+    case eColorID_IMEConvertedTextForeground:
         aColor = NS_SAME_AS_FOREGROUND_COLOR;
         break;
-    case eColor_IMERawInputUnderline:
-    case eColor_IMEConvertedTextUnderline:
+    case eColorID_IMERawInputUnderline:
+    case eColorID_IMEConvertedTextUnderline:
         aColor = NS_SAME_AS_FOREGROUND_COLOR;
         break;
-    case eColor_IMESelectedRawTextUnderline:
-    case eColor_IMESelectedConvertedTextUnderline:
+    case eColorID_IMESelectedRawTextUnderline:
+    case eColorID_IMESelectedConvertedTextUnderline:
         aColor = NS_TRANSPARENT;
         break;
-    case eColor_SpellCheckerUnderline:
+    case eColorID_SpellCheckerUnderline:
       aColor = NS_RGB(0xff, 0, 0);
       break;
 
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
-    case eColor_activeborder:
+    case eColorID_activeborder:
         // active window border
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor_activecaption:
+    case eColorID_activecaption:
         // active window caption background
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor_appworkspace:
+    case eColorID_appworkspace:
         // MDI background color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor_background:
+    case eColorID_background:
         // desktop background
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor_captiontext:
+    case eColorID_captiontext:
         // text in active window caption, size box, and scrollbar arrow box (!)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
-    case eColor_graytext:
+    case eColorID_graytext:
         // disabled text in windows, menus, etc.
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
         break;
-    case eColor_highlight:
+    case eColorID_highlight:
         // background of selected item
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
         break;
-    case eColor_highlighttext:
+    case eColorID_highlighttext:
         // text of selected item
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
         break;
-    case eColor_inactiveborder:
+    case eColorID_inactiveborder:
         // inactive window border
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor_inactivecaption:
+    case eColorID_inactivecaption:
         // inactive window caption
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_INSENSITIVE]);
         break;
-    case eColor_inactivecaptiontext:
+    case eColorID_inactivecaptiontext:
         // text in inactive window caption
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
         break;
-    case eColor_infobackground:
+    case eColorID_infobackground:
         // tooltip background color
         aColor = sInfoBackground;
         break;
-    case eColor_infotext:
+    case eColorID_infotext:
         // tooltip text color
         aColor = sInfoText;
         break;
-    case eColor_menu:
+    case eColorID_menu:
         // menu background
         aColor = sMenuBackground;
         break;
-    case eColor_menutext:
+    case eColorID_menutext:
         // menu text
         aColor = sMenuText;
         break;
-    case eColor_scrollbar:
+    case eColorID_scrollbar:
         // scrollbar gray area
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
         break;
 
-    case eColor_threedface:
-    case eColor_buttonface:
+    case eColorID_threedface:
+    case eColorID_buttonface:
         // 3-D face color
         aColor = sButtonBackground;
         break;
 
-    case eColor_buttontext:
+    case eColorID_buttontext:
         // text on push buttons
         aColor = sButtonText;
         break;
 
-    case eColor_buttonhighlight:
+    case eColorID_buttonhighlight:
         // 3-D highlighted edge color
-    case eColor_threedhighlight:
+    case eColorID_threedhighlight:
         // 3-D highlighted outer edge color
         aColor = sButtonOuterLightBorder;
         break;
 
-    case eColor_threedlightshadow:
+    case eColorID_threedlightshadow:
         // 3-D highlighted inner edge color
         aColor = sButtonBackground; // always same as background in GTK code
         break;
 
-    case eColor_buttonshadow:
+    case eColorID_buttonshadow:
         // 3-D shadow edge color
-    case eColor_threedshadow:
+    case eColorID_threedshadow:
         // 3-D shadow inner edge color
         aColor = sButtonInnerDarkBorder;
         break;
 
-    case eColor_threeddarkshadow:
+    case eColorID_threeddarkshadow:
         // 3-D shadow outer edge color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
         break;
 
-    case eColor_window:
-    case eColor_windowframe:
+    case eColorID_window:
+    case eColorID_windowframe:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
 
-    case eColor_windowtext:
+    case eColorID_windowtext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
 
-    case eColor__moz_eventreerow:
-    case eColor__moz_field:
+    case eColorID__moz_eventreerow:
+    case eColorID__moz_field:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
-    case eColor__moz_fieldtext:
+    case eColorID__moz_fieldtext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
         break;
-    case eColor__moz_dialog:
+    case eColorID__moz_dialog:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
-    case eColor__moz_dialogtext:
+    case eColorID__moz_dialogtext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
-    case eColor__moz_dragtargetzone:
+    case eColorID__moz_dragtargetzone:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
         break; 
-    case eColor__moz_buttondefault:
+    case eColorID__moz_buttondefault:
         // default button border color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
         break;
-    case eColor__moz_buttonhoverface:
+    case eColorID__moz_buttonhoverface:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_PRELIGHT]);
         break;
-    case eColor__moz_buttonhovertext:
+    case eColorID__moz_buttonhovertext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
         break;
-    case eColor__moz_cellhighlight:
-    case eColor__moz_html_cellhighlight:
+    case eColorID__moz_cellhighlight:
+    case eColorID__moz_html_cellhighlight:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_ACTIVE]);
         break;
-    case eColor__moz_cellhighlighttext:
-    case eColor__moz_html_cellhighlighttext:
+    case eColorID__moz_cellhighlighttext:
+    case eColorID__moz_html_cellhighlighttext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_ACTIVE]);
         break;
-    case eColor__moz_menuhover:
+    case eColorID__moz_menuhover:
         aColor = sMenuHover;
         break;
-    case eColor__moz_menuhovertext:
+    case eColorID__moz_menuhovertext:
         aColor = sMenuHoverText;
         break;
-    case eColor__moz_oddtreerow:
+    case eColorID__moz_oddtreerow:
         aColor = sOddCellBackground;
         break;
-    case eColor__moz_nativehyperlinktext:
+    case eColorID__moz_nativehyperlinktext:
         aColor = sNativeHyperLinkText;
         break;
-    case eColor__moz_comboboxtext:
+    case eColorID__moz_comboboxtext:
         aColor = sComboBoxText;
         break;
-    case eColor__moz_combobox:
+    case eColorID__moz_combobox:
         aColor = sComboBoxBackground;
         break;
-    case eColor__moz_menubartext:
+    case eColorID__moz_menubartext:
         aColor = sMenuBarText;
         break;
-    case eColor__moz_menubarhovertext:
+    case eColorID__moz_menubarhovertext:
         aColor = sMenuBarHoverText;
         break;
     default:
@@ -365,54 +366,55 @@ static void darken_gdk_color(GdkColor *src, GdkColor *dest)
     dest->blue = blue * 65535.0;
 }
 
-static PRInt32 CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, PRInt32 aMetric) {
+static PRInt32 CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, PRInt32 aResult) {
     gboolean value = PR_FALSE;
     gtk_widget_style_get(aWidget, aStyle, &value, NULL);
-    return value ? aMetric : 0;
+    return value ? aResult : 0;
 }
 
 static PRInt32 ConvertGTKStepperStyleToMozillaScrollArrowStyle(GtkWidget* aWidget)
 {
     if (!aWidget)
-        return nsILookAndFeel::eMetric_ScrollArrowStyleSingle;
+        return mozilla::LookAndFeel::eScrollArrowStyle_Single;
   
     return
         CheckWidgetStyle(aWidget, "has-backward-stepper",
-                         nsILookAndFeel::eMetric_ScrollArrowStartBackward) |
+                         mozilla::LookAndFeel::eScrollArrow_StartBackward) |
         CheckWidgetStyle(aWidget, "has-forward-stepper",
-                         nsILookAndFeel::eMetric_ScrollArrowEndForward) |
+                         mozilla::LookAndFeel::eScrollArrow_EndForward) |
         CheckWidgetStyle(aWidget, "has-secondary-backward-stepper",
-                         nsILookAndFeel::eMetric_ScrollArrowEndBackward) |
+                         mozilla::LookAndFeel::eScrollArrow_EndBackward) |
         CheckWidgetStyle(aWidget, "has-secondary-forward-stepper",
-                         nsILookAndFeel::eMetric_ScrollArrowStartForward);
+                         mozilla::LookAndFeel::eScrollArrow_StartForward);
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
+nsresult
+nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
 {
     nsresult res = NS_OK;
 
     // Set these before they can get overrided in the nsXPLookAndFeel. 
     switch (aID) {
-    case eMetric_ScrollButtonLeftMouseButtonAction:
-        aMetric = 0;
+    case eIntID_ScrollButtonLeftMouseButtonAction:
+        aResult = 0;
         return NS_OK;
-    case eMetric_ScrollButtonMiddleMouseButtonAction:
-        aMetric = 1;
+    case eIntID_ScrollButtonMiddleMouseButtonAction:
+        aResult = 1;
         return NS_OK;
-    case eMetric_ScrollButtonRightMouseButtonAction:
-        aMetric = 2;
+    case eIntID_ScrollButtonRightMouseButtonAction:
+        aResult = 2;
         return NS_OK;
     default:
         break;
     }
 
-    res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+    res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
     if (NS_SUCCEEDED(res))
         return res;
     res = NS_OK;
 
     switch (aID) {
-    case eMetric_CaretBlinkTime:
+    case eIntID_CaretBlinkTime:
         {
             GtkSettings *settings;
             gint blink_time;
@@ -425,18 +427,18 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                           NULL);
  
             if (blink)
-                aMetric = (PRInt32) blink_time;
+                aResult = (PRInt32) blink_time;
             else
-                aMetric = 0;
+                aResult = 0;
             break;
         }
-    case eMetric_CaretWidth:
-        aMetric = 1;
+    case eIntID_CaretWidth:
+        aResult = 1;
         break;
-    case eMetric_ShowCaretDuringSelection:
-        aMetric = 0;
+    case eIntID_ShowCaretDuringSelection:
+        aResult = 0;
         break;
-    case eMetric_SelectTextfieldsOnKeyFocus:
+    case eIntID_SelectTextfieldsOnKeyFocus:
         {
             GtkWidget *entry;
             GtkSettings *settings;
@@ -451,33 +453,33 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                          NULL);
             
             if(select_on_focus)
-                aMetric = 1;
+                aResult = 1;
             else
-                aMetric = 0;
+                aResult = 0;
 
             gtk_widget_destroy(entry);
             g_object_unref(entry);
         }
         break;
-    case eMetric_SubmenuDelay:
+    case eIntID_SubmenuDelay:
         {
             GtkSettings *settings;
             gint delay;
 
             settings = gtk_settings_get_default ();
             g_object_get (settings, "gtk-menu-popup-delay", &delay, NULL);
-            aMetric = (PRInt32) delay;
+            aResult = (PRInt32) delay;
             break;
         }
-    case eMetric_MenusCanOverlapOSBar:
+    case eIntID_MenusCanOverlapOSBar:
         // we want XUL popups to be able to overlap the task bar.
-        aMetric = 1;
+        aResult = 1;
         break;
-    case eMetric_SkipNavigatingDisabledMenuItem:
-        aMetric = 1;
+    case eIntID_SkipNavigatingDisabledMenuItem:
+        aResult = 1;
         break;
-    case eMetric_DragThresholdX:
-    case eMetric_DragThresholdY:
+    case eIntID_DragThresholdX:
+    case eIntID_DragThresholdY:
         {
             GtkWidget* box = gtk_hbox_new(FALSE, 5);
             gint threshold = 0;
@@ -486,52 +488,52 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                          NULL);
             g_object_ref_sink(box);
             
-            aMetric = threshold;
+            aResult = threshold;
         }
         break;
-    case eMetric_ScrollArrowStyle:
+    case eIntID_ScrollArrowStyle:
         moz_gtk_init();
-        aMetric =
+        aResult =
             ConvertGTKStepperStyleToMozillaScrollArrowStyle(moz_gtk_get_scrollbar_widget());
         break;
-    case eMetric_ScrollSliderStyle:
-        aMetric = eMetric_ScrollThumbStyleProportional;
+    case eIntID_ScrollSliderStyle:
+        aResult = eScrollThumbStyle_Proportional;
         break;
-    case eMetric_TreeOpenDelay:
-        aMetric = 1000;
+    case eIntID_TreeOpenDelay:
+        aResult = 1000;
         break;
-    case eMetric_TreeCloseDelay:
-        aMetric = 1000;
+    case eIntID_TreeCloseDelay:
+        aResult = 1000;
         break;
-    case eMetric_TreeLazyScrollDelay:
-        aMetric = 150;
+    case eIntID_TreeLazyScrollDelay:
+        aResult = 150;
         break;
-    case eMetric_TreeScrollDelay:
-        aMetric = 100;
+    case eIntID_TreeScrollDelay:
+        aResult = 100;
         break;
-    case eMetric_TreeScrollLinesMax:
-        aMetric = 3;
+    case eIntID_TreeScrollLinesMax:
+        aResult = 3;
         break;
-    case eMetric_DWMCompositor:
-    case eMetric_WindowsClassic:
-    case eMetric_WindowsDefaultTheme:
-    case eMetric_WindowsThemeIdentifier:
-        aMetric = 0;
+    case eIntID_DWMCompositor:
+    case eIntID_WindowsClassic:
+    case eIntID_WindowsDefaultTheme:
+    case eIntID_WindowsThemeIdentifier:
+        aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
-    case eMetric_TouchEnabled:
+    case eIntID_TouchEnabled:
 #ifdef MOZ_PLATFORM_MAEMO
         // All Hildon devices are touch-enabled
-        aMetric = 1;
+        aResult = 1;
 #else
-        aMetric = 0;
+        aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
 #endif
         break;
-    case eMetric_MaemoClassic:
+    case eIntID_MaemoClassic:
 #ifdef MOZ_PLATFORM_MAEMO
         {
-            aMetric = 0;
+            aResult = 0;
             nsCOMPtr<nsIPropertyBag2> infoService(do_GetService("@mozilla.org/system-info;1"));
             if (infoService) {
                 nsCString deviceType;
@@ -539,69 +541,69 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                                                                  deviceType);
                 if (NS_SUCCEEDED(rv)) {
                     if (deviceType.EqualsLiteral("Nokia N8xx"))
-                        aMetric = 1;
+                        aResult = 1;
                 }
             }
         }
 #else
-        aMetric = 0;
+        aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
 #endif
         break;
-    case eMetric_MacGraphiteTheme:
-    case eMetric_MacLionTheme:
-        aMetric = 0;
+    case eIntID_MacGraphiteTheme:
+    case eIntID_MacLionTheme:
+        aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
-    case eMetric_IMERawInputUnderlineStyle:
-    case eMetric_IMEConvertedTextUnderlineStyle:
-        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
+    case eIntID_IMERawInputUnderlineStyle:
+    case eIntID_IMEConvertedTextUnderlineStyle:
+        aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
         break;
-    case eMetric_IMESelectedRawTextUnderlineStyle:
-    case eMetric_IMESelectedConvertedTextUnderline:
-        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    case eIntID_IMESelectedRawTextUnderlineStyle:
+    case eIntID_IMESelectedConvertedTextUnderline:
+        aResult = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
         break;
-    case eMetric_SpellCheckerUnderlineStyle:
-        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
+    case eIntID_SpellCheckerUnderlineStyle:
+        aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
         break;
-    case eMetric_ImagesInMenus:
-        aMetric = moz_gtk_images_in_menus();
+    case eIntID_ImagesInMenus:
+        aResult = moz_gtk_images_in_menus();
         break;
-    case eMetric_ImagesInButtons:
-        aMetric = moz_gtk_images_in_buttons();
+    case eIntID_ImagesInButtons:
+        aResult = moz_gtk_images_in_buttons();
         break;
-    case eMetric_MenuBarDrag:
-        aMetric = sMenuSupportsDrag;
+    case eIntID_MenuBarDrag:
+        aResult = sMenuSupportsDrag;
         break;
     default:
-        aMetric = 0;
+        aResult = 0;
         res     = NS_ERROR_FAILURE;
     }
 
     return res;
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
-                                       float & aMetric)
+nsresult
+nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 {
     nsresult res = NS_OK;
-    res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+    res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
     if (NS_SUCCEEDED(res))
         return res;
     res = NS_OK;
 
     switch (aID) {
-    case eMetricFloat_IMEUnderlineRelativeSize:
-        aMetric = 1.0f;
+    case eFloatID_IMEUnderlineRelativeSize:
+        aResult = 1.0f;
         break;
-    case eMetricFloat_SpellCheckerUnderlineRelativeSize:
-        aMetric = 1.0f;
+    case eFloatID_SpellCheckerUnderlineRelativeSize:
+        aResult = 1.0f;
         break;
-    case eMetricFloat_CaretAspectRatio:
-        aMetric = sCaretRatio;
+    case eFloatID_CaretAspectRatio:
+        aResult = sCaretRatio;
         break;
     default:
-        aMetric = -1.0;
+        aResult = -1.0;
         res = NS_ERROR_FAILURE;
     }
     return res;
@@ -791,21 +793,19 @@ nsLookAndFeel::InitLookAndFeel()
 
 // virtual
 PRUnichar
-nsLookAndFeel::GetPasswordCharacter()
+nsLookAndFeel::GetPasswordCharacterImpl()
 {
     return sInvisibleCharacter;
 }
 
-NS_IMETHODIMP
-nsLookAndFeel::LookAndFeelChanged()
+void
+nsLookAndFeel::RefreshImpl()
 {
-    nsXPLookAndFeel::LookAndFeelChanged();
+    nsXPLookAndFeel::RefreshImpl();
 
     g_object_unref(mStyle);
     mStyle = nsnull;
  
     InitWidget();
     InitLookAndFeel();
-
-    return NS_OK;
 }

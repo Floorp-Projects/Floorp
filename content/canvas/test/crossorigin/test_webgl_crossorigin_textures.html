@@ -84,68 +84,68 @@
     }
 
 
-    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/crossorigin/image.png",
                 "missing-value-default",
                 OK);
-    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/crossorigin/image.png",
                 "",
                 OK);
-    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/crossorigin/image.png",
                 "just-crossOrigin-without-value",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "missing-value-default",
                 SECURITY_ERR);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "",
                 SECURITY_ERR);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "just-crossOrigin-without-value",
                 SECURITY_ERR);
 
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "missing-value-default",
                 SECURITY_ERR);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "just-crossOrigin-without-value",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "anonymous",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "use-credentials",
                 SECURITY_ERR);
 
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "missing-value-default",
                 SECURITY_ERR);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "just-crossOrigin-without-value",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "anonymous",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "use-credentials",
                 OK);
 
     // Test that bad values for crossorigin="..." are interpreted as invalid-value-default which is "anonymous".
-    testTexture("http://mochi.test:8888/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://mochi.test:8888/tests/content/canvas/test/crossorigin/image.png",
                 "foobar",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image.png",
                 "foobar",
                 SECURITY_ERR);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-star.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-star.png",
                 "foobar",
                 OK);
-    testTexture("http://example.com/tests/content/canvas/test/webgl/crossorigin/image-allow-credentials.png",
+    testTexture("http://example.com/tests/content/canvas/test/crossorigin/image-allow-credentials.png",
                 "foobar",
                 OK);
 

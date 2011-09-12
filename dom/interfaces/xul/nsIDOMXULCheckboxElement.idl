@@ -40,7 +40,7 @@
 #include "nsIDOMElement.idl"
 #include "nsIDOMXULLabeledControlEl.idl"
 
-[scriptable, uuid(6713cd76-65ef-4883-bb58-31b2e400bb78)]
+[scriptable, uuid(f678191a-9d88-4567-a45e-8835883cb9a7)]
 interface nsIDOMXULCheckboxElement : nsIDOMXULLabeledControlElement {
   const short CHECKSTATE_UNCHECKED = 0;
   const short CHECKSTATE_CHECKED = 1;

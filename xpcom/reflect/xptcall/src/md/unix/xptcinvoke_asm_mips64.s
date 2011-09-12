@@ -113,11 +113,7 @@ NESTED(_NS_InvokeByIndex_P, FRAMESZ, ra)
     # which must then be saved in t9
     lw       t9, 0(a0)
     addu     t9, t9, t1
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
     lw       t9, (t9)
-#else /* not G++ V3 ABI */
-    lw       t9, 2*PTRSIZE(t9)
-#endif /* G++ V3 ABI */
 
     # get register save area from invoke_copy_to_stack
     subu     t1, t3, 64

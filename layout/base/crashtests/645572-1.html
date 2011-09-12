@@ -1,0 +1,52 @@
+<html class="reftest-wait">
+<script>
+function start(){
+        tmp=document.createElement('iframe');
+        tmp.id='ifr32247';
+        tmp.addEventListener("load", start_dataiframe9, false);
+        document.documentElement.appendChild(tmp);
+}function start_dataiframe9(){
+        o185=document.getElementById('ifr32247').contentDocument.documentElement;
+        tmp=document.createElement('iframe')
+        o196=document.getElementById('ifr32247').contentDocument.createElementNS('http:2000svg','altGlyph');
+        o230=o185.cloneNode(true);
+        tmp.id='ifr42257';
+        o230.ownerDocument.documentElement.appendChild(tmp); 
+        start_dataiframe11();
+        //window.setTimeout('start_dataiframe11()',100);
+}function start_dataiframe11(){
+        o232=o230.ownerDocument.getElementById('ifr42257').contentDocument.documentElement;
+        o234=o196;
+        tmp=o234.ownerDocument.createElement('iframe');
+        tmp.src='data:text/html,' + escape("<q id='element2'><q id='element3'><q id='element4'><dd style id='element6'>");
+        tmp.id='ifr22371';
+        tmp.addEventListener("load", start_dataiframe12, false);
+        o234.ownerDocument.documentElement.appendChild(tmp);
+}function start_dataiframe12(){
+        o239=o234.ownerDocument.getElementById('ifr22371').contentDocument.getElementById('element2');
+        o240=o234.ownerDocument.getElementById('ifr22371').contentDocument.getElementById('element3');
+        o241=o234.ownerDocument.getElementById('ifr22371').contentDocument.getElementById('element4');
+        o243=o234.ownerDocument.getElementById('ifr22371').contentDocument.getElementById('element6');
+        o232.addEventListener('DOMNodeRemoved',function(){this.offsetHeight;},true);
+        o272=o185.cloneNode(false);
+        o232.innerHTML=unescape("%3Cxmp%3E20style3E");
+        o276=document.createTextNode('window;');
+        o278=document.createTextNode('o243className=1;');
+        o243.innerHTML=unescape('22%3Cform%3E');
+        o232.appendChild(o241);
+        o288=o240.cloneNode(true);
+        o185.appendChild(o288);
+        o241.innerHTML='<input placeholder>';
+        o241.style.position='absolute';
+        o232.style.cssText='opacity:0;display:table;';
+        o241.appendChild(o276);
+        o241.appendChild(o239);
+        o241.offsetParent.appendChild(o243);
+        o288.appendChild(o272);
+        o240.appendChild(o276);
+        o241.offsetParent.appendChild(o278);
+        document.documentElement.removeAttribute("class");
+}
+addEventListener("load", start, false);
+</script>
+</html>

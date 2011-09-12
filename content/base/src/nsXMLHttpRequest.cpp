@@ -426,7 +426,8 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mProgressEventWasDelayed(PR_FALSE),
     mLoadLengthComputable(PR_FALSE), mLoadTotal(0),
     mFirstStartRequestSeen(PR_FALSE),
-    mResultArrayBuffer(nsnull) 
+    mResultArrayBuffer(nsnull),
+    mResultJSON(JSVAL_VOID)
 {
   mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   nsLayoutStatics::AddRef();
@@ -584,6 +585,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
                                                 nsXHREventTarget)
   tmp->mResultArrayBuffer = nsnull;
+  tmp->mResultJSON = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mReadRequest)
@@ -606,6 +608,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsXMLHttpRequest,
   if(tmp->mResultArrayBuffer) {
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mResultArrayBuffer,
                                                "mResultArrayBuffer")
+  }
+  if (JSVAL_IS_GCTHING(tmp->mResultJSON)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mResultJSON);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResultJSON")
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -854,10 +860,30 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
   return rv;
 }
 
-nsresult nsXMLHttpRequest::CreateResponseArrayBuffer(JSContext *aCx)
+nsresult
+nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
 {
-  if (!aCx)
+  if (!aCx) {
     return NS_ERROR_FAILURE;
+  }
+
+  nsString bodyString;
+  ConvertBodyToText(bodyString);
+  if (!JS_ParseJSON(aCx,
+                    (jschar*)PromiseFlatString(bodyString).get(),
+                    bodyString.Length(), &mResultJSON)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXMLHttpRequest::CreateResponseArrayBuffer(JSContext *aCx)
+{
+  if (!aCx){
+    return NS_ERROR_FAILURE;
+  }
 
   PRInt32 dataLen = mResponseBody.Length();
   RootResultArrayBuffer();
@@ -894,6 +920,9 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseType(nsAString& aResponseType)
   case XML_HTTP_RESPONSE_TYPE_TEXT:
     aResponseType.AssignLiteral("text");
     break;
+  case XML_HTTP_RESPONSE_TYPE_JSON:
+    aResponseType.AssignLiteral("moz-json");
+    break;
   default:
     NS_ERROR("Should not happen");
   }
@@ -921,6 +950,8 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
     mResponseType = XML_HTTP_RESPONSE_TYPE_DOCUMENT;
   } else if (aResponseType.EqualsLiteral("text")) {
     mResponseType = XML_HTTP_RESPONSE_TYPE_TEXT;
+  } else if (aResponseType.EqualsLiteral("moz-json")) {
+    mResponseType = XML_HTTP_RESPONSE_TYPE_JSON;
   }
   // If the given value is not the empty string, "arraybuffer",
   // "blob", "document", or "text" terminate these steps.
@@ -962,7 +993,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
 
   case XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER:
     if (mState & XML_HTTP_REQUEST_DONE) {
-      if (!mResultArrayBuffer) {  
+      if (!mResultArrayBuffer) {
          rv = CreateResponseArrayBuffer(aCx);
          NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -987,6 +1018,21 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
       JSObject* scope = JS_GetScopeChain(aCx);
       rv = nsContentUtils::WrapNative(aCx, scope, mResponseXML, aResult,
                                       nsnull, PR_TRUE);
+    } else {
+      *aResult = JSVAL_NULL;
+    }
+    break;
+
+  case XML_HTTP_RESPONSE_TYPE_JSON:
+    if (mState & XML_HTTP_REQUEST_DONE) {
+      if (mResultJSON == JSVAL_VOID) {
+        rv = CreateResponseParsedJSON(aCx);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mResponseBody.Truncate();
+        mResponseBodyUnicode.SetIsVoid(PR_TRUE);
+      }
+      *aResult = mResultJSON;
     } else {
       *aResult = JSVAL_NULL;
     }
@@ -1086,6 +1132,7 @@ nsXMLHttpRequest::Abort()
   mResponseBlob = nsnull;
   mState |= XML_HTTP_REQUEST_ABORTED;
   mResultArrayBuffer = nsnull;
+  mResultJSON = JSVAL_VOID;
   
   if (!(mState & (XML_HTTP_REQUEST_UNSENT |
                   XML_HTTP_REQUEST_OPENED |
@@ -2082,6 +2129,28 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
     nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(supports);
     if (sendable) {
       return sendable->GetSendInfo(aResult, aContentType, aCharset);
+    }
+
+    // ArrayBuffer?
+    jsval realVal;
+    JSObject* obj;
+    nsresult rv = aBody->GetAsJSVal(&realVal);
+    if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal) &&
+        (obj = JSVAL_TO_OBJECT(realVal)) &&
+        (js_IsArrayBuffer(obj))) {
+
+      aContentType.SetIsVoid(PR_TRUE);
+      PRInt32 abLength = JS_GetArrayBufferByteLength(obj);
+      char* data = (char*)JS_GetArrayBufferData(obj);
+
+      nsCOMPtr<nsIInputStream> stream;
+      nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), data,
+                                          abLength, NS_ASSIGNMENT_COPY);
+      NS_ENSURE_SUCCESS(rv, rv);
+      stream.forget(aResult);
+      aCharset.Truncate();
+
+      return NS_OK;
     }
   }
   else if (dataType == nsIDataType::VTYPE_VOID ||

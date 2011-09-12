@@ -98,8 +98,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
     return result;
 }
 
-#ifdef __GNUC__         /* Gnu Compiler. */
-
 #ifdef KEEP_STACK_16_BYTE_ALIGNED
 /* Make sure the stack is 16-byte aligned.  Do that by aligning to 16 bytes and
  * then subtracting 4 so the three subsequent pushes result in a 16-byte aligned
@@ -161,10 +159,6 @@ nsresult nsXPTCStubBase::Stub##n() \
 	); \
     return result; \
 }
-
-#else
-#error "can't find a compiler to use"
-#endif /* __GNUC__ */
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \

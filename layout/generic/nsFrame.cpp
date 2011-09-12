@@ -104,9 +104,7 @@
 #include "nsIServiceManager.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
-#include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
 #include "nsUnicharUtils.h"
 #include "nsLayoutErrors.h"
 #include "nsContentErrors.h"
@@ -124,11 +122,10 @@
 #include "CSSCalc.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
-
-static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -1061,22 +1058,17 @@ private:
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
 {
-  nscolor color = NS_RGB(255, 255, 255);
-  
-  nsILookAndFeel::nsColorID colorID;
+  LookAndFeel::ColorID colorID;
   nsresult result;
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
-    colorID = nsILookAndFeel::eColor_TextSelectBackground;
+    colorID = LookAndFeel::eColorID_TextSelectBackground;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
-    colorID = nsILookAndFeel::eColor_TextSelectBackgroundAttention;
+    colorID = LookAndFeel::eColorID_TextSelectBackgroundAttention;
   } else {
-    colorID = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
+    colorID = LookAndFeel::eColorID_TextSelectBackgroundDisabled;
   }
 
-  nsCOMPtr<nsILookAndFeel> look;
-  look = do_GetService(kLookAndFeelCID, &result);
-  if (NS_SUCCEEDED(result) && look)
-    look->GetColor(colorID, color);
+  nscolor color = LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255));
 
   gfxRGBA c(color);
   c.a = .5;

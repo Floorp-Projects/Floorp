@@ -107,9 +107,6 @@ NS_InvokeByIndex_P:
 	lwz     r3,8(r31)			// r3 <= that
 	lwz     r4,12(r31)			// r4 <= methodIndex
 	lwz     r5,0(r3)			// r5 <= vtable ( == *that )
-#if !((__GNUC__ == 3 && __GNUC_MINOR__ < 2) || __GXX_ABI_VERSION  >= 100) // G++ pre-V3 ABI
-	addi	r4,r4,2				// skip first two vtable entries
-#endif
 	slwi    r4,r4,2				// convert to offset ( *= 4 )
 	lwzx    r0,r5,r4			// r0 <= methodpointer ( == vtable + offset )
 

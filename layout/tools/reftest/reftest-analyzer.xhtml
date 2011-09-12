@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- -*- Mode: HTML; tab-width: 4; indent-tabs-mode: nil; -*- -->
 <!-- vim: set shiftwidth=4 tabstop=4 autoindent noexpandtab: -->
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -51,6 +52,7 @@ Features to add:
 ** move log loading into popup from viewer UI
 
 -->
+<!DOCTYPE html>
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>Reftest analyzer</title>
@@ -515,7 +517,7 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
     <label><input type="radio" name="which" value="1" onchange="show_image(2)" />Image 2</label>
     <label><input type="checkbox" onchange="show_differences(this)" />Circle differences</label>
     </form>
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewbox="0 0 800 1000" id="svg">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewBox="0 0 800 1000" id="svg">
       <defs>
         <!-- use sRGB to avoid loss of data -->
         <filter id="showDifferences" x="0%" y="0%" width="100%" height="100%"

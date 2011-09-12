@@ -38,7 +38,7 @@
 
 #include "nsIDOMSVGElement.idl"
 
-[scriptable, uuid(2ce28aa9-3b6c-4eb6-a42a-4c00dd7406f3)]
+[scriptable, uuid(9ce8621b-b838-4d9a-8a74-59df65a62cf3)]
 interface nsIDOMSVGStyleElement
   : nsIDOMSVGElement
 {

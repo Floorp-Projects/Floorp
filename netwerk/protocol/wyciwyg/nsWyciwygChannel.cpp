@@ -344,6 +344,24 @@ nsWyciwygChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
+nsWyciwygChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsWyciwygChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsWyciwygChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 nsWyciwygChannel::GetContentLength(PRInt32 *aContentLength)
 {
   *aContentLength = mContentLength;

@@ -61,7 +61,6 @@
 #include "nsISliderListener.h"
 #include "nsIScrollbarMediator.h"
 #include "nsScrollbarFrame.h"
-#include "nsILookAndFeel.h"
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
@@ -71,6 +70,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 
@@ -609,16 +609,11 @@ nsSliderFrame::GetScrollToClick()
  
   // if there was no scrollbar, always scroll on click
   PRBool scrollToClick = PR_FALSE;
-  nsresult rv;
-  nsCOMPtr<nsILookAndFeel> lookNFeel =
-    do_GetService("@mozilla.org/widget/lookandfeel;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 scrollToClickMetric;
-    rv = lookNFeel->GetMetric(nsILookAndFeel::eMetric_ScrollToClick,
-                              scrollToClickMetric);
-    if (NS_SUCCEEDED(rv) && scrollToClickMetric == 1)
-      scrollToClick = PR_TRUE;
-  }
+  PRInt32 scrollToClickMetric;
+  nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollToClick,
+                                    &scrollToClickMetric);
+  if (NS_SUCCEEDED(rv) && scrollToClickMetric == 1)
+    scrollToClick = PR_TRUE;
   return scrollToClick;
 
 #else

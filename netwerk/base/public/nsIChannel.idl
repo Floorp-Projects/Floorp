@@ -56,7 +56,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(c63a055a-a676-4e71-bf3c-6cfa11082018)]
+[scriptable, uuid(06f6ada3-7729-4e72-8d3f-bf8ba630ff9b)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -272,4 +272,39 @@ interface nsIChannel : nsIRequest
      * the URI when opening the channel.
      */
     const unsigned long LOAD_CLASSIFY_URI = 1 << 22;
+
+    /**
+     * Access to the type implied or stated by the Content-Disposition header
+     * if available and if applicable. This allows determining inline versus
+     * attachment.
+     *
+     * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
+     * doesn't exist for this type of channel or is empty, and
+     * DISPOSITION_ATTACHMENT if an invalid/noncompliant value is present.
+     */
+    readonly attribute unsigned long contentDisposition;
+    const unsigned long DISPOSITION_INLINE = 0;
+    const unsigned long DISPOSITION_ATTACHMENT = 1;
+
+    /**
+     * Access to the filename portion of the Content-Disposition header if
+     * available and if applicable. This allows getting the preferred filename
+     * without having to parse it out yourself.
+     *
+     * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header doesn't
+     * exist for this type of channel, if the header is empty, if the header
+     * doesn't contain a filename portion, or the value of the filename
+     * attribute is empty/missing.
+     */
+    readonly attribute AString contentDispositionFilename;
+
+    /**
+     * Access to the raw Content-Disposition header if available and applicable.
+     *
+     * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
+     * doesn't exist for this type of channel or is empty.
+     *
+     * @deprecated Use contentDisposition/contentDispositionFilename instead.
+     */
+    readonly attribute ACString contentDispositionHeader;
 };

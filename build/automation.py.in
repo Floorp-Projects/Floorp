@@ -792,10 +792,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
     """ build the application command line """
 
-    cmd = app
-    if self.IS_MAC and not self.IS_CAMINO and not cmd.endswith("-bin"):
+    cmd = os.path.abspath(app)
+    if self.IS_MAC and not self.IS_CAMINO and os.path.exists(cmd + "-bin"):
+      # Prefer 'app-bin' in case 'app' is a shell script.
+      # We can remove this hack once bug 673899 etc are fixed.
       cmd += "-bin"
-    cmd = os.path.abspath(cmd)
 
     args = []
 

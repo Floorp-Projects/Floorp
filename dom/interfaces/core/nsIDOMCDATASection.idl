@@ -49,7 +49,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(f1eea89d-8af3-4c2a-90df-6c3a75cb5005)]
+[scriptable, uuid(08a05c75-23de-4937-a45b-89bdcbe4f467)]
 interface nsIDOMCDATASection : nsIDOMText
 {
 };

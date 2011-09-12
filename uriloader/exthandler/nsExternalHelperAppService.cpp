@@ -227,66 +227,6 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
   return rv;
 }
 
-/** Gets the content-disposition header from a channel, using nsIHttpChannel
- * or nsIMultipartChannel if available
- * @param aChannel The channel to extract the disposition header from
- * @param aDisposition Reference to a string where the header is to be stored
- */
-static void ExtractDisposition(nsIChannel* aChannel, nsACString& aDisposition)
-{
-  aDisposition.Truncate();
-  // First see whether this is an http channel
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-  if (httpChannel) 
-  {
-    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), aDisposition);
-  }
-  if (aDisposition.IsEmpty())
-  {
-    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(aChannel));
-    if (multipartChannel)
-    {
-      multipartChannel->GetContentDisposition(aDisposition);
-    }
-  }
-
-}
-
-/** Extracts the filename out of a content-disposition header
- * @param aFilename [out] The filename. Can be empty on error.
- * @param aDisposition Value of a Content-Disposition header
- * @param aURI Optional. Will be used to get a fallback charset for the
- *        filename, if it is QI'able to nsIURL
- * @param aMIMEHeaderParam Optional. Pointer to a nsIMIMEHeaderParam class, so
- *        that it doesn't need to be fetched by this function.
- */
-static void GetFilenameFromDisposition(nsAString& aFilename,
-                                       const nsACString& aDisposition,
-                                       nsIURI* aURI = nsnull,
-                                       nsIMIMEHeaderParam* aMIMEHeaderParam = nsnull)
-{
-  aFilename.Truncate();
-  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar(aMIMEHeaderParam);
-  if (!mimehdrpar) {
-    mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID);
-    if (!mimehdrpar)
-      return;
-  }
-
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-
-  nsCAutoString fallbackCharset;
-  if (url)
-    url->GetOriginCharset(fallbackCharset);
-  // Get the value of 'filename' parameter
-  nsresult rv = mimehdrpar->GetParameter(aDisposition, "filename", fallbackCharset, 
-                                         PR_TRUE, nsnull, aFilename);
-  if (NS_FAILED(rv) || aFilename.IsEmpty())
-    // Try 'name' parameter, instead.
-    rv = mimehdrpar->GetParameter(aDisposition, "name", fallbackCharset, PR_TRUE, 
-                                  nsnull, aFilename);
-}
-
 /**
  * Given a channel, returns the filename and extension the channel has.
  * This uses the URL and other sources (nsIMultiPartChannel).
@@ -318,51 +258,19 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
    * user.  we shouldn't actually use that without their
    * permission... otherwise just use our temp file
    */
-  nsCAutoString disp;
-  ExtractDisposition(aChannel, disp);
   PRBool handleExternally = PR_FALSE;
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv;
-  aChannel->GetURI(getter_AddRefs(uri));
-  // content-disposition: has format:
-  // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
-  if (!disp.IsEmpty()) 
+  PRUint32 disp;
+  nsresult rv = aChannel->GetContentDisposition(&disp);
+  if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return PR_FALSE;
-
-    nsCAutoString fallbackCharset;
-    uri->GetOriginCharset(fallbackCharset);
-    // Get the disposition type
-    nsAutoString dispToken;
-    rv = mimehdrpar->GetParameter(disp, "", fallbackCharset, PR_TRUE, 
-                                  nsnull, dispToken);
-    // RFC 2183, section 2.8 says that an unknown disposition
-    // value should be treated as "attachment"
-    // XXXbz this code is duplicated in nsDocumentOpenInfo::DispatchContent.
-    // Factor it out!  Maybe store it in the nsDocumentOpenInfo?
-    if (NS_FAILED(rv) || 
-        (!dispToken.IsEmpty() &&
-         !dispToken.LowerCaseEqualsLiteral("inline") &&
-         // Broken sites just send
-         // Content-Disposition: filename="file"
-         // without a disposition token... screen those out.
-         !dispToken.EqualsIgnoreCase("filename", 8) &&
-         // Also in use is Content-Disposition: name="file"
-         !dispToken.EqualsIgnoreCase("name", 4)))
-    {
-      // We have a content-disposition of "attachment" or unknown
+    aChannel->GetContentDispositionFilename(aFileName);
+    if (disp == nsIChannel::DISPOSITION_ATTACHMENT)
       handleExternally = PR_TRUE;
-    }
-
-    // We may not have a disposition type listed; some servers suck.
-    // But they could have listed a filename anyway.
-    GetFilenameFromDisposition(aFileName, disp, uri, mimehdrpar);
-
-  } // we had a disp header 
+  }
 
   // If the disposition header didn't work, try the filename from nsIURL
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (url && aFileName.IsEmpty())
   {
@@ -715,7 +623,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 
     nsCString disp;
     if (channel)
-      ExtractDisposition(channel, disp);
+      channel->GetContentDispositionHeader(disp);
 
     nsCOMPtr<nsIURI> referrer;
     rv = NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));

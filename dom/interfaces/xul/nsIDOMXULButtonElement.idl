@@ -38,7 +38,7 @@
 
 #include "nsIDOMXULLabeledControlEl.idl"
 
-[scriptable, uuid(761e4742-e1c2-4d0d-91fe-cc11c4e6b1ad)]
+[scriptable, uuid(ebf2741a-9e4a-4c40-82da-886c46f8632f)]
 interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
   const short CHECKSTATE_UNCHECKED = 0;
   const short CHECKSTATE_CHECKED = 1;

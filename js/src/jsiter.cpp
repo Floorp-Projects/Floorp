@@ -1111,9 +1111,8 @@ generator_trace(JSTracer *trc, JSObject *obj)
 }
 
 Class js::GeneratorClass = {
-    js_Generator_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Generator) |
-    JSCLASS_IS_ANONYMOUS,
+    "Generator",
+    JSCLASS_HAS_PRIVATE,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -1149,14 +1148,18 @@ Class js::GeneratorClass = {
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &GeneratorClass);
-    if (!obj)
-        return NULL;
-
     FrameRegs &stackRegs = cx->regs();
     StackFrame *stackfp = stackRegs.fp();
     JS_ASSERT(stackfp->base() == cx->regs().sp);
     JS_ASSERT(stackfp->actualArgs() <= stackfp->formalArgs());
+
+    GlobalObject *global = stackfp->scopeChain().getGlobal();
+    JSObject *proto = global->getOrCreateGeneratorPrototype(cx);
+    if (!proto)
+        return NULL;
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &GeneratorClass, proto, global);
+    if (!obj)
+        return NULL;
 
     /* Load and compute stack slot counts. */
     Value *stackvp = stackfp->actualArgs() - 2;
@@ -1443,22 +1446,16 @@ InitIteratorClass(JSContext *cx, GlobalObject *global)
     return DefineConstructorAndPrototype(cx, global, JSProto_Iterator, ctor, iteratorProto);
 }
 
-static bool
-InitGeneratorClass(JSContext *cx, GlobalObject *global)
+bool
+GlobalObject::initGeneratorClass(JSContext *cx)
 {
 #if JS_HAS_GENERATORS
-    JSObject *proto = global->createBlankPrototype(cx, &GeneratorClass);
-    if (!proto)
+    JSObject *proto = createBlankPrototype(cx, &GeneratorClass);
+    if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
         return false;
-
-    if (!DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
-        return false;
-
-    /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
-    return DefineConstructorAndPrototype(cx, global, JSProto_Generator, proto, proto);
-#else
-    return true;
+    setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
 #endif
+    return true;
 }
 
 static JSObject *
@@ -1496,7 +1493,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (iter)
         return iter;
 
-    if (!InitIteratorClass(cx, global) || !InitGeneratorClass(cx, global))
+    if (!InitIteratorClass(cx, global) || !global->initGeneratorClass(cx))
         return NULL;
     return InitStopIterationClass(cx, global);
 }

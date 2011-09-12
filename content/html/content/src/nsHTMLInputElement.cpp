@@ -85,8 +85,6 @@
 #include "nsUnicharUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
-#include "nsWidgetsCID.h"
-#include "nsILookAndFeel.h"
 
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -118,12 +116,14 @@
 #include "nsContentUtils.h"
 #include "nsRadioVisitor.h"
 
+#include "mozilla/LookAndFeel.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 // First bits are needed for the control type.
 #define NS_OUTER_ACTIVATE_EVENT   (1 << 9)
@@ -1923,15 +1923,14 @@ static PRBool
 SelectTextFieldOnFocus()
 {
   if (!gSelectTextFieldOnFocus) {
-    nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
-    if (lookNFeel) {
-      PRInt32 selectTextfieldsOnKeyFocus = -1;
-      lookNFeel->GetMetric(nsILookAndFeel::eMetric_SelectTextfieldsOnKeyFocus,
-                           selectTextfieldsOnKeyFocus);
-      gSelectTextFieldOnFocus = selectTextfieldsOnKeyFocus != 0 ? 1 : -1;
-    }
-    else {
+    PRInt32 selectTextfieldsOnKeyFocus = -1;
+    nsresult rv =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_SelectTextfieldsOnKeyFocus,
+                          &selectTextfieldsOnKeyFocus);
+    if (NS_FAILED(rv)) {
       gSelectTextFieldOnFocus = -1;
+    } else {
+      gSelectTextFieldOnFocus = selectTextfieldsOnKeyFocus != 0 ? 1 : -1;
     }
   }
 

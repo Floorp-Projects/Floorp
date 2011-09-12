@@ -1062,11 +1062,11 @@ struct JSFunctionBoxQueue {
 
     bool init(uint32 count) {
         lengthMask = JS_BITMASK(JS_CeilingLog2(count));
-        vector = js::OffTheBooks::array_new<JSFunctionBox*>(length());
+        vector = (JSFunctionBox **) js::OffTheBooks::malloc_(sizeof(JSFunctionBox) * length());
         return !!vector;
     }
 
-    ~JSFunctionBoxQueue() { js::UnwantedForeground::array_delete(vector); }
+    ~JSFunctionBoxQueue() { js::UnwantedForeground::free_(vector); }
 
     void push(JSFunctionBox *funbox) {
         if (!funbox->queued) {
