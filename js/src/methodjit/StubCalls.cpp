@@ -182,9 +182,9 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                 {
 #ifdef DEBUG
                     if (entry->directHit()) {
-                        JS_ASSERT(obj->nativeContains(*shape));
+                        JS_ASSERT(obj->nativeContains(cx, *shape));
                     } else {
-                        JS_ASSERT(obj2->nativeContains(*shape));
+                        JS_ASSERT(obj2->nativeContains(cx, *shape));
                         JS_ASSERT(entry->vcapTag() == 1);
                         JS_ASSERT(entry->kshape != entry->vshape());
                         JS_ASSERT(!shape->hasSlot());
@@ -477,7 +477,7 @@ stubs::GetElem(VMFrame &f)
             if (arg < argsobj->initialLength()) {
                 copyFrom = &argsobj->element(arg);
                 if (!copyFrom->isMagic()) {
-                    if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
+                    if (StackFrame *afp = argsobj->maybeStackFrame())
                         copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }

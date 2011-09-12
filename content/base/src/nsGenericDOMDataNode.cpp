@@ -328,12 +328,13 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
   }
 
   if (aOffset == 0 && endOffset == textLength) {
-    // Replacing whole text or old text was empty
-    mText.SetTo(aBuffer, aLength);
+    // Replacing whole text or old text was empty.  Don't bother to check for
+    // bidi in this string if the document already has bidi enabled.
+    mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled());
   }
   else if (aOffset == textLength) {
     // Appending to existing
-    mText.Append(aBuffer, aLength);
+    mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled());
   }
   else {
     // Merging old and new
@@ -355,12 +356,16 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     }
 
     // XXX Add OOM checking to this
-    mText.SetTo(to, newLength);
+    mText.SetTo(to, newLength, !document || !document->GetBidiEnabled());
 
     delete [] to;
   }
 
-  UpdateBidiStatus(aBuffer, aLength);
+  if (document && mText.IsBidi()) {
+    // If we found bidi characters in mText.SetTo() above, indicate that the
+    // document contains bidi characters.
+    document->SetBidiEnabled();
+  }
 
   // Notify observers
   if (aNotify) {
@@ -748,7 +753,8 @@ nsGenericDOMDataNode::SplitData(PRUint32 aOffset, nsIContent** aReturn,
   CharacterDataChangeInfo::Details details = {
     CharacterDataChangeInfo::Details::eSplit, newContent
   };
-  rv = SetTextInternal(cutStartOffset, cutLength, nsnull, 0, PR_TRUE, &details);
+  rv = SetTextInternal(cutStartOffset, cutLength, nsnull, 0, PR_TRUE,
+                       aCloneAfterOriginal ? &details : nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -968,21 +974,6 @@ void
 nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
 {
   mText.AppendTo(aResult);
-}
-
-void nsGenericDOMDataNode::UpdateBidiStatus(const PRUnichar* aBuffer, PRUint32 aLength)
-{
-  nsIDocument *document = GetCurrentDoc();
-  if (document && document->GetBidiEnabled()) {
-    // OK, we already know it's Bidi, so we won't test again
-    return;
-  }
-
-  mText.UpdateBidiFlag(aBuffer, aLength);
-
-  if (document && mText.IsBidi()) {
-    document->SetBidiEnabled();
-  }
 }
 
 already_AddRefed<nsIAtom>

@@ -49,7 +49,6 @@ public:
 
   /** "content-length" */
   const nsLiteralString kContentLength;
-  const nsLiteralString kContentDisposition;
   const nsLiteralString kChannelPolicy;
 };
 

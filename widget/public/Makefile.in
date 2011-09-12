@@ -52,10 +52,16 @@ EXPORTS_IPC = \
 		nsGUIEventIPC.h \
 		$(NULL)
 
-ifdef MOZ_INSTRUMENT_EVENT_LOOP
 EXPORTS_NAMESPACES += mozilla
+
 EXPORTS_mozilla = \
-  WidgetTraceEvent.h
+		LookAndFeel.h \
+		$(NULL)
+
+ifdef MOZ_INSTRUMENT_EVENT_LOOP
+EXPORTS_mozilla += \
+		WidgetTraceEvent.h \
+		$(NULL)
 endif
 
 EXPORTS		= \
@@ -65,7 +71,6 @@ EXPORTS		= \
 		nsNativeWidget.h \
 		nsWidgetInitData.h \
 		nsWidgetsCID.h \
-		nsILookAndFeel.h \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \

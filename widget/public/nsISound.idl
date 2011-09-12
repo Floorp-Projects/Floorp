@@ -41,7 +41,7 @@
 
 interface nsIURL;
 
-[scriptable, uuid(86B75B05-DB60-4c3e-97A7-82B363A41A01)]
+[scriptable, uuid(C3C28D92-A17F-43DF-976D-4EEAE6F995FC)]
 interface nsISound : nsISupports
 {
   void play(in nsIURL aURL);
@@ -75,6 +75,7 @@ interface nsISound : nsISupports
   const unsigned long EVENT_SELECT_DIALOG_OPEN          = 4;
   const unsigned long EVENT_MENU_EXECUTE                = 5;
   const unsigned long EVENT_MENU_POPUP                  = 6;
+  const unsigned long EVENT_EDITOR_MAX_LEN              = 7;
   void playEventSound(in unsigned long aEventId);
 };
 

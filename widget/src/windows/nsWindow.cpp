@@ -133,7 +133,6 @@
 #include "nsILocalFile.h"
 #include "nsFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsILookAndFeel.h"
 #include "nsGUIEvent.h"
 #include "nsFont.h"
 #include "nsRect.h"
@@ -158,6 +157,7 @@
 #include "Layers.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
+#include "nsISound.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -6157,7 +6157,10 @@ void nsWindow::ActivateOtherWindowHelper(HWND aWnd)
 
   // Play the minimize sound while we're here, since that is also
   // forgotten when we use SW_SHOWMINIMIZED.
-  ::PlaySoundW(L"Minimize", nsnull, SND_ALIAS | SND_NODEFAULT | SND_ASYNC);
+  nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+  if (sound) {
+    sound->PlaySystemSound(NS_LITERAL_STRING("Minimize"));
+  }
 }
 
 void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)

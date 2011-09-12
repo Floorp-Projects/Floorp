@@ -175,9 +175,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 // however, it's quick, dirty, and'll break when the ABI changes on
 // us, which is what we want ;-).
 
-#if __GXX_ABI_VERSION < 100
-#error Prehistoric GCC not supported here
-#else
+
 // gcc-3 version
 //
 // As G++3 ABI contains the length of the functionname in the mangled
@@ -233,7 +231,6 @@ __asm__ (                                                               \
         "li     11,"#n" \n\t"                                           \
         "b      SharedStub \n"                                          \
 );
-#endif
 
 #define SENTINEL_ENTRY(n)                                               \
 nsresult nsXPTCStubBase::Sentinel##n()                                  \

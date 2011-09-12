@@ -136,6 +136,8 @@ interface nsIContentPolicy : nsISupports
    */
   const unsigned long TYPE_MEDIA = 15;  
 
+  /* Please update nsContentBlocker when adding new content types. */
+
   //////////////////////////////////////////////////////////////////////
 
   /**

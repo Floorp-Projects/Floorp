@@ -238,7 +238,6 @@
                 vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
                               (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
               }
-
               this._updateArrow(popupRect, anchorRect, horizPos, vertPos);
             ]]>
          </body>
