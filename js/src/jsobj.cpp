@@ -5653,6 +5653,8 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     if (slot != SHAPE_INVALID_SLOT) {
         *vp = pobj->nativeGetSlot(slot);
         JS_ASSERT(!vp->isMagic());
+        JS_ASSERT_IF(!pobj->hasSingletonType() && shape->hasDefaultGetterOrIsMethod(),
+                     js::types::TypeHasProperty(cx, pobj->type(), shape->propid, *vp));
     } else {
         vp->setUndefined();
     }
