@@ -1141,7 +1141,7 @@ RunTracer(VMFrame &f)
         if (!HandleFinishedFrame(f, entryFrame))
             THROWV(NULL);
         void *addr = *f.returnAddressLocation();
-        if (addr != JaegerInterpoline)
+        if (addr != JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline))
             *f.returnAddressLocation() = cx->jaegerCompartment()->forceReturnFromFastCall();
         return NULL;
     }
