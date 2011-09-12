@@ -2396,19 +2396,11 @@ public:
    * this frame returns a child frame, then the child frame must be sure
    * to return a grandparent or higher!
    *
-   * @param aPresContext:   PresContext
-   * @param aProviderFrame: The frame whose style context should be the
-   *                        parent of this frame's style context.  Null
-   *                        is permitted, and means that this frame's
-   *                        style context should be the root of the
-   *                        style context tree.
-   * @param aIsChild:       True if |aProviderFrame| is set to a child
-   *                        of this frame; false if it is an ancestor or
-   *                        null.
+   * @return The frame whose style context should be the parent of this frame's
+   *         style context.  Null is permitted, and means that this frame's
+   *         style context should be the root of the style context tree.
    */
-  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
-                                        nsIFrame**      aProviderFrame,
-                                        PRBool*         aIsChild) = 0;
+  virtual nsIFrame* GetParentStyleContextFrame() = 0;
 
   /**
    * Determines whether a frame is visible for painting;
