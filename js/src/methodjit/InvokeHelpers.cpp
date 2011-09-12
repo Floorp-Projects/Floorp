@@ -617,50 +617,46 @@ js_InternalThrow(VMFrame &f)
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
 
-    if (cx->typeInferenceEnabled() || !fp->jit()) {
-        /*
-         * Fall back to EnterMethodJIT and finish the frame in the interpreter.
-         * With type inference enabled, we may wipe out all JIT code on the
-         * stack without patching ncode values to jump to the interpreter, and
-         * thus can only enter JIT code via EnterMethodJIT (which overwrites
-         * its entry frame's ncode). See ClearAllFrames.
-         */
-        cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
+    /*
+     * Fall back to EnterMethodJIT and finish the frame in the interpreter.
+     * We may wipe out all JIT code on the stack without patching ncode values
+     * to jump to the interpreter, and thus can only enter JIT code via
+     * EnterMethodJIT (which overwrites its entry frame's ncode).
+     * See ClearAllFrames.
+     */
+    cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
 
-        if (!script->ensureRanAnalysis(cx)) {
-            js_ReportOutOfMemory(cx);
-            return NULL;
-        }
-
-        analyze::AutoEnterAnalysis enter(cx);
-
-        cx->regs().pc = pc;
-        cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
-
-        /*
-         * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
-         * back into the interpreter with a pending exception. This will cause
-         * it to immediately rethrow.
-         */
-        if (cx->isExceptionPending()) {
-            JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
-            JSObject *obj = script->getObject(GET_SLOTNO(pc));
-            Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
-            SetValueRangeToUndefined(cx->regs().sp, vp);
-            cx->regs().sp = vp;
-            JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
-            cx->regs().sp[0] = cx->getPendingException();
-            cx->clearPendingException();
-            cx->regs().sp++;
-            cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
-        }
-
-        *f.oldregs = f.regs;
-
+    if (!script->ensureRanAnalysis(cx)) {
+        js_ReportOutOfMemory(cx);
         return NULL;
     }
 
-    return script->nativeCodeForPC(fp->isConstructing(), pc);
+    analyze::AutoEnterAnalysis enter(cx);
+
+    cx->regs().pc = pc;
+    cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
+
+    /*
+     * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
+     * back into the interpreter with a pending exception. This will cause
+     * it to immediately rethrow.
+     */
+    if (cx->isExceptionPending()) {
+        JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
+        JSObject *obj = script->getObject(GET_SLOTNO(pc));
+        Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
+        SetValueRangeToUndefined(cx->regs().sp, vp);
+        cx->regs().sp = vp;
+        JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
+        cx->regs().sp[0] = cx->getPendingException();
+        cx->clearPendingException();
+        cx->regs().sp++;
+        cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
+    }
+
+    *f.oldregs = f.regs;
+
+    return NULL;
 }
 
 void JS_FASTCALL
@@ -1060,6 +1056,8 @@ RunTracer(VMFrame &f)
     hits = 1;
 #endif
 
+    RecompilationMonitor monitor(cx);
+
     {
         /*
          * While the tracer is running, redirect the regs to a local variable here.
@@ -1078,9 +1076,11 @@ RunTracer(VMFrame &f)
     }
 
 #if JS_MONOIC
-    ic.loopCounterStart = *loopCounter;
-    if (blacklist)
-        DisableTraceHint(entryFrame->jit(), ic);
+    if (!monitor.recompiled()) {
+        ic.loopCounterStart = *loopCounter;
+        if (blacklist)
+            DisableTraceHint(entryFrame->jit(), ic);
+    }
 #endif
 
     // Even though ExecuteTree() bypasses the interpreter, it should propagate
@@ -1140,7 +1140,9 @@ RunTracer(VMFrame &f)
     if (FrameIsFinished(cx)) {
         if (!HandleFinishedFrame(f, entryFrame))
             THROWV(NULL);
-        *f.returnAddressLocation() = cx->jaegerCompartment()->forceReturnFromFastCall();
+        void *addr = *f.returnAddressLocation();
+        if (addr != JaegerInterpoline)
+            *f.returnAddressLocation() = cx->jaegerCompartment()->forceReturnFromFastCall();
         return NULL;
     }
 
@@ -1569,6 +1571,12 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             f.regs.pc = nextpc + analyze::GetBytecodeLength(nextpc);
         break;
       }
+
+      case REJOIN_FINISH_FRAME:
+        /* InvokeTracer finishes the frame it is given, including the epilogue. */
+        if (fp->isFunctionFrame())
+            fp->markFunctionEpilogueDone();
+        break;
 
       default:
         JS_NOT_REACHED("Missing rejoin");
