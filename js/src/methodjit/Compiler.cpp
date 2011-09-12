@@ -6882,39 +6882,54 @@ mjit::Compiler::constructThis()
 
     JSFunction *fun = script->function();
 
-    if (cx->typeInferenceEnabled() && !fun->getType(cx)->unknownProperties()) {
+    do {
+        if (!cx->typeInferenceEnabled() || fun->getType(cx)->unknownProperties())
+            break;
+
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
         types::TypeSet *protoTypes = fun->getType(cx)->getProperty(cx, id, false);
 
         JSObject *proto = protoTypes->getSingleton(cx, true);
-        if (proto) {
-            JSObject *templateObject = js_CreateThisForFunctionWithProto(cx, fun, proto);
-            if (!templateObject)
-                return false;
+        if (!proto)
+            break;
 
-            /*
-             * The template incorporates a shape and/or fixed slots from any
-             * newScript on its type, so make sure recompilation is triggered
-             * should this information change later.
-             */
-            if (templateObject->type()->newScript)
-                types::TypeSet::WatchObjectStateChange(cx, templateObject->type());
+        /*
+         * Generate an inline path to create a 'this' object with the given
+         * prototype. Only do this if the type is actually known as a possible
+         * 'this' type of the script.
+         */
+        types::TypeObject *type = proto->getNewType(cx, fun);
+        if (!type)
+            return false;
+        if (!types::TypeScript::ThisTypes(script)->hasType(types::Type::ObjectType(type)))
+            break;
 
-            RegisterID result = frame.allocReg();
-            Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
+        JSObject *templateObject = js_CreateThisForFunctionWithProto(cx, fun, proto);
+        if (!templateObject)
+            return false;
 
-            stubcc.linkExit(emptyFreeList, Uses(0));
-            stubcc.leave();
+        /*
+         * The template incorporates a shape and/or fixed slots from any
+         * newScript on its type, so make sure recompilation is triggered
+         * should this information change later.
+         */
+        if (templateObject->type()->newScript)
+            types::TypeSet::WatchObjectStateChange(cx, templateObject->type());
 
-            stubcc.masm.move(ImmPtr(proto), Registers::ArgReg1);
-            OOL_STUBCALL(stubs::CreateThis, REJOIN_RESUME);
+        RegisterID result = frame.allocReg();
+        Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
 
-            frame.setThis(result);
+        stubcc.linkExit(emptyFreeList, Uses(0));
+        stubcc.leave();
 
-            stubcc.rejoin(Changes(1));
-            return true;
-        }
-    }
+        stubcc.masm.move(ImmPtr(proto), Registers::ArgReg1);
+        OOL_STUBCALL(stubs::CreateThis, REJOIN_RESUME);
+
+        frame.setThis(result);
+
+        stubcc.rejoin(Changes(1));
+        return true;
+    } while (false);
 
     // Load the callee.
     frame.pushCallee();
