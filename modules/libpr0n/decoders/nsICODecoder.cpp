@@ -475,7 +475,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
       // only used if the alpha data is not already set. The alpha data 
       // is used for 32bpp bitmaps as per the comment in ICODecoder.h
       // The alpha mask should be checked in all other cases.
-      if (static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetBitsPerPixel() != 32) {
+      if (static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetBitsPerPixel() != 32 || 
+          !static_cast<nsBMPDecoder*>(mContainedDecoder.get())->HasAlphaData()) {
         PRUint32 rowSize = ((mDirEntry.mWidth + 31) / 32) * 4; // + 31 to round up
         if (mPos == bmpDataEnd) {
           mPos++;

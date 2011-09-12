@@ -159,7 +159,7 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
 }
 
 // Darwin/x86-64 uses gcc >= 4.2
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 1002
+
 #define STUB_ENTRY(n) \
 asm(".section	__TEXT,__text\n\t" \
     ".align	3\n\t" \
@@ -219,7 +219,3 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 }
 
 #include "xptcstubsdef.inc"
-
-#else
-#error "Unsupported compiler. Use gcc >= 4.2 for Darwin/x86-64."
-#endif /* __GNUC__ */

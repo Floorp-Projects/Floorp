@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function repeatChar(s, n)
+{
+  while (s.length < n)
+    s += s;
+  return s.substr(0, n);
+}
+
+function boom()
+{
+  document.documentElement.contentEditable = "true";
+  document.execCommand("inserthtml", false, "<button><\/button>");
+  document.execCommand("inserthtml", false, repeatChar("i", 34646));
+  document.execCommand("contentReadOnly", false, null);
+  document.execCommand("removeformat", false, null);
+  document.execCommand("hilitecolor", false, "red");
+  document.execCommand("inserthtml", false, "a");
+  document.execCommand("delete", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+
+</html>

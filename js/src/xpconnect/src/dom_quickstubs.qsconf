@@ -597,6 +597,11 @@ customMethodCalls = {
         'code': '    nsINode *result = self->GetNodeParent();',
         'canFail': False
         },
+    'nsIDOMNode_GetParentElement': {
+        'thisType': 'nsINode',
+        'code': '    nsINode *result = self->GetElementParent();',
+        'canFail': False
+        },
     'nsIDOMNode_InsertBefore': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',

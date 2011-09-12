@@ -44,7 +44,7 @@ interface nsIDOMSVGPoint;
 interface nsIDOMSVGRect;
 
 
-[scriptable, uuid(2dc007ee-b5f4-44e7-a516-9512d88f6347)]
+[scriptable, uuid(0a719b38-d8ea-4b62-83d9-ed9d76dbe111)]
 interface nsIDOMSVGTextContentElement
   : nsIDOMSVGElement
 /*

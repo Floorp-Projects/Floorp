@@ -116,6 +116,9 @@ public:
   NS_IMETHOD SetContentType(const nsACString& aContentType);
   NS_IMETHOD GetContentCharset(nsACString& aContentCharset);
   NS_IMETHOD SetContentCharset(const nsACString& aContentCharset);
+  NS_IMETHOD GetContentDisposition(PRUint32 *aContentDisposition);
+  NS_IMETHOD GetContentDispositionFilename(nsAString& aContentDispositionFilename);
+  NS_IMETHOD GetContentDispositionHeader(nsACString& aContentDispositionHeader);
   NS_IMETHOD GetContentLength(PRInt32 *aContentLength);
   NS_IMETHOD SetContentLength(PRInt32 aContentLength);
   NS_IMETHOD Open(nsIInputStream **aResult);

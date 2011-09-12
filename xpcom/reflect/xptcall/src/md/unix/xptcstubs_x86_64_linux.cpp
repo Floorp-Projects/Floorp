@@ -158,7 +158,6 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
     return result;
 }
 
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 // Linux/x86-64 uses gcc >= 3.1
 #define STUB_ENTRY(n) \
 asm(".section	\".text\"\n\t" \
@@ -234,7 +233,3 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 }
 
 #include "xptcstubsdef.inc"
-
-#else
-#error "Unsupported compiler. Use gcc >= 3.1 for Linux/x86-64."
-#endif /* __GNUC__ */

@@ -53,7 +53,9 @@
 #include "nsIScrollbarMediator.h"
 #include "nsRepeatService.h"
 #include "nsGUIEvent.h"
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
+
+using namespace mozilla;
 
 //
 // NS_NewToolbarFrame
@@ -100,16 +102,16 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
                                           nsEventStatus*  aEventStatus)
 {
   // Get the desired action for the scrollbar button.
-  nsILookAndFeel::nsMetricID tmpAction;
+  LookAndFeel::IntID tmpAction;
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       aEvent->message == NS_MOUSE_BUTTON_DOWN) {
     PRUint16 button = static_cast<nsMouseEvent*>(aEvent)->button;
     if (button == nsMouseEvent::eLeftButton) {
-      tmpAction = nsILookAndFeel::eMetric_ScrollButtonLeftMouseButtonAction;
+      tmpAction = LookAndFeel::eIntID_ScrollButtonLeftMouseButtonAction;
     } else if (button == nsMouseEvent::eMiddleButton) {
-      tmpAction = nsILookAndFeel::eMetric_ScrollButtonMiddleMouseButtonAction;
+      tmpAction = LookAndFeel::eIntID_ScrollButtonMiddleMouseButtonAction;
     } else if (button == nsMouseEvent::eRightButton) {
-      tmpAction = nsILookAndFeel::eMetric_ScrollButtonRightMouseButtonAction;
+      tmpAction = LookAndFeel::eIntID_ScrollButtonRightMouseButtonAction;
     } else {
       return PR_FALSE;
     }
@@ -119,9 +121,9 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 
   // Get the button action metric from the pres. shell.
   PRInt32 pressedButtonAction;
-  if (NS_FAILED(aPresContext->LookAndFeel()->GetMetric(tmpAction,
-                                                       pressedButtonAction)))
+  if (NS_FAILED(LookAndFeel::GetInt(tmpAction, &pressedButtonAction))) {
     return PR_FALSE;
+  }
 
   // get the scrollbar control
   nsIFrame* scrollbar;

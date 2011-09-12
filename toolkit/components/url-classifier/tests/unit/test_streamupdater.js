@@ -27,6 +27,25 @@ function doTest(updates, assertions, expectError, clientKey)
   }
 }
 
+function testFillDb() {
+  var add1Urls = [ "zaz.com/a", "yxz.com/c" ];
+
+  var update = "n:1000\n";
+  update += "i:test-phish-simple\n";
+
+  var update1 = buildBareUpdate(
+    [{ "chunkNum" : 1,
+       "urls" : add1Urls }]);
+  update += "u:data:," + encodeURIComponent(update1) + "\n";
+
+  var assertions = {
+    "tableData" : "test-phish-simple;a:1",
+    "urlsExist" : add1Urls
+  };
+
+  doTest([update], assertions, false);
+}
+
 function testSimpleForward() {
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
@@ -61,6 +80,8 @@ function testSimpleForward() {
 // Make sure that a nested forward (a forward within a forward) causes
 // the update to fail.
 function testNestedForward() {
+  testFillDb(); // Make sure the db isn't empty
+
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
 
@@ -182,6 +203,8 @@ function testValidMAC() {
 
 // Test a simple update with an invalid message authentication code.
 function testInvalidMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
   var update = buildPhishingUpdate(
         [
@@ -201,6 +224,8 @@ function testInvalidMAC() {
 // Test a simple  update without a message authentication code, when it is
 // expecting one.
 function testNoMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
   var update = buildPhishingUpdate(
         [
@@ -257,6 +282,8 @@ function testValidForwardMAC() {
 // Test an update with a valid message authentication code, but with
 // invalid MACs on the forwards.
 function testInvalidForwardMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
   var add3Urls = [ "bar.com/d" ];
@@ -296,6 +323,8 @@ function testInvalidForwardMAC() {
 // Test an update with a valid message authentication code, but no MAC
 // specified for sub-urls.
 function testNoForwardMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
   var add3Urls = [ "bar.com/d" ];
@@ -362,6 +391,8 @@ gAssertions.gotRekey = function(data, cb)
 
 // Tests a rekey request.
 function testRekey() {
+  testFillDb();
+
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
   var update = buildPhishingUpdate(
         [

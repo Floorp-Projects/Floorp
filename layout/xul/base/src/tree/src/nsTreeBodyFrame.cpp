@@ -107,6 +107,8 @@
 #include "nsBidiUtils.h"
 #endif
 
+using namespace mozilla;
+
 // Enumeration function that cancels all the image requests in our cache
 static PLDHashOperator
 CancelImageRequest(const nsAString& aKey,
@@ -1793,13 +1795,12 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
 }
 
 nsresult
-nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
+nsTreeBodyFrame::CreateTimer(const LookAndFeel::IntID aID,
                              nsTimerCallbackFunc aFunc, PRInt32 aType,
                              nsITimer** aTimer)
 {
   // Get the delay from the look and feel service.
-  PRInt32 delay = 0;
-  PresContext()->LookAndFeel()->GetMetric(aID, delay);
+  PRInt32 delay = LookAndFeel::GetInt(aID, 0);
 
   nsCOMPtr<nsITimer> timer;
 
@@ -2633,7 +2634,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
         }
 
         // Set a timer to trigger the tree scrolling.
-        CreateTimer(nsILookAndFeel::eMetric_TreeLazyScrollDelay,
+        CreateTimer(LookAndFeel::eIntID_TreeLazyScrollDelay,
                     LazyScrollCallback, nsITimer::TYPE_ONE_SHOT,
                     getter_AddRefs(mSlots->mTimer));
        }
@@ -2671,7 +2672,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
             mView->IsContainerOpen(mSlots->mDropRow, &isOpen);
             if (!isOpen) {
               // This node isn't expanded, set a timer to expand it.
-              CreateTimer(nsILookAndFeel::eMetric_TreeOpenDelay,
+              CreateTimer(LookAndFeel::eIntID_TreeOpenDelay,
                           OpenCallback, nsITimer::TYPE_ONE_SHOT,
                           getter_AddRefs(mSlots->mTimer));
             }
@@ -2748,7 +2749,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
 
     if (!mSlots->mArray.IsEmpty()) {
       // Close all spring loaded folders except the drop folder.
-      CreateTimer(nsILookAndFeel::eMetric_TreeCloseDelay,
+      CreateTimer(LookAndFeel::eIntID_TreeCloseDelay,
                   CloseCallback, nsITimer::TYPE_ONE_SHOT,
                   getter_AddRefs(mSlots->mTimer));
     }
@@ -4347,9 +4348,8 @@ nsTreeBodyFrame::ComputeDropPosition(nsGUIEvent* aEvent, PRInt32* aRow, PRInt16*
 
   if (CanAutoScroll(*aRow)) {
     // Get the max value from the look and feel service.
-    PRInt32 scrollLinesMax = 0;
-    PresContext()->LookAndFeel()->
-      GetMetric(nsILookAndFeel::eMetric_TreeScrollLinesMax, scrollLinesMax);
+    PRInt32 scrollLinesMax =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_TreeScrollLinesMax, 0);
     scrollLinesMax--;
     if (scrollLinesMax < 0)
       scrollLinesMax = 0;
@@ -4409,7 +4409,7 @@ nsTreeBodyFrame::LazyScrollCallback(nsITimer *aTimer, void *aClosure)
 
     if (self->mView) {
       // Set a new timer to scroll the tree repeatedly.
-      self->CreateTimer(nsILookAndFeel::eMetric_TreeScrollDelay,
+      self->CreateTimer(LookAndFeel::eIntID_TreeScrollDelay,
                         ScrollCallback, nsITimer::TYPE_REPEATING_SLACK,
                         getter_AddRefs(self->mSlots->mTimer));
       self->ScrollByLines(self->mSlots->mScrollLines);

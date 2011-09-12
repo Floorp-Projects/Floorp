@@ -349,12 +349,12 @@ function completeTest11(request, data, ctx)
   do_check_eq(request.status, 0);
 
   try {
-    // TODO when bug XXX lands, also get channel C-D properties and make sure
-    // they're blank
-    dispo = request.getResponseHeader("Content-Disposition");
-    do_check_eq(dispo, "attachment; filename=foo");
+    var chan = request.QueryInterface(Ci.nsIChannel);
+    do_check_eq(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
+    do_check_eq(chan.contentDispositionFilename, "foo");
+    do_check_eq(chan.contentDispositionHeader, "attachment; filename=foo");
   } catch (ex) {
-    do_throw("Content-Disposition should be present");
+    do_throw("error parsing Content-Disposition: " + ex);
   }
 
   endTests();

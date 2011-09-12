@@ -52,7 +52,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(af9b19f7-7c88-4d16-9a3a-97390f824c58)]
+[scriptable, uuid(c8ac3f81-63e1-4c31-8543-70a656642789)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -74,6 +74,7 @@ interface nsIDOMNode : nsISupports
                                           // raises(DOMException) on retrieval
   readonly attribute unsigned short   nodeType;
   readonly attribute nsIDOMNode       parentNode;
+  readonly attribute nsIDOMElement    parentElement;
   readonly attribute nsIDOMNodeList   childNodes;
   readonly attribute nsIDOMNode       firstChild;
   readonly attribute nsIDOMNode       lastChild;

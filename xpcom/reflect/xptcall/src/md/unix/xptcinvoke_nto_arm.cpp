@@ -194,12 +194,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "ldr	r1, [r0, #0]	\n\t"	/* get that->vtable offset		*/
     "ldr	r2, [%1, #4]	\n\t"
     "mov	r2, r2, lsl #2	\n\t"	/* a vtable_entry(x)=8 + (4 bytes * x)	*/
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
     "ldr        ip, [r1, r2]    \n\t"   /* get method adress from vtable        */
-#else /* non G++ V3 ABI */
-    "add	r2, r2, #8	\n\t"	/* with this compilers			*/
-    "ldr	ip, [r1, r2]	\n\t"	/* get method adress from vtable	*/
-#endif
     "cmp	r4, #12		\n\t"	/* more than 3 arguments???		*/
     "ldmgtia	sp!, {r1, r2, r3}\n\t"	/* yes: load arguments for r1-r3	*/
     "subgt	r4, r4, #12	\n\t"	/*      and correct the stack pointer	*/

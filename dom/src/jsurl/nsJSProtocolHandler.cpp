@@ -1028,6 +1028,24 @@ nsJSChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
+nsJSChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+{
+    return mStreamChannel->GetContentDisposition(aContentDisposition);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
+{
+    return mStreamChannel->GetContentDispositionFilename(aContentDispositionFilename);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
+{
+    return mStreamChannel->GetContentDispositionHeader(aContentDispositionHeader);
+}
+
+NS_IMETHODIMP
 nsJSChannel::GetContentLength(PRInt32 *aContentLength)
 {
     return mStreamChannel->GetContentLength(aContentLength);

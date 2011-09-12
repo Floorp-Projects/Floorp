@@ -62,14 +62,11 @@
 #include "nsIServiceManager.h"
 #include "mozilla/Preferences.h"
 
-#include "nsILookAndFeel.h"
-#include "nsWidgetsCID.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 
 class nsHTMLEditUtils;
-
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 // ==================================================================
 // DocumentResizeEventListener
@@ -895,12 +892,10 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     mouseEvent->GetClientX(&clientX);
     mouseEvent->GetClientY(&clientY);
 
-    nsCOMPtr<nsILookAndFeel> look = do_GetService(kLookAndFeelCID);
-    NS_ASSERTION(look, "Look and feel service must be implemented for this toolkit");
-
-    PRInt32 xThreshold=1, yThreshold=1;
-    look->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, xThreshold);
-    look->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, yThreshold);
+    PRInt32 xThreshold =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 1);
+    PRInt32 yThreshold =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 1);
 
     if (NS_ABS(clientX - mOriginalX ) * 2 >= xThreshold ||
         NS_ABS(clientY - mOriginalY ) * 2 >= yThreshold) {

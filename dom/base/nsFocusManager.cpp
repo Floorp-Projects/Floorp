@@ -72,8 +72,6 @@
 #include "nsIMEStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
-#include "nsWidgetsCID.h"
-#include "nsILookAndFeel.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
 #include "nsIViewManager.h"
@@ -85,6 +83,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -154,8 +153,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFocusManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstFocusEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWindowBeingLowered)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsFocusManager* nsFocusManager::sInstance = nsnull;
 PRBool nsFocusManager::sMouseFocusesFormControl = PR_FALSE;
@@ -2293,9 +2290,8 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
   if (!doc)
     return NS_OK;
 
-  nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
-  lookNFeel->GetMetric(nsILookAndFeel::eMetric_TabFocusModel,
-                       nsIContent::sTabFocusModel);
+  LookAndFeel::GetInt(LookAndFeel::eIntID_TabFocusModel,
+                      &nsIContent::sTabFocusModel);
 
   if (aType == MOVEFOCUS_ROOT) {
     NS_IF_ADDREF(*aNextContent = GetRootForFocus(aWindow, doc, PR_FALSE, PR_FALSE));

@@ -173,7 +173,7 @@ SharedStub:							\n\
  *
  * This will work with or without optimisation.
  */
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+
 /*
  * Note : As G++3 ABI contains the length of the functionname in the
  *  mangled name, it is difficult to get a generic assembler mechanism like
@@ -227,19 +227,6 @@ nsresult nsXPTCStubBase::Stub##n ()  \
 }
 #endif
 
-#else /* G++2.95 ABI */
-
-#define STUB_ENTRY(n)						\
-  __asm__(							\
-	".section \".text\"\n"					\
-"	.align\n"						\
-"	.globl	Stub"#n"__14nsXPTCStubBase\n"			\
-"	.type	Stub"#n"__14nsXPTCStubBase,#function\n\n"	\
-"Stub"#n"__14nsXPTCStubBase:\n"					\
-"	mov	ip, #"#n"\n"					\
-"	b	SharedStub\n\t");
-
-#endif
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \

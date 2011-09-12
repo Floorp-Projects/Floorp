@@ -229,9 +229,9 @@ class NS_STACK_CLASS nsWSRunObject
     struct NS_STACK_CLASS WSPoint
     {
       nsCOMPtr<nsIContent> mTextNode;
-      PRInt16 mOffset;
+      PRUint32 mOffset;
       PRUnichar mChar;
-      
+
       WSPoint() : mTextNode(0),mOffset(0),mChar(0) {}
       WSPoint(nsIDOMNode *aNode, PRInt32 aOffset, PRUnichar aChar) : 
                      mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)

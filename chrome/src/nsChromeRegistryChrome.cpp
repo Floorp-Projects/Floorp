@@ -58,14 +58,14 @@
 #include "nsStringEnumerator.h"
 #include "nsTextFormatter.h"
 #include "nsUnicharUtils.h"
-#include "nsWidgetsCID.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsZipArchive.h"
+
+#include "mozilla/LookAndFeel.h"
 
 #include "nsICommandLine.h"
 #include "nsILocaleService.h"
 #include "nsILocalFile.h"
-#include "nsILookAndFeel.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
@@ -82,7 +82,7 @@
 #define SELECTED_LOCALE_PREF "general.useragent.locale"
 #define SELECTED_SKIN_PREF   "general.skins.selectedSkin"
 
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+using namespace mozilla;
 
 static PLDHashOperator
 RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *arg)
@@ -210,26 +210,19 @@ nsChromeRegistryChrome::Init()
 NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForOSAccessibility()
 {
-  nsresult rv;
+  PRInt32 useAccessibilityTheme =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
 
-  nsCOMPtr<nsILookAndFeel> lookAndFeel (do_GetService(kLookAndFeelCID));
-  if (lookAndFeel) {
-    PRInt32 useAccessibilityTheme = 0;
+  if (useAccessibilityTheme) {
+    /* Set the skin to classic and remove pref observers */
+    if (!mSelectedSkin.EqualsLiteral("classic/1.0")) {
+      mSelectedSkin.AssignLiteral("classic/1.0");
+      RefreshSkins();
+    }
 
-    rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_UseAccessibilityTheme,
-                                useAccessibilityTheme);
-
-    if (NS_SUCCEEDED(rv) && useAccessibilityTheme) {
-      /* Set the skin to classic and remove pref observers */
-      if (!mSelectedSkin.EqualsLiteral("classic/1.0")) {
-        mSelectedSkin.AssignLiteral("classic/1.0");
-        RefreshSkins();
-      }
-
-      nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefs) {
-        prefs->RemoveObserver(SELECTED_SKIN_PREF, this);
-      }
+    nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) {
+      prefs->RemoveObserver(SELECTED_SKIN_PREF, this);
     }
   }
 

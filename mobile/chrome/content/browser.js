@@ -2201,7 +2201,7 @@ IdentityHandler.prototype = {
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city)
-        supplemental += iData.city + " ";
+        supplemental += iData.city + "\n";
       if (iData.state && iData.country)
         supplemental += Strings.browser.formatStringFromName("identity.identified.state_and_country", [iData.state, iData.country], 2);
       else if (iData.state) // State only
@@ -2235,13 +2235,17 @@ IdentityHandler.prototype = {
     this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
 
     this._identityPopup.hidden = false;
-    this._identityPopup.top = BrowserUI.toolbarH - this._identityPopup.offset;
-    this._identityPopup.anchorTo(this._identityBox);
+    let anchorPos = "";
+    if (Util.isTablet())
+      anchorPos = "after_start";
+    else
+      this._identityPopup.top = BrowserUI.toolbarH - this._identityPopup.offset;
 
     this._identityBox.setAttribute("open", "true");
 
     BrowserUI.pushPopup(this, [this._identityPopup, this._identityBox, Elements.toolbarContainer]);
     BrowserUI.lockToolbar();
+    this._identityPopup.anchorTo(this._identityBox, anchorPos);
   },
 
   hide: function ih_hide() {

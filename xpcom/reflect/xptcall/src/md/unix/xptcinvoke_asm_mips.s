@@ -137,11 +137,7 @@ _NS_InvokeByIndex_P:
 	# t0 = methodIndex << PTRLOG
 	sll	t0, t0, PTRLOG
 	addu	t9, t0
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 	lw	t9, (t9)
-#else /* not G++ V3 ABI */
-	lw	t9, 2*PTRSIZE(t9)
-#endif /* G++ V3 ABI */
 
 	# Set a1-a3 to what invoke_copy_to_stack told us. a0 is already
 	# the "this" pointer. We don't have to care about floating

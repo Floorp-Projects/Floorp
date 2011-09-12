@@ -385,58 +385,10 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // future, because the user has specified external handling for the MIME
   // type.
   PRBool forceExternalHandling = PR_FALSE;
-  nsCAutoString disposition;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
-  nsCOMPtr<nsIURI> uri;
-  if (httpChannel)
-  {
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"),
-                                        disposition);
-    httpChannel->GetURI(getter_AddRefs(uri));
-  }
-  else
-  {
-    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(request));
-    if (multipartChannel)
-    {
-      rv = multipartChannel->GetContentDisposition(disposition);
-    } else {
-      // Soon-to-be common way to get Disposition: right now only JARChannel
-      rv = NS_GetContentDisposition(request, disposition);
-    }
-  }
-
-  LOG(("  Disposition header: '%s'", disposition.get()));
-
-  if (NS_SUCCEEDED(rv) && !disposition.IsEmpty())
-  {
-    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-      nsCAutoString fallbackCharset;
-      if (uri)
-        uri->GetOriginCharset(fallbackCharset);
-      nsAutoString dispToken;
-      // Get the disposition type
-      rv = mimehdrpar->GetParameter(disposition, "", fallbackCharset,
-                                    PR_TRUE, nsnull, dispToken);
-      // RFC 2183, section 2.8 says that an unknown disposition
-      // value should be treated as "attachment"
-      // XXXbz this code is duplicated in GetFilenameAndExtensionFromChannel in
-      // nsExternalHelperAppService.  Factor it out!
-      if (NS_FAILED(rv) || 
-          (!dispToken.IsEmpty() &&
-           !dispToken.LowerCaseEqualsLiteral("inline") &&
-           // Broken sites just send
-           // Content-Disposition: filename="file"
-           // without a disposition token... screen those out.
-           !dispToken.EqualsIgnoreCase("filename", 8) &&
-           // Also in use is Content-Disposition: name="file"
-           !dispToken.EqualsIgnoreCase("name", 4)))
-        // We have a content-disposition of "attachment" or unknown
-        forceExternalHandling = PR_TRUE;
-    }
-  }
+  PRUint32 disposition;
+  rv = aChannel->GetContentDisposition(&disposition);
+  if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT)
+    forceExternalHandling = PR_TRUE;
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
     
@@ -576,6 +528,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   // Before dispatching to the external helper app service, check for an HTTP
   // error page.  If we got one, we don't want to handle it with a helper app,
   // really.
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
     PRBool requestSucceeded;
     httpChannel->GetRequestSucceeded(&requestSucceeded);

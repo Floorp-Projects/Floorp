@@ -44,20 +44,20 @@ public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
-  NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
-  NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
+  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
+  virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
+  virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
+  virtual PRUnichar GetPasswordCharacterImpl()
+  {
+    // unicode value for the bullet character, used for password textfields.
+    return 0x2022;
+  }
 
 protected:
 
   // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
   static const int kThemeScrollBarArrowsBoth = 2;
   static const int kThemeScrollBarArrowsUpperLeft = 3;
-
-  PRUnichar GetPasswordCharacter() {
-    // unicode value for the bullet character, used for password textfields.
-    return 0x2022;
-  }
 };
 
 #endif // nsLookAndFeel_h_
