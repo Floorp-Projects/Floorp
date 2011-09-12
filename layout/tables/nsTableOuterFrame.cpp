@@ -117,10 +117,8 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   return result;
 }
 
-NS_IMETHODIMP 
-nsTableCaptionFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
-                                                nsIFrame**      aProviderFrame,
-                                                PRBool*         aIsChild)
+nsIFrame*
+nsTableCaptionFrame::GetParentStyleContextFrame()
 {
   NS_PRECONDITION(mContent->GetParent(),
                   "How could we not have a parent here?");
@@ -131,17 +129,13 @@ nsTableCaptionFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
   if (outerFrame && outerFrame->GetType() == nsGkAtoms::tableOuterFrame) {
     nsIFrame* innerFrame = outerFrame->GetFirstPrincipalChild();
     if (innerFrame) {
-      *aProviderFrame =
-        nsFrame::CorrectStyleParentFrame(innerFrame,
-                                         GetStyleContext()->GetPseudo());
-      *aIsChild = PR_FALSE;
-      return NS_OK;
+      return nsFrame::CorrectStyleParentFrame(innerFrame,
+                                              GetStyleContext()->GetPseudo());
     }
   }
 
   NS_NOTREACHED("Where is our inner table frame?");
-  return nsBlockFrame::GetParentStyleContextFrame(aPresContext, aProviderFrame,
-                                                  aIsChild);
+  return nsBlockFrame::GetParentStyleContextFrame();
 }
 
 #ifdef ACCESSIBILITY
@@ -405,10 +399,8 @@ nsTableOuterFrame::SetSelected(PRBool        aSelected,
   }
 }
 
-NS_IMETHODIMP 
-nsTableOuterFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
-                                              nsIFrame**      aProviderFrame,
-                                              PRBool*         aIsChild)
+nsIFrame*
+nsTableOuterFrame::GetParentStyleContextFrame()
 {
   // The table outer frame and the (inner) table frame split the style
   // data by giving the table frame the style context associated with
@@ -421,13 +413,9 @@ nsTableOuterFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
   // the outer table's style context is a leaf.
 
   if (!mInnerTableFrame) {
-    *aProviderFrame = this;
-    *aIsChild = PR_FALSE;
-    return NS_ERROR_FAILURE;
+    return this;
   }
-  *aProviderFrame = mInnerTableFrame;
-  *aIsChild = PR_TRUE;
-  return NS_OK;
+  return mInnerTableFrame;
 }
 
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
