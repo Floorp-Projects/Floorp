@@ -194,6 +194,40 @@ js_ObjectIsRegExp(JSObject *obj)
  * js::RegExp
  */
 
+#if !ENABLE_YARR_JIT
+void
+RegExp::reportPCREError(JSContext *cx, int error)
+{
+#define REPORT(msg_) \
+    JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
+    return
+    switch (error) {
+      case -2: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 0: JS_NOT_REACHED("Precondition violation: an error must have occurred."); 
+      case 1: REPORT(JSMSG_TRAILING_SLASH);
+      case 2: REPORT(JSMSG_TRAILING_SLASH); 
+      case 3: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 4: REPORT(JSMSG_BAD_QUANTIFIER);
+      case 5: REPORT(JSMSG_BAD_QUANTIFIER);
+      case 6: REPORT(JSMSG_BAD_CLASS_RANGE);
+      case 7: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 8: REPORT(JSMSG_BAD_CLASS_RANGE);
+      case 9: REPORT(JSMSG_BAD_QUANTIFIER);
+      case 10: REPORT(JSMSG_UNMATCHED_RIGHT_PAREN);
+      case 11: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 12: REPORT(JSMSG_UNMATCHED_RIGHT_PAREN);
+      case 13: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 14: REPORT(JSMSG_MISSING_PAREN);
+      case 15: REPORT(JSMSG_BAD_BACKREF);
+      case 16: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      case 17: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
+      default:
+        JS_NOT_REACHED("Precondition violation: unknown PCRE error code.");
+    }
+#undef REPORT
+}
+#endif
+
 void
 RegExp::reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error)
 {

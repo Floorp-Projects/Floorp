@@ -62,7 +62,6 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
-#include "nsILookAndFeel.h"
 #include "nsRuleNode.h"
 #include "nsUnicharUtils.h"
 #include "nsCSSPseudoElements.h"

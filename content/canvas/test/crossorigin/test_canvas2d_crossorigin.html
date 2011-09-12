@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=685518
+-->
+<head>
+  <title>Test for Bug 685518</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=685518">Mozilla Bug 685518</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 685518 **/
+
+SimpleTest.waitForExplicitFinish();
+
+const SECURITY_ERR = 0x805303e8;
+const BAD_URI_ERR = 0x805303f4;
+const OK = 0;
+
+function nameForErrorCode(code) {
+  switch(code) {
+    case OK: return "no error";
+    case SECURITY_ERR: return "security error";
+    case BAD_URI_ERR: return "bad URI error"
+  }
+  return "unexpected error (" + code + ")";
+}
+
+function verifyError(actual_error, expected_error, message) {
+  ok(actual_error == expected_error,
+     message + ": expected " + nameForErrorCode(expected_error)
+             + ", got " + nameForErrorCode(actual_error));
+}
+
+var number_of_tests_live = 0;
+
+function testDone() {
+  number_of_tests_live--;
+        
+  if (number_of_tests_live == 0)
+    SimpleTest.finish();
+}
+
+function testImage(url, crossOriginAttribute, expected_result) {
+  ++number_of_tests_live;
+  var image;
+  if (crossOriginAttribute == "just-crossOrigin-without-value") {
+    var div = document.createElement('div');
+    div.innerHTML="<img crossOrigin>";
+    image = div.children[0];
+  }
+  else {
+    image = new Image();
+    if (crossOriginAttribute != "missing-value-default") {
+      image.crossOrigin = crossOriginAttribute;
+    }
+  }
+
+  image.onload = function() {
+    var c = document.createElement("canvas");
+    c.width = this.width;
+    c.height = this.height;
+    var ctx = c.getContext("2d");
+    ctx.drawImage(this, 0, 0);
+
+    var data;
+    var actual_result;
+    try {
+      data = ctx.getImageData(0, 0, 1, 1);
+      actual_result = OK;
+    } catch (e) {
+      actual_result = e.result;
+    }
+
+    verifyError(actual_result, expected_result,
+                "drawImage then get image data on " + url +
+                " with crossOrigin=" + this.crossOrigin);
+
+    // Now test patterns
+    c = document.createElement("canvas");
+    c.width = this.width;
+    c.height = this.height;
+    ctx = c.getContext("2d");
+    ctx.fillStyle = ctx.createPattern(this, "");
+    ctx.fillRect(0, 0, c.width, c.height);
+    try {
+      data = ctx.getImageData(0, 0, 1, 1);
+      actual_result = OK;
+    } catch (e) {
+      actual_result = e.result;
+    }
+
+    verifyError(actual_result, expected_result,
+                "createPattern+fill then get image data on " + url +
+                " with crossOrigin=" + this.crossOrigin);
+
+    testDone();
+  };
+
+  image.onerror = function(event) {
+    verifyError(BAD_URI_ERR, expected_result,
+                "image error handler for " + url +
+                " with crossOrigin=" + this.crossOrigin);
+
+    testDone();
+  }
+
+  image.src = url;
+}
+
+// Now kick off the tests.
+const testPath = "/tests/content/canvas/test/crossorigin/"
+
+// First column is image file, second column is what CORS headers the server sends
+const imageFiles = [
+ [ "image.png", "none" ],
+ [ "image-allow-star.png", "allow-all-anon" ],
+ [ "image-allow-credentials.png", "allow-single-server-creds" ]
+];
+
+const hostnames = [
+  [ "mochi.test:8888", "same-origin" ],
+  [ "example.com", "cross-origin" ]
+];
+
+// First column is the value; second column is the expected resulting CORS mode
+const attrValues = [
+  [ "missing-value-default", "none" ],
+  [ "", "anonymous" ],
+  [ "just-crossOrigin-without-value", "anonymous" ],
+  [ "anonymous", "anonymous" ],
+  [ "use-credentials", "use-credentials" ],
+  [ "foobar", "anonymous" ]
+];
+
+for (var imgIdx = 0; imgIdx < imageFiles.length; ++imgIdx) {
+  for (var hostnameIdx = 0; hostnameIdx < hostnames.length; ++hostnameIdx) {
+    var hostnameData = hostnames[hostnameIdx];
+    var url = "http://" + hostnameData[0] + testPath + imageFiles[imgIdx][0];
+    for (var attrValIdx = 0; attrValIdx < attrValues.length; ++attrValIdx) {
+      var attrValData = attrValues[attrValIdx];
+      // Now compute the expected result
+      var expected_result;
+      if (hostnameData[1] == "same-origin") {
+        // Same-origin; these should all Just Work
+        expected_result = OK;
+      } else {
+        // Cross-origin
+        is(hostnameData[1], "cross-origin",
+           "what sort of host is " + hostnameData[0]);
+        var CORSMode = attrValData[1];
+        if (CORSMode == "none") {
+          // Doesn't matter what headers the server sends; we're not
+          // using CORS on our end.
+          expected_result = SECURITY_ERR;
+        } else {
+          // Check whether the server will let us talk to them
+          var CORSHeaders = imageFiles[imgIdx][1];
+          // We're going to look for CORS headers from the server
+          if (CORSHeaders == "none") {
+            // No CORS headers from server; load will fail.
+            expected_result = BAD_URI_ERR;
+          } else if (CORSHeaders == "allow-all-anon") {
+            // Server only allows anonymous requests
+            if (CORSMode == "anonymous") {
+              expected_result = OK;
+            } else {
+              is(CORSMode, "use-credentials",
+                 "What other CORS modes are there?");
+              // A load with credentials against a server that only
+              // allows anonymous loads will fail.
+              expected_result = BAD_URI_ERR;
+            }
+          } else {
+            is(CORSHeaders, "allow-single-server-creds",
+               "What other CORS headers could there be?");
+            // Our server should allow both anonymous and non-anonymous requests
+            expected_result = OK;
+          }
+        }
+      }
+      testImage(url, attrValData[0], expected_result);
+    }
+  }
+}
+</script>
+</pre>
+</body>
+</html>

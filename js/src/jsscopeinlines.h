@@ -164,7 +164,7 @@ StringObject::init(JSContext *cx, JSString *str)
     }
     JS_ASSERT(*shapep == lastProperty());
     JS_ASSERT(!nativeEmpty());
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot == LENGTH_SLOT);
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot == LENGTH_SLOT);
 
     setStringThis(str);
     return true;

@@ -398,6 +398,24 @@ nsIconChannel::SetContentCharset(const nsACString &aContentCharset)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsIconChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsIconChannel::GetContentDispositionFilename(nsAString &aContentDispositionFilename)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsIconChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 NS_IMETHODIMP nsIconChannel::GetContentLength(PRInt32 *aContentLength)
 {
   *aContentLength = mContentLength;

@@ -91,12 +91,13 @@
 #include "methodjit/MethodJIT.h"
 #include "vm/String.h"
 #include "vm/Debugger.h"
+#include "ion/IonCode.h"
+#include "ion/IonMacroAssembler.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
-#include "ion/IonCode.h"
-#include "ion/IonMacroAssembler.h"
+#include "vm/CallObject-inl.h"
 
 #ifdef MOZ_VALGRIND
 # define JS_VALGRIND
@@ -2287,7 +2288,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      */
     while (WatchpointMap::markAllIteratively(&gcmarker) ||
            WeakMapBase::markAllIteratively(&gcmarker) ||
-           Debugger::markAllIteratively(&gcmarker, gckind))
+           Debugger::markAllIteratively(&gcmarker))
     {
         gcmarker.drainMarkStack();
     }

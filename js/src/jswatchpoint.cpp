@@ -144,7 +144,7 @@ WatchpointMap::triggerWatchpoint(JSContext *cx, JSObject *obj, jsid id, Value *v
     Value old;
     old.setUndefined();
     if (obj->isNative()) {
-        if (const Shape *shape = obj->nativeLookup(id)) {
+        if (const Shape *shape = obj->nativeLookup(cx, id)) {
             uint32 slot = shape->slot;
             if (obj->containsSlot(slot)) {
                 if (shape->isMethod()) {
@@ -157,7 +157,7 @@ WatchpointMap::triggerWatchpoint(JSContext *cx, JSObject *obj, jsid id, Value *v
                     Value method = ObjectValue(shape->methodObject());
                     if (!obj->methodReadBarrier(cx, *shape, &method))
                         return false;
-                    shape = obj->nativeLookup(id);
+                    shape = obj->nativeLookup(cx, id);
                     JS_ASSERT(shape->isDataDescriptor());
                     JS_ASSERT(!shape->isMethod());
                     old = method;
