@@ -317,7 +317,10 @@ enum RejoinState {
      * For an opcode fused with IFEQ/IFNE, call returns a boolean indicating
      * the result of the comparison and whether to take or not take the branch.
      */
-    REJOIN_BRANCH
+    REJOIN_BRANCH,
+
+    /* Calls to RunTracer which finished the given frame. */
+    REJOIN_FINISH_FRAME
 };
 
 /* Helper to watch for recompilation and frame expansion activity on a compartment. */
