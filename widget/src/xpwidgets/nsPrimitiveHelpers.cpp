@@ -143,6 +143,15 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
       plainText->GetData ( data );
       *aDataBuff = ToNewCString(data);
     }
+  // CF_HTML only supports single byte.
+  // Reference: http://msdn.microsoft.com/en-us/library/aa767917(v=vs.85).aspx
+  } else if ( strcmp(aFlavor,kNativeHTMLMime) == 0 ) {
+    nsCOMPtr<nsISupportsCString> plainText ( do_QueryInterface(aPrimitive) );
+    if ( plainText ) {
+      nsCAutoString data;
+      plainText->GetData ( data );
+      *aDataBuff = ToNewUnicode(data);
+    }
   }
   else {
     nsCOMPtr<nsISupportsString> doubleByteText ( do_QueryInterface(aPrimitive) );
