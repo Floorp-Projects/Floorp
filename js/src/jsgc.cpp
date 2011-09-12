@@ -227,7 +227,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize)
     JS_ASSERT(aheader.allocated());
     JS_ASSERT(thingKind == aheader.getAllocKind());
     JS_ASSERT(thingSize == aheader.getThingSize());
-    JS_ASSERT(!aheader.getMarkingDelay()->link);
+    JS_ASSERT(!aheader.hasDelayedMarking);
 
     uintptr_t thing = thingsStart(thingKind);
     uintptr_t lastByte = thingsEnd() - 1;
@@ -387,31 +387,26 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
 } /* namespace js */
 
 void
-Chunk::init(JSRuntime *rt)
+Chunk::init()
 {
-    info.runtime = rt;
-    info.age = 0;
-    info.numFree = ArenasPerChunk;
+    JS_POISON(this, JS_FREE_PATTERN, GC_CHUNK_SIZE);
 
     /* Assemble all arenas into a linked list and mark them as not allocated. */
     ArenaHeader **prevp = &info.emptyArenaListHead;
     Arena *end = &arenas[JS_ARRAY_LENGTH(arenas)];
     for (Arena *a = &arenas[0]; a != end; ++a) {
-#ifdef DEBUG
-        memset(a, ArenaSize, JS_FREE_PATTERN);
-#endif
         *prevp = &a->aheader;
         a->aheader.setAsNotAllocated();
         prevp = &a->aheader.next;
     }
     *prevp = NULL;
 
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(markingDelay); ++i)
-        markingDelay[i].init();
-
     /* We clear the bitmap to guard against xpc_IsGrayGCThing being called on
        uninitialized data, which would happen before the first GC cycle. */
     bitmap.clear();
+
+    info.age = 0;
+    info.numFree = ArenasPerChunk;
 
     /* The rest of info fields are initialized in PickChunk. */
 }
@@ -467,7 +462,7 @@ Chunk::allocateArena(JSContext *cx, AllocKind thingKind)
     if (!hasAvailableArenas())
         removeFromAvailableList();
 
-    JSRuntime *rt = info.runtime;
+    JSRuntime *rt = comp->rt;
     Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
     JS_ATOMIC_ADD(&rt->gcBytes, ArenaSize);
     JS_ATOMIC_ADD(&comp->gcBytes, ArenaSize);
@@ -481,13 +476,14 @@ void
 Chunk::releaseArena(ArenaHeader *aheader)
 {
     JS_ASSERT(aheader->allocated());
-    JSRuntime *rt = info.runtime;
+    JS_ASSERT(!aheader->hasDelayedMarking);
+    JSCompartment *comp = aheader->compartment;
+    JSRuntime *rt = comp->rt;
 #ifdef JS_THREADSAFE
     AutoLockGC maybeLock;
     if (rt->gcHelperThread.sweeping)
-        maybeLock.lock(info.runtime);
+        maybeLock.lock(rt);
 #endif
-    JSCompartment *comp = aheader->compartment;
 
     Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes - ArenaSize);
     JS_ASSERT(size_t(rt->gcBytes) >= ArenaSize);
@@ -576,7 +572,7 @@ PickChunk(JSContext *cx)
         if (!chunk)
             return NULL;
 
-        chunk->init(rt);
+        chunk->init();
         rt->gcChunkAllocationSinceLastGC = true;
     }
 
@@ -1546,7 +1542,7 @@ namespace js {
 
 GCMarker::GCMarker(JSContext *cx)
   : color(0),
-    unmarkedArenaStackTop(MarkingDelay::stackBottom()),
+    unmarkedArenaStackTop(NULL),
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
     ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
     typeStack(cx->runtime->gcMarkStackTypes, sizeof(cx->runtime->gcMarkStackTypes)),
@@ -1573,24 +1569,23 @@ GCMarker::delayMarkingChildren(const void *thing)
 {
     const Cell *cell = reinterpret_cast<const Cell *>(thing);
     ArenaHeader *aheader = cell->arenaHeader();
-    if (aheader->getMarkingDelay()->link) {
+    if (aheader->hasDelayedMarking) {
         /* Arena already scheduled to be marked later */
         return;
     }
-    aheader->getMarkingDelay()->link = unmarkedArenaStackTop;
-    unmarkedArenaStackTop = aheader;
+    aheader->setNextDelayedMarking(unmarkedArenaStackTop);
+    unmarkedArenaStackTop = aheader->getArena();
     markLaterArenas++;
 }
 
 static void
-MarkDelayedChildren(JSTracer *trc, ArenaHeader *aheader)
+MarkDelayedChildren(JSTracer *trc, Arena *a)
 {
-    AllocKind thingKind = aheader->getAllocKind();
-    JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
-    size_t thingSize = aheader->getThingSize();
-    Arena *a = aheader->getArena();
+    AllocKind allocKind = a->aheader.getAllocKind();
+    JSGCTraceKind traceKind = MapAllocToTraceKind(allocKind);
+    size_t thingSize = Arena::thingSize(allocKind);
     uintptr_t end = a->thingsEnd();
-    for (uintptr_t thing = a->thingsStart(thingKind); thing != end; thing += thingSize) {
+    for (uintptr_t thing = a->thingsStart(allocKind); thing != end; thing += thingSize) {
         Cell *t = reinterpret_cast<Cell *>(thing);
         if (t->isMarked())
             JS_TraceChildren(trc, t, traceKind);
@@ -1600,19 +1595,19 @@ MarkDelayedChildren(JSTracer *trc, ArenaHeader *aheader)
 void
 GCMarker::markDelayedChildren()
 {
-    while (unmarkedArenaStackTop != MarkingDelay::stackBottom()) {
+    while (unmarkedArenaStackTop) {
         /*
          * If marking gets delayed at the same arena again, we must repeat
          * marking of its things. For that we pop arena from the stack and
-         * clear its nextDelayedMarking before we begin the marking.
+         * clear its hasDelayedMarking flag before we begin the marking.
          */
-        ArenaHeader *aheader = unmarkedArenaStackTop;
-        unmarkedArenaStackTop = aheader->getMarkingDelay()->link;
-        JS_ASSERT(unmarkedArenaStackTop);
-        aheader->getMarkingDelay()->link = NULL;
+        Arena *a = unmarkedArenaStackTop;
+        JS_ASSERT(a->aheader.hasDelayedMarking);
         JS_ASSERT(markLaterArenas);
+        unmarkedArenaStackTop = a->aheader.getNextDelayedMarking();
+        a->aheader.hasDelayedMarking = 0;
         markLaterArenas--;
-        MarkDelayedChildren(this, aheader);
+        MarkDelayedChildren(this, a);
     }
     JS_ASSERT(!markLaterArenas);
 }
