@@ -450,9 +450,8 @@ Chunk::removeFromAvailableList()
 }
 
 ArenaHeader *
-Chunk::allocateArena(JSContext *cx, AllocKind thingKind)
+Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
 {
-    JSCompartment *comp = cx->compartment;
     JS_ASSERT(hasAvailableArenas());
     ArenaHeader *aheader = info.emptyArenaListHead;
     info.emptyArenaListHead = aheader->next;
@@ -547,9 +546,8 @@ ReleaseGCChunk(JSRuntime *rt, Chunk *p)
 
 /* The caller must hold the GC lock. */
 static Chunk *
-PickChunk(JSContext *cx)
+PickChunk(JSCompartment *comp)
 {
-    JSCompartment *comp = cx->compartment;
     JSRuntime *rt = comp->rt;
     Chunk **listHeadp = GetAvailableChunkList(comp);
     Chunk *chunk = *listHeadp;
@@ -1145,7 +1143,7 @@ namespace js {
 namespace gc {
 
 inline void *
-ArenaLists::allocateFromArena(JSContext *cx, AllocKind thingKind)
+ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
 {
     Chunk *chunk = NULL;
 
@@ -1160,7 +1158,7 @@ ArenaLists::allocateFromArena(JSContext *cx, AllocKind thingKind)
          * background finalization runs and can modify head or cursor at any
          * moment. So we always allocate a new arena in that case.
          */
-        maybeLock.lock(cx->runtime);
+        maybeLock.lock(comp->rt);
         for (;;) {
             if (*bfs == BFS_DONE)
                 break;
@@ -1176,7 +1174,7 @@ ArenaLists::allocateFromArena(JSContext *cx, AllocKind thingKind)
             }
 
             JS_ASSERT(!*al->cursor);
-            chunk = PickChunk(cx);
+            chunk = PickChunk(comp);
             if (chunk)
                 break;
 
@@ -1186,7 +1184,7 @@ ArenaLists::allocateFromArena(JSContext *cx, AllocKind thingKind)
              * added new empty arenas.
              */
             JS_ASSERT(*bfs == BFS_RUN);
-            cx->runtime->gcHelperThread.waitBackgroundSweepEnd(cx->runtime, false);
+            comp->rt->gcHelperThread.waitBackgroundSweepEnd(comp->rt, false);
             JS_ASSERT(*bfs == BFS_JUST_FINISHED || *bfs == BFS_DONE);
         }
     }
@@ -1214,8 +1212,8 @@ ArenaLists::allocateFromArena(JSContext *cx, AllocKind thingKind)
 
         /* Make sure we hold the GC lock before we call PickChunk. */
         if (!maybeLock.locked())
-            maybeLock.lock(cx->runtime);
-        chunk = PickChunk(cx);
+            maybeLock.lock(comp->rt);
+        chunk = PickChunk(comp);
         if (!chunk)
             return NULL;
     }
@@ -1230,7 +1228,7 @@ ArenaLists::allocateFromArena(JSContext *cx, AllocKind thingKind)
      * for allocations improving cache locality.
      */
     JS_ASSERT(!*al->cursor);
-    ArenaHeader *aheader = chunk->allocateArena(cx, thingKind);
+    ArenaHeader *aheader = chunk->allocateArena(comp, thingKind);
     aheader->next = al->head;
     if (!al->head) {
         JS_ASSERT(al->cursor == &al->head);
@@ -1433,14 +1431,9 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
 {
     JS_ASSERT(cx->compartment->arenas.freeLists[thingKind].isEmpty());
 
-    /*
-     * For compatibility with older code we tolerate calling the allocator
-     * during the GC in optimized builds.
-     */
-    JSRuntime *rt = cx->runtime;
+    JSCompartment *comp = cx->compartment;
+    JSRuntime *rt = comp->rt;
     JS_ASSERT(!rt->gcRunning);
-    if (rt->gcRunning)
-        return NULL;
 
     bool runGC = !!rt->gcIsNeeded;
     for (;;) {
@@ -1457,10 +1450,10 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
              * return that list head.
              */
             size_t thingSize = Arena::thingSize(thingKind);
-            if (void *thing = cx->compartment->arenas.allocateFromFreeList(thingKind, thingSize))
+            if (void *thing = comp->arenas.allocateFromFreeList(thingKind, thingSize))
                 return thing;
         }
-        void *thing = cx->compartment->arenas.allocateFromArena(cx, thingKind);
+        void *thing = comp->arenas.allocateFromArena(comp, thingKind);
         if (JS_LIKELY(!!thing))
             return thing;
 
