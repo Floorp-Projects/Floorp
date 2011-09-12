@@ -244,17 +244,11 @@ nsTableOuterFrame::SetInitialChildList(ChildListID     aListID,
   else {
     NS_ASSERTION(aListID == kPrincipalList, "wrong childlist");
     NS_ASSERTION(mFrames.IsEmpty(), "Frame leak!");
-    mInnerTableFrame = nsnull;
-    if (aChildList.NotEmpty()) {
-      if (nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType()) {
-        mInnerTableFrame = (nsTableFrame*)aChildList.FirstChild();
-        mFrames.SetFrames(aChildList);
-      }
-      else {
-        NS_ERROR("expected a table frame");
-        return NS_ERROR_INVALID_ARG;
-      }
-    }
+    NS_ASSERTION(aChildList.FirstChild() &&
+                 nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType(),
+                 "expected a table frame");
+    mInnerTableFrame = static_cast<nsTableFrame*>(aChildList.FirstChild());
+    mFrames.SetFrames(aChildList);
   }
 
   return NS_OK;
@@ -394,9 +388,7 @@ nsTableOuterFrame::SetSelected(PRBool        aSelected,
                                SelectionType aType)
 {
   nsFrame::SetSelected(aSelected, aType);
-  if (mInnerTableFrame) {
-    mInnerTableFrame->SetSelected(aSelected, aType);
-  }
+  mInnerTableFrame->SetSelected(aSelected, aType);
 }
 
 nsIFrame*
@@ -412,9 +404,6 @@ nsTableOuterFrame::GetParentStyleContextFrame()
   // children of the table inherit directly from the inner table, and
   // the outer table's style context is a leaf.
 
-  if (!mInnerTableFrame) {
-    return this;
-  }
   return mInnerTableFrame;
 }
 
@@ -429,7 +418,8 @@ nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,
   nsMargin collapsePadding(0,0,0,0);
   nsMargin* pCollapseBorder  = nsnull;
   nsMargin* pCollapsePadding = nsnull;
-  if ((aReflowState.frame == mInnerTableFrame) && (mInnerTableFrame->IsBorderCollapse())) {
+  if (aReflowState.frame == mInnerTableFrame &&
+      mInnerTableFrame->IsBorderCollapse()) {
     collapseBorder  = mInnerTableFrame->GetIncludedOuterBCBorder();
     pCollapseBorder = &collapseBorder;
     pCollapsePadding = &collapsePadding;
@@ -958,12 +948,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame");
   DISPLAY_REFLOW(aPresContext, this, aOuterRS, aDesiredSize, aStatus);
 
-  // We desperately need an inner table frame,
-  // if this fails fix the frame constructor
-  if (mFrames.IsEmpty() || !mInnerTableFrame) {
-    NS_ERROR("incomplete children");
-    return NS_ERROR_FAILURE;
-  }
   nsresult rv = NS_OK;
   PRUint8 captionSide = GetCaptionSide();
 
@@ -1169,8 +1153,6 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                                  PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
                                  PRBool& aIsSelected)
 {
-  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
-  
   return mInnerTableFrame->GetCellDataAt(aRowIndex, aColIndex, aCell,
                                         aStartRowIndex, aStartColIndex, 
                                         aRowSpan, aColSpan, aActualRowSpan,
@@ -1180,8 +1162,6 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
 NS_IMETHODIMP
 nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
 {
-  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
-
   return mInnerTableFrame->GetTableSize(aRowCount, aColCount);
 }
 
@@ -1190,8 +1170,6 @@ nsTableOuterFrame::GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn,
                                           PRInt32 *aIndex)
 {
   NS_ENSURE_ARG_POINTER(aIndex);
-
-  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
   return mInnerTableFrame->GetIndexByRowAndColumn(aRow, aColumn, aIndex);
 }
 
@@ -1201,8 +1179,6 @@ nsTableOuterFrame::GetRowAndColumnByIndex(PRInt32 aIndex,
 {
   NS_ENSURE_ARG_POINTER(aRow);
   NS_ENSURE_ARG_POINTER(aColumn);
-
-  NS_ASSERTION(mInnerTableFrame, "no inner table frame yet?");
   return mInnerTableFrame->GetRowAndColumnByIndex(aIndex, aRow, aColumn);
 }
 
