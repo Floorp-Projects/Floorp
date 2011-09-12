@@ -7216,7 +7216,12 @@ mjit::Compiler::updateJoinVarTypes()
             if (newv->slot < TotalSlots(script)) {
                 VarType &vt = a->varTypes[newv->slot];
                 vt.types = analysis->getValueTypes(newv->value);
-                vt.type = vt.types->getKnownTypeTag(cx);
+                JSValueType newType = vt.types->getKnownTypeTag(cx);
+                if (newType != vt.type) {
+                    FrameEntry *fe = frame.getSlotEntry(newv->slot);
+                    frame.forgetLoopReg(fe);
+                }
+                vt.type = newType;
             }
             newv++;
         }
