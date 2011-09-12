@@ -136,7 +136,14 @@ function runTest() {
   }, SimpleTest.finish);
 }
 
-SimpleTest.waitForFocus(runTest);
+var isMac = ("nsILocalFileMac" in Components.interfaces);
+if (isMac)
+  SimpleTest.waitForFocus(runTest);
+else {
+  // This test is not yet supported on non-Mac platforms, see bug 574005.
+  todo(false, "Test not supported on this platform");
+  SimpleTest.finish();
+}
 
 </script>
 </pre>
