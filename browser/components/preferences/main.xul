@@ -148,7 +148,7 @@
                 oncommand="gMainPane.setHomePageToCurrent();"
                 id="useCurrent"
                 preference="pref.browser.homepage.disable_button.current_page"/>
-        <button label="&useBookmark.label;" accesskey="&useBookmark.accesskey;"
+        <button label="&chooseBookmark.label;" accesskey="&chooseBookmark.accesskey;"
                 oncommand="gMainPane.setHomePageToBookmark();"
                 id="useBookmark"
                 preference="pref.browser.homepage.disable_button.bookmark_page"/>

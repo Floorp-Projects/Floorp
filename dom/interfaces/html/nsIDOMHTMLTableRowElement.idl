@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(0f614ba0-5ee1-494b-ade8-14c29f416798)]
+[scriptable, uuid(637b44fe-229c-4a72-a9e9-ccdb265821ed)]
 interface nsIDOMHTMLTableRowElement : nsIDOMHTMLElement
 {
   // Modified in DOM Level 2:

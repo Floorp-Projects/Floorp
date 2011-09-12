@@ -58,12 +58,6 @@
  */
 #define NS_CHANNEL_PROP_CONTENT_LENGTH_STR "content-length"
 
-/**
- * MIME Content-Disposition header of channel.  
- * Not available before onStartRequest. 
- * Type: nsACString
- */
-#define NS_CHANNEL_PROP_CONTENT_DISPOSITION_STR "content-disposition"
 
 /**
  * Exists to allow content policy mechanism to function properly during channel
@@ -74,13 +68,10 @@
 
 #ifdef IMPL_NS_NET
 #define NS_CHANNEL_PROP_CONTENT_LENGTH gNetStrings->kContentLength
-#define NS_CHANNEL_PROP_CONTENT_DISPOSITION gNetStrings->kContentDisposition
 #define NS_CHANNEL_PROP_CHANNEL_POLICY gNetStrings->kChannelPolicy
 #else
 #define NS_CHANNEL_PROP_CONTENT_LENGTH \
   NS_LITERAL_STRING(NS_CHANNEL_PROP_CONTENT_LENGTH_STR)
-#define NS_CHANNEL_PROP_CONTENT_DISPOSITION \
-  NS_LITERAL_STRING(NS_CHANNEL_PROP_CONTENT_DISPOSITION_STR)
 #define NS_CHANNEL_PROP_CHANNEL_POLICY \
   NS_LITERAL_STRING(NS_CHANNEL_PROP_CHANNEL_POLICY_STR)
 #endif

@@ -498,7 +498,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if (httpChannel) {
         httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,application/xslt+xml,*/*;q=0.1"),
+                                      NS_LITERAL_CSTRING("*/*"),
                                       PR_FALSE);
 
         nsCOMPtr<nsIURI> referrerURI;

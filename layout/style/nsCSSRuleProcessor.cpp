@@ -77,8 +77,6 @@
 #include "nsQuickSort.h"
 #include "nsAttrValue.h"
 #include "nsAttrName.h"
-#include "nsILookAndFeel.h"
-#include "nsWidgetsCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
@@ -95,6 +93,7 @@
 #include "nsGenericElement.h"
 #include "nsNthIndexCache.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -103,11 +102,10 @@ using namespace mozilla::dom;
 
 static PRBool gSupportVisitedPseudo = PR_TRUE;
 
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
 
 #ifdef XP_WIN
-PRUint8 nsCSSRuleProcessor::sWinThemeId = nsILookAndFeel::eWindowsTheme_Generic;
+PRUint8 nsCSSRuleProcessor::sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
 #endif
 
 /**
@@ -1054,109 +1052,111 @@ InitSystemMetrics()
   sSystemMetrics = new nsTArray< nsCOMPtr<nsIAtom> >;
   NS_ENSURE_TRUE(sSystemMetrics, PR_FALSE);
 
-  nsresult rv;
-  nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID, &rv));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
   /***************************************************************************
    * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES IN         *
    * nsMediaFeatures.cpp                                                     *
    ***************************************************************************/
 
-  PRInt32 metricResult;
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
-  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartBackward) {
+  PRInt32 metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
+  if (metricResult & LookAndFeel::eScrollArrow_StartBackward) {
     sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_start_backward);
   }
-  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartForward) {
+  if (metricResult & LookAndFeel::eScrollArrow_StartForward) {
     sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_start_forward);
   }
-  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndBackward) {
+  if (metricResult & LookAndFeel::eScrollArrow_EndBackward) {
     sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_end_backward);
   }
-  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndForward) {
+  if (metricResult & LookAndFeel::eScrollArrow_EndForward) {
     sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_end_forward);
   }
 
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollSliderStyle, metricResult);
-  if (metricResult != nsILookAndFeel::eMetric_ScrollThumbStyleNormal) {
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollSliderStyle);
+  if (metricResult != LookAndFeel::eScrollThumbStyle_Normal) {
     sSystemMetrics->AppendElement(nsGkAtoms::scrollbar_thumb_proportional);
   }
 
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ImagesInMenus, metricResult);
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ImagesInMenus);
   if (metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::images_in_menus);
   }
 
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ImagesInButtons, metricResult);
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_ImagesInButtons);
   if (metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::images_in_buttons);
   }
 
-  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenuBarDrag, metricResult);
+  metricResult =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_MenuBarDrag);
   if (metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::menubar_drag);
   }
 
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsDefaultTheme, metricResult);
+  nsresult rv =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsDefaultTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::windows_default_theme);
   }
 
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MacGraphiteTheme, metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacGraphiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::mac_graphite_theme);
   }
 
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MacLionTheme, metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacLionTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::mac_lion_theme);
   }
 
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DWMCompositor, metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_DWMCompositor, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::windows_compositor);
   }
 
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsClassic, metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsClassic, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::windows_classic);
   }
 
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TouchEnabled, metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_TouchEnabled, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::touch_enabled);
   }
  
-  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MaemoClassic, metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MaemoClassic, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::maemo_classic);
   }
 
 #ifdef XP_WIN
-  if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsThemeIdentifier,
-                                          metricResult))) {
+  if (NS_SUCCEEDED(
+        LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsThemeIdentifier,
+                            &metricResult))) {
     nsCSSRuleProcessor::SetWindowsThemeIdentifier(static_cast<PRUint8>(metricResult));
     switch(metricResult) {
-      case nsILookAndFeel::eWindowsTheme_Aero:
+      case LookAndFeel::eWindowsTheme_Aero:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero);
         break;
-      case nsILookAndFeel::eWindowsTheme_LunaBlue:
+      case LookAndFeel::eWindowsTheme_LunaBlue:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_blue);
         break;
-      case nsILookAndFeel::eWindowsTheme_LunaOlive:
+      case LookAndFeel::eWindowsTheme_LunaOlive:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_olive);
         break;
-      case nsILookAndFeel::eWindowsTheme_LunaSilver:
+      case LookAndFeel::eWindowsTheme_LunaSilver:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_silver);
         break;
-      case nsILookAndFeel::eWindowsTheme_Royale:
+      case LookAndFeel::eWindowsTheme_Royale:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_royale);
         break;
-      case nsILookAndFeel::eWindowsTheme_Zune:
+      case LookAndFeel::eWindowsTheme_Zune:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_zune);
         break;
-      case nsILookAndFeel::eWindowsTheme_Generic:
+      case LookAndFeel::eWindowsTheme_Generic:
         sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_generic);
         break;
     }

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGTextFrame.h"
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsTextFragment.h"
 #include "nsBidiPresUtils.h"
 #include "nsSVGUtils.h"
@@ -1007,11 +1007,11 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
 
     *charnum=CompressIndex(details->mStart, fragment);
     *nchars=CompressIndex(details->mEnd, fragment)-*charnum;  
-    
-    nsILookAndFeel *look = presContext->LookAndFeel();
 
-    look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, *background);
-    look->GetColor(nsILookAndFeel::eColor_TextSelectForeground, *foreground);
+    LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectBackground,
+                          background);
+    LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
+                          foreground);
 
     SelectionDetails *dp = details;
     while ((dp=details->mNext) != nsnull) {

@@ -49,7 +49,6 @@
 
 	.text
 
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 #define STUB_ENTRY(x)						\
 	.if x < 10;						\
 	.globl	_ZN14nsXPTCStubBase5Stub ##x ##Ev;		\
@@ -78,16 +77,6 @@ _ZN14nsXPTCStubBase7Stub ##x ##Ev:;				\
 	.else;							\
 	.err;							\
 	.endif
-#else /* not G++ V3 ABI */
-#define STUB_ENTRY(x)						\
-	.globl	Stub ##x ##__14nsXPTCStubBase;			\
-	.type	Stub ##x ##__14nsXPTCStubBase,@function;	\
-	.aent	Stub ##x ##__14nsXPTCStubBase,0;		\
-Stub ##x ##__14nsXPTCStubBase:;					\
-	SETUP_GP;						\
-	li	t0,x;						\
-	b	sharedstub
-#endif /* G++ V3 ABI */
 
 # SENTINEL_ENTRY is handled in the cpp file.
 #define SENTINEL_ENTRY(x)

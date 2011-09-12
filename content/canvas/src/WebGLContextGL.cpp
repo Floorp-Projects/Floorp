@@ -62,6 +62,7 @@
 #endif
 
 #include "WebGLTexelConversions.h"
+#include "WebGLValidateStrings.h"
 
 using namespace mozilla;
 
@@ -182,8 +183,8 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
     if (!GetGLName<WebGLProgram>("bindAttribLocation: program", pobj, &progname))
         return NS_OK;
 
-    if (name.IsEmpty())
-        return ErrorInvalidValue("BindAttribLocation: name can't be null or empty");
+    if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
+        return NS_OK;
 
     if (!ValidateAttribIndex(location, "bindAttribLocation"))
         return NS_OK;
@@ -1750,7 +1751,28 @@ WebGLContext::GenerateMipmap(WebGLenum target)
     tex->SetGeneratedMipmap();
 
     MakeContextCurrent();
+
+#ifdef XP_MACOSX
+    // On Mac, glGenerateMipmap on a texture whose minification filter does NOT require a mipmap at the time of the call,
+    // will happily grab random video memory into certain mipmap levels. See bug 684882. Also, this is Apple bug 9129398.
+    // Thanks to Kenneth Russell / Google for figuring this out.
+    // So we temporarily spoof the minification filter, call glGenerateMipmap,
+    // and restore it. If that turned out to not be enough, we would have to avoid calling glGenerateMipmap altogether and
+    // emulate it.
+    if (tex->DoesMinFilterRequireMipmap()) {
+        gl->fGenerateMipmap(target);
+    } else {
+        // spoof the min filter as something that requires a mipmap. The particular choice of a filter doesn't matter as
+        // we're not rendering anything here. Since LINEAR_MIPMAP_LINEAR is by far the most common use case, and we're trying
+        // to work around a bug triggered by "unexpected" min filters, it seems to be the safest choice.
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR_MIPMAP_LINEAR);
+        gl->fGenerateMipmap(target);
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, tex->MinFilter());
+    }
+#else
     gl->fGenerateMipmap(target);
+#endif
+    
     return NS_OK;
 }
 
@@ -1856,7 +1878,7 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
     if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLIdentifier(name, "getAttribLocation"))
+    if (!ValidateGLSLVariableName(name, "getAttribLocation"))
         return NS_OK; 
 
     MakeContextCurrent();
@@ -2671,7 +2693,7 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
     if (!GetConcreteObjectAndGLName("getUniformLocation: program", pobj, &prog, &progname))
         return NS_OK;
 
-    if (!ValidateGLSLIdentifier(name, "getUniformLocation"))
+    if (!ValidateGLSLVariableName(name, "getUniformLocation"))
         return NS_OK; 
 
     MakeContextCurrent();
@@ -3584,19 +3606,13 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     // validated for cross-domain use.
     // if res.mPrincipal == null, no need for the origin check. See DoDrawImageSecurityCheck.
     // this case happens in the mochitest for images served from mochi.test:8888
-    if (res.mPrincipal) {
+    if (res.mPrincipal && !res.mCORSUsed) {
         PRBool subsumes;
         nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
         if (NS_FAILED(rv) || !subsumes) {
-            PRInt32 corsmode;
-            if (!res.mImageRequest || NS_FAILED(res.mImageRequest->GetCORSMode(&corsmode))) {
-                corsmode = imgIRequest::CORS_NONE;
-            }
-            if (corsmode == imgIRequest::CORS_NONE) {
-                LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
-                                    "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
-                return NS_ERROR_DOM_SECURITY_ERR;
-            }
+            LogMessageIfVerbose("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return NS_ERROR_DOM_SECURITY_ERR;
         }
     }
 
@@ -3976,8 +3992,25 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
                                        gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT,
                                        &resources);
 
-        nsPromiseFlatCString src(shader->Source());
-        const char *s = src.get();
+        // We're storing an actual instance of StripComments because, if we don't, the 
+        // cleanSource nsAString instance will be destroyed before the reference is
+        // actually used.
+        StripComments stripComments(shader->Source());
+        const nsAString& cleanSource = nsString(stripComments.result().Elements(), stripComments.length());
+        if (!ValidateGLSLString(cleanSource, "compileShader"))
+            return NS_OK;
+
+        const nsPromiseFlatString& flatSource = PromiseFlatString(cleanSource);
+
+        // shaderSource() already checks that the source stripped of comments is in the
+        // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
+        const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
+    
+        const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
+        if (sourceCString.Length() > maxSourceLength)
+            return ErrorInvalidValue("compileShader: source has more than %d characters", maxSourceLength);
+
+        const char *s = sourceCString.get();
 
         if (!ShCompile(compiler, &s, 1, SH_OBJECT_CODE)) {
             int len = 0;
@@ -4018,15 +4051,10 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         shader->SetTranslationSuccess();
 
         ShDestruct(compiler);
-    } else
-#endif
-    {
-        const char *s = nsDependentCString(shader->Source()).get();
-        gl->fShaderSource(shadername, 1, &s, NULL);
-        shader->SetTranslationSuccess();
-    }
 
-    gl->fCompileShader(shadername);
+        gl->fCompileShader(shadername);
+    }
+#endif
 
     return NS_OK;
 }
@@ -4125,7 +4153,7 @@ WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
     if (!GetConcreteObjectAndGLName("getShaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
 
-    CopyASCIItoUTF16(shader->Source(), retval);
+    retval.Assign(shader->Source());
 
     return NS_OK;
 }
@@ -4137,19 +4165,16 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("shaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
-    
-    const nsPromiseFlatString& flatSource = PromiseFlatString(source);
 
-    if (!NS_IsAscii(flatSource.get()))
-        return ErrorInvalidValue("shaderSource: non-ascii characters found in source");
+    // We're storing an actual instance of StripComments because, if we don't, the 
+    // cleanSource nsAString instance will be destroyed before the reference is
+    // actually used.
+    StripComments stripComments(source);
+    const nsAString& cleanSource = nsString(stripComments.result().Elements(), stripComments.length());
+    if (!ValidateGLSLString(cleanSource, "compileShader"))
+        return NS_OK;
 
-    const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
-    
-    const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
-    if (sourceCString.Length() > maxSourceLength)
-        return ErrorInvalidValue("shaderSource: source has more than %d characters", maxSourceLength);
-    
-    shader->SetSource(sourceCString);
+    shader->SetSource(source);
 
     shader->SetNeedsTranslation();
 

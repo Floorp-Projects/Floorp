@@ -139,6 +139,9 @@ chrome.jar:
   skin/images/handle-end.png                (images/handle-end.png)
   skin/images/homescreen-blank-hdpi.png     (images/homescreen-blank-hdpi.png)
   skin/images/homescreen-default-hdpi.png   (images/homescreen-default-hdpi.png)
+  skin/images/aurora-lightbox-bg.jpg        (images/aurora-lightbox-bg.jpg)
+  skin/images/aurora-lightbox-logo.png      (images/aurora-lightbox-logo.png)
+  skin/images/aurora-lightbox-close.png     (images/aurora-lightbox-close.png)
 
 chrome.jar:
 % skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7
@@ -273,6 +276,9 @@ chrome.jar:
   skin/gingerbread/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
   skin/gingerbread/images/homescreen-blank-hdpi.png     (images/homescreen-blank-hdpi.png)
   skin/gingerbread/images/homescreen-default-hdpi.png   (images/homescreen-default-hdpi.png)
+  skin/gingerbread/images/aurora-lightbox-bg.jpg        (images/aurora-lightbox-bg.jpg)
+  skin/gingerbread/images/aurora-lightbox-logo.png      (images/aurora-lightbox-logo.png)
+  skin/gingerbread/images/aurora-lightbox-close.png     (images/aurora-lightbox-close.png)
 
 chrome.jar:
 % skin browser classic/1.0 %skin/honeycomb/ os=Android osversion>=3.0
@@ -417,4 +423,10 @@ chrome.jar:
   skin/honeycomb/images/urlbar-border-bottom.png      (honeycomb/images/urlbar-border-bottom.png)
   skin/honeycomb/images/urlbar-border-side-active.png (honeycomb/images/urlbar-border-side-active.png)
   skin/honeycomb/images/urlbar-border-bottom-active.png (honeycomb/images/urlbar-border-bottom-active.png)
+  skin/honeycomb/images/aurora-lightbox-bg.jpg        (images/aurora-lightbox-bg.jpg)
+  skin/honeycomb/images/aurora-lightbox-logo.png      (images/aurora-lightbox-logo.png)
+  skin/honeycomb/images/aurora-lightbox-close.png     (images/aurora-lightbox-close.png)
+  
   skin/honeycomb/images/menu-top-insideglow.png       (honeycomb/images/menu-top-insideglow.png)
+  skin/honeycomb/images/menu-top-insideglow-green.png (honeycomb/images/menu-top-insideglow-green.png)
+  skin/honeycomb/images/menu-top-insideglow-grey.png  (honeycomb/images/menu-top-insideglow-grey.png)

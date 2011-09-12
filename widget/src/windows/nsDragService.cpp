@@ -214,7 +214,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
   // if we're dragging more than one item, we need to create a
   // "collection" object to fake out the OS. This collection contains
-  // one |IDataObject| for each transerable. If there is just the one
+  // one |IDataObject| for each transferable. If there is just the one
   // (most cases), only pass around the native |IDataObject|.
   nsRefPtr<IDataObject> itemToDrag;
   if (numItemsToDrag > 1) {
@@ -387,8 +387,17 @@ nsDragService::GetNumDropItems(PRUint32 * aNumItems)
 
   if (IsCollectionObject(mDataObject)) {
     nsDataObjCollection * dataObjCol = GetDataObjCollection(mDataObject);
-    if (dataObjCol)
+    if (dataObjCol) {
       *aNumItems = dataObjCol->GetNumDataObjects();
+    }
+    else {
+      // If the count cannot be determined just return 0.
+      // This can happen if we have collection data of type 
+      // MULTI_MIME ("Mozilla/IDataObjectCollectionFormat") on the clipboard
+      // from another process but we can't obtain an IID_IDataObjCollection
+      // from this process.
+      *aNumItems = 0;
+    }
   }
   else {
     // Next check if we have a file drop. Return the number of files in

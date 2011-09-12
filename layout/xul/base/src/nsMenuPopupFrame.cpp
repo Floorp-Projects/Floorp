@@ -61,7 +61,6 @@
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
 #include "nsRect.h"
-#include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
@@ -87,6 +86,7 @@
 #include "nsThemeConstants.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 using namespace mozilla;
 
@@ -150,10 +150,8 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
 
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object
-  PRInt32 tempBool;
-  presContext->LookAndFeel()->
-    GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
-  mMenuCanOverlapOSBar = tempBool;
+  mMenuCanOverlapOSBar =
+    LookAndFeel::GetInt(LookAndFeel::eIntID_MenusCanOverlapOSBar) != 0;
 
   rv = CreatePopupViewForFrame();
   NS_ENSURE_SUCCESS(rv, rv);

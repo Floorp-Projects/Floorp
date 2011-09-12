@@ -246,26 +246,30 @@ public:
 
     nsCanvasPattern(gfxPattern* pat,
                     nsIPrincipal* principalForSecurityCheck,
-                    PRBool forceWriteOnly)
+                    PRBool forceWriteOnly,
+                    PRBool CORSUsed)
         : mPattern(pat),
           mPrincipal(principalForSecurityCheck),
-          mForceWriteOnly(forceWriteOnly)
+          mForceWriteOnly(forceWriteOnly),
+          mCORSUsed(CORSUsed)
     {
     }
 
-    gfxPattern* GetPattern() {
+    gfxPattern* GetPattern() const {
         return mPattern;
     }
 
-    nsIPrincipal* Principal() { return mPrincipal; }
-    PRBool GetForceWriteOnly() { return mForceWriteOnly; }
+    nsIPrincipal* Principal() const { return mPrincipal; }
+    PRBool GetForceWriteOnly() const { return mForceWriteOnly; }
+    PRBool GetCORSUsed() const { return mCORSUsed; }
 
     NS_DECL_ISUPPORTS
 
 protected:
     nsRefPtr<gfxPattern> mPattern;
     nsCOMPtr<nsIPrincipal> mPrincipal;
-    PRPackedBool mForceWriteOnly;
+    const PRPackedBool mForceWriteOnly;
+    const PRPackedBool mCORSUsed;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPattern, NS_CANVASPATTERN_PRIVATE_IID)
@@ -994,7 +998,8 @@ nsCanvasRenderingContext2D::ApplyStyle(Style aWhichStyle,
         if (mCanvasElement)
             CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(),
                                                   pattern->Principal(),
-                                                  pattern->GetForceWriteOnly());
+                                                  pattern->GetForceWriteOnly(),
+                                                  pattern->GetCORSUsed());
 
         gfxPattern* gpat = pattern->GetPattern();
 
@@ -1842,7 +1847,8 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
     thebespat->SetExtend(extend);
 
     nsRefPtr<nsCanvasPattern> pat = new nsCanvasPattern(thebespat, res.mPrincipal,
-                                                        res.mIsWriteOnly);
+                                                        res.mIsWriteOnly,
+                                                        res.mCORSUsed);
     if (!pat)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3438,7 +3444,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
         if (mCanvasElement) {
             CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(),
-                                                  res.mPrincipal, res.mIsWriteOnly);
+                                                  res.mPrincipal,
+                                                  res.mIsWriteOnly,
+                                                  res.mCORSUsed);
         }
 
         if (res.mImageRequest) {

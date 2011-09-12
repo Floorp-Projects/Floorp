@@ -74,7 +74,8 @@ inline PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
 
 void DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
                               nsIPrincipal *aPrincipal,
-                              PRBool forceWriteOnly);
+                              PRBool forceWriteOnly,
+                              PRBool CORSUsed);
 
 void LogMessage (const nsCString& errorString);
 void LogMessagef (const char *fmt, ...);

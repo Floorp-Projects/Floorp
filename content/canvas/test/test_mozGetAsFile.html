@@ -7,16 +7,20 @@
 <canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
+var gCompares = 0;
+
 function compareAsync(file, canvas, type)
 {
-  SimpleTest.waitForExplicitFinish();
+  ++gCompares;
 
   var reader = new FileReader();
   reader.onload = 
     function(e) {
       is(e.target.result, canvas.toDataURL(type),
  "<canvas>.mozGetAsFile().getAsDataURL() should equal <canvas>.toDataURL()");
-      SimpleTest.finish();
+      if (--gCompares == 0) {
+        SimpleTest.finish();
+      }
     };
   reader.readAsDataURL(file);
 }
@@ -39,8 +43,6 @@ is(jpegfile.type, "image/jpeg",
    "When a valid type is specified that should be returned");
 compareAsync(jpegfile, canvas, "image/jpeg");
 is(jpegfile.name, "bar.jpg", "File name should be what we passed in");
-
-SimpleTest.finish();
 
 });
 </script>

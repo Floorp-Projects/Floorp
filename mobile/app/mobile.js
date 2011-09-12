@@ -74,6 +74,13 @@ pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.
 pref("browser.viewport.scaleRatio", -1);
 pref("browser.viewport.desktopWidth", 980);
 
+#ifndef ANDROID
+#ifndef MOZ_PLATFORM_MAEMO
+// On desktop builds, simulate an MDPI tablet by default.
+pref("layout.css.dpi", 160);
+#endif
+#endif
+
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
@@ -453,6 +460,7 @@ pref("app.support.baseURL", "http://support.mozilla.com/mobile");
 pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
+pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");
 #if MOZ_UPDATE_CHANNEL == beta
 pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
