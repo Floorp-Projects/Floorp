@@ -146,8 +146,6 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsPresContext* presContext = PresContext();
-
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object
   mMenuCanOverlapOSBar =
