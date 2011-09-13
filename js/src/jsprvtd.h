@@ -184,6 +184,7 @@ class InlineMap;
 
 class PropertyCache;
 struct PropertyCacheEntry;
+struct PropertyDescriptor;
 
 struct Shape;
 struct EmptyShape;

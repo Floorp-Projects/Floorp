@@ -63,10 +63,10 @@ DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 
 #include <sys/stat.h>
 
-typedef PIDLIST_ABSOLUTE (*ILCreateFromPathWPtr)(PCWSTR);
-typedef void (*ILFreePtr)(PIDLIST_RELATIVE);
-typedef HRESULT (*SHOpenFolderAndSelectItemsPtr)(PCIDLIST_ABSOLUTE, UINT, 
-                                                 PCUITEMID_CHILD_ARRAY, DWORD);
+typedef LPITEMIDLIST (WINAPI *ILCreateFromPathWPtr)(PCWSTR);
+typedef HRESULT (WINAPI *SHOpenFolderAndSelectItemsPtr)(PCIDLIST_ABSOLUTE, UINT, 
+                                                        PCUITEMID_CHILD_ARRAY,
+                                                        DWORD);
 
 class nsLocalFile : public nsILocalFileWin,
                     public nsIHashable
@@ -139,7 +139,6 @@ private:
     nsresult RevealUsingShell(); // Uses newer shell API to reveal the path
 
     static ILCreateFromPathWPtr sILCreateFromPathW;
-    static ILFreePtr sILFree;
     static SHOpenFolderAndSelectItemsPtr sSHOpenFolderAndSelectItems;
     static PRLibrary *sLibShell;
 };

@@ -1,0 +1,151 @@
+
+.spacer-actionbar,
+.button-actionbar {
+  visibility: collapse;
+}
+
+.button-actionbar[disabled="true"] {
+  opacity: 0.5;
+}
+
+%ifndef honeycomb
+.button-actionbar:hover:active {
+  background-color: #8db8d8;
+}
+%endif
+
+#toolbar-main[tablet] > .spacer-actionbar,
+#toolbar-main[tablet] > .button-actionbar {
+  visibility: visible;
+}
+#toolbar-main[tablet] > #tool-tabs {
+  visibility: collapse;
+}
+
+#controls-scrollbox[tablet] > #controls-sidebar {
+  visibility: collapse;
+}
+
+#tabs-spacer[tablet]  {
+  visibility: collapse;
+}
+
+#tabs-container[tablet] {
+  -moz-border-end: 0px;
+  background: #000;
+}
+
+#tabs[tablet] > .tabs-scrollbox {
+  max-width: 200px;
+  -moz-box-orient: vertical;
+}
+
+#tabs[tablet] .tabs-list {
+  width: 200px;
+  -moz-column-width: auto;
+  -moz-padding-end: 0px;
+  -moz-padding-start: 0px;
+}
+
+#tabs[tablet] documenttab {
+  /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
+  width: 200px;
+  padding: 12px;
+  -moz-margin-start: 0px;
+  background: none;
+}
+
+#tabs[tablet] documenttab[selected="true"] {
+  background: none;
+}
+
+.documenttab-thumbnail[tablet] {
+  border-radius: @border_radius_tiny@;
+}
+
+.documenttab-close-container[tablet] {
+  left: 0px;
+  -moz-margin-end: 0px;
+  -moz-margin-start: 135px;
+  -moz-box-pack: end;
+  -moz-box-align: center;
+}
+
+documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
+  background: url("chrome://browser/skin/images/close-background-hdpi.png");
+  background-repeat: no-repeat;
+  background-position: right;
+  -moz-margin-end: -12px;
+  padding-right: 2px;
+}
+
+.documenttab-close[tablet] {
+  width: 30px;
+  height: 44px;
+  list-style-image: url("chrome://browser/skin/images/close-inactive-tab-tablet-hdpi.png");
+}
+
+documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
+  list-style-image: url("chrome://browser/skin/images/close-default-tablet-hdpi.png");
+}
+
+.documenttab-close-container:hover:active > .documenttab-close[tablet] {
+  list-style-image: url("chrome://browser/skin/images/close-active-tablet-hdpi.png");
+}
+
+.documenttab-reload[tablet] {
+  background: url("chrome://browser/skin/images/tab-reopen-tablet-hdpi.png");
+}
+
+#newtab-button[tablet] {
+  list-style-image: url("images/newtab-default-tablet-hdpi.png");
+}
+
+@media (@orientation@: portrait) {
+  #toolbar-main[tablet] > #tool-tabs {
+    visibility: visible;
+  }
+
+  #controls-scrollbox[tablet] > #tabs-sidebar {
+    border: none;
+%ifdef honeycomb
+    top: @touch_button_xlarge@;
+%else
+    top: -moz-calc(@touch_button_xlarge@ + @margin_normal@);
+%endif
+    visibility: collapse;
+  }
+
+  #controls-scrollbox[tablet] > #tabs-sidebar:-moz-locale-dir(ltr) {
+    left: 0;
+  }
+  #controls-scrollbox[tablet] > #tabs-sidebar:-moz-locale-dir(rtl) {
+    right: 0;
+  }
+
+  #controls-scrollbox[tablet] > #tabs-sidebar[open] {
+    position: fixed;
+    visibility: visible;
+  }
+}
+
+#identity-container[tablet] #identity-popup-container {
+  -moz-stack-sizing: ignore;
+  max-width: -moz-calc(0.75 * @urlbar_max_width@);
+  min-width: -moz-calc(0.75 * @urlbar_max_width@);
+}
+
+#identity-container[tablet] pageaction {
+  width: 100%;
+}
+
+%ifndef honeycomb
+@media (min-width: @tablet_panel_minwidth@) {
+  #awesome-panels {
+    -moz-box-shadow: 0px 0px @shadow_width_small@ black;
+  }
+  #search-engines-popup {
+    max-width: -moz-calc(@tablet_panel_minwidth@);
+  }
+}
+%endif

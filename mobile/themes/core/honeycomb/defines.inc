@@ -32,10 +32,11 @@
 %define color_selection #c0e49a
 %define color_shadow #6699ff
 %define color_shadow_light rgba(102,153,255, 0.2)
+%define color_shadow_green rgba(137,251,21, 0.2)
+%define color_shadow_grey rgba(200,200,200, 0.5)
 
 %define color_subtext_default #aaaaaa
 
-%ifdef ANDROID
 %define font_xlarge 6.08mozmm
 %define font_xnormal 3.75mozmm
 %define font_normal 3.54mozmm
@@ -129,101 +130,6 @@
 
 %define tablet_panel_controls  40mozmm
 %define tablet_panel_minwidth  124mozmm
-%else
-%define font_xlarge 48px
-%define font_xnormal 26px
-%define font_normal 24px
-%define font_snormal 20px
-%define font_small 18px
-%define font_xsmall 16px
-%define font_tiny 14px
-%define font_xtiny 12px
-
-%define touch_row 70px
-%define touch_button_xlarge 72px
-%define touch_button_large 64px
-%define touch_button_small 56px
-%define touch_button_minwidth 112px
-%define touch_action_minwidth 200px
-%define touch_normal 64px
-
-%define margin_context_popup 32px
-%define margin_large 24px
-%define margin_xxxnormal 16px
-%define margin_xnormal 10px
-%define margin_normal 8px
-%define margin_snormal 6px
-%define margin_small 4px
-%define margin_tiny 2px
-%define margin_xtiny 1px
-
-%define padding_xlarge 32px
-%define padding_large 24px
-%define padding_xxxnormal 16px
-%define padding_xxnormal 12px
-%define padding_xnormal 10px
-%define padding_normal 8px
-%define padding_snormal 6px
-%define padding_small 4px
-%define padding_xsmall 2px
-%define padding_tiny 1px
-
-%define border_width_xxlarge 6px
-%define border_width_xlarge 4px
-%define border_width_large 3px
-%define border_width_small 2px
-%define border_width_tiny 1px
-
-%define border_radius_normal 8px
-%define border_radius_small 6px
-%define border_radius_tiny 2px
-
-%define shadow_width_xlarge 15px
-%define shadow_width_large 6px
-%define shadow_width_medium 4px
-%define shadow_width_small 2px
-%define shadow_width_tiny 1px
-
-%define textbox_height 48px
-
-%define dropmarker_margin 5px
-
-%define progressmeter_height 32px
-
-%define urlbar_edit_height 60px
-%define urlbar_edit_indent 8px
-%define urlbar_max_width 596px
-
-%define scroller_thickness 6px
-%define scroller_minimum 12px
-
-%define sidebar_width_minimum 80px
-%define sidebar_button_height 70px
-%define documenttab_margin_bottom 8px
-
-%define placelabel_padding 80px
-%define placeitem_padding 40px
-
-%define awesome_header_maxwidth 100px
-%define autocomplete_item_container_image_padding 5px
-%define autocomplete_item_container_position 2px
-%define autocomplete_item_container_size 26px
-%define autocomplete_item_container_padding 48px
-
-%define autocomplete_item_subtitle_margin 26px
-%define autocomplete_item_label_margin 30px
-%define autocomplete_item_tags_margin 32px
-
-%define autocompleteresult_padding 5px
-
-%define dialog_width 500px
-
-%define appmenu_portrait_height 200px
-%define appmenu_button_height 99px
-
-%define tablet_panel_controls  270px
-%define tablet_panel_minwidth  801px
-%endif
 
 %ifdef MOZ_PLATFORM_MAEMO
 %define orientation -moz-device-orientation

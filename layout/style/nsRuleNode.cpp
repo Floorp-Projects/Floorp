@@ -53,7 +53,7 @@
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIWidget.h"
-#include "nsILookAndFeel.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsIPresShell.h"
 #include "nsFontMetrics.h"
 #include "gfxFont.h"
@@ -91,8 +91,8 @@
 #include <alloca.h>
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
-namespace css = mozilla::css;
 
 #define NS_SET_IMAGE_REQUEST(method_, context_, request_)                   \
   if ((context_)->PresContext()->IsDynamic()) {                               \
@@ -765,9 +765,8 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
   else if (eCSSUnit_EnumColor == unit) {
     PRInt32 intValue = aValue.GetIntValue();
     if (0 <= intValue) {
-      nsILookAndFeel* look = aPresContext->LookAndFeel();
-      nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID) intValue;
-      if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
+      LookAndFeel::ColorID colorID = (LookAndFeel::ColorID) intValue;
+      if (NS_SUCCEEDED(LookAndFeel::GetColor(colorID, &aResult))) {
         result = PR_TRUE;
       }
     }

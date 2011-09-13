@@ -60,6 +60,7 @@
 #include "nsCOMPtr.h"
 #include "pldhash.h"
 #include "prclist.h"
+#include "nsAutoPtr.h"
 
 struct nsRequestInfo;
 struct nsListenerInfo;
@@ -154,10 +155,28 @@ protected:
                               PRInt64 aTotalProgress,
                               PRInt64 aMaxTotalProgress);
 
+    // This should be at least 2 long since we'll generally always
+    // have the current page and the global docloader on the ancestor
+    // list.  But to deal with frames it's better to make it a bit
+    // longer, and it's always a stack temporary so there's no real
+    // reason not to.
+    typedef nsAutoTArray<nsRefPtr<nsDocLoader>, 8> WebProgressList;
+    void GatherAncestorWebProgresses(WebProgressList& aList);
+
     void FireOnStateChange(nsIWebProgress *aProgress,
                            nsIRequest* request,
                            PRInt32 aStateFlags,
                            nsresult aStatus);
+
+    // The guts of FireOnStateChange, but does not call itself on our ancestors.
+    // The arguments that are const are const so that we can detect cases when
+    // DoFireOnStateChange wants to propagate changes to the next web progress
+    // at compile time.  The ones that are not, are references so that such
+    // changes can be propagated.
+    void DoFireOnStateChange(nsIWebProgress * const aProgress,
+                             nsIRequest* const request,
+                             PRInt32 &aStateFlags,
+                             const nsresult aStatus);
 
     void FireOnStatusChange(nsIWebProgress *aWebProgress,
                             nsIRequest *aRequest,
