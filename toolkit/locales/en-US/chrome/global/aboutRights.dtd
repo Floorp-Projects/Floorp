@@ -38,7 +38,7 @@
 
 <!-- point 4 text for unbranded builds -->
 <!ENTITY rights.intro-point4a-unbranded "If this product incorporates web services, any applicable service terms for the service(s) should be linked to the ">
-<!ENTITY rights.intro-point4b-unbranded "Web Site Services">
+<!ENTITY rights.intro-point4b-unbranded "Website Services">
 <!ENTITY rights.intro-point4c-unbranded " section.">
 
 <!ENTITY rights2.webservices-header "&brandFullName; Web-Based Information Services">
@@ -70,7 +70,7 @@
 <!ENTITY rights.locationawarebrowsing-term4 "Location-Aware Browsing is now disabled">
 
 <!-- intro paragraph for unbranded builds -->
-<!ENTITY rights.webservices-unbranded "An overview of the web site services the product incorporates, along with instructions on how to disable them, if applicable, should be included here.">
+<!ENTITY rights.webservices-unbranded "An overview of the website services the product incorporates, along with instructions on how to disable them, if applicable, should be included here.">
 
 <!-- point 1 text for unbranded builds -->
 <!ENTITY rights.webservices-term1-unbranded "Any applicable service terms for this product should be listed here.">
