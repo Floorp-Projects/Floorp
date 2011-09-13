@@ -37,8 +37,6 @@
 
 /* Implement shared vtbl methods. */
 
-#ifdef __GNUC__         /* Gnu Compiler. */
-
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 #include "xptc_platforms_unixish_x86.h"
@@ -101,25 +99,6 @@ PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
 }
 } // extern "C"
 
-// NOTE! See xptc_gcc_x86_unix.h for the reason this function exists.
-#if (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ == 0))
-PRUint32
-xptc_PrepareAndDispatch_keeper (void)
-{
-    PRUint32 dummy1;
-    nsresult ATTRIBUTE_USED __attribute__ ((regparm (3))) (*dummy2)
-        (uint32, nsXPTCStubBase *, PRUint32*) = PrepareAndDispatch;
-// dummy2 references PrepareAndDispatch, now "use" it
-    __asm__ __volatile__ (
-        ""
-        : "=&a" (dummy1)
-        : "g"   (dummy2)
-    );
-    return dummy1 & 0xF0F00000;
-}
-#endif
-
-#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
 // gcc3 mangling tends to insert the length of the method name
 #define STUB_ENTRY(n) \
 asm(".text\n\t" \
@@ -151,18 +130,6 @@ asm(".text\n\t" \
     ".else\n\t" \
     ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
     ".endif");
-#else
-#define STUB_ENTRY(n) \
-asm(".text\n\t" \
-    ".align	2\n\t" \
-    ".globl	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase\n\t" \
-    ".hidden	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase\n\t" \
-    ".type	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase,@function\n" \
-    SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase:\n\t" \
-    "movl	$" #n ", %eax\n\t" \
-    "jmp	" SYMBOL_UNDERSCORE "SharedStub\n\t" \
-    ".size	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase,.-" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase");
-#endif
 
 // static nsresult SharedStub(PRUint32 methodIndex) __attribute__((regparm(1)))
 asm(".text\n\t"
@@ -187,7 +154,3 @@ void
 xptc_dummy()
 {
 }
-
-#else
-#error "can't find a compiler to use"
-#endif /* __GNUC__ */

@@ -169,6 +169,60 @@ NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, P
 
 NS_IMPL_FRAMEARENA_HELPERS(nsComboboxControlFrame)
 
+namespace {
+
+class DestroyWidgetRunnable : public nsRunnable {
+public:
+  NS_DECL_NSIRUNNABLE
+
+  explicit DestroyWidgetRunnable(nsIContent* aCombobox) :
+    mCombobox(aCombobox),
+    mWidget(GetWidget())
+  {
+  }
+
+private:
+  nsIWidget* GetWidget(nsIView** aOutView = nsnull) const;
+
+private:
+  nsCOMPtr<nsIContent> mCombobox;
+  nsIWidget* mWidget;
+};
+
+NS_IMETHODIMP DestroyWidgetRunnable::Run()
+{
+  nsIView* view = nsnull;
+  nsIWidget* currentWidget = GetWidget(&view);
+  // Make sure that we are destroying the same widget as what was requested
+  // when the event was fired.
+  if (view && mWidget && mWidget == currentWidget) {
+    view->DestroyWidget();
+  }
+  return NS_OK;
+}
+
+nsIWidget* DestroyWidgetRunnable::GetWidget(nsIView** aOutView) const
+{
+  nsIFrame* primaryFrame = mCombobox->GetPrimaryFrame();
+  nsIComboboxControlFrame* comboboxFrame = do_QueryFrame(primaryFrame);
+  if (comboboxFrame) {
+    nsIFrame* dropdown = comboboxFrame->GetDropDown();
+    if (dropdown) {
+      nsIView* view = dropdown->GetView();
+      NS_ASSERTION(view, "nsComboboxControlFrame view is null");
+      if (aOutView) {
+        *aOutView = view;
+      }
+      if (view) {
+        return view->GetWidget();
+      }
+    }
+  }
+  return nsnull;
+}
+
+}
+
 //-----------------------------------------------------------
 // Reflow Debugging Macros
 // These let us "see" how many reflow counts are happening
@@ -423,7 +477,9 @@ nsComboboxControlFrame::ShowList(PRBool aShowList)
         widget->CaptureRollupEvents(this, nsnull, mDroppedDown, mDroppedDown);
 
         if (!aShowList) {
-          view->DestroyWidget();
+          nsCOMPtr<nsIRunnable> widgetDestroyer =
+            new DestroyWidgetRunnable(GetContent());
+          NS_DispatchToMainThread(widgetDestroyer);
         }
       }
     }

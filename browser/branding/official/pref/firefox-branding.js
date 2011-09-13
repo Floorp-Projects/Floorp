@@ -1,4 +1,5 @@
-pref("startup.homepage_override_url","http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/whatsnew/");
+// Fight update fatigue by suppressing whatsnew tab opening after update (bug 685727)
+pref("startup.homepage_override_url","");
 pref("startup.homepage_welcome_url","http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/firstrun/");
 // Interval: Time between checks for a new version (in seconds)
 // nightly=6 hours, official=24 hours

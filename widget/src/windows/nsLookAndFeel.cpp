@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLookAndFeel.h"
-#include "nsXPLookAndFeel.h"
 #include <windows.h>
 #include <shellapi.h>
 #include "nsWindow.h"
@@ -94,111 +93,112 @@ nsLookAndFeel::~nsLookAndFeel()
    }
 }
 
-nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
+nsresult
+nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
 
   int idx;
   switch (aID) {
-    case eColor_WindowBackground:
+    case eColorID_WindowBackground:
         idx = COLOR_WINDOW;
         break;
-    case eColor_WindowForeground:
+    case eColorID_WindowForeground:
         idx = COLOR_WINDOWTEXT;
         break;
-    case eColor_WidgetBackground:
+    case eColorID_WidgetBackground:
         idx = COLOR_BTNFACE;
         break;
-    case eColor_WidgetForeground:
+    case eColorID_WidgetForeground:
         idx = COLOR_BTNTEXT;
         break;
-    case eColor_WidgetSelectBackground:
+    case eColorID_WidgetSelectBackground:
         idx = COLOR_HIGHLIGHT;
         break;
-    case eColor_WidgetSelectForeground:
+    case eColorID_WidgetSelectForeground:
         idx = COLOR_HIGHLIGHTTEXT;
         break;
-    case eColor_Widget3DHighlight:
+    case eColorID_Widget3DHighlight:
         idx = COLOR_BTNHIGHLIGHT;
         break;
-    case eColor_Widget3DShadow:
+    case eColorID_Widget3DShadow:
         idx = COLOR_BTNSHADOW;
         break;
-    case eColor_TextBackground:
+    case eColorID_TextBackground:
         idx = COLOR_WINDOW;
         break;
-    case eColor_TextForeground:
+    case eColorID_TextForeground:
         idx = COLOR_WINDOWTEXT;
         break;
-    case eColor_TextSelectBackground:
-    case eColor_IMESelectedRawTextBackground:
-    case eColor_IMESelectedConvertedTextBackground:
+    case eColorID_TextSelectBackground:
+    case eColorID_IMESelectedRawTextBackground:
+    case eColorID_IMESelectedConvertedTextBackground:
         idx = COLOR_HIGHLIGHT;
         break;
-    case eColor_TextSelectForeground:
-    case eColor_IMESelectedRawTextForeground:
-    case eColor_IMESelectedConvertedTextForeground:
+    case eColorID_TextSelectForeground:
+    case eColorID_IMESelectedRawTextForeground:
+    case eColorID_IMESelectedConvertedTextForeground:
         idx = COLOR_HIGHLIGHTTEXT;
         break;
-    case eColor_IMERawInputBackground:
-    case eColor_IMEConvertedTextBackground:
+    case eColorID_IMERawInputBackground:
+    case eColorID_IMEConvertedTextBackground:
         aColor = NS_TRANSPARENT;
         return NS_OK;
-    case eColor_IMERawInputForeground:
-    case eColor_IMEConvertedTextForeground:
+    case eColorID_IMERawInputForeground:
+    case eColorID_IMEConvertedTextForeground:
         aColor = NS_SAME_AS_FOREGROUND_COLOR;
         return NS_OK;
-    case eColor_IMERawInputUnderline:
-    case eColor_IMEConvertedTextUnderline:
+    case eColorID_IMERawInputUnderline:
+    case eColorID_IMEConvertedTextUnderline:
         aColor = NS_SAME_AS_FOREGROUND_COLOR;
         return NS_OK;
-    case eColor_IMESelectedRawTextUnderline:
-    case eColor_IMESelectedConvertedTextUnderline:
+    case eColorID_IMESelectedRawTextUnderline:
+    case eColorID_IMESelectedConvertedTextUnderline:
         aColor = NS_TRANSPARENT;
         return NS_OK;
-    case eColor_SpellCheckerUnderline:
+    case eColorID_SpellCheckerUnderline:
         aColor = NS_RGB(0xff, 0, 0);
         return NS_OK;
 
     // New CSS 2 Color definitions
-    case eColor_activeborder:
+    case eColorID_activeborder:
       idx = COLOR_ACTIVEBORDER;
       break;
-    case eColor_activecaption:
+    case eColorID_activecaption:
       idx = COLOR_ACTIVECAPTION;
       break;
-    case eColor_appworkspace:
+    case eColorID_appworkspace:
       idx = COLOR_APPWORKSPACE;
       break;
-    case eColor_background:
+    case eColorID_background:
       idx = COLOR_BACKGROUND;
       break;
-    case eColor_buttonface:
-    case eColor__moz_buttonhoverface:
+    case eColorID_buttonface:
+    case eColorID__moz_buttonhoverface:
       idx = COLOR_BTNFACE;
       break;
-    case eColor_buttonhighlight:
+    case eColorID_buttonhighlight:
       idx = COLOR_BTNHIGHLIGHT;
       break;
-    case eColor_buttonshadow:
+    case eColorID_buttonshadow:
       idx = COLOR_BTNSHADOW;
       break;
-    case eColor_buttontext:
-    case eColor__moz_buttonhovertext:
+    case eColorID_buttontext:
+    case eColorID__moz_buttonhovertext:
       idx = COLOR_BTNTEXT;
       break;
-    case eColor_captiontext:
+    case eColorID_captiontext:
       idx = COLOR_CAPTIONTEXT;
       break;
-    case eColor_graytext:
+    case eColorID_graytext:
       idx = COLOR_GRAYTEXT;
       break;
-    case eColor_highlight:
-    case eColor__moz_html_cellhighlight:
-    case eColor__moz_menuhover:
+    case eColorID_highlight:
+    case eColorID__moz_html_cellhighlight:
+    case eColorID__moz_menuhover:
       idx = COLOR_HIGHLIGHT;
       break;
-    case eColor__moz_menubarhovertext:
+    case eColorID__moz_menubarhovertext:
       if (!nsUXThemeData::sIsVistaOrLater || !nsUXThemeData::isAppThemed())
       {
         idx = nsUXThemeData::sFlatMenus ?
@@ -207,7 +207,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         break;
       }
       // Fall through
-    case eColor__moz_menuhovertext:
+    case eColorID__moz_menuhovertext:
       if (nsUXThemeData::IsAppThemed() && nsUXThemeData::sIsVistaOrLater)
       {
         res = ::GetColorFromTheme(eUXMenu,
@@ -216,74 +216,74 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
           return res;
         // fall through to highlight case
       }
-    case eColor_highlighttext:
-    case eColor__moz_html_cellhighlighttext:
+    case eColorID_highlighttext:
+    case eColorID__moz_html_cellhighlighttext:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
-    case eColor_inactiveborder:
+    case eColorID_inactiveborder:
       idx = COLOR_INACTIVEBORDER;
       break;
-    case eColor_inactivecaption:
+    case eColorID_inactivecaption:
       idx = COLOR_INACTIVECAPTION;
       break;
-    case eColor_inactivecaptiontext:
+    case eColorID_inactivecaptiontext:
       idx = COLOR_INACTIVECAPTIONTEXT;
       break;
-    case eColor_infobackground:
+    case eColorID_infobackground:
       idx = COLOR_INFOBK;
       break;
-    case eColor_infotext:
+    case eColorID_infotext:
       idx = COLOR_INFOTEXT;
       break;
-    case eColor_menu:
+    case eColorID_menu:
       idx = COLOR_MENU;
       break;
-    case eColor_menutext:
-    case eColor__moz_menubartext:
+    case eColorID_menutext:
+    case eColorID__moz_menubartext:
       idx = COLOR_MENUTEXT;
       break;
-    case eColor_scrollbar:
+    case eColorID_scrollbar:
       idx = COLOR_SCROLLBAR;
       break;
-    case eColor_threeddarkshadow:
+    case eColorID_threeddarkshadow:
       idx = COLOR_3DDKSHADOW;
       break;
-    case eColor_threedface:
+    case eColorID_threedface:
       idx = COLOR_3DFACE;
       break;
-    case eColor_threedhighlight:
+    case eColorID_threedhighlight:
       idx = COLOR_3DHIGHLIGHT;
       break;
-    case eColor_threedlightshadow:
+    case eColorID_threedlightshadow:
       idx = COLOR_3DLIGHT;
       break;
-    case eColor_threedshadow:
+    case eColorID_threedshadow:
       idx = COLOR_3DSHADOW;
       break;
-    case eColor_window:
+    case eColorID_window:
       idx = COLOR_WINDOW;
       break;
-    case eColor_windowframe:
+    case eColorID_windowframe:
       idx = COLOR_WINDOWFRAME;
       break;
-    case eColor_windowtext:
+    case eColorID_windowtext:
       idx = COLOR_WINDOWTEXT;
       break;
-    case eColor__moz_eventreerow:
-    case eColor__moz_oddtreerow:
-    case eColor__moz_field:
-    case eColor__moz_combobox:
+    case eColorID__moz_eventreerow:
+    case eColorID__moz_oddtreerow:
+    case eColorID__moz_field:
+    case eColorID__moz_combobox:
       idx = COLOR_WINDOW;
       break;
-    case eColor__moz_fieldtext:
-    case eColor__moz_comboboxtext:
+    case eColorID__moz_fieldtext:
+    case eColorID__moz_comboboxtext:
       idx = COLOR_WINDOWTEXT;
       break;
-    case eColor__moz_dialog:
-    case eColor__moz_cellhighlight:
+    case eColorID__moz_dialog:
+    case eColorID__moz_cellhighlight:
       idx = COLOR_3DFACE;
       break;
-    case eColor__moz_win_mediatext:
+    case eColorID__moz_win_mediatext:
       if (nsUXThemeData::IsAppThemed() && nsUXThemeData::sIsVistaOrLater) {
         res = ::GetColorFromTheme(eUXMediaToolbar,
                                   TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
@@ -293,7 +293,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       // if we've gotten here just return -moz-dialogtext instead
       idx = COLOR_WINDOWTEXT;
       break;
-    case eColor__moz_win_communicationstext:
+    case eColorID__moz_win_communicationstext:
       if (nsUXThemeData::IsAppThemed() && nsUXThemeData::sIsVistaOrLater)
       {
         res = ::GetColorFromTheme(eUXCommunicationsToolbar,
@@ -304,17 +304,17 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       // if we've gotten here just return -moz-dialogtext instead
       idx = COLOR_WINDOWTEXT;
       break;
-    case eColor__moz_dialogtext:
-    case eColor__moz_cellhighlighttext:
+    case eColorID__moz_dialogtext:
+    case eColorID__moz_cellhighlighttext:
       idx = COLOR_WINDOWTEXT;
       break;
-    case eColor__moz_dragtargetzone:
+    case eColorID__moz_dragtargetzone:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
-    case eColor__moz_buttondefault:
+    case eColorID__moz_buttondefault:
       idx = COLOR_3DDKSHADOW;
       break;
-    case eColor__moz_nativehyperlinktext:
+    case eColorID__moz_nativehyperlinktext:
       idx = COLOR_HOTLIGHT;
       break;
     default:
@@ -328,48 +328,49 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
   return res;
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
+nsresult
+nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
 {
-  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
   if (NS_SUCCEEDED(res))
     return res;
   res = NS_OK;
 
   switch (aID) {
-    case eMetric_CaretBlinkTime:
-        aMetric = (PRInt32)::GetCaretBlinkTime();
+    case eIntID_CaretBlinkTime:
+        aResult = (PRInt32)::GetCaretBlinkTime();
         break;
-    case eMetric_CaretWidth:
-        aMetric = 1;
+    case eIntID_CaretWidth:
+        aResult = 1;
         break;
-    case eMetric_ShowCaretDuringSelection:
-        aMetric = 0;
+    case eIntID_ShowCaretDuringSelection:
+        aResult = 0;
         break;
-    case eMetric_SelectTextfieldsOnKeyFocus:
+    case eIntID_SelectTextfieldsOnKeyFocus:
         // Select textfield content when focused by kbd
         // used by nsEventStateManager::sTextfieldSelectModel
-        aMetric = 1;
+        aResult = 1;
         break;
-    case eMetric_SubmenuDelay:
+    case eIntID_SubmenuDelay:
         // This will default to the Windows' default
         // (400ms) on error.
-        aMetric = GetSystemParam(SPI_GETMENUSHOWDELAY, 400);
+        aResult = GetSystemParam(SPI_GETMENUSHOWDELAY, 400);
         break;
-    case eMetric_MenusCanOverlapOSBar:
+    case eIntID_MenusCanOverlapOSBar:
         // we want XUL popups to be able to overlap the task bar.
-        aMetric = 1;
+        aResult = 1;
         break;
-    case eMetric_DragThresholdX:
+    case eIntID_DragThresholdX:
         // The system metric is the number of pixels at which a drag should
         // start.  Our look and feel metric is the number of pixels you can
         // move before starting a drag, so subtract 1.
 
-        aMetric = ::GetSystemMetrics(SM_CXDRAG) - 1;
+        aResult = ::GetSystemMetrics(SM_CXDRAG) - 1;
         break;
-    case eMetric_DragThresholdY:
-        aMetric = ::GetSystemMetrics(SM_CYDRAG) - 1;
+    case eIntID_DragThresholdY:
+        aResult = ::GetSystemMetrics(SM_CYDRAG) - 1;
         break;
-    case eMetric_UseAccessibilityTheme:
+    case eIntID_UseAccessibilityTheme:
         // High contrast is a misnomer under Win32 -- any theme can be used with it, 
         // e.g. normal contrast with large fonts, low contrast, etc.
         // The high contrast flag really means -- use this theme and don't override it.
@@ -377,58 +378,58 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         contrastThemeInfo.cbSize = sizeof(contrastThemeInfo);
         ::SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &contrastThemeInfo, 0);
 
-        aMetric = ((contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0);
+        aResult = ((contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0);
         break;
-    case eMetric_ScrollArrowStyle:
-        aMetric = eMetric_ScrollArrowStyleSingle;
+    case eIntID_ScrollArrowStyle:
+        aResult = eScrollArrowStyle_Single;
         break;
-    case eMetric_ScrollSliderStyle:
-        aMetric = eMetric_ScrollThumbStyleProportional;
+    case eIntID_ScrollSliderStyle:
+        aResult = eScrollThumbStyle_Proportional;
         break;
-    case eMetric_TreeOpenDelay:
-        aMetric = 1000;
+    case eIntID_TreeOpenDelay:
+        aResult = 1000;
         break;
-    case eMetric_TreeCloseDelay:
-        aMetric = 0;
+    case eIntID_TreeCloseDelay:
+        aResult = 0;
         break;
-    case eMetric_TreeLazyScrollDelay:
-        aMetric = 150;
+    case eIntID_TreeLazyScrollDelay:
+        aResult = 150;
         break;
-    case eMetric_TreeScrollDelay:
-        aMetric = 100;
+    case eIntID_TreeScrollDelay:
+        aResult = 100;
         break;
-    case eMetric_TreeScrollLinesMax:
-        aMetric = 3;
+    case eIntID_TreeScrollLinesMax:
+        aResult = 3;
         break;
-    case eMetric_WindowsClassic:
-        aMetric = !nsUXThemeData::IsAppThemed();
+    case eIntID_WindowsClassic:
+        aResult = !nsUXThemeData::IsAppThemed();
         break;
-    case eMetric_TouchEnabled:
-        aMetric = 0;
+    case eIntID_TouchEnabled:
+        aResult = 0;
         PRInt32 touchCapabilities;
         touchCapabilities = ::GetSystemMetrics(SM_DIGITIZER);
         if ((touchCapabilities & NID_READY) && 
            (touchCapabilities & (NID_EXTERNAL_TOUCH | NID_INTEGRATED_TOUCH))) {
-            aMetric = 1;
+            aResult = 1;
         }
         break;
-    case eMetric_WindowsDefaultTheme:
-        aMetric = nsUXThemeData::IsDefaultWindowTheme();
+    case eIntID_WindowsDefaultTheme:
+        aResult = nsUXThemeData::IsDefaultWindowTheme();
         break;
-    case eMetric_WindowsThemeIdentifier:
-        aMetric = nsUXThemeData::GetNativeThemeId();
+    case eIntID_WindowsThemeIdentifier:
+        aResult = nsUXThemeData::GetNativeThemeId();
         break;
-    case eMetric_MacGraphiteTheme:
-    case eMetric_MacLionTheme:
-    case eMetric_MaemoClassic:
-        aMetric = 0;
+    case eIntID_MacGraphiteTheme:
+    case eIntID_MacLionTheme:
+    case eIntID_MaemoClassic:
+        aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
-    case eMetric_DWMCompositor:
-        aMetric = nsUXThemeData::CheckForCompositor();
+    case eIntID_DWMCompositor:
+        aResult = nsUXThemeData::CheckForCompositor();
         break;
-    case eMetric_AlertNotificationOrigin:
-        aMetric = 0;
+    case eIntID_AlertNotificationOrigin:
+        aResult = 0;
         if (gSHAppBarMessage)
         {
           // Get task bar window handle
@@ -442,72 +443,74 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             appBarData.cbSize = sizeof(appBarData);
             if (gSHAppBarMessage(ABM_GETTASKBARPOS, &appBarData))
             {
-              // Set alert origin as a bit field - see nsILookAndFeel.h
+              // Set alert origin as a bit field - see LookAndFeel.h
               // 0 represents bottom right, sliding vertically.
               switch(appBarData.uEdge)
               {
                 case ABE_LEFT:
-                  aMetric = NS_ALERT_HORIZONTAL | NS_ALERT_LEFT;
+                  aResult = NS_ALERT_HORIZONTAL | NS_ALERT_LEFT;
                   break;
                 case ABE_RIGHT:
-                  aMetric = NS_ALERT_HORIZONTAL;
+                  aResult = NS_ALERT_HORIZONTAL;
                   break;
                 case ABE_TOP:
-                  aMetric = NS_ALERT_TOP;
+                  aResult = NS_ALERT_TOP;
                   // fall through for the right-to-left handling.
                 case ABE_BOTTOM:
                   // If the task bar is right-to-left,
                   // move the origin to the left
                   if (::GetWindowLong(shellWindow, GWL_EXSTYLE) &
                         WS_EX_LAYOUTRTL)
-                    aMetric |= NS_ALERT_LEFT;
+                    aResult |= NS_ALERT_LEFT;
                   break;
               }
             }
           }
         }
         break;
-    case eMetric_IMERawInputUnderlineStyle:
-    case eMetric_IMEConvertedTextUnderlineStyle:
-        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
+    case eIntID_IMERawInputUnderlineStyle:
+    case eIntID_IMEConvertedTextUnderlineStyle:
+        aResult = NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
         break;
-    case eMetric_IMESelectedRawTextUnderlineStyle:
-    case eMetric_IMESelectedConvertedTextUnderline:
-        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    case eIntID_IMESelectedRawTextUnderlineStyle:
+    case eIntID_IMESelectedConvertedTextUnderline:
+        aResult = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
         break;
-    case eMetric_SpellCheckerUnderlineStyle:
-        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
+    case eIntID_SpellCheckerUnderlineStyle:
+        aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
         break;
     default:
-        aMetric = 0;
+        aResult = 0;
         res = NS_ERROR_FAILURE;
     }
   return res;
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
+nsresult
+nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 {
-  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
   if (NS_SUCCEEDED(res))
     return res;
   res = NS_OK;
 
   switch (aID) {
-    case eMetricFloat_IMEUnderlineRelativeSize:
-        aMetric = 1.0f;
+    case eFloatID_IMEUnderlineRelativeSize:
+        aResult = 1.0f;
         break;
-    case eMetricFloat_SpellCheckerUnderlineRelativeSize:
-        aMetric = 1.0f;
+    case eFloatID_SpellCheckerUnderlineRelativeSize:
+        aResult = 1.0f;
         break;
     default:
-        aMetric = -1.0;
+        aResult = -1.0;
         res = NS_ERROR_FAILURE;
     }
   return res;
 }
 
 /* virtual */
-PRUnichar nsLookAndFeel::GetPasswordCharacter()
+PRUnichar
+nsLookAndFeel::GetPasswordCharacterImpl()
 {
 #define UNICODE_BLACK_CIRCLE_CHAR 0x25cf
   static PRUnichar passwordCharacter = 0;
@@ -518,60 +521,3 @@ PRUnichar nsLookAndFeel::GetPasswordCharacter()
   }
   return passwordCharacter;
 }
-
-#ifdef NS_DEBUG
-
-NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
-                                        const nsMetricNavFontID   aFontID, 
-                                        const PRInt32             aFontSize, 
-                                        nsSize &aSize)
-{
-  nsresult rv = nsXPLookAndFeel::GetNavSize(aWidgetID, aFontID, aFontSize,
-                                            aSize);
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  aSize.width  = 0;
-  aSize.height = 0;
-
-  if (aFontSize < 1 || aFontSize > 7) {
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 kTextFieldWidths[2][7] = {
-    {106,147,169,211,253,338,506}, // Courier
-    {152,214,237,281,366,495,732}  // sans-serif
-  };
-
-  PRInt32 kTextFieldHeights[2][7] = {
-    {18,21,24,27,33,45,63}, // Courier
-    {18,21,24,27,34,48,67}  // sans-serif
-  };
-
-  PRInt32 kTextAreaWidths[2][7] = {
-    {121,163,184,226,268,352,520}, // Courier
-    {163,226,247,289,373,499,730}  // sans-serif
-  };
-
-  PRInt32 kTextAreaHeights[2][7] = {
-    {40,44,48,52,60,76,100}, // Courier
-    {40,44,48,52,62,80,106}  // sans-serif
-  };
-
-  switch (aWidgetID) {
-    case eMetricSize_TextField:
-      aSize.width  = kTextFieldWidths[aFontID][aFontSize-1];
-      aSize.height = kTextFieldHeights[aFontID][aFontSize-1];
-      break;
-    case eMetricSize_TextArea:
-      aSize.width  = kTextAreaWidths[aFontID][aFontSize-1];
-      aSize.height = kTextAreaHeights[aFontID][aFontSize-1];
-      break;
-    default:
-      break;
-  } //switch
-
-  return NS_OK;
-
-}
-#endif

@@ -377,6 +377,51 @@ HttpBaseChannel::SetContentCharset(const nsACString& aContentCharset)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetContentDisposition(PRUint32 *aContentDisposition)
+{
+  nsresult rv;
+  nsCString header;
+
+  rv = GetContentDispositionHeader(header);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *aContentDisposition = NS_GetContentDispositionFromHeader(header, this);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetContentDispositionFilename(nsAString& aContentDispositionFilename)
+{
+  aContentDispositionFilename.Truncate();
+
+  nsresult rv;
+  nsCString header;
+
+  rv = GetContentDispositionHeader(header);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_GetFilenameFromDisposition(aContentDispositionFilename,
+                                       header, mURI);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetContentDispositionHeader(nsACString& aContentDispositionHeader)
+{
+  if (!mResponseHead)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  nsresult rv = mResponseHead->GetHeader(nsHttp::Content_Disposition,
+                                         aContentDispositionHeader);
+  if (NS_FAILED(rv) || aContentDispositionHeader.IsEmpty())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetContentLength(PRInt32 *aContentLength)
 {
   NS_ENSURE_ARG_POINTER(aContentLength);
@@ -731,7 +776,7 @@ HttpBaseChannel::nsContentEncodings::PrepareForNext(void)
 NS_IMETHODIMP
 HttpBaseChannel::GetRequestMethod(nsACString& aMethod)
 {
-  aMethod = mRequestHead.Method();
+  mRequestHead.Method()->ToUTF8String(aMethod);
   return NS_OK;
 }
 
@@ -740,16 +785,27 @@ HttpBaseChannel::SetRequestMethod(const nsACString& aMethod)
 {
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
-  const nsCString& flatMethod = PromiseFlatCString(aMethod);
+  nsCAutoString upperCaseMethod;
+  ToUpperCase(aMethod, upperCaseMethod);
 
   // Method names are restricted to valid HTTP tokens.
-  if (!nsHttp::IsValidToken(flatMethod))
+  if (!nsHttp::IsValidToken(upperCaseMethod))
     return NS_ERROR_INVALID_ARG;
 
-  nsHttpAtom atom = nsHttp::ResolveAtom(flatMethod.get());
-  if (!atom)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(upperCaseMethod);
 
+  // We've changed method names to case sensitive in bug 477578. Some
+  // methods are kept case insensitive to keep backward compatibility and
+  // to satisfy XMLHttpRequest specification which demands it.
+#define HTTP_METHOD_ATOM(name_, value_)
+#define HTTP_CASE_INSENSITIVE_METHOD_ATOM(name_, value_) \
+  if (nsHttp::name_ == atom) {} else
+#include "nsHttpAtomList.h"
+#undef HTTP_CASE_INSENSITIVE_METHOD_ATOM
+#undef HTTP_METHOD_ATOM
+  { // upper case atom doesn't match any case insensitive atom
+    atom = do_GetAtom(aMethod);
+  }
   mRequestHead.SetMethod(atom);
   return NS_OK;
 }
@@ -1498,7 +1554,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
         PRInt64 len = clen ? nsCRT::atoll(clen) : -1;
         uploadChannel2->ExplicitSetUploadStream(
                                   mUploadStream, nsDependentCString(ctype), len,
-                                  nsDependentCString(mRequestHead.Method()),
+                                  nsAtomCString(mRequestHead.Method()),
                                   mUploadStreamHasHeaders);
       } else {
         if (mUploadStreamHasHeaders) {
@@ -1525,7 +1581,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     // we set the upload stream above. This means SetRequestMethod() will
     // be called twice if ExplicitSetUploadStream() gets called above.
 
-    httpChannel->SetRequestMethod(nsDependentCString(mRequestHead.Method()));
+    httpChannel->SetRequestMethod(nsAtomCString(mRequestHead.Method()));
   }
   // convey the referrer if one was used for this channel to the next one
   if (mReferrer)

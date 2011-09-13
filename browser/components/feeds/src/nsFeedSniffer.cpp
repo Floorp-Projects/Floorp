@@ -129,51 +129,18 @@ StringBeginsWithLowercaseLiteral(nsAString& aString,
   return StringHead(aString, N).LowerCaseEqualsLiteral(aSubstring);
 }
 
-// XXXsayrer put this in here to get on the branch with minimal delay.
-// Trunk really needs to factor this out. This is the third usage.
 PRBool
 HasAttachmentDisposition(nsIHttpChannel* httpChannel)
 {
   if (!httpChannel)
     return PR_FALSE;
-  
-  nsCAutoString contentDisposition;
-  nsresult rv = 
-    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"),
-                                   contentDisposition);
-  
-  if (NS_SUCCEEDED(rv) && !contentDisposition.IsEmpty()) {
-    nsCOMPtr<nsIURI> uri;
-    httpChannel->GetURI(getter_AddRefs(uri));
-    nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
-      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-      nsCAutoString fallbackCharset;
-      if (uri)
-        uri->GetOriginCharset(fallbackCharset);
-      nsAutoString dispToken;
-      // Get the disposition type
-      rv = mimehdrpar->GetParameter(contentDisposition, "", fallbackCharset,
-                                    PR_TRUE, nsnull, dispToken);
-      // RFC 2183, section 2.8 says that an unknown disposition
-      // value should be treated as "attachment"
-      // XXXbz this code is duplicated in GetFilenameAndExtensionFromChannel in
-      // nsExternalHelperAppService.  Factor it out!
-      if (NS_FAILED(rv) || 
-          (!dispToken.IsEmpty() &&
-           !StringBeginsWithLowercaseLiteral(dispToken, "inline") &&
-           // Broken sites just send
-           // Content-Disposition: filename="file"
-           // without a disposition token... screen those out.
-           !StringBeginsWithLowercaseLiteral(dispToken, "filename") &&
-           // Also in use is Content-Disposition: name="file"
-           !StringBeginsWithLowercaseLiteral(dispToken, "name")))
-        // We have a content-disposition of "attachment" or unknown
-        return PR_TRUE;
-    }
-  } 
-  
+
+  PRUint32 disp;
+  nsresult rv = httpChannel->GetContentDisposition(&disp);
+
+  if (NS_SUCCEEDED(rv) && disp == nsIChannel::DISPOSITION_ATTACHMENT)
+    return PR_TRUE;
+
   return PR_FALSE;
 }
 

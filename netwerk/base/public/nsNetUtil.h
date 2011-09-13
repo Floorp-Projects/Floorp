@@ -106,6 +106,7 @@
 #include "nsIChannelPolicy.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
+#include "nsIMIMEHeaderParam.h"
 #include "mozilla/Services.h"
 
 #include "nsIRedirectChannelRegistrar.h"
@@ -242,19 +243,6 @@ NS_NewChannel(nsIChannel           **result,
         }
     }
     return rv;
-}
-
-// For now, works only with JARChannel.  Future: with all channels that may
-// have Content-Disposition header (JAR, nsIHttpChannel, and nsIMultiPartChannel).
-inline nsresult
-NS_GetContentDisposition(nsIRequest     *channel,
-                         nsACString     &result)
-{
-    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
-    if (props)
-        return props->GetPropertyAsACString(NS_CHANNEL_PROP_CONTENT_DISPOSITION,
-                                            result);
-    return NS_ERROR_NOT_AVAILABLE;
 }
 
 // Use this function with CAUTION. It creates a stream that blocks when you
@@ -1903,6 +1891,110 @@ NS_CheckIsJavaCompatibleURLString(nsCString& urlString, PRBool *result)
   }
 
   *result = compatible;
+
+  return NS_OK;
+}
+
+/** Given the first (disposition) token from a Content-Disposition header,
+ * tell whether it indicates the content is inline or attachment
+ * @param aDispToken the disposition token from the content-disposition header
+ */
+inline PRUint32
+NS_GetContentDispositionFromToken(const nsAString& aDispToken)
+{
+  // RFC 2183, section 2.8 says that an unknown disposition
+  // value should be treated as "attachment"
+  // If all of these tests eval to false, then we have a content-disposition of
+  // "attachment" or unknown
+  if (aDispToken.IsEmpty() ||
+      aDispToken.LowerCaseEqualsLiteral("inline") ||
+      // Broken sites just send
+      // Content-Disposition: filename="file"
+      // without a disposition token... screen those out.
+      StringHead(aDispToken, 8).LowerCaseEqualsLiteral("filename") ||
+      // Also in use is Content-Disposition: name="file"
+      StringHead(aDispToken, 4).LowerCaseEqualsLiteral("name"))
+    return nsIChannel::DISPOSITION_INLINE;
+
+  return nsIChannel::DISPOSITION_ATTACHMENT;
+}
+
+/** Determine the disposition (inline/attachment) of the content based on the
+ * Content-Disposition header
+ * @param aHeader the content-disposition header (full value)
+ * @param aChan the channel the header came from
+ */
+inline PRUint32
+NS_GetContentDispositionFromHeader(const nsACString& aHeader, nsIChannel *aChan = nsnull)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return nsIChannel::DISPOSITION_ATTACHMENT;
+
+  nsCAutoString fallbackCharset;
+  if (aChan) {
+    nsCOMPtr<nsIURI> uri;
+    aChan->GetURI(getter_AddRefs(uri));
+    if (uri)
+      uri->GetOriginCharset(fallbackCharset);
+  }
+
+  nsAutoString dispToken;
+  rv = mimehdrpar->GetParameter(aHeader, "", fallbackCharset, PR_TRUE, nsnull,
+                                dispToken);
+
+  if (NS_FAILED(rv)) {
+    // special case (see bug 272541): empty disposition type handled as "inline"
+    return rv == NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY
+                 ? nsIChannel::DISPOSITION_INLINE
+                 : nsIChannel::DISPOSITION_ATTACHMENT;
+  }
+
+  return NS_GetContentDispositionFromToken(dispToken);
+}
+
+/** Extracts the filename out of a content-disposition header
+ * @param aFilename [out] The filename. Can be empty on error.
+ * @param aDisposition Value of a Content-Disposition header
+ * @param aURI Optional. Will be used to get a fallback charset for the
+ *        filename, if it is QI'able to nsIURL
+ */
+inline nsresult
+NS_GetFilenameFromDisposition(nsAString& aFilename,
+                              const nsACString& aDisposition,
+                              nsIURI* aURI = nsnull)
+{
+  aFilename.Truncate();
+
+  nsresult rv;
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
+      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+
+  nsCAutoString fallbackCharset;
+  if (url)
+    url->GetOriginCharset(fallbackCharset);
+  // Get the value of 'filename' parameter
+  rv = mimehdrpar->GetParameter(aDisposition, "filename",
+                                fallbackCharset, PR_TRUE, nsnull,
+                                aFilename);
+  if (NS_FAILED(rv) || aFilename.IsEmpty()) {
+    // Try 'name' parameter, instead.
+    rv = mimehdrpar->GetParameter(aDisposition, "name", fallbackCharset,
+                                  PR_TRUE, nsnull, aFilename);
+  }
+
+  if (NS_FAILED(rv)) {
+    aFilename.Truncate();
+    return rv;
+  }
+
+  if (aFilename.IsEmpty())
+    return NS_ERROR_NOT_AVAILABLE;
 
   return NS_OK;
 }

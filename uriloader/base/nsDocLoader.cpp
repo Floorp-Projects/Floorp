@@ -946,26 +946,33 @@ void nsDocLoader::doStopDocumentLoad(nsIRequest *request,
           this, buffer.get(), aStatus));
 #endif /* DEBUG */
 
+  // Firing STATE_STOP|STATE_IS_DOCUMENT will fire onload handlers.
+  // Grab our parent chain before doing that so we can still dispatch
+  // STATE_STOP|STATE_IS_WINDW_STATE_IS_NETWORK to them all, even if
+  // the onload handlers rearrange the docshell tree.
+  WebProgressList list;
+  GatherAncestorWebProgresses(list);
+  
   //
   // Fire an OnStateChange(...) notification indicating the the
   // current document has finished loading...
   //
-  FireOnStateChange(this,
-                    request,
-                    nsIWebProgressListener::STATE_STOP |
-                    nsIWebProgressListener::STATE_IS_DOCUMENT,
-                    aStatus);
+  PRInt32 flags = nsIWebProgressListener::STATE_STOP |
+                  nsIWebProgressListener::STATE_IS_DOCUMENT;
+  for (PRUint32 i = 0; i < list.Length(); ++i) {
+    list[i]->DoFireOnStateChange(this, request, flags, aStatus);
+  }
 
   //
   // Fire a final OnStateChange(...) notification indicating the the
   // current document has finished loading...
   //
-  FireOnStateChange(this,
-                    request,
-                    nsIWebProgressListener::STATE_STOP |
-                    nsIWebProgressListener::STATE_IS_WINDOW |
-                    nsIWebProgressListener::STATE_IS_NETWORK,
-                    aStatus);
+  flags = nsIWebProgressListener::STATE_STOP |
+          nsIWebProgressListener::STATE_IS_WINDOW |
+          nsIWebProgressListener::STATE_IS_NETWORK;
+  for (PRUint32 i = 0; i < list.Length(); ++i) {
+    list[i]->DoFireOnStateChange(this, request, flags, aStatus);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1295,11 +1302,29 @@ void nsDocLoader::FireOnProgressChange(nsDocLoader *aLoadInitiator,
   }
 }
 
+void nsDocLoader::GatherAncestorWebProgresses(WebProgressList& aList)
+{
+  for (nsDocLoader* loader = this; loader; loader = loader->mParent) {
+    aList.AppendElement(loader);
+  }
+}
 
 void nsDocLoader::FireOnStateChange(nsIWebProgress *aProgress,
                                     nsIRequest *aRequest,
                                     PRInt32 aStateFlags,
                                     nsresult aStatus)
+{
+  WebProgressList list;
+  GatherAncestorWebProgresses(list);
+  for (PRUint32 i = 0; i < list.Length(); ++i) {
+    list[i]->DoFireOnStateChange(aProgress, aRequest, aStateFlags, aStatus);
+  }
+}
+
+void nsDocLoader::DoFireOnStateChange(nsIWebProgress * const aProgress,
+                                      nsIRequest * const aRequest,
+                                      PRInt32 &aStateFlags,
+                                      const nsresult aStatus)
 {
   //
   // Remove the STATE_IS_NETWORK bit if necessary.
@@ -1359,11 +1384,6 @@ void nsDocLoader::FireOnStateChange(nsIWebProgress *aProgress,
   }
 
   mListenerInfoList.Compact();
-
-  // Pass the notification up to the parent...
-  if (mParent) {
-    mParent->FireOnStateChange(aProgress, aRequest, aStateFlags, aStatus);
-  }
 }
 
 

@@ -87,12 +87,12 @@ compareQueries: function(fragments)
   for (var i = 0; i < fragments.length; i++) {
     expectedQueries.push(this.getHash(fragments[i]).slice(0, 4));
   }
+  do_check_eq(this.queries.length, expectedQueries.length);
   expectedQueries.sort();
   this.queries.sort();
   for (var i = 0; i < this.queries.length; i++) {
     do_check_eq(this.queries[i], expectedQueries[i]);
   }
-  do_check_eq(this.queries.length, expectedQueries.length);
 }
 };
 
@@ -421,15 +421,23 @@ function testInvalidHashSize()
           }],
         12); // only 4 and 32 are legal hash sizes
 
+  var addUrls2 = [ "zaz.com/a", "xyz.com/b" ];
+  var update2 = buildPhishingUpdate(
+        [
+          { "chunkNum" : 2,
+            "urls" : addUrls2
+          }],
+        4);
+
   var completer = installCompleter('test-phish-simple', [[1, addUrls]], []);
 
   var assertions = {
-    "tableData" : "",
+    "tableData" : "test-phish-simple;a:2",
     "urlsDontExist" : addUrls
   };
 
   // A successful update will trigger an error
-  doUpdateTest([update], assertions, updateError, runNextTest);
+  doUpdateTest([update2, update], assertions, updateError, runNextTest);
 }
 
 function testWrongTable()
