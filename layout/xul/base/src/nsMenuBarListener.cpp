@@ -141,6 +141,11 @@ nsMenuBarListener::ToggleMenuActiveState()
 nsresult
 nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {  
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) {
+    return NS_OK;
+  }
+
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
@@ -159,7 +164,6 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     // On a press of the ALT key by itself, we toggle the menu's 
     // active/inactive state.
     // Get the ascii key code.
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
     PRUint32 theChar;
     keyEvent->GetKeyCode(&theChar);
 

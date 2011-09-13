@@ -161,10 +161,8 @@ struct BCPropertyData
   BCPixelSize mRightCellBorderWidth;
 };
 
-NS_IMETHODIMP
-nsTableFrame::GetParentStyleContextFrame(nsPresContext*  aPresContext,
-                                         nsIFrame**      aProviderFrame,
-                                         PRBool*         aIsChild)
+nsIFrame*
+nsTableFrame::GetParentStyleContextFrame()
 {
   // Since our parent, the table outer frame, returned this frame, we
   // must return whatever our parent would normally have returned.
@@ -172,13 +170,10 @@ nsTableFrame::GetParentStyleContextFrame(nsPresContext*  aPresContext,
   NS_PRECONDITION(mParent, "table constructed without outer table");
   if (!mContent->GetParent() && !GetStyleContext()->GetPseudo()) {
     // We're the root.  We have no style context parent.
-    *aIsChild = PR_FALSE;
-    *aProviderFrame = nsnull;
-    return NS_OK;
+    return nsnull;
   }
 
-  return static_cast<nsFrame*>(mParent)->
-          DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
+  return static_cast<nsFrame*>(GetParent())->DoGetParentStyleContextFrame();
 }
 
 
