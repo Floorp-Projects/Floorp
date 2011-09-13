@@ -2,6 +2,7 @@ load 336081-1.xhtml
 load 382778-1.html
 load 407074-1.html
 load 407277-1.html
+load 414178-1.html
 load 418923-1.html
 asserts(0-16) load 420439.html # Bug 439258
 load 428489-1.html
