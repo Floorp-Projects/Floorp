@@ -253,8 +253,6 @@ private:
   void DestroyEditor();
   void Clear();
 
-  nsresult InitializeRootNode();
-
   void FinishedRestoringSelection() { mRestoringSelection = nsnull; }
 
   class InitializationGuard {
