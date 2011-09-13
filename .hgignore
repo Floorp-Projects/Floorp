@@ -7,6 +7,10 @@
 (^|/)ID$
 (^|/)\.DS_Store$
 
+# Vim swap files.
+^\.sw.$
+.[^/]*\.sw.$
+
 # User files that may appear at the root
 ^\.mozconfig
 ^mozconfig$

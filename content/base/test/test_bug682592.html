@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=682592
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+    <title>Test for bug 682592</title>
+    <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+<iframe id="iframe-ref" src="bug682592-subframe-ref.html"></iframe>
+<iframe id="iframe-test"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+/** Test for Bug 682592 **/
+
+/* 
+   We want to check that bidi is detected correctly. So, we have a reference
+   document where ltr is set explicitely with <bdo> element. Then, we compare
+   it with test document.
+
+   In mozilla, once bidi has been detected in a document, document always
+   consider it's in bidi mode. So, if one fragment enables bidi correctly, and
+   we create or update a fragment in the same document, that operation may not
+   enable bidi by itself, but it will not be detected. So, we need to have new
+   document for each test.
+
+   So, instead of many diferent reftests, this mochitest implements a
+   reftest-like. It creates reference text fragments in reference iframe, test
+   text fragments in test iframe, and compare the documents. Then, it reloads
+   test iframe. Reference iframe does not need to be reloaded between tests.
+   It's ok (and maybe, desired) to keep bidi always enabled in that document. 
+*/
+
+SimpleTest.waitForExplicitFinish();
+var refFrame = document.getElementById("iframe-ref")
+var testFrame = document.getElementById("iframe-test");
+
+refFrame.addEventListener("load", function() {
+  testFrame.addEventListener("load", function() {
+    try {
+      tests.next();
+      ok(compareSnapshots(snapshotWindow(testFrame.contentWindow), 
+                          snapshotWindow(refFrame.contentWindow), true)[0], 
+         "bidi is not detected correctly");
+
+      testFrame.contentWindow.location.reload();
+    } catch (err if err instanceof StopIteration) {
+      SimpleTest.finish();
+    }
+  }, false);
+  testFrame.src = "bug682592-subframe.html"
+}, false);
+
+var rtl = "עִבְרִית";
+var non8bit =  "ʃ";
+var is8bit = "a";
+
+// concats aStr aNumber of times
+function strMult(aStr, aNumber) {
+  if (aNumber === 0) {
+    return "";
+  }
+  return strMult(aStr, aNumber - 1) + aStr;
+}
+
+function runTests () {
+  var ltr = "", prefix = null;
+  var refContainer = refFrame.contentDocument.getElementById('content');
+  var testContainer, textNode;
+  var i = 0;
+
+  // 8bit chars + bidi
+  for (i = 0; i <= 16; i++) {
+    ltr = strMult(is8bit, i);
+    refContainer.innerHTML = ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    testContainer.innerHTML = ltr + rtl;
+    yield;
+  }
+
+  // non-8bit char + 8bit chars + bidi
+  for (i = 0; i <= 16; i++) {
+    ltr = non8bit + strMult(is8bit, i);
+    refContainer.innerHTML = ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    testContainer.innerHTML = ltr + rtl;
+    yield;
+  }
+
+  // appendData
+  for (i = 0; i <= 16; i++) {
+    ltr = strMult(is8bit, i);
+    refContainer.innerHTML = ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    textNode = document.createTextNode("");
+    testContainer.appendChild(textNode);
+    textNode.appendData(ltr + rtl);
+    yield;
+  }
+
+  for (i = 0; i <= 16; i++) {
+    ltr = non8bit + strMult(is8bit, i);
+    refContainer.innerHTML = ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    textNode = document.createTextNode("");
+    testContainer.appendChild(textNode);
+    textNode.appendData(ltr + rtl);
+    yield;
+  }
+
+  // appendData with 8bit prefix
+  for (i = 0; i <= 16; i++) {
+    prefix = is8bit;
+    ltr = strMult(is8bit, i);
+    refContainer.innerHTML = prefix + ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    textNode = document.createTextNode(prefix);
+    testContainer.appendChild(textNode);
+    textNode.appendData(ltr + rtl);
+    yield;
+  }
+
+  for (i = 0; i <= 16; i++) {
+    prefix = is8bit;
+    ltr = non8bit + strMult(is8bit, i);
+    refContainer.innerHTML = prefix + ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    textNode = document.createTextNode(prefix);
+    testContainer.appendChild(textNode);
+    textNode.appendData(ltr + rtl);
+    yield;
+  }
+
+  // appendData with non-8bit prefix
+  for (i = 0; i <= 16; i++) {
+    prefix = non8bit;
+    ltr = strMult(is8bit, i);
+    refContainer.innerHTML = prefix + ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    textNode = document.createTextNode(prefix);
+    testContainer.appendChild(textNode);
+    textNode.appendData(ltr + rtl);
+    yield;
+  }
+
+  for (i = 0; i <= 16; i++) {
+    prefix = non8bit;
+    ltr = non8bit + strMult(is8bit, i);
+    refContainer.innerHTML = prefix + ltr + '<bdo dir="rtl">' + rtl + '</bdo>';
+    testContainer = testFrame.contentDocument.getElementById('content');
+    textNode = document.createTextNode(prefix);
+    testContainer.appendChild(textNode);
+    textNode.appendData(ltr + rtl);
+    yield;
+  }
+};
+
+var tests = runTests();
+
+</script>
+</pre>
+</body>
+</html>

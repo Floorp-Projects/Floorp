@@ -104,8 +104,6 @@
 #include "nsIDOMNSEditableElement.h"
 
 #include "nsCaret.h"
-#include "nsILookAndFeel.h"
-#include "nsWidgetsCID.h"
 
 #include "nsSubDocumentFrame.h"
 #include "nsIFrameTraversal.h"
@@ -138,6 +136,7 @@
 #include "nsHTMLLabelElement.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -151,8 +150,6 @@ using namespace mozilla::dom;
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
-
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 static PRBool sLeftClickOnly = PR_TRUE;
 static PRBool sKeyCausesActivation = PR_TRUE;
@@ -2050,9 +2047,10 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     static PRInt32 pixelThresholdY = 0;
 
     if (!pixelThresholdX) {
-      nsILookAndFeel *lf = aPresContext->LookAndFeel();
-      lf->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, pixelThresholdX);
-      lf->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, pixelThresholdY);
+      pixelThresholdX =
+        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 0);
+      pixelThresholdY =
+        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 0);
       if (!pixelThresholdX)
         pixelThresholdX = 5;
       if (!pixelThresholdY)

@@ -254,6 +254,117 @@ body[dir="rtl"] {
   margin: 0;
 }
 
+/* Lightbox for Aurora */
+#lightbox {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  display: none;
+}
+
+#lightbox-background {
+  background-color: #000;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+}
+
+#lightbox-wrapper {
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  position: fixed;
+}
+
+#lightbox-container {
+  max-width: 300px;
+  margin: 40px auto;
+  background: #000 url("images/aurora-lightbox-bg.jpg") center top no-repeat;
+  border-radius: 6px;
+  padding: 26px 0px 0px;
+  border: 1px solid #000;
+  box-shadow: rgba(0, 0, 0, 0.75) 0px 0px 10px 2px;
+  position: relative;
+}
+
+#lightbox-logo {
+  width: 65%;
+  max-width: 195px;
+  display: block;
+  margin: 0px auto;
+}
+
+#lightbox-message {
+  width: 100%;
+  padding: 34px 0px 18px;
+  text-align: center;
+}
+
+#lightbox-message > p,
+#lightbox-button > p {
+  font-family: Georgia;
+  margin: 0px;
+  padding: 0px;
+}
+
+#lightbox-message > p.title ,
+#lightbox-button > p.title {
+  font-size: 24px;
+  line-height: 24px;
+  color: #fff;
+  padding-bottom: 10px;
+}
+
+#lightbox-message > p.message,
+#lightbox-button > p.sub-title {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+#lightbox-message > p.message {
+  color: #c0b5b5;
+}
+
+#lightbox-container a,
+#lightbox-container a:hover,
+#lightbox-container a:visited {
+  outline: 0px;
+  border: 0px;
+  text-decoration: none;
+  display: block;
+}
+
+#lightbox-button {
+  background: -moz-linear-gradient(center top , #84C63C 0%, #489615 100%) repeat scroll 0 0 transparent;
+  margin: 10px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 18px 0px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px, inset rgba(0, 0, 0, 0.1) 0px -3px;
+}
+
+#lightbox-button > p.title,
+#lightbox-button > p.sub-title {
+  text-shadow: rgba(136, 136, 136, 0.39) 0px 0px 0px -1px;
+}
+
+#lightbox-button > p.sub-title {
+  font-style: italic;
+  color: #fff;
+}
+
+#lightbox-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 16px;
+  height: 16px;
+}
+
 @media (max-width: 399px) {
   #support {
     margin-top: 8px;

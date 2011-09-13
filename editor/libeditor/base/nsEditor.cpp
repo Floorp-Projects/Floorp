@@ -1964,7 +1964,7 @@ nsEditor::ForceCompositionEnd()
 // We can test mInIMEMode and do some optimization for Mac and Window
 // Howerver, since UNIX support over-the-spot, we cannot rely on that 
 // flag for Unix.
-// We should use nsILookAndFeel to resolve this
+// We should use LookAndFeel to resolve this
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
   // XXXmnakano see bug 558976, ResetInputState() has two meaning which are

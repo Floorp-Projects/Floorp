@@ -143,7 +143,7 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT_IF(!hasSingletonType() && nativeContains(js_CheckForStringIndex(id)),
+        JS_ASSERT_IF(!hasSingletonType() && nativeContains(cx, js_CheckForStringIndex(id)),
                      js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
@@ -253,7 +253,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
 {
     JS_ASSERT(canHaveMethodBarrier());
     JS_ASSERT(hasMethodBarrier());
-    JS_ASSERT(nativeContains(shape));
+    JS_ASSERT(nativeContains(cx, shape));
     JS_ASSERT(shape.isMethod());
     JS_ASSERT(shape.methodObject() == vp->toObject());
     JS_ASSERT(shape.writable());
@@ -538,112 +538,6 @@ JSObject::denseArrayHasInlineSlots() const
 {
     JS_ASSERT(isDenseArray() && slots);
     return slots == fixedSlots();
-}
-
-inline bool
-JSObject::callIsForEval() const
-{
-    JS_ASSERT(isCall());
-    JS_ASSERT(getFixedSlot(JSSLOT_CALL_CALLEE).isObjectOrNull());
-    JS_ASSERT_IF(getFixedSlot(JSSLOT_CALL_CALLEE).isObject(),
-                 getFixedSlot(JSSLOT_CALL_CALLEE).toObject().isFunction());
-    return getFixedSlot(JSSLOT_CALL_CALLEE).isNull();
-}
-
-inline js::StackFrame *
-JSObject::maybeCallObjStackFrame() const
-{
-    JS_ASSERT(isCall());
-    return reinterpret_cast<js::StackFrame *>(getPrivate());
-}
-
-inline void
-JSObject::setCallObjCallee(JSObject *callee)
-{
-    JS_ASSERT(isCall());
-    JS_ASSERT_IF(callee, callee->isFunction());
-    setFixedSlot(JSSLOT_CALL_CALLEE, js::ObjectOrNullValue(callee));
-}
-
-inline JSObject *
-JSObject::getCallObjCallee() const
-{
-    JS_ASSERT(isCall());
-    return getFixedSlot(JSSLOT_CALL_CALLEE).toObjectOrNull();
-}
-
-inline JSFunction *
-JSObject::getCallObjCalleeFunction() const
-{
-    JS_ASSERT(isCall());
-    return getFixedSlot(JSSLOT_CALL_CALLEE).toObject().getFunctionPrivate();
-}
-
-inline const js::Value &
-JSObject::getCallObjArguments() const
-{
-    JS_ASSERT(isCall());
-    JS_ASSERT(!callIsForEval());
-    return getFixedSlot(JSSLOT_CALL_ARGUMENTS);
-}
-
-inline void
-JSObject::setCallObjArguments(const js::Value &v)
-{
-    JS_ASSERT(isCall());
-    JS_ASSERT(!callIsForEval());
-    setFixedSlot(JSSLOT_CALL_ARGUMENTS, v);
-}
-
-inline const js::Value &
-JSObject::callObjArg(uintN i) const
-{
-    JS_ASSERT(isCall());
-    JS_ASSERT(i < getCallObjCalleeFunction()->nargs);
-    return getSlot(JSObject::CALL_RESERVED_SLOTS + i);
-}
-
-inline void
-JSObject::setCallObjArg(uintN i, const js::Value &v)
-{
-    JS_ASSERT(isCall());
-    JS_ASSERT(i < getCallObjCalleeFunction()->nargs);
-    setSlot(JSObject::CALL_RESERVED_SLOTS + i, v);
-}
-
-inline js::Value *
-JSObject::callObjArgArray()
-{
-    js::DebugOnly<JSFunction*> fun = getCallObjCalleeFunction();
-    JS_ASSERT(hasContiguousSlots(JSObject::CALL_RESERVED_SLOTS, fun->nargs));
-    return getSlotAddress(JSObject::CALL_RESERVED_SLOTS);
-}
-
-inline const js::Value &
-JSObject::callObjVar(uintN i) const
-{
-    JSFunction *fun = getCallObjCalleeFunction();
-    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
-    JS_ASSERT(i < fun->script()->bindings.countVars());
-    return getSlot(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i);
-}
-
-inline void
-JSObject::setCallObjVar(uintN i, const js::Value &v)
-{
-    JSFunction *fun = getCallObjCalleeFunction();
-    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
-    JS_ASSERT(i < fun->script()->bindings.countVars());
-    setSlot(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i, v);
-}
-
-inline js::Value *
-JSObject::callObjVarArray()
-{
-    JSFunction *fun = getCallObjCalleeFunction();
-    JS_ASSERT(hasContiguousSlots(JSObject::CALL_RESERVED_SLOTS + fun->nargs,
-                                 fun->script()->bindings.countVars()));
-    return getSlotAddress(JSObject::CALL_RESERVED_SLOTS + fun->nargs);
 }
 
 namespace js {
@@ -1113,28 +1007,28 @@ JSObject::setOwnShape(uint32 s)
 }
 
 inline js::Shape **
-JSObject::nativeSearch(jsid id, bool adding)
+JSObject::nativeSearch(JSContext *cx, jsid id, bool adding)
 {
-    return js::Shape::search(compartment()->rt, &lastProp, id, adding);
+    return js::Shape::search(cx, &lastProp, id, adding);
 }
 
 inline const js::Shape *
-JSObject::nativeLookup(jsid id)
+JSObject::nativeLookup(JSContext *cx, jsid id)
 {
     JS_ASSERT(isNative());
-    return SHAPE_FETCH(nativeSearch(id));
+    return SHAPE_FETCH(nativeSearch(cx, id));
 }
 
 inline bool
-JSObject::nativeContains(jsid id)
+JSObject::nativeContains(JSContext *cx, jsid id)
 {
-    return nativeLookup(id) != NULL;
+    return nativeLookup(cx, id) != NULL;
 }
 
 inline bool
-JSObject::nativeContains(const js::Shape &shape)
+JSObject::nativeContains(JSContext *cx, const js::Shape &shape)
 {
-    return nativeLookup(shape.propid) == &shape;
+    return nativeLookup(cx, shape.propid) == &shape;
 }
 
 inline const js::Shape *
@@ -1673,7 +1567,12 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
     JS_ASSERT(baseobj->getClass() == &ObjectClass);
     JS_ASSERT(!baseobj->inDictionaryMode());
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, baseobj->getAllocKind());
+    gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
+#ifdef JS_THREADSAFE
+    kind = gc::GetBackgroundAllocKind(kind);
+#endif
+    JS_ASSERT(kind == baseobj->getAllocKind());
+    JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
 
     if (!obj || !obj->ensureSlots(cx, baseobj->numSlots()))
         return NULL;
@@ -1695,7 +1594,7 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     JS_ASSERT(proto);
 
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
-    JS_ASSERT(!global->nativeLookup(id));
+    JS_ASSERT(!global->nativeLookup(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));
