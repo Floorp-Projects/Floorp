@@ -1058,9 +1058,6 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
   nsIContent *rootNode = GetRootNode();
 
-  nsresult rv = InitializeRootNode();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsIPresShell *shell = mBoundFrame->PresContext()->GetPresShell();
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
@@ -1548,17 +1545,6 @@ nsTextEditorState::CreateRootNode()
                                   NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsSingleLineTextControl()) {
-    mMutationObserver = new nsAnonDivObserver(this);
-    mRootNode->AddMutationObserver(mMutationObserver);
-  }
-
-  return rv;
-}
-
-nsresult
-nsTextEditorState::InitializeRootNode()
-{
   // Set the necessary classes on the text control. We use class values
   // instead of a 'style' attribute so that the style comes from a user-agent
   // style sheet and is still applied even if author styles are disabled.
@@ -1578,12 +1564,19 @@ nsTextEditorState::InitializeRootNode()
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
       classValue.AppendLiteral(" inherit-overflow");
     }
+
+    mMutationObserver = new nsAnonDivObserver(this);
+    NS_ENSURE_TRUE(mMutationObserver, NS_ERROR_OUT_OF_MEMORY);
+    mRootNode->AddMutationObserver(mMutationObserver);
   }
-  nsresult rv = mRootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                   classValue, PR_FALSE);
+  rv = mRootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                          classValue, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mBoundFrame->UpdateValueDisplay(PR_FALSE);
+  rv = mBoundFrame->UpdateValueDisplay(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
 }
 
 nsresult
