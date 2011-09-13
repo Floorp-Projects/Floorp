@@ -3117,7 +3117,7 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
     JS_ASSERT(ctor->isFunction());
     JS_ASSERT(ctor->getFunctionPrivate()->isInterpreted());
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    const Shape *shape = ctor->nativeLookup(id);
+    const Shape *shape = ctor->nativeLookup(cx, id);
     JS_ASSERT(shape->slot == protoSlot);
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(!shape->isMethod());
@@ -4115,7 +4115,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
         if (!obj->ensureClassReservedSlots(cx))
             return false;
 
-        const Shape *shape = obj->nativeLookup(id);
+        const Shape *shape = obj->nativeLookup(cx, id);
         if (!shape) {
             uint32 slot = 2 * JSProto_LIMIT + key;
             if (!js_SetReservedSlot(cx, obj, slot, v))
@@ -4965,7 +4965,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
             obj = obj->getProto();
             continue;
         }
-        shape = obj->nativeLookup(id);
+        shape = obj->nativeLookup(cx, id);
         if (shape) {
             PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             obj->shadowingShapeChange(cx, *shape);
@@ -5204,7 +5204,7 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
             }
         }
 
-        if (const Shape *existingShape = obj->nativeLookup(id)) {
+        if (const Shape *existingShape = obj->nativeLookup(cx, id)) {
             if (existingShape->hasSlot())
                 AbortRecordingIfUnexpectedGlobalWrite(cx, obj, existingShape->slot);
 
@@ -5356,7 +5356,7 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
     }
 
     if (!obj->nativeEmpty()) {
-        if (const Shape *shape = obj->nativeLookup(id)) {
+        if (const Shape *shape = obj->nativeLookup(cx, id)) {
             *objp = obj;
             *propp = (JSProperty *) shape;
         }
@@ -5375,7 +5375,7 @@ LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags
     /* Search scopes starting with obj and following the prototype link. */
     JSObject *start = obj;
     while (true) {
-        const Shape *shape = obj->nativeLookup(id);
+        const Shape *shape = obj->nativeLookup(cx, id);
         if (shape) {
             *objp = obj;
             *propp = (JSProperty *) shape;
@@ -5670,7 +5670,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
 
     if (pobj->containsSlot(slot) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
-         pobj->nativeContains(*shape))) {
+         pobj->nativeContains(cx, *shape))) {
         if (!pobj->methodWriteBarrier(cx, *shape, *vp))
             return false;
         pobj->nativeSetSlot(slot, *vp);
@@ -5737,7 +5737,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
 
     if (obj->containsSlot(slot) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
-         obj->nativeContains(*shape))) {
+         obj->nativeContains(cx, *shape))) {
         if (!added) {
             AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
             if (!obj->methodWriteBarrier(cx, *shape, *vp))
@@ -6348,9 +6348,9 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 namespace js {
 
 bool
-HasDataProperty(JSObject *obj, jsid methodid, Value *vp)
+HasDataProperty(JSContext *cx, JSObject *obj, jsid methodid, Value *vp)
 {
-    if (const Shape *shape = obj->nativeLookup(methodid)) {
+    if (const Shape *shape = obj->nativeLookup(cx, methodid)) {
         if (shape->hasDefaultGetterOrIsMethod() && obj->containsSlot(shape->slot)) {
             *vp = obj->nativeGetSlot(shape->slot);
             return true;
