@@ -32,8 +32,11 @@
       this.link = getAccessible(this.linkNode);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode),
-        new asyncInvokerChecker(EVENT_REORDER, this.linkNode.parentNode)
+        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.linkNode.parentNode)
       ];
 
       this.invoke = function focusAnchor_invoke()
@@ -43,8 +46,8 @@
 
       this.check = function focusAnchor_check(aEvent)
       {
-        todo_is(this.link, aEvent.accessible,
-                "Focus should be fired against new link accessible!");
+        is(this.link, aEvent.accessible,
+           "The link accessible shouldn't be recreated!");
       }
 
       this.getID = function focusAnchor_getID()
@@ -59,8 +62,11 @@
       this.link = getAccessible(this.linkNode);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode),
-        new asyncInvokerChecker(EVENT_REORDER, this.linkNode.parentNode)
+        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.linkNode.parentNode)
       ];
 
       this.invoke = function tabAnchor_invoke()
@@ -70,8 +76,8 @@
 
       this.check = function tabAnchor_check(aEvent)
       {
-        todo_isnot(this.link, aEvent.accessible,
-                   "Focus should be fired against new link accessible!");
+        is(this.link, aEvent.accessible,
+           "The link accessible shouldn't be recreated!");
       }
 
       this.getID = function tabAnchor_getID()
@@ -120,9 +126,9 @@
     Mozilla Bug 570275
   </a><br>
   <a target="_blank"
-     title="Text control frames should accept dynamic changes to the CSS overflow property"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=686247">
-    Mozilla Bug 686247
+     title="Don't recreate frames for inlines with overflow style applied"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606087">
+    Mozilla Bug 606087
   </a><br>
 
   <p id="display"></p>
