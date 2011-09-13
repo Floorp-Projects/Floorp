@@ -35,6 +35,10 @@
         new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
       ];
 
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.linkNode.parentNode)
+      ];
+
       this.invoke = function focusAnchor_invoke()
       {
         this.linkNode.focus();
@@ -42,9 +46,8 @@
 
       this.check = function focusAnchor_check(aEvent)
       {
-        todo_is(this.link, aEvent.accessible,
-                "Focus should be fired against new link accessible!");
-        todo(false, "Doubled reorder events!");
+        is(this.link, aEvent.accessible,
+           "The link accessible shouldn't be recreated!");
       }
 
       this.getID = function focusAnchor_getID()
@@ -62,6 +65,10 @@
         new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
       ];
 
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.linkNode.parentNode)
+      ];
+
       this.invoke = function tabAnchor_invoke()
       {
         synthesizeKey("VK_TAB", { shiftKey: false });
@@ -69,9 +76,8 @@
 
       this.check = function tabAnchor_check(aEvent)
       {
-        todo_isnot(this.link, aEvent.accessible,
-                   "Focus should be fired against new link accessible!");
-        todo(false, "Doubled reorder events!");
+        is(this.link, aEvent.accessible,
+           "The link accessible shouldn't be recreated!");
       }
 
       this.getID = function tabAnchor_getID()
@@ -120,9 +126,9 @@
     Mozilla Bug 570275
   </a><br>
   <a target="_blank"
-     title="Text control frames should accept dynamic changes to the CSS overflow property"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=686247">
-    Mozilla Bug 686247
+     title="Don't recreate frames for inlines with overflow style applied"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606087">
+    Mozilla Bug 606087
   </a><br>
 
   <p id="display"></p>
