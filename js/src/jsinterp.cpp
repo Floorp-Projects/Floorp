@@ -6173,7 +6173,7 @@ END_CASE(JSOP_ARRAYPUSH)
      * When a trap handler returns JSTRAP_RETURN, we jump here with
      * interpReturnOK set to true bypassing any finally blocks.
      */
-    interpReturnOK &= UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
+    interpReturnOK &= (JSBool)UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
     JS_ASSERT(regs.sp == regs.fp()->base());
 
     if (entryFrame != regs.fp())
