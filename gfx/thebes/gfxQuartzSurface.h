@@ -75,6 +75,8 @@ public:
     }
 
 protected:
+    void MakeInvalid();
+
     CGContextRef mCGContext;
     gfxSize      mSize;
     bool mForPrinting;
