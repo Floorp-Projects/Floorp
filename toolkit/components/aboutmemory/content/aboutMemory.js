@@ -144,6 +144,9 @@ function $(n)
 function doGlobalGC()
 {
   Cu.forceGC();
+  var os = Cc["@mozilla.org/observer-service;1"]
+            .getService(Ci.nsIObserverService);
+  os.notifyObservers(null, "child-gc-request", null);
   update();
 }
 
@@ -152,6 +155,9 @@ function doCC()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
+  var os = Cc["@mozilla.org/observer-service;1"]
+            .getService(Ci.nsIObserverService);
+  os.notifyObservers(null, "child-cc-request", null);
   update();
 }
 
