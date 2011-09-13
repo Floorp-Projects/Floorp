@@ -238,6 +238,8 @@ nsHttpHandler::Init()
     if (NS_FAILED(rv))
         return rv;
 
+    nsHttp::CreateMethodAtoms();
+
     mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("unable to continue without io service");

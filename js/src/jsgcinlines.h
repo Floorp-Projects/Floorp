@@ -143,6 +143,15 @@ GetGCObjectKind(size_t numSlots, bool isArray = false)
     return slotsToThingKind[numSlots];
 }
 
+static inline AllocKind
+GetGCObjectFixedSlotsKind(size_t numFixedSlots)
+{
+    extern AllocKind slotsToThingKind[];
+
+    JS_ASSERT(numFixedSlots < SLOTS_TO_THING_KIND_LIMIT);
+    return slotsToThingKind[numFixedSlots];
+}
+
 static inline bool
 IsBackgroundAllocKind(AllocKind kind)
 {

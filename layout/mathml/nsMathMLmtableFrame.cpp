@@ -458,8 +458,8 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
   // mtable is simple and only has one (pseudo) row-group inside our inner-table
   nsIFrame* tableFrame = mFrames.FirstChild();
-  if (!tableFrame || tableFrame->GetType() != nsGkAtoms::tableFrame)
-    return NS_OK;
+  NS_ASSERTION(tableFrame && tableFrame->GetType() == nsGkAtoms::tableFrame,
+               "should always have an inner table frame");
   nsIFrame* rgFrame = tableFrame->GetFirstPrincipalChild();
   if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
     return NS_OK;
@@ -548,8 +548,8 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
   // if our inner table says that the index is valid, find the row now
   if (0 <= aRowIndex && aRowIndex <= rowCount) {
     nsIFrame* tableFrame = mFrames.FirstChild();
-    if (!tableFrame || tableFrame->GetType() != nsGkAtoms::tableFrame)
-      return nsnull;
+    NS_ASSERTION(tableFrame && tableFrame->GetType() == nsGkAtoms::tableFrame,
+                 "should always have an inner table frame");
     nsIFrame* rgFrame = tableFrame->GetFirstPrincipalChild();
     if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
       return nsnull;
