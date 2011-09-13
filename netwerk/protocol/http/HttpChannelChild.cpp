@@ -1072,7 +1072,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
                 IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
-                mRequestHeaders, mRequestHead.Method(),
+                mRequestHeaders, nsAtomCString(mRequestHead.Method()),
                 IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
                 mPriority, mRedirectionLimit, mAllowPipelining,
                 mForceAllowThirdPartyCookie, mSendResumeAt,
