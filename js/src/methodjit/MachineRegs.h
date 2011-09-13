@@ -130,11 +130,13 @@ struct Registers {
     static const RegisterID ArgReg1 = JSC::X86Registers::edx;
 #  if defined(JS_CPU_X64)
     static const RegisterID ArgReg2 = JSC::X86Registers::r8;
+    static const RegisterID ArgReg3 = JSC::X86Registers::r9;
 #  endif
 # else
     static const RegisterID ArgReg0 = JSC::X86Registers::edi;
     static const RegisterID ArgReg1 = JSC::X86Registers::esi;
     static const RegisterID ArgReg2 = JSC::X86Registers::edx;
+    static const RegisterID ArgReg3 = JSC::X86Registers::ecx;
 # endif
 #elif JS_CPU_ARM
     static const RegisterID ReturnReg = JSC::ARMRegisters::r0;
@@ -427,7 +429,7 @@ struct Registers {
         regs.takeReg(ArgReg0);
         regs.takeReg(ArgReg1);
         regs.takeReg(ArgReg2);
-#ifdef JS_CPU_SPARC
+#if defined(JS_CPU_SPARC) || defined(JS_CPU_X64)
         regs.takeReg(ArgReg3);
 #endif
 #endif
