@@ -57,6 +57,7 @@
 #include "nsMIMEHeaderParamImpl.h"
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsNetError.h"
 
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp
   
@@ -181,7 +182,8 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
       for (; *str && *str != ';' && !nsCRT::IsAsciiSpace(*str); ++str)
         ;
       if (str == start)
-        return NS_ERROR_UNEXPECTED;
+        return NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY;
+
       *aResult = (char *) nsMemory::Clone(start, (str - start) + 1);
       NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
       (*aResult)[str - start] = '\0';  // null-terminate

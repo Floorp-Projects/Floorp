@@ -989,7 +989,9 @@ public:
 
     void imull_i32r(RegisterID src, int32_t value, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "imull      %d, %s, %s\n",
+                       MAYBE_PAD, value, nameIReg(4, src), nameIReg(4, dst));
         m_formatter.oneByteOp(OP_IMUL_GvEvIz, dst, src);
         m_formatter.immediate32(value);
     }
