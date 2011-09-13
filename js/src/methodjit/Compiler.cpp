@@ -6790,7 +6790,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         jsbytecode* pc = PC;
         PC = target;
 
-        OOL_STUBCALL(stubs::InvokeTracer, REJOIN_FINISH_FRAME);
+        OOL_STUBCALL(stubs::InvokeTracer, REJOIN_RUN_TRACER);
 
         PC = pc;
     }

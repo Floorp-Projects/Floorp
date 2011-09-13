@@ -319,8 +319,8 @@ enum RejoinState {
      */
     REJOIN_BRANCH,
 
-    /* Calls to RunTracer which finished the given frame. */
-    REJOIN_FINISH_FRAME
+    /* Calls to RunTracer which either finished the frame or did nothing. */
+    REJOIN_RUN_TRACER
 };
 
 /* Helper to watch for recompilation and frame expansion activity on a compartment. */
@@ -463,6 +463,9 @@ class JaegerCompartment {
      */
     Vector<StackFrame *, 8, SystemAllocPolicy> orphanedNativeFrames;
     Vector<JSC::ExecutablePool *, 8, SystemAllocPolicy> orphanedNativePools;
+
+    /* Whether frames pushed after bailing out in RunTracer are unwinding. */
+    bool finishingTracer;
 };
 
 /*

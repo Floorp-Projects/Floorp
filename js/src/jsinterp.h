@@ -235,10 +235,9 @@ enum InterpMode
 {
     JSINTERP_NORMAL    = 0, /* interpreter is running normally */
     JSINTERP_RECORD    = 1, /* interpreter has been started to record/run traces */
-    JSINTERP_SAFEPOINT = 2, /* interpreter should leave on a method JIT safe point */
-    JSINTERP_PROFILE   = 3, /* interpreter should profile a loop */
-    JSINTERP_REJOIN    = 4, /* as normal, but the frame has already started */
-    JSINTERP_SKIP_TRAP = 5  /* as REJOIN, but skip trap at first opcode */
+    JSINTERP_PROFILE   = 2, /* interpreter should profile a loop */
+    JSINTERP_REJOIN    = 3, /* as normal, but the frame has already started */
+    JSINTERP_SKIP_TRAP = 4  /* as REJOIN, but skip trap at first opcode */
 };
 
 /*
