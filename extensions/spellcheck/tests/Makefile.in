@@ -39,60 +39,10 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = extensions/spellcheck/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-DIRS            += tests
-endif
-
-MODULE		= editor
-LIBRARY_NAME	= editorbase_s
-LIBXUL_LIBRARY	= 1
-
-
-# Internal header files, needed by other editor sublibs:
-INTERNAL_HDR_DIR = ../internal
-
-CPPSRCS		=                           \
-		nsEditor.cpp                \
-		nsEditorCommands.cpp        \
-		nsEditorController.cpp      \
-		nsEditorEventListener.cpp   \
-		nsEditorUtils.cpp           \
-		nsSelectionState.cpp        \
-		$(NULL)
-
-# Transactions: we'd like to split these off,
-# but currently they and nsEditor are too intertwined!
-CPPSRCS		+=                          \
-		EditTxn.cpp                 \
-		PlaceholderTxn.cpp          \
-		ChangeAttributeTxn.cpp      \
-		ChangeCSSInlineStyleTxn.cpp \
-		CreateElementTxn.cpp        \
-		DeleteElementTxn.cpp        \
-		DeleteRangeTxn.cpp          \
-		DeleteTextTxn.cpp           \
-		EditAggregateTxn.cpp        \
-		IMETextTxn.cpp              \
-		InsertElementTxn.cpp        \
-		InsertTextTxn.cpp           \
-		JoinElementTxn.cpp          \
-		SetDocTitleTxn.cpp          \
-		SplitElementTxn.cpp         \
-		nsStyleSheetTxns.cpp        \
-		$(NULL)
-
-# don't want the shared lib; force the creation of a static lib.
-FORCE_STATIC_LIB = 1
+DIRS		= chrome
 
 include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= \
-		-I$(topsrcdir)/editor/libeditor/text \
-		-I$(topsrcdir)/content/base/src \
-		-I$(topsrcdir)/content/events/src \
-		-I$(topsrcdir)/layout/style \
-		-I$(topsrcdir)/extensions/spellcheck/src \
-		$(NULL)
