@@ -85,7 +85,8 @@ abstract public class GeckoApp
     private BroadcastReceiver mConnectivityReceiver;
     private PhoneStateListener mPhoneStateListener;
 
-    enum LaunchState {PreLaunch, Launching, Launched, GeckoRunning, GeckoExiting};
+    enum LaunchState {PreLaunch, Launching, WaitButton,
+                      Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.PreLaunch;
     private static boolean sTryCatchAttached = false;
 
@@ -300,42 +301,43 @@ abstract public class GeckoApp
             return;
         }
         final String action = intent.getAction();
+        if (ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitButton)) {
+            final Button launchButton = new Button(this);
+            launchButton.setText("Launch"); // don't need to localize
+            launchButton.setOnClickListener(new Button.OnClickListener() {
+                public void onClick (View v) {
+                    // hide the button so we can't be launched again
+                    mainLayout.removeView(launchButton);
+                    setLaunchState(LaunchState.Launching);
+                    launch(null);
+                }
+            });
+            mainLayout.addView(launchButton, 300, 200);
+            return;
+        }
+        if (checkLaunchState(LaunchState.WaitButton) || launch(intent))
+            return;
 
         if (Intent.ACTION_MAIN.equals(action)) {
             Log.i(LOG_FILE_NAME, "Intent : ACTION_MAIN");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
-            return;
         }
-        
-        if (Intent.ACTION_VIEW.equals(action)) {
+        else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i(LOG_FILE_NAME,"onNewIntent: "+uri);
-            return;
         }
-        
-        if (ACTION_WEBAPP.equals(action)) {
+        else if (ACTION_WEBAPP.equals(action)) {
             String uri = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i(LOG_FILE_NAME,"Intent : WEBAPP - " + uri);
-            return;
         }
-        
-        if (ACTION_BOOKMARK.equals(action)) {
+        else if (ACTION_BOOKMARK.equals(action)) {
             String args = intent.getStringExtra("args");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(args));
             Log.i(LOG_FILE_NAME,"Intent : BOOKMARK - " + args);
-            return;
         }
-
-        if (ACTION_DEBUG.equals(action)) {
-            // Wait for 5 seconds until the debugger can attach.
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {}
-        }
-
-        launch(intent);
     }
 
     @Override
