@@ -894,7 +894,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 
     JaegerStatus status = cx->compartment->jaegerCompartment()->lastUnfinished();
     if (status) {
-        if (partial) {
+        if (partial || status == Jaeger_Returned) {
             /*
              * Being called from the interpreter, which will resume execution
              * where the JIT left off.
