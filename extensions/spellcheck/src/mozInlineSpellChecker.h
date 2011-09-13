@@ -229,8 +229,10 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMEventListener)
 
-  // returns true if it looks likely that we can enable real-time spell checking
+  // returns true if there are any spell checking dictionaries available
   static PRBool CanEnableInlineSpellChecking();
+  // update the cached value whenever the list of available dictionaries changes
+  static void UpdateCanEnableInlineSpellChecking();
 
   nsresult Blur(nsIDOMEvent* aEvent);
   nsresult MouseClick(nsIDOMEvent* aMouseEvent);
