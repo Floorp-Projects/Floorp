@@ -73,6 +73,7 @@ _TEST_FILES = \
 		file_bug549262.html \
 		test_bug550434.html \
 		test_bug551704.html \
+		test_bug570144.html \
 		test_bug592592.html \
 		test_bug597784.html \
 		test_bug599322.html \

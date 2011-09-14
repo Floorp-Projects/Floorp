@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=570144
+-->
+<head>
+  <title>Test for Bug 570144</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=570144">Mozilla Bug 570144</a>
+<p id="display"></p>
+<div id="content">
+  <!-- editable paragraphs in list item -->
+  <section id="test1">
+    <ol>
+      <li><p contenteditable>foo</p></li>
+    </ol>
+    <ul>
+      <li><p contenteditable>foo</p></li>
+    </ul>
+    <dl>
+      <dt>foo</dt>
+      <dd><p contenteditable>bar</p></dd>
+    </dl>
+  </section>
+  <!-- paragraphs in editable list item -->
+  <section id="test2">
+    <ol>
+      <li contenteditable><p>foo</p></li>
+    </ol>
+    <ul>
+      <li contenteditable><p>foo</p></li>
+    </ul>
+    <dl>
+      <dt>foo</dt>
+      <dd contenteditable><p>bar</p></dd>
+    </dl>
+  </section>
+  <!-- paragraphs in editable list -->
+  <section id="test3">
+    <ol contenteditable>
+      <li><p>foo</p></li>
+    </ol>
+    <ul contenteditable>
+      <li><p>foo</p></li>
+    </ul>
+    <dl contenteditable>
+      <dt>foo</dt>
+      <dd><p>bar</p></dd>
+    </dl>
+  </section>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 570144 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function try2split(list) {
+  var editor = list.hasAttribute("contenteditable")
+             ? list : list.querySelector("*[contenteditable]");
+  editor.focus();
+  // put the caret at the end of the paragraph
+  var selection = window.getSelection();
+  if (editor.nodeName.toLowerCase() == "p")
+    selection.selectAllChildren(editor);
+  else
+    selection.selectAllChildren(editor.querySelector("p"));
+  selection.collapseToEnd();
+  // simulate a [Return] keypress
+  synthesizeKey("VK_RETURN", {});
+}
+
+function testSection(element, context, shouldCreateLI, shouldCreateP) {
+  var nbLI = shouldCreateLI ? 2 : 1; // number of expected list items
+  var nbP  = shouldCreateP  ? 2 : 1; // number of expected paragraphs
+
+  function message(nodeName, dup) {
+    return context + ":[Return] should " + (dup ? "" : "not ")
+                   + "create another <" + nodeName + ">."
+  }
+  var msgP  = message("p",  shouldCreateP);
+  var msgLI = message("li", shouldCreateLI);
+  var msgDT = message("dt", shouldCreateLI);
+  var msgDD = message("dd", false);
+
+  const ol = element.querySelector("ol");
+  try2split(ol);
+  is(ol.querySelectorAll("li").length, nbLI, msgLI);
+  is(ol.querySelectorAll("p").length, nbP, msgP);
+
+  const ul = element.querySelector("ul");
+  try2split(ul);
+  is(ul.querySelectorAll("li").length, nbLI, msgLI);
+  is(ul.querySelectorAll("p").length, nbP, msgP);
+
+  const dl = element.querySelector("dl");
+  try2split(dl);
+  is(dl.querySelectorAll("dt").length, nbLI, msgDT);
+  is(dl.querySelectorAll("dd").length, 1, msgDD);
+  is(dl.querySelectorAll("p").length, nbP, msgP);
+}
+
+function runTests() {
+  testSection(document.getElementById("test1"), "editable paragraph in list item", false, false);
+  testSection(document.getElementById("test2"), "paragraph in editable list item", false, true);
+  testSection(document.getElementById("test3"), "paragraph in editable list",      true,  false);
+  /* Note: concerning #test3, it would be preferrable that [Return] creates
+   * another paragraph in another list item (i.e. last argument = 'true').
+   * Currently it just creates an empty list item, which is acceptable.
+   */
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
