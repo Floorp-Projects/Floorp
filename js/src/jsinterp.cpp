@@ -3066,29 +3066,11 @@ BEGIN_CASE(JSOP_DIV)
     if (!ToNumber(cx, lval, &d1) || !ToNumber(cx, rval, &d2))
         goto error;
     regs.sp--;
-    if (d2 == 0) {
-        const Value *vp;
-#ifdef XP_WIN
-        /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (JSDOUBLE_IS_NaN(d2))
-            vp = &rt->NaNValue;
-        else
-#endif
-        if (d1 == 0 || JSDOUBLE_IS_NaN(d1))
-            vp = &rt->NaNValue;
-        else if (JSDOUBLE_IS_NEG(d1) != JSDOUBLE_IS_NEG(d2))
-            vp = &rt->negativeInfinityValue;
-        else
-            vp = &rt->positiveInfinityValue;
-        regs.sp[-1] = *vp;
+
+    regs.sp[-1].setNumber(NumberDiv(d1, d2));
+
+    if (d2 == 0 || (regs.sp[-1].isDouble() && !(lval.isDouble() || rval.isDouble())))
         TypeScript::MonitorOverflow(cx, script, regs.pc);
-    } else {
-        d1 /= d2;
-        if (!regs.sp[-1].setNumber(d1) &&
-            !(lval.isDouble() || rval.isDouble())) {
-            TypeScript::MonitorOverflow(cx, script, regs.pc);
-        }
-    }
 }
 END_CASE(JSOP_DIV)
 
