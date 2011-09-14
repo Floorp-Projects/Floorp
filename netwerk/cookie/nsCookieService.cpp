@@ -1493,11 +1493,11 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
 }
 
 void
-nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
-                                         bool             aIsForeign,
-                                         const nsCString &aCookieHeader,
-                                         const nsCString &aServerTime,
-                                         PRBool           aFromHttp) 
+nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
+                                         bool                aIsForeign,
+                                         nsDependentCString &aCookieHeader,
+                                         const nsCString    &aServerTime,
+                                         PRBool              aFromHttp)
 {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -1550,9 +1550,8 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   }
 
   // process each cookie in the header
-  nsDependentCString cookieHeader(aCookieHeader);
-  while (SetCookieInternal(aHostURI, baseDomain, requireHostMatch,
-                           cookieStatus, cookieHeader, serverTime, aFromHttp)) {
+  while (SetCookieInternal(aHostURI, baseDomain, requireHostMatch, cookieStatus,
+                           aCookieHeader, serverTime, aFromHttp)) {
     // document.cookie can only set one cookie at a time
     if (!aFromHttp)
       break;
