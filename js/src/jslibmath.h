@@ -42,9 +42,7 @@
 #define _LIBMATH_H
 
 #include <math.h>
-#ifdef XP_WIN
-# include "jsnum.h"
-#endif
+#include "jsnum.h"
 
 /*
  * Use system provided math routines.
@@ -86,6 +84,28 @@ js_fmod(double d, double d2)
     }
 #endif
     return fmod(d, d2);
+}
+
+namespace js {
+
+inline double
+NumberDiv(double a, double b) {
+    if (b == 0) {
+        if (a == 0 || JSDOUBLE_IS_NaN(a) 
+#ifdef XP_WIN
+            || JSDOUBLE_IS_NaN(a) /* XXX MSVC miscompiles such that (NaN == 0) */
+#endif
+        )
+            return js_NaN;    
+        else if (JSDOUBLE_IS_NEG(a) != JSDOUBLE_IS_NEG(b))
+            return js_NegativeInfinity;
+        else
+            return js_PositiveInfinity; 
+    }
+
+    return a / b;
+}
+
 }
 
 #endif /* _LIBMATH_H */
