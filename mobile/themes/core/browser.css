@@ -1485,7 +1485,7 @@ setting {
   margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
 }
 
-#appmenu-overflow-appcommands > .appmenu-button {
+#appmenu-overflow-commands > .appmenu-button {
   color: #000;
   background: transparent;
   font-size: @font_normal@ !important;
@@ -1495,7 +1495,7 @@ setting {
   -moz-box-align: center;
 }
 
-#appmenu-overflow-appcommands > .appmenu-button:hover:active {
+#appmenu-overflow-commands > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
 }
