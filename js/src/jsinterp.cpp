@@ -3755,9 +3755,9 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 {
 #ifdef DEBUG
                     if (entry->directHit()) {
-                        JS_ASSERT(obj->nativeContains(*shape));
+                        JS_ASSERT(obj->nativeContains(cx, *shape));
                     } else {
-                        JS_ASSERT(obj2->nativeContains(*shape));
+                        JS_ASSERT(obj2->nativeContains(cx, *shape));
                         JS_ASSERT(entry->vcapTag() == 1);
                         JS_ASSERT(entry->kshape != entry->vshape());
                         JS_ASSERT(!shape->hasSlot());
@@ -6173,7 +6173,7 @@ END_CASE(JSOP_ARRAYPUSH)
      * When a trap handler returns JSTRAP_RETURN, we jump here with
      * interpReturnOK set to true bypassing any finally blocks.
      */
-    interpReturnOK &= UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
+    interpReturnOK &= (JSBool)UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
     JS_ASSERT(regs.sp == regs.fp()->base());
 
     if (entryFrame != regs.fp())

@@ -31,7 +31,7 @@
 }
 
 #tabs-container[tablet] {
-  -moz-border-end: 0px;
+  -moz-border-end: @border_width_xxlarge@ solid #eaeaea;
   background: #000;
 }
 
