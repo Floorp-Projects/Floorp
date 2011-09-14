@@ -37,6 +37,7 @@
 %define padding_xsmall 0.21mozmm
 %define padding_tiny 0.11mozmm
 
+%define border_width_xxlarge 0.64mozmm
 %define border_width_xlarge 0.42mozmm
 %define border_width_large 0.32mozmm
 %define border_width_small 0.21mozmm
