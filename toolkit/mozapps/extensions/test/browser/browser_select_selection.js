@@ -17,27 +17,27 @@ const SYSTEM = AddonManager.SCOPE_SYSTEM;
 // of the application ran with this add-on.
 var ADDONS = [
   //userDisabled   wasAppDisabled isAppDisabled  isActive  hasUpdate  autoUpdate  scope    defaultKeep  position  keepString           disableString
-  [false,          true,          false,         false,    false,     true,       PROFILE, true,        72,       "enabled",           ""],               // 0
-  [false,          true,          false,         false,    true,      true,       PROFILE, true,        73,       "enabled",           ""],               // 1
-  [false,          true,          false,         false,    true,      false,      PROFILE, true,        82,       "unneededupdate",    ""],               // 2
-  [false,          false,         false,         true,     false,     true,       PROFILE, true,        83,       "",                  "disabled"],       // 3
-  [false,          false,         false,         true,     true,      true,       PROFILE, true,        84,       "",                  "disabled"],       // 4
-  [false,          false,         false,         true,     true,      false,      PROFILE, true,        85,       "unneededupdate",    "disabled"],       // 5
-  [false,          true,          true,          false,    false,     true,       PROFILE, true,        86,       "incompatible",      ""],               // 6
-  [false,          true,          true,          false,    true,      true,       PROFILE, true,        87,       "autoupdate",        ""],               // 7
-  [false,          true,          true,          false,    true,      false,      PROFILE, true,        88,       "neededupdate",      ""],               // 8
-  [false,          false,         true,          true,     false,     true,       PROFILE, true,        89,       "incompatible",      "disabled"],       // 9
-  [false,          true,          true,          true,     true,      true,       PROFILE, true,        74,       "autoupdate",        "disabled"],       // 10
-  [false,          true,          true,          true,     true,      false,      PROFILE, true,        75,       "neededupdate",      "disabled"],       // 11
-  [true,           false,         false,         false,    false,     true,       PROFILE, false,       76,       "enabled",           ""],               // 12
-  [true,           false,         false,         false,    true,      true,       PROFILE, false,       77,       "enabled",           ""],               // 13
-  [true,           false,         false,         false,    true,      false,      PROFILE, false,       78,       "unneededupdate",    ""],               // 14
+  [false,          true,          false,         false,    false,     true,       PROFILE, true,        38,      "enabled",           ""],               // 0
+  [false,          true,          false,         false,    true,      true,       PROFILE, true,        39,       "enabled",           ""],               // 1
+  [false,          true,          false,         false,    true,      false,      PROFILE, true,        48,       "unneededupdate",    ""],               // 2
+  [false,          false,         false,         true,     false,     true,       PROFILE, true,        53,       "",                  "disabled"],       // 3
+  [false,          false,         false,         true,     true,      true,       PROFILE, true,        54,       "",                  "disabled"],       // 4
+  [false,          false,         false,         true,     true,      false,      PROFILE, true,        55,       "unneededupdate",    "disabled"],       // 5
+  [false,          true,          true,          false,    false,     true,       PROFILE, true,        56,       "incompatible",      ""],               // 6
+  [false,          true,          true,          false,    true,      true,       PROFILE, true,        57,       "autoupdate",        ""],               // 7
+  [false,          true,          true,          false,    true,      false,      PROFILE, true,        58,       "neededupdate",      ""],               // 8
+  [false,          false,         true,          true,     false,     true,       PROFILE, true,        59,       "incompatible",      "disabled"],       // 9
+  [false,          true,          true,          true,     true,      true,       PROFILE, true,        40,       "autoupdate",        "disabled"],       // 10
+  [false,          true,          true,          true,     true,      false,      PROFILE, true,        41,       "neededupdate",      "disabled"],       // 11
+  [true,           false,         false,         false,    false,     true,       PROFILE, false,       42,       "enabled",           ""],               // 12
+  [true,           false,         false,         false,    true,      true,       PROFILE, false,       43,       "enabled",           ""],               // 13
+  [true,           false,         false,         false,    true,      false,      PROFILE, false,       44,       "unneededupdate",    ""],               // 14
 
   // userDisabled and isActive cannot be true on startup
 
-  [true,           true,          true,          false,    false,     true,       PROFILE, false,       79,       "incompatible",      ""],               // 15
-  [true,           true,          true,          false,    true,      true,       PROFILE, false,       80,       "autoupdate",        ""],               // 16
-  [true,           true,          true,          false,    true,      false,      PROFILE, false,       81,       "neededupdate",      ""],               // 17
+  [true,           true,          true,          false,    false,     true,       PROFILE, false,       45,       "incompatible",      ""],               // 15
+  [true,           true,          true,          false,    true,      true,       PROFILE, false,       46,       "autoupdate",        ""],               // 16
+  [true,           true,          true,          false,    true,      false,      PROFILE, false,       47,       "neededupdate",      ""],               // 17
 
   // userDisabled and isActive cannot be true on startup
 
@@ -50,10 +50,10 @@ var ADDONS = [
   [true,           true,          false,         false,    true,      false,      SYSTEM,  false,       5,        "enabled",           ""],               // 23
   [false,          true,          true,          true,     true,      false,      SYSTEM,  false,       6,        "incompatible",      "disabled"],       // 24
   [true,           true,          true,          false,    true,      false,      SYSTEM,  false,       7,        "incompatible",      ""],               // 25
-  [false,          false,         false,         true,     true,      false,      APP,     true,        38,       "",                  "disabled"],       // 26
-  [true,           true,          false,         false,    true,      false,      APP,     false,       39,       "enabled",           ""],               // 27
-  [false,          true,          true,          true,     true,      false,      APP,     true,        40,       "incompatible",      "disabled"],       // 28
-  [true,           true,          true,          false,    true,      false,      APP,     false,       41,       "incompatible",      ""],               // 29
+  [false,          false,         false,         true,     true,      false,      APP,     true,        49,       "",                  "disabled"],       // 26
+  [true,           true,          false,         false,    true,      false,      APP,     false,       50,       "enabled",           ""],               // 27
+  [false,          true,          true,          true,     true,      false,      APP,     true,        51,       "incompatible",      "disabled"],       // 28
+  [true,           true,          true,          false,    true,      false,      APP,     false,       52,       "incompatible",      ""],               // 29
 ];
 
 function waitForView(aView, aCallback) {
@@ -72,10 +72,30 @@ function getString(aName) {
   return strings.GetStringFromName("action." + aName);
 }
 
+function getSourceString(aSource) {
+  if (!aSource)
+    return "";
+
+  var strings = Services.strings.createBundle("chrome://mozapps/locale/extensions/selectAddons.properties");
+  switch (aSource) {
+    case APP:
+      return strings.GetStringFromName("source.bundled");
+    case PROFILE:
+      return strings.GetStringFromName("source.profile");
+    default:
+      return strings.GetStringFromName("source.other");
+  }
+}
+
 function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
+
+  // Set prefs for Distributed Extension Source tests.
+  Services.prefs.setBoolPref("extensions.installedDistroAddon.test3@tests.mozilla.org", true);
+  Services.prefs.setBoolPref("extensions.installedDistroAddon.test12@tests.mozilla.org", true);
+  Services.prefs.setBoolPref("extensions.installedDistroAddon.test15@tests.mozilla.org", true);
 
   ADDONS.forEach(function(aAddon, aPos) {
     var addon = new MockAddon("test" + aPos + "@tests.mozilla.org",
@@ -208,6 +228,14 @@ add_test(function selection_test() {
     var keep = gWin.document.getAnonymousElementByAttribute(row, "anonid", "keep");
     var action = gWin.document.getAnonymousElementByAttribute(row, "class", "addon-action-message");
     var update = gWin.document.getAnonymousElementByAttribute(row, "anonid", "update");
+    var source = gWin.document.getAnonymousElementByAttribute(row, "class", "addon-source");
+
+    if (id == 3 || id == 12 || id == 15) {
+      // Distro Installed To Profile
+      is(source.textContent, getSourceString(APP), "Source message should have the right text for Distributed Addons");
+    } else {
+      is(source.textContent, getSourceString(addon[6]), "Source message should have the right text");
+    }
 
     // Non-profile add-ons don't appear to have updates since we won't install
     // them
@@ -227,7 +255,7 @@ add_test(function selection_test() {
     pos++;
   }
 
-  is(pos, 90, "Should have seen the right number of add-ons");
+  is(pos, 60, "Should have seen the right number of add-ons");
 
   run_next_test();
 });

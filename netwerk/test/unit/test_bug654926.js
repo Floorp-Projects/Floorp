@@ -11,6 +11,15 @@ function get_cache_service() {
                  getService(Ci.nsICacheService);
 }
 
+var _PSvc;
+function get_pref_service() {
+  if (_PSvc)
+    return _PSvc;
+
+  return _PSvc = Cc["@mozilla.org/preferences-service;1"].
+                 getService(Ci.nsIPrefBranch);
+}
+
 function get_ostream_for_entry(key, asFile, append, entryRef)
 {
   var cache = get_cache_service();
@@ -79,9 +88,13 @@ function write_datafile()
   var oStr = get_ostream_for_entry("data", true, false, entry);
   var data = gen_1MiB();
 
-  // 6MiB
+  // max size in MB
+  var max_size = get_pref_service().
+                 getIntPref("browser.cache.disk.max_entry_size") / 1024;
+
+  // write larger entry than is allowed
   var i;
-  for (i=0 ; i<6 ; i++)
+  for (i=0 ; i<(max_size+1) ; i++)
     write_and_check(oStr, data, data.length);
 
   oStr.close();

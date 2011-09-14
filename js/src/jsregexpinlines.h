@@ -783,17 +783,17 @@ JSObject::initRegExp(JSContext *cx, js::RegExp *re)
         JS_ASSERT(!nativeEmpty());
     }
 
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom))->slot ==
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom))->slot ==
               JSObject::JSSLOT_REGEXP_LAST_INDEX);
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.sourceAtom))->slot ==
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.sourceAtom))->slot ==
               JSObject::JSSLOT_REGEXP_SOURCE);
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.globalAtom))->slot ==
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.globalAtom))->slot ==
               JSObject::JSSLOT_REGEXP_GLOBAL);
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.ignoreCaseAtom))->slot ==
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.ignoreCaseAtom))->slot ==
               JSObject::JSSLOT_REGEXP_IGNORE_CASE);
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.multilineAtom))->slot ==
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.multilineAtom))->slot ==
               JSObject::JSSLOT_REGEXP_MULTILINE);
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.stickyAtom))->slot ==
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.stickyAtom))->slot ==
               JSObject::JSSLOT_REGEXP_STICKY);
 
     setPrivate(re);

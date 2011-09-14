@@ -336,10 +336,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
       nsTableColFrame* nextCol;
       while (col && col->GetColType() == eColAnonymousCol) {
 #ifdef DEBUG
-        nsIFrame* providerFrame;
-        PRBool isChild;
-        colFrame->GetParentStyleContextFrame(PresContext(), &providerFrame,
-                                             &isChild);
+        nsIFrame* providerFrame = colFrame->GetParentStyleContextFrame();
         if (colFrame->GetStyleContext()->GetParent() ==
             providerFrame->GetStyleContext()) {
           NS_ASSERTION(col->GetStyleContext() == colFrame->GetStyleContext() &&

@@ -259,7 +259,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
             continue;
 
         /* Not inlining at monitored call sites or those with type barriers. */
-        if (code->monitoredTypes || code->monitoredTypesReturn || analysis->typeBarriers(pc) != NULL)
+        if (code->monitoredTypes || code->monitoredTypesReturn || analysis->typeBarriers(cx, pc) != NULL)
             continue;
 
         uint32 argc = GET_ARGC(pc);
@@ -5927,7 +5927,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
          * then bake its address into the jitcode and guard against future
          * reallocation of the global object's slots.
          */
-        const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
+        const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(atom));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
             Value *value = &globalObj->getSlotRef(shape->slot);
             if (!value->isUndefined() &&
@@ -6150,7 +6150,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
         types::TypeSet *types = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!types)
             return;
-        const js::Shape *shape = globalObj->nativeLookup(ATOM_TO_JSID(atom));
+        const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(atom));
         if (shape && !shape->isMethod() && shape->hasDefaultSetter() &&
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
@@ -7241,7 +7241,7 @@ mjit::Compiler::hasTypeBarriers(jsbytecode *pc)
     return js_CodeSpec[*pc].format & JOF_TYPESET;
 #endif
 
-    return analysis->typeBarriers(pc) != NULL;
+    return analysis->typeBarriers(cx, pc) != NULL;
 }
 
 void

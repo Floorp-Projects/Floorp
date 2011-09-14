@@ -916,6 +916,8 @@ static const char js_profiling_content_str[]  = JS_OPTIONS_DOT_STR "jitprofiling
 static const char js_profiling_chrome_str[]   = JS_OPTIONS_DOT_STR "jitprofiling.chrome";
 static const char js_methodjit_always_str[]   = JS_OPTIONS_DOT_STR "methodjit_always";
 static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
+static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
+static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
 
 int
@@ -947,6 +949,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRBool useProfiling = Preferences::GetBool(chromeWindow ?
                                                js_profiling_chrome_str :
                                                js_profiling_content_str);
+  PRBool usePCCounts = Preferences::GetBool(chromeWindow ?
+                                            js_pccounts_chrome_str :
+                                            js_pccounts_content_str);
   PRBool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   PRBool useTypeInference = !chromeWindow && Preferences::GetBool(js_typeinfer_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
@@ -957,6 +962,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useTraceJIT = PR_FALSE;
       useMethodJIT = PR_FALSE;
       useProfiling = PR_FALSE;
+      usePCCounts = PR_FALSE;
       useTypeInference = PR_FALSE;
       useMethodJITAlways = PR_TRUE;
     }
@@ -976,6 +982,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_PROFILING;
   else
     newDefaultJSOptions &= ~JSOPTION_PROFILING;
+
+  if (usePCCounts)
+    newDefaultJSOptions |= JSOPTION_PCCOUNT;
+  else
+    newDefaultJSOptions &= ~JSOPTION_PCCOUNT;
 
   if (useMethodJITAlways)
     newDefaultJSOptions |= JSOPTION_METHODJIT_ALWAYS;

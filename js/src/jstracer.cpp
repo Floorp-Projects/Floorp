@@ -11556,7 +11556,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                     if (js_GetClassPrototype(cx, NULL, JSProto_RegExp, &proto)) {
                         Value pval;
                         jsid id = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
-                        if (HasDataProperty(proto, id, &pval) &&
+                        if (HasDataProperty(cx, proto, id, &pval) &&
                             IsNativeFunction(pval, js_regexp_test))
                         {
                             vp[0] = pval;
@@ -12065,7 +12065,7 @@ SafeLookup(JSContext *cx, JSObject* obj, jsid id, JSObject** pobjp, const Shape*
         if (obj->getOps()->lookupProperty)
             return false;
 
-        if (const Shape *shape = obj->nativeLookup(id)) {
+        if (const Shape *shape = obj->nativeLookup(cx, id)) {
             *pobjp = obj;
             *shapep = shape;
             return true;
@@ -12136,7 +12136,7 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
 {
     uint32 slot = shape->slot;
     JS_ASSERT((slot != SHAPE_INVALID_SLOT) == shape->hasSlot());
-    JS_ASSERT_IF(shape->hasSlot(), obj->nativeContains(*shape));
+    JS_ASSERT_IF(shape->hasSlot(), obj->nativeContains(cx, *shape));
 
     /*
      * We do not trace assignment to properties that have both a non-default
@@ -12181,7 +12181,7 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
                 // Because the trace is type-specialized to the global object's
                 // slots, no run-time check is needed. Avoid recording a global
                 // shape change, though.
-                JS_ASSERT(obj->nativeContains(*shape));
+                JS_ASSERT(obj->nativeContains(cx, *shape));
                 if (IsFunctionObject(obj->getSlot(slot)))
                     RETURN_STOP("can't trace set of function-valued global property");
             } else {
@@ -12521,7 +12521,7 @@ TraceRecorder::recordInitPropertyOp(jsbytecode op)
     // shape or because the id appears more than once in the initializer), just
     // set it. The existing property can't be an accessor property: we wouldn't
     // get here, as JSOP_SETTER can't be recorded.
-    if (const Shape* shape = obj->nativeLookup(id)) {
+    if (const Shape* shape = obj->nativeLookup(cx, id)) {
         // Don't assign a bare (non-cloned) function to an ordinary or method
         // property. The opposite case, assigning some other value to a method,
         // is OK. nativeSet emits code that trips the write barrier.
@@ -14179,7 +14179,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
 
     if (pcval.isShape()) {
         shape = pcval.toShape();
-        JS_ASSERT(obj2->nativeContains(*shape));
+        JS_ASSERT(obj2->nativeContains(cx, *shape));
 
         if (setflags && !shape->hasDefaultSetter())
             RETURN_STOP("non-stub setter");
