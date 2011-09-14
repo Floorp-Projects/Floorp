@@ -51,8 +51,10 @@
   /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
   width: 200px;
   padding: 12px;
+  padding-bottom: 0px;
   -moz-margin-start: 0px;
   background: none;
+  margin-bottom: 0px;
 }
 
 #tabs[tablet] documenttab[selected="true"] {
