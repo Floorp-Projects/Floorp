@@ -169,7 +169,11 @@ typedef void *EGLCastToRelevantPtr;
 typedef void *EGLImageKHR;
 typedef void *GLeglImageOES;
 
+#ifdef MOZ_WIDGET_QT
+#define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)QX11Info::display())
+#else
 #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
+#endif
 #define EGL_NO_CONTEXT       ((EGLContext)0)
 #define EGL_NO_DISPLAY       ((EGLDisplay)0)
 #define EGL_NO_SURFACE       ((EGLSurface)0)
@@ -242,6 +246,8 @@ public:
 
     typedef EGLDisplay (GLAPIENTRY * pfnGetDisplay)(void *display_id);
     pfnGetDisplay fGetDisplay;
+    typedef EGLSurface (GLAPIENTRY * pfnGetCurrentSurface)(EGLint);
+    pfnGetCurrentSurface fGetCurrentSurface;
     typedef EGLContext (GLAPIENTRY * pfnGetCurrentContext)(void);
     pfnGetCurrentContext fGetCurrentContext;
     typedef EGLBoolean (GLAPIENTRY * pfnMakeCurrent)(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
@@ -364,6 +370,7 @@ public:
 
         LibrarySymbolLoader::SymLoadStruct earlySymbols[] = {
             SYMBOL(GetDisplay),
+            SYMBOL(GetCurrentSurface),
             SYMBOL(GetCurrentContext),
             SYMBOL(MakeCurrent),
             SYMBOL(DestroyContext),
@@ -693,7 +700,7 @@ public:
 #endif
 
         sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
-        if (mSurface) {
+        if (mSurface && !mPlatformContext) {
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
         }
     }
@@ -825,17 +832,15 @@ public:
     }
 #endif
 
-#ifndef MOZ_WIDGET_QT
     virtual void
     ReleaseSurface() {
-        if (mSurface) {
+        if (mSurface && !mPlatformContext) {
             sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
                                      EGL_NO_CONTEXT);
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
             mSurface = NULL;
         }
     }
-#endif
 
     PRBool SetupLookupFunction()
     {
@@ -856,7 +861,7 @@ public:
 
     PRBool SwapBuffers()
     {
-        if (mSurface) {
+        if (mSurface && !mPlatformContext) {
             return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
         } else {
             return PR_FALSE;
@@ -1063,7 +1068,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 
         SetOffscreenSize(aNewSize, pbsize);
 
-        if (mSurface) {
+        if (mSurface && !mPlatformContext) {
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
         }
 
@@ -1733,7 +1738,8 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         nsRefPtr<GLContextEGL> glContext =
             new GLContextEGL(ContextFormat(DepthToGLFormat(context->device()->depth())),
                              NULL,
-                             NULL, NULL,
+                             NULL,
+                             sEGLLibrary.fGetCurrentSurface(LOCAL_EGL_DRAW), // just use same surface for read and draw
                              sEGLLibrary.fGetCurrentContext(),
                              PR_FALSE);
 
