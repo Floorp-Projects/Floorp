@@ -2522,6 +2522,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
   nsRefPtr<gfxASurface> backSurface =
     BasicManager()->OpenDescriptor(mBackBuffer);
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface);
+  tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   PaintContext(pat,
                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                nsnull, 1.0, tmpCtx);
