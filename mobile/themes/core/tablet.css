@@ -71,7 +71,7 @@
   -moz-box-align: center;
 }
 
-documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
+documenttab[selected="true"] > vbox > stack > .documenttab-close-container[tablet] {
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
@@ -85,7 +85,7 @@ documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
   list-style-image: url("chrome://browser/skin/images/close-inactive-tab-tablet-hdpi.png");
 }
 
-documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
+documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] {
   list-style-image: url("chrome://browser/skin/images/close-default-tablet-hdpi.png");
 }
 
@@ -95,6 +95,15 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
 
 .documenttab-reload[tablet] {
   background: url("chrome://browser/skin/images/tab-reopen-tablet-hdpi.png");
+}
+
+.documenttab-title[tablet] {
+  color: #FFF;
+  font-size: @font_xtiny@ !important;
+  padding: @padding_small@;
+  margin: 0px;
+  text-align: center;
+  display: -moz-box;
 }
 
 #newtab-button[tablet] {
