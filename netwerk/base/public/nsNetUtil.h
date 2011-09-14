@@ -1946,9 +1946,9 @@ NS_GetContentDispositionFromHeader(const nsACString& aHeader, nsIChannel *aChan 
 
   if (NS_FAILED(rv)) {
     // special case (see bug 272541): empty disposition type handled as "inline"
-    return rv == NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY
-                 ? nsIChannel::DISPOSITION_INLINE
-                 : nsIChannel::DISPOSITION_ATTACHMENT;
+    if (rv == NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY)
+        return nsIChannel::DISPOSITION_INLINE;
+    return nsIChannel::DISPOSITION_ATTACHMENT;
   }
 
   return NS_GetContentDispositionFromToken(dispToken);

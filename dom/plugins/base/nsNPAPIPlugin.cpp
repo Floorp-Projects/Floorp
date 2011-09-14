@@ -70,11 +70,14 @@
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsIUnicodeNormalizer.h"
 #include "nsDOMJSUtils.h"
 #include "nsIPrincipal.h"
 #include "nsWildCard.h"
+#include "nsContentUtils.h"
 
 #include "nsIXPConnect.h"
 
@@ -2157,6 +2160,46 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       return NPERR_NO_ERROR;
     }
     return NPERR_GENERIC_ERROR;
+  }
+
+  case NPNVdocumentOrigin: {
+    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
+    if (!inst) {
+      return NPERR_GENERIC_ERROR;
+    }
+
+    nsCOMPtr<nsIDOMElement> element;
+    inst->GetDOMElement(getter_AddRefs(element));
+    if (!element) {
+      return NPERR_GENERIC_ERROR;
+    }
+
+    nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+    if (!content) {
+      return NPERR_GENERIC_ERROR;
+    }
+
+    nsIPrincipal* principal = content->NodePrincipal();
+
+    nsAutoString utf16Origin;
+    res = nsContentUtils::GetUTFOrigin(principal, utf16Origin);
+    if (NS_FAILED(res)) {
+      return NPERR_GENERIC_ERROR;
+    }
+
+    nsCOMPtr<nsIUnicodeNormalizer> normalizer = do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID);
+    if (!normalizer) {
+      return NPERR_GENERIC_ERROR;
+    }
+
+    nsAutoString normalizedUTF16Origin;
+    res = normalizer->NormalizeUnicodeNFKC(utf16Origin, normalizedUTF16Origin);
+    if (NS_FAILED(res)) {
+      return NPERR_GENERIC_ERROR;
+    }
+
+    *(char**)result = ToNewUTF8String(normalizedUTF16Origin);
+    return *(char**)result ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
   }
 
 #ifdef XP_MACOSX

@@ -44,9 +44,9 @@
 #define NS_SPELLCHECKER_CONTRACTID "@mozilla.org/spellchecker;1"
 
 #define NS_ISPELLCHECKER_IID                    \
-{ /* E75AC48C-E948-452E-8DB3-30FEE29FE3D2 */    \
-0xe75ac48c, 0xe948, 0x452e, \
-  { 0x8d, 0xb3, 0x30, 0xfe, 0xe2, 0x9f, 0xe3, 0xd2 } }
+{ /* 27bff957-b486-40ae-9f5d-af0cdd211868 */    \
+0x27bff957, 0xb486, 0x40ae, \
+  { 0x9f, 0x5d, 0xaf, 0x0c, 0xdd, 0x21, 0x18, 0x68 } }
 
 class nsITextServicesDocument;
 class nsString;
@@ -146,6 +146,12 @@ public:
    * empty string, spellchecker will be disabled.
    */
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary) = 0;
+
+  /**
+   * Call this on any change in installed dictionaries to ensure that the spell
+   * checker is not using a current dictionary which is no longer available.
+   */
+  NS_IMETHOD CheckCurrentDictionary() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISpellChecker, NS_ISPELLCHECKER_IID)
