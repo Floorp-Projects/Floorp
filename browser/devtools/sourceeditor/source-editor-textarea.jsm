@@ -1,4 +1,4 @@
-/* vim:set ts=2 sw=2 sts=2 et tw=80:
+/* vim:set ft=javascript ts=2 sw=2 sts=2 et tw=80:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -129,7 +129,7 @@ SourceEditor.prototype = {
 
     this._textbox.style.MozTabSize = this._tabSize;
 
-    this._textbox.setAttribute("value", aConfig.placeholderText);
+    this._textbox.setAttribute("value", aConfig.placeholderText || "");
     this._textbox.setAttribute("class", "monospace");
     this._textbox.style.direction = "ltr";
     this._textbox.readOnly = aConfig.readOnly;
