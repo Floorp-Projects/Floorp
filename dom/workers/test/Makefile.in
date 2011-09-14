@@ -58,9 +58,6 @@ _TEST_FILES = \
   errorPropagation_worker.js \
   test_eventDispatch.html \
   eventDispatch_worker.js \
-  test_ipAddressOrigin.html \
-  ipAddressOrigin_iframe.html \
-  ipAddressOrigin_worker.js \
   test_importScripts.html \
   importScripts_worker.js \
   importScripts_worker_imported1.js \

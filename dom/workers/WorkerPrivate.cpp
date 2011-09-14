@@ -39,11 +39,11 @@
 
 #include "WorkerPrivate.h"
 
-#include "mozIThirdPartyUtil.h"
 #include "nsIClassInfo.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMFile.h"
 #include "nsIDocument.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIJSContextStack.h"
 #include "nsIMemoryReporter.h"
 #include "nsIScriptError.h"
@@ -2329,14 +2329,14 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
           domain = file;
         }
         else {
-          nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-            do_GetService(THIRDPARTYUTIL_CONTRACTID);
-          if (!thirdPartyUtil) {
-            JS_ReportError(aCx, "Could not get third party helper service!");
+          nsCOMPtr<nsIEffectiveTLDService> tldService =
+            do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+          if (!tldService) {
+            JS_ReportError(aCx, "Could not get TLD service!");
             return nsnull;
           }
 
-          if (NS_FAILED(thirdPartyUtil->GetBaseDomain(codebase, domain))) {
+          if (NS_FAILED(tldService->GetBaseDomain(codebase, 0, domain))) {
             JS_ReportError(aCx, "Could not get domain!");
             return nsnull;
           }
