@@ -411,7 +411,9 @@ typedef enum {
 
   NPNVprivateModeBool = 18,
 
-  NPNVsupportsAdvancedKeyHandling = 21
+  NPNVsupportsAdvancedKeyHandling = 21,
+
+  NPNVdocumentOrigin = 22
 
 #if defined(XP_MACOSX)
   /* Used for negotiating drawing models */
