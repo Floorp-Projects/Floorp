@@ -57,7 +57,7 @@ namespace ion {
 //   arg0      /
 //   this    _/
 //   calleeToken - Encodes script or JSFunction
-//   descriptor  - Size of the parent frame 
+//   sizeDescriptor  - Size of the parent frame, with lower bits for FrameType.
 //   returnAddr - Return address, entering into the next call.
 //   .. locals ..
 
@@ -73,14 +73,25 @@ struct IonFrameData
 class IonFramePrefix : protected IonFrameData
 {
   public:
+    enum FrameType {
+        JSFrame,
+        EntryFrame,
+        RectifierFrame
+    };
+
+    // The FrameType is packed into the sizeDescriptor by left-shifting the
+    // sizeDescriptor by FrameTypeBits, then ORing in the FrameType.
+    static const unsigned FrameTypeBits = 2;
+
+  public:
     // True if this is the frame passed into EnterIonCode.
     bool isEntryFrame() const {
-        return !(sizeDescriptor_ & 1);
+        return !!(sizeDescriptor_ & EntryFrame);
     }
     // The depth of the parent frame.
     size_t prevFrameDepth() const {
         JS_ASSERT(!isEntryFrame());
-        return sizeDescriptor_ >> 1;
+        return sizeDescriptor_ >> FrameTypeBits;
     }
     IonFramePrefix *prev() const {
         JS_ASSERT(!isEntryFrame());

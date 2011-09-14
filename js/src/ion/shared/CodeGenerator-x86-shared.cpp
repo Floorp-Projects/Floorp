@@ -727,9 +727,9 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
         return false;
 
     // Remember the size of the frame above this point, in case of bailout.
+    JS_STATIC_ASSERT(IonFramePrefix::JSFrame == 0x0);
     uint32 stack_size = masm.framePushed() - unused_stack;
-    // Mark !IonFramePrefix::isEntryFrame().
-    uint32 size_descriptor = stack_size << 1;
+    uint32 size_descriptor = stack_size << IonFramePrefix::FrameTypeBits;
 
     // Nestle %esp up to the argument vector.
     if (unused_stack)

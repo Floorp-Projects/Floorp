@@ -141,6 +141,9 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.shll(Imm32(3), eax);
     masm.addl(eax, ecx);
     masm.addl(Imm32(4), ecx);
+
+    // Safe to take lowest bit without shifting: aligned, and no other consumers.
+    masm.orl(Imm32(0x1), ecx); // Mark EntryFrame.
     masm.push(ecx);
 
     /***************************************************************
@@ -153,6 +156,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     // Pop arguments off the stack.
     // eax <- 8*argc (size of all arugments we pushed on the stack)
     masm.pop(eax);
+    masm.xorl(Imm32(0x1), eax); // Unmark EntryFrame.
     masm.addl(eax, esp);
 
     // |ebp| could have been clobbered by the inner function. For now, re-grab
@@ -185,10 +189,9 @@ IonCompartment::generateReturnError(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
-    // Pop arguments off the stack.
-    // eax <- 8*argc (size of all arugments we pushed on the stack)
-    masm.pop(eax);
-    masm.addl(eax, esp);
+    masm.pop(eax);              // sizeDescriptor.
+    masm.xorl(Imm32(0x1), eax); // Unmark EntryFrame.
+    masm.addl(eax, esp);        // Remove arguments.
 
     GenerateReturn(masm, JS_FALSE);
     
@@ -255,8 +258,10 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
 
+    // Construct sizeDescriptor.
     masm.subl(esp, ebp);
-    masm.shll(Imm32(1), ebp); // construct sizeDescriptor.
+    masm.shll(Imm32(IonFramePrefix::FrameTypeBits), ebp);
+    masm.orl(Imm32(IonFramePrefix::RectifierFrame), ebp);
 
     // Construct IonFrameData.
     masm.push(eax); // calleeToken
@@ -271,10 +276,10 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.call(eax);
 
     // Remove the rectifier frame.
-    masm.pop(ebx);            // ebx <- sizeDescriptor
-    masm.shrl(Imm32(1), ebx); // ebx <- size of pushed arguments
-    masm.pop(edi);            // Discard calleeToken
-    masm.addl(ebx, esp);      // Discard pushed arguments.
+    masm.pop(ebp);            // ebp <- sizeDescriptor with FrameType.
+    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), ebp); // ebp <- sizeDescriptor.
+    masm.pop(edi);            // Discard calleeToken.
+    masm.addl(ebp, esp);      // Discard pushed arguments.
 
     masm.ret();
 
