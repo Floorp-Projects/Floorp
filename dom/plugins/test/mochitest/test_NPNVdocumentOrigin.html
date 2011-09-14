@@ -1,0 +1,34 @@
+<html>
+<head>
+  <title>Test NPNVdocumentOrigin</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="runTest()">
+  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      var p1 = document.getElementById("plugin1");
+      var realOrigin = "http://mochi.test:8888";
+
+      // Test with no modifications
+      is(p1.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin.");
+
+      // Mess with window.location.toString
+      window.location.toString = function() { return 'http://victim.rckc.at/'; }
+      is(p1.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin afer modifying window.location.toString.");
+
+      // Create a plugin in a new window with about:blank
+      var newWindow = window.open("about:blank");
+      newWindow.document.writeln('<embed id="plugin2" type="application/x-test" width="200" height="200"></embed>');
+      var p2 = newWindow.document.getElementById("plugin2");
+      is(p2.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin of plugin in new about:blank window.");
+      newWindow.close();
+
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>
