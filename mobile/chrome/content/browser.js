@@ -554,6 +554,13 @@ var Browser = {
     this.tryUnfloatToolbar();
   },
 
+  /** Workaround to hide the tabstrip if it is partially visible (bug 524469 and bug 626660) */
+  hidePartialTabSidebar: function hidePartialSidebars() {
+    let [tabsVisibility,,,] = this.computeSidebarVisibility();
+    if (tabsVisibility > 0.0 && tabsVisibility < 1.0)
+      this.hideSidebars();
+  },
+
   hideTitlebar: function hideTitlebar() {
     let rect = Elements.browsers.getBoundingClientRect();
     this.pageScrollboxScroller.scrollBy(0, Math.round(rect.top));
@@ -2847,7 +2854,7 @@ Tab.prototype = {
   },
 
   create: function create(aURI, aParams) {
-    this._chromeTab = document.getElementById("tabs").addTab();
+    this._chromeTab = Elements.tabList.addTab();
     let browser = this._createBrowser(aURI, null);
 
     // Should we fully load the new browser, or wait until later
@@ -2866,7 +2873,7 @@ Tab.prototype = {
   },
 
   destroy: function destroy() {
-    document.getElementById("tabs").removeTab(this._chromeTab);
+    Elements.tabList.removeTab(this._chromeTab);
     this._chromeTab = null;
     this._destroyBrowser();
   },
@@ -3092,7 +3099,7 @@ Tab.prototype = {
       browser.setAttribute("type", "content-primary");
       Elements.browsers.selectedPanel = notification;
       browser.active = true;
-      document.getElementById("tabs").selectedTab = this._chromeTab;
+      Elements.tabList.selectedTab = this._chromeTab;
       browser.focus();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });

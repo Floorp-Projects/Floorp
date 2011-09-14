@@ -73,6 +73,7 @@
 #include "nsWeakReference.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
+#include "nsJSEnvironment.h"
 
 #include "History.h"
 #include "nsDocShellCID.h"
@@ -761,6 +762,21 @@ ContentChild::GetIndexedDBPath()
     }
 
     return *gIndexedDBPath;
+}
+
+bool
+ContentChild::RecvGarbageCollect()
+{
+    nsJSContext::GarbageCollectNow();
+    return true;
+}
+
+bool
+ContentChild::RecvCycleCollect()
+{
+    nsJSContext::GarbageCollectNow();
+    nsJSContext::CycleCollectNow();
+    return true;
 }
 
 } // namespace dom
