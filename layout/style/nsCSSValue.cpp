@@ -922,7 +922,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.Append(NS_LITERAL_STRING("-moz-element(#"));
     nsAutoString tmpStr;
     GetStringValue(tmpStr);
-    nsStyleUtil::AppendEscapedCSSIdent(tmpStr, aResult);
+    nsStyleUtil::AppendEscapedCSSIdent(
+      nsDependentString(tmpStr), aResult);
     aResult.Append(NS_LITERAL_STRING(")"));
   }
   else if (eCSSUnit_Percent == unit) {
