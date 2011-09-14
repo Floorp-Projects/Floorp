@@ -95,9 +95,8 @@ CookieServiceParent::RecvSetCookieString(const IPC::URI& aHost,
   if (!hostURI)
     return false;
 
-  nsDependentCString cookieString(aCookieString, 0);
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign,
-                                          cookieString, aServerTime,
+                                          aCookieString, aServerTime,
                                           aFromHttp);
   return true;
 }
