@@ -154,14 +154,17 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     Push the number of bytes we've pushed so far on the stack and call
     *****************************************************************/
     masm.subq(rsp, r14);
+    // Safe to not shift sizeDescriptor: no other consumers.
+    masm.orl(Imm32(0x1), r14); // Mark EntryFrame.
     masm.push(r14);
 
     // Call function.
     masm.call(reg_code);
 
     // Pop arguments and padding from stack.
-    masm.pop(r14);
-    masm.addq(r14, rsp);
+    masm.pop(r14);              // sizeDescriptor.
+    masm.xorl(Imm32(0x1), r14); // Unmark EntryFrame.
+    masm.addq(r14, rsp);        // Remove arguments.
 
     /*****************************************************************
     Place return value where it belongs, pop all saved registers
@@ -180,13 +183,10 @@ IonCompartment::generateReturnError(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
-    // Pop arguments off the stack.
-    // eax <- 8*argc (size of all arguments we pushed on the stack)
-    masm.pop(r14);
-    masm.addq(r14, rsp);
-
-    // Discard pushed vp.
-    masm.pop(r11);
+    masm.pop(r14);              // sizeDescriptor.
+    masm.xorl(Imm32(0x1), r14); // Unmark EntryFrame.
+    masm.addq(r14, rsp);        // Remove arguments.
+    masm.pop(r11);              // Discard |vp|: returning from error.
 
     GenerateReturn(masm, JS_FALSE);
     
@@ -250,8 +250,10 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
 
+    // Construct sizeDescriptor.
     masm.subq(rsp, rbp);
-    masm.shll(Imm32(1), rbp); // construct sizeDescriptor.
+    masm.shll(Imm32(IonFramePrefix::FrameTypeBits), rbp);
+    masm.orl(Imm32(IonFramePrefix::RectifierFrame), rbp);
 
     // Construct IonFrameData.
     masm.push(rax); // calleeToken.
@@ -266,10 +268,10 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.call(rax);
 
     // Remove the rectifier frame.
-    masm.pop(rbx);            // rbx <- sizeDescriptor_
-    masm.shrl(Imm32(1), rbx); // rbx <- size of pushed arguments
-    masm.pop(r11);            // Discard calleeToken_
-    masm.addq(rbx, rsp);      // Discard pushed arguments.
+    masm.pop(rbp);            // rbp <- sizeDescriptor with FrameType.
+    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), rbp); // rbp <- size of pushed arguments.
+    masm.pop(r11);            // Discard calleeToken.
+    masm.addq(rbp, rsp);      // Discard pushed arguments.
 
     masm.ret();
 
