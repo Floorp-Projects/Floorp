@@ -2849,6 +2849,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
         exposeEvent.major_code = 0;
         exposeEvent.minor_code = 0;
         mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
+        aSurface->MarkDirty(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
     } else
 #endif
     {
@@ -2926,7 +2927,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
     }
 #endif
 
-    if (aColor.a > 0.0) {
+    if (mIsTransparent && !CanPaintOnBackground()) {
        // Clear surface content for transparent rendering
        nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
        ctx->SetColor(aColor);
