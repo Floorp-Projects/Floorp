@@ -670,6 +670,9 @@ class Mochitest(object):
     except KeyboardInterrupt:
       self.automation.log.info("INFO | runtests.py | Received keyboard interrupt.\n");
       status = -1
+    except:
+      self.automation.log.info("INFO | runtests.py | Received unexpected exception while running application '%s'\n" % (sys.exc_info()[1])
+      status = 1
 
     if options.vmwareRecording:
       self.stopVMwareRecording();
