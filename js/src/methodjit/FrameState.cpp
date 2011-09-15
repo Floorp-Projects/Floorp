@@ -1107,6 +1107,77 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         unpinReg(address.base);
 }
 
+#ifdef DEBUG
+JSC::MacroAssembler::Jump
+FrameState::typeCheckEntry(const FrameEntry *fe, types::TypeSet *types) const
+{
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    Address addr1 = addressOfTop();
+    Address addr2 = Address(JSFrameReg, addr1.offset + sizeof(Value));
+
+    Registers tempRegs(Registers::AvailRegs);
+    RegisterID scratch = tempRegs.takeAnyReg().reg();
+    masm.storePtr(scratch, addr1);
+
+    do {
+        if (fe->isConstant()) {
+            masm.storeValue(fe->getValue(), addr2);
+            break;
+        }
+
+        if (fe->data.inFPRegister()) {
+            masm.storeDouble(fe->data.fpreg(), addr2);
+            break;
+        }
+
+        if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+            JS_ASSERT(fe->data.inMemory());
+            masm.loadDouble(addressOf(fe), Registers::FPConversionTemp);
+            masm.storeDouble(Registers::FPConversionTemp, addr2);
+            break;
+        }
+
+        if (fe->data.inRegister())
+            masm.storePayload(fe->data.reg(), addr2);
+        else
+            JS_ASSERT(fe->data.inMemory());
+
+        if (fe->isTypeKnown())
+            masm.storeTypeTag(ImmType(fe->getKnownType()), addr2);
+        else if (fe->type.inRegister())
+            masm.storeTypeTag(fe->type.reg(), addr2);
+        else
+            JS_ASSERT(fe->type.inMemory());
+
+        if (fe->data.inMemory()) {
+            masm.loadPayload(addressOf(fe), scratch);
+            masm.storePayload(scratch, addr2);
+        }
+        if (fe->type.inMemory()) {
+            masm.loadTypeTag(addressOf(fe), scratch);
+            masm.storeTypeTag(scratch, addr2);
+        }
+    } while (false);
+
+    Vector<Jump> mismatches(cx);
+    masm.generateTypeCheck(cx, addr2, scratch, types, &mismatches);
+
+    masm.loadPtr(addr1, scratch);
+    Jump j = masm.jump();
+
+    for (unsigned i = 0; i < mismatches.length(); i++)
+        mismatches[i].linkTo(masm.label(), &masm);
+    masm.loadPtr(addr1, scratch);
+    Jump mismatch = masm.jump();
+
+    j.linkTo(masm.label(), &masm);
+
+    return mismatch;
+}
+#endif /* DEBUG */
+
 void
 FrameState::loadThisForReturn(RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
 {

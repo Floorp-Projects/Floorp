@@ -1152,7 +1152,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
      * in the specified set. Updates mismatches with any failure jumps. Assumes
      * no data registers are live.
      */
-    bool generateTypeCheck(JSContext *cx, Address address,
+    bool generateTypeCheck(JSContext *cx, Address address, RegisterID reg,
                            types::TypeSet *types, Vector<Jump> *mismatches)
     {
         if (types->unknown())
@@ -1200,9 +1200,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         if (count != 0) {
             if (!mismatches->append(testObject(Assembler::NotEqual, address)))
                 return false;
-            Registers tempRegs(Registers::AvailRegs);
-            RegisterID reg = tempRegs.takeAnyReg().reg();
-
             loadPayload(address, reg);
 
             Jump notSingleton = branchTest32(Assembler::Zero,
