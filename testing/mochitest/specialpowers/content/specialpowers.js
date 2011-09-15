@@ -407,12 +407,6 @@ SpecialPowers.prototype = {
       getService(Components.interfaces.nsICategoryManager).
       addCategoryEntry(category, entry, value, persists, replace);
   },
-
-  copyString: function(str) {
-    Cc["@mozilla.org/widget/clipboardhelper;1"].
-      getService(Ci.nsIClipboardHelper).
-      copyString(str);
-  },
 };
 
 // Expose everything but internal APIs (starting with underscores) to
