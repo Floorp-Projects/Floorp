@@ -53,6 +53,7 @@
 #include "xpcom-config.h"
 
 #define MOZALLOC_HAVE_XMALLOC
+#define MOZALLOC_HAVE_MALLOC_USABLE_SIZE
 
 #if defined(MOZALLOC_EXPORT)
 /* do nothing: it's been defined to __declspec(dllexport) by
