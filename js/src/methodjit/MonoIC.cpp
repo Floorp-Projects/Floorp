@@ -623,7 +623,7 @@ mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJum
              * FastBuiltins.
              */
             types::TypeSet *types = f.script()->analysis()->bytecodeTypes(f.pc());
-            if (!masm.generateTypeCheck(f.cx, resultAddress, types, &mismatches))
+            if (!masm.generateTypeCheck(f.cx, resultAddress, Registers::ReturnReg, types, &mismatches))
                 THROWV(false);
         }
     }
@@ -1339,17 +1339,20 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
     Assembler masm;
     Vector<Jump> mismatches(f.cx);
 
+    Registers tempRegs(Registers::AvailRegs);
+    RegisterID scratch = tempRegs.takeAnyReg().reg();
+
     if (!f.fp()->isConstructing()) {
         types::TypeSet *types = types::TypeScript::ThisTypes(script);
         Address address(JSFrameReg, StackFrame::offsetOfThis(fun));
-        if (!masm.generateTypeCheck(f.cx, address, types, &mismatches))
+        if (!masm.generateTypeCheck(f.cx, address, scratch, types, &mismatches))
             return;
     }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
         types::TypeSet *types = types::TypeScript::ArgTypes(script, i);
         Address address(JSFrameReg, StackFrame::offsetOfFormalArg(fun, i));
-        if (!masm.generateTypeCheck(f.cx, address, types, &mismatches))
+        if (!masm.generateTypeCheck(f.cx, address, scratch, types, &mismatches))
             return;
     }
 
