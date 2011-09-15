@@ -47,6 +47,7 @@
 // use chains.
 
 #include "jscntxt.h"
+#include "jslibmath.h"
 #include "TypeOracle.h"
 #include "TypePolicy.h"
 #include "IonAllocPolicy.h"
