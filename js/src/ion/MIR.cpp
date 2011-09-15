@@ -116,7 +116,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         ret.setNumber(lhs.toNumber() * rhs.toNumber());
         break;
       case MDefinition::Op_Div:
-        ret.setNumber(lhs.toNumber() / rhs.toNumber());
+        ret.setNumber(NumberDiv(lhs.toNumber(), rhs.toNumber()));
         break;
       default:
         JS_NOT_REACHED("NYI");
