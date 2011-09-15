@@ -3216,7 +3216,7 @@ BEGIN_CASE(JSOP_GETELEM)
 
         SpecialId special;
         if (ValueIsSpecial(obj, &rref, &special, cx)) {
-            if (!obj->getSpecial(cx, special, &rval))
+            if (!obj->getSpecial(cx, obj, special, &rval))
                 goto error;
         } else {
             JSAtom *name;
