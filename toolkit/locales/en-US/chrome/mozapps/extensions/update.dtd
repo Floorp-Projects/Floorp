@@ -21,7 +21,7 @@
 <!ENTITY  found.top.label                 "Select the add-ons you would like to install:">
 <!ENTITY  found.disabledXPinstall.label   "These updates can't be installed because software installation is currently
                                            disabled. You can change this setting below.">
-<!ENTITY  found.enableXPInstall.label     "Allow web sites to install software">
+<!ENTITY  found.enableXPInstall.label     "Allow websites to install software">
 <!ENTITY  found.enableXPInstall.accesskey "A">
 
 <!ENTITY  installing.wizard.title         "Installing Compatible Add-ons">
