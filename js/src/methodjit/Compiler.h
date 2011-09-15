@@ -558,6 +558,9 @@ class Compiler : public BaseCompiler
     CompileStatus addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc);
     CompileStatus scanInlineCalls(uint32 index, uint32 depth);
     CompileStatus checkAnalysis(JSScript *script);
+#ifdef DEBUG
+    void typeCheckPopped(int which);
+#endif
 
     struct BarrierState {
         MaybeJump jump;

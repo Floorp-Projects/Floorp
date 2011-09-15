@@ -2034,6 +2034,9 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETELEM)
           {
+            typeCheckPopped(0);
+            typeCheckPopped(1);
+            typeCheckPopped(2);
             jsbytecode *next = &PC[JSOP_SETELEM_LENGTH];
             bool pop = (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next));
             if (!jsop_setelem(pop))
@@ -2384,18 +2387,13 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETPROP)
-          {
-            jsbytecode *next = &PC[JSOP_SETPROP_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
-                return Compile_Error;
-          }
-          END_CASE(JSOP_SETPROP)
-
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETMETHOD)
           {
-            jsbytecode *next = &PC[JSOP_SETNAME_LENGTH];
+            typeCheckPopped(0);
+            if (op != JSOP_SETNAME)
+                typeCheckPopped(1);
+            jsbytecode *next = &PC[JSOP_SETPROP_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
@@ -2793,6 +2791,22 @@ mjit::Compiler::generateMethod()
                     frame.extra(fe).types = analysis->pushedTypes(lastPC - script->code, i);
                 }
             }
+
+#ifdef DEBUG
+            if ((js_CodeSpec[op].format & JOF_TYPESET) &&
+                js_GetOpcode(cx, script, PC) != JSOP_POP) {
+                FrameEntry *fe = frame.getStack(opinfo->stackDepth - nuses);
+                Jump j = frame.typeCheckEntry(fe, frame.extra(fe).types);
+                stubcc.linkExit(j, Uses(0));
+                stubcc.leave();
+
+                jsbytecode *oldPC = PC;
+                PC = lastPC;
+                OOL_STUBCALL(stubs::TypeCheckPushed, REJOIN_FALLTHROUGH);
+                PC = oldPC;
+                stubcc.rejoin(Changes(0));
+            }
+#endif
         }
 
         if (script->pcCounters) {
@@ -7602,8 +7616,11 @@ mjit::Compiler::testPushedType(RejoinState rejoin, int which, bool ool)
     JS_ASSERT(which <= 0);
     Address address = (which == 0) ? frame.addressOfTop() : frame.addressOf(frame.peek(which));
 
+    Registers tempRegs(Registers::AvailRegs);
+    RegisterID scratch = tempRegs.takeAnyReg().reg();
+
     Vector<Jump> mismatches(cx);
-    if (!masm.generateTypeCheck(cx, address, types, &mismatches)) {
+    if (!masm.generateTypeCheck(cx, address, scratch, types, &mismatches)) {
         oomInVector = true;
         return;
     }
@@ -7621,3 +7638,21 @@ mjit::Compiler::testPushedType(RejoinState rejoin, int which, bool ool)
 
     j.linkTo(masm.label(), &masm);
 }
+
+#ifdef DEBUG
+void
+mjit::Compiler::typeCheckPopped(int which)
+{
+    if (!cx->typeInferenceEnabled())
+        return;
+
+    FrameEntry *fe = frame.peek(-1 - which);
+    Jump j = frame.typeCheckEntry(fe, analysis->poppedTypes(PC, which));
+    stubcc.linkExit(j, Uses(0));
+    stubcc.leave();
+
+    stubcc.masm.move(Imm32(which), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::TypeCheckPopped, REJOIN_RESUME);
+    stubcc.rejoin(Changes(0));
+}
+#endif /* DEBUG */

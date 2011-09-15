@@ -2458,6 +2458,34 @@ stubs::AssertArgumentTypes(VMFrame &f)
             TypeFailure(f.cx, "Missing type for arg %d: %s", i, TypeString(type));
     }
 }
+
+void JS_FASTCALL
+stubs::TypeCheckPushed(VMFrame &f)
+{
+    TypeScript::CheckBytecode(f.cx, f.script(), f.pc(), f.regs.sp);
+}
+
+void JS_FASTCALL
+stubs::TypeCheckPopped(VMFrame &f, int32 which)
+{
+    JSScript *script = f.script();
+    jsbytecode *pc = f.pc();
+    if (!script->hasAnalysis() || !script->analysis()->ranInference())
+        return;
+
+    AutoEnterTypeInference enter(f.cx);
+
+    const js::Value &val = f.regs.sp[-1 - which];
+    TypeSet *types = script->analysis()->poppedTypes(pc, which);
+    Type type = GetValueType(f.cx, val);
+
+    if (!types->hasType(type)) {
+        /* Display fine-grained debug information first */
+        fprintf(stderr, "Missing type at #%u:%05u popped %u: %s\n", 
+                script->id(), unsigned(pc - script->code), which, TypeString(type));
+        TypeFailure(f.cx, "Missing type popped %u", which);
+    }
+}
 #endif
 
 /*

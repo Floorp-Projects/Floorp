@@ -618,9 +618,19 @@ class FrameState
      */
     inline FrameEntry *peek(int32 depth);
 
+#ifdef DEBUG
+    /*
+     * Check that a frame entry matches a type, returning a jump taken on
+     * mismatch. Does not affect register state or sync state of any entries.
+     */
+    Jump typeCheckEntry(const FrameEntry *fe, types::TypeSet *types) const;
+#endif
+
     /*
      * Fully stores a FrameEntry at an arbitrary address. popHint specifies
      * how hard the register allocator should try to keep the FE in registers.
+     * If scratchData and scratchType are specified, the frame entry and
+     * register state will not be modified.
      */
     void storeTo(FrameEntry *fe, Address address, bool popHint = false);
 

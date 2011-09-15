@@ -216,6 +216,8 @@ void JS_FASTCALL CheckArgumentTypes(VMFrame &f);
 
 #ifdef DEBUG
 void JS_FASTCALL AssertArgumentTypes(VMFrame &f);
+void JS_FASTCALL TypeCheckPushed(VMFrame &f);
+void JS_FASTCALL TypeCheckPopped(VMFrame &f, int32 which);
 #endif
 
 void JS_FASTCALL MissedBoundsCheckEntry(VMFrame &f);
