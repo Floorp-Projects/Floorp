@@ -1755,7 +1755,7 @@ class ScopeNameCompiler : public PICStubCompiler
         // If the property was found, but we decided not to cache it, then
         // take a slow path and do a full property fetch.
         if (!getprop.shape) {
-            if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
+            if (!obj->getGeneric(cx, ATOM_TO_JSID(atom), vp))
                 return false;
             if (thisvp)
                 return ComputeImplicitThis(cx, obj, *vp, thisvp);
@@ -1995,7 +1995,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     }
 
     Value v;
-    if (!obj->getProperty(f.cx, ATOM_TO_JSID(atom), &v))
+    if (!obj->getGeneric(f.cx, ATOM_TO_JSID(atom), &v))
         THROW();
 
     f.regs.sp[-1] = v;
@@ -2747,7 +2747,7 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
 
     disable(cx, "generated arguments stub");
 
-    if (!obj->getProperty(cx, id, vp))
+    if (!obj->getGeneric(cx, id, vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2830,7 +2830,7 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     disable(cx, "generated typed array stub");
 
     // Fetch the value as expected of Lookup_Cacheable for GetElement.
-    if (!obj->getProperty(cx, id, vp))
+    if (!obj->getGeneric(cx, id, vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2967,7 +2967,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         }
     }
 
-    if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
+    if (!obj->getGeneric(cx, id, &f.regs.sp[-2]))
         THROW();
 }
 

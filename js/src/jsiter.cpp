@@ -992,7 +992,7 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
         JS_ASSERT(!ni->isKeyIter());
         jsid id = *ni->current();
         ni->incCursor();
-        if (!ni->obj->getProperty(cx, id, rval))
+        if (!ni->obj->getGeneric(cx, id, rval))
             return false;
         if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *rval, rval))
             return false;

@@ -2998,7 +2998,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
     {
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
-        if (!proto->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom), &cval))
+        if (!proto->getProperty(cx, cx->runtime->atomState.constructorAtom, &cval))
             return NULL;
     }
     JSObject *funobj;
@@ -3734,7 +3734,7 @@ JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->getProperty(cx, id, vp);
+    return obj->getGeneric(cx, id, vp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4271,7 +4271,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         }
 
         Value v;
-        if (!obj->getProperty(cx, r.front().propid, &v))
+        if (!obj->getGeneric(cx, r.front().propid, &v))
             return NULL;
         clone->getFlatClosureUpvars()[i] = v;
     }

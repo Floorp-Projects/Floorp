@@ -4791,7 +4791,7 @@ xml_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
 }
 
 static JSBool
-xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+xml_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
         vp->setUndefined();
@@ -4802,18 +4802,24 @@ xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value
 }
 
 static JSBool
+xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return xml_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+}
+
+static JSBool
 xml_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_getProperty(cx, obj, receiver, id, vp);
+    return xml_getGeneric(cx, obj, receiver, id, vp);
 }
 
 static JSBool
 xml_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return xml_getProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+    return xml_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 static JSBool
@@ -5283,7 +5289,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_defineProperty,
         xml_defineElement,
         xml_defineSpecial,
-        xml_getProperty,
+        xml_getGeneric,
         xml_getProperty,
         xml_getElement,
         xml_getSpecial,
@@ -7457,7 +7463,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         Class *clasp = tmp->getClass();
         if (clasp == &BlockClass || clasp == &WithClass)
             continue;
-        if (!tmp->getProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, &v))
+        if (!tmp->getSpecial(cx, SpecialId::defaultXMLNamespace(), &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             *vp = v;
@@ -7690,7 +7696,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return false;
 
     JS_ASSERT(tvr.object());
-    return tvr.object()->getProperty(cx, id, vp);
+    return tvr.object()->getGeneric(cx, id, vp);
 }
 
 static JSXML *

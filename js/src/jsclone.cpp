@@ -583,7 +583,7 @@ JSStructuredCloneWriter::write(const Value &v)
                 if (prop) {
                     Value val;
                     if (!writeId(id) ||
-                        !obj->getProperty(context(), id, &val) ||
+                        !obj->getGeneric(context(), id, &val) ||
                         !startWrite(val))
                         return false;
                 }

@@ -51,6 +51,7 @@
 namespace js {
 
 class AutoIdVector;
+class PropertyName;
 class SpecialId;
 
 static JS_ALWAYS_INLINE jsid
@@ -201,7 +202,7 @@ typedef JSBool
 typedef JSBool
 (* GenericIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 typedef JSBool
-(* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+(* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp);
 typedef JSBool
 (* ElementIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp);
 typedef JSBool

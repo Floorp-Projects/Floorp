@@ -383,7 +383,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
 
         /* Take the slow path if prop was not found in a native object. */
         if (!obj->isNative() || !obj2->isNative()) {
-            if (!obj->getProperty(cx, id, &rval))
+            if (!obj->getGeneric(cx, id, &rval))
                 return NULL;
         } else {
             shape = (Shape *)prop;
@@ -499,7 +499,7 @@ stubs::GetElem(VMFrame &f)
         }
     }
 
-    if (!obj->getProperty(cx, id, &rval))
+    if (!obj->getGeneric(cx, id, &rval))
         THROW();
     copyFrom = &rval;
 
@@ -1601,7 +1601,7 @@ InlineGetProp(VMFrame &f)
                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                     &rval)
-                : !obj->getProperty(cx, id, &rval)) {
+                : !obj->getGeneric(cx, id, &rval)) {
             return false;
         }
     } while(0);
@@ -1627,7 +1627,7 @@ stubs::GetPropNoCache(VMFrame &f, JSAtom *atom)
     if (!obj)
         THROW();
 
-    if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
+    if (!obj->getGeneric(cx, ATOM_TO_JSID(atom), vp))
         THROW();
 
     /* Don't check for undefined, this is only used for 'prototype'. See ic::GetProp. */
