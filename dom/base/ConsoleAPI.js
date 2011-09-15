@@ -1,3 +1,5 @@
+/* -*- Mode: js2; js2-basic-offset: 2; indent-tabs-mode: nil; -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -71,19 +73,19 @@ ConsoleAPI.prototype = {
     let chromeObject = {
       // window.console API
       log: function CA_log() {
-        self.notifyObservers(outerID, innerID, "log", arguments);
+        self.notifyObservers(outerID, innerID, "log", self.processArguments(arguments));
       },
       info: function CA_info() {
-        self.notifyObservers(outerID, innerID, "info", arguments);
+        self.notifyObservers(outerID, innerID, "info", self.processArguments(arguments));
       },
       warn: function CA_warn() {
-        self.notifyObservers(outerID, innerID, "warn", arguments);
+        self.notifyObservers(outerID, innerID, "warn", self.processArguments(arguments));
       },
       error: function CA_error() {
-        self.notifyObservers(outerID, innerID, "error", arguments);
+        self.notifyObservers(outerID, innerID, "error", self.processArguments(arguments));
       },
       debug: function CA_debug() {
-        self.notifyObservers(outerID, innerID, "log", arguments);
+        self.notifyObservers(outerID, innerID, "log", self.processArguments(arguments));
       },
       trace: function CA_trace() {
         self.notifyObservers(outerID, innerID, "trace", self.getStackTrace());
@@ -166,6 +168,42 @@ ConsoleAPI.prototype = {
 
     Services.obs.notifyObservers(consoleEvent,
                                  "console-api-log-event", aOuterWindowID);
+  },
+
+  /**
+   * Process the console API call arguments in order to perform printf-like
+   * string substitution.
+   * TODO: object substitution should display an interactive property list (bug
+   * 685815) and width and precision qualifiers should be taken into account
+   * (bug 685813).
+   *
+   * @param mixed aArguments
+   *        The arguments given to the console API call.
+   **/
+  processArguments: function CA_processArguments(aArguments) {
+    if (aArguments.length < 2) {
+      return aArguments;
+    }
+    let args = Array.prototype.slice.call(aArguments);
+    let format = args.shift();
+    // Format specification regular expression.
+    let pattern = /%(\d*).?(\d*)[a-zA-Z]/g;
+    let processed = format.replace(pattern, function CA_PA_substitute(spec) {
+      switch (spec[spec.length-1]) {
+        case "o":
+        case "s":
+          return args.shift().toString();
+        case "d":
+        case "i":
+          return parseInt(args.shift());
+        case "f":
+          return parseFloat(args.shift());
+        default:
+          return spec;
+      };
+    });
+    args.unshift(processed);
+    return args;
   },
 
   /**
