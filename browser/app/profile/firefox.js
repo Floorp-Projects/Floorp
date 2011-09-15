@@ -308,7 +308,7 @@ pref("browser.urlbar.trimURLs", true);
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some
 // feedback from their action.
-pref("browser.download.saveLinkAsFilenameTimeout", 1000);
+pref("browser.download.saveLinkAsFilenameTimeout", 4000);
 
 pref("browser.download.useDownloadDir", true);
 

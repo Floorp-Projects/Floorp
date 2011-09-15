@@ -683,7 +683,7 @@ nsNavHistory::SetJournalMode(enum JournalMode aJournalMode)
   }
   else {
     NS_WARNING(nsPrintfCString(128, "Setting journal mode failed: %s",
-                               PromiseFlatCString(journalMode).get()).get());
+                               journalMode.get()).get());
     return NS_ERROR_FAILURE;
   }
 
@@ -3516,14 +3516,14 @@ PlacesSQLQueryBuilder::SelectAsSite()
     ") ",
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
     mSortingMode,
-    PromiseFlatCString(timeConstraints).get(),
-    PromiseFlatCString(visitsJoin).get(),
-    PromiseFlatCString(additionalConditions).get(),
+    timeConstraints.get(),
+    visitsJoin.get(),
+    additionalConditions.get(),
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
     mSortingMode,
-    PromiseFlatCString(timeConstraints).get(),
-    PromiseFlatCString(visitsJoin).get(),
-    PromiseFlatCString(additionalConditions).get()
+    timeConstraints.get(),
+    visitsJoin.get(),
+    additionalConditions.get()
   );
 
   return NS_OK;
@@ -3936,9 +3936,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     PRInt32 lastError = 0;
     (void)mDBConn->GetLastError(&lastError);
     printf("Places failed to create a statement from this query:\n%s\nStorage error (%d): %s\n",
-           PromiseFlatCString(queryString).get(),
-           lastError,
-           PromiseFlatCString(lastErrorString).get());
+           queryString.get(), lastError, lastErrorString.get());
   }
 #endif
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5193,9 +5191,7 @@ nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
     PRInt32 lastError = 0;
     (void)mDBConn->GetLastError(&lastError);
     printf("Places failed to create a statement from this query:\n%s\nStorage error (%d): %s\n",
-           PromiseFlatCString(queryString).get(),
-           lastError,
-           PromiseFlatCString(lastErrorString).get());
+           queryString.get(), lastError, lastErrorString.get());
   }
 #endif
   NS_ENSURE_SUCCESS(rv, rv);

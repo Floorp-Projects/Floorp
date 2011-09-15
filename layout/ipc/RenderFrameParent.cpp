@@ -811,11 +811,12 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // We're the subdoc for <browser remote="true"> and it has
   // painted content.  Display its shadow layer tree.
   nsDisplayList shadowTree;
-  if (aBuilder->IsForEventDelivery()) {
+  ContainerLayer* container = GetRootLayer();
+  if (aBuilder->IsForEventDelivery() && container) {
     nsRect bounds = aFrame->EnsureInnerView()->GetBounds();
     ViewTransform offset =
       ViewTransform(GetRootFrameOffset(aFrame, aBuilder), 1, 1);
-    BuildListForLayer(GetRootLayer(), mFrameLoader, offset,
+    BuildListForLayer(container, mFrameLoader, offset,
                       aBuilder, shadowTree, aFrame);
   } else {
     shadowTree.AppendToTop(

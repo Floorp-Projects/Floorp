@@ -200,6 +200,8 @@ ContentParent::Init()
         obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
         obs->AddObserver(this, "child-memory-reporter-request", PR_FALSE);
         obs->AddObserver(this, "memory-pressure", PR_FALSE);
+        obs->AddObserver(this, "child-gc-request", PR_FALSE);
+        obs->AddObserver(this, "child-cc-request", PR_FALSE);
 #ifdef ACCESSIBILITY
         obs->AddObserver(this, "a11y-init-or-shutdown", PR_FALSE);
 #endif
@@ -304,6 +306,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-memory-reporter-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
 #ifdef ACCESSIBILITY
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "a11y-init-or-shutdown");
 #endif
@@ -748,6 +752,12 @@ ContentParent::Observe(nsISupports* aSubject,
     }
     else if (!strcmp(aTopic, "child-memory-reporter-request")) {
         SendPMemoryReportRequestConstructor();
+    }
+    else if (!strcmp(aTopic, "child-gc-request")){
+        SendGarbageCollect();
+    }
+    else if (!strcmp(aTopic, "child-cc-request")){
+        SendCycleCollect();
     }
 #ifdef ACCESSIBILITY
     // Make sure accessibility is running in content process when accessibility

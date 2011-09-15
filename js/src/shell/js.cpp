@@ -4528,6 +4528,9 @@ Help(JSContext *cx, uintN argc, jsval *vp)
                     const char *p = strchr(msg, '(');
                     JS_ASSERT(p);
 
+                    if (size_t(p - msg) != str->length())
+                        continue;
+
                     if (strncmp(funcName.ptr(), msg, p - msg) == 0) {
                         if (!did_header) {
                             did_header = 1;

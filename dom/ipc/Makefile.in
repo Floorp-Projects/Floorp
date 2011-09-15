@@ -105,6 +105,7 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/../../xpcom/base \
 	-I$(srcdir)/../indexedDB \
 	-I$(topsrcdir)/extensions/cookie \
+	-I$(topsrcdir)/dom/base \
 	$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

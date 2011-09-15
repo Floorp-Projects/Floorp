@@ -50,6 +50,7 @@
   The second argument to HTTP_ATOM is the string value of the atom.
  ******/
 
+#if defined(HTTP_ATOM)
 HTTP_ATOM(Accept,                    "Accept")
 HTTP_ATOM(Accept_Encoding,           "Accept-Encoding")
 HTTP_ATOM(Accept_Language,           "Accept-Language")
@@ -123,26 +124,40 @@ HTTP_ATOM(Vary,                      "Vary")
 HTTP_ATOM(Version,                   "Version")
 HTTP_ATOM(WWW_Authenticate,          "WWW-Authenticate")
 HTTP_ATOM(Warning,                   "Warning")
+#endif
 
 // methods are atoms too.
 //
 // Note: winnt.h defines DELETE macro, so we'll just keep the methods mixedcase
 // even though they're normally written all uppercase. -- darin
 
-HTTP_ATOM(Connect,                   "CONNECT")
-HTTP_ATOM(Copy,                      "COPY")
-HTTP_ATOM(Delete,                    "DELETE")
-HTTP_ATOM(Get,                       "GET")
-HTTP_ATOM(Head,                      "HEAD")
-HTTP_ATOM(Index,                     "INDEX")
-HTTP_ATOM(Lock,                      "LOCK")
-HTTP_ATOM(M_Post,                    "M-POST")
-HTTP_ATOM(Mkcol,                     "MKCOL")
-HTTP_ATOM(Move,                      "MOVE")
-HTTP_ATOM(Options,                   "OPTIONS")
-HTTP_ATOM(Post,                      "POST")
-HTTP_ATOM(Propfind,                  "PROPFIND")
-HTTP_ATOM(Proppatch,                 "PROPPATCH")
-HTTP_ATOM(Put,                       "PUT")
-HTTP_ATOM(Trace,                     "TRACE")
-HTTP_ATOM(Unlock,                    "UNLOCK")
+#if defined(HTTP_METHOD_ATOM)
+
+#if !defined(HTTP_CASE_INSENSITIVE_METHOD_ATOM)
+#define HTTP_CASE_INSENSITIVE_METHOD_ATOM HTTP_METHOD_ATOM
+#define UNDEF_HTTP_CASE_INSENSITIVE_METHOD_ATOM
+#endif
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Connect,   "CONNECT")
+HTTP_METHOD_ATOM                 (Copy,      "COPY")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Delete,    "DELETE")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Get,       "GET")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Head,      "HEAD")
+HTTP_METHOD_ATOM                 (Index,     "INDEX")
+HTTP_METHOD_ATOM                 (Lock,      "LOCK")
+HTTP_METHOD_ATOM                 (M_Post,    "M-POST")
+HTTP_METHOD_ATOM                 (Mkcol,     "MKCOL")
+HTTP_METHOD_ATOM                 (Move,      "MOVE")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Options,   "OPTIONS")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Post,      "POST")
+HTTP_METHOD_ATOM                 (Propfind,  "PROPFIND")
+HTTP_METHOD_ATOM                 (Proppatch, "PROPPATCH")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Put,       "PUT")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Trace,     "TRACE")
+HTTP_CASE_INSENSITIVE_METHOD_ATOM(Track,     "TRACK")
+HTTP_METHOD_ATOM                 (Unlock,    "UNLOCK")
+#if defined(UNDEF_HTTP_CASE_INSENSITIVE_METHOD_ATOM)
+#undef UNDEF_HTTP_CASE_INSENSITIVE_METHOD_ATOM
+#undef HTTP_CASE_INSENSITIVE_METHOD_ATOM
+#endif
+
+#endif
