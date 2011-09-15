@@ -133,6 +133,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     inlining_(false),
     hasGlobalReallocation(false),
     oomInVector(false),
+    overflowICSpace(false),
     gcNumber(cx->runtime->gcNumber),
     applyTricks(NoApplyTricks),
     pcLengths(NULL)
@@ -893,6 +894,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
      */
     if (cx->runtime->gcNumber != gcNumber)
         return Compile_Retry;
+
+    if (overflowICSpace) {
+        JaegerSpew(JSpew_Scripts, "dumped a constant pool while generating an IC\n");
+        return Compile_Abort;
+    }
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
         Label label = labelOf(branchPatches[i].pc, branchPatches[i].inlineIndex);
