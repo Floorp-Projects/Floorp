@@ -4438,7 +4438,7 @@ function JSTermHelper(aJSTerm)
     if (!errstr) {
       let stylePanel = StyleInspector.createPanel();
       stylePanel.setAttribute("hudToolId", aJSTerm.hudId);
-      stylePanel.selectNode(aNode, true);
+      stylePanel.selectNode(aNode);
     } else {
       aJSTerm.writeOutput(errstr + "\n", CATEGORY_OUTPUT, SEVERITY_ERROR);
     }
