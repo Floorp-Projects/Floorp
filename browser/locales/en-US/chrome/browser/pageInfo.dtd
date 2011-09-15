@@ -111,17 +111,17 @@
 <!ENTITY  securityView.unknown   "Unknown">
 
 
-<!ENTITY  securityView.identity.header   "Web Site Identity">
+<!ENTITY  securityView.identity.header   "Website Identity">
 <!ENTITY  securityView.identity.owner    "Owner:">
-<!ENTITY  securityView.identity.domain   "Web site:">
+<!ENTITY  securityView.identity.domain   "Website:">
 <!ENTITY  securityView.identity.verifier "Verified by:">
 
 <!ENTITY  securityView.privacy.header                   "Privacy &amp; History">
-<!ENTITY  securityView.privacy.history                  "Have I visited this web site prior to today?">
-<!ENTITY  securityView.privacy.cookies                  "Is this web site storing information (cookies) on my computer?">
+<!ENTITY  securityView.privacy.history                  "Have I visited this website prior to today?">
+<!ENTITY  securityView.privacy.cookies                  "Is this website storing information (cookies) on my computer?">
 <!ENTITY  securityView.privacy.viewCookies              "View Cookies">
 <!ENTITY  securityView.privacy.viewCookies.accessKey    "k">
-<!ENTITY  securityView.privacy.passwords                "Have I saved any passwords for this web site?">
+<!ENTITY  securityView.privacy.passwords                "Have I saved any passwords for this website?">
 <!ENTITY  securityView.privacy.viewPasswords            "View Saved Passwords">
 <!ENTITY  securityView.privacy.viewPasswords.accessKey  "w">
 
