@@ -114,12 +114,14 @@ void GetBasename(const nsCString &aPath, nsACString &aOut)
 struct CategoriesSeen {
   CategoriesSeen() :
     mSeenResident(false),
+    mSeenPss(false),
     mSeenVsize(false),
     mSeenSwap(false)
   {
   }
 
   bool mSeenResident;
+  bool mSeenPss;
   bool mSeenVsize;
   bool mSeenSwap;
 };
@@ -466,6 +468,10 @@ MapsReporter::ParseMapBody(
   else if (strcmp(desc, "Rss") == 0) {
     category = "resident";
     aCategoriesSeen->mSeenResident = PR_TRUE;
+  }
+  else if (strcmp(desc, "Pss") == 0) {
+    category = "pss";
+    aCategoriesSeen->mSeenPss = PR_TRUE;
   }
   else if (strcmp(desc, "Swap") == 0) {
     category = "swap";
