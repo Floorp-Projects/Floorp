@@ -71,15 +71,6 @@ body {
   content: "";
 }
 
-#header,
-#footer {
-  padding: 5px;
-}
-
-#header label {
-  font-weight: bold;
-}
-
 .property-header {
   padding: 2px 5px;
   background: -moz-linear-gradient(top, #F8F8F8, #E8E8E8);
@@ -87,63 +78,52 @@ body {
 }
 
 .property-name,
-.property-value,
-.rule-count,
+.rule-matched,
 .rule-unmatched {
   cursor: pointer;
 }
 
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
-.link,
-.unmatchedlink {
+.link {
   color: #55A;
 }
-.link:visited,
-.unmatchedlink:visited {
+.link:visited {
   color: #55A;
 }
-a.link,
-a.unmatchedlink {
+a.link {
   text-decoration: none;
   cursor: pointer;
 }
-a.link:visited,
-a.unmatchedlink:visited {
+a.link:visited {
   text-decoration: none;
 }
 
-.rule-count,
+.rule-matched,
 .rule-unmatched {
-  padding: 5px 0 0 15px;
+  padding: 2px 0;
+  white-space: nowrap;
 }
-.unmatched {
-  display: inline-block;
+
+.rulelink {
+  color: #55A;
 }
+
 .expander {
   width: 8px;
   height: 8px;
-  display: inline-block;
+  float: left;
+  -moz-margin-start: 15px;
   -moz-margin-end: 5px;
-  margin-bottom: 1px;
+  margin-top: 3px;
   background: url("chrome://browser/skin/devtools/arrows.png");
-}
-
-.unmatched-rule {
-  -moz-margin-start: 25px;
   background-position: 24px 0;
 }
 
-.property-view .rule-count .expander,
-.property-view .rule-unmatched .expander {
-  background-position: 24px 0;
-}
-.property-view[dir="rtl"] .rule-count .expander,
-.property-view[dir="rtl"] .rule-unmatched .expander {
+.expander[dir="rtl"] {
   background-position: 16px 0;
 }
-.property-view[open] .rule-count .expander,
-.property-view[open] .rule-unmatched .expander {
+.expander[open] {
   background-position: 8px 0;
 }
 
@@ -158,20 +138,6 @@ a.unmatchedlink:visited {
   font-size: 10px;
 }
 
-.property-view > .rules {
-  display: none;
-}
-.property-view[open] > .rules {
-  display: table;
-}
-.rules {
-  -moz-margin-start: 32px;
-  max-height: 350px;
-  overflow-y: auto;
-}
-.rule-status {
-  white-space: nowrap;
-}
 .rule-link {
   text-align: end;
   -moz-padding-start: 10px;
