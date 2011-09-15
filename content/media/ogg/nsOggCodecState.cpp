@@ -773,34 +773,34 @@ nsSkeletonState::~nsSkeletonState()
 // http://wiki.xiph.org/Ogg_Skeleton_4
 
 // Minimum length in bytes of a Skeleton header packet.
-#define SKELETON_MIN_HEADER_LEN 28
-#define SKELETON_4_0_MIN_HEADER_LEN 80
+static const long SKELETON_MIN_HEADER_LEN = 28;
+static const long SKELETON_4_0_MIN_HEADER_LEN = 80;
 
 // Minimum length in bytes of a Skeleton 4.0 index packet.
-#define SKELETON_4_0_MIN_INDEX_LEN 42
+static const long SKELETON_4_0_MIN_INDEX_LEN = 42;
 
 // Minimum possible size of a compressed index keypoint.
-#define MIN_KEY_POINT_SIZE 2
+static const size_t MIN_KEY_POINT_SIZE = 2;
 
 // Byte offset of the major and minor version numbers in the
 // Ogg Skeleton 4.0 header packet.
-#define SKELETON_VERSION_MAJOR_OFFSET 8
-#define SKELETON_VERSION_MINOR_OFFSET 10
+static const size_t SKELETON_VERSION_MAJOR_OFFSET = 8;
+static const size_t SKELETON_VERSION_MINOR_OFFSET = 10;
 
 // Byte-offsets of the presentation time numerator and denominator
-#define SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET 12
-#define SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET 20
+static const size_t SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET = 12;
+static const size_t SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET = 20;
 
 // Byte-offsets of the length of file field in the Skeleton 4.0 header packet.
-#define SKELETON_FILE_LENGTH_OFFSET 64
+static const size_t SKELETON_FILE_LENGTH_OFFSET = 64;
 
 // Byte-offsets of the fields in the Skeleton index packet.
-#define INDEX_SERIALNO_OFFSET 6
-#define INDEX_NUM_KEYPOINTS_OFFSET 10
-#define INDEX_TIME_DENOM_OFFSET 18
-#define INDEX_FIRST_NUMER_OFFSET 26
-#define INDEX_LAST_NUMER_OFFSET 34
-#define INDEX_KEYPOINT_OFFSET 42
+static const size_t INDEX_SERIALNO_OFFSET = 6;
+static const size_t INDEX_NUM_KEYPOINTS_OFFSET = 10;
+static const size_t INDEX_TIME_DENOM_OFFSET = 18;
+static const size_t INDEX_FIRST_NUMER_OFFSET = 26;
+static const size_t INDEX_LAST_NUMER_OFFSET = 34;
+static const size_t INDEX_KEYPOINT_OFFSET = 42;
 
 static PRBool IsSkeletonBOS(ogg_packet* aPacket)
 {

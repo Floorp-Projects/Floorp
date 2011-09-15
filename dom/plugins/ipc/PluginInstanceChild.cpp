@@ -359,6 +359,18 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return result;
     }
 
+    case NPNVdocumentOrigin: {
+        nsCString v;
+        NPError result;
+        if (!CallNPN_GetValue_NPNVdocumentOrigin(&v, &result)) {
+            return NPERR_GENERIC_ERROR;
+        }
+        if (result == NPERR_NO_ERROR) {
+            *static_cast<char**>(aValue) = ToNewCString(v);
+        }
+        return result;
+    }
+
     case NPNVWindowNPObject: // Intentional fall-through
     case NPNVPluginElementNPObject: {
         NPObject* object;

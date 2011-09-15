@@ -330,9 +330,7 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
   if (!colorStr.IsEmpty()) {
     nscolor thecolor;
     if (colorStr[0] == PRUnichar('#')) {
-      if (NS_HexToRGB(nsDependentString(
-                        Substring(colorStr, 1, colorStr.Length() - 1)),
-                      &thecolor)) {
+      if (NS_HexToRGB(nsDependentString(colorStr, 1), &thecolor)) {
         PRInt32 id = NS_PTR_TO_INT32(index);
         CACHE_COLOR(id, thecolor);
       }

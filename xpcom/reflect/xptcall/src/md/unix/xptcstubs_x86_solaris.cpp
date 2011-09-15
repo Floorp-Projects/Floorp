@@ -40,7 +40,6 @@
 
 #include "xptcprivate.h"
 #include "xptiprivate.h"
-#include "xptc_platforms_unixish_x86.h"
 
 nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)

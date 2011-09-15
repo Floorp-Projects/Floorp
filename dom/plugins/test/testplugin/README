@@ -37,6 +37,10 @@ Hands back an object which reflects properties as values, e.g.
   .getReflector()['foo'] = 'foo'
   .getReflector()[1] = 1
 
+* .getNPNVdocumentOrigin()
+Returns the origin string retrieved from the browser by a NPNVdocumentOrigin
+variable request. Does not cache the value, gets it from the browser every time.
+
 == NPN_ConvertPoint testing ==
 
 * convertPointX(sourceSpace, sourceX, sourceY, destSpace)

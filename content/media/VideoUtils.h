@@ -141,17 +141,17 @@ PRBool SamplesToUsecs(PRInt64 aSamples, PRUint32 aRate, PRInt64& aOutUsecs);
 PRBool UsecsToSamples(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutSamples);
 
 // Number of microseconds per second. 1e6.
-#define USECS_PER_S 1000000
+static const PRInt64 USECS_PER_S = 1000000;
 
 // Number of microseconds per millisecond.
-#define USECS_PER_MS 1000
+static const PRInt64 USECS_PER_MS = 1000;
 
 // The maximum height and width of the video. Used for
 // sanitizing the memory allocation of the RGB buffer.
 // The maximum resolution we anticipate encountering in the
 // wild is 2160p - 3840x2160 pixels.
-#define MAX_VIDEO_WIDTH  4000
-#define MAX_VIDEO_HEIGHT 3000
+static const PRInt32 MAX_VIDEO_WIDTH = 4000;
+static const PRInt32 MAX_VIDEO_HEIGHT = 3000;
 
 // Scales the display rect aDisplay by aspect ratio aAspectRatio.
 // Note that aDisplay must be validated by nsVideoInfo::ValidateVideoRegion()
