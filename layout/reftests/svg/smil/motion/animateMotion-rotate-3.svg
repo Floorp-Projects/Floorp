@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <!-- Tests for "rotate" interacting with the transform attribute. -->
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(1, false);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
+
+  <!-- Big green background to match lime.svg -->
+  <rect height="100%" width="100%" fill="lime"/>
+
+  <!-- A "shadow" rect (should be covered up by green rect). The only difference
+       between this rect and the other one is that this rect has the
+       |transform| attr set on its <g> parent instead of on it directly. -->
+  <g transform="translate(0, 50)">
+    <rect width="50" height="50" fill="red">
+     <animateMotion begin="0s" dur="1s" fill="freeze" rotate="90"
+                    path="M50 0 h50"/>
+    </rect>
+  </g>
+
+  <rect width="50" height="50" fill="lime" transform="translate(0, 50)">
+    <animateMotion begin="0s" dur="1s" fill="freeze" rotate="90"
+                   path="M50 0 h50"/>
+  </rect>
+</svg>
