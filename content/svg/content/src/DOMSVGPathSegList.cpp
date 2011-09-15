@@ -156,9 +156,20 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
   PRUint32 newSegType;
 
   nsRefPtr<DOMSVGPathSegList> kungFuDeathGrip;
-  if (aNewValue.Length() < length) {
+  if (length) {
     // RemovingFromList() might clear last reference to |this|.
     // Retain a temporary reference to keep from dying before returning.
+    //
+    // NOTE: For path-seg lists (unlike other list types), we have to do this
+    // *whenever our list is nonempty* (even if we're growing in length).
+    // That's because the path-seg-type of any segment could differ between old
+    // list vs. new list, which will make us destroy & recreate that segment,
+    // which could remove the last reference to us.
+    //
+    // (We explicitly *don't* want to create a kungFuDeathGrip in the length=0
+    // case, though, because we do hit this code inside our constructor before
+    // any other owning references have been added, and at that point, the
+    // deathgrip-removal would make us die before we exit our constructor.)
     kungFuDeathGrip = this;
   }
 
