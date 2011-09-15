@@ -141,7 +141,7 @@ struct RuleValue : RuleSelectorPair {
 struct RuleHashTableEntry : public PLDHashEntryHdr {
   // If you add members that have heap allocated memory be sure to change the
   // logic in RuleHashTableSizeOfEnumerator.
-  nsTArray<RuleValue> mRules;
+  nsAutoTArray<RuleValue, 2> mRules;
 };
 
 struct RuleHashTagTableEntry : public RuleHashTableEntry {
@@ -229,6 +229,17 @@ RuleHash_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
   entry->~RuleHashTableEntry();
 }
 
+static void
+RuleHash_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
+                   PLDHashEntryHdr *to)
+{
+  RuleHashTableEntry *oldEntry =
+    const_cast<RuleHashTableEntry*>(
+      static_cast<const RuleHashTableEntry*>(from));
+  RuleHashTableEntry *newEntry = new (to) RuleHashTableEntry();
+  newEntry->mRules.SwapElements(oldEntry->mRules);
+}
+
 static bool
 RuleHash_TagTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
@@ -255,6 +266,18 @@ RuleHash_TagTable_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>(hdr);
   entry->~RuleHashTagTableEntry();
+}
+
+static void
+RuleHash_TagTable_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
+                            PLDHashEntryHdr *to)
+{
+  RuleHashTagTableEntry *oldEntry =
+    const_cast<RuleHashTagTableEntry*>(
+      static_cast<const RuleHashTagTableEntry*>(from));
+  RuleHashTagTableEntry *newEntry = new (to) RuleHashTagTableEntry();
+  newEntry->mTag.swap(oldEntry->mTag);
+  newEntry->mRules.SwapElements(oldEntry->mRules);
 }
 
 static nsIAtom*
@@ -296,7 +319,7 @@ static const PLDHashTableOps RuleHash_TagTable_Ops = {
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_TagTable_MatchEntry,
-  PL_DHashMoveEntryStub,
+  RuleHash_TagTable_MoveEntry,
   RuleHash_TagTable_ClearEntry,
   PL_DHashFinalizeStub,
   RuleHash_TagTable_InitEntry
@@ -309,7 +332,7 @@ static const RuleHashTableOps RuleHash_ClassTable_CSOps = {
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_CSMatchEntry,
-  PL_DHashMoveEntryStub,
+  RuleHash_MoveEntry,
   RuleHash_ClearEntry,
   PL_DHashFinalizeStub,
   RuleHash_InitEntry
@@ -324,7 +347,7 @@ static const RuleHashTableOps RuleHash_ClassTable_CIOps = {
   PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
-  PL_DHashMoveEntryStub,
+  RuleHash_MoveEntry,
   RuleHash_ClearEntry,
   PL_DHashFinalizeStub,
   RuleHash_InitEntry
@@ -339,7 +362,7 @@ static const RuleHashTableOps RuleHash_IdTable_CSOps = {
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_CSMatchEntry,
-  PL_DHashMoveEntryStub,
+  RuleHash_MoveEntry,
   RuleHash_ClearEntry,
   PL_DHashFinalizeStub,
   RuleHash_InitEntry
@@ -354,7 +377,7 @@ static const RuleHashTableOps RuleHash_IdTable_CIOps = {
   PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
-  PL_DHashMoveEntryStub,
+  RuleHash_MoveEntry,
   RuleHash_ClearEntry,
   PL_DHashFinalizeStub,
   RuleHash_InitEntry
@@ -367,7 +390,7 @@ static const PLDHashTableOps RuleHash_NameSpaceTable_Ops = {
   PL_DHashFreeTable,
   RuleHash_NameSpaceTable_HashKey,
   RuleHash_NameSpaceTable_MatchEntry,
-  PL_DHashMoveEntryStub,
+  RuleHash_MoveEntry,
   RuleHash_ClearEntry,
   PL_DHashFinalizeStub,
   RuleHash_InitEntry
@@ -750,7 +773,7 @@ RuleHash::SizeOf() const
 // A hash table mapping atoms to lists of selectors
 struct AtomSelectorEntry : public PLDHashEntryHdr {
   nsIAtom *mAtom;
-  nsTArray<nsCSSSelector*> mSelectors;
+  nsAutoTArray<nsCSSSelector*, 2> mSelectors;
 };
 
 static void
@@ -769,6 +792,17 @@ AtomSelector_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PR_TRUE;
 }
 
+static void
+AtomSelector_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
+                       PLDHashEntryHdr *to)
+{
+  AtomSelectorEntry *oldEntry =
+    const_cast<AtomSelectorEntry*>(static_cast<const AtomSelectorEntry*>(from));
+  AtomSelectorEntry *newEntry = new (to) AtomSelectorEntry();
+  newEntry->mAtom = oldEntry->mAtom;
+  newEntry->mSelectors.SwapElements(oldEntry->mSelectors);
+}
+
 static nsIAtom*
 AtomSelector_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
@@ -782,7 +816,7 @@ static const PLDHashTableOps AtomSelector_CSOps = {
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   PL_DHashMatchEntryStub,
-  PL_DHashMoveEntryStub,
+  AtomSelector_MoveEntry,
   AtomSelector_ClearEntry,
   PL_DHashFinalizeStub,
   AtomSelector_InitEntry
@@ -795,7 +829,7 @@ static const RuleHashTableOps AtomSelector_CIOps = {
   PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
-  PL_DHashMoveEntryStub,
+  AtomSelector_MoveEntry,
   AtomSelector_ClearEntry,
   PL_DHashFinalizeStub,
   AtomSelector_InitEntry
