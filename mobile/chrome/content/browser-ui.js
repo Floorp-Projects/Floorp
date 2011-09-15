@@ -431,6 +431,9 @@ var BrowserUI = {
     // listening AppCommand to handle special keys
     window.addEventListener("AppCommand", this, true);
 
+    // Initialize the number of tabs in toolbar
+    TabsPopup.init();
+
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
     messageManager.addMessageListener("pageshow", function() {
