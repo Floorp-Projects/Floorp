@@ -1380,12 +1380,10 @@ public:
         m_assembler.forceFlushConstantPool();
     }
 
-#ifdef DEBUG
-    void allowPoolFlush(bool allowFlush)
+    int flushCount()
     {
-        m_assembler.allowPoolFlush(allowFlush);
+        return m_assembler.flushCount();
     }
-#endif
 
 protected:
     ARMAssembler::Condition ARMCondition(Condition cond)

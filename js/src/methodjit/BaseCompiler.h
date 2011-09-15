@@ -228,67 +228,43 @@ class AutoReserveICSpace {
     typedef Assembler::Label Label;
 
     Assembler           &masm;
-#ifdef DEBUG
-    Label               startLabel;
     bool                didCheck;
-#endif
+    bool                *overflowSpace;
+    int                 flushCount;
 
   public:
-    AutoReserveICSpace(Assembler &masm) : masm(masm) {
+    AutoReserveICSpace(Assembler &masm, bool *overflowSpace)
+        : masm(masm), didCheck(false), overflowSpace(overflowSpace)
+    {
         masm.ensureSpace(reservedSpace);
-#ifdef DEBUG
-        didCheck = false;
-
-        startLabel = masm.label();
-
-        /* Assert that the constant pool is not flushed until we reach a safe point. */
-        masm.allowPoolFlush(false);
-
-        JaegerSpew(JSpew_Insns, " -- BEGIN CONSTANT-POOL-FREE REGION -- \n");
-#endif
+        flushCount = masm.flushCount();
     }
 
     /* Allow manual IC space checks so that non-patchable code at the end of an IC section can be
      * free to use constant pools. */
     void check() {
-#ifdef DEBUG
         JS_ASSERT(!didCheck);
         didCheck = true;
 
-        Label endLabel = masm.label();
-        int spaceUsed = masm.differenceBetween(startLabel, endLabel);
-
-        /* Spew the space used, to help tuning of reservedSpace. */
-        JaegerSpew(JSpew_Insns,
-                   " -- END CONSTANT-POOL-FREE REGION: %u bytes used of %u reserved. -- \n",
-                   spaceUsed, reservedSpace);
-
-        /* Assert that we didn't emit more code than we protected. */
-        JS_ASSERT(spaceUsed >= 0);
-        JS_ASSERT(size_t(spaceUsed) <= reservedSpace);
-
-        /* Allow the pool to be flushed. */
-        masm.allowPoolFlush(true);
-#endif
+        if (masm.flushCount() != flushCount)
+            *overflowSpace = true;
     }
 
     ~AutoReserveICSpace() {
-#ifdef DEBUG
         /* Automatically check the IC space if we didn't already do it manually. */
         if (!didCheck) {
             check();
         }
-#endif
     }
 };
 
-# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<256> arics(__masm)
+# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<256> arics(__masm, &this->overflowICSpace)
 # define CHECK_IC_SPACE()               arics.check()
 
 /* The OOL path can need a lot of space because we save and restore a lot of registers. The actual
  * sequene varies. However, dumping the literal pool before an OOL block is probably a good idea
  * anyway, as we branch directly to the start of the block from the fast path. */
-# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<2048> arics_ool(__masm)
+# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<2048> arics_ool(__masm, &this->overflowICSpace)
 
 /* Allow the OOL patch to be checked before object destruction. Often, non-patchable epilogues or
  * rejoining sequences are emitted, and it isn't necessary to protect these from literal pools. */
