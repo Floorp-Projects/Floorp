@@ -163,7 +163,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     }
 
     AutoValueRooter tvr(cx);
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), tvr.addr()))
+    if (!obj->getProperty(cx, cx->runtime->atomState.lengthAtom, tvr.addr()))
         return false;
 
     if (tvr.value().isInt32()) {
@@ -395,7 +395,7 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
         *hole = JS_TRUE;
         vp->setUndefined();
     } else {
-        if (!obj->getProperty(cx, idr.id(), vp))
+        if (!obj->getGeneric(cx, idr.id(), vp))
             return JS_FALSE;
         *hole = JS_FALSE;
     }
@@ -776,7 +776,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+array_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     uint32 i;
 
@@ -827,6 +827,12 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
 }
 
 static JSBool
+array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return array_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+}
+
+static JSBool
 array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
 {
     if (!obj->isDenseArray())
@@ -866,7 +872,7 @@ array_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
 static JSBool
 array_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return array_getProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+    return array_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 static JSBool
@@ -1227,7 +1233,7 @@ Class js::ArrayClass = {
         array_defineProperty,
         array_defineElement,
         array_defineSpecial,
-        array_getProperty,
+        array_getGeneric,
         array_getProperty,
         array_getElement,
         array_getSpecial,
@@ -1653,7 +1659,7 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     Value &join = vp[0];
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.joinAtom), &join))
+    if (!obj->getProperty(cx, cx->runtime->atomState.joinAtom, &join))
         return false;
 
     if (!js_IsCallable(join)) {

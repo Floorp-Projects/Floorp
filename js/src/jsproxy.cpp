@@ -320,7 +320,7 @@ GetTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    return handler->getProperty(cx, ATOM_TO_JSID(atom), fvalp);
+    return handler->getGeneric(cx, ATOM_TO_JSID(atom), fvalp);
 }
 
 static bool
@@ -951,11 +951,17 @@ proxy_DefineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *va
 }
 
 static JSBool
-proxy_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+proxy_GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     id = js_CheckForStringIndex(id);
 
     return JSProxy::get(cx, obj, receiver, id, vp);
+}
+
+static JSBool
+proxy_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return proxy_GetGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
 }
 
 static JSBool
@@ -964,13 +970,13 @@ proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return proxy_GetProperty(cx, obj, receiver, id, vp);
+    return proxy_GetGeneric(cx, obj, receiver, id, vp);
 }
 
 static JSBool
 proxy_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return proxy_GetProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+    return proxy_GetGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 static JSBool
@@ -1173,7 +1179,7 @@ JS_FRIEND_DATA(Class) js::ObjectProxyClass = {
         proxy_DefineProperty,
         proxy_DefineElement,
         proxy_DefineSpecial,
-        proxy_GetProperty,
+        proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
         proxy_GetSpecial,
@@ -1234,7 +1240,7 @@ JS_FRIEND_DATA(Class) js::OuterWindowProxyClass = {
         proxy_DefineProperty,
         proxy_DefineElement,
         proxy_DefineSpecial,
-        proxy_GetProperty,
+        proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
         proxy_GetSpecial,
@@ -1307,7 +1313,7 @@ JS_FRIEND_DATA(Class) js::FunctionProxyClass = {
         proxy_DefineProperty,
         proxy_DefineElement,
         proxy_DefineSpecial,
-        proxy_GetProperty,
+        proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
         proxy_GetSpecial,
@@ -1523,7 +1529,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
 
         /* callable is the constructor, so get callable.prototype is the proto of the new object. */
         Value protov;
-        if (!callable->getProperty(cx, ATOM_TO_JSID(ATOM(classPrototype)), &protov))
+        if (!callable->getProperty(cx, ATOM(classPrototype), &protov))
             return false;
 
         JSObject *proto;

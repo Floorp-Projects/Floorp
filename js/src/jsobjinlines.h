@@ -135,9 +135,9 @@ JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 }
 
 inline JSBool
-JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
+JSObject::getGeneric(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
 {
-    js::PropertyIdOp op = getOps()->getProperty;
+    js::GenericIdOp op = getOps()->getGeneric;
     if (op) {
         if (!op(cx, this, receiver, id, vp))
             return false;
@@ -149,9 +149,21 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
 }
 
 inline JSBool
-JSObject::getProperty(JSContext *cx, jsid id, js::Value *vp)
+JSObject::getProperty(JSContext *cx, JSObject *receiver, js::PropertyName *name, js::Value *vp)
 {
-    return getProperty(cx, this, id, vp);
+    return getGeneric(cx, receiver, ATOM_TO_JSID(name), vp);
+}
+
+inline JSBool
+JSObject::getGeneric(JSContext *cx, jsid id, js::Value *vp)
+{
+    return getGeneric(cx, this, id, vp);
+}
+
+inline JSBool
+JSObject::getProperty(JSContext *cx, js::PropertyName *name, js::Value *vp)
+{
+    return getGeneric(cx, ATOM_TO_JSID(name), vp);
 }
 
 inline JSBool
@@ -1104,7 +1116,7 @@ JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value 
     jsid id;
     if (!js::IndexToId(cx, index, &id))
         return false;
-    return getProperty(cx, receiver, id, vp);
+    return getGeneric(cx, receiver, id, vp);
 }
 
 inline JSBool
@@ -1113,7 +1125,7 @@ JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
     jsid id;
     if (!js::IndexToId(cx, index, &id))
         return false;
-    return getProperty(cx, id, vp);
+    return getGeneric(cx, id, vp);
 }
 
 inline JSBool
@@ -1126,9 +1138,9 @@ JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool str
 }
 
 inline JSBool
-JSObject::getSpecial(JSContext *cx, jsid id, js::Value *vp)
+JSObject::getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp)
 {
-    return getProperty(cx, id, vp);
+    return getGeneric(cx, SPECIALID_TO_JSID(sid), vp);
 }
 
 static inline bool

@@ -901,7 +901,7 @@ js::CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
     isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
     if (!isFunction) {
         Value value;
-        if (!obj->getProperty(cx, id, &value))
+        if (!obj->getGeneric(cx, id, &value))
             return JS_FALSE;
         isFunction = IsFunctionObject(value);
     }
@@ -3345,7 +3345,7 @@ do_incop:
      * we have done with obj->setProperty.
      */
     PUSH_NULL();
-    if (!obj->getProperty(cx, id, &regs.sp[-1]))
+    if (!obj->getGeneric(cx, id, &regs.sp[-1]))
         goto error;
 
     const JSCodeSpec *cs = &js_CodeSpec[op];
@@ -3562,7 +3562,8 @@ BEGIN_CASE(JSOP_LENGTH)
                                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                     &rval)
-            : !obj->getProperty(cx, id, &rval)) {
+            : !obj->getGeneric(cx, id, &rval))
+        {
             goto error;
         }
     } while (0);
@@ -3904,7 +3905,7 @@ BEGIN_CASE(JSOP_GETELEM)
     if (JSID_IS_STRING(id) && script->hasAnalysis() && !regs.fp()->hasImacropc())
         script->analysis()->getCode(regs.pc).getStringElement = true;
 
-    if (!obj->getProperty(cx, id, &rval))
+    if (!obj->getGeneric(cx, id, &rval))
         goto error;
     copyFrom = &rval;
 
@@ -4165,7 +4166,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getProperty(cx, id, &rval))
+        if (!obj->getGeneric(cx, id, &rval))
             goto error;
     } else {
         shape = (Shape *)prop;
@@ -5292,7 +5293,7 @@ BEGIN_CASE(JSOP_USESHARP)
     } else {
         JSObject *obj = &regs.fp()->slots()[slot].toObject();
         jsid id = INT_TO_JSID(i);
-        if (!obj->getProperty(cx, id, &rval))
+        if (!obj->getGeneric(cx, id, &rval))
             goto error;
     }
     if (!rval.isObjectOrNull()) {
@@ -5619,7 +5620,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
         goto error;
     Value rval;
-    if (!obj->getProperty(cx, id, &rval))
+    if (!obj->getGeneric(cx, id, &rval))
         goto error;
     regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME)

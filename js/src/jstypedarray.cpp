@@ -348,7 +348,7 @@ ArrayBuffer::obj_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, cons
 }
 
 JSBool
-ArrayBuffer::obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+ArrayBuffer::obj_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     obj = getArrayBuffer(obj);
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
@@ -363,6 +363,13 @@ ArrayBuffer::obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, j
 }
 
 JSBool
+ArrayBuffer::obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name,
+                             Value *vp)
+{
+    return obj_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+}
+
+JSBool
 ArrayBuffer::obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
 {
     JSObject *delegate = DelegateObject(cx, getArrayBuffer(obj));
@@ -374,7 +381,7 @@ ArrayBuffer::obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, ui
 JSBool
 ArrayBuffer::obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return obj_getProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+    return obj_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 JSBool
@@ -924,7 +931,7 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+    obj_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
     {
         JSObject *tarray = getTypedArray(obj);
 
@@ -965,6 +972,13 @@ class TypedArrayTemplate
     }
 
     static JSBool
+    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name,
+                    Value *vp)
+    {
+        return obj_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+    }
+
+    static JSBool
     obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
     {
         JSObject *tarray = getTypedArray(obj);
@@ -1002,7 +1016,7 @@ class TypedArrayTemplate
     static JSBool
     obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
     {
-        return obj_getProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+        return obj_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
     }
 
     static bool
@@ -2017,7 +2031,7 @@ Class js::ArrayBufferClass = {
         ArrayBuffer::obj_defineProperty,
         ArrayBuffer::obj_defineElement,
         ArrayBuffer::obj_defineSpecial,
-        ArrayBuffer::obj_getProperty,
+        ArrayBuffer::obj_getGeneric,
         ArrayBuffer::obj_getProperty,
         ArrayBuffer::obj_getElement,
         ArrayBuffer::obj_getSpecial,
@@ -2129,7 +2143,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
         _typedArray::obj_defineProperty,                                       \
         _typedArray::obj_defineElement,                                        \
         _typedArray::obj_defineSpecial,                                        \
-        _typedArray::obj_getProperty,                                          \
+        _typedArray::obj_getGeneric,                                          \
         _typedArray::obj_getProperty,                                          \
         _typedArray::obj_getElement,                                           \
         _typedArray::obj_getSpecial,                                           \

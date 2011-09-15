@@ -2106,7 +2106,7 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 4. */
     Value &toISO = vp[0];
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.toISOStringAtom), &toISO))
+    if (!obj->getProperty(cx, cx->runtime->atomState.toISOStringAtom, &toISO))
         return false;
 
     /* Step 5. */
