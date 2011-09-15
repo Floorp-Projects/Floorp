@@ -492,21 +492,11 @@ abstract public class GeckoApp
         // copy any .xpi file into an extensions/ directory
         Enumeration<? extends ZipEntry> zipEntries = zip.entries();
         while (zipEntries.hasMoreElements()) {
-          ZipEntry entry = zipEntries.nextElement();
-          if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
-            Log.i("GeckoAppJava", "installing extension : " + entry.getName());
-            unpackFile(zip, buf, entry, entry.getName());
-          }
-        }
-
-        // copy any hyphenation dictionaries file into a hyphenation/ directory
-        Enumeration<? extends ZipEntry> hyphenEntries = zip.entries();
-        while (hyphenEntries.hasMoreElements()) {
-          ZipEntry entry = hyphenEntries.nextElement();
-          if (entry.getName().startsWith("hyphenation/")) {
-            Log.i("GeckoAppJava", "installing hyphenation : " + entry.getName());
-            unpackFile(zip, buf, entry, entry.getName());
-          }
+            ZipEntry entry = zipEntries.nextElement();
+            if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
+                Log.i("GeckoAppJava", "installing extension : " + entry.getName());
+                unpackFile(zip, buf, entry, entry.getName());
+            }
         }
     }
 
