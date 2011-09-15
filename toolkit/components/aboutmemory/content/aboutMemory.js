@@ -82,6 +82,14 @@ const kTreeDescriptions = {
     "'resident' under 'Other Measurements' because the two measurements are not " +
     "taken at exactly the same time.",
 
+  'pss':
+    "This tree shows how much space in physical memory can be 'blamed' on this " +
+    "process.  For each mapping, its 'proportional set size' (PSS) is the " +
+    "mapping's resident size divided by the number of processes which use the " +
+    "mapping.  So if a mapping is private to this process, its PSS should equal " +
+    "its RSS.  But if a mapping is shared between three processes, its PSS in " +
+    "each of the processes would be 1/3 its RSS.",
+
   'vsize':
     "This tree shows how much virtual addres space each of the process's " +
     "mappings takes up (the mapping's 'vsize').  A mapping may have a large " +
@@ -100,12 +108,13 @@ const kTreeDescriptions = {
 const kTreeNames = {
   'explicit': 'Explicit Allocations',
   'resident': 'Resident Set Size (RSS) Breakdown',
+  'pss':      'Proportional Set Size (PSS) Breakdown',
   'vsize':    'Virtual Size Breakdown',
   'swap':     'Swap Usage Breakdown',
   'other':    'Other Measurements'
 };
 
-const kMapTreePaths = ['map/resident', 'map/vsize', 'map/swap'];
+const kMapTreePaths = ['map/resident', 'map/pss', 'map/vsize', 'map/swap'];
 
 function onLoad()
 {
