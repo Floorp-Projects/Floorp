@@ -1054,7 +1054,7 @@ namespace JSC {
         static void repatchInt32(void* from, int32_t to)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                           "##repatchInt32    ((%p)) holds ((%x))\n",
+                           ISPFX "##repatchInt32    ((%p)) holds ((%#x))\n",
                            from, to);
 
             patchPointerInternal(reinterpret_cast<intptr_t>(from), reinterpret_cast<void*>(to));

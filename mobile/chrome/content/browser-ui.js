@@ -64,6 +64,7 @@ let Elements = {};
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
   ["stack",              "stack"],
+  ["tabList",            "tabs"],
   ["tabs",               "tabs-container"],
   ["controls",           "browser-controls"],
   ["panelUI",            "panel-container"],
@@ -115,17 +116,21 @@ var BrowserUI = {
   },
 
   _titleChanged: function(aBrowser) {
+    let url = this.getDisplayURI(aBrowser);
+    let caption = aBrowser.contentTitle || url;
+
+    if (aBrowser.contentTitle == "" && !Util.isURLEmpty(aBrowser.userTypedValue))
+      caption = aBrowser.userTypedValue;
+    else if (Util.isURLEmpty(url))
+      caption = "";
+
+    let tab = Browser.getTabForBrowser(aBrowser);
+    if (tab)
+      tab.chromeTab.updateTitle(caption);
+
     let browser = Browser.selectedBrowser;
     if (browser && aBrowser != browser)
       return;
-
-    let url = this.getDisplayURI(browser);
-    let caption = browser.contentTitle || url;
-
-    if (browser.contentTitle == "" && !Util.isURLEmpty(browser.userTypedValue))
-      caption = browser.userTypedValue;
-    else if (Util.isURLEmpty(url))
-      caption = "";
 
     if (caption) {
       this._title.value = caption;
@@ -383,7 +388,7 @@ var BrowserUI = {
 
   sizeControls: function(windowW, windowH) {
     // tabs
-    document.getElementById("tabs").resize();
+    Elements.tabList.resize();
     AwesomeScreen.doResize(windowW, windowH);
 
     // content navigator helper
@@ -665,6 +670,7 @@ var BrowserUI = {
     // new page is opened, so a call to Browser.hideSidebars() fill this
     // requirement and fix the sidebars position.
     Browser.hideSidebars();
+    Elements.tabList.removeClosedTab();
 
     // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
     // and the proper third-party fixup can be done
@@ -781,6 +787,7 @@ var BrowserUI = {
   selectTab: function selectTab(aTab) {
     AwesomeScreen.activePanel = null;
     Browser.selectedTab = aTab;
+    Elements.tabList.removeClosedTab();
   },
 
   undoCloseTab: function undoCloseTab(aIndex) {
@@ -907,18 +914,14 @@ var BrowserUI = {
         this._tabSelect(aEvent);
         break;
       case "TabOpen":
-      case "TabRemove":
-      {
-        // Workaround to hide the tabstrip if it is partially visible
-        // See bug 524469 and bug 626660
-        let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
-        if (tabsVisibility > 0.0 && tabsVisibility < 1.0)
-          Browser.hideSidebars();
-
+        Elements.tabList.removeClosedTab();
+        Browser.hidePartialTabSidebar();
         break;
-      }
-      case "PanFinished":
-        let tabs = document.getElementById("tabs");
+      case "TabRemove":
+        Browser.hidePartialTabSidebar();
+        break;
+      case "PanFinished": {
+        let tabs = Elements.tabList;
         let [tabsVisibility,,oldLeftWidth, oldRightWidth] = Browser.computeSidebarVisibility();
         if (tabsVisibility == 0.0 && tabs.hasClosedTab) {
           let { x: x1, y: y1 } = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller);
@@ -936,6 +939,7 @@ var BrowserUI = {
           Browser.tryFloatToolbar(0, 0);
         }
         break;
+      }
       case "SizeChanged":
         this.sizeControls(ViewableAreaObserver.width, ViewableAreaObserver.height);
         break;

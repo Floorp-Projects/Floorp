@@ -2653,9 +2653,8 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
     }
 
     /*
-     * Data is a little more complicated. If the op is MUL, not all CPUs
-     * have multiplication on immediates, so a register is needed. Also,
-     * if the op is not commutative, the LHS _must_ be in a register.
+     * Allocate data registers. If the op is not commutative, the LHS
+     * _must_ be in a register.
      */
     JS_ASSERT_IF(lhs->isConstant(), !rhs->isConstant());
     JS_ASSERT_IF(rhs->isConstant(), !lhs->isConstant());
@@ -2664,23 +2663,16 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
         if (backingLeft->data.inMemory()) {
             alloc.lhsData = tempRegForData(lhs);
             pinReg(alloc.lhsData.reg());
-        } else if (op == JSOP_MUL || !commu) {
+        } else if (!commu) {
             JS_ASSERT(lhs->isConstant());
             alloc.lhsData = allocReg();
             alloc.extraFree = alloc.lhsData;
             masm.move(Imm32(lhs->getValue().toInt32()), alloc.lhsData.reg());
         }
     }
-    if (!alloc.rhsData.isSet()) {
-        if (backingRight->data.inMemory()) {
-            alloc.rhsData = tempRegForData(rhs);
-            pinReg(alloc.rhsData.reg());
-        } else if (op == JSOP_MUL) {
-            JS_ASSERT(rhs->isConstant());
-            alloc.rhsData = allocReg();
-            alloc.extraFree = alloc.rhsData;
-            masm.move(Imm32(rhs->getValue().toInt32()), alloc.rhsData.reg());
-        }
+    if (!alloc.rhsData.isSet() && backingRight->data.inMemory()) {
+        alloc.rhsData = tempRegForData(rhs);
+        pinReg(alloc.rhsData.reg());
     }
 
     alloc.lhsNeedsRemat = false;

@@ -71,11 +71,9 @@ nsresult xpcJSWeakReference::Init()
 
     JSAutoRequest ar(cx);
 
-    if (JSVAL_IS_NULL(argv[0])) return NS_ERROR_FAILURE;
+    if (JSVAL_IS_PRIMITIVE(argv[0])) return NS_ERROR_FAILURE;
     
-    JSObject *obj;
-    if (!JS_ValueToObject(cx, argv[0], &obj))
-        return NS_ERROR_FAILURE;
+    JSObject *obj = JSVAL_TO_OBJECT(argv[0]);
     
     XPCCallContext ccx(NATIVE_CALLER, cx);
     

@@ -295,6 +295,28 @@ case "$target" in
 
     if test -z "$android_sdk" ; then
         AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
+    else
+        if ! test -e "$android_sdk"/source.properties ; then
+            AC_MSG_ERROR([The path in --with-android-sdk isn't valid (source.properties hasn't been found).])
+        fi
+
+        # Minimum Android SDK API Level we require.
+        android_min_api_level=13
+
+        # Get the api level from "$android_sdk"/source.properties.
+        android_api_level=`$AWK -F = '$1 == "AndroidVersion.ApiLevel" {print $2}' "$android_sdk"/source.properties`
+
+        if test -z "$android_api_level" ; then
+            AC_MSG_ERROR([Unexpected error: no AndroidVersion.ApiLevel field has been found in source.properties.])
+        fi
+
+        if ! test "$android_api_level" -eq "$android_api_level" ; then
+            AC_MSG_ERROR([Unexpected error: the found android api value isn't a number! (found $android_api_level)])
+        fi
+
+        if test $android_api_level -lt $android_min_api_level ; then
+            AC_MSG_ERROR([The given Android SDK provides API level $android_api_level ($android_min_api_level or higher required).])
+        fi
     fi
 
     android_platform_tools="$android_sdk"/../../platform-tools
@@ -6499,6 +6521,20 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
    if test $MOZ_PLATFORM_MAEMO = 6; then
+
+      PKG_CHECK_MODULES(LIBCONTENTMANAGER, ContentManager QtSparql,
+                        _LIB_FOUND=1,
+                        _LIB_FOUND=)
+      if test "$_LIB_FOUND"; then
+         MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTMANAGER_LIBS"
+         MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTMANAGER_CFLAGS"
+         MOZ_ENABLE_CONTENTMANAGER=1
+         AC_DEFINE(MOZ_ENABLE_CONTENTMANAGER)
+      else
+         AC_MSG_WARN([Cannot find libcontentmanager and or QtSparql building for Maemo 6])
+      fi
+      AC_SUBST(MOZ_ENABLE_CONTENTMANAGER)
+
       dnl ========================================================
       dnl = Enable meego libcontentaction
       dnl ========================================================

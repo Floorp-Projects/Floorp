@@ -86,7 +86,7 @@ protected:
                              const IPC::URI&            referrerUri,
                              const PRUint32&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
-                             const nsHttpAtom&          requestMethod,
+                             const nsCString&           requestMethod,
                              const IPC::InputStream&    uploadStream,
                              const PRBool&              uploadStreamHasHeaders,
                              const PRUint16&            priority,

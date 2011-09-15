@@ -57,7 +57,14 @@ MOCSRCS = \
 		moc_nsAppShell.cpp \
 		$(NULL)
 
-CPPSRCS	= \
+ifdef MOZ_ENABLE_CONTENTMANAGER
+MOCSRCS += moc_nsMFilePicker.cpp \
+		$(NULL)
+CPPSRCS	+= nsMFilePicker.cpp \
+		$(NULL)
+endif
+
+CPPSRCS	+= \
 		$(MOCSRCS) \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
@@ -102,8 +109,8 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS)
-CFLAGS		+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) $(MOZ_PLATFORM_MAEMO_CFLAGS)
+CFLAGS		+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) $(MOZ_PLATFORM_MAEMO_CFLAGS)
 
 DEFINES		+= -D_IMPL_NS_WIDGET
 #DEFINES		+= -DDEBUG_WIDGETS

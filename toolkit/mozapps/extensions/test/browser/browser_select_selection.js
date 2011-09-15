@@ -72,10 +72,30 @@ function getString(aName) {
   return strings.GetStringFromName("action." + aName);
 }
 
+function getSourceString(aSource) {
+  if (!aSource)
+    return "";
+
+  var strings = Services.strings.createBundle("chrome://mozapps/locale/extensions/selectAddons.properties");
+  switch (aSource) {
+    case APP:
+      return strings.GetStringFromName("source.bundled");
+    case PROFILE:
+      return strings.GetStringFromName("source.profile");
+    default:
+      return strings.GetStringFromName("source.other");
+  }
+}
+
 function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
+
+  // Set prefs for Distributed Extension Source tests.
+  Services.prefs.setBoolPref("extensions.installedDistroAddon.test3@tests.mozilla.org", true);
+  Services.prefs.setBoolPref("extensions.installedDistroAddon.test12@tests.mozilla.org", true);
+  Services.prefs.setBoolPref("extensions.installedDistroAddon.test15@tests.mozilla.org", true);
 
   ADDONS.forEach(function(aAddon, aPos) {
     var addon = new MockAddon("test" + aPos + "@tests.mozilla.org",
@@ -208,6 +228,14 @@ add_test(function selection_test() {
     var keep = gWin.document.getAnonymousElementByAttribute(row, "anonid", "keep");
     var action = gWin.document.getAnonymousElementByAttribute(row, "class", "addon-action-message");
     var update = gWin.document.getAnonymousElementByAttribute(row, "anonid", "update");
+    var source = gWin.document.getAnonymousElementByAttribute(row, "class", "addon-source");
+
+    if (id == 3 || id == 12 || id == 15) {
+      // Distro Installed To Profile
+      is(source.textContent, getSourceString(APP), "Source message should have the right text for Distributed Addons");
+    } else {
+      is(source.textContent, getSourceString(addon[6]), "Source message should have the right text");
+    }
 
     // Non-profile add-ons don't appear to have updates since we won't install
     // them
