@@ -59,6 +59,8 @@
 #include "jsvector.h"
 #include "jscell.h"
 
+#include "vm/String.h"
+
 namespace nanojit { class ValidateWriter; }
 
 namespace js {
@@ -1440,12 +1442,16 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_DefineElement)(cx, this, index, &value, getter, setter, attrs);
     }
 
-    inline JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
+    inline JSBool getGeneric(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
+    inline JSBool getProperty(JSContext *cx, JSObject *receiver, js::PropertyName *name,
+                              js::Value *vp);
     inline JSBool getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp);
+    inline JSBool getSpecial(JSContext *cx, JSObject *receiver, js::SpecialId sid, js::Value *vp);
 
-    inline JSBool getProperty(JSContext *cx, jsid id, js::Value *vp);
+    inline JSBool getGeneric(JSContext *cx, jsid id, js::Value *vp);
+    inline JSBool getProperty(JSContext *cx, js::PropertyName *name, js::Value *vp);
     inline JSBool getElement(JSContext *cx, uint32 index, js::Value *vp);
-    inline JSBool getSpecial(JSContext *cx, jsid id, js::Value *vp);
+    inline JSBool getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp);
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
         if (getOps()->setProperty)
