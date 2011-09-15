@@ -409,10 +409,8 @@ function buildTree(aReporters, aTreeName)
   }
 
   if (!foundReporter) {
-    // We didn't find any reporters for this tree, so create an empty one.  Its
-    // description will be set later.
-    aReporters[aTreeName] =
-      new Reporter(aTreeName, KIND_NONHEAP, UNITS_BYTES, 0, '');
+    // We didn't find any reporters for this tree, so bail.
+    return null;
   }
 
   var t = new TreeNode("falseRoot");
@@ -637,8 +635,12 @@ function genProcessText(aProcess, aReporters)
   var mapTreeText = '';
   kMapTreePaths.forEach(function(t) {
     var tree = buildTree(aReporters, t);
-    filterTree(tree._amount, tree);
-    mapTreeText += genTreeText(tree, aProcess);
+
+    // |tree| will be null if we don't have any reporters for the given path.
+    if (tree) {
+      filterTree(tree._amount, tree);
+      mapTreeText += genTreeText(tree, aProcess);
+    }
   });
 
   // We have to call genOtherText after we process all the trees, because it
