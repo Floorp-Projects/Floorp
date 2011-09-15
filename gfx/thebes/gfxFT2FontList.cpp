@@ -312,8 +312,7 @@ gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
     }
 #elif defined(ANDROID)
     nsAutoString resolvedName;
-    if (ResolveFontName(nsDependentString(NS_LITERAL_STRING("Droid Sans")), 
-                        resolvedName))
+    if (ResolveFontName(NS_LITERAL_STRING("Droid Sans"), resolvedName))
         return FindFontForFamily(resolvedName, aStyle, aNeedsBold);
 #endif
     /* TODO: what about Qt or other platforms that may use this? */
