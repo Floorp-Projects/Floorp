@@ -894,7 +894,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 
     JaegerStatus status = cx->compartment->jaegerCompartment()->lastUnfinished();
     if (status) {
-        if (partial || status == Jaeger_Returned) {
+        if (partial) {
             /*
              * Being called from the interpreter, which will resume execution
              * where the JIT left off.
@@ -990,10 +990,16 @@ JITScript::callSites() const
     return (js::mjit::CallSite *)&inlineFrames()[nInlineFrames];
 }
 
+JSObject **
+JITScript::rootedObjects() const
+{
+    return (JSObject **)&callSites()[nCallSites];
+}
+
 char *
 JITScript::commonSectionLimit() const
 {
-    return (char *)&callSites()[nCallSites];
+    return (char *)&rootedObjects()[nRootedObjects];
 }
 
 #ifdef JS_MONOIC
@@ -1149,6 +1155,7 @@ mjit::JITScript::scriptDataSize(JSUsableSizeFun usf)
         sizeof(NativeMapEntry) * nNmapPairs +
         sizeof(InlineFrame) * nInlineFrames +
         sizeof(CallSite) * nCallSites +
+        sizeof(JSObject *) * nRootedObjects +
 #if defined JS_MONOIC
         sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
         sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +
@@ -1286,6 +1293,43 @@ jsbytecode *
 mjit::NativeToPC(JITScript *jit, void *ncode, mjit::CallSite **pinline)
 {
     return jit->nativeToPC(ncode, pinline);
+}
+
+void
+JITScript::trace(JSTracer *trc)
+{
+    /*
+     * MICs and PICs attached to the JITScript are weak references, and either
+     * entirely purged or selectively purged on each GC. We do, however, need
+     * to maintain references to any scripts whose code was inlined into this.
+     */
+    InlineFrame *inlineFrames_ = inlineFrames();
+    for (unsigned i = 0; i < nInlineFrames; i++)
+        MarkObject(trc, *inlineFrames_[i].fun, "jitscript_fun");
+
+    for (uint32 i = 0; i < nRootedObjects; ++i)
+        MarkObject(trc, *rootedObjects()[i], "mjit rooted object");
+}
+
+void
+mjit::PurgeICs(JSContext *cx, JSScript *script)
+{
+#ifdef JS_MONOIC
+    if (script->jitNormal) {
+        script->jitNormal->purgeMICs();
+        script->jitNormal->sweepCallICs(cx);
+    }
+    if (script->jitCtor) {
+        script->jitCtor->purgeMICs();
+        script->jitCtor->sweepCallICs(cx);
+    }
+#endif
+#ifdef JS_POLYIC
+    if (script->jitNormal)
+        script->jitNormal->purgePICs();
+    if (script->jitCtor)
+        script->jitCtor->purgePICs();
+#endif
 }
 
 /* static */ const double mjit::Assembler::oneDouble = 1.0;

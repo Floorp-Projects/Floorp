@@ -859,6 +859,13 @@ MarkChildren(JSTracer *trc, JSScript *script)
 
     if (script->types)
         script->types->trace(trc);
+
+#ifdef JS_METHODJIT
+    if (script->jitNormal)
+        script->jitNormal->trace(trc);
+    if (script->jitCtor)
+        script->jitCtor->trace(trc);
+#endif
 }
 
 void

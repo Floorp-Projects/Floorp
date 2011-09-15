@@ -3249,5 +3249,48 @@ JITScript::purgeGetterPICs()
     }
 }
 
+void
+JITScript::purgePICs()
+{
+    if (!nPICs && !nGetElems && !nSetElems)
+        return;
+
+    Repatcher repatcher(this);
+
+    ic::PICInfo *pics_ = pics();
+    for (uint32 i = 0; i < nPICs; i++) {
+        ic::PICInfo &pic = pics_[i];
+        switch (pic.kind) {
+          case ic::PICInfo::SET:
+          case ic::PICInfo::SETMETHOD:
+            SetPropCompiler::reset(repatcher, pic);
+            break;
+          case ic::PICInfo::NAME:
+          case ic::PICInfo::XNAME:
+          case ic::PICInfo::CALLNAME:
+            ScopeNameCompiler::reset(repatcher, pic);
+            break;
+          case ic::PICInfo::BIND:
+            BindNameCompiler::reset(repatcher, pic);
+            break;
+          case ic::PICInfo::CALL: /* fall-through */
+          case ic::PICInfo::GET:
+            GetPropCompiler::reset(repatcher, pic);
+            break;
+          default:
+            JS_NOT_REACHED("Unhandled PIC kind");
+            break;
+        }
+        pic.reset();
+    }
+
+    ic::GetElementIC *getElems_ = getElems();
+    ic::SetElementIC *setElems_ = setElems();
+    for (uint32 i = 0; i < nGetElems; i++)
+        getElems_[i].purge(repatcher);
+    for (uint32 i = 0; i < nSetElems; i++)
+        setElems_[i].purge(repatcher);
+}
+
 #endif /* JS_POLYIC */
 
