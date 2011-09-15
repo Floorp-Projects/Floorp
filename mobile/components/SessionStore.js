@@ -790,8 +790,10 @@ SessionStore.prototype = {
   
             let image = new window.Image();
             image.onload = function() {
-              if (canvas)
+              if (canvas) {
                 canvas.getContext("2d").drawImage(image, 0, 0);
+                canvas.removeAttribute("empty");
+              }
             };
             image.src = tabData.extData.thumbnail;
           }
