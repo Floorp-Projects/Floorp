@@ -102,6 +102,7 @@ _MOCHITEST_FILES = \
   test_zero_opacity.html \
   test_NPPVpluginWantsAllNetworkStreams.html \
   test_npruntime_npnsetexception.html \
+  test_NPNVdocumentOrigin.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491

@@ -1612,14 +1612,15 @@ _cairo_win32_surface_flush (void *abstract_surface)
 #define STACK_GLYPH_SIZE 256
 
 cairo_int_status_t
-_cairo_win32_surface_show_glyphs (void			*surface,
-				  cairo_operator_t	 op,
-				  const cairo_pattern_t	*source,
-				  cairo_glyph_t		*glyphs,
-				  int			 num_glyphs,
-				  cairo_scaled_font_t	*scaled_font,
-				  cairo_clip_t		*clip,
-				  int			*remaining_glyphs)
+_cairo_win32_surface_show_glyphs_internal (void			*surface,
+					   cairo_operator_t	 op,
+					   const cairo_pattern_t	*source,
+					   cairo_glyph_t		*glyphs,
+					   int			 num_glyphs,
+					   cairo_scaled_font_t	*scaled_font,
+					   cairo_clip_t		*clip,
+					   int			*remaining_glyphs,
+					   cairo_bool_t           glyph_indexing)
 {
 #ifdef CAIRO_HAS_WIN32_FONT
     if (scaled_font->backend->type == CAIRO_FONT_TYPE_DWRITE) {
@@ -1742,19 +1743,10 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	    }
 	}
 
-	/* Using glyph indices for a Type 1 font does not work on a
-	 * printer DC. The win32 printing surface will convert the the
-	 * glyph indices of Type 1 fonts to the unicode values.
-	 */
-	if ((dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) &&
-	    _cairo_win32_scaled_font_is_type1 (scaled_font))
-	{
-	    glyph_index_option = 0;
-	}
-	else
-	{
+	if (glyph_indexing)
 	    glyph_index_option = ETO_GLYPH_INDEX;
-	}
+	else
+	    glyph_index_option = 0;
 
 	win_result = ExtTextOutW(dst->dc,
 				 start_x,
@@ -1782,6 +1774,27 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 }
 
 #undef STACK_GLYPH_SIZE
+
+cairo_int_status_t
+_cairo_win32_surface_show_glyphs (void			*surface,
+ 				  cairo_operator_t	 op,
+ 				  const cairo_pattern_t *source,
+ 				  cairo_glyph_t	 	*glyphs,
+ 				  int			 num_glyphs,
+ 				  cairo_scaled_font_t	*scaled_font,
+ 				  cairo_clip_t          *clip,
+ 				  int		      	*remaining_glyphs)
+{
+    return _cairo_win32_surface_show_glyphs_internal (surface,
+ 						      op,
+ 						      source,
+ 						      glyphs,
+ 						      num_glyphs,
+ 						      scaled_font,
+ 						      clip,
+ 						      remaining_glyphs,
+ 						      TRUE);
+}
 
 static cairo_surface_t *
 cairo_win32_surface_create_internal (HDC hdc, cairo_format_t format)

@@ -1020,6 +1020,14 @@ proxy.h
 #if MOZ_PLATFORM_MAEMO==6
 contentaction/contentaction.h
 #endif
+#ifdef MOZ_ENABLE_CONTENTMANAGER
+SelectSingleContentItemPage.h
+SelectMultipleContentItemsPage.h
+QtSparql/qsparqlconnection.h
+QtSparql/qsparqlquery.h
+QtSparql/qsparqlresult.h
+#endif
+
 #if MOZ_TREE_PIXMAN!=1
 pixman.h
 #endif

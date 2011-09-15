@@ -6388,6 +6388,20 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
    if test $MOZ_PLATFORM_MAEMO = 6; then
+
+      PKG_CHECK_MODULES(LIBCONTENTMANAGER, ContentManager QtSparql,
+                        _LIB_FOUND=1,
+                        _LIB_FOUND=)
+      if test "$_LIB_FOUND"; then
+         MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTMANAGER_LIBS"
+         MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTMANAGER_CFLAGS"
+         MOZ_ENABLE_CONTENTMANAGER=1
+         AC_DEFINE(MOZ_ENABLE_CONTENTMANAGER)
+      else
+         AC_MSG_WARN([Cannot find libcontentmanager and or QtSparql building for Maemo 6])
+      fi
+      AC_SUBST(MOZ_ENABLE_CONTENTMANAGER)
+
       dnl ========================================================
       dnl = Enable meego libcontentaction
       dnl ========================================================

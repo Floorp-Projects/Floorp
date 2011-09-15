@@ -59,12 +59,12 @@ class nsTimeRanges;
 // The size to use for audio data frames in MozAudioAvailable events.
 // This value is per channel, and is chosen to give ~43 fps of events,
 // for example, 44100 with 2 channels, 2*1024 = 2048.
-#define FRAMEBUFFER_LENGTH_PER_CHANNEL 1024
+static const PRUint32 FRAMEBUFFER_LENGTH_PER_CHANNEL = 1024;
 
 // The total size of the framebuffer used for MozAudioAvailable events
 // has to be within the following range.
-#define FRAMEBUFFER_LENGTH_MIN 512
-#define FRAMEBUFFER_LENGTH_MAX 16384
+static const PRUint32 FRAMEBUFFER_LENGTH_MIN = 512;
+static const PRUint32 FRAMEBUFFER_LENGTH_MAX = 16384;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of GetImageContainer, SetVideoData and GetStatistics,
