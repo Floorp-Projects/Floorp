@@ -1707,6 +1707,9 @@ var XPIProvider = {
    * Shows the "Compatibility Updates" UI
    */
   showUpgradeUI: function XPI_showUpgradeUI() {
+    // Flip a flag to indicate that we interrupted startup with an interactive prompt
+    Services.startup.interrupted = true;
+
     if (!Prefs.getBoolPref(PREF_SHOWN_SELECTION_UI, false)) {
       // This *must* be modal as it has to block startup.
       var features = "chrome,centerscreen,dialog,titlebar,modal";

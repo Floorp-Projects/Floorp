@@ -177,7 +177,7 @@ private:
                            PRBool aBOS,
                            PRBool aEOS,
                            PRInt64 aGranulepos);
-                     
+
   // Decode a nestegg packet of audio data. Push the audio data on the
   // audio queue. Returns PR_TRUE when there's more audio to decode,
   // PR_FALSE if the audio is finished, end of file has been reached,

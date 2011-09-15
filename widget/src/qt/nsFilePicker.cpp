@@ -38,30 +38,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsFilePicker.h"
+#include <QStringList>
+#include <QGraphicsWidget>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QTemporaryFile>
 
-#include "nsILocalFile.h"
-#include "nsIURI.h"
-#include "nsISupportsArray.h"
-#include "nsMemory.h"
-#include "nsEnumeratorUtils.h"
+#ifdef MOZ_ENABLE_CONTENTMANAGER
+#include "nsMFilePicker.h"
+#define MozFileDialog MeegoFileDialog
+#else
+#include <QFileDialog>
+#define MozFileDialog QFileDialog
+#endif
+
+
+#include "nsFilePicker.h"
 #include "nsNetUtil.h"
-#include "nsReadableUtils.h"
 #include "nsIWidget.h"
-#include "mozqwidget.h"
-#include "nsWindow.h"
 #include "prlog.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* sFilePickerLog = nsnull;
 #endif
 
+#include "nsDirectoryServiceDefs.h"
+
+//-----------------------------
+
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
-    : mDialog(0),
-      mMode(nsIFilePicker::modeOpen)
+    : mMode(nsIFilePicker::modeOpen)
 {
 #ifdef PR_LOGGING
     if (!sFilePickerLog)
@@ -74,7 +83,7 @@ nsFilePicker::~nsFilePicker()
 }
 
 NS_IMETHODIMP
-nsFilePicker::Init(nsIDOMWindow *parent, const nsAString & title, PRInt16 mode)
+nsFilePicker::Init(nsIDOMWindow* parent, const nsAString& title, PRInt16 mode)
 {
     return nsBaseFilePicker::Init(parent, title, mode);
 }
@@ -88,7 +97,7 @@ nsFilePicker::AppendFilters(PRInt32 filterMask)
 
 /* void appendFilter (in AString title, in AString filter); */
 NS_IMETHODIMP
-nsFilePicker::AppendFilter(const nsAString & aTitle, const nsAString & aFilter)
+nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
     if (aFilter.Equals(NS_LITERAL_STRING("..apps"))) {
         // No platform specific thing we can do here, really....
@@ -107,13 +116,13 @@ nsFilePicker::AppendFilter(const nsAString & aTitle, const nsAString & aFilter)
 
 /* attribute AString defaultString; */
 NS_IMETHODIMP
-nsFilePicker::GetDefaultString(nsAString & aDefaultString)
+nsFilePicker::GetDefaultString(nsAString& aDefaultString)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsFilePicker::SetDefaultString(const nsAString & aDefaultString)
+nsFilePicker::SetDefaultString(const nsAString& aDefaultString)
 {
     mDefault = aDefaultString;
 
@@ -122,14 +131,15 @@ nsFilePicker::SetDefaultString(const nsAString & aDefaultString)
 
 /* attribute AString defaultExtension; */
 NS_IMETHODIMP
-nsFilePicker::GetDefaultExtension(nsAString & aDefaultExtension)
+nsFilePicker::GetDefaultExtension(nsAString& aDefaultExtension)
 {
     aDefaultExtension = mDefaultExtension;
 
     return NS_OK;
 }
+
 NS_IMETHODIMP
-nsFilePicker::SetDefaultExtension(const nsAString & aDefaultExtension)
+nsFilePicker::SetDefaultExtension(const nsAString& aDefaultExtension)
 {
     mDefaultExtension = aDefaultExtension;
 
@@ -138,12 +148,13 @@ nsFilePicker::SetDefaultExtension(const nsAString & aDefaultExtension)
 
 /* attribute long filterIndex; */
 NS_IMETHODIMP
-nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+nsFilePicker::GetFilterIndex(PRInt32* aFilterIndex)
 {
     *aFilterIndex = mSelectedType;
 
     return NS_OK;
 }
+
 NS_IMETHODIMP
 nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 {
@@ -154,7 +165,7 @@ nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 
 /* readonly attribute nsILocalFile file; */
 NS_IMETHODIMP
-nsFilePicker::GetFile(nsILocalFile * *aFile)
+nsFilePicker::GetFile(nsILocalFile* *aFile)
 {
     NS_ENSURE_ARG_POINTER(aFile);
 
@@ -175,7 +186,7 @@ nsFilePicker::GetFile(nsILocalFile * *aFile)
 
 /* readonly attribute nsIFileURL fileURL; */
 NS_IMETHODIMP
-nsFilePicker::GetFileURL(nsIURI * *aFileURL)
+nsFilePicker::GetFileURL(nsIURI* *aFileURL)
 {
     nsCOMPtr<nsILocalFile> file;
     GetFile(getter_AddRefs(file));
@@ -189,7 +200,7 @@ nsFilePicker::GetFileURL(nsIURI * *aFileURL)
 
 /* readonly attribute nsISimpleEnumerator files; */
 NS_IMETHODIMP
-nsFilePicker::GetFiles(nsISimpleEnumerator * *aFiles)
+nsFilePicker::GetFiles(nsISimpleEnumerator* *aFiles)
 {
     NS_ENSURE_ARG_POINTER(aFiles);
 
@@ -202,94 +213,121 @@ nsFilePicker::GetFiles(nsISimpleEnumerator * *aFiles)
 
 /* short show (); */
 NS_IMETHODIMP
-nsFilePicker::Show(PRInt16 *aReturn)
+nsFilePicker::Show(PRInt16* aReturn)
 {
     nsCAutoString directory;
     if (mDisplayDirectory) {
         mDisplayDirectory->GetNativePath(directory);
     }
 
-    switch (mMode) {
-    case nsIFilePicker::modeOpen:
-        break;
-    case nsIFilePicker::modeOpenMultiple:
-        mDialog->setFileMode(QFileDialog::ExistingFiles);
-        break;
-    case nsIFilePicker::modeSave:
-        mDialog->setFileMode(QFileDialog::AnyFile);
-        mDialog->setAcceptMode(QFileDialog::AcceptSave);
-        break;
-    case nsIFilePicker::modeGetFolder:
-        mDialog->setFileMode(QFileDialog::DirectoryOnly);
-        break;
-    default:
-        break;
-    }
-
-    mDialog->selectFile(QString::fromUtf16(mDefault.get()));
-
-    mDialog->setDirectory(directory.get());
-
     QStringList filters;
     PRUint32 count = mFilters.Length();
     for (PRUint32 i = 0; i < count; ++i) {
-        filters.append( mFilters[i].get() );
+        filters.append(mFilters[i].get());
     }
-    mDialog->setFilters(filters);
 
-    switch (mDialog->exec()) {
-    case QDialog::Accepted: {
-        QStringList files = mDialog->selectedFiles();
-        QString selected;
-        if (!files.isEmpty())
-        {
-            selected = files[0];
+    QGraphicsWidget* parentWidget = 0;
+    if (mParent) {
+        parentWidget = static_cast<QGraphicsWidget*>
+            (mParent->GetNativeData(NS_NATIVE_WIDGET));
+    }
+
+    QWidget* parentQWidget = 0;
+    if (parentWidget && parentWidget->scene()) {
+        if (parentWidget->scene()->views().size()>0) {
+            parentQWidget = parentWidget->scene()->views()[0];
+        }
+    }
+
+    QStringList files;
+    QString selected;
+
+    switch (mMode) {
+    case nsIFilePicker::modeOpen:
+        selected = MozFileDialog::getOpenFileName(parentQWidget, mCaption,
+                                                  directory.get(), filters.join(";"));
+        if (selected.isNull()) {
+            *aReturn = nsIFilePicker::returnCancel;
+            return NS_OK;
+        }
+        break;
+    case nsIFilePicker::modeOpenMultiple:
+        files = MozFileDialog::getOpenFileNames(parentQWidget, mCaption,
+                                                directory.get(), filters.join(";"));
+        if (files.empty()) {
+            *aReturn = nsIFilePicker::returnCancel;
+            return NS_OK;
+        }
+        selected = files[0];
+        break;
+    case nsIFilePicker::modeSave:
+    {
+        nsCOMPtr<nsIFile> targetFile;
+        NS_GetSpecialDirectory(NS_UNIX_XDG_DOCUMENTS_DIR,
+                               getter_AddRefs(targetFile));
+        if (!targetFile) {
+            // failed to get the XDG directory, using $HOME for now
+            NS_GetSpecialDirectory(NS_UNIX_HOME_DIR,
+                                   getter_AddRefs(targetFile));
         }
 
-        QString path = QFile::encodeName(selected);
-        PR_LOG(sFilePickerLog, PR_LOG_DEBUG, ("path is '%s'", path.toAscii().data()));
-        mFile.Assign(path.toUtf8().data());
-        *aReturn = nsIFilePicker::returnOK;
-        if (mMode == modeSave) {
-            nsCOMPtr<nsILocalFile> file;
-            GetFile(getter_AddRefs(file));
-            if (file) {
-                PRBool exists = PR_FALSE;
-                file->Exists(&exists);
-                if (exists) {
-                    *aReturn = nsIFilePicker::returnReplace;
-                }
+        if (targetFile) {
+            targetFile->Append(mDefault);
+            nsString targetPath;
+            targetFile->GetPath(targetPath);
+
+            PRBool exists = PR_FALSE;
+            targetFile->Exists(&exists);
+            if (exists) {
+                // file exists already create temporary filename
+                QTemporaryFile temp(QString::fromUtf16(targetPath.get()));
+                temp.open();
+                selected = temp.fileName();
+                temp.close();
+            } else {
+                selected = QString::fromUtf16(targetPath.get());
             }
         }
     }
-        break;
-    case QDialog::Rejected: {
-        *aReturn = nsIFilePicker::returnCancel;
-    }
-        break;
+    break;
+    case nsIFilePicker::modeGetFolder:
+        selected = MozFileDialog::getExistingDirectory(parentQWidget, mCaption,
+                                                       directory.get());
+        if (selected.isNull()) {
+            *aReturn = nsIFilePicker::returnCancel;
+            return NS_OK;
+        }
+    break;
     default:
-        *aReturn = nsIFilePicker::returnCancel;
-        break;
+    break;
     }
 
+    if (!selected.isEmpty()) {
+        QString path = QFile::encodeName(selected);
+        mFile.Assign(path.toUtf8().data());
+    }
+
+    *aReturn = nsIFilePicker::returnOK;
+    if (mMode == modeSave) {
+        nsCOMPtr<nsILocalFile> file;
+        GetFile(getter_AddRefs(file));
+        if (file) {
+            PRBool exists = PR_FALSE;
+            file->Exists(&exists);
+            if (exists) {
+                *aReturn = nsIFilePicker::returnReplace;
+            }
+        }
+    }
 
     return NS_OK;
 }
 
-void nsFilePicker::InitNative(nsIWidget *parent, const nsAString &title, PRInt16 mode)
+void nsFilePicker::InitNative(nsIWidget *aParent, const nsAString &aTitle, PRInt16 mode)
 {
     PR_LOG(sFilePickerLog, PR_LOG_DEBUG, ("nsFilePicker::InitNative"));
-
-    MozQWidget *parentMozWidget = (parent) ?
-        static_cast<MozQWidget*>(parent->GetNativeData(NS_NATIVE_WIDGET)) : nsnull;
-    QWidget *parentWidget = (parentMozWidget) ?
-        parentMozWidget->getReceiver()->GetViewWidget() : nsnull;
-    if (!parentWidget) {
-        NS_WARNING("Can't find parent for QFileDialog");
-    }
-
-    nsAutoString str(title);
-    mDialog = new QFileDialog(parentWidget, QString::fromUtf16(str.get()));
-
+    nsAutoString str(aTitle);
+    mCaption = QString::fromUtf16(str.get());
+    mParent = aParent;
     mMode = mode;
 }

@@ -349,9 +349,7 @@ public:
 
   nsFrameList& GetColGroups();
 
-  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
-                                        nsIFrame**      aProviderFrame,
-                                        PRBool*         aIsChild);
+  virtual nsIFrame* GetParentStyleContextFrame();
 
   /**
    * Get the "type" of the frame

@@ -59,7 +59,7 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 // Wait this number of seconds when buffering, then leave and play
 // as best as we can if the required amount of data hasn't been
 // retrieved.
-#define BUFFERING_WAIT 30
+static const PRUint32 BUFFERING_WAIT = 30;
 
 // The amount of data to retrieve during buffering is computed based
 // on the download rate. BUFFERING_MIN_RATE is the minimum download

@@ -2180,8 +2180,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
-      || (mOverflowX != aOther.mOverflowX && mDisplay != NS_STYLE_DISPLAY_INLINE)
-      || (mOverflowY != aOther.mOverflowY && mDisplay != NS_STYLE_DISPLAY_INLINE)
+      || mOverflowX != aOther.mOverflowX
+      || mOverflowY != aOther.mOverflowY
       || mResize != aOther.mResize)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
 

@@ -18,6 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): David Einstein Deinst@world.std.com
+ *   Jesper Kristensen <mail@jesperkristensen.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,9 +78,6 @@ mozSpellChecker::Init()
   mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
   
   mSpellCheckingEngine = nsnull;
-  mCurrentEngineContractId = nsnull;
-  mDictionariesMap.Init();
-  InitSpellCheckDictionaryMap();
 
   return NS_OK;
 } 
@@ -307,35 +305,45 @@ mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList)
   return NS_OK;
 }
 
-struct AppendNewStruct
-{
-  nsTArray<nsString> *dictionaryList;
-  PRBool failed;
-};
-
-static PLDHashOperator
-AppendNewString(const nsAString& aString, nsCString*, void* aClosure)
-{
-  AppendNewStruct *ans = (AppendNewStruct*) aClosure;
-
-  if (!ans->dictionaryList->AppendElement(aString))
-  {
-    ans->failed = PR_TRUE;
-    return PL_DHASH_STOP;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP 
 mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
 {
-  AppendNewStruct ans = {aDictionaryList, PR_FALSE};
+  nsresult rv;
 
-  mDictionariesMap.EnumerateRead(AppendNewString, &ans);
+  // For catching duplicates
+  nsClassHashtable<nsStringHashKey, nsCString> dictionaries;
+  dictionaries.Init();
 
-  if (ans.failed)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMArray<mozISpellCheckingEngine> spellCheckingEngines;
+  rv = GetEngineList(&spellCheckingEngines);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < spellCheckingEngines.Count(); i++) {
+    nsCOMPtr<mozISpellCheckingEngine> engine = spellCheckingEngines[i];
+
+    PRUint32 count = 0;
+    PRUnichar **words = NULL;
+    engine->GetDictionaryList(&words, &count);
+    for (PRUint32 k = 0; k < count; k++) {
+      nsAutoString dictName;
+
+      dictName.Assign(words[k]);
+
+      // Skip duplicate dictionaries. Only take the first one
+      // for each name.
+      if (dictionaries.Get(dictName, NULL))
+        continue;
+
+      dictionaries.Put(dictName, NULL);
+
+      if (!aDictionaryList->AppendElement(dictName)) {
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
+  }
 
   return NS_OK;
 }
@@ -343,11 +351,12 @@ mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
 NS_IMETHODIMP 
 mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 {
+  if (!mSpellCheckingEngine) {
+    aDictionary.AssignLiteral("");
+    return NS_OK;
+  }
+
   nsXPIDLString dictname;
-
-  if (!mSpellCheckingEngine)
-    return NS_ERROR_NOT_INITIALIZED;
-
   mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
   aDictionary = dictname;
   return NS_OK;
@@ -356,44 +365,62 @@ mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 NS_IMETHODIMP 
 mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
 {
-  nsresult rv;
-  nsCString *contractId;
+  mSpellCheckingEngine = nsnull;
 
   if (aDictionary.IsEmpty()) {
-    mCurrentEngineContractId = nsnull;
-    mSpellCheckingEngine = nsnull;
     return NS_OK;
   }
 
-  if (!mDictionariesMap.Get(aDictionary, &contractId)){
-    NS_WARNING("Dictionary not found");
-    return NS_ERROR_NOT_AVAILABLE;
+  nsresult rv;
+  nsCOMArray<mozISpellCheckingEngine> spellCheckingEngines;
+  rv = GetEngineList(&spellCheckingEngines);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < spellCheckingEngines.Count(); i++) {
+    // We must set mSpellCheckingEngine before we call SetDictionary, since
+    // SetDictionary calls back to this spell checker to check if the
+    // dictionary was set
+    mSpellCheckingEngine = spellCheckingEngines[i];
+
+    rv = mSpellCheckingEngine->SetDictionary(PromiseFlatString(aDictionary).get());
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<mozIPersonalDictionary> personalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
+      mSpellCheckingEngine->SetPersonalDictionary(personalDictionary.get());
+
+      return NS_OK;
+    }
   }
 
-  if (!mCurrentEngineContractId || !mCurrentEngineContractId->Equals(*contractId)){
-    mSpellCheckingEngine = do_GetService(contractId->get(), &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    mCurrentEngineContractId = contractId;
-  }
-
-  nsresult res;
-  res = mSpellCheckingEngine->SetDictionary(PromiseFlatString(aDictionary).get());
-  if(NS_FAILED(res)){
-    NS_WARNING("Dictionary load failed");
-    return res;
-  }
-
-  mSpellCheckingEngine->SetPersonalDictionary(mPersonalDictionary);
-
-  nsXPIDLString language;
+  mSpellCheckingEngine = NULL;
   
-  nsCOMPtr<mozISpellI18NManager> serv(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &res));
-  if(serv && NS_SUCCEEDED(res)){
-    res = serv->GetUtil(language.get(),getter_AddRefs(mConverter));
+  // We could not find any engine with the requested dictionary
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP 
+mozSpellChecker::CheckCurrentDictionary()
+{
+  // If the current dictionary has been uninstalled, we need to stop using it.
+  // This happens when there is a current engine, but that engine has no
+  // current dictionary.
+
+  if (!mSpellCheckingEngine) {
+    // We didn't have a current dictionary
+    return NS_OK;
   }
-  return res;
+
+  nsXPIDLString dictname;
+  mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
+
+  if (!dictname.IsEmpty()) {
+    // We still have a current dictionary
+    return NS_OK;
+  }
+
+  // We had a current dictionary, but it has gone, so we cannot use it anymore.
+  mSpellCheckingEngine = nsnull;
+  return NS_OK;
 }
 
 nsresult
@@ -477,11 +504,10 @@ mozSpellChecker::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *ou
 }
 
 nsresult
-mozSpellChecker::InitSpellCheckDictionaryMap()
+mozSpellChecker::GetEngineList(nsCOMArray<mozISpellCheckingEngine>* aSpellCheckingEngines)
 {
   nsresult rv;
   PRBool hasMoreEngines;
-  nsTArray<nsCString> contractIds;
 
   nsCOMPtr<nsICategoryManager> catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   if (!catMgr)
@@ -508,52 +534,24 @@ mozSpellChecker::InitSpellCheckDictionaryMap()
     if (NS_FAILED(rv))
       return rv;
 
-    contractIds.AppendElement(contractId);
-  }
-
-  contractIds.AppendElement(NS_LITERAL_CSTRING(DEFAULT_SPELL_CHECKER));
-
-  // Retrieve dictionaries from all available spellcheckers and
-  // fill mDictionariesMap hash (only the first dictionary with the
-  // each name is used).
-  for (PRUint32 i=0;i < contractIds.Length();i++){
-    PRUint32 count,k;
-    PRUnichar **words;
-
-    const nsCString& contractId = contractIds[i];
-
     // Try to load spellchecker engine. Ignore errors silently
     // except for the last one (HunSpell).
     nsCOMPtr<mozISpellCheckingEngine> engine =
       do_GetService(contractId.get(), &rv);
-    if (NS_FAILED(rv)){
-      // Fail if not succeeded to load HunSpell. Ignore errors
-      // for external spellcheck engines.
-      if (i==contractIds.Length()-1){
-        return rv;
-      }
-
-      continue;
+    if (NS_SUCCEEDED(rv)) {
+      aSpellCheckingEngines->AppendObject(engine);
     }
-
-    engine->GetDictionaryList(&words,&count);
-    for(k=0;k<count;k++){
-      nsAutoString dictName;
-
-      dictName.Assign(words[k]);
-
-      nsCString dictCName = NS_ConvertUTF16toUTF8(dictName);
-
-      // Skip duplicate dictionaries. Only take the first one
-      // for each name.
-      if (mDictionariesMap.Get(dictName, NULL))
-        continue;
-
-      mDictionariesMap.Put(dictName, new nsCString(contractId));
-    }
-
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
   }
+
+  // Try to load HunSpell spellchecker engine.
+  nsCOMPtr<mozISpellCheckingEngine> engine =
+    do_GetService(DEFAULT_SPELL_CHECKER, &rv);
+  if (NS_FAILED(rv)) {
+    // Fail if not succeeded to load HunSpell. Ignore errors
+    // for external spellcheck engines.
+    return rv;
+  }
+  aSpellCheckingEngines->AppendObject(engine);
 
   return NS_OK;
 }
