@@ -6988,6 +6988,10 @@ CompExprTransplanter::transplant(JSParseNode *pn)
         if (!transplant(pn->pn_tree))
             return false;
         break;
+
+      case PN_NULLARY:
+        /* Nothing. */
+        break;
     }
     return true;
 }
