@@ -308,7 +308,9 @@
                 // look for an item with the same id, as the item may be
                 // in a different toolbar.
                 var item = document.getElementById(aId);
-                if (item && item.parentNode && item.parentNode.parentNode == toolbox) {
+                if (item && item.parentNode && 
+                    item.parentNode.localName == "toolbar" && 
+                    item.parentNode.toolbox == toolbox) {
                   newItem = item;
                   break;
                 }
