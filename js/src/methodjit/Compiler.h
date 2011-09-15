@@ -472,6 +472,7 @@ class Compiler : public BaseCompiler
     bool inlining_;
     bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
+    bool overflowICSpace;   // True if we added a constant pool in a reserved space.
     uint32 gcNumber;
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
     PCLengthEntry *pcLengths;
