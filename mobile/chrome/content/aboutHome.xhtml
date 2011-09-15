@@ -62,7 +62,7 @@
   <div id="wrapper">
     <div id="header"><div id="logo"><img src="chrome://branding/content/logo.png"/></div>&aboutHome.header;</div>
 
-    <div id="content" hidden="true">
+    <div id="content">
       <div id="recentTabs" class="section-box">
         <h1>&aboutHome.recentTabs;</h1>
         <div id="loadingTabs" class="loading">
@@ -448,9 +448,6 @@
      broadcaster.removeAttribute("mode");
      doc.removeEventListener("animationend", endDiscovery, false);
      doc.removeEventListener("PanBegin", endDiscovery, false);
-     setTimeout(function() {
-       document.getElementById("content").removeAttribute("hidden");
-     }, 0);
    }
    
    function initLightbox() {
