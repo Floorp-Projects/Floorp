@@ -99,54 +99,85 @@ To visually debug the templates without running firefox, alter the display:none
   -->
   <div id="templateProperty">
     <div class="property-view" save="${element}" dir="${getRTLAttr}">
-      <div class="property-header" onclick="${click}">
+      <div class="property-header">
         <div class="property-name" dir="${getRTLAttr}">
           <a class="link" target="_blank" title="&helpLinkTitle;"
               href="${link}">${name}</a>
         </div>
-        <div class="property-value" dir="ltr">${value}</div>
-        <div class="link" dir="${getRTLAttr}">
-          <div></div>${ruleTitle(__element)}
-        </div>
+        <div save="${valueNode}" class="property-value" dir="ltr">${value}</div>
       </div>
-      <table class="rules" save="${rules}" dir="${getRTLAttr}"></table>
+
+      <div save="${matchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
+        <div onclick="${matchedSelectorsClick}" class="rule-matched">
+          <div save="${matchedExpander}" class="expander"></div>
+          <div save="${matchedSelectorsTitleNode}">
+            ${matchedSelectorTitle(__element)}
+          </div>
+        </div>
+        <table save="${matchedSelectorTable}" dir="${getRTLAttr}"></table>
+      </div>
+
+      <div save="${unmatchedSelectorsContainer}" class="rulelink" dir="${getRTLAttr}">
+        <div onclick="${unmatchedSelectorsClick}" class="rule-unmatched">
+          <div save="${unmatchedExpander}" class="expander"></div>
+          <div save="${unmatchedSelectorsTitleNode}">
+            ${unmatchedSelectorTitle(__element)}
+          </div>
+        </div>
+        <table save="${unmatchedSelectorTable}" dir="${getRTLAttr}"></table>
+      </div>
     </div>
   </div>
 
   <!--
-  A templateRules sits inside each templateProperties showing the list of rules
-  that affect that property. Each needs data like this:
+  A templateMatchedSelectors sits inside each templateProperties showing the
+  list of selectors that affect that property. Each needs data like this:
   {
-    selectors: ..., // from cssLogic.getPropertyInfo(x).[un]matchedSelectors
-    statusText: function(status) {}, // convert rule.status to readable text
-    showUnmatchedRules: true / false, // show a "more unmatched rules" link
-    showUnmatchedRulesClick: function() {}, // click event handler for the
-        "show more unmatched rules"
+    matchedSelectorViews: ..., // from cssHtmlTree.propertyViews[name].matchedSelectorViews
   }
   This is a template so the parent does not need to be a table, except that
   using a div as the parent causes the DOM to muck with the tr elements
   -->
-  <table id="templateRules">
-    <loop foreach="selector in ${selectorViews}" if="${selector.selectorInfo.sheetAllowed}">
-      <tr>
-        <td dir="ltr" class="rule-text ${selector.statusClass}">
-          ${selector.humanReadableText(__element)}
-        </td>
-        <td class="rule-link">
-          <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
-              title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
-        </td>
-      </tr>
-    </loop>
-    <tr if="${showUnmatchedLink}">
-      <td colspan="4">
-        <div class="expander unmatched-rule"></div>
-        <div class="unmatched">
-          <a href="#" onclick="${showUnmatchedLinkClick}" class="unmatchedlink">${showUnmatchedLinkText}</a>
-        </div>
-      </td>
-    </tr>
-  </table>
+  <div id="templateMatchedSelectors">
+    <table>
+      <loop foreach="selector in ${matchedSelectorViews}">
+        <tr>
+          <td dir="ltr" class="rule-text ${selector.statusClass}">
+            ${selector.humanReadableText(__element)}
+          </td>
+          <td class="rule-link">
+            <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
+                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
+          </td>
+        </tr>
+      </loop>
+    </table>
+  </div>
+
+  <!--
+  A templateUnmatchedSelectors sits inside each templateProperties showing the
+  list of selectors that fail to affect that property. Each needs data like this:
+  {
+    unmatchedSelectorViews: ..., // from cssHtmlTree.propertyViews[name].unmatchedSelectorViews
+  }
+  This is a template so the parent does not need to be a table, except that
+  using a div as the parent causes the DOM to muck with the tr elements
+  -->
+  <div id="templateUnmatchedSelectors">
+    <table>
+      <loop foreach="selector in ${unmatchedSelectorViews}">
+        <tr>
+          <td dir="ltr" class="rule-text unmatched">
+            ${selector.humanReadableText(__element)}
+          </td>
+          <td class="rule-link">
+            <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
+                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
+          </td>
+        </tr>
+      </loop>
+    </table>
+  </div>
 </div>
 
 </body>
