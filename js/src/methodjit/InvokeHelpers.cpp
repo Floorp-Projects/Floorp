@@ -177,16 +177,9 @@ top:
 static void
 InlineReturn(VMFrame &f)
 {
-    bool shiftResult = f.fp()->loweredCallOrApply();
-
     JS_ASSERT(f.fp() != f.entryfp);
     JS_ASSERT(!IsActiveWithOrBlock(f.cx, f.fp()->scopeChain(), 0));
     f.cx->stack.popInlineFrame(f.regs);
-
-    if (shiftResult) {
-        f.regs.sp[-2] = f.regs.sp[-1];
-        f.regs.sp--;
-    }
 
     DebugOnly<JSOp> op = js_GetOpcode(f.cx, f.fp()->script(), f.regs.pc);
     JS_ASSERT(op == JSOP_CALL ||
@@ -781,6 +774,18 @@ HandleErrorInExcessFrame(VMFrame &f, StackFrame *stopFp, bool searchedTopmostFra
     return returnOK;
 }
 
+/* Returns whether the current PC has method JIT'd code. */
+static inline void *
+AtSafePoint(JSContext *cx)
+{
+    StackFrame *fp = cx->fp();
+    if (fp->hasImacropc())
+        return NULL;
+
+    JSScript *script = fp->script();
+    return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs().pc);
+}
+
 /*
  * Interprets until either a safe point is reached that has method JIT'd
  * code, or the current frame tries to return.
@@ -790,12 +795,16 @@ PartialInterpret(VMFrame &f)
 {
     JSContext *cx = f.cx;
     StackFrame *fp = cx->fp();
-    JS_ASSERT(!fp->finishedInInterpreter());
 
-    JS_ASSERT(!cx->compartment->jaegerCompartment()->finishingTracer);
-    cx->compartment->jaegerCompartment()->finishingTracer = true;
-    JSBool ok = Interpret(cx, fp, JSINTERP_REJOIN);
-    cx->compartment->jaegerCompartment()->finishingTracer = false;
+#ifdef DEBUG
+    JSScript *script = fp->script();
+    JS_ASSERT(!fp->finishedInInterpreter());
+    JS_ASSERT(fp->hasImacropc() ||
+              !script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs().pc));
+#endif
+
+    JSBool ok = JS_TRUE;
+    ok = Interpret(cx, fp, JSINTERP_SAFEPOINT);
 
     return ok;
 }
@@ -907,6 +916,13 @@ EvaluateExcessFrame(VMFrame &f, StackFrame *entryFrame)
     if (!fp->hasImacropc() && FrameIsFinished(cx))
         return HandleFinishedFrame(f, entryFrame);
 
+    if (void *ncode = AtSafePoint(cx)) {
+        if (!JaegerShotAtSafePoint(cx, ncode, false))
+            return false;
+        InlineReturn(f);
+        return true;
+    }
+
     return PartialInterpret(f);
 }
 
@@ -997,10 +1013,10 @@ js::mjit::ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool 
 }
 
 #if JS_MONOIC
-JSBool
+void *
 RunTracer(VMFrame &f, ic::TraceICInfo &ic)
 #else
-JSBool
+void *
 RunTracer(VMFrame &f)
 #endif
 {
@@ -1010,14 +1026,7 @@ RunTracer(VMFrame &f)
 
     /* :TODO: nuke PIC? */
     if (!cx->traceJitEnabled)
-        return false;
-
-    /*
-     * Don't reenter the tracer while finishing frames we bailed out from,
-     * to avoid over-recursing.
-     */
-    if (cx->compartment->jaegerCompartment()->finishingTracer)
-        return false;
+        return NULL;
 
     /*
      * Force initialization of the entry frame's scope chain and return value,
@@ -1047,8 +1056,6 @@ RunTracer(VMFrame &f)
     hits = 1;
 #endif
 
-    RecompilationMonitor monitor(cx);
-
     {
         /*
          * While the tracer is running, redirect the regs to a local variable here.
@@ -1064,17 +1071,12 @@ RunTracer(VMFrame &f)
         tpa = MonitorTracePoint(f.cx, &blacklist, traceData, traceEpoch,
                                 loopCounter, hits);
         JS_ASSERT(!TRACE_RECORDER(cx));
-
-        if (tpa != TPA_Nothing)
-            ClearAllFrames(cx->compartment);
     }
 
 #if JS_MONOIC
-    if (!monitor.recompiled()) {
-        ic.loopCounterStart = *loopCounter;
-        if (blacklist)
-            DisableTraceHint(entryFrame->jit(), ic);
-    }
+    ic.loopCounterStart = *loopCounter;
+    if (blacklist)
+        DisableTraceHint(entryFrame->jit(), ic);
 #endif
 
     // Even though ExecuteTree() bypasses the interpreter, it should propagate
@@ -1084,11 +1086,11 @@ RunTracer(VMFrame &f)
     JS_ASSERT(f.fp() == cx->fp());
     switch (tpa) {
       case TPA_Nothing:
-        return false;
+        return NULL;
 
       case TPA_Error:
         if (!HandleErrorInExcessFrame(f, entryFrame, f.fp()->finishedInInterpreter()))
-            THROWV(false);
+            THROWV(NULL);
         JS_ASSERT(!cx->fp()->hasImacropc());
         break;
 
@@ -1124,7 +1126,7 @@ RunTracer(VMFrame &f)
   restart:
     /* Step 1. Finish frames created after the entry frame. */
     if (!FinishExcessFrames(f, entryFrame))
-        THROWV(false);
+        THROWV(NULL);
 
     /* IMacros are guaranteed to have been removed by now. */
     JS_ASSERT(f.fp() == entryFrame);
@@ -1133,14 +1135,19 @@ RunTracer(VMFrame &f)
     /* Step 2. If entryFrame is done, use a special path to return to EnterMethodJIT(). */
     if (FrameIsFinished(cx)) {
         if (!HandleFinishedFrame(f, entryFrame))
-            THROWV(false);
-        return true;
+            THROWV(NULL);
+        *f.returnAddressLocation() = cx->jaegerCompartment()->forceReturnFromFastCall();
+        return NULL;
     }
 
-    /* Step 3. Do a partial interp, then restart the whole process. */
+    /* Step 3. If entryFrame is at a safe point, just leave. */
+    if (void *ncode = AtSafePoint(cx))
+        return ncode;
+
+    /* Step 4. Do a partial interp, then restart the whole process. */
     if (!PartialInterpret(f)) {
         if (!HandleErrorInExcessFrame(f, entryFrame))
-            THROWV(false);
+            THROWV(NULL);
     }
 
     goto restart;
@@ -1150,7 +1157,7 @@ RunTracer(VMFrame &f)
 
 #if defined JS_TRACER
 # if defined JS_MONOIC
-JSBool JS_FASTCALL
+void * JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *ic)
 {
     return RunTracer(f, *ic);
@@ -1158,7 +1165,7 @@ stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *ic)
 
 # else
 
-JSBool JS_FASTCALL
+void * JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f)
 {
     return RunTracer(f);
@@ -1558,23 +1565,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             f.regs.pc = nextpc + analyze::GetBytecodeLength(nextpc);
         break;
       }
-
-      case REJOIN_RUN_TRACER:
-        if (returnReg) {
-            /* InvokeTracer finishes the frame it is given, including the epilogue. */
-            if (fp->isFunctionFrame())
-                fp->markFunctionEpilogueDone();
-            if (fp != f.entryfp) {
-                InlineReturn(f);
-                cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
-                *f.oldregs = f.regs;
-                return NULL;
-            } else {
-                cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Returned);
-                return NULL;
-            }
-        }
-        break;
 
       default:
         JS_NOT_REACHED("Missing rejoin");
