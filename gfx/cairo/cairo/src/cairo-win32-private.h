@@ -162,6 +162,17 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 				      cairo_region_t *region);
 
 cairo_int_status_t
+_cairo_win32_surface_show_glyphs_internal (void			 *surface,
+					   cairo_operator_t	  op,
+					   const cairo_pattern_t *source,
+					   cairo_glyph_t	 *glyphs,
+					   int			  num_glyphs,
+					   cairo_scaled_font_t	 *scaled_font,
+					   cairo_clip_t		 *clip,
+					   int			 *remaining_glyphs,
+					   cairo_bool_t		  glyph_indices);
+
+cairo_int_status_t
 _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_operator_t	 op,
 				  const cairo_pattern_t	*source,

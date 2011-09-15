@@ -45,6 +45,10 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsStringGlue.h"
 
+#include "WorkerPrivate.h"
+
+#define CTYPES_STR "ctypes"
+
 USING_WORKERS_NAMESPACE
 
 namespace {
@@ -74,7 +78,56 @@ UnicodeToNative(JSContext* aCx, const jschar* aSource, size_t aSourceLen)
 JSCTypesCallbacks gCTypesCallbacks = {
   UnicodeToNative
 };
+
+JSBool
+CTypesLazyGetter(JSContext* aCx, JSObject* aObj, jsid aId, jsval* aVp)
+{
+  NS_ASSERTION(JS_GetGlobalObject(aCx) == aObj, "Not a global object!");
+  NS_ASSERTION(JSID_IS_STRING(aId), "Bad id!");
+  NS_ASSERTION(JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), CTYPES_STR),
+               "Bad id!");
+
+  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
+  NS_ASSERTION(worker->IsChromeWorker(), "This should always be true!");
+
+  if (!worker->DisableMemoryReporter()) {
+    return false;
+  }
+
+  jsval ctypes;
+  return JS_DeletePropertyById(aCx, aObj, aId) &&
+         JS_InitCTypesClass(aCx, aObj) &&
+         JS_GetPropertyById(aCx, aObj, aId, &ctypes) &&
+         JS_SetCTypesCallbacks(aCx, JSVAL_TO_OBJECT(ctypes),
+                               &gCTypesCallbacks) &&
+         JS_GetPropertyById(aCx, aObj, aId, aVp);
+}
 #endif
+
+inline bool
+DefineCTypesLazyGetter(JSContext* aCx, JSObject* aGlobal)
+{
+#ifdef BUILD_CTYPES
+  {
+    JSString* ctypesStr = JS_InternString(aCx, CTYPES_STR);
+    if (!ctypesStr) {
+      return false;
+    }
+
+    jsid ctypesId = INTERNED_STRING_TO_JSID(aCx, ctypesStr);
+
+    // We use a lazy getter here to let us unregister the blocking memory
+    // reporter since ctypes can easily block the worker thread and we can
+    // deadlock. Remove once bug 673323 is fixed.
+    if (!JS_DefinePropertyById(aCx, aGlobal, ctypesId, JSVAL_VOID,
+                               CTypesLazyGetter, NULL, 0)) {
+      return false;
+    }
+  }
+#endif
+
+  return true;
+}
 
 } // anonymous namespace
 
@@ -85,16 +138,8 @@ namespace chromeworker {
 bool
 DefineChromeWorkerFunctions(JSContext* aCx, JSObject* aGlobal)
 {
-#ifdef BUILD_CTYPES
-  jsval ctypes;
-  if (!JS_InitCTypesClass(aCx, aGlobal) ||
-      !JS_GetProperty(aCx, aGlobal, "ctypes", &ctypes) ||
-      !JS_SetCTypesCallbacks(aCx, JSVAL_TO_OBJECT(ctypes), &gCTypesCallbacks)) {
-    return false;
-  }
-#endif
-
-  return true;
+  // Currently ctypes is the only special property given to ChromeWorkers.
+  return DefineCTypesLazyGetter(aCx, aGlobal);
 }
 
 } // namespace chromeworker

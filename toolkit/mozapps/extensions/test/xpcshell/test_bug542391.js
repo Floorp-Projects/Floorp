@@ -58,6 +58,7 @@ var WindowWatcher = {
   arguments: null,
 
   openWindow: function(parent, url, name, features, arguments) {
+    do_check_true(Services.startup.interrupted);
     do_check_eq(url, URI_EXTENSION_UPDATE_DIALOG);
     do_check_true(this.expected);
     this.expected = false;

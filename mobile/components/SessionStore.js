@@ -781,6 +781,9 @@ SessionStore.prototype = {
             tab.browser.__SS_data = tabData;
             tab.browser.__SS_restore = true;
 
+            // Restore current title
+            tab.chromeTab.updateTitle(tabData.entries[tabData.index - 1].title);
+
             // Recreate the thumbnail if we are delay loading the tab
             let canvas = tab.chromeTab.thumbnail;
             canvas.setAttribute("restored", "true");
