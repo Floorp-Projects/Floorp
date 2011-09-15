@@ -7586,7 +7586,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     for (tmp = scopeChain; tmp; tmp = tmp->enclosingScope()) {
         if (tmp->isBlock() || tmp->isWith())
             continue;
-        if (!tmp->getSpecial(cx, SpecialId::defaultXMLNamespace(), &v))
+        if (!tmp->getSpecial(cx, tmp, SpecialId::defaultXMLNamespace(), &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             *vp = v;

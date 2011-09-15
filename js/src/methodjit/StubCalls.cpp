@@ -404,7 +404,7 @@ stubs::GetElem(VMFrame &f)
     } else {
         SpecialId special;
         if (ValueIsSpecial(obj, &rref, &special, cx)) {
-            if (!obj->getSpecial(cx, special, &rval))
+            if (!obj->getSpecial(cx, obj, special, &rval))
                 THROW();
         } else {
             JSAtom *name;
