@@ -6,7 +6,6 @@
 ]>
 <resources>
   <string name="splash_screen_loading">&splash_screen_loading;</string>
-  <string name="splash_screen_installing_libs">&splash_screen_installing_libs;</string>
   <string name="splash_firstrun">&splash_firstrun;</string>
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
