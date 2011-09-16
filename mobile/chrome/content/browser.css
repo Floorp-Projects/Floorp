@@ -27,15 +27,15 @@ settings {
 }
 
 setting[type="bool"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-bool");
+  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-bool");
 }
 
 setting[type="bool"][localized="true"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-localized-bool");
+  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-localized-bool");
 }
 
 setting[type="boolint"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-boolint");
+  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-boolint");
 }
 
 setting[type="integer"] {
