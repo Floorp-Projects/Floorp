@@ -560,6 +560,8 @@ class Compiler : public BaseCompiler
     CompileStatus checkAnalysis(JSScript *script);
 #ifdef DEBUG
     void typeCheckPopped(int which);
+#else
+    void typeCheckPopped(int which) {}
 #endif
 
     struct BarrierState {
