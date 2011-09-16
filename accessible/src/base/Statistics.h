@@ -55,6 +55,12 @@ namespace statistics {
   inline void ISimpleDOMUsed()
     { Telemetry::Accumulate(Telemetry::ISIMPLE_DOM_USAGE, 1); }
 
+  /**
+   * Report that IAccessibleTable has been used.
+   */
+  inline void IAccessibleTableUsed()
+    { Telemetry::Accumulate(Telemetry::IACCESSIBLE_TABLE_USAGE, 1); }
+
 } // namespace statistics
 } // namespace a11y
 } // namespace mozilla
