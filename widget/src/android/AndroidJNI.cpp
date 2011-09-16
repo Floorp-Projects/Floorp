@@ -72,6 +72,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *, jclass, jstring status, jstring type);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *, jclass, jstring stack);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass);
 }
 
 
@@ -178,4 +179,16 @@ Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstri
     CrashReporter::AppendAppNotesToCrashReport(NS_ConvertUTF16toUTF8(javaStack));
 #endif
     abort();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass)
+{
+    __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "%s", __PRETTY_FUNCTION__);
+    if (!AndroidBridge::Bridge()) {
+        __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "no bridge in %s!!!!", __PRETTY_FUNCTION__);
+        return;
+    }
+    AndroidBridge::Bridge()->ExecuteNextRunnable();
+    __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "leaving %s", __PRETTY_FUNCTION__);
 }
