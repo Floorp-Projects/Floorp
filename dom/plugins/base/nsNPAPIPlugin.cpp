@@ -127,6 +127,13 @@ using mozilla::plugins::PluginModuleParent;
 #include <windows.h>
 #endif
 
+#ifdef ANDROID
+#include "ANPBase.h"
+#include "AndroidBridge.h"
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
+#endif
+
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
 
@@ -477,7 +484,7 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
     return NS_ERROR_FAILURE;
   }
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(ANDROID)
   if (!pluginLib->HasRequiredFunctions()) {
     NS_WARNING("Not all necessary functions exposed by plugin, it will not load.");
     return NS_ERROR_FAILURE;
@@ -2264,6 +2271,112 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 #endif
 
+#ifdef ANDROID
+    case kLogInterfaceV0_ANPGetValue: {
+      LOG("get log interface");
+      ANPLogInterfaceV0 *i = (ANPLogInterfaceV0 *) result;
+      InitLogInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kBitmapInterfaceV0_ANPGetValue: {
+      LOG("get bitmap interface");
+      ANPBitmapInterfaceV0 *i = (ANPBitmapInterfaceV0 *) result;
+      InitBitmapInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kMatrixInterfaceV0_ANPGetValue: {
+      LOG("get matrix interface");
+      ANPMatrixInterfaceV0 *i = (ANPMatrixInterfaceV0 *) result;
+      InitMatrixInterface(i);
+      return NPERR_NO_ERROR;
+    }
+      
+    case kPathInterfaceV0_ANPGetValue: {
+      LOG("get path interface");
+      ANPPathInterfaceV0 *i = (ANPPathInterfaceV0 *) result;
+      InitPathInterface(i);
+      return NPERR_NO_ERROR;
+    }
+      
+    case kTypefaceInterfaceV0_ANPGetValue: {
+      LOG("get typeface interface");
+      ANPTypefaceInterfaceV0 *i = (ANPTypefaceInterfaceV0 *) result;
+      InitTypeFaceInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kPaintInterfaceV0_ANPGetValue: {
+      LOG("get paint interface");
+      ANPPaintInterfaceV0 *i = (ANPPaintInterfaceV0 *) result;
+      InitPaintInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kCanvasInterfaceV0_ANPGetValue: {
+      LOG("get canvas interface");
+      ANPCanvasInterfaceV0 *i = (ANPCanvasInterfaceV0 *) result;
+      InitCanvasInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kWindowInterfaceV0_ANPGetValue: {
+      LOG("get window interface");
+      ANPWindowInterfaceV0 *i = (ANPWindowInterfaceV0 *) result;
+      InitWindowInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kAudioTrackInterfaceV0_ANPGetValue: {
+      LOG("get audio interface");
+      ANPAudioTrackInterfaceV0 *i = (ANPAudioTrackInterfaceV0 *) result;
+      InitAudioTrackInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kEventInterfaceV0_ANPGetValue: {
+      LOG("get event interface");
+      ANPEventInterfaceV0 *i = (ANPEventInterfaceV0 *) result;
+      InitEventInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kSystemInterfaceV0_ANPGetValue: {
+      LOG("get system interface");
+      ANPSystemInterfaceV0* i = reinterpret_cast<ANPSystemInterfaceV0*>(result);
+      InitSystemInterface(i);
+      LOG("done system interface");
+      return NPERR_NO_ERROR;
+    }
+
+    case kSurfaceInterfaceV0_ANPGetValue: {
+      LOG("get surface interface");
+      ANPSurfaceInterfaceV0 *i = (ANPSurfaceInterfaceV0 *) result;
+      InitSurfaceInterface(i);
+      return NPERR_NO_ERROR;
+    }
+      
+    case kSupportedDrawingModel_ANPGetValue: {
+      LOG("get supported drawing model");
+      uint32_t* bits = reinterpret_cast<uint32_t*>(result);
+      *bits = kBitmap_ANPDrawingModel && kSurface_ANPDrawingModel;
+      return NPERR_NO_ERROR;
+    }  
+
+    case kJavaContext_ANPGetValue: {
+      LOG("get context");
+      JNIEnv* env    = GetJNIForThread();
+      jclass cls     = env->FindClass("org/mozilla/gecko/GeckoApp");
+      jfieldID field = env->GetStaticFieldID(cls, "mAppContext",
+                                             "Lorg/mozilla/gecko/GeckoApp;");
+      jobject ret = env->GetStaticObjectField(cls, field);
+      int32_t* i  = reinterpret_cast<int32_t*>(result);
+      *i = reinterpret_cast<int32_t>(ret);
+      return NPERR_NO_ERROR;
+    }
+#endif
+
   // we no longer hand out any XPCOM objects
   case NPNVDOMElement:
     // fall through
@@ -2275,6 +2388,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(nsISupports**)result = nsnull;
     // fall through
   default:
+    NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_getvalue unhandled get value: %d\n", variable));
     return NPERR_GENERIC_ERROR;
   }
 }
@@ -2374,7 +2488,14 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       }
     }
 #endif
-
+#ifdef ANDROID
+  case kRequestDrawingModel_ANPSetValue:
+    if (inst)
+      inst->SetDrawingModel(NS_PTR_TO_INT32(result));
+    return NPERR_NO_ERROR;
+  case kAcceptEvents_ANPSetValue:
+    return NPERR_NO_ERROR;
+#endif
     default:
       return NPERR_GENERIC_ERROR;
   }

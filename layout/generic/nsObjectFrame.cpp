@@ -1683,6 +1683,22 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
                            nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
+#if defined(ANDROID)
+  if (mInstanceOwner) {
+    NPWindow *window;
+    mInstanceOwner->GetWindow(window);
+
+    gfxRect frameGfxRect =
+      PresContext()->AppUnitsToGfxUnits(aPluginRect);
+    gfxRect dirtyGfxRect =
+      PresContext()->AppUnitsToGfxUnits(aDirtyRect);
+    gfxContext* ctx = aRenderingContext.ThebesContext();
+
+    mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
+    return;
+  }
+#endif
+
   // Screen painting code
 #if defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
