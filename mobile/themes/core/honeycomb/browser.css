@@ -260,6 +260,8 @@ toolbarbutton.urlbar-button {
   background-position: bottom right;
   background-repeat: no-repeat,
                      repeat-x;
+  padding-bottom: 1px;
+  -moz-padding-end: 1px;
 }
 
 #urlbar-icons:-moz-locale-dir(rtl) {
