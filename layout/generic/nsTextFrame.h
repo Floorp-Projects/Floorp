@@ -514,6 +514,7 @@ protected:
                    PRBool aDrawSoftHyphen);
 
   void DrawTextRunAndDecorations(gfxContext* const aCtx,
+                                 const gfxRect& aDirtyRect,
                                  const gfxPoint& aFramePt,
                                  const gfxPoint& aTextBaselinePt,
                                  PRUint32 aOffset,
@@ -527,6 +528,7 @@ protected:
                                  const nscolor* const aDecorationOverrideColor);
 
   void DrawText(gfxContext* const aCtx,
+                const gfxRect& aDirtyRect,
                 const gfxPoint& aFramePt,
                 const gfxPoint& aTextBaselinePt,
                 PRUint32 aOffset,
