@@ -2323,13 +2323,14 @@ inline uint32 frameCountersOffset(JSContext *cx)
 LookupStatus
 BaseIC::disable(JSContext *cx, const char *reason, void *stub)
 {
-    if (cx->hasRunOption(JSOPTION_PCCOUNT)) {
+    JITScript *jit = cx->fp()->jit();
+    if (jit->pcLengths) {
         uint32 offset = frameCountersOffset(cx);
-        cx->fp()->jit()->pcLengths[offset].picsLength = 0;
+        jit->pcLengths[offset].picsLength = 0;
     }
 
     spew(cx, "disabled", reason);
-    Repatcher repatcher(cx->fp()->jit());
+    Repatcher repatcher(jit);
     repatcher.relink(slowPathCall, FunctionPtr(stub));
     return Lookup_Uncacheable;
 }
@@ -2337,9 +2338,10 @@ BaseIC::disable(JSContext *cx, const char *reason, void *stub)
 void
 BaseIC::updatePCCounters(JSContext *cx, Assembler &masm)
 {
-    if (cx->hasRunOption(JSOPTION_PCCOUNT)) {
+    JITScript *jit = cx->fp()->jit();
+    if (jit->pcLengths) {
         uint32 offset = frameCountersOffset(cx);
-        cx->fp()->jit()->pcLengths[offset].picsLength += masm.size();
+        jit->pcLengths[offset].picsLength += masm.size();
     }
 }
 

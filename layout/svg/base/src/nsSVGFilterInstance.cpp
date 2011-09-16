@@ -78,12 +78,22 @@ nsSVGFilterInstance::GetPrimitiveNumber(PRUint8 aCtxType, float aValue) const
 void
 nsSVGFilterInstance::ConvertLocation(float aValues[3]) const
 {
-  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    aValues[0] *= mTargetBBox.Width();
-    aValues[1] *= mTargetBBox.Height();
-    aValues[2] *= nsSVGUtils::ComputeNormalizedHypotenuse(
-                    mTargetBBox.Width(), mTargetBBox.Height());
-  }
+  nsSVGLength2 val[4];
+  val[0].Init(nsSVGUtils::X, 0xff, aValues[0],
+              nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  val[1].Init(nsSVGUtils::Y, 0xff, aValues[1],
+              nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  // Dummy width/height values
+  val[2].Init(nsSVGUtils::X, 0xff, 0,
+              nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  val[3].Init(nsSVGUtils::Y, 0xff, 0,
+              nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+
+  gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
+    val, mTargetBBox, mTargetFrame);
+  aValues[0] = feArea.X();
+  aValues[1] = feArea.Y();
+  aValues[2] = GetPrimitiveNumber(nsSVGUtils::XY, aValues[2]);
 }
 
 already_AddRefed<gfxImageSurface>
@@ -110,6 +120,13 @@ nsSVGFilterInstance::UserSpaceToFilterSpace(const gfxRect& aRect) const
   r.Scale(mFilterSpaceSize.width / mFilterRect.Width(),
           mFilterSpaceSize.height / mFilterRect.Height());
   return r;
+}
+
+gfxPoint
+nsSVGFilterInstance::FilterSpaceToUserSpace(const gfxPoint& aPt) const
+{
+  return gfxPoint(aPt.x * mFilterRect.Width() / mFilterSpaceSize.width + mFilterRect.X(),
+                  aPt.y * mFilterRect.Height() / mFilterSpaceSize.height + mFilterRect.Y());
 }
 
 gfxMatrix

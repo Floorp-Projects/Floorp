@@ -295,6 +295,28 @@ case "$target" in
 
     if test -z "$android_sdk" ; then
         AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
+    else
+        if ! test -e "$android_sdk"/source.properties ; then
+            AC_MSG_ERROR([The path in --with-android-sdk isn't valid (source.properties hasn't been found).])
+        fi
+
+        # Minimum Android SDK API Level we require.
+        android_min_api_level=13
+
+        # Get the api level from "$android_sdk"/source.properties.
+        android_api_level=`$AWK -F = '$1 == "AndroidVersion.ApiLevel" {print $2}' "$android_sdk"/source.properties`
+
+        if test -z "$android_api_level" ; then
+            AC_MSG_ERROR([Unexpected error: no AndroidVersion.ApiLevel field has been found in source.properties.])
+        fi
+
+        if ! test "$android_api_level" -eq "$android_api_level" ; then
+            AC_MSG_ERROR([Unexpected error: the found android api value isn't a number! (found $android_api_level)])
+        fi
+
+        if test $android_api_level -lt $android_min_api_level ; then
+            AC_MSG_ERROR([The given Android SDK provides API level $android_api_level ($android_min_api_level or higher required).])
+        fi
     fi
 
     android_platform_tools="$android_sdk"/../../platform-tools
@@ -1352,35 +1374,8 @@ solaris*)
 BSD_386)
     HOST_OS_ARCH=BSD
     ;;
-dgux)
-    HOST_OS_ARCH=DGUX
-    ;;
-UNIX_SV)
-    if "`cat /etc/bcheckrc | grep -c NCR 2>/dev/null`" != "0"; then
-        HOST_OS_ARCH=NCR
-    else
-        HOST_OS_ARCH=UNIXWARE
-    fi
-    ;;
-ncr)
-    HOST_OS_ARCH=NCR
-    ;;
-UNIX_SYSTEM_V)
-    HOST_OS_ARCH=NEC
-    ;;
-OSF1)
-    ;;
 OS_2)
     HOST_OS_ARCH=OS2
-    ;;
-SCO_SV)
-    HOST_OS_ARCH=SCOOS
-    ;;
-SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
-    HOST_OS_ARCH=SINIX
-    ;;
-UnixWare)
-    HOST_OS_ARCH=UNIXWARE
     ;;
 esac
 
@@ -1423,51 +1418,9 @@ AIX)
 BSD_386)
     OS_ARCH=BSD
     ;;
-dgux)
-    OS_ARCH=DGUX
-    ;;
-UNIX_SV)
-    if "`cat /etc/bcheckrc | grep -c NCR 2>/dev/null`" != "0"; then
-        OS_ARCH=NCR
-    else
-        OS_ARCH=UNIXWARE
-        OS_RELEASE=`uname -v`
-    fi
-    ;;
-ncr)
-    OS_ARCH=NCR
-    ;;
-UNIX_SYSTEM_V)
-    OS_ARCH=NEC
-    ;;
-OSF1)
-    case `uname -v` in
-    148)
-        OS_RELEASE=V3.2C
-        ;;
-    564)
-        OS_RELEASE=V4.0B
-        ;;
-    878)
-        OS_RELEASE=V4.0D
-        ;;
-    esac
-    ;;
 OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
-    OS_RELEASE=`uname -v`
-    ;;
-SCO_SV)
-    OS_ARCH=SCOOS
-    OS_RELEASE=5.0
-    ;;
-SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
-    OS_ARCH=SINIX
-    OS_TEST=`uname -p`
-    ;;
-UnixWare)
-    OS_ARCH=UNIXWARE
     OS_RELEASE=`uname -v`
     ;;
 Darwin)
@@ -1489,12 +1442,6 @@ Darwin)
     esac
     ;;
 esac
-
-if test "$OS_ARCH" = "NCR"; then
-    changequote(,)
-    OS_RELEASE=`awk '{print $3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$/\2.\3/'`
-    changequote([,])
-fi
 
 # Only set CPU_ARCH if we recognize the value of OS_TEST
 
@@ -1949,12 +1896,6 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
     MOZ_FIX_LINK_PATHS=
-    ;;
-
-*-osf*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
-    HOST_NSPR_MDCPUCFG='\"md/_osf1.cfg\"'
-    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 
 *)
@@ -2518,42 +2459,6 @@ ia64*-hpux*)
     fi
     ;;
 
-alpha*-*-osf*)
-    if test "$GNU_CC"; then
-      MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$@ -o $@'
-      MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$@ -o $@'
-
-    else
-	MOZ_DEBUG_FLAGS='-g'
-	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g'
-	CFLAGS="$CFLAGS -ieee"
-	CXXFLAGS="$CXXFLAGS "'-noexceptions -ieee  -ptr $(DIST)/cxx_repository'
-	DSO_LDOPTS='-shared -msym -expect_unresolved \* -update_registry $(DIST)/so_locations'
-	DSO_CFLAGS=
-	DSO_PIC_CFLAGS=
-	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -soname $@ -o $@'
-	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -soname $@ -o $@'
-	MKSHLIB_FORCE_ALL='-all'
-	MKSHLIB_UNFORCE_ALL='-none'
-	dnl Might fix the libxpcom.so breakage on this platform as well....
-	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    fi
-    if test -z "$GNU_CXX"; then
-      COMPAQ_CXX=1
-    fi
-    AC_DEFINE(NEED_USLEEP_PROTOTYPE)
-    ;;
-
-*-sco*)
-    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
-    if test ! "$GNU_CC"; then
-       DSO_LDOPTS='-G'
-    fi
-    ;;
-
 *-solaris*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
@@ -2653,10 +2558,6 @@ alpha*-*-osf*)
     esac
     ;;
 
-*-sysv4.2uw7*)
-	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION -L/usr/ccs/lib -lcrt"
-    ;;
-
 *-os2*)
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     ;;
@@ -2702,7 +2603,6 @@ dnl ========================================================
 case "$target" in
     *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS='-rdynamic -Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/jemalloc-standalone-linkage-version-script'
         ;;
     *-solaris*)
         if test -z "$GNU_CC"; then
@@ -2714,9 +2614,6 @@ case "$target" in
           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
          fi
         fi
-        ;;
-    *-nto*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
@@ -3485,19 +3382,11 @@ then
 			AC_DEFINE(_REENTRANT)
 			;;
 
-	    *-*-nto*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
 	    *-aix4.3*|*-aix5*)
 			AC_DEFINE(_REENTRANT)
 			;;
 
 	    *-hpux11.*)
-			AC_DEFINE(_REENTRANT)
-			;;
-
-	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
 			;;
 
@@ -6499,6 +6388,20 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
    if test $MOZ_PLATFORM_MAEMO = 6; then
+
+      PKG_CHECK_MODULES(LIBCONTENTMANAGER, ContentManager QtSparql,
+                        _LIB_FOUND=1,
+                        _LIB_FOUND=)
+      if test "$_LIB_FOUND"; then
+         MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTMANAGER_LIBS"
+         MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTMANAGER_CFLAGS"
+         MOZ_ENABLE_CONTENTMANAGER=1
+         AC_DEFINE(MOZ_ENABLE_CONTENTMANAGER)
+      else
+         AC_MSG_WARN([Cannot find libcontentmanager and or QtSparql building for Maemo 6])
+      fi
+      AC_SUBST(MOZ_ENABLE_CONTENTMANAGER)
+
       dnl ========================================================
       dnl = Enable meego libcontentaction
       dnl ========================================================
@@ -7070,6 +6973,21 @@ if test "$NS_TRACE_MALLOC"; then
     MOZ_MEMORY=
 fi
 
+if test "${OS_TARGET}" = "Android"; then
+  dnl On Android, we use WRAP_LDFLAGS to link everything to mozutils
+  :
+elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
+  dnl On Windows, OSX and OS2, we want to link all our binaries against mozutils
+  MOZ_UTILS_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib)'
+else
+  dnl On other Unix systems, we only want to link executables against mozutils
+  MOZ_UTILS_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
+  if test -n "$GNU_CC"; then
+    dnl And we need mozutils symbols to be exported.
+    MOZ_UTILS_PROGRAM_LDFLAGS="$MOZ_UTILS_PROGRAM_LDFLAGS -rdynamic"
+  fi
+fi
+
 if test -z "$MOZ_MEMORY"; then
   case "${target}" in
     *-mingw*)
@@ -7119,6 +7037,7 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
+    MOZ_UTILS_LDFLAGS=
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7140,14 +7059,12 @@ else
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_MEMORY_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
-    else
-      MOZ_MEMORY_LDFLAGS='$(DIST)/../memory/jemalloc/jemalloc.lib'
+      MOZ_UTILS_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
     fi
     rm crtdll.obj
 
     dnl Also pass this to NSPR/NSS
-    DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
+    DLLFLAGS="$DLLFLAGS $MOZ_UTILS_LDFLAGS"
     export DLLFLAGS
     ;;
   *)
@@ -7163,7 +7080,8 @@ else
   AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_MEMORY_LDFLAGS)
+AC_SUBST(MOZ_UTILS_LDFLAGS)
+AC_SUBST(MOZ_UTILS_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
@@ -7786,13 +7704,7 @@ fi
 
 AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
 
-# OSF native compilers do not like exception declarations
-# when exceptions are disabled
-if test -n "$COMPAQ_CXX" -o -n "$VACPP"; then
-    AC_DEFINE(CPP_THROW_NEW, [])
-else
-    AC_DEFINE(CPP_THROW_NEW, [throw()])
-fi
+AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
 dnl ========================================================
@@ -8578,7 +8490,6 @@ AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-AC_SUBST(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
@@ -9152,8 +9063,11 @@ ac_configure_args="$ac_configure_args --prefix=$dist"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
-   if test -n "$MOZ_MEMORY_LDFLAGS"; then
-     export MOZ_MEMORY_LDFLAGS
+   if test -n "$MOZ_UTILS_LDFLAGS"; then
+     export MOZ_UTILS_LDFLAGS
+   fi
+   if test -n "$MOZ_UTILS_PROGRAM_LDFLAGS"; then
+     export MOZ_UTILS_PROGRAM_LDFLAGS
    fi
 fi
 export MOZ_APP_NAME

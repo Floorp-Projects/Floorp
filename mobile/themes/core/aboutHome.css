@@ -228,16 +228,6 @@ body[dir="rtl"] {
   -moz-margin-start: 0 !important;
 }
 
-#content {
-  opacity: 1;
-  -moz-transition: opacity 500ms;
-}
-
-#content[hidden] {
-  display: block;
-  opacity: 0;
-}
-
 #footer-wrapper {
   font-size: 18px;
   margin-top: 24px;

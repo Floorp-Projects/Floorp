@@ -152,6 +152,17 @@
 #define NS_ERROR_CORRUPTED_CONTENT \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 29)
 
+/**
+ * While parsing for the first component of a header field using
+ * syntax as in Content-Disposition or Content-Type, the first component
+ * was found to be empty, such as in:
+ *
+ * Content-Disposition: ; filename=foo
+ */
+#define NS_ERROR_FIRST_HEADER_FIELD_COMPONENT_EMPTY \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 34)
+
+
 /******************************************************************************
  * Connectivity error codes:
  */

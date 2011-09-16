@@ -176,7 +176,6 @@ function snapshot(elem)
     pos[count] = elem.getBoundingClientRect().top;
     ++count;
     if (count <= 1) {
-        ok(true, "trying to open the second submenu");
         // close the submenu and open the bottom submenu
         synthesizeKey("VK_LEFT", {});
         synthesizeKey("9", {});
@@ -193,13 +192,11 @@ function doTest() {
 
 function openSubmenu()
 {
-    ok(true, "openSubMenu() called");
     // open a submenu in the middle
     synthesizeKey("5", {});
 }
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(doTest);
+SimpleTest.waitForFocus(doTest);
 
 ]]></script>
 </window>

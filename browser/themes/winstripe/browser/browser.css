@@ -687,7 +687,7 @@ menuitem.bookmark-item {
               -moz-linear-gradient(rgba(251,252,253,.95), rgba(246,247,248,.47) 49%, 
                                    rgba(231,232,233,.45) 51%, rgba(225,226,229,.3));
   background-clip: padding-box;
-  border-radius: 3.5px;
+  border-radius: 2.5px;
   border: 1px solid;
   border-color: rgba(0,0,0,.12) rgba(0,0,0,.19) rgba(0,0,0,.38);
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
@@ -1195,7 +1195,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 2px;
   background-clip: padding-box;
   border: 1px solid ThreeDShadow;
-  border-radius: 3.5px;
+  border-radius: 2.5px;
 }
 
 @media all and (-moz-windows-default-theme) {
@@ -1282,13 +1282,13 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #identity-box:-moz-locale-dir(ltr) {
-  border-top-left-radius: 2.5px;
-  border-bottom-left-radius: 2.5px;
+  border-top-left-radius: 1.5px;
+  border-bottom-left-radius: 1.5px;
 }
 
 #identity-box:-moz-locale-dir(rtl) {
-  border-top-right-radius: 2.5px;
-  border-bottom-right-radius: 2.5px;
+  border-top-right-radius: 1.5px;
+  border-bottom-right-radius: 1.5px;
 }
 
 #identity-box:hover {
@@ -1500,13 +1500,13 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar:-moz-locale-dir(ltr) > toolbarbutton {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
+  border-top-right-radius: 1.5px;
+  border-bottom-right-radius: 1.5px;
 }
 
 #urlbar:-moz-locale-dir(rtl) > toolbarbutton {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
+  border-top-left-radius: 1.5px;
+  border-bottom-left-radius: 1.5px;
 }
 
 #urlbar > toolbarbutton:not([disabled]):active:hover,

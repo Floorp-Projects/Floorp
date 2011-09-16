@@ -8,7 +8,7 @@
 <!ENTITY useCursorNavigation.accesskey   "c">
 <!ENTITY searchStartTyping.label         "Search for text when I start typing">
 <!ENTITY searchStartTyping.accesskey     "x">
-<!ENTITY blockAutoRefresh.label          "Warn me when web sites try to redirect or reload the page">
+<!ENTITY blockAutoRefresh.label          "Warn me when websites try to redirect or reload the page">
 <!ENTITY blockAutoRefresh.accesskey      "b">
 
 <!ENTITY browsing.label                  "Browsing">

@@ -113,21 +113,7 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         dL *= dR;
         break;
       case JSOP_DIV:
-        if (dR == 0) {
-#ifdef XP_WIN
-            if (JSDOUBLE_IS_NaN(dR))
-                dL = js_NaN;
-            else
-#endif
-            if (dL == 0 || JSDOUBLE_IS_NaN(dL))
-                dL = js_NaN;
-            else if (JSDOUBLE_IS_NEG(dL) != JSDOUBLE_IS_NEG(dR))
-                dL = cx->runtime->negativeInfinityValue.toDouble();
-            else
-                dL = cx->runtime->positiveInfinityValue.toDouble();
-        } else {
-            dL /= dR;
-        }
+        dL = js::NumberDiv(dL, dR);
         break;
       case JSOP_MOD:
         if (needInt)
@@ -662,8 +648,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
 
       case JSOP_MUL:
       {
-        JS_ASSERT(reg.isSet());
-
         MaybeJump storeNegZero;
         bool maybeNegZero = !ignoreOverflow;
         bool hasConstant = (lhs->isConstant() || rhs->isConstant());
@@ -680,10 +664,19 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
                 storeNegZero = masm.branch32(Assembler::LessThan, nonConstReg, Imm32(0));
         }
 
-        if (cannotOverflow)
-            masm.mul32(reg.reg(), regs.result);
-        else
-            overflow = masm.branchMul32(Assembler::Overflow, reg.reg(), regs.result);
+        if (cannotOverflow) {
+            if (reg.isSet())
+                masm.mul32(reg.reg(), regs.result);
+            else
+                masm.mul32(Imm32(value), regs.result, regs.result);
+        } else {
+            if (reg.isSet()) {
+                overflow = masm.branchMul32(Assembler::Overflow, reg.reg(), regs.result);
+            } else {
+                overflow = masm.branchMul32(Assembler::Overflow, Imm32(value), regs.result,
+                                            regs.result);
+            }
+        }
 
         if (maybeNegZero) {
             if (hasConstant) {

@@ -169,7 +169,7 @@ function testIdleTime()
     // 1 second leniency.
     ok(timeDiff < 1000, "The idle time should have increased by roughly the " +
                         "amount of time it took for the timeout to fire. " +
-                        "You didn't touch the mouse or keyboard during the" +
+                        "You didn't touch the mouse or keyboard during the " +
                         "test did you?");
     finishedTimeoutOK = true;
 }

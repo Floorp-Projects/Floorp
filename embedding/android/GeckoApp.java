@@ -266,29 +266,8 @@ abstract public class GeckoApp
 
 
             }});
-        File cacheFile = GeckoAppShell.getCacheDir();
-        File libxulFile = new File(cacheFile, "libxul.so");
-
-        if (GeckoAppShell.getFreeSpace() > GeckoAppShell.kFreeSpaceThreshold &&
-            (!libxulFile.exists() ||
-             new File(getApplication().getPackageResourcePath()).lastModified()
-             >= libxulFile.lastModified())) {
-            surfaceView.mSplashStatusMsg =
-                getResources().getString(R.string.splash_screen_installing_libs);
-            File[] libs = cacheFile.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".so");
-                }
-            });
-            if (libs != null) {
-                for (int i = 0; i < libs.length; i++) {
-                    libs[i].delete();
-                }
-            }
-        } else {
-            surfaceView.mSplashStatusMsg =
-                getResources().getString(R.string.splash_screen_loading);
-        }
+        surfaceView.mSplashStatusMsg =
+            getResources().getString(R.string.splash_screen_loading);
         mLibLoadThread.start();
     }
 
@@ -492,21 +471,11 @@ abstract public class GeckoApp
         // copy any .xpi file into an extensions/ directory
         Enumeration<? extends ZipEntry> zipEntries = zip.entries();
         while (zipEntries.hasMoreElements()) {
-          ZipEntry entry = zipEntries.nextElement();
-          if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
-            Log.i("GeckoAppJava", "installing extension : " + entry.getName());
-            unpackFile(zip, buf, entry, entry.getName());
-          }
-        }
-
-        // copy any hyphenation dictionaries file into a hyphenation/ directory
-        Enumeration<? extends ZipEntry> hyphenEntries = zip.entries();
-        while (hyphenEntries.hasMoreElements()) {
-          ZipEntry entry = hyphenEntries.nextElement();
-          if (entry.getName().startsWith("hyphenation/")) {
-            Log.i("GeckoAppJava", "installing hyphenation : " + entry.getName());
-            unpackFile(zip, buf, entry, entry.getName());
-          }
+            ZipEntry entry = zipEntries.nextElement();
+            if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
+                Log.i("GeckoAppJava", "installing extension : " + entry.getName());
+                unpackFile(zip, buf, entry, entry.getName());
+            }
         }
     }
 

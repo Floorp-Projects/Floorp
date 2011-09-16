@@ -1431,6 +1431,94 @@ _cairo_win32_printing_surface_fill (void		        *abstract_surface,
 }
 
 static cairo_int_status_t
+_cairo_win32_printing_surface_emit_win32_glyphs (cairo_win32_surface_t 	*surface,
+						 cairo_operator_t	 op,
+						 const cairo_pattern_t  *source,
+						 cairo_glyph_t        	*glyphs,
+						 int			 num_glyphs,
+						 cairo_scaled_font_t  	*scaled_font,
+						 cairo_clip_t		*clip,
+						 int			*remaining_glyphs)
+{
+    cairo_matrix_t ctm;
+    cairo_glyph_t  *unicode_glyphs;
+    cairo_scaled_font_subsets_glyph_t subset_glyph;
+    int i, first;
+    cairo_bool_t sequence_is_unicode;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    /* Where possible reverse the glyph indices back to unicode
+     * characters. Strings of glyphs that could not be reversed to
+     * unicode will be printed with ETO_GLYPH_INDEX.
+     *
+     * As _cairo_win32_scaled_font_index_to_ucs4() is a slow
+     * operation, the font subsetting function
+     * _cairo_scaled_font_subsets_map_glyph() is used to obtain
+     * the unicode value because it caches the reverse mapping in
+     * the subsets.
+     */
+
+    if (surface->has_ctm) {
+	for (i = 0; i < num_glyphs; i++)
+	    cairo_matrix_transform_point (&surface->ctm, &glyphs[i].x, &glyphs[i].y);
+	cairo_matrix_multiply (&ctm, &scaled_font->ctm, &surface->ctm);
+	scaled_font = cairo_scaled_font_create (scaled_font->font_face,
+						&scaled_font->font_matrix,
+						&ctm,
+						&scaled_font->options);
+    }
+
+    unicode_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+    if (unicode_glyphs == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    memcpy (unicode_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
+    for (i = 0; i < num_glyphs; i++) {
+	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
+						       scaled_font,
+						       glyphs[i].index,
+						       NULL, 0,
+						       &subset_glyph);
+	if (status)
+	    goto fail;
+
+	unicode_glyphs[i].index = subset_glyph.unicode;
+    }
+
+    i = 0;
+    first = 0;
+    sequence_is_unicode = unicode_glyphs[0].index <= 0xffff;
+    while (i < num_glyphs) {
+	if (i == num_glyphs - 1 ||
+	    ((unicode_glyphs[i + 1].index < 0xffff) != sequence_is_unicode))
+	{
+	    status = _cairo_win32_surface_show_glyphs_internal (
+		surface,
+		op,
+		source,
+		sequence_is_unicode ? &unicode_glyphs[first] : &glyphs[first],
+		i - first + 1,
+		scaled_font,
+		clip,
+		remaining_glyphs,
+		! sequence_is_unicode);
+	    first = i + 1;
+	    if (i < num_glyphs - 1)
+		sequence_is_unicode = unicode_glyphs[i + 1].index <= 0xffff;
+	}
+	i++;
+    }
+
+fail:
+    if (surface->has_ctm)
+	cairo_scaled_font_destroy (scaled_font);
+
+    free (unicode_glyphs);
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surface,
                                            cairo_operator_t	 op,
                                            const cairo_pattern_t *source,
@@ -1538,67 +1626,14 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
 	source->type == CAIRO_PATTERN_TYPE_SOLID)
     {
-	cairo_matrix_t ctm;
-	cairo_glyph_t  *type1_glyphs = NULL;
-	cairo_scaled_font_subsets_glyph_t subset_glyph;
-
-	/* Calling ExtTextOutW() with ETO_GLYPH_INDEX and a Type 1
-	 * font on a printer DC prints garbled text. The text displays
-	 * correctly on a display DC. When using a printer
-	 * DC, ExtTextOutW() only works with characters and not glyph
-	 * indices.
-	 *
-	 * For Type 1 fonts the glyph indices are converted back to
-	 * unicode characters before calling _cairo_win32_surface_show_glyphs().
-	 *
-	 * As _cairo_win32_scaled_font_index_to_ucs4() is a slow
-	 * operation, the font subsetting function
-	 * _cairo_scaled_font_subsets_map_glyph() is used to obtain
-	 * the unicode value because it caches the reverse mapping in
-	 * the subsets.
-	 */
-	if (_cairo_win32_scaled_font_is_type1 (scaled_font)) {
-	    type1_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	    if (type1_glyphs == NULL) {
-		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		goto FINISH;
-	    }
-	    memcpy (type1_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
-	    for (i = 0; i < num_glyphs; i++) {
-		status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
-							       scaled_font,
-							       type1_glyphs[i].index,
-							       NULL, 0,
-							       &subset_glyph);
-		if (status)
-		    goto FINISH;
-
-		type1_glyphs[i].index = subset_glyph.unicode;
-	    }
-	    glyphs = type1_glyphs;
-	}
-
-	if (surface->has_ctm || surface->has_gdi_ctm) {
-	    cairo_matrix_multiply (&ctm, &surface->ctm, &surface->gdi_ctm);
-	    for (i = 0; i < num_glyphs; i++)
-		cairo_matrix_transform_point (&ctm, &glyphs[i].x, &glyphs[i].y);
-	    cairo_matrix_multiply (&ctm, &scaled_font->ctm, &ctm);
-	    scaled_font = cairo_scaled_font_create (scaled_font->font_face,
-						    &scaled_font->font_matrix,
-						    &ctm,
-						    &scaled_font->options);
-	}
-	status = _cairo_win32_surface_show_glyphs (surface, op,
-						   source, glyphs,
-						   num_glyphs, scaled_font,
-						   clip,
-						   remaining_glyphs);
-	if (surface->has_ctm || surface->has_gdi_ctm)
-	    cairo_scaled_font_destroy (scaled_font);
-
-	if (type1_glyphs != NULL)
-	    free (type1_glyphs);
-
+	status = _cairo_win32_printing_surface_emit_win32_glyphs (surface,
+								  op,
+								  source,
+								  glyphs,
+								  num_glyphs,
+								  scaled_font,
+								  clip,
+								  remaining_glyphs);
 	goto FINISH;
     }
 #endif

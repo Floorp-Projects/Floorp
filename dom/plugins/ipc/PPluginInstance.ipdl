@@ -171,6 +171,8 @@ parent:
     returns (bool value, NPError result);
   rpc NPN_GetValue_NPNVnetscapeWindow()
     returns (NativeWindowHandle value, NPError result);
+  rpc NPN_GetValue_NPNVdocumentOrigin()
+    returns (nsCString value, NPError result);
 
   rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);

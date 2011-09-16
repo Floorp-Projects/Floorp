@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0D8F8F10-C92D-4A6A-B2BB-E1921F3F4DDA)]
+[scriptable, uuid(99957506-f21b-4a61-ad64-5b641cf508e2)]
 interface nsIBidiKeyboard : nsISupports
 {
   /**
@@ -54,5 +54,14 @@ interface nsIBidiKeyboard : nsISupports
    * @throws NS_ERROR_FAILURE if no right-to-left keyboards are installed
    */
   void setLangFromBidiLevel(in PRUint8 aLevel);
+
+  /**
+   * Determines whether the system has at least one keyboard of each direction
+   * installed.
+   *
+   * @throws NS_ERROR_NOT_IMPLEMENTED if the widget layer does not provide this
+   * information.
+   */
+  readonly attribute boolean haveBidiKeyboards;
 };
 

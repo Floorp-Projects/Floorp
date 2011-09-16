@@ -189,13 +189,6 @@ nsSVGGraphicElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 {
   gfxMatrix result(aMatrix);
 
-  // animateMotion's resulting transform is supposed to apply *on top of*
-  // any transformations from the |transform| attribute. So since we're
-  // PRE-multiplying, we need to apply the animateMotion transform *first*.
-  if (mAnimateMotionTransform) {
-    result.PreMultiply(*mAnimateMotionTransform);
-  }
-
   if (mTransforms) {
     nsresult rv;
     nsCOMPtr<nsIDOMSVGTransformList> transforms;
@@ -208,6 +201,13 @@ nsSVGGraphicElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
         nsSVGTransformList::GetConsolidationMatrix(transforms);
       result.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(matrix));
     }
+  }
+
+  // <animateMotion>'s transformation is *supplemental* to the |transform|
+  // attribute and any transformations on ancestors.  So, we apply it
+  // (pre-multiply it) last.
+  if (mAnimateMotionTransform) {
+    result.PreMultiply(*mAnimateMotionTransform);
   }
 
   return result;
