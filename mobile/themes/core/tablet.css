@@ -77,7 +77,7 @@ documenttab[selected="true"] > vbox > stack > .documenttab-close-container[table
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-end: -12px;
+  -moz-margin-end: -11px;
   padding-right: 2px;
 }
 
