@@ -64,22 +64,6 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 endif
 
-ifeq (Darwin,$(OS_ARCH))
-ifeq (86,$(findstring 86,$(OS_TEST)))
-ifneq (x86_64,$(OS_TEST))
-# If we compile xptcinvoke_unixish_x86.cpp with -fomit-frame-pointer
-# we end up crashing on startup. This is because
-# "movl  %5, %%eax\n\t"   /* function index */
-# becomes
-# mov    0x1c(%esp),%eax
-# but we have modified esp.
-# NOTE: MOZ_FRAMEPTR_FLAGS must be set before including config.mk
-# FIXME: change the file instead of using this hack.
-MOZ_FRAMEPTR_FLAGS=-fno-omit-frame-pointer
-endif
-endif
-endif
-
 include $(topsrcdir)/config/config.mk
 
 ######################################################################
@@ -94,15 +78,15 @@ ifeq (86,$(findstring 86,$(OS_TEST)))
 ifeq (x86_64,$(OS_TEST))
 CPPSRCS		:= xptcinvoke_x86_64_unix.cpp xptcstubs_x86_64_darwin.cpp
 else
-DEFINES		+= -DKEEP_STACK_16_BYTE_ALIGNED
-CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
+CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
 endif
 endif
 endif
 
 ifneq (,$(filter NetBSD OpenBSD BSD_OS GNU,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
-CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
 endif
 endif
 #
@@ -137,7 +121,7 @@ endif
 #
 ifeq ($(OS_TARGET),NTO)
 ifeq ($(OS_TEST),x86)
-CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
 endif
 ifeq ($(OS_TEST),arm)
 CPPSRCS		:= xptcinvoke_nto_arm.cpp xptcstubs_nto_arm.cpp
