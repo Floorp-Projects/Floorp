@@ -429,7 +429,7 @@ GENERATE_CACHE = \
   rm startupCache.zip && \
   $(ZIP) -r9m omni.jar jsloader/resource/$(PRECOMPILE_RESOURCE)
 else
-GENERATE_CACHE =
+GENERATE_CACHE = true
 endif
 endif
 
@@ -694,7 +694,6 @@ ifndef PKG_SKIP_STRIP
   ifeq ($(OS_ARCH),OS2)
 		@echo "Stripping package directory..."
 		@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) && $(STRIP)
-		$(SIGN_NSS)
   else
 		@echo "Stripping package directory..."
 		@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
@@ -720,16 +719,10 @@ ifndef PKG_SKIP_STRIP
 				! -name "*.reg" \
 				$(PLATFORM_EXCLUDE_LIST) \
 				-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-		$(SIGN_NSS)
   endif
-else
-ifdef UNIVERSAL_BINARY
-# universal binaries will have had their .chk files removed prior to the unify
-# step, and if they're also --disable-install-strip then they won't get
-# re-signed in the block above.
-	$(SIGN_NSS)
-endif # UNIVERSAL_BINARY
 endif # PKG_SKIP_STRIP
+# We always sign nss because we don't do it from security/manager anymore
+	$(SIGN_NSS)
 	@echo "Removing unpackaged files..."
 ifdef NO_PKG_FILES
 	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH); rm -rf $(NO_PKG_FILES)

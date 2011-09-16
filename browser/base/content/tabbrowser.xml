@@ -565,6 +565,8 @@
 
                 this.mTab.removeAttribute("busy");
                 this.mTab.removeAttribute("progress");
+                if (!this.mTab.selected)
+                  this.mTab.setAttribute("unread", "true");
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -871,6 +873,7 @@
               (window.windowState != window.STATE_MINIMIZED);
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
+            this.mCurrentTab.removeAttribute("unread");
             this.showTab(this.mCurrentTab);
 
             if (updatePageReport)
