@@ -290,10 +290,6 @@ MAKEFILES_layout="
   layout/xul/base/src/tree/public/Makefile
 "
 
-MAKEFILES_libimg="
-  modules/libimg/Makefile
-"
-
 MAKEFILES_libjar="
   modules/libjar/Makefile
   modules/libjar/test/Makefile
@@ -759,7 +755,6 @@ add_makefiles "
   $MAKEFILES_jsductwork
   $MAKEFILES_content
   $MAKEFILES_layout
-  $MAKEFILES_libimg
   $MAKEFILES_libjar
   $MAKEFILES_libreg
   $MAKEFILES_libpref
