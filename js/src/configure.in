@@ -5450,10 +5450,6 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
   if test "$CROSS_COMPILE"; then
     case "$target" in
     *-android*|*-linuxandroid*)
-      CFLAGS="$ANDROID_CFLAGS"
-      CPPFLAGS="$ANDROID_CPPFLAGS"
-      LDFLAGS="$ANDROID_LDFLAGS"
-
       export AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS CFLAGS LDFLAGS
 
       ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\""
