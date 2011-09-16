@@ -51,4 +51,6 @@ USE_STATIC_LIBS = 1
 
 CPPSRCS = $(LIBRARY_NAME).cpp
 
+MOZ_UTILS_LDFLAGS =
+
 include $(topsrcdir)/config/rules.mk
