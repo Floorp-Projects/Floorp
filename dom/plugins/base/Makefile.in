@@ -99,6 +99,11 @@ CPPSRCS		= \
 		nsPluginInstanceOwner.cpp \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+DIRS += android
+LOCAL_INCLUDES += -I$(topsrcdir)/dom/plugins/base/android
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 	CPPSRCS += nsPluginsDirWin.cpp
 	CPPSRCS += nsPluginNativeWindowWin.cpp
@@ -127,7 +132,7 @@ endif
 endif
 endif
 
-LOCAL_INCLUDES = \
+LOCAL_INCLUDES += \
   -I$(topsrcdir)/xpcom/base/ \
   $(MOZ_CAIRO_CFLAGS) \
   $(NULL)
