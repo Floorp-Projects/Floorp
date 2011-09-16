@@ -118,6 +118,16 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "gfxXlibNativeRenderer.h"
 #endif
 
+#ifdef ANDROID
+#include "ANPBase.h"
+#include "android_npapi.h"
+#include "AndroidBridge.h"
+using namespace mozilla::dom;
+
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
+#endif
+
 using namespace mozilla;
 
 // special class for handeling DOM context menu events because for
@@ -1255,7 +1265,12 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   // Add PARAM and null separator.
   mCachedAttrParamNames [nextAttrParamIndex] = ToNewUTF8String(NS_LITERAL_STRING("PARAM"));
+#ifdef ANDROID
+  // Flash expects an empty string on android
+  mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_LITERAL_STRING(""));
+#else
   mCachedAttrParamValues[nextAttrParamIndex] = nsnull;
+#endif
   nextAttrParamIndex++;
 
   // Add PARAM name/value pairs.
@@ -1640,8 +1655,48 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 #endif
 }
 
+#ifdef ANDROID
+void nsPluginInstanceOwner::RemovePluginView()
+{
+  if (mInstance && mObjectFrame) {
+    void* surface = mInstance->GetJavaSurface();
+    if (surface) {
+      JNIEnv* env = GetJNIForThread();
+      if (env) {
+        jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+        jmethodID method = env->GetStaticMethodID(cls,
+                                                  "removePluginView",
+                                                  "(Landroid/view/View;)V");
+        env->CallStaticVoidMethod(cls, method, surface);
+      }
+    }
+  }
+}
+#endif
+
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
+#ifdef ANDROID
+  {
+    ANPEvent event;
+    event.inSize = sizeof(ANPEvent);
+    event.eventType = kLifecycle_ANPEventType;
+
+    nsAutoString eventType;
+    aFocusEvent->GetType(eventType);
+    if (eventType.EqualsLiteral("focus")) {
+      event.data.lifecycle.action = kGainFocus_ANPLifecycleAction;
+    }
+    else if (eventType.EqualsLiteral("blur")) {
+      event.data.lifecycle.action = kLoseFocus_ANPLifecycleAction;
+    }
+    else {
+      NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin, wierd eventType");   
+    }
+    mInstance->HandleEvent(&event, nsnull);
+  }
+#endif
+
 #ifndef XP_MACOSX
   if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow)) {
     // continue only for cases without child window
@@ -1912,8 +1967,6 @@ static unsigned int XInputEventState(const nsInputEvent& anEvent)
 
 nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
-  // printf("nsGUIEvent.message: %d\n", anEvent.message);
-
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   if (!mInstance || !mObjectFrame)   // if mInstance is null, we shouldn't be here
@@ -2436,6 +2489,107 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     rv = nsEventStatus_eConsumeNoDefault;
 #endif
 
+#ifdef ANDROID
+  // this code supports windowless plugins
+  {
+    // The plugin needs focus to receive keyboard and touch events
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mContent);
+      fm->SetFocus(elem, 0);
+    }
+  }
+  switch(anEvent.eventStructType)
+    {
+    case NS_MOUSE_EVENT:
+      {
+        switch (anEvent.message)
+          {
+          case NS_MOUSE_CLICK:
+          case NS_MOUSE_DOUBLECLICK:
+            // Button up/down events sent instead.
+            return rv;
+          }
+
+        // Get reference point relative to plugin origin.
+        const nsPresContext* presContext = mObjectFrame->PresContext();
+        nsPoint appPoint =
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
+          mObjectFrame->GetContentRectRelativeToSelf().TopLeft();
+        nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
+                               presContext->AppUnitsToDevPixels(appPoint.y));
+
+        switch (anEvent.message)
+          {
+          case NS_MOUSE_MOVE:
+            {
+              // are these going to be touch events?
+              // pluginPoint.x;
+              // pluginPoint.y;
+            }
+            break;
+          case NS_MOUSE_BUTTON_DOWN:
+            {
+              ANPEvent event;
+              event.inSize = sizeof(ANPEvent);
+              event.eventType = kMouse_ANPEventType;
+              event.data.mouse.action = kDown_ANPMouseAction;
+              event.data.mouse.x = pluginPoint.x;
+              event.data.mouse.y = pluginPoint.y;
+              mInstance->HandleEvent(&event, nsnull);
+            }
+            break;
+          case NS_MOUSE_BUTTON_UP:
+            {
+              ANPEvent event;
+              event.inSize = sizeof(ANPEvent);
+              event.eventType = kMouse_ANPEventType;
+              event.data.mouse.action = kUp_ANPMouseAction;
+              event.data.mouse.x = pluginPoint.x;
+              event.data.mouse.y = pluginPoint.y;
+              mInstance->HandleEvent(&event, nsnull);
+            }
+            break;
+          }
+      }
+      break;
+
+    case NS_KEY_EVENT:
+     {
+       const nsKeyEvent& keyEvent = static_cast<const nsKeyEvent&>(anEvent);
+       LOG("Firing NS_KEY_EVENT %d %d\n", keyEvent.keyCode, keyEvent.charCode);
+       
+       int modifiers = 0;
+       if (keyEvent.isShift)
+         modifiers |= kShift_ANPKeyModifier;
+       if (keyEvent.isAlt)
+         modifiers |= kAlt_ANPKeyModifier;
+
+       ANPEvent event;
+       event.inSize = sizeof(ANPEvent);
+       event.eventType = kKey_ANPEventType;
+       event.data.key.nativeCode = keyEvent.keyCode;
+       event.data.key.virtualCode = keyEvent.charCode;
+       event.data.key.modifiers = modifiers;
+       event.data.key.repeatCount = 0;
+       event.data.key.unichar = 0;
+       switch (anEvent.message)
+         {
+         case NS_KEY_DOWN:
+           event.data.key.action = kDown_ANPKeyAction;
+           mInstance->HandleEvent(&event, nsnull);
+           break;
+           
+         case NS_KEY_UP:
+           event.data.key.action = kUp_ANPKeyAction;
+           mInstance->HandleEvent(&event, nsnull);
+           break;
+         }
+     }
+    }
+    rv = nsEventStatus_eConsumeNoDefault;
+#endif
+ 
   return rv;
 }
 
@@ -2541,6 +2695,10 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
   }
 #endif
 
+#ifdef ANDROID
+  RemovePluginView();
+#endif
+
   // Unregister scroll position listeners
   for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     nsIScrollableFrame* sf = do_QueryFrame(f);
@@ -2634,6 +2792,138 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
   pluginEvent.wParam = (uint32)aHPS;
   pluginEvent.lParam = (uint32)&rectl;
   mInstance->HandleEvent(&pluginEvent, nsnull);
+}
+#endif
+
+#ifdef ANDROID
+
+class AndroidPaintEventRunnable : public nsRunnable
+{
+public:
+  AndroidPaintEventRunnable(void* aSurface, nsNPAPIPluginInstance* inst, const gfxRect& aFrameRect)
+    : mSurface(aSurface), mInstance(inst), mFrameRect(aFrameRect) {
+  }
+
+  ~AndroidPaintEventRunnable() {
+  }
+
+  NS_IMETHOD Run()
+  {
+    LOG("%p - AndroidPaintEventRunnable::Run\n", this);
+
+    if (!mInstance || !mSurface)
+      return NS_OK;
+
+    // This needs to happen on the gecko main thread.
+    JNIEnv* env = GetJNIForThread();
+    jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+    jmethodID method = env->GetStaticMethodID(cls,
+                                              "addPluginView",
+                                              "(Landroid/view/View;DDDD)V");
+    env->CallStaticVoidMethod(cls,
+                              method,
+                              mSurface,
+                              mFrameRect.x,
+                              mFrameRect.y,
+                              mFrameRect.width,
+                              mFrameRect.height);
+    return NS_OK;
+  }
+private:
+  void* mSurface;
+  nsCOMPtr<nsNPAPIPluginInstance> mInstance;
+  gfxRect mFrameRect;
+};
+
+
+void nsPluginInstanceOwner::Paint(gfxContext* aContext,
+                                  const gfxRect& aFrameRect,
+                                  const gfxRect& aDirtyRect)
+{
+  if (!mInstance || !mObjectFrame)
+    return;
+
+  PRInt32 model;
+  mInstance->GetDrawingModel(&model);
+
+  if (model == kSurface_ANPDrawingModel) {
+
+    {
+      ANPEvent event;
+      event.inSize = sizeof(ANPEvent);
+      event.eventType = kLifecycle_ANPEventType;
+      event.data.lifecycle.action = kOnScreen_ANPLifecycleAction;
+      mInstance->HandleEvent(&event, nsnull);
+    }
+
+    /*
+    gfxMatrix currentMatrix = aContext->CurrentMatrix();
+    gfxSize scale = currentMatrix.ScaleFactors(PR_TRUE);
+    printf_stderr("!!!!!!!! scale!!:  %f x %f\n", scale.width, scale.height);
+    */
+
+    JNIEnv* env = GetJNIForThread();
+    jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+    jmethodID method = env->GetStaticMethodID(cls,
+                                              "addPluginView",
+                                              "(Landroid/view/View;DDDD)V");
+    env->CallStaticVoidMethod(cls,
+                              method,
+                              mInstance->GetJavaSurface(),
+                              aFrameRect.x,
+                              aFrameRect.y,
+                              aFrameRect.width,
+                              aFrameRect.height);
+    return;
+  }
+
+  if (model != kBitmap_ANPDrawingModel)
+    return;
+
+#ifdef ANP_BITMAP_DRAWING_MODEL
+  static nsRefPtr<gfxImageSurface> pluginSurface;
+
+  if (pluginSurface == nsnull ||
+      aFrameRect.width  != pluginSurface->Width() ||
+      aFrameRect.height != pluginSurface->Height()) {
+
+    pluginSurface = new gfxImageSurface(gfxIntSize(aFrameRect.width, aFrameRect.height), 
+                                        gfxImageSurface::ImageFormatARGB32);
+    if (!pluginSurface)
+      return;
+  }
+
+  // Clears buffer.  I think this is needed.
+  nsRefPtr<gfxContext> ctx = new gfxContext(pluginSurface);
+  ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+  ctx->Paint();
+  
+  ANPEvent event;
+  event.inSize = sizeof(ANPEvent);
+  event.eventType = 4;
+  event.data.draw.model = 1;
+  
+  event.data.draw.clip.top     = 0;
+  event.data.draw.clip.left    = 0;
+  event.data.draw.clip.bottom  = aFrameRect.width;
+  event.data.draw.clip.right   = aFrameRect.height;
+  
+  event.data.draw.data.bitmap.format   = kRGBA_8888_ANPBitmapFormat;
+  event.data.draw.data.bitmap.width    = aFrameRect.width;
+  event.data.draw.data.bitmap.height   = aFrameRect.height;
+  event.data.draw.data.bitmap.baseAddr = pluginSurface->Data();
+  event.data.draw.data.bitmap.rowBytes = aFrameRect.width * 4;
+  
+  if (!mInstance)
+    return;
+    
+  mInstance->HandleEvent(&event, nsnull);
+
+  aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+  aContext->SetSource(pluginSurface, gfxPoint(aFrameRect.x, aFrameRect.y));
+  aContext->Clip(aFrameRect);
+  aContext->Paint();
+#endif
 }
 #endif
 
@@ -3274,9 +3564,28 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
   if (mPluginWindowVisible && mPluginDocumentActiveState) {
     mPluginWindow->clipRect.right = mPluginWindow->width;
     mPluginWindow->clipRect.bottom = mPluginWindow->height;
+#ifdef ANDROID
+    if (mInstance) {
+      ANPEvent event;
+      event.inSize = sizeof(ANPEvent);
+      event.eventType = kLifecycle_ANPEventType;
+      event.data.lifecycle.action = kOnScreen_ANPLifecycleAction;
+      mInstance->HandleEvent(&event, nsnull);
+    }
+#endif
   } else {
     mPluginWindow->clipRect.right = 0;
     mPluginWindow->clipRect.bottom = 0;
+#ifdef ANDROID
+    if (mInstance) {
+      ANPEvent event;
+      event.inSize = sizeof(ANPEvent);
+      event.eventType = kLifecycle_ANPEventType;
+      event.data.lifecycle.action = kOffScreen_ANPLifecycleAction;
+      mInstance->HandleEvent(&event, nsnull);
+    }
+    RemovePluginView();
+#endif
   }
 
   if (!aSetWindow)
