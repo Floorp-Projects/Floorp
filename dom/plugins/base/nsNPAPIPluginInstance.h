@@ -68,7 +68,6 @@ public:
   uint32_t id;
   nsCOMPtr<nsITimer> timer;
   void (*callback)(NPP npp, uint32_t timerID);
-  PRBool inCallback;
 };
 
 class nsNPAPIPluginInstance : public nsISupports
@@ -86,9 +85,6 @@ public:
   nsresult NewStreamToPlugin(nsIPluginStreamListener** listener);
   nsresult NewStreamFromPlugin(const char* type, const char* target, nsIOutputStream* *result);
   nsresult Print(NPPrint* platformPrint);
-#ifdef ANDROID
-  nsresult PostEvent(void* event) { return 0; };
-#endif
   nsresult HandleEvent(void* event, PRInt16* result);
   nsresult GetValueFromPlugin(NPPVariable variable, void* value);
   nsresult GetDrawingModel(PRInt32* aModel);
@@ -143,11 +139,6 @@ public:
 #ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
   void SetEventModel(NPEventModel aModel);
-#endif
-
-#ifdef ANDROID
-  void SetDrawingModel(PRUint32 aModel);
-  void* GetJavaSurface();
 #endif
 
   nsresult NewStreamListener(const char* aURL, void* notifyData,
@@ -216,10 +207,6 @@ protected:
   NPDrawingModel mDrawingModel;
 #endif
 
-#ifdef ANDROID
-  PRUint32 mDrawingModel;
-#endif
-
   enum {
     NOT_STARTED,
     RUNNING,
@@ -263,9 +250,6 @@ private:
   nsCOMPtr<nsIURI> mURI;
 
   PRPackedBool mUsePluginLayersPref;
-#ifdef ANDROID
-  void* mSurface;
-#endif
 };
 
 #endif // nsNPAPIPluginInstance_h_

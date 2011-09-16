@@ -63,11 +63,9 @@ public:
         mNP_GetEntryPoints(nsnull),
 #endif
         mNPP_New(nsnull),
-        mNPP_GetValue(nsnull),
         mNPP_ClearSiteData(nsnull),
         mNPP_GetSitesWithData(nsnull),
-        mLibrary(aLibrary),
-        mFilePath(aFilePath)
+        mLibrary(aLibrary)
     {
         NS_ASSERTION(mLibrary, "need non-null lib");
         // addref here??
@@ -161,8 +159,6 @@ public:
                                     const nsGUIEvent& anEvent, bool* handled);
 #endif
 
-    virtual void GetLibraryPath(nsACString& aPath) { aPath.Assign(mFilePath); }
-
 private:
     NP_InitializeFunc mNP_Initialize;
     NP_ShutdownFunc mNP_Shutdown;
@@ -174,11 +170,9 @@ private:
     NP_GetEntryPointsFunc mNP_GetEntryPoints;
 #endif
     NPP_NewProcPtr mNPP_New;
-    NPP_GetValueProcPtr mNPP_GetValue;
     NPP_ClearSiteDataPtr mNPP_ClearSiteData;
     NPP_GetSitesWithDataPtr mNPP_GetSitesWithData;
     PRLibrary* mLibrary;
-    nsCString mFilePath;
 };
 
 
