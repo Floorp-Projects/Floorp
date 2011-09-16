@@ -476,8 +476,8 @@ nsresult nsPluginInstanceOwner::GetInstance(nsNPAPIPluginInstance **aInstance)
 {
   NS_ENSURE_ARG_POINTER(aInstance);
 
-  NS_IF_ADDREF(mInstance);
   *aInstance = mInstance;
+  NS_IF_ADDREF(*aInstance);
   return NS_OK;
 }
 
