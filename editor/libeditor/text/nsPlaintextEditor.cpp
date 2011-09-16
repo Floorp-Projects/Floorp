@@ -1717,8 +1717,8 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
 already_AddRefed<nsIDOMEventTarget>
 nsPlaintextEditor::GetDOMEventTarget()
 {
-  NS_IF_ADDREF(mEventTarget);
-  return mEventTarget.get();
+  nsCOMPtr<nsIDOMEventTarget> copy = mEventTarget;
+  return copy.forget();
 }
 
 
