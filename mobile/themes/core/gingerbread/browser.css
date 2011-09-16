@@ -1248,6 +1248,10 @@ setting {
   -moz-box-orient: horizontal;
 }
 
+setting:hover:active {
+  background-color: @color_background_highlight@;
+}
+
 .setting-label {
   -moz-box-flex: 1;
 }
