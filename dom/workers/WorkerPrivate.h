@@ -63,6 +63,7 @@
 class JSAutoStructuredCloneBuffer;
 class nsIDocument;
 class nsIPrincipal;
+class nsIMemoryMultiReporter;
 class nsIScriptContext;
 class nsIURI;
 class nsPIDOMWindow;
@@ -512,6 +513,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTArray<nsAutoPtr<TimeoutInfo> > mTimeouts;
 
   nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIMemoryMultiReporter> mMemoryReporter;
 
   mozilla::TimeStamp mKillTime;
   PRUint32 mErrorHandlerRecursionCount;
@@ -522,6 +524,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mRunningExpiredTimeouts;
   bool mCloseHandlerStarted;
   bool mCloseHandlerFinished;
+  bool mMemoryReporterRunning;
+  bool mMemoryReporterDisabled;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mThread;
@@ -654,7 +658,11 @@ public:
   ScheduleDeletion(bool aWasPending);
 
   bool
-  BlockAndCollectRuntimeStats(mozilla::xpconnect::memory::IterateData* aData);
+  BlockAndCollectRuntimeStats(mozilla::xpconnect::memory::IterateData* aData,
+                              bool* aDisabled);
+
+  bool
+  DisableMemoryReporter();
 
 #ifdef JS_GC_ZEAL
   void
@@ -743,6 +751,9 @@ private:
     ClearQueue(&mQueue);
     ClearQueue(&mControlQueue);
   }
+
+  bool
+  ProcessAllControlRunnables();
 };
 
 WorkerPrivate*

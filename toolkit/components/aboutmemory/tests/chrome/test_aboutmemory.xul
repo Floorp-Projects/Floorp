@@ -238,15 +238,6 @@ Explicit Allocations\n\
 ├────200.00 MB (20.00%) -- compartment(compartment-url)\n\
 └────101.00 MB (10.10%) -- heap-unclassified\n\
 \n\
-Resident Set Size (RSS) Breakdown\n\
-0.00 MB (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0.00 MB (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0.00 MB (100.0%) -- swap\n\
-\n\
 Other Measurements\n\
   666.00 MB -- danger<script>window.alert(1)</script>\n\
 1,000.00 MB -- heap-allocated\n\
@@ -262,15 +253,6 @@ Explicit Allocations\n\
 │  ├──333.00 MB (42.86%) -- b\n\
 │  └────0.00 MB (00.00%) -- (1 omitted)\n\
 └────0.00 MB (00.00%) -- (2 omitted)\n\
-\n\
-Resident Set Size (RSS) Breakdown\n\
-0.00 MB (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0.00 MB (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0.00 MB (100.0%) -- swap\n\
 \n\
 Other Measurements\n\
 0.00 MB -- heap-allocated [*]\n\
@@ -342,15 +324,6 @@ Explicit Allocations\n\
 ├────209,715,200 B (20.00%) -- compartment(compartment-url)\n\
 └────105,906,176 B (10.10%) -- heap-unclassified\n\
 \n\
-Resident Set Size (RSS) Breakdown\n\
-0 B (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0 B (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0 B (100.0%) -- swap\n\
-\n\
 Other Measurements\n\
   698,351,616 B -- danger<script>window.alert(1)</script>\n\
 1,048,576,000 B -- heap-allocated\n\
@@ -367,15 +340,6 @@ Explicit Allocations\n\
 │  └────────────0 B (00.00%) -- d [*] [2]\n\
 ├────────────0 B (00.00%) -- b [*]\n\
 └────────────0 B (00.00%) -- heap-unclassified [*]\n\
-\n\
-Resident Set Size (RSS) Breakdown\n\
-0 B (100.0%) -- resident\n\
-\n\
-Virtual Size Breakdown\n\
-0 B (100.0%) -- vsize\n\
-\n\
-Swap Usage Breakdown\n\
-0 B (100.0%) -- swap\n\
 \n\
 Other Measurements\n\
 0 B -- heap-allocated [*]\n\

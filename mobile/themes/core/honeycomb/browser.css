@@ -1016,8 +1016,8 @@ documenttab[selected="true"] {
   margin: -1px;
 }
 
-documenttab:hover:active > stack > .documenttab-thumbnail,
-documenttab[selected="true"] > stack > .documenttab-thumbnail {
+documenttab:hover:active > vbox > stack > .documenttab-thumbnail,
+documenttab[selected="true"] > vbox > stack > .documenttab-thumbnail {
   opacity: 1.0;
 }
 
@@ -1034,7 +1034,7 @@ documenttab[selected="true"] > stack > .documenttab-thumbnail {
   list-style-image: url("chrome://browser/skin/images/close-inactive-tab-hdpi.png");
 }
 
-documenttab[selected="true"] > stack > hbox > .documenttab-close {
+documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close {
   list-style-image: url("chrome://browser/skin/images/close-default-hdpi.png");
 }
 
@@ -1042,7 +1042,7 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close {
   list-style-image: url("chrome://browser/skin/images/close-active-hdpi.png");
 }
 
-documenttab:only-child > stack > hbox > .documenttab-close {
+documenttab:only-child > vbox > stack > hbox > .documenttab-close {
   display: none;
 }
 
@@ -1055,12 +1055,16 @@ documenttab[reload="true"] {
   display: none;
 }
 
-documenttab[reload="true"] > stack > .documenttab-close-container {
+documenttab[reload="true"] > vbox > stack > .documenttab-close-container {
   display: none;
 }
 
-documenttab[reload="true"] > stack > .documenttab-reload {
+documenttab[reload="true"] > vbox > stack > .documenttab-reload {
   display: -moz-box;
+}
+
+.documenttab-title {
+  display: none;
 }
 
 #newtab-button {
@@ -1561,7 +1565,7 @@ setting {
   margin: @margin_xxxnormal@ @margin_xxxnormal@ 0 @margin_xxxnormal@;
 }
 
-#appmenu-overflow-appcommands > .appmenu-button {
+#appmenu-overflow-commands > .appmenu-button {
   color: @color_text_default@;
   background: transparent;
   font-size: @font_normal@ !important;
@@ -1571,7 +1575,7 @@ setting {
   -moz-box-align: center;
 }
 
-#appmenu-overflow-appcommands > .appmenu-button:hover:active {
+#appmenu-overflow-commands > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
 }

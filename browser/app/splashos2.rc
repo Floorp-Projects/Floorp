@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include <os2.h>
 
 // Splash screen dialog ID.
@@ -55,24 +56,3 @@ BEGIN
 END
 
 //BITMAP IDB_SPLASH "splash.bmp"
-
-#ifdef MOZ_STATIC_BUILD
-#include "wdgtos2rc.h"
-
-POINTER IDC_SELECTANCHOR   "..\\..\\widget\\src\\os2\\res\\select.ptr"
-POINTER IDC_GRAB           "..\\..\\widget\\src\\os2\\res\\grab.ptr"
-POINTER IDC_GRABBING       "..\\..\\widget\\src\\os2\\res\\grabbing.ptr"
-POINTER IDC_CELL           "..\\..\\widget\\src\\os2\\res\\cell.ptr"
-POINTER IDC_COPY           "..\\..\\widget\\src\\os2\\res\\copy.ptr"
-POINTER IDC_ALIAS          "..\\..\\widget\\src\\os2\\res\\aliasb.ptr"
-POINTER IDC_ZOOMIN         "..\\..\\widget\\src\\os2\\res\\zoom_in.ptr"
-POINTER IDC_ZOOMOUT        "..\\..\\widget\\src\\os2\\res\\zoom_out.ptr"
-
-POINTER IDC_ARROWWAIT      "..\\..\\widget\\src\\os2\\res\\arrow_wait.ptr"
-POINTER IDC_CROSS          "..\\..\\widget\\src\\os2\\res\\crosshair.ptr"
-POINTER IDC_HELP           "..\\..\\widget\\src\\os2\\res\\help.ptr"
-POINTER IDC_NONE           "..\\..\\widget\\src\\os2\\res\\none.ptr"
-
-ICON    IDC_DNDURL         "..\\..\\widget\\src\\os2\\res\\dndurl.ico"
-ICON    IDC_DNDTEXT        "..\\..\\widget\\src\\os2\\res\\dndtext.ico"
-#endif

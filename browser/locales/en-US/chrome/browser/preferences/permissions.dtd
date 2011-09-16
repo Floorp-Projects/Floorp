@@ -7,7 +7,7 @@
 <!ENTITY removepermission.accesskey   "R">
 <!ENTITY removeallpermissions.label   "Remove All Sites">
 <!ENTITY removeallpermissions.accesskey "e">
-<!ENTITY address.label                "Address of web site:">
+<!ENTITY address.label                "Address of website:">
 <!ENTITY address.accesskey            "d">
 <!ENTITY block.label                  "Block">
 <!ENTITY block.accesskey              "B">

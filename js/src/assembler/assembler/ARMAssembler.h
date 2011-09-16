@@ -586,7 +586,7 @@ namespace JSC {
             }
             char const * off_sign = (posOffset) ? ("+") : ("-");
             js::JaegerSpew(js::JSpew_Insns, 
-                           IPFX "%sr%s%s, [%s, #%s%u]\n", 
+                           IPFX "%sr%s%s %s, [%s, #%s%u]\n", 
                            MAYBE_PAD, mnemonic_act, mnemonic_sign, mnemonic_size,
                            nameGpReg(rd), nameGpReg(rb), off_sign, offset);
             if (size == 32 || (size == 8 && !isSigned)) {
@@ -626,7 +626,7 @@ namespace JSC {
             }
             char const * off_sign = (posOffset) ? ("+") : ("-");
             js::JaegerSpew(js::JSpew_Insns, 
-                           IPFX "%sr%s%s, [%s, #%s%s]\n", MAYBE_PAD, mnemonic_act, mnemonic_sign, mnemonic_size,
+                           IPFX "%sr%s%s %s, [%s, #%s%s]\n", MAYBE_PAD, mnemonic_act, mnemonic_sign, mnemonic_size,
                            nameGpReg(rd), nameGpReg(rb), off_sign, nameGpReg(rm));
             if (size == 32 || (size == 8 && !isSigned)) {
                 /* All (the one) 32 bit ops and the signed 8 bit ops use the original encoding.*/
@@ -1050,7 +1050,7 @@ namespace JSC {
         static void repatchInt32(void* from, int32_t to)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                           ISPFX "##repatchInt32    ((%p)) holds ((%p))\n",
+                           ISPFX "##repatchInt32    ((%p)) holds ((%#x))\n",
                            from, to);
 
             patchPointerInternal(reinterpret_cast<intptr_t>(from), reinterpret_cast<void*>(to));
@@ -1608,7 +1608,7 @@ namespace JSC {
         void fcpyd_r(int dd, int dm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov.f64", 
+                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vmov.f64", 
                            nameFpRegD(dd), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
@@ -1652,7 +1652,7 @@ namespace JSC {
         void fabsd_r(int dd, int dm, Condition cc = AL)
         {
             js::JaegerSpew(js::JSpew_Insns,
-                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
+                    IPFX   "%-15s %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
             m_buffer.putInt(static_cast<ARMWord>(cc) | FABSD | DD(dd) | DM(dm));
         }
 

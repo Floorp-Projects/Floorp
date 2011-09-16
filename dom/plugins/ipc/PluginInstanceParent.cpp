@@ -342,6 +342,18 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVprivateModeBool(bool* value,
 }
 
 bool
+PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
+                                                            NPError* result)
+{
+    void *v = nsnull;
+    *result = mNPNIface->getvalue(mNPP, NPNVdocumentOrigin, &v);
+    if (*result == NPERR_NO_ERROR && v) {
+        value->Adopt(static_cast<char*>(v));
+    }
+    return true;
+}
+
+bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginWindow(
     const bool& windowed, NPError* result)
 {

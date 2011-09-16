@@ -67,6 +67,7 @@
 
 #include "vm/GlobalObject.h"
 
+#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
@@ -1088,6 +1089,40 @@ inline void
 JSObject::setSharedNonNativeMap()
 {
     setMap(&js::Shape::sharedNonNative);
+}
+
+inline JSBool
+JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp)
+{
+    js::LookupElementOp op = getOps()->lookupElement;
+    return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
+}
+
+inline JSBool
+JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return getProperty(cx, receiver, id, vp);
+}
+
+inline JSBool
+JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return getProperty(cx, id, vp);
+}
+
+inline JSBool
+JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return deleteProperty(cx, id, rval, strict);
 }
 
 static inline bool
