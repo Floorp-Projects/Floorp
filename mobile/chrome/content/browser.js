@@ -1619,6 +1619,8 @@ Browser.WebProgress.prototype = {
       }
 
       aTab.scrolledAreaChanged(true);
+      aTab.updateThumbnail();
+
       aTab.updateContentCapture();
     });
   }
@@ -2723,9 +2725,6 @@ function Tab(aURI, aParams) {
 
   // default tabs to inactive (i.e. no display port)
   this.active = false;
-
-  // Whether the tab thumbnail has been delayed to wait for the first paint.
-  this._delayedThumbnail = false;
 }
 
 Tab.prototype = {
@@ -2838,22 +2837,9 @@ Tab.prototype = {
   endLoading: function endLoading() {
     if (!this._loading) throw "Not Loading!";
     this._loading = false;
-
-    if (!this._delayedThumbnail) {
-      if (this._firstPaint) {
-        this.updateThumbnail();
-      } else {
-        let browser = this._browser;
-        let self = this;
-
-        this._delayedThumbnail = true;
-
-        browser.messageManager.addMessageListener("Browser:FirstPaint", function (aMessage) {
-          browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
-          self.updateThumbnail();
-          self._delayedThumbnail = false;
-        });
-      }
+    if (this._drawThumb) {
+      this._drawThumb = false;
+      this.updateThumbnail();
     }
   },
 
@@ -3074,6 +3060,12 @@ Tab.prototype = {
   updateThumbnail: function updateThumbnail(options) {
     let options = options || {};
     let browser = this._browser;
+
+    if (this._loading) {
+      this._drawThumb = true;
+      return;
+    }
+
     let forceUpdate = ("force" in options && options.force);
 
     // Do not repaint thumbnail if we already painted for this load. Bad things
