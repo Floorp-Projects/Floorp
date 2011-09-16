@@ -3610,6 +3610,21 @@ JSObject::nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool str
     return getOps()->setProperty(cx, this, id, vp, strict);
 }
 
+JSBool
+JSObject::nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
+{
+    if (JS_UNLIKELY(watched())) {
+        jsid id;
+        if (!IndexToId(cx, index, &id))
+            return false;
+        JS_ASSERT(id == js_CheckForStringIndex(id));
+        WatchpointMap *wpmap = cx->compartment->watchpointMap;
+        if (wpmap && !wpmap->triggerWatchpoint(cx, this, id, vp))
+            return false;
+    }
+    return getOps()->setElement(cx, this, index, vp, strict);
+}
+
 bool
 JSObject::copyPropertiesFrom(JSContext *cx, JSObject *obj)
 {
@@ -5066,6 +5081,16 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     return !!DefineNativeProperty(cx, obj, id, *value, getter, setter, attrs, 0, 0);
 }
 
+JSBool
+js_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+                 PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return !!DefineNativeProperty(cx, obj, id, *value, getter, setter, attrs, 0, 0);
+}
+
 /*
  * Backward compatibility requires allowing addProperty hooks to mutate the
  * nominal initial value of a slotful property, while GC safety wants that
@@ -5436,6 +5461,16 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 {
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
+
+    return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
+}
+
+JS_FRIEND_API(JSBool)
+js_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp, JSProperty **propp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
 
     return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
 }
@@ -5875,6 +5910,17 @@ js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value 
 }
 
 JSBool
+js_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+
+    /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
+    return js_GetPropertyHelperInline(cx, obj, receiver, id, JSGET_METHOD_BARRIER, vp);
+}
+
+JSBool
 js::GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, Value *vp)
 {
     JSProperty *prop;
@@ -6235,6 +6281,16 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 }
 
 JSBool
+js_SetElementHelper(JSContext *cx, JSObject *obj, uint32 index, uintN defineHow,
+                    Value *vp, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return js_SetPropertyHelper(cx, obj, id, defineHow, vp, strict);
+}
+
+JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     JSProperty *prop;
@@ -6246,6 +6302,24 @@ js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
     }
     if (!obj->isNative())
         return obj->getAttributes(cx, id, attrsp);
+
+    const Shape *shape = (Shape *)prop;
+    *attrsp = shape->attributes();
+    return true;
+}
+
+JSBool
+js_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    JSProperty *prop;
+    if (!js_LookupElement(cx, obj, index, &obj, &prop))
+        return false;
+    if (!prop) {
+        *attrsp = 0;
+        return true;
+    }
+    if (!obj->isNative())
+        return obj->getElementAttributes(cx, index, attrsp);
 
     const Shape *shape = (Shape *)prop;
     *attrsp = shape->attributes();
@@ -6271,6 +6345,19 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
     return obj->isNative()
            ? js_SetNativeAttributes(cx, obj, (Shape *) prop, *attrsp)
            : obj->setAttributes(cx, id, attrsp);
+}
+
+JSBool
+js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+{
+    JSProperty *prop;
+    if (!js_LookupElement(cx, obj, index, &obj, &prop))
+        return false;
+    if (!prop)
+        return true;
+    return obj->isNative()
+           ? js_SetNativeAttributes(cx, obj, (Shape *) prop, *attrsp)
+           : obj->setElementAttributes(cx, index, attrsp);
 }
 
 JSBool
@@ -6350,6 +6437,15 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
     }
 
     return obj->removeProperty(cx, id) && js_SuppressDeletedProperty(cx, obj, id);
+}
+
+JSBool
+js_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return js_DeleteProperty(cx, obj, id, rval, strict);
 }
 
 namespace js {

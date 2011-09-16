@@ -130,6 +130,9 @@ public:
                                        NPError* result);
     virtual bool
     AnswerNPN_GetValue_NPNVprivateModeBool(bool* value, NPError* result);
+  
+    virtual bool
+    AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value, NPError* result);
 
     virtual bool
     AnswerNPN_SetValue_NPPVpluginWindow(const bool& windowed, NPError* result);

@@ -31,7 +31,7 @@
 }
 
 #tabs-container[tablet] {
-  -moz-border-end: 0px;
+  -moz-border-end: @border_width_xxlarge@ solid #eaeaea;
   background: #000;
 }
 
@@ -51,8 +51,10 @@
   /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
   width: 200px;
   padding: 12px;
+  padding-bottom: 0px;
   -moz-margin-start: 0px;
   background: none;
+  margin-bottom: 0px;
 }
 
 #tabs[tablet] documenttab[selected="true"] {
@@ -66,16 +68,16 @@
 .documenttab-close-container[tablet] {
   left: 0px;
   -moz-margin-end: 0px;
-  -moz-margin-start: 135px;
+  -moz-margin-start: 151px;
   -moz-box-pack: end;
   -moz-box-align: center;
 }
 
-documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
+documenttab[selected="true"] > vbox > stack > .documenttab-close-container[tablet] {
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-end: -12px;
+  -moz-margin-end: -11px;
   padding-right: 2px;
 }
 
@@ -85,7 +87,7 @@ documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
   list-style-image: url("chrome://browser/skin/images/close-inactive-tab-tablet-hdpi.png");
 }
 
-documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
+documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] {
   list-style-image: url("chrome://browser/skin/images/close-default-tablet-hdpi.png");
 }
 
@@ -95,6 +97,15 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
 
 .documenttab-reload[tablet] {
   background: url("chrome://browser/skin/images/tab-reopen-tablet-hdpi.png");
+}
+
+.documenttab-title[tablet] {
+  color: #FFF;
+  font-size: @font_xtiny@ !important;
+  padding: @padding_small@;
+  margin: 0px;
+  text-align: center;
+  display: -moz-box;
 }
 
 #newtab-button[tablet] {

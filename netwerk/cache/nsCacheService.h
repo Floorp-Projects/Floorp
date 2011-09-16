@@ -163,9 +163,11 @@ public:
     static void      SetDiskCacheEnabled(PRBool  enabled);
     // Sets the disk cache capacity (in kilobytes)
     static void      SetDiskCacheCapacity(PRInt32  capacity);
-    // Set max size for a disk-cache entry (in bytes). -1 disables this limit
+    // Set max size for a disk-cache entry (in KB). -1 disables limit up to
+    // 1/8th of disk cache size
     static void      SetDiskCacheMaxEntrySize(PRInt32  maxSize);
-    // Set max size for a memory-cache entry (in bytes). -1 disables this limit
+    // Set max size for a memory-cache entry (in kilobytes). -1 disables
+    // limit up to 90% of memory cache size
     static void      SetMemoryCacheMaxEntrySize(PRInt32  maxSize);
 
     static void      SetOfflineCacheEnabled(PRBool  enabled);

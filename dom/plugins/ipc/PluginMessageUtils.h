@@ -213,6 +213,7 @@ NPNVariableToString(NPNVariable aVar)
         VARSTR(NPNVSupportsWindowless);
 
         VARSTR(NPNVprivateModeBool);
+        VARSTR(NPNVdocumentOrigin);
 
     default: return "???";
     }

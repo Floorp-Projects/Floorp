@@ -47,7 +47,7 @@ nsHttpRequestHead::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
 {
     // note: the first append is intentional.
  
-    buf.Append(mMethod.get());
+    buf.Append(nsAtomCString(mMethod));
     buf.Append(' ');
     buf.Append(mRequestURI);
     buf.AppendLiteral(" HTTP/");

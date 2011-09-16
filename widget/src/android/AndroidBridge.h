@@ -162,7 +162,7 @@ public:
                            const nsAString& aTitle = EmptyString());
 
     void GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& aMimeType);
-    void GetExtensionFromMimeType(const nsCString& aMimeType, nsACString& aFileExt);
+    void GetExtensionFromMimeType(const nsACString& aMimeType, nsACString& aFileExt);
 
     void MoveTaskToBack();
 

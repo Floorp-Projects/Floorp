@@ -41,7 +41,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(68b4b481-e21b-478f-8d75-41b131e1c261)]
+[scriptable, uuid(35fcdb69-3bb6-4484-b99a-32f49a84fabd)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -135,6 +135,11 @@ interface nsIAppStartup : nsISupports
      * Properties may not be available depending on platform or application
      */
     void getStartupInfo();
+
+    /**
+     * True if startup was interrupted by an interactive prompt.
+     */
+    attribute boolean interrupted;
 };
 
 %{C++

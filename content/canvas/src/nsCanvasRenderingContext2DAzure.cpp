@@ -4098,11 +4098,12 @@ nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRU
 
   PRUint8 *src = aData;
   PRUint32 srcStride = w * 4;
-    
+  
+  RefPtr<DataSourceSurface> readback;
   if (!srcReadRect.IsEmpty()) {
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
 
-    RefPtr<DataSourceSurface> readback = snapshot->GetDataSurface();
+    readback = snapshot->GetDataSurface();
 
     srcStride = readback->Stride();
     src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;

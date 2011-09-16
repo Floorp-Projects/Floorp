@@ -38,7 +38,6 @@
 
 #include "nsXULSliderAccessible.h"
 
-#include "nsAccessibilityAtoms.h"
 #include "States.h"
 
 #include "nsIDOMDocument.h"
@@ -94,7 +93,7 @@ nsXULSliderAccessible::NativeState()
 NS_IMETHODIMP
 nsXULSliderAccessible::GetValue(nsAString& aValue)
 {
-  return GetSliderAttr(nsAccessibilityAtoms::curpos, aValue);
+  return GetSliderAttr(nsGkAtoms::curpos, aValue);
 }
 
 PRUint8
@@ -137,7 +136,7 @@ nsXULSliderAccessible::GetMaximumValue(double *aValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  return GetSliderAttr(nsAccessibilityAtoms::maxpos, aValue);
+  return GetSliderAttr(nsGkAtoms::maxpos, aValue);
 }
 
 NS_IMETHODIMP
@@ -149,7 +148,7 @@ nsXULSliderAccessible::GetMinimumValue(double *aValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  return GetSliderAttr(nsAccessibilityAtoms::minpos, aValue);
+  return GetSliderAttr(nsGkAtoms::minpos, aValue);
 }
 
 NS_IMETHODIMP
@@ -161,7 +160,7 @@ nsXULSliderAccessible::GetMinimumIncrement(double *aValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  return GetSliderAttr(nsAccessibilityAtoms::increment, aValue);
+  return GetSliderAttr(nsGkAtoms::increment, aValue);
 }
 
 NS_IMETHODIMP
@@ -173,7 +172,7 @@ nsXULSliderAccessible::GetCurrentValue(double *aValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  return GetSliderAttr(nsAccessibilityAtoms::curpos, aValue);
+  return GetSliderAttr(nsGkAtoms::curpos, aValue);
 }
 
 NS_IMETHODIMP
@@ -185,7 +184,7 @@ nsXULSliderAccessible::SetCurrentValue(double aValue)
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
-  return SetSliderAttr(nsAccessibilityAtoms::curpos, aValue);
+  return SetSliderAttr(nsGkAtoms::curpos, aValue);
 }
 
 PRBool

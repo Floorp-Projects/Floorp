@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include <windows.h>
 #include "nsNativeAppSupportWin.h"
 
@@ -49,37 +50,3 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU_APPNAME,              "@MOZ_APP_DISPLAYNAME@"
 END
-
-#ifdef MOZ_STATIC_BUILD
-
-// XXX This code is copied from resource.h and widget.rc.  It's a work-around
-// for the limitation that only one resource file can be used in an .exe.  We
-// should develop a method, for static builds only, to combine multiple .rc
-// files into a single .rc file, and then use that to build the single .res
-// file for the .exe.
-
-#define IDC_GRAB                        4101
-#define IDC_GRABBING                    4102
-#define IDC_CELL                        4103
-#define IDC_COPY                        4104
-#define IDC_ALIAS                       4105
-#define IDC_ZOOMIN                      4106
-#define IDC_ZOOMOUT                     4107
-#define IDC_COLRESIZE                   4108
-#define IDC_ROWRESIZE                   4109
-#define IDC_VERTICALTEXT                4110
-#define IDC_NONE                        4112
-
-IDC_GRAB                CURSOR  DISCARDABLE     "../../widget/src/build/res/grab.cur"
-IDC_GRABBING            CURSOR  DISCARDABLE     "../../widget/src/build/res/grabbing.cur"
-IDC_CELL                CURSOR  DISCARDABLE     "../../widget/src/build/res/cell.cur"
-IDC_COPY                CURSOR  DISCARDABLE     "../../widget/src/build/res/copy.cur"
-IDC_ALIAS               CURSOR  DISCARDABLE     "../../widget/src/build/res/aliasb.cur"
-IDC_ZOOMIN              CURSOR  DISCARDABLE     "../../widget/src/build/res/zoom_in.cur"
-IDC_ZOOMOUT             CURSOR  DISCARDABLE     "../../widget/src/build/res/zoom_out.cur"
-IDC_COLRESIZE           CURSOR  DISCARDABLE     "../../widget/src/build/res/col_resize.cur"
-IDC_ROWRESIZE           CURSOR  DISCARDABLE     "../../widget/src/build/res/row_resize.cur"
-IDC_VERTICALTEXT        CURSOR  DISCARDABLE     "../../widget/src/build/res/vertical_text.cur"
-IDC_NONE                CURSOR  DISCARDABLE     "../../widget/src/build/res/none.cur"
-
-#endif

@@ -132,7 +132,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const IPC::URI&            aReferrerURI,
                                  const PRUint32&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
-                                 const nsHttpAtom&          requestMethod,
+                                 const nsCString&           requestMethod,
                                  const IPC::InputStream&    uploadStream,
                                  const PRBool&              uploadStreamHasHeaders,
                                  const PRUint16&            priority,
@@ -190,7 +190,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   httpChan->SetNotificationCallbacks(channelListener);
 
-  httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
+  httpChan->SetRequestMethod(requestMethod);
 
   nsCOMPtr<nsIInputStream> stream(uploadStream);
   if (stream) {

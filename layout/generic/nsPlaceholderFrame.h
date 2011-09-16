@@ -174,9 +174,8 @@ public:
   }
 #endif
 
-  NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
-                                        nsIFrame**      aProviderFrame,
-                                        PRBool*         aIsChild);
+  virtual nsIFrame* GetParentStyleContextFrame();
+
   /**
    * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise
    * aFrame

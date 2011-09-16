@@ -149,17 +149,6 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
-ifdef MOZ_MEMORY
-ifneq ($(OS_ARCH),WINNT)
-JEMALLOC_LIBS = $(MKSHLIB_FORCE_ALL) $(call EXPAND_MOZLIBNAME,jemalloc) $(MKSHLIB_UNFORCE_ALL)
-# If we are linking jemalloc into a program, we want the jemalloc symbols
-# to be exported
-ifneq (,$(SIMPLE_PROGRAMS)$(PROGRAM))
-JEMALLOC_LIBS += $(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
-endif
-endif
-endif
-
 CC := $(CC_WRAPPER) $(CC)
 CXX := $(CXX_WRAPPER) $(CXX)
 MKDIR ?= mkdir
@@ -247,12 +236,16 @@ endif # MOZ_DEBUG
 # We don't build a static CRT when building a custom CRT,
 # it appears to be broken. So don't link to jemalloc if
 # the Makefile wants static CRT linking.
-ifeq ($(MOZ_MEMORY)_$(USE_STATIC_LIBS),1_)
+ifeq ($(MOZ_MEMORY)_$(USE_STATIC_LIBS),1_1)
 # Disable default CRT libs and add the right lib path for the linker
-OS_LDFLAGS += $(MOZ_MEMORY_LDFLAGS)
+MOZ_UTILS_LDFLAGS=
 endif
 
 endif # WINNT && !GNU_CC
+
+ifndef MOZ_UTILS_PROGRAM_LDFLAGS
+MOZ_UTILS_PROGRAM_LDFLAGS=$(MOZ_UTILS_LDFLAGS)
+endif
 
 #
 # Build using PIC by default

@@ -126,7 +126,7 @@
 <!ENTITY nssFailure2.longDesc "
 <ul>
   <li>The page you are trying to view can not be shown because the authenticity of the received data could not be verified.</li>
-  <li>Please contact the web site owners to inform them of this problem. Alternatively, use the command found in the help menu to report this broken site.</li>
+  <li>Please contact the website owners to inform them of this problem. Alternatively, use the command found in the help menu to report this broken site.</li>
 </ul>
 ">
 
@@ -154,7 +154,7 @@ be temporary, and you can try again later.</li>
 <!ENTITY malwareBlocked.title "Suspected Attack Site!">
 <!ENTITY malwareBlocked.longDesc "
 <p>Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p>
-<p>Web site owners who believe their site has been reported as an attack site in error may <a href='http://www.stopbadware.org/home/reviewinfo' >request a review</a>.</p>
+<p>Website owners who believe their site has been reported as an attack site in error may <a href='http://www.stopbadware.org/home/reviewinfo' >request a review</a>.</p>
 ">
 
 <!ENTITY phishingBlocked.title "Suspected Web Forgery!">

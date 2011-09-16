@@ -1675,7 +1675,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     ptrdiff_t head;
     JSContext *cx;
     JSPrinter *jp;
-    JSOp op, saveop;
+    JSOp op;
     const JSCodeSpec *cs;
     uintN oplen;
     jsint i, lasti;
@@ -1710,7 +1710,6 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
 #endif
 
         LOAD_OP_DATA(pc);
-        saveop = op;
 
         switch (op) {
           case JSOP_POP:
