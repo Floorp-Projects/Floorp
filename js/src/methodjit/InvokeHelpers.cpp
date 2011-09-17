@@ -617,50 +617,46 @@ js_InternalThrow(VMFrame &f)
     StackFrame *fp = cx->fp();
     JSScript *script = fp->script();
 
-    if (cx->typeInferenceEnabled() || !fp->jit()) {
-        /*
-         * Fall back to EnterMethodJIT and finish the frame in the interpreter.
-         * With type inference enabled, we may wipe out all JIT code on the
-         * stack without patching ncode values to jump to the interpreter, and
-         * thus can only enter JIT code via EnterMethodJIT (which overwrites
-         * its entry frame's ncode). See ClearAllFrames.
-         */
-        cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
+    /*
+     * Fall back to EnterMethodJIT and finish the frame in the interpreter.
+     * We may wipe out all JIT code on the stack without patching ncode values
+     * to jump to the interpreter, and thus can only enter JIT code via
+     * EnterMethodJIT (which overwrites its entry frame's ncode).
+     * See ClearAllFrames.
+     */
+    cx->compartment->jaegerCompartment()->setLastUnfinished(Jaeger_Unfinished);
 
-        if (!script->ensureRanAnalysis(cx)) {
-            js_ReportOutOfMemory(cx);
-            return NULL;
-        }
-
-        analyze::AutoEnterAnalysis enter(cx);
-
-        cx->regs().pc = pc;
-        cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
-
-        /*
-         * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
-         * back into the interpreter with a pending exception. This will cause
-         * it to immediately rethrow.
-         */
-        if (cx->isExceptionPending()) {
-            JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
-            JSObject *obj = script->getObject(GET_SLOTNO(pc));
-            Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
-            SetValueRangeToUndefined(cx->regs().sp, vp);
-            cx->regs().sp = vp;
-            JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
-            cx->regs().sp[0] = cx->getPendingException();
-            cx->clearPendingException();
-            cx->regs().sp++;
-            cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
-        }
-
-        *f.oldregs = f.regs;
-
+    if (!script->ensureRanAnalysis(cx)) {
+        js_ReportOutOfMemory(cx);
         return NULL;
     }
 
-    return script->nativeCodeForPC(fp->isConstructing(), pc);
+    analyze::AutoEnterAnalysis enter(cx);
+
+    cx->regs().pc = pc;
+    cx->regs().sp = fp->base() + script->analysis()->getCode(pc).stackDepth;
+
+    /*
+     * Interpret the ENTERBLOCK and EXCEPTION opcodes, so that we don't go
+     * back into the interpreter with a pending exception. This will cause
+     * it to immediately rethrow.
+     */
+    if (cx->isExceptionPending()) {
+        JS_ASSERT(js_GetOpcode(cx, script, pc) == JSOP_ENTERBLOCK);
+        JSObject *obj = script->getObject(GET_SLOTNO(pc));
+        Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
+        SetValueRangeToUndefined(cx->regs().sp, vp);
+        cx->regs().sp = vp;
+        JS_ASSERT(js_GetOpcode(cx, script, pc + JSOP_ENTERBLOCK_LENGTH) == JSOP_EXCEPTION);
+        cx->regs().sp[0] = cx->getPendingException();
+        cx->clearPendingException();
+        cx->regs().sp++;
+        cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
+    }
+
+    *f.oldregs = f.regs;
+
+    return NULL;
 }
 
 void JS_FASTCALL
@@ -1161,7 +1157,7 @@ RunTracer(VMFrame &f)
 
 #if defined JS_TRACER
 # if defined JS_MONOIC
-void *JS_FASTCALL
+void * JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *ic)
 {
     return RunTracer(f, *ic);
@@ -1169,7 +1165,7 @@ stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *ic)
 
 # else
 
-void *JS_FASTCALL
+void * JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f)
 {
     return RunTracer(f);
@@ -1332,22 +1328,34 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         break;
 
       case REJOIN_NATIVE:
-      case REJOIN_NATIVE_LOWERED: {
+      case REJOIN_NATIVE_LOWERED:
+      case REJOIN_NATIVE_GETTER: {
         /*
          * We don't rejoin until after the native stub finishes execution, in
          * which case the return value will be in memory. For lowered natives,
-         * the return value will be in the 'this' value's slot.
+         * the return value will be in the 'this' value's slot. For getters,
+         * the result is at nextsp[0] (see ic::CallProp).
          */
-        if (rejoin == REJOIN_NATIVE_LOWERED)
+        if (rejoin == REJOIN_NATIVE_LOWERED) {
             nextsp[-1] = nextsp[0];
+        } else if (rejoin == REJOIN_NATIVE_GETTER) {
+            if (js_CodeSpec[op].format & JOF_CALLOP) {
+                /*
+                 * If we went through jsop_callprop_obj then the 'this' value
+                 * is still in its original slot and hasn't been shifted yet,
+                 * so fix that now. Yuck.
+                 */
+                if (nextsp[-2].isObject())
+                    nextsp[-1] = nextsp[-2];
+                nextsp[-2] = nextsp[0];
+            } else {
+                nextsp[-1] = nextsp[0];
+            }
+        }
 
         /* Release this reference on the orphaned native stub. */
         RemoveOrphanedNative(cx, fp);
 
-        /*
-         * Note: there is no need to monitor the result of the native, the
-         * native stub will always do a type check before finishing.
-         */
         f.regs.pc = nextpc;
         break;
       }
@@ -1565,6 +1573,16 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     if (nextDepth == uint32(-1))
         nextDepth = analysis->getCode(f.regs.pc).stackDepth;
     f.regs.sp = fp->base() + nextDepth;
+
+    /*
+     * Monitor the result of the previous op when finishing a JOF_TYPESET op.
+     * The result may not have been marked if we bailed out while inside a stub
+     * for the op.
+     */
+    if (f.regs.pc == nextpc && (js_CodeSpec[op].format & JOF_TYPESET)) {
+        int which = (js_CodeSpec[op].format & JOF_CALLOP) ? -2 : -1;  /* Yuck. */
+        types::TypeScript::Monitor(cx, script, pc, f.regs.sp[which]);
+    }
 
     /* Mark the entry frame as unfinished, and update the regs to resume at. */
     JaegerStatus status = skipTrap ? Jaeger_UnfinishedAtTrap : Jaeger_Unfinished;
