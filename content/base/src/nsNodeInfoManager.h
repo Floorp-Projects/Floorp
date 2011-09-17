@@ -139,7 +139,6 @@ protected:
   friend class nsXULPrototypeDocument;
   friend nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** ,
                                         nsNodeInfoManager *,
-                                        nsIPrincipal *,
                                         nsIAtom *,
                                         const nsAString& ,
                                         const nsAString& ,
