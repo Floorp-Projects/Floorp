@@ -459,17 +459,17 @@ WinTaskbar::PrepareFullScreenHWND(void *aHWND, PRBool aFullScreen) {
   if (!Initialize())
     return NS_ERROR_NOT_AVAILABLE;
 
-    NS_ENSURE_ARG_POINTER(aHWND);
+  NS_ENSURE_ARG_POINTER(aHWND);
 
-    if (!::IsWindow((HWND)aHWND)) 
-      return NS_ERROR_INVALID_ARG;
+  if (!::IsWindow((HWND)aHWND)) 
+    return NS_ERROR_INVALID_ARG;
 
-    HRESULT hr = mTaskbar->MarkFullscreenWindow((HWND)aHWND, aFullScreen);
-    if (FAILED(hr)) {
-      return NS_ERROR_UNEXPECTED;
-    }
+  HRESULT hr = mTaskbar->MarkFullscreenWindow((HWND)aHWND, aFullScreen);
+  if (FAILED(hr)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 } // namespace widget
