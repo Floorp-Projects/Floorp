@@ -101,9 +101,6 @@ public:
 
   // nsIContent overrides
   virtual const nsTextFragment* GetText();
-  virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
-                              nsIContent *aBindingParent,
-                              PRBool aCompileEventHandlers);
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const;
@@ -117,8 +114,7 @@ protected:
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      nsNodeInfoManager *aOwnerDoc,
-                      nsIPrincipal *aPrincipal,
+                      nsNodeInfoManager* aNodeInfoManager,
                       nsIAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
