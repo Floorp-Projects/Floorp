@@ -80,6 +80,8 @@ var docName = 'domimplementationcreatedocumenttype02';
 	and a valid publicId and systemId.  Check if the the DocumentType node was created 
 	with its ownerDocument attribute set to null.
 
+	The specification has changed! ownerDocument should not be null.
+
 * @author IBM
 * @author Neil Delima
 * @see http://www.w3.org/TR/DOM-Level-2-Core/core#Level-2-Core-DOM-createDocType
@@ -123,7 +125,7 @@ for(var indexN65655 = 0;indexN65655 < qualifiedNames.length; indexN65655++) {
       assertNotNull("domimplementationcreatedocumenttype02_newDocType",newDocType);
 ownerDocument = newDocType.ownerDocument;
 
-      assertNull("domimplementationcreatedocumenttype02_ownerDocument",ownerDocument);
+      assertNotNull("domimplementationcreatedocumenttype02_ownerDocument",ownerDocument);
     
 	}
    

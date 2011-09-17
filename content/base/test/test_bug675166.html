@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=675166
+-->
+<head>
+  <title>Test for Bug 675166</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675166">Mozilla Bug 675166</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 675166 **/
+
+
+var dt = document.implementation.createDocumentType("html", null, null);
+isnot(dt.ownerDocument, null, "DocumentType should have ownerDocument");
+
+var d = document.implementation.createDocument(null, null, dt);
+is(dt.ownerDocument, d, "DocumentType shouldn't have null ownerDocument");
+
+try {
+  document.implementation.createDocument(null, null, dt);
+  ok(true, "Creating document using already bound document type shouldn't throw!");
+} catch(ex) {
+  ok(false, "Creating document using already bound document type shouldn't throw!");
+}
+
+var d2 = document.implementation.createDocument(null, null, null);
+var dt2 = document.implementation.createDocumentType("html", null, null);
+d2.appendChild(dt2);
+is(dt2.ownerDocument, d2, "DocumentType shouldn't have null ownerDocument");
+
+is(document.ownerDocument, null, "Document's ownerDocument should be null!");
+is(document.documentElement.ownerDocument, document,
+   "Element should have ownerDocument!")
+
+is(dt2.parentNode, d2, "parentNode should be document!");
+d2.removeChild(dt2);
+is(dt2.parentNode, null, "parentNode should be null!");
+
+d.adoptNode(dt2);
+d2.adoptNode(dt2);
+d2.appendChild(dt2);
+is(dt2.parentNode, d2, "parentNode should be document!");
+
+</script>
+</pre>
+</body>
+</html>

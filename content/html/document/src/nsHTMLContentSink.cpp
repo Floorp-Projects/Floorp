@@ -2452,7 +2452,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     nsAutoString voidString;
     voidString.SetIsVoid(PR_TRUE);
     rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
-                               mDocument->NodeInfoManager(), nsnull, nameAtom,
+                               mDocument->NodeInfoManager(), nameAtom,
                                publicId, systemId, voidString);
     NS_ENSURE_SUCCESS(rv, rv);
 

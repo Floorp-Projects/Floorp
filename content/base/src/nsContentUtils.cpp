@@ -3686,11 +3686,10 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
 {
   nsresult rv = NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
                                   aDoctype, aDocumentURI, aBaseURI, aPrincipal,
-                                  PR_TRUE);
+                                  PR_TRUE, aEventObject);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
-  document->SetScriptHandlingObject(aEventObject);
   
   // created documents are immediately "complete" (ready to use)
   document->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
