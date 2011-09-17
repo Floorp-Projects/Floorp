@@ -184,7 +184,7 @@ class Compiler : public BaseCompiler
     };
 
     struct BaseICInfo {
-        BaseICInfo(JSOp op) : op(op), canCallHook(false), forcedTypeBarrier(false)
+        BaseICInfo(JSOp op) : op(op)
         { }
         Label fastPathStart;
         Label fastPathRejoin;
@@ -192,16 +192,12 @@ class Compiler : public BaseCompiler
         Call slowPathCall;
         DataLabelPtr paramAddr;
         JSOp op;
-        bool canCallHook;
-        bool forcedTypeBarrier;
 
         void copyTo(ic::BaseIC &to, JSC::LinkBuffer &full, JSC::LinkBuffer &stub) {
             to.fastPathStart = full.locationOf(fastPathStart);
             to.fastPathRejoin = full.locationOf(fastPathRejoin);
             to.slowPathStart = stub.locationOf(slowPathStart);
             to.slowPathCall = stub.locationOf(slowPathCall);
-            to.canCallHook = canCallHook;
-            to.forcedTypeBarrier = forcedTypeBarrier;
             to.op = op;
             JS_ASSERT(to.op == op);
         }
@@ -472,7 +468,6 @@ class Compiler : public BaseCompiler
     bool inlining_;
     bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
-    bool overflowICSpace;   // True if we added a constant pool in a reserved space.
     uint32 gcNumber;
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
     PCLengthEntry *pcLengths;
@@ -491,7 +486,7 @@ class Compiler : public BaseCompiler
     Label labelOf(jsbytecode *target, uint32 inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
     void addReturnSite();
-    void inlineStubCall(void *stub, RejoinState rejoin, Uses uses);
+    void inlineStubCall(void *stub, RejoinState rejoin);
 
     bool debugMode() { return debugMode_; }
     bool inlining() { return inlining_; }
@@ -558,11 +553,6 @@ class Compiler : public BaseCompiler
     CompileStatus addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc);
     CompileStatus scanInlineCalls(uint32 index, uint32 depth);
     CompileStatus checkAnalysis(JSScript *script);
-#ifdef DEBUG
-    void typeCheckPopped(int which);
-#else
-    void typeCheckPopped(int which) {}
-#endif
 
     struct BarrierState {
         MaybeJump jump;
@@ -575,11 +565,8 @@ class Compiler : public BaseCompiler
     BarrierState pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
                                          bool testUndefined = false);
     BarrierState testBarrier(RegisterID typeReg, RegisterID dataReg,
-                             bool testUndefined = false, bool testReturn = false,
-                             bool force = false);
+                             bool testUndefined = false, bool testReturn = false);
     void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which);
-
-    void testPushedType(RejoinState rejoin, int which, bool ool = true);
 
     /* Non-emitting helpers. */
     void pushSyncedEntry(uint32 pushed);
@@ -788,20 +775,16 @@ class Compiler : public BaseCompiler
 // Given a stub call, emits the call into the inline assembly path. rejoin
 // indicates how to rejoin should this call trigger expansion/discarding.
 #define INLINE_STUBCALL(stub, rejoin)                                       \
-    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, Uses(0))
-#define INLINE_STUBCALL_USES(stub, rejoin, uses)                            \
-    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, uses)
+    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin)
 
 // Given a stub call, emits the call into the out-of-line assembly path.
 // Unlike the INLINE_STUBCALL variant, this returns the Call offset.
 #define OOL_STUBCALL(stub, rejoin)                                          \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, Uses(0))
-#define OOL_STUBCALL_USES(stub, rejoin, uses)                               \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, uses)
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin)
 
 // Same as OOL_STUBCALL, but specifies a slot depth.
 #define OOL_STUBCALL_LOCAL_SLOTS(stub, rejoin, slots)                       \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, Uses(0), (slots))
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, (slots))
 
 } /* namespace js */
 } /* namespace mjit */

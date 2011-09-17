@@ -170,19 +170,19 @@ typedef JSC::MacroAssembler::Imm32 Imm32;
 typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin)
 {
-    return emitStubCall(ptr, rejoin, uses, frame.totalDepth());
+    return emitStubCall(ptr, rejoin, frame.totalDepth());
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32 slots)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     masm.bumpStubCounter(cc.script, cc.PC, Registers::tempCallReg());
     DataLabelPtr inlinePatch;
     Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
-                                  ptr, cc.outerPC(), NULL, &inlinePatch, slots);
+                                  ptr, cc.outerPC(), &inlinePatch, slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
 
     /* Add the call site for debugging and recompilation. */
@@ -199,7 +199,7 @@ StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32 slots
         /* MissedBoundsCheck* are not actually called, so f.regs need to be written before InvariantFailure. */
         bool entry = (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckEntry))
                   || (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckHead));
-        cc.loop->addInvariantCall(j, l, true, entry, cc.callSites.length(), uses);
+        cc.loop->addInvariantCall(j, l, true, entry, cc.callSites.length());
     }
 
     cc.addCallSite(site);
