@@ -1599,14 +1599,10 @@ static inline void
 TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRegs &regs)
 {
 #ifdef DEBUG
-    if (*regs.pc != JSOP_TRAP &&
+    if (cx->typeInferenceEnabled() &&
+        *regs.pc != JSOP_TRAP &&
         n == analyze::GetBytecodeLength(regs.pc)) {
-        if (script->hasAnalysis() && !regs.fp()->hasImacropc()) {
-            jsbytecode *nextpc = regs.pc + GetBytecodeLength(cx, script, regs.pc);
-            JS_ASSERT(regs.sp == regs.fp()->base() + script->analysis()->getCode(nextpc).stackDepth);
-        }
-        if (cx->typeInferenceEnabled())
-            TypeScript::CheckBytecode(cx, script, regs.pc, regs.sp);
+        TypeScript::CheckBytecode(cx, script, regs.pc, regs.sp);
     }
 #endif
 }
@@ -3907,12 +3903,12 @@ BEGIN_CASE(JSOP_GETELEM)
         }
     }
 
-    if (JSID_IS_STRING(id) && script->hasAnalysis() && !regs.fp()->hasImacropc())
-        script->analysis()->getCode(regs.pc).getStringElement = true;
-
     if (!obj->getProperty(cx, id, &rval))
         goto error;
     copyFrom = &rval;
+
+    if (!JSID_IS_INT(id))
+        TypeScript::MonitorUnknown(cx, script, regs.pc);
 
   end_getelem:
     regs.sp--;
@@ -3951,11 +3947,14 @@ BEGIN_CASE(JSOP_CALLELEM)
         regs.sp[-1] = thisv;
     }
 
+    if (!JSID_IS_INT(id))
+        TypeScript::MonitorUnknown(cx, script, regs.pc);
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
 }
 END_CASE(JSOP_CALLELEM)
 
 BEGIN_CASE(JSOP_SETELEM)
+BEGIN_CASE(JSOP_SETHOLE)
 {
     JSObject *obj;
     FETCH_OBJECT(cx, -3, obj);
@@ -3973,12 +3972,12 @@ BEGIN_CASE(JSOP_SETELEM)
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(cx, i + 1);
+                    *regs.pc = JSOP_SETHOLE;
                 }
                 obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
-                if (script->hasAnalysis() && !regs.fp()->hasImacropc())
-                    script->analysis()->getCode(regs.pc).arrayWriteHole = true;
+                *regs.pc = JSOP_SETHOLE;
             }
         }
     } while (0);
@@ -4687,7 +4686,6 @@ BEGIN_CASE(JSOP_DEFFUN)
         obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             goto error;
-        JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
     }
 
     /*
@@ -4821,8 +4819,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         }
     }
 
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
     uint32 slot = GET_SLOTNO(regs.pc);
     TRACE_2(DefLocalFunSetSlot, slot, obj);
 
@@ -4941,8 +4937,6 @@ BEGIN_CASE(JSOP_LAMBDA)
     } while (0);
 
     JS_ASSERT(obj->getProto());
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
@@ -4955,7 +4949,6 @@ BEGIN_CASE(JSOP_LAMBDA_FC)
     JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         goto error;
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
     PUSH_OBJECT(*obj);
 }

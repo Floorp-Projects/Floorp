@@ -258,12 +258,10 @@ enum RejoinState {
     /*
      * As for REJOIN_FALLTHROUGH, but holds a reference on the compartment's
      * orphaned native pools which needs to be reclaimed by InternalInterpret.
-     * The return value needs to be adjusted if REJOIN_NATIVE_LOWERED, and
-     * REJOIN_NATIVE_GETTER is for ABI calls made for property accesses.
+     * The return value needs to be adjusted if REJOIN_NATIVE_LOWERED.
      */
     REJOIN_NATIVE,
     REJOIN_NATIVE_LOWERED,
-    REJOIN_NATIVE_GETTER,
 
     /*
      * Dummy rejoin stored in VMFrames to indicate they return into a native
@@ -555,31 +553,6 @@ struct PCLengthEntry {
     double          picsLength; /* amount of PIC stub code generated */
 };
 
-/*
- * Pools and patch locations for managing stubs for non-FASTCALL C++ calls made
- * from native call and PropertyOp stubs. Ownership of these may be transferred
- * into the orphanedNativePools for the compartment.
- */
-struct NativeCallStub {
-    /* pc/inlined location of the stub. */
-    jsbytecode *pc;
-    CallSite *inlined;
-
-    /* Pool for the stub, NULL if it has been removed from the script. */
-    JSC::ExecutablePool *pool;
-
-    /*
-     * Fallthrough jump returning to jitcode which may be patched during
-     * recompilation. On x64 this is an indirect jump to avoid issues with far
-     * jumps on relative branches.
-     */
-#ifdef JS_CPU_X64
-    JSC::CodeLocationDataLabelPtr jump;
-#else
-    JSC::CodeLocationJump jump;
-#endif
-};
-
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
@@ -638,9 +611,6 @@ struct JITScript {
     ExecPoolVector execPools;
 #endif
 
-    // Additional ExecutablePools for native call and getter stubs.
-    Vector<NativeCallStub, 0, SystemAllocPolicy> nativeCallStubs;
-
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
@@ -666,9 +636,8 @@ struct JITScript {
         return jcheck >= jitcode && jcheck < jitcode + code.m_size;
     }
 
-    void purgeGetterPICs();
-
-    void sweepCallICs(JSContext *cx);
+    void nukeScriptDependentICs();
+    void sweepCallICs(JSContext *cx, bool purgeAll);
     void purgeMICs();
     void purgePICs();
 
@@ -685,8 +654,6 @@ struct JITScript {
     char *monoICSectionsLimit() const;
     char *polyICSectionsLimit() const;
 };
-
-void PurgeICs(JSContext *cx, JSScript *script);
 
 /*
  * Execute the given mjit code. This is a low-level call and callers must

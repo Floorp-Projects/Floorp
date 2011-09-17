@@ -195,7 +195,7 @@ LoopState::addJoin(unsigned index, bool script)
 }
 
 void
-LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, Uses uses)
+LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex)
 {
     RestoreInvariantCall call;
     call.jump = jump;
@@ -203,7 +203,7 @@ LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsign
     call.ool = ool;
     call.entry = entry;
     call.patchIndex = patchIndex;
-    call.temporaryCopies = frame.getTemporaryCopies(uses);
+    call.temporaryCopies = frame.getTemporaryCopies();
 
     restoreInvariantCalls.append(call);
 }
@@ -259,7 +259,7 @@ LoopState::flushLoop(StubCompiler &stubcc)
 
                 if (call.entry) {
                     masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::InvariantFailure),
-                                        pc, NULL, NULL, 0);
+                                        pc, NULL, 0);
                 } else {
                     /* f.regs are already coherent, don't write new values to them. */
                     masm.infallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::InvariantFailure), -1);
@@ -1820,6 +1820,7 @@ LoopState::analyzeLoopBody(unsigned frame)
             skipAnalysis = true;
             break;
 
+          case JSOP_SETHOLE:
           case JSOP_SETELEM: {
             SSAValue objValue = analysis->poppedValue(pc, 2);
             SSAValue elemValue = analysis->poppedValue(pc, 1);
@@ -1843,7 +1844,7 @@ LoopState::analyzeLoopBody(unsigned frame)
                     continue;
                 if (!addModifiedProperty(object, JSID_VOID))
                     return;
-                if (analysis->getCode(pc).arrayWriteHole && !addGrowArray(object))
+                if (op == JSOP_SETHOLE && !addGrowArray(object))
                     return;
             }
 

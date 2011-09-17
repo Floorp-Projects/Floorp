@@ -452,8 +452,7 @@ class TypeSet
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, TypeSet *target, TypeSet *other = NULL);
     void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
-    void addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc,
-                          Type type, TypeSet *types = NULL);
+    void addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc, Type type);
     void addFilterPrimitives(JSContext *cx, TypeSet *target, FilterKind filter);
     void addSubsetBarrier(JSContext *cx, JSScript *script, jsbytecode *pc, TypeSet *target);
     void addLazyArguments(JSContext *cx, TypeSet *target);

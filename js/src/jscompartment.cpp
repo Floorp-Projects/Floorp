@@ -426,6 +426,42 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     return true;
 }
 
+#if defined JS_METHODJIT && defined JS_MONOIC
+/*
+ * Check if the pool containing the code for jit should be destroyed, per the
+ * heuristics in JSCompartment::sweep.
+ */
+static inline bool
+ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
+                    uint32 releaseInterval, uint32 &counter)
+{
+    JSC::ExecutablePool *pool = jit->code.m_executablePool;
+    if (pool->m_gcNumber != cx->runtime->gcNumber) {
+        /*
+         * The m_destroy flag may have been set in a previous GC for a pool which had
+         * references we did not remove (e.g. from the compartment's ExecutableAllocator)
+         * and is still around. Forget we tried to destroy it in such cases.
+         */
+        pool->m_destroy = false;
+        pool->m_gcNumber = cx->runtime->gcNumber;
+        if (--counter == 0) {
+            pool->m_destroy = true;
+            counter = releaseInterval;
+        }
+    }
+    return pool->m_destroy;
+}
+
+static inline void
+ScriptTryDestroyCode(JSContext *cx, JSScript *script, bool normal,
+                     uint32 releaseInterval, uint32 &counter)
+{
+    mjit::JITScript *jit = normal ? script->jitNormal : script->jitCtor;
+    if (jit && ScriptPoolDestroyed(cx, jit, releaseInterval, counter))
+        mjit::ReleaseScriptCode(cx, script, !normal);
+}
+#endif // JS_METHODJIT && JS_MONOIC
+
 /*
  * This method marks pointers that cross compartment boundaries. It should be
  * called only for per-compartment GCs, since full GCs naturally follow pointers
@@ -470,7 +506,7 @@ JSCompartment::markTypes(JSTracer *trc)
 }
 
 void
-JSCompartment::sweep(JSContext *cx, bool releaseTypes)
+JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
@@ -509,13 +545,47 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
         traceMonitor()->sweep(cx);
 #endif
 
-#ifdef JS_METHODJIT
-    /* Purge ICs in the compartment. These can reference GC things. */
+# if defined JS_METHODJIT && defined JS_POLYIC
+    /*
+     * Purge all PICs in the compartment. These can reference type data and
+     * need to know which types are pending collection.
+     */
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        mjit::PurgeICs(cx, script);
+        if (script->hasJITCode())
+            mjit::ic::PurgePICs(cx, script);
+    }
+# endif
+
+    bool discardScripts = !active && (releaseInterval != 0 || hasDebugModeCodeToDrop);
+
+#if defined JS_METHODJIT && defined JS_MONOIC
+
+    /*
+     * The release interval is the frequency with which we should try to destroy
+     * executable pools by releasing all JIT code in them, zero to never destroy pools.
+     * Initialize counter so that the first pool will be destroyed, and eventually drive
+     * the amount of JIT code in never-used compartments to zero. Don't discard anything
+     * for compartments which currently have active stack frames.
+     */
+    uint32 counter = 1;
+    if (discardScripts)
+        hasDebugModeCodeToDrop = false;
+
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->hasJITCode()) {
+            mjit::ic::SweepCallICs(cx, script, discardScripts);
+            if (discardScripts) {
+                ScriptTryDestroyCode(cx, script, true, releaseInterval, counter);
+                ScriptTryDestroyCode(cx, script, false, releaseInterval, counter);
+            }
+        }
     }
 
+#endif
+
+#ifdef JS_METHODJIT
     if (types.inferenceEnabled)
         mjit::ClearAllFrames(this);
 #endif
@@ -548,35 +618,23 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
          * enabled in the compartment.
          */
         if (types.inferenceEnabled) {
-            if (active)
-                releaseTypes = false;
             for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->types) {
                     types::TypeScript::Sweep(cx, script);
 
                     /*
-                     * Periodically release observed types for all scripts.
-                     * This is always safe to do when there are no frames for
-                     * the compartment on the stack.
+                     * On each 1/8 lifetime, release observed types for all scripts.
+                     * This is always safe to do when there are no frames for the
+                     * compartment on the stack.
                      */
-                    if (releaseTypes) {
+                    if (discardScripts) {
                         script->types->destroy();
                         script->types = NULL;
                         script->typesPurged = true;
                     }
                 }
             }
-        } else {
-#ifdef JS_METHODJIT
-            /* :XXX: bug 685358 only releasing jitcode if there are no frames on the stack */
-            if (!active) {
-                for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-                    JSScript *script = i.get<JSScript>();
-                    mjit::ReleaseScriptCode(cx, script);
-                }
-            }
-#endif
         }
 
         types.sweep(cx);
@@ -625,6 +683,20 @@ JSCompartment::purge(JSContext *cx)
     if (cx->runtime->gcRegenShapes)
         if (hasTraceMonitor())
             traceMonitor()->needFlush = JS_TRUE;
+#endif
+
+#if defined JS_METHODJIT && defined JS_MONOIC
+    /*
+     * MICs do not refer to data which can be GC'ed and do not generate stubs
+     * which might need to be discarded, but are sensitive to shape regeneration.
+     */
+    if (cx->runtime->gcRegenShapes) {
+        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            if (script->hasJITCode())
+                mjit::ic::PurgeMICs(cx, script);
+        }
+    }
 #endif
 }
 
