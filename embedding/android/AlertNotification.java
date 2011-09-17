@@ -115,7 +115,7 @@ public class AlertNotification
             view.setImageViewResource(R.id.notificationImage, mIcon);
             view.setTextViewText(R.id.notificationTitle, mTitle);
             contentView = view;
-            flags |= FLAG_ONGOING_EVENT;
+            flags |= FLAG_ONGOING_EVENT | FLAG_ONLY_ALERT_ONCE;
 
             mProgressStyle = true;
         }
