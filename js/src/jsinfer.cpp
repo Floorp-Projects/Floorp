@@ -691,17 +691,16 @@ public:
     JSScript *script;
     jsbytecode *callpc;
     Type type;
-    TypeSet *types;
 
-    TypeConstraintPropagateThis(JSScript *script, jsbytecode *callpc, Type type, TypeSet *types)
-        : TypeConstraint("propagatethis"), script(script), callpc(callpc), type(type), types(types)
+    TypeConstraintPropagateThis(JSScript *script, jsbytecode *callpc, Type type)
+        : TypeConstraint("propagatethis"), script(script), callpc(callpc), type(type)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type);
 };
 
 void
-TypeSet::addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc, Type type, TypeSet *types)
+TypeSet::addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 {
     /* Don't add constraints when the call will be 'new' (see addCallProperty). */
     jsbytecode *callpc = script->analysis()->getCallPC(pc);
@@ -709,7 +708,7 @@ TypeSet::addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc, Type 
     if (JSOp(*callpc) == JSOP_NEW)
         return;
 
-    add(cx, ArenaNew<TypeConstraintPropagateThis>(cx->compartment->pool, script, callpc, type, types));
+    add(cx, ArenaNew<TypeConstraintPropagateThis>(cx->compartment->pool, script, callpc, type));
 }
 
 /* Subset constraint which filters out primitive types. */
@@ -1064,10 +1063,10 @@ TypeConstraintCallProp::newType(JSContext *cx, TypeSet *source, Type type)
     UntrapOpcode untrap(cx, script, callpc);
 
     /*
-     * For CALLPROP, we need to update not just the pushed types but also the
-     * 'this' types of possible callees. If we can't figure out that set of
-     * callees, monitor the call to make sure discovered callees get their
-     * 'this' types updated.
+     * For CALLPROP and CALLELEM, we need to update not just the pushed types
+     * but also the 'this' types of possible callees. If we can't figure out
+     * that set of callees, monitor the call to make sure discovered callees
+     * get their 'this' types updated.
      */
 
     if (UnknownPropertyAccess(script, type)) {
@@ -1087,8 +1086,7 @@ TypeConstraintCallProp::newType(JSContext *cx, TypeSet *source, Type type)
                 object->getFromPrototypes(cx, id, types);
             /* Bypass addPropagateThis, we already have the callpc. */
             types->add(cx, ArenaNew<TypeConstraintPropagateThis>(cx->compartment->pool,
-                                                                 script, callpc, type,
-                                                                 (TypeSet *) NULL));
+                                                                 script, callpc, type));
         }
     }
 }
@@ -1232,8 +1230,8 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
         /*
          * The callee is unknown, make sure the call is monitored so we pick up
          * possible this/callee correlations. This only comes into play for
-         * CALLPROP, for other calls we are past the type barrier and a
-         * TypeConstraintCall will also monitor the call.
+         * CALLPROP and CALLELEM, for other calls we are past the type barrier
+         * already and a TypeConstraintCall will also monitor the call.
          */
         cx->compartment->types.monitorBytecode(cx, script, callpc - script->code);
         return;
@@ -1260,11 +1258,7 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
     if (!callee->script()->ensureHasTypes(cx, callee))
         return;
 
-    TypeSet *thisTypes = TypeScript::ThisTypes(callee->script());
-    if (this->types)
-        this->types->addSubset(cx, thisTypes);
-    else
-        thisTypes->addType(cx, this->type);
+    TypeScript::ThisTypes(callee->script())->addType(cx, this->type);
 }
 
 void
@@ -1897,8 +1891,10 @@ TypeCompartment::init(JSContext *cx)
 {
     PodZero(this);
 
+#ifndef JS_CPU_ARM
     if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE)
         inferenceEnabled = true;
+#endif
 }
 
 TypeObject *
@@ -3225,14 +3221,6 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
             return access;
         }
 
-        /*
-         * The script's bindings do not contain a name for the function itself,
-         * don't resolve name accesses on lambdas in DeclEnv objects on the
-         * scope chain.
-         */
-        if (atom == CallObjectLambdaName(script->function()))
-            return access;
-
         if (!script->nesting()->parent)
             return access;
         script = script->nesting()->parent;
@@ -3688,18 +3676,19 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         TypeSet *seen = script->analysis()->bytecodeTypes(pc);
 
         poppedTypes(pc, 1)->addGetProperty(cx, script, pc, seen, JSID_VOID);
+        if (op == JSOP_CALLELEM)
+            poppedTypes(pc, 1)->addCallProperty(cx, script, pc, JSID_VOID);
 
         seen->addSubset(cx, &pushed[0]);
-        if (op == JSOP_CALLELEM) {
+        if (op == JSOP_CALLELEM)
             poppedTypes(pc, 1)->addFilterPrimitives(cx, &pushed[1], TypeSet::FILTER_NULL_VOID);
-            pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType(), &pushed[1]);
-        }
         if (CheckNextTest(pc))
             pushed[0].addType(cx, Type::UndefinedType());
         break;
       }
 
       case JSOP_SETELEM:
+      case JSOP_SETHOLE:
         poppedTypes(pc, 1)->addSetElement(cx, script, pc, poppedTypes(pc, 2), poppedTypes(pc, 0));
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
@@ -6032,13 +6021,6 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script);
 #endif
-
-    /*
-     * Use counts for scripts are reset on GC. After discarding code we need to
-     * let it warm back up to get information like which opcodes are setting
-     * array holes or accessing getter properties.
-     */
-    script->resetUseCount();
 }
 
 void

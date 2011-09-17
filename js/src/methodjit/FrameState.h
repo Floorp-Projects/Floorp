@@ -618,19 +618,9 @@ class FrameState
      */
     inline FrameEntry *peek(int32 depth);
 
-#ifdef DEBUG
-    /*
-     * Check that a frame entry matches a type, returning a jump taken on
-     * mismatch. Does not affect register state or sync state of any entries.
-     */
-    Jump typeCheckEntry(const FrameEntry *fe, types::TypeSet *types) const;
-#endif
-
     /*
      * Fully stores a FrameEntry at an arbitrary address. popHint specifies
      * how hard the register allocator should try to keep the FE in registers.
-     * If scratchData and scratchType are specified, the frame entry and
-     * register state will not be modified.
      */
     void storeTo(FrameEntry *fe, Address address, bool popHint = false);
 
@@ -957,11 +947,8 @@ class FrameState
     void clearTemporaries();
     inline FrameEntry *getTemporary(uint32 which);
 
-    /*
-     * Return NULL or a new vector with all current copies of temporaries,
-     * excluding those about to be popped per 'uses'.
-     */
-    Vector<TemporaryCopy> *getTemporaryCopies(Uses uses);
+    /* Return NULL or a new vector with all current copies of temporaries. */
+    Vector<TemporaryCopy> *getTemporaryCopies();
 
     inline void syncAndForgetFe(FrameEntry *fe, bool markSynced = false);
     inline void forgetLoopReg(FrameEntry *fe);

@@ -15,10 +15,9 @@
 var HOTLOOP = this.tracemonkey ? tracemonkey.HOTLOOP : 8;
 var a;
 function f(n) {
-  for (var i = 0; i < HOTLOOP; i++) {
+    for (var i = 0; i < HOTLOOP; i++)
         if (i == HOTLOOP - 2)
             a = this;
-  }
 }
 
 /*
