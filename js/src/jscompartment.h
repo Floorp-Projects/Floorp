@@ -532,7 +532,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
     void markTypes(JSTracer *trc);
-    void sweep(JSContext *cx, uint32 releaseInterval);
+    void sweep(JSContext *cx, bool releaseTypes);
     void purge(JSContext *cx);
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
