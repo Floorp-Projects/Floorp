@@ -634,7 +634,7 @@ mjit::Compiler::jsop_not()
           default:
           {
             prepareStubCall(Uses(1));
-            INLINE_STUBCALL_USES(stubs::ValueToBoolean, REJOIN_NONE, Uses(1));
+            INLINE_STUBCALL(stubs::ValueToBoolean, REJOIN_NONE);
 
             RegisterID reg = Registers::ReturnReg;
             frame.takeReg(reg);
@@ -1746,7 +1746,6 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
-    testPushedType(REJOIN_FALLTHROUGH, -2);
 
     frame.popn(2);
 
@@ -1838,7 +1837,6 @@ mjit::Compiler::jsop_getelem_args()
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
-    testPushedType(REJOIN_FALLTHROUGH, -2);
 
     frame.popn(2);
     frame.pushRegs(typeReg, dataReg, knownPushedType(0));
@@ -1970,7 +1968,6 @@ mjit::Compiler::jsop_getelem_typed(int atype)
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
-    testPushedType(REJOIN_FALLTHROUGH, -2);
 
     frame.popn(2);
 
@@ -2152,17 +2149,11 @@ mjit::Compiler::jsop_getelem(bool isCall)
         ic.slowPathCall = OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
 #endif
 
-    testPushedType(REJOIN_FALLTHROUGH, -2);
-
     ic.fastPathRejoin = masm.label();
-    ic.forcedTypeBarrier = analysis->getCode(PC).getStringElement;
-
-    CHECK_IC_SPACE();
 
     frame.popn(2);
     frame.pushRegs(ic.typeReg, ic.objReg, knownPushedType(0));
-    BarrierState barrier = testBarrier(ic.typeReg, ic.objReg, false, false,
-                                       /* force = */ ic.forcedTypeBarrier);
+    BarrierState barrier = testBarrier(ic.typeReg, ic.objReg, false);
     if (isCall)
         frame.pushSynced(knownPushedType(1));
 
@@ -2353,9 +2344,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         prepareStubCall(Uses(2));
 
         if (op == JSOP_STRICTEQ)
-            INLINE_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
+            INLINE_STUBCALL(stubs::StrictEq, REJOIN_NONE);
         else
-            INLINE_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
+            INLINE_STUBCALL(stubs::StrictNe, REJOIN_NONE);
 
         frame.popn(2);
         frame.pushSynced(JSVAL_TYPE_BOOLEAN);
@@ -2407,9 +2398,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if (needStub) {
         stubcc.leave();
         if (op == JSOP_STRICTEQ)
-            OOL_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
+            OOL_STUBCALL(stubs::StrictEq, REJOIN_NONE);
         else
-            OOL_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
+            OOL_STUBCALL(stubs::StrictNe, REJOIN_NONE);
     }
 
     frame.popn(2);
@@ -2422,9 +2413,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     prepareStubCall(Uses(2));
 
     if (op == JSOP_STRICTEQ)
-        INLINE_STUBCALL_USES(stubs::StrictEq, REJOIN_NONE, Uses(2));
+        INLINE_STUBCALL(stubs::StrictEq, REJOIN_NONE);
     else
-        INLINE_STUBCALL_USES(stubs::StrictNe, REJOIN_NONE, Uses(2));
+        INLINE_STUBCALL(stubs::StrictNe, REJOIN_NONE);
 
     frame.popn(2);
     frame.pushSynced(JSVAL_TYPE_BOOLEAN);

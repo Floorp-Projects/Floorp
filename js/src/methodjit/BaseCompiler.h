@@ -175,41 +175,6 @@ class LinkerHelper : public JSC::LinkBuffer
     }
 };
 
-class NativeStubLinker : public LinkerHelper
-{
-  public:
-#ifdef JS_CPU_X64
-    typedef JSC::MacroAssembler::DataLabelPtr FinalJump;
-#else
-    typedef JSC::MacroAssembler::Jump FinalJump;
-#endif
-
-    NativeStubLinker(Assembler &masm, JITScript *jit, jsbytecode *pc, CallSite *inlined, FinalJump done)
-        : LinkerHelper(masm, JSC::METHOD_CODE), jit(jit), pc(pc), inlined(inlined), done(done)
-    {}
-
-    bool init(JSContext *cx);
-
-    void patchJump(JSC::CodeLocationLabel target) {
-#ifdef JS_CPU_X64
-        patch(done, target);
-#else
-        link(done, target);
-#endif
-    }
-
-  private:
-    JITScript *jit;
-    jsbytecode *pc;
-    CallSite *inlined;
-    FinalJump done;
-};
-
-bool
-NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJump *result,
-                   int32 initialFrameDepth, int32 vpOffset,
-                   MaybeRegisterID typeReg, MaybeRegisterID dataReg);
-
 /*
  * On ARM, we periodically flush a constant pool into the instruction stream
  * where constants are found using PC-relative addressing. This is necessary
@@ -228,43 +193,67 @@ class AutoReserveICSpace {
     typedef Assembler::Label Label;
 
     Assembler           &masm;
+#ifdef DEBUG
+    Label               startLabel;
     bool                didCheck;
-    bool                *overflowSpace;
-    int                 flushCount;
+#endif
 
   public:
-    AutoReserveICSpace(Assembler &masm, bool *overflowSpace)
-        : masm(masm), didCheck(false), overflowSpace(overflowSpace)
-    {
+    AutoReserveICSpace(Assembler &masm) : masm(masm) {
         masm.ensureSpace(reservedSpace);
-        flushCount = masm.flushCount();
+#ifdef DEBUG
+        didCheck = false;
+
+        startLabel = masm.label();
+
+        /* Assert that the constant pool is not flushed until we reach a safe point. */
+        masm.allowPoolFlush(false);
+
+        JaegerSpew(JSpew_Insns, " -- BEGIN CONSTANT-POOL-FREE REGION -- \n");
+#endif
     }
 
     /* Allow manual IC space checks so that non-patchable code at the end of an IC section can be
      * free to use constant pools. */
     void check() {
+#ifdef DEBUG
         JS_ASSERT(!didCheck);
         didCheck = true;
 
-        if (masm.flushCount() != flushCount)
-            *overflowSpace = true;
+        Label endLabel = masm.label();
+        int spaceUsed = masm.differenceBetween(startLabel, endLabel);
+
+        /* Spew the space used, to help tuning of reservedSpace. */
+        JaegerSpew(JSpew_Insns,
+                   " -- END CONSTANT-POOL-FREE REGION: %u bytes used of %u reserved. -- \n",
+                   spaceUsed, reservedSpace);
+
+        /* Assert that we didn't emit more code than we protected. */
+        JS_ASSERT(spaceUsed >= 0);
+        JS_ASSERT(size_t(spaceUsed) <= reservedSpace);
+
+        /* Allow the pool to be flushed. */
+        masm.allowPoolFlush(true);
+#endif
     }
 
     ~AutoReserveICSpace() {
+#ifdef DEBUG
         /* Automatically check the IC space if we didn't already do it manually. */
         if (!didCheck) {
             check();
         }
+#endif
     }
 };
 
-# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<256> arics(__masm, &this->overflowICSpace)
+# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<128> arics(__masm)
 # define CHECK_IC_SPACE()               arics.check()
 
 /* The OOL path can need a lot of space because we save and restore a lot of registers. The actual
  * sequene varies. However, dumping the literal pool before an OOL block is probably a good idea
  * anyway, as we branch directly to the start of the block from the fast path. */
-# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<2048> arics_ool(__masm, &this->overflowICSpace)
+# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<256> arics_ool(__masm)
 
 /* Allow the OOL patch to be checked before object destruction. Often, non-patchable epilogues or
  * rejoining sequences are emitted, and it isn't necessary to protect these from literal pools. */
