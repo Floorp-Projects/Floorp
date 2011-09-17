@@ -189,6 +189,7 @@ nsSVGFilterInstance::BuildSources()
   // Detect possible float->int overflow
   if (!gfxUtils::GfxRectToIntRect(sourceBounds, &sourceBoundsInt))
     return NS_ERROR_FAILURE;
+  sourceBoundsInt.UnionRect(sourceBoundsInt, mTargetBounds);
 
   mSourceColorAlpha.mResultBoundingBox = sourceBoundsInt;
   mSourceAlpha.mResultBoundingBox = sourceBoundsInt;
