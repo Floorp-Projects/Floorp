@@ -140,14 +140,6 @@ class Bytecode
     /* Call whose result should be monitored. */
     bool monitoredTypesReturn : 1;
 
-    /*
-     * Dynamically observed state about the execution of this opcode. These are
-     * hints about the script for use during compilation.
-     */
-    bool arrayWriteHole: 1;  /* SETELEM which has written to an array hole. */
-    bool getStringElement:1; /* GETELEM which has accessed string properties. */
-    bool accessGetter: 1;    /* Property read on a shape with a getter hook. */
-
     /* Stack depth before this opcode. */
     uint32 stackDepth;
 
@@ -972,6 +964,7 @@ class ScriptAnalysis
     /* Accessors for bytecode information. */
 
     Bytecode& getCode(uint32 offset) {
+        JS_ASSERT(script->compartment()->activeAnalysis);
         JS_ASSERT(offset < script->length);
         JS_ASSERT(codeArray[offset]);
         return *codeArray[offset];
@@ -979,6 +972,7 @@ class ScriptAnalysis
     Bytecode& getCode(const jsbytecode *pc) { return getCode(pc - script->code); }
 
     Bytecode* maybeCode(uint32 offset) {
+        JS_ASSERT(script->compartment()->activeAnalysis);
         JS_ASSERT(offset < script->length);
         return codeArray[offset];
     }
