@@ -545,7 +545,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
 }
 
 nsPoint
-nsComboboxControlFrame::GetCSSTransformTranslate()
+nsComboboxControlFrame::GetCSSTransformTranslation()
 {
   nsIFrame* frame = this;
   PRBool is3DTransform = PR_FALSE;
