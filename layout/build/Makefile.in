@@ -135,6 +135,7 @@ LOCAL_INCLUDES	+= \
 else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/dom/system/android/$(LIB_PREFIX)domsystemandroid_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/plugins/base/android/$(LIB_PREFIX)gkpluginandroid_s.$(LIB_SUFFIX) \
 	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/android \
