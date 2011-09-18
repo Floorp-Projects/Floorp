@@ -144,8 +144,6 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT_IF(!hasSingletonType() && nativeContains(cx, js_CheckForStringIndex(id)),
-                     js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
 }
