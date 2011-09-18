@@ -544,6 +544,43 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   return rv;
 }
 
+nsPoint
+nsComboboxControlFrame::GetCSSTransformTranslate()
+{
+  nsIFrame* frame = this;
+  PRBool is3DTransform = PR_FALSE;
+  gfxMatrix transform;
+  while (frame) {
+    nsIFrame* parent = nsnull;
+    gfx3DMatrix ctm = frame->GetTransformMatrix(&parent);
+    gfxMatrix matrix;
+    if (ctm.Is2D(&matrix)) {
+      transform = transform * matrix;
+    } else {
+      is3DTransform = PR_TRUE;
+      break;
+    }
+    frame = parent;
+  }
+  nsPoint translation;
+  if (!is3DTransform && !transform.HasNonTranslation()) {
+    nsPresContext* pc = PresContext();
+    gfxPoint pixelTranslation = transform.GetTranslation();
+    PRInt32 apd = pc->AppUnitsPerDevPixel();
+    translation.x = NSFloatPixelsToAppUnits(float(pixelTranslation.x), apd);
+    translation.y = NSFloatPixelsToAppUnits(float(pixelTranslation.y), apd);
+    // To get the translation introduced only by transforms we subtract the
+    // regular non-transform translation.
+    nsRootPresContext* rootPC = pc->GetRootPresContext();
+    if (rootPC) {
+      translation -= GetOffsetToCrossDoc(rootPC->PresShell()->GetRootFrame());
+    } else {
+      translation.x = translation.y = 0;
+    }
+  }
+  return translation;
+}
+
 void
 nsComboboxControlFrame::AbsolutelyPositionDropDown()
 {
@@ -558,6 +595,11 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
    // The approach, taken here is to get use the absolute position of the display frame and use it's location
    // to determine if the dropdown will go offscreen.
 
+  // Normal frame geometry (eg GetOffsetTo, mRect) doesn't include transforms.
+  // In the special case that our transform is only a 2D translation we
+  // introduce this hack so that the dropdown will show up in the right place.
+  nsPoint translation = GetCSSTransformTranslation();
+
    // Use the height calculated for the area frame so it includes both
    // the display and button heights.
   nscoord dropdownYOffset = GetRect().height;
@@ -566,7 +608,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   nsRect screen = nsFormControlFrame::GetUsableScreenRect(PresContext());
 
   // Check to see if the drop-down list will go offscreen
-  if (GetScreenRectInAppUnits().YMost() + dropdownSize.height > screen.YMost()) {
+  if ((GetScreenRectInAppUnits() + translation).YMost() + dropdownSize.height > screen.YMost()) {
     // move the dropdown list up
     dropdownYOffset = - (dropdownSize.height);
   }
@@ -581,7 +623,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   }
   dropdownPosition.y = dropdownYOffset; 
 
-  mDropdownFrame->SetPosition(dropdownPosition);
+  mDropdownFrame->SetPosition(dropdownPosition + translation);
 }
 
 //----------------------------------------------------------
