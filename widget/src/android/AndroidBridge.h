@@ -42,6 +42,7 @@
 #include <android/log.h>
 
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
 
@@ -262,6 +263,10 @@ public:
 
     void UnlockBitmap(jobject bitmap);
 
+    void PostToJavaThread(nsIRunnable* aRunnable, PRBool aMainThread = PR_FALSE);
+
+    void ExecuteNextRunnable();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -285,6 +290,8 @@ protected:
 
     bool mOpenedBitmapLibrary;
     bool mHasNativeBitmapAccess;
+
+    nsCOMArray<nsIRunnable> mRunnableQueue;
 
     // other things
     jmethodID jNotifyIME;
@@ -325,6 +332,7 @@ protected:
     jmethodID jGetIconForExtension;
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
+    jmethodID jPostToJavaThread;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

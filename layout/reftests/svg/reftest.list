@@ -111,6 +111,8 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == filter-basic-01.svg pass.svg
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
+== filter-bounds-01.svg pass.svg
+== filter-bounds-02.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
 == filter-scaled-01.svg pass.svg

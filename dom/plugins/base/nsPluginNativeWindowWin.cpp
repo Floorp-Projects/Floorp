@@ -184,8 +184,7 @@ static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsNPAPI
   if (msg == sWM_FLASHBOUNCEMSG) {
     // See PluginWindowEvent::Run() below.
     NS_ASSERTION((sWM_FLASHBOUNCEMSG != 0), "RegisterWindowMessage failed in flash plugin WM_USER message handling!");
-    NS_TRY_SAFE_CALL_VOID(::CallWindowProc((WNDPROC)aWin->GetWindowProc(), hWnd, WM_USER_FLASH, wParam, lParam),
-                                           aInst);
+    ::CallWindowProc((WNDPROC)aWin->GetWindowProc(), hWnd, WM_USER_FLASH, wParam, lParam);
     return TRUE;
   }
 
@@ -577,12 +576,11 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   else {
     // Currently not used, but added so that processing events here
     // is more generic.
-    NS_TRY_SAFE_CALL_VOID(::CallWindowProc(win->GetWindowProc(), 
-                          hWnd, 
-                          GetMsg(), 
-                          GetWParam(), 
-                          GetLParam()),
-                          inst);
+    ::CallWindowProc(win->GetWindowProc(), 
+                     hWnd, 
+                     GetMsg(), 
+                     GetWParam(), 
+                     GetLParam());
   }
 
   Clear();
