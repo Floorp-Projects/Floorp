@@ -1100,8 +1100,10 @@ esac
 AC_SUBST(GCC_VERSION)
 
 dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
-dnl that a universal binary is being produced.
+dnl that a universal binary is being produced and MOZ_CAN_RUN_PROGRAMS
+dnl when we can run target binaries.
 AC_SUBST(UNIVERSAL_BINARY)
+AC_SUBST(MOZ_CAN_RUN_PROGRAMS)
 
 dnl ========================================================
 dnl Check for MacOS deployment target version
