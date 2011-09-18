@@ -375,7 +375,6 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp++;
                 f.regs.sp[-1].setUndefined();
-                TypeScript::Monitor(cx, f.script(), f.pc(), f.regs.sp[-1]);
                 return obj;
             }
             ReportAtomNotDefined(cx, atom);
@@ -401,8 +400,6 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
         if (rval.isUndefined() && (js_CodeSpec[*f.pc()].format & (JOF_INC|JOF_DEC)))
             AddTypePropertyId(cx, obj, id, Type::UndefinedType());
     }
-
-    TypeScript::Monitor(cx, f.script(), f.pc(), rval);
 
     *f.regs.sp++ = rval;
 
@@ -443,7 +440,6 @@ stubs::GetElem(VMFrame &f)
             if (!str)
                 THROW();
             f.regs.sp[-2].setString(str);
-            TypeScript::Monitor(cx, f.script(), f.pc(), f.regs.sp[-2]);
             return;
         }
     }
@@ -451,7 +447,6 @@ stubs::GetElem(VMFrame &f)
     if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
         if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
             regs.sp[-2] = regs.fp()->canonicalActualArg(rref.toInt32());
-            TypeScript::Monitor(cx, f.script(), f.pc(), regs.sp[-2]);
             return;
         }
         MarkArgumentsCreated(cx, f.script());
@@ -508,12 +503,8 @@ stubs::GetElem(VMFrame &f)
         THROW();
     copyFrom = &rval;
 
-    if (!JSID_IS_INT(id))
-        TypeScript::MonitorUnknown(cx, f.script(), f.pc());
-
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
-    TypeScript::Monitor(cx, f.script(), f.pc(), f.regs.sp[-2]);
 }
 
 static inline bool
@@ -559,9 +550,6 @@ stubs::CallElem(VMFrame &f)
     {
         regs.sp[-1] = thisv;
     }
-    if (!JSID_IS_INT(id))
-        TypeScript::MonitorUnknown(cx, f.script(), f.pc());
-    TypeScript::Monitor(cx, f.script(), f.pc(), regs.sp[-2]);
 }
 
 template<JSBool strict>
@@ -1573,7 +1561,6 @@ InlineGetProp(VMFrame &f)
     if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
         JS_ASSERT(js_GetOpcode(cx, f.script(), f.pc()) == JSOP_LENGTH);
         regs.sp[-1] = Int32Value(regs.fp()->numActualArgs());
-        TypeScript::Monitor(cx, f.script(), f.pc(), regs.sp[-1]);
         return true;
     }
 
@@ -1621,8 +1608,6 @@ InlineGetProp(VMFrame &f)
             return false;
         }
     } while(0);
-
-    TypeScript::Monitor(cx, f.script(), f.pc(), rval);
 
     regs.sp[-1] = rval;
     return true;
@@ -1742,7 +1727,6 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             THROW();
     }
 #endif
-    TypeScript::Monitor(cx, f.script(), f.pc(), rval);
 }
 
 void JS_FASTCALL
@@ -2394,6 +2378,19 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
     TypeScript::Monitor(f.cx, f.script(), f.pc(), result);
 }
 
+void JS_FASTCALL
+stubs::StubTypeHelper(VMFrame &f, int32 which)
+{
+    const Value &result = f.regs.sp[which];
+
+    if (f.script()->hasAnalysis() && f.script()->analysis()->ranInference()) {
+        AutoEnterTypeInference enter(f.cx);
+        f.script()->analysis()->breakTypeBarriers(f.cx, f.pc() - f.script()->code, false);
+    }
+
+    TypeScript::Monitor(f.cx, f.script(), f.pc(), result);
+}
+
 /*
  * Variant of TypeBarrierHelper for checking types after making a native call.
  * The stack is already correct, and no fixup should be performed.
@@ -2409,25 +2406,6 @@ stubs::NegZeroHelper(VMFrame &f)
 {
     f.regs.sp[-1].setDouble(-0.0);
     TypeScript::MonitorOverflow(f.cx, f.script(), f.pc());
-}
-
-void JS_FASTCALL
-stubs::CallPropSwap(VMFrame &f)
-{
-    /*
-     * CALLPROP operations on strings are implemented in terms of GETPROP.
-     * If we rejoin from such a GETPROP, we come here at the end of the
-     * CALLPROP to fix up the stack. Right now the stack looks like:
-     *
-     * STRING PROP
-     *
-     * We need it to be:
-     *
-     * PROP STRING
-     */
-    Value v = f.regs.sp[-1];
-    f.regs.sp[-1] = f.regs.sp[-2];
-    f.regs.sp[-2] = v;
 }
 
 void JS_FASTCALL
