@@ -106,9 +106,7 @@ public:
         , m_numConsts(0)
         , m_maxDistance(maxPoolSize)
         , m_lastConstDelta(0)
-#ifdef DEBUG
-        , m_allowFlush(true)
-#endif
+        , m_flushCount(0)
     {
         m_pool = static_cast<uint32_t*>(malloc(maxPoolSize));
         m_mask = static_cast<char*>(malloc(maxPoolSize / sizeof(uint32_t)));
@@ -241,14 +239,10 @@ public:
         return m_numConsts;
     }
 
-#ifdef DEBUG
-    // Guard constant pool flushes to ensure that they don't occur during
-    // regions where offsets into the code have to be maintained (such as PICs).
-    void allowPoolFlush(bool allowFlush)
+    int flushCount()
     {
-        m_allowFlush = allowFlush;
+        return m_flushCount;
     }
-#endif
 
 private:
     void correctDeltas(int insnSize)
@@ -273,9 +267,9 @@ private:
     {
         js::JaegerSpew(js::JSpew_Insns, " -- FLUSHING CONSTANT POOL WITH %d CONSTANTS --\n",
                        m_numConsts);
-        ASSERT(m_allowFlush);
         if (m_numConsts == 0)
             return;
+        m_flushCount++;
         int alignPool = (AssemblerBuffer::size() + (useBarrier ? barrierSize : 0)) & (sizeof(uint64_t) - 1);
 
         if (alignPool)
@@ -339,10 +333,7 @@ private:
     int m_numConsts;
     int m_maxDistance;
     int m_lastConstDelta;
-
-#ifdef DEBUG
-    bool    m_allowFlush;
-#endif
+    int m_flushCount;
 };
 
 } // namespace JSC

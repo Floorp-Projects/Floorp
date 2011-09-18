@@ -85,7 +85,6 @@ static inline JSRejoinState ScriptedRejoin(uint32 pcOffset)
 
 static inline JSRejoinState StubRejoin(RejoinState rejoin)
 {
-    JS_ASSERT(rejoin != REJOIN_NONE);
     return rejoin << 1;
 }
 
