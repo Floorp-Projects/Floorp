@@ -644,8 +644,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     }
 
     nsCxPusher pusher;
-    if (aNeedsCxPush &&
-        !pusher.Push((JSContext*)context->GetNativeContext())) {
+    if (aNeedsCxPush && !pusher.Push(context->GetNativeContext())) {
       return NS_ERROR_FAILURE;
     }
 

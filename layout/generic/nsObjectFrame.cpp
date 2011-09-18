@@ -2519,7 +2519,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
   if (!scx)
     return;
 
-  JSContext *cx = (JSContext *)scx->GetNativeContext();
+  JSContext *cx = scx->GetNativeContext();
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsContentUtils::XPConnect()->

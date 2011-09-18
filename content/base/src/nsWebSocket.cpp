@@ -901,7 +901,7 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData)
   nsIScriptContext* scriptContext = sgo->GetContext();
   NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
 
-  JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
+  JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
   // Now we can turn our string into a jsval

@@ -1,7 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=2 sw=2 et tw=78:
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -1286,11 +1285,10 @@ nsContentUtils::GetContextFromDocument(nsIDocument *aDocument)
   nsIScriptContext *scx = sgo->GetContext();
   if (!scx) {
     // No context left in the scope...
-
     return nsnull;
   }
 
-  return (JSContext *)scx->GetNativeContext();
+  return scx->GetNativeContext();
 }
 
 // static
@@ -2559,7 +2557,7 @@ nsCxPusher::Push(nsIDOMEventTarget *aCurrentTarget)
   JSContext* cx = nsnull;
 
   if (scx) {
-    cx = static_cast<JSContext*>(scx->GetNativeContext());
+    cx = scx->GetNativeContext();
     // Bad, no JSContext from script context!
     NS_ENSURE_TRUE(cx, PR_FALSE);
   }
