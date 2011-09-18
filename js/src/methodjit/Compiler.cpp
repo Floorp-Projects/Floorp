@@ -4506,6 +4506,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
 #endif
 
+    CHECK_IC_SPACE();
+
     pic.objReg = objReg;
     frame.pushRegs(shapeReg, objReg, knownType);
     BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg, false, false,
@@ -4623,6 +4625,8 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 #else
     labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
 #endif
+
+    CHECK_IC_SPACE();
 
     /* Adjust the frame. */
     frame.pop();
@@ -4760,6 +4764,8 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 
     pic.fastPathRejoin = masm.label();
     pic.objReg = objReg;
+
+    CHECK_IC_SPACE();
 
     /*
      * 1) Dup the |this| object.
@@ -5345,6 +5351,8 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, bool isCall)
     ScopeNameLabels &labels = pic.scopeNameLabels();
     labels.setInlineJump(masm, pic.fastPathStart, inlineJump);
 
+    CHECK_IC_SPACE();
+
     /*
      * We can't optimize away the PIC for the NAME access itself, but if we've
      * only seen a single value pushed by this access, mark it as such and
@@ -5432,6 +5440,8 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     /* Initialize op labels. */
     ScopeNameLabels &labels = pic.scopeNameLabels();
     labels.setInlineJumpOffset(masm.differenceBetween(pic.fastPathStart, inlineJump));
+
+    CHECK_IC_SPACE();
 
     frame.pop();
     frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0));
@@ -6018,6 +6028,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
     RegisterID dreg = objReg;
 
     ic.load = masm.loadValueWithAddressOffsetPatch(address, treg, dreg);
+
+    CHECK_IC_SPACE();
 
     frame.pushRegs(treg, dreg, type);
 

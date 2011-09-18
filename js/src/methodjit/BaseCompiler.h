@@ -281,13 +281,13 @@ class AutoReserveICSpace {
     }
 };
 
-# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<128> arics(__masm)
+# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<256> arics(__masm)
 # define CHECK_IC_SPACE()               arics.check()
 
 /* The OOL path can need a lot of space because we save and restore a lot of registers. The actual
  * sequene varies. However, dumping the literal pool before an OOL block is probably a good idea
  * anyway, as we branch directly to the start of the block from the fast path. */
-# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<256> arics_ool(__masm)
+# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<2048> arics_ool(__masm)
 
 /* Allow the OOL patch to be checked before object destruction. Often, non-patchable epilogues or
  * rejoining sequences are emitted, and it isn't necessary to protect these from literal pools. */
