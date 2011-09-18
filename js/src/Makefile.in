@@ -306,13 +306,16 @@ CPPSRCS += \
 		Fragmento.cpp  \
 		LIR.cpp        \
 		njconfig.cpp   \
-		RegAlloc.cpp   \
 		avmplus.cpp    \
 		Native$(NANOJIT_ARCH).cpp \
 		jsbuiltins.cpp \
 		VMPI.cpp       \
 		Writer.cpp     \
 		$(NULL)
+
+ifdef MOZ_DEBUG
+CPPSRCS += RegAlloc.cpp
+endif
 
 endif # ENABLE_TRACEJIT
 ifdef ENABLE_METHODJIT
@@ -423,23 +426,36 @@ VPATH += 	$(srcdir)/assembler \
 		$(NONE)
 
 CPPSRCS += 	Assertions.cpp \
-		ExecutableAllocatorPosix.cpp \
-		ExecutableAllocatorWin.cpp \
-		ExecutableAllocatorOS2.cpp \
 		ExecutableAllocator.cpp \
 		ARMAssembler.cpp \
-        Logging.cpp \
 		MacroAssemblerARM.cpp \
 		MacroAssemblerX86Common.cpp \
-		OSAllocatorOS2.cpp \
-		OSAllocatorPosix.cpp \
-		OSAllocatorWin.cpp \
 		PageBlock.cpp \
 		YarrInterpreter.cpp \
 		YarrJIT.cpp \
 		YarrPattern.cpp \
 		YarrSyntaxChecker.cpp \
 		$(NONE)
+
+ifdef MOZ_DEBUG
+CPPSRCS += Logging.cpp
+endif
+
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+CPPSRCS += ExecutableAllocatorPosix.cpp \
+           OSAllocatorPosix.cpp \
+           $(NONE)
+endif
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += ExecutableAllocatorWin.cpp \
+           OSAllocatorWin.cpp \
+           $(NONE)
+endif
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS += ExecutableAllocatorOS2.cpp \
+           OSAllocatorOS2.cpp \
+           $(NONE)
+endif
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
@@ -1047,14 +1063,19 @@ ifdef ENABLE_METHODJIT
 # sources a bit.
 TESTMAIN_OBJS = \
 		Assertions.$(OBJ_SUFFIX) \
-		ExecutableAllocatorPosix.$(OBJ_SUFFIX) \
-		ExecutableAllocatorWin.$(OBJ_SUFFIX) \
 		ExecutableAllocator.$(OBJ_SUFFIX) \
 		ARMAssembler.$(OBJ_SUFFIX) \
 		MacroAssemblerARM.$(OBJ_SUFFIX) \
 		TestMain.$(OBJ_SUFFIX) \
 		jsutil.$(OBJ_SUFFIX) \
 		jslog2.$(OBJ_SUFFIX)
+
+ifeq ($(OS_ARCH),WINNT)
+TESTMAIN_OBJS += ExecutableAllocatorWin.$(OBJ_SUFFIX)
+else
+TESTMAIN_OBJS += ExecutableAllocatorPosix.$(OBJ_SUFFIX)
+endif
+
 TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
 	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
 endif
