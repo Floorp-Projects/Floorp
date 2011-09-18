@@ -3954,7 +3954,6 @@ BEGIN_CASE(JSOP_CALLELEM)
 END_CASE(JSOP_CALLELEM)
 
 BEGIN_CASE(JSOP_SETELEM)
-BEGIN_CASE(JSOP_SETHOLE)
 {
     JSObject *obj;
     FETCH_OBJECT(cx, -3, obj);
@@ -3972,12 +3971,12 @@ BEGIN_CASE(JSOP_SETHOLE)
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(cx, i + 1);
-                    *regs.pc = JSOP_SETHOLE;
                 }
                 obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
-                *regs.pc = JSOP_SETHOLE;
+                if (script->hasAnalysis())
+                    script->analysis()->getCode(regs.pc).arrayWriteHole = true;
             }
         }
     } while (0);
@@ -4686,6 +4685,7 @@ BEGIN_CASE(JSOP_DEFFUN)
         obj = CloneFunctionObject(cx, fun, obj2, true);
         if (!obj)
             goto error;
+        JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
     }
 
     /*
@@ -4819,6 +4819,8 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         }
     }
 
+    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
+
     uint32 slot = GET_SLOTNO(regs.pc);
     TRACE_2(DefLocalFunSetSlot, slot, obj);
 
@@ -4937,6 +4939,8 @@ BEGIN_CASE(JSOP_LAMBDA)
     } while (0);
 
     JS_ASSERT(obj->getProto());
+    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
+
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
@@ -4949,6 +4953,7 @@ BEGIN_CASE(JSOP_LAMBDA_FC)
     JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         goto error;
+    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
     PUSH_OBJECT(*obj);
 }
