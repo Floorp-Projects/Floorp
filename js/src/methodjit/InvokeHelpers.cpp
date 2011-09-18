@@ -1332,21 +1332,37 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         break;
 
       case REJOIN_NATIVE:
-      case REJOIN_NATIVE_LOWERED: {
+      case REJOIN_NATIVE_LOWERED:
+      case REJOIN_NATIVE_GETTER: {
         /*
          * We don't rejoin until after the native stub finishes execution, in
          * which case the return value will be in memory. For lowered natives,
-         * the return value will be in the 'this' value's slot.
+         * the return value will be in the 'this' value's slot. For getters,
+         * the result is at nextsp[0] (see ic::CallProp).
          */
-        if (rejoin == REJOIN_NATIVE_LOWERED)
+        if (rejoin == REJOIN_NATIVE_LOWERED) {
             nextsp[-1] = nextsp[0];
+        } else if (rejoin == REJOIN_NATIVE_GETTER) {
+            if (js_CodeSpec[op].format & JOF_CALLOP) {
+                /*
+                 * If we went through jsop_callprop_obj then the 'this' value
+                 * is still in its original slot and hasn't been shifted yet,
+                 * so fix that now. Yuck.
+                 */
+                if (nextsp[-2].isObject())
+                    nextsp[-1] = nextsp[-2];
+                nextsp[-2] = nextsp[0];
+            } else {
+                nextsp[-1] = nextsp[0];
+            }
+        }
 
         /* Release this reference on the orphaned native stub. */
         RemoveOrphanedNative(cx, fp);
 
         /*
-         * Note: there is no need to monitor the result of the native, the
-         * native stub will always do a type check before finishing.
+         * Note: there is no need to monitor the result of the native, the stub
+         * will always do a type check before finishing.
          */
         f.regs.pc = nextpc;
         break;
