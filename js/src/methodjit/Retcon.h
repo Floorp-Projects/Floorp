@@ -100,7 +100,7 @@ private:
 
     static void patchCall(JITScript *jit, StackFrame *fp, void **location);
     static void patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *fp,
-                            jsbytecode *pc, CallSite *inline_, RejoinState rejoin);
+                            jsbytecode *pc, RejoinState rejoin);
 
     static StackFrame *
     expandInlineFrameChain(StackFrame *outer, InlineFrame *inner);

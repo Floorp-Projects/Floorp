@@ -85,6 +85,7 @@ static inline JSRejoinState ScriptedRejoin(uint32 pcOffset)
 
 static inline JSRejoinState StubRejoin(RejoinState rejoin)
 {
+    JS_ASSERT(rejoin != REJOIN_NONE);
     return rejoin << 1;
 }
 
@@ -119,71 +120,66 @@ Recompiler::patchCall(JITScript *jit, StackFrame *fp, void **location)
 
 void
 Recompiler::patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *fp,
-                        jsbytecode *pc, CallSite *inlined, RejoinState rejoin)
+                        jsbytecode *pc, RejoinState rejoin)
 {
     /*
-     * There is a native IC at pc which triggered a recompilation. The recompilation
-     * could have been triggered either by the native call itself, or by a SplatApplyArgs
-     * preparing for the native call. Either way, we don't want to patch up the call,
-     * but will instead steal the pool for the native IC so it doesn't get freed
-     * with the old script, and patch up the jump at the end to go to the interpoline.
+     * There is a native call or getter IC at pc which triggered recompilation.
+     * The recompilation could have been triggered either by the native call
+     * itself, or by a SplatApplyArgs preparing for the native call. Either
+     * way, we don't want to patch up the call, but will instead steal the pool
+     * for the IC so it doesn't get freed with the JITScript, and patch up the
+     * jump at the end to go to the interpoline.
+     *
+     * When doing this, we do not reset the the IC itself; the JITScript must
+     * be dead and about to be released due to the recompilation (or a GC).
      */
     fp->setRejoin(StubRejoin(rejoin));
 
     /* :XXX: We might crash later if this fails. */
     compartment->jaegerCompartment()->orphanedNativeFrames.append(fp);
 
-    unsigned i;
-    ic::CallICInfo *callICs = jit->callICs();
-    for (i = 0; i < jit->nCallICs; i++) {
-        CallSite *call = callICs[i].call;
-        if (inlined) {
-            /*
-             * The IC and regs.inlined will have two different call sites for
-             * the same point in the script. The IC site refers to the scripted
-             * return and regs.inlined has the prologue site (which was in use
-             * when the native stub was generated.
-             */
-            if (call->inlineIndex == inlined->inlineIndex && call->pcOffset == inlined->pcOffset)
-                break;
-        } else if (call->inlineIndex == uint32(-1) &&
-                   call->pcOffset == uint32(pc - jit->script->code)) {
-            break;
-        }
-    }
-    JS_ASSERT(i < jit->nCallICs);
-    ic::CallICInfo &ic = callICs[i];
-    JS_ASSERT(ic.fastGuardedNative);
+    DebugOnly<bool> found = false;
 
-    JSC::ExecutablePool *&pool = ic.pools[ic::CallICInfo::Pool_NativeStub];
+    /*
+     * Find and patch all native call stubs attached to the given PC. There may
+     * be multiple ones for getter stubs attached to e.g. a GETELEM.
+     */
+    for (unsigned i = 0; i < jit->nativeCallStubs.length(); i++) {
+        NativeCallStub &stub = jit->nativeCallStubs[i];
+        if (stub.pc != pc)
+            continue;
 
-    if (!pool) {
-        /* Already stole this stub. */
-        return;
-    }
+        found = true;
 
-    /* Patch the native fallthrough to go to the interpoline. */
-    {
+        /* Check for pools that were already patched. */
+        if (!stub.pool)
+            continue;
+
+        /* Patch the native fallthrough to go to the interpoline. */
+        {
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-        /* Win64 needs stack adjustment */
-        void *interpoline = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolinePatched);
+            /* Win64 needs stack adjustment */
+            void *interpoline = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpolinePatched);
 #else
-        void *interpoline = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
+            void *interpoline = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
 #endif
-        uint8 *start = (uint8 *)ic.nativeJump.executableAddress();
-        JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
+            uint8 *start = (uint8 *)stub.jump.executableAddress();
+            JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
 #ifdef JS_CPU_X64
-        repatch.repatch(ic.nativeJump, interpoline);
+            repatch.repatch(stub.jump, interpoline);
 #else
-        repatch.relink(ic.nativeJump, JSC::CodeLocationLabel(interpoline));
+            repatch.relink(stub.jump, JSC::CodeLocationLabel(interpoline));
 #endif
+        }
+
+        /* :XXX: We leak the pool if this fails. Oh well. */
+        compartment->jaegerCompartment()->orphanedNativePools.append(stub.pool);
+
+        /* Mark as stolen in case there are multiple calls on the stack. */
+        stub.pool = NULL;
     }
 
-    /* :XXX: We leak the pool if this fails. Oh well. */
-    compartment->jaegerCompartment()->orphanedNativePools.append(pool);
-
-    /* Mark as stolen in case there are multiple calls on the stack. */
-    pool = NULL;
+    JS_ASSERT(found);
 }
 
 void
@@ -199,11 +195,11 @@ Recompiler::patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script)
     void **addr = f->returnAddressLocation();
     RejoinState rejoin = (RejoinState) f->stubRejoin;
     if (rejoin == REJOIN_NATIVE ||
-        rejoin == REJOIN_NATIVE_LOWERED) {
+        rejoin == REJOIN_NATIVE_LOWERED ||
+        rejoin == REJOIN_NATIVE_GETTER) {
         /* Native call. */
         if (fp->script() == script) {
-            patchNative(compartment, fp->jit(), fp,
-                        f->regs.pc, NULL, rejoin);
+            patchNative(compartment, fp->jit(), fp, f->regs.pc, rejoin);
             f->stubRejoin = REJOIN_NATIVE_PATCHED;
         }
     } else if (rejoin == REJOIN_NATIVE_PATCHED) {
@@ -295,6 +291,7 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
         /* The VMFrame is calling CompileFunction. */
         JS_ASSERT(f->stubRejoin != REJOIN_NATIVE &&
                   f->stubRejoin != REJOIN_NATIVE_LOWERED &&
+                  f->stubRejoin != REJOIN_NATIVE_GETTER &&
                   f->stubRejoin != REJOIN_NATIVE_PATCHED);
         innerfp->setRejoin(StubRejoin((RejoinState) f->stubRejoin));
         *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);

@@ -184,7 +184,7 @@ class Compiler : public BaseCompiler
     };
 
     struct BaseICInfo {
-        BaseICInfo(JSOp op) : op(op)
+        BaseICInfo(JSOp op) : op(op), canCallHook(false)
         { }
         Label fastPathStart;
         Label fastPathRejoin;
@@ -192,12 +192,14 @@ class Compiler : public BaseCompiler
         Call slowPathCall;
         DataLabelPtr paramAddr;
         JSOp op;
+        bool canCallHook;
 
         void copyTo(ic::BaseIC &to, JSC::LinkBuffer &full, JSC::LinkBuffer &stub) {
             to.fastPathStart = full.locationOf(fastPathStart);
             to.fastPathRejoin = full.locationOf(fastPathRejoin);
             to.slowPathStart = stub.locationOf(slowPathStart);
             to.slowPathCall = stub.locationOf(slowPathCall);
+            to.canCallHook = canCallHook;
             to.op = op;
             JS_ASSERT(to.op == op);
         }
@@ -486,7 +488,7 @@ class Compiler : public BaseCompiler
     Label labelOf(jsbytecode *target, uint32 inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
     void addReturnSite();
-    void inlineStubCall(void *stub, RejoinState rejoin);
+    void inlineStubCall(void *stub, RejoinState rejoin, Uses uses);
 
     bool debugMode() { return debugMode_; }
     bool inlining() { return inlining_; }
@@ -565,7 +567,8 @@ class Compiler : public BaseCompiler
     BarrierState pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
                                          bool testUndefined = false);
     BarrierState testBarrier(RegisterID typeReg, RegisterID dataReg,
-                             bool testUndefined = false, bool testReturn = false);
+                             bool testUndefined = false, bool testReturn = false,
+                             bool force = false);
     void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which);
 
     /* Non-emitting helpers. */
@@ -775,16 +778,20 @@ class Compiler : public BaseCompiler
 // Given a stub call, emits the call into the inline assembly path. rejoin
 // indicates how to rejoin should this call trigger expansion/discarding.
 #define INLINE_STUBCALL(stub, rejoin)                                       \
-    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin)
+    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, Uses(0))
+#define INLINE_STUBCALL_USES(stub, rejoin, uses)                            \
+    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, uses)
 
 // Given a stub call, emits the call into the out-of-line assembly path.
 // Unlike the INLINE_STUBCALL variant, this returns the Call offset.
 #define OOL_STUBCALL(stub, rejoin)                                          \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin)
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, Uses(0))
+#define OOL_STUBCALL_USES(stub, rejoin, uses)                               \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, uses)
 
 // Same as OOL_STUBCALL, but specifies a slot depth.
 #define OOL_STUBCALL_LOCAL_SLOTS(stub, rejoin, slots)                       \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, (slots))
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, Uses(0), (slots))
 
 } /* namespace js */
 } /* namespace mjit */
