@@ -1456,7 +1456,12 @@ namespace JSC {
             // Encoded as bits [5,3:0].
             return ((reg << 5) & 0x20) | ((reg >> 1) & 0xf);
         }
-
+        ARMWord SN(int reg)
+        {
+            ASSERT(reg <= ARMRegisters::d31);
+            // Encoded as bits [19:16,7].
+            return ((reg << 15) & 0xf0000) | ((reg & 1) << 7);
+        }
         static ARMWord getConditionalField(ARMWord i)
         {
             return i & 0xf0000000;
@@ -1600,7 +1605,6 @@ namespace JSC {
             emitVFPInst(static_cast<ARMWord>(cc) | VFP_DXFER | VFP_MOV |
                         (fromFP ? DT_LOAD : 0) |
                         (isDbl ? VFP_DBL : 0), RD(r1), RN(r2), isDbl ? DM(rFP) : SM(rFP));
-            
         }
 
         void fcpyd_r(int dd, int dm, Condition cc = AL)
@@ -1610,7 +1614,7 @@ namespace JSC {
                            nameFpRegD(dd), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FCPYD, dd, dd, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FCPYD, DD(dd), DM(dm), 0);
         }
 
         void faddd_r(int dd, int dn, int dm, Condition cc = AL)
@@ -1619,7 +1623,7 @@ namespace JSC {
                     IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vadd.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FADDD, dd, dn, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FADDD, DD(dd), DN(dn), DM(dm));
         }
 
         void fnegd_r(int dd, int dm, Condition cc = AL)
@@ -1635,7 +1639,7 @@ namespace JSC {
                     IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vdiv.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FDIVD, dd, dn, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FDIVD, DD(dd), DN(dn), DM(dm));
         }
 
         void fsubd_r(int dd, int dn, int dm, Condition cc = AL)
@@ -1644,7 +1648,7 @@ namespace JSC {
                     IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vsub.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSUBD, dd, dn, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FSUBD, DD(dd), DN(dn), DM(dm));
         }
 
         void fabsd_r(int dd, int dm, Condition cc = AL)
@@ -1660,7 +1664,7 @@ namespace JSC {
                     IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmul.f64", nameFpRegD(dd), nameFpRegD(dn), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMULD, dd, dn, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FMULD, DD(dd), DN(dn), DM(dm));
         }
 
         void fcmpd_r(int dd, int dm, Condition cc = AL)
@@ -1669,7 +1673,7 @@ namespace JSC {
                     IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vcmp.f64", nameFpRegD(dd), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FCMPD, dd, 0, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FCMPD, DD(dd), 0, DM(dm));
         }
 
         void fsqrtd_r(int dd, int dm, Condition cc = AL)
@@ -1678,49 +1682,49 @@ namespace JSC {
                     IPFX   "%-15s %s, %s\n", MAYBE_PAD, "vsqrt.f64", nameFpRegD(dd), nameFpRegD(dm));
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSQRTD, dd, 0, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FSQRTD, DD(dd), 0, DM(dm));
         }
 
         void fmsr_r(int dd, int rn, Condition cc = AL)
         {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMSR, rn, dd, 0);
+            emitVFPInst(static_cast<ARMWord>(cc) | FMSR, RD(rn), SN(dd), 0);
         }
 
         void fmrs_r(int rd, int dn, Condition cc = AL)
         {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FMRS, rd, dn, 0);
+            emitVFPInst(static_cast<ARMWord>(cc) | FMRS, RD(rd), SN(dn), 0);
         }
 
+        // dear god :(
+        // integer registers ar encoded the same as single registers
         void fsitod_r(int dd, int dm, Condition cc = AL)
         {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FSITOD, dd, 0, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FSITOD, DD(dd), 0, SM(dm));
         }
 
         void fuitod_r(int dd, int dm, Condition cc = AL)
         {
             // TODO: emitInst doesn't work for VFP instructions, though it
             // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FUITOD, dd, 0, dm);
+            emitVFPInst(static_cast<ARMWord>(cc) | FUITOD, DD(dd), 0, SM(dm));
         }
 
         void ftosid_r(int fd, int dm, Condition cc = AL)
         {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FTOSID, fd, 0, dm);
+            // TODO: I don't actually know what the encoding is i'm guessing SD and DM.
+            emitVFPInst(static_cast<ARMWord>(cc) | FTOSID, SD(fd), 0, DM(dm));
         }
 
         void ftosizd_r(int fd, int dm, Condition cc = AL)
         {
-            // TODO: emitInst doesn't work for VFP instructions, though it
-            // seems to work for current usage.
-            emitInst(static_cast<ARMWord>(cc) | FTOSIZD, fd, 0, dm);
+            // TODO: I don't actually know what the encoding is i'm guessing SD and DM.
+            emitVFPInst(static_cast<ARMWord>(cc) | FTOSIZD, SD(fd), 0, DM(dm));
         }
 
         void fmstat(Condition cc = AL)

@@ -101,6 +101,20 @@ SetRejoinState(StackFrame *fp, const CallSite &site, void **location)
     }
 }
 
+static inline bool
+CallsiteMatches(uint8 *codeStart, const CallSite &site, void *location)
+{
+    if (codeStart + site.codeOffset == location)
+        return true;
+
+#ifdef JS_CPU_ARM
+    if (codeStart + site.codeOffset + 4 == location)
+        return true;
+#endif
+
+    return false;
+}
+
 void
 Recompiler::patchCall(JITScript *jit, StackFrame *fp, void **location)
 {
@@ -108,7 +122,7 @@ Recompiler::patchCall(JITScript *jit, StackFrame *fp, void **location)
 
     CallSite *callSites_ = jit->callSites();
     for (uint32 i = 0; i < jit->nCallSites; i++) {
-        if (callSites_[i].codeOffset + codeStart == *location) {
+        if (CallsiteMatches(codeStart, callSites_[i], *location)) {
             JS_ASSERT(callSites_[i].inlineIndex == analyze::CrossScriptSSA::OUTER_FRAME);
             SetRejoinState(fp, callSites_[i], location);
             return;
@@ -297,7 +311,7 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
         *frameAddr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
         f->stubRejoin = 0;
     }
-    if (*frameAddr == codeStart + inlined->codeOffset) {
+    if (CallsiteMatches(codeStart, *inlined, *frameAddr)) {
         /* The VMFrame returns directly into the expanded frame. */
         SetRejoinState(innerfp, *inlined, frameAddr);
     }
