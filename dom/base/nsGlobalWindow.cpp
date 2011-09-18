@@ -6010,8 +6010,7 @@ PostMessageReadStructuredClone(JSContext* cx,
                                uint32 data,
                                void* closure)
 {
-  StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(closure);
-  NS_ASSERTION(scInfo, "Must have scInfo!");
+  NS_ASSERTION(closure, "Must have closure!");
 
   if (tag == SCTAG_DOM_BLOB || tag == SCTAG_DOM_FILELIST) {
     NS_ASSERTION(!data, "Data should be empty");
