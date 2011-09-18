@@ -80,8 +80,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xeee816d2, 0x2f08, 0x4b34, \
-  { 0x97, 0x47, 0x5e, 0x5a, 0xcd, 0xc3, 0x56, 0xfa } }
+{ 0x8ce567b5, 0xcc8d, 0x410b, \
+  { 0xa2, 0x7b, 0x07, 0xaf, 0x31, 0xc0, 0x33, 0xb8 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -468,6 +468,24 @@ public:
   }
 
   /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a mouseenter/leave event listener.
+   */
+  PRBool HasMouseEnterLeaveEventListeners()
+  {
+    return mMayHaveMouseEnterLeaveEventListener;
+  }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a mouseenter/leave event listener.
+   */
+  void SetHasMouseEnterLeaveEventListeners()
+  {
+    mMayHaveMouseEnterLeaveEventListener = PR_TRUE;
+  }  
+
+  /**
    * Initialize window.java and window.Packages.
    */
   virtual void InitJavaProperties() = 0;
@@ -627,6 +645,7 @@ protected:
   PRPackedBool           mMayHavePaintEventListener;
   PRPackedBool           mMayHaveTouchEventListener;
   PRPackedBool           mMayHaveAudioAvailableEventListener;
+  PRPackedBool           mMayHaveMouseEnterLeaveEventListener;
 
   // This variable is used on both inner and outer windows (and they
   // should match).
