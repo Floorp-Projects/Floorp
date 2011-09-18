@@ -1746,6 +1746,7 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -2);
 
     frame.popn(2);
 
@@ -1837,6 +1838,7 @@ mjit::Compiler::jsop_getelem_args()
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -2);
 
     frame.popn(2);
     frame.pushRegs(typeReg, dataReg, knownPushedType(0));
@@ -1968,6 +1970,7 @@ mjit::Compiler::jsop_getelem_typed(int atype)
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
+    testPushedType(REJOIN_FALLTHROUGH, -2);
 
     frame.popn(2);
 
@@ -2149,13 +2152,17 @@ mjit::Compiler::jsop_getelem(bool isCall)
         ic.slowPathCall = OOL_STUBCALL(stubs::GetElem, REJOIN_FALLTHROUGH);
 #endif
 
+    testPushedType(REJOIN_FALLTHROUGH, -2);
+
     ic.fastPathRejoin = masm.label();
+    ic.forcedTypeBarrier = analysis->getCode(PC).getStringElement;
 
     CHECK_IC_SPACE();
 
     frame.popn(2);
     frame.pushRegs(ic.typeReg, ic.objReg, knownPushedType(0));
-    BarrierState barrier = testBarrier(ic.typeReg, ic.objReg, false);
+    BarrierState barrier = testBarrier(ic.typeReg, ic.objReg, false, false,
+                                       /* force = */ ic.forcedTypeBarrier);
     if (isCall)
         frame.pushSynced(knownPushedType(1));
 
