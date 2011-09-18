@@ -1544,7 +1544,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_TRUE);
 
-  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, PR_TRUE);
 
   PRBool enabled = PR_TRUE;

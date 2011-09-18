@@ -3813,7 +3813,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
         nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-        JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+        JSContext *cx = scx ? scx->GetNativeContext() : nsnull;
         if (!cx) {
           nsContentUtils::ThreadJSContextStack()->Peek(&cx);
           if (!cx) {
@@ -6423,7 +6423,7 @@ nsDocument::IsScriptEnabled()
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_FALSE);
 
-  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, PR_FALSE);
 
   PRBool enabled;

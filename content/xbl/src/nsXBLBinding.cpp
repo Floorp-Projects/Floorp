@@ -1062,7 +1062,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 
           nsCOMPtr<nsIScriptContext> context = global->GetContext();
           if (context && scope) {
-            JSContext *cx = (JSContext *)context->GetNativeContext();
+            JSContext *cx = context->GetNativeContext();
  
             nsCxPusher pusher;
             pusher.Push(cx);
@@ -1395,7 +1395,7 @@ nsXBLBinding::AllowScripts()
     return PR_FALSE;
   }
   
-  JSContext* cx = (JSContext*) context->GetNativeContext();
+  JSContext* cx = context->GetNativeContext();
 
   nsCOMPtr<nsIDocument> ourDocument =
     mPrototypeBinding->XBLDocumentInfo()->GetDocument();

@@ -318,7 +318,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetScriptContext(aLangID, newCtx);
 
-  JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
+  JSContext *cx = mScriptContext->GetNativeContext();
   JSAutoRequest ar(cx);
 
   // nsJSEnvironment set the error reporter to NS_ScriptErrorReporter so
@@ -372,8 +372,7 @@ nsXBLDocGlobalObject::GetGlobalJSObject()
   if (!mScriptContext)
     return nsnull;
 
-  JSContext* cx = static_cast<JSContext*>
-                             (mScriptContext->GetNativeContext());
+  JSContext* cx = mScriptContext->GetNativeContext();
   if (!cx)
     return nsnull;
 
