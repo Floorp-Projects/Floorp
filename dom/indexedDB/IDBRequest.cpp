@@ -143,7 +143,7 @@ IDBRequest::SetDone(AsyncConnectionHelper* aHelper)
   }
 
   // Otherwise we need to get the result from the helper.
-  JSContext* cx = static_cast<JSContext*>(mScriptContext->GetNativeContext());
+  JSContext* cx = mScriptContext->GetNativeContext();
   NS_ASSERTION(cx, "Failed to get a context!");
 
   JSObject* global = static_cast<JSObject*>(mScriptContext->GetNativeGlobal());

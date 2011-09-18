@@ -1420,7 +1420,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! context)
         return NS_ERROR_UNEXPECTED;
 
-    JSContext* jscontext = reinterpret_cast<JSContext*>(context->GetNativeContext());
+    JSContext* jscontext = context->GetNativeContext();
     NS_ASSERTION(context != nsnull, "no jscontext");
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
