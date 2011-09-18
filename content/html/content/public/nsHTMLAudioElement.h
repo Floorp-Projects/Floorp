@@ -50,8 +50,7 @@ class nsHTMLAudioElement : public nsHTMLMediaElement,
                            public nsIJSNativeInitializer
 {
 public:
-  nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
+  nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLAudioElement();
 
   // nsISupports
