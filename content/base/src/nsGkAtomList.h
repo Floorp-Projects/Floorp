@@ -690,6 +690,8 @@ GK_ATOM(onpopstate, "onpopstate")
 GK_ATOM(only, "only")               // this one is not an event
 GK_ATOM(onmessage, "onmessage")
 GK_ATOM(onmousedown, "onmousedown")
+GK_ATOM(onmouseenter, "onmouseenter")
+GK_ATOM(onmouseleave, "onmouseleave")
 GK_ATOM(onmousemove, "onmousemove")
 GK_ATOM(onmouseout, "onmouseout")
 GK_ATOM(onmouseover, "onmouseover")
