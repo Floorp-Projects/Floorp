@@ -73,6 +73,7 @@
 
 %define border_radius_normal 0.85mozmm
 %define border_radius_small 0.64mozmm
+%define border_radius_xsmall 0.31mozmm
 %define border_radius_tiny 0.21mozmm
 
 %define shadow_width_xlarge 1.06mozmm
