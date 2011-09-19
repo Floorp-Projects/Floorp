@@ -52,8 +52,88 @@
 
 #include "nsWindowsDllInterceptor.h"
 
-#define IN_WINDOWS_DLL_BLOCKLIST
-#include "nsWindowsDllBlocklist.h"
+#include "nsExceptionHandler.h"
+
+#define ALL_VERSIONS   ((unsigned long long)-1LL)
+
+// DLLs sometimes ship without a version number, particularly early
+// releases. Blocking "version <= 0" has the effect of blocking unversioned
+// DLLs (since the call to get version info fails), but not blocking
+// any versioned instance.
+#define UNVERSIONED    ((unsigned long long)0LL)
+
+// Convert the 4 (decimal) components of a DLL version number into a
+// single unsigned long long, as needed by the blocklist
+#define MAKE_VERSION(a,b,c,d)\
+  ((a##ULL << 48) + (b##ULL << 32) + (c##ULL << 16) + d##ULL)
+
+struct DllBlockInfo {
+  // The name of the DLL -- in LOWERCASE!  It will be compared to
+  // a lowercase version of the DLL name only.
+  const char *name;
+
+  // If maxVersion is ALL_VERSIONS, we'll block all versions of this
+  // dll.  Otherwise, we'll block all versions less than or equal to
+  // the given version, as queried by GetFileVersionInfo and
+  // VS_FIXEDFILEINFO's dwFileVersionMS and dwFileVersionLS fields.
+  //
+  // Note that the version is usually 4 components, which is A.B.C.D
+  // encoded as 0x AAAA BBBB CCCC DDDD ULL (spaces added for clarity),
+  // but it's not required to be of that format.
+  unsigned long long maxVersion;
+};
+
+static DllBlockInfo sWindowsDllBlocklist[] = {
+  // EXAMPLE:
+  // { "uxtheme.dll", ALL_VERSIONS },
+  // { "uxtheme.dll", 0x0000123400000000ULL },
+  // The DLL name must be in lowercase!
+  
+  // NPFFAddon - Known malware
+  { "npffaddon.dll", ALL_VERSIONS},
+
+  // AVG 8 - Antivirus vendor AVG, old version, plugin already blocklisted
+  {"avgrsstx.dll", MAKE_VERSION(8,5,0,401)},
+  
+  // calc.dll - Suspected malware
+  {"calc.dll", MAKE_VERSION(1,0,0,1)},
+
+  // hook.dll - Suspected malware
+  {"hook.dll", ALL_VERSIONS},
+  
+  // GoogleDesktopNetwork3.dll - Extremely old, unversioned instances
+  // of this DLL cause crashes
+  {"googledesktopnetwork3.dll", UNVERSIONED},
+
+  // rdolib.dll - Suspected malware
+  {"rdolib.dll", MAKE_VERSION(6,0,88,4)},
+
+  // fgjk4wvb.dll - Suspected malware
+  {"fgjk4wvb.dll", MAKE_VERSION(8,8,8,8)},
+  
+  // radhslib.dll - Naomi internet filter - unmaintained since 2006
+  {"radhslib.dll", UNVERSIONED},
+
+  // Music download filter for vkontakte.ru - old instances
+  // of this DLL cause crashes
+  {"vksaver.dll", MAKE_VERSION(2,2,2,0)},
+
+  // Topcrash in Firefox 4.0b1
+  {"rlxf.dll", MAKE_VERSION(1,2,323,1)},
+
+  // psicon.dll - Topcrashes in Thunderbird, and some crashes in Firefox
+  // Adobe photoshop library, now redundant in later installations
+  {"psicon.dll", ALL_VERSIONS},
+
+  // Topcrash in Firefox 4 betas (bug 618899)
+  {"accelerator.dll", MAKE_VERSION(3,2,1,6)},
+  
+  // leave these two in always for tests
+  { "mozdllblockingtest.dll", ALL_VERSIONS },
+  { "mozdllblockingtest_versioned.dll", 0x0000000400000000ULL },
+
+  { NULL, 0 }
+};
 
 #ifndef STATUS_DLL_NOT_FOUND
 #define STATUS_DLL_NOT_FOUND ((DWORD)0xC0000135L)
@@ -226,4 +306,8 @@ XRE_SetupDllBlocklist()
   if (!ok)
     printf_stderr ("LdrLoadDll hook failed, no dll blocklisting active\n");
 #endif
+
+  if (!ok) {
+    CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DllBlockList Failed\n"));
+  }
 }
