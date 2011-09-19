@@ -38,7 +38,7 @@
 
 #include "txExpr.h"
 #include "nsIAtom.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txXPathTreeWalker.h"
 #include "txIXPathContext.h"
 
@@ -47,7 +47,7 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
     :mPrefix(aPrefix), mLocalName(aLocalName), mNamespace(aNSID),
      mNodeType(aNodeType)
 {
-    if (aPrefix == txXMLAtoms::_empty)
+    if (aPrefix == nsGkAtoms::_empty)
         mPrefix = 0;
     NS_ASSERTION(aLocalName, "txNameTest without a local name?");
     NS_ASSERTION(aNodeType == txXPathNodeType::DOCUMENT_NODE ||
@@ -68,7 +68,7 @@ PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     }
 
     // Totally wild?
-    if (mLocalName == txXPathAtoms::_asterix && !mPrefix)
+    if (mLocalName == nsGkAtoms::_asterix && !mPrefix)
         return MB_TRUE;
 
     // Compare namespaces
@@ -79,7 +79,7 @@ PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
         return MB_FALSE;
 
     // Name wild?
-    if (mLocalName == txXPathAtoms::_asterix)
+    if (mLocalName == nsGkAtoms::_asterix)
         return MB_TRUE;
 
     // Compare local-names
@@ -91,7 +91,7 @@ PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
  */
 double txNameTest::getDefaultPriority()
 {
-    if (mLocalName == txXPathAtoms::_asterix) {
+    if (mLocalName == nsGkAtoms::_asterix) {
         if (!mPrefix)
             return -0.5;
         return -0.25;

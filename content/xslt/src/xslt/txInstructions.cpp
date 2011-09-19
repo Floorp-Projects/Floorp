@@ -45,7 +45,7 @@
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "txStringUtils.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txRtfHandler.h"
 #include "txNodeSorter.h"
 #include "txXSLTNumber.h"
@@ -136,7 +136,7 @@ txAttribute::execute(txExecutionState& aEs)
 
     const PRUnichar* colon;
     if (!XMLUtils::isValidQName(name, &colon) ||
-        TX_StringEqualsAtom(name, txXMLAtoms::xmlns)) {
+        TX_StringEqualsAtom(name, nsGkAtoms::xmlns)) {
         return NS_OK;
     }
 

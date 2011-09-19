@@ -62,7 +62,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txLog.h"
 #include "txMozillaXSLTProcessor.h"
 #include "txStylesheetCompiler.h"

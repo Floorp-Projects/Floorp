@@ -38,7 +38,7 @@
 
 #include "txXSLTProcessor.h"
 #include "txInstructions.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txLog.h"
 #include "txStylesheetCompileHandlers.h"
 #include "txStylesheetCompiler.h"
