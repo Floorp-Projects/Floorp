@@ -45,7 +45,27 @@ var ContentPopupHelper = {
     if (!this._popup && !aPopup)
       return;
 
-    if (aPopup) {
+    if (this._popup) {
+      this._popup.hidden = true;
+      this._anchorRect = null;
+
+      window.removeEventListener("TabSelect", this, false);
+      window.removeEventListener("TabClose", this, false);
+      window.removeEventListener("AnimatedZoomBegin", this, false);
+      window.removeEventListener("AnimatedZoomEnd", this, false);
+      window.removeEventListener("MozBeforeResize", this, true);
+      window.removeEventListener("resize", this, false);
+      Elements.browsers.removeEventListener("PanBegin", this, false);
+      Elements.browsers.removeEventListener("PanFinished", this, false);
+
+      let event = document.createEvent("Events");
+      event.initEvent("contentpopuphidden", true, false);
+      this._popup.dispatchEvent(event);
+    }
+
+    this._popup = aPopup;
+
+    if (this._popup) {
       // Keeps the new popup element hidden until it is positioned, but using
       // visibility: 'hidden' instead of display: 'none' will allow to
       // workaround some bugs with arrowscrollbox's arrows that does not
@@ -71,25 +91,7 @@ var ContentPopupHelper = {
       window.addEventListener("resize", this, false);
       Elements.browsers.addEventListener("PanBegin", this, false);
       Elements.browsers.addEventListener("PanFinished", this, false);
-    } else {
-      this._popup.hidden = true;
-      this._anchorRect = null;
-
-      window.removeEventListener("TabSelect", this, false);
-      window.removeEventListener("TabClose", this, false);
-      window.removeEventListener("AnimatedZoomBegin", this, false);
-      window.removeEventListener("AnimatedZoomEnd", this, false);
-      window.removeEventListener("MozBeforeResize", this, true);
-      window.removeEventListener("resize", this, false);
-      Elements.browsers.removeEventListener("PanBegin", this, false);
-      Elements.browsers.removeEventListener("PanFinished", this, false);
-
-      let event = document.createEvent("Events");
-      event.initEvent("contentpopuphidden", true, false);
-      this._popup.dispatchEvent(event);
     }
-
-    this._popup = aPopup;
   },
 
   /**
