@@ -143,8 +143,5 @@ interface nsIGfxInfo : nsISupports
    * underlying GL impl that's used to implement WebGL.
    */
   DOMString getWebGLParameter(in DOMString aParam);
-
-  // only useful on X11
-  [noscript, notxpcom] void GetData();
 };
 
