@@ -55,8 +55,7 @@
               let title = this._title;
 
               thumbnail.width = reload.width = title.width = tabWidth;
-              thumbnail.height = reload.height = tabHeight;
-              closeContainer.height = tabHeight;
+              thumbnail.height = reload.height = closeContainer.height = tabHeight;
             }
           ]]>
         </body>
