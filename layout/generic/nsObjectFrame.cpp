@@ -1631,7 +1631,15 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     UpdateImageLayer(container, r);
 
     imglayer->SetContainer(container);
-    imglayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+    gfxPattern::GraphicsFilter filter =
+      nsLayoutUtils::GetGraphicsFilterForFrame(this);
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    if (!aManager->IsCompositingCheap()) {
+      // Pixman just horrible with bilinear filter scaling
+      filter = gfxPattern::FILTER_NEAREST;
+    }
+#endif
+    imglayer->SetFilter(filter);
 
     layer->SetContentFlags(IsOpaque() ? Layer::CONTENT_OPAQUE : 0);
   } else {
