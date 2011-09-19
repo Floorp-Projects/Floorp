@@ -90,6 +90,8 @@ FormAssistant.prototype = {
   _currentIndex: -1,
   _elements: [],
 
+  invalidSubmit: false,
+
   get currentElement() {
     return this._elements[this._currentIndex];
   },
@@ -353,6 +355,9 @@ FormAssistant.prototype = {
         break;
 
       case "text":
+        if (this._isValidatable(aEvent.target))
+          sendAsyncMessage("FormAssist:ValidationMessage", this._getJSON());
+
         if (this._isAutocomplete(aEvent.target))
           sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
         break;
@@ -439,6 +444,9 @@ FormAssistant.prototype = {
             break;
 
           default:
+            if (this._isValidatable(aEvent.target))
+              sendAsyncMessage("FormAssist:ValidationMessage", this._getJSON());
+
             if (this._isAutocomplete(aEvent.target))
               sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
             else if (currentElement && this._isSelectElement(currentElement))
@@ -511,6 +519,14 @@ FormAssistant.prototype = {
     }
 
     return aElement;
+  },
+
+  _isValidatable: function(aElement) {
+    return this.invalidSubmit &&
+           (aElement instanceof HTMLInputElement ||
+            aElement instanceof HTMLTextAreaElement ||
+            aElement instanceof HTMLSelectElement ||
+            aElement instanceof HTMLButtonElement);
   },
 
   _isAutocomplete: function formHelperIsAutocomplete(aElement) {
@@ -733,6 +749,7 @@ FormAssistant.prototype = {
         type: (element.getAttribute("type") || "").toLowerCase(),
         choices: choices,
         isAutocomplete: this._isAutocomplete(element),
+        validationMessage: this.invalidSubmit ? element.validationMessage : null,
         list: this._getListSuggestions(element),
         rect: this._getRect(),
         caretRect: this._getCaretRect(),

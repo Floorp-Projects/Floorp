@@ -1047,6 +1047,21 @@ var FormSubmitObserver = {
   init: function init(){
     addMessageListener("Browser:TabOpen", this);
     addMessageListener("Browser:TabClose", this);
+
+    addEventListener("pageshow", this, false);
+
+    Services.obs.addObserver(this, "invalidformsubmit", false);
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    let target = aEvent.originalTarget;
+    let isRootDocument = (target == content.document || target.ownerDocument == content.document);
+    if (!isRootDocument)
+      return;
+
+    // Reset invalid submit state on each pageshow
+    if (aEvent.type == "pageshow")
+      Content.formAssistant.invalidSubmit = false;
   },
 
   receiveMessage: function findHandlerReceiveMessage(aMessage) {
@@ -1066,6 +1081,22 @@ var FormSubmitObserver = {
     if (aWindow == content)
       // We don't need to send any data along
       sendAsyncMessage("Browser:FormSubmit", {});
+  },
+
+  notifyInvalidSubmit: function notifyInvalidSubmit(aFormElement, aInvalidElements) {
+    if (!aInvalidElements.length)
+      return;
+
+    let element = aInvalidElements.queryElementAt(0, Ci.nsISupports);
+    if (!(element instanceof HTMLInputElement ||
+          element instanceof HTMLTextAreaElement ||
+          element instanceof HTMLSelectElement ||
+          element instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    Content.formAssistant.invalidSubmit = true;
+    Content.formAssistant.open(element);
   },
 
   QueryInterface : function(aIID) {
