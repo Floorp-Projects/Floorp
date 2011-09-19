@@ -17,11 +17,11 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 == justification-2c.html justification-2-ref.html
 != justification-2d.html justification-2-ref.html
 load ligature-with-space-1.html
-== line-editing-1a.html line-editing-1-ref.html
-== line-editing-1b.html line-editing-1-ref.html
-== line-editing-1c.html line-editing-1-ref.html
-== line-editing-1d.html line-editing-1-ref.html
-== line-editing-1e.html line-editing-1-ref.html
+fails-if(Android&&layersOpenGL) == line-editing-1a.html line-editing-1-ref.html
+fails-if(Android&&layersOpenGL) == line-editing-1b.html line-editing-1-ref.html
+fails-if(Android&&layersOpenGL) == line-editing-1c.html line-editing-1-ref.html
+fails-if(Android&&layersOpenGL) == line-editing-1d.html line-editing-1-ref.html
+fails-if(Android&&layersOpenGL) == line-editing-1e.html line-editing-1-ref.html
 fails-if(cocoaWidget||winWidget) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
 == long-1.html long-ref.html
 == pre-line-1.html pre-line-1-ref.html
@@ -46,8 +46,8 @@ fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixe
 # D2D/DirectWrite results depend on the rendering mode chosen, so considering this as random for now.
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
 # No platforms do subpixel positioning vertically
-== subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
-== subpixel-lineheight-1a.html subpixel-lineheight-1b.html
+fails-if(Android&&layersOpenGL) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
+fails-if(Android&&layersOpenGL) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
