@@ -68,17 +68,19 @@
 .documenttab-close-container[tablet] {
   left: 0px;
   -moz-margin-end: 0px;
-  -moz-margin-start: 151px;
+  -moz-margin-start: 145px;
   -moz-box-pack: end;
   -moz-box-align: center;
+  -moz-margin-end: -11px;
+  padding-right: 11px;
 }
 
 documenttab[selected="true"] > vbox > stack > .documenttab-close-container[tablet] {
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-end: -11px;
-  padding-right: 2px;
+  -moz-margin-start: 150px;
+  padding-right: 0px;
 }
 
 .documenttab-close[tablet] {
