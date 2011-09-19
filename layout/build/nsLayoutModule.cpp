@@ -269,9 +269,6 @@ nsresult
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
-nsresult
-NS_NewDOMImplementation(nsIDOMDOMImplementation**);
-
 static void Shutdown();
 
 #ifdef MOZ_XTF
@@ -510,7 +507,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
 MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
-MAKE_CTOR(CreateDOMImplementation,        nsIDOMDOMImplementation,     NS_NewDOMImplementation)
 MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXMLDocument)
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
@@ -746,7 +742,6 @@ NS_DEFINE_NAMED_CID(IN_DOMUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_NAMESPACEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOCUMENT_VIEWER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_DOM_IMPLEMENTATION_CID);
 NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_IMAGEDOCUMENT_CID);
@@ -881,7 +876,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
   { &kNS_DOCUMENT_VIEWER_CID, false, NULL, CreateDocumentViewer },
   { &kNS_HTMLDOCUMENT_CID, false, NULL, CreateHTMLDocument },
-  { &kNS_DOM_IMPLEMENTATION_CID, false, NULL, CreateDOMImplementation },
   { &kNS_XMLDOCUMENT_CID, false, NULL, CreateXMLDocument },
   { &kNS_SVGDOCUMENT_CID, false, NULL, CreateSVGDocument },
   { &kNS_IMAGEDOCUMENT_CID, false, NULL, CreateImageDocument },

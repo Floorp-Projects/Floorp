@@ -451,7 +451,7 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
                 if (!scriptContext) { rv = NS_ERROR_FAILURE; break; }
 
                 // 5. Get JSContext from the script context.
-                JSContext *jsContext = (JSContext*)scriptContext->GetNativeContext();
+                JSContext *jsContext = scriptContext->GetNativeContext();
                 if (!jsContext) { rv = NS_ERROR_FAILURE; break; }
 
                 // Now, give results to caller.

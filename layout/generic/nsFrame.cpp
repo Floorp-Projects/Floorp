@@ -1059,7 +1059,6 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
 {
   LookAndFeel::ColorID colorID;
-  nsresult result;
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
     colorID = LookAndFeel::eColorID_TextSelectBackground;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {

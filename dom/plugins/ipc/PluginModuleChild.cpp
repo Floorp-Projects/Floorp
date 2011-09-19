@@ -199,13 +199,11 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
     nsPluginFile pluginFile(localFile);
 
-    nsresult rv;
     // Maemo flash can render with any provided rectangle and so does not
     // require this quirk.
 #if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
     nsPluginInfo info = nsPluginInfo();
-    rv = pluginFile.GetPluginInfo(info, &mLibrary);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(pluginFile.GetPluginInfo(info, &mLibrary)))
         return false;
 
     NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
@@ -216,7 +214,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     if (!mLibrary)
 #endif
     {
-        rv = pluginFile.LoadPlugin(&mLibrary);
+        DebugOnly<nsresult> rv = pluginFile.LoadPlugin(&mLibrary);
         NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
     }
     NS_ASSERTION(mLibrary, "couldn't open shared object");
@@ -259,8 +257,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
 #ifdef XP_MACOSX
     nsPluginInfo info = nsPluginInfo();
-    rv = pluginFile.GetPluginInfo(info, &mLibrary);
-    if (rv == NS_OK) {
+    if (pluginFile.GetPluginInfo(info, &mLibrary) == NS_OK) {
         mozilla::plugins::PluginUtilsOSX::SetProcessName(info.fName);
     }
 #endif
@@ -688,12 +685,11 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
                                            const nsString& aDisplayName,
                                            const nsString& aIconPath)
 {
-    nsresult rv;
 #if !defined XP_WIN || MOZ_WINSDK_TARGETVER < MOZ_NTDDI_LONGHORN
     NS_RUNTIMEABORT("Not Reached!");
     return false;
 #else
-    rv = mozilla::widget::RecvAudioSessionData(aId, aDisplayName, aIconPath);
+    nsresult rv = mozilla::widget::RecvAudioSessionData(aId, aDisplayName, aIconPath);
     NS_ENSURE_SUCCESS(rv, true); // Bail early if this fails
 
     // Ignore failures here; we can't really do anything about them
@@ -2080,7 +2076,10 @@ PluginModuleChild::NPN_RetainObject(NPObject* aNPObj)
 {
     AssertPluginThread();
 
-    int32_t refCnt = PR_ATOMIC_INCREMENT((int32_t*)&aNPObj->referenceCount);
+#ifdef NS_BUILD_REFCNT_LOGGING
+    int32_t refCnt =
+#endif
+    PR_ATOMIC_INCREMENT((int32_t*)&aNPObj->referenceCount);
     NS_LOG_ADDREF(aNPObj, refCnt, "NPObject", sizeof(NPObject));
 
     return aNPObj;
