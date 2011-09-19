@@ -5723,9 +5723,12 @@ main(int argc, char **argv, char **envp)
     CALIBRATION_DELAY_COUNT = 0;
 #endif
 
-    rt = JS_NewRuntime(160L * 1024L * 1024L);
+    /* Use the same parameters as the browser in xpcjsruntime.cpp. */
+    rt = JS_NewRuntime(32L * 1024L * 1024L);
     if (!rt)
         return 1;
+
+    JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
