@@ -54,7 +54,7 @@
  * make dependency induced by this file should not prove painful.
  */
 
-#include "jspubtd.h"
+#include "jsapi.h"
 #include "jsstaticcheck.h"
 #include "jsutil.h"
 
@@ -122,6 +122,7 @@ class JSStaticAtom;
 class JSRope;
 class JSAtom;
 struct JSDefinition;
+class JSWrapper;
 
 namespace js {
 

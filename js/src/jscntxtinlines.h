@@ -175,10 +175,6 @@ class CompartmentChecker
             check(v.toString());
     }
 
-    void check(jsval v) {
-        check(Valueify(v));
-    }
-
     void check(const ValueArray &arr) {
         for (size_t i = 0; i < arr.length; i++)
             check(arr.array[i]);
@@ -430,7 +426,7 @@ inline void
 JSContext::setPendingException(js::Value v) {
     this->throwing = true;
     this->exception = v;
-    assertSameCompartment(this, v);
+    js::assertSameCompartment(this, v);
 }
 
 inline bool

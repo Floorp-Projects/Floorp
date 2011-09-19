@@ -9941,7 +9941,7 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
 void
 TraceRecorder::box_undefined_into(Address addr)
 {
-    w.stq(w.nameImmq(JSVAL_BITS(JSVAL_VOID)), addr);
+    w.stq(w.nameImmq(JSVAL_VOID.asRawBits()), addr);
 }
 
 inline LIns *
@@ -10043,14 +10043,14 @@ LIns*
 TraceRecorder::is_boxed_true(Address addr)
 {
     LIns *v_ins = w.ldq(addr);
-    return w.eqq(v_ins, w.immq(JSVAL_BITS(JSVAL_TRUE)));
+    return w.eqq(v_ins, w.immq(JSVAL_TRUE.asRawBits()));
 }
 
 LIns*
 TraceRecorder::is_boxed_magic(Address addr, JSWhyMagic why)
 {
     LIns *v_ins = w.ldq(addr);
-    return w.eqq(v_ins, w.nameImmq(BUILD_JSVAL(JSVAL_TAG_MAGIC, why)));
+    return w.eqq(v_ins, w.nameImmq(MagicValue(why).asRawBits()));
 }
 
 LIns*
@@ -10068,9 +10068,9 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
     }
 
     if (v.isNull())
-        return w.nameImmq(JSVAL_BITS(JSVAL_NULL));
+        return w.nameImmq(JSVAL_NULL.asRawBits());
     if (v.isUndefined())
-        return w.nameImmq(JSVAL_BITS(JSVAL_VOID));
+        return w.nameImmq(JSVAL_VOID.asRawBits());
 
     JSValueTag tag = v.isObject() ? JSVAL_TAG_OBJECT : v.extractNonDoubleObjectTraceTag();
     uint64 shiftedTag = ((uint64)tag) << JSVAL_TAG_SHIFT;
@@ -14849,7 +14849,7 @@ TraceRecorder::storeMagic(JSWhyMagic why, Address addr)
 JS_REQUIRES_STACK void
 TraceRecorder::storeMagic(JSWhyMagic why, Address addr)
 {
-    LIns *magic = w.nameImmq(BUILD_JSVAL(JSVAL_TAG_MAGIC, why));
+    LIns *magic = w.nameImmq(MagicValue(why).asRawBits());
     w.stq(magic, addr);
 }
 #endif
