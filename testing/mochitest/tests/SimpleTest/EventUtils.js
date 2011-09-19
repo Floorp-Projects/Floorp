@@ -5,6 +5,14 @@
  *  sendChar
  *  sendString
  *  sendKey
+ *  synthesizeMouse
+ *  synthesizeMouseAtCenter
+ *  synthesizeMouseScroll
+ *  synthesizeKey
+ *  synthesizeMouseExpectEvent
+ *  synthesizeKeyExpectEvent
+ *
+ *  When adding methods to this file, please add a performance test for it.
  */
 
 /**
@@ -540,11 +548,6 @@ function _getDOMWindowUtils(aWindow)
   return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                  getInterface(Components.interfaces.nsIDOMWindowUtils);
 }
-
-/*
- * synthesizeComposition, synthesizeText and synthesizeQuerySelectedText
- * are only used by layout/base/tests/test_reftests_with_caret.html.
- */
 
 /**
  * Synthesize a composition event.

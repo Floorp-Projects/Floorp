@@ -1,0 +1,223 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org code
+   -
+   - The Initial Developer of the Original Code is Mozilla Foundation
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Test ChromeUtils functions" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <!-- ChromeUtils.js depends on EventUtils.js -->
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript">
+  var start = new Date();
+  </script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <script type="text/javascript">
+  var loadTime = new Date();
+  </script>
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.info("\nProfile::ChromeUtilsLoadTime: " + (loadTime - start) + "\n");
+    var testFile = Components.classes["@mozilla.org/file/directory_service;1"].
+                      getService(Components.interfaces.nsIProperties).
+                      get("CurWorkD", Components.interfaces.nsIFile);
+    var regularDtForDrag1 = null;
+    var gSetDropEffect = true;
+    var gData;
+    var gEnter = false;
+    var gOver  = false;
+    var dragDrop = [[
+      { type    : "text/plain",
+        data    : "This is a test" }
+    ]];
+    // this is the expected data arrays
+    // for testing drag of 2 items create 2 inner arrays
+    var drag1 = [[
+      { type  : "text/uri-list",
+        data  : "http://www.mozilla.org/" }
+    ]];
+    var drag2items = [[
+      { type  : "text/uri-list",
+        data  : "http://www.mozilla.org/" }
+      ],[
+      { type  : "text/uri-list",
+        data  : "http://www.mozilla.org/" }
+    ]];
+    var drag1WrongFlavor = [[
+      { type  : "text/plain",
+        data  : "this is text/plain" }
+    ]];
+    var drag2 = [[
+      { type  : "text/plain",
+        data  : "this is text/plain" },
+      { type  : "text/uri-list",
+        data  : "http://www.mozilla.org/" }
+    ]];
+    var drag2WrongOrder = [[
+      { type  : "text/uri-list",
+        data  : "http://www.mozilla.org/" },
+      { type  : "text/plain",
+        data  : "this is text/plain" }
+    ]];
+    var dragfile = [[
+      { type    : "application/x-moz-file",
+        data    : testFile,
+        eqTest  : function(actualData, expectedData) {return expectedData.equals(actualData);} }
+    ]];
+    
+    function doOnDrop(aEvent) {
+      gData = aEvent.dataTransfer.getData(dragDrop[0][0].type);
+      aEvent.preventDefault(); // cancels event and keeps dropEffect
+                               // as was before event.
+    }
+    
+    function doOnDragStart(aEvent) {
+      var dt = aEvent.dataTransfer;
+      switch (aEvent.currentTarget.id) {
+        case "drag2" :
+          dt.setData("text/plain", "this is text/plain");
+        case "drag1" :
+          regularDtForDrag1 = dt;
+          dt.setData("text/uri-list", "http://www.mozilla.org/");
+          break;
+        case "dragfile" :
+          dt.mozSetDataAt("application/x-moz-file", testFile, 0);
+          break;
+      }
+        dt.effectAllowed = "all";
+    }
+
+    function doOnDragEnter(aEvent) {
+      gEnter = true;
+      aEvent.dataTransfer.effectAllowed = "all";
+      aEvent.preventDefault(); // sets target this element
+    }
+    
+    function doOnDragOver(aEvent) {
+      gOver = true;
+      if (gSetDropEffect)
+        aEvent.dataTransfer.dropEffect = "copy";
+      aEvent.preventDefault();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    function test() {
+      var startTime = new Date();
+      var result;
+
+      /* test synthesizeDragStart */
+      result = synthesizeDragStart($("drag1"), drag1, window);
+      is(result, null, "drag1 is text/uri-list");
+      result = synthesizeDragStart($("drag1"), drag1WrongFlavor, window);
+      isnot(result, null, "drag1 is not text/plain");
+      result = synthesizeDragStart($("drag1"), drag2items, window);
+      isnot(result, null, "drag1 is not 2 items");
+      result = synthesizeDragStart($("drag2"), drag2, window);
+      is(result, null, "drag2 is ordered text/plain then text/uri-list");
+      result = synthesizeDragStart($("drag2"), drag1, window);
+      isnot(result, null, "drag2 is not one flavor");
+      result = synthesizeDragStart($("drag2"), drag2WrongOrder, window);
+      isnot(result, null, "drag2 is not ordered text/uri-list then text/plain");
+      result = synthesizeDragStart($("dragfile"), dragfile, window);
+      is(result, null, "dragfile is nsIFile");
+      result = synthesizeDragStart($("drag1"), null, window);
+      is(result, regularDtForDrag1, "synthesizeDragStart accepts null expectedDragData");
+     
+      /* test synthesizeDrop */
+      result = synthesizeDrop($("dragDrop"), $("dragDrop"), dragDrop, null, window);
+      ok(gEnter, "Fired dragenter");
+      ok(gOver,  "Fired dragover");
+      is(result, "copy", "copy is dropEffect");
+      is(gData, dragDrop[0][0].data, "Received valid drop data");
+
+      gSetDropEffect = false;
+      result = synthesizeDrop($("dragDrop"), $("dragDrop"), dragDrop, "link", window);
+      is(result, "link", "link is dropEffect");
+      gSetDropEffect = true;
+
+      $("textB").focus();
+      var content = synthesizeQueryTextContent(0, 100);
+      ok(content, "synthesizeQueryTextContent should not be null");
+      ok(content.succeeded, "synthesizeQueryTextContent should succeed");
+      is(content.text, "I haz a content", "synthesizeQueryTextContent should be 'I haz a content': " + content.text);
+
+      content = synthesizeQueryCaretRect(0);
+      ok(content, "synthesizeQueryCaretRect should not be null");
+      ok(content.succeeded, "synthesizeQueryCaretRect should succeed");
+
+      content = synthesizeQueryTextRect(0, 100);
+      ok(content, "synthesizeQueryTextRect should not be null");
+      ok(content.succeeded, "synthesizeQueryTextRect should succeed");
+
+      content = synthesizeQueryEditorRect();
+      ok(content, "synthesizeQueryEditorRect should not be null");
+      ok(content.succeeded, "synthesizeQueryEditorRect should succeed");
+
+      content = synthesizeCharAtPoint(0, 0);
+      ok(content, "synthesizeCharAtPoint should not be null");
+      ok(content.succeeded, "synthesizeCharAtPoint should succeed");
+
+      content = synthesizeSelectionSet(0, 100);
+      ok(content, "synthesizeSelectionSet should not be null");
+      is(content, true, "synthesizeSelectionSet should succeed");
+
+      var endTime = new Date();
+      SimpleTest.info("\nProfile::ChromeUtilsRunTime: " + (endTime-startTime) + "\n");
+      SimpleTest.finish();
+    };
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" onload="setTimeout('test()', 0)">
+    <input id="textB" value="I haz a content"/>
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+    <div id="drag1" ondragstart="doOnDragStart(event);">Need some space here</div>
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+    <div id="dragDrop" ondragover  ="doOnDragOver(event);"
+                    ondragenter ="doOnDragEnter(event);"
+                    ondragleave ="doOnDragLeave(event);"
+                    ondrop      ="doOnDrop(event);">
+    Need some depth and height to drag here
+    </div>
+    <div id="drag2" ondragstart="doOnDragStart(event);">Need more space</div>
+    <div id="dragfile" ondragstart="doOnDragStart(event);">Sure why not here too</div>
+  </body>
+</window>
