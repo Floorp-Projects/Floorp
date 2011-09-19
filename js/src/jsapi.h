@@ -2209,6 +2209,9 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
 
+extern JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
