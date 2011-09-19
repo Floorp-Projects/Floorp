@@ -592,7 +592,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       voidString.SetIsVoid(PR_TRUE);
       NS_NewDOMDocumentType(getter_AddRefs(docType),
                             aBuilder->GetNodeInfoManager(),
-                            nsnull,
                             name,
                             publicId,
                             systemId,

@@ -39,7 +39,6 @@
 
 #include "nsXULFormControlAccessible.h"
 
-#include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
 #include "nsAccTreeWalker.h"
 #include "nsCoreUtils.h"
@@ -159,7 +158,7 @@ nsXULButtonAccessible::NativeState()
   if (ContainsMenu())
     state |= states::HASPOPUP;
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::_default))
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::_default))
     state |= states::DEFAULT;
 
   return state;
@@ -178,14 +177,14 @@ nsXULButtonAccessible::CacheChildren()
   // XXX: no children until the button is menu button. Probably it's not
   // totally correct but in general AT wants to have leaf buttons.
   PRBool isMenu = mContent->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::type,
-                                       nsAccessibilityAtoms::menu,
+                                       nsGkAtoms::type,
+                                       nsGkAtoms::menu,
                                        eCaseMatters);
 
   PRBool isMenuButton = isMenu ?
     PR_FALSE :
-    mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                          nsAccessibilityAtoms::menuButton, eCaseMatters);
+    mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                          nsGkAtoms::menuButton, eCaseMatters);
 
   if (!isMenu && !isMenuButton)
     return;
@@ -230,10 +229,10 @@ PRBool
 nsXULButtonAccessible::ContainsMenu()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsAccessibilityAtoms::menu, &nsAccessibilityAtoms::menuButton, nsnull};
+    {&nsGkAtoms::menu, &nsGkAtoms::menuButton, nsnull};
 
   return mContent->FindAttrValueIn(kNameSpaceID_None,
-                                   nsAccessibilityAtoms::type,
+                                   nsGkAtoms::type,
                                    strings, eCaseMatters) >= 0;
 }
 
@@ -600,9 +599,9 @@ nsXULToolbarButtonAccessible::IsSeparator(nsAccessible *aAccessible)
   if (!contentDomNode)
     return PR_FALSE;
 
-  return (contentDomNode->Tag() == nsAccessibilityAtoms::toolbarseparator) ||
-         (contentDomNode->Tag() == nsAccessibilityAtoms::toolbarspacer) ||
-         (contentDomNode->Tag() == nsAccessibilityAtoms::toolbarspring);
+  return (contentDomNode->Tag() == nsGkAtoms::toolbarseparator) ||
+         (contentDomNode->Tag() == nsGkAtoms::toolbarspacer) ||
+         (contentDomNode->Tag() == nsGkAtoms::toolbarspring);
 }
 
 
@@ -626,8 +625,7 @@ nsresult
 nsXULToolbarAccessible::GetNameInternal(nsAString& aName)
 {
   nsAutoString name;
-  if (mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::toolbarname,
-                        name)) {
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname, name)) {
     name.CompressWhitespace();
     aName = name;
   }
@@ -728,8 +726,8 @@ nsXULTextFieldAccessible::NativeState()
   if (menuList) {
     // <xul:menulist droppable="false">
     if (!mContent->AttrValueIs(kNameSpaceID_None,
-                               nsAccessibilityAtoms::editable,
-                               nsAccessibilityAtoms::_true, eIgnoreCase)) {
+                               nsGkAtoms::editable,
+                               nsGkAtoms::_true, eIgnoreCase)) {
       state |= states::READONLY;
     }
   }
@@ -740,8 +738,8 @@ nsXULTextFieldAccessible::NativeState()
 PRUint32
 nsXULTextFieldAccessible::NativeRole()
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                            nsAccessibilityAtoms::password, eIgnoreCase))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::password, eIgnoreCase))
     return nsIAccessibleRole::ROLE_PASSWORD_TEXT;
   return nsIAccessibleRole::ROLE_ENTRY;
 }

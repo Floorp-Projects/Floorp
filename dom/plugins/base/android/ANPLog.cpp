@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Android NPAPI support code
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Doug Turner <dougt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,35 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIPrivateDOMImplementation_h__
-#define nsIPrivateDOMImplementation_h__
+#include "assert.h"
+#include "ANPBase.h"
+#include <android/log.h>
 
-#include "nsISupports.h"
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
+#define ASSIGN(obj, name)   (obj)->name = anp_log_##name
 
-class nsIURI;
-class nsIPrincipal;
+void
+anp_log_log(ANPLogType type, const char format[], ...) {
 
-/*
- * Event listener manager interface.
- */
-#define NS_IPRIVATEDOMIMPLEMENTATION_IID \
-{ /* 87c20441-8b0d-4383-a189-52fef1dd5d8a */ \
-0x87c20441, 0x8b0d, 0x4383, \
- { 0xa1, 0x89, 0x52, 0xfe, 0xf1, 0xdd, 0x5d, 0x8a } }
+  va_list argp;
+  va_start(argp,format);
+  __android_log_vprint(type == kError_ANPLogType ? ANDROID_LOG_ERROR : type == kWarning_ANPLogType ?
+                       ANDROID_LOG_WARN : ANDROID_LOG_INFO, "GeckoPluginLog", format, argp);
+  va_end(argp);
+}
 
-class nsIPrivateDOMImplementation : public nsISupports {
-
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMIMPLEMENTATION_IID)
-
-  NS_IMETHOD Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
-                  nsIPrincipal* aPrincipal) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateDOMImplementation,
-                              NS_IPRIVATEDOMIMPLEMENTATION_IID)
-
-nsresult
-NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult);
-
-#endif // nsIPrivateDOMImplementation_h__
+void InitLogInterface(ANPLogInterfaceV0 *i) {
+      _assert(i->inSize == sizeof(*i));
+      ASSIGN(i, log);
+}

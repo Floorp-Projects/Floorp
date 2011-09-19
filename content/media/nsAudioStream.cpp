@@ -78,7 +78,7 @@ using mozilla::TimeStamp;
 PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
-#define FAKE_BUFFER_SIZE 176400
+static const PRUint32 FAKE_BUFFER_SIZE = 176400;
 
 class nsAudioStreamLocal : public nsAudioStream
 {

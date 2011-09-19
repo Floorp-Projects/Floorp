@@ -43,11 +43,20 @@ gTests.push({
     var imageValue  = imageRegion.value;
     var imageTitle  = document.getAnonymousElementByAttribute(imageRegion, "class", "preferences-title");
     var imageButton = document.getAnonymousElementByAttribute(imageRegion, "anonid", "input");
-    imageButton.click();
+
+    var ibEvent = document.createEvent("MouseEvents");
+    ibEvent.initEvent("TapSingle", true, false);
+    imageButton.dispatchEvent(ibEvent);
     is(imageRegion.value, !imageValue, "Tapping on input control should change the value");
-    imageTitle.click();
+
+    var itEvent = document.createEvent("MouseEvents");
+    itEvent.initEvent("TapSingle", true, false);
+    imageTitle.dispatchEvent(itEvent);
     is(imageRegion.value, imageValue, "Tapping on the title should change the value"); 
-    imageRegion.click();
+
+    var irEvent = document.createEvent("MouseEvents");
+    irEvent.initEvent("TapSingle", true, false);
+    imageRegion.dispatchEvent(irEvent);
     is(imageRegion.value, !imageValue, "Tapping on the setting should change the value"); 
 
     BrowserUI.hidePanel();

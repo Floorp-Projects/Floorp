@@ -204,7 +204,7 @@ nsHTMLOutputAccessible::RelationByType(PRUint32 aType)
 {
   Relation rel = nsAccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)
-    rel.AppendIter(new IDRefsIterator(mContent, nsAccessibilityAtoms::_for));
+    rel.AppendIter(new IDRefsIterator(mContent, nsGkAtoms::_for));
 
   return rel;
 }
@@ -221,7 +221,7 @@ nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
   nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::live,
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::live,
                          NS_LITERAL_STRING("polite"));
   
   return NS_OK;

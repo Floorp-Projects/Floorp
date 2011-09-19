@@ -27,7 +27,7 @@ function testHTMLDocuments(ids, isXHTML) {
                                                  ids[i],
                                                  null);
     ok(docType1, "No doctype?");
-    ok(!docType1.ownerDocument, "docType shouldn't have ownerDocument!");
+    ok(docType1.ownerDocument, "docType should have ownerDocument!");
     var doc1 = document.implementation.createDocument(null, null, docType1);
     is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
     ok(!doc1.documentElement, "Document shouldn't have document element!");
@@ -64,7 +64,7 @@ function testSVGDocument() {
                                                  "-//W3C//DTD SVG 1.1//EN",
                                                  null);
   ok(docType1, "No doctype?");
-  ok(!docType1.ownerDocument, "docType shouldn't have ownerDocument!");
+  ok(docType1.ownerDocument, "docType should have ownerDocument!");
   var doc1 = document.implementation.createDocument(null, null, docType1);
   is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
   ok(!doc1.documentElement, "Document shouldn't have document element!");
@@ -91,7 +91,7 @@ function testFooBarDocument() {
   var docType1 =
       document.implementation.createDocumentType("FooBar", "FooBar", null);
   ok(docType1, "No doctype?");
-  ok(!docType1.ownerDocument, "docType shouldn't have ownerDocument!");
+  ok(docType1.ownerDocument, "docType should have ownerDocument!");
   var doc1 = document.implementation.createDocument(null, null, docType1);
   is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
   ok(!doc1.documentElement, "Document shouldn't have document element!");

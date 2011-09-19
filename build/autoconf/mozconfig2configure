@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Stephen Lamm <slamm@netscape.com>
+#   Siddharth Agarwal <sagarwal@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -113,14 +114,24 @@ do
   ac_options="$ac_options \"$_opt\""
 done
 
-MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $topsrcdir`
-if [ "$MOZCONFIG" ]; then
-  . "$MOZCONFIG"
+
+# If FOUND_MOZCONFIG isn't set, look for it and make sure the script doesn't error out
+isfoundset=${FOUND_MOZCONFIG+yes}
+if [ -z $isfoundset ]; then
+  FOUND_MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $topsrcdir`
+  if [ $? -ne 0 ]; then
+    echo "Fix above errors before continuing." 1>&2
+    exit 1
+  fi
 fi
+
+if [ "$FOUND_MOZCONFIG" ]; then
+  . "$FOUND_MOZCONFIG"
+fi
+export FOUND_MOZCONFIG
 
 if [ "$mozconfig_ac_options" ]; then
   ac_echo_options 1>&2
 fi
 
 eval "set -- $mozconfig_ac_options $ac_options"
-

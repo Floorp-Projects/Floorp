@@ -212,7 +212,7 @@ NPError
 PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
                                                  NPObject** aObject)
 {
-    PluginScriptableObjectChild* actor;
+    PluginScriptableObjectChild* actor = NULL;
     NPError result = NPERR_NO_ERROR;
 
     switch (aValue) {
@@ -356,6 +356,18 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
             return NPERR_GENERIC_ERROR;
         }
         *static_cast<NPBool*>(aValue) = v;
+        return result;
+    }
+
+    case NPNVdocumentOrigin: {
+        nsCString v;
+        NPError result;
+        if (!CallNPN_GetValue_NPNVdocumentOrigin(&v, &result)) {
+            return NPERR_GENERIC_ERROR;
+        }
+        if (result == NPERR_NO_ERROR) {
+            *static_cast<char**>(aValue) = ToNewCString(v);
+        }
         return result;
     }
 
@@ -2849,6 +2861,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
         exposeEvent.major_code = 0;
         exposeEvent.minor_code = 0;
         mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
+        aSurface->MarkDirty(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
     } else
 #endif
     {
@@ -2926,7 +2939,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
     }
 #endif
 
-    if (aColor.a > 0.0) {
+    if (mIsTransparent && !CanPaintOnBackground()) {
        // Clear surface content for transparent rendering
        nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
        ctx->SetColor(aColor);

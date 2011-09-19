@@ -48,3 +48,36 @@
 #define hnj_realloc(p, size)  moz_xrealloc(p, size)
 #define hnj_free(p)           moz_free(p)
 
+/*
+ * To enable us to load hyphenation dictionaries from arbitrary resource URIs,
+ * not just through file paths using stdio, we override the (few) stdio APIs
+ * that hyphen.c uses and provide our own reimplementation that calls Gecko
+ * i/o methods.
+ */
+
+#include <stdio.h> /* ensure stdio.h is loaded before our macros */
+
+#undef FILE
+#define FILE hnjFile
+
+#define fopen(path,mode)      hnjFopen(path,mode)
+#define fclose(file)          hnjFclose(file)
+#define fgets(buf,count,file) hnjFgets(buf,count,file)
+
+typedef struct hnjFile_ hnjFile;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+hnjFile* hnjFopen(const char* aURISpec, const char* aMode);
+
+int hnjFclose(hnjFile* f);
+
+char* hnjFgets(char* s, int n, hnjFile* f);
+
+#ifdef __cplusplus
+}
+#endif
+
+

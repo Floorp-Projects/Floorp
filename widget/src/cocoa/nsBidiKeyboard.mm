@@ -66,3 +66,9 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
   // XXX Insert platform specific code to set keyboard language
   return NS_OK;
 }
+
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(PRBool* aResult)
+{
+  // not implemented yet
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,7 +39,6 @@
 /* Platform specific code to invoke XPCOM methods on native objects */
 
 #include "xptcprivate.h"
-#include "xptc_platforms_unixish_x86.h"
 #include "xptc_gcc_x86_unix.h"
 
 extern "C" {
@@ -81,11 +81,6 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
   paramCount  = ebp + 0x10
   params      = ebp + 0x14
 
-  NOTE NOTE NOTE:
-  As of 2002-04-29 this function references no global variables nor does
-  it call non-static functions so preserving and loading the PIC register
-  is unnecessary. Define MOZ_PRESERVE_PIC if this changes. See mozilla
-  bug 140412 for details. However, avoid this if you can. It's slower.
 */
 /*
  * Hack for gcc for win32 and os2.  Functions used externally must be
@@ -109,35 +104,23 @@ __asm__ (
 /* alignment here seems unimportant here; this was 16, now it's 2 which
    is what xptcstubs uses. */
 	".align 2\n\t"
-#if defined(XP_WIN32) || defined(XP_OS2)
-	".globl " SYMBOL_UNDERSCORE "_NS_InvokeByIndex_P\n\t"
-	SYMBOL_UNDERSCORE "_NS_InvokeByIndex_P:\n\t"
-#else
 	".globl " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
+#if !defined(XP_WIN32) && !defined(XP_OS2) && !defined(XP_MACOSX)
 	".type  " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P,@function\n"
-	SYMBOL_UNDERSCORE "NS_InvokeByIndex_P:\n\t"
 #endif
+	SYMBOL_UNDERSCORE "NS_InvokeByIndex_P:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp, %ebp\n\t"
-#ifdef MOZ_PRESERVE_PIC 
-	"pushl %ebx\n\t"
-	"call  0f\n\t"
-	".subsection 1\n"
-	"0:\n\t"
-	"movl (%esp), %ebx\n\t"
-	"ret\n\t"
-	".previous\n\t"
-	"addl  $_GLOBAL_OFFSET_TABLE_, %ebx\n\t"
-#endif
 	"movl  0x10(%ebp), %eax\n\t"
 	"leal  0(,%eax,8),%edx\n\t"
-	"movl  %esp, %ecx\n\t"
-	"subl  %edx, %ecx\n\t"
+
+        /* set up call frame for method. */
+	"subl  %edx, %esp\n\t"       /* make room for params. */
 /* Align to maximum x86 data size: 128 bits == 16 bytes == XMM register size.
  * This is to avoid protection faults where SSE+ alignment of stack pointer
  * is assumed and required, e.g. by GCC4's -ftree-vectorize option.
  */
-	"andl  $0xfffffff0, %ecx\n\t"   /* drop(?) stack ptr to 128-bit align */
+	"andl  $0xfffffff0, %esp\n\t"   /* drop(?) stack ptr to 128-bit align */
 /* $esp should be aligned to a 16-byte boundary here (note we include an 
  * additional 4 bytes in a later push instruction). This will ensure $ebp 
  * in the function called below is aligned to a 0x8 boundary. SSE instructions 
@@ -145,35 +128,22 @@ __asm__ (
  * boundary. The GCC compiler will generate the memory operand using $ebp
  * with an 8-byte offset.
  */
-	"subl  $0xc, %ecx\n\t"          /* lower again; push/call below will re-align */
-	"movl  %ecx, %esp\n\t"          /* make stack space */
+	"subl  $0xc, %esp\n\t"          /* lower again; push/call below will re-align */
+	"movl  %esp, %ecx\n\t"          /* ecx = d */
+	"movl  8(%ebp), %edx\n\t"       /* edx = this */
+	"pushl %edx\n\t"                /* push this. esp % 16 == 0 */
+
 	"movl  0x14(%ebp), %edx\n\t"
 	"call  " SYMBOL_UNDERSCORE "invoke_copy_to_stack\n\t"
 	"movl  0x08(%ebp), %ecx\n\t"	/* 'that' */
-#ifdef CFRONT_STYLE_THIS_ADJUST
-	"movl  (%ecx), %edx\n\t"
-	"movl  0x0c(%ebp), %eax\n\t"    /* function index */
-	"shll  $3, %eax\n\t"	        /* *= 8 */
-	"addl  $8, %eax\n\t"	        /* += 8 skip first entry */
-	"addl  %eax, %edx\n\t"
-	"movswl (%edx), %eax\n\t"       /* 'this' offset */
-	"addl  %eax, %ecx\n\t"
-	"pushl %ecx\n\t"
-	"addl  $4, %edx\n\t"	        /* += 4, method pointer */
-#else /* THUNK_BASED_THIS_ADJUST */
-	"pushl %ecx\n\t"
 	"movl  (%ecx), %edx\n\t"
 	"movl  0x0c(%ebp), %eax\n\t"    /* function index */
 	"leal  (%edx,%eax,4), %edx\n\t"
-#endif
 	"call  *(%edx)\n\t"
-#ifdef MOZ_PRESERVE_PIC
-	"movl  -4(%ebp), %ebx\n\t"
-#endif
 	"movl  %ebp, %esp\n\t"
 	"popl  %ebp\n\t"
 	"ret\n"
-#if !defined(XP_WIN32) && !defined(XP_OS2)
+#if !defined(XP_WIN32) && !defined(XP_OS2) && !defined(XP_MACOSX)
 	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
 #endif
 );

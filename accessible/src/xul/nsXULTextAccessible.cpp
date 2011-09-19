@@ -40,7 +40,6 @@
 // NOTE: groups are alphabetically ordered
 #include "nsXULTextAccessible.h"
 
-#include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsCoreUtils.h"
@@ -71,7 +70,7 @@ nsXULTextAccessible::GetNameInternal(nsAString& aName)
 {
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
   return NS_OK;
 }
 
@@ -96,7 +95,7 @@ nsXULTextAccessible::RelationByType(PRUint32 aType)
   if (aType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
     // Caption is the label for groupbox
     nsIContent *parent = mContent->GetParent();
-    if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
+    if (parent && parent->Tag() == nsGkAtoms::caption) {
       nsAccessible* parent = Parent();
       if (parent && parent->Role() == nsIAccessibleRole::ROLE_GROUPING)
         rel.AppendTarget(parent);
@@ -159,14 +158,14 @@ nsXULLinkAccessible::GetValue(nsAString& aValue)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aValue);
   return NS_OK;
 }
 
 nsresult
 nsXULLinkAccessible::GetNameInternal(nsAString& aName)
 {
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
   if (!aName.IsEmpty())
     return NS_OK;
 
@@ -255,7 +254,7 @@ nsXULLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
     return nsnull;
 
   nsAutoString href;
-  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, href);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsIDocument* document = mContent->GetOwnerDoc();

@@ -39,7 +39,6 @@
 
 #include "xptcprivate.h"
 #include "xptiprivate.h"
-#include "xptc_platforms_unixish_x86.h"
 #include "xptc_gcc_x86_unix.h"
 
 extern "C" {

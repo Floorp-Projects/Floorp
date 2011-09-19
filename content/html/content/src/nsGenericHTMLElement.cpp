@@ -2505,7 +2505,7 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo>
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
   if (mFieldSet) {
-    static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+    mFieldSet->RemoveElement(this);
   }
 
   // Check that this element doesn't know anything about its form at this point.
@@ -2842,6 +2842,22 @@ nsGenericHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
+/* virtual */
+bool
+nsGenericHTMLFormElement::IsDisabled() const
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) ||
+         (mFieldSet && mFieldSet->IsDisabled());
+}
+
+void
+nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset)
+{
+  if (mFieldSet == aFieldset) {
+    mFieldSet = nsnull;
+  }
+}
+
 PRBool
 nsGenericHTMLFormElement::CanBeDisabled() const
 {
@@ -3092,32 +3108,30 @@ nsGenericHTMLFormElement::UpdateFieldSet(PRBool aNotify)
 
   for (parent = GetParent(); parent;
        prev = parent, parent = parent->GetParent()) {
-    if (parent->IsHTML(nsGkAtoms::fieldset)) {
-      nsHTMLFieldSetElement* fieldset =
-        static_cast<nsHTMLFieldSetElement*>(parent);
-
-      if (!prev || fieldset->GetFirstLegend() != prev) {
-        if (mFieldSet == fieldset) {
-          // We already have the right fieldset;
-          return;
-        }
-
-        if (mFieldSet) {
-          static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
-        }
-        mFieldSet = fieldset;
-        fieldset->AddElement(this);
-
-        // The disabled state may have changed
-        FieldSetDisabledChanged(aNotify);
+    nsHTMLFieldSetElement* fieldset =
+      nsHTMLFieldSetElement::FromContent(parent);
+    if (fieldset &&
+        (!prev || fieldset->GetFirstLegend() != prev)) {
+      if (mFieldSet == fieldset) {
+        // We already have the right fieldset;
         return;
       }
+
+      if (mFieldSet) {
+        mFieldSet->RemoveElement(this);
+      }
+      mFieldSet = fieldset;
+      fieldset->AddElement(this);
+
+      // The disabled state may have changed
+      FieldSetDisabledChanged(aNotify);
+      return;
     }
   }
 
   // No fieldset found.
   if (mFieldSet) {
-    static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+    mFieldSet->RemoveElement(this);
     mFieldSet = nsnull;
     // The disabled state may have changed
     FieldSetDisabledChanged(aNotify);
