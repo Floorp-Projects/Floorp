@@ -198,8 +198,7 @@ nsHTTPIndex::OnFTPControlLog(PRBool server, const char *msg)
     nsIScriptContext *context = scriptGlobal->GetContext();
     NS_ENSURE_TRUE(context, NS_OK);
 
-    JSContext* cx = reinterpret_cast<JSContext*>
-                                    (context->GetNativeContext());
+    JSContext* cx = context->GetNativeContext();
     NS_ENSURE_TRUE(cx, NS_OK);
 
     JSObject* global = JS_GetGlobalObject(cx);
@@ -276,8 +275,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     nsIScriptContext *context = scriptGlobal->GetContext();
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-    JSContext* cx = reinterpret_cast<JSContext*>
-                                    (context->GetNativeContext());
+    JSContext* cx = context->GetNativeContext();
     JSObject* global = JS_GetGlobalObject(cx);
 
     // Using XPConnect, wrap the HTTP index object...

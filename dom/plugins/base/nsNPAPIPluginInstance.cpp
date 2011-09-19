@@ -1371,7 +1371,7 @@ nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
       nsIScriptContext *context = global->GetContext();
 
       if (context) {
-        *outContext = (JSContext*) context->GetNativeContext();
+        *outContext = context->GetNativeContext();
       }
     }
   }

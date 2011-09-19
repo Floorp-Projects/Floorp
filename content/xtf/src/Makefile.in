@@ -67,12 +67,9 @@ EXPORTS 	=  \
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += 	\
-		-I$(srcdir)/../../shared/public \
-		-I$(srcdir)/../../html/base/src \
 		-I$(srcdir)/../../xml/content/src \
-		-I$(srcdir)/../../../dom \
 		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../../layout/html/base/src \
+		-I$(topsrcdir)/dom \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

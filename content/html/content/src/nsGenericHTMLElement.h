@@ -835,6 +835,8 @@ private:
 
 //----------------------------------------------------------------------
 
+class nsHTMLFieldSetElement;
+
 /**
  * A helper class for form elements that can contain children
  */
@@ -885,10 +887,7 @@ public:
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  virtual bool IsDisabled() const {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) ||
-           (mFieldSet && mFieldSet->IsDisabled());
-  }
+  virtual bool IsDisabled() const;
 
   /**
    * This callback is called by a fieldest on all its elements whenever its
@@ -912,11 +911,7 @@ public:
    *
    * @param aFieldSet The fieldset being removed.
    */
-  void ForgetFieldSet(nsIContent* aFieldset) {
-    if (mFieldSet == aFieldset) {
-      mFieldSet = nsnull;
-    }
-  }
+  void ForgetFieldSet(nsIContent* aFieldset);
 
   /**
    * Returns if the control can be disabled.
@@ -994,7 +989,7 @@ protected:
   nsHTMLFormElement* mForm;
 
   /* This is a pointer to our closest fieldset parent if any */
-  nsGenericHTMLFormElement* mFieldSet;
+  nsHTMLFieldSetElement* mFieldSet;
 };
 
 // If this flag is set on an nsGenericHTMLFormElement, that means that we have

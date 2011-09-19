@@ -144,34 +144,27 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
     *notifyOnOpen = PR_FALSE;
 
     nsPrintProgress* prtProgress = new nsPrintProgress(printSettings);
-    nsresult rv = prtProgress->QueryInterface(NS_GET_IID(nsIPrintProgress), (void**)getter_AddRefs(mPrintProgress));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mPrintProgress = prtProgress;
+    mWebProgressListener = prtProgress;
 
-    rv = prtProgress->QueryInterface(NS_GET_IID(nsIWebProgressListener), (void**)getter_AddRefs(mWebProgressListener));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrintProgressParams> prtProgressParams = new nsPrintProgressParams();
 
-    nsPrintProgressParams* prtProgressParams = new nsPrintProgressParams();
-    rv = prtProgressParams->QueryInterface(NS_GET_IID(nsIPrintProgressParams), (void**)printProgressParams);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMWindow> parentWindow = parent;
 
-    if (printProgressParams) {
-        nsCOMPtr<nsIDOMWindow> parentDOMIntl = parent;
-
-        if (mWatcher && !parentDOMIntl) {
-            mWatcher->GetActiveWindow(getter_AddRefs(parentDOMIntl));
-        }
-
-        if (parentDOMIntl) {
-            mPrintProgress->OpenProgressDialog(parentDOMIntl,
-                                               isForPrinting?kPrintProgressDialogURL:kPrtPrvProgressDialogURL,
-                                               *printProgressParams, openDialogObserver, notifyOnOpen);
-        }
+    if (mWatcher && !parentWindow) {
+        mWatcher->GetActiveWindow(getter_AddRefs(parentWindow));
     }
 
-    *webProgressListener = static_cast<nsIWebProgressListener*>(this);
-    NS_ADDREF(*webProgressListener);
+    if (parentWindow) {
+        mPrintProgress->OpenProgressDialog(parentWindow,
+                                           isForPrinting ? kPrintProgressDialogURL : kPrtPrvProgressDialogURL,
+                                           prtProgressParams, openDialogObserver, notifyOnOpen);
+    }
 
-    return rv;
+    prtProgressParams.forget(printProgressParams);
+    NS_ADDREF(*webProgressListener = this);
+
+    return NS_OK;
 }
 
 /* void showPageSetup (in nsIDOMWindow parent, in nsIPrintSettings printSettings); */

@@ -82,6 +82,8 @@ var docName = 'documentimportnode07';
 	DocumentType object. Since DocumentType nodes cannot be imported, a 
 	NOT_SUPPORTED_ERR should be raised.
 
+	The specification has changed! No exception should be thrown.
+
 * @author IBM
 * @author Neil Delima
 * @see http://www.w3.org/TR/DOM-Level-2-Core/core
@@ -106,11 +108,12 @@ function documentimportnode07() {
 		success = false;
 		try {
             imported = doc.importNode(docType,true);
+            success = true;
         }
 		catch(ex) {
-      success = (typeof(ex.code) != 'undefined' && ex.code == 9);
+      success = false;
 		}
-		assertTrue("throw_NOT_SUPPORTED_ERR",success);
+		assertTrue("no_throw_NOT_SUPPORTED_ERR",success);
 	}
 
 }

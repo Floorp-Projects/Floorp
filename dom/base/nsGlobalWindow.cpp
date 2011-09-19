@@ -774,7 +774,9 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
-  mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
+  mMayHaveAudioAvailableEventListener(PR_FALSE),
+  mMayHaveMouseEnterLeaveEventListener(PR_FALSE),
+  mIsModalContentWindow(PR_FALSE),
   mIsActive(PR_FALSE), mIsBackground(PR_FALSE),
   mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
@@ -1261,9 +1263,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 
   // Kill all of the workers for this window.
   nsIScriptContext *scx = GetContextInternal();
-  JSContext *cx = scx ?
-                  static_cast<JSContext*>(scx->GetNativeContext()) :
-                  nsnull;
+  JSContext *cx = scx ? scx->GetNativeContext() : nsnull;
   mozilla::dom::workers::CancelWorkersForWindow(cx, this);
 
   // Close all IndexedDB databases for this window.
@@ -1864,7 +1864,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsIScriptContext *scx = GetContextInternal();
   NS_ENSURE_TRUE(scx, NS_ERROR_NOT_INITIALIZED);
 
-  JSContext *cx = (JSContext *)scx->GetNativeContext();
+  JSContext *cx = scx->GetNativeContext();
 #ifndef MOZ_DISABLE_DOMCRYPTO
   // clear smartcard events, our document has gone away.
   if (mCrypto) {
@@ -2860,7 +2860,7 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   JSContext *cx;
   nsIScriptContext *ctx = GetOuterWindowInternal()->mContext;
   NS_ENSURE_TRUE(aArguments && ctx &&
-                 (cx = (JSContext *)ctx->GetNativeContext()),
+                 (cx = ctx->GetNativeContext()),
                  NS_ERROR_NOT_INITIALIZED);
 
   if (mIsModalContentWindow) {
@@ -6100,7 +6100,7 @@ PostMessageEvent::Run()
   JSContext* cx = nsnull;
   nsIScriptContext* scriptContext = mTargetWindow->GetContext();
   if (scriptContext) {
-    cx = (JSContext*)scriptContext->GetNativeContext();
+    cx = scriptContext->GetNativeContext();
   }
 
   if (!cx) {
@@ -9804,7 +9804,7 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
     // such a way. This also makes us get the appropriate base URI for
     // the below URI resolution code.
 
-    cx = (JSContext *)scx->GetNativeContext();
+    cx = scx->GetNativeContext();
   } else {
     // get the JSContext from the call stack
     nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
@@ -9907,7 +9907,7 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   inner->Freeze();
 
   // Remember the outer window's prototype.
-  JSContext *cx = (JSContext *)mContext->GetNativeContext();
+  JSContext *cx = mContext->GetNativeContext();
   JSAutoRequest req(cx);
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
@@ -10000,9 +10000,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
 
     // Suspend all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
-    JSContext *cx = scx ?
-                    static_cast<JSContext*>(scx->GetNativeContext()) :
-                    nsnull;
+    JSContext *cx = scx ? scx->GetNativeContext() : nsnull;
     mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
 
     TimeStamp now = TimeStamp::Now();
@@ -10078,9 +10076,7 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
 
     // Resume all of the workers for this window.
     nsIScriptContext *scx = GetContextInternal();
-    JSContext *cx = scx ?
-                    static_cast<JSContext*>(scx->GetNativeContext()) :
-                    nsnull;
+    JSContext *cx = scx ? scx->GetNativeContext() : nsnull;
     mozilla::dom::workers::ResumeWorkersForWindow(cx, this);
 
     // Restore all of the timeouts, using the stored time remaining
@@ -10528,7 +10524,7 @@ nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
   if (!mMessageManager) {
     nsIScriptContext* scx = GetContextInternal();
     NS_ENSURE_STATE(scx);
-    JSContext* cx = (JSContext *)scx->GetNativeContext();
+    JSContext* cx = scx->GetNativeContext();
     NS_ENSURE_STATE(cx);
     nsCOMPtr<nsIChromeFrameMessageManager> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");

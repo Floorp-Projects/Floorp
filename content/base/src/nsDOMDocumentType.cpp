@@ -55,34 +55,19 @@
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       nsNodeInfoManager *aNodeInfoManager,
-                      nsIPrincipal *aPrincipal,
                       nsIAtom *aName,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset)
 {
-  NS_PRECONDITION(aNodeInfoManager || aPrincipal,
-                  "Must have a principal if no nodeinfo manager.");
   NS_ENSURE_ARG_POINTER(aDocType);
   NS_ENSURE_ARG_POINTER(aName);
 
-  nsRefPtr<nsNodeInfoManager> nimgr;
-  if (aNodeInfoManager) {
-    nimgr = aNodeInfoManager;
-  }
-  else {
-    nimgr = new nsNodeInfoManager();
-    nsresult rv = nimgr->Init(nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nimgr->SetDocumentPrincipal(aPrincipal);
-  }
-
   nsCOMPtr<nsINodeInfo> ni =
-    nimgr->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
-                       kNameSpaceID_None,
-                       nsIDOMNode::DOCUMENT_TYPE_NODE,
-                       aName);
+    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
+                                  kNameSpaceID_None,
+                                  nsIDOMNode::DOCUMENT_TYPE_NODE,
+                                  aName);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   *aDocType = new nsDOMDocumentType(ni.forget(), aPublicId, aSystemId,
@@ -176,59 +161,3 @@ nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) cons
                                mInternalSubset);
 }
 
-nsresult
-nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
-                              nsIContent *aBindingParent,
-                              PRBool aCompileEventHandlers)
-{
-  if (!HasSameOwnerDoc(NODE_FROM(aParent, aDocument))) {
-    NS_ASSERTION(!GetOwnerDoc(), "Need to adopt or import first!");
-
-    // DocumentType nodes are the only nodes that can have a null ownerDocument
-    // according to the DOM spec, so we need to give them a new nodeinfo in that
-    // case.
-    // XXX We may want to move this to nsDOMImplementation::CreateDocument if
-    //     we want to rely on the nodeinfo and wrappers being right before
-    //     getting into ReplaceOrInsertBefore or doInsertChildAt. That would
-    //     break inserting DOMDocumentType nodes through other DOM methods
-    //     though.
-    nsNodeInfoManager *nimgr = aParent ?
-      aParent->NodeInfo()->NodeInfoManager() :
-      aDocument->NodeInfoManager();
-    nsCOMPtr<nsINodeInfo> newNodeInfo;
-    newNodeInfo = nimgr->GetNodeInfo(mNodeInfo->NameAtom(),
-                                     mNodeInfo->GetPrefixAtom(),
-                                     mNodeInfo->NamespaceID(),
-                                     nsIDOMNode::DOCUMENT_TYPE_NODE,
-                                     mNodeInfo->GetExtraName());
-    NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-
-    mNodeInfo.swap(newNodeInfo);
-
-    JSObject *oldScope = GetWrapper();
-    if (oldScope) {
-      nsIXPConnect *xpc = nsContentUtils::XPConnect();
-
-      JSContext *cx = nsnull;
-      JSObject *newScope = nsnull;
-      nsresult rv = nsContentUtils::GetContextAndScope(nsnull,
-                                                       nimgr->GetDocument(),
-                                                       &cx, &newScope);
-      if (cx && xpc) {
-        nsISupports *node = NS_ISUPPORTS_CAST(nsIContent*, this);
-        nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
-        rv = xpc->ReparentWrappedNativeIfFound(cx, oldScope, newScope, node,
-                                               getter_AddRefs(oldWrapper));
-      }
-
-      if (NS_FAILED(rv)) {
-        mNodeInfo.swap(newNodeInfo);
-
-        return rv;
-      }
-    }
-  }
-
-  return nsGenericDOMDataNode::BindToTree(aDocument, aParent, aBindingParent,
-                                          aCompileEventHandlers);
-}
