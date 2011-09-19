@@ -608,7 +608,7 @@ class HashTable : private AllocPolicy
             memset(table, 0, sizeof(*table) * tableCapacity);
         } else {
             for (Entry *e = table, *end = table + tableCapacity; e != end; ++e)
-                *e = Entry();
+                *e = Move(Entry());
         }
         removedCount = 0;
         entryCount = 0;
