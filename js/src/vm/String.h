@@ -487,14 +487,14 @@ class JSFlatString : public JSLinearString
     /*
      * Returns true if this string's characters store an unsigned 32-bit
      * integer value, initializing *indexp to that value if so.  (Thus if
-     * calling isElement returns true, js::IndexToString(cx, *indexp) will be a
+     * calling isIndex returns true, js::IndexToString(cx, *indexp) will be a
      * string equal to this string.)
      */
-    bool isElement(uint32 *indexp) const;
+    bool isIndex(uint32 *indexp) const;
 
     /*
      * Returns a property name represented by this string, or null on failure.
-     * You must verify that this is not an element per isElement before calling
+     * You must verify that this is not an index per isIndex before calling
      * this method.
      */
     inline js::PropertyName *toPropertyName(JSContext *cx);
@@ -644,7 +644,7 @@ JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
 class JSAtom : public JSFixedString
 {
   public:
-    /* Returns the PropertyName for this.  isElement() must be false. */
+    /* Returns the PropertyName for this.  isIndex() must be false. */
     inline js::PropertyName *asPropertyName();
 
     inline void finalize(JSRuntime *rt);
@@ -794,7 +794,7 @@ JSAtom::asPropertyName()
 {
 #ifdef DEBUG
     uint32 dummy;
-    JS_ASSERT(!isElement(&dummy));
+    JS_ASSERT(!isIndex(&dummy));
 #endif
     return static_cast<js::PropertyName *>(this);
 }
