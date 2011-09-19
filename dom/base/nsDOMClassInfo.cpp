@@ -6492,7 +6492,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     if (!my_context) {
       my_cx = cx;
     } else {
-      my_cx = (JSContext *)my_context->GetNativeContext();
+      my_cx = my_context->GetNativeContext();
 
       if (my_cx != cx) {
         if (!ac.enter(my_cx, obj)) {
@@ -9340,7 +9340,7 @@ public:
   {
     JSContext* cx = nsnull;
     if (mContext) {
-      cx = (JSContext*)mContext->GetNativeContext();
+      cx = mContext->GetNativeContext();
     } else {
       nsCOMPtr<nsIThreadJSContextStack> stack =
         do_GetService("@mozilla.org/js/xpc/ContextStack;1");

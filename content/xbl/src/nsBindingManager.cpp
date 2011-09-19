@@ -1248,7 +1248,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       if (!context)
         return NS_NOINTERFACE;
 
-      JSContext* jscontext = (JSContext*)context->GetNativeContext();
+      JSContext* jscontext = context->GetNativeContext();
       if (!jscontext)
         return NS_NOINTERFACE;
 

@@ -146,6 +146,11 @@ BoxBlurHorizontal(unsigned char* aInput,
     PRInt32 boxSize = aLeftLobe + aRightLobe + 1;
     PRBool skipRectCoversWholeRow = 0 >= aSkipRect.x &&
                                     aWidth <= aSkipRect.XMost();
+    if (boxSize == 1) {
+        memcpy(aOutput, aInput, aWidth*aRows);
+        return;
+    }
+    PRUint32 reciprocal = (PRUint64(1) << 32)/boxSize;
 
     for (PRInt32 y = 0; y < aRows; y++) {
         // Check whether the skip rect intersects this row. If the skip
@@ -158,7 +163,7 @@ BoxBlurHorizontal(unsigned char* aInput,
             continue;
         }
 
-        PRInt32 alphaSum = 0;
+        PRUint32 alphaSum = 0;
         for (PRInt32 i = 0; i < boxSize; i++) {
             PRInt32 pos = i - aLeftLobe;
             // See assertion above; if aWidth is zero, then we would have no
@@ -192,7 +197,7 @@ BoxBlurHorizontal(unsigned char* aInput,
             PRInt32 last = NS_MAX(tmp, 0);
             PRInt32 next = NS_MIN(tmp + boxSize, aWidth - 1);
 
-            aOutput[aWidth * y + x] = alphaSum/boxSize;
+            aOutput[aWidth * y + x] = (PRUint64(alphaSum)*reciprocal) >> 32;
 
             alphaSum += aInput[aWidth * y + next] -
                         aInput[aWidth * y + last];
@@ -219,6 +224,11 @@ BoxBlurVertical(unsigned char* aInput,
     PRInt32 boxSize = aTopLobe + aBottomLobe + 1;
     PRBool skipRectCoversWholeColumn = 0 >= aSkipRect.y &&
                                        aRows <= aSkipRect.YMost();
+    if (boxSize == 1) {
+        memcpy(aOutput, aInput, aWidth*aRows);
+        return;
+    }
+    PRUint32 reciprocal = (PRUint64(1) << 32)/boxSize;
 
     for (PRInt32 x = 0; x < aWidth; x++) {
         PRBool inSkipRectX = x >= aSkipRect.x &&
@@ -228,7 +238,7 @@ BoxBlurVertical(unsigned char* aInput,
             continue;
         }
 
-        PRInt32 alphaSum = 0;
+        PRUint32 alphaSum = 0;
         for (PRInt32 i = 0; i < boxSize; i++) {
             PRInt32 pos = i - aTopLobe;
             // See assertion above; if aRows is zero, then we would have no
@@ -258,7 +268,7 @@ BoxBlurVertical(unsigned char* aInput,
             PRInt32 last = NS_MAX(tmp, 0);
             PRInt32 next = NS_MIN(tmp + boxSize, aRows - 1);
 
-            aOutput[aWidth * y + x] = alphaSum/boxSize;
+            aOutput[aWidth * y + x] = (PRUint64(alphaSum)*reciprocal) >> 32;
 
             alphaSum += aInput[aWidth * next + x] -
                         aInput[aWidth * last + x];
