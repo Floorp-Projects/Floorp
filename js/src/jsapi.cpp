@@ -1395,7 +1395,7 @@ JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
 {
     CHECK_REQUEST(cx);
-    return compartment->data;
+    return js_GetCompartmentPrivate(compartment);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6266,6 +6266,12 @@ JS_ScheduleGC(JSContext *cx, uint32 count, JSBool compartment)
     cx->runtime->gcDebugCompartmentGC = !!compartment;
 }
 #endif
+
+JS_FRIEND_API(void *)
+js_GetCompartmentPrivate(JSCompartment *compartment)
+{
+    return compartment->data;
+}
 
 /************************************************************************/
 
