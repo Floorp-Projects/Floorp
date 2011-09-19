@@ -1059,12 +1059,6 @@ PRBool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::PutIntoCache -- Element already in the cache", nsnull));
     nsRefPtr<imgRequest> tmpRequest = getter_AddRefs(tmpCacheEntry->GetRequest());
-    void *cacheId = NS_GetCurrentThread();
-
-    // If the existing request is currently loading, or loading on a different
-    // thread, we'll leave it be, and not put this new entry into the cache.
-    if (!tmpRequest->IsReusable(cacheId))
-      return PR_FALSE;
 
     // If it already exists, and we're putting the same key into the cache, we
     // should remove the old version.
@@ -1397,26 +1391,6 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   }
 #endif
 
-  //
-  // Get the current thread...  This is used as a cacheId to prevent
-  // sharing requests which are being loaded across multiple threads...
-  //
-  void *cacheId = NS_GetCurrentThread();
-  if (!request->IsReusable(cacheId)) {
-    //
-    // The current request is still being loaded and lives on a different
-    // event queue.
-    //
-    // Since its event queue is NOT active, do not reuse this imgRequest.
-    // PutIntoCache() will also ensure that we don't cache it.
-    //
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("imgLoader::ValidateEntry -- DANGER!! Unable to use cached "
-            "imgRequest [request=%p]\n", address_of(request)));
-
-    return PR_FALSE;
-  }
-
   // We can't use a cached request if it comes from a different
   // application cache than this load is expecting.
   nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
@@ -1705,8 +1679,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
         do_CreateInstance(NS_LOADGROUP_CONTRACTID);
     newChannel->SetLoadGroup(loadGroup);
 
-    void *cacheId = NS_GetCurrentThread();
-    request->Init(aURI, aURI, loadGroup, newChannel, entry, cacheId, aCX,
+    request->Init(aURI, aURI, loadGroup, newChannel, entry, aCX,
                   aLoadingPrincipal, corsmode);
 
     // Pass the inner window ID of the loading document, if possible.
@@ -1904,7 +1877,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     // No principal specified here, because we're not passed one.
     request->Init(originalURI, uri, channel, channel, entry,
-                  NS_GetCurrentThread(), aCX, nsnull, imgIRequest::CORS_NONE);
+                  aCX, nsnull, imgIRequest::CORS_NONE);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     NS_ADDREF(pl);
@@ -2211,7 +2184,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
   mNewRequest->Init(originalURI, uri, channel, channel, mNewEntry,
-                    NS_GetCurrentThread(), mContext, loadingPrincipal,
+                    mContext, loadingPrincipal,
                     corsmode);
 
   mDestListener = new ProxyListener(mNewRequest);
