@@ -89,7 +89,7 @@ needs-focus == data:text/plain, about:blank
 # Sanity check of viewport+displayport overrides
 fails-if(!browserIsRemote) == test-displayport.html test-displayport-ref.html # bug 593168
 skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
-skip-if(!browserIsRemote) == 647192-1.html 647192-1-ref.html
+skip-if(!browserIsRemote) fails-if(Android&&layersOpenGL) == 647192-1.html 647192-1-ref.html
 skip-if(!browserIsRemote) == 656041-1.html 656041-1-ref.html
 
 # IPC Position-fixed frames/layers test
