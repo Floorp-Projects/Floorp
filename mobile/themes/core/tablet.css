@@ -62,7 +62,8 @@
 }
 
 .documenttab-thumbnail[tablet] {
-  border-radius: @border_radius_tiny@;
+  border-radius: @border_radius_xsmall@;
+  border: 0px;
 }
 
 .documenttab-close-container[tablet] {
@@ -79,7 +80,7 @@ documenttab[selected="true"] > vbox > stack > .documenttab-close-container[table
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-start: 150px;
+  -moz-margin-start: 146px;
   padding-right: 0px;
 }
 
@@ -103,8 +104,8 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
 
 .documenttab-title[tablet] {
   color: #FFF;
-  font-size: @font_xtiny@ !important;
-  padding: @padding_small@;
+  font-size: @font_xxtiny@ !important;
+  padding: @padding_snormal@;
   margin: 0px;
   text-align: center;
   display: -moz-box;

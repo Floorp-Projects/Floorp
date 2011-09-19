@@ -43,7 +43,7 @@
 
             if (Util.isTablet()) {
               tabWidth = 176;
-              tabHeight = 110;
+              tabHeight = 108;
             } else {
               tabWidth = 104;
               tabHeight = 65;
