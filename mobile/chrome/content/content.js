@@ -254,9 +254,9 @@ function getContentClientRects(aElement) {
 
 
 let Content = {
-  get _formAssistant() {
-    delete this._formAssistant;
-    return this._formAssistant = new FormAssistant();
+  get formAssistant() {
+    delete this.formAssistant;
+    return this.formAssistant = new FormAssistant();
   },
 
   init: function init() {
@@ -490,7 +490,7 @@ let Content = {
       }
 
       case "Browser:MouseClick": {
-        this._formAssistant.focusSync = true;
+        this.formAssistant.focusSync = true;
         let element = elementFromPoint(x, y);
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
           let uri = Util.getHrefForElement(element);
@@ -500,7 +500,7 @@ let Content = {
           break;
         }
 
-        if (!this._formAssistant.open(element))
+        if (!this.formAssistant.open(element))
           sendAsyncMessage("FindAssist:Hide", { });
 
         if (this._highlightElement) {
@@ -510,7 +510,7 @@ let Content = {
         }
         this._cancelTapHighlight();
         ContextHandler.reset();
-        this._formAssistant.focusSync = false;
+        this.formAssistant.focusSync = false;
         break;
       }
 
