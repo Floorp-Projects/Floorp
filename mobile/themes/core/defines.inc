@@ -8,6 +8,7 @@
 %define font_xsmall 1.69mozmm
 %define font_tiny 1.48mozmm
 %define font_xtiny 1.27mozmm
+%define font_xxtiny 1.08mozmm
 
 %define touch_row 7.41mozmm
 %define touch_button_xlarge 7.62mozmm
