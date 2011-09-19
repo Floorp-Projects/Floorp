@@ -141,10 +141,12 @@
         </getter>
         <setter>
         <![CDATA[
-          if (val >= 0)
+          if (val >= 0) {
             this.selectItem(this.getItemAtIndex(val));
-          else
+          } else {
             this.clearSelection();
+            this.currentItem = null;
+          }
         ]]>
         </setter>
       </property>

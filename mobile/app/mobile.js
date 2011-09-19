@@ -78,9 +78,11 @@ pref("browser.viewport.desktopWidth", 980);
 #ifndef MOZ_PLATFORM_MAEMO
 // On desktop builds, simulate an MDPI tablet by default.
 pref("layout.css.dpi", 160);
+#else
+// Maemo X11 lies about its dpi
+pref("layout.css.dpi", 240);
 #endif
 #endif
-
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 

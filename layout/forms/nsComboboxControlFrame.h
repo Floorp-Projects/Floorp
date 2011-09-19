@@ -254,6 +254,12 @@ protected:
   void HandleRedisplayTextEvent();
   void ActuallyDisplayText(PRBool aNotify);
 
+private:
+  // If our total transform to the root frame of the root document is only a 2d
+  // translation then return that translation, otherwise returns (0,0).
+  nsPoint GetCSSTransformTranslation();
+
+protected:
   nsFrameList              mPopupFrames;             // additional named child list
   nsCOMPtr<nsIContent>     mDisplayContent;          // Anonymous content used to display the current selection
   nsCOMPtr<nsIContent>     mButtonContent;           // Anonymous content for the button

@@ -563,8 +563,13 @@
                 if (this.mBlank)
                   this.mBlank = false;
 
-                this.mTab.removeAttribute("busy");
+                if (this.mTab.hasAttribute("busy")) {
+                  this.mTab.removeAttribute("busy");
+                  this.mTabBrowser._tabAttrModified(this.mTab);
+                }
                 this.mTab.removeAttribute("progress");
+                if (!this.mTab.selected)
+                  this.mTab.setAttribute("unread", "true");
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -871,6 +876,7 @@
               (window.windowState != window.STATE_MINIMIZED);
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
+            this.mCurrentTab.removeAttribute("unread");
             this.showTab(this.mCurrentTab);
 
             if (updatePageReport)
@@ -3676,12 +3682,9 @@
         <body><![CDATA[
           if (tab.parentNode != this)
             return;
+          tab._fullyOpen = true;
 
           this.adjustTabstrip();
-
-          if (tab._fullyOpen)
-            return;
-          tab._fullyOpen = true;
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
@@ -3724,10 +3727,14 @@
 
         var tab = event.target;
 
-        if (tab.getAttribute("fadein") == "true")
-          this._handleNewTab(tab);
-        else if (tab.closing)
+        if (tab.getAttribute("fadein") == "true") {
+          if (tab._fullyOpen)
+            this.adjustTabstrip();
+          else
+            this._handleNewTab(tab);
+        } else if (tab.closing) {
           this.tabbrowser._endRemoveTab(tab);
+        }
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
@@ -4161,12 +4168,14 @@
         <body><![CDATA[
           aMenuitem.setAttribute("label", aTab.label);
           aMenuitem.setAttribute("crop", aTab.getAttribute("crop"));
-          aMenuitem.setAttribute("image", aTab.getAttribute("image"));
 
-          if (aTab.hasAttribute("busy"))
+          if (aTab.hasAttribute("busy")) {
             aMenuitem.setAttribute("busy", aTab.getAttribute("busy"));
-          else
+            aMenuitem.removeAttribute("image");
+          } else {
+            aMenuitem.setAttribute("image", aTab.getAttribute("image"));
             aMenuitem.removeAttribute("busy");
+          }
 
           if (aTab.selected)
             aMenuitem.setAttribute("selected", "true");

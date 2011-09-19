@@ -96,6 +96,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsDeviceMotion.h"
+#include "mozilla/Util.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsMemoryReporterManager.h"
@@ -200,6 +201,8 @@ ContentParent::Init()
         obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
         obs->AddObserver(this, "child-memory-reporter-request", PR_FALSE);
         obs->AddObserver(this, "memory-pressure", PR_FALSE);
+        obs->AddObserver(this, "child-gc-request", PR_FALSE);
+        obs->AddObserver(this, "child-cc-request", PR_FALSE);
 #ifdef ACCESSIBILITY
         obs->AddObserver(this, "a11y-init-or-shutdown", PR_FALSE);
 #endif
@@ -222,7 +225,7 @@ ContentParent::Init()
     // If accessibility is running in chrome process then start it in content
     // process.
     if (nsIPresShell::IsAccessibilityActive()) {
-        SendActivateA11y();
+        unused << SendActivateA11y();
     }
 #endif
 }
@@ -304,6 +307,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-memory-reporter-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
 #ifdef ACCESSIBILITY
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "a11y-init-or-shutdown");
 #endif
@@ -364,7 +369,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                 notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("content"));
 
                 char startTime[32];
-                sprintf(startTime, "%lld", static_cast<PRInt64>(mProcessStartTime));
+                sprintf(startTime, "%lld", static_cast<long long>(mProcessStartTime));
                 notes.Put(NS_LITERAL_CSTRING("StartupTime"),
                           nsDependentCString(startTime));
 
@@ -487,7 +492,7 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
                  "We have no permissionManager in the Chrome process !");
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
+    DebugOnly<nsresult> rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
     while(1) {
         PRBool hasMore;
@@ -747,14 +752,20 @@ ContentParent::Observe(nsISupports* aSubject,
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, "child-memory-reporter-request")) {
-        SendPMemoryReportRequestConstructor();
+        unused << SendPMemoryReportRequestConstructor();
+    }
+    else if (!strcmp(aTopic, "child-gc-request")){
+        SendGarbageCollect();
+    }
+    else if (!strcmp(aTopic, "child-cc-request")){
+        SendCycleCollect();
     }
 #ifdef ACCESSIBILITY
     // Make sure accessibility is running in content process when accessibility
     // gets initiated in chrome process.
     else if (aData && (*aData == '1') &&
              !strcmp(aTopic, "a11y-init-or-shutdown")) {
-        SendActivateA11y();
+        unused << SendActivateA11y();
     }
 #endif
 
