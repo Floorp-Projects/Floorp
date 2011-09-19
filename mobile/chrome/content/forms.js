@@ -77,6 +77,7 @@ function FormAssistant() {
   addEventListener("keypress", this, true);
   addEventListener("keyup", this, false);
   addEventListener("focus", this, true);
+  addEventListener("blur", this, true);
   addEventListener("pageshow", this, false);
   addEventListener("pagehide", this, false);
   addEventListener("submit", this, false);
@@ -352,6 +353,19 @@ FormAssistant.prototype = {
         let focusedIndex = this._getIndexForElement(focusedElement);
         if (focusedIndex != -1 && this.currentIndex != focusedIndex)
           this.currentIndex = focusedIndex;
+        break;
+
+      case "blur":
+        content.setTimeout(function(self) {
+          if (!self._open)
+            return;
+
+          // If the blurring causes focus be in no other element,
+          // we should close the form assistant.
+          let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
+          if (!focusedElement)
+            self.close();
+        }, 0, this);
         break;
 
       case "text":
