@@ -43,7 +43,7 @@ function runNextTest() {
       Browser.closeTab(newTab);
     }
     finally {
-      // We must finialize the tests
+      // We must finalize the tests
       finish();
     }
   }
