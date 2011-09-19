@@ -1855,6 +1855,11 @@
   
   <binding id="setting-fulltoggle-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-bool">
     <handlers>
+      <handler event="click" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="TapSingle" button="0" phase="capturing">
         <![CDATA[
         this.input.setChecked(!this.value);
@@ -1867,6 +1872,11 @@
 
   <binding id="setting-fulltoggle-boolint" extends="chrome://mozapps/content/extensions/setting.xml#setting-boolint">
     <handlers>
+      <handler event="click" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="TapSingle" button="0" phase="capturing">
         <![CDATA[
         this.input.setChecked(!this.value);
@@ -1879,6 +1889,11 @@
 
   <binding id="setting-fulltoggle-localized-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-localized-bool">
     <handlers>
+      <handler event="click" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="TapSingle" button="0" phase="capturing">
         <![CDATA[
         this.input.setChecked(!this.value);
