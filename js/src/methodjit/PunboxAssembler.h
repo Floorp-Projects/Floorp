@@ -180,10 +180,7 @@ class PunboxAssembler : public JSC::MacroAssembler
 
     /* Overload for constant type and constant data. */
     DataLabel32 storeValueWithAddressOffsetPatch(const Value &v, Address address) {
-        jsval_layout jv;
-        jv.asBits = JSVAL_BITS(Jsvalify(v));
-
-        move(ImmPtr(reinterpret_cast<void*>(jv.asBits)), Registers::ValueReg);
+        move(ImmPtr(reinterpret_cast<void*>(v.asRawBits())), Registers::ValueReg);
         return storePtrWithAddressOffsetPatch(Registers::ValueReg, valueOf(address));
     }
 
@@ -251,10 +248,7 @@ class PunboxAssembler : public JSC::MacroAssembler
 
     template <typename T>
     void storeValue(const Value &v, T address) {
-        jsval_layout jv;
-        jv.asBits = JSVAL_BITS(Jsvalify(v));
-
-        storePtr(Imm64(jv.asBits), valueOf(address));
+        storePtr(Imm64(v.asRawBits()), valueOf(address));
     }
 
     template <typename T>

@@ -86,7 +86,6 @@
 
 using namespace js;
 using namespace js::types;
-using namespace mozilla;
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
 
