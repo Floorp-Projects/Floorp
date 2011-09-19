@@ -657,6 +657,15 @@
           <richlistitem class="context-command" id="context-copy-link" type="link" onclick="ContextCommands.copyLink();">
             <label value="&contextCopyLink.label;"/>
           </richlistitem>
+          <richlistitem class="context-command" id="context-copy-email" type="mailto" onclick="ContextCommands.copyEmail();">
+            <label value="&contextCopyEmail.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-copy-phone" type="callto" onclick="ContextCommands.copyPhone();">
+            <label value="&contextCopyPhone.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-copy-image-location" type="image" onclick="ContextCommands.copyImageLocation();">
+            <label value="&contextCopyImageLocation.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-share-link" type="link-shareable" onclick="ContextCommands.shareLink();">
             <label value="&contextShareLink.label;"/>
           </richlistitem>
