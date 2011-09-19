@@ -20,6 +20,8 @@ AS=$CC
 LD=ld
 STRIP="strip -x -S"
 
+MOZ_CAN_RUN_PROGRAMS=1
+
 # We do 32 bit builds for leopard
 TARGET_CPU=i386
 CC="$CC -arch $TARGET_CPU"

@@ -630,7 +630,7 @@ nsHtml5TreeOpExecutor::IsScriptEnabled()
   }
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_TRUE);
-  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, PR_TRUE);
   PRBool enabled = PR_TRUE;
   nsContentUtils::GetSecurityManager()->
@@ -861,6 +861,9 @@ nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* a
 already_AddRefed<nsIURI>
 nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(const nsAString& aURL)
 {
+  if (aURL.IsEmpty()) {
+    return nsnull;
+  }
   // The URL of the document without <base>
   nsIURI* documentURI = mDocument->GetDocumentURI();
   // The URL of the document with non-speculative <base>

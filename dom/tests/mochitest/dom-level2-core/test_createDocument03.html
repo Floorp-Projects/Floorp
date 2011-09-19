@@ -77,6 +77,8 @@ var docName = 'createDocument03';
    DOMImplementation should raise WRONG_DOCUMENT_ERR DOMException
    if parameter doctype has been used with a different document.
    
+   The specification has changed! No exception should be thrown.
+   
    Invoke method createDocument(namespaceURI,qualifiedName,doctype) on
    this domimplementation where doctype is the type of this document.
    Method should raise WRONG_DOCUMENT_ERR DOMException.
@@ -110,11 +112,12 @@ function createDocument03() {
 		success = false;
 		try {
             aNewDoc = domImpl.createDocument(namespaceURI,qualifiedName,docType);
+            success = true;
         }
 		catch(ex) {
-      success = (typeof(ex.code) != 'undefined' && ex.code == 4);
+      success = false;
 		}
-		assertTrue("throw_WRONG_DOCUMENT_ERR",success);
+		//assertTrue("no_throw_WRONG_DOCUMENT_ERR",success);
 	}
 
 }

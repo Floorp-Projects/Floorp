@@ -206,11 +206,19 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     MapDeviceRectToFilterSpace(deviceToFilterSpace, filterRes, aDirtyOutputRect);
   nsIntRect dirtyInputRect =
     MapDeviceRectToFilterSpace(deviceToFilterSpace, filterRes, aDirtyInputRect);
+  nsIntRect targetBoundsDeviceSpace;
+  nsISVGChildFrame* svgTarget = do_QueryFrame(aTarget);
+  if (svgTarget) {
+    targetBoundsDeviceSpace.UnionRect(targetBoundsDeviceSpace,
+      svgTarget->GetCoveredRegion().ToOutsidePixels(aTarget->PresContext()->AppUnitsPerDevPixel()));
+  }
+  nsIntRect targetBoundsFilterSpace =
+    MapDeviceRectToFilterSpace(deviceToFilterSpace, filterRes, &targetBoundsDeviceSpace);
 
   // Setup instance data
   mInstance = new nsSVGFilterInstance(aTarget, aPaint, filter, bbox, filterRegion,
                                       nsIntSize(filterRes.width, filterRes.height),
-                                      filterToDeviceSpace,
+                                      filterToDeviceSpace, targetBoundsFilterSpace,
                                       dirtyOutputRect, dirtyInputRect,
                                       primitiveUnits);
 }

@@ -308,6 +308,19 @@ public class GeckoAppShell
             if (intHome != null && intProf != null && intProf.exists())
                 moveDir(intProf, profileDir);
         }
+        try {
+            String[] dirs = GeckoApp.mAppContext.getPluginDirectories();
+            StringBuffer pluginSearchPath = new StringBuffer();
+            for (int i = 0; i < dirs.length; i++) {
+                Log.i("GeckoPlugins", "dir: " + dirs[i]);
+                pluginSearchPath.append(dirs[i]);
+                pluginSearchPath.append(":");
+            }
+            GeckoAppShell.putenv("MOZ_PLUGIN_PATH="+pluginSearchPath);
+        } catch (Exception ex) {
+            Log.i("GeckoPlugins", "exception getting plugin dirs", ex);
+        }
+
         GeckoAppShell.putenv("HOME=" + homeDir);
         GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
         Intent i = geckoApp.getIntent();
@@ -395,6 +408,7 @@ public class GeckoAppShell
             combinedArgs += " " + args;
         if (url != null)
             combinedArgs += " " + url;
+
         // and go
         GeckoAppShell.nativeRun(combinedArgs);
     }
@@ -1384,5 +1398,188 @@ public class GeckoAppShell
         catch (Exception e) {
             return false;
         }
+    }
+    public static void addPluginView(final View view,
+                                     final double x, final double y,
+                                     final double w, final double h) {
+
+        Log.i("GeckoAppShell", "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
+
+        getMainHandler().post(new Runnable() { 
+                public void run() {
+                    AbsoluteLayout.LayoutParams lp = new AbsoluteLayout.LayoutParams((int)w,
+                                                                                     (int)h,
+                                                                                     (int)x,
+                                                                                     (int)y);
+
+                    if (GeckoApp.mainLayout.indexOfChild(view) == -1) {
+                        view.setWillNotDraw(false);
+                        if(view instanceof SurfaceView)
+                            ((SurfaceView)view).setZOrderOnTop(true);
+
+                        GeckoApp.mainLayout.addView(view, lp);
+                    }
+                    else
+                    {
+                        try {
+                            GeckoApp.mainLayout.updateViewLayout(view, lp);
+                        } catch (IllegalArgumentException e) {
+                            Log.i("updateViewLayout - IllegalArgumentException", "e:" + e);
+                            // it can be the case where we
+                            // get an update before the view
+                            // is actually attached.
+                        }
+                    }
+                }
+            });
+    }
+
+    public static void removePluginView(final View view) {
+        Log.i("GeckoAppShell", "remove view:" + view);
+        getMainHandler().post(new Runnable() { 
+                public void run() {
+                    try {
+                        GeckoApp.mainLayout.removeView(view);
+                    } catch (Exception e) {}
+                }
+            });
+    }
+
+    public static Class<?> loadPluginClass(String className, String libName) {
+        Log.i("GeckoAppShell", "in loadPluginClass... attempting to access className, then libName.....");
+        Log.i("GeckoAppShell", "className: " + className);
+        Log.i("GeckoAppShell", "libName: " + libName);
+
+        try {
+            String[] split = libName.split("/");
+            String packageName = split[split.length - 3];
+            Log.i("GeckoAppShell", "load \"" + className + "\" from \"" + packageName + 
+                  "\" for \"" + libName + "\"");
+            Context pluginContext = 
+                GeckoApp.mAppContext.createPackageContext(packageName,
+                                                          Context.CONTEXT_INCLUDE_CODE |
+                                                      Context.CONTEXT_IGNORE_SECURITY);
+            ClassLoader pluginCL = pluginContext.getClassLoader();
+            return pluginCL.loadClass(className);
+        } catch (java.lang.ClassNotFoundException cnfe) {
+            Log.i("GeckoAppShell", "class not found", cnfe);
+        } catch (android.content.pm.PackageManager.NameNotFoundException nnfe) {
+            Log.i("GeckoAppShell", "package not found", nnfe);
+        }
+        Log.e("GeckoAppShell", "couldn't find class");
+        return null;
+    }
+
+    static HashMap<SurfaceView, SurfaceLockInfo> sSufaceMap = new HashMap<SurfaceView, SurfaceLockInfo>();
+
+    public static void lockSurfaceANP()
+    {
+         Log.i("GeckoAppShell", "other lockSurfaceANP");
+    }
+
+    public static org.mozilla.gecko.SurfaceLockInfo lockSurfaceANP(android.view.SurfaceView sview, int top, int left, int bottom, int right)
+    {
+        Log.i("GeckoAppShell", "real lockSurfaceANP " + sview + ", " + top + ",  " + left + ", " + bottom + ", " + right);
+        if (sview == null)
+            return null;
+
+        int format = -1;
+        try {
+            Field privateFormatField = SurfaceView.class.getDeclaredField("mFormat");
+            privateFormatField.setAccessible(true);
+            format = privateFormatField.getInt(sview);
+        } catch (Exception e) {
+            Log.i("GeckoAppShell", "mFormat is not a field of sview: ", e);
+        }
+
+        int n = 0;
+        if (format == PixelFormat.RGB_565)
+            n = 2;
+        else if (format == PixelFormat.RGBA_8888)
+            n = 4;
+
+        if (n == 0)
+            return null;
+
+        SurfaceLockInfo info = sSufaceMap.get(sview);
+        if (info == null) {
+            info = new SurfaceLockInfo();
+            sSufaceMap.put(sview, info);
+        }
+
+        Rect r = new Rect(left, top, right, bottom);
+
+        info.canvas = sview.getHolder().lockCanvas(r);
+        int bufSizeRequired = info.canvas.getWidth() * info.canvas.getHeight() * n;
+        Log.i("GeckoAppShell", "lockSurfaceANP - bufSizeRequired: " + n + " " + info.canvas.getHeight() + " " + info.canvas.getWidth());
+
+        if (info.width != info.canvas.getWidth() || info.height != info.canvas.getHeight() || info.buffer == null || info.buffer.capacity() < bufSizeRequired) {
+            info.width = info.canvas.getWidth();
+            info.height = info.canvas.getHeight();
+
+            // XXX Bitmaps instead of ByteBuffer
+            info.buffer = ByteBuffer.allocateDirect(bufSizeRequired);  //leak
+            Log.i("GeckoAppShell", "!!!!!!!!!!!  lockSurfaceANP - Allocating buffer! " + bufSizeRequired);
+
+        }
+
+        info.canvas.drawColor(Color.WHITE, PorterDuff.Mode.CLEAR);
+
+        info.format = format;
+        info.dirtyTop = top;
+        info.dirtyBottom = bottom;
+        info.dirtyLeft = left;
+        info.dirtyRight = right;
+
+        return info;
+    }
+
+    public static void unlockSurfaceANP(SurfaceView sview) {
+        SurfaceLockInfo info = sSufaceMap.get(sview);
+
+        int n = 0;
+        Bitmap.Config config;
+        if (info.format == PixelFormat.RGB_565) {
+            n = 2;
+            config = Bitmap.Config.RGB_565;
+        } else {
+            n = 4;
+            config = Bitmap.Config.ARGB_8888;
+        }
+
+        Log.i("GeckoAppShell", "unlockSurfaceANP: " + (info.width * info.height * n));
+
+        Bitmap bm = Bitmap.createBitmap(info.width, info.height, config);
+        bm.copyPixelsFromBuffer(info.buffer);
+        info.canvas.drawBitmap(bm, 0, 0, null);
+        sview.getHolder().unlockCanvasAndPost(info.canvas);
+    }
+
+    public static Class getSurfaceLockInfoClass() {
+        Log.i("GeckoAppShell", "class name: " + SurfaceLockInfo.class.getName());
+        return SurfaceLockInfo.class;
+    }
+
+    public static Method getSurfaceLockMethod() {
+        Method[] m = GeckoAppShell.class.getMethods();
+        for (int i = 0; i < m.length; i++) {
+            if (m[i].getName().equals("lockSurfaceANP"))
+                return m[i];
+        }
+        return null;
+    }
+
+    static native void executeNextRunnable();
+
+    static class GeckoRunnableCallback implements Runnable {
+        public void run() {
+            Log.i("GeckoShell", "run GeckoRunnableCallback");
+            GeckoAppShell.executeNextRunnable();
+        }
+    }
+
+    public static void postToJavaThread(boolean mainThread) {
+        Log.i("GeckoShell", "post to " + (mainThread ? "main " : "") + "java thread");
+        getMainHandler().post(new GeckoRunnableCallback());
     }
 }

@@ -2116,7 +2116,7 @@ nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
     if (sgo) {
       nsIScriptContext *scx = sgo->GetContext();
       if (scx)
-        cx = (JSContext *) scx->GetNativeContext();
+        cx = scx->GetNativeContext();
     }
     /* (off-topic note:) the nsIScriptContext can be retrieved by
     nsCOMPtr<nsIScriptContext> scx;

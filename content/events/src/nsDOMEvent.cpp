@@ -61,7 +61,7 @@
 using namespace mozilla;
 
 static const char* const sEventNames[] = {
-  "mousedown", "mouseup", "click", "dblclick", "mouseover",
+  "mousedown", "mouseup", "click", "dblclick", "mouseenter", "mouseleave", "mouseover",
   "mouseout", "MozMouseHittest", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "popstate", "beforescriptexecute",
   "afterscriptexecute", "beforeunload", "unload",
@@ -1109,6 +1109,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_click];
   case NS_MOUSE_DOUBLECLICK:
     return sEventNames[eDOMEvents_dblclick];
+  case NS_MOUSEENTER:
+    return sEventNames[eDOMEvents_mouseenter];
+  case NS_MOUSELEAVE:
+    return sEventNames[eDOMEvents_mouseleave];
   case NS_MOUSE_ENTER_SYNTH:
     return sEventNames[eDOMEvents_mouseover];
   case NS_MOUSE_EXIT_SYNTH:

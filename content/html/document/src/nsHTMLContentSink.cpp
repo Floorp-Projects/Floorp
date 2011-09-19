@@ -1544,7 +1544,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_TRUE);
 
-  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, PR_TRUE);
 
   PRBool enabled = PR_TRUE;
@@ -2452,7 +2452,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     nsAutoString voidString;
     voidString.SetIsVoid(PR_TRUE);
     rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
-                               mDocument->NodeInfoManager(), nsnull, nameAtom,
+                               mDocument->NodeInfoManager(), nameAtom,
                                publicId, systemId, voidString);
     NS_ENSURE_SUCCESS(rv, rv);
 

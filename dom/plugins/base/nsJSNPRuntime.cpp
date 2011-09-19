@@ -361,7 +361,7 @@ GetJSContext(NPP npp)
   nsIScriptContext *scx = sgo->GetContext();
   NS_ENSURE_TRUE(scx, nsnull);
 
-  return (JSContext *)scx->GetNativeContext();
+  return scx->GetNativeContext();
 }
 
 }
