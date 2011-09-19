@@ -41,7 +41,7 @@
  * A representation of the XSLT additional function: document()
  */
 
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txIXPathContext.h"
 #include "txXSLTFunctions.h"
 #include "txExecutionState.h"
@@ -191,7 +191,7 @@ DocumentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 nsresult
 DocumentFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
-    *aAtom = txXSLTAtoms::document;
+    *aAtom = nsGkAtoms::document;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
