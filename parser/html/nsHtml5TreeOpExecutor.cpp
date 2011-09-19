@@ -861,6 +861,9 @@ nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* a
 already_AddRefed<nsIURI>
 nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(const nsAString& aURL)
 {
+  if (aURL.IsEmpty()) {
+    return nsnull;
+  }
   // The URL of the document without <base>
   nsIURI* documentURI = mDocument->GetDocumentURI();
   // The URL of the document with non-speculative <base>
