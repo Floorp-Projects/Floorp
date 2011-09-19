@@ -134,6 +134,7 @@ nsEventListenerManager::nsEventListenerManager(nsISupports* aTarget) :
   mMayHaveSystemGroupListeners(PR_FALSE),
   mMayHaveAudioAvailableEventListener(PR_FALSE),
   mMayHaveTouchEventListener(PR_FALSE),
+  mMayHaveMouseEnterLeaveEventListener(PR_FALSE),
   mNoListenerForEvent(0),
   mTarget(aTarget)
 {
@@ -293,6 +294,19 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasTouchEventListeners();
+  } else if (aTypeAtom == nsGkAtoms::onmouseenter ||
+             aTypeAtom == nsGkAtoms::onmouseleave) {
+    mMayHaveMouseEnterLeaveEventListener = PR_TRUE;
+    nsPIDOMWindow* window = GetInnerWindowForTarget();
+    if (window) {
+#ifdef DEBUG
+      nsCOMPtr<nsIDocument> d = do_QueryInterface(window->GetExtantDocument());
+      NS_WARN_IF_FALSE(!nsContentUtils::IsChromeDoc(d),
+                       "Please do not use mouseenter/leave events in chrome. "
+                       "They are slower than mouseover/out!");
+#endif
+      window->SetHasMouseEnterLeaveEventListeners();
+    }
   }
 }
 
@@ -644,8 +658,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     }
 
     nsCxPusher pusher;
-    if (aNeedsCxPush &&
-        !pusher.Push((JSContext*)context->GetNativeContext())) {
+    if (aNeedsCxPush && !pusher.Push(context->GetNativeContext())) {
       return NS_ERROR_FAILURE;
     }
 

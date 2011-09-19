@@ -943,7 +943,7 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
             nsAutoString voidString;
             voidString.SetIsVoid(PR_TRUE);
             rv = NS_NewDOMDocumentType(getter_AddRefs(documentType),
-                                       mNodeInfoManager, nsnull,
+                                       mNodeInfoManager,
                                        doctypeName,
                                        mOutputFormat.mPublicId,
                                        mOutputFormat.mSystemId,

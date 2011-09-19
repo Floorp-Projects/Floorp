@@ -65,6 +65,8 @@ public:
     eDOMEvents_mouseup,
     eDOMEvents_click,
     eDOMEvents_dblclick,
+    eDOMEvents_mouseenter,
+    eDOMEvents_mouseleave,
     eDOMEvents_mouseover,
     eDOMEvents_mouseout,
     eDOMEvents_MozMouseHittest,
