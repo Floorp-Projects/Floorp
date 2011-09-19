@@ -111,11 +111,6 @@ js_LeaveLocalRootScope(JSContext *cx)
 }
 
 static inline void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
-{
-}
-
-static inline void
 js_LeaveLocalRootScopeWithResult(JSContext *cx, Value rval)
 {
 }
