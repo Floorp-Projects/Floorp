@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txIXPathContext.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txError.h"
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
@@ -66,14 +66,14 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         case SYSTEM_PROPERTY:
         {
             if (qname.mNamespaceID == kNameSpaceID_XSLT) {
-                if (qname.mLocalName == txXSLTAtoms::version) {
+                if (qname.mLocalName == nsGkAtoms::version) {
                     return aContext->recycler()->getNumberResult(1.0, aResult);
                 }
-                if (qname.mLocalName == txXSLTAtoms::vendor) {
+                if (qname.mLocalName == nsGkAtoms::vendor) {
                     return aContext->recycler()->getStringResult(
                           NS_LITERAL_STRING("Transformiix"), aResult);
                 }
-                if (qname.mLocalName == txXSLTAtoms::vendorUrl) {
+                if (qname.mLocalName == nsGkAtoms::vendorUrl) {
                     return aContext->recycler()->getStringResult(
                           NS_LITERAL_STRING("http://www.mozilla.org/projects/xslt/"),
                           aResult);
@@ -85,41 +85,41 @@ txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
         case ELEMENT_AVAILABLE:
         {
             PRBool val = qname.mNamespaceID == kNameSpaceID_XSLT &&
-                         (qname.mLocalName == txXSLTAtoms::applyImports ||
-                          qname.mLocalName == txXSLTAtoms::applyTemplates ||
-                          qname.mLocalName == txXSLTAtoms::attribute ||
-                          qname.mLocalName == txXSLTAtoms::attributeSet ||
-                          qname.mLocalName == txXSLTAtoms::callTemplate ||
-                          qname.mLocalName == txXSLTAtoms::choose ||
-                          qname.mLocalName == txXSLTAtoms::comment ||
-                          qname.mLocalName == txXSLTAtoms::copy ||
-                          qname.mLocalName == txXSLTAtoms::copyOf ||
-                          qname.mLocalName == txXSLTAtoms::decimalFormat ||
-                          qname.mLocalName == txXSLTAtoms::element ||
-                          qname.mLocalName == txXSLTAtoms::fallback ||
-                          qname.mLocalName == txXSLTAtoms::forEach ||
-                          qname.mLocalName == txXSLTAtoms::_if ||
-                          qname.mLocalName == txXSLTAtoms::import ||
-                          qname.mLocalName == txXSLTAtoms::include ||
-                          qname.mLocalName == txXSLTAtoms::key ||
-                          qname.mLocalName == txXSLTAtoms::message ||
-                          //qname.mLocalName == txXSLTAtoms::namespaceAlias ||
-                          qname.mLocalName == txXSLTAtoms::number ||
-                          qname.mLocalName == txXSLTAtoms::otherwise ||
-                          qname.mLocalName == txXSLTAtoms::output ||
-                          qname.mLocalName == txXSLTAtoms::param ||
-                          qname.mLocalName == txXSLTAtoms::preserveSpace ||
-                          qname.mLocalName == txXSLTAtoms::processingInstruction ||
-                          qname.mLocalName == txXSLTAtoms::sort ||
-                          qname.mLocalName == txXSLTAtoms::stripSpace ||
-                          qname.mLocalName == txXSLTAtoms::stylesheet ||
-                          qname.mLocalName == txXSLTAtoms::_template ||
-                          qname.mLocalName == txXSLTAtoms::text ||
-                          qname.mLocalName == txXSLTAtoms::transform ||
-                          qname.mLocalName == txXSLTAtoms::valueOf ||
-                          qname.mLocalName == txXSLTAtoms::variable ||
-                          qname.mLocalName == txXSLTAtoms::when ||
-                          qname.mLocalName == txXSLTAtoms::withParam);
+                         (qname.mLocalName == nsGkAtoms::applyImports ||
+                          qname.mLocalName == nsGkAtoms::applyTemplates ||
+                          qname.mLocalName == nsGkAtoms::attribute ||
+                          qname.mLocalName == nsGkAtoms::attributeSet ||
+                          qname.mLocalName == nsGkAtoms::callTemplate ||
+                          qname.mLocalName == nsGkAtoms::choose ||
+                          qname.mLocalName == nsGkAtoms::comment ||
+                          qname.mLocalName == nsGkAtoms::copy ||
+                          qname.mLocalName == nsGkAtoms::copyOf ||
+                          qname.mLocalName == nsGkAtoms::decimalFormat ||
+                          qname.mLocalName == nsGkAtoms::element ||
+                          qname.mLocalName == nsGkAtoms::fallback ||
+                          qname.mLocalName == nsGkAtoms::forEach ||
+                          qname.mLocalName == nsGkAtoms::_if ||
+                          qname.mLocalName == nsGkAtoms::import ||
+                          qname.mLocalName == nsGkAtoms::include ||
+                          qname.mLocalName == nsGkAtoms::key ||
+                          qname.mLocalName == nsGkAtoms::message ||
+                          //qname.mLocalName == nsGkAtoms::namespaceAlias ||
+                          qname.mLocalName == nsGkAtoms::number ||
+                          qname.mLocalName == nsGkAtoms::otherwise ||
+                          qname.mLocalName == nsGkAtoms::output ||
+                          qname.mLocalName == nsGkAtoms::param ||
+                          qname.mLocalName == nsGkAtoms::preserveSpace ||
+                          qname.mLocalName == nsGkAtoms::processingInstruction ||
+                          qname.mLocalName == nsGkAtoms::sort ||
+                          qname.mLocalName == nsGkAtoms::stripSpace ||
+                          qname.mLocalName == nsGkAtoms::stylesheet ||
+                          qname.mLocalName == nsGkAtoms::_template ||
+                          qname.mLocalName == nsGkAtoms::text ||
+                          qname.mLocalName == nsGkAtoms::transform ||
+                          qname.mLocalName == nsGkAtoms::valueOf ||
+                          qname.mLocalName == nsGkAtoms::variable ||
+                          qname.mLocalName == nsGkAtoms::when ||
+                          qname.mLocalName == nsGkAtoms::withParam);
 
             aContext->recycler()->getBoolResult(val, aResult);
             break;
@@ -161,9 +161,9 @@ txXSLTEnvironmentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 nsresult
 txXSLTEnvironmentFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
-    *aAtom = mType == SYSTEM_PROPERTY ? txXSLTAtoms::systemProperty :
-             mType == ELEMENT_AVAILABLE ? txXSLTAtoms::elementAvailable :
-             txXSLTAtoms::functionAvailable;
+    *aAtom = mType == SYSTEM_PROPERTY ? nsGkAtoms::systemProperty :
+             mType == ELEMENT_AVAILABLE ? nsGkAtoms::elementAvailable :
+             nsGkAtoms::functionAvailable;
     NS_ADDREF(*aAtom);
 
     return NS_OK;
