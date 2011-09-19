@@ -725,7 +725,7 @@ GetJSContextFromDoc(nsIDocument *doc)
   nsIScriptContext *scx = sgo->GetContext();
   NS_ENSURE_TRUE(scx, nsnull);
 
-  return (JSContext *)scx->GetNativeContext();
+  return scx->GetNativeContext();
 }
 
 static JSContext *
