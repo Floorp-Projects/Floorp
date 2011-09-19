@@ -50,6 +50,7 @@
 #include "nsJSUtils.h"
 #include "nsMathUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
@@ -779,6 +780,7 @@ nsresult NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aR
 nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
+  Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
   if (Preferences::GetBool("gfx.canvas.azure.enabled", PR_FALSE)) {
     nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
     // If Azure fails, fall back to a classic canvas.
