@@ -241,6 +241,7 @@ SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
 SHELL_WRAPPER1(removeObserver, jstring)
 SHELL_WRAPPER2(onChangeNetworkLinkStatus, jstring, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
+SHELL_WRAPPER0(executeNextRunnable)
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -667,6 +668,7 @@ loadLibs(const char *apkName)
   GETFUNC(removeObserver);
   GETFUNC(onChangeNetworkLinkStatus);
   GETFUNC(reportJavaCrash);
+  GETFUNC(executeNextRunnable);
 #undef GETFUNC
   gettimeofday(&t1, 0);
   struct rusage usage2;

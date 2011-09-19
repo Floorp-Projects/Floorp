@@ -72,7 +72,4 @@ LOCAL_INCLUDES = \
   -I$(srcdir) \
   -I$(srcdir)/../base \
   -I$(srcdir)/../html \
-  -I$(srcdir)/../../../layout/html/base/src \
-  -I$(srcdir)/../../../layout/html/forms/src \
-  -I$(srcdir)/../../../layout/html/forms/public \
   $(NULL)

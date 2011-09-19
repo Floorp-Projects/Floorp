@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Stephen Lamm <slamm@netscape.com>
+#   Siddharth Agarwal <sagarwal@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -92,20 +93,32 @@ opts=""
 
 trap "rm -f $tmp_file; exit 1" 1 2 15
 
-MOZCONFIG=`$scriptdir/mozconfig-find $topsrcdir`
-
 print_header > $tmp_file
 
 # If the path changes, configure should be rerun
 echo "# PATH=$PATH" >> $tmp_file
 
-if [ "$MOZCONFIG" ]
-then
-  . "$MOZCONFIG"
+# If FOUND_MOZCONFIG isn't set, look for it and make sure the script doesn't error out
+isfoundset=${FOUND_MOZCONFIG+yes}
+if [ -z $isfoundset ]; then
+  FOUND_MOZCONFIG=`$scriptdir/mozconfig-find $topsrcdir`
+  if [ $? -ne 0 ]; then
+    echo '$(error Fix above errors before continuing.)' >> $tmp_file
+  else
+    isfoundset=yes
+  fi
 fi
 
-if [ "$opts" ]; then
-  mk_echo_options
+if [ -n $isfoundset ]; then
+  if [ "$FOUND_MOZCONFIG" ]
+  then
+    . "$FOUND_MOZCONFIG"
+  fi
+  echo "export FOUND_MOZCONFIG := $FOUND_MOZCONFIG" >> $tmp_file
+
+  if [ "$opts" ]; then
+    mk_echo_options
+  fi
 fi
 
 if test -f $out_file && cmp -s $tmp_file $out_file; then

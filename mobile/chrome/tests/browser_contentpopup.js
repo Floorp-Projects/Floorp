@@ -20,14 +20,9 @@ function test() {
     }
   });
 
-  let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
-  if (!("firstPaint" in startupInfo))
-    waitFor(function() { newTab = Browser.addTab(testURL, true); }, function() {
-      let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup).getStartupInfo();
-      return ("firstPaint" in startupInfo);
-    }, Date.now() + 3000);
-  else
+  waitForFirstPaint(function() {
     newTab = Browser.addTab(testURL, true);
+  });
 }
 
 //------------------------------------------------------------------------------
@@ -48,7 +43,7 @@ function runNextTest() {
       Browser.closeTab(newTab);
     }
     finally {
-      // We must finialize the tests
+      // We must finalize the tests
       finish();
     }
   }

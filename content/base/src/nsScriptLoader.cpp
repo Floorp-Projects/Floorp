@@ -910,7 +910,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   JSContext *cx = nsnull; // Initialize this to keep GCC happy.
   if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    cx = (JSContext *)context->GetNativeContext();
+    cx = context->GetNativeContext();
     ::JS_BeginRequest(cx);
     NS_ASSERTION(!::JS_IsExceptionPending(cx),
                  "JS_ReportPendingException wasn't called in EvaluateString");

@@ -54,6 +54,7 @@ JAVAFILES = \
   GeckoInputConnection.java \
   GeckoPhoneStateListener.java \
   AlertNotification.java \
+  SurfaceLockInfo.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \

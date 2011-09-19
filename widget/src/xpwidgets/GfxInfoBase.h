@@ -84,6 +84,9 @@ public:
   // Ideally, Init() would be void-return, but the rules of
   // NS_GENERIC_FACTORY_CONSTRUCTOR_INIT require it be nsresult return.
   virtual nsresult Init();
+  
+  // only useful on X11
+  NS_IMETHOD_(void) GetData() { }
 
 protected:
 

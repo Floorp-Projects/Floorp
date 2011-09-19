@@ -41,9 +41,16 @@
 interface nsIEditor;
 interface nsITextServicesFilter;
 
-[scriptable, uuid(af84da62-588f-409f-847d-feecc991bd93)]
+[scriptable, uuid(334946c3-0e93-4aac-b662-e1b56f95d68b)]
 interface nsIEditorSpellCheck : nsISupports
 {
+
+  /**
+   * Call this on any change in installed dictionaries to ensure that the spell
+   * checker is not using a current dictionary which is no longer available.
+   * If the current dictionary is no longer available, then pick another one.
+   */
+  void checkCurrentDictionary();
 
  /**
    * Returns true if we can enable spellchecking. If there are no available

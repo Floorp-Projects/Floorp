@@ -227,6 +227,14 @@ EVENT(mousedown,
       NS_MOUSE_BUTTON_DOWN,
       EventNameType_All,
       NS_MOUSE_EVENT)
+EVENT(mouseenter,
+      NS_MOUSEENTER,
+      EventNameType_All,
+      NS_MOUSE_EVENT)
+EVENT(mouseleave,
+      NS_MOUSELEAVE,
+      EventNameType_All,
+      NS_MOUSE_EVENT)
 EVENT(mousemove,
       NS_MOUSE_MOVE,
       EventNameType_All,

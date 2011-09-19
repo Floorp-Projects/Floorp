@@ -38,7 +38,6 @@
 
 #include "nsAccessibleWrap.h"
 
-#include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
@@ -408,7 +407,7 @@ __try {
   if (content->IsElement()) {
     nsAutoString roleString;
     if (msaaRole != ROLE_SYSTEM_CLIENT &&
-        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
+        !content->GetAttr(kNameSpaceID_None, nsGkAtoms::role, roleString)) {
       nsIDocument * document = content->GetCurrentDoc();
       if (!document)
         return E_FAIL;

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Android NPAPI support code
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Doug Turner <dougt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,34 +35,57 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsAccessibilityAtoms_h___
-#define nsAccessibilityAtoms_h___
 
-#include "nsIAtom.h"
+#include "assert.h"
+#include "ANPBase.h"
+#include <android/log.h>
 
-/**
- * This class wraps up the creation (and destruction) of the standard
- * set of atoms used in the accessibility module. These objects
- * are created when the are needed by accessibility is being used and they
- * are destroyed when the last nsRootAccessible is destroyed.
- */
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
+#define ASSIGN(obj, name)   (obj)->name = anp_window_##name
 
-class nsAccessibilityAtoms {
-public:
+void
+anp_window_setVisibleRects(NPP instance, const ANPRectI rects[], int32_t count)
+{
+  NOT_IMPLEMENTED();
+}
 
-  static void AddRefAtoms();
-  static void ReleaseAtoms();
+void
+anp_window_clearVisibleRects(NPP instance)
+{
+  NOT_IMPLEMENTED();
+}
 
-  /* Declare all atoms
+void
+anp_window_showKeyboard(NPP instance, bool value)
+{
+  NOT_IMPLEMENTED();
+}
 
-     The atom names and values are stored in nsAccessibilityAtomList.h and
-     are brought to you by the magic of C preprocessing
+void
+anp_window_requestFullScreen(NPP instance)
+{
+  NOT_IMPLEMENTED();
+}
 
-     Add new atoms to nsAccessibilityAtomList and all support logic will be auto-generated
-   */
-#define ACCESSIBILITY_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsAccessibilityAtomList.h"
-#undef ACCESSIBILITY_ATOM
-};
+void
+anp_window_exitFullScreen(NPP instance)
+{
+  NOT_IMPLEMENTED();
+}
 
-#endif /* nsAccessibilityAtoms_h___ */
+void
+anp_window_requestCenterFitZoom(NPP instance)
+{
+  NOT_IMPLEMENTED();
+}
+
+void InitWindowInterface(ANPWindowInterfaceV0 *i) {
+  _assert(i->inSize == sizeof(*i));
+  ASSIGN(i, setVisibleRects);
+  ASSIGN(i, clearVisibleRects);
+  ASSIGN(i, showKeyboard);
+  ASSIGN(i, requestFullScreen);
+  ASSIGN(i, exitFullScreen);
+  ASSIGN(i, requestCenterFitZoom);
+}
+
