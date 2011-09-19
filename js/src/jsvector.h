@@ -506,6 +506,7 @@ Vector<T, N, AllocPolicy>::Vector(MoveRef<Vector> rhs)
 
     if (rhs->usingInlineStorage()) {
         /* We can't move the buffer over in this case, so copy elements. */
+        mBegin = (T *)storage.addr();
         Impl::moveConstruct(mBegin, rhs->beginNoCheck(), rhs->endNoCheck());
         /*
          * Leave rhs's mLength, mBegin, mCapacity, and mReserved as they are.
