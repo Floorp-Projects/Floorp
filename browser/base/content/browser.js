@@ -2509,7 +2509,6 @@ function URLBarSetURI(aURI) {
   }
 
   gURLBar.value = value;
-  gURLBar.valueIsTyped = !valid;
   SetPageProxyState(valid ? "valid" : "invalid");
 }
 
