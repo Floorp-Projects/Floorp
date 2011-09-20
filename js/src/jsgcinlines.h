@@ -49,63 +49,6 @@
 #include "jslock.h"
 #include "jstl.h"
 
-inline bool
-JSAtom::isUnitString(const void *ptr)
-{
-#ifdef JS_HAS_STATIC_STRINGS
-    jsuword delta = reinterpret_cast<jsuword>(ptr) -
-                    reinterpret_cast<jsuword>(unitStaticTable);
-    if (delta >= UNIT_STATIC_LIMIT * sizeof(JSString))
-        return false;
-
-    /* If ptr points inside the static array, it must be well-aligned. */
-    JS_ASSERT(delta % sizeof(JSString) == 0);
-    return true;
-#else
-    return false;
-#endif
-}
-
-inline bool
-JSAtom::isLength2String(const void *ptr)
-{
-#ifdef JS_HAS_STATIC_STRINGS
-    jsuword delta = reinterpret_cast<jsuword>(ptr) -
-                    reinterpret_cast<jsuword>(length2StaticTable);
-    if (delta >= NUM_SMALL_CHARS * NUM_SMALL_CHARS * sizeof(JSString))
-        return false;
-
-    /* If ptr points inside the static array, it must be well-aligned. */
-    JS_ASSERT(delta % sizeof(JSString) == 0);
-    return true;
-#else
-    return false;
-#endif
-}
-
-inline bool
-JSAtom::isHundredString(const void *ptr)
-{
-#ifdef JS_HAS_STATIC_STRINGS
-    jsuword delta = reinterpret_cast<jsuword>(ptr) -
-                    reinterpret_cast<jsuword>(hundredStaticTable);
-    if (delta >= NUM_HUNDRED_STATICS * sizeof(JSString))
-        return false;
-
-    /* If ptr points inside the static array, it must be well-aligned. */
-    JS_ASSERT(delta % sizeof(JSString) == 0);
-    return true;
-#else
-    return false;
-#endif
-}
-
-inline bool
-JSAtom::isStatic(const void *ptr)
-{
-    return isUnitString(ptr) || isLength2String(ptr) || isHundredString(ptr);
-}
-
 namespace js {
 
 struct Shape;
@@ -116,8 +59,6 @@ inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing)
 {
     JS_ASSERT(thing);
-    if (JSAtom::isStatic(thing))
-        return JSTRACE_STRING;
     const Cell *cell = reinterpret_cast<const Cell *>(thing);
     return MapAllocToTraceKind(cell->getAllocKind());
 }

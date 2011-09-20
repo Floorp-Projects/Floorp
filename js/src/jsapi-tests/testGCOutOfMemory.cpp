@@ -58,7 +58,7 @@ BEGIN_TEST(testGCOutOfMemory)
 }
 
 virtual JSRuntime * createRuntime() {
-    return JS_NewRuntime(256 * 1024);
+    return JS_NewRuntime(512 * 1024);
 }
 
 virtual void destroyRuntime() {

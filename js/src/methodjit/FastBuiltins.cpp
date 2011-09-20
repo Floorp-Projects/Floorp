@@ -279,12 +279,13 @@ mjit::Compiler::compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMo
     if (mode == GetChar) {
         /* Slow path if there's no unit string for this character. */
         Jump notUnitString = masm.branch32(Assembler::AboveOrEqual, reg2,
-                                           Imm32(JSAtom::UNIT_STATIC_LIMIT));
+                                           Imm32(StaticStrings::UNIT_STATIC_LIMIT));
         stubcc.linkExit(notUnitString, Uses(3));
 
         /* Load unit string in reg2. */
-        masm.lshiftPtr(Imm32(sizeof(JSString) == 16 ? 4 : 5), reg2);
-        masm.addPtr(ImmPtr(JSAtom::unitStaticTable), reg2);
+        masm.lshiftPtr(Imm32(sizeof(JSAtom *) == 4 ? 2 : 3), reg2);
+        masm.addPtr(ImmPtr(&cx->runtime->staticStrings.unitStaticTable), reg2);
+        masm.loadPtr(Address(reg2), reg2);
     }
 
     if (thisValue->isConstant())
