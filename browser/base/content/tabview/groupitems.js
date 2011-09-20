@@ -2604,7 +2604,7 @@ let GroupItems = {
     if (groupItemId) {
       groupItem = GroupItems.groupItem(groupItemId);
       groupItem.add(tab._tabViewTabItem);
-      UI.setReorderTabItemsOnShow(groupItem);
+      groupItem.reorderTabsBasedOnTabItemOrder()
     } else {
       let pageBounds = Items.getPageBounds();
       pageBounds.inset(20, 20);
