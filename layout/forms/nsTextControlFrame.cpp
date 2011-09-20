@@ -385,7 +385,9 @@ nsTextControlFrame::EnsureEditorInitialized()
   mUseEditor = PR_TRUE;
 
   // Set the selection to the beginning of the text field.
-  SetSelectionEndPoints(0, 0);
+  if (weakFrame.IsAlive()) {
+    SetSelectionEndPoints(0, 0);
+  }
 
   return NS_OK;
 }
