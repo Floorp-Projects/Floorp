@@ -39,7 +39,7 @@
 #include "txExpr.h"
 #include "nsAutoPtr.h"
 #include "txNodeSet.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txIXPathContext.h"
 #include "nsWhitespaceTokenizer.h"
 #include "txXPathTreeWalker.h"
@@ -59,36 +59,36 @@ struct txCoreFunctionDescriptor
 // If you change one, change the other.
 static const txCoreFunctionDescriptor descriptTable[] =
 {
-    { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::count }, // COUNT
-    { 1, 1, Expr::NODESET_RESULT, &txXPathAtoms::id }, // ID
-    { 0, 0, Expr::NUMBER_RESULT,  &txXPathAtoms::last }, // LAST
-    { 0, 1, Expr::STRING_RESULT,  &txXPathAtoms::localName }, // LOCAL_NAME
-    { 0, 1, Expr::STRING_RESULT,  &txXPathAtoms::namespaceUri }, // NAMESPACE_URI
-    { 0, 1, Expr::STRING_RESULT,  &txXPathAtoms::name }, // NAME
-    { 0, 0, Expr::NUMBER_RESULT,  &txXPathAtoms::position }, // POSITION
+    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::count }, // COUNT
+    { 1, 1, Expr::NODESET_RESULT, &nsGkAtoms::id }, // ID
+    { 0, 0, Expr::NUMBER_RESULT,  &nsGkAtoms::last }, // LAST
+    { 0, 1, Expr::STRING_RESULT,  &nsGkAtoms::localName }, // LOCAL_NAME
+    { 0, 1, Expr::STRING_RESULT,  &nsGkAtoms::namespaceUri }, // NAMESPACE_URI
+    { 0, 1, Expr::STRING_RESULT,  &nsGkAtoms::name }, // NAME
+    { 0, 0, Expr::NUMBER_RESULT,  &nsGkAtoms::position }, // POSITION
 
-    { 2, -1, Expr::STRING_RESULT, &txXPathAtoms::concat }, // CONCAT
-    { 2, 2, Expr::BOOLEAN_RESULT, &txXPathAtoms::contains }, // CONTAINS
-    { 0, 1, Expr::STRING_RESULT,  &txXPathAtoms::normalizeSpace }, // NORMALIZE_SPACE
-    { 2, 2, Expr::BOOLEAN_RESULT, &txXPathAtoms::startsWith }, // STARTS_WITH
-    { 0, 1, Expr::STRING_RESULT,  &txXPathAtoms::string }, // STRING
-    { 0, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::stringLength }, // STRING_LENGTH
-    { 2, 3, Expr::STRING_RESULT,  &txXPathAtoms::substring }, // SUBSTRING
-    { 2, 2, Expr::STRING_RESULT,  &txXPathAtoms::substringAfter }, // SUBSTRING_AFTER
-    { 2, 2, Expr::STRING_RESULT,  &txXPathAtoms::substringBefore }, // SUBSTRING_BEFORE
-    { 3, 3, Expr::STRING_RESULT,  &txXPathAtoms::translate }, // TRANSLATE
+    { 2, -1, Expr::STRING_RESULT, &nsGkAtoms::concat }, // CONCAT
+    { 2, 2, Expr::BOOLEAN_RESULT, &nsGkAtoms::contains }, // CONTAINS
+    { 0, 1, Expr::STRING_RESULT,  &nsGkAtoms::normalizeSpace }, // NORMALIZE_SPACE
+    { 2, 2, Expr::BOOLEAN_RESULT, &nsGkAtoms::startsWith }, // STARTS_WITH
+    { 0, 1, Expr::STRING_RESULT,  &nsGkAtoms::string }, // STRING
+    { 0, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::stringLength }, // STRING_LENGTH
+    { 2, 3, Expr::STRING_RESULT,  &nsGkAtoms::substring }, // SUBSTRING
+    { 2, 2, Expr::STRING_RESULT,  &nsGkAtoms::substringAfter }, // SUBSTRING_AFTER
+    { 2, 2, Expr::STRING_RESULT,  &nsGkAtoms::substringBefore }, // SUBSTRING_BEFORE
+    { 3, 3, Expr::STRING_RESULT,  &nsGkAtoms::translate }, // TRANSLATE
 
-    { 0, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::number }, // NUMBER
-    { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::round }, // ROUND
-    { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::floor }, // FLOOR
-    { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::ceiling }, // CEILING
-    { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::sum }, // SUM
+    { 0, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::number }, // NUMBER
+    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::round }, // ROUND
+    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::floor }, // FLOOR
+    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::ceiling }, // CEILING
+    { 1, 1, Expr::NUMBER_RESULT,  &nsGkAtoms::sum }, // SUM
 
-    { 1, 1, Expr::BOOLEAN_RESULT, &txXPathAtoms::boolean }, // BOOLEAN
-    { 0, 0, Expr::BOOLEAN_RESULT, &txXPathAtoms::_false }, // _FALSE
-    { 1, 1, Expr::BOOLEAN_RESULT, &txXPathAtoms::lang }, // LANG
-    { 1, 1, Expr::BOOLEAN_RESULT, &txXPathAtoms::_not }, // _NOT
-    { 0, 0, Expr::BOOLEAN_RESULT, &txXPathAtoms::_true } // _TRUE
+    { 1, 1, Expr::BOOLEAN_RESULT, &nsGkAtoms::boolean }, // BOOLEAN
+    { 0, 0, Expr::BOOLEAN_RESULT, &nsGkAtoms::_false }, // _FALSE
+    { 1, 1, Expr::BOOLEAN_RESULT, &nsGkAtoms::lang }, // LANG
+    { 1, 1, Expr::BOOLEAN_RESULT, &nsGkAtoms::_not }, // _NOT
+    { 0, 0, Expr::BOOLEAN_RESULT, &nsGkAtoms::_true } // _TRUE
 };
 
 
@@ -636,7 +636,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             nsAutoString lang;
             PRBool found;
             do {
-                found = walker.getAttr(txXMLAtoms::lang, kNameSpaceID_XML,
+                found = walker.getAttr(nsGkAtoms::lang, kNameSpaceID_XML,
                                        lang);
             } while (!found && walker.moveToParent());
 

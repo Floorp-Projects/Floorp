@@ -40,7 +40,7 @@
 #include "txNodeSorter.h"
 #include "txExecutionState.h"
 #include "txXPathResultComparator.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txNodeSetContext.h"
 #include "txExpr.h"
 #include "txStringUtils.h"
@@ -84,10 +84,10 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
         rv = aOrderExpr->evaluateToString(aContext, attrValue);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::descending)) {
+        if (TX_StringEqualsAtom(attrValue, nsGkAtoms::descending)) {
             ascending = MB_FALSE;
         }
-        else if (!TX_StringEqualsAtom(attrValue, txXSLTAtoms::ascending)) {
+        else if (!TX_StringEqualsAtom(attrValue, nsGkAtoms::ascending)) {
             // XXX ErrorReport: unknown value for order attribute
             return NS_ERROR_XSLT_BAD_VALUE;
         }
@@ -101,7 +101,7 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (!aDataTypeExpr || TX_StringEqualsAtom(dataType, txXSLTAtoms::text)) {
+    if (!aDataTypeExpr || TX_StringEqualsAtom(dataType, nsGkAtoms::text)) {
         // Text comparator
         
         // Language
@@ -119,11 +119,11 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
             rv = aCaseOrderExpr->evaluateToString(aContext, attrValue);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::upperFirst)) {
+            if (TX_StringEqualsAtom(attrValue, nsGkAtoms::upperFirst)) {
                 upperFirst = PR_TRUE;
             }
             else if (!TX_StringEqualsAtom(attrValue,
-                                          txXSLTAtoms::lowerFirst)) {
+                                          nsGkAtoms::lowerFirst)) {
                 // XXX ErrorReport: unknown value for case-order attribute
                 return NS_ERROR_XSLT_BAD_VALUE;
             }
@@ -134,7 +134,7 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
                                                         lang);
         NS_ENSURE_TRUE(key->mComparator, NS_ERROR_OUT_OF_MEMORY);
     }
-    else if (TX_StringEqualsAtom(dataType, txXSLTAtoms::number)) {
+    else if (TX_StringEqualsAtom(dataType, nsGkAtoms::number)) {
         // Number comparator
         key->mComparator = new txResultNumberComparator(ascending);
         NS_ENSURE_TRUE(key->mComparator, NS_ERROR_OUT_OF_MEMORY);

@@ -8,6 +8,7 @@
 %define font_xsmall 1.69mozmm
 %define font_tiny 1.48mozmm
 %define font_xtiny 1.27mozmm
+%define font_xxtiny 1.08mozmm
 
 %define touch_row 7.41mozmm
 %define touch_button_xlarge 7.62mozmm
@@ -45,6 +46,7 @@
 
 %define border_radius_normal 0.85mozmm
 %define border_radius_small 0.64mozmm
+%define border_radius_xsmall 0.31mozmm
 %define border_radius_tiny 0.21mozmm
 
 %define shadow_width_xlarge 1.06mozmm

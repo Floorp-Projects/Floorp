@@ -824,6 +824,9 @@ class MoveRef {
 template<typename T>
 MoveRef<T> Move(T &t) { return MoveRef<T>(t); }
 
+template<typename T>
+MoveRef<T> Move(const T &t) { return MoveRef<T>(const_cast<T &>(t)); }
+
 } /* namespace js */
 
 #endif /* defined(__cplusplus) */

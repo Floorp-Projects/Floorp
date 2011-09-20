@@ -3,7 +3,6 @@
 <head>
   <title>Test for SpecialPowers extension</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="starttest();">
@@ -31,8 +30,10 @@ function dispatchTestEvent() {
 
 dump("\nSPECIALPTEST:::Test script loaded " + (new Date).getTime() + "\n");
 SimpleTest.waitForExplicitFinish();
+var startTime = new Date();
 function starttest(){
   dump("\nSPECIALPTEST:::Test script running after load " + (new Date).getTime() + "\n");
+
   /** Test for SpecialPowers extension **/
   is(SpecialPowers.sanityCheck(), "foo", "check to see whether the Special Powers extension is installed.");
 
@@ -75,9 +76,17 @@ function starttest(){
   is(SpecialPowers.DOMWindowUtils.getClassName(window), "Proxy");
   is(SpecialPowers.DOMWindowUtils.docCharsetIsForced, false);
 
+  //Run the createSystemXHR method
+  var xhr = SpecialPowers.createSystemXHR();
+  ok(xhr, "createSystemXHR should not return null");
+  is(xhr.readyState, XMLHttpRequest.UNSENT, "createSystemXHR should create an unsent XMLHttpRequest object");
+  
+  //try to run garbage collection
+  SpecialPowers.gc();
+
+  SimpleTest.info("\nProfile::SpecialPowersRunTime: " + (new Date() - startTime) + "\n");
   SimpleTest.finish();
 }
-//starttest();
 </script>
 </pre>
 </body>

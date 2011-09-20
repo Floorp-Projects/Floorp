@@ -274,6 +274,7 @@ static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
 static FILE                *gDumpFile                  = nsnull;
 static PRUint64             gNextWindowID              = 0;
 static PRUint32             gSerialCounter             = 0;
+static PRBool               gDoNotTrackEnabled         = PR_FALSE;
 
 #ifdef DEBUG_jst
 PRInt32 gTimeoutCnt                                    = 0;
@@ -961,6 +962,10 @@ nsGlobalWindow::Init()
   CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   NS_ASSERTION(gEntropyCollector,
                "gEntropyCollector should have been initialized!");
+
+  mozilla::Preferences::AddBoolVarCache(&gDoNotTrackEnabled,
+                                        "privacy.donottrackheader.enabled",
+                                        PR_FALSE);
 
 #ifdef PR_LOGGING
   gDOMLeakPRLog = PR_NewLogModule("DOMLeak");
@@ -11113,6 +11118,18 @@ nsNavigator::GetBuildID(nsAString& aBuildID)
 
   aBuildID.Truncate();
   AppendASCIItoUTF16(buildID, aBuildID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavigator::GetDoNotTrack(nsAString &aResult)
+{
+  if (gDoNotTrackEnabled) {
+    aResult.AssignLiteral("yes");
+  }
+  else {
+    aResult.AssignLiteral("unspecified");
+  }
   return NS_OK;
 }
 

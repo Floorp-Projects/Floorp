@@ -1,0 +1,79 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=686449
+-->
+<head>
+  <title>Test for Bug 686449</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=686449">Mozilla Bug 686449</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="rangetest">abcd<div id="picontainer1"><?pi efgh?></div><div>ijkl</div><div id="picontainer2"><?pi mnop?></div>qrst</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 686449 **/
+
+var pi = document.createProcessingInstruction("t", "data");
+ok("target" in pi, "No target?");
+ok("data" in pi, "No data?");
+ok("length" in pi, "No length?");
+ok("substringData" in pi, "No substringData?");
+ok("appendData" in pi, "No appendData?");
+ok("insertData" in pi, "No insertData?");
+ok("deleteData" in pi, "No deleteData?");
+ok("replaceData" in pi, "No replaceData?");
+
+is(pi.substringData(0, pi.length), pi.data, "wrong data?");
+var olddata = pi.data;
+var appenddata = "foo"
+pi.appendData(appenddata);
+is(pi.data, olddata + appenddata, "appendData doesn't work?");
+pi.deleteData(olddata.length, appenddata.length);
+is(pi.data, olddata, "deleteData doesn't work?");
+pi.replaceData(0, 0, olddata);
+is(pi.data, olddata + olddata, "replaceData doesn't work?");
+pi.insertData(0, olddata);
+is(pi.data, olddata + olddata + olddata, "insertData doesn't work?");
+pi.data = olddata;
+is(pi.data, olddata, "setting data doesn't work?");
+
+var r = document.createRange();
+r.selectNodeContents(pi);
+is(r.startContainer, pi, "Wrong startContainer!");
+is(r.startOffset, 0, "Wrong startOffset!");
+is(r.endContainer, pi, "Wrong endContainer!");
+is(r.endOffset, pi.length, "Wrong endOffset!");
+
+var df = r.cloneContents();
+is(df.childNodes.length, 1, "Unexpected child nodes?");
+ok(df.firstChild.isEqualNode(pi), "Wrong cloning?");
+
+r.setStart(pi, 1);
+r.setEnd(pi, 3);
+df = r.cloneContents();
+is(df.childNodes.length, 1, "Unexpected child nodes?");
+ok(!df.firstChild.isEqualNode(pi), "Should clone to similar pi!");
+is(df.firstChild.data, "at", "Wrong data cloning?");
+
+r.selectNode(document.getElementById("rangetest"));
+is(r.toString(), document.getElementById("rangetest").textContent,
+   "Wrong range stringification!");
+ok(r.cloneContents().firstChild.firstChild.nextSibling.firstChild.
+     isEqualNode(document.getElementById("picontainer1").firstChild),
+   "Wrong pi cloning!");
+ok(r.cloneContents().firstChild.firstChild.nextSibling.nextSibling.nextSibling.firstChild.
+     isEqualNode(document.getElementById("picontainer2").firstChild),
+   "Wrong pi cloning!");
+
+]]>
+</script>
+</pre>
+</body>
+</html>
