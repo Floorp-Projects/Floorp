@@ -649,7 +649,8 @@ class GeckoSurfaceView
                 break;
         }
 
-        if (isPreIme && mIMEState != IME_STATE_DISABLED)
+        if (isPreIme && mIMEState != IME_STATE_DISABLED &&
+            (event.getMetaState() & KeyEvent.META_ALT_ON) == 0)
             // Let active IME process pre-IME key events
             return false;
 
@@ -678,7 +679,8 @@ class GeckoSurfaceView
                 break;
         }
 
-        if (isPreIme && mIMEState != IME_STATE_DISABLED)
+        if (isPreIme && mIMEState != IME_STATE_DISABLED &&
+            (event.getMetaState() & KeyEvent.META_ALT_ON) == 0)
             // Let active IME process pre-IME key events
             return false;
 
