@@ -592,8 +592,5 @@ OPDEF(JSOP_UNBRANDTHIS,   229,"unbrandthis",   NULL,  1,  0,  0,  0,  JOF_BYTE)
 
 OPDEF(JSOP_SHARPINIT,     230,"sharpinit",     NULL,  3,  0,  0,  0,  JOF_UINT16|JOF_SHARPSLOT)
 
-/* Substituted for JSOP_SETELEM to indicate opcodes which have written holes in dense arrays. */
-OPDEF(JSOP_SETHOLE,       231, "sethole",      NULL,  1,  3,  1,  3,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_DETECTING)
-
 /* Pop the stack, convert to a jsid (int or string), and push back. */
-OPDEF(JSOP_TOID,          232, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_TOID,          231, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)

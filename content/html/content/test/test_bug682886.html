@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=682886
+-->
+<head>
+  <title>Test for Bug 682886</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682886">Mozilla Bug 682886</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 682886 **/
+
+
+  var m = document.createElement("menu");
+  var s = "<menuitem>foo</menuitem>";
+  m.innerHTML = s;
+  is(m.innerHTML, s, "Wrong menuitem serialization!");
+
+
+
+</script>
+</pre>
+</body>
+</html>
