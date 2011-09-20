@@ -854,7 +854,7 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
 
 /************************************************************************/
 
-/* JSClass (and ObjectOps where appropriate) function pointer typedefs. */
+/* JSClass operation signatures. */
 
 /*
  * Add, delete, or get a property named by id in obj.  Note the jsid id

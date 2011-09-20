@@ -77,13 +77,13 @@ using namespace js::types;
 Class js::JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
-    PropertyStub,        /* addProperty */
-    PropertyStub,        /* delProperty */
-    PropertyStub,        /* getProperty */
-    StrictPropertyStub,  /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    JS_PropertyStub,        /* addProperty */
+    JS_PropertyStub,        /* delProperty */
+    JS_PropertyStub,        /* getProperty */
+    JS_StrictPropertyStub,  /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 /* ES5 15.12.2. */
@@ -749,7 +749,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
 
     /* Step 10. */
     jsid emptyId = ATOM_TO_JSID(cx->runtime->atomState.emptyAtom);
-    if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, PropertyStub, StrictPropertyStub,
+    if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
         return false;
@@ -814,8 +814,8 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
                     JS_ALWAYS_TRUE(array_deleteProperty(cx, obj, id, &newElement, false));
                 } else {
                     /* Step 2a(iii)(3). */
-                    JS_ALWAYS_TRUE(array_defineProperty(cx, obj, id, &newElement, PropertyStub,
-                                                        StrictPropertyStub, JSPROP_ENUMERATE));
+                    JS_ALWAYS_TRUE(array_defineProperty(cx, obj, id, &newElement, JS_PropertyStub,
+                                                        JS_StrictPropertyStub, JSPROP_ENUMERATE));
                 }
             }
         } else {
@@ -839,8 +839,8 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
                 } else {
                     /* Step 2b(ii)(3). */
                     JS_ASSERT(obj->isNative());
-                    if (!DefineNativeProperty(cx, obj, id, newElement, PropertyStub,
-                                              StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
+                    if (!DefineNativeProperty(cx, obj, id, newElement, JS_PropertyStub,
+                                              JS_StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
                     {
                         return false;
                     }

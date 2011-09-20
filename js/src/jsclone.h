@@ -44,7 +44,6 @@
 #include "jshashtable.h"
 #include "jsstdint.h"
 #include "jsvector.h"
-#include "jsvalue.h"
 
 JS_FRIEND_API(uint64_t)
 js_GetSCOffset(JSStructuredCloneWriter* writer);

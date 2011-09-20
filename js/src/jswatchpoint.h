@@ -43,7 +43,6 @@
 #include "jshashtable.h"
 #include "jsprvtd.h"
 #include "jsapi.h"
-#include "jsvalue.h"
 
 namespace js {
 

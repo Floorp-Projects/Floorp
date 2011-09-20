@@ -1202,7 +1202,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
             assert haveCcx
             template = (
                 "    nsCOMPtr<nsIVariant> ${name}(already_AddRefed<nsIVariant>("
-                "XPCVariant::newVariant(ccx, js::Jsvalify(js::ValueArgToConstRef(${argVal})))));\n"
+                "XPCVariant::newVariant(ccx, js::ValueArgToConstRef(${argVal}))));\n"
                 "    if (!${name}) {\n")
             f.write(substitute(template, params))
             writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
@@ -1217,7 +1217,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
             f.write("    xpc_qsSelfRef %sref;\n" % name)
             f.write("    JS::Anchor<jsval> %sanchor;\n" % name);
             f.write("    rv = xpc_qsUnwrapArg<%s>("
-                    "cx, js::Jsvalify(js::ValueArgToConstRef(%s)), &%s, &%sref.ptr, &%sanchor.get());\n"
+                    "cx, js::ValueArgToConstRef(%s), &%s, &%sref.ptr, &%sanchor.get());\n"
                     % (type.name, argVal, name, name, name))
             f.write("    if (NS_FAILED(rv)) {\n")
             if haveCcx:

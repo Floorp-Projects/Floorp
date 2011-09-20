@@ -561,13 +561,13 @@ static JSFunctionSpec number_functions[] = {
 Class js::NumberClass = {
     js_Number_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 static JSBool
@@ -841,7 +841,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode) {
-        JSBool ok = cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
+        JSBool ok = cx->localeCallbacks->localeToUnicode(cx, buf, vp);
         cx->free_(buf);
         return ok;
     }
@@ -1119,14 +1119,14 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 
     /* ECMA 15.1.1.1 */
     rt = cx->runtime;
-    if (!JS_DefineProperty(cx, obj, js_NaN_str, Jsvalify(rt->NaNValue),
+    if (!JS_DefineProperty(cx, obj, js_NaN_str, rt->NaNValue,
                            JS_PropertyStub, JS_StrictPropertyStub,
                            JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
     }
 
     /* ECMA 15.1.1.2 */
-    if (!JS_DefineProperty(cx, obj, js_Infinity_str, Jsvalify(rt->positiveInfinityValue),
+    if (!JS_DefineProperty(cx, obj, js_Infinity_str, rt->positiveInfinityValue,
                            JS_PropertyStub, JS_StrictPropertyStub,
                            JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
