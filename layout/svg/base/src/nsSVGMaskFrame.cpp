@@ -38,6 +38,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGMaskElement.h"
+#include "nsSVGEffects.h"
 #include "nsIDOMSVGMatrix.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -155,6 +156,25 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   gfxPattern *retval = new gfxPattern(image);
   NS_IF_ADDREF(retval);
   return retval;
+}
+
+NS_IMETHODIMP
+nsSVGMaskFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                 nsIAtom* aAttribute,
+                                 PRInt32  aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::width ||
+       aAttribute == nsGkAtoms::height||
+       aAttribute == nsGkAtoms::maskUnits ||
+       aAttribute == nsGkAtoms::maskContentUnits)) {
+    nsSVGEffects::InvalidateRenderingObservers(this);
+  }
+
+  return nsSVGMaskFrameBase::AttributeChanged(aNameSpaceID,
+                                              aAttribute, aModType);
 }
 
 #ifdef DEBUG

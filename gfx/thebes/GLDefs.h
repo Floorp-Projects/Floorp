@@ -3198,5 +3198,6 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_EGL_WRITE_SURFACE_BIT_KHR       0x0002
 #define LOCAL_EGL_LOCK_SURFACE_BIT_KHR        0x0080
 #define LOCAL_EGL_CORE_NATIVE_ENGINE          0x305B
-
+#define LOCAL_EGL_READ                        0x305A
+#define LOCAL_EGL_DRAW                        0x3059
 #endif

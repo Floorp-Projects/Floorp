@@ -3594,14 +3594,8 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
   if (!HasSameOwnerDoc(aKid)) {
-    // DocumentType nodes are the only nodes that can have a null
-    // ownerDocument according to the DOM spec, and we need to allow
-    // inserting them w/o calling AdoptNode().
-    if (aKid->NodeType() != nsIDOMNode::DOCUMENT_TYPE_NODE ||
-        aKid->GetOwnerDoc()) {
-      rv = AdoptNodeIntoOwnerDoc(this, aKid);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = AdoptNodeIntoOwnerDoc(this, aKid);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   PRUint32 childCount = aChildArray.ChildCount();
@@ -4113,9 +4107,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
-  if (!HasSameOwnerDoc(newContent) &&
-      (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
-       newContent->GetOwnerDoc())) {
+  if (!HasSameOwnerDoc(newContent)) {
     res = AdoptNodeIntoOwnerDoc(this, aNewChild);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -5535,7 +5527,9 @@ nsGenericElement::SizeOf() const
     return elm->SetJSEventListenerToJsval(nsGkAtoms::on##name_, cx, obj, v); \
 }
 #define TOUCH_EVENT EVENT
+#define DOCUMENT_ONLY_EVENT EVENT
 #include "nsEventNameList.h"
+#undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT
 

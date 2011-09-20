@@ -6875,8 +6875,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
              * Since this doesn't re-enter the recorder, the post-state snapshot
              * is invalid. Fix it up here.
              */
-            if ((op == JSOP_SETELEM || op == JSOP_SETHOLE) &&
-                JSOp(regs->pc[JSOP_SETELEM_LENGTH]) == JSOP_POP) {
+            if (op == JSOP_SETELEM && JSOp(regs->pc[JSOP_SETELEM_LENGTH]) == JSOP_POP) {
                 regs->sp -= js_CodeSpec[JSOP_SETELEM].nuses;
                 regs->sp += js_CodeSpec[JSOP_SETELEM].ndefs;
                 regs->pc += JSOP_SETELEM_LENGTH;
@@ -11048,7 +11047,11 @@ TraceRecorder::record_JSOP_OBJTOP()
 RecordingStatus
 TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 {
-    // ctor must be a function created via js_InitClass.
+    /*
+     * This function requires that |ctor| be a built-in class function in order
+     * to have an immutable |ctor.prototype| that can be burned into the trace
+     * below.
+     */
 #ifdef DEBUG
     Class *clasp = ctor->getFunctionPrivate()->getConstructorClass();
     JS_ASSERT(clasp);
@@ -11060,8 +11063,10 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &pval))
         RETURN_ERROR("error getting prototype from constructor");
 
-    // ctor.prototype is a permanent data property, so this lookup cannot have
-    // deep-aborted.
+    /*
+     * |ctor.prototype| is a non-configurable, non-writable data property, so
+     * this lookup cannot have deep-aborted.
+     */
     JS_ASSERT(localtm.recorder);
 
 #ifdef DEBUG
@@ -11073,8 +11078,10 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     JS_ASSERT((~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)) == 0);
 #endif
 
-    // Since ctor was built by js_InitClass, we can assert (rather than check)
-    // that pval is usable.
+    /*
+     * Per requirements noted at the start of this function, pval must be
+     * usable.
+     */
     JS_ASSERT(!pval.isPrimitive());
     JSObject *proto = &pval.toObject();
     JS_ASSERT(!proto->isDenseArray());
@@ -13420,7 +13427,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
     }
 
     jsbytecode* pc = cx->regs().pc;
-    if ((*pc == JSOP_SETELEM || *pc == JSOP_SETHOLE) && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
+    if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
         set(&lval, v_ins);
 
     return ARECORD_CONTINUE;
@@ -13428,12 +13435,6 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_SETELEM()
-{
-    return setElem(-3, -2, -1);
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETHOLE()
 {
     return setElem(-3, -2, -1);
 }
@@ -17064,7 +17065,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (op == JSOP_NEW)
         increment(OP_NEW);
 
-    if (op == JSOP_GETELEM || op == JSOP_SETELEM || op == JSOP_SETHOLE) {
+    if (op == JSOP_GETELEM || op == JSOP_SETELEM) {
         Value& lval = cx->regs().sp[op == JSOP_GETELEM ? -2 : -3];
         if (lval.isObject() && js_IsTypedArray(&lval.toObject()))
             increment(OP_TYPED_ARRAY);

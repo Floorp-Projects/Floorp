@@ -1183,14 +1183,14 @@ nsXULTreeGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(cellIdx);
-  nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::tableCellIndex,
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex,
                          stringIdx);
 
   // "cycles" attribute
   PRBool isCycler = PR_FALSE;
   nsresult rv = mColumn->GetCycler(&isCycler);
   if (NS_SUCCEEDED(rv) && isCycler)
-    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::cycles,
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::cycles,
                            NS_LITERAL_STRING("true"));
 
   return NS_OK;
@@ -1339,12 +1339,12 @@ nsXULTreeGridCellAccessible::IsEditable() const
 
   nsCOMPtr<nsIContent> columnContent(do_QueryInterface(columnElm));
   if (!columnContent->AttrValueIs(kNameSpaceID_None,
-                                  nsAccessibilityAtoms::editable,
-                                  nsAccessibilityAtoms::_true,
+                                  nsGkAtoms::editable,
+                                  nsGkAtoms::_true,
                                   eCaseMatters))
     return PR_FALSE;
 
   return mContent->AttrValueIs(kNameSpaceID_None,
-                               nsAccessibilityAtoms::editable,
-                               nsAccessibilityAtoms::_true, eCaseMatters);
+                               nsGkAtoms::editable,
+                               nsGkAtoms::_true, eCaseMatters);
 }

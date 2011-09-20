@@ -62,8 +62,8 @@ nsXULComboboxAccessible::
 PRUint32
 nsXULComboboxAccessible::NativeRole()
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                            nsAccessibilityAtoms::autocomplete, eIgnoreCase))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::autocomplete, eIgnoreCase))
     return nsIAccessibleRole::ROLE_AUTOCOMPLETE;
   return nsIAccessibleRole::ROLE_COMBOBOX;
 }
@@ -138,9 +138,9 @@ nsXULComboboxAccessible::Description(nsString& aDescription)
 PRBool
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
-  if (mContent->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL) ||
-      mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::editable,
-                            nsAccessibilityAtoms::_true, eIgnoreCase)) {
+  if (mContent->NodeInfo()->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL) ||
+      mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
+                            nsGkAtoms::_true, eIgnoreCase)) {
     // Both the XUL <textbox type="autocomplete"> and <menulist editable="true"> widgets
     // use nsXULComboboxAccessible. We need to walk the anonymous children for these
     // so that the entry field is a child

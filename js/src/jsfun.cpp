@@ -1266,7 +1266,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
              * track of the method, so we associate it with the first barriered
              * object found starting from thisp on the prototype chain.
              */
-            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent(), true);
+            JSObject *newfunobj = CloneFunctionObject(cx, fun);
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);
@@ -2091,20 +2091,6 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static JSFunctionSpec function_methods[] = {
-#if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   fun_toSource,   0,0),
-#endif
-    JS_FN(js_toString_str,   fun_toString,   0,0),
-    JS_FN(js_apply_str,      js_fun_apply,   2,0),
-    JS_FN(js_call_str,       js_fun_call,    1,0),
-    JS_FN("bind",            fun_bind,       1,0),
-#if JS_HAS_GENERATORS
-    JS_FN("isGenerator",     fun_isGenerator,0,0),
-#endif
-    JS_FS_END
-};
-
 /*
  * Report "malformed formal parameter" iff no illegal char or similar scanner
  * error was already reported.
@@ -2119,7 +2105,23 @@ OnBadFormal(JSContext *cx, TokenKind tt)
     return false;
 }
 
-static JSBool
+namespace js {
+
+JSFunctionSpec function_methods[] = {
+#if JS_HAS_TOSOURCE
+    JS_FN(js_toSource_str,   fun_toSource,   0,0),
+#endif
+    JS_FN(js_toString_str,   fun_toString,   0,0),
+    JS_FN(js_apply_str,      js_fun_apply,   2,0),
+    JS_FN(js_call_str,       js_fun_call,    1,0),
+    JS_FN("bind",            fun_bind,       1,0),
+#if JS_HAS_GENERATORS
+    JS_FN("isGenerator",     fun_isGenerator,0,0),
+#endif
+    JS_FS_END
+};
+
+JSBool
 Function(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs call = CallArgsFromVp(argc, vp);
@@ -2294,8 +2296,6 @@ Function(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-namespace js {
-
 bool
 IsBuiltinFunctionConstructor(JSFunction *fun)
 {
@@ -2327,59 +2327,6 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 }
 
 } /* namespace js */
-
-static JSBool
-ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
-{
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
-                                 JSMSG_THROW_TYPE_ERROR);
-    return false;
-}
-
-JSObject *
-js_InitFunctionClass(JSContext *cx, JSObject *obj)
-{
-    JSObject *proto = js_InitClass(cx, obj, NULL, &FunctionClass, Function, 1,
-                                   NULL, function_methods, NULL, NULL);
-    if (!proto)
-        return NULL;
-
-    /*
-     * The default 'new' object for Function.prototype has unknown properties.
-     * This will be used for generic scripted functions, e.g. from non-compileAndGo code.
-     */
-    proto->getNewType(cx, NULL, /* markUnknown = */ true);
-
-    JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
-    if (!fun)
-        return NULL;
-    fun->flags |= JSFUN_PROTOTYPE;
-
-    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
-    if (!script)
-        return NULL;
-    script->noScriptRval = true;
-    script->code[0] = JSOP_STOP;
-    script->code[1] = SRC_NULL;
-    fun->u.i.script = script;
-    fun->getType(cx)->interpretedFunction = fun;
-    script->hasFunction = true;
-    script->setOwnerObject(fun);
-    js_CallNewScriptHook(cx, script, fun);
-
-    if (obj->isGlobal()) {
-        /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-        JSFunction *throwTypeError =
-            js_NewFunction(cx, NULL, reinterpret_cast<Native>(ThrowTypeError), 0,
-                           0, obj, NULL);
-        if (!throwTypeError)
-            return NULL;
-
-        obj->asGlobal()->setThrowTypeError(throwTypeError);
-    }
-
-    return proto;
-}
 
 JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,

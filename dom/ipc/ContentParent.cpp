@@ -96,6 +96,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsDeviceMotion.h"
+#include "mozilla/Util.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsMemoryReporterManager.h"
@@ -224,7 +225,7 @@ ContentParent::Init()
     // If accessibility is running in chrome process then start it in content
     // process.
     if (nsIPresShell::IsAccessibilityActive()) {
-        SendActivateA11y();
+        unused << SendActivateA11y();
     }
 #endif
 }
@@ -368,7 +369,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                 notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("content"));
 
                 char startTime[32];
-                sprintf(startTime, "%lld", static_cast<PRInt64>(mProcessStartTime));
+                sprintf(startTime, "%lld", static_cast<long long>(mProcessStartTime));
                 notes.Put(NS_LITERAL_CSTRING("StartupTime"),
                           nsDependentCString(startTime));
 
@@ -491,7 +492,7 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
                  "We have no permissionManager in the Chrome process !");
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
+    DebugOnly<nsresult> rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
     while(1) {
         PRBool hasMore;
@@ -751,7 +752,7 @@ ContentParent::Observe(nsISupports* aSubject,
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, "child-memory-reporter-request")) {
-        SendPMemoryReportRequestConstructor();
+        unused << SendPMemoryReportRequestConstructor();
     }
     else if (!strcmp(aTopic, "child-gc-request")){
         SendGarbageCollect();
@@ -764,7 +765,7 @@ ContentParent::Observe(nsISupports* aSubject,
     // gets initiated in chrome process.
     else if (aData && (*aData == '1') &&
              !strcmp(aTopic, "a11y-init-or-shutdown")) {
-        SendActivateA11y();
+        unused << SendActivateA11y();
     }
 #endif
 

@@ -205,6 +205,8 @@ public:
                                         nsIPrivateTextRangeList *aTextRange)=0;
   nsresult EndIMEComposition();
 
+  void SwitchTextDirectionTo(PRUint32 aDirection);
+
   void BeginKeypressHandling() { mLastKeypressEventWasTrusted = eTriTrue; }
   void BeginKeypressHandling(nsIDOMNSEvent* aEvent);
   void EndKeypressHandling() { mLastKeypressEventWasTrusted = eTriUnset; }
@@ -230,6 +232,8 @@ public:
 
 protected:
   nsCString mContentMIMEType;       // MIME type of the doc we are editing.
+
+  nsresult DetermineCurrentDirection();
 
   /** create a transaction for setting aAttribute to aValue on aElement
     */
