@@ -5665,6 +5665,8 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     if (slot != SHAPE_INVALID_SLOT) {
         *vp = pobj->nativeGetSlot(slot);
         JS_ASSERT(!vp->isMagic());
+        JS_ASSERT_IF(!pobj->hasSingletonType() && shape->hasDefaultGetterOrIsMethod(),
+                     js::types::TypeHasProperty(cx, pobj->type(), shape->propid, *vp));
     } else {
         vp->setUndefined();
     }
@@ -5674,6 +5676,14 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     if (JS_UNLIKELY(shape->isMethod()) && (getHow & JSGET_NO_METHOD_BARRIER)) {
         JS_ASSERT(shape->methodObject() == vp->toObject());
         return true;
+    }
+
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc);
+    if (script && script->hasAnalysis() && !cx->fp()->hasImacropc()) {
+        analyze::Bytecode *code = script->analysis()->maybeCode(pc);
+        if (code)
+            code->accessGetter = true;
     }
 
     sample = cx->runtime->propertyRemovals;
@@ -5687,9 +5697,6 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
             return false;
         pobj->nativeSetSlot(slot, *vp);
     }
-
-    /* Record values produced by shapes without a default getter. */
-    AddTypePropertyId(cx, obj, shape->propid, *vp);
 
     return true;
 }
@@ -5991,7 +5998,7 @@ CloneFunctionForSetMethod(JSContext *cx, Value *vp)
      * need to be cloned again.
      */
     if (fun == funobj) {
-        funobj = CloneFunctionObject(cx, fun, fun->parent, true);
+        funobj = CloneFunctionObject(cx, fun);
         if (!funobj)
             return false;
         vp->setObject(*funobj);

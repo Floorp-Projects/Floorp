@@ -512,6 +512,7 @@ _TEST_FILES2 = \
 		bug682592-subframe.html \
 		bug682592-subframe-ref.html \
 		test_bug685798.html \
+		test_bug686449.xhtml \
 		$(NULL)
 
 _CHROME_FILES =	\

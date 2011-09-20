@@ -277,6 +277,7 @@ _TEST_FILES = \
 		test_checked.html \
 		test_bug677658.html \
 		test_bug677463.html \
+		test_bug682886.html \
 		file_fullscreen-api.html \
 		file_fullscreen-api-keys.html \
 		test_fullscreen-api.html \
