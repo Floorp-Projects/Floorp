@@ -235,8 +235,6 @@ nsDOMStorageMemoryDB::SetKey(DOMStorageImpl* aStorage,
 
   *aNewUsage = usage;
 
-  MarkScopeDirty(aStorage);
-
   return NS_OK;
 }
 
@@ -256,8 +254,6 @@ nsDOMStorageMemoryDB::SetSecure(DOMStorageImpl* aStorage,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   item->mSecure = aSecure;
-
-  MarkScopeDirty(aStorage);
 
   return NS_OK;
 }
@@ -280,8 +276,6 @@ nsDOMStorageMemoryDB::RemoveKey(DOMStorageImpl* aStorage,
 
   storage->mUsageDelta -= aKey.Length() + item->mValue.Length();
   storage->mTable.Remove(aKey);
-
-  MarkScopeDirty(aStorage);
 
   return NS_OK;
 }
@@ -308,9 +302,6 @@ nsDOMStorageMemoryDB::ClearStorage(DOMStorageImpl* aStorage)
   NS_ENSURE_SUCCESS(rv, rv);
 
   storage->mTable.Enumerate(RemoveAllKeysEnum, storage);
-
-  MarkScopeDirty(aStorage);
-
   return NS_OK;
 }
 
@@ -318,7 +309,6 @@ nsresult
 nsDOMStorageMemoryDB::DropStorage(DOMStorageImpl* aStorage)
 {
   mData.Remove(aStorage->GetScopeDBKey());
-  MarkScopeDirty(aStorage);
   return NS_OK;
 }
 
@@ -356,8 +346,6 @@ nsDOMStorageMemoryDB::RemoveOwner(const nsACString& aOwner,
   struc.mMatch = PR_TRUE;
   mData.Enumerate(RemoveOwnersEnum, &struc);
 
-  MarkAllScopesDirty();
-
   return NS_OK;
 }
 
@@ -390,8 +378,6 @@ nsDOMStorageMemoryDB::RemoveOwners(const nsTArray<nsString> &aOwners,
     mData.Enumerate(RemoveOwnersEnum, &struc);
   }
 
-  MarkAllScopesDirty();
-
   return NS_OK;
 }
 
@@ -399,9 +385,6 @@ nsresult
 nsDOMStorageMemoryDB::RemoveAll()
 {
   mData.Clear(); // XXX Check this releases all instances
-
-  MarkAllScopesDirty();
-
   return NS_OK;
 }
 
