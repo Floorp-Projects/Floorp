@@ -1676,8 +1676,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   TabView.init();
 
   // Enable Inspector?
-  let enabled = gPrefService.getBoolPref(InspectorUI.prefEnabledName);
-  if (enabled) {
+  if (InspectorUI.enabled) {
     document.getElementById("menu_pageinspect").hidden = false;
     document.getElementById("Tools:Inspect").removeAttribute("disabled");
 #ifdef MENUBAR_CAN_AUTOHIDE
