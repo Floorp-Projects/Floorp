@@ -241,7 +241,7 @@ class Value
      * constructor prevents Value from being stored in a union.
      */
 
-    /*** Mutatators ***/
+    /*** Mutators ***/
 
     JS_ALWAYS_INLINE
     void setNull() {
