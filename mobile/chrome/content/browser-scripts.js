@@ -69,16 +69,12 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
 
 [
   ["FullScreenVideo"],
-  ["WebappsUI"],
   ["BadgeHandlers"],
   ["ContextHelper"],
-  ["SelectionHelper"],
   ["FormHelperUI"],
   ["FindHelperUI"],
   ["NewTabPopup"],
-  ["PageActions"],
   ["BrowserSearch"],
-  ["CharsetMenu"]
 ].forEach(function (aObject) {
   XPCOMUtils.defineLazyGetter(window, aObject, function() {
     return CommonUI[aObject];
@@ -96,6 +92,7 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["AwesomeScreen", "chrome://browser/content/AwesomePanel.js"],
   ["BookmarkHelper", "chrome://browser/content/BookmarkHelper.js"],
   ["BookmarkPopup", "chrome://browser/content/BookmarkPopup.js"],
+  ["CharsetMenu", "chrome://browser/content/CharsetMenu.js"],
   ["CommandUpdater", "chrome://browser/content/commandUtil.js"],
   ["ContextCommands", "chrome://browser/content/ContextCommands.js"],
   ["ConsoleView", "chrome://browser/content/console.js"],
@@ -104,9 +101,11 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
   ["MenuListHelperUI", "chrome://browser/content/MenuListHelperUI.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
   ["IndexedDB", "chrome://browser/content/IndexedDB.js"],
+  ["PageActions", "chrome://browser/content/PageActions.js"],
   ["PreferencesView", "chrome://browser/content/preferences.js"],
   ["Sanitizer", "chrome://browser/content/sanitize.js"],
   ["SelectHelperUI", "chrome://browser/content/SelectHelperUI.js"],
+  ["SelectionHelper", "chrome://browser/content/SelectionHelper.js"],
   ["ContentPopupHelper", "chrome://browser/content/ContentPopupHelper.js"],
   ["SharingUI", "chrome://browser/content/SharingUI.js"],
   ["TabsPopup", "chrome://browser/content/TabsPopup.js"],
@@ -114,6 +113,7 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
 #ifdef MOZ_SERVICES_SYNC
   ["WeaveGlue", "chrome://browser/content/sync.js"],
 #endif
+  ["WebappsUI", "chrome://browser/content/WebappsUI.js"],
   ["SSLExceptions", "chrome://browser/content/exceptions.js"]
 ].forEach(function (aScript) {
   let [name, script] = aScript;
