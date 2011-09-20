@@ -42,8 +42,8 @@ let doc = null;
 let xhr = null;
 let expectedResult = "";
 
-const TEST_URI = "http://mochi.test:8888/browser/browser/base/content/test/inspector/browser_inspector_treePanel_input.html";
-const RESULT_URI = "http://mochi.test:8888/browser/browser/base/content/test/inspector/browser_inspector_treePanel_result.html";
+const TEST_URI = "http://mochi.test:8888/browser/browser/devtools/highlighter/test/browser_inspector_treePanel_input.html";
+const RESULT_URI = "http://mochi.test:8888/browser/browser/devtools/highlighter/test/browser_inspector_treePanel_result.html";
 
 function tabFocused()
 {
