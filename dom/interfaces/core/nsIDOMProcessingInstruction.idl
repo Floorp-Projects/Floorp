@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMNode.idl"
+#include "nsIDOMCharacterData.idl"
 
 /**
  * The nsIDOMProcessingInstruction interface represents a 
@@ -45,13 +45,12 @@
  * information in the text of the document.
  *
  * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
+ * http://www.w3.org/TR/DOM-Level-2-Core/ and
+ * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(5964f639-1183-487d-a87d-4c93111eae85)]
-interface nsIDOMProcessingInstruction : nsIDOMNode
+[scriptable, uuid(d754433f-4637-4a5f-9034-0388173ea254)]
+interface nsIDOMProcessingInstruction : nsIDOMCharacterData
 {
   readonly attribute DOMString        target;
-           attribute DOMString        data;
-                                       // raises(DOMException) on setting
 };
