@@ -293,6 +293,9 @@ struct TraceMonitor {
 namespace mjit {
 class JaegerCompartment;
 }
+namespace ion {
+class IonCompartment;
+}
 }
 
 /* Defined in jsapi.cpp */
@@ -531,6 +534,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
+    void mark(JSTracer *trc);
     void markTypes(JSTracer *trc);
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
@@ -624,6 +628,18 @@ struct JS_FRIEND_API(JSCompartment) {
 
   public:
     js::WatchpointMap *watchpointMap;
+	
+#ifdef JS_ION
+  private:
+    js::ion::IonCompartment *ionCompartment_;
+
+  public:
+    bool ensureIonCompartmentExists(JSContext *cx);
+    js::ion::IonCompartment *ionCompartment() {
+        return ionCompartment_;
+    }
+#endif
+
 };
 
 #define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)

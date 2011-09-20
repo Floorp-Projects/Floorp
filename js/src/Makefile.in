@@ -342,7 +342,41 @@ CPPSRCS += 	MethodJIT.cpp \
 		TrampolineCompiler.cpp \
 		$(NULL)
 
+# Ion
+ifdef ENABLE_ION
+VPATH +=	$(srcdir)/ion
+VPATH +=	$(srcdir)/ion/shared
+
+CPPSRCS +=	MIR.cpp \
+		IonBuilder.cpp \
+		MIRGraph.cpp \
+		IonAnalysis.cpp \
+		Lowering.cpp \
+		Ion.cpp \
+		BitSet.cpp \
+		IonLIR.cpp \
+		GreedyAllocator.cpp \
+		C1Spewer.cpp \
+		JSONSpewer.cpp \
+		IonSpewer.cpp \
+		LICM.cpp \
+		ValueNumbering.cpp \
+		LinearScan.cpp \
+		MoveResolver.cpp \
+		CodeGenerator-shared.cpp \
+		Lowering-shared.cpp \
+		TypeOracle.cpp \
+		TypePolicy.cpp \
+		CodeGenerator.cpp \
+		IonMacroAssembler.cpp \
+		Snapshots.cpp \
+		Bailouts.cpp \
+		$(NULL)
+endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
+CPPSRCS +=	CodeGenerator-x86-shared.cpp
+CPPSRCS +=	MoveEmitter-x86-shared.cpp
+CPPSRCS +=	Assembler-x86-shared.cpp
 ifeq (x86_64, $(TARGET_CPU))
 ifdef _MSC_VER
 ASFILES +=	TrampolineMasmX64.asm
@@ -356,16 +390,40 @@ ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX64.s
 endif
 #CPPSRCS		+= only_on_x86_64.cpp
+VPATH +=	$(srcdir)/ion/x64
+CPPSRCS += 	Lowering-x64.cpp \
+		CodeGenerator-x64.cpp \
+		Trampoline-x64.cpp \
+		Assembler-x64.cpp \
+		Bailouts-x64.cpp \
+		$(NULL)
 else
 #CPPSRCS		+= only_on_x86.cpp
+VPATH +=	$(srcdir)/ion/x86
+CPPSRCS +=	Lowering-x86.cpp \
+		CodeGenerator-x86.cpp \
+		Trampoline-x86.cpp \
+		Assembler-x86.cpp \
+		Bailouts-x86.cpp \
+		$(NULL)
 ifdef SOLARIS_SUNPRO_CXX
 ASFILES +=	TrampolineSUNWX86.s
 endif
 endif
 endif
-ifeq (arm, $(TARGET_CPU))
+ifdef ENABLE_ION
+ifeq (arm, $(findstring arm, $(TARGET_CPU)))
 #CPPSRCS		+= only_on_arm.cpp
+VPATH +=	$(srcdir)/ion/arm
+CPPSRCS +=	Lowering-arm.cpp \
+		CodeGenerator-arm.cpp \
+		Trampoline-arm.cpp \
+		Assembler-arm.cpp \
+		Bailouts-arm.cpp \
+		MoveEmitter-arm.cpp \
+		$(NULL)
 endif
+endif #ENABLE_ION
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
 ASFILES +=	TrampolineSparc.s
 endif
@@ -464,7 +522,7 @@ else
 #CPPSRCS		+= only_on_x86.cpp
 endif
 endif
-ifeq (arm, $(TARGET_CPU))
+ifeq (arm, $(findstring arm, $(TARGET_CPU)))
 #CPPSRCS		+= only_on_arm.cpp
 endif
 #
@@ -666,7 +724,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 59 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 60 \
 		"in Makefile.in" "{cx,rt}->{new_,array_new,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \

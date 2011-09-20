@@ -1377,6 +1377,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory);
             break;
         }
+	case JSTRACE_IONCODE:
         case JSTRACE_XML:
         {
             break;

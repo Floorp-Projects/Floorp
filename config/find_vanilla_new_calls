@@ -60,10 +60,10 @@ nm -C $file > $tmpfile1
 
 # Need to double-escape '[' and ']' to stop grep from interpreting them
 # specially.
-grep 'operator new(unsigned int)'        $tmpfile1 >> $tmpfile2
-grep 'operator new(unsigned long)'       $tmpfile1 >> $tmpfile2
-grep 'operator new\\[\\](unsigned int)'  $tmpfile1 >> $tmpfile2
-grep 'operator new\\[\\](unsigned long)' $tmpfile1 >> $tmpfile2
+grep '^operator new(unsigned int)'        $tmpfile1 >> $tmpfile2
+grep '^operator new(unsigned long)'       $tmpfile1 >> $tmpfile2
+grep '^operator new\\[\\](unsigned int)'  $tmpfile1 >> $tmpfile2
+grep '^operator new\\[\\](unsigned long)' $tmpfile1 >> $tmpfile2
 rm -f $tmpfile1
 
 if [ -s $tmpfile2 ] ; then
