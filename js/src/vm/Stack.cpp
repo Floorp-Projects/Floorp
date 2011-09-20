@@ -750,6 +750,28 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     return true;
 }
 
+StackFrame *
+ContextStack::pushBailoutFrame(JSContext *cx, JSObject *callee, JSFunction *fun,
+                               JSScript *script, BailoutFrameGuard *bfg)
+{
+    uintN formalArgs = fun->nargs + 2;
+    uintN nvars = formalArgs + VALUES_PER_STACK_FRAME + script->nslots;
+    Value *firstUnused = ensureOnTop(cx, DONT_REPORT_ERROR, nvars, CAN_EXTEND, &bfg->pushedSeg_);
+    if (!firstUnused)
+        return NULL;
+    
+    StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused + formalArgs);
+    fp->initCallFrame(cx, *callee, fun, script, fun->nargs, ToFrameFlags(INITIAL_NONE));
+
+    SetValueRangeToUndefined(fp->slots(), script->nfixed);
+    bfg->regs_.prepareToRun(*fp, script);
+
+    bfg->prevRegs_ = seg_->pushRegs(bfg->regs_);
+    JS_ASSERT(space().firstUnused() == bfg->regs_.sp);
+    bfg->setPushed(*this);
+    return fp;
+}
+
 bool
 ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg)
 {

@@ -69,6 +69,7 @@
 #include "jsxdrapi.h"
 #endif
 #include "methodjit/MethodJIT.h"
+#include "ion/IonCode.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
 
@@ -1362,6 +1363,10 @@ JSScript::finalize(JSContext *cx)
 #ifdef JS_TRACER
     if (compartment()->hasTraceMonitor())
         PurgeScriptFragments(compartment()->traceMonitor(), this);
+#endif
+
+#ifdef JS_ION
+    ion::IonScript::Destroy(cx, this);
 #endif
 
     if (types)

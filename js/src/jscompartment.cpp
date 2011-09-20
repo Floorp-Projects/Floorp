@@ -59,6 +59,7 @@
 
 #include "jsgcinlines.h"
 #include "jsscopeinlines.h"
+#include "ion/IonCompartment.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -98,7 +99,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
     breakpointSites(rt),
-    watchpointMap(NULL)
+	watchpointMap(NULL)
+#ifdef JS_ION
+    , ionCompartment_(NULL)
+#endif
 {
     PodArrayZero(evalCache);
 }
@@ -107,6 +111,10 @@ JSCompartment::~JSCompartment()
 {
 #if ENABLE_YARR_JIT
     Foreground::delete_(regExpAllocator);
+#endif
+
+#ifdef JS_ION
+    Foreground::delete_(ionCompartment_);
 #endif
 
 #ifdef JS_METHODJIT
@@ -152,6 +160,28 @@ JSCompartment::init(JSContext *cx)
 
     return debuggees.init() && breakpointSites.init();
 }
+
+#ifdef JS_ION
+bool
+JSCompartment::ensureIonCompartmentExists(JSContext *cx)
+{
+    using namespace js::ion;
+    if (ionCompartment_)
+        return true;
+
+    // Set the compartment early, so linking works.
+    ionCompartment_ = cx->new_<IonCompartment>();
+
+    if (!ionCompartment_ || !ionCompartment_->initialize(cx)) {
+        if (ionCompartment_)
+            delete ionCompartment_;
+        ionCompartment_ = NULL;
+        return false;
+    }
+
+    return true;
+}
+#endif
 
 #ifdef JS_METHODJIT
 bool
@@ -477,6 +507,15 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 }
 
 void
+JSCompartment::mark(JSTracer *trc)
+{
+#ifdef JS_ION
+    if (ionCompartment_)
+        ionCompartment_->mark(trc, this);
+#endif
+}
+
+void
 JSCompartment::markTypes(JSTracer *trc)
 {
     /*
@@ -537,6 +576,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         initialRegExpShape = NULL;
     if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
         initialStringShape = NULL;
+
+    if (ionCompartment_)
+        ionCompartment_->sweep(cx);
 
     sweepBreakpoints(cx);
 

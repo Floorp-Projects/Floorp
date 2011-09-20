@@ -119,6 +119,11 @@ DEFINES += \
 CONFIG := $(shell cat $(DEPTH)/js/src/js-confdefs.h)
 
 ENABLE_JIT = $(filter JS_TRACER, $(CONFIG))
+ENABLE_ION = $(filter JS_ION, $(CONFIG))
+
+ifneq (,$(ENABLE_ION))
+DEFINES += -DJS_ION=1
+endif # ENABLE_ION
 
 ifneq (,$(ENABLE_JIT))
 

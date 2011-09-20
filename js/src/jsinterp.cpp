@@ -80,6 +80,7 @@
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
 #endif
+#include "ion/Ion.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
@@ -599,6 +600,14 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
             return false;
         }
     }
+
+#ifdef JS_ION
+    if (ion::IsEnabled()) {
+        ion::MethodStatus status = ion::Compile(cx, script, fp);
+        if (status == ion::Method_Compiled)
+            return ion::Cannon(cx, fp);
+    }
+#endif
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
@@ -2217,6 +2226,9 @@ check_backedge:
 
     DO_OP();
 }
+
+BEGIN_CASE(JSOP_NOTEARG)
+END_CASE(JSOP_NOTEARG)
 
 /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
 BEGIN_CASE(JSOP_LINENO)
@@ -4062,6 +4074,17 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     TRACE_0(EnterFrame);
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+	
+#ifdef JS_ION
+    if (!newType && ion::IsEnabled()) {
+        ion::MethodStatus status = ion::Compile(cx, script, regs.fp());
+        if (status == ion::Method_Compiled) {
+            interpReturnOK = ion::Cannon(cx, regs.fp());
+            CHECK_INTERRUPT_HANDLER();
+            goto jit_return;
+        }
+    }
+#endif
 
 #ifdef JS_METHODJIT
     if (!newType) {

@@ -45,6 +45,7 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
+#include "ion/IonCode.h"
 #include "vm/String-inl.h"
 #include "methodjit/MethodJIT.h"
 
@@ -216,6 +217,15 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
 }
 
 void
+MarkIonCode(JSTracer *trc, ion::IonCode *code, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(code);
+    JS_SET_TRACING_NAME(trc, name);
+    Mark(trc, code);
+}
+
+void
 MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
 {
     JS_ASSERT(trc);
@@ -297,6 +307,16 @@ PushMarkStack(GCMarker *gcmarker, JSShortString *thing)
                      thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
 
     (void) thing->markIfUnmarked(gcmarker->getMarkColor());
+}
+
+void
+PushMarkStack(GCMarker *gcmarker, ion::IonCode *thing)
+{
+    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+
+    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+        gcmarker->pushIonCode(thing);
 }
 
 void
@@ -417,11 +437,16 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
       case JSTRACE_TYPE_OBJECT:
         MarkTypeObject(trc, reinterpret_cast<types::TypeObject *>(thing), "type_stack");
         break;
+      case JSTRACE_IONCODE:
+        Mark(trc, reinterpret_cast<ion::IonCode *>(thing));
+        break;	
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
         Mark(trc, static_cast<JSXML *>(thing));
         break;
 #endif
+      default:
+        JS_NOT_REACHED("unknown trace kind");
     }
 }
 
@@ -562,6 +587,12 @@ void
 MarkRoot(JSTracer *trc, JSXML *thing, const char *name)
 {
     MarkXML(trc, thing, name);
+}
+
+void
+MarkRoot(JSTracer *trc, ion::IonCode *code, const char *name)
+{
+    MarkIonCode(trc, code, name);
 }
 
 static void
@@ -855,6 +886,10 @@ MarkChildren(JSTracer *trc, JSScript *script)
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 
+#ifdef JS_ION
+    ion::IonScript::Trace(trc, script);
+#endif
+
     script->bindings.trace(trc);
 
     if (script->types)
@@ -962,6 +997,12 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
         MarkObject(trc, *type->interpretedFunction, "type_function");
 }
 
+void
+MarkChildren(JSTracer *trc, ion::IonCode *code)
+{
+    code->trace(trc);
+}
+
 #ifdef JS_HAS_XML_SUPPORT
 void
 MarkChildren(JSTracer *trc, JSXML *xml)
@@ -990,6 +1031,9 @@ GCMarker::drainMarkStack()
 
         while (!xmlStack.isEmpty())
             MarkChildren(this, xmlStack.pop());
+
+	while (!ionCodeStack.isEmpty())
+            MarkChildren(this, ionCodeStack.pop());
 
         if (!largeStack.isEmpty()) {
             LargeMarkItem &item = largeStack.peek();
@@ -1029,6 +1073,10 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 
       case JSTRACE_SHAPE:
 	MarkChildren(trc, static_cast<Shape *>(thing));
+        break;
+
+      case JSTRACE_IONCODE:
+        MarkChildren(trc, (js::ion::IonCode *)thing);
         break;
 
       case JSTRACE_TYPE_OBJECT:
