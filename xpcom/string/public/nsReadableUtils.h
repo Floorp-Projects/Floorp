@@ -241,16 +241,29 @@ PRBool IsASCII( const nsACString& aString );
    *
    * (see bug 191541)
    * As such,  it does not check for non-UTF-8 7bit encodings such as 
-   * ISO-2022-JP and HZ. However, it filters out  UTF-8 representation
-   * of surrogate codepoints and non-characters ( 0xFFFE and 0xFFFF
-   * in planes 0 through 16.) as well as overlong UTF-8 sequences. 
-   * Also note that it regards UTF-8 sequences corresponding to 
-   * codepoints above 0x10FFFF as invalid in accordance with 
-   * http://www.ietf.org/internet-drafts/draft-yergeau-rfc2279bis-04.txt
+   * ISO-2022-JP and HZ. 
+   *
+   * It rejects sequences with the following errors:
+   *
+   * byte sequences that cannot be decoded into characters according to
+   *   UTF-8's rules (including cases where the input is part of a valid
+   *   UTF-8 sequence but starts or ends mid-character)
+   * overlong sequences (i.e., cases where a character was encoded
+   *   non-canonically by using more bytes than necessary)
+   * surrogate codepoints (i.e., the codepoints reserved for
+       representing astral characters in UTF-16)
+   * codepoints above the unicode range (i.e., outside the first 17
+   *   planes; higher than U+10FFFF), in accordance with
+   *   http://tools.ietf.org/html/rfc3629
+   * when aRejectNonChar is true (the default), any codepoint whose low
+   *   16 bits are 0xFFFE or 0xFFFF
+
    *
    * @param aString an 8-bit wide string to scan
+   * @param aRejectNonChar a boolean to control the rejection of utf-8
+   *        non characters
    */
-PRBool IsUTF8( const nsACString& aString );
+PRBool IsUTF8( const nsACString& aString, PRBool aRejectNonChar = PR_TRUE );
 
 PRBool ParseString(const nsACString& aAstring, char aDelimiter, 
                           nsTArray<nsCString>& aArray);
