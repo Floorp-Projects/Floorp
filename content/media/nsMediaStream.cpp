@@ -62,8 +62,8 @@
 #include "mozilla/Util.h" // for DebugOnly
 #include "nsContentUtils.h"
 
-#define HTTP_OK_CODE 200
-#define HTTP_PARTIAL_RESPONSE_CODE 206
+static const PRUint32 HTTP_OK_CODE = 200;
+static const PRUint32 HTTP_PARTIAL_RESPONSE_CODE = 206;
 
 using namespace mozilla;
 

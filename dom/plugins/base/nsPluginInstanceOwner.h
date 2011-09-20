@@ -144,7 +144,7 @@ public:
   void Paint(const gfxRect& aDirtyRect, CGContextRef cgContext);  
   void RenderCoreAnimation(CGContextRef aCGContext, int aWidth, int aHeight);
   void DoCocoaEventDrawRect(const gfxRect& aDrawRect, CGContextRef cgContext);
-#elif defined(MOZ_X11)
+#elif defined(MOZ_X11) || defined(ANDROID)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
              const gfxRect& aDirtyRect);
@@ -308,7 +308,10 @@ private:
   }
   
   void FixUpURLS(const nsString &name, nsAString &value);
-  
+#ifdef ANDROID
+  void RemovePluginView();
+#endif 
+ 
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
   nsObjectFrame              *mObjectFrame; // owns nsPluginInstanceOwner

@@ -71,6 +71,21 @@ var ContextCommands = {
     clipboard.copyString(ContextHelper.popupState.linkURL);
   },
 
+  copyEmail: function cc_copyEmail() {
+      let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+      clipboard.copyString(ContextHelper.popupState.linkURL.substr(ContextHelper.popupState.linkURL.indexOf(':')+1));
+  },
+
+  copyPhone: function cc_copyPhone() {
+      let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+      clipboard.copyString(ContextHelper.popupState.linkURL.substr(ContextHelper.popupState.linkURL.indexOf(':')+1));
+  },
+
+  copyImageLocation: function cc_copyImageLocation() {
+      let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+      clipboard.copyString(ContextHelper.popupState.mediaURL);
+  },
+
   shareLink: function cc_shareLink() {
     let state = ContextHelper.popupState;
     SharingUI.show(state.linkURL, state.linkTitle);

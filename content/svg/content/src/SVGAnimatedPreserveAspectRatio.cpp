@@ -247,9 +247,7 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   }
 #endif
 
-  // We don't need to call DidChange* here - we're only called by
-  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
-  // which takes care of notifying.
+  aSVGElement->DidChangePreserveAspectRatio(aDoSetAttr);
   return NS_OK;
 }
 

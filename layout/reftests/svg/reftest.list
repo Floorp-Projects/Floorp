@@ -62,6 +62,7 @@ fails-if(Android) == dynamic-conditions-01.svg pass.svg # bug 652050
 == dynamic-conditions-12.svg pass.svg
 == dynamic-conditions-13.svg about:blank
 == dynamic-clipPath-01.svg pass.svg
+== dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 == dynamic-feImage-01.svg pass.svg
 == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
@@ -72,6 +73,8 @@ fails-if(Android) == dynamic-conditions-01.svg pass.svg # bug 652050
 == dynamic-link-style-01.svg pass.svg
 == dynamic-marker-01.svg pass.svg
 == dynamic-marker-02.svg dynamic-marker-02-ref.svg
+== dynamic-marker-03.svg pass.svg
+== dynamic-mask-01.svg pass.svg
 == dynamic-mask-contents-01.svg pass.svg
 == dynamic-pattern-01.svg pass.svg
 == dynamic-pattern-02.svg pass.svg
@@ -111,6 +114,8 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == filter-basic-01.svg pass.svg
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
+== filter-bounds-01.svg pass.svg
+== filter-bounds-02.svg pass.svg
 == filter-foreignObject-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
 == filter-scaled-01.svg pass.svg
@@ -146,6 +151,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
+random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundingBox-and-fePointLight-02-ref.svg
 == objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-mask-02.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg

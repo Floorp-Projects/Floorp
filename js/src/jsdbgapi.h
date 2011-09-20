@@ -90,9 +90,6 @@ class JS_PUBLIC_API(AutoEnterFrameCompartment) : public AutoEnterScriptCompartme
 JS_BEGIN_EXTERN_C
 #endif
 
-extern JS_PUBLIC_API(JSScript *)
-JS_GetScriptFromObject(JSObject *scriptObject);
-
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN indent);
 

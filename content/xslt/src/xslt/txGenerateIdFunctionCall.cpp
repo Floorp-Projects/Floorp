@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 #include "txXPathTreeWalker.h"
@@ -135,7 +135,7 @@ GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 nsresult
 GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
-    *aAtom = txXSLTAtoms::generateId;
+    *aAtom = nsGkAtoms::generateId;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }

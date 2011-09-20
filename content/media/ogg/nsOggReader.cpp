@@ -63,20 +63,13 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-// If we don't have a Theora video stream, then during seeking, if a seek
-// target is less than SEEK_DECODE_MARGIN ahead of the current playback
-// position, we'll just decode forwards rather than performing a bisection
-// search. If we have Theora video we use the maximum keyframe interval as
-// this value, rather than SEEK_DECODE_MARGIN. This makes small seeks faster.
-#define SEEK_DECODE_MARGIN 2000000
-
 // The number of microseconds of "fuzz" we use in a bisection search over
 // HTTP. When we're seeking with fuzz, we'll stop the search if a bisection
 // lands between the seek target and SEEK_FUZZ_USECS microseconds before the
 // seek target.  This is becaue it's usually quicker to just keep downloading
 // from an exisiting connection than to do another bisection inside that
 // small range, which would open a new HTTP connetion.
-#define SEEK_FUZZ_USECS 500000
+static const PRUint32 SEEK_FUZZ_USECS = 500000;
 
 enum PageSyncResult {
   PAGE_SYNC_ERROR = 1,

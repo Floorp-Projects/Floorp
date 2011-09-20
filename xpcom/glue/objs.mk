@@ -69,12 +69,15 @@ XPCOM_GLUENS_SRC_LCPPSRCS =      \
   BlockingResourceBase.cpp       \
   DeadlockDetector.cpp           \
   SSE.cpp                        \
-  arm.cpp                        \
   unused.cpp                     \
   nsProxyRelease.cpp             \
   nsTextFormatter.cpp            \
   GenericFactory.cpp             \
   FileUtils.cpp                  \
   $(NULL)
+
+ifeq (arm,$(TARGET_CPU))
+XPCOM_GLUENS_SRC_LCPPSRCS += arm.cpp
+endif
 
 XPCOM_GLUENS_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCPPSRCS))

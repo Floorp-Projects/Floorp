@@ -51,8 +51,10 @@
   /* Use px instead of mozmm because tab bar items have hard-coded pixel sizes */
   width: 200px;
   padding: 12px;
+  padding-bottom: 0px;
   -moz-margin-start: 0px;
   background: none;
+  margin-bottom: 0px;
 }
 
 #tabs[tablet] documenttab[selected="true"] {
@@ -60,23 +62,26 @@
 }
 
 .documenttab-thumbnail[tablet] {
-  border-radius: @border_radius_tiny@;
+  border-radius: @border_radius_xsmall@;
+  border: 0px;
 }
 
 .documenttab-close-container[tablet] {
   left: 0px;
   -moz-margin-end: 0px;
-  -moz-margin-start: 135px;
+  -moz-margin-start: 145px;
   -moz-box-pack: end;
   -moz-box-align: center;
+  -moz-margin-end: -11px;
+  padding-right: 11px;
 }
 
-documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
+documenttab[selected="true"] > vbox > stack > .documenttab-close-container[tablet] {
   background: url("chrome://browser/skin/images/close-background-hdpi.png");
   background-repeat: no-repeat;
   background-position: right;
-  -moz-margin-end: -12px;
-  padding-right: 2px;
+  -moz-margin-start: 146px;
+  padding-right: 0px;
 }
 
 .documenttab-close[tablet] {
@@ -85,7 +90,7 @@ documenttab[selected="true"] > stack > .documenttab-close-container[tablet] {
   list-style-image: url("chrome://browser/skin/images/close-inactive-tab-tablet-hdpi.png");
 }
 
-documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
+documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] {
   list-style-image: url("chrome://browser/skin/images/close-default-tablet-hdpi.png");
 }
 
@@ -95,6 +100,15 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
 
 .documenttab-reload[tablet] {
   background: url("chrome://browser/skin/images/tab-reopen-tablet-hdpi.png");
+}
+
+.documenttab-title[tablet] {
+  color: #FFF;
+  font-size: @font_xxtiny@ !important;
+  padding: @padding_snormal@;
+  margin: 0px;
+  text-align: center;
+  display: -moz-box;
 }
 
 #newtab-button[tablet] {
@@ -139,6 +153,47 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
   width: 100%;
 }
 
+arrowbox {
+  -moz-stack-sizing: ignore;
+}
+
+#tabs-popup-list {
+  min-width: @dialog_width@;
+  max-width: @dialog_width@;
+  overflow-x: no-display;
+}
+
+#tabs-popup-newtab-button,
+.tab-popup-item {
+  -moz-box-align: center;
+}
+
+.tab-popup-item-box {
+  -moz-box-flex: 1;
+  -moz-box-align: center;
+}
+
+.documenttab-popup-favicon {
+  width: 32px;
+  height: 32px;
+}
+
+.tab-popup-item.selected .documenttab-popup-checkmark {
+  list-style-image: url("chrome://browser/skin/images/checkmark-hdpi.png");
+}
+
+.documenttab-popup-label {
+  -moz-box-flex: 1;
+}
+
+.documenttab-popup-checkmark {
+  min-width: 26px; /* size of the checkmark image */
+}
+
+#tabs-popup-newtab-button {
+  -moz-box-flex: 1;
+}
+
 %ifndef honeycomb
 @media (min-width: @tablet_panel_minwidth@) {
   #awesome-panels {
@@ -147,5 +202,12 @@ documenttab[selected="true"] > stack > hbox > .documenttab-close[tablet] {
   #search-engines-popup {
     max-width: -moz-calc(@tablet_panel_minwidth@);
   }
+}
+.documenttab-popup-closebutton {
+  list-style-image: url("chrome://browser/skin/images/close-default-hdpi.png");
+}
+
+#tabs-popup-newtab-button {
+  list-style-image: url("chrome://browser/skin/images/newtab-hdpi.png");
 }
 %endif

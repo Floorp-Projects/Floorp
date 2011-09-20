@@ -73,8 +73,7 @@ public:
     CANPLAY_YES
   };
 
-  nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
+  nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLMediaElement();
 
   /**

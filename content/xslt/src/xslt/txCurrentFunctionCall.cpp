@@ -1,4 +1,4 @@
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txXSLTFunctions.h"
 #include "txExecutionState.h"
 
@@ -54,7 +54,7 @@ CurrentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 nsresult
 CurrentFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
-    *aAtom = txXSLTAtoms::current;
+    *aAtom = nsGkAtoms::current;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }

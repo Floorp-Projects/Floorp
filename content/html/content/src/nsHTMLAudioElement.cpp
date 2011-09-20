@@ -90,7 +90,7 @@ NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     NS_ENSURE_TRUE(nodeInfo, nsnull);
   }
 
-  return new nsHTMLAudioElement(nodeInfo.forget(), aFromParser);
+  return new nsHTMLAudioElement(nodeInfo.forget());
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
@@ -108,9 +108,8 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
 
 
-nsHTMLAudioElement::nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                       FromParser aFromParser)
-  : nsHTMLMediaElement(aNodeInfo, aFromParser)
+nsHTMLAudioElement::nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : nsHTMLMediaElement(aNodeInfo)
 {
 }
 

@@ -116,17 +116,21 @@ var BrowserUI = {
   },
 
   _titleChanged: function(aBrowser) {
+    let url = this.getDisplayURI(aBrowser);
+    let caption = aBrowser.contentTitle || url;
+
+    if (aBrowser.contentTitle == "" && !Util.isURLEmpty(aBrowser.userTypedValue))
+      caption = aBrowser.userTypedValue;
+    else if (Util.isURLEmpty(url))
+      caption = "";
+
+    let tab = Browser.getTabForBrowser(aBrowser);
+    if (tab)
+      tab.chromeTab.updateTitle(caption);
+
     let browser = Browser.selectedBrowser;
     if (browser && aBrowser != browser)
       return;
-
-    let url = this.getDisplayURI(browser);
-    let caption = browser.contentTitle || url;
-
-    if (browser.contentTitle == "" && !Util.isURLEmpty(browser.userTypedValue))
-      caption = browser.userTypedValue;
-    else if (Util.isURLEmpty(url))
-      caption = "";
 
     if (caption) {
       this._title.value = caption;
@@ -426,6 +430,9 @@ var BrowserUI = {
 
     // listening AppCommand to handle special keys
     window.addEventListener("AppCommand", this, true);
+
+    // Initialize the number of tabs in toolbar
+    TabsPopup.init();
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.

@@ -39,7 +39,7 @@
 #include "jspubtd.h"
 %}
 
-[scriptable, uuid(c3cc4504-1eaf-42e9-8b1b-a3020f6d3a28)]
+[scriptable, uuid(1b065b41-6e00-450c-a44c-e0e44581c08a)]
 interface nsIInlineEventHandlers : nsISupports
 {
   [implicit_jscontext] attribute jsval onabort;
@@ -77,6 +77,8 @@ interface nsIInlineEventHandlers : nsISupports
   [implicit_jscontext] attribute jsval onmousemove;
   [implicit_jscontext] attribute jsval onmouseout;
   [implicit_jscontext] attribute jsval onmouseover;
+  [implicit_jscontext] attribute jsval onmouseenter;
+  [implicit_jscontext] attribute jsval onmouseleave;
   [implicit_jscontext] attribute jsval onmouseup;
   // Not supported yet
   // [implicit_jscontext] attribute jsval onmousewheel;
@@ -86,7 +88,6 @@ interface nsIInlineEventHandlers : nsISupports
   [implicit_jscontext] attribute jsval onplaying;
   [implicit_jscontext] attribute jsval onprogress;
   [implicit_jscontext] attribute jsval onratechange;
-  [implicit_jscontext] attribute jsval onreadystatechange;
   [implicit_jscontext] attribute jsval onreset;
   [implicit_jscontext] attribute jsval onscroll;
   [implicit_jscontext] attribute jsval onseeked;

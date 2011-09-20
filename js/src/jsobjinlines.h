@@ -67,6 +67,7 @@
 
 #include "vm/GlobalObject.h"
 
+#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
 #include "jsprobes.h"
@@ -143,8 +144,6 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT_IF(!hasSingletonType() && nativeContains(cx, js_CheckForStringIndex(id)),
-                     js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
 }
@@ -266,7 +265,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(fun == funobj);
     JS_ASSERT(fun->isNullClosure());
 
-    funobj = CloneFunctionObject(cx, fun, funobj->getParent(), true);
+    funobj = CloneFunctionObject(cx, fun);
     if (!funobj)
         return NULL;
     funobj->setMethodObj(*this);
@@ -1090,6 +1089,40 @@ inline void
 JSObject::setSharedNonNativeMap()
 {
     setMap(&js::Shape::sharedNonNative);
+}
+
+inline JSBool
+JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp)
+{
+    js::LookupElementOp op = getOps()->lookupElement;
+    return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
+}
+
+inline JSBool
+JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return getProperty(cx, receiver, id, vp);
+}
+
+inline JSBool
+JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return getProperty(cx, id, vp);
+}
+
+inline JSBool
+JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict)
+{
+    jsid id;
+    if (!js::IndexToId(cx, index, &id))
+        return false;
+    return deleteProperty(cx, id, rval, strict);
 }
 
 static inline bool
