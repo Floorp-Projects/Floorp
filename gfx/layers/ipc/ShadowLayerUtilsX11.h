@@ -60,6 +60,8 @@ struct SurfaceDescriptorX11 {
 
   SurfaceDescriptorX11(gfxXlibSurface* aSurf);
 
+  SurfaceDescriptorX11(const int aXid, const int aXrenderPictID, const gfxIntSize& aSize);
+
   // Default copy ctor and operator= are OK
 
   bool operator==(const SurfaceDescriptorX11& aOther) const {
