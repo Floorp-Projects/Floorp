@@ -87,6 +87,7 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args);
     virtual bool hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp);
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
+    virtual bool classPropertyIs(JSContext *cx, JSObject *obj, ESClassValue classValue);
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp);

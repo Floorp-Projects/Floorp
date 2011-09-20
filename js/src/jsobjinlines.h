@@ -1747,6 +1747,22 @@ BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
     return true;
 }
 
+inline bool
+ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
+{
+    if (JS_UNLIKELY(obj.isProxy()))
+        return obj.getProxyHandler()->classPropertyIs(cx, &obj, classValue);
+
+    switch (classValue) {
+      case ESClass_Array: return obj.isArray();
+      case ESClass_Number: return obj.isNumber();
+      case ESClass_String: return obj.isString();
+      case ESClass_Boolean: return obj.isBoolean();
+    }
+    JS_NOT_REACHED("bad classValue");
+    return false;
+}
+
 } /* namespace js */
 
 inline JSObject *
