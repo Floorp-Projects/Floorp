@@ -106,7 +106,7 @@ class TPSTestRunner(object):
                           'extensions.checkCompatibility.4.0': False,
                         }
   syncVerRe = re.compile(
-      r"Weave version: (?P<syncversion>.*)\n")
+      r"Sync version: (?P<syncversion>.*)\n")
   ffVerRe = re.compile(
       r"Firefox version: (?P<ffver>.*)\n")
   ffDateRe = re.compile(
