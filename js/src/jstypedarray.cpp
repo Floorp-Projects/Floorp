@@ -311,10 +311,10 @@ ArrayBuffer::obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
 }
 
 JSBool
-ArrayBuffer::obj_lookupSpecial(JSContext *cx, JSObject *obj, jsid id,
+ArrayBuffer::obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
                                JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupProperty(cx, obj, id, objp, propp);
+    return obj_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 JSBool
@@ -341,10 +341,10 @@ ArrayBuffer::obj_defineElement(JSContext *cx, JSObject *obj, uint32 index, const
 }
 
 JSBool
-ArrayBuffer::obj_defineSpecial(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+ArrayBuffer::obj_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
                                PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return obj_defineProperty(cx, obj, id, v, getter, setter, attrs);
+    return obj_defineProperty(cx, obj, SPECIALID_TO_JSID(sid), v, getter, setter, attrs);
 }
 
 JSBool
@@ -372,9 +372,9 @@ ArrayBuffer::obj_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, ui
 }
 
 JSBool
-ArrayBuffer::obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+ArrayBuffer::obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return obj_getProperty(cx, obj, receiver, id, vp);
+    return obj_getProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 JSBool
@@ -442,9 +442,9 @@ ArrayBuffer::obj_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *v
 }
 
 JSBool
-ArrayBuffer::obj_setSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+ArrayBuffer::obj_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return obj_setProperty(cx, obj, id, vp, strict);
+    return obj_setProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 JSBool
@@ -471,9 +471,9 @@ ArrayBuffer::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index
 }
 
 JSBool
-ArrayBuffer::obj_getSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+ArrayBuffer::obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_getAttributes(cx, obj, id, attrsp);
+    return obj_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 JSBool
@@ -501,9 +501,9 @@ ArrayBuffer::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index
 }
 
 JSBool
-ArrayBuffer::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+ArrayBuffer::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_setSpecialAttributes(cx, obj, id, attrsp);
+    return obj_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 JSBool
@@ -530,9 +530,9 @@ ArrayBuffer::obj_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value
 }
 
 JSBool
-ArrayBuffer::obj_deleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+ArrayBuffer::obj_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return obj_deleteProperty(cx, obj, id, rval, strict);
+    return obj_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 JSBool
@@ -694,10 +694,10 @@ TypedArray::obj_lookupElement(JSContext *cx, JSObject *obj, uint32 index,
 }
 
 JSBool
-TypedArray::obj_lookupSpecial(JSContext *cx, JSObject *obj, jsid id,
+TypedArray::obj_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid,
                               JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupProperty(cx, obj, id, objp, propp);
+    return obj_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 JSBool
@@ -717,9 +717,9 @@ TypedArray::obj_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index,
 }
 
 JSBool
-TypedArray::obj_getSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+TypedArray::obj_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_getAttributes(cx, obj, id, attrsp);
+    return obj_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 JSBool
@@ -737,9 +737,9 @@ TypedArray::obj_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index,
 }
 
 JSBool
-TypedArray::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+TypedArray::obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return obj_setAttributes(cx, obj, id, attrsp);
+    return obj_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 /* static */ int
@@ -1000,9 +1000,9 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+    obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
     {
-        return obj_getProperty(cx, obj, receiver, id, vp);
+        return obj_getProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
     }
 
     static bool
@@ -1105,9 +1105,9 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_setSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+    obj_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
     {
-        return obj_setProperty(cx, obj, id, vp, strict);
+        return obj_setProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
     }
 
     static JSBool
@@ -1130,10 +1130,10 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_defineSpecial(JSContext *cx, JSObject *obj, jsid id, const Value *v,
+    obj_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, uintN attrs)
     {
-        return obj_defineProperty(cx, obj, id, v, getter, setter, attrs);
+        return obj_defineProperty(cx, obj, SPECIALID_TO_JSID(sid), v, getter, setter, attrs);
     }
 
     static JSBool
@@ -1172,9 +1172,9 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_deleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+    obj_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
     {
-        return obj_deleteProperty(cx, obj, id, rval, strict);
+        return obj_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
     }
 
     static JSBool

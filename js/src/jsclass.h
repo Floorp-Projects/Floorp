@@ -51,6 +51,126 @@
 namespace js {
 
 class AutoIdVector;
+class SpecialId;
+
+static JS_ALWAYS_INLINE jsid
+SPECIALID_TO_JSID(const SpecialId &sid);
+
+/*
+ * We partition the ways to refer to a property into three: by an index
+ * (uint32); by a string whose characters do not represent an index
+ * (PropertyName, see vm/String.h); and by various special values.
+ *
+ * Special values are encoded using SpecialId, which is layout-compatible but
+ * non-interconvertible with jsid.  A SpecialId may be: an object (used by E4X
+ * and perhaps eventually by Harmony-proposed private names); JSID_VOID, which
+ * does not occur in JS scripts but may be used to indicate the absence of a
+ * valid identifier; or JS_DEFAULT_XML_NAMESPACE_ID, if E4X is enabled.
+ */
+
+class SpecialId {
+    uintptr_t bits;
+
+    /* Needs access to raw bits. */
+    friend JS_ALWAYS_INLINE jsid SPECIALID_TO_JSID(const SpecialId &sid);
+
+    static const uintptr_t TYPE_VOID = JSID_TYPE_VOID;
+    static const uintptr_t TYPE_OBJECT = JSID_TYPE_OBJECT;
+    static const uintptr_t TYPE_DEFAULT_XML_NAMESPACE = JSID_TYPE_DEFAULT_XML_NAMESPACE;
+    static const uintptr_t TYPE_MASK = JSID_TYPE_MASK;
+
+    SpecialId(uintptr_t bits) : bits(bits) { }
+
+  public:
+    SpecialId() : bits(TYPE_VOID) { }
+
+    /* Object-valued */
+
+    SpecialId(JSObject &obj)
+      : bits(uintptr_t(&obj) | TYPE_OBJECT)
+    {
+        JS_ASSERT(&obj != NULL);
+        JS_ASSERT((uintptr_t(&obj) & TYPE_MASK) == 0);
+    }
+
+    bool isObject() const {
+        return (bits & TYPE_MASK) == TYPE_OBJECT && bits != TYPE_OBJECT;
+    }
+
+    JSObject *toObject() const {
+        JS_ASSERT(isObject());
+        return reinterpret_cast<JSObject *>(bits & ~TYPE_MASK);
+    }
+
+    /* Empty */
+
+    static SpecialId empty() {
+        SpecialId sid(TYPE_OBJECT);
+        JS_ASSERT(sid.isEmpty());
+        return sid;
+    }
+
+    bool isEmpty() const {
+        return bits == TYPE_OBJECT;
+    }
+
+    /* Void */
+
+    static SpecialId voidId() {
+        SpecialId sid(TYPE_VOID);
+        JS_ASSERT(sid.isVoid());
+        return sid;
+    }
+
+    bool isVoid() const {
+        return bits == TYPE_VOID;
+    }
+
+    /* Default XML namespace */
+
+    static SpecialId defaultXMLNamespace() {
+        SpecialId sid(TYPE_DEFAULT_XML_NAMESPACE);
+        JS_ASSERT(sid.isDefaultXMLNamespace());
+        return sid;
+    }
+
+    bool isDefaultXMLNamespace() const {
+        return bits == TYPE_DEFAULT_XML_NAMESPACE;
+    }
+};
+
+static JS_ALWAYS_INLINE jsid
+SPECIALID_TO_JSID(const SpecialId &sid)
+{
+    jsid id;
+    JSID_BITS(id) = sid.bits;
+    JS_ASSERT_IF(sid.isObject(), JSID_IS_OBJECT(id) && JSID_TO_OBJECT(id) == sid.toObject());
+    JS_ASSERT_IF(sid.isVoid(), JSID_IS_VOID(id));
+    JS_ASSERT_IF(sid.isEmpty(), JSID_IS_EMPTY(id));
+    JS_ASSERT_IF(sid.isDefaultXMLNamespace(), JSID_IS_DEFAULT_XML_NAMESPACE(id));
+    return id;
+}
+
+static JS_ALWAYS_INLINE bool
+JSID_IS_SPECIAL(jsid id)
+{
+    return JSID_IS_OBJECT(id) || JSID_IS_EMPTY(id) || JSID_IS_VOID(id) ||
+           JSID_IS_DEFAULT_XML_NAMESPACE(id);
+}
+
+static JS_ALWAYS_INLINE SpecialId
+JSID_TO_SPECIALID(jsid id)
+{
+    JS_ASSERT(JSID_IS_SPECIAL(id));
+    if (JSID_IS_OBJECT(id))
+        return SpecialId(*JSID_TO_OBJECT(id));
+    if (JSID_IS_EMPTY(id))
+        return SpecialId::empty();
+    if (JSID_IS_VOID(id))
+        return SpecialId::voidId();
+    JS_ASSERT(JSID_IS_DEFAULT_XML_NAMESPACE(id));
+    return SpecialId::defaultXMLNamespace();
+}
 
 /* js::Class operation signatures. */
 
@@ -64,7 +184,7 @@ typedef JSBool
 (* LookupElementOp)(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
-(* LookupSpecialOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+(* LookupSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp,
                     JSProperty **propp);
 typedef JSBool
 (* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
@@ -76,7 +196,7 @@ typedef JSBool
 (* DefineElementOp)(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
-(* DefineSpecialOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+(* DefineSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 typedef JSBool
 (* GenericIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
@@ -85,7 +205,7 @@ typedef JSBool
 typedef JSBool
 (* ElementIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp);
 typedef JSBool
-(* SpecialIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+(* SpecialIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp);
 typedef JSBool
 (* StrictGenericIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
@@ -93,7 +213,7 @@ typedef JSBool
 typedef JSBool
 (* StrictElementIdOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool
-(* StrictSpecialIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* StrictSpecialIdOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
 typedef JSBool
 (* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 typedef JSBool
@@ -101,7 +221,7 @@ typedef JSBool
 typedef JSBool
 (* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp);
 typedef JSBool
-(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
 typedef JSBool
 (* DeleteGenericOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
@@ -109,7 +229,7 @@ typedef JSBool
 typedef JSBool
 (* DeleteElementOp)(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict);
 typedef JSBool
-(* DeleteSpecialOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+(* DeleteSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
 typedef JSType
 (* TypeOfOp)(JSContext *cx, JSObject *obj);
 
