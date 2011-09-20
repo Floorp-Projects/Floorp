@@ -223,11 +223,15 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: getStorageData
   // Get data to be used for persistent storage of this object.
   getStorageData: function TabItem_getStorageData() {
-    return {
+    let data = {
       url: this.tab.linkedBrowser.currentURI.spec,
       groupID: (this.parent ? this.parent.id : 0),
       title: this.tab.label
     };
+    if (this.parent.getActiveTab() == this)
+      data.active = true;
+
+    return data;
   },
 
   // ----------
@@ -339,14 +343,13 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     Utils.assertThrow(!this._reconnected, "shouldn't already be reconnected");
     Utils.assertThrow(this.tab, "should have a xul:tab");
 
-    let self = this;
     let tabData = Storage.getTabData(this.tab);
 
     if (tabData && TabItems.storageSanity(tabData)) {
       this.loadThumbnail(tabData);
 
-      if (self.parent)
-        self.parent.remove(self, {immediately: true});
+      if (this.parent)
+        this.parent.remove(this, {immediately: true});
 
       let groupItem;
 
@@ -357,22 +360,26 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       if (groupItem) {
-        groupItem.add(self, {immediately: true});
+        groupItem.add(this, {immediately: true});
+
+        // restore the active tab for each group between browser sessions
+        if (tabData.active)
+          groupItem.setActiveTab(this);
 
         // if it matches the selected tab or no active tab and the browser
         // tab is hidden, the active group item would be set.
-        if (self.tab == gBrowser.selectedTab ||
-            (!GroupItems.getActiveGroupItem() && !self.tab.hidden))
-          UI.setActive(self.parent);
+        if (this.tab == gBrowser.selectedTab ||
+            (!GroupItems.getActiveGroupItem() && !this.tab.hidden))
+          UI.setActive(this.parent);
       }
     } else {
       // create tab group by double click is handled in UI_init().
-      GroupItems.newTab(self, {immediately: true});
+      GroupItems.newTab(this, {immediately: true});
     }
 
-    self._reconnected = true;
-    self.save();
-    self._sendToSubscribers("reconnected");
+    this._reconnected = true;
+    this.save();
+    this._sendToSubscribers("reconnected");
   },
 
   // ----------
