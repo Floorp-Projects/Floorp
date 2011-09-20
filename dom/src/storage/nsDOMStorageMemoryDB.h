@@ -40,13 +40,12 @@
 #define nsDOMStorageMemoryDB_h___
 
 #include "nscore.h"
-#include "nsDOMStorageBaseDB.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 
 class nsDOMStoragePersistentDB;
 
-class nsDOMStorageMemoryDB : public nsDOMStorageBaseDB
+class nsDOMStorageMemoryDB
 {
 public:
   nsDOMStorageMemoryDB() : mPreloading(PR_FALSE) {}

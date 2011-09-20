@@ -726,8 +726,6 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
 
   *aNewUsage = usage;
 
-  MarkScopeDirty(aStorage);
-
   return NS_OK;
 }
 
@@ -762,12 +760,7 @@ nsDOMStoragePersistentDB::SetSecure(DOMStorageImpl* aStorage,
   rv = binder.Add();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mSetSecureStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MarkScopeDirty(aStorage);
-
-  return NS_OK;
+  return mSetSecureStatement->Execute();
 }
 
 nsresult
@@ -803,8 +796,6 @@ nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
   rv = mRemoveKeyStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MarkScopeDirty(aStorage);
-
   return NS_OK;
 }
 
@@ -833,8 +824,6 @@ nsDOMStoragePersistentDB::ClearStorage(DOMStorageImpl* aStorage)
 
   rv = mRemoveStorageStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  MarkScopeDirty(aStorage);
 
   return NS_OK;
 }
@@ -874,8 +863,6 @@ nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
 
   rv = mRemoveOwnerStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  MarkAllScopesDirty();
 
   return NS_OK;
 }
@@ -954,8 +941,6 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MarkAllScopesDirty();
-
   return NS_OK;
 }
 
@@ -971,8 +956,6 @@ nsDOMStoragePersistentDB::RemoveAll()
 
   rv = mRemoveAllStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  MarkAllScopesDirty();
 
   return NS_OK;
 }
