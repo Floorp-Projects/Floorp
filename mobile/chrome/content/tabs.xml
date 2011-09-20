@@ -85,10 +85,10 @@
       <method name="_onUndo">
         <body>
           <![CDATA[
-            let closeFn = new Function("event", this._container.getAttribute("onreloadtab"));
+            let container = this._container;
+            let closeFn = new Function("event", container.getAttribute("onreloadtab"));
             closeFn.call(this);
-
-            this._container.removeTab(this);
+            container.removeClosedTab(this);
           ]]>
         </body>
       </method>
