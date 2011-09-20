@@ -1830,4 +1830,95 @@ setting {
 
 }
 
+#tabs-popup-container {
+  max-height: -moz-calc(6 * @touch_row@);
+}
+
+#tabs-popup-container .panel-arrowcontent {
+  background-color: @color_toolbar_background@;
+}
+
+#tabs-popup-list {
+  background-color: transparent;
+}
+
+#tabs-popup-newtab-button,
+.tab-popup-item {
+  min-width: @touch_action_minwidth@;
+  padding: 0px @padding_xnormal@;
+  border: none;
+  height: -moz-calc(0.75 * @touch_row@);
+  min-height: -moz-calc(0.75 * @touch_row@);
+}
+
+.tab-popup-item {
+  margin: @border_width_tiny@ 0px -moz-calc(@border_width_tiny@ * 2) 0px; /* provide some top and bottom margin to shift the borders into */
+}
+
+.tab-popup-item-box {
+  border-top: @border_width_tiny@ solid @color_button_border@;
+  margin-top: -2px; /* make the border stick slightly outside this box */
+}
+
+.tab-popup-item:first-child .tab-popup-item-box {
+  border-top: none;
+}
+
+.documenttab-popup-closebutton {
+  background-image: none;
+  background-color: transparent;
+  min-width: -moz-calc(0.75 * @touch_row@) !important;
+  list-style-image: url("chrome://browser/skin/images/close-default-tablet-hdpi.png");
+  -moz-image-region: rect(14px, 23px, 30px, 7px); /* remove empty space from around the close image */
+  -moz-margin-end: -@margin_snormal@;
+  border: none;
+  -moz-border-start: @border_width_tiny@ solid @color_button_border@;
+}
+
+#tabs-popup-newtab-button:hover:active {
+  background-color: @color_background_highlight@;  
+}
+
+.documenttab-popup-closebutton:hover:active {
+  background-image: none !important;
+}
+
+.documenttab-popup-checkmark {
+  min-width: -moz-calc(26px + 2 * @padding_normal@); /* size of the checkmark image  plus the padding */
+  padding: 0px @padding_normal@;
+}
+
+.tab-popup-item.selected .documenttab-popup-checkmark {
+  list-style-image: url("chrome://browser/skin/images/checkmark-hdpi.png");
+}
+
+.documenttab-popup-label {
+  -moz-box-flex: 1;
+  padding: 0px @padding_normal@;
+  font-size: @font_small@;
+}
+
+#tabs-popup-newtab-button {
+  background-image: none;
+  background-color: transparent;
+  padding: 0px @padding_xnormal@;
+  margin: 0px;
+  -moz-box-flex: 1;
+  border-radius: 0px;
+  list-style-image: url("chrome://browser/skin/images/newtab-tabmenu-tablet-hdpi.png");
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  border: none;
+  min-height: -moz-calc(0.75 * @touch_row@) !important;
+}
+
+#tabs-popup-newtab-button > .button-box {
+  min-height: -moz-calc(0.75 * @touch_row@);
+  border-top: @border_width_tiny@ solid @color_button_border@;
+}
+
+#tabs-popup-newtab-button .button-text {
+  -moz-padding-start: @padding_large@;
+}
+
 %include ../tablet.css

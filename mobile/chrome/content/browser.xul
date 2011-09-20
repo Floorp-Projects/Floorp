@@ -315,6 +315,17 @@
       <arrowscrollbox id="form-helper-suggestions" align="center" flex="1" orient="horizontal" onclick="FormHelperUI.doAutoComplete(event.target);"/>
     </arrowbox>
 
+    <!-- Tabs sidebar helper popup -->
+    <arrowbox id="tabs-popup-container" hidden="true" offset="18" type="dialog">
+      <vbox id="tabs-popup-inner-container" flex="1">
+         <richlistbox id="tabs-popup-list" flex="1"
+                onselect="BrowserUI.selectTab(this); TabsPopup.hide();"
+                onreloadtab="BrowserUI.undoCloseTab(); TabsPopup.hide();"
+                onclosetab="BrowserUI.closeTab(this); TabsPopup.closeTab(this);"/>
+         <button id="tabs-popup-newtab-button" class="show-text" command="cmd_newTab"/>
+      </vbox>
+    </arrowbox>
+
     <!-- popup for site identity information -->
     <arrowbox id="identity-container" hidden="true" mode="unknownIdentity" offset="18" flex="1" type="dialog" observes="bcast_urlbarState">
       <box id="identity-popup-container" flex="1" align="top">
