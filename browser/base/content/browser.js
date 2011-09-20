@@ -180,7 +180,7 @@ let gInitialPages = [
 ];
 
 #include browser-fullZoom.js
-#include inspector.js
+#include ../../devtools/highlighter/inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
 #include browser-tabview.js
