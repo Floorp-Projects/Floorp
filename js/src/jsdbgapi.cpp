@@ -2166,8 +2166,6 @@ JS_GetFunctionCallback(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_DumpBytecode(JSContext *cx, JSScript *script)
 {
-    JS_ASSERT(!cx->runtime->gcRunning);
-
 #if defined(DEBUG)
     AutoArenaAllocator mark(&cx->tempPool);
     Sprinter sprinter;
