@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=682554
+-->
+<head>
+  <title>Test for Bug 682554</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682554">Mozilla Bug 682554</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 682554 **/
+is("onreadystatechange" in window, false,
+   "Window should not have an onreadystatechange");
+is("onreadystatechange" in document, true,
+   "Document should have an onreadystatechange");
+is("onreadystatechange" in document.createElement("script"), false,
+   "<script> element should not have an onreadystatechange");
+</script>
+</pre>
+</body>
+</html>
