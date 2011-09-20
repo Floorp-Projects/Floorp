@@ -441,10 +441,9 @@ nsIdentifierMapEntry::AddNameElement(nsIDocument* aDocument, Element* aElement)
 void
 nsIdentifierMapEntry::RemoveNameElement(Element* aElement)
 {
-  NS_ASSERTION(mNameContentList &&
-               mNameContentList->IndexOf(aElement, PR_FALSE) >= 0,
-               "Attmpting to remove named element that doesn't exist");
-  mNameContentList->RemoveElement(aElement);
+  if (mNameContentList) {
+    mNameContentList->RemoveElement(aElement);
+  }
 }
 
 // Helper structs for the content->subdoc map
@@ -2571,7 +2570,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 
   nsIdentifierMapEntry *entry =
     mIdentifierMap.GetEntry(nsDependentAtomString(aName));
-  if (!entry) // Should never be false unless we had OOM when adding the entry
+  if (!entry) // Could be false if the element was anonymous, hence never added
     return;
 
   entry->RemoveNameElement(aElement);
@@ -8688,6 +8687,8 @@ nsDocument::SizeOf() const
     return nsINode::SetOn##name_(cx, v);                                  \
   }
 #define TOUCH_EVENT EVENT
+#define DOCUMENT_ONLY_EVENT EVENT
 #include "nsEventNameList.h"
+#undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txNamespaceMap.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txXPathNode.h"
 
 txNamespaceMap::txNamespaceMap()
@@ -53,7 +53,7 @@ txNamespaceMap::txNamespaceMap(const txNamespaceMap& aOther)
 nsresult
 txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
 {
-    nsIAtom* prefix = aPrefix == txXMLAtoms::_empty ? nsnull : aPrefix;
+    nsIAtom* prefix = aPrefix == nsGkAtoms::_empty ? nsnull : aPrefix;
 
     PRInt32 nsId;
     if (prefix && aNamespaceURI.IsEmpty()) {
@@ -101,11 +101,11 @@ txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
 PRInt32
 txNamespaceMap::lookupNamespace(nsIAtom* aPrefix)
 {
-    if (aPrefix == txXMLAtoms::xml) {
+    if (aPrefix == nsGkAtoms::xml) {
         return kNameSpaceID_XML;
     }
 
-    nsIAtom* prefix = aPrefix == txXMLAtoms::_empty ? 0 : aPrefix;
+    nsIAtom* prefix = aPrefix == nsGkAtoms::_empty ? 0 : aPrefix;
 
     PRInt32 index = mPrefixes.IndexOf(prefix);
     if (index >= 0) {
@@ -131,7 +131,7 @@ PRInt32
 txNamespaceMap::lookupNamespaceWithDefault(const nsAString& aPrefix)
 {
     nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);
-    if (prefix != txXSLTAtoms::_poundDefault) {
+    if (prefix != nsGkAtoms::_poundDefault) {
         return lookupNamespace(prefix);
     }
 

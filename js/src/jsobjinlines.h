@@ -144,8 +144,6 @@ JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
     } else {
         if (!js_GetProperty(cx, this, receiver, id, vp))
             return false;
-        JS_ASSERT_IF(!hasSingletonType() && nativeContains(cx, js_CheckForStringIndex(id)),
-                     js::types::TypeHasProperty(cx, type(), id, *vp));
     }
     return true;
 }
@@ -267,7 +265,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(fun == funobj);
     JS_ASSERT(fun->isNullClosure());
 
-    funobj = CloneFunctionObject(cx, fun, funobj->getParent(), true);
+    funobj = CloneFunctionObject(cx, fun);
     if (!funobj)
         return NULL;
     funobj->setMethodObj(*this);

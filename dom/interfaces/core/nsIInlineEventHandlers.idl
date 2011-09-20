@@ -39,7 +39,7 @@
 #include "jspubtd.h"
 %}
 
-[scriptable, uuid(790ad9f7-167a-4f5f-a5c1-8cfb3697104d)]
+[scriptable, uuid(1b065b41-6e00-450c-a44c-e0e44581c08a)]
 interface nsIInlineEventHandlers : nsISupports
 {
   [implicit_jscontext] attribute jsval onabort;
@@ -88,7 +88,6 @@ interface nsIInlineEventHandlers : nsISupports
   [implicit_jscontext] attribute jsval onplaying;
   [implicit_jscontext] attribute jsval onprogress;
   [implicit_jscontext] attribute jsval onratechange;
-  [implicit_jscontext] attribute jsval onreadystatechange;
   [implicit_jscontext] attribute jsval onreset;
   [implicit_jscontext] attribute jsval onscroll;
   [implicit_jscontext] attribute jsval onseeked;

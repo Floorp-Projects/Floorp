@@ -93,6 +93,12 @@ struct BaseIC : public MacroAssemblerTypedefs {
     bool hit : 1;
     bool slowCallPatched : 1;
 
+    // Whether getter/setter hooks can be called from IC stubs.
+    bool canCallHook : 1;
+
+    // Whether a type barrier is in place for the result of the op.
+    bool forcedTypeBarrier : 1;
+
     // Number of stubs generated.
     uint32 stubsGenerated : 5;
 
@@ -102,6 +108,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
     void reset() {
         hit = false;
         slowCallPatched = false;
+        forcedTypeBarrier = false;
         stubsGenerated = 0;
         secondShapeGuard = 0;
     }

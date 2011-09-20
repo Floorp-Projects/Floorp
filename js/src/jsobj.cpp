@@ -153,7 +153,7 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 static JSBool
 obj_setProto(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
 
-static JSPropertySpec object_props[] = {
+JSPropertySpec object_props[] = {
     {js_proto_str, 0, JSPROP_PERMANENT|JSPROP_SHARED, Jsvalify(obj_getProto), Jsvalify(obj_setProto)},
     {0,0,0,0,0}
 };
@@ -1311,20 +1311,20 @@ WarnOnTooManyArgs(JSContext *cx, const CallArgs &call)
     return true;
 }
 
+namespace js {
+
 /*
  * ES5 15.1.2.1.
  *
  * NB: This method handles only indirect eval.
  */
-static JSBool
+JSBool
 eval(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs call = CallArgsFromVp(argc, vp);
     return WarnOnTooManyArgs(cx, call) &&
            EvalKernel(cx, call, INDIRECT_EVAL, NULL, *call.callee().getGlobal());
 }
-
-namespace js {
 
 bool
 DirectEval(JSContext *cx, const CallArgs &call)
@@ -2867,7 +2867,7 @@ const char js_hasOwnProperty_str[] = "hasOwnProperty";
 const char js_isPrototypeOf_str[] = "isPrototypeOf";
 const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
 
-static JSFunctionSpec object_methods[] = {
+JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
@@ -2890,7 +2890,7 @@ static JSFunctionSpec object_methods[] = {
     JS_FS_END
 };
 
-static JSFunctionSpec object_static_methods[] = {
+JSFunctionSpec object_static_methods[] = {
     JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
     JS_FN("keys",                      obj_keys,                    1,0),
@@ -4088,29 +4088,6 @@ Class js::BlockClass = {
     ResolveStub,
     ConvertStub
 };
-
-JSObject *
-js_InitObjectClass(JSContext *cx, JSObject *obj)
-{
-    JSObject *proto = js_InitClass(cx, obj, NULL, &ObjectClass, js_Object, 1,
-                                   object_props, object_methods, NULL, object_static_methods);
-    if (!proto)
-        return NULL;
-
-    /* The default 'new' object for Object.prototype has unknown properties. */
-    proto->getNewType(cx, NULL, /* markUnknown = */ true);
-
-    /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
-
-    JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS);
-    if (!evalobj)
-        return NULL;
-    if (obj->isGlobal())
-        obj->asGlobal()->setOriginalEval(evalobj);
-
-    return proto;
-}
 
 static bool
 DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
@@ -5688,6 +5665,8 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     if (slot != SHAPE_INVALID_SLOT) {
         *vp = pobj->nativeGetSlot(slot);
         JS_ASSERT(!vp->isMagic());
+        JS_ASSERT_IF(!pobj->hasSingletonType() && shape->hasDefaultGetterOrIsMethod(),
+                     js::types::TypeHasProperty(cx, pobj->type(), shape->propid, *vp));
     } else {
         vp->setUndefined();
     }
@@ -5697,6 +5676,14 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
     if (JS_UNLIKELY(shape->isMethod()) && (getHow & JSGET_NO_METHOD_BARRIER)) {
         JS_ASSERT(shape->methodObject() == vp->toObject());
         return true;
+    }
+
+    jsbytecode *pc;
+    JSScript *script = cx->stack.currentScript(&pc);
+    if (script && script->hasAnalysis() && !cx->fp()->hasImacropc()) {
+        analyze::Bytecode *code = script->analysis()->maybeCode(pc);
+        if (code)
+            code->accessGetter = true;
     }
 
     sample = cx->runtime->propertyRemovals;
@@ -5710,9 +5697,6 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
             return false;
         pobj->nativeSetSlot(slot, *vp);
     }
-
-    /* Record values produced by shapes without a default getter. */
-    AddTypePropertyId(cx, obj, shape->propid, *vp);
 
     return true;
 }
@@ -6014,7 +5998,7 @@ CloneFunctionForSetMethod(JSContext *cx, Value *vp)
      * need to be cloned again.
      */
     if (fun == funobj) {
-        funobj = CloneFunctionObject(cx, fun, fun->parent, true);
+        funobj = CloneFunctionObject(cx, fun);
         if (!funobj)
             return false;
         vp->setObject(*funobj);

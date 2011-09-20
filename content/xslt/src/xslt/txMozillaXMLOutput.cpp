@@ -51,7 +51,7 @@
 #include "nsContentCID.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
-#include "txAtoms.h"
+#include "nsGkAtoms.h"
 #include "txLog.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
@@ -716,7 +716,7 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
     nsresult rv = NS_OK;
     nsIAtom *atom = aElement->Tag();
 
-    if ((atom != txHTMLAtoms::tr || !aIsHTML) &&
+    if ((atom != nsGkAtoms::tr || !aIsHTML) &&
         NS_PTR_TO_INT32(mTableStateStack.peek()) == ADDED_TBODY) {
         PRUint32 last = mCurrentNodeStack.Count() - 1;
         NS_ASSERTION(last != (PRUint32)-1, "empty stack");
@@ -726,10 +726,10 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
         mTableStateStack.pop();
     }
 
-    if (atom == txHTMLAtoms::table && aIsHTML) {
+    if (atom == nsGkAtoms::table && aIsHTML) {
         mTableState = TABLE;
     }
-    else if (atom == txHTMLAtoms::tr && aIsHTML &&
+    else if (atom == nsGkAtoms::tr && aIsHTML &&
              NS_PTR_TO_INT32(mTableStateStack.peek()) == TABLE) {
         nsCOMPtr<nsIContent> tbody;
         rv = createHTMLElement(nsGkAtoms::tbody, getter_AddRefs(tbody));
@@ -747,7 +747,7 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
 
         mCurrentNode = tbody;
     }
-    else if (atom == txHTMLAtoms::head &&
+    else if (atom == nsGkAtoms::head &&
              mOutputFormat.mMethod == eHTMLOutput) {
         // Insert META tag, according to spec, 16.2, like
         // <META http-equiv="Content-Type" content="text/html; charset=EUC-JP">
@@ -782,7 +782,7 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
     nsIAtom *atom = aElement->Tag();
 
     if (mTableState == ADDED_TBODY) {
-        NS_ASSERTION(atom == txHTMLAtoms::tbody,
+        NS_ASSERTION(atom == nsGkAtoms::tbody,
                      "Element flagged as added tbody isn't a tbody");
         PRUint32 last = mCurrentNodeStack.Count() - 1;
         NS_ASSERTION(last != (PRUint32)-1, "empty stack");
@@ -794,13 +794,13 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
 
         return NS_OK;
     }
-    else if (mCreatingNewDocument && atom == txHTMLAtoms::meta) {
+    else if (mCreatingNewDocument && atom == nsGkAtoms::meta) {
         // handle HTTP-EQUIV data
         nsAutoString httpEquiv;
-        aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::httpEquiv, httpEquiv);
+        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, httpEquiv);
         if (!httpEquiv.IsEmpty()) {
             nsAutoString value;
-            aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::content, value);
+            aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
             if (!value.IsEmpty()) {
                 ToLowerCase(httpEquiv);
                 nsCOMPtr<nsIAtom> header = do_GetAtom(httpEquiv);
@@ -816,7 +816,7 @@ void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsString& aVal
 {
     // For now we only handle "refresh". There's a longer list in
     // HTMLContentSink::ProcessHeaderData
-    if (aHeader == txHTMLAtoms::refresh)
+    if (aHeader == nsGkAtoms::refresh)
         LossyCopyUTF16toASCII(aValue, mRefreshString);
 }
 
