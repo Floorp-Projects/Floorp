@@ -153,6 +153,47 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
   width: 100%;
 }
 
+arrowbox {
+  -moz-stack-sizing: ignore;
+}
+
+#tabs-popup-list {
+  min-width: @dialog_width@;
+  max-width: @dialog_width@;
+  overflow-x: no-display;
+}
+
+#tabs-popup-newtab-button,
+.tab-popup-item {
+  -moz-box-align: center;
+}
+
+.tab-popup-item-box {
+  -moz-box-flex: 1;
+  -moz-box-align: center;
+}
+
+.documenttab-popup-favicon {
+  width: 32px;
+  height: 32px;
+}
+
+.tab-popup-item.selected .documenttab-popup-checkmark {
+  list-style-image: url("chrome://browser/skin/images/checkmark-hdpi.png");
+}
+
+.documenttab-popup-label {
+  -moz-box-flex: 1;
+}
+
+.documenttab-popup-checkmark {
+  min-width: 26px; /* size of the checkmark image */
+}
+
+#tabs-popup-newtab-button {
+  -moz-box-flex: 1;
+}
+
 %ifndef honeycomb
 @media (min-width: @tablet_panel_minwidth@) {
   #awesome-panels {
@@ -161,5 +202,12 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
   #search-engines-popup {
     max-width: -moz-calc(@tablet_panel_minwidth@);
   }
+}
+.documenttab-popup-closebutton {
+  list-style-image: url("chrome://browser/skin/images/close-default-hdpi.png");
+}
+
+#tabs-popup-newtab-button {
+  list-style-image: url("chrome://browser/skin/images/newtab-hdpi.png");
 }
 %endif

@@ -312,4 +312,46 @@
     </implementation>
   </binding>
 
+  <binding id="documenttab-popup" extends="chrome://browser/content/bindings.xml#richlistitem">
+    <content>
+      <xul:box class="tab-popup-item-box">
+        <xul:image class="documenttab-popup-checkmark"/>
+        <xul:image class="documenttab-popup-favicon" xbl:inherits="src=img"/>
+        <xul:label class="documenttab-popup-label" xbl:inherits="value=label" crop="center"/>
+        <xul:button class="documenttab-popup-closebutton" onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()" />
+      </xul:box>
+    </content>
+
+    <implementation>
+      <field name="_container" readonly="true">this.parentNode;</field>
+      <field name="tab">null</field>
+
+      <method name="_onClick">
+        <body>
+          <![CDATA[
+            this._container.selectedTab = this;
+            let selectFn = new Function("event", this._container.getAttribute("onselect"));
+            selectFn.call(this.tab);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onClose">
+        <body>
+          <![CDATA[
+            let callbackFunc = this._container.getAttribute(this.hasAttribute("reload") ? "onclosereloadtab" : "onclosetab");
+            let closeFn = new Function("event", callbackFunc);
+            closeFn.call(this.tab);
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="click" action="this._onClick();"/>
+    </handlers>
+
+  </binding>
+
 </bindings>

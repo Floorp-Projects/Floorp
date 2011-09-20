@@ -22,6 +22,10 @@ documenttab {
   -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
 }
 
+.tab-popup-item {
+  -moz-binding: url("chrome://browser/content/tabs.xml#documenttab-popup");
+}
+
 settings {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
 }
