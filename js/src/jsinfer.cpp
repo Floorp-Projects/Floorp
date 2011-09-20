@@ -6031,7 +6031,6 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
      */
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script);
-#endif
 
     /*
      * Use counts for scripts are reset on GC. After discarding code we need to
@@ -6039,6 +6038,7 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
      * array holes or accessing getter properties.
      */
     script->resetUseCount();
+#endif
 }
 
 void
