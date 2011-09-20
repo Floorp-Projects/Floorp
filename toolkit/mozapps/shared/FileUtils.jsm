@@ -158,5 +158,7 @@ var FileUtils = {
       }
     }
     stream.close();
-  }
+  },
+
+  File: Components.Constructor("@mozilla.org/file/local;1", Ci.nsILocalFile, "initWithPath")
 };
