@@ -42,7 +42,8 @@ body {
   font-size: 11px;
   background: #EEE;
 }
-.path {
+.path,
+.filters {
   font-size: 11px;
   word-spacing: -1px;
 }
@@ -138,6 +139,10 @@ a.link:visited {
   font-size: 10px;
 }
 
+.property-view-hidden {
+  display: none;
+}
+
 .rule-link {
   text-align: end;
   -moz-padding-start: 10px;
@@ -164,4 +169,14 @@ a.link:visited {
 }
 .unmatched {
   color: brown;
+}
+
+.userStyles {
+  position: relative;
+  top: 3px;
+}
+
+.userStyles,
+.userStylesLabel {
+  cursor: pointer;
 }
