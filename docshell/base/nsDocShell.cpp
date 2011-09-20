@@ -8186,7 +8186,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // Except we reverse the rv check to be safe in case
         // URIInheritsSecurityContext fails here and succeeds there.
         rv = URIInheritsSecurityContext(aURI, &willInherit);
-        if (NS_FAILED(rv) || willInherit || IsAboutBlank(aURI)) {
+        if (NS_FAILED(rv) || willInherit || NS_IsAboutBlank(aURI)) {
             nsCOMPtr<nsIDocShellTreeItem> treeItem = this;
             do {
                 nsCOMPtr<nsIDocShell> itemDocShell =
@@ -9020,11 +9020,11 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     // accordingly.
     PRBool inherit;
     // We expect URIInheritsSecurityContext to return success for an
-    // about:blank URI, so don't call IsAboutBlank() if this call fails.
+    // about:blank URI, so don't call NS_IsAboutBlank() if this call fails.
     // This condition needs to match the one in InternalLoad where
     // we're checking for things that will use the owner.
     rv = URIInheritsSecurityContext(aURI, &inherit);
-    if (NS_SUCCEEDED(rv) && (inherit || IsAboutBlank(aURI))) {
+    if (NS_SUCCEEDED(rv) && (inherit || NS_IsAboutBlank(aURI))) {
         channel->SetOwner(aOwner);
     }
 
@@ -9452,7 +9452,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
             shAvailable, updateHistory, equalUri));
 
     if (shAvailable && mCurrentURI && !mOSHE && aLoadType != LOAD_ERROR_PAGE) {
-        NS_ASSERTION(IsAboutBlank(mCurrentURI), "no SHEntry for a non-transient viewer?");
+        NS_ASSERTION(NS_IsAboutBlank(mCurrentURI), "no SHEntry for a non-transient viewer?");
     }
 #endif
 
@@ -11273,23 +11273,6 @@ nsDocShell::URIIsLocalFile(nsIURI *aURI)
                                     nsIProtocolHandler::URI_IS_LOCAL_FILE,
                                     &isFile)) &&
            isFile;
-}
-
-/* static */
-PRBool
-nsDocShell::IsAboutBlank(nsIURI* aURI)
-{
-    NS_PRECONDITION(aURI, "Must have URI");
-    
-    // GetSpec can be expensive for some URIs, so check the scheme first.
-    PRBool isAbout = PR_FALSE;
-    if (NS_FAILED(aURI->SchemeIs("about", &isAbout)) || !isAbout) {
-        return PR_FALSE;
-    }
-    
-    nsCAutoString str;
-    aURI->GetSpec(str);
-    return str.EqualsLiteral("about:blank");
 }
 
 PRBool
