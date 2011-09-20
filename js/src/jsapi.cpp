@@ -110,6 +110,10 @@
 #include "jsxml.h"
 #endif
 
+#ifdef JS_METHODJIT
+#include "ion/Ion.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -774,6 +778,11 @@ JS_NewRuntime(uint32 maxbytes)
     void *mem = OffTheBooks::calloc_(sizeof(JSRuntime));
     if (!mem)
         return NULL;
+
+#if defined(JS_METHODJIT) && defined(JS_ION)
+    if (!ion::InitializeIon())
+        return NULL;
+#endif
 
     JSRuntime *rt = new (mem) JSRuntime();
     if (!rt->init(maxbytes)) {
@@ -2256,6 +2265,10 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "script";
         break;
 
+      case JSTRACE_IONCODE:
+        name = "ioncode";
+        break;
+
       case JSTRACE_SHAPE:
         name = "shape";
         break;
@@ -2322,6 +2335,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             break;
           }
 
+          case JSTRACE_IONCODE:
           case JSTRACE_SHAPE:
           case JSTRACE_TYPE_OBJECT:
             break;

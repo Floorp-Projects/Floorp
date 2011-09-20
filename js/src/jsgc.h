@@ -75,6 +75,10 @@ namespace js {
 class GCHelperThread;
 struct Shape;
 
+namespace ion {
+    class IonCode;
+}
+
 namespace gc {
 
 struct Arena;
@@ -850,6 +854,7 @@ MapAllocToTraceKind(AllocKind thingKind)
         JSTRACE_STRING,     /* FINALIZE_SHORT_STRING */
         JSTRACE_STRING,     /* FINALIZE_STRING */
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING */
+        JSTRACE_IONCODE,    /* FINALIZE_IONCODE */
     };
     return map[thingKind];
 }
@@ -1093,6 +1098,7 @@ struct ArenaLists {
     void finalizeStrings(JSContext *cx);
     void finalizeShapes(JSContext *cx);
     void finalizeScripts(JSContext *cx);
+    void finalizeIonCode(JSContext *cx);
 
 #ifdef JS_THREADSAFE
     static void backgroundFinalize(JSContext *cx, ArenaHeader *listHead);
@@ -1481,6 +1487,7 @@ static const size_t ROPES_MARK_STACK_SIZE = 1024 * sizeof(JSString *);
 static const size_t XML_MARK_STACK_SIZE = 1024 * sizeof(JSXML *);
 static const size_t TYPE_MARK_STACK_SIZE = 1024 * sizeof(types::TypeObject *);
 static const size_t LARGE_MARK_STACK_SIZE = 64 * sizeof(LargeMarkItem);
+static const size_t IONCODE_MARK_STACK_SIZE = 1024 * sizeof(ion::IonCode *);
 
 struct GCMarker : public JSTracer {
   private:
@@ -1505,6 +1512,7 @@ struct GCMarker : public JSTracer {
     MarkStack<types::TypeObject *> typeStack;
     MarkStack<JSXML *> xmlStack;
     MarkStack<LargeMarkItem> largeStack;
+    MarkStack<ion::IonCode *> ionCodeStack;
 
   public:
     explicit GCMarker(JSContext *cx);
@@ -1529,7 +1537,8 @@ struct GCMarker : public JSTracer {
                ropeStack.isEmpty() &&
                typeStack.isEmpty() &&
                xmlStack.isEmpty() &&
-               largeStack.isEmpty();
+               largeStack.isEmpty() &&
+               ionCodeStack.isEmpty();
     }
 
     JS_FRIEND_API(void) drainMarkStack();
@@ -1552,6 +1561,11 @@ struct GCMarker : public JSTracer {
     void pushXML(JSXML *xml) {
         if (!xmlStack.push(xml))
             delayMarkingChildren(xml);
+    }
+
+    void pushIonCode(ion::IonCode *code) {
+        if (!ionCodeStack.push(code))
+            delayMarkingChildren(code);
     }
 };
 

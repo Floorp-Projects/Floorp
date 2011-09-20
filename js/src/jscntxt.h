@@ -436,6 +436,7 @@ struct JSRuntime {
     void                *gcMarkStackTypes[js::TYPE_MARK_STACK_SIZE / sizeof(void *)];
     void                *gcMarkStackXMLs[js::XML_MARK_STACK_SIZE / sizeof(void *)];
     void                *gcMarkStackLarges[js::LARGE_MARK_STACK_SIZE / sizeof(void *)];
+    void                *gcMarkStackIonCode[js::IONCODE_MARK_STACK_SIZE / sizeof(void *)];
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
@@ -1488,7 +1489,8 @@ class AutoGCRooter {
         DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
-        OBJVECTOR =   -16  /* js::AutoObjectVector */
+        OBJVECTOR =   -16, /* js::AutoObjectVector */
+        IONMASM =     -17  /* js::ion::MacroAssembler */
     };
 
     private:

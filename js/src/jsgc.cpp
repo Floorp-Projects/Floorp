@@ -91,6 +91,8 @@
 #include "methodjit/MethodJIT.h"
 #include "vm/String.h"
 #include "vm/Debugger.h"
+#include "ion/IonCode.h"
+#include "ion/IonMacroAssembler.h"
 
 #include "jsobjinlines.h"
 
@@ -144,6 +146,7 @@ const uint32 Arena::ThingSizes[] = {
     sizeof(JSShortString),      /* FINALIZE_SHORT_STRING        */
     sizeof(JSString),           /* FINALIZE_STRING              */
     sizeof(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
+    sizeof(ion::IonCode),       /* FINALIZE_IONCODE             */
 };
 
 #define OFFSET(type) uint32(sizeof(ArenaHeader) + (ArenaSize - sizeof(ArenaHeader)) % sizeof(type))
@@ -171,6 +174,7 @@ const uint32 Arena::FirstThingOffsets[] = {
     OFFSET(JSShortString),      /* FINALIZE_SHORT_STRING        */
     OFFSET(JSString),           /* FINALIZE_STRING              */
     OFFSET(JSExternalString),   /* FINALIZE_EXTERNAL_STRING     */
+    OFFSET(ion::IonCode),       /* FINALIZE_IONCODE             */
 };
 
 #undef OFFSET
@@ -379,6 +383,9 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
         break;
       case FINALIZE_EXTERNAL_STRING:
 	FinalizeTypedArenas<JSExternalString>(cx, al, thingKind);
+        break;
+      case FINALIZE_IONCODE:
+        FinalizeTypedArenas<ion::IonCode>(cx, al, thingKind);
         break;
     }
 }
@@ -1405,6 +1412,12 @@ ArenaLists::finalizeScripts(JSContext *cx)
     finalizeNow(cx, FINALIZE_SCRIPT);
 }
 
+void
+ArenaLists::finalizeIonCode(JSContext *cx)
+{
+    finalizeNow(cx, FINALIZE_IONCODE);
+}
+
 static void
 RunLastDitchGC(JSContext *cx)
 {
@@ -1547,7 +1560,8 @@ GCMarker::GCMarker(JSContext *cx)
     ropeStack(cx->runtime->gcMarkStackRopes, sizeof(cx->runtime->gcMarkStackRopes)),
     typeStack(cx->runtime->gcMarkStackTypes, sizeof(cx->runtime->gcMarkStackTypes)),
     xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
-    largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
+    largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges)),
+    ionCodeStack(cx->runtime->gcMarkStackIonCode, sizeof(cx->runtime->gcMarkStackIonCode))
 {
     JS_TRACER_INIT(this, cx, NULL);
     markLaterArenas = 0;
@@ -1802,6 +1816,13 @@ AutoGCRooter::trace(JSTracer *trc)
         MarkValueRange(trc, array->length(), array->start(), "js::AutoValueArray");
         return;
       }
+
+      case IONMASM: {
+#ifdef JS_ION
+        static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
+#endif
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
@@ -1842,7 +1863,7 @@ MarkContext(JSTracer *trc, JSContext *acx)
     }
 
 JS_REQUIRES_STACK void
-MarkRuntime(JSTracer *trc)
+MarkRuntime(JSTracer *trc, JSCompartment *comp)
 {
     JSRuntime *rt = trc->context->runtime;
 
@@ -1869,6 +1890,13 @@ MarkRuntime(JSTracer *trc)
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
+
+    if (comp) {
+        comp->mark(trc);
+    } else {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            (*c)->mark(trc);
+    }
 
     /*
      * We mark extra roots at the end so that the hook can use additional
@@ -2253,7 +2281,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         Debugger::markCrossCompartmentDebuggerObjectReferents(&gcmarker);
     }
 
-    MarkRuntime(&gcmarker);
+    MarkRuntime(&gcmarker, comp);
     gcmarker.drainMarkStack();
 
     /*
@@ -2320,6 +2348,8 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         GCTIMESTAMP(sweepStringEnd);
         comp->arenas.finalizeScripts(cx);
         GCTIMESTAMP(sweepScriptEnd);
+        comp->arenas.finalizeIonCode(cx);
+        GCTIMESTAMP(sweepIonCodeEnd);
         comp->arenas.finalizeShapes(cx);
         GCTIMESTAMP(sweepShapeEnd);
         Probes::GCEndSweepPhase(comp);
@@ -2350,6 +2380,11 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         }
 
         GCTIMESTAMP(sweepScriptEnd);
+
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+            (*c)->arenas.finalizeIonCode(cx);
+
+        GCTIMESTAMP(sweepIonCodeEnd);
 
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
             (*c)->arenas.finalizeShapes(cx);
@@ -2778,7 +2813,7 @@ TraceRuntime(JSTracer *trc)
 
             AutoCopyFreeListToArenas copy(rt);
             RecordNativeStackTopForGC(trc->context);
-            MarkRuntime(trc);
+            MarkRuntime(trc, NULL);
             return;
         }
     }
@@ -2791,7 +2826,7 @@ TraceRuntime(JSTracer *trc)
      * Calls from inside a normal GC or a recursive calls are OK and do not
      * require session setup.
      */
-    MarkRuntime(trc);
+    MarkRuntime(trc, NULL);
 }
 
 struct IterateArenaCallbackOp

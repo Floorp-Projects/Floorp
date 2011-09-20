@@ -375,7 +375,14 @@ enum JITScriptStatus {
     JITScript_Valid
 };
 
-namespace js { namespace mjit { struct JITScript; } }
+namespace js {
+namespace mjit {
+    struct JITScript;
+}
+namespace ion {
+    struct IonScript;
+}
+}
 #endif
 
 namespace js { namespace analyze { class ScriptAnalysis; } }
@@ -579,6 +586,13 @@ struct JSScript : public js::gc::Cell {
 
     /* array of execution counters for every JSOp in the script, by runmode */
     JSPCCounters    pcCounters;
+
+#ifdef JS_ION
+    js::ion::IonScript *ion;          /* Information attached by Ion */
+# if JS_BITS_PER_WORD == 32
+    uint32 padding_;
+# endif
+#endif
 
 #ifdef JS_CRASH_DIAGNOSTICS
     JSObject        *ownerObject;
