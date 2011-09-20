@@ -574,7 +574,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
       float x, y, width, height;
       static_cast<nsSVGSVGElement*>(innerSvg->GetContent())->
         GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-      gfxRect bounds = nsSVGUtils::GetCanvasTM(innerSvgParent).
+      gfxRect bounds = GetCanvasTM(innerSvgParent).
                          TransformBounds(gfxRect(x, y, width, height));
       bounds.RoundOut();
       nsIntRect r;
@@ -603,7 +603,7 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
   if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
+  nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
   if (outerSVGFrame)
     outerSVGFrame->InvalidateCoveredRegion(aFrame);
@@ -619,7 +619,7 @@ nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
   if (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(frame);
+  nsSVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame(frame);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
@@ -884,7 +884,7 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
       NS_ASSERTION(kid->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
-      nsSVGUtils::NotifyChildrenOfSVGChange(kid, aFlags);
+      NotifyChildrenOfSVGChange(kid, aFlags);
     }
     kid = kid->GetNextSibling();
   }
@@ -1329,10 +1329,10 @@ nsSVGUtils::GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
     width = ObjectSpace(aBBox, &aXYWH[2]);
     height = ObjectSpace(aBBox, &aXYWH[3]);
   } else {
-    x = nsSVGUtils::UserSpace(aFrame, &aXYWH[0]);
-    y = nsSVGUtils::UserSpace(aFrame, &aXYWH[1]);
-    width = nsSVGUtils::UserSpace(aFrame, &aXYWH[2]);
-    height = nsSVGUtils::UserSpace(aFrame, &aXYWH[3]);
+    x = UserSpace(aFrame, &aXYWH[0]);
+    y = UserSpace(aFrame, &aXYWH[1]);
+    width = UserSpace(aFrame, &aXYWH[2]);
+    height = UserSpace(aFrame, &aXYWH[3]);
   }
   return gfxRect(x, y, width, height);
 }

@@ -102,6 +102,7 @@ DOMCI_NODE_DATA(ProcessingInstruction, nsXMLProcessingInstruction)
 NS_INTERFACE_TABLE_HEAD(nsXMLProcessingInstruction)
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXMLProcessingInstruction)
     NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction, nsIDOMCharacterData)
     NS_INTERFACE_TABLE_ENTRY(nsXMLProcessingInstruction,
                              nsIDOMProcessingInstruction)
   NS_OFFSET_AND_INTERFACE_TABLE_END
@@ -120,18 +121,6 @@ nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
   aTarget = NodeName();
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLProcessingInstruction::SetData(const nsAString& aData)
-{
-  return SetNodeValue(aData);
-}
-
-NS_IMETHODIMP
-nsXMLProcessingInstruction::GetData(nsAString& aData)
-{
-  return nsGenericDOMDataNode::GetData(aData);
 }
 
 PRBool

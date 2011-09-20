@@ -623,6 +623,8 @@ pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.jitprofiling.content", true);
 pref("javascript.options.jitprofiling.chrome",  true);
+pref("javascript.options.pccounts.content", false);
+pref("javascript.options.pccounts.chrome",  false);
 pref("javascript.options.methodjit_always", false);
 pref("javascript.options.typeinference", true);
 // This preference limits the memory usage of javascript.

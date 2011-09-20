@@ -46,7 +46,10 @@
 #include "jsvector.h"
 
 extern JSObject *
-js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj);
+js_InitObjectClass(JSContext *cx, JSObject *obj);
+
+extern JSObject *
+js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 namespace js {
 
@@ -114,6 +117,47 @@ class GlobalObject : public ::JSObject {
         setSlot(FLAGS, Int32Value(flags));
     }
 
+    friend JSObject *
+    ::js_InitObjectClass(JSContext *cx, JSObject *obj);
+    friend JSObject *
+    ::js_InitFunctionClass(JSContext *cx, JSObject *obj);
+
+    /* Initialize the Function and Object classes.  Must only be called once! */
+    JSObject *
+    initFunctionAndObjectClasses(JSContext *cx);
+
+    void setDetailsForKey(JSProtoKey key, JSObject *ctor, JSObject *proto) {
+        Value &ctorVal = getSlotRef(key);
+        Value &protoVal = getSlotRef(JSProto_LIMIT + key);
+        Value &visibleVal = getSlotRef(2 * JSProto_LIMIT + key);
+        JS_ASSERT(ctorVal.isUndefined());
+        JS_ASSERT(protoVal.isUndefined());
+        JS_ASSERT(visibleVal.isUndefined());
+        ctorVal = ObjectValue(*ctor);
+        protoVal = ObjectValue(*proto);
+        visibleVal = ctorVal;
+    }
+
+    void setObjectClassDetails(JSFunction *ctor, JSObject *proto) {
+        setDetailsForKey(JSProto_Object, ctor, proto);
+    }
+
+    void setFunctionClassDetails(JSFunction *ctor, JSObject *proto) {
+        setDetailsForKey(JSProto_Function, ctor, proto);
+    }
+
+    void setThrowTypeError(JSFunction *fun) {
+        Value &v = getSlotRef(THROWTYPEERROR);
+        JS_ASSERT(v.isUndefined());
+        v.setObject(*fun);
+    }
+
+    void setOriginalEval(JSObject *evalobj) {
+        Value &v = getSlotRef(EVAL);
+        JS_ASSERT(v.isUndefined());
+        v.setObject(*evalobj);
+    }
+
   public:
     static GlobalObject *create(JSContext *cx, Class *clasp);
 
@@ -140,15 +184,26 @@ class GlobalObject : public ::JSObject {
      */
     JSObject *createBlankPrototypeInheriting(JSContext *cx, js::Class *clasp, JSObject &proto);
 
-    void setThrowTypeError(JSFunction *fun) {
-        // Our bootstrapping code is currently too convoluted to correctly and
-        // confidently assert this.
-        // JS_ASSERT(v.isUndefined());
-        // JS_ASSERT(getSlot(THROWTYPEERROR).isUndefined());
-        setSlot(THROWTYPEERROR, ObjectValue(*fun));
+    bool functionObjectClassesInitialized() const {
+        bool inited = !getSlot(JSProto_Function).isUndefined();
+        JS_ASSERT(inited == !getSlot(JSProto_LIMIT + JSProto_Function).isUndefined());
+        JS_ASSERT(inited == !getSlot(JSProto_Object).isUndefined());
+        JS_ASSERT(inited == !getSlot(JSProto_LIMIT + JSProto_Object).isUndefined());
+        return inited;
+    }
+
+    JSObject *getFunctionPrototype() const {
+        JS_ASSERT(functionObjectClassesInitialized());
+        return &getSlot(JSProto_LIMIT + JSProto_Function).toObject();
+    }
+
+    JSObject *getObjectPrototype() const {
+        JS_ASSERT(functionObjectClassesInitialized());
+        return &getSlot(JSProto_LIMIT + JSProto_Object).toObject();
     }
 
     JSObject *getThrowTypeError() const {
+        JS_ASSERT(functionObjectClassesInitialized());
         return &getSlot(THROWTYPEERROR).toObject();
     }
 
@@ -173,15 +228,8 @@ class GlobalObject : public ::JSObject {
     bool isRuntimeCodeGenEnabled(JSContext *cx);
 
     const Value &getOriginalEval() const {
+        JS_ASSERT(getSlot(EVAL).isObject());
         return getSlot(EVAL);
-    }
-
-    void setOriginalEval(JSObject *evalobj) {
-        // Our bootstrapping code is currently too convoluted to correctly and
-        // confidently assert this.
-        // JS_ASSERT(v.isUndefined());
-        // JS_ASSERT(getSlot(EVAL).isUndefined());
-        setSlot(EVAL, ObjectValue(*evalobj));
     }
 
     bool getFunctionNamespace(JSContext *cx, Value *vp);
