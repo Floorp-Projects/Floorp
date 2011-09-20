@@ -77,7 +77,6 @@ class FrameEntry
 
 #if defined JS_NUNBOX32
     uint32 getPayload() const {
-        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
         JS_ASSERT(isConstant());
         return v_.s.payload.u32;
     }
@@ -95,7 +94,7 @@ class FrameEntry
         ValueToECMAInt32(cx, getValue(), &value);
 
         Value newValue = Int32Value(value);
-        setConstant(Jsvalify(newValue));
+        setConstant(newValue);
     }
 
     /*

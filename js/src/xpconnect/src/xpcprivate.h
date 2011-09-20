@@ -1405,7 +1405,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* setElementAttributes  */                                   \
         nsnull, /* deleteProperty */                                          \
         nsnull, /* deleteElement */                                           \
-        js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
+        XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_TypeOf_Function,                                          \
         nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
@@ -1428,7 +1428,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* setElementAttributes  */                                   \
         nsnull, /* deleteProperty */                                          \
         nsnull, /* deleteElement */                                           \
-        js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
+        XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_TypeOf_Object,                                            \
         nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
@@ -1997,7 +1997,7 @@ public:
     PRUint32                        GetInterfacesBitmap() const
         {return mJSClass.interfacesBitmap;}
     JSClass*                        GetJSClass()
-        {return js::Jsvalify(&mJSClass.base);}
+        {return Jsvalify(&mJSClass.base);}
     JSClass*                        GetSlimJSClass()
         {if(mCanBeSlim) return GetJSClass(); return nsnull;}
 

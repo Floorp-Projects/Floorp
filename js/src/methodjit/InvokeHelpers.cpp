@@ -562,7 +562,7 @@ js_InternalThrow(VMFrame &f)
                 Value rval;
                 JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
                 if (st == JSTRAP_CONTINUE && handler) {
-                    st = handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
+                    st = handler(cx, cx->fp()->script(), cx->regs().pc, &rval,
                                  cx->debugHooks->throwHookData);
                 }
 

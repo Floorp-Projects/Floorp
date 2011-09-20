@@ -977,7 +977,7 @@ namespace js {
 /* non-static for direct definition of array elements within the engine */
 JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+                     JSPropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
@@ -1158,13 +1158,13 @@ array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
 Class js::ArrayClass = {
     "Array",
     Class::NON_NATIVE | JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     NULL,
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
@@ -1202,12 +1202,12 @@ Class js::SlowArrayClass = {
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty,
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 static bool
@@ -3530,7 +3530,7 @@ js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp)
     JSObject *array;
 
     for (i = 0; i < argc; i++) {
-        Value arg = Valueify(JS_ARGV(cx, vp)[i]);
+        Value arg = JS_ARGV(cx, vp)[i];
 
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NULL);
         if (!bytes)

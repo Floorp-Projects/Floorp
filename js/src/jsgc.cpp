@@ -967,7 +967,7 @@ js_FinishGC(JSRuntime *rt)
 JSBool
 js_AddRoot(JSContext *cx, Value *vp, const char *name)
 {
-    JSBool ok = js_AddRootRT(cx->runtime, Jsvalify(vp), name);
+    JSBool ok = js_AddRootRT(cx->runtime, vp, name);
     if (!ok)
         JS_ReportOutOfMemory(cx);
     return ok;

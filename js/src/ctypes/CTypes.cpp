@@ -2780,14 +2780,14 @@ void
 CType::Trace(JSTracer* trc, JSObject* obj)
 {
   // Make sure our TypeCode slot is legit. If it's not, bail.
-  jsval slot = js::Jsvalify(obj->getSlot(SLOT_TYPECODE));
+  jsval slot = obj->getSlot(SLOT_TYPECODE);
   if (JSVAL_IS_VOID(slot))
     return;
 
   // The contents of our slots depends on what kind of type we are.
   switch (TypeCode(JSVAL_TO_INT(slot))) {
   case TYPE_struct: {
-    slot = Jsvalify(obj->getReservedSlot(SLOT_FIELDINFO));
+    slot = obj->getReservedSlot(SLOT_FIELDINFO);
     if (JSVAL_IS_VOID(slot))
       return;
 
@@ -2802,7 +2802,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
   }
   case TYPE_function: {
     // Check if we have a FunctionInfo.
-    slot = Jsvalify(obj->getReservedSlot(SLOT_FNINFO));
+    slot = obj->getReservedSlot(SLOT_FNINFO);
     if (JSVAL_IS_VOID(slot))
       return;
 

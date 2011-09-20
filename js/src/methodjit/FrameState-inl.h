@@ -251,7 +251,7 @@ inline void
 FrameState::push(const Value &v)
 {
     FrameEntry *fe = rawPush();
-    fe->setConstant(Jsvalify(v));
+    fe->setConstant(v);
 }
 
 inline void

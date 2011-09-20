@@ -10276,8 +10276,8 @@ TraceRecorder::guardNativeConversion(Value& v)
     JSObject* obj = &v.toObject();
     LIns* obj_ins = get(&v);
 
-    ConvertOp convert = obj->getClass()->convert;
-    if (convert != ConvertStub)
+    JSConvertOp convert = obj->getClass()->convert;
+    if (convert != JS_ConvertStub)
         RETURN_STOP("operand has convert hook");
 
     VMSideExit* exit = snapshot(BRANCH_EXIT);
@@ -12216,12 +12216,12 @@ TraceRecorder::addDataProperty(JSObject* obj)
 
     // js_AddProperty does not call the addProperty hook.
     Class* clasp = obj->getClass();
-    if (clasp->addProperty != Valueify(JS_PropertyStub))
+    if (clasp->addProperty != JS_PropertyStub)
         RETURN_STOP("set new property of object with addProperty hook");
 
     // See comment in TR::nativeSet about why we do not support setting a
     // property that has both a setter and a slot.
-    if (clasp->setProperty != Valueify(JS_StrictPropertyStub))
+    if (clasp->setProperty != JS_StrictPropertyStub)
         RETURN_STOP("set new property with setter and slot");
 
 #ifdef DEBUG
@@ -14057,7 +14057,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          * We could specialize to guard on just JSClass.getProperty, but a mere
          * class guard is simpler and slightly faster.
          */
-        if (obj->getClass()->getProperty != Valueify(JS_PropertyStub)) {
+        if (obj->getClass()->getProperty != JS_PropertyStub) {
             RETURN_STOP_A("can't trace through access to undefined property if "
                           "JSClass.getProperty hook isn't stubbed");
         }
@@ -17026,7 +17026,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
                     increment(OP_RECURSIVE);
             } else {
                 js::Native native = fun->u.n.native;
-                if (js_IsMathFunction(JS_JSVALIFY_NATIVE(native)))
+                if (js_IsMathFunction(native))
                     increment(OP_FLOAT);
             }
         }
