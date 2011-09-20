@@ -4050,27 +4050,10 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     return result;
   }
 
-  // In case of data: URIs, we want to ignore principals;
-  // they should have the originating content's principal,
-  // but that's broken at the moment in imgLib.
-  nsCOMPtr<nsIURI> uri;
-  rv = imgRequest->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv))
-    return result;
-
-  PRBool isDataURI = PR_FALSE;
-  rv = uri->SchemeIs("data", &isDataURI);
-  if (NS_FAILED(rv))
-    return result;
-
-  // Data URIs are always OK; set the principal
-  // to null to indicate that.
   nsCOMPtr<nsIPrincipal> principal;
-  if (!isDataURI) {
-    rv = imgRequest->GetImagePrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv) || !principal)
-      return result;
-  }
+  rv = imgRequest->GetImagePrincipal(getter_AddRefs(principal));
+  if (NS_FAILED(rv) || !principal)
+    return result;
 
   nsCOMPtr<imgIContainer> imgContainer;
   rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
