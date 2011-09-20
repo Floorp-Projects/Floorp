@@ -50,12 +50,8 @@
 #include "nsIDOMDocument.h"
 #include "nsDOMError.h"
 #include "nsNodeInfoManager.h"
-#include "plbase64.h"
-#include "nsNetUtil.h"
-#include "prmem.h"
 #include "nsNetUtil.h"
 #include "nsXPCOMStrings.h"
-#include "prlock.h"
 #include "nsThreadUtils.h"
 #include "nsIThreadInternal.h"
 #include "nsContentUtils.h"
@@ -1269,8 +1265,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
   return NS_OK;
 }
 
-nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                       FromParser aFromParser)
+nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),

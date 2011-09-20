@@ -8,14 +8,17 @@
 
   <binding id="documenttab">
     <content observes="bcast_urlbarState">
-      <xul:stack anonid="page" class="documenttab-container" flex="1">
-        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" moz-opaque="true" empty="true"
-          onclick="document.getBindingParent(this)._onClick()" observes="bcast_urlbarState"/>
-        <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();" observes="bcast_urlbarState"/>
-        <xul:hbox anonid="close-container" class="documenttab-close-container" top="0" align="center" onclick="document.getBindingParent(this)._onClose()" observes="bcast_urlbarState">
-          <xul:image anonid="close" class="documenttab-close" mousethrough="always" observes="bcast_urlbarState"/>
-        </xul:hbox>
-      </xul:stack>
+      <xul:vbox anonid="container" class="documenttab-container" left="0" top="0" observes="bcast_urlbarState">
+        <xul:stack anonid="page" flex="1">
+          <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" moz-opaque="true" empty="true"
+            onclick="document.getBindingParent(this)._onClick()" observes="bcast_urlbarState"/>
+          <xul:hbox anonid="reload" class="documenttab-reload" left="0" top="0" onclick="document.getBindingParent(this)._onUndo();" observes="bcast_urlbarState"/>
+          <xul:hbox anonid="close-container" class="documenttab-close-container" top="0" align="center" onclick="document.getBindingParent(this)._onClose()" observes="bcast_urlbarState">
+            <xul:image anonid="close" class="documenttab-close" mousethrough="always" observes="bcast_urlbarState"/>
+          </xul:hbox>
+        </xul:stack>
+        <xul:label anonid="title" crop="end" class="documenttab-title" observes="bcast_urlbarState"/>
+      </xul:vbox>
     </content>
 
     <implementation>
@@ -23,6 +26,7 @@
       <field name="thumbnail" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
       <field name="_reload" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "reload");</field>
       <field name="_closeContainer" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "close-container");</field>
+      <field name="_title" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "title");</field>
       <field name="_container" readonly="true">this.parentNode.parentNode;</field>
 
       <constructor>
@@ -35,28 +39,23 @@
         <parameter name="thumbnail"/>
         <body>
           <![CDATA[
-            let tabWidth, tabHeight, closeWidth, closeHeight;
+            let tabWidth, tabHeight;
 
             if (Util.isTablet()) {
               tabWidth = 176;
-              tabHeight = 110;
-              closeWidth = 41;
-              closeHeight = 117;
+              tabHeight = 108;
             } else {
               tabWidth = 104;
               tabHeight = 65;
-              closeWidth = 55;
-              closeHeight = 65;
             }
 
             if (tabWidth != thumbnail.width) {
               let reload = this._reload;
               let closeContainer = this._closeContainer;
+              let title = this._title;
 
-              thumbnail.width = reload.width = tabWidth;
-              thumbnail.height = reload.height = tabHeight;
-              closeContainer.width = closeWidth;
-              closeContainer.height = closeHeight;
+              thumbnail.width = reload.width = title.width = tabWidth;
+              thumbnail.height = reload.height = closeContainer.height = tabHeight;
             }
           ]]>
         </body>
@@ -90,6 +89,15 @@
             closeFn.call(this);
 
             this._container.removeTab(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTitle">
+        <parameter name="title"/>
+        <body>
+          <![CDATA[
+            this._title.value = title;
           ]]>
         </body>
       </method>
@@ -302,6 +310,48 @@
       </method>
 
     </implementation>
+  </binding>
+
+  <binding id="documenttab-popup" extends="chrome://browser/content/bindings.xml#richlistitem">
+    <content>
+      <xul:box class="tab-popup-item-box">
+        <xul:image class="documenttab-popup-checkmark"/>
+        <xul:image class="documenttab-popup-favicon" xbl:inherits="src=img"/>
+        <xul:label class="documenttab-popup-label" xbl:inherits="value=label" crop="center"/>
+        <xul:button class="documenttab-popup-closebutton" onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()" />
+      </xul:box>
+    </content>
+
+    <implementation>
+      <field name="_container" readonly="true">this.parentNode;</field>
+      <field name="tab">null</field>
+
+      <method name="_onClick">
+        <body>
+          <![CDATA[
+            this._container.selectedTab = this;
+            let selectFn = new Function("event", this._container.getAttribute("onselect"));
+            selectFn.call(this.tab);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onClose">
+        <body>
+          <![CDATA[
+            let callbackFunc = this._container.getAttribute(this.hasAttribute("reload") ? "onclosereloadtab" : "onclosetab");
+            let closeFn = new Function("event", callbackFunc);
+            closeFn.call(this.tab);
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="click" action="this._onClick();"/>
+    </handlers>
+
   </binding>
 
 </bindings>

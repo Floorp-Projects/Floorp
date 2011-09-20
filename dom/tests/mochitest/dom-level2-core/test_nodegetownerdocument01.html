@@ -79,6 +79,8 @@ var docName = 'nodegetownerdocument01';
 	Create a new DocumentType node.  Since this node is not used with any Document yet
 	verify if the ownerDocument is null.
 
+	The specification has changed! ownerDocument should not be null.
+
 * @author IBM
 * @author Neil Delima
 * @see http://www.w3.org/TR/DOM-Level-2-Core/core#node-ownerDoc
@@ -103,7 +105,7 @@ function nodegetownerdocument01() {
 docType = domImpl.createDocumentType("mydoc",nullID,nullID);
       ownerDoc = docType.ownerDocument;
 
-      assertNull("nodegetownerdocument01",ownerDoc);
+      assertNotNull("nodegetownerdocument01",ownerDoc);
     
 }
 

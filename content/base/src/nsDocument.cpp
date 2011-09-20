@@ -441,10 +441,9 @@ nsIdentifierMapEntry::AddNameElement(nsIDocument* aDocument, Element* aElement)
 void
 nsIdentifierMapEntry::RemoveNameElement(Element* aElement)
 {
-  NS_ASSERTION(mNameContentList &&
-               mNameContentList->IndexOf(aElement, PR_FALSE) >= 0,
-               "Attmpting to remove named element that doesn't exist");
-  mNameContentList->RemoveElement(aElement);
+  if (mNameContentList) {
+    mNameContentList->RemoveElement(aElement);
+  }
 }
 
 // Helper structs for the content->subdoc map
@@ -1321,46 +1320,33 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
 class nsDOMImplementation : public nsIDOMDOMImplementation
 {
 public:
-  nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
+  nsDOMImplementation(nsIDocument* aOwner,
+                      nsIScriptGlobalObject* aScriptObject,
                       nsIURI* aDocumentURI,
-                      nsIURI* aBaseURI,
-                      nsIPrincipal* aPrincipal);
+                      nsIURI* aBaseURI);
   virtual ~nsDOMImplementation();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMImplementation)
 
   // nsIDOMDOMImplementation
   NS_DECL_NSIDOMDOMIMPLEMENTATION
 
 protected:
+  nsCOMPtr<nsIDocument> mOwner;
   nsWeakPtr mScriptObject;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
-
-nsresult
-NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
-{
-  *aInstancePtrResult = new nsDOMImplementation(nsnull, nsnull, nsnull, nsnull);
-  if (!*aInstancePtrResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
-
-nsDOMImplementation::nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
+nsDOMImplementation::nsDOMImplementation(nsIDocument* aOwner,
+                                         nsIScriptGlobalObject* aScriptObject,
                                          nsIURI* aDocumentURI,
-                                         nsIURI* aBaseURI,
-                                         nsIPrincipal* aPrincipal)
-  : mScriptObject(do_GetWeakReference(aScriptObject)),
+                                         nsIURI* aBaseURI)
+  : mOwner(aOwner),
+    mScriptObject(do_GetWeakReference(aScriptObject)),
     mDocumentURI(aDocumentURI),
-    mBaseURI(aBaseURI),
-    mPrincipal(aPrincipal)
+    mBaseURI(aBaseURI)
 {
 }
 
@@ -1371,15 +1357,16 @@ nsDOMImplementation::~nsDOMImplementation()
 DOMCI_DATA(DOMImplementation, nsDOMImplementation)
 
 // QueryInterface implementation for nsDOMImplementation
-NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMImplementation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMImplementation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDOMImplementation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMImplementation)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION_1(nsDOMImplementation, mOwner)
 
-NS_IMPL_ADDREF(nsDOMImplementation)
-NS_IMPL_RELEASE(nsDOMImplementation)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMImplementation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMImplementation)
 
 
 NS_IMETHODIMP
@@ -1399,6 +1386,7 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
                                         nsIDOMDocumentType** aReturn)
 {
   *aReturn = nsnull;
+  NS_ENSURE_STATE(mOwner);
 
   nsresult rv = nsContentUtils::CheckQName(aQualifiedName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1409,7 +1397,8 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   // Indicate that there is no internal subset (not just an empty one)
   nsAutoString voidString;
   voidString.SetIsVoid(PR_TRUE);
-  return NS_NewDOMDocumentType(aReturn, nsnull, mPrincipal, name, aPublicId,
+  return NS_NewDOMDocumentType(aReturn, mOwner->NodeInfoManager(),
+                               name, aPublicId,
                                aSystemId, voidString);
 }
 
@@ -1443,21 +1432,14 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     return NS_ERROR_DOM_NAMESPACE_ERR;
   }
 
-  if (aDoctype) {
-    nsCOMPtr<nsIDOMDocument> owner;
-    aDoctype->GetOwnerDocument(getter_AddRefs(owner));
-    if (owner) {
-      return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
-    }
-  }
-
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptObject);
   
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
-                                        mDocumentURI, mBaseURI, mPrincipal,
+                                        mDocumentURI, mBaseURI,
+                                        mOwner->NodePrincipal(),
                                         scriptHandlingObject, aReturn);
 }
 
@@ -1465,15 +1447,15 @@ NS_IMETHODIMP
 nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
                                         nsIDOMDocument** aReturn)
 {
-  *aReturn = NULL;
+  *aReturn = nsnull;
+  NS_ENSURE_STATE(mOwner);
 
   nsCOMPtr<nsIDOMDocumentType> doctype;
   // Indicate that there is no internal subset (not just an empty one)
   nsAutoString voidString;
   voidString.SetIsVoid(true);
   nsresult rv = NS_NewDOMDocumentType(getter_AddRefs(doctype),
-                                      NULL, // aNodeInfoManager
-                                      mPrincipal, // aPrincipal
+                                      mOwner->NodeInfoManager(),
                                       nsGkAtoms::html, // aName
                                       EmptyString(), // aPublicId
                                       EmptyString(), // aSystemId
@@ -1489,7 +1471,8 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   nsCOMPtr<nsIDOMDocument> document;
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(),
                                       doctype, mDocumentURI, mBaseURI,
-                                      mPrincipal, scriptHandlingObject,
+                                      mOwner->NodePrincipal(),
+                                      scriptHandlingObject,
                                       getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
@@ -2587,7 +2570,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 
   nsIdentifierMapEntry *entry =
     mIdentifierMap.GetEntry(nsDependentAtomString(aName));
-  if (!entry) // Should never be false unless we had OOM when adding the entry
+  if (!entry) // Could be false if the element was anonymous, hence never added
     return;
 
   entry->RemoveNameElement(aElement);
@@ -3813,7 +3796,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
         nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-        JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+        JSContext *cx = scx ? scx->GetNativeContext() : nsnull;
         if (!cx) {
           nsContentUtils::ThreadJSContextStack()->Peek(&cx);
           if (!cx) {
@@ -4315,8 +4298,7 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
     nsIScriptGlobalObject* scriptObject =
       GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
-    mDOMImplementation = new nsDOMImplementation(scriptObject, uri, uri,
-                                                 NodePrincipal());
+    mDOMImplementation = new nsDOMImplementation(this, scriptObject, uri, uri);
     if (!mDOMImplementation) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -4806,6 +4788,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
     case nsIDOMNode::TEXT_NODE:
     case nsIDOMNode::CDATA_SECTION_NODE:
     case nsIDOMNode::COMMENT_NODE:
+    case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
       nsCOMPtr<nsINode> imported = do_QueryInterface(aImportedNode);
       NS_ENSURE_TRUE(imported, NS_ERROR_FAILURE);
@@ -6119,6 +6102,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     case nsIDOMNode::TEXT_NODE:
     case nsIDOMNode::CDATA_SECTION_NODE:
     case nsIDOMNode::COMMENT_NODE:
+    case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
       // We don't want to adopt an element into its own contentDocument or into
       // a descendant contentDocument, so we check if the frameElement of this
@@ -6151,7 +6135,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       return NS_ERROR_NOT_IMPLEMENTED;
     }
     case nsIDOMNode::DOCUMENT_NODE:
-    case nsIDOMNode::DOCUMENT_TYPE_NODE:
     case nsIDOMNode::ENTITY_NODE:
     case nsIDOMNode::NOTATION_NODE:
     {
@@ -6423,7 +6406,7 @@ nsDocument::IsScriptEnabled()
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_FALSE);
 
-  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  JSContext* cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, PR_FALSE);
 
   PRBool enabled;
@@ -8704,6 +8687,8 @@ nsDocument::SizeOf() const
     return nsINode::SetOn##name_(cx, v);                                  \
   }
 #define TOUCH_EVENT EVENT
+#define DOCUMENT_ONLY_EVENT EVENT
 #include "nsEventNameList.h"
+#undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT

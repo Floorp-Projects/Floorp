@@ -63,8 +63,6 @@ struct gfxRect;
 class NS_STACK_CLASS nsSVGFilterInstance
 {
 public:
-  void ConvertLocation(float aValues[3]) const;
-
   nsSVGFilterInstance(nsIFrame *aTargetFrame,
                       nsSVGFilterPaintCallback *aPaintCallback,
                       nsSVGFilterElement *aFilterElement,
@@ -72,6 +70,7 @@ public:
                       const gfxRect& aFilterRect,
                       const nsIntSize& aFilterSpaceSize,
                       const gfxMatrix &aFilterSpaceToDeviceSpaceTransform,
+                      const nsIntRect& aTargetBounds,
                       const nsIntRect& aDirtyOutputRect,
                       const nsIntRect& aDirtyInputRect,
                       PRUint16 aPrimitiveUnits) :
@@ -82,6 +81,7 @@ public:
     mFilterSpaceToDeviceSpaceTransform(aFilterSpaceToDeviceSpaceTransform),
     mFilterRect(aFilterRect),
     mFilterSpaceSize(aFilterSpaceSize),
+    mTargetBounds(aTargetBounds),
     mDirtyOutputRect(aDirtyOutputRect),
     mDirtyInputRect(aDirtyInputRect),
     mSurfaceRect(nsIntPoint(0, 0), aFilterSpaceSize),
@@ -115,10 +115,18 @@ public:
   {
     return GetPrimitiveNumber(aCtxType, aNumberPair->GetAnimValue(aIndex));
   }
+  /**
+   * Converts a point and a length in filter primitive units into filter space.
+   * For object-bounding-box units, the object bounding box offset is applied
+   * to the point.
+   */
+  void ConvertLocation(float aValues[3]) const;
+
   gfxMatrix GetUserSpaceToFilterSpaceTransform() const;
   gfxMatrix GetFilterSpaceToDeviceSpaceTransform() const {
     return mFilterSpaceToDeviceSpaceTransform;
   }
+  gfxPoint FilterSpaceToUserSpace(const gfxPoint& aPt) const;
 
 private:
   typedef nsSVGFE::Image Image;
@@ -203,6 +211,8 @@ private:
   gfxMatrix               mFilterSpaceToDeviceSpaceTransform;
   gfxRect                 mFilterRect;
   nsIntSize               mFilterSpaceSize;
+  // Filter-space bounds of the target image (SourceAlpha/SourceGraphic)
+  nsIntRect               mTargetBounds;
   nsIntRect               mDirtyOutputRect;
   nsIntRect               mDirtyInputRect;
   nsIntRect               mSurfaceRect;

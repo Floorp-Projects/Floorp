@@ -2400,6 +2400,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(ProcessingInstruction, nsIDOMProcessingInstruction)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProcessingInstruction)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCharacterData)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
@@ -6492,7 +6493,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     if (!my_context) {
       my_cx = cx;
     } else {
-      my_cx = (JSContext *)my_context->GetNativeContext();
+      my_cx = my_context->GetNativeContext();
 
       if (my_cx != cx) {
         if (!ac.enter(my_cx, obj)) {
@@ -8120,7 +8121,7 @@ nsDOMStringMapSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (PRUint32 i = 0; i < properties.Length(); ++i) {
-    nsDependentString prop(properties[i]);
+    nsString& prop(properties[i]);
     *_retval = JS_DefineUCProperty(cx, obj, prop.get(), prop.Length(),
                                    JSVAL_VOID, nsnull, nsnull,
                                    JSPROP_ENUMERATE | JSPROP_SHARED);
@@ -9340,7 +9341,7 @@ public:
   {
     JSContext* cx = nsnull;
     if (mContext) {
-      cx = (JSContext*)mContext->GetNativeContext();
+      cx = mContext->GetNativeContext();
     } else {
       nsCOMPtr<nsIThreadJSContextStack> stack =
         do_GetService("@mozilla.org/js/xpc/ContextStack;1");

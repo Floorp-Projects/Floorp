@@ -671,6 +671,7 @@ var FormHelperUI = {
     messageManager.addMessageListener("FormAssist:Update", this);
     messageManager.addMessageListener("FormAssist:Resize", this);
     messageManager.addMessageListener("FormAssist:AutoComplete", this);
+    messageManager.addMessageListener("FormAssist:ValidationMessage", this);
 
     // Listen for events where form assistant should be closed or updated
     let tabs = Elements.tabList;
@@ -739,12 +740,13 @@ var FormHelperUI = {
       type: aElement.type,
       choices: aElement.choices,
       isAutocomplete: aElement.isAutocomplete,
+      validationMessage: aElement.validationMessage,
       list: aElement.list,
     }
 
     this._updateContainerForSelect(lastElement, this._currentElement);
     this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
-    this._updateSuggestionsFor(this._currentElement);
+    this._updatePopupsFor(this._currentElement);
 
     // Prevent the view to scroll automatically while typing
     this._currentBrowser.scrollSync = false;
@@ -828,7 +830,8 @@ var FormHelperUI = {
   },
 
   receiveMessage: function formHelperReceiveMessage(aMessage) {
-    let allowedMessages = ["FormAssist:Show", "FormAssist:Hide", "FormAssist:AutoComplete"];
+    let allowedMessages = ["FormAssist:Show", "FormAssist:Hide",
+                           "FormAssist:AutoComplete", "FormAssist:ValidationMessage"];
     if (!this._open && allowedMessages.indexOf(aMessage.name) == -1)
       return;
 
@@ -845,7 +848,7 @@ var FormHelperUI = {
         } else {
           this._currentElementRect = Rect.fromRect(json.current.rect);
           this._currentBrowser = getBrowser();
-          this._updateSuggestionsFor(json.current);
+          this._updatePopupsFor(json.current);
         }
         break;
 
@@ -866,8 +869,12 @@ var FormHelperUI = {
         this._zoom(Rect.fromRect(element.rect), Rect.fromRect(element.caretRect));
         break;
 
+      case "FormAssist:ValidationMessage":
+        this._updatePopupsFor(json.current, { fromInput: true });
+        break;
+
       case "FormAssist:AutoComplete":
-        this._updateSuggestionsFor(json.current);
+        this._updatePopupsFor(json.current, { fromInput: true });
         break;
 
        case "FormAssist:Update":
@@ -938,12 +945,33 @@ var FormHelperUI = {
     this._container.dispatchEvent(evt);
   },
 
+  _updatePopupsFor: function _formHelperUpdatePopupsFor(aElement, options) {
+    options = options || {};
+
+    let fromInput = 'fromInput' in options && options.fromInput;
+
+    // The order of the updates matters here. If the popup update was
+    // triggered from user input (e.g. key press in an input element),
+    // we first check if there are input suggestions then check for
+    // a validation message. The idea here is that the validation message
+    // will be shown straight away once the invalid element is focused
+    // and suggestions will be shown as user inputs data. Only one popup
+    // is shown at a time. If both are not shown, then we ensure any
+    // previous popups are hidden.
+    let noPopupsShown = fromInput ?
+                        (!this._updateSuggestionsFor(aElement) &&
+                         !this._updateFormValidationFor(aElement)) :
+                        (!this._updateFormValidationFor(aElement) &&
+                         !this._updateSuggestionsFor(aElement));
+
+    if (noPopupsShown)
+      ContentPopupHelper.popup = null;
+  },
+
   _updateSuggestionsFor: function _formHelperUpdateSuggestionsFor(aElement) {
     let suggestions = this._getAutocompleteSuggestions(aElement);
-    if (!suggestions.length) {
-      ContentPopupHelper.popup = null;
-      return;
-    }
+    if (!suggestions.length)
+      return false;
 
     // the scrollX/scrollY position can change because of the animated zoom so
     // delay the suggestions positioning
@@ -952,7 +980,7 @@ var FormHelperUI = {
       this._waitForZoom(function() {
         self._updateSuggestionsFor(aElement);
       });
-      return;
+      return true;
     }
 
     // Declare which box is going to be the inside container of the content popup helper
@@ -974,6 +1002,33 @@ var FormHelperUI = {
 
     ContentPopupHelper.popup = suggestionsContainer;
     ContentPopupHelper.anchorTo(this._currentElementRect);
+
+    return true;
+  },
+
+  _updateFormValidationFor: function _formHelperUpdateFormValidationFor(aElement) {
+    if (!aElement.validationMessage)
+      return false;
+
+    // the scrollX/scrollY position can change because of the animated zoom so
+    // delay the suggestions positioning
+    if (AnimatedZoom.isZooming()) {
+      let self = this;
+      this._waitForZoom(function() {
+        self._updateFormValidationFor(aElement);
+      });
+      return true;
+    }
+
+    let validationContainer = document.getElementById("form-helper-validation-container");
+
+    // Update label with form validation message
+    validationContainer.firstChild.value = aElement.validationMessage;
+
+    ContentPopupHelper.popup = validationContainer;
+    ContentPopupHelper.anchorTo(this._currentElementRect);
+
+    return true;
   },
 
   /** Retrieve the autocomplete list from the autocomplete service for an element */

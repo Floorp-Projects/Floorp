@@ -40,23 +40,25 @@
 #include "nsUTF8Utils.h"
 #include "nsIUGenCategory.h"
 #include "nsUnicharUtilCIID.h"
+#include "nsNetUtil.h"
 
 #include "hyphen.h"
 
 nsHyphenator::nsHyphenator(nsIFile *aFile)
   : mDict(nsnull)
 {
-  nsCString path;
-  aFile->GetNativePath(path);
-  mDict = hnj_hyphen_load(path.get());
+  nsCString urlSpec;
+  nsresult rv = NS_GetURLSpecFromFile(aFile, urlSpec);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  mDict = hnj_hyphen_load(urlSpec.get());
 #ifdef DEBUG
   if (mDict) {
-    printf("loaded hyphenation patterns from %s\n", path.get());
+    printf("loaded hyphenation patterns from %s\n", urlSpec.get());
   }
 #endif
-  nsresult rv;
-  mCategories =
-    do_GetService(NS_UNICHARCATEGORY_CONTRACTID, &rv);
+  mCategories = do_GetService(NS_UNICHARCATEGORY_CONTRACTID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get category service");
 }
 

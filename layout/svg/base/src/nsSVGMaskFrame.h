@@ -64,6 +64,10 @@ public:
                                                 const gfxMatrix &aMatrix,
                                                 float aOpacity = 1.0f);
 
+  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType);
+
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,

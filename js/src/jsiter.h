@@ -149,6 +149,9 @@ bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
 
 bool
+js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index);
+
+bool
 js_SuppressDeletedIndexProperties(JSContext *cx, JSObject *obj, jsint begin, jsint end);
 
 /*

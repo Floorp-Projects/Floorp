@@ -1,6 +1,6 @@
 dump("====================== Content Script Loaded =======================\n");
 
-let assistant = Content._formAssistant;
+let assistant = Content.formAssistant;
 
 AsyncTests.add("TestRemoteAutocomplete:Click", function(aMessage, aJson) {
   let element = content.document.getElementById(aJson.id);

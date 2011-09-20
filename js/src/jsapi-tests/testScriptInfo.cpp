@@ -34,12 +34,10 @@ BEGIN_TEST(testScriptInfo)
 {
     uintN startLine = 1000;
 
-    JSObject *scriptObj = JS_CompileScript(cx, global, code, strlen(code),
-                                           __FILE__, startLine);
+    JSScript *script = JS_CompileScript(cx, global, code, strlen(code), __FILE__, startLine);
 
-    CHECK(scriptObj);
+    CHECK(script);
 
-    JSScript *script = JS_GetScriptFromObject(scriptObj);
     jsbytecode *start = JS_LineNumberToPC(cx, script, startLine);
     CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);
     CHECK_EQUAL(JS_PCToLineNumber(cx, script, start), startLine);

@@ -193,7 +193,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
   }
   
   if (aContent->IsHTML() &&
-      aContent->NodeInfo()->Equals(nsAccessibilityAtoms::br)) {
+      aContent->NodeInfo()->Equals(nsGkAtoms::br)) {
     aString->AppendLiteral("\r\n");
     return NS_OK;
   }
@@ -360,14 +360,14 @@ nsTextEquivUtils::AppendFromDOMNode(nsIContent *aContent, nsAString *aString)
     if (labeledEl) {
       labeledEl->GetLabel(textEquivalent);
     } else {
-      if (aContent->NodeInfo()->Equals(nsAccessibilityAtoms::label,
+      if (aContent->NodeInfo()->Equals(nsGkAtoms::label,
                                        kNameSpaceID_XUL))
-        aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+        aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
                           textEquivalent);
 
       if (textEquivalent.IsEmpty())
         aContent->GetAttr(kNameSpaceID_None,
-                          nsAccessibilityAtoms::tooltiptext, textEquivalent);
+                          nsGkAtoms::tooltiptext, textEquivalent);
     }
 
     AppendString(aString, textEquivalent);

@@ -41,6 +41,7 @@
 
 #include "nsNPAPIPlugin.h"
 #include "mozilla/unused.h"
+#include "mozilla/Util.h"
 
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;
@@ -1083,7 +1084,7 @@ PluginScriptableObjectParent::AnswerEnumerate(InfallibleTArray<PPluginIdentifier
     if (_identifierisstring(ids[index])) {
       JSString* str = NPIdentifierToString(ids[index]);
       if (!JS_StringHasBeenInterned(cx, str)) {
-        JSString* str2 = JS_InternJSString(cx, str);
+        DebugOnly<JSString*> str2 = JS_InternJSString(cx, str);
         NS_ASSERTION(str2 == str, "Interning a JS string which is currently an ID should return itself.");
       }
     }

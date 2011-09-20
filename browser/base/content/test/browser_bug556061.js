@@ -63,6 +63,7 @@ let tests = [
     expected: testURL,
     setup: function() {
       gURLBar.value = testActionURL;
+      gURLBar.valueIsTyped = true;
       is(gURLBar.value, testActionURL, "gURLBar.value starts with correct value");
 
       // Focus the urlbar so we can select it all & copy
@@ -103,6 +104,7 @@ let tests = [
     setup: function() {
       // Reset urlbar value
       gURLBar.value = testActionURL;
+      gURLBar.valueIsTyped = true;
       // Sanity check that we have the right value
       is(gURLBar.value, testActionURL, "gURLBar.value starts with correct value");
 

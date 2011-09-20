@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Profiling test suite for EventUtils</title>
+  <script type="text/javascript">
+  var start = new Date();
+  </script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript">
+  var loadTime = new Date();
+  </script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="starttest()">
+<input type="radio" id="radioTarget1" name="group">Radio Target 1</input>
+<input id="textBoxA">
+<input id="textBoxB">
+<input id="testMouseEvent" type="button" value="click">
+<input id="testKeyEvent" >
+<input id="testStrEvent" >
+<div id="scrollB" style="width: 190px;height: 250px;overflow:auto">
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+<p>blah blah blah blah</p>
+</div>
+<script class="testbody" type="text/javascript">
+SimpleTest.info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
+function starttest() {
+  SimpleTest.waitForFocus(
+    function () {
+      SimpleTest.waitForExplicitFinish();
+      var startTime = new Date();
+      var check = false;
+      
+      /* test send* functions */
+      $("testMouseEvent").addEventListener("click", function() { check=true; }, false);
+      sendMouseEvent({type:'click'}, "testMouseEvent");
+      is(check, true, 'sendMouseEvent should dispatch click event');
+      
+      check = false;
+      $("testKeyEvent").addEventListener("keypress", function() { check = true; }, false);
+      $("testKeyEvent").focus();
+      sendChar("x", "testKeyEvent");
+      is($("testKeyEvent").value, "x", "sendChar should work");
+      is(check, true, "sendChar should dispatch keyPress");
+      $("testKeyEvent").value = "";
+    
+      sendString("string", "testStrEvent");
+      is($("testStrEvent").value, "string", "sendString should work");
+      $("testStrEvent").value = "";
+    
+      check = false;
+      sendKey("DOWN", "testKeyEvent");
+      is(check, true, "sendKey should dispatch keyPress");
+    
+      /* test synthesizeMouse* */
+      //focus trick enables us to run this in iframes
+      $("radioTarget1").addEventListener('focus', function (aEvent) {
+        $("radioTarget1").removeEventListener('focus', arguments.callee, false);
+        synthesizeMouse($("radioTarget1"), 1, 1, {});
+        is($("radioTarget1").checked, true, "synthesizeMouse should work")
+        $("radioTarget1").checked = false;
+        disableNonTestMouseEvents(true);
+        synthesizeMouse($("radioTarget1"), 1, 1, {});
+        is($("radioTarget1").checked, true, "synthesizeMouse should still work with non-test mouse events disabled");
+        $("radioTarget1").checked = false;
+        disableNonTestMouseEvents(false);
+      });
+      $("radioTarget1").focus();
+
+      //focus trick enables us to run this in iframes
+      $("textBoxA").addEventListener("focus", function (aEvent) {
+        $("textBoxA").removeEventListener("focus", arguments.callee, false);
+        check = false;
+        $("textBoxA").addEventListener("click", function() { check = true; }, false);
+        synthesizeMouseAtCenter($("textBoxA"), {});
+        is(check, true, 'synthesizeMouse should dispatch mouse event');
+    
+        check = false;
+        synthesizeMouseExpectEvent($("textBoxA"), 1, 1, {}, $("textBoxA"), "click", "synthesizeMouseExpectEvent should fire click event");
+        is(check, true, 'synthesizeMouse should dispatch mouse event');
+      });
+      $("textBoxA").focus();
+    
+      /**
+       * TODO: testing synthesizeMouseScroll requires a setTimeout 
+       * since there is delay between the scroll event and a check, so for now just test
+       * that we can successfully call it to avoid having setTimeout vary the runtime metric.
+       * Testing of this method is currently done here:
+       * toolkit/content/tests/chrome/test_mousescroll.xul
+       */
+      synthesizeMouseScroll($("scrollB"), 5, 5, {'delta': 10, 'type': "DOMMouseScroll"});
+    
+      /* test synthesizeKey* */
+      check = false;
+      $("testKeyEvent").addEventListener("keypress", function() { check = true; }, false);
+      $("testKeyEvent").focus();
+      synthesizeKey("a", {});
+      is($("testKeyEvent").value, "a", "synthesizeKey should work");
+      is(check, true, "synthesizeKey should dispatch keyPress");
+      $("testKeyEvent").value = "";
+    
+      check = false;
+      synthesizeKeyExpectEvent("a", {}, $("testKeyEvent"), "keypress");
+      is($("testKeyEvent").value, "a", "synthesizeKey should work");
+      is(check, true, "synthesizeKey should dispatch keyPress");
+      $("testKeyEvent").value = "";
+    
+      /* test synthesizeComposition */
+      check = false;
+      window.addEventListener("compositionstart", function() { check = true; }, false);
+      synthesizeComposition(true);
+      is(check, true, 'synthesizeComposition(true) should dispatch compositionstart');
+    
+      check = false;
+      window.addEventListener("compositionend", function() { check = true; }, false);
+      synthesizeComposition();
+      is(check, true, 'synthesizeComposition() should dispatch compositionend');
+      check = false;
+    
+      $("textBoxB").focus();
+      const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+      synthesizeText(
+        { "composition":
+          { "string": "a",
+            "clauses":
+            [
+              { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        }
+      );
+      is(check, false, "synthesizeText shouldn't start or end composition");
+      is($("textBoxB").value, "a", "synthesizeText should send text");
+      var querySelectedText = synthesizeQuerySelectedText();
+      ok(querySelectedText, "query selected text event result is null");
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); //get permission to check members of querySelectedText
+      ok(querySelectedText.succeeded, "query selected text event failed");
+      is(querySelectedText.offset, 1,
+         "query selected text event returns wrong offset");
+      is(querySelectedText.text, "",
+         "query selected text event returns wrong selected text");
+      $("textBoxB").value = "";
+    
+      querySelectedText = synthesizeQuerySelectedText();
+      ok(querySelectedText, "query selected text event result is null");
+      ok(querySelectedText.succeeded, "query selected text event failed");
+      is(querySelectedText.offset, 0,
+         "query selected text event returns wrong offset");
+      is(querySelectedText.text, "",
+         "query selected text event returns wrong selected text");
+      var endTime = new Date();
+      SimpleTest.info("\nProfile::EventUtilsRunTime: " + (endTime-startTime) + "\n");
+      SimpleTest.finish();
+    }
+  );
+};
+</script>
+</body>
+</html>

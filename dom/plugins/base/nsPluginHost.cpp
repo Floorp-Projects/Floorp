@@ -159,6 +159,11 @@
 #include "winbase.h"
 #endif
 
+#ifdef ANDROID
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
+#endif
+
 using namespace mozilla;
 using mozilla::TimeStamp;
 
@@ -2229,7 +2234,7 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
       nsCOMPtr<nsIFile> nextDir(do_QueryInterface(supports, &rv));
       if (NS_FAILED(rv))
         continue;
-
+      
       // don't pass aPluginsChanged directly to prevent it from been reset
       PRBool pluginschanged = PR_FALSE;
       ScanPluginsDirectory(nextDir, aCreatePluginList, &pluginschanged);
@@ -2324,6 +2329,10 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
       NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
       return NS_OK;
     }
+  } else {
+#ifdef ANDROID
+    LOG("getting plugins dir failed");
+#endif
   }
 
   mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,

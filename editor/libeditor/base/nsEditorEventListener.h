@@ -51,6 +51,11 @@
 #undef KeyPress
 #endif
 
+#ifdef XP_WIN
+// On Windows, we support switching the text direction by pressing Ctrl+Shift
+#define HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+#endif
+
 class nsEditor;
 class nsIDOMDragEvent;
 
@@ -67,6 +72,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
+#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+#endif
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
@@ -95,6 +104,11 @@ protected:
   nsRefPtr<nsCaret> mCaret;
   PRPackedBool mCommitText;
   PRPackedBool mInTransaction;
+#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+  PRPackedBool mHaveBidiKeyboards;
+  PRPackedBool mShouldSwitchTextDirection;
+  PRPackedBool mSwitchToRTL;
+#endif
 };
 
 #endif // nsEditorEventListener_h__

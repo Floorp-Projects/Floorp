@@ -48,6 +48,10 @@
 #include "npapi.h"
 #include "npruntime.h"
 
+#ifdef ANDROID
+#include <jni.h>
+#endif
+
 typedef NPError      (* NP_LOADDS NPP_NewProcPtr)(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
 typedef NPError      (* NP_LOADDS NPP_DestroyProcPtr)(NPP instance, NPSavedData** save);
 typedef NPError      (* NP_LOADDS NPP_SetWindowProcPtr)(NPP instance, NPWindow* window);
@@ -307,8 +311,13 @@ NP_EXPORT(NPError)     NP_Initialize(NPNetscapeFuncs* bFuncs);
 typedef NPError        (*NP_GetEntryPointsFunc)(NPPluginFuncs*);
 NP_EXPORT(NPError)     NP_GetEntryPoints(NPPluginFuncs* pFuncs);
 #else
-typedef NPError        (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
-NP_EXPORT(NPError)     NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
+#ifdef ANDROID
+typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*, JNIEnv* pEnv);
+NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, JNIEnv* pEnv);
+#else
+typedef NPError    (*NP_InitializeFunc)(NPNetscapeFuncs*, NPPluginFuncs*);
+NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs);
+#endif
 #endif
 typedef NPError        (*NP_ShutdownFunc)(void);
 NP_EXPORT(NPError)     NP_Shutdown(void);
