@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const Cu = Components.utils;
+const FILTER_CHANGED_TIMEOUT = 300;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -150,6 +151,12 @@ XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
 
 CssHtmlTree.prototype = {
   htmlComplete: false,
+
+  // Used for cancelling timeouts in the style filter.
+  filterChangedTimeout: null,
+
+  // The search filter
+  searchField: null,
   
   // Reference to the "Only user Styles" checkbox.
   onlyUserStylesCheckbox: null,
@@ -241,6 +248,25 @@ CssHtmlTree.prototype = {
         this.panel.selectNode(aEvent.target.pathElement);
       }
     }
+  },
+
+  /**
+   * Called when the user enters a search term.
+   *
+   * @param {Event} aEvent the DOM Event object.
+   */
+  filterChanged: function CssHtmlTree_filterChanged(aEvent)
+  {
+    let win = this.styleWin.contentWindow;
+
+    if (this.filterChangedTimeout) {
+      win.clearTimeout(this.filterChangedTimeout);
+      this.filterChangeTimeout = null;
+    }
+
+    this.filterChangedTimeout = win.setTimeout(function() {
+      this.refreshPanel();
+    }.bind(this), FILTER_CHANGED_TIMEOUT);
   },
 
   /**
@@ -394,6 +420,12 @@ PropertyView.prototype = {
   get visible()
   {
     if (this.tree.showOnlyUserStyles && this.matchedSelectorCount == 0) {
+      return false;
+    }
+
+    let searchTerm = this.tree.searchField.value.toLowerCase();
+    if (searchTerm && this.name.toLowerCase().indexOf(searchTerm) == -1 &&
+      this.value.toLowerCase().indexOf(searchTerm) == -1) {
       return false;
     }
 

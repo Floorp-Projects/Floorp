@@ -89,6 +89,8 @@ To visually debug the templates without running firefox, alter the display:none
         <input class="userStyles" save="${onlyUserStylesCheckbox}" type="checkbox"
                onchange="${onlyUserStylesChanged}" checked=""/>
       </label>
+      <input save="${searchField}" class="searchfield" type="text"
+             oninput="${filterChanged}"/>
     </div>
   </div>
 
