@@ -2116,11 +2116,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRING)
 
           BEGIN_CASE(JSOP_ZERO)
-            frame.push(Valueify(JSVAL_ZERO));
+            frame.push(JSVAL_ZERO);
           END_CASE(JSOP_ZERO)
 
           BEGIN_CASE(JSOP_ONE)
-            frame.push(Valueify(JSVAL_ONE));
+            frame.push(JSVAL_ONE);
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)

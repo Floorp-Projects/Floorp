@@ -676,7 +676,7 @@ inline jsval
 JSObject::getNamePrefixVal() const
 {
     JS_ASSERT(isNamespace() || isQName());
-    return js::Jsvalify(getSlot(JSSLOT_NAME_PREFIX));
+    return getSlot(JSSLOT_NAME_PREFIX);
 }
 
 inline void
@@ -705,7 +705,7 @@ inline jsval
 JSObject::getNameURIVal() const
 {
     JS_ASSERT(isNamespace() || isQName());
-    return js::Jsvalify(getSlot(JSSLOT_NAME_URI));
+    return getSlot(JSSLOT_NAME_URI);
 }
 
 inline void
@@ -719,14 +719,14 @@ inline jsval
 JSObject::getNamespaceDeclared() const
 {
     JS_ASSERT(isNamespace());
-    return js::Jsvalify(getSlot(JSSLOT_NAMESPACE_DECLARED));
+    return getSlot(JSSLOT_NAMESPACE_DECLARED);
 }
 
 inline void
 JSObject::setNamespaceDeclared(jsval decl)
 {
     JS_ASSERT(isNamespace());
-    setSlot(JSSLOT_NAMESPACE_DECLARED, js::Valueify(decl));
+    setSlot(JSSLOT_NAMESPACE_DECLARED, decl);
 }
 
 inline JSAtom *
@@ -741,7 +741,7 @@ inline jsval
 JSObject::getQNameLocalNameVal() const
 {
     JS_ASSERT(isQName());
-    return js::Jsvalify(getSlot(JSSLOT_QNAME_LOCAL_NAME));
+    return getSlot(JSSLOT_QNAME_LOCAL_NAME);
 }
 
 inline void

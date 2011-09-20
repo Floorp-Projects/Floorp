@@ -546,10 +546,8 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
 template <typename Base>
 bool
 XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id, bool set,
-                                      PropertyDescriptor *desc_in)
+                                      PropertyDescriptor *desc)
 {
-    JSPropertyDescriptor *desc = Jsvalify(desc_in);
-
     // Partially transparent wrappers (which used to be known as XOWs) don't
     // have a .wrappedJSObject property.
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
@@ -652,9 +650,8 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
 template <typename Base>
 bool
 XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                         bool set, PropertyDescriptor *desc_in)
+                                         bool set, PropertyDescriptor *desc)
 {
-    JSPropertyDescriptor *desc = Jsvalify(desc_in);
     JSObject *holder = GetHolder(wrapper);
     if (IsResolving(holder, id)) {
         desc->obj = NULL;
@@ -688,10 +685,10 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
 
         if (desc->obj)
             desc->obj = wrapper;
-        return JS_WrapPropertyDescriptor(cx, desc_in);
+        return JS_WrapPropertyDescriptor(cx, desc);
     }
 
-    if (!this->resolveOwnProperty(cx, wrapper, id, set, desc_in))
+    if (!this->resolveOwnProperty(cx, wrapper, id, set, desc))
         return false;
 
     if (desc->obj)
@@ -721,9 +718,8 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
 template <typename Base>
 bool
 XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                            bool set, PropertyDescriptor *desc_in)
+                                            bool set, PropertyDescriptor *desc)
 {
-    JSPropertyDescriptor *desc = Jsvalify(desc_in);
     JSObject *holder = GetHolder(wrapper);
     if (IsResolving(holder, id)) {
         desc->obj = NULL;
@@ -759,10 +755,10 @@ XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, js
         }
 
         desc->obj = (desc->obj == wnObject) ? wrapper : nsnull;
-        return JS_WrapPropertyDescriptor(cx, desc_in);
+        return JS_WrapPropertyDescriptor(cx, desc);
     }
 
-    return this->resolveOwnProperty(cx, wrapper, id, set, desc_in);
+    return this->resolveOwnProperty(cx, wrapper, id, set, desc);
 }
 
 template <typename Base>
@@ -771,7 +767,7 @@ XrayWrapper<Base>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                   js::PropertyDescriptor *desc)
 {
     JSObject *holder = GetHolder(wrapper);
-    JSPropertyDescriptor *jsdesc = Jsvalify(desc);
+    JSPropertyDescriptor *jsdesc = desc;
 
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper)) {
@@ -984,13 +980,12 @@ XrayWrapper<Base>::call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value 
     // Run the resolve hook of the wrapped native.
     if (NATIVE_HAS_FLAG(wn, WantCall)) {
         XPCCallContext ccx(JS_CALLER, cx, wrapper, nsnull, JSID_VOID, argc,
-                           Jsvalify(vp + 2), Jsvalify(vp));
+                           vp + 2, vp);
         if (!ccx.IsValid())
             return false;
         PRBool ok = PR_TRUE;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(wn, cx, wrapper,
-                                                                   argc, Jsvalify(vp + 2),
-                                                                   Jsvalify(vp), &ok);
+                                                                   argc, vp + 2, vp, &ok);
         if (NS_FAILED(rv)) {
             if (ok)
                 XPCThrower::Throw(rv, cx);
@@ -1011,16 +1006,12 @@ XrayWrapper<Base>::construct(JSContext *cx, JSObject *wrapper, uintN argc,
 
     // Run the resolve hook of the wrapped native.
     if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nsnull, JSID_VOID, argc,
-                           Jsvalify(argv), Jsvalify(rval));
+        XPCCallContext ccx(JS_CALLER, cx, wrapper, nsnull, JSID_VOID, argc, argv, rval);
         if (!ccx.IsValid())
             return false;
         PRBool ok = PR_TRUE;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(wn, cx, wrapper,
-                                                                        argc,
-                                                                        Jsvalify(argv),
-                                                                        Jsvalify(rval),
-                                                                        &ok);
+                                                                        argc, argv, rval, &ok);
         if (NS_FAILED(rv)) {
             if (ok)
                 XPCThrower::Throw(rv, cx);

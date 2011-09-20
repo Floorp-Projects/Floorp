@@ -287,7 +287,7 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 JS_ALWAYS_INLINE bool
-CallJSNative(JSContext *cx, js::Native native, const CallArgs &args)
+CallJSNative(JSContext *cx, Native native, const CallArgs &args)
 {
 #ifdef DEBUG
     JSBool alreadyThrowing = cx->isExceptionPending();
@@ -305,7 +305,7 @@ extern JSBool CallOrConstructBoundFunction(JSContext *, uintN, js::Value *);
 
 STATIC_PRECONDITION(ubound(args.argv_) >= argc)
 JS_ALWAYS_INLINE bool
-CallJSNativeConstructor(JSContext *cx, js::Native native, const CallArgs &args)
+CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
 {
 #ifdef DEBUG
     JSObject &callee = args.callee();
@@ -340,7 +340,7 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, const CallArgs &args)
 }
 
 JS_ALWAYS_INLINE bool
-CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *receiver, jsid id, js::Value *vp)
+CallJSPropertyOp(JSContext *cx, PropertyOp op, JSObject *receiver, jsid id, Value *vp)
 {
     assertSameCompartment(cx, receiver, id, *vp);
     JSBool ok = op(cx, receiver, id, vp);
@@ -350,16 +350,16 @@ CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *receiver, jsid id, 
 }
 
 JS_ALWAYS_INLINE bool
-CallJSPropertyOpSetter(JSContext *cx, js::StrictPropertyOp op, JSObject *obj, jsid id,
-                       JSBool strict, js::Value *vp)
+CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, JSObject *obj, jsid id,
+                       JSBool strict, Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     return op(cx, obj, id, strict, vp);
 }
 
 inline bool
-CallSetter(JSContext *cx, JSObject *obj, jsid id, js::StrictPropertyOp op, uintN attrs,
-           uintN shortid, JSBool strict, js::Value *vp)
+CallSetter(JSContext *cx, JSObject *obj, jsid id, StrictPropertyOp op, uintN attrs,
+           uintN shortid, JSBool strict, Value *vp)
 {
     if (attrs & JSPROP_SETTER)
         return InvokeGetterOrSetter(cx, obj, CastAsObjectJsval(op), 1, vp, vp);

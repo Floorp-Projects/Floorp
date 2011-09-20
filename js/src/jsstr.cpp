@@ -352,7 +352,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
         if (!str1)
             return false;
         if (!obj->defineElement(cx, i, StringValue(str1),
-                                PropertyStub, StrictPropertyStub,
+                                JS_PropertyStub, JS_StrictPropertyStub,
                                 STRING_ELEMENT_ATTRS)) {
             return false;
         }
@@ -388,13 +388,13 @@ Class js::StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_CACHED_PROTO(JSProto_String),
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
     str_enumerate,
     (JSResolveOp)str_resolve,
-    ConvertStub
+    JS_ConvertStub
 };
 
 /*
@@ -624,7 +624,7 @@ str_toLocaleLowerCase(JSContext *cx, uintN argc, Value *vp)
         JSString *str = ThisToStringForStringProto(cx, vp);
         if (!str)
             return false;
-        return cx->localeCallbacks->localeToLowerCase(cx, str, Jsvalify(vp));
+        return cx->localeCallbacks->localeToLowerCase(cx, str, vp);
     }
 
     return str_toLowerCase(cx, 0, vp);
@@ -675,7 +675,7 @@ str_toLocaleUpperCase(JSContext *cx, uintN argc, Value *vp)
         JSString *str = ThisToStringForStringProto(cx, vp);
         if (!str)
             return false;
-        return cx->localeCallbacks->localeToUpperCase(cx, str, Jsvalify(vp));
+        return cx->localeCallbacks->localeToUpperCase(cx, str, vp);
     }
 
     return str_toUpperCase(cx, 0, vp);
@@ -696,7 +696,7 @@ str_localeCompare(JSContext *cx, uintN argc, Value *vp)
             return false;
         if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
             vp[2].setString(thatStr);
-            return cx->localeCallbacks->localeCompare(cx, str, thatStr, Jsvalify(vp));
+            return cx->localeCallbacks->localeCompare(cx, str, thatStr, vp);
         }
         int32 result;
         if (!CompareStrings(cx, str, thatStr, &result))

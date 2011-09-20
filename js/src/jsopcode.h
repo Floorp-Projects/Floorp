@@ -48,10 +48,6 @@
 #include "jsutil.h"
 #include "jsarena.h"
 
-#ifdef __cplusplus
-# include "jsvalue.h"
-#endif
-
 JS_BEGIN_EXTERN_C
 
 /*
@@ -502,7 +498,7 @@ static inline char *
 DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
                         JSString *fallback)
 {
-    return js_DecompileValueGenerator(cx, spindex, Jsvalify(v), fallback);
+    return js_DecompileValueGenerator(cx, spindex, v, fallback);
 }
 
 /*

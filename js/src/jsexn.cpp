@@ -93,13 +93,13 @@ Class js::ErrorClass = {
     js_Error_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
     (JSResolveOp)exn_resolve,
-    ConvertStub,
+    JS_ConvertStub,
     exn_finalize,
     NULL,                 /* reserved0   */
     NULL,                 /* checkAccess */
@@ -298,9 +298,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JS_ASSERT(!exnObject->getPrivate());
 
     JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-    CheckAccessOp checkAccess = callbacks
-                                ? Valueify(callbacks->checkObjectAccess)
-                                : NULL;
+    JSCheckAccessOp checkAccess = callbacks ? callbacks->checkObjectAccess : NULL;
 
     Vector<JSStackTraceElem> frames(cx);
     Vector<Value> values(cx);
@@ -381,7 +379,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     JSStackTraceElem *framesDest = priv->stackElems;
     Value *valuesDest = reinterpret_cast<Value *>(framesDest + frames.length());
-    JS_ASSERT(valuesDest == Valueify(GetStackTraceValueBuffer(priv)));
+    JS_ASSERT(valuesDest == GetStackTraceValueBuffer(priv));
 
     PodCopy(framesDest, frames.begin(), frames.length());
     PodCopy(valuesDest, values.begin(), values.length());
@@ -639,7 +637,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
             for (i = 0; i != elem->argc; i++, values++) {
                 if (i > 0)
                     APPEND_CHAR_TO_STACK(',');
-                str = ValueToShortSource(cx, Valueify(*values));
+                str = ValueToShortSource(cx, *values);
                 if (!str)
                     goto bad;
                 APPEND_STRING_TO_STACK(str);
@@ -795,7 +793,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return JS_FALSE;
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), Valueify(&v)))
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), &v))
         return JS_FALSE;
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
     vp->setString(name);
@@ -864,19 +862,19 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
     vp->setString(name);
 
     {
-        AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroots), Valueify(localroots));
+        AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroots), localroots);
 
 #ifdef __GNUC__
         message = filename = NULL;
 #endif
         if (!JS_GetProperty(cx, obj, js_message_str, &localroots[0]) ||
-            !(message = js_ValueToSource(cx, Valueify(localroots[0])))) {
+            !(message = js_ValueToSource(cx, localroots[0]))) {
             return false;
         }
         localroots[0] = STRING_TO_JSVAL(message);
 
         if (!JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) ||
-            !(filename = js_ValueToSource(cx, Valueify(localroots[1])))) {
+            !(filename = js_ValueToSource(cx, localroots[1]))) {
             return false;
         }
         localroots[1] = STRING_TO_JSVAL(filename);
@@ -884,11 +882,11 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
         if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]))
             return false;
         uint32_t lineno;
-        if (!ValueToECMAUint32(cx, Valueify(localroots[2]), &lineno))
+        if (!ValueToECMAUint32(cx, localroots[2], &lineno))
             return false;
 
         if (lineno != 0) {
-            lineno_as_str = js_ValueToString(cx, Valueify(localroots[2]));
+            lineno_as_str = js_ValueToString(cx, localroots[2]);
             if (!lineno_as_str)
                 return false;
             lineno_length = lineno_as_str->length();
@@ -1020,13 +1018,13 @@ InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
     jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
     jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
     if (!DefineNativeProperty(cx, errorProto, nameId, StringValue(name),
-                              PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+                              JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, messageId, empty,
-                              PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+                              JS_PropertyStub, JS_StrictPropertyStub, 0, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, fileNameId, empty,
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
+                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
         !DefineNativeProperty(cx, errorProto, lineNumberId, Int32Value(0),
-                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
+                              JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
     {
         return NULL;
     }
@@ -1159,7 +1157,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 
     /* Protect the newly-created strings below from nesting GCs. */
     PodArrayZero(tv);
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(tv), Valueify(tv));
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(tv), tv);
 
     /*
      * Try to get an appropriate prototype by looking up the corresponding
@@ -1224,7 +1222,7 @@ js_ReportUncaughtException(JSContext *cx)
         return false;
 
     PodArrayZero(roots);
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), Valueify(roots));
+    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
 
     /*
      * Because js_ValueToString below could error and an exception object
@@ -1243,7 +1241,7 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = js_ErrorFromException(cx, exn);
 
     /* XXX L10N angels cry once again (see also jsemit.c, /L10N gaffes/) */
-    str = js_ValueToString(cx, Valueify(exn));
+    str = js_ValueToString(cx, exn);
     JSAutoByteString bytesStorage;
     if (!str) {
         bytes = "unknown (can't convert to string)";
@@ -1267,14 +1265,14 @@ js_ReportUncaughtException(JSContext *cx)
 
         if (!JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]))
             return false;
-        str = js_ValueToString(cx, Valueify(roots[3]));
+        str = js_ValueToString(cx, roots[3]);
         if (!str || !filename.encode(cx, str))
             return false;
 
         if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
             return false;
         uint32_t lineno;
-        if (!ValueToECMAUint32(cx, Valueify(roots[4]), &lineno))
+        if (!ValueToECMAUint32(cx, roots[4], &lineno))
             return false;
 
         reportp = &report;
