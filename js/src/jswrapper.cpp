@@ -291,6 +291,12 @@ Wrapper::typeOf(JSContext *cx, JSObject *wrapper)
     return TypeOfValue(cx, ObjectValue(*wrappedObject(wrapper)));
 }
 
+bool
+Wrapper::classPropertyIs(JSContext *cx, JSObject *wrapper, ESClassValue classValue)
+{
+    return ObjectClassIs(*wrappedObject(wrapper), classValue, cx);
+}
+
 JSString *
 Wrapper::obj_toString(JSContext *cx, JSObject *wrapper)
 {
@@ -737,7 +743,8 @@ CrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc,
 bool
 CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs srcArgs)
 {
-    JS_ASSERT(srcArgs.callee().getFunctionPrivate()->native() == native);
+    JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
+                 srcArgs.callee().getFunctionPrivate()->native() == native);
     JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
     JS_ASSERT(!wrapper->unwrap(NULL)->isProxy());
 

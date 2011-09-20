@@ -313,6 +313,13 @@ ProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
     return proxy->isFunctionProxy() ? JSTYPE_FUNCTION : JSTYPE_OBJECT;
 }
 
+bool
+ProxyHandler::classPropertyIs(JSContext *cx, JSObject *proxy, ESClassValue classValue)
+{
+    JS_ASSERT(OperationInProgress(cx, proxy));
+    return false;
+}
+
 void
 ProxyHandler::finalize(JSContext *cx, JSObject *proxy)
 {
