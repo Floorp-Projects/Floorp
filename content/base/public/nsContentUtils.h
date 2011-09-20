@@ -1801,6 +1801,26 @@ public:
    */
   static void InitializeTouchEventTable();
 
+  /**
+   * Test whether the given URI always inherits a security context
+   * from the document it comes from.
+   */
+  static nsresult URIInheritsSecurityContext(nsIURI *aURI, PRBool *aResult);
+
+  /**
+   * Set the given principal as the owner of the given channel, if
+   * needed.  aURI must be the URI of aChannel.  aPrincipal may be
+   * null.  If aSetUpForAboutBlank is true, then about:blank will get
+   * the principal set up on it.
+   *
+   * The return value is whether the principal was set up as the owner
+   * of the channel.
+   */
+  static bool SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
+                                nsIChannel* aChannel,
+                                nsIURI* aURI,
+                                PRBool aSetUpForAboutBlank);
+
   static nsresult Btoa(const nsAString& aBinaryData,
                        nsAString& aAsciiBase64String);
 
