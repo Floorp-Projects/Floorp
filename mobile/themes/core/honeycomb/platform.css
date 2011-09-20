@@ -117,27 +117,17 @@ textbox[disabled="true"] {
   background-color: rgba(0,0,0,.6);
 }
 
-.context-block {
-  padding: @margin_context_popup@;
-}
-
 .dialog-dark,
 .panel-arrowcontent {
   background-color: @color_background_default@;
   padding: 0;
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
 }
 
 .panel-arrowcontent {
-  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;  
   background-image: url(chrome://browser/skin/images/menu-top-insideglow.png);
   background-repeat: repeat-x;
   background-position: top left;
-}
-
-@media (max-width: 499px) {
-  .context-block {
-    padding: @padding_xlarge@;
-  }
 }
 
 dialog > .prompt-header > .prompt-message {
@@ -401,7 +391,7 @@ checkbox[checked="true"][disabled="true"] > .checkbox-spacer-box > .checkbox-che
 /* richlistbox ------------------------------------------------------------- */
 richlistbox {
   color: @color_text_default@;
-  background-color: @color_background_default@;
+  background-color: transparent;
   -moz-user-focus: ignore;
   margin: 0;
 }
@@ -410,7 +400,12 @@ richlistitem {
   -moz-user-focus: ignore;
   min-height: @touch_row@; /* row size */
   padding: @padding_small@;
-  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+}
+
+richlistitem:last-child,
+richlistitem[selector="last-child"] {
+  border-bottom: none;
 }
 
 richlistitem label.title,
@@ -580,7 +575,8 @@ arrowbox {
 
 dialog,
 .arrowbox-dark .panel-arrowcontent,
-.panel-dark {
+.panel-dark,
+.dialog-dark {
   color: @color_text_default@;
   background: @color_background_default@;
 }
@@ -588,23 +584,36 @@ dialog,
 dialog,
 .arrowbox-dark .panel-arrowcontent {
   border: @border_width_small@ solid @color_dialog_border@;
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
 }
 
+dialog,
+.dialog-dark {
+  margin: @margin_xxxnormal@ !important;
+}
+
+#context-popup,
+#menulist-popup,
 dialog {
   margin: @margin_xxxnormal@ !important;
   max-width: @dialog_width@;
+  -moz-box-flex: 1;
 }
 
 .prompt-message {
   -moz-box-pack: center;
   font-size: @font_snormal@;
-  margin: @padding_normal@;
+  padding-bottom: @padding_normal@;
+  min-height: 4em;
+}
+
+.prompt-header {
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+  margin: @margin_normal@ @margin_large@ 0px !important;
 }
 
 .prompt-title {
-  font-size: @font_xnormal@;
-  padding-top: @padding_xnormal@;
-  padding-left: @padding_normal@;
+  font-size: @font_snormal@;
 }
 
 /* Authentication dialogs do not have a title */
@@ -614,15 +623,14 @@ dialog {
 }
 
 .prompt-line {
-  border-bottom: @border_width_tiny@ solid @color_divider_border@;
-  margin: @margin_small@ 0 0 0;
+  background-color: transparent;
+  border-bottom: @border_width_xlarge@ solid @color_divider_border@;
   height: @padding_normal@ !important;
 }
 
 .prompt-buttons {
   font-size: @font_snormal@;
-  background-color: @color_background_dlgbuttons@;
-  display: inline-block;
+  background-color: transparent;
   text-align: center;
 }
 
@@ -660,20 +668,49 @@ dialog {
   padding: 0 !important;
 }
 
+.prompt-button,
 .panel-row-button {
   color: @color_text_panelrow@;
   -moz-appearance: none;
-  border: 0 solid transparent !important;
+  border: @border_width_tiny@ solid transparent;
   -moz-user-focus: ignore;
   -moz-user-select: none;
-  margin: 0px;
-  padding-top: @padding_normal@ !important;
+  margin: @margin_xtiny@;
+  -moz-margin-end: -moz-calc(2 * @margin_xtiny@);
+  padding: @padding_normal@ 0px !important;
   -moz-box-flex: 1;
+  background-image: none;
+  background-color: transparent;
+  border-radius: 0px !important;
 }
 
+.prompt-button[disabled="true"] {
+  border: none !important;
+}
+
+.prompt-button > .button-box {
+  -moz-border-end: @border_width_tiny@ solid @color_button_border@;
+  -moz-border-right-colors: transparent @color_button_border@;
+  -moz-margin-end: -moz-calc(-3 * @border_width_tiny@);
+}
+
+.prompt-button:last-of-type {
+  -moz-margin-end: @margin_xtiny@;
+}
+
+.prompt-button:last-of-type > .button-box {
+  -moz-border-end: none;
+}
+
+.prompt-button:not([disabled]):hover:active,
 .panel-row-button:hover:active {
-  background: @color_background_highlight@;
+  background-image: none;
+  background-color: @color_background_highlight@;
   color: @color_text_highlight@;
+}
+
+.prompt-button {
+  min-width: 33%;
 }
 
 .panel-row-button:first-child {
