@@ -1802,7 +1802,7 @@ static void call_constructors(soinfo *si)
         TRACE("[ %5d Done calling init_func for '%s' ]\n", pid, si->name);
     }
 
-    if (si->init_array) {
+    if (si->init_array && strncmp(si->name, "libmozalloc.so", 14)) {
         TRACE("[ %5d Calling init_array @ 0x%08x [%d] for '%s' ]\n", pid,
               (unsigned)si->init_array, si->init_array_count, si->name);
         call_array(si->init_array, si->init_array_count, 0);
