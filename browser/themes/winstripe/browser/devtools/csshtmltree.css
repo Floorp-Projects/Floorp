@@ -121,6 +121,14 @@ a.link:visited {
   background-position: 24px 0;
 }
 
+.searchfield {
+  background: url("chrome://browser/skin/devtools/search.png") no-repeat #FFF;
+  border-radius: 5px;
+  -moz-padding-start: 20px;
+  width: 135px;
+  float: right;
+}
+
 .expander[dir="rtl"] {
   background-position: 16px 0;
 }
