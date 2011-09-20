@@ -71,6 +71,10 @@
  * are otherwise equivalent to those enclosed in EVENT.  If
  * TOUCH_EVENT is not defined, it will be defined to the empty string.
  *
+ * Event names that are only exposed as IDL attributes on Documents
+ * should be enclosed in the DOCUMENT_ONLY_EVENT macro.  If this macro is
+ * not defined, it will be defined to the empty string.
+ *
  * Event names that are not exposed as IDL attributes at all should be
  * enclosed in NON_IDL_EVENT.  If NON_IDL_EVENT is not defined, it
  * will be defined to the empty string.
@@ -111,6 +115,15 @@
 #define TOUCH_EVENT(_name, _id, _type, _struct)
 #define DEFINED_TOUCH_EVENT
 #endif /* TOUCH_EVENT */
+
+#ifdef DEFINED_DOCUMENT_ONLY_EVENT
+#error "Don't define DEFINED_DOCUMENT_ONLY_EVENT"
+#endif /* DEFINED_DOCUMENT_ONLY_EVENT */
+
+#ifndef DOCUMENT_ONLY_EVENT
+#define DOCUMENT_ONLY_EVENT(_name, _id, _type, _struct)
+#define DEFINED_DOCUMENT_ONLY_EVENT
+#endif /* DOCUMENT_ONLY_EVENT */
 
 #ifdef DEFINED_NON_IDL_EVENT
 #error "Don't define DEFINED_NON_IDL_EVENT"
@@ -276,10 +289,6 @@ EVENT(progress,
 EVENT(ratechange,
       NS_RATECHANGE,
       EventNameType_HTML,
-      NS_EVENT_NULL)
-EVENT(readystatechange,
-      NS_READYSTATECHANGE,
-      EventNameType_HTMLXUL,
       NS_EVENT_NULL)
 EVENT(reset,
       NS_FORM_RESET,
@@ -456,6 +465,11 @@ TOUCH_EVENT(touchcancel,
             NS_USER_DEFINED_EVENT,
             EventNameType_All,
             NS_INPUT_EVENT)
+
+DOCUMENT_ONLY_EVENT(readystatechange,
+                    NS_READYSTATECHANGE,
+                    EventNameType_HTMLXUL,
+                    NS_EVENT_NULL)
 
 NON_IDL_EVENT(MozMouseHittest,
               NS_MOUSE_MOZHITTEST,
@@ -755,6 +769,11 @@ NON_IDL_EVENT(animationiteration,
 #undef DEFINED_TOUCH_EVENT
 #undef TOUCH_EVENT
 #endif /* DEFINED_TOUCH_EVENT */
+
+#ifdef DEFINED_DOCUMENT_ONLY_EVENT
+#undef DEFINED_DOCUMENT_ONLY_EVENT
+#undef DOCUMENT_ONLY_EVENT
+#endif /* DEFINED_DOCUMENT_ONLY_EVENT */
 
 #ifdef DEFINED_NON_IDL_EVENT
 #undef DEFINED_NON_IDL_EVENT

@@ -5527,7 +5527,9 @@ nsGenericElement::SizeOf() const
     return elm->SetJSEventListenerToJsval(nsGkAtoms::on##name_, cx, obj, v); \
 }
 #define TOUCH_EVENT EVENT
+#define DOCUMENT_ONLY_EVENT EVENT
 #include "nsEventNameList.h"
+#undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT
 
