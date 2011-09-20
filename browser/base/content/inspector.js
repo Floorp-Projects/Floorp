@@ -558,10 +558,7 @@ var InspectorUI = {
   showTextNodesWithWhitespace: false,
   inspecting: false,
   treeLoaded: false,
-  get enabled()
-  {
-    return gPrefService.getBoolPref("devtools.inspector.enabled");
-  },
+  prefEnabledName: "devtools.inspector.enabled",
   isDirty: false,
 
   /**
@@ -653,12 +650,12 @@ var InspectorUI = {
       InspectorUI.treePanel.removeEventListener("popupshown",
         treePanelShown, false);
 
-      InspectorUI.treeIFrame.addEventListener("load",
-        function loadedInitializeTreePanel() {
-          InspectorUI.treeIFrame.removeEventListener("load",
-            loadedInitializeTreePanel, true);
-          InspectorUI.initializeTreePanel();
-        }, true);
+        InspectorUI.treeIFrame.addEventListener("load",
+          function loadedInitializeTreePanel() {
+            InspectorUI.treeIFrame.removeEventListener("load",
+              loadedInitializeTreePanel, true);
+            InspectorUI.initializeTreePanel();
+          }, true);
 
       let src = InspectorUI.treeIFrame.getAttribute("src");
       if (src != "chrome://browser/content/inspector.html") {
@@ -782,33 +779,12 @@ var InspectorUI = {
   },
 
   /**
-   * Open inspector UI and HTML tree. Add listeners for document scrolling,
-   * resize, tabContainer.TabSelect and others. If a node is provided, then
-   * start inspecting it.
-   *
-   * @param [optional] aNode
-   *        The node to inspect.
+   * Open inspector UI. tree. Add listeners for document scrolling,
+   * resize, tabContainer.TabSelect and others.
    */
-  openInspectorUI: function IUI_openInspectorUI(aNode)
+  openInspectorUI: function IUI_openInspectorUI()
   {
-    // Observer used to inspect the specified element from content after the
-    // inspector UI has been opened.
-    function inspectObserver(aElement) {
-      Services.obs.removeObserver(boundInspectObserver,
-                                  INSPECTOR_NOTIFICATIONS.OPENED,
-                                  false);
-      this.inspectNode(aElement);
-      this.stopInspecting();
-    };
-    var boundInspectObserver = inspectObserver.bind(this, aNode);
-
-    if (aNode) {
-      // Add the observer to inspect the node after initialization finishes.
-      Services.obs.addObserver(boundInspectObserver,
-                               INSPECTOR_NOTIFICATIONS.OPENED,
-                               false);
-    }
-    // Start initialization.
+    // initialization
     this.browser = gBrowser.selectedBrowser;
     this.win = this.browser.contentWindow;
     this.winID = this.getWindowID(this.win);
