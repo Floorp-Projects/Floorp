@@ -113,18 +113,22 @@ nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTables(bool force)
   return NS_FAILED(rv1) ? rv1 : rv2;
 }
 
+#define IMPL_FORWARDER(_code)                                         \
+  PR_BEGIN_MACRO                                                      \
+  if (aStorage->CanUseChromePersist())                                \
+    return mChromePersistentDB._code;                                 \
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())  \
+    return mPrivateBrowsingDB._code;                                  \
+  if (aStorage->SessionOnly())                                        \
+    return mSessionOnlyDB._code;                                      \
+  return mPersistentDB._code;                                         \
+  PR_END_MACRO
+
 nsresult
 nsDOMStorageDBWrapper::GetAllKeys(DOMStorageImpl* aStorage,
                                   nsTHashtable<nsSessionStorageEntry>* aKeys)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.GetAllKeys(aStorage, aKeys);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.GetAllKeys(aStorage, aKeys);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.GetAllKeys(aStorage, aKeys);
-
-  return mPersistentDB.GetAllKeys(aStorage, aKeys);
+  IMPL_FORWARDER(GetAllKeys(aStorage, aKeys));
 }
 
 nsresult
@@ -133,14 +137,7 @@ nsDOMStorageDBWrapper::GetKeyValue(DOMStorageImpl* aStorage,
                                    nsAString& aValue,
                                    PRBool* aSecure)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.GetKeyValue(aStorage, aKey, aValue, aSecure);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.GetKeyValue(aStorage, aKey, aValue, aSecure);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.GetKeyValue(aStorage, aKey, aValue, aSecure);
-
-  return mPersistentDB.GetKeyValue(aStorage, aKey, aValue, aSecure);
+  IMPL_FORWARDER(GetKeyValue(aStorage, aKey, aValue, aSecure));
 }
 
 nsresult
@@ -152,18 +149,8 @@ nsDOMStorageDBWrapper::SetKey(DOMStorageImpl* aStorage,
                               PRBool aExcludeOfflineFromUsage,
                               PRInt32 *aNewUsage)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.SetKey(aStorage, aKey, aValue, aSecure,
-                                      aQuota, aExcludeOfflineFromUsage, aNewUsage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.SetKey(aStorage, aKey, aValue, aSecure,
-                                          aQuota, aExcludeOfflineFromUsage, aNewUsage);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.SetKey(aStorage, aKey, aValue, aSecure,
-                                      aQuota, aExcludeOfflineFromUsage, aNewUsage);
-
-  return mPersistentDB.SetKey(aStorage, aKey, aValue, aSecure,
-                                   aQuota, aExcludeOfflineFromUsage, aNewUsage);
+  IMPL_FORWARDER(SetKey(aStorage, aKey, aValue, aSecure,
+                        aQuota, aExcludeOfflineFromUsage, aNewUsage));
 }
 
 nsresult
@@ -171,14 +158,7 @@ nsDOMStorageDBWrapper::SetSecure(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  const PRBool aSecure)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.SetSecure(aStorage, aKey, aSecure);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.SetSecure(aStorage, aKey, aSecure);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.SetSecure(aStorage, aKey, aSecure);
-
-  return mPersistentDB.SetSecure(aStorage, aKey, aSecure);
+  IMPL_FORWARDER(SetSecure(aStorage, aKey, aSecure));
 }
 
 nsresult
@@ -187,27 +167,13 @@ nsDOMStorageDBWrapper::RemoveKey(DOMStorageImpl* aStorage,
                                  PRBool aExcludeOfflineFromUsage,
                                  PRInt32 aKeyUsage)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage);
-
-  return mPersistentDB.RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage);
+  IMPL_FORWARDER(RemoveKey(aStorage, aKey, aExcludeOfflineFromUsage, aKeyUsage));
 }
 
 nsresult
 nsDOMStorageDBWrapper::ClearStorage(DOMStorageImpl* aStorage)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.ClearStorage(aStorage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.ClearStorage(aStorage);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.ClearStorage(aStorage);
-
-  return mPersistentDB.ClearStorage(aStorage);
+  IMPL_FORWARDER(ClearStorage(aStorage));
 }
 
 nsresult
@@ -289,14 +255,7 @@ nsresult
 nsDOMStorageDBWrapper::GetUsage(DOMStorageImpl* aStorage,
                                 PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage);    
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return mPrivateBrowsingDB.GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage);
-  if (aStorage->SessionOnly())
-    return mSessionOnlyDB.GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage);
-
-  return mPersistentDB.GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage);
+  IMPL_FORWARDER(GetUsage(aStorage, aExcludeOfflineFromUsage, aUsage));
 }
 
 nsresult
