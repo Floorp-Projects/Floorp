@@ -912,9 +912,9 @@ proxy_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
 }
 
 static JSBool
-proxy_LookupSpecial(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp)
+proxy_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return proxy_LookupProperty(cx, obj, id, objp, propp);
+    return proxy_LookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 static JSBool
@@ -944,10 +944,10 @@ proxy_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *val
 }
 
 static JSBool
-proxy_DefineSpecial(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+proxy_DefineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return proxy_DefineProperty(cx, obj, id, value, getter, setter, attrs);
+    return proxy_DefineProperty(cx, obj, SPECIALID_TO_JSID(sid), value, getter, setter, attrs);
 }
 
 static JSBool
@@ -968,9 +968,9 @@ proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
 }
 
 static JSBool
-proxy_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+proxy_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return proxy_GetProperty(cx, obj, receiver, id, vp);
+    return proxy_GetProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 static JSBool
@@ -991,9 +991,9 @@ proxy_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool s
 }
 
 static JSBool
-proxy_SetSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+proxy_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return proxy_SetProperty(cx, obj, id, vp, strict);
+    return proxy_SetProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 static JSBool
@@ -1018,9 +1018,9 @@ proxy_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 }
 
 static JSBool
-proxy_GetSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+proxy_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return proxy_GetAttributes(cx, obj, id, attrsp);
+    return proxy_GetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -1046,9 +1046,9 @@ proxy_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *at
 }
 
 static JSBool
-proxy_SetSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+proxy_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return proxy_SetAttributes(cx, obj, id, attrsp);
+    return proxy_SetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -1074,9 +1074,9 @@ proxy_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSB
 }
 
 static JSBool
-proxy_DeleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+proxy_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return proxy_DeleteProperty(cx, obj, id, rval, strict);
+    return proxy_DeleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static void

@@ -3278,9 +3278,9 @@ with_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
 }
 
 static JSBool
-with_LookupSpecial(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp)
+with_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupProperty(cx, obj, id, objp, propp);
+    return with_LookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
 }
 
 static JSBool
@@ -3299,9 +3299,9 @@ with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, 
 }
 
 static JSBool
-with_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+with_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
 {
-    return with_GetProperty(cx, obj, receiver, id, vp);
+    return with_GetProperty(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 static JSBool
@@ -3320,9 +3320,9 @@ with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool st
 }
 
 static JSBool
-with_SetSpecial(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+with_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
 {
-    return with_SetProperty(cx, obj, id, vp, strict);
+    return with_SetProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 static JSBool
@@ -3341,9 +3341,9 @@ with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *att
 }
 
 static JSBool
-with_GetSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+with_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return with_GetAttributes(cx, obj, id, attrsp);
+    return with_GetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -3362,9 +3362,9 @@ with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *att
 }
 
 static JSBool
-with_SetSpecialAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
 {
-    return with_SetAttributes(cx, obj, id, attrsp);
+    return with_SetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -3383,9 +3383,9 @@ with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBo
 }
 
 static JSBool
-with_DeleteSpecial(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+with_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
 {
-    return with_DeleteProperty(cx, obj, id, rval, strict);
+    return with_DeleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static JSBool
