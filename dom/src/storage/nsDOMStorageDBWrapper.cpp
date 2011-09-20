@@ -113,22 +113,16 @@ nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTables(bool force)
   return NS_FAILED(rv1) ? rv1 : rv2;
 }
 
-#define IMPL_FORWARDER_GUTS(_return, _code)                                \
+#define IMPL_FORWARDER(_code)                                         \
   PR_BEGIN_MACRO                                                      \
   if (aStorage->CanUseChromePersist())                                \
-    _return mChromePersistentDB._code;                                \
+    return mChromePersistentDB._code;                                 \
   if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())  \
-    _return mPrivateBrowsingDB._code;                                 \
+    return mPrivateBrowsingDB._code;                                  \
   if (aStorage->SessionOnly())                                        \
-    _return mSessionOnlyDB._code;                                     \
-  _return mPersistentDB._code;                                        \
+    return mSessionOnlyDB._code;                                      \
+  return mPersistentDB._code;                                         \
   PR_END_MACRO
-
-#define IMPL_FORWARDER(_code)                                  \
-  IMPL_FORWARDER_GUTS(return, _code)
-
-#define IMPL_VOID_FORWARDER(_code)                                    \
-  IMPL_FORWARDER_GUTS((void), _code)
 
 nsresult
 nsDOMStorageDBWrapper::GetAllKeys(DOMStorageImpl* aStorage,
@@ -180,18 +174,6 @@ nsresult
 nsDOMStorageDBWrapper::ClearStorage(DOMStorageImpl* aStorage)
 {
   IMPL_FORWARDER(ClearStorage(aStorage));
-}
-
-void
-nsDOMStorageDBWrapper::MarkScopeCached(DOMStorageImpl* aStorage)
-{
-  IMPL_VOID_FORWARDER(MarkScopeCached(aStorage));
-}
-
-bool
-nsDOMStorageDBWrapper::IsScopeDirty(DOMStorageImpl* aStorage)
-{
-  IMPL_FORWARDER(IsScopeDirty(aStorage));
 }
 
 nsresult
