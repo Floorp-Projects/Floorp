@@ -192,6 +192,33 @@ js::BooleanToStringBuffer(JSContext *cx, JSBool b, StringBuffer &sb)
     return b ? sb.append("true") : sb.append("false");
 }
 
+namespace js {
+
+bool
+BooleanGetPrimitiveValueSlow(JSContext *cx, JSObject &obj, Value *vp)
+{
+    JS_ASSERT(ObjectClassIs(obj, ESClass_Boolean, cx));
+    JS_ASSERT(obj.isProxy());
+
+    /*
+     * To respect the proxy abstraction, we can't simply unwrap and call
+     * getPrimitiveThis on the wrapped object. All we know is that obj says
+     * its [[Class]] is "Boolean". Boolean.prototype.valueOf is specified to
+     * return the [[PrimitiveValue]] internal property, so call that instead.
+     */
+    InvokeArgsGuard args;
+    if (!cx->stack.pushInvokeArgs(cx, 0, &args))
+        return false;
+    args.calleev().setUndefined();
+    args.thisv().setObject(obj);
+    if (!obj.getProxyHandler()->nativeCall(cx, &obj, &BooleanClass, bool_valueOf, args))
+        return false;
+    *vp = args.rval();
+    return true;
+}
+
+}  /* namespace js */
+
 JSBool
 js_ValueToBoolean(const Value &v)
 {
