@@ -4674,6 +4674,7 @@ nsContentUtils::URIIsLocalFile(nsIURI *aURI)
   PRBool isFile;
   nsCOMPtr<nsINetUtil> util = do_QueryInterface(sIOService);
 
+  // Important: we do NOT test the entire URI chain here!
   return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
                                 nsIProtocolHandler::URI_IS_LOCAL_FILE,
                                 &isFile)) &&
@@ -5719,6 +5720,71 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                                   aValue.Length(), &idx, JS_TRUE, &rval);
 
   return res == JS_FALSE || rval != JSVAL_NULL;
+}
+
+// static
+nsresult
+nsContentUtils::URIInheritsSecurityContext(nsIURI *aURI, PRBool *aResult)
+{
+  // Note: about:blank URIs do NOT inherit the security context from the
+  // current document, which is what this function tests for...
+  return NS_URIChainHasFlags(aURI,
+                             nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                             aResult);
+}
+
+// static
+bool
+nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
+                                  nsIChannel* aChannel,
+                                  nsIURI* aURI,
+                                  PRBool aSetUpForAboutBlank)
+{
+  //
+  // Set the owner of the channel, but only for channels that can't
+  // provide their own security context.
+  //
+  // XXX: It seems wrong that the owner is ignored - even if one is
+  //      supplied) unless the URI is javascript or data or about:blank.
+  // XXX: If this is ever changed, check all callers for what owners
+  //      they're passing in.  In particular, see the code and
+  //      comments in nsDocShell::LoadURI where we fall back on
+  //      inheriting the owner if called from chrome.  That would be
+  //      very wrong if this code changed anything but channels that
+  //      can't provide their own security context!
+  //
+  //      (Currently chrome URIs set the owner when they are created!
+  //      So setting a NULL owner would be bad!)
+  //
+  PRBool inherit;
+  // We expect URIInheritsSecurityContext to return success for an
+  // about:blank URI, so don't call NS_IsAboutBlank() if this call fails.
+  // This condition needs to match the one in nsDocShell::InternalLoad where
+  // we're checking for things that will use the owner.
+  if (NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherit)) &&
+      (inherit || (aSetUpForAboutBlank && NS_IsAboutBlank(aURI)))) {
+    aChannel->SetOwner(aLoadingPrincipal);
+    return true;
+  }
+
+  //
+  // file: uri special-casing
+  //
+  // If this is a file: load opened from another file: then it may need
+  // to inherit the owner from the referrer so they can script each other.
+  // If we don't set the owner explicitly then each file: gets an owner
+  // based on its own codebase later.
+  //
+  if (URIIsLocalFile(aURI) && aLoadingPrincipal &&
+      NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, PR_FALSE)) &&
+      // One more check here.  CheckMayLoad will always return true for the
+      // system principal, but we do NOT want to inherit in that case.
+      !IsSystemPrincipal(aLoadingPrincipal)) {
+    aChannel->SetOwner(aLoadingPrincipal);
+    return true;
+  }
+
+  return false;
 }
 
 PRBool
