@@ -471,7 +471,7 @@ IsASCII( const nsACString& aString )
   }
 
 PRBool
-IsUTF8( const nsACString& aString )
+IsUTF8( const nsACString& aString, PRBool aRejectNonChar )
   {
     nsReadingIterator<char> done_reading;
     aString.EndReading(done_reading);
@@ -539,6 +539,9 @@ IsUTF8( const nsACString& aString )
               return PR_FALSE; // Not UTF-8 string
           }
           
+        if (nonchar && !aRejectNonChar)
+          nonchar = PR_FALSE;
+
         while ( ptr < end && state )
           {
             c = *ptr++;

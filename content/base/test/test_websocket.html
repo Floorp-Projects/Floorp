@@ -62,10 +62,12 @@
  * 38. ensure extensions attribute is defined
  * 39. a basic wss:// connectivity test
  * 40. negative test for wss:// with no cert
+ * 41. HSTS
+ * 42. non-char utf-8 sequences
  */
 
 var first_test = 1;
-var last_test = 40;
+var last_test = 42;
 
 var current_test = first_test;
 
@@ -1122,6 +1124,44 @@ function test40()
     doTest(41);
   };
 }
+
+function test41()
+{
+ // reserve test41 for HSTS - bug 664284
+ doTest(42);
+}
+
+function test42()
+{
+// test some utf-8 non-characters. They should be allowed in the
+// websockets context. Test via round trip echo.
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-42");
+  var data = ["U+FFFE ￾",
+              "U+FFFF ￿",
+              "U+10FFFF 􏿿"];
+  var index = 0;
+
+  ws.onopen = function()
+  {
+    ws.send(data[0]);
+    ws.send(data[1]);
+    ws.send(data[2]);
+  }
+
+  ws.onmessage = function(e)
+  {
+    ok(e.data == data[index], "bad received message in test-42! index="+index);
+    index++;
+    if (index == 3)
+      ws.close();
+  }
+
+  ws.onclose = function(e)
+  {
+    doTest(43);
+  }
+}
+
 
 var ranAllTests = false;
 
