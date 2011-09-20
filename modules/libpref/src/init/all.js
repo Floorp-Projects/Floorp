@@ -820,8 +820,10 @@ pref("network.websocket.timeout.ping.request", 0);
 pref("network.websocket.timeout.ping.response", 10);
 
 // Defines whether or not to try and negotiate the stream-deflate compression
-// extension with the websocket server
-pref("network.websocket.extensions.stream-deflate", true);
+// extension with the websocket server. Stream-Deflate has been removed from
+// the standards track document, but can still be used by servers who opt
+// into it.
+pref("network.websocket.extensions.stream-deflate", false);
 
 // the maximum number of concurrent websocket sessions. By specification there
 // is never more than one handshake oustanding to an individual host at
