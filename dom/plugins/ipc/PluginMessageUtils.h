@@ -382,7 +382,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    uint64_t window;
+    uint64 window;
     int32_t x, y;
     uint32_t width, height;
     NPRect clipRect;
