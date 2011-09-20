@@ -265,6 +265,7 @@
 
       <!-- =================== PUBLIC MEMBERS =================== -->
 
+      <field name="valueIsTyped">false</field>
       <property name="value">
         <getter><![CDATA[
           if (typeof this.onBeforeValueGet == "function") {
@@ -283,6 +284,7 @@
           if (typeof this.trimValue == "function")
             val = this.trimValue(val);
 
+          this.valueIsTyped = false;
           this.inputField.value = val;
 
           if (typeof this.formatValue == "function")
@@ -559,6 +561,7 @@
     <handlers>
       <handler event="input"><![CDATA[
         if (!this.mIgnoreInput && this.mController.input == this) {
+          this.valueIsTyped = true;
           this.mController.handleText(true);
         }
         this.resetActionType();
