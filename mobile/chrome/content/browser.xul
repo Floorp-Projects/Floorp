@@ -586,7 +586,7 @@
             <separator flex="1"/>
           </scrollbox>
           <hbox class="prompt-buttons" pack="center">
-            <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
+            <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
@@ -605,9 +605,9 @@
             <separator flex="1"/>
           </scrollbox>
           <hbox class="prompt-buttons" pack="center">
-            <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
+            <button class="prompt-button" oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
-            <button id="syncsetup-button-connect" oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
+            <button id="syncsetup-button-connect" class="prompt-button" oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
           </hbox>
         </vbox>
       </dialog>
