@@ -4936,14 +4936,6 @@ IsAboutToBeFinalized(JSContext *cx, TypeObjectKey *key)
     return !reinterpret_cast<const gc::Cell *>((jsuword) key & ~1)->isMarked();
 }
 
-inline bool
-ScriptIsAboutToBeFinalized(JSContext *cx, JSScript *script, JSFunction *fun)
-{
-    return script->isCachedEval ||
-        (script->u.object && IsAboutToBeFinalized(cx, script->u.object)) ||
-        (fun && IsAboutToBeFinalized(cx, fun));
-}
-
 void
 TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 {
