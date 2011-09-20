@@ -2013,4 +2013,21 @@ net_EnsurePSMInit()
     }
 }
 
+/**
+ * Test whether a URI is "about:blank".  |uri| must not be null
+ */
+inline bool
+NS_IsAboutBlank(nsIURI *uri)
+{
+    // GetSpec can be expensive for some URIs, so check the scheme first.
+    PRBool isAbout = PR_FALSE;
+    if (NS_FAILED(uri->SchemeIs("about", &isAbout)) || !isAbout) {
+        return false;
+    }
+
+    nsCAutoString str;
+    uri->GetSpec(str);
+    return str.EqualsLiteral("about:blank");
+}
+
 #endif // !nsNetUtil_h__
