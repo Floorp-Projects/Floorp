@@ -72,7 +72,9 @@ function CssHtmlTree(aStyleWin, aCssLogic, aPanel)
 
   // Nodes used in templating
   this.root = this.styleDocument.getElementById("root");
+  this.path = this.styleDocument.getElementById("path");
   this.templateRoot = this.styleDocument.getElementById("templateRoot");
+  this.templatePath = this.styleDocument.getElementById("templatePath");
   this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
   this.templateProperty = this.styleDocument.getElementById("templateProperty");
   this.panel = aPanel;
@@ -148,6 +150,14 @@ XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
 
 CssHtmlTree.prototype = {
   htmlComplete: false,
+  
+  // Reference to the "Only user Styles" checkbox.
+  onlyUserStylesCheckbox: null,
+
+  get showOnlyUserStyles()
+  {
+    return this.onlyUserStylesCheckbox.checked;
+  },
 
   /**
    * Update the highlighted element. The CssHtmlTree panel will show the style
@@ -162,11 +172,13 @@ CssHtmlTree.prototype = {
 
     this.viewedElement = aElement;
 
-    CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
+    CssHtmlTree.processTemplate(this.templatePath, this.path, this);
 
     if (this.htmlComplete) {
       this.refreshPanel();
     } else {
+      CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
+
       // We use a setTimeout loop to display the properties in batches of 15 at a
       // time. This results in a perceptibly more responsive UI.
       let i = 0;
@@ -190,6 +202,7 @@ CssHtmlTree.prototype = {
             this.win.setTimeout(displayProperties.bind(this), 50);
           } else {
             this.htmlComplete = true;
+            Services.obs.notifyObservers(null, "StyleInspector-populated", null);
           }
         }
       }
@@ -205,6 +218,7 @@ CssHtmlTree.prototype = {
     for each(let propView in this.propertyViews) {
       propView.refresh();
     }
+    Services.obs.notifyObservers(null, "StyleInspector-populated", null);
   },
 
   /**
@@ -227,6 +241,24 @@ CssHtmlTree.prototype = {
         this.panel.selectNode(aEvent.target.pathElement);
       }
     }
+  },
+
+  /**
+   * The change event handler for the onlyUserStyles checkbox. When
+   * onlyUserStyles.checked is true we do not display properties that have no
+   * matched selectors, and we do not display UA styles. If .checked is false we
+   * do display even properties with no matched selectors, and we include the UA
+   * styles.
+   *
+   * @param {Event} aEvent the DOM Event object.
+   */
+  onlyUserStylesChanged: function CssHtmltree_onlyUserStylesChanged(aEvent)
+  {
+    this.cssLogic.sourceFilter = this.showOnlyUserStyles ?
+                                 CssLogic.FILTER.ALL :
+                                 CssLogic.FILTER.UA;
+    
+    this.refreshPanel();
   },
 
   /**
@@ -357,6 +389,26 @@ PropertyView.prototype = {
   },
 
   /**
+   * Should this property be visible?
+   */
+  get visible()
+  {
+    if (this.tree.showOnlyUserStyles && this.matchedSelectorCount == 0) {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Returns the className that should be assigned to the propertyView.
+   */
+  get className()
+  {
+    return this.visible ? "property-view" : "property-view-hidden";
+  },
+
+  /**
    * The number of matched selectors.
    */
   get matchedSelectorCount()
@@ -377,7 +429,15 @@ PropertyView.prototype = {
    */
   refresh: function PropertyView_refresh()
   {
-    if (!this.tree.viewedElement) {
+    this.element.className = this.className;
+
+    if (this.prevViewedElement != this.tree.viewedElement) {
+      this._matchedSelectorViews = null;
+      this._unmatchedSelectorViews = null;
+      this.prevViewedElement = this.tree.viewedElement;
+    }
+
+    if (!this.tree.viewedElement || !this.visible) {
       this.valueNode.innerHTML = "";
       this.matchedSelectorsContainer.hidden = true;
       this.unmatchedSelectorsContainer.hidden = true;
@@ -389,13 +449,7 @@ PropertyView.prototype = {
     }
 
     this.valueNode.innerHTML = this.propertyInfo.value;
-
-    if (this.prevViewedElement != this.tree.viewedElement) {
-      this._matchedSelectorViews = null;
-      this._unmatchedSelectorViews = null;
-      this.prevViewedElement = this.tree.viewedElement;
-    }
-
+    
     this.refreshMatchedSelectors();
     this.refreshUnmatchedSelectors();
   },

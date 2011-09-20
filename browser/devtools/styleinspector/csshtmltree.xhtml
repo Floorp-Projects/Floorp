@@ -66,6 +66,10 @@
 <div id="root">
 </div>
 
+<!-- The output from #templatePath (below) is inserted here. -->
+<div id="path">
+</div>
+
 <!-- The output from #templateProperty (below) is appended here. -->
 <div id="propertyContainer">
 </div>
@@ -75,10 +79,24 @@ To visually debug the templates without running firefox, alter the display:none
 -->
 <div style="display:none;">
   <!--
-  templateRoot sits at the top of the window showing what we're looking at.
-  For data it needs an instance of CssHtmlTree.
+  templateRoot sits at the top of the window and contains the "include default
+  styles" checkbox. For data it needs an instance of CssHtmlTree.
   -->
   <div id="templateRoot">
+    <div class="filters">
+      <label class="userStylesLabel" dir="${getRTLAttr}">
+        &userStylesLabel;
+        <input class="userStyles" save="${onlyUserStylesCheckbox}" type="checkbox"
+               onchange="${onlyUserStylesChanged}" checked=""/>
+      </label>
+    </div>
+  </div>
+
+  <!--
+  templatePath sits just below the top of the window showing what we're looking
+  at. For data it needs an instance of CssHtmlTree.
+  -->
+  <div id="templatePath">
     <p class="path">
       <label dir="${getRTLAttr}">&lookingAtLabel;</label>
       <ol>
@@ -98,7 +116,7 @@ To visually debug the templates without running firefox, alter the display:none
   }
   -->
   <div id="templateProperty">
-    <div class="property-view" save="${element}" dir="${getRTLAttr}">
+    <div class="${className}" save="${element}" dir="${getRTLAttr}">
       <div class="property-header">
         <div class="property-name" dir="${getRTLAttr}">
           <a class="link" target="_blank" title="&helpLinkTitle;"

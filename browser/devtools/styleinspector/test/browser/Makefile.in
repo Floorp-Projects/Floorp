@@ -49,6 +49,7 @@ _BROWSER_TEST_FILES = \
   browser_styleinspector.js \
   browser_styleinspector_webconsole.js \
   browser_bug683672.js \
+  browser_styleinspector_bug_672746_default_styles.js \
   head.js \
   $(NULL)
 
