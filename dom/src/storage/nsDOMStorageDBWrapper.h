@@ -191,6 +191,25 @@ public:
   GetUsage(const nsACString& aDomain, PRBool aIncludeSubDomains, PRInt32 *aUsage);
 
   /**
+   * Marks the storage as "cached" after the DOMStorageImpl object has loaded
+   * all items to its memory copy of the entries - IsScopeDirty returns false
+   * after call of this method for this storage.
+   *
+   * When a key is changed or deleted in the storage, the storage scope is
+   * marked as "dirty" again and makes the DOMStorageImpl object recache its
+   * keys on next access, because IsScopeDirty returns true again.
+   */
+  void
+  MarkScopeCached(DOMStorageImpl* aStorage);
+
+  /**
+   * Test whether the storage for the scope (i.e. origin or host) has been
+   * changed since the last MarkScopeCached call.
+   */
+  bool
+  IsScopeDirty(DOMStorageImpl* aStorage);
+
+  /**
     * Turns "http://foo.bar.com:80" to "moc.rab.oof.:http:80",
     * i.e. reverses the host, appends a dot, appends the schema
     * and a port number.
