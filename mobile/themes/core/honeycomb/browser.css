@@ -1222,6 +1222,12 @@ pageaction > vbox {
 }
 
 /* Override richlistbox and richlistitem styles */
+#context-header {
+  background-color: transparent;
+  border-bottom: @border_width_xlarge@ solid @color_divider_border@;
+  margin: @margin_large@ @margin_large@ 0px;
+}
+
 #context-commands > scrollbox {
   width: 100%;
 }
@@ -1229,6 +1235,26 @@ pageaction > vbox {
 .action-button,
 .context-command {
   -moz-box-align: center;
+  padding: 0px @padding_large@;
+  border: none;
+  border-top: @border_width_tiny@ solid transparent;
+}
+
+.action-button > label,
+.context-command > label {
+  min-height: @touch_row@;
+  padding-top: -moz-calc(@touch_row@ / 2 - 0.75em);
+  -moz-box-align: center;
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+  -moz-box-flex: 1;
+  margin-bottom: -@border_width_tiny@;
+}
+
+.action-button:last-child > label
+.action-button[selector="last-child"] > label,
+.context-command:last-child > label,
+.context-command[selector="last-child"] > label {
+  border-bottom: none;
 }
 
 .action-button[disabled="true"],
@@ -1239,7 +1265,7 @@ pageaction > vbox {
 
 .action-button[selected="true"],
 .context-command[selected="true"] {
-  color: black; /* force */
+  color: @color_text_active@; /* force */
   background: transparent;
 }
 
@@ -1296,8 +1322,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 .action-button,
 .context-command,
 .pageaction-title {
-  font-size: @font_normal@ !important;
-  color: black; /* force */
+  color: @color_text_active@; /* force */
 }
 
 .pageaction-desc {
@@ -1307,10 +1332,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
 
 .pageaction-desc[value=""] {
   display: none;
-}
-
-#context-header {
-  background-color: @color_background_default@;
 }
 
 #share-title,
@@ -1662,6 +1683,19 @@ setting {
 }
 
 /* Sync setup ------------------------------------------------------------- */
+.content-dialog > .prompt-title {
+  margin: @margin_normal@ @margin_large@ 0px;
+}
+
+.content-dialog > .prompt-line,
+.content-dialog .prompt-message {
+  margin: 0px @margin_large@;
+}
+
+.content-dialog .prompt-message {
+  border-bottom: @border_width_tiny@ solid @color_button_border@;
+}
+
 .syncsetup-center {
   /* TODO: remove this dummy when we no longer use it in other themes */
 }
