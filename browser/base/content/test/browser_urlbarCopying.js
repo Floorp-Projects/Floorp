@@ -126,8 +126,10 @@ function nextTest() {
 
 function runTest(test, cb) {
   function doCheck() {
-    if (test.setURL || test.loadURL)
+    if (test.setURL || test.loadURL) {
+      gURLBar.valueIsTyped = !!test.setURL;
       is(gURLBar.value, test.expectedURL, "url bar value set");
+    }
 
     testCopy(test.copyVal, test.copyExpected, cb);
   }

@@ -185,6 +185,8 @@
       <method name="trimValue">
         <parameter name="aURL"/>
         <body><![CDATA[
+          // This method must not modify the given URL such that calling
+          // nsIURIFixup::createFixupURI with the result will produce a different URI.
           return this._mayTrimURLs ? trimURL(aURL) : aURL;
         ]]></body>
       </method>
@@ -497,13 +499,21 @@
 
           // If the selection doesn't start at the beginning or URL bar is
           // modified, nothing else to do here.
-          if (this.getAttribute("pageproxystate") != "valid" || this.selectionStart > 0)
+          if (this.selectionStart > 0 || this.valueIsTyped)
             return selectedVal;
 
-          let uri = gBrowser.currentURI;
+          let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+
+          let uri;
+          try {
+            uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+          } catch (e) {}
+          if (!uri)
+            return selectedVal;
+
           // Only copy exposable URIs
           try {
-            uri = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup).createExposableURI(uri);
+            uri = uriFixup.createExposableURI(uri);
           } catch (ex) {}
 
           // If the entire URL is selected, just use the actual loaded URI.
