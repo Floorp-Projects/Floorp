@@ -604,7 +604,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         CopyXlibSurfaceToImage(tempXlibSurface, gfxASurface::ImageFormatRGB24);
   
     if (blackImage->CairoStatus() == CAIRO_STATUS_SUCCESS &&
-        blackImage->CairoStatus() == CAIRO_STATUS_SUCCESS) {
+        whiteImage->CairoStatus() == CAIRO_STATUS_SUCCESS) {
         gfxAlphaRecovery::Analysis analysis;
         if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage,
                                             result ? &analysis : nsnull))
