@@ -3604,9 +3604,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
 
     // part 1: check that the DOM element is same-origin, or has otherwise been
     // validated for cross-domain use.
-    // if res.mPrincipal == null, no need for the origin check. See DoDrawImageSecurityCheck.
-    // this case happens in the mochitest for images served from mochi.test:8888
-    if (res.mPrincipal && !res.mCORSUsed) {
+    if (!res.mCORSUsed) {
         PRBool subsumes;
         nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
         if (NS_FAILED(rv) || !subsumes) {
