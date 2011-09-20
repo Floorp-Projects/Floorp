@@ -621,8 +621,6 @@ ExpireGCChunks(JSRuntime *rt, JSGCInvocationKind gckind)
 JS_FRIEND_API(bool)
 IsAboutToBeFinalized(JSContext *cx, const void *thing)
 {
-    if (JSAtom::isStatic(thing))
-        return false;
     JS_ASSERT(cx);
 
     JSCompartment *thingCompartment = reinterpret_cast<const Cell *>(thing)->compartment();
@@ -639,7 +637,6 @@ js_GCThingIsMarked(void *thing, uintN color = BLACK)
 {
     JS_ASSERT(thing);
     AssertValidColor(thing, color);
-    JS_ASSERT(!JSAtom::isStatic(thing));
     return reinterpret_cast<Cell *>(thing)->isMarked(color);
 }
 
@@ -1640,24 +1637,22 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
     }
 
     if (ptr && !trc->context->runtime->gcCurrentCompartment) {
-        if (!JSAtom::isStatic(ptr)) {
-            /*
-             * Use conservative machinery to find if ptr is a valid GC thing.
-             * We only do this during global GCs, to preserve the invariant
-             * that mark callbacks are not in place during compartment GCs.
-             */
-            JSTracer checker;
-            JS_TRACER_INIT(&checker, trc->context, EmptyMarkCallback);
-            ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<jsuword>(ptr));
-            if (test != CGCT_VALID && entry.value.name) {
-                fprintf(stderr,
+        /*
+         * Use conservative machinery to find if ptr is a valid GC thing.
+         * We only do this during global GCs, to preserve the invariant
+         * that mark callbacks are not in place during compartment GCs.
+         */
+        JSTracer checker;
+        JS_TRACER_INIT(&checker, trc->context, EmptyMarkCallback);
+        ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<jsuword>(ptr));
+        if (test != CGCT_VALID && entry.value.name) {
+            fprintf(stderr,
 "JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
 "invalid gcthing.  This is usually caused by a missing call to JS_RemoveRoot.\n"
 "The root's name is \"%s\".\n",
-                        entry.value.name);
-            }
-            JS_ASSERT(test == CGCT_VALID);
+                    entry.value.name);
         }
+        JS_ASSERT(test == CGCT_VALID);
     }
 #endif
     JS_SET_TRACING_NAME(trc, entry.value.name ? entry.value.name : "root");
@@ -1856,6 +1851,7 @@ MarkRuntime(JSTracer *trc)
         gc_lock_traversal(r.front(), trc);
 
     js_TraceAtomState(trc);
+    rt->staticStrings.trace(trc);
 
     JSContext *iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))

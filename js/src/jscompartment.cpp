@@ -207,10 +207,6 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (vp->isString()) {
         JSString *str = vp->toString();
 
-        /* Static atoms do not have to be wrapped. */
-        if (str->isStaticAtom())
-            return true;
-
         /* If the string is already in this compartment, we are done. */
         if (str->compartment() == this)
             return true;

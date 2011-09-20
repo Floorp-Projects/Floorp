@@ -3837,7 +3837,7 @@ BEGIN_CASE(JSOP_GETELEM)
         JSString *str = lref.toString();
         int32_t i = rref.toInt32();
         if (size_t(i) < str->length()) {
-            str = JSAtom::getUnitStringForElement(cx, str, size_t(i));
+            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
             if (!str)
                 goto error;
             regs.sp--;
