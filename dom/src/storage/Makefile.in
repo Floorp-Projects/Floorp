@@ -48,6 +48,7 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
        nsDOMStorage.cpp \
+       nsDOMStorageBaseDB.cpp \
        nsDOMStorageDBWrapper.cpp \
        nsDOMStoragePersistentDB.cpp \
        nsDOMStorageMemoryDB.cpp \

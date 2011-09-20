@@ -40,6 +40,7 @@
 #define nsDOMStoragePersistentDB_h___
 
 #include "nscore.h"
+#include "nsDOMStorageBaseDB.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsTHashtable.h"
@@ -52,7 +53,7 @@ class nsSessionStorageEntry;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-class nsDOMStoragePersistentDB
+class nsDOMStoragePersistentDB : public nsDOMStorageBaseDB
 {
 public:
   nsDOMStoragePersistentDB();
