@@ -485,6 +485,8 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     // fill buffer
     {
         bufLen = count + mBufLen;
+        NS_ENSURE_TRUE((bufLen >= count) && (bufLen >= mBufLen),
+                       NS_ERROR_FAILURE);
         buffer = (char *) malloc(bufLen);
         if (!buffer)
             return NS_ERROR_OUT_OF_MEMORY;
