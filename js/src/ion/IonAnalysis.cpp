@@ -89,11 +89,68 @@ ion::EliminateDeadCode(MIRGraph &graph)
             else
                 inst++;
         }
+    }
 
-        // FIXME: Bug 678273.
-        // All phi nodes currently have non-zero uses as determined
-        // by hasUses(). They are kept alive by resume points, and therefore
-        // cannot currently be eliminated.
+    return true;
+}
+
+static inline bool
+IsPhiObservable(MPhi *phi)
+{
+    // Note that this skips reading resume points, which we don't count as
+    // actual uses. This is safe as long as the SSA still mimics the actual
+    // bytecode, i.e. no elimination has occurred. If the only uses are resume
+    // points, then the SSA name is never consumed by the program.
+    for (MUseDefIterator iter(phi); iter; iter++) {
+        if (!iter.def()->isPhi())
+            return true;
+    }
+    return false;
+}
+
+bool
+ion::EliminateDeadPhis(MIRGraph &graph)
+{
+    Vector<MPhi *, 16, SystemAllocPolicy> worklist;
+
+    // Add all observable phis to a worklist. We use the "in worklist" bit to
+    // mean "this phi is live".
+    for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
+        for (MPhiIterator iter = block->phisBegin(); iter != block->phisEnd(); iter++) {
+            if (IsPhiObservable(*iter)) {
+                iter->setInWorklist();
+                if (!worklist.append(*iter))
+                    return false;
+            }
+        }
+    }
+
+    // Iteratively mark all phis reacahble from live phis.
+    while (!worklist.empty()) {
+        MPhi *phi = worklist.popCopy();
+
+        for (size_t i = 0; i < phi->numOperands(); i++) {
+            MDefinition *in = phi->getOperand(i);
+            if (!in->isPhi() || in->isInWorklist())
+                continue;
+            in->setInWorklist();
+            if (!worklist.append(in->toPhi()))
+                return false;
+        }
+    }
+
+    // Sweep dead phis.
+    for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
+        MPhiIterator iter = block->phisBegin();
+        while (iter != block->phisEnd()) {
+            if (iter->isInWorklist()) {
+                iter->setNotInWorklist();
+                iter++;
+            } else {
+                iter->setUnused();
+                iter = block->removePhiAt(iter);
+            }
+        }
     }
 
     return true;

@@ -102,7 +102,11 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     for (uint32 i = 0; i < nslots; i++) {
         MDefinition *mir = snapshot->mir()->getOperand(i);
 
-        switch (mir->type()) {
+        MIRType type = mir->isUnused()
+                       ? MIRType_Undefined
+                       : mir->type();
+
+        switch (type) {
           case MIRType_Undefined:
             snapshots_.addUndefinedSlot();
             break;

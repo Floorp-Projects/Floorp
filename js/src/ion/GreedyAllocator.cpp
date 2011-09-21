@@ -296,10 +296,12 @@ GreedyAllocator::allocateRegisterOperand(LAllocation *a, VirtualRegister *vr)
     AnyRegister reg;
 
     // Note that the disallow policy is required to prevent other allocations
-    // in later uses clobbering the register.
+    // in later uses clobbering the register. If a register is already
+    // assigned, it may already be in the disallow set (if an output was
+    // same-as-input).
     if (vr->hasRegister()) {
         reg = vr->reg();
-        disallowed.add(reg);
+        disallowed.addUnchecked(reg);
     } else {
         // If it does not have a register, allocate one now.
         if (!allocate(vr->type(), DISALLOW, &reg))
@@ -329,9 +331,9 @@ GreedyAllocator::allocateWritableOperand(LAllocation *a, VirtualRegister *vr)
             align(vr->reg(), reg);
         } else {
             // Otherwise, just steal the register.
+            reg = vr->reg();
             if (!evict(vr->reg()))
                 return false;
-            reg = vr->reg();
         }
     }
 

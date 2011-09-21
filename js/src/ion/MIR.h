@@ -90,7 +90,12 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Commutative)                                                              \
     _(Idempotent)    /* The instruction has no side-effects. */                 \
     _(NeverHoisted)  /* Don't hoist, even if loop invariant */                  \
-    _(Lowered)       /* (Debug only) has a virtual register */
+    _(Lowered)       /* (Debug only) has a virtual register */                  \
+                                                                                \
+    /* The instruction has been marked dead for lazy removal from resume
+     * points.
+     */                                                                         \
+    _(Unused)
 
 class MDefinition;
 class MInstruction;
