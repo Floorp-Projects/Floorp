@@ -1148,7 +1148,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     /*
      * Generate code testing whether an in memory value at address has a type
      * in the specified set. Updates mismatches with any failure jumps. Assumes
-     * no data registers are live.
+     * that no temporary (caller save) registers are live.
      */
     bool generateTypeCheck(JSContext *cx, Address address,
                            types::TypeSet *types, Vector<Jump> *mismatches)
@@ -1198,8 +1198,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         if (count != 0) {
             if (!mismatches->append(testObject(Assembler::NotEqual, address)))
                 return false;
-            Registers tempRegs(Registers::AvailRegs);
-            RegisterID reg = tempRegs.takeAnyReg().reg();
+            RegisterID reg = Registers::ArgReg1;
 
             loadPayload(address, reg);
 
