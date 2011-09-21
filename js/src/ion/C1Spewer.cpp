@@ -208,7 +208,10 @@ C1Spewer::spewPass(FILE *fp, MBasicBlock *block)
         MDefinition *ins = block->getEntrySlot(i);
         fprintf(fp, "        ");
         fprintf(fp, "%d ", i);
-        ins->printName(fp);
+        if (ins->isUnused())
+            fprintf(fp, "unused");
+        else
+            ins->printName(fp);
         fprintf(fp, "\n");
     }
     fprintf(fp, "      end_locals\n");
