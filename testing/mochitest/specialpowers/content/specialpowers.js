@@ -254,7 +254,6 @@ SpecialPowers.prototype = {
     el.width = win.innerWidth;
     el.height = win.innerHeight;
     var ctx = el.getContext("2d");
-    var flags = 0;
 
     ctx.drawWindow(win, win.scrollX, win.scrollY,
                    win.innerWidth, win.innerHeight,

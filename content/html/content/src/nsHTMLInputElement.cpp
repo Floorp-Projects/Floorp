@@ -848,7 +848,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       UpdateTypeMismatchValidityState();
     }
 
-    UpdateEditableState(aNotify);
     UpdateState(aNotify);
   }
 
