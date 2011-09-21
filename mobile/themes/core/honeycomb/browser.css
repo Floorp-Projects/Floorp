@@ -208,7 +208,7 @@ toolbarbutton.urlbar-button {
 #urlbar-title {
   font-size: @font_snormal@ !important;
   background: @color_toolbar_background@;
-  padding: @padding_xxxnormal@ 0px @padding_xsmall@ 0px;
+  padding: @padding_xxnormal@ @padding_normal@;
   margin: 0px !important;
   min-height: @urlbar_edit_height@ !important;
   max-height: @urlbar_edit_height@;
