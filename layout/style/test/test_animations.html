@@ -1219,6 +1219,39 @@ is(cs.marginTop, "40px",
    "rest of animation should still work when UA !important present at 200ms");
 done_div();
 
+// Test interaction of animations and restyling (Bug 686656).
+// This test depends on kf3 getting its 0% and 100% values from the
+// rules below it in the cascade; we're checking that the animation
+// isn't rebuilt when the restyles happen.
+new_div("-moz-animation: kf3 1s linear forwards");
+is(cs.marginTop, "0px", "bug 686656 test 1 at 0ms");
+advance_clock(250);
+display.style.color = "blue";
+is(cs.marginTop, "100px", "bug 686656 test 1 at 250ms");
+advance_clock(375);
+is(cs.marginTop, "50px", "bug 686656 test 1 at 625ms");
+advance_clock(375);
+is(cs.marginTop, "0px", "bug 686656 test 1 at 1000ms");
+done_div();
+display.style.color = "";
+
+// Test interaction of animations and restyling (Bug 686656),
+// with reframing.
+// This test depends on kf3 getting its 0% and 100% values from the
+// rules below it in the cascade; we're checking that the animation
+// isn't rebuilt when the restyles happen.
+new_div("-moz-animation: kf3 1s linear forwards");
+is(cs.marginTop, "0px", "bug 686656 test 2 at 0ms");
+advance_clock(250);
+display.style.overflow = "scroll";
+is(cs.marginTop, "100px", "bug 686656 test 2 at 250ms");
+advance_clock(375);
+is(cs.marginTop, "50px", "bug 686656 test 2 at 625ms");
+advance_clock(375);
+is(cs.marginTop, "0px", "bug 686656 test 2 at 1000ms");
+done_div();
+display.style.overflow = "";
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>
