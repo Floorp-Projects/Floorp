@@ -5286,12 +5286,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       (void)os->RemoveObserver(this, TOPIC_PROFILE_CHANGE);
-      // Double notification allows to correctly enqueue tasks without the need
-      // to enqueue notification events to the main-thread.  There is no
-      // guarantee that the event loop will spin before xpcom-shutdown indeed,
-      // see bug 580892.
       (void)os->NotifyObservers(nsnull, TOPIC_PLACES_WILL_CLOSE_CONNECTION, nsnull);
-      (void)os->NotifyObservers(nsnull, TOPIC_PLACES_CONNECTION_CLOSING, nsnull);
     }
 
     // Operations that are unlikely to create issues to implementers should go
