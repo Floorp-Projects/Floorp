@@ -253,50 +253,68 @@ Highlighter.prototype = {
       return;
     }
 
+    if (aScroll) {
+      this.node.scrollIntoView();
+    }
+
     let clientRect = this.node.getBoundingClientRect();
 
+    // Go up in the tree of frames to determine the correct rectangle.
     // clientRect is read-only, we need to be able to change properties.
     let rect = {top: clientRect.top,
                 left: clientRect.left,
                 width: clientRect.width,
                 height: clientRect.height};
 
-    if (aScroll) {
-      this.node.scrollIntoView();
-    }
-
-    // Go up in the tree of frames to determine the correct rectangle
-    // coordinates and size.
     let frameWin = this.node.ownerDocument.defaultView;
-    do {
-      let frameRect = frameWin.frameElement ?
-                      frameWin.frameElement.getBoundingClientRect() :
-                      {top: 0, left: 0};
 
-      if (rect.top < 0) {
-        rect.height += rect.top;
-        rect.top = 0;
+    // We iterate through all the parent windows.
+    while (true) {
+
+      // Does the selection overflow on the right of its window?
+      let diffx = frameWin.innerWidth - (rect.left + rect.width);
+      if (diffx < 0) {
+        rect.width += diffx;
       }
 
+      // Does the selection overflow on the bottom of its window?
+      let diffy = frameWin.innerHeight - (rect.top + rect.height);
+      if (diffy < 0) {
+        rect.height += diffy;
+      }
+
+      // Does the selection overflow on the left of its window?
       if (rect.left < 0) {
         rect.width += rect.left;
         rect.left = 0;
       }
 
-      let diffx = frameWin.innerWidth - rect.left - rect.width;
-      if (diffx < 0) {
-        rect.width += diffx;
-      }
-      let diffy = frameWin.innerHeight - rect.top - rect.height;
-      if (diffy < 0) {
-        rect.height += diffy;
+      // Does the selection overflow on the top of its window?
+      if (rect.top < 0) {
+        rect.height += rect.top;
+        rect.top = 0;
       }
 
-      rect.left += frameRect.left;
-      rect.top += frameRect.top;
+      // Selection has been clipped to fit in its own window.
+
+      // Are we in the top-level window?
+      if (frameWin.parent === frameWin || !frameWin.frameElement) {
+        break;
+      }
+
+      // We are in an iframe.
+      // We take into account the parent iframe position and its
+      // offset (borders and padding).
+      let frameRect = frameWin.frameElement.getBoundingClientRect();
+
+      let [offsetTop, offsetLeft] =
+        InspectorUI.getIframeContentOffset(frameWin.frameElement);
+
+      rect.top += frameRect.top + offsetTop;
+      rect.left += frameRect.left + offsetLeft;
 
       frameWin = frameWin.parent;
-    } while (frameWin != this.win);
+    }
 
     this.highlightRectangle(rect);
 
@@ -1378,17 +1396,26 @@ var InspectorUI = {
   {
     let node = aDocument.elementFromPoint(aX, aY);
     if (node && node.contentDocument) {
-      switch (node.nodeName.toLowerCase()) {
-        case "iframe":
-          let rect = node.getBoundingClientRect();
-          aX -= rect.left;
-          aY -= rect.top;
+      if (node instanceof HTMLIFrameElement) {
+        let rect = node.getBoundingClientRect();
 
-        case "frame":
-          let subnode = this.elementFromPoint(node.contentDocument, aX, aY);
-          if (subnode) {
-            node = subnode;
-          }
+        // Gap between the iframe and its content window.
+        let [offsetTop, offsetLeft] = this.getIframeContentOffset(node);
+
+        aX -= rect.left + offsetLeft;
+        aY -= rect.top + offsetTop;
+
+        if (aX < 0 || aY < 0) {
+          // Didn't reach the content document, still over the iframe.
+          return node;
+        }
+      }
+      if (node instanceof HTMLIFrameElement ||
+          node instanceof HTMLFrameElement) {
+        let subnode = this.elementFromPoint(node.contentDocument, aX, aY);
+        if (subnode) {
+          node = subnode;
+        }
       }
     }
     return node;
@@ -1396,6 +1423,33 @@ var InspectorUI = {
 
   ///////////////////////////////////////////////////////////////////////////
   //// Utility functions
+
+  /**
+   * Returns iframe content offset (iframe border + padding).
+   * Note: this function shouldn't need to exist, had the platform provided a
+   * suitable API for determining the offset between the iframe's content and
+   * its bounding client rect. Bug 626359 should provide us with such an API.
+   *
+   * @param aIframe
+   *        The iframe.
+   * @returns array [offsetTop, offsetLeft]
+   *          offsetTop is the distance from the top of the iframe and the
+   *            top of the content document.
+   *          offsetLeft is the distance from the left of the iframe and the
+   *            left of the content document.
+   */
+  getIframeContentOffset: function IUI_getIframeContentOffset(aIframe)
+  {
+    let style = aIframe.contentWindow.getComputedStyle(aIframe, null);
+
+    let paddingTop = parseInt(style.getPropertyValue("padding-top"));
+    let paddingLeft = parseInt(style.getPropertyValue("padding-left"));
+
+    let borderTop = parseInt(style.getPropertyValue("border-top-width"));
+    let borderLeft = parseInt(style.getPropertyValue("border-left-width"));
+
+    return [borderTop + paddingTop, borderLeft + paddingLeft];
+  },
 
   /**
    * Does the given object have a class attribute?

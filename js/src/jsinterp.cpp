@@ -3837,7 +3837,7 @@ BEGIN_CASE(JSOP_GETELEM)
         JSString *str = lref.toString();
         int32_t i = rref.toInt32();
         if (size_t(i) < str->length()) {
-            str = JSAtom::getUnitStringForElement(cx, str, size_t(i));
+            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
             if (!str)
                 goto error;
             regs.sp--;
@@ -4966,7 +4966,7 @@ BEGIN_CASE(JSOP_GETTER)
 BEGIN_CASE(JSOP_SETTER)
 {
   do_getter_setter:
-    JSOp op2 = (JSOp) *++regs.pc;
+    JSOp op2 = js_GetOpcode(cx, script, ++regs.pc);
     jsid id;
     Value rval;
     jsint i;

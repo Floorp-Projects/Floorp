@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=552782
+-->
+<head>
+  <title>Test for Bug 552782</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=290026">Mozilla Bug 552782</a>
+<p id="display"></p>
+<div id="editor" contenteditable></div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 552782 **/
+SimpleTest.waitForExplicitFinish();
+
+var original = '<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li><li>Item 4</li></ol></ol>';
+var editor = document.getElementById("editor");
+editor.innerHTML = original;
+editor.focus();
+
+addLoadEvent(function() {
+
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var lis = document.getElementsByTagName("li");
+  sel.selectAllChildren(lis[2]);
+  document.execCommand("outdent", false, false);
+  var expected = '<ol><li>Item 1</li><ol><li>Item 2</li></ol><li>Item 3</li><ol><li>Item 4</li></ol></ol>';
+  is(editor.innerHTML, expected, "outdenting third item in a partially indented numbered list");
+  document.execCommand("indent", false, false);
+  todo_is(editor.innerHTML, original, "re-indenting third item in a partially indented numbered list");
+
+  // done
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

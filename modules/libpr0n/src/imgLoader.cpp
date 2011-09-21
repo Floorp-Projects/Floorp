@@ -92,6 +92,8 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 
+#include "nsContentUtils.h"
+
 using namespace mozilla;
 using namespace mozilla::imagelib;
 
@@ -395,13 +397,14 @@ nsProgressNotificationProxy::GetInterface(const nsIID& iid,
   return NS_NOINTERFACE;
 }
 
-static PRBool NewRequestAndEntry(imgRequest **request, imgCacheEntry **entry)
+static PRBool NewRequestAndEntry(bool forcePrincipalCheckForCacheEntry,
+                                 imgRequest **request, imgCacheEntry **entry)
 {
   *request = new imgRequest();
   if (!*request)
     return PR_FALSE;
 
-  *entry = new imgCacheEntry(*request);
+  *entry = new imgCacheEntry(*request, forcePrincipalCheckForCacheEntry);
   if (!*entry) {
     delete *request;
     return PR_FALSE;
@@ -459,13 +462,15 @@ static PRBool ShouldRevalidateEntry(imgCacheEntry *aEntry,
 // given loading principal, and false if the request may not be reused due
 // to CORS.
 static bool
-ValidateCORS(imgRequest* request, PRInt32 corsmode, nsIPrincipal* loadingPrincipal)
+ValidateCORSAndPrincipal(imgRequest* request, bool forcePrincipalCheck,
+                         PRInt32 corsmode, nsIPrincipal* loadingPrincipal)
 {
   // If the entry's CORS mode doesn't match, or the CORS mode matches but the
   // document principal isn't the same, we can't use this request.
   if (request->GetCORSMode() != corsmode) {
     return false;
-  } else if (request->GetCORSMode() != imgIRequest::CORS_NONE) {
+  } else if (request->GetCORSMode() != imgIRequest::CORS_NONE ||
+             forcePrincipalCheck) {
     nsCOMPtr<nsIPrincipal> otherprincipal = request->GetLoadingPrincipal();
 
     // If we previously had a principal, but we don't now, we can't use this
@@ -485,13 +490,23 @@ ValidateCORS(imgRequest* request, PRInt32 corsmode, nsIPrincipal* loadingPrincip
 }
 
 static nsresult NewImageChannel(nsIChannel **aResult,
+                                // If aForcePrincipalCheckForCacheEntry is
+                                // true, then we will force a principal check
+                                // even when not using CORS before assuming we
+                                // have a cache hit on a cache entry that we
+                                // create for this channel.  This is an out
+                                // param that should be set to true if this
+                                // channel ends up depending on
+                                // aLoadingPrincipal and false otherwise.
+                                bool *aForcePrincipalCheckForCacheEntry,
                                 nsIURI *aURI,
                                 nsIURI *aInitialDocumentURI,
                                 nsIURI *aReferringURI,
                                 nsILoadGroup *aLoadGroup,
                                 const nsCString& aAcceptHeader,
                                 nsLoadFlags aLoadFlags,
-                                nsIChannelPolicy *aPolicy)
+                                nsIChannelPolicy *aPolicy,
+                                nsIPrincipal *aLoadingPrincipal)
 {
   nsresult rv;
   nsCOMPtr<nsIChannel> newChannel;
@@ -526,6 +541,8 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   if (NS_FAILED(rv))
     return rv;
 
+  *aForcePrincipalCheckForCacheEntry = false;
+
   // Initialize HTTP-specific attributes
   newHttpChannel = do_QueryInterface(*aResult);
   if (newHttpChannel) {
@@ -550,6 +567,10 @@ static nsresult NewImageChannel(nsIChannel **aResult,
     p->AdjustPriority(priority);
   }
 
+  PRBool setOwner = nsContentUtils::SetUpChannelOwner(aLoadingPrincipal,
+                                                      *aResult, aURI, PR_FALSE);
+  *aForcePrincipalCheckForCacheEntry = setOwner;
+
   return NS_OK;
 }
 
@@ -558,7 +579,7 @@ static PRUint32 SecondsFromPRTime(PRTime prTime)
   return PRUint32(PRInt64(prTime) / PRInt64(PR_USEC_PER_SEC));
 }
 
-imgCacheEntry::imgCacheEntry(imgRequest *request)
+imgCacheEntry::imgCacheEntry(imgRequest *request, bool forcePrincipalCheck)
  : mRequest(request),
    mDataSize(0),
    mTouchedTime(SecondsFromPRTime(PR_Now())),
@@ -567,7 +588,8 @@ imgCacheEntry::imgCacheEntry(imgRequest *request)
    // We start off as evicted so we don't try to update the cache. PutIntoCache
    // will set this to false.
    mEvicted(PR_TRUE),
-   mHasNoProxies(PR_TRUE)
+   mHasNoProxies(PR_TRUE),
+   mForcePrincipalCheck(forcePrincipalCheck)
 {}
 
 imgCacheEntry::~imgCacheEntry()
@@ -1059,12 +1081,6 @@ PRBool imgLoader::PutIntoCache(nsIURI *key, imgCacheEntry *entry)
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::PutIntoCache -- Element already in the cache", nsnull));
     nsRefPtr<imgRequest> tmpRequest = getter_AddRefs(tmpCacheEntry->GetRequest());
-    void *cacheId = NS_GetCurrentThread();
-
-    // If the existing request is currently loading, or loading on a different
-    // thread, we'll leave it be, and not put this new entry into the cache.
-    if (!tmpRequest->IsReusable(cacheId))
-      return PR_FALSE;
 
     // If it already exists, and we're putting the same key into the cache, we
     // should remove the old version.
@@ -1247,14 +1263,17 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
     // tell imgCacheValidator::OnStartRequest whether the request came from its
     // cache.
     nsCOMPtr<nsIChannel> newChannel;
+    bool forcePrincipalCheck;
     rv = NewImageChannel(getter_AddRefs(newChannel),
+                         &forcePrincipalCheck,
                          aURI,
                          aInitialDocumentURI,
                          aReferrerURI,
                          aLoadGroup,
                          mAcceptHeader,
                          aLoadFlags,
-                         aPolicy);
+                         aPolicy,
+                         aLoadingPrincipal);
     if (NS_FAILED(rv)) {
       return PR_FALSE;
     }
@@ -1272,7 +1291,8 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
     if (!progressproxy)
       return PR_FALSE;
 
-    nsRefPtr<imgCacheValidator> hvc = new imgCacheValidator(progressproxy, request, aCX);
+    nsRefPtr<imgCacheValidator> hvc =
+      new imgCacheValidator(progressproxy, request, aCX, forcePrincipalCheck);
 
     nsCOMPtr<nsIStreamListener> listener = hvc.get();
 
@@ -1361,7 +1381,8 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   if (!request)
     return PR_FALSE;
 
-  if (!ValidateCORS(request, aCORSMode, aLoadingPrincipal))
+  if (!ValidateCORSAndPrincipal(request, aEntry->ForcePrincipalCheck(),
+                                aCORSMode, aLoadingPrincipal))
     return PR_FALSE;
 
   PRBool validateRequest = PR_FALSE;
@@ -1396,26 +1417,6 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
             "because of NULL LoadID", spec.get()));
   }
 #endif
-
-  //
-  // Get the current thread...  This is used as a cacheId to prevent
-  // sharing requests which are being loaded across multiple threads...
-  //
-  void *cacheId = NS_GetCurrentThread();
-  if (!request->IsReusable(cacheId)) {
-    //
-    // The current request is still being loaded and lives on a different
-    // event queue.
-    //
-    // Since its event queue is NOT active, do not reuse this imgRequest.
-    // PutIntoCache() will also ensure that we don't cache it.
-    //
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("imgLoader::ValidateEntry -- DANGER!! Unable to use cached "
-            "imgRequest [request=%p]\n", address_of(request)));
-
-    return PR_FALSE;
-  }
 
   // We can't use a cached request if it comes from a different
   // application cache than this load is expecting.
@@ -1682,18 +1683,22 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   if (!request) {
     LOG_SCOPE(gImgLog, "imgLoader::LoadImage |cache miss|");
 
+    bool forcePrincipalCheck;
     rv = NewImageChannel(getter_AddRefs(newChannel),
+                         &forcePrincipalCheck,
                          aURI,
                          aInitialDocumentURI,
                          aReferrerURI,
                          aLoadGroup,
                          mAcceptHeader,
                          requestFlags,
-                         aPolicy);
+                         aPolicy,
+                         aLoadingPrincipal);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
-    if (!NewRequestAndEntry(getter_AddRefs(request), getter_AddRefs(entry)))
+    if (!NewRequestAndEntry(forcePrincipalCheck, getter_AddRefs(request),
+                            getter_AddRefs(entry)))
       return NS_ERROR_OUT_OF_MEMORY;
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -1705,8 +1710,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
         do_CreateInstance(NS_LOADGROUP_CONTRACTID);
     newChannel->SetLoadGroup(loadGroup);
 
-    void *cacheId = NS_GetCurrentThread();
-    request->Init(aURI, aURI, loadGroup, newChannel, entry, cacheId, aCX,
+    request->Init(aURI, aURI, loadGroup, newChannel, entry, aCX,
                   aLoadingPrincipal, corsmode);
 
     // Pass the inner window ID of the loading document, if possible.
@@ -1895,7 +1899,11 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
                                   requestFlags, nsnull, _retval);
     static_cast<imgRequestProxy*>(*_retval)->NotifyListener();
   } else {
-    if (!NewRequestAndEntry(getter_AddRefs(request), getter_AddRefs(entry)))
+    // Default to doing a principal check because we don't know who
+    // started that load and whether their principal ended up being
+    // inherited on the channel.
+    if (!NewRequestAndEntry(PR_TRUE, getter_AddRefs(request),
+                            getter_AddRefs(entry)))
       return NS_ERROR_OUT_OF_MEMORY;
 
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
@@ -1904,7 +1912,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     // No principal specified here, because we're not passed one.
     request->Init(originalURI, uri, channel, channel, entry,
-                  NS_GetCurrentThread(), aCX, nsnull, imgIRequest::CORS_NONE);
+                  aCX, nsnull, imgIRequest::CORS_NONE);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
     NS_ADDREF(pl);
@@ -2111,12 +2119,14 @@ NS_IMPL_ISUPPORTS5(imgCacheValidator, nsIStreamListener, nsIRequestObserver,
 imgLoader imgCacheValidator::sImgLoader;
 
 imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
-                                     imgRequest *request, void *aContext)
+                                     imgRequest *request, void *aContext,
+                                     bool forcePrincipalCheckForCacheEntry)
  : mProgressProxy(progress),
    mRequest(request),
    mContext(aContext)
 {
-  NewRequestAndEntry(getter_AddRefs(mNewRequest), getter_AddRefs(mNewEntry));
+  NewRequestAndEntry(forcePrincipalCheckForCacheEntry,
+                     getter_AddRefs(mNewRequest), getter_AddRefs(mNewEntry));
 }
 
 imgCacheValidator::~imgCacheValidator()
@@ -2211,7 +2221,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
   mNewRequest->Init(originalURI, uri, channel, channel, mNewEntry,
-                    NS_GetCurrentThread(), mContext, loadingPrincipal,
+                    mContext, loadingPrincipal,
                     corsmode);
 
   mDestListener = new ProxyListener(mNewRequest);
