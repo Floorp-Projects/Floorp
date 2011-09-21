@@ -1234,7 +1234,8 @@ class GetPropCompiler : public PICStubCompiler
         if (!linker.init(f.cx))
             THROW();
 
-        if (!linker.verifyRange(f.jit())) {
+        if (!linker.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !linker.verifyRange(f.jit())) {
             disable("code memory is out of range");
             return;
         }
