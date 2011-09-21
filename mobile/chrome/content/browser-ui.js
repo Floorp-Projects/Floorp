@@ -494,10 +494,8 @@ var BrowserUI = {
       BadgeHandlers.register(BrowserUI._edit.popup);
       FormHelperUI.init();
       FindHelperUI.init();
-      PageActions.init();
       FullScreenVideo.init();
       NewTabPopup.init();
-      CharsetMenu.init();
 
       // If some add-ons were disabled during during an application update, alert user
       let addonIDs = AddonManager.getStartupChanges("disabled");

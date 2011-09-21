@@ -436,7 +436,7 @@ stubs::GetElem(VMFrame &f)
         JSString *str = lref.toString();
         int32_t i = rref.toInt32();
         if ((size_t)i < str->length()) {
-            str = JSAtom::getUnitStringForElement(cx, str, (size_t)i);
+            str = f.cx->runtime->staticStrings.getUnitStringForElement(cx, str, (size_t)i);
             if (!str)
                 THROW();
             f.regs.sp[-2].setString(str);

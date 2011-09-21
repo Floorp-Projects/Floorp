@@ -650,15 +650,6 @@ protected:
     void DoGetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
                               PRInt32 * cy);
     
-    // Check whether aURI should inherit our security context
-    static nsresult URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult);
-
-    // Check whether aURI is a URI_IS_LOCAL_FILE or not
-    static PRBool URIIsLocalFile(nsIURI *aURI);
-
-    // Check whether aURI is about:blank
-    static PRBool IsAboutBlank(nsIURI* aURI);
-
     // Call this when a URI load is handed to us (via OnLinkClick or
     // InternalLoad).  This makes sure that we're not inside unload, or that if
     // we are it's still OK to load this URI.
