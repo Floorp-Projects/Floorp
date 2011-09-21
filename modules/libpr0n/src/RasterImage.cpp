@@ -2345,12 +2345,12 @@ RasterImage::RequestDecode()
   if (mError)
     return NS_ERROR_FAILURE;
 
-  // If we're not storing source data, we have nothing to do
-  if (!StoringSourceData())
-    return NS_OK;
-
   // If we're fully decoded, we have nothing to do
   if (mDecoded)
+    return NS_OK;
+
+  // If we're not storing source data, we have nothing to do
+  if (!StoringSourceData())
     return NS_OK;
 
   // If we've already got a full decoder running, we have nothing to do
