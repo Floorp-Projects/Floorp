@@ -3352,16 +3352,6 @@ PluginInstanceChild::InvalidateRectDelayed(void)
 
     if (!ShowPluginFrame()) {
         AsyncShowPluginFrame();
-    } else if (!mCurrentInvalidateTask) {
-        // We have just painted a frame. Prepare a delayed mCurrentInvalidateTask
-        // task 15ms from now. This will cause any invalidate rect calls to
-        // accumulate. If none are made during this time the task will do
-        // nothing on an empty mAccumulatedInvalidRect.
-        // See bug 683803
-        mCurrentInvalidateTask =
-            NewRunnableMethod(this, &PluginInstanceChild::InvalidateRectDelayed);
-        MessageLoop::current()->PostDelayedTask(
-            FROM_HERE, mCurrentInvalidateTask, 15);
     }
 }
 
