@@ -1,3 +1,8 @@
+<!-- LOCALIZATION NOTE (userStylesLabel): This is the label for the checkbox
+  -  that specifies whether the styles that are not from the user's stylesheet
+  -  should be displayed or not. -->
+<!ENTITY userStylesLabel    "Only user styles">
+
 <!-- LOCALIZATION NOTE (lookingAtLabel): This is the label for the path of
   -  the highlighted element in the web page. This path is based on the document
   -  tree. -->
