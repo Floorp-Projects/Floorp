@@ -35,6 +35,7 @@
 	.object_arch armv4
 	.arm
 	.altmacro
+	.p2align 2
 
 /* Supplementary macro for setting function attributes */
 .macro pixman_asm_function fname
