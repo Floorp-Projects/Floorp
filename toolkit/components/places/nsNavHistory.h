@@ -109,9 +109,6 @@
 // cleanup tasks should run at this stage, nothing should be added to the
 // database, nor APIs should be called.
 #define TOPIC_PLACES_WILL_CLOSE_CONNECTION "places-will-close-connection"
-// For Internal use only. Fired as the last notification before the connection
-// is gone.
-#define TOPIC_PLACES_CONNECTION_CLOSING "places-connection-closing"
 // Fired when the connection has gone, nothing will work from now on.
 #define TOPIC_PLACES_CONNECTION_CLOSED "places-connection-closed"
 
