@@ -446,21 +446,33 @@ Highlighter.prototype = {
       return this._highlighting; // same rectangle
     }
 
-    if (aRect.left >= 0 && aRect.top >= 0 &&
-        aRect.width > 0 && aRect.height > 0) {
+    // get page zoom factor, if any
+    let zoom =
+      this.win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+      .getInterface(Components.interfaces.nsIDOMWindowUtils)
+      .screenPixelsPerCSSPixel;
+
+    // adjust rect for zoom scaling
+    let aRectScaled = {};
+    for (let prop in aRect) {
+      aRectScaled[prop] = aRect[prop] * zoom;
+    }
+
+    if (aRectScaled.left >= 0 && aRectScaled.top >= 0 &&
+        aRectScaled.width > 0 && aRectScaled.height > 0) {
       // The bottom div and the right div are flexibles (flex=1).
       // We don't need to resize them.
-      this.veilTopBox.style.height = aRect.top + "px";
-      this.veilLeftBox.style.width = aRect.left + "px";
-      this.veilMiddleBox.style.height = aRect.height + "px";
-      this.veilTransparentBox.style.width = aRect.width + "px";
+      this.veilTopBox.style.height = aRectScaled.top + "px";
+      this.veilLeftBox.style.width = aRectScaled.left + "px";
+      this.veilMiddleBox.style.height = aRectScaled.height + "px";
+      this.veilTransparentBox.style.width = aRectScaled.width + "px";
 
       this._highlighting = true;
     } else {
       this.unhighlight();
     }
 
-    this._highlightRect = aRect;
+    this._highlightRect = aRect; // save orig (non-scaled) rect
 
     return this._highlighting;
   },
