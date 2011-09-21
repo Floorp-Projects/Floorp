@@ -107,6 +107,47 @@ function performTestComparisons(evt)
   is(InspectorUI.selection, h1, "selection matches node");
   is(InspectorUI.selection, InspectorUI.highlighter.highlitNode, "selection matches highlighter");
 
+  // get dimensions of h1 element
+  let h1Dims = h1.getBoundingClientRect();
+  let h1Width = h1Dims.width;
+  let h1Height = h1Dims.height;
+
+  // get dimensions of transparent veil box over element
+  let veilBoxDims = 
+    InspectorUI.highlighter.veilTransparentBox.getBoundingClientRect();
+  let veilBoxWidth = veilBoxDims.width;
+  let veilBoxHeight = veilBoxDims.height;
+
+  ok((veilBoxWidth == h1Width && veilBoxHeight == h1Height), "transparent veil box matches dimensions of element (no zoom)");
+
+  // zoom the page by a factor of 2
+  let contentDocument = InspectorUI.browser.docShell.contentViewer
+                            .QueryInterface(Ci.nsIMarkupDocumentViewer);
+  contentDocument.fullZoom = 2;
+
+  finishTestComparisons();
+}
+
+function finishTestComparisons()
+{
+  // check what zoom factor we're at
+  let zoom =
+      InspectorUI.win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+      .getInterface(Components.interfaces.nsIDOMWindowUtils)
+      .screenPixelsPerCSSPixel;
+
+  // simulate the zoomed dimensions of the h1 element
+  let h1Dims = h1.getBoundingClientRect();
+  let h1Width = h1Dims.width * zoom;
+  let h1Height = h1Dims.height * zoom;
+
+  // now zoomed, get new dimensions of transparent veil box over element
+  let veilBoxDims = InspectorUI.highlighter.veilTransparentBox.getBoundingClientRect();
+  let veilBoxWidth = veilBoxDims.width;
+  let veilBoxHeight = veilBoxDims.height;
+
+  ok((veilBoxWidth == h1Width && veilBoxHeight == h1Height), "transparent veil box matches dimensions of element (2x zoom)");
+
   doc = h1 = null;
   executeSoon(finishUp);
 }
