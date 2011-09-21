@@ -3883,6 +3883,31 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
   return NS_OK;
 }
 
+static void
+SetFlagsOnSubtree(nsIContent *aNode, PtrBits aFlagsToSet)
+{
+#ifdef DEBUG
+  // Make sure that the node passed to us doesn't have any XBL children
+  {
+    nsIDocument *doc = aNode->GetOwnerDoc();
+    NS_ASSERTION(doc, "The node must be in a document");
+    NS_ASSERTION(!doc->BindingManager()->GetXBLChildNodesFor(aNode),
+                 "The node should not have any XBL children");
+  }
+#endif
+
+  // Set the flag on the node itself
+  aNode->SetFlags(aFlagsToSet);
+
+  // Set the flag on all of its children recursively
+  PRUint32 count;
+  nsIContent * const *children = aNode->GetChildArray(&count);
+
+  for (PRUint32 index = 0; index < count; ++index) {
+    SetFlagsOnSubtree(children[index], aFlagsToSet);
+  }
+}
+
 nsresult
 nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
                                            nsIFrame* aParentFrame,
@@ -3910,7 +3935,17 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
       content->SetNativeAnonymous();
     }
 
+    PRBool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
     rv = content->BindToTree(mDocument, aParent, aParent, PR_TRUE);
+    // If the anonymous content creator requested that the content should be
+    // editable, honor its request.
+    // We need to set the flag on the whole subtree, because existing
+    // children's flags have already been set as part of the BindToTree operation.
+    if (anonContentIsEditable) {
+      NS_ASSERTION(aParentFrame->GetType() == nsGkAtoms::textInputFrame,
+                   "We only expect this for anonymous content under a text control frame");
+      SetFlagsOnSubtree(content, NODE_IS_EDITABLE);
+    }
     if (NS_FAILED(rv)) {
       content->UnbindFromTree();
       return rv;
@@ -6137,25 +6172,6 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
   ContentInserted(aParentContent, aContent, nsnull, PR_FALSE);
 }
 
-// We want to disable lazy frame construction for nodes that are under an
-// editor. We use nsINode::IsEditable, but that includes inputs with type text
-// and password and textareas, which are common and aren't really editable (the
-// native anonymous content under them is what is actually editable) so we want
-// to construct frames for those lazily.
-// The logic for this check is based on
-// nsGenericHTMLFormElement::UpdateEditableFormControlState and so must be kept
-// in sync with that.  MayHaveContentEditableAttr() being true only indicates
-// a contenteditable attribute, it doesn't indicate whether it is true or false,
-// so we force eager construction in some cases when the node is not editable,
-// but that should be rare.
-static inline PRBool
-IsActuallyEditable(nsIContent* aContainer, nsIContent* aChild)
-{
-  return (aChild->IsEditable() &&
-          (aContainer->IsEditable() ||
-           aChild->MayHaveContentEditableAttr()));
-}
-
 // For inserts aChild should be valid, for appends it should be null.
 // Returns true if this operation can be lazy, false if not.
 PRBool
@@ -6170,7 +6186,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   if (aOperation == CONTENTINSERT) {
     if (aChild->IsRootOfAnonymousSubtree() ||
-        aChild->IsXUL() || IsActuallyEditable(aContainer, aChild)) {
+        aChild->IsEditable() || aChild->IsXUL()) {
       return PR_FALSE;
     }
   } else { // CONTENTAPPEND
@@ -6179,7 +6195,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
       NS_ASSERTION(!child->IsRootOfAnonymousSubtree(),
                    "Should be coming through the CONTENTAPPEND case");
-      if (child->IsXUL() || IsActuallyEditable(aContainer, child)) {
+      if (child->IsXUL() || child->IsEditable()) {
         return PR_FALSE;
       }
     }
@@ -7961,6 +7977,12 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     }
 
     if (hint & nsChangeHint_ReconstructFrame) {
+      // If we ever start passing PR_TRUE here, be careful of restyles
+      // that involve a reframe and animations.  In particular, if the
+      // restyle we're processing here is an animation restyle, but
+      // the style resolution we will do for the frame construction
+      // happens async when we're not in an animation restyle already,
+      // problems could arise.
       RecreateFramesForContent(content, PR_FALSE);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");

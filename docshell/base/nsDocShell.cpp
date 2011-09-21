@@ -8171,7 +8171,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // One more twist: Don't inherit the owner for external loads.
         if (aLoadType != LOAD_NORMAL_EXTERNAL && !owner &&
             (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
-            NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
+            NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(aURI,
+                                                                    &inherits)) &&
             inherits) {
 
             owner = GetInheritedPrincipal(PR_TRUE);
@@ -8182,11 +8183,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // if this document came from an unsafe channel.
     {
         PRBool willInherit;
-        // This condition needs to match the one in DoChannelLoad.
+        // This condition needs to match the one in
+        // nsContentUtils::SetUpChannelOwner.
         // Except we reverse the rv check to be safe in case
-        // URIInheritsSecurityContext fails here and succeeds there.
-        rv = URIInheritsSecurityContext(aURI, &willInherit);
-        if (NS_FAILED(rv) || willInherit || IsAboutBlank(aURI)) {
+        // nsContentUtils::URIInheritsSecurityContext fails here and
+        // succeeds there.
+        rv = nsContentUtils::URIInheritsSecurityContext(aURI, &willInherit);
+        if (NS_FAILED(rv) || willInherit || NS_IsAboutBlank(aURI)) {
             nsCOMPtr<nsIDocShellTreeItem> treeItem = this;
             do {
                 nsCOMPtr<nsIDocShell> itemDocShell =
@@ -9001,56 +9004,9 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             httpChannel->SetReferrer(aReferrerURI);
         }
     }
-    //
-    // Set the owner of the channel, but only for channels that can't
-    // provide their own security context.
-    //
-    // XXX: Is seems wrong that the owner is ignored - even if one is
-    //      supplied) unless the URI is javascript or data or about:blank.
-    // XXX: If this is ever changed, check all callers for what owners they're
-    //      passing in.  In particular, see the code and comments in LoadURI
-    //      where we fall back on inheriting the owner if called
-    //      from chrome.  That would be very wrong if this code changed
-    //      anything but channels that can't provide their own security context!
-    //
-    //      (Currently chrome URIs set the owner when they are created!
-    //      So setting a NULL owner would be bad!)
-    //
-    // If this code ever changes, change nsObjectLoadingContent::LoadObject
-    // accordingly.
-    PRBool inherit;
-    // We expect URIInheritsSecurityContext to return success for an
-    // about:blank URI, so don't call IsAboutBlank() if this call fails.
-    // This condition needs to match the one in InternalLoad where
-    // we're checking for things that will use the owner.
-    rv = URIInheritsSecurityContext(aURI, &inherit);
-    if (NS_SUCCEEDED(rv) && (inherit || IsAboutBlank(aURI))) {
-        channel->SetOwner(aOwner);
-    }
 
-    //
-    // file: uri special-casing
-    //
-    // If this is a file: load opened from another file: then it may need
-    // to inherit the owner from the referrer so they can script each other.
-    // If we don't set the owner explicitly then each file: gets an owner
-    // based on its own codebase later.
-    //
     nsCOMPtr<nsIPrincipal> ownerPrincipal(do_QueryInterface(aOwner));
-    if (URIIsLocalFile(aURI) && ownerPrincipal &&
-        NS_SUCCEEDED(ownerPrincipal->CheckMayLoad(aURI, PR_FALSE))) {
-        // One more check here.  CheckMayLoad will always return true for the
-        // system principal, but we do NOT want to inherit in that case.
-        PRBool isSystem;
-        nsCOMPtr<nsIScriptSecurityManager> secMan =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (secMan &&
-            NS_SUCCEEDED(secMan->IsSystemPrincipal(ownerPrincipal,
-                                                   &isSystem)) &&
-            !isSystem) {
-            channel->SetOwner(aOwner);
-        }
-    }
+    nsContentUtils::SetUpChannelOwner(ownerPrincipal, channel, aURI, PR_TRUE);
 
     nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
     if (scriptChannel) {
@@ -9452,7 +9408,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
             shAvailable, updateHistory, equalUri));
 
     if (shAvailable && mCurrentURI && !mOSHE && aLoadType != LOAD_ERROR_PAGE) {
-        NS_ASSERTION(IsAboutBlank(mCurrentURI), "no SHEntry for a non-transient viewer?");
+        NS_ASSERTION(NS_IsAboutBlank(mCurrentURI), "no SHEntry for a non-transient viewer?");
     }
 #endif
 
@@ -9743,7 +9699,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         }
 
         // 2c: Same-origin check.
-        if (!URIIsLocalFile(newURI)) {
+        if (!nsContentUtils::URIIsLocalFile(newURI)) {
             // In addition to checking that the security manager says that
             // the new URI has the same origin as our current URI, we also
             // check that the two URIs have the same userpass. (The
@@ -11249,47 +11205,6 @@ nsDocShell::GetIsContent(PRBool *aIsContent)
 {
     *aIsContent = (mItemType == typeContent);
     return NS_OK;
-}
-
-/* static */
-nsresult
-nsDocShell::URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult)
-{
-    // Note: about:blank URIs do NOT inherit the security context from the
-    // current document, which is what this function tests for...
-    return NS_URIChainHasFlags(aURI,
-                               nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                               aResult);
-}
-
-/* static */
-PRBool
-nsDocShell::URIIsLocalFile(nsIURI *aURI)
-{
-    PRBool isFile;
-    nsCOMPtr<nsINetUtil> util = do_GetNetUtil();
-
-    return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
-                                    nsIProtocolHandler::URI_IS_LOCAL_FILE,
-                                    &isFile)) &&
-           isFile;
-}
-
-/* static */
-PRBool
-nsDocShell::IsAboutBlank(nsIURI* aURI)
-{
-    NS_PRECONDITION(aURI, "Must have URI");
-    
-    // GetSpec can be expensive for some URIs, so check the scheme first.
-    PRBool isAbout = PR_FALSE;
-    if (NS_FAILED(aURI->SchemeIs("about", &isAbout)) || !isAbout) {
-        return PR_FALSE;
-    }
-    
-    nsCAutoString str;
-    aURI->GetSpec(str);
-    return str.EqualsLiteral("about:blank");
 }
 
 PRBool

@@ -637,8 +637,8 @@ js_IntToString(JSContext *cx, int32 si)
 {
     uint32 ui;
     if (si >= 0) {
-        if (JSAtom::hasIntStatic(si))
-            return &JSAtom::intStatic(si);
+        if (StaticStrings::hasInt(si))
+            return cx->runtime->staticStrings.getInt(si);
         ui = si;
     } else {
         ui = uint32(-si);
@@ -1204,17 +1204,15 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 
     int32_t i;
     if (JSDOUBLE_IS_INT32(d, &i)) {
-        if (base == 10 && JSAtom::hasIntStatic(i))
-            return &JSAtom::intStatic(i);
-#ifdef JS_HAS_STATIC_STRINGS
+        if (base == 10 && StaticStrings::hasInt(i))
+            return cx->runtime->staticStrings.getInt(i);
         if (jsuint(i) < jsuint(base)) {
             if (i < 10)
-                return &JSAtom::intStatic(i);
+                return cx->runtime->staticStrings.getInt(i);
             jschar c = 'a' + i - 10;
-            JS_ASSERT(JSAtom::hasUnitStatic(c));
-            return &JSAtom::unitStatic(c);
+            JS_ASSERT(StaticStrings::hasUnit(c));
+            return cx->runtime->staticStrings.getUnit(c);
         }
-#endif
 
         if (JSFlatString *str = c->dtoaCache.lookup(base, d))
             return str;
@@ -1260,8 +1258,8 @@ NumberToString(JSContext *cx, jsdouble d)
 JSFixedString *
 IndexToString(JSContext *cx, uint32 index)
 {
-    if (JSAtom::hasUintStatic(index))
-        return &JSAtom::uintStatic(index);
+    if (StaticStrings::hasUint(index))
+        return cx->runtime->staticStrings.getUint(index);
 
     JSCompartment *c = cx->compartment;
     if (JSFixedString *str = c->dtoaCache.lookup(10, index))

@@ -15,6 +15,7 @@
 #elif defined(ANDROID)
 #include <sys/stat.h>
 #elif defined(OS_POSIX) 
+#include <sys/types.h>
 #include <fts.h>
 #include <sys/stat.h>
 #endif

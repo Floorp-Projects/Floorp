@@ -1130,23 +1130,6 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
   return LoadObject(uri, aNotify, aTypeHint, aForceLoad);
 }
 
-static PRBool
-IsAboutBlank(nsIURI* aURI)
-{
-  // XXXbz this duplicates an nsDocShell function, sadly
-  NS_PRECONDITION(aURI, "Must have URI");
-    
-  // GetSpec can be expensive for some URIs, so check the scheme first.
-  PRBool isAbout = PR_FALSE;
-  if (NS_FAILED(aURI->SchemeIs("about", &isAbout)) || !isAbout) {
-    return PR_FALSE;
-  }
-    
-  nsCAutoString str;
-  aURI->GetSpec(str);
-  return str.EqualsLiteral("about:blank");  
-}
-
 void
 nsObjectLoadingContent::UpdateFallbackState(nsIContent* aContent,
                                             AutoFallback& fallback,
@@ -1460,17 +1443,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   }
 
   // Set up the channel's principal and such, like nsDocShell::DoURILoad does
-  PRBool inheritPrincipal;
-  rv = NS_URIChainHasFlags(aURI,
-                           nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                           &inheritPrincipal);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (inheritPrincipal || IsAboutBlank(aURI) ||
-      (nsContentUtils::URIIsLocalFile(aURI) &&
-       NS_SUCCEEDED(thisContent->NodePrincipal()->CheckMayLoad(aURI,
-                                                               PR_FALSE)))) {
-    chan->SetOwner(thisContent->NodePrincipal());
-  }
+  nsContentUtils::SetUpChannelOwner(thisContent->NodePrincipal(),
+                                    chan, aURI, PR_TRUE);
 
   nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(chan);
   if (scriptChannel) {
