@@ -73,12 +73,14 @@ _TEST_FILES = \
 		file_bug549262.html \
 		test_bug550434.html \
 		test_bug551704.html \
+		test_bug552782.html \
 		test_bug570144.html \
 		test_bug592592.html \
 		test_bug597784.html \
 		test_bug599322.html \
 		test_bug607584.html \
 		test_bug611182.html \
+		test_bug612128.html \
 		test_bug612447.html \
 		test_bug620906.html \
 		test_bug622371.html \
