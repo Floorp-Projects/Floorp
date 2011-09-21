@@ -81,13 +81,13 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
   gfxRect maskArea = nsSVGUtils::GetRelativeRect(units,
     &mask->mLengthAttributes[nsSVGMaskElement::X], bbox, aParent);
-  maskArea.RoundOut();
 
   gfxContext *gfx = aContext->GetGfxContext();
 
   gfx->Save();
   nsSVGUtils::SetClipRect(gfx, aMatrix, maskArea);
   gfxRect clipExtents = gfx->GetClipExtents();
+  clipExtents.RoundOut();
   gfx->Restore();
 
 #ifdef DEBUG_tor
