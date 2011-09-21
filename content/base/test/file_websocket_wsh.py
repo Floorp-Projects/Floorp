@@ -105,5 +105,13 @@ def web_socket_transfer_data(request):
     test37reason = request.ws_close_reason
   elif request.ws_protocol == "test-37c":
     request.ws_stream.close_connection(test37code, test37reason)
+  elif request.ws_protocol == "test-42":
+    # Echo back 3 messages
+    msgutil.send_message(request,
+                         msgutil.receive_message(request))
+    msgutil.send_message(request, 
+                         msgutil.receive_message(request))
+    msgutil.send_message(request, 
+                         msgutil.receive_message(request))
   while not request.client_terminated:
     msgutil.receive_message(request)

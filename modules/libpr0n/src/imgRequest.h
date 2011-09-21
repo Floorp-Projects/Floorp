@@ -94,7 +94,6 @@ public:
                 nsIRequest *aRequest,
                 nsIChannel *aChannel,
                 imgCacheEntry *aCacheEntry,
-                void *aCacheId,
                 void *aLoadId,
                 nsIPrincipal* aLoadingPrincipal,
                 PRInt32 aCORSMode);
@@ -106,11 +105,6 @@ public:
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify);
 
   void SniffMimeType(const char *buf, PRUint32 len);
-
-  // a request is "reusable" if it has already been loaded, or it is
-  // currently being loaded on the same event queue as the new request
-  // being made...
-  PRBool IsReusable(void *aCacheId);
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
@@ -246,8 +240,6 @@ private:
   nsCString mContentType;
 
   nsRefPtr<imgCacheEntry> mCacheEntry; /* we hold on to this to this so long as we have observers */
-
-  void *mCacheId;
 
   void *mLoadId;
 
