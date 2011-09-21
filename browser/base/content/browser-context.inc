@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Rob Campbell <rcampbell@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -340,3 +341,8 @@
                 label="&bidiSwitchPageDirectionItem.label;"
                 accesskey="&bidiSwitchPageDirectionItem.accesskey;"
                 oncommand="gContextMenu.switchPageDirection();"/>
+      <menuseparator id="inspect-separator"/>
+      <menuitem id="context-inspect"
+                label="&inspectContextMenu.label;"
+                accesskey="&inspectContextMenu.accesskey;"
+                oncommand="gContextMenu.inspectNode();"/>
