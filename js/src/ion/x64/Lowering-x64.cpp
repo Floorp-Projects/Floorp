@@ -150,6 +150,12 @@ LIRGeneratorX64::assignSnapshot(LInstruction *ins)
     for (size_t i = 0; i < lastResumePoint_->numOperands(); i++) {
         MDefinition *def = lastResumePoint_->getOperand(i);
         LAllocation *a = snapshot->getEntry(i);
+
+        if (def->isUnused()) {
+            *a = LConstantIndex::Bogus();
+            continue;
+        }
+
         *a = useKeepaliveOrConstant(def);
 #ifdef DEBUG
         if (a->isUse()) {

@@ -69,7 +69,7 @@ class StackAssignment
             return true;
         }
         if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT)) {
-            normalSlots.append(height_++);
+            normalSlots.append(++height_);
             JS_ASSERT(!ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT));
         }
         height_ += 2;

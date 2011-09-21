@@ -405,6 +405,12 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         return false;
     // No spew: graph not changed.
 
+    // This must occur before any code elimination, so the latest it can occur
+    // is before ApplyTypeInformation() which removes copies.
+    if (!EliminateDeadPhis(graph))
+        return false;
+    IonSpewPass("Eliminate dead phis");
+
     if (!BuildPhiReverseMapping(graph))
         return false;
     // No spew: graph not changed.

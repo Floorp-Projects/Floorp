@@ -179,7 +179,7 @@ LIRGeneratorX86::assignSnapshot(LInstruction *ins)
         // interpreter state with the given information. Note that for
         // constants, including known types, we record a dummy placeholder,
         // since we can recover the same information, much cleaner, from MIR.
-        if (ins->isConstant()) {
+        if (ins->isConstant() || ins->isUnused()) {
             *type = LConstantIndex::Bogus();
             *payload = LConstantIndex::Bogus();
         } else if (ins->type() != MIRType_Value) {
