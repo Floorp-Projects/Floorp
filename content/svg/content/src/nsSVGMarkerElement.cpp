@@ -288,12 +288,7 @@ nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                               PRBool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::viewBox && mCoordCtx) {
-      mViewBox.SetBaseValue(0, 0, mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx),
-                            mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx),
-                            this, PR_FALSE);
-      return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-    } else if (aName == nsGkAtoms::orient) {
+    if (aName == nsGkAtoms::orient) {
       mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
     }
   }
@@ -304,48 +299,11 @@ nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-void
-nsSVGMarkerElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
-{
-  nsSVGMarkerElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
-
-  mViewBoxToViewportTransform = nsnull;
-
-  if (mCoordCtx && !HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
-      (aAttrEnum == MARKERWIDTH || aAttrEnum == MARKERHEIGHT)) {
-    mViewBox.SetBaseValue(0, 0, mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx),
-                          mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx),
-                          this, PR_FALSE);
-  }
-}
-
-void
-nsSVGMarkerElement::DidChangeViewBox(PRBool aDoSetAttr)
-{
-  nsSVGMarkerElementBase::DidChangeViewBox(aDoSetAttr);
-
-  mViewBoxToViewportTransform = nsnull;
-}
-
-void
-nsSVGMarkerElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
-{
-  nsSVGMarkerElementBase::DidChangePreserveAspectRatio(aDoSetAttr);
-
-  mViewBoxToViewportTransform = nsnull;
-}
-
 void 
 nsSVGMarkerElement::SetParentCoordCtxProvider(nsSVGSVGElement *aContext)
 {
   mCoordCtx = aContext;
   mViewBoxToViewportTransform = nsnull;
-
-  if (mCoordCtx && !HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
-    mViewBox.SetBaseValue(0, 0, mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx),
-                          mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx),
-                          this, PR_FALSE);
-  }
 }
 
 nsSVGElement::LengthAttributesInfo
@@ -388,18 +346,28 @@ gfxMatrix
 nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                                        float aX, float aY, float aAutoAngle)
 {
-  float scale = 1.0;
-  if (mEnumAttributes[MARKERUNITS].GetAnimValue() ==
-      SVG_MARKERUNITS_STROKEWIDTH)
-    scale = aStrokeWidth;
+  gfxFloat scale = mEnumAttributes[MARKERUNITS].GetAnimValue() ==
+                     SVG_MARKERUNITS_STROKEWIDTH ? aStrokeWidth : 1.0;
 
-  float angle = mOrientType.GetAnimValue() == SVG_MARKER_ORIENT_AUTO ?
-                aAutoAngle :
-                mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0;
+  gfxFloat angle = mOrientType.GetAnimValue() == SVG_MARKER_ORIENT_AUTO ?
+                    aAutoAngle :
+                    mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0;
 
   return gfxMatrix(cos(angle) * scale,   sin(angle) * scale,
                    -sin(angle) * scale,  cos(angle) * scale,
                    aX,                    aY);
+}
+
+nsSVGViewBoxRect
+nsSVGMarkerElement::GetViewBoxRect()
+{
+  if (mViewBox.IsValid()) {
+    return mViewBox.GetAnimValue();
+  }
+  return nsSVGViewBoxRect(
+           0, 0,
+           mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx),
+           mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
 }
 
 gfxMatrix
@@ -411,14 +379,10 @@ nsSVGMarkerElement::GetViewBoxTransform()
     float viewportHeight = 
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
    
-    const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(); 
+    nsSVGViewBoxRect viewbox = GetViewBoxRect();
 
-    if (viewbox.width <= 0.0f || viewbox.height <= 0.0f) {
-      return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // invalid - don't paint element
-    }
-
-    float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
-    float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
+    NS_ABORT_IF_FALSE(viewbox.width > 0.0f && viewbox.height > 0.0f,
+                      "Rendering should be disabled");
 
     gfxMatrix viewBoxTM =
       nsSVGUtils::GetViewBoxTransform(this,
@@ -426,6 +390,9 @@ nsSVGMarkerElement::GetViewBoxTransform()
                                       viewbox.x, viewbox.y,
                                       viewbox.width, viewbox.height,
                                       mPreserveAspectRatio);
+
+    float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
+    float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
 
     gfxPoint ref = viewBoxTM.Transform(gfxPoint(refX, refY));
 
