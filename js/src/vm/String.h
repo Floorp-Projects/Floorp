@@ -146,10 +146,12 @@ js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNot
  *  |     | JSShortString       - / header is fat
  *  |     |        |
  * JSAtom |        |            - / string equality === pointer equality
- *    \   |        |
- *    JSInlineAtom |            - / atomized JSInlineString
- *          \      |
- *          JSShortAtom         - / atomized JSShortString
+ *  | \   |        |
+ *  | JSInlineAtom |            - / atomized JSInlineString
+ *  |       \      |
+ *  |       JSShortAtom         - / atomized JSShortString
+ *  |
+ * js::PropertyName             - / chars don't contain an index (uint32)
  *
  * Classes marked with (abstract) above are not literally C++ Abstract Base
  * Classes (since there are no virtual functions, pure or not, in this
@@ -728,9 +730,19 @@ class StaticStrings
 };
 
 /*
- * Represents an atomized string which does not contain an unsigned 32-bit
- * value.  That is, it is never the case that for a PropertyName propname,
- * ToString(ToUint32(propname)) is equal to propname.
+ * Represents an atomized string which does not contain an index (that is, an
+ * unsigned 32-bit value).  Thus for any PropertyName propname,
+ * ToString(ToUint32(propname)) never equals propname.
+ *
+ * To more concretely illustrate the utility of PropertyName, consider that it
+ * is used to partition, in a type-safe manner, the ways to refer to a
+ * property, as follows:
+ *
+ *   - uint32 indexes,
+ *   - PropertyName strings which don't encode uint32 indexes, and
+ *   - jsspecial special properties (non-ES5 properties like object-valued
+ *     jsids, JSID_EMPTY, JSID_VOID, E4X's default XML namespace, and maybe in
+ *     the future Harmony-proposed private names).
  */
 class PropertyName : public JSAtom
 {};
