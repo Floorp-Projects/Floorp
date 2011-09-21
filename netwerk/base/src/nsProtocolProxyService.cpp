@@ -306,7 +306,8 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsProtocolProxyService,
                              nsIProtocolProxyService2)
 
 nsProtocolProxyService::nsProtocolProxyService()
-    : mFilters(nsnull)
+    : mFilterLocalHosts(PR_FALSE)
+    , mFilters(nsnull)
     , mProxyConfig(PROXYCONFIG_DIRECT)
     , mHTTPProxyPort(-1)
     , mFTPProxyPort(-1)
@@ -543,6 +544,12 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, PRInt32 defaultPort)
         }
     }
     
+    // Don't use proxy for local hosts (plain hostname, no dots)
+    if (!is_ipaddr && mFilterLocalHosts && (kNotFound == host.FindChar('.'))) {
+        LOG(("Not using proxy for this local host [%s]!\n", host.get()));
+        return PR_FALSE; // don't allow proxying
+    }
+
     PRInt32 index = -1;
     while (++index < PRInt32(mHostFiltersArray.Length())) {
         HostInfo *hinfo = mHostFiltersArray[index];
@@ -849,8 +856,10 @@ nsProtocolProxyService::Resolve(nsIURI *uri, PRUint32 flags,
 
     PRBool usePAC;
     rv = Resolve_Internal(uri, info, flags, &usePAC, result);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        LOG(("Resolve_Internal returned rv(0x%08x)\n", rv));
         return rv;
+    }
 
     if (usePAC && mPACMan) {
         NS_ASSERTION(*result == nsnull, "we should not have a result yet");
@@ -1069,6 +1078,8 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
     // filter  = ( host | domain | ipaddr ["/" mask] ) [":" port] 
     // filters = filter *( "," LWS filter)
     //
+    // Reset mFilterLocalHosts - will be set to true if "<local>" is in pref string
+    mFilterLocalHosts = PR_FALSE;
     while (*filters) {
         // skip over spaces and ,
         while (*filters && (*filters == ',' || IS_ASCII_SPACE(*filters)))
@@ -1091,17 +1102,26 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
 
         filters = endhost; // advance iterator up front
 
-        HostInfo *hinfo = new HostInfo();
-        if (!hinfo)
-            return; // fail silently
-        hinfo->port = portLocation ? atoi(portLocation + 1) : 0;
-
         // locate end of host
         const char *end = maskLocation ? maskLocation :
                           portLocation ? portLocation :
                           endhost;
 
         nsCAutoString str(starthost, end - starthost);
+
+        // If the current host filter is "<local>", then all local (i.e.
+        // no dots in the hostname) hosts should bypass the proxy
+        if (str.EqualsIgnoreCase("<local>")) {
+            mFilterLocalHosts = PR_TRUE;
+            LOG(("loaded filter for local hosts "
+                 "(plain host names, no dots)\n"));
+            // Continue to next host filter;
+            continue;
+        }
+
+        // For all other host filters, create HostInfo object and add to list
+        HostInfo *hinfo = new HostInfo();
+        hinfo->port = portLocation ? atoi(portLocation + 1) : 0;
 
         PRNetAddr addr;
         if (PR_StringToNetAddr(str.get(), &addr) == PR_SUCCESS) {
