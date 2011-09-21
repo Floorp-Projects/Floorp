@@ -808,12 +808,22 @@ private:
     size_t idx_;
     bool snapshot_;
 
+    void handleOperandsEnd() {
+        // Iterate on the snapshot when iteration over all operands is done.
+        if (!snapshot_ && idx_ == ins_.numOperands() && ins_.snapshot()) {
+            idx_ = 0;
+            snapshot_ = true;
+        }
+    }
+
 public:
     InputIterator(LInstruction &ins) :
       ins_(ins),
       idx_(0),
       snapshot_(false)
-    { }
+    {
+        handleOperandsEnd();
+    }
 
     bool more() const {
         if (snapshot_)
@@ -832,10 +842,7 @@ public:
     void next() {
         JS_ASSERT(more());
         idx_++;
-        if (!snapshot_ && idx_ == ins_.numOperands() && ins_.snapshot()) {
-            idx_ = 0;
-            snapshot_ = true;
-        }
+        handleOperandsEnd();
     }
 
     void replace(const LAllocation &alloc) {
