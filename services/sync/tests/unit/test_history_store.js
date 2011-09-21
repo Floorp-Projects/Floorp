@@ -168,6 +168,7 @@ add_test(function test_invalid_records() {
     + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
   let stmt = PlacesUtils.history.DBConnection.createAsyncStatement(query);
   let result = Async.querySpinningly(stmt);
+  stmt.finalize();
   do_check_attribute_count(store.getAllIDs(), 4);
 
   _("Make sure we report records with invalid URIs.");

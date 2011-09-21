@@ -144,8 +144,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == mask-basic-01.svg pass.svg
 == mask-containing-masked-content-01.svg pass.svg
-# Bug 456323
-# == mask-transformed-01.svg mask-transformed-01-ref.svg
+== mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == objectBoundingBox-and-clipPath.svg pass.svg

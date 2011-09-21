@@ -270,6 +270,20 @@ DIST_FILES = \
   res \
   lib \
   lib.id \
+  libmozalloc.so \
+  libnspr4.so \
+  libplc4.so \
+  libplds4.so \
+  libmozsqlite3.so \
+  libnssutil3.so \
+  libnss3.so \
+  libssl3.so \
+  libsmime3.so \
+  libxul.so \
+  libxpcom.so \
+  libnssckbi.so \
+  libfreebl3.so \
+  libsoftokn3.so \
   extensions \
   application.ini \
   platform.ini \
@@ -304,10 +318,9 @@ INNER_MAKE_PACKAGE	= \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     rm -rf lib && \
     mkdir -p lib/$(ABI_DIR) && \
-    cp lib*.so lib && \
-    mv lib/libmozutils.so lib/$(ABI_DIR) && \
+    mv libmozutils.so lib/$(ABI_DIR) && \
     rm -f lib.id && \
-    for SOMELIB in lib/*.so ; \
+    for SOMELIB in *.so ; \
     do \
       printf "`basename $$SOMELIB`:`$(_ABS_DIST)/host/bin/file_id $$SOMELIB`\n" >> lib.id ; \
     done && \
@@ -324,7 +337,6 @@ INNER_UNMAKE_PACKAGE	= \
   cd $(MOZ_PKG_DIR) && \
   $(UNZIP) $(UNPACKAGE) && \
   mv lib/$(ABI_DIR)/*.so . && \
-  mv lib/*.so . && \
   rm -rf lib
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
