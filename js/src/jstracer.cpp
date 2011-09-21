@@ -11516,22 +11516,6 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             }
             if (vp[1].isString()) {
                 JSString *str = vp[1].toString();
-#ifdef JS_HAS_STATIC_STRINGS
-                if (native == js_str_charAt) {
-                    jsdouble i = vp[2].toNumber();
-                    if (JSDOUBLE_IS_NaN(i))
-                      i = 0;
-                    if (i < 0 || i >= str->length())
-                        RETURN_STOP("charAt out of bounds");
-                    LIns* str_ins = get(&vp[1]);
-                    LIns* idx_ins = get(&vp[2]);
-                    LIns* char_ins;
-                    CHECK_STATUS(getCharAt(str, str_ins, idx_ins, mode, &char_ins));
-                    set(&vp[0], char_ins);
-                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-                    return RECORD_CONTINUE;
-                } else
-#endif
                 if (native == js_str_charCodeAt) {
                     jsdouble i = vp[2].toNumber();
                     if (JSDOUBLE_IS_NaN(i))
@@ -12879,53 +12863,6 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
 JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
 
 
-#ifdef JS_HAS_STATIC_STRINGS
-JS_REQUIRES_STACK LIns*
-TraceRecorder::getUnitString(LIns* str_ins, LIns* idx_ins)
-{
-    LIns *ch_ins = w.getStringChar(str_ins, idx_ins);
-    guard(true, w.ltuiN(ch_ins, JSAtom::UNIT_STATIC_LIMIT), MISMATCH_EXIT);
-    JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
-    return w.addp(w.nameImmpNonGC(JSAtom::unitStaticTable),
-                  w.lshpN(w.ui2p(ch_ins), (sizeof(JSString) == 16) ? 4 : 5));
-}
-
-JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode, LIns** out)
-{
-    CHECK_STATUS(makeNumberInt32(idx_ins, &idx_ins));
-    idx_ins = w.ui2p(idx_ins);
-    LIns *lengthAndFlags_ins = w.ldpStringLengthAndFlags(str_ins);
-    if (MaybeBranch mbr = w.jt(w.eqp0(w.andp(lengthAndFlags_ins,
-                                             w.nameImmw(JSString::ROPE_BIT)))))
-    {
-        LIns *args[] = { str_ins, cx_ins };
-        LIns *ok_ins = w.call(&js_FlattenOnTrace_ci, args);
-        guard(false, w.eqi0(ok_ins), OOM_EXIT);
-        w.label(mbr);
-    }
-
-    LIns* inRange = w.ltup(idx_ins, w.rshupN(lengthAndFlags_ins, JSString::LENGTH_SHIFT));
-
-    if (mode == JSOP_GETELEM) {
-        guard(true, inRange, MISMATCH_EXIT);
-
-        *out = getUnitString(str_ins, idx_ins);
-    } else {
-        LIns *phi_ins = w.allocp(sizeof(JSString *));
-        w.stAlloc(w.nameImmpNonGC(cx->runtime->emptyString), phi_ins);
-
-        if (MaybeBranch mbr = w.jf(inRange)) {
-            LIns *unitstr_ins = getUnitString(str_ins, idx_ins);
-            w.stAlloc(unitstr_ins, phi_ins);
-            w.label(mbr);
-        }
-        *out = w.ldpAlloc(phi_ins);
-    }
-    return RECORD_CONTINUE;
-}
-#endif
-
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED && NJ_F2I_SUPPORTED
 static bool OkToTraceTypedArrays = true;
@@ -12958,21 +12895,6 @@ TraceRecorder::record_JSOP_GETELEM()
 
     LIns* obj_ins = get(&lval);
     LIns* idx_ins = get(&idx);
-
-#ifdef JS_HAS_STATIC_STRINGS
-    // Special case for array-like access of strings.
-    if (lval.isString() && hasInt32Repr(idx)) {
-        if (call)
-            RETURN_STOP_A("JSOP_CALLELEM on a string");
-        int i = asInt32(idx);
-        if (size_t(i) >= lval.toString()->length())
-            RETURN_STOP_A("Invalid string index in JSOP_GETELEM");
-        LIns* char_ins;
-        CHECK_STATUS_A(getCharAt(lval.toString(), obj_ins, idx_ins, JSOP_GETELEM, &char_ins));
-        set(&lval, char_ins);
-        return ARECORD_CONTINUE;
-    }
-#endif
 
     if (lval.isPrimitive())
         RETURN_STOP_A("JSOP_GETLEM on a primitive");

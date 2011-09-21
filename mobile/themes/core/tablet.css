@@ -194,6 +194,10 @@ arrowbox {
   -moz-box-flex: 1;
 }
 
+.tab-popup-item:only-child .documenttab-popup-closebutton {
+  display: none;
+}
+
 %ifndef honeycomb
 @media (min-width: @tablet_panel_minwidth@) {
   #awesome-panels {
