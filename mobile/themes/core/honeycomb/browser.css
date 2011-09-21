@@ -206,6 +206,7 @@ toolbarbutton.urlbar-button {
 
 #urlbar-edit,
 #urlbar-title {
+  font-size: @font_snormal@ !important;
   background: @color_toolbar_background@;
   padding: @padding_xxxnormal@ 0px @padding_xsmall@ 0px;
   margin: 0px !important;
