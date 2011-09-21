@@ -7977,6 +7977,12 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     }
 
     if (hint & nsChangeHint_ReconstructFrame) {
+      // If we ever start passing PR_TRUE here, be careful of restyles
+      // that involve a reframe and animations.  In particular, if the
+      // restyle we're processing here is an animation restyle, but
+      // the style resolution we will do for the frame construction
+      // happens async when we're not in an animation restyle already,
+      // problems could arise.
       RecreateFramesForContent(content, PR_FALSE);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
