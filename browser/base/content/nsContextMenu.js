@@ -272,9 +272,10 @@ nsContextMenu.prototype = {
     // View image depends on having an image that's not standalone
     // (or is in a frame), or a canvas.
     this.showItem("context-viewimage", (this.onImage &&
-                  (!this.onStandaloneImage || this.inFrame)) || this.onCanvas);
+                  (!this.inSyntheticDoc || this.inFrame)) || this.onCanvas);
 
-    this.showItem("context-viewvideo", this.onVideo);
+    // View video depends on not having a standalone video.
+    this.showItem("context-viewvideo", this.onVideo && (!this.inSyntheticDoc || this.inFrame));
     this.setItemAttr("context-viewvideo",  "disabled", !this.mediaURL);
 
     // View background image depends on whether there is one.
@@ -443,7 +444,6 @@ nsContextMenu.prototype = {
     this.onImage           = false;
     this.onLoadedImage     = false;
     this.onCompletedImage  = false;
-    this.onStandaloneImage = false;
     this.onCanvas          = false;
     this.onVideo           = false;
     this.onAudio           = false;
@@ -459,6 +459,7 @@ nsContextMenu.prototype = {
     this.linkProtocol      = "";
     this.onMathML          = false;
     this.inFrame           = false;
+    this.inSyntheticDoc    = false;
     this.hasBGImage        = false;
     this.bgImageURL        = "";
     this.onEditableArea    = false;
@@ -477,6 +478,8 @@ nsContextMenu.prototype = {
     // Remember the node that was clicked.
     this.target = aNode;
 
+    // Check if we are in a synthetic document (stand alone image, video, etc.).
+    this.inSyntheticDoc =  this.target.ownerDocument.mozSyntheticDocument;
     // First, do checks for nodes that never have children.
     if (this.target.nodeType == Node.ELEMENT_NODE) {
       // See if the user clicked on an image.
@@ -492,8 +495,6 @@ nsContextMenu.prototype = {
           this.onCompletedImage = true;
 
         this.mediaURL = this.target.currentURI.spec;
-        if (this.target.ownerDocument instanceof ImageDocument)
-          this.onStandaloneImage = true;
       }
       else if (this.target instanceof HTMLCanvasElement) {
         this.onCanvas = true;
