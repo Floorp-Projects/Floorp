@@ -613,7 +613,7 @@
     </box>
 #endif
 
-    <arrowbox id="search-engines-popup" hidden="true" offset="18" flex="1">
+    <arrowbox id="search-engines-popup" hidden="true" offset="18" flex="1" type="dialog">
       <hbox id="search-engines-list" class="action-buttons" flex="1"/>
     </arrowbox>
 
