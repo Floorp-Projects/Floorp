@@ -67,6 +67,7 @@
 #include "nsIRedirectResultListener.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "nsDOMError.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -1086,6 +1087,25 @@ nsHttpChannel::ProcessResponse()
 nsresult
 nsHttpChannel::ContinueProcessResponse(nsresult rv)
 {
+    if (rv == NS_ERROR_DOM_BAD_URI && mRedirectURI) {
+
+        PRBool isHTTP = PR_FALSE;
+        if (NS_FAILED(mRedirectURI->SchemeIs("http", &isHTTP)))
+            isHTTP = PR_FALSE;
+        if (!isHTTP && NS_FAILED(mRedirectURI->SchemeIs("https", &isHTTP)))
+            isHTTP = PR_FALSE;
+        
+        if (!isHTTP) {
+            // This was a blocked attempt to redirect and subvert the system by
+            // redirecting to another protocol (perhaps javascript:)
+            // In that case we want to throw an error instead of displaying the
+            // non-redirected response body.
+
+            LOG(("ContinueProcessResponse detected rejected Non-HTTP Redirection"));
+            return NS_ERROR_CORRUPTED_CONTENT;
+        }
+    }
+
     if (NS_SUCCEEDED(rv)) {
         InitCacheEntry();
         CloseCacheEntry(PR_FALSE);
