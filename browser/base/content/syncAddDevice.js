@@ -61,6 +61,10 @@ let gSyncAddDevice = {
 
     this.throbber = document.getElementById("add-device-throbber");
     this.errorRow = document.getElementById("errorRow");
+
+    // Kick off a sync. That way the server will have the most recent data from
+    // this computer and it will show up immediately on the new device.
+    Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
   },
 
   onPageShow: function onPageShow() {
