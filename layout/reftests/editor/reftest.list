@@ -69,8 +69,4 @@ skip-if(Android) == 674212-spellcheck.html 674212-spellcheck-ref.html
 skip-if(Android) == 338427-2.html 338427-2-ref.html
 skip-if(Android) == 338427-3.html 338427-3-ref.html
 skip-if(Android) == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.html
-== readwrite-non-editable.html readwrite-non-editable-ref.html
-== readwrite-editable.html readwrite-editable-ref.html
-== readonly-non-editable.html readonly-non-editable-ref.html
-== readonly-editable.html readonly-editable-ref.html
 == dynamic-overflow-change.html dynamic-overflow-change-ref.html
