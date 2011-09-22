@@ -725,6 +725,9 @@ public:
         IDX_ITERATOR                ,
         IDX_EXPOSEDPROPS            ,
         IDX_SCRIPTONLY              ,
+        IDX_BASEURIOBJECT           ,
+        IDX_NODEPRINCIPAL           ,
+        IDX_DOCUMENTURIOBJECT       ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
