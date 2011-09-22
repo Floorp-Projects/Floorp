@@ -46,9 +46,6 @@
 #include "jscntxt.h"
 #include "jsiter.h"
 
-#include "nsINode.h"
-#include "nsIDocument.h"
-
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
 
@@ -335,116 +332,9 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
 static JSBool
 wrappedJSObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 {
-    if (!wrapper->isWrapper() || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
     *vp = OBJECT_TO_JSVAL(wrapper);
 
     return WrapperFactory::WaiveXrayAndWrap(cx, vp);
-}
-
-template <typename T>
-static bool
-Is(JSObject *wrapper)
-{
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    nsCOMPtr<T> native = do_QueryWrappedNative(wn);
-    return !!native;
-}
-
-static JSBool
-WrapURI(JSContext *cx, nsIURI *uri, jsval *vp)
-{
-    JSObject *scope = JS_GetGlobalForScopeChain(cx);
-    nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, uri, nsnull,
-                                                           &NS_GET_IID(nsIURI), PR_TRUE,
-                                                           vp, nsnull);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
-}
-
-static JSBool
-documentURIObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
-{
-    if (!wrapper->isWrapper() || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    nsCOMPtr<nsIDocument> native = do_QueryWrappedNative(wn);
-    if (!native) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    nsCOMPtr<nsIURI> uri = native->GetDocumentURI();
-    if (!uri) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return WrapURI(cx, uri, vp);
-}
-
-static JSBool
-baseURIObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
-{
-    if (!wrapper->isWrapper() || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    nsCOMPtr<nsINode> native = do_QueryWrappedNative(wn);
-    if (!native) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-    nsCOMPtr<nsIURI> uri = native->GetBaseURI();
-    if (!uri) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return WrapURI(cx, uri, vp);
-}
-
-static JSBool
-nodePrincipal_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
-{
-    if (!wrapper->isWrapper() || !WrapperFactory::IsXrayWrapper(wrapper)) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    JSObject *holder = GetHolder(wrapper);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    nsCOMPtr<nsINode> node = do_QueryWrappedNative(wn);
-    if (!node) {
-        JS_ReportError(cx, "Unexpected object");
-        return false;
-    }
-
-    JSObject *scope = JS_GetGlobalForScopeChain(cx);
-    nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, node->NodePrincipal(), nsnull,
-                                                           &NS_GET_IID(nsIPrincipal), PR_TRUE,
-                                                           vp, nsnull);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
 }
 
 static JSBool
@@ -511,22 +401,7 @@ class AutoLeaveHelper
 };
 
 static bool
-IsPrivilegedScript()
-{
-    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (ssm) {
-        PRBool privileged;
-        if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) && privileged)
-            return true;
-    }
-    return false;
-}
-
-namespace XrayUtils {
-
-bool
-IsTransparent(JSContext *cx, JSObject *wrapper)
+Transparent(JSContext *cx, JSObject *wrapper)
 {
     if (WrapperFactory::HasWaiveXrayFlag(wrapper))
         return true;
@@ -535,10 +410,22 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
         return false;
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (IsPrivilegedScript())
-        return true;
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (ssm) {
+        PRBool privileged;
+        if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) && privileged)
+            return true;
+    }
 
     return AccessCheck::documentDomainMakesSameOrigin(cx, wrapper->unwrap());
+}
+
+namespace XrayUtils {
+
+bool
+IsTransparent(JSContext *cx, JSObject *wrapper)
+{
+    return Transparent(cx, wrapper);
 }
 
 }
@@ -550,20 +437,8 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
 {
     // Partially transparent wrappers (which used to be known as XOWs) don't
     // have a .wrappedJSObject property.
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if (!WrapperFactory::IsPartiallyTransparent(wrapper) &&
-        (id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
-         // Check for baseURIObject and nodePrincipal no nodes and
-         // documentURIObject on documents, but only from privileged scripts.
-         // Do the id checks before the QIs and IsPrivilegedScript() checks,
-         // since they're cheaper and will tend to fail most of the time
-         // anyway.
-         (((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
-            id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
-           Is<nsINode>(wrapper)) ||
-          (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
-           Is<nsIDocument>(wrapper))) &&
-         IsPrivilegedScript())) {
+        id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
         bool status;
         JSWrapper::Action action = set ? JSWrapper::SET : JSWrapper::GET;
         desc->obj = NULL; // default value
@@ -574,14 +449,7 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
 
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
-        if (id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT))
-            desc->getter = wrappedJSObject_getter;
-        else if (id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT))
-            desc->getter = baseURIObject_getter;
-        else if (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT))
-            desc->getter = documentURIObject_getter;
-        else
-            desc->getter = nodePrincipal_getter;
+        desc->getter = wrappedJSObject_getter;
         desc->setter = NULL;
         desc->shortid = 0;
         desc->value = JSVAL_VOID;
@@ -669,7 +537,7 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
     ResolvingId resolving(holder, id);
 
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
 
         {
@@ -739,7 +607,7 @@ XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, js
     // NB: Nothing we do here acts on the wrapped native itself, so we don't
     // enter our policy.
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
 
         {
@@ -770,7 +638,7 @@ XrayWrapper<Base>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
     JSPropertyDescriptor *jsdesc = desc;
 
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
 
         JSAutoEnterCompartment ac;
@@ -819,7 +687,7 @@ EnumerateNames(JSContext *cx, JSObject *wrapper, uintN flags, js::AutoIdVector &
     JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
 
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (Transparent(cx, wrapper)) {
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, wnObject))
             return false;
@@ -876,7 +744,7 @@ XrayWrapper<Base>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
     JSBool b;
 
     // Redirect access straight to the wrapper if we should be transparent.
-    if (XrayUtils::IsTransparent(cx, wrapper)) {
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
 
         JSAutoEnterCompartment ac;
