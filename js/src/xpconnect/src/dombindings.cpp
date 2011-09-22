@@ -159,91 +159,18 @@ WrapNativeParent(JSContext *cx, JSObject *scope, T *p)
     return XPCOMObjectToJsval(cx, scope, helper, false, &v) ? JSVAL_TO_OBJECT(v) : NULL;
 }
 
-JSObject *
-NodeList::create(JSContext *cx, XPCWrappedNativeScope *scope, nsINodeList *aNodeList,
-                 bool *triedToWrap)
+static bool
+WrapObject(JSContext *cx, JSObject *scope, nsISupports *result,
+           nsWrapperCache *cache, jsval *vp)
 {
-    return NodeListBase::create(cx, scope, aNodeList, aNodeList, triedToWrap);
-}
-
-JSObject *
-HTMLCollection::create(JSContext *cx, XPCWrappedNativeScope *scope,
-                       nsIHTMLCollection *aHTMLCollection,
-                       nsWrapperCache *aWrapperCache, bool *triedToWrap)
-{
-    return HTMLCollectionBase::create(cx, scope, aHTMLCollection, aWrapperCache, triedToWrap);
+    if (xpc_FastGetCachedWrapper(cache, scope, vp))
+        return true;
+    qsObjectHelper helper(result, cache);
+    return XPCOMObjectToJsval(cx, scope, helper, true, vp);
 }
 
 template<class T>
 ListBase<T> ListBase<T>::instance;
-
-JSBool
-interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool *bp);
-
-template<>
-Class NodeListBase::sInterfaceClass = {
-    "NodeList",
-    0,
-    JS_PropertyStub,        /* addProperty */
-    JS_PropertyStub,        /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                   /* finalize */
-    NULL,                   /* reserved0 */
-    NULL,                   /* checkAccess */
-    NULL,                   /* call */
-    NULL,                   /* construct */
-    NULL,                   /* xdrObject */
-    interface_hasInstance
-};
-
-template<>
-NodeListBase::Properties NodeListBase::sProtoProperties[] = {
-    { s_length_id, length_getter, NULL }
-};
-
-template<>
-NodeListBase::Methods NodeListBase::sProtoMethods[] = {
-    { s_item_id, &item, 1 }
-};
-
-template<>
-Class HTMLCollectionBase::sInterfaceClass = {
-    "HTMLCollection",
-    0,
-    JS_PropertyStub,        /* addProperty */
-    JS_PropertyStub,        /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                   /* finalize */
-    NULL,                   /* reserved0 */
-    NULL,                   /* checkAccess */
-    NULL,                   /* call */
-    NULL,                   /* construct */
-    NULL,                   /* xdrObject */
-    interface_hasInstance
-};
-
-template<>
-JSBool
-HTMLCollectionBase::namedItem(JSContext *cx, uintN argc, jsval *vp);
-
-template<>
-HTMLCollectionBase::Properties HTMLCollectionBase::sProtoProperties[] = {
-    { s_length_id, length_getter, NULL }
-};
-
-template<>
-HTMLCollectionBase::Methods HTMLCollectionBase::sProtoMethods[] = {
-    { s_item_id, &item, 1 },
-    { s_namedItem_id, &namedItem, 1 }
-};
 
 void
 Register(nsDOMClassInfoData *aData)
@@ -317,16 +244,6 @@ ListBase<T>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee
     return true;
 }
 
-static bool
-WrapObject(JSContext *cx, JSObject *scope, nsISupports *result,
-           nsWrapperCache *cache, jsval *vp)
-{
-    if (xpc_FastGetCachedWrapper(cache, scope, vp))
-        return true;
-    qsObjectHelper helper(result, cache);
-    return XPCOMObjectToJsval(cx, scope, helper, true, vp);
-}
-
 template<class T>
 JSBool
 ListBase<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
@@ -338,20 +255,6 @@ ListBase<T>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JS_ASSERT(int32(length) >= 0);
     *vp = UINT_TO_JSVAL(length);
     return true;
-}
-
-template<>
-nsISupports*
-NodeListBase::getNamedItem(nsINodeList *list, const nsAString& aName, nsWrapperCache **aCache)
-{
-    return NULL;
-}
-template<>
-nsISupports*
-HTMLCollectionBase::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
-                                 nsWrapperCache **aCache)
-{
-    return list->GetNamedItem(aName, aCache);
 }
 
 template<class T>
@@ -375,27 +278,9 @@ ListBase<T>::item(JSContext *cx, uintN argc, jsval *vp)
 
 
 template<>
-bool
-NodeListBase::hasNamedItem(jsid id)
-{
-    return false;
-}
-
-template<>
-bool
-NodeListBase::namedItem(JSContext *cx, JSObject *obj, jsval *name, nsISupports **result,
-                        nsWrapperCache **cache, bool *hasResult)
-{
-    *hasResult = false;
-    return true;
-}
-
-template<>
-bool
-HTMLCollectionBase::hasNamedItem(jsid id)
-{
-    return JSID_IS_STRING(id);
-}
+nsISupports*
+HTMLCollectionBase::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
+                                 nsWrapperCache **aCache);
 
 template<>
 bool
@@ -1060,9 +945,130 @@ ListBase<T>::finalize(JSContext *cx, JSObject *proxy)
     NS_RELEASE(list);
 }
 
+
+// NodeList
+
+JSObject *
+NodeList::create(JSContext *cx, XPCWrappedNativeScope *scope, nsINodeList *aNodeList,
+                 bool *triedToWrap)
+{
+    return NodeListBase::create(cx, scope, aNodeList, aNodeList, triedToWrap);
+}
+
+template<>
+Class NodeListBase::sInterfaceClass = {
+    "NodeList",
+    0,
+    JS_PropertyStub,        /* addProperty */
+    JS_PropertyStub,        /* delProperty */
+    JS_PropertyStub,        /* getProperty */
+    JS_StrictPropertyStub,  /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                   /* finalize */
+    NULL,                   /* reserved0 */
+    NULL,                   /* checkAccess */
+    NULL,                   /* call */
+    NULL,                   /* construct */
+    NULL,                   /* xdrObject */
+    interface_hasInstance
+};
+
+template<>
+NodeListBase::Properties NodeListBase::sProtoProperties[] = {
+    { s_length_id, length_getter, NULL }
+};
+
+template<>
+NodeListBase::Methods NodeListBase::sProtoMethods[] = {
+    { s_item_id, &item, 1 }
+};
+
+template<>
+nsISupports*
+NodeListBase::getNamedItem(nsINodeList *list, const nsAString& aName, nsWrapperCache **aCache)
+{
+    return NULL;
+}
+
+template<>
+bool
+NodeListBase::hasNamedItem(jsid id)
+{
+    return false;
+}
+
+template<>
+bool
+NodeListBase::namedItem(JSContext *cx, JSObject *obj, jsval *name, nsISupports **result,
+                        nsWrapperCache **cache, bool *hasResult)
+{
+    *hasResult = false;
+    return true;
+}
+
+
+// HTMLCollection
+
+JSObject *
+HTMLCollection::create(JSContext *cx, XPCWrappedNativeScope *scope,
+                       nsIHTMLCollection *aHTMLCollection,
+                       nsWrapperCache *aWrapperCache, bool *triedToWrap)
+{
+    return HTMLCollectionBase::create(cx, scope, aHTMLCollection, aWrapperCache, triedToWrap);
+}
+
+template<>
+Class HTMLCollectionBase::sInterfaceClass = {
+    "HTMLCollection",
+    0,
+    JS_PropertyStub,        /* addProperty */
+    JS_PropertyStub,        /* delProperty */
+    JS_PropertyStub,        /* getProperty */
+    JS_StrictPropertyStub,  /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                   /* finalize */
+    NULL,                   /* reserved0 */
+    NULL,                   /* checkAccess */
+    NULL,                   /* call */
+    NULL,                   /* construct */
+    NULL,                   /* xdrObject */
+    interface_hasInstance
+};
+
+template<>
+HTMLCollectionBase::Properties HTMLCollectionBase::sProtoProperties[] = {
+    { s_length_id, length_getter, NULL }
+};
+
+template<>
+HTMLCollectionBase::Methods HTMLCollectionBase::sProtoMethods[] = {
+    { s_item_id, &item, 1 },
+    { s_namedItem_id, &namedItem, 1 }
+};
+
+template<>
+nsISupports*
+HTMLCollectionBase::getNamedItem(nsIHTMLCollection *list, const nsAString& aName,
+                                 nsWrapperCache **aCache)
+{
+    return list->GetNamedItem(aName, aCache);
+}
+
+template<>
+bool
+HTMLCollectionBase::hasNamedItem(jsid id)
+{
+    return JSID_IS_STRING(id);
+}
+
 template
 nsIHTMLCollection*
 HTMLCollectionBase::getListObject(JSObject *obj);
+
 
 }
 }
