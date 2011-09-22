@@ -46,7 +46,7 @@
   padding: 0;
   background: @color_toolbar_background@;
   border: none;
-  min-height: @touch_button_xlarge@;
+  min-height: @touch_button_small@;
 }
 
 #toolbar-moveable-container[mode="discovery"],
