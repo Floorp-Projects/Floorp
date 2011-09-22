@@ -56,7 +56,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_GTK3)
 #define DISPLAY gdk_x11_get_default_xdisplay
 #elif defined(MOZ_WIDGET_QT)
 #include "QX11Info"
@@ -95,6 +95,8 @@ public:
 
 #if defined(MOZ_WIDGET_GTK2)
     void Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd);
+#elif defined(MOZ_WIDGET_GTK3)
+    void Put(GdkWindow* aWindow, cairo_rectangle_list_t* aRects);
 #elif defined(MOZ_WIDGET_QT)
     void Put(QWidget* aWindow, QRect& aRect);
 #endif
