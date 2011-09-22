@@ -82,7 +82,7 @@ function testGroups() {
      "one group divider exists after the third console message");
 
   jsterm.clearOutput();
-  jsterm.history.splice(0);   // workaround for bug 592552
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
 
   finishTest();
 }

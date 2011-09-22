@@ -605,7 +605,7 @@ function filterTree(aTotalBytes, aT)
       for ( ; i < aT._kids.length; i++) {
         aggBytes += aT._kids[i]._amount;
       }
-      aT._kids.splice(i0);
+      aT._kids.splice(i0, aT._kids.length);
       var n = i - i0;
       var rSub = new TreeNode("(" + n + " omitted)");
       rSub._amount = aggBytes;

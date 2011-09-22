@@ -511,7 +511,7 @@ TileManager.TileCache.prototype = {
       if (!skipEvictionQueueSort)
         this.sortEvictionQueue();
 
-      rem = this._tilePool.splice(newCap);
+      rem = this._tilePool.splice(newCap, this._tilePool.length);
 
     } else {
       // This case is win.  Extend our tile pool array with new empty space.
