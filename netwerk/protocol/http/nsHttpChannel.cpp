@@ -2452,9 +2452,7 @@ nsHttpChannel::CheckCache()
     rv = mCacheEntry->GetMetaDataElement("request-method", getter_Copies(buf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAtom> method = do_GetAtom(buf);
-    NS_ENSURE_TRUE(method, NS_ERROR_OUT_OF_MEMORY);
-
+    nsHttpAtom method = nsHttp::ResolveAtom(buf);
     if (method == nsHttp::Head) {
         // The cached response does not contain an entity.  We can only reuse
         // the response if the current request is also HEAD.
@@ -3024,7 +3022,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
     // Store the HTTP request method with the cache entry so we can distinguish
     // for example GET and HEAD responses.
     rv = entry->SetMetaDataElement("request-method",
-                                   nsAtomCString(mRequestHead.Method()).get());
+                                   mRequestHead.Method().get());
     if (NS_FAILED(rv)) return rv;
 
     // Store the HTTP authorization scheme used if any...
