@@ -2753,7 +2753,7 @@ imgDecodeWorker::Run()
   }
 
   TimeDuration decodeLatency = TimeStamp::Now() - start;
-  if (chunkCount) {
+  if (chunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_LATENCY, PRInt32(decodeLatency.ToMicroseconds()));
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, chunkCount);
   }
@@ -2772,7 +2772,11 @@ imgDecodeWorker::Run()
 
   // If the decode finished, shutdown the decoder
   if (image->mDecoder && image->IsDecodeFinished()) {
-    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME, PRInt32(mDecodeTime.ToMicroseconds()));
+
+    if (!image->mDecoder->IsSizeDecode()) {
+        Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME, PRInt32(mDecodeTime.ToMicroseconds()));
+    }
+
     rv = image->ShutdownDecoder(RasterImage::eShutdownIntent_Done);
     if (NS_FAILED(rv)) {
       image->DoError();
