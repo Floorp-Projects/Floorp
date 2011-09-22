@@ -506,7 +506,7 @@ JSObject*
 nsContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
                           bool *triedToWrap)
 {
-  return mozilla::dom::binding::HTMLCollection::create(cx, scope, this, this,
+  return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
                                                        triedToWrap);
 }
 
