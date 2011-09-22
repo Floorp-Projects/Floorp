@@ -23,6 +23,8 @@
  * Contributor(s):
  *   Mats Palmgren <matspal@gmail.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Martin Stransky <stransky@redhat.com>
+ *   Jan Horak <jhorak@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,11 +60,17 @@
 #include "nsGtkCursors.h"
 
 #include <gtk/gtk.h>
+#if defined(MOZ_WIDGET_GTK3)
+#include <gtk/gtkx.h>
+#endif
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
 #include <X11/extensions/shape.h>
+#if defined(MOZ_WIDGET_GTK3)
+#include <gdk/gdkkeysyms-compat.h>
+#endif
 
 #ifdef AIX
 #include <X11/keysym.h>
@@ -73,7 +81,13 @@
 #include "gtk2xtbin.h"
 #endif /* MOZ_X11 */
 #include <gdk/gdkkeysyms.h>
+#if defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtkprivate.h>
+#endif
+
+#if defined(MOZ_WIDGET_GTK2)
+#include "gtk2compat.h"
+#endif
 
 #include "nsWidgetAtoms.h"
 
@@ -137,6 +151,7 @@ extern "C" {
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
+#include "cairo-xlib.h"
 #endif
 
 #include "nsShmImage.h"
@@ -186,8 +201,13 @@ static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
 
 /* callbacks from widgets */
+#if defined(MOZ_WIDGET_GTK2)
 static gboolean expose_event_cb           (GtkWidget *widget,
                                            GdkEventExpose *event);
+#else
+static gboolean expose_event_cb           (GtkWidget *widget,
+                                           cairo_t *rect);
+#endif
 static gboolean configure_event_cb        (GtkWidget *widget,
                                            GdkEventConfigure *event);
 static void     container_unrealize_cb    (GtkWidget *widget);
@@ -323,20 +343,6 @@ static PRBool                      gConsumeRollupEvent;
 // needed for imgIContainer cursors
 // GdkDisplay* was added in 2.2
 typedef struct _GdkDisplay GdkDisplay;
-typedef GdkDisplay* (*_gdk_display_get_default_fn)(void);
-
-typedef GdkCursor*  (*_gdk_cursor_new_from_pixbuf_fn)(GdkDisplay *display,
-                                                      GdkPixbuf *pixbuf,
-                                                      gint x,
-                                                      gint y);
-static _gdk_display_get_default_fn    _gdk_display_get_default;
-static _gdk_cursor_new_from_pixbuf_fn _gdk_cursor_new_from_pixbuf;
-static PRBool sPixbufCursorChecked;
-
-// needed for GetAttention calls
-// gdk_window_set_urgency_hint was added in 2.8
-typedef void (*_gdk_window_set_urgency_hint_fn)(GdkWindow *window,
-                                                gboolean urgency);
 
 #define kWindowPositionSlop 20
 
@@ -381,6 +387,16 @@ protected:
 
     pixman_region32& get() { return *this; }
 };
+
+static inline PRInt32
+GetBitmapStride(PRInt32 width)
+{
+#if defined(MOZ_X11) || defined(MOZ_WIDGET_GTK2)
+  return (width+7)/8;
+#else
+  return cairo_format_stride_for_width(CAIRO_FORMAT_A1, width);
+#endif
+}
 
 nsWindow::nsWindow()
 {
@@ -651,10 +667,10 @@ CheckDestroyInvisibleContainer()
 {
     NS_PRECONDITION(gInvisibleContainer, "oh, no");
 
-    if (!gdk_window_peek_children(gInvisibleContainer->window)) {
+    if (!gdk_window_peek_children(gtk_widget_get_window(gInvisibleContainer))) {
         // No children, so not in use.
         // Make sure to destroy the GtkWindow also.
-        gtk_widget_destroy(gInvisibleContainer->parent);
+        gtk_widget_destroy(gtk_widget_get_parent(gInvisibleContainer));
         gInvisibleContainer = NULL;
     }
 }
@@ -675,7 +691,7 @@ SetWidgetForHierarchy(GdkWindow *aWindow,
             return;
 
         GtkWidget* widget = static_cast<GtkWidget*>(data);
-        if (widget->parent != aOldWidget)
+        if (gtk_widget_get_parent(widget) != aOldWidget)
             return;
 
         // This window belongs to a child widget, which will no longer be a
@@ -772,13 +788,13 @@ nsWindow::Destroy(void)
         gFocusWindow = nsnull;
     }
 
-#ifdef MOZ_X11
+#if defined(MOZ_WIDGET_GTK2) && defined(MOZ_X11)
     // make sure that we remove ourself as the plugin focus window
     if (gPluginFocusWindow == this) {
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
-#endif /* MOZ_X11 */
-
+#endif /* MOZ_X11 && MOZ_WIDGET_GTK2 */
+  
     if (mWindowGroup) {
         g_object_unref(mWindowGroup);
         mWindowGroup = nsnull;
@@ -868,7 +884,7 @@ nsWindow::GetDPI()
     }
     return sDPI;
 #else
-    Display *dpy = GDK_DISPLAY();
+    Display *dpy = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     int defaultScreen = DefaultScreen(dpy);
     double heightInches = DisplayHeightMM(dpy, defaultScreen)/MM_PER_INCH_FLOAT;
     if (heightInches < 0.25) {
@@ -898,7 +914,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     if (!oldContainer) {
         // The GdkWindows have been destroyed so there is nothing else to
         // reparent.
-        NS_ABORT_IF_FALSE(GDK_WINDOW_OBJECT(mGdkWindow)->destroyed,
+        NS_ABORT_IF_FALSE(gdk_window_is_destroyed(mGdkWindow),
                           "live GdkWindow with no widget");
         return NS_OK;
     }
@@ -912,7 +928,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         // An invisible container widget is needed to hold descendant
         // GtkWidgets.
         GtkWidget* newContainer = EnsureInvisibleContainer();
-        GdkWindow* newParentWindow = newContainer->window;
+        GdkWindow* newParentWindow = gtk_widget_get_window(newContainer);
         ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
                                      oldContainer);
     }
@@ -930,11 +946,11 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     if (!oldContainer) {
         // The GdkWindows have been destroyed so there is nothing else to
         // reparent.
-        NS_ABORT_IF_FALSE(GDK_WINDOW_OBJECT(mGdkWindow)->destroyed,
+        NS_ABORT_IF_FALSE(gdk_window_is_destroyed(mGdkWindow),
                           "live GdkWindow with no widget");
         return NS_OK;
     }
-    NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(mGdkWindow)->destroyed,
+    NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(mGdkWindow),
                       "destroyed GdkWindow with widget");
     
     nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
@@ -953,14 +969,14 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
           g_object_unref(mWindowGroup);
           mWindowGroup = NULL;
       }
-      if (mTransientParent->group) {
-          gtk_window_group_add_window(mTransientParent->group,
+      if (gtk_window_get_group(mTransientParent)) {
+          gtk_window_group_add_window(gtk_window_get_group(mTransientParent),
                                       GTK_WINDOW(mShell));
-          mWindowGroup = mTransientParent->group;
+          mWindowGroup = gtk_window_get_group(mTransientParent);
           g_object_ref(mWindowGroup);
       }
-      else if (GTK_WINDOW(mShell)->group) {
-          gtk_window_group_remove_window(GTK_WINDOW(mShell)->group,
+      else if (gtk_window_get_group(GTK_WINDOW(mShell))) {
+          gtk_window_group_remove_window(gtk_window_get_group(GTK_WINDOW(mShell)),
                                          GTK_WINDOW(mShell));
       }
     }
@@ -979,12 +995,12 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
     if (!aNewContainer) {
         // The new parent GdkWindow has been destroyed.
         NS_ABORT_IF_FALSE(!aNewParentWindow ||
-                          GDK_WINDOW_OBJECT(aNewParentWindow)->destroyed,
+                          gdk_window_is_destroyed(aNewParentWindow),
                           "live GdkWindow with no widget");
         Destroy();
     } else {
         if (aNewContainer != aOldContainer) {
-            NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(aNewParentWindow)->destroyed,
+            NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(aNewParentWindow),
                               "destroyed GdkWindow with widget");
             SetWidgetForHierarchy(mGdkWindow, aOldContainer, aNewContainer);
         }
@@ -1405,22 +1421,19 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
         // that triggered it.
         PRUint32 timestamp = GTKToolkit->GetFocusTimestamp();
         if (timestamp) {
-            gdk_window_focus(aWindow->window, timestamp);
+            gdk_window_focus(gtk_widget_get_window(aWindow), timestamp);
             GTKToolkit->SetFocusTimestamp(0);
         }
         return;
     }
 
-#ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
-    GdkDrawable* drawable = GDK_DRAWABLE(aWindow->window);
-    GtkWindow* win = GTK_WINDOW(aWindow);
-    if (!win) {
-        NS_WARNING("Passed in widget was not a GdkWindow!");
-        return;
-    }
-    GdkScreen* screen = gtk_window_get_screen(win);
+#if defined(MOZ_ENABLE_STARTUP_NOTIFICATION)
+    GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
+  
+    GdkScreen* screen = gdk_window_get_screen(gdkWindow);
     SnDisplay* snd =
-        sn_display_new(gdk_x11_drawable_get_xdisplay(drawable), nsnull, nsnull);
+        sn_display_new(gdk_x11_display_get_xdisplay(gdk_window_get_display(gdkWindow)), 
+                       nsnull, nsnull);
     if (!snd)
         return;
     SnLauncheeContext* ctx =
@@ -1436,12 +1449,12 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
         SetUserTimeFunc setUserTimeFunc = (SetUserTimeFunc)
             PR_FindFunctionSymbolAndLibrary("gdk_x11_window_set_user_time", &gtkLibrary);
         if (setUserTimeFunc) {
-            setUserTimeFunc(aWindow->window, sn_launchee_context_get_timestamp(ctx));
+            setUserTimeFunc(gdkWindow, sn_launchee_context_get_timestamp(ctx));
             PR_UnloadLibrary(gtkLibrary);
         }
     }
 
-    sn_launchee_context_setup_window(ctx, gdk_x11_drawable_get_xid(drawable));
+    sn_launchee_context_setup_window(ctx, gdk_x11_window_get_xid(gdkWindow));
     sn_launchee_context_complete(ctx);
 
     sn_launchee_context_unref(ctx);
@@ -1468,13 +1481,13 @@ nsWindow::SetFocus(PRBool aRaise)
     GtkWidget *toplevelWidget = gtk_widget_get_toplevel(owningWidget);
 
     if (gRaiseWindows && aRaise && toplevelWidget &&
-        !GTK_WIDGET_HAS_FOCUS(owningWidget) &&
-        !GTK_WIDGET_HAS_FOCUS(toplevelWidget)) {
+        !gtk_widget_has_focus(owningWidget) &&
+        !gtk_widget_has_focus(toplevelWidget)) {
         GtkWidget* top_window = nsnull;
         GetToplevelWidget(&top_window);
-        if (top_window && (GTK_WIDGET_VISIBLE(top_window)))
+        if (top_window && (gtk_widget_get_visible(top_window)))
         {
-            gdk_window_show_unraised(top_window->window);
+            gdk_window_show_unraised(gtk_widget_get_window(top_window));
             // Unset the urgency hint if possible.
             SetUrgencyHint(top_window, PR_FALSE);
         }
@@ -1545,7 +1558,7 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
     if (mIsTopLevel && mContainer) {
         // use the point including window decorations
         gint x, y;
-        gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window, &x, &y);
+        gdk_window_get_root_origin(gtk_widget_get_window(GTK_WIDGET(mContainer)), &x, &y);
         aRect.MoveTo(x, y);
     }
     else {
@@ -1598,62 +1611,12 @@ nsWindow::SetCursor(nsCursor aCursor)
             if (!mContainer)
                 return NS_OK;
 
-            gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, newCursor);
+            gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), newCursor);
         }
     }
 
     return NS_OK;
 }
-
-
-static
-PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
-                         PRUint32 aImageBytesPerRow,
-                         PRUint32 aWidth, PRUint32 aHeight)
-{
-  PRUint32 outBpr = (aWidth + 7) / 8;
-
-  PRUint8* outData = new PRUint8[outBpr * aHeight];
-  if (!outData)
-      return NULL;
-
-  PRUint8 *outRow = outData,
-          *imageRow = aImageData;
-
-  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
-      PRUint8 *irow = imageRow;
-      PRUint8 *orow = outRow;
-      PRUint8 imagePixels = 0;
-      PRUint8 offset = 0;
-
-      for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
-          PRUint8 r = *imageRow++,
-                  g = *imageRow++,
-                  b = *imageRow++;
-               /* a = * */imageRow++;
-
-          if ((r + b + g) < 3 * 128)
-              imagePixels |= (1 << offset);
-
-          if (offset == 7) {
-              *outRow++ = imagePixels;
-              offset = 0;
-              imagePixels = 0;
-          } else {
-              offset++;
-          }
-      }
-      if (offset != 0)
-          *outRow++ = imagePixels;
-
-      imageRow = irow + aImageBytesPerRow;
-      outRow = orow + outBpr;
-  }
-
-  return outData;
-}
-
-
 
 NS_IMETHODIMP
 nsWindow::SetCursor(imgIContainer* aCursor,
@@ -1669,24 +1632,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         return window->SetCursor(aCursor, aHotspotX, aHotspotY);
     }
 
-    if (!sPixbufCursorChecked) {
-        PRLibrary* lib;
-        _gdk_cursor_new_from_pixbuf = (_gdk_cursor_new_from_pixbuf_fn)
-            PR_FindFunctionSymbolAndLibrary("gdk_cursor_new_from_pixbuf", &lib);
-        if (lib) {
-            // We already link against GDK, so we can unload it.
-            PR_UnloadLibrary(lib);
-            lib = nsnull;
-        }
-        _gdk_display_get_default = (_gdk_display_get_default_fn)
-            PR_FindFunctionSymbolAndLibrary("gdk_display_get_default", &lib);
-        if (lib) {
-            // We already link against GDK, so we can unload it.
-            PR_UnloadLibrary(lib);
-            lib = nsnull;
-        }
-        sPixbufCursorChecked = PR_TRUE;
-    }
     mCursor = nsCursor(-1);
 
     // Get the image's current frame
@@ -1717,54 +1662,14 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         pixbuf = alphaBuf;
     }
 
-    GdkCursor* cursor;
-    if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default) {
-        // Fallback to a monochrome cursor
-        GdkPixmap* mask = gdk_pixmap_new(NULL, width, height, 1);
-        if (!mask) {
-            g_object_unref(pixbuf);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        PRUint8* data = Data32BitTo1Bit(gdk_pixbuf_get_pixels(pixbuf),
-                                        gdk_pixbuf_get_rowstride(pixbuf),
-                                        width, height);
-        if (!data) {
-            g_object_unref(mask);
-            g_object_unref(pixbuf);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        GdkPixmap* image = gdk_bitmap_create_from_data(NULL, (const gchar*)data, width,
-                                                       height);
-        delete[] data;
-        if (!image) {
-            g_object_unref(mask);
-            g_object_unref(pixbuf);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        gdk_pixbuf_render_threshold_alpha(pixbuf, mask, 0, 0, 0, 0, width,
-                                          height, 1);
-
-        GdkColor fg = { 0, 0, 0, 0 }; // Black
-        GdkColor bg = { 0, 0xFFFF, 0xFFFF, 0xFFFF }; // White
-
-        cursor = gdk_cursor_new_from_pixmap(image, mask, &fg, &bg, aHotspotX,
-                                            aHotspotY);
-        g_object_unref(image);
-        g_object_unref(mask);
-    } else {
-        // Now create the cursor
-        cursor = _gdk_cursor_new_from_pixbuf(_gdk_display_get_default(),
-                                             pixbuf,
-                                             aHotspotX, aHotspotY);
-    }
+    GdkCursor* cursor = gdk_cursor_new_from_pixbuf(gdk_display_get_default(),
+                                                   pixbuf,
+                                                   aHotspotX, aHotspotY);
     g_object_unref(pixbuf);
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     if (cursor) {
         if (mContainer) {
-            gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, cursor);
+            gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), cursor);
             rv = NS_OK;
         }
         gdk_cursor_unref(cursor);
@@ -1806,7 +1711,7 @@ nsWindow::Update()
 
     gdk_window_process_updates(mGdkWindow, FALSE);
     // Send the updates to the server.
-    gdk_display_flush(gdk_drawable_get_display(GDK_DRAWABLE(mGdkWindow)));
+    gdk_display_flush(gdk_window_get_display(mGdkWindow));
     return NS_OK;
 }
 
@@ -1829,15 +1734,19 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 
     case NS_NATIVE_DISPLAY:
 #ifdef MOZ_X11
-        return GDK_DISPLAY();
+        return GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 #else
         return nsnull;
 #endif /* MOZ_X11 */
         break;
 
     case NS_NATIVE_GRAPHIC: {
-        NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
+#if defined(MOZ_WIDGET_GTK2)
+        NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");    
         return (void *)static_cast<nsGTKToolkit *>(mToolkit)->GetSharedGC();
+#else
+        return nsnull;
+#endif
         break;
     }
 
@@ -2013,7 +1922,7 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
         gFocusWindow->GetToplevelWidget(&top_focused_window);
 
     // Don't get attention if the window is focused anyway.
-    if (top_window && (GTK_WIDGET_VISIBLE(top_window)) &&
+    if (top_window && (gtk_widget_get_visible(top_window)) &&
         top_window != top_focused_window) {
         SetUrgencyHint(top_window, PR_TRUE);
     }
@@ -2032,8 +1941,9 @@ nsWindow::HasPendingInputEvent()
     PRBool haveEvent;
 #ifdef MOZ_X11
     XEvent ev;
+    Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     haveEvent =
-        XCheckMaskEvent(GDK_DISPLAY(),
+        XCheckMaskEvent(display,
                         KeyPressMask | KeyReleaseMask | ButtonPressMask |
                         ButtonReleaseMask | EnterWindowMask | LeaveWindowMask |
                         PointerMotionMask | PointerMotionHintMask |
@@ -2046,7 +1956,7 @@ nsWindow::HasPendingInputEvent()
                         PropertyChangeMask | ColormapChangeMask |
                         OwnerGrabButtonMask, &ev);
     if (haveEvent) {
-        XPutBackEvent(GDK_DISPLAY(), &ev);
+        XPutBackEvent(display, &ev);
     }
 #else
     haveEvent = PR_FALSE;
@@ -2079,12 +1989,11 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
   GdkGC *      gc = 0;
   GdkColor     white;
 
-  gdk_window_get_geometry(aGdkWindow,
-                          NULL,
-                          NULL,
-                          &width,
-                          &height,
-                          NULL);
+#if defined(MOZ_WIDGET_GTK2)
+  gdk_window_get_geometry(aGdkWindow,NULL,NULL,&width,&height,NULL);
+#else
+  gdk_window_get_geometry(aGdkWindow,NULL,NULL,&width,&height);
+#endif
 
   gdk_window_get_origin (aGdkWindow,
                          &x,
@@ -2136,12 +2045,15 @@ DispatchDidPaint(nsIWidget* aWidget)
     aWidget->DispatchEvent(&didPaintEvent, status);
 }
 
+#if defined(MOZ_WIDGET_GTK2)
 gboolean
-nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
+nsWindow::OnExposeEvent(GdkEventExpose *aEvent)
+#else
+gboolean
+nsWindow::OnExposeEvent(cairo_t *cr)
+#endif
 {
     if (mIsDestroyed) {
-        LOG(("Expose event on destroyed window [%p] window %p\n",
-             (void *)this, (void *)aEvent->window));
         return FALSE;
     }
 
@@ -2164,29 +2076,48 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.refPoint.x = aEvent->area.x;
-    event.refPoint.y = aEvent->area.y;
     event.willSendDidPaint = PR_TRUE;
 
+#if defined(MOZ_WIDGET_GTK2)
     GdkRectangle *rects;
     gint nrects;
     gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
     if (NS_UNLIKELY(!rects)) // OOM
         return FALSE;
+#else
+#ifdef cairo_copy_clip_rectangle_list
+#error "Looks like we're including Mozilla's cairo instead of system cairo"
+#else
+    cairo_rectangle_list_t *rects;
+    rects = cairo_copy_clip_rectangle_list(cr);  
+    if (NS_UNLIKELY(rects->status != CAIRO_STATUS_SUCCESS)) {
+       NS_WARNING("Failed to obtain cairo rectangle list.");
+       return FALSE;
+    }
+#endif
+#endif
 
+// GTK3 TODO?
+#if defined(MOZ_WIDGET_GTK2)
     if (nrects > MAX_RECTS_IN_REGION) {
         // Just use the bounding box
         rects[0] = aEvent->area;
         nrects = 1;
     }
+#endif
 
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
-             (void *)this, (void *)aEvent->window,
-             GDK_WINDOW_XWINDOW(aEvent->window)));
-
-    GdkRectangle *r;
+             (void *)this, (void *)mGdkWindow,
+             gdk_x11_window_get_xid(mGdkWindow)));
+  
+#if defined(MOZ_WIDGET_GTK2)
+    GdkRectangle *r = rects;
     GdkRectangle *r_end = rects + nrects;
-    for (r = rects; r < r_end; ++r) {
+#else
+    cairo_rectangle_t *r = rects->rectangles;
+    cairo_rectangle_t *r_end = r + rects->num_rectangles;
+#endif
+    for (; r < r_end; ++r) {
         event.region.Or(event.region, nsIntRect(r->x, r->y, r->width, r->height));
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
@@ -2219,7 +2150,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     if (event.region.IsEmpty()) {
+#if defined(MOZ_WIDGET_GTK2)
         g_free(rects);
+#else
+        cairo_rectangle_list_destroy(rects);
+#endif
         return TRUE;
     }
 
@@ -2238,7 +2173,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return TRUE;
     }
             
+#if defined(MOZ_WIDGET_GTK2)
     nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
+#else
+    nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
+#endif
 
 #ifdef MOZ_DFB
     gfxPlatformGtk::SetGdkDrawable(ctx->OriginalSurface(),
@@ -2291,8 +2230,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // for cairo.
 #ifdef DEBUG
     // XXX aEvent->region may refer to a newly-invalid area.  FIXME
-    if (0 && WANT_PAINT_FLASHING && aEvent->window)
-        gdk_window_flash(aEvent->window, 1, 100, aEvent->region);
+    if (0 && WANT_PAINT_FLASHING && gtk_widget_get_window(aEvent))
+        gdk_window_flash(mGdkWindow, 1, 100, aEvent->region);
 #endif
 #endif
 
@@ -2338,20 +2277,37 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (nsShmImage::UseShm() && NS_LIKELY(!mIsDestroyed)) {
+#if defined(MOZ_WIDGET_GTK2)
         mShmImage->Put(mGdkWindow, rects, r_end);
+#else
+        mShmImage->Put(mGdkWindow, rects);
+#endif
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
 
+#if defined(MOZ_WIDGET_GTK2)
     g_free(rects);
+#else
+    cairo_rectangle_list_destroy(rects);
+#endif
 
     DispatchDidPaint(this);
 
     // Synchronously flush any new dirty areas
+#if defined(MOZ_WIDGET_GTK2)
     GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
+#else
+    cairo_region_t* dirtyArea = gdk_window_get_update_area(mGdkWindow);
+#endif
+
     if (dirtyArea) {
         gdk_window_invalidate_region(mGdkWindow, dirtyArea, PR_FALSE);
+#if defined(MOZ_WIDGET_GTK2)
         gdk_region_destroy(dirtyArea);
+#else
+        cairo_region_destroy(dirtyArea);
+#endif
         gdk_window_process_updates(mGdkWindow, PR_FALSE);
     }
 
@@ -2531,7 +2487,7 @@ is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
 {
     gint x = gint(aEvent->x_root);
     gint y = gint(aEvent->y_root);
-    GdkDisplay* display = gdk_drawable_get_display(aWindow);
+    GdkDisplay* display = gdk_window_get_display(aWindow);
     GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
     if (!winAtPt)
         return PR_TRUE;
@@ -2649,19 +2605,20 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     while (XPending (GDK_WINDOW_XDISPLAY(aEvent->window))) {
         XEvent peeked;
         XPeekEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &peeked);
-        if (peeked.xany.window != GDK_WINDOW_XWINDOW(aEvent->window)
+        if (peeked.xany.window != gdk_x11_window_get_xid(aEvent->window)
             || peeked.type != MotionNotify)
             break;
 
         synthEvent = PR_TRUE;
         XNextEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
     }
-
+#if defined(MOZ_WIDGET_GTK2)
     // if plugins still keeps the focus, get it back
     if (gPluginFocusWindow && gPluginFocusWindow != this) {
         nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
+#endif /* MOZ_WIDGET_GTK2 */
 #endif /* MOZ_X11 */
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
@@ -2971,7 +2928,7 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     // Unset the urgency hint, if possible
     GtkWidget* top_window = nsnull;
     GetToplevelWidget(&top_window);
-    if (top_window && (GTK_WIDGET_VISIBLE(top_window)))
+    if (top_window && (gtk_widget_get_visible(top_window)))
         SetUrgencyHint(top_window, PR_FALSE);
 
     // Return if being called within SetFocus because the focus manager
@@ -3019,13 +2976,13 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         }
     }
 
-#ifdef MOZ_X11
+#if defined(MOZ_WIDGET_GTK2) && defined(MOZ_X11)
     // plugin lose focus
     if (gPluginFocusWindow) {
         nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
-#endif /* MOZ_X11 */
+#endif /* MOZ_X11 && MOZ_WIDGET_GTK2 */
 
     if (gFocusWindow) {
         nsRefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
@@ -3063,7 +3020,9 @@ GetCharCodeFor(const GdkEventKey *aEvent, guint aShiftState,
                gint aGroup)
 {
     guint keyval;
-    if (gdk_keymap_translate_keyboard_state(NULL, aEvent->hardware_keycode,
+    GdkKeymap *keymap = gdk_keymap_get_default();
+
+    if (gdk_keymap_translate_keyboard_state(keymap, aEvent->hardware_keycode,
                                             GdkModifierType(aShiftState),
                                             aGroup,
                                             &keyval, NULL, NULL, NULL)) {
@@ -3080,7 +3039,9 @@ static gint
 GetKeyLevel(GdkEventKey *aEvent)
 {
     gint level;
-    if (!gdk_keymap_translate_keyboard_state(NULL,
+    GdkKeymap *keymap = gdk_keymap_get_default();
+
+    if (!gdk_keymap_translate_keyboard_state(keymap,
                                              aEvent->hardware_keycode,
                                              GdkModifierType(aEvent->state),
                                              aEvent->group,
@@ -3622,7 +3583,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     nscoord retx = 0;
     nscoord rety = 0;
 
-    GdkWindow *innerWindow = get_inner_gdk_window(aWidget->window, aX, aY,
+    GdkWindow *innerWindow = get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
                                                   &retx, &rety);
     nsRefPtr<nsWindow> innerMostWidget = get_window_for_gdk_window(innerWindow);
 
@@ -3711,7 +3672,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     nscoord retx = 0;
     nscoord rety = 0;
 
-    GdkWindow *innerWindow = get_inner_gdk_window(aWidget->window, aX, aY,
+    GdkWindow *innerWindow = get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
                                                   &retx, &rety);
     nsRefPtr<nsWindow> innerMostWidget = get_window_for_gdk_window(innerWindow);
 
@@ -3876,7 +3837,7 @@ static GdkWindow *
 CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
 {
     GdkWindowAttr attributes;
-    gint          attributes_mask = GDK_WA_VISUAL | GDK_WA_COLORMAP;
+    gint          attributes_mask = GDK_WA_VISUAL;
 
     attributes.event_mask = (GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                              GDK_VISIBILITY_NOTIFY_MASK |
@@ -3891,15 +3852,22 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
     attributes.height = 1;
     attributes.wclass = GDK_INPUT_OUTPUT;
     attributes.visual = gtk_widget_get_visual(widget);
-    attributes.colormap = gtk_widget_get_colormap(widget);
     attributes.window_type = GDK_WINDOW_CHILD;
+
+#if defined(MOZ_WIDGET_GTK2)
+    attributes_mask |= GDK_WA_COLORMAP;
+    attributes.colormap = gtk_widget_get_colormap(widget);
+#endif
 
     GdkWindow *window = gdk_window_new(parent, &attributes, attributes_mask);
     gdk_window_set_user_data(window, widget);
 
+// GTK3 TODO?
+#if defined(MOZ_WIDGET_GTK2)
     /* set the default pixmap to None so that you don't end up with the
        gtk default which is BlackPixel. */
     gdk_window_set_back_pixmap(window, NULL, FALSE);
+#endif
 
     return window;
 }
@@ -3997,7 +3965,7 @@ nsWindow::Create(nsIWidget        *aParent,
             // add ourselves to the parent window's window group
             if (!topLevelParent) {
                 gtk_widget_realize(mShell);
-                GdkWindow* dialoglead = mShell->window;
+                GdkWindow* dialoglead = gtk_widget_get_window(mShell);
                 gdk_window_set_group(dialoglead, dialoglead);
             }
             if (parentGdkWindow) {
@@ -4056,7 +4024,7 @@ nsWindow::Create(nsIWidget        *aParent,
                 // ... but when the window manager offers focus through
                 // WM_TAKE_FOCUS, focus is requested on the parent window.
                 gtk_widget_realize(mShell);
-                gdk_window_add_filter(mShell->window,
+                gdk_window_add_filter(gtk_widget_get_window(mShell),
                                       popup_take_focus_filter, NULL); 
 #endif
             }
@@ -4085,10 +4053,10 @@ nsWindow::Create(nsIWidget        *aParent,
                                             topLevelParent);
                 mTransientParent = topLevelParent;
 
-                if (topLevelParent->group) {
-                    gtk_window_group_add_window(topLevelParent->group,
-                                            GTK_WINDOW(mShell));
-                    mWindowGroup = topLevelParent->group;
+                GtkWindowGroup *groupParent = gtk_window_get_group(topLevelParent);
+                if (groupParent) {
+                    gtk_window_group_add_window(groupParent, GTK_WINDOW(mShell));
+                    mWindowGroup = groupParent;
                     g_object_ref(mWindowGroup);
                 }
             }
@@ -4113,14 +4081,16 @@ nsWindow::Create(nsIWidget        *aParent,
         gtk_container_add(GTK_CONTAINER(mShell), container);
         gtk_widget_realize(container);
 
+#if defined(MOZ_WIDGET_GTK2)
         // Don't let GTK mess with the shapes of our GdkWindows
         GTK_PRIVATE_SET_FLAG(container, GTK_HAS_SHAPE_MASK);
+#endif
 
         // make sure this is the focus widget in the container
         gtk_window_set_focus(GTK_WINDOW(mShell), container);
 
         // the drawing window
-        mGdkWindow = container->window;
+        mGdkWindow = gtk_widget_get_window(container);
 
         if (mWindowType == eWindowType_popup) {
             // gdk does not automatically set the cursor for "temporary"
@@ -4135,7 +4105,7 @@ nsWindow::Create(nsIWidget        *aParent,
             if (aInitData->mNoAutoHide) {
                 gint wmd = ConvertBorderStyles(mBorderStyle);
                 if (wmd != -1)
-                  gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+                  gdk_window_set_decorations(gtk_widget_get_window(mShell), (GdkWMDecoration) wmd);
             }
         }
     }
@@ -4155,10 +4125,12 @@ nsWindow::Create(nsIWidget        *aParent,
             gtk_container_add(parentGtkContainer, container);
             gtk_widget_realize(container);
 
+#if defined(MOZ_WIDGET_GTK2)
             // Don't let GTK mess with the shapes of our GdkWindows
             GTK_PRIVATE_SET_FLAG(container, GTK_HAS_SHAPE_MASK);
+#endif
 
-            mGdkWindow = container->window;
+            mGdkWindow = gtk_widget_get_window(container);
         }
         else {
             NS_WARNING("Warning: tried to create a new child widget with no parent!");
@@ -4207,7 +4179,7 @@ nsWindow::Create(nsIWidget        *aParent,
 
 #ifdef MOZ_PLATFORM_MAEMO
         if (mWindowType == eWindowType_toplevel) {
-            GdkWindow *gdkwin = mShell->window;
+            GdkWindow *gdkwin = gtk_widget_get_window(mShell);
 
             // Tell the Hildon desktop that we support being rotated
             gulong portrait_set = 1;
@@ -4230,8 +4202,13 @@ nsWindow::Create(nsIWidget        *aParent,
                          G_CALLBACK(container_unrealize_cb), NULL);
         g_signal_connect_after(mContainer, "size_allocate",
                                G_CALLBACK(size_allocate_cb), NULL);
+#if defined(MOZ_WIDGET_GTK2)
         g_signal_connect(mContainer, "expose_event",
                          G_CALLBACK(expose_event_cb), NULL);
+#else
+        g_signal_connect(G_OBJECT(mContainer), "draw",
+                         G_CALLBACK(expose_event_cb), NULL);
+#endif
         g_signal_connect(mContainer, "enter_notify_event",
                          G_CALLBACK(enter_notify_event_cb), NULL);
         g_signal_connect(mContainer, "leave_notify_event",
@@ -4288,18 +4265,18 @@ nsWindow::Create(nsIWidget        *aParent,
 
     LOG(("nsWindow [%p]\n", (void *)this));
     if (mShell) {
-        LOG(("\tmShell %p %p %lx\n", (void *)mShell, (void *)mShell->window,
-             GDK_WINDOW_XWINDOW(mShell->window)));
+        LOG(("\tmShell %p %p %lx\n", (void *)mShell, (void *)gtk_widget_get_window(mShell),
+             gdk_x11_window_get_xid(gtk_widget_get_window(mShell))));
     }
 
     if (mContainer) {
         LOG(("\tmContainer %p %p %lx\n", (void *)mContainer,
-             (void *)GTK_WIDGET(mContainer)->window,
-             GDK_WINDOW_XWINDOW(GTK_WIDGET(mContainer)->window)));
+             (void *)gtk_widget_get_window(GTK_WIDGET(mContainer)),
+             gdk_x11_window_get_xid(gtk_widget_get_window(GTK_WIDGET(mContainer)))));
     }
     else if (mGdkWindow) {
         LOG(("\tmGdkWindow %p %lx\n", (void *)mGdkWindow,
-             GDK_WINDOW_XWINDOW(mGdkWindow)));
+             gdk_x11_window_get_xid(mGdkWindow)));
     }
 
     // resize so that everything is set to the right dimensions
@@ -4393,11 +4370,12 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   class_hint->res_name[0] = toupper(class_hint->res_name[0]);
   if (!role) role = class_hint->res_name;
 
-  gdk_window_set_role(GTK_WIDGET(mShell)->window, role);
+  GdkWindow *shellWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
+  gdk_window_set_role(shellWindow, role);
   // Can't use gtk_window_set_wmclass() for this; it prints
   // a warning & refuses to make the change.
-  XSetClassHint(GDK_DISPLAY(),
-                GDK_WINDOW_XWINDOW(GTK_WIDGET(mShell)->window),
+  XSetClassHint(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                gdk_x11_window_get_xid(shellWindow),
                 class_hint);
   nsMemory::Free(class_hint->res_class);
   nsMemory::Free(class_hint->res_name);
@@ -4430,7 +4408,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   res_name[0] = toupper(res_name[0]);
   if (!role) role = res_name;
 
-  gdk_window_set_role(GTK_WIDGET(mShell)->window, role);
+  gdk_window_set_role(gtk_widget_get_window(GTK_WIDGET(mShell)), role);
 
   nsMemory::Free(res_name);
 
@@ -4454,9 +4432,10 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
     }
     else if (mContainer) {
         GtkWidget *widget = GTK_WIDGET(mContainer);
-        GtkAllocation allocation;
-        allocation.x = widget->allocation.x;
-        allocation.y = widget->allocation.y;
+        GtkAllocation allocation, prev_allocation;
+        gtk_widget_get_allocation(widget, &prev_allocation);
+        allocation.x = prev_allocation.x;
+        allocation.y = prev_allocation.y;
         allocation.width = aWidth;
         allocation.height = aHeight;
         gtk_widget_size_allocate(widget, &allocation);
@@ -4640,7 +4619,11 @@ nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
             mTransparencyBitmap = nsnull;
             mTransparencyBitmapWidth = 0;
             mTransparencyBitmapHeight = 0;
+#if defined(MOZ_WIDGET_GTK2)
             gtk_widget_reset_shapes(mShell);
+#else
+            // GTK3 TODO
+#endif
         }
     } // else the new default alpha values are "all 1", so we don't
     // need to change anything yet
@@ -4779,6 +4762,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     if (!mGdkWindow)
         return;
 
+#if defined(MOZ_WIDGET_GTK2)
     GdkRegion *region = gdk_region_new(); // aborts on OOM
     for (PRUint32 i = 0; i < newRects->Length(); ++i) {
         const nsIntRect& r = newRects->ElementAt(i);
@@ -4788,7 +4772,18 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
 
     gdk_window_shape_combine_region(mGdkWindow, region, 0, 0);
     gdk_region_destroy(region);
+#else
+    cairo_region_t *region = cairo_region_create();
+    for (PRUint32 i = 0; i < newRects->Length(); ++i) {
+        const nsIntRect& r = newRects->ElementAt(i);
+        cairo_rectangle_int_t rect = { r.x, r.y, r.width, r.height };
+        cairo_region_union_rectangle(region, &rect);
+    }
 
+    gdk_window_shape_combine_region(mGdkWindow, region, 0, 0);
+    cairo_region_destroy(region);
+#endif
+  
     return;
 }
 
@@ -4802,7 +4797,7 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
         aNewHeight == mTransparencyBitmapHeight)
         return;
 
-    PRInt32 newSize = ((aNewWidth+7)/8)*aNewHeight;
+    PRInt32 newSize = GetBitmapStride(aNewWidth)*aNewHeight;
     gchar* newBits = new gchar[newSize];
     if (!newBits) {
         delete[] mTransparencyBitmap;
@@ -4817,9 +4812,9 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
     // Now copy the intersection of the old and new areas into the new mask
     PRInt32 copyWidth = NS_MIN(aNewWidth, mTransparencyBitmapWidth);
     PRInt32 copyHeight = NS_MIN(aNewHeight, mTransparencyBitmapHeight);
-    PRInt32 oldRowBytes = (mTransparencyBitmapWidth+7)/8;
-    PRInt32 newRowBytes = (aNewWidth+7)/8;
-    PRInt32 copyBytes = (copyWidth+7)/8;
+    PRInt32 oldRowBytes = GetBitmapStride(mTransparencyBitmapWidth);
+    PRInt32 newRowBytes = GetBitmapStride(aNewWidth);
+    PRInt32 copyBytes = GetBitmapStride(copyWidth);
 
     PRInt32 i;
     gchar* fromPtr = mTransparencyBitmap;
@@ -4841,7 +4836,7 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
         const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
     PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-    PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
+    PRInt32 maskBytesPerRow = GetBitmapStride(aMaskWidth);
     for (y = aRect.y; y < yMax; y++) {
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
         PRUint8* alphas = aAlphas;
@@ -4867,7 +4862,7 @@ void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
         const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
     PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-    PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
+    PRInt32 maskBytesPerRow = GetBitmapStride(aMaskWidth);
     for (y = aRect.y; y < yMax; y++) {
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
         PRUint8* alphas = aAlphas;
@@ -4891,8 +4886,9 @@ nsWindow::ApplyTransparencyBitmap()
     // We use X11 calls where possible, because GDK handles expose events
     // for shaped windows in a way that's incompatible with us (Bug 635903).
     // It doesn't occur when the shapes are set through X.
-    Display* xDisplay = GDK_WINDOW_XDISPLAY(mShell->window);
-    Window xDrawable = GDK_WINDOW_XID(mShell->window);
+    GdkWindow *shellWindow = gtk_widget_get_window(mShell);
+    Display* xDisplay = GDK_WINDOW_XDISPLAY(shellWindow);
+    Window xDrawable = GDK_WINDOW_XID(shellWindow);
     Pixmap maskPixmap = XCreateBitmapFromData(xDisplay,
                                               xDrawable,
                                               mTransparencyBitmap,
@@ -4903,8 +4899,9 @@ nsWindow::ApplyTransparencyBitmap()
                       maskPixmap, ShapeSet);
     XFreePixmap(xDisplay, maskPixmap);
 #else
+#if defined(MOZ_WIDGET_GTK2)
     gtk_widget_reset_shapes(mShell);
-    GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
+    GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(gtk_widget_get_window(mShell),
             mTransparencyBitmap,
             mTransparencyBitmapWidth, mTransparencyBitmapHeight);
     if (!maskBitmap)
@@ -4912,7 +4909,22 @@ nsWindow::ApplyTransparencyBitmap()
 
     gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
     g_object_unref(maskBitmap);
-#endif
+#else
+    cairo_surface_t *maskBitmap;
+    maskBitmap = cairo_image_surface_create_for_data((unsigned char*)mTransparencyBitmap, 
+                                                     CAIRO_FORMAT_A1, 
+                                                     mTransparencyBitmapWidth, 
+                                                     mTransparencyBitmapHeight,
+                                                     GetBitmapStride(mTransparencyBitmapWidth));
+    if (!maskBitmap)
+        return;
+
+    cairo_region_t * maskRegion = gdk_cairo_region_create_from_surface(maskBitmap);
+    gtk_widget_shape_combine_region(mShell, maskRegion);
+    cairo_region_destroy(maskRegion);
+    cairo_surface_destroy(maskBitmap);
+#endif // MOZ_WIDGET_GTK2
+#endif // MOZ_X11
 }
 
 nsresult
@@ -4936,7 +4948,7 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
     NS_ASSERTION(mIsTransparent, "Window is not transparent");
 
     if (mTransparencyBitmap == nsnull) {
-        PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
+        PRInt32 size = GetBitmapStride(mBounds.width)*mBounds.height;
         mTransparencyBitmap = new gchar[size];
         if (mTransparencyBitmap == nsnull)
             return NS_ERROR_FAILURE;
@@ -5055,20 +5067,8 @@ nsWindow::SetUrgencyHint(GtkWidget *top_window, PRBool state)
 {
     if (!top_window)
         return;
-
-    // Try to get a pointer to gdk_window_set_urgency_hint
-    PRLibrary* lib;
-    _gdk_window_set_urgency_hint_fn _gdk_window_set_urgency_hint = nsnull;
-    _gdk_window_set_urgency_hint = (_gdk_window_set_urgency_hint_fn)
-           PR_FindFunctionSymbolAndLibrary("gdk_window_set_urgency_hint", &lib);
-
-    if (_gdk_window_set_urgency_hint) {
-        _gdk_window_set_urgency_hint(top_window->window, state);
-        PR_UnloadLibrary(lib);
-    }
-    else if (state) {
-        gdk_window_show_unraised(top_window->window);
-    }
+        
+    gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
 }
 
 void *
@@ -5077,27 +5077,28 @@ nsWindow::SetupPluginPort(void)
     if (!mGdkWindow)
         return nsnull;
 
-    if (GDK_WINDOW_OBJECT(mGdkWindow)->destroyed == TRUE)
+    if (gdk_window_is_destroyed(mGdkWindow) == TRUE)
         return nsnull;
 
+    Window window = gdk_x11_window_get_xid(mGdkWindow);
+    
     // we have to flush the X queue here so that any plugins that
     // might be running on separate X connections will be able to use
     // this window in case it was just created
 #ifdef MOZ_X11
-    XWindowAttributes xattrs;
-    XGetWindowAttributes(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mGdkWindow),
-                         &xattrs);
-    XSelectInput (GDK_DISPLAY (),
-                  GDK_WINDOW_XWINDOW(mGdkWindow),
+    XWindowAttributes xattrs;    
+    Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+    XGetWindowAttributes(display, window, &xattrs);
+    XSelectInput (display, window,
                   xattrs.your_event_mask |
                   SubstructureNotifyMask);
 
     gdk_window_add_filter(mGdkWindow, plugin_window_filter_func, this);
 
-    XSync(GDK_DISPLAY(), False);
+    XSync(display, False);
 #endif /* MOZ_X11 */
-
-    return (void *)GDK_WINDOW_XWINDOW(mGdkWindow);
+    
+    return (void *)window;
 }
 
 nsresult
@@ -5156,15 +5157,21 @@ nsWindow::SetNonXEmbedPluginFocus()
 
     Window curFocusWindow;
     int focusState;
-
-    XGetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
+    
+    GdkDisplay *gdkDisplay = gdk_window_get_display(mGdkWindow);
+    XGetInputFocus(gdk_x11_display_get_xdisplay(gdkDisplay),
                    &curFocusWindow,
                    &focusState);
 
     LOGFOCUS(("\t curFocusWindow=%p\n", curFocusWindow));
 
     GdkWindow* toplevel = gdk_window_get_toplevel(mGdkWindow);
+#if defined(MOZ_WIDGET_GTK2)
     GdkWindow *gdkfocuswin = gdk_window_lookup(curFocusWindow);
+#else
+    GdkWindow *gdkfocuswin = gdk_x11_window_lookup_for_display(gdkDisplay,
+                                                               curFocusWindow);
+#endif
 
     // lookup with the focus proxy window is supposed to get the
     // same GdkWindow as toplevel. If the current focused window
@@ -5176,10 +5183,10 @@ nsWindow::SetNonXEmbedPluginFocus()
     // switch the focus from the focus proxy to the plugin window
     mOldFocusWindow = curFocusWindow;
     XRaiseWindow(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                 GDK_WINDOW_XWINDOW(mGdkWindow));
+                 gdk_x11_window_get_xid(mGdkWindow));
     gdk_error_trap_push();
     XSetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                   GDK_WINDOW_XWINDOW(mGdkWindow),
+                   gdk_x11_window_get_xid(mGdkWindow),
                    RevertToNone,
                    CurrentTime);
     gdk_flush();
@@ -5188,7 +5195,7 @@ nsWindow::SetNonXEmbedPluginFocus()
     gdk_window_add_filter(NULL, plugin_client_message_filter, this);
 
     LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus oldfocus=%p new=%p\n",
-              mOldFocusWindow, GDK_WINDOW_XWINDOW(mGdkWindow)));
+              mOldFocusWindow, gdk_x11_window_get_xid(mGdkWindow)));
 }
 
 void
@@ -5214,7 +5221,7 @@ nsWindow::LoseNonXEmbedPluginFocus()
     // event filter that blocks the WM_TAKE_FOCUS is enough. WM and gtk2
     // will take care of the focus later.
     if (!curFocusWindow ||
-        curFocusWindow == GDK_WINDOW_XWINDOW(mGdkWindow)) {
+        curFocusWindow == gdk_x11_window_get_xid(mGdkWindow)) {
 
         gdk_error_trap_push();
         XRaiseWindow(GDK_WINDOW_XDISPLAY(mGdkWindow),
@@ -5233,7 +5240,6 @@ nsWindow::LoseNonXEmbedPluginFocus()
     LOGFOCUS(("nsWindow::LoseNonXEmbedPluginFocus end\n"));
 }
 #endif /* MOZ_X11 */
-
 
 gint
 nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
@@ -5306,8 +5312,9 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // confused if we change the window decorations while the window
     // is visible.
     PRBool wasVisible = PR_FALSE;
-    if (gdk_window_is_visible(mShell->window)) {
-        gdk_window_hide(mShell->window);
+    GdkWindow *shellWindow = gtk_widget_get_window(mShell);
+    if (gdk_window_is_visible(shellWindow)) {
+        gdk_window_hide(shellWindow);
         wasVisible = PR_TRUE;
     }
 
@@ -5318,10 +5325,10 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
         wmd = ConvertBorderStyles(mBorderStyle);
 
     if (wmd != -1)
-      gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+      gdk_window_set_decorations(shellWindow, (GdkWMDecoration) wmd);
 
     if (wasVisible)
-        gdk_window_show(mShell->window);
+        gdk_window_show(shellWindow);
 
     // For some window managers, adding or removing window decorations
     // requires unmapping and remapping our toplevel window.  Go ahead
@@ -5329,7 +5336,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // error later when this happens (when the persistence timer fires
     // and GetWindowPos is called)
 #ifdef MOZ_X11
-    XSync(GDK_DISPLAY(), False);
+    XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()) , False);
 #else
     gdk_flush ();
 #endif /* MOZ_X11 */
@@ -5440,7 +5447,12 @@ is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
         window = gdk_window_get_parent(window);
     }
 
+#if defined(MOZ_WIDGET_GTK2)
     gdk_drawable_get_size(aWindow, &w, &h);
+#else
+    w = gdk_window_get_width(aWindow);
+    h = gdk_window_get_height(aWindow);
+#endif
 
     if (aMouseX > x && aMouseX < x + w &&
         aMouseY > y && aMouseY < y + h)
@@ -5477,9 +5489,6 @@ get_gtk_widget_for_gdk_window(GdkWindow *window)
 static GdkCursor *
 get_gtk_cursor(nsCursor aCursor)
 {
-    GdkPixmap *cursor;
-    GdkPixmap *mask;
-    GdkColor fg, bg;
     GdkCursor *gdkcursor = nsnull;
     PRUint8 newType = 0xff;
 
@@ -5596,30 +5605,35 @@ get_gtk_cursor(nsCursor aCursor)
     // if by now we don't have a xcursor, this means we have to make a
     // custom one
     if (newType != 0xff) {
-        gdk_color_parse("#000000", &fg);
-        gdk_color_parse("#ffffff", &bg);
-
-        cursor = gdk_bitmap_create_from_data(NULL,
-                                             (char *)GtkCursors[newType].bits,
-                                             32, 32);
-        if (!cursor)
+        GdkPixbuf * cursor_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 32, 32);
+        if (!cursor_pixbuf)
             return NULL;
-
-        mask =
-            gdk_bitmap_create_from_data(NULL,
-                                        (char *)GtkCursors[newType].mask_bits,
-                                        32, 32);
-        if (!mask) {
-            g_object_unref(cursor);
-            return NULL;
+      
+        guchar *data = gdk_pixbuf_get_pixels(cursor_pixbuf);
+        
+        // Read data from GtkCursors and compose RGBA surface from 1bit bitmap and mask
+        // GtkCursors bits and mask are 32x32 monochrome bitmaps (1 bit for each pixel)
+        // so it's 128 byte array (4 bytes for are one bitmap row and there are 32 rows here).
+        const unsigned char *bits = GtkCursors[newType].bits;
+        const unsigned char *mask_bits = GtkCursors[newType].mask_bits;
+        
+        for (int i = 0; i < 128; i++) {
+            char bit = *bits++;
+            char mask = *mask_bits++;
+            for (int j = 0; j < 8; j++) {
+                unsigned char pix = ~(((bit >> j) & 0x01) * 0xff);
+                *data++ = pix;
+                *data++ = pix;
+                *data++ = pix;
+                *data++ = (((mask >> j) & 0x01) * 0xff);
+            }
         }
-
-        gdkcursor = gdk_cursor_new_from_pixmap(cursor, mask, &fg, &bg,
+      
+        gdkcursor = gdk_cursor_new_from_pixbuf(gdk_display_get_default(), cursor_pixbuf,
                                                GtkCursors[newType].hot_x,
                                                GtkCursors[newType].hot_y);
-
-        g_object_unref(mask);
-        g_object_unref(cursor);
+        
+        g_object_unref(cursor_pixbuf);
     }
 
     gCursorCache[aCursor] = gdkcursor;
@@ -5629,6 +5643,7 @@ get_gtk_cursor(nsCursor aCursor)
 
 // gtk callbacks
 
+#if defined(MOZ_WIDGET_GTK2)
 static gboolean
 expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 {
@@ -5644,9 +5659,53 @@ expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 
     // This return window->OnExposeEvent(widget, event); */
 
-    window->OnExposeEvent(widget, event);
+    window->OnExposeEvent(event);
     return FALSE;
 }
+#else
+void
+draw_window_of_widget(GtkWidget *widget, GdkWindow *aWindow, cairo_t *cr)
+{
+    gpointer windowWidget;
+    gdk_window_get_user_data(aWindow, &windowWidget);
+
+    // aWindow is in another widget
+    if (windowWidget != widget)
+        return;
+    
+    if (gtk_cairo_should_draw_window(cr, aWindow)) {
+        nsRefPtr<nsWindow> window = get_window_for_gdk_window(aWindow);
+        if (!window) {
+            NS_WARNING("Cannot get nsWindow from GtkWidget");
+        }
+        else {      
+            cairo_save(cr);      
+            gtk_cairo_transform_to_window(cr, widget, aWindow);  
+            // TODO - window->OnExposeEvent() can destroy this or other windows,
+            // do we need to handle it somehow?
+            window->OnExposeEvent(cr);
+            cairo_restore(cr);
+        }
+    }
+    
+    GList *children = gdk_window_get_children(aWindow);
+    GList *child = children;
+    while (child) {
+        draw_window_of_widget(widget, GDK_WINDOW(child->data), cr);
+        child = g_list_next(child);
+    }  
+    g_list_free(children);
+
+}
+
+/* static */
+gboolean
+expose_event_cb(GtkWidget *widget, cairo_t *cr)
+{
+    draw_window_of_widget(widget, gtk_widget_get_window(widget), cr);
+    return FALSE;
+}
+#endif //MOZ_WIDGET_GTK2
 
 static gboolean
 configure_event_cb(GtkWidget *widget,
@@ -5866,7 +5925,7 @@ popup_take_focus_filter(GdkXEvent *gdk_xevent,
     if (gtk_window_is_active(parent))
         return GDK_FILTER_REMOVE; // leave input focus on the parent
 
-    GdkWindow* parent_window = GTK_WIDGET(parent)->window;
+    GdkWindow* parent_window = gtk_widget_get_window(GTK_WIDGET(parent));
     if (!parent_window)
         return GDK_FILTER_CONTINUE;
 
@@ -5883,8 +5942,9 @@ popup_take_focus_filter(GdkXEvent *gdk_xevent,
 static GdkFilterReturn
 plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 {
-    GdkWindow *plugin_window;
-    XEvent    *xevent;
+    GdkWindow  *plugin_window;
+    XEvent     *xevent;
+    Window      xeventWindow;
 
     nsRefPtr<nsWindow> nswindow = (nsWindow*)data;
     GdkFilterReturn return_val;
@@ -5897,22 +5957,32 @@ plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
         case CreateNotify:
         case ReparentNotify:
             if (xevent->type==CreateNotify) {
-                plugin_window = gdk_window_lookup(xevent->xcreatewindow.window);
+                xeventWindow = xevent->xcreatewindow.window;
             }
             else {
                 if (xevent->xreparent.event != xevent->xreparent.parent)
                     break;
-                plugin_window = gdk_window_lookup (xevent->xreparent.window);
+                xeventWindow = xevent->xreparent.window;
             }
+#if defined(MOZ_WIDGET_GTK2)
+            plugin_window = gdk_window_lookup(xeventWindow);
+#else
+            plugin_window = gdk_x11_window_lookup_for_display(
+                                  gdk_x11_lookup_xdisplay(xevent->xcreatewindow.display), xeventWindow);
+#endif        
             if (plugin_window) {
                 GtkWidget *widget =
                     get_gtk_widget_for_gdk_window(plugin_window);
 
+// TODO GTK3
+#if defined(MOZ_WIDGET_GTK2)
                 if (GTK_IS_XTBIN(widget)) {
                     nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);
                     break;
                 }
-                else if(GTK_IS_SOCKET(widget)) {
+                else 
+#endif
+                if(GTK_IS_SOCKET(widget)) {
                     nswindow->SetPluginType(nsWindow::PluginType_XEMBED);
                     break;
                 }
@@ -6000,7 +6070,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
         XEvent next_event;
         XPeekEvent(dpy, &next_event);
         GdkWindow* nextGdkWindow =
-            gdk_window_lookup_for_display(gdkDisplay, next_event.xany.window);
+            gdk_x11_window_lookup_for_display(gdkDisplay, next_event.xany.window);
         if (nextGdkWindow != event->window ||
             next_event.type != KeyPress ||
             next_event.xkey.keycode != event->hardware_keycode ||
@@ -6070,16 +6140,18 @@ hierarchy_changed_cb (GtkWidget *widget,
         g_signal_handlers_disconnect_by_func(previous_toplevel,
                                              FuncToGpointer(window_state_event_cb),
                                              widget);
-        if (previous_toplevel->window) {
-            old_window_state = gdk_window_get_state(previous_toplevel->window);
+        GdkWindow *win = gtk_widget_get_window(previous_toplevel);
+        if (win) {
+            old_window_state = gdk_window_get_state(win);
         }
     }
 
     if (GTK_IS_WINDOW(toplevel)) {
         g_signal_connect_swapped(toplevel, "window-state-event",
                                  G_CALLBACK(window_state_event_cb), widget);
-        if (toplevel->window) {
-            event.new_window_state = gdk_window_get_state(toplevel->window);
+        GdkWindow *win = gtk_widget_get_window(toplevel);
+        if (win) {
+            event.new_window_state = gdk_window_get_state(win);
         }
     }
 
@@ -6120,9 +6192,8 @@ void
 nsWindow::InitDragEvent(nsDragEvent &aEvent)
 {
     // set the keyboard modifiers
-    gint x, y;
     GdkModifierType state = (GdkModifierType)0;
-    gdk_window_get_pointer(NULL, &x, &y, &state);
+    gdk_display_get_pointer(gdk_display_get_default(), NULL, NULL, NULL, &state);
     aEvent.isShift = (state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     aEvent.isControl = (state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     aEvent.isAlt = (state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
@@ -6139,21 +6210,22 @@ nsWindow::UpdateDragStatus(GdkDragContext *aDragContext,
 {
     // default is to do nothing
     int action = nsIDragService::DRAGDROP_ACTION_NONE;
+    GdkDragAction gdkAction = gdk_drag_context_get_actions(aDragContext);
 
     // set the default just in case nothing matches below
-    if (aDragContext->actions & GDK_ACTION_DEFAULT)
+    if (gdkAction & GDK_ACTION_DEFAULT)
         action = nsIDragService::DRAGDROP_ACTION_MOVE;
 
     // first check to see if move is set
-    if (aDragContext->actions & GDK_ACTION_MOVE)
+    if (gdkAction & GDK_ACTION_MOVE)
         action = nsIDragService::DRAGDROP_ACTION_MOVE;
 
     // then fall to the others
-    else if (aDragContext->actions & GDK_ACTION_LINK)
+    else if (gdkAction & GDK_ACTION_LINK)
         action = nsIDragService::DRAGDROP_ACTION_LINK;
 
     // copy is ctrl
-    else if (aDragContext->actions & GDK_ACTION_COPY)
+    else if (gdkAction & GDK_ACTION_COPY)
         action = nsIDragService::DRAGDROP_ACTION_COPY;
 
     // update the drag information
@@ -6274,14 +6346,18 @@ get_inner_gdk_window (GdkWindow *aWindow,
                       gint x, gint y,
                       gint *retx, gint *rety)
 {
-    gint cx, cy, cw, ch, cd;
+    gint cx, cy, cw, ch;
     GList *children = gdk_window_peek_children(aWindow);
     for (GList *child = g_list_last(children);
          child;
          child = g_list_previous(child)) {
         GdkWindow *childWindow = (GdkWindow *) child->data;
         if (get_window_for_gdk_window(childWindow)) {
-            gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch, &cd);
+#if defined(MOZ_WIDGET_GTK2)
+            gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch, NULL);
+#else
+            gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch);
+#endif
             if ((cx < x) && (x < (cx + cw)) &&
                 (cy < y) && (y < (cy + ch)) &&
                 gdk_window_is_visible(childWindow)) {
@@ -6561,7 +6637,7 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
 #endif /* MOZ_X11 */
 }
 
-#ifdef MOZ_X11
+#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 /* static */ already_AddRefed<gfxASurface>
 nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                    const nsIntSize& aSize)
@@ -6606,23 +6682,40 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*
+#if defined(MOZ_WIDGET_GTK2)
 nsWindow::GetThebesSurface()
+#else
+nsWindow::GetThebesSurface(cairo_t *cr)
+#endif
 {
     if (!mGdkWindow)
         return nsnull;
 
-    GdkDrawable* d;
-    gint x_offset, y_offset;
-    gdk_window_get_internal_paint_info(mGdkWindow, &d, &x_offset, &y_offset);
+#if !defined(MOZ_WIDGET_GTK2)
+    cairo_surface_t *surf = cairo_get_target(cr);
+    if (cairo_surface_status(surf) != CAIRO_STATUS_SUCCESS) {
+      NS_NOTREACHED("Missing cairo target?");
+      return NULL;
+    }
+#endif // MOZ_WIDGET_GTK2
 
 #ifdef MOZ_X11
     gint width, height;
-    gdk_drawable_get_size(d, &width, &height);
+
+#if defined(MOZ_WIDGET_GTK2)
+    gdk_drawable_get_size(GDK_DRAWABLE(mGdkWindow), &width, &height);
+#else
+    width = gdk_window_get_width(mGdkWindow);
+    height = gdk_window_get_height(mGdkWindow);
+#endif
+
     // Owen Taylor says this is the right thing to do!
     width = NS_MIN(32767, width);
     height = NS_MIN(32767, height);
     gfxIntSize size(width, height);
-    Visual* visual = GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d));
+
+    GdkVisual *gdkVisual = gdk_window_get_visual(mGdkWindow);
+    Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
 
 #  ifdef MOZ_HAVE_SHMIMAGE
     PRBool usingShm = PR_FALSE;
@@ -6632,29 +6725,37 @@ nsWindow::GetThebesSurface()
         // lifetime
         mThebesSurface =
             nsShmImage::EnsureShmImage(size,
-                                       visual, gdk_drawable_get_depth(d),
+                                       visual, gdk_visual_get_depth(gdkVisual),
                                        mShmImage);
         usingShm = mThebesSurface != nsnull;
     }
     if (!usingShm)
 #  endif  // MOZ_HAVE_SHMIMAGE
 
+#if defined(MOZ_WIDGET_GTK2)
     mThebesSurface = new gfxXlibSurface
-        (GDK_WINDOW_XDISPLAY(d),
-         GDK_WINDOW_XWINDOW(d),
+        (GDK_WINDOW_XDISPLAY(mGdkWindow),
+         gdk_x11_window_get_xid(mGdkWindow),
          visual,
          size);
+#else
+#if MOZ_TREE_CAIRO
+#error "cairo-gtk3 target must be built with --enable-system-cairo"
+#else
+    mThebesSurface = gfxASurface::Wrap(surf);
+#endif
+#endif
+
 #endif
 #ifdef MOZ_DFB
-    mThebesSurface = new gfxDirectFBSurface(gdk_directfb_surface_lookup(d));
+    // not supported
+    mThebesSurface = nsnull;
 #endif
 
     // if the surface creation is reporting an error, then
     // we don't have a surface to give back
     if (mThebesSurface && mThebesSurface->CairoStatus() != 0) {
         mThebesSurface = nsnull;
-    } else {
-        mThebesSurface->SetDeviceOffset(gfxPoint(-x_offset, -y_offset));
     }
 
     return mThebesSurface;
