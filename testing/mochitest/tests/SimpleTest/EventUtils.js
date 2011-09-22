@@ -552,11 +552,18 @@ function _getDOMWindowUtils(aWindow)
 /**
  * Synthesize a composition event.
  *
- * @param aIsCompositionStart  If true, this synthesize compositionstart event.
- *                             Otherwise, compositionend event.
+ * @param aEvent               The composition event information.  This must
+ *                             have |type| member.  The value must be
+ *                             "compositionstart", "compositionend" or
+ *                             "compositionupdate".
+ *                             And also this may have |data| and |locale| which
+ *                             would be used for the value of each property of
+ *                             the composition event.  Note that the data would
+ *                             be ignored if the event type were
+ *                             "compositionstart".
  * @param aWindow              Optional (If null, current |window| will be used)
  */
-function synthesizeComposition(aIsCompositionStart, aWindow)
+function synthesizeComposition(aEvent, aWindow)
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
@@ -565,8 +572,8 @@ function synthesizeComposition(aIsCompositionStart, aWindow)
     return;
   }
 
-  utils.sendCompositionEvent(aIsCompositionStart ?
-                               "compositionstart" : "compositionend");
+  utils.sendCompositionEvent(aEvent.type, aEvent.data ? aEvent.data : "",
+                             aEvent.locale ? aEvent.locale : "");
 }
 
 /**
