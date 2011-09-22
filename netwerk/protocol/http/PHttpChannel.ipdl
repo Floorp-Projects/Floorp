@@ -47,6 +47,7 @@ include "prio.h";
 
 using RequestHeaderTuples;
 using nsHttpResponseHead;
+using nsHttpAtom;
 using IPC::URI;
 using IPC::InputStream;
 using PRNetAddr;
@@ -69,7 +70,7 @@ parent:
             URI                 referrer,
             PRUint32            loadFlags,
             RequestHeaderTuples requestHeaders,
-            nsCString           requestMethod,
+            nsHttpAtom          requestMethod,
             InputStream         uploadStream,
             PRBool              uploadStreamHasHeaders,
             PRUint16            priority,
