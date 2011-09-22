@@ -1373,6 +1373,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_COMPOSITION_START:
+  case NS_COMPOSITION_UPDATE:
   case NS_COMPOSITION_END:
     {
       nsCompositionEvent *compositionEvent =
