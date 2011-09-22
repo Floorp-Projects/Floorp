@@ -52,7 +52,7 @@
 
 #include "nsWindowsDllInterceptor.h"
 
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && !defined(NO_BLOCKLIST_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #endif
 
@@ -309,7 +309,7 @@ XRE_SetupDllBlocklist()
     printf_stderr ("LdrLoadDll hook failed, no dll blocklisting active\n");
 #endif
 
-#ifdef MOZ_CRASHREPORTER
+#if defined(MOZ_CRASHREPORTER) && !defined(NO_BLOCKLIST_CRASHREPORTER)
   if (!ok) {
     CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DllBlockList Failed\n"));
   }
