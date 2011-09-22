@@ -67,11 +67,11 @@
 .documenttab-close-container[tablet] {
   left: 0px;
   -moz-margin-end: 0px;
-  -moz-margin-start: 145px;
+  -moz-margin-start: 143px;
   -moz-box-pack: end;
   -moz-box-align: center;
   -moz-margin-end: -11px;
-  padding-right: 11px;
+  padding-right: 13px;
 }
 
 documenttab[selected="true"] > vbox > stack > .documenttab-close-container[tablet] {
@@ -79,7 +79,7 @@ documenttab[selected="true"] > vbox > stack > .documenttab-close-container[table
   background-repeat: no-repeat;
   background-position: right;
   -moz-margin-start: 146px;
-  padding-right: 0px;
+  padding-right: 2px;
 }
 
 .documenttab-close[tablet] {
