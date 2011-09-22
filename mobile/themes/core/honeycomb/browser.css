@@ -130,7 +130,6 @@ toolbarbutton.urlbar-button {
 #urlbar-container {
   color: @color_text_default@;
   background-color: transparent;
-  max-width: @urlbar_max_width@;
   -moz-box-align: center;
   -moz-margin-end: @margin_xxxnormal@;
 }
