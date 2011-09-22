@@ -1,0 +1,23 @@
+<html>
+<head>
+  <title>Test if spellcheck is turned on</title>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+  is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 1, "Check if the layout.spellcheckDefault pref is turned on");
+
+</script>
+</body>
+
+</html>
