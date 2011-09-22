@@ -282,6 +282,9 @@ public:
   static jsid sAll_id;
   static jsid sTags_id;
   static jsid sAddEventListener_id;
+  static jsid sBaseURIObject_id;
+  static jsid sNodePrincipal_id;
+  static jsid sDocumentURIObject_id;
   static jsid sJava_id;
   static jsid sPackages_id;
   static jsid sWrappedJSObject_id;
@@ -508,6 +511,13 @@ protected:
     return IsCapabilityEnabled("UniversalXPConnect");
   }
 
+  // Helper to define a void property with JSPROP_SHARED; this can do all the
+  // work so it's safe to just return whatever it returns.  |obj| is the object
+  // we're defining on, |id| is the name of the prop.  This must be a string
+  // jsval.  |objp| is the out param if we define successfully.
+  nsresult DefineVoidProp(JSContext* cx, JSObject* obj, jsid id,
+                          JSObject** objp);
+
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
@@ -516,6 +526,10 @@ public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
 
   virtual void PreserveWrapper(nsISupports *aNative);
@@ -816,6 +830,10 @@ public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32* aFlags);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
