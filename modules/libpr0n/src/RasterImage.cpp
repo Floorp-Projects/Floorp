@@ -2775,6 +2775,13 @@ imgDecodeWorker::Run()
 
     if (!image->mDecoder->IsSizeDecode()) {
         Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME, PRInt32(mDecodeTime.ToMicroseconds()));
+
+        // We only record the speed for some decoders. The rest have SpeedHistogram return HistogramCount.
+        Telemetry::ID id = image->mDecoder->SpeedHistogram();
+        if (id < Telemetry::HistogramCount) {
+            PRInt32 KBps = PRInt32((image->mBytesDecoded/1024.0)/mDecodeTime.ToSeconds());
+            Telemetry::Accumulate(id, KBps);
+        }
     }
 
     rv = image->ShutdownDecoder(RasterImage::eShutdownIntent_Done);
