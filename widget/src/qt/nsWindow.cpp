@@ -2815,14 +2815,26 @@ nsWindow::contextMenuEvent(QGraphicsSceneContextMenuEvent *)
 nsEventStatus
 nsWindow::imComposeEvent(QInputMethodEvent *event, PRBool &handled)
 {
+    // XXX Needs to check whether this widget has been destroyed or not after
+    //     each DispatchEvent().
+
     nsCompositionEvent start(PR_TRUE, NS_COMPOSITION_START, this);
     DispatchEvent(&start);
 
+    nsAutoString compositionStr(event->commitString().utf16());
+
+    if (!compositionStr.IsEmpty()) {
+      nsCompositionEvent update(PR_TRUE, NS_COMPOSITION_UPDATE, this);
+      update.data = compositionStr;
+      DispatchEvent(&update);
+    }
+
     nsTextEvent text(PR_TRUE, NS_TEXT_TEXT, this);
-    text.theText.Assign(event->commitString().utf16());
+    text.theText = compositionStr;
     DispatchEvent(&text);
 
     nsCompositionEvent end(PR_TRUE, NS_COMPOSITION_END, this);
+    end.data = compositionStr;
     DispatchEvent(&end);
 
     return nsEventStatus_eIgnore;
