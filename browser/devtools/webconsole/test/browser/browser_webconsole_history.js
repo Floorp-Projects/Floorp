@@ -99,7 +99,7 @@ function testHistory() {
   is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
 
   jsterm.clearOutput();
-  jsterm.history.splice(0);   // workaround for bug 592552
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
 
   finishTest();
 }
