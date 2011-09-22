@@ -46,6 +46,7 @@
   padding: 0;
   background: @color_toolbar_background@;
   border: none;
+  border-bottom: @border_width_large@ solid @color_toolbar_border@;
   min-height: @touch_button_small@;
 }
 
