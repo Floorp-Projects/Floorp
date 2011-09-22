@@ -115,12 +115,17 @@ function starttest() {
       /* test synthesizeComposition */
       check = false;
       window.addEventListener("compositionstart", function() { check = true; }, false);
-      synthesizeComposition(true);
-      is(check, true, 'synthesizeComposition(true) should dispatch compositionstart');
+      synthesizeComposition({ type: "compositionstart" });
+      is(check, true, 'synthesizeComposition() should dispatch compositionstart');
+    
+      check = false;
+      window.addEventListener("compositionupdate", function() { check = true; }, false);
+      synthesizeComposition({ type: "compositionupdate" });
+      is(check, true, 'synthesizeComposition() should dispatch compositionupdate');
     
       check = false;
       window.addEventListener("compositionend", function() { check = true; }, false);
-      synthesizeComposition();
+      synthesizeComposition({ type: "compositionend" });
       is(check, true, 'synthesizeComposition() should dispatch compositionend');
       check = false;
     

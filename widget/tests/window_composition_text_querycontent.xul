@@ -154,9 +154,10 @@ function runUndoRedoTest()
   textarea.focus();
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
   synthesizeText(
     { "composition":
       { "string": "\u306D",
@@ -168,6 +169,7 @@ function runUndoRedoTest()
       "caret": { "start": 1, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u306D\u3053" });
   synthesizeText(
     { "composition":
       { "string": "\u306D\u3053",
@@ -180,6 +182,7 @@ function runUndoRedoTest()
     });
 
   // convert
+  synthesizeComposition({ type: "compositionupdate", data: "\u732B" });
   synthesizeText(
     { "composition":
       { "string": "\u732B",
@@ -205,12 +208,13 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u732B" });
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u307E" });
   synthesizeText(
     { "composition":
       { "string": "\u307E",
@@ -223,6 +227,7 @@ function runUndoRedoTest()
     });
 
   // cancel the composition
+  synthesizeComposition({ type: "compositionupdate", data: "" });
   synthesizeText(
     { "composition":
       { "string": "",
@@ -235,12 +240,13 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "" });
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3080" });
   synthesizeText(
     { "composition":
       { "string": "\u3080",
@@ -252,6 +258,7 @@ function runUndoRedoTest()
       "caret": { "start": 1, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3080\u3059" });
   synthesizeText(
     { "composition":
       { "string": "\u3080\u3059",
@@ -263,6 +270,8 @@ function runUndoRedoTest()
       "caret": { "start": 2, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3080\u3059\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3080\u3059\u3081",
@@ -275,6 +284,7 @@ function runUndoRedoTest()
     });
 
   // convert
+  synthesizeComposition({ type: "compositionupdate", data: "\u5A18" });
   synthesizeText(
     { "composition":
       { "string": "\u5A18",
@@ -300,7 +310,7 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u5A18" });
 
   synthesizeKey(" ", {});
   synthesizeKey("m", {});
@@ -336,9 +346,10 @@ function runUndoRedoTest()
   synthesizeKey(" ", {});
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3088" });
   synthesizeText(
     { "composition":
       { "string": "\u3088",
@@ -350,6 +361,7 @@ function runUndoRedoTest()
       "caret": { "start": 1, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3088\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3088\u3046",
@@ -361,6 +373,8 @@ function runUndoRedoTest()
       "caret": { "start": 2, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3088\u3046\u304b" });
   synthesizeText(
     { "composition":
       { "string": "\u3088\u3046\u304b",
@@ -372,6 +386,8 @@ function runUndoRedoTest()
       "caret": { "start": 3, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3088\u3046\u304b\u3044" });
   synthesizeText(
     { "composition":
       { "string": "\u3088\u3046\u304b\u3044",
@@ -384,6 +400,7 @@ function runUndoRedoTest()
     });
 
   // convert
+  synthesizeComposition({ type: "compositionupdate", data: "\u5996\u602a" });
   synthesizeText(
     { "composition":
       { "string": "\u5996\u602a",
@@ -408,7 +425,7 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u5996\u602a" });
 
   synthesizeKey("VK_BACK_SPACE", {});
   synthesizeKey("VK_BACK_SPACE", {});
@@ -591,9 +608,10 @@ function runCompositionTest()
   caretRects[0] = caretRect;
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input first character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
   synthesizeText(
     { "composition":
       { "string": "\u3089",
@@ -618,6 +636,7 @@ function runCompositionTest()
   caretRects[1] = caretRect;
 
   // input second character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089\u30FC" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC",
@@ -651,6 +670,8 @@ function runCompositionTest()
      "runCompositionTest: caret width is wrong (#1-2)");
 
   // input third character
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -751,6 +772,8 @@ function runCompositionTest()
   is(caretRect.height, caretRects[1].height,
      "runCompositionTest: caret rects are different (#1-3-2, height)");
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -769,6 +792,8 @@ function runCompositionTest()
 
 
   // backspace
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -786,6 +811,8 @@ function runCompositionTest()
   }
 
   // re-input
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -802,6 +829,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055",
@@ -818,6 +847,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044",
@@ -834,6 +865,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
@@ -850,6 +883,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
@@ -868,6 +903,8 @@ function runCompositionTest()
   }
 
   // convert
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
   synthesizeText(
     { "composition":
       { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
@@ -910,6 +947,8 @@ function runCompositionTest()
   }
 
   // reset clauses
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
@@ -958,7 +997,8 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046" });
 
   var textRect3 = synthesizeQueryTextRect(0, 1);
   var textRect4 = synthesizeQueryTextRect(1, 1);
@@ -974,9 +1014,10 @@ function runCompositionTest()
   checkRect(textRect4, textRect2, "runCompositionTest: textRect #1-13-2");
 
   // restart composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3057" });
   synthesizeText(
     { "composition":
       { "string": "\u3057",
@@ -994,6 +1035,7 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3058" });
   synthesizeText(
     { "composition":
       { "string": "\u3058",
@@ -1011,6 +1053,7 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3058\u3087" });
   synthesizeText(
     { "composition":
       { "string": "\u3058\u3087",
@@ -1028,6 +1071,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3058\u3087\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3058\u3087\u3046",
@@ -1063,7 +1108,7 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u3058\u3087\u3046" });
 
   // set selection
   var selectionSetTest = synthesizeSelectionSet(4, 7, false);
@@ -1074,8 +1119,9 @@ function runCompositionTest()
   }
 
   // start composition with selection
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u304A" });
   synthesizeText(
     { "composition":
       { "string": "\u304A",
@@ -1094,6 +1140,7 @@ function runCompositionTest()
   }
 
   // remove the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "" });
   synthesizeText(
     { "composition":
       { "string": "",
@@ -1112,6 +1159,7 @@ function runCompositionTest()
   }
 
   // re-input the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3046",
@@ -1130,6 +1178,7 @@ function runCompositionTest()
   }
 
   // cancel the composition
+  synthesizeComposition({ type: "compositionupdate", data: "" });
   synthesizeText(
     { "composition":
       { "string": "",
@@ -1141,7 +1190,7 @@ function runCompositionTest()
       "caret": { "start": 0, "length": 0 }
     });
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "" });
 
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
                     "runCompositionTest", "#3-5") ||
@@ -1277,9 +1326,11 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
                         ": the editor rect coordinates are wrong");
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3078\u3093\u3057\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3078\u3093\u3057\u3093",
@@ -1297,6 +1348,7 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   }
 
   // convert them #1
+  synthesizeComposition({ type: "compositionupdate", data: "\u8FD4\u4FE1" });
   synthesizeText(
     { "composition":
       { "string": "\u8FD4\u4FE1",
@@ -1315,6 +1367,7 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   }
 
   // convert them #2
+  synthesizeComposition({ type: "compositionupdate", data: "\u5909\u8EAB" });
   synthesizeText(
     { "composition":
       { "string": "\u5909\u8EAB",
@@ -1349,7 +1402,7 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u5909\u8EAB" });
 
   is(aFocusedEditor.value, "\u5909\u8EAB",
      aTestName + ": composition isn't in the focused editor");
@@ -1431,9 +1484,10 @@ function runMaxLengthTest()
   var kDesc ="runMaxLengthTest";
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input first character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
   synthesizeText(
     { "composition":
       { "string": "\u3089",
@@ -1451,6 +1505,7 @@ function runMaxLengthTest()
   }
 
   // input second character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089\u30FC" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC",
@@ -1468,6 +1523,8 @@ function runMaxLengthTest()
   }
 
   // input third character
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -1485,6 +1542,8 @@ function runMaxLengthTest()
   }
 
   // input fourth character
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -1503,6 +1562,8 @@ function runMaxLengthTest()
 
 
   // backspace
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -1520,6 +1581,8 @@ function runMaxLengthTest()
   }
 
   // re-input
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -1536,6 +1599,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055",
@@ -1552,6 +1617,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044",
@@ -1568,6 +1635,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
@@ -1585,6 +1654,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
@@ -1603,6 +1674,8 @@ function runMaxLengthTest()
   }
 
   // convert
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
   synthesizeText(
     { "composition":
       { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
@@ -1639,12 +1712,14 @@ function runMaxLengthTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
 
   // restart composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3057" });
   synthesizeText(
     { "composition":
       { "string": "\u3057",
@@ -1662,6 +1737,7 @@ function runMaxLengthTest()
   }
 
   // commit the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "\u3058" });
   synthesizeText(
     { "composition":
       { "string": "\u3058",
@@ -1678,7 +1754,7 @@ function runMaxLengthTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u3058" });
 
   // Undo
   synthesizeKey("Z", {accelKey: true});
