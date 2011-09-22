@@ -26,7 +26,8 @@ var UpdateHelper = Class.create({
           method    = d.methodName;
 
       namespace[method] = (namespace[method] || function() {}).wrap(function(proceed) {
-        var args = $A(arguments).splice(1);
+        var arr = $A(arguments);
+        var args = arr.splice(1, arr.length);
         if (!condition || condition.apply(this, args)) notify(message, type);
         return proceed.apply(proceed, args);
       });
@@ -403,7 +404,8 @@ var prototypeUpdateHelper = new UpdateHelper([
     if (!Object.isFunction(method.value) || key == 'initialize') return;
     Hash.prototype[key] = Hash.prototype[key].wrap(function(proceed) {
       checkProperties(this);
-      return proceed.apply(proceed, $A(arguments).splice(1));
+      var arr = $A(arguments);
+      return proceed.apply(proceed, arr.splice(1, arr.length));
     });
   });
 

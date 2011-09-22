@@ -68,7 +68,7 @@ function testExecutionScope() {
     "command was executed in the window scope");
 
   jsterm.clearOutput();
-  jsterm.history.splice(0);   // workaround for bug 592552
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
 
   finishTest();
 }
