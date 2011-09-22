@@ -278,7 +278,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (vp->isObject()) {
             JSObject *obj = &vp->toObject();
             JS_ASSERT(obj->isCrossCompartmentWrapper());
-            if (global->getJSClass() != &js_dummy_class && obj->getParent() != global) {
+            if (global->getClass() != &dummy_class && obj->getParent() != global) {
                 do {
                     obj->setParent(global);
                     obj = obj->getProto();
@@ -861,14 +861,11 @@ JSCompartment::getBreakpointSite(jsbytecode *pc)
 }
 
 BreakpointSite *
-JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc, JSObject *scriptObject)
+JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc,
+                                         GlobalObject *scriptGlobal)
 {
     JS_ASSERT(script->code <= pc);
     JS_ASSERT(pc < script->code + script->length);
-    JS_ASSERT_IF(scriptObject, scriptObject->isScript() || scriptObject->isFunction());
-    JS_ASSERT_IF(scriptObject && scriptObject->isFunction(),
-                 scriptObject->getFunctionPrivate()->script() == script);
-    JS_ASSERT_IF(scriptObject && scriptObject->isScript(), scriptObject->getScript() == script);
 
     BreakpointSiteMap::AddPtr p = breakpointSites.lookupForAdd(pc);
     if (!p) {
@@ -880,10 +877,10 @@ JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbyte
     }
 
     BreakpointSite *site = p->value;
-    if (site->scriptObject)
-        JS_ASSERT_IF(scriptObject, site->scriptObject == scriptObject);
+    if (site->scriptGlobal)
+        JS_ASSERT_IF(scriptGlobal, site->scriptGlobal == scriptGlobal);
     else
-        site->scriptObject = scriptObject;
+        site->scriptGlobal = scriptGlobal;
 
     return site;
 }

@@ -779,15 +779,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             if (si) {
                 JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
                             clazz->name, si->GetJSClass()->name);
-            } else if (clazz == &js::ScriptClass) {
-                JSScript* script = (JSScript*) xpc_GetJSPrivate(obj);
-                if (script->filename) {
-                    JS_snprintf(name, sizeof(name),
-                                "JS Object (Script - %s)",
-                                script->filename);
-                } else {
-                    JS_snprintf(name, sizeof(name), "JS Object (Script)");
-                }
             } else if (clazz == &js::FunctionClass) {
                 JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
                 JSString* str = JS_GetFunctionId(fun);
