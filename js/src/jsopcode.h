@@ -96,7 +96,6 @@ typedef enum JSOp {
 #define JOF_INT8          18      /* int8 immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16 constant index + object index */
 #define JOF_UINT16PAIR    20      /* pair of uint16 immediates */
-#define JOF_GLOBAL        21      /* uint16 global array index */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */

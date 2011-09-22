@@ -16361,26 +16361,12 @@ TraceRecorder::record_JSOP_SHARPINIT()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GETGLOBAL()
-{
-    uint32 slot = cx->fp()->script()->getGlobalSlot(GET_SLOTNO(cx->regs().pc));
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    stack(0, get(&globalObj->getSlotRef(slot)));
+TraceRecorder::record_JSOP_UNUSED0() {
     return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CALLGLOBAL()
-{
-    uint32 slot = cx->fp()->script()->getGlobalSlot(GET_SLOTNO(cx->regs().pc));
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    const Value &v = globalObj->getSlot(slot);
-    stack(0, get(&v));
-    stack(1, w.immiUndefined());
+TraceRecorder::record_JSOP_UNUSED1() {
     return ARECORD_CONTINUE;
 }
 

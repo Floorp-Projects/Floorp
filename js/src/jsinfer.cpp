@@ -1974,13 +1974,6 @@ GetAtomId(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset
     return MakeTypeId(cx, ATOM_TO_JSID(script->getAtom(index)));
 }
 
-static inline jsid
-GetGlobalId(JSContext *cx, JSScript *script, const jsbytecode *pc)
-{
-    unsigned index = GET_SLOTNO(pc);
-    return MakeTypeId(cx, ATOM_TO_JSID(script->getGlobalAtom(index)));
-}
-
 static inline JSObject *
 GetScriptObject(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset)
 {
@@ -3463,15 +3456,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_GETGLOBAL:
-      case JSOP_CALLGLOBAL:
       case JSOP_GETGNAME:
       case JSOP_CALLGNAME: {
-        jsid id;
-        if (op == JSOP_GETGLOBAL || op == JSOP_CALLGLOBAL)
-            id = GetGlobalId(cx, script, pc);
-        else
-            id = GetAtomId(cx, script, pc, 0);
+        jsid id = GetAtomId(cx, script, pc, 0);
 
         TypeSet *seen = bytecodeTypes(pc);
         seen->addSubset(cx, &pushed[0]);
@@ -3491,7 +3478,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /* Handle as a property access. */
         PropertyAccess(cx, script, pc, script->global()->getType(cx), false, seen, id);
 
-        if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME) {
+        if (op == JSOP_CALLGNAME) {
             pushed[1].addType(cx, Type::UnknownType());
             pushed[0].addPropagateThis(cx, script, pc, Type::UnknownType());
         }
