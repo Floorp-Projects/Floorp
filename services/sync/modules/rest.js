@@ -425,19 +425,19 @@ RESTRequest.prototype = {
       // From nsIRequest.
       requestStatus = channel.status;
       this._log.trace("Request status is " + requestStatus);
-      if (statusSuccess && (statusCode != requestStatus)) {
-        this._log.error("Request status " + requestStatus +
-                        " does not match status arg " + statusCode);
-        try {
-          channel.responseStatus;
-        } catch (ex) {
-          this._log.error("... and we got " + Utils.exceptionStr(ex) +
-                          " retrieving responseStatus.");
-        }
-      }
     } catch (ex) {
       this._log.warn("Got exception " + Utils.exceptionStr(ex) +
                      " fetching channel.status.");
+    }
+    if (statusSuccess && (statusCode != requestStatus)) {
+      this._log.error("Request status " + requestStatus +
+                      " does not match status arg " + statusCode);
+      try {
+        channel.responseStatus;
+      } catch (ex) {
+        this._log.error("... and we got " + Utils.exceptionStr(ex) +
+                        " retrieving responseStatus.");
+      }
     }
 
     let requestStatusSuccess = Components.isSuccessCode(requestStatus);
