@@ -401,7 +401,8 @@
       </dialog>
     </box>
 
-    <arrowbox id="appmenu-popup" hidden="true" type="dialog">
+    <!-- use an offset to remove the space taken by the invisible callout arrow -->
+    <arrowbox id="appmenu-popup" hidden="true" type="dialog" offset="18">
       <box id="appmenu-popup-sitecommands"/>
       <richlistbox id="appmenu-popup-appcommands"/>
     </arrowbox>
