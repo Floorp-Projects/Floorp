@@ -946,6 +946,9 @@ protected:
 private:
   // If mIsIMEComposing is true, the composition string is stored here.
   NSString* mIMECompositionString;
+  // mLastDispatchedCompositionString stores the lastest dispatched composition
+  // string by compositionupdate event.
+  nsString mLastDispatchedCompositionString;
 
   NSRange mMarkedRange;
 
