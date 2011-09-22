@@ -79,10 +79,6 @@ public:
    * Creates "native" anonymous content and adds the created content to
    * the aElements array. None of the returned elements can be nsnull.
    *
-   * If the anonymous content creator sets the editable flag on some
-   * of the elements that it creates, the flag will be applied to the node
-   * upon being bound to the document.
-   *
    * @note The returned elements are owned by this object. This object is
    *       responsible for calling UnbindFromTree on the elements it returned
    *       from CreateAnonymousContent when appropriate (i.e. before releasing
