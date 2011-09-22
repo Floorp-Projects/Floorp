@@ -103,6 +103,7 @@ _DATA_FILES = \
 		data/cfhtml-firefox.txt \
 		data/cfhtml-ie.txt \
 		data/cfhtml-ooo.txt \
+		data/cfhtml-nocontext.txt \
 		$(NULL)
 
 _CHROME_TEST_FILES = \

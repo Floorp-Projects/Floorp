@@ -29,7 +29,7 @@
 
     function doTest() {
       var clip1 = document.getElementById("clip1");
-      clip1.setAttribute("clipPathUnits", "userSpaceOnUse");
+      clip1.clipPathUnits.baseVal = SVGUnitTypes.SVG_UNIT_TYPE_USERSPACEONUSE;
 
       document.documentElement.removeAttribute("class");
     }
