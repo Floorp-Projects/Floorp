@@ -1472,6 +1472,13 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
     return NewNativeClassInstance(cx, clasp, proto, parent, kind);
 }
 
+inline GlobalObject *
+GetCurrentGlobal(JSContext *cx)
+{
+    JSObject *scopeChain = (cx->hasfp()) ? &cx->fp()->scopeChain() : cx->globalObject;
+    return scopeChain ? scopeChain->getGlobal() : NULL;
+}
+
 bool
 FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject **protop,
                    Class *clasp);

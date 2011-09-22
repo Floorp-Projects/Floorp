@@ -275,7 +275,7 @@ struct StmtInfo {
 /*
  * The caller is JS_Compile*Script*.
  */
-#define TCF_NEED_SCRIPT_OBJECT 0x40000000
+#define TCF_NEED_SCRIPT_GLOBAL 0x40000000
 
 /*
  * Flags to check for return; vs. return expr; in a function.
