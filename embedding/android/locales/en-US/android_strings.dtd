@@ -1,5 +1,4 @@
 
-<!ENTITY  splash_screen_loading "Loading">
 <!ENTITY  splash_firstrun "Setting up &brandShortName;\u2026">
 
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">

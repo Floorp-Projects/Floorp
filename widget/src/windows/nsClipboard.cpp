@@ -693,23 +693,47 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 PRBool
 nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen )
 {
-  PRBool dataFound = PR_FALSE;
+  // Reference: MSDN doc entitled "HTML Clipboard Format"
+  // http://msdn.microsoft.com/en-us/library/aa767917(VS.85).aspx#unknown_854
+  // CF_HTML is UTF8, not unicode. We also can't rely on it being null-terminated
+  // so we have to check the CF_HTML header for the correct length. 
+  // The length we return is the bytecount from the beginning of the selected data to the end
+  // of the selected data, without the null termination. Because it's UTF8, we're guaranteed 
+  // the header is ASCII.
 
-  if ( outData && *outData ) {
-    // CF_HTML is UTF8, not unicode. We also can't rely on it being null-terminated
-    // so we have to check the CF_HTML header for the correct length. The length we return
-    // is the bytecount from the beginning of the data to the end, without
-    // the null termination. Because it's UTF8, we're guaranteed the header is ascii (yay!).
-    float vers = 0.0;
-    PRUint32 startOfData = 0;
-    sscanf((char*)*outData, "Version:%f\nStartHTML:%u\nEndHTML:%u", &vers, &startOfData, outDataLen);
-    NS_ASSERTION(startOfData && *outDataLen, "Couldn't parse CF_HTML description header");
- 
-    if ( *outDataLen )
-      dataFound = PR_TRUE;
+  if (!outData || !*outData) {
+    return PR_FALSE;
   }
 
-  return dataFound;
+  float vers = 0.0;
+  PRInt32 startOfData = 0;
+  PRInt32 endOfData = 0;
+  int numFound = sscanf((char*)*outData, "Version:%f\nStartHTML:%d\nEndHTML:%d", 
+                        &vers, &startOfData, &endOfData);
+
+  if (numFound != 3 || startOfData < -1 || endOfData < -1) {
+    return PR_FALSE;
+  }
+
+  // Fixup the start and end markers if they have no context (set to -1)
+  if (startOfData == -1) {
+    startOfData = 0;
+  }
+  if (endOfData == -1) {
+    endOfData = *outDataLen;
+  }
+
+  // Make sure we were passed sane values within our buffer size.
+  if (!endOfData || startOfData >= endOfData || 
+      endOfData > *outDataLen) {
+    return PR_FALSE;
+  }
+  
+  // We want to return the buffer not offset by startOfData because it will be 
+  // parsed out later (probably by nsHTMLEditor::ParseCFHTML) when it is still
+  // in CF_HTML format.
+  *outDataLen = endOfData;
+  return PR_TRUE;
 }
 
 

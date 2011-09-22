@@ -353,6 +353,9 @@ protected:
       ~FilterLink() { if (next) delete next; }
     };
 
+    // Indicates if local hosts (plain hostnames, no dots) should use the proxy
+    PRBool mFilterLocalHosts;
+
     // Holds an array of HostInfo objects
     nsTArray<nsAutoPtr<HostInfo> > mHostFiltersArray;
 

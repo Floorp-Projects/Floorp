@@ -107,26 +107,79 @@ class GeckoSurfaceView
     }
 
     void drawSplashScreen(SurfaceHolder holder, int width, int height) {
+        // No splash screen for Honeycomb or greater
+        if (Build.VERSION.SDK_INT >= 11) {
+            Log.i(LOG_FILE_NAME, "skipping splash screen");
+            return;
+        }
+
         Canvas c = holder.lockCanvas();
         if (c == null) {
             Log.i(LOG_FILE_NAME, "canvas is null");
             return;
         }
+
         Resources res = getResources();
-        c.drawColor(res.getColor(R.color.splash_background));
-        Drawable drawable = res.getDrawable(R.drawable.splash);
-        int w = drawable.getIntrinsicWidth();
-        int h = drawable.getIntrinsicHeight();
-        int x = (width - w)/2;
-        int y = (height - h)/2 - 16;
-        drawable.setBounds(x, y, x + w, y + h);
-        drawable.draw(c);
-        Paint p = new Paint();
-        p.setTextAlign(Paint.Align.CENTER);
-        p.setTextSize(32f);
-        p.setAntiAlias(true);
-        p.setColor(res.getColor(R.color.splash_font));
-        c.drawText(GeckoSurfaceView.mSplashStatusMsg, width/2, y + h + 16, p);
+
+        File profiles = new File(GeckoApp.sGREDir, "files/mozilla/profiles.ini");
+        if (profiles.exists() == false) {
+            // Just show the simple splash screen for "new profile" startup
+            c.drawColor(res.getColor(R.color.splash_background));
+            Drawable drawable = res.getDrawable(R.drawable.splash);
+            int w = drawable.getIntrinsicWidth();
+            int h = drawable.getIntrinsicHeight();
+            int x = (width - w) / 2;
+            int y = (height - h) / 2 - 16;
+            drawable.setBounds(x, y, x + w, y + h);
+            drawable.draw(c);
+
+            Paint p = new Paint();
+            p.setTextAlign(Paint.Align.CENTER);
+            p.setTextSize(32f);
+            p.setAntiAlias(true);
+            p.setColor(res.getColor(R.color.splash_msgfont));
+            c.drawText(res.getString(R.string.splash_firstrun), width / 2, y + h + 16, p);
+        } else {
+            // Show the static UI for normal startup
+            DisplayMetrics metrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    
+            // Default to DENSITY_HIGH sizes
+            int toolbarHeight = 80;
+            int faviconOffset = 25;
+            float urlHeight = 24f;
+            int urlOffsetX = 80;
+            int urlOffsetY = 48;
+            if (metrics.densityDpi == DisplayMetrics.DENSITY_MEDIUM) {
+                toolbarHeight = 53;
+                faviconOffset = 10;
+                urlHeight = 16f;
+                urlOffsetX = 53;
+                urlOffsetY = 32;
+            }
+    
+            c.drawColor(res.getColor(R.color.splash_content));
+            Drawable toolbar = res.getDrawable(Build.VERSION.SDK_INT > 8 ?
+                                               R.drawable.splash_v9 :
+                                               R.drawable.splash_v8);
+            toolbar.setBounds(0, 0, width, toolbarHeight);
+            toolbar.draw(c);
+    
+            // XUL/CSS always uses 32px width and height for favicon
+            Drawable favicon = res.getDrawable(R.drawable.favicon32);
+            favicon.setBounds(faviconOffset, faviconOffset, 32 + faviconOffset, 32 + faviconOffset);
+            favicon.draw(c);
+    
+            if (GeckoSurfaceView.mSplashURL != "") {
+                TextPaint p = new TextPaint();
+                p.setTextAlign(Paint.Align.LEFT);
+                p.setTextSize(urlHeight);
+                p.setAntiAlias(true);
+                p.setColor(res.getColor(R.color.splash_urlfont));
+                String url = TextUtils.ellipsize(GeckoSurfaceView.mSplashURL, p, width - urlOffsetX * 2, TextUtils.TruncateAt.END).toString();
+                c.drawText(url, urlOffsetX, urlOffsetY, p);
+            }
+        }
         holder.unlockCanvasAndPost(c);
     }
 
@@ -734,7 +787,7 @@ class GeckoSurfaceView
     int mDrawMode;
 
     static boolean mShowingSplashScreen = true;
-    static String  mSplashStatusMsg = "";
+    static String  mSplashURL = "";
 
     // let's not change stuff around while we're in the middle of
     // starting drawing, ending drawing, or changing surface
