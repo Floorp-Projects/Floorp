@@ -71,7 +71,7 @@ PRUint32
 nsICODecoder::CalcAlphaRowSize() 
 {
   // Calculate rowsize in DWORD's and then return in # of bytes
-  PRUint32 rowSize = (mDirEntry.mWidth + 31) / 32; // +31 to round up
+  PRUint32 rowSize = (GetRealWidth() + 31) / 32; // + 31 to round up
   return rowSize * 4; // Return rowSize in bytes
 }
 
@@ -149,10 +149,10 @@ PRBool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh)
       return PR_FALSE;
     }
     dataOffset += 4 * numColors;
-    fileSize = dataOffset + mDirEntry.mWidth * mDirEntry.mHeight;
+    fileSize = dataOffset + GetRealWidth() * GetRealHeight();
   } else {
-    fileSize = dataOffset + (mDirEntry.mBitCount * mDirEntry.mWidth * 
-                             mDirEntry.mHeight) / 8;
+    fileSize = dataOffset + (mDirEntry.mBitCount * GetRealWidth() * 
+                             GetRealHeight()) / 8;
   }
 
   fileSize = NATIVE32_TO_LITTLE(fileSize);
@@ -168,7 +168,7 @@ PRBool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh)
 void 
 nsICODecoder::FillBitmapInformationBufferHeight(PRInt8 *bih) 
 {
-  PRInt32 height = mDirEntry.mHeight;
+  PRInt32 height = GetRealHeight();
   height = NATIVE32_TO_LITTLE(height);
   memcpy(bih + 8, &height, sizeof(height));
 }
@@ -265,8 +265,11 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                 (mCurrIcon * sizeof(mDirEntryArray))) {
       mCurrIcon++;
       ProcessDirEntry(e);
-      if ((e.mWidth == PREFICONSIZE && e.mHeight == PREFICONSIZE && 
-           e.mBitCount >= colorDepth) || 
+      // We can't use GetRealWidth and GetRealHeight here because those operate
+      // on mDirEntry, here we are going through each item in the directory
+      if (((e.mWidth == 0 ? 256 : e.mWidth) == PREFICONSIZE && 
+           (e.mHeight == 0 ? 256 : e.mHeight) == PREFICONSIZE && 
+           (e.mBitCount >= colorDepth)) ||
           (mCurrIcon == mNumIcons && mImageOffset == 0)) {
         mImageOffset = e.mImageOffset;
 
@@ -477,11 +480,11 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
       // The alpha mask should be checked in all other cases.
       if (static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetBitsPerPixel() != 32 || 
           !static_cast<nsBMPDecoder*>(mContainedDecoder.get())->HasAlphaData()) {
-        PRUint32 rowSize = ((mDirEntry.mWidth + 31) / 32) * 4; // + 31 to round up
+        PRUint32 rowSize = ((GetRealWidth() + 31) / 32) * 4; // + 31 to round up
         if (mPos == bmpDataEnd) {
           mPos++;
           mRowBytes = 0;
-          mCurLine = mDirEntry.mHeight;
+          mCurLine = GetRealHeight();
           mRow = (PRUint8*)moz_realloc(mRow, rowSize);
           if (!mRow) {
             PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
@@ -515,8 +518,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
               PostDataError();
               return;
             }
-            PRUint32* decoded = imageData + mCurLine * mDirEntry.mWidth;
-            PRUint32* decoded_end = decoded + mDirEntry.mWidth;
+            PRUint32* decoded = imageData + mCurLine * GetRealWidth();
+            PRUint32* decoded_end = decoded + GetRealWidth();
             PRUint8* p = mRow, *p_end = mRow + rowSize; 
             while (p < p_end) {
               PRUint8 idx = *p++;

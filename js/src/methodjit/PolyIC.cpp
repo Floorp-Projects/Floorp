@@ -1167,10 +1167,8 @@ class GetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.canCallHook);
         PropertyOp getter = shape->getterOp();
 
-        if (cx->typeInferenceEnabled()) {
-            masm.storePtr(ImmPtr((void *) REJOIN_NATIVE_GETTER),
-                          FrameAddress(offsetof(VMFrame, stubRejoin)));
-        }
+        masm.storePtr(ImmPtr((void *) REJOIN_NATIVE_GETTER),
+                      FrameAddress(offsetof(VMFrame, stubRejoin)));
 
         Registers tempRegs = Registers::tempCallRegMask();
         if (tempRegs.hasReg(Registers::ClobberInCall))
