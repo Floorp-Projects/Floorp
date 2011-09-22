@@ -165,7 +165,8 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
                                bool *triedToWrap)
   {
-    return mozilla::dom::binding::HTMLCollection::create(cx, scope, this, this, triedToWrap);
+    return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
+                                                         triedToWrap);
   }
 
   nsHTMLFormElement* mForm;  // WEAK - the form owns me
