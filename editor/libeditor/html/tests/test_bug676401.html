@@ -35,17 +35,10 @@ var gBlock1, gBlock2;
 function IsCommandEnabled(command) {
   var enabled;
 
-  var resultInNonEditableRegion = false;
-  if (command == "selectAll") {
-    // The select all command is sort of exceptional, as it needs to be enabled
-    // everywhere.
-    resultInNonEditableRegion = true;
-  }
-
   // non-editable div: should return false
   window.getSelection().selectAllChildren(gBlock1);
   enabled = document.queryCommandEnabled(command);
-  is(enabled, resultInNonEditableRegion, "'" + command + "' should not be enabled on a non-editable block.");
+  is(enabled, false, "'" + command + "' should not be enabled on a non-editable block.");
 
   // editable div: should return true
   window.getSelection().selectAllChildren(gBlock2);
