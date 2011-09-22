@@ -2590,7 +2590,7 @@ SessionStoreService.prototype = {
              (!winData.tabs[0].entries || winData.tabs[0].entries.length == 0)) {
       winData.tabs = [];
     }
-    
+
     var tabbrowser = aWindow.gBrowser;
     var openTabCount = aOverwriteTabs ? tabbrowser.browsers.length : -1;
     var newTabCount = winData.tabs.length;
@@ -2600,17 +2600,17 @@ SessionStoreService.prototype = {
     var tabstrip = tabbrowser.tabContainer.mTabstrip;
     var smoothScroll = tabstrip.smoothScroll;
     tabstrip.smoothScroll = false;
-    
-    // make sure that the selected tab won't be closed in order to
-    // prevent unnecessary flickering
-    if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
-      tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
 
     // unpin all tabs to ensure they are not reordered in the next loop
     if (aOverwriteTabs) {
       for (let t = tabbrowser._numPinnedTabs - 1; t > -1; t--)
         tabbrowser.unpinTab(tabbrowser.tabs[t]);
     }
+
+    // make sure that the selected tab won't be closed in order to
+    // prevent unnecessary flickering
+    if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
+      tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
 
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ?
