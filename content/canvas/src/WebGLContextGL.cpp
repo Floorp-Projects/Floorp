@@ -1274,15 +1274,23 @@ WebGLContext::WhatDoesVertexAttrib0Need()
                                                         : VertexAttrib0Status::EmulatedUninitializedArray;
 }
 
-void
+bool
 WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
 {
     int whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
 
     if (whatDoesAttrib0Need == VertexAttrib0Status::Default)
-        return;
+        return true;
 
-    WebGLuint dataSize = sizeof(WebGLfloat) * 4 * vertexCount;
+    CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(WebGLfloat);
+    
+    if (!checked_dataSize.valid()) {
+        ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0 array for a draw-operation "
+                         "with %d vertices. Try reducing the number of vertices.", vertexCount);
+        return false;
+    }
+    
+    WebGLuint dataSize = checked_dataSize.value();
 
     if (!mFakeVertexAttrib0BufferObject) {
         gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
@@ -1311,7 +1319,8 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
 
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
 
-        WebGLuint dataSize = sizeof(WebGLfloat) * 4 * vertexCount;
+        GLenum error = LOCAL_GL_NO_ERROR;
+        UpdateWebGLErrorAndClearGLError();
 
         if (mFakeVertexAttrib0BufferStatus == VertexAttrib0Status::EmulatedInitializedArray) {
             nsAutoArrayPtr<WebGLfloat> array(new WebGLfloat[4 * vertexCount]);
@@ -1325,12 +1334,22 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
         } else {
             gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nsnull, LOCAL_GL_DYNAMIC_DRAW);
         }
-
+        UpdateWebGLErrorAndClearGLError(&error);
+        
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
+
+        // note that we do this error checking and early return AFTER having restored the buffer binding above
+        if (error) {
+            ErrorOutOfMemory("Ran out of memory trying to construct a fake vertex attrib 0 array for a draw-operation "
+                             "with %d vertices. Try reducing the number of vertices.", vertexCount);
+            return false;
+        }
     }
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
     gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0);
+    
+    return true;
 }
 
 void
@@ -1483,7 +1502,8 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     }
 
     BindFakeBlackTextures();
-    DoFakeVertexAttrib0(checked_firstPlusCount.value());
+    if (!DoFakeVertexAttrib0(checked_firstPlusCount.value()))
+        return NS_OK;
 
     gl->fDrawArrays(mode, first, count);
 
@@ -1589,7 +1609,8 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     }
 
     BindFakeBlackTextures();
-    DoFakeVertexAttrib0(checked_maxIndexPlusOne.value());
+    if (!DoFakeVertexAttrib0(checked_maxIndexPlusOne.value()))
+        return NS_OK;
 
     gl->fDrawElements(mode, count, type, (GLvoid*) (byteOffset));
 
