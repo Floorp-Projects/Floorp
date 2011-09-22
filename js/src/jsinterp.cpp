@@ -4579,19 +4579,8 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
 }
 END_CASE(JSOP_GETFCSLOT)
 
-BEGIN_CASE(JSOP_GETGLOBAL)
-BEGIN_CASE(JSOP_CALLGLOBAL)
-{
-    uint32 slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    JSObject *obj = regs.fp()->scopeChain().getGlobal();
-    JS_ASSERT(obj->containsSlot(slot));
-    PUSH_COPY(obj->getSlot(slot));
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-    if (op == JSOP_CALLGLOBAL)
-        PUSH_UNDEFINED();
-}
-END_CASE(JSOP_GETGLOBAL)
+BEGIN_CASE(JSOP_UNUSED0)
+BEGIN_CASE(JSOP_UNUSED1)
 
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)

@@ -615,7 +615,6 @@ class Compiler : public BaseCompiler
     bool finishLoop(jsbytecode *head);
     void jsop_bindname(JSAtom *atom, bool usePropCache);
     void jsop_setglobal(uint32 index);
-    void jsop_getglobal(uint32 index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
     void jsop_getarg(uint32 slot);
     void jsop_setarg(uint32 slot, bool popped);

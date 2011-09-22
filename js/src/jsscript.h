@@ -747,18 +747,6 @@ struct JSScript : public js::gc::Cell {
         return arr->vector[index];
     }
 
-    uint32 getGlobalSlot(size_t index) {
-        js::GlobalSlotArray *arr = globals();
-        JS_ASSERT(index < arr->length);
-        return arr->vector[index].slot;
-    }
-
-    JSAtom *getGlobalAtom(size_t index) {
-        js::GlobalSlotArray *arr = globals();
-        JS_ASSERT(index < arr->length);
-        return getAtom(arr->vector[index].atomIndex);
-    }
-
     JSVersion getVersion() const {
         return JSVersion(version);
     }
