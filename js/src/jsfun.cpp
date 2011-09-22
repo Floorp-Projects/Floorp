@@ -1558,6 +1558,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     uint32 flagsword;           /* word for argument count and fun->flags */
 
     cx = xdr->cx;
+    JSScript *script;
     if (xdr->mode == JSXDR_ENCODE) {
         fun = (*objp)->getFunctionPrivate();
         if (!fun->isInterpreted()) {
@@ -1570,12 +1571,14 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         }
         firstword = (fun->u.i.skipmin << 2) | !!fun->atom;
         flagsword = (fun->nargs << 16) | fun->flags;
+        script = fun->script();
     } else {
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
         fun->clearParent();
         fun->clearType();
+        script = NULL;
     }
 
     AutoObjectRooter tvr(cx, fun);
@@ -1587,28 +1590,20 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRUint32(xdr, &flagsword))
         return false;
 
+    if (!js_XDRScript(xdr, &script))
+        return false;
+
     if (xdr->mode == JSXDR_DECODE) {
         fun->nargs = flagsword >> 16;
         JS_ASSERT((flagsword & JSFUN_KINDMASK) >= JSFUN_INTERPRETED);
         fun->flags = uint16(flagsword);
         fun->u.i.skipmin = uint16(firstword >> 2);
-    }
-
-    /*
-     * Don't directly store into fun->u.i.script because we want this to happen
-     * at the same time as we set the script's owner.
-     */
-    JSScript *script = fun->script();
-    if (!js_XDRScript(xdr, &script))
-        return false;
-
-    if (xdr->mode == JSXDR_DECODE) {
-        *objp = fun;
         fun->setScript(script);
-        if (!fun->script()->typeSetFunction(cx, fun))
+        if (!script->typeSetFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
+        *objp = fun;
     }
 
     return true;
@@ -1674,10 +1669,8 @@ fun_trace(JSTracer *trc, JSObject *obj)
     if (fun->atom)
         MarkString(trc, fun->atom, "atom");
 
-    if (fun->isInterpreted() && fun->script()) {
-        CheckScriptOwner(fun->script(), obj);
+    if (fun->isInterpreted() && fun->script())
         MarkScript(trc, fun->script(), "script");
-    }
 }
 
 static void
@@ -2421,19 +2414,18 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
-            JS_OPT_ASSERT(script->ownerObject == fun);
 
             cfun->u.i.script_ = NULL;
             JSScript *cscript = js_CloneScript(cx, script);
             if (!cscript)
                 return NULL;
-
+            cscript->u.globalObject = cfun->getGlobal();
             cfun->setScript(cscript);
-            if (!cfun->script()->typeSetFunction(cx, cfun))
+            if (!cscript->typeSetFunction(cx, cfun))
                 return NULL;
 
             js_CallNewScriptHook(cx, cfun->script(), cfun);
-            Debugger::onNewScript(cx, cfun->script(), cfun, NULL);
+            Debugger::onNewScript(cx, cfun->script(), NULL);
         }
     }
     return clone;

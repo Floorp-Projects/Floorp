@@ -1049,9 +1049,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     JSPrincipals *principals;
 
     nbytes = sizeof *script;
-    if (script->u.object)
-        nbytes += JS_GetObjectTotalSize(cx, script->u.object);
-
     nbytes += script->length * sizeof script->code[0];
     nbytes += script->natoms * sizeof script->atoms[0];
     for (size_t i = 0; i < script->natoms; i++)

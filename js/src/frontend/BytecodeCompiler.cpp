@@ -72,7 +72,7 @@ BytecodeCompiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame 
     bool inDirectivePrologue;
 
     JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_NEED_MUTABLE_SCRIPT |
-                            TCF_COMPILE_FOR_EVAL | TCF_NEED_SCRIPT_OBJECT)));
+                            TCF_COMPILE_FOR_EVAL | TCF_NEED_SCRIPT_GLOBAL)));
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
