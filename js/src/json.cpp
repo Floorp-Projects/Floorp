@@ -41,7 +41,6 @@
 
 #include <string.h>
 #include "jsapi.h"
-#include "jsarena.h"
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
