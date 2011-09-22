@@ -64,6 +64,7 @@ public:
 
   virtual void InitInternal();
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual Telemetry::ID SpeedHistogram();
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    PRInt32 width, PRInt32 height,
