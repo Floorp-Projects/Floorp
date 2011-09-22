@@ -209,7 +209,7 @@ libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
 	$(NSINSTALL) $(srcdir)/macbuild/InfoPlist.strings $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
 	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Info.plist.in > $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Info.plist
-	rsync -a $(DIST)/bin/ $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION) --exclude mangle --exclude shlibsign
+	rsync -av $(DIST)/bin/ $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION) --exclude mangle --exclude shlibsign
 	rm -f $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/XUL \
