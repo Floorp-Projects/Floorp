@@ -1632,12 +1632,15 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             ALOGIME("IME: IME_COMPOSITION_END");
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
             InitEvent(event, nsnull);
+            event.data = mIMELastDispatchedComposingText;
+            mIMELastDispatchedComposingText.Truncate();
             DispatchEvent(&event);
         }
         return;
     case AndroidGeckoEvent::IME_COMPOSITION_BEGIN:
         {
             ALOGIME("IME: IME_COMPOSITION_BEGIN");
+            mIMELastDispatchedComposingText.Truncate();
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
             InitEvent(event, nsnull);
             DispatchEvent(&event);
@@ -1658,6 +1661,20 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             event.theText.Assign(ae->Characters());
             event.rangeArray = mIMERanges.Elements();
             event.rangeCount = mIMERanges.Length();
+
+            if (mIMEComposing &&
+                event.theText != mIMELastDispatchedComposingText) {
+                nsCompositionEvent compositionUpdate(PR_TRUE,
+                                                     NS_COMPOSITION_UPDATE,
+                                                     this);
+                InitEvent(compositionUpdate, nsnull);
+                compositionUpdate.data = event.theText;
+                mIMELastDispatchedComposingText = event.theText;
+                DispatchEvent(&compositionUpdate);
+                // XXX We must check whether this widget is destroyed or not
+                //     before dispatching next event.  However, Android's
+                //     nsWindow has never checked it...
+            }
 
             ALOGIME("IME: IME_SET_TEXT: l=%u, r=%u",
                 event.theText.Length(), mIMERanges.Length());
