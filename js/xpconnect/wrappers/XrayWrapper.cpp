@@ -552,6 +552,17 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
     return AccessCheck::documentDomainMakesSameOrigin(cx, UnwrapObject(wrapper));
 }
 
+JSObject *
+GetNativePropertiesObject(JSContext *cx, JSObject *wrapper)
+{
+    NS_ASSERTION(js::IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper),
+                 "bad object passed in");
+
+    JSObject *holder = GetHolder(wrapper);
+    NS_ASSERTION(holder, "uninitialized wrapper being used?");
+    return holder;
+}
+
 }
 
 template <typename Base>
