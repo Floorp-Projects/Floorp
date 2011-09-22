@@ -897,9 +897,12 @@ mozilla_AndroidBridge_AttachThread(PRBool asDaemon)
     return AndroidBridge::Bridge()->AttachThread(asDaemon);
 }
 
-extern "C" JNIEnv * GetJNIForThread()
-{
-    return mozilla::AndroidBridge::JNIForThread();
+extern "C" {
+    __attribute__ ((visibility("default")))
+    JNIEnv * GetJNIForThread()
+    {
+        return mozilla::AndroidBridge::JNIForThread();
+    }
 }
 
 jclass GetGeckoAppShellClass()
