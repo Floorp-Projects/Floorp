@@ -124,12 +124,12 @@ ChannelListener.prototype = {
 
   onStopRequest: function(request, context, status) {
     try {
-      if (!this._got_onstartrequest)
+      var success = Components.isSuccessCode(status);
+      if (!this._got_onstartrequest && success)
         do_throw("onStopRequest without onStartRequest event!");
       if (this._got_onstoprequest)
         do_throw("Got second onStopRequest event!");
       this._got_onstoprequest = true;
-      var success = Components.isSuccessCode(status);
       if ((this._flags & CL_EXPECT_FAILURE) && success)
         do_throw("Should have failed to load URL (status is " + status.toString(16) + ")");
       else if (!(this._flags & CL_EXPECT_FAILURE) && !success)

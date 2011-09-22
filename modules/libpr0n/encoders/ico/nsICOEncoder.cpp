@@ -178,8 +178,8 @@ nsICOEncoder::AddImageFrame(const PRUint8* aData,
                                          aStride, aInputFormat, params);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 andMaskSize = ((mICODirEntry.mWidth + 31) / 32) * 4 * // row AND mask
-                           mICODirEntry.mHeight; // num rows
+    PRUint32 andMaskSize = ((GetRealWidth() + 31) / 32) * 4 * // row AND mask
+                           GetRealHeight(); // num rows
 
     PRUint32 imageBufferSize;
     mContainedEncoder->GetImageBufferSize(&imageBufferSize);
@@ -204,15 +204,15 @@ nsICOEncoder::AddImageFrame(const PRUint8* aData,
     memcpy(mImageBufferCurr, imageBuffer + BFH_LENGTH, 
            imageBufferSize - BFH_LENGTH);
     // We need to fix the BMP height to be *2 for the AND mask
-    PRUint32 fixedHeight = mICODirEntry.mHeight * 2;
+    PRUint32 fixedHeight = GetRealHeight() * 2;
     fixedHeight = NATIVE32_TO_LITTLE(fixedHeight);
     // The height is stored at an offset of 8 from the DIB header
     memcpy(mImageBufferCurr + 8, &fixedHeight, sizeof(fixedHeight));
     mImageBufferCurr += imageBufferSize - BFH_LENGTH;
 
     // Calculate rowsize in DWORD's
-    PRUint32 rowSize = ((mICODirEntry.mWidth + 31) / 32) * 4; // + 31 to round up
-    PRInt32 currentLine = mICODirEntry.mHeight;
+    PRUint32 rowSize = ((GetRealWidth() + 31) / 32) * 4; // + 31 to round up
+    PRInt32 currentLine = GetRealHeight();
     
     // Write out the AND mask
     while (currentLine > 0) {
@@ -250,7 +250,7 @@ NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aWidth,
   }
 
   // Icons are only 1 byte, so make sure our bitmap is in range
-  if (aWidth > 255 || aHeight > 255) {
+  if (aWidth > 256 || aHeight > 256) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -263,7 +263,9 @@ NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aWidth,
   mUsePNG = usePNG;
 
   InitFileHeader();
-  InitInfoHeader(bpp, (PRUint8)aWidth, (PRUint8)aHeight); // range checks above
+  // The width and height are stored as 0 when we have a value of 256
+  InitInfoHeader(bpp, aWidth == 256 ? 0 : (PRUint8)aWidth, 
+                 aHeight == 256 ? 0 : (PRUint8)aHeight);
 
   return NS_OK;
 }
