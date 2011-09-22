@@ -2758,13 +2758,6 @@ mjit::Compiler::generateMethod()
             INLINE_STUBCALL(stubs::UnbrandThis, REJOIN_FALLTHROUGH);
           END_CASE(JSOP_UNBRANDTHIS)
 
-          BEGIN_CASE(JSOP_GETGLOBAL)
-          BEGIN_CASE(JSOP_CALLGLOBAL)
-            jsop_getglobal(GET_SLOTNO(PC));
-            if (op == JSOP_CALLGLOBAL)
-                frame.push(UndefinedValue());
-          END_CASE(JSOP_GETGLOBAL)
-
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
@@ -2895,38 +2888,6 @@ mjit::Compiler::jumpInScript(Jump j, jsbytecode *pc)
         return true;
     }
     return branchPatches.append(BranchPatch(j, pc, a->inlineIndex));
-}
-
-void
-mjit::Compiler::jsop_getglobal(uint32 index)
-{
-    JS_ASSERT(globalObj);
-    uint32 slot = script->getGlobalSlot(index);
-
-    JSObject *singleton = pushedSingleton(0);
-    if (singleton && !hasTypeBarriers(PC) && !globalObj->getSlot(slot).isUndefined()) {
-        frame.push(ObjectValue(*singleton));
-        return;
-    }
-
-    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
-        !globalObj->getType(cx)->unknownProperties()) {
-        Value *value = &globalObj->getSlotRef(slot);
-        if (!value->isUndefined()) {
-            watchGlobalReallocation();
-            RegisterID reg = frame.allocReg();
-            masm.move(ImmPtr(value), reg);
-
-            BarrierState barrier = pushAddressMaybeBarrier(Address(reg), knownPushedType(0), true);
-            finishBarrier(barrier, REJOIN_GETTER, 0);
-            return;
-        }
-    }
-
-    RegisterID reg = frame.allocReg();
-    Address address = masm.objSlotRef(globalObj, reg, slot);
-    BarrierState barrier = pushAddressMaybeBarrier(address, knownPushedType(0), true);
-    finishBarrier(barrier, REJOIN_GETTER, 0);
 }
 
 void

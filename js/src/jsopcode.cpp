@@ -545,17 +545,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         }
         break;
 
-      case JOF_GLOBAL:
-        atom = script->getGlobalAtom(GET_SLOTNO(pc));
-        v = STRING_TO_JSVAL(atom);
-        {
-            JSAutoByteString bytes;
-            if (!ToDisassemblySource(cx, v, &bytes))
-                return 0;
-            Sprint(sp, " %s", bytes.ptr());
-        }
-        break;
-
       case JOF_UINT16PAIR:
         i = (jsint)GET_UINT16(pc);
         Sprint(sp, " %d", i);
@@ -4014,11 +4003,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #else
                 LOCAL_ASSERT(atom);
 #endif
-                goto do_name;
-
-              case JSOP_CALLGLOBAL:
-              case JSOP_GETGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
                 goto do_name;
 
               case JSOP_CALLNAME:
