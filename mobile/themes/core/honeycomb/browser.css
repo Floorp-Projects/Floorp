@@ -352,16 +352,30 @@ toolbarbutton.urlbar-button {
 #tool-tabs {
   -moz-box-orient: vertical;
   list-style-image: url("chrome://browser/skin/images/tabs-hdpi.png");
+  background-image: url("chrome://browser/skin/images/tabs-default-bg.png");
+  background-position: top left;
+  background-repeat: no-repeat;
+  -moz-margin-end: -@margin_large@; /* allow back button to overlap a bit */
+  min-width: 100px !important; /* same width than bg image */
+}
+
+#tool-tabs:not([disabled="true"]):active,
+#tool-tabs:not([disabled="true"])[open="true"] {
+  background-image: url("chrome://browser/skin/images/tabs-selected-bg.png");
+  background-color: transparent;
 }
 
 #tool-tabs .toolbarbutton-icon {
-  -moz-transform: translateY(0.5em);
+  -moz-transform: translateY(0.45em);
+  padding-right: 32px; /* correct position and alignment */
 }
 
 #tool-tabs .toolbarbutton-text {
+  color: @color_text_toolbutton_inverse@;
   display: -moz-box;
   font-size: @font_small@ !important;
-  -moz-transform: translateY(-1.25em);
+  -moz-transform: translateY(-0.56em);
+  padding-right: 33px; /* correct position and alignment */
 }
 
 #tool-menu {
