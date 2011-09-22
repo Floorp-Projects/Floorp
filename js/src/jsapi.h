@@ -783,6 +783,8 @@ SameType(const Value &lhs, const Value &rhs)
 
 /************************************************************************/
 
+#ifndef __GNUC__
+
 /*
  * The default assignment operator for |struct C| has the signature:
  *
@@ -800,6 +802,8 @@ inline Anchor<Value>::~Anchor()
     volatile uint64 bits;
     bits = hold.asRawBits();
 }
+
+#endif
 
 }  /* namespace JS */
 
