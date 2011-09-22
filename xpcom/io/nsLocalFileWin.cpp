@@ -1268,7 +1268,7 @@ nsLocalFile::GetLeafName(nsAString &aLeafName)
 {
     aLeafName.Truncate();
 
-    if(mWorkingPath.IsEmpty())
+    if (mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     PRInt32 offset = mWorkingPath.RFindChar(L'\\');
@@ -1287,7 +1287,7 @@ nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
     MakeDirty();
 
-    if(mWorkingPath.IsEmpty())
+    if (mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
@@ -2226,8 +2226,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = NS_NewLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
 
-    if(NS_SUCCEEDED(rv) && localFile)
-    {
+    if (NS_SUCCEEDED(rv) && localFile) {
         return CallQueryInterface(localFile, aParent);
     }
     return rv;
@@ -2255,22 +2254,51 @@ nsLocalFile::IsWritable(PRBool *aIsWritable)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    //TODO: extend to support NTFS file permissions
-
     // The read-only attribute on a FAT directory only means that it can't 
     // be deleted. It is still possible to modify the contents of the directory.
     nsresult rv = IsDirectory(aIsWritable);
-    if (NS_FAILED(rv))
+    if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+      *aIsWritable = PR_TRUE;
+      return NS_OK;
+    } else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+      // If the file is normally allowed write access
+      // we should still return that the file is writable.
+    } else if (NS_FAILED(rv)) {
         return rv;
+    }
     if (*aIsWritable)
         return NS_OK;
 
     // writable if the file doesn't have the readonly attribute
     rv = HasFileAttribute(FILE_ATTRIBUTE_READONLY, aIsWritable);
-    if (NS_FAILED(rv))
+    if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+        *aIsWritable = PR_FALSE;
+        return NS_OK;
+    } else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+      // If the file is normally allowed write access
+      // we should still return that the file is writable.
+    } else if (NS_FAILED(rv)) {
         return rv;
+    }
     *aIsWritable = !*aIsWritable;
 
+    // If the read only attribute is not set, check to make sure
+    // we can open the file with write access.
+    if (*aIsWritable) {
+        PRFileDesc* file;
+        rv = OpenFile(mResolvedPath, PR_WRONLY, 0, &file);
+        if (NS_SUCCEEDED(rv)) {
+            PR_Close(file);
+        } else if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+          *aIsWritable = false;
+        } else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+            // If it is locked and read only we would have 
+            // gotten access denied
+            *aIsWritable = true; 
+        } else {
+            return rv;
+        }
+    }
     return NS_OK;
 }
 
