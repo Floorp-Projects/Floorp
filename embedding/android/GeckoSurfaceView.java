@@ -121,8 +121,8 @@ class GeckoSurfaceView
 
         Resources res = getResources();
 
-        File profiles = new File(GeckoApp.sGREDir, "files/mozilla/profiles.ini");
-        if (profiles.exists() == false) {
+        File filesDir = new File(GeckoApp.sGREDir, "files");
+        if (filesDir.exists() == false) {
             // Just show the simple splash screen for "new profile" startup
             c.drawColor(res.getColor(R.color.splash_background));
             Drawable drawable = res.getDrawable(R.drawable.splash);
