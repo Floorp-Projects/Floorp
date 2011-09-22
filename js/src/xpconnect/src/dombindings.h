@@ -44,7 +44,7 @@
 #include "jsproxy.h"
 #include "xpcpublic.h"
 
-class nsINode;
+class nsIContent;
 class nsINodeList;
 class nsIHTMLCollection;
 
@@ -80,11 +80,61 @@ public:
     virtual bool isInstanceOf(JSObject *prototype) = 0;
 };
 
-template<class T>
+class NoType;
+class NoOp {
+public:
+    typedef NoType* T;
+    enum {
+        hasOp = 0
+    };
+};
+
+template<typename Type>
+class Op {
+public:
+    typedef Type T;
+    enum {
+        hasOp = 1
+    };
+};
+
+template<typename Type>
+class Getter : public Op<Type>
+{
+};
+
+template<class Getter>
+class Ops
+{
+public:
+    typedef Getter G;
+};
+
+typedef Ops<NoOp> NoOps;
+ 
+template<class ListType, class IndexOps, class NameOps=NoOps>
+class ListClass {
+public:
+    typedef ListType LT;
+    typedef IndexOps IO;
+    typedef NameOps NO;
+};
+
+template<class LC>
 class ListBase : public ProxyHandler {
+protected:
+    typedef typename LC::LT ListType;
+    typedef typename LC::IO::G::T IndexGetterType;
+    typedef typename LC::NO::G::T NameGetterType;
+    enum {
+        hasIndexGetter = LC::IO::G::hasOp,
+        hasNameGetter = LC::NO::G::hasOp
+    };
+
+private:
     friend void Register(nsDOMClassInfoData *aData);
 
-    static ListBase<T> instance;
+    static ListBase<LC> instance;
 
     static js::Class sInterfaceClass;
 
@@ -102,7 +152,6 @@ class ListBase : public ProxyHandler {
     static Properties sProtoProperties[];
     static Methods sProtoMethods[];
 
-    static bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled);
 
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
@@ -114,24 +163,37 @@ class ListBase : public ProxyHandler {
     static JSBool item(JSContext *cx, uintN argc, jsval *vp);
     static JSBool namedItem(JSContext *cx, uintN argc, jsval *vp);
 
-    static bool hasNamedItem(jsid id);
-    static bool namedItem(JSContext *cx, JSObject *obj, jsval *name, nsISupports **result,
-                          nsWrapperCache **cache, bool *hasResult);
+    static inline bool getItemAt(ListType *list, uint32 i, IndexGetterType &item);
 
-    static nsISupports *getNamedItem(T *list, const nsAString& aName, nsWrapperCache **aCache);
+    static inline bool namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterType &result,
+                                 bool *hasResult);
+
+    static inline bool getNamedItem(ListType *list, const nsAString& aName, NameGetterType &item);
 
     static bool cacheProtoShape(JSContext *cx, JSObject *proxy, JSObject *proto);
     static bool checkForCacheHit(JSContext *cx, JSObject *proxy, JSObject *receiver, JSObject *proto,
                                  jsid id, js::Value *vp, bool *hitp);
 
+    static bool hasNative(JSContext *cx, JSObject *proxy, jsid id)
+    {
+        bool found;
+        // We ignore an error from nativeGet.
+        return !nativeGet(cx, proxy, js::GetObjectProto(proxy), id, &found, NULL) || found;
+    }
+
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
                                   js::PropertyDescriptor *desc);
 
-protected:
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, T *,
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *aList,
                             nsWrapperCache* aWrapperCache, bool *triedToWrap);
 
 public:
+    template <typename I>
+    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, I *aList, bool *triedToWrap)
+    {
+        return create(cx, scope, aList, GetWrapperCache(aList), triedToWrap);
+    }
+    
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                js::PropertyDescriptor *desc);
     bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -159,28 +221,31 @@ public:
     static bool objIsList(JSObject *obj) {
         return js::IsProxy(obj) && js::GetProxyHandler(obj) == &instance;
     }
+    static bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     virtual bool isInstanceOf(JSObject *prototype)
     {
         return js::GetObjectClass(prototype) == &sInterfaceClass;
     }
-    static T *getListObject(JSObject *obj);
+    static ListType *getListObject(JSObject *obj);
+
+    static bool nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id, bool *found,
+                          js::Value *vp);
 };
 
-typedef ListBase<nsINodeList> NodeListBase;
-class NodeList : public NodeListBase
+struct nsISupportsResult
 {
-public:
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
-                            nsINodeList *aNodeList, bool *triedToWrap);
+    nsISupportsResult()
+    {
+    }
+    nsISupports *mResult;
+    nsWrapperCache *mCache;
 };
-typedef ListBase<nsIHTMLCollection> HTMLCollectionBase;
-class HTMLCollection : public HTMLCollectionBase
-{
-public:
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope,
-                            nsIHTMLCollection *aHTMLCollection,
-                            nsWrapperCache *aWrapperCache, bool *triedToWrap);
-};
+
+typedef ListClass<nsINodeList, Ops<Getter<nsIContent*> > > NodeListClass;
+typedef ListBase<NodeListClass> NodeList;
+
+typedef ListClass<nsIHTMLCollection, Ops<Getter<nsIContent*> >, Ops<Getter<nsISupportsResult> > > HTMLCollectionClass;
+typedef ListBase<HTMLCollectionClass> HTMLCollection;
 
 }
 }
