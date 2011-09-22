@@ -384,6 +384,79 @@ function run_pac_cancel_test() {
   do_test_pending();
 }
 
+function check_host_filters(hostList, bShouldBeFiltered) {
+  var uri;
+  var proxy;
+  for (var i=0; i<hostList.length; i++) {
+    dump("*** uri=" + hostList[i] + " bShouldBeFiltered=" + bShouldBeFiltered + "\n");
+    uri = ios.newURI(hostList, null, null);
+    proxy = pps.resolve(uri, 0); 
+    if (bShouldBeFiltered) {
+      do_check_eq(proxy, null);
+    } else {
+      do_check_neq(proxy, null);
+      // Just to be sure, let's check that the proxy is correct
+      // - this should match the proxy setup in the calling function
+      check_proxy(proxy, "http", "foopy", 8080, 0, -1, false);
+    }
+  }
+}
+
+
+// Verify that hists in the host filter list are not proxied
+// refers to "network.proxy.no_proxies_on"
+
+function run_proxy_host_filters_test() {
+  // Get prefs object from DOM
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  // Setup a basic HTTP proxy configuration
+  // - pps.resolve() needs this to return proxy info for non-filtered hosts
+  prefs.setIntPref("network.proxy.type", 1);
+  prefs.setCharPref("network.proxy.http", "foopy");
+  prefs.setIntPref("network.proxy.http_port", 8080);
+
+  // Setup host filter list string for "no_proxies_on"
+  var hostFilterList = "www.mozilla.org, www.google.com, www.apple.com, "
+                       + ".domain, .domain2.org"
+  prefs.setCharPref("network.proxy.no_proxies_on", hostFilterList);
+  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), hostFilterList);
+  
+  var rv;
+  // Check the hosts that should be filtered out
+  var uriStrFilterList = [ "http://www.mozilla.org/",
+                           "http://www.google.com/",
+                           "http://www.apple.com/",
+                           "http://somehost.domain/",
+                           "http://someotherhost.domain/",
+                           "http://somehost.domain2.org/",
+                           "http://somehost.subdomain.domain2.org/" ];
+  check_host_filters(uriStrFilterList, true);
+
+  // Check the hosts that should be proxied
+  var uriStrUseProxyList = [ "http://www.mozilla.com/",
+                             "http://mail.google.com/",
+                             "http://somehost.domain.co.uk/",
+                             "http://somelocalhost/" ];  
+  check_host_filters(uriStrUseProxyList, false);
+  
+  // Set no_proxies_on to include local hosts
+  prefs.setCharPref("network.proxy.no_proxies_on", hostFilterList + ", <local>");
+  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"),
+              hostFilterList + ", <local>");
+
+  // Amend lists - move local domain to filtered list
+  uriStrFilterList.push(uriStrUseProxyList.pop());
+  check_host_filters(uriStrFilterList, true);
+  check_host_filters(uriStrUseProxyList, false);
+
+  // Cleanup
+  prefs.setCharPref("network.proxy.no_proxies_on", "");
+  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), "");  
+
+  do_test_finished();
+}
+
 function run_test() {
   register_test_protocol_handler();
   run_filter_test();
@@ -399,4 +472,5 @@ function run_test_continued() {
 }
 
 function run_test_continued_2() {
+  run_proxy_host_filters_test();
 }

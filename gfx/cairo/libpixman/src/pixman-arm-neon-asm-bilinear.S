@@ -66,6 +66,7 @@
 .eabi_attribute 12, 0
 .arm
 .altmacro
+.p2align 2
 
 #include "pixman-arm-neon-asm.h"
 
