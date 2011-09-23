@@ -180,11 +180,11 @@ toolbarbutton.urlbar-button {
 
 /* add special color */
 #identity-box[mode="verifiedIdentity"] {
-  background-color: #89d715;
+  background-color: #c4eb8a;
 }
 
 #identity-box[mode="verifiedDomain"] {
-  background-color: #6579e3;
+  background-color: #b2bcf1;
 }
 
 #identity-popup-runBy-box,
