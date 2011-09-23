@@ -515,6 +515,11 @@ static void * mozload(const char * path, void *zip,
 
     if (cache_fd < 0) {
       extractLib(entry, data, buf);
+#ifdef ANDROID_ARM_LINKER
+      /* We just extracted data that is going to be executed in the future.
+       * We thus need to ensure Instruction and Data cache coherency. */
+      cacheflush((unsigned) buf, (unsigned) buf + entry->uncompressed_size, 0);
+#endif
       if (!skipLibCache)
         addLibCacheFd(path, fd, lib_size, buf);
     }
