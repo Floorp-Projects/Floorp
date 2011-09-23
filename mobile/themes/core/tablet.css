@@ -16,7 +16,7 @@
 #toolbar-main[tablet] > .button-actionbar {
   visibility: visible;
 }
-#toolbar-main[tablet] > #tool-tabs {
+#toolbar-main[tablet][tablet_sidebar] > #tool-tabs {
   visibility: collapse;
 }
 
@@ -113,31 +113,17 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
   list-style-image: url("images/newtab-default-tablet-hdpi.png");
 }
 
+#controls-scrollbox[tablet]:not([tablet_sidebar]) > #tabs-sidebar {
+  visibility: collapse;
+}
+
 @media (@orientation@: portrait) {
-  #toolbar-main[tablet] > #tool-tabs {
+  #toolbar-main[tablet][tablet_sidebar] > #tool-tabs {
     visibility: visible;
   }
 
   #controls-scrollbox[tablet] > #tabs-sidebar {
-    border: none;
-%ifdef honeycomb
-    top: @touch_button_xlarge@;
-%else
-    top: -moz-calc(@touch_button_xlarge@ + @margin_normal@);
-%endif
     visibility: collapse;
-  }
-
-  #controls-scrollbox[tablet] > #tabs-sidebar:-moz-locale-dir(ltr) {
-    left: 0;
-  }
-  #controls-scrollbox[tablet] > #tabs-sidebar:-moz-locale-dir(rtl) {
-    right: 0;
-  }
-
-  #controls-scrollbox[tablet] > #tabs-sidebar[open] {
-    position: fixed;
-    visibility: visible;
   }
 }
 
