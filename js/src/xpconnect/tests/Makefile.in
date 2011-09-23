@@ -44,19 +44,9 @@ relativesrcdir = js/src/xpconnect/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= TestXPC
-SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
-
-
 DIRS		= idl mochitest chrome
 
-# XXX Doesn't work in libxul builds.
-#DIRS += components
-#
-
 XPCSHELL_TESTS = unit
-
-CPPSRCS		= TestXPC.cpp
 
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
