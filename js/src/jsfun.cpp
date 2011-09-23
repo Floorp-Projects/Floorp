@@ -112,8 +112,7 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
     JSObject *argsobj;
     if (fp->hasOverriddenArgs()) {
         JS_ASSERT(fp->hasCallObj());
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
-        return fp->callObj().getProperty(cx, id, vp);
+        return fp->callObj().getProperty(cx, cx->runtime->atomState.argumentsAtom, vp);
     }
     argsobj = js_GetArgsObject(cx, fp);
     if (!argsobj)
@@ -130,9 +129,8 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
     if (fp->hasOverriddenArgs()) {
         JS_ASSERT(fp->hasCallObj());
 
-        jsid argumentsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
         Value v;
-        if (!fp->callObj().getProperty(cx, argumentsid, &v))
+        if (!fp->callObj().getProperty(cx, cx->runtime->atomState.argumentsAtom, &v))
             return false;
 
         JSObject *obj;
@@ -143,7 +141,7 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
         } else {
             obj = &v.toObject();
         }
-        return obj->getProperty(cx, id, vp);
+        return obj->getGeneric(cx, id, vp);
     }
 
     vp->setUndefined();
@@ -154,7 +152,7 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
             if (argsobj) {
                 const Value &v = argsobj->element(arg);
                 if (v.isMagic(JS_ARGS_HOLE))
-                    return argsobj->getProperty(cx, id, vp);
+                    return argsobj->getGeneric(cx, id, vp);
                 if (fp->functionScript()->strictModeCode) {
                     *vp = v;
                     return true;
@@ -175,12 +173,12 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
              * undefined in *vp.
              */
             if (argsobj)
-                return argsobj->getProperty(cx, id, vp);
+                return argsobj->getGeneric(cx, id, vp);
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         ArgumentsObject *argsobj = fp->maybeArgsObj();
         if (argsobj && argsobj->hasOverriddenLength())
-            return argsobj->getProperty(cx, id, vp);
+            return argsobj->getGeneric(cx, id, vp);
         vp->setInt32(fp->numActualArgs());
     }
     return true;
@@ -1634,9 +1632,8 @@ fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
         obj = obj->getBoundFunctionTarget();
     }
 
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     Value pval;
-    if (!obj->getProperty(cx, id, &pval))
+    if (!obj->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &pval))
         return JS_FALSE;
 
     if (pval.isPrimitive()) {

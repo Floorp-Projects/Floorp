@@ -4754,6 +4754,12 @@ xml_lookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
 }
 
 static JSBool
+xml_lookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
+{
+    return xml_lookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+}
+
+static JSBool
 xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
                    PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
@@ -4778,7 +4784,14 @@ xml_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *v,
 }
 
 static JSBool
-xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+xml_defineSpecial(JSContext *cx, JSObject *obj, SpecialId sid, const Value *v,
+                  PropertyOp getter, StrictPropertyOp setter, uintN attrs)
+{
+    return xml_defineProperty(cx, obj, SPECIALID_TO_JSID(sid), v, getter, setter, attrs);
+}
+
+static JSBool
+xml_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
         vp->setUndefined();
@@ -4789,18 +4802,36 @@ xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value
 }
 
 static JSBool
+xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return xml_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+}
+
+static JSBool
 xml_getElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_getProperty(cx, obj, receiver, id, vp);
+    return xml_getGeneric(cx, obj, receiver, id, vp);
+}
+
+static JSBool
+xml_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
+{
+    return xml_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
+}
+
+static JSBool
+xml_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+{
+    return PutProperty(cx, obj, id, strict, vp);
 }
 
 static JSBool
 xml_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return PutProperty(cx, obj, id, strict, vp);
+    return xml_setGeneric(cx, obj, id, vp, strict);
 }
 
 static JSBool
@@ -4809,7 +4840,13 @@ xml_setElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool str
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return xml_setProperty(cx, obj, id, vp, strict);
+    return xml_setGeneric(cx, obj, id, vp, strict);
+}
+
+static JSBool
+xml_setSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
+{
+    return xml_setGeneric(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
 }
 
 static JSBool
@@ -4830,6 +4867,12 @@ xml_getElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attr
     if (!IndexToId(cx, index, &id))
         return false;
     return xml_getAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
+xml_getSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
+{
+    return xml_getAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -4854,6 +4897,12 @@ xml_setElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attr
     if (!IndexToId(cx, index, &id))
         return false;
     return xml_setAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
+xml_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
+{
+    return xml_setAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -4926,6 +4975,12 @@ xml_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBoo
 
     rval->setBoolean(true);
     return true;
+}
+
+static JSBool
+xml_deleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
+{
+    return xml_deleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static JSString *
@@ -5227,19 +5282,33 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
     JS_NULL_CLASS_EXT,
     {
         xml_lookupProperty,
+        xml_lookupProperty,
         xml_lookupElement,
+        xml_lookupSpecial,
+        xml_defineProperty,
         xml_defineProperty,
         xml_defineElement,
+        xml_defineSpecial,
+        xml_getGeneric,
         xml_getProperty,
         xml_getElement,
+        xml_getSpecial,
+        xml_setProperty,
         xml_setProperty,
         xml_setElement,
+        xml_setSpecial,
+        xml_getAttributes,
         xml_getAttributes,
         xml_getElementAttributes,
+        xml_getSpecialAttributes,
+        xml_setAttributes,
         xml_setAttributes,
         xml_setElementAttributes,
+        xml_setSpecialAttributes,
+        xml_deleteProperty,
         xml_deleteProperty,
         xml_deleteElement,
+        xml_deleteSpecial,
         xml_enumerate,
         xml_typeOf,
         xml_fix,
@@ -7394,7 +7463,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         Class *clasp = tmp->getClass();
         if (clasp == &BlockClass || clasp == &WithClass)
             continue;
-        if (!tmp->getProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, &v))
+        if (!tmp->getSpecial(cx, SpecialId::defaultXMLNamespace(), &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             *vp = v;
@@ -7627,7 +7696,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return false;
 
     JS_ASSERT(tvr.object());
-    return tvr.object()->getProperty(cx, id, vp);
+    return tvr.object()->getGeneric(cx, id, vp);
 }
 
 static JSXML *

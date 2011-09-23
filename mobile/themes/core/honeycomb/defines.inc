@@ -8,6 +8,7 @@
 %define color_toolbar_background #eaeaea
 %define color_toolbar_border #d9d9d9
 %define color_divider_border #6699ff
+%define color_url_border #222222
 %define color_button_border rgb(207,207,207)
 %define color_background_dialog #fff
 %define color_text_dialog #000

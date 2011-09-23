@@ -73,7 +73,7 @@ function testNullAndUndefinedOutput() {
   ok(nodes[1].textContent.indexOf("undefined") > -1, "'undefined' printed to output");
 
   jsterm.clearOutput();
-  jsterm.history.splice(0);   // workaround for bug 592552
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
 
   finishTest();
 }

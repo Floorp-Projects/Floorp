@@ -38,8 +38,8 @@ window.addEventListener("message", function(event) {
       var pm = Components.classes["@mozilla.org/permissionmanager;1"].
                getService(Components.interfaces.nsIPermissionManager);
 
-      pm.remove(frames.testFrame.document.documentURIObject.host, "offline-app");
-      pm.remove(frames.testFrame3.document.documentURIObject.host, "offline-app");
+      pm.remove(frames.testFrame.location.hostname, "offline-app");
+      pm.remove(frames.testFrame3.location.hostname, "offline-app");
 
       SimpleTest.finish();
     }

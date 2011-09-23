@@ -53,7 +53,7 @@ XPIDLSRCS = \
       nsIWinAccessNode.idl \
       $(NULL)
 
-DEFINES		+= -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
+DEFINES += -DREGISTER_PROXY_DLL
 
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 

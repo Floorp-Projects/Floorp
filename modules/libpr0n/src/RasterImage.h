@@ -65,6 +65,7 @@
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Telemetry.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif

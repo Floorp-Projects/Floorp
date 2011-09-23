@@ -175,6 +175,37 @@ const uint32 Arena::FirstThingOffsets[] = {
 
 #undef OFFSET
 
+class GCCompartmentsIter {
+  private:
+    JSCompartment **it, **end;
+
+  public:
+    GCCompartmentsIter(JSRuntime *rt) {
+        if (rt->gcCurrentCompartment) {
+            it = &rt->gcCurrentCompartment;
+            end = &rt->gcCurrentCompartment + 1;
+        } else {
+            it = rt->compartments.begin();
+            end = rt->compartments.end();
+        }
+    }
+
+    bool done() const { return it == end; }
+
+    void next() {
+        JS_ASSERT(!done());
+        it++;
+    }
+
+    JSCompartment *get() const {
+        JS_ASSERT(!done());
+        return *it;
+    }
+
+    operator JSCompartment *() const { return get(); }
+    JSCompartment *operator->() const { return get(); }
+};
+
 #ifdef DEBUG
 void
 ArenaHeader::checkSynchronizedWithFreeList() const
@@ -1818,17 +1849,6 @@ MarkContext(JSTracer *trc, JSContext *acx)
     MarkValue(trc, acx->iterValue, "iterValue");
 }
 
-#define PER_COMPARTMENT_OP(rt, op)                                      \
-    if ((rt)->gcCurrentCompartment) {                                   \
-        JSCompartment *c = (rt)->gcCurrentCompartment;                  \
-        op;                                                             \
-    } else {                                                            \
-        for (JSCompartment **i = rt->compartments.begin(); i != rt->compartments.end(); ++i) { \
-            JSCompartment *c = *i;                                      \
-            op;                                                         \
-        }                                                               \
-    }
-
 JS_REQUIRES_STACK void
 MarkRuntime(JSTracer *trc)
 {
@@ -1850,11 +1870,15 @@ MarkRuntime(JSTracer *trc)
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
         MarkContext(trc, acx);
 
-    PER_COMPARTMENT_OP(rt, if (c->activeAnalysis) c->markTypes(trc));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->activeAnalysis)
+            c->markTypes(trc);
 
 #ifdef JS_TRACER
-    PER_COMPARTMENT_OP(rt, if (c->hasTraceMonitor()) c->traceMonitor()->mark(trc));
+        if (c->hasTraceMonitor())
+            c->traceMonitor()->mark(trc);
 #endif
+    }
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
@@ -2114,8 +2138,8 @@ GCHelperThread::doSweep()
 
 #endif /* JS_THREADSAFE */
 
-static void
-SweepCrossCompartmentWrappers(JSContext *cx)
+static uint32
+ComputeJitReleaseInterval(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
     /*
@@ -2134,15 +2158,7 @@ SweepCrossCompartmentWrappers(JSContext *cx)
         }
     }
 
-    /*
-     * Sweep the compartment:
-     * (1) Remove dead wrappers from the compartment map.
-     * (2) Finalize any unused empty shapes.
-     * (3) Sweep the trace JIT of unused code.
-     * (4) Sweep the method JIT ICs and release infrequently used JIT code.
-     */
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->sweep(cx, releaseInterval);
+    return releaseInterval;
 }
 
 static void
@@ -2177,30 +2193,10 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     rt->compartments.resize(write - rt->compartments.begin());
 }
 
-/*
- * Perform mark-and-sweep GC.
- *
- * In a JS_THREADSAFE build, the calling thread must be rt->gcThread and each
- * other thread must be either outside all requests or blocked waiting for GC
- * to finish. Note that the caller does not hold rt->gcLock.
- * If comp is set, we perform a single-compartment GC.
- */
 static void
-MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIMER_PARAM)
+BeginMarkPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind GCTIMER_PARAM)
 {
-    JS_ASSERT_IF(comp, gckind != GC_LAST_CONTEXT);
-    JS_ASSERT_IF(comp, comp != comp->rt->atomsCompartment);
-    JS_ASSERT_IF(comp, comp->rt->gcMode == JSGC_MODE_COMPARTMENT);
-
     JSRuntime *rt = cx->runtime;
-    rt->gcNumber++;
-
-    /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
-    rt->gcIsNeeded = false;
-    rt->gcTriggerCompartment = NULL;
-
-    /* Reset malloc counter. */
-    rt->resetGCMallocBytes();
 
     /*
      * Reset the property cache's type id generator so we can compress ids.
@@ -2208,51 +2204,52 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * prototypes having readonly or setter properties.
      */
     if (rt->shapeGen & SHAPE_OVERFLOW_BIT || (rt->gcZeal() && !rt->gcCurrentCompartment)) {
+        JS_ASSERT(!rt->gcCurrentCompartment);
         rt->gcRegenShapes = true;
         rt->shapeGen = 0;
         rt->protoHazardShape = 0;
     }
 
-    PER_COMPARTMENT_OP(rt, c->purge(cx));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->purge(cx);
 
     js_PurgeThreads(cx);
+
     {
         JSContext *iter = NULL;
         while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
             acx->purge();
     }
 
-    JS_ASSERT_IF(comp, !rt->gcRegenShapes);
-
     /*
      * Mark phase.
      */
     GCTIMESTAMP(startMark);
-    GCMarker gcmarker(cx);
-    JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
-    JS_ASSERT(gcmarker.getMarkColor() == BLACK);
-    rt->gcMarkingTracer = &gcmarker;
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
-    if (comp) {
+    if (rt->gcCurrentCompartment) {
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-            (*c)->markCrossCompartmentWrappers(&gcmarker);
-        Debugger::markCrossCompartmentDebuggerObjectReferents(&gcmarker);
+            (*c)->markCrossCompartmentWrappers(gcmarker);
+        Debugger::markCrossCompartmentDebuggerObjectReferents(gcmarker);
     }
 
-    MarkRuntime(&gcmarker);
-    gcmarker.drainMarkStack();
+    MarkRuntime(gcmarker);
+}
 
+static void
+EndMarkPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind GCTIMER_PARAM)
+{
+    JSRuntime *rt = cx->runtime;
     /*
      * Mark weak roots.
      */
-    while (WatchpointMap::markAllIteratively(&gcmarker) ||
-           WeakMapBase::markAllIteratively(&gcmarker) ||
-           Debugger::markAllIteratively(&gcmarker))
+    while (WatchpointMap::markAllIteratively(gcmarker) ||
+           WeakMapBase::markAllIteratively(gcmarker) ||
+           Debugger::markAllIteratively(gcmarker))
     {
-        gcmarker.drainMarkStack();
+        gcmarker->drainMarkStack();
     }
 
     rt->gcMarkingTracer = NULL;
@@ -2262,12 +2259,19 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
 #ifdef DEBUG
     /* Make sure that we didn't mark an object in another compartment */
-    if (comp) {
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-            JS_ASSERT_IF(*c != comp && *c != rt->atomsCompartment,
+    if (rt->gcCurrentCompartment) {
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+            JS_ASSERT_IF(*c != rt->gcCurrentCompartment && *c != rt->atomsCompartment,
                          (*c)->arenas.checkArenaListAllUnmarked());
+        }
     }
 #endif
+}
+
+static void
+SweepPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind GCTIMER_PARAM)
+{
+    JSRuntime *rt = cx->runtime;
 
     /*
      * Sweep phase.
@@ -2286,67 +2290,51 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     GCTIMESTAMP(startSweep);
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
-    WeakMapBase::sweepAll(&gcmarker);
+    WeakMapBase::sweepAll(gcmarker);
 
     js_SweepAtomState(cx);
 
     /* Collect watch points associated with unreachable objects. */
     WatchpointMap::sweepAll(cx);
 
-    /*
-     * We finalize objects before other GC things to ensure that object's finalizer
-     * can access them even if they will be freed. Sweep the runtime's property trees
-     * after finalizing objects, in case any had watchpoints referencing tree nodes.
-     * Do this before sweeping compartments, so that we sweep all shapes in
-     * unreachable compartments.
-     */
-    if (comp) {
-        Probes::GCStartSweepPhase(comp);
-        comp->sweep(cx, 0);
-        comp->arenas.finalizeObjects(cx);
-        GCTIMESTAMP(sweepObjectEnd);
-        comp->arenas.finalizeStrings(cx);
-        GCTIMESTAMP(sweepStringEnd);
-        comp->arenas.finalizeScripts(cx);
-        GCTIMESTAMP(sweepScriptEnd);
-        comp->arenas.finalizeShapes(cx);
-        GCTIMESTAMP(sweepShapeEnd);
-        Probes::GCEndSweepPhase(comp);
-    } else {
-        /*
-         * Some sweeping is not compartment-specific. Start a NULL-compartment
-         * phase to demarcate all of that. (The compartment sweeps will nest
-         * within.)
-         */
-        Probes::GCStartSweepPhase(NULL);
+    Probes::GCStartSweepPhase(NULL);
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        Probes::GCStartSweepPhase(c);
 
+    if (!rt->gcCurrentCompartment)
         Debugger::sweepAll(cx);
-        SweepCrossCompartmentWrappers(cx);
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
-            Probes::GCStartSweepPhase(*c);
-            (*c)->arenas.finalizeObjects(cx);
-        }
 
-        GCTIMESTAMP(sweepObjectEnd);
+    uint32 releaseInterval = rt->gcCurrentCompartment ? 0 : ComputeJitReleaseInterval(cx);
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->sweep(cx, releaseInterval);
 
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
-            (*c)->arenas.finalizeStrings(cx);
+    /*
+     * We finalize objects before other GC things to ensure that the object's
+     * finalizer can access the other things even if they will be freed.
+     */
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->arenas.finalizeObjects(cx);
 
-        GCTIMESTAMP(sweepStringEnd);
+    GCTIMESTAMP(sweepObjectEnd);
 
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
-            (*c)->arenas.finalizeScripts(cx);
-        }
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->arenas.finalizeStrings(cx);
 
-        GCTIMESTAMP(sweepScriptEnd);
+    GCTIMESTAMP(sweepStringEnd);
 
-        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
-            (*c)->arenas.finalizeShapes(cx);
-            Probes::GCEndSweepPhase(*c);
-        }
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->arenas.finalizeScripts(cx);
 
-        GCTIMESTAMP(sweepShapeEnd);
-    }
+    GCTIMESTAMP(sweepScriptEnd);
+
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->arenas.finalizeShapes(cx);
+
+    GCTIMESTAMP(sweepShapeEnd);
+
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        Probes::GCEndSweepPhase(c);
+    Probes::GCEndSweepPhase(NULL);
 
 #ifdef DEBUG
      PropertyTree::dumpShapes(cx);
@@ -2358,14 +2346,15 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * script and calls rt->destroyScriptHook, the hook can still access the
      * script's filename. See bug 323267.
      */
-    PER_COMPARTMENT_OP(rt, js_SweepScriptFilenames(c));
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        js_SweepScriptFilenames(c);
 
-    if (!comp) {
+    /*
+     * This removes compartments from rt->compartment, so we do it last to make
+     * sure we don't miss sweeping any compartments.
+     */
+    if (!rt->gcCurrentCompartment)
         SweepCompartments(cx, gckind);
-
-        /* non-compartmental sweep pieces */
-        Probes::GCEndSweepPhase(NULL);
-    }
 
 #ifndef JS_THREADSAFE
     /*
@@ -2379,12 +2368,38 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
-#ifdef DEBUG_srcnotesize
-  { extern void DumpSrcNoteSizeHist();
-    DumpSrcNoteSizeHist();
-    printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
-  }
-#endif
+}
+
+/*
+ * Perform mark-and-sweep GC.
+ *
+ * In a JS_THREADSAFE build, the calling thread must be rt->gcThread and each
+ * other thread must be either outside all requests or blocked waiting for GC
+ * to finish. Note that the caller does not hold rt->gcLock.
+ * If comp is set, we perform a single-compartment GC.
+ */
+static void
+MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
+{
+    JSRuntime *rt = cx->runtime;
+    rt->gcNumber++;
+
+    /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
+    rt->gcIsNeeded = false;
+    rt->gcTriggerCompartment = NULL;
+
+    /* Reset malloc counter. */
+    rt->resetGCMallocBytes();
+
+    GCMarker gcmarker(cx);
+    JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
+    JS_ASSERT(gcmarker.getMarkColor() == BLACK);
+    rt->gcMarkingTracer = &gcmarker;
+
+    BeginMarkPhase(cx, &gcmarker, gckind GCTIMER_ARG);
+    gcmarker.drainMarkStack();
+    EndMarkPhase(cx, &gcmarker, gckind GCTIMER_ARG);
+    SweepPhase(cx, &gcmarker, gckind GCTIMER_ARG);
 }
 
 #ifdef JS_THREADSAFE
@@ -2570,6 +2585,10 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
 {
     JSRuntime *rt = cx->runtime;
 
+    JS_ASSERT_IF(comp, gckind != GC_LAST_CONTEXT);
+    JS_ASSERT_IF(comp, comp != rt->atomsCompartment);
+    JS_ASSERT_IF(comp, rt->gcMode == JSGC_MODE_COMPARTMENT);
+
     /*
      * Recursive GC is no-op and a call from another thread waits the started
      * GC cycle to finish.
@@ -2623,7 +2642,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
                 cx->gcBackgroundFree = &rt->gcHelperThread;
         }
 #endif
-        MarkAndSweep(cx, comp, gckind  GCTIMER_ARG);
+        MarkAndSweep(cx, gckind  GCTIMER_ARG);
     }
 
 #ifdef JS_THREADSAFE

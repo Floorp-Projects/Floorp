@@ -925,10 +925,6 @@ autocompleteresult.noresults > .autocomplete-item-container {
   background: #5e6166;
 }
 
-#tabs:-moz-locale-dir(rtl) {
-  -moz-box-align: start;
-}
-
 #tabs > .tabs-scrollbox {
   max-width: 350px;
 }
