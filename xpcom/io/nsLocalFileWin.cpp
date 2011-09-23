@@ -966,6 +966,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     // search for first slash after the drive (or volume) name
     PRUnichar* slash = wcschr(path, L'\\');
 
+    nsresult directoryCreateError = NS_OK;
     if (slash)
     {
         // skip the first '\\'
@@ -978,12 +979,20 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
             if (!::CreateDirectoryW(mResolvedPath.get(), NULL)) {
                 rv = ConvertWinError(GetLastError());
+                if (NS_ERROR_FILE_NOT_FOUND == rv &&
+                    NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
+                    // If a previous CreateDirectory failed due to access, return that.
+                    return NS_ERROR_FILE_ACCESS_DENIED;
+                }
                 // perhaps the base path already exists, or perhaps we don't have
                 // permissions to create the directory.  NOTE: access denied could
                 // occur on a parent directory even though it exists.
-                if (rv != NS_ERROR_FILE_ALREADY_EXISTS &&
-                    rv != NS_ERROR_FILE_ACCESS_DENIED)
+                else if (NS_ERROR_FILE_ALREADY_EXISTS != rv &&
+                         NS_ERROR_FILE_ACCESS_DENIED != rv) {
                     return rv;
+                }
+
+                directoryCreateError = rv;
             }
             *slash = L'\\';
             ++slash;
@@ -1006,14 +1015,26 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
             PRBool isdir;
             if (NS_SUCCEEDED(IsDirectory(&isdir)) && isdir)
                 rv = NS_ERROR_FILE_ALREADY_EXISTS;
+        } else if (NS_ERROR_FILE_NOT_FOUND == rv && 
+                   NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
+            // If a previous CreateDirectory failed due to access, return that.
+            return NS_ERROR_FILE_ACCESS_DENIED;
         }
         return rv;
     }
 
     if (type == DIRECTORY_TYPE)
     {
-        if (!::CreateDirectoryW(mResolvedPath.get(), NULL))
-            return ConvertWinError(GetLastError());
+        if (!::CreateDirectoryW(mResolvedPath.get(), NULL)) {
+          rv = ConvertWinError(GetLastError());
+          if (NS_ERROR_FILE_NOT_FOUND == rv && 
+              NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
+              // If a previous CreateDirectory failed due to access, return that.
+              return NS_ERROR_FILE_ACCESS_DENIED;
+          } else {
+              return rv;
+          }
+        }
         else
             return NS_OK;
     }
@@ -1247,7 +1268,7 @@ nsLocalFile::GetLeafName(nsAString &aLeafName)
 {
     aLeafName.Truncate();
 
-    if(mWorkingPath.IsEmpty())
+    if (mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     PRInt32 offset = mWorkingPath.RFindChar(L'\\');
@@ -1266,7 +1287,7 @@ nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
     MakeDirty();
 
-    if(mWorkingPath.IsEmpty())
+    if (mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
@@ -2205,8 +2226,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = NS_NewLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
 
-    if(NS_SUCCEEDED(rv) && localFile)
-    {
+    if (NS_SUCCEEDED(rv) && localFile) {
         return CallQueryInterface(localFile, aParent);
     }
     return rv;
@@ -2234,22 +2254,51 @@ nsLocalFile::IsWritable(PRBool *aIsWritable)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    //TODO: extend to support NTFS file permissions
-
     // The read-only attribute on a FAT directory only means that it can't 
     // be deleted. It is still possible to modify the contents of the directory.
     nsresult rv = IsDirectory(aIsWritable);
-    if (NS_FAILED(rv))
+    if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+      *aIsWritable = PR_TRUE;
+      return NS_OK;
+    } else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+      // If the file is normally allowed write access
+      // we should still return that the file is writable.
+    } else if (NS_FAILED(rv)) {
         return rv;
+    }
     if (*aIsWritable)
         return NS_OK;
 
     // writable if the file doesn't have the readonly attribute
     rv = HasFileAttribute(FILE_ATTRIBUTE_READONLY, aIsWritable);
-    if (NS_FAILED(rv))
+    if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+        *aIsWritable = PR_FALSE;
+        return NS_OK;
+    } else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+      // If the file is normally allowed write access
+      // we should still return that the file is writable.
+    } else if (NS_FAILED(rv)) {
         return rv;
+    }
     *aIsWritable = !*aIsWritable;
 
+    // If the read only attribute is not set, check to make sure
+    // we can open the file with write access.
+    if (*aIsWritable) {
+        PRFileDesc* file;
+        rv = OpenFile(mResolvedPath, PR_WRONLY, 0, &file);
+        if (NS_SUCCEEDED(rv)) {
+            PR_Close(file);
+        } else if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+          *aIsWritable = false;
+        } else if (rv == NS_ERROR_FILE_IS_LOCKED) {
+            // If it is locked and read only we would have 
+            // gotten access denied
+            *aIsWritable = true; 
+        } else {
+            return rv;
+        }
+    }
     return NS_OK;
 }
 

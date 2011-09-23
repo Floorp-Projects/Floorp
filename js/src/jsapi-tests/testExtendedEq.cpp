@@ -18,27 +18,27 @@ my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)
 js::Class TestExtendedEq_JSClass = {
     "TestExtendedEq",
     0,
-    js::PropertyStub,       /* addProperty */
-    js::PropertyStub,       /* delProperty */
-    js::PropertyStub,       /* getProperty */
-    js::StrictPropertyStub, /* setProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_PropertyStub,       /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    NULL,           /* convert */
-    NULL,           /* finalize */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
+    NULL,                  /* convert */
+    NULL,                  /* finalize */
+    NULL,                  /* reserved0   */
+    NULL,                  /* checkAccess */
+    NULL,                  /* call        */
+    NULL,                  /* construct   */
+    NULL,                  /* xdrObject   */
+    NULL,                  /* hasInstance */
+    NULL,                  /* mark        */
     {
-        js::Valueify(my_Equality),
-        NULL, /* outerObject    */
-        NULL, /* innerObject    */
-        NULL, /* iteratorObject */
-        NULL, /* wrappedObject  */
+        my_Equality,
+        NULL,              /* outerObject    */
+        NULL,              /* innerObject    */
+        NULL,              /* iteratorObject */
+        NULL,              /* wrappedObject  */
     }
 };
 

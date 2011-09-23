@@ -605,6 +605,9 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // obtained before calling this.
   nsDecoderStateMachine::State GetDecodeState() { return mDecoderStateMachine->GetState(); }
 
+  // Drop reference to state machine.  Only called during shutdown dance.
+  void ReleaseStateMachine() { mDecoderStateMachine = nsnull; }
+
 public:
   // Notifies the element that decoding has failed.
   void DecodeError();

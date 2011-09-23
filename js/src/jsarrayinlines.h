@@ -70,7 +70,7 @@ JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32 index, uint32 
     JS_ASSERT(index + extra <= capacity);
     if (initializedLength < index) {
         markDenseArrayNotPacked(cx);
-        ClearValueRange(slots + initializedLength, index - initializedLength, true);
+        js::ClearValueRange(slots + initializedLength, index - initializedLength, true);
     }
     if (initializedLength < index + extra)
         initializedLength = index + extra;

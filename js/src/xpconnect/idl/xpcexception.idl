@@ -43,7 +43,7 @@
 #include "nsIException.idl"
 
 %{ C++
-#include "jspubtd.h"
+#include "jsapi.h"
 %}
 
 [ptr] native xpcexJSContextPtr(JSContext);

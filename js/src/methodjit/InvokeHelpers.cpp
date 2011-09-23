@@ -562,7 +562,7 @@ js_InternalThrow(VMFrame &f)
                 Value rval;
                 JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
                 if (st == JSTRAP_CONTINUE && handler) {
-                    st = handler(cx, cx->fp()->script(), cx->regs().pc, Jsvalify(&rval),
+                    st = handler(cx, cx->fp()->script(), cx->regs().pc, &rval,
                                  cx->debugHooks->throwHookData);
                 }
 
@@ -1475,7 +1475,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         switch (op) {
           case JSOP_NAME:
           case JSOP_GETGNAME:
-          case JSOP_GETGLOBAL:
           case JSOP_GETFCSLOT:
           case JSOP_GETPROP:
           case JSOP_GETXPROP:
@@ -1491,7 +1490,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             f.regs.pc = nextpc;
             break;
 
-          case JSOP_CALLGLOBAL:
           case JSOP_CALLFCSLOT:
             /* |this| is always undefined for CALLGLOBAL/CALLFCSLOT. */
             nextsp[-1].setUndefined();

@@ -55,12 +55,12 @@ public:
     nsHttpRequestHead() : mMethod(nsHttp::Get), mVersion(NS_HTTP_VERSION_1_1) {}
     ~nsHttpRequestHead() {}
 
-    void SetMethod(nsIAtom *method) { mMethod = method; }
+    void SetMethod(nsHttpAtom method) { mMethod = method; }
     void SetVersion(nsHttpVersion version) { mVersion = version; }
     void SetRequestURI(const nsCSubstring &s) { mRequestURI = s; }
 
     nsHttpHeaderArray  &Headers()    { return mHeaders; }
-    nsIAtom            *Method()     { return mMethod; }
+    nsHttpAtom          Method()     { return mMethod; }
     nsHttpVersion       Version()    { return mVersion; }
     const nsCSubstring &RequestURI() { return mRequestURI; }
 
@@ -77,7 +77,7 @@ public:
 
 private:
     nsHttpHeaderArray mHeaders;
-    nsCOMPtr<nsIAtom> mMethod;
+    nsHttpAtom        mMethod;
     nsHttpVersion     mVersion;
     nsCString         mRequestURI;
 };

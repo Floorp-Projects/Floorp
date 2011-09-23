@@ -219,6 +219,8 @@ public:
   };
   friend class AutoUseBasicLayerManager;
 
+  PRBool                  Destroyed() { return mOnDestroyCalled; }
+
 protected:
 
   virtual void            ResolveIconName(const nsAString &aIconName,

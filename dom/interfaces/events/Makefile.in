@@ -86,6 +86,7 @@ XPIDLSRCS =					\
 	nsIDOMTouchEvent.idl			\
 	nsIDOMHashChangeEvent.idl		\
 	nsIDOMCustomEvent.idl			\
+	nsIDOMCompositionEvent.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
