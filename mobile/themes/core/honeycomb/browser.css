@@ -348,6 +348,7 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-tabs {
+  border: none;
   -moz-box-orient: vertical;
   list-style-image: url("chrome://browser/skin/images/tabs-hdpi.png");
   background-image: url("chrome://browser/skin/images/tabs-default-bg.png");
