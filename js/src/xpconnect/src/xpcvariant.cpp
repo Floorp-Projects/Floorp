@@ -388,8 +388,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
         if(!XPCConvert::JSArray2Native(ccx, &mData.u.array.mArrayValue, 
                                        val, len, len,
-                                       type, type.IsPointer(),
-                                       &id, nsnull))
+                                       type, &id, nsnull))
             return JS_FALSE;
 
         mData.mType = nsIDataType::VTYPE_ARRAY;
