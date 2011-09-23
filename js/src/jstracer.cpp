@@ -11060,7 +11060,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 #endif
 
     Value pval;
-    if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &pval))
+    if (!ctor->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &pval))
         RETURN_ERROR("error getting prototype from constructor");
 
     /*
@@ -12617,7 +12617,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp)
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
+    if (!RootedStringToId(cx, namep, &id) || !obj->getGeneric(cx, id, vp)) {
         SetBuiltinError(tm);
         return false;
     }
@@ -12689,7 +12689,7 @@ GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp)
     LeaveTraceIfGlobalObject(cx, obj);
 
     AutoIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->getProperty(cx, idr.id(), vp)) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->getGeneric(cx, idr.id(), vp)) {
         SetBuiltinError(tm);
         return JS_FALSE;
     }
@@ -12719,7 +12719,7 @@ GetPropertyById(JSContext* cx, JSObject* obj, jsid id, Value* vp)
     TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
-    if (!obj->getProperty(cx, id, vp)) {
+    if (!obj->getGeneric(cx, id, vp)) {
         SetBuiltinError(tm);
         return JS_FALSE;
     }

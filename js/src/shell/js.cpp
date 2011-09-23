@@ -2363,7 +2363,7 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
-                if (!obj->getProperty(cx, id, &value))
+                if (!obj->getGeneric(cx, id, &value))
                     return JS_FALSE;
             }
             if (!prop || !value.isObjectOrNull()) {
@@ -3171,7 +3171,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
             return false;
         if (*objp != referent)
             return true;
-        if (!referent->getProperty(cx, id, &desc.value) ||
+        if (!referent->getGeneric(cx, id, &desc.value) ||
             !referent->getAttributes(cx, id, &desc.attrs)) {
             return false;
         }

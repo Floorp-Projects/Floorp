@@ -447,7 +447,7 @@ JO(JSContext *cx, JSObject *obj, StringifyContext *scx)
          */
         const jsid &id = propertyList[i];
         Value outputValue;
-        if (!obj->getProperty(cx, id, &outputValue))
+        if (!obj->getGeneric(cx, id, &outputValue))
             return false;
         if (!PreprocessValue(cx, obj, id, &outputValue, scx))
             return false;
@@ -776,7 +776,7 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
 
     /* Step 1. */
     Value val;
-    if (!holder->getProperty(cx, name, &val))
+    if (!holder->getGeneric(cx, name, &val))
         return false;
 
     /* Step 2. */

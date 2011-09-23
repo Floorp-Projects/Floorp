@@ -8,6 +8,7 @@
         onload="test();">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
 
   <script type="application/javascript">
   <![CDATA[
@@ -30,11 +31,11 @@
       worker.onmessage = function(event) {
         is(event.data, message, "Good message.");
         prefs.clearUserPref(enabledPref);
-        SimpleTest.finish();
+        finish();
       }
       worker.postMessage(message);
 
-      SimpleTest.waitForExplicitFinish();
+      waitForWorkerFinish();
     }
   ]]>
   </script>
