@@ -476,10 +476,10 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         ) {
         JS_ASSERT(!rt->gcRunning);
 
-        JS_UNLOCK_GC(rt);
 #ifdef JS_THREADSAFE
-        rt->gcHelperThread.waitBackgroundSweepEnd(rt);
+        rt->gcHelperThread.waitBackgroundSweepEnd();
 #endif
+        JS_UNLOCK_GC(rt);
 
         if (last) {
 #ifdef JS_THREADSAFE
@@ -559,10 +559,10 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     js_ClearContextThread(cx);
     JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->data.requestDepth);
 #endif
-    JS_UNLOCK_GC(rt);
 #ifdef JS_THREADSAFE
-    rt->gcHelperThread.waitBackgroundSweepEnd(rt);
+    rt->gcHelperThread.waitBackgroundSweepEnd();
 #endif
+    JS_UNLOCK_GC(rt);
     Foreground::delete_(cx);
 }
 
@@ -1177,7 +1177,10 @@ js_InvokeOperationCallback(JSContext *cx)
             * We have to wait until the background thread is done in order
             * to get a correct answer.
             */
-            rt->gcHelperThread.waitBackgroundSweepEnd(rt);
+            {
+                AutoLockGC lock(rt);
+                rt->gcHelperThread.waitBackgroundSweepEnd();
+            }
             if (checkOutOfMemory(rt)) {
                 js_ReportOutOfMemory(cx);
                 return false;
@@ -1518,8 +1521,17 @@ JSRuntime::onTooMuchMalloc()
 JS_FRIEND_API(void *)
 JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 {
+    /*
+     * Retry when we are done with the background sweeping and have stopped
+     * all the allocations and released the empty GC chunks.
+     */
+    {
 #ifdef JS_THREADSAFE
-    gcHelperThread.waitBackgroundSweepEnd(this);
+        AutoLockGC lock(this);
+        gcHelperThread.waitBackgroundSweepOrAllocEnd();
+#endif
+        gcChunkPool.expire(this, true);
+    }
     if (!p)
         p = OffTheBooks::malloc_(nbytes);
     else if (p == reinterpret_cast<void *>(1))
@@ -1528,7 +1540,6 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
       p = OffTheBooks::realloc_(p, nbytes);
     if (p)
         return p;
-#endif
     if (cx)
         js_ReportOutOfMemory(cx);
     return NULL;
