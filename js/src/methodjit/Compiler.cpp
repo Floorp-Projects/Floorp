@@ -313,6 +313,17 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
             JSScript *script = fun->script();
 
             /*
+             * Don't inline calls to scripts which haven't been analyzed.
+             * We need to analyze the inlined scripts to compile them, and
+             * doing so can change type information we have queried already
+             * in making inlining decisions.
+             */
+            if (!script->hasAnalysis() || !script->analysis()->ranInference()) {
+                okay = false;
+                break;
+            }
+
+            /*
              * The outer and inner scripts must have the same scope. This only
              * allows us to inline calls between non-inner functions. Also
              * check for consistent strictness between the functions.
