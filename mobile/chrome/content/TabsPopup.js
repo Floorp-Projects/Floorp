@@ -59,12 +59,23 @@ var TabsPopup = {
   },
 
   hide: function hide() {
+    if (!Util.isPortrait()) {
+      Elements.urlbarState.removeAttribute("tablet_sidebar");
+      ViewableAreaObserver.update();
+      return;
+    }
     this.box.hidden = true;
     BrowserUI.popPopup(this);
     window.removeEventListener("resize", this.resizeHandler, false);
   },
 
   show: function show() {
+    if (!Util.isPortrait()) {
+      Elements.urlbarState.setAttribute("tablet_sidebar", "true");
+      ViewableAreaObserver.update();
+      return;
+    }
+
     while(this.list.firstChild)
       this.list.removeChild(this.list.firstChild);
 
@@ -105,10 +116,14 @@ var TabsPopup = {
   },
 
   toggle: function toggle() {
-    if (this.box.hidden)
-      this.show();
-    else
+    if (this.visible)
       this.hide();
+    else
+      this.show();
+  },
+
+  get visible() {
+    return Util.isPortrait() ? !this.box.hidden : Elements.urlbarState.hasAttribute("tablet_sidebar");
   },
 
   resizeHandler: function(aEvent) {

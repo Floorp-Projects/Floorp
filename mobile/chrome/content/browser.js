@@ -549,6 +549,8 @@ var Browser = {
   },
 
   hideSidebars: function scrollSidebarsOffscreen() {
+    if (Util.isTablet()) // Never scroll the sidebar away in tablet mode.
+      return;
     let rect = Elements.browsers.getBoundingClientRect();
     this.controlsScrollboxScroller.scrollBy(Math.round(rect.left), 0);
     this.tryUnfloatToolbar();
@@ -1263,6 +1265,58 @@ var Browser = {
         this._handleErrorPage(aMessage);
         break;
     }
+  },
+
+  _grabbedSidebar: false, // true while the user is dragging the sidebar
+  _sidebarOffset: 0, // tracks how far the sidebar has been dragged
+  _slideMultiplier: 1, // set greater than 1 to amplify sidebar drags (makes swiping easier)
+
+  /**
+   * Call this function in landscape tablet mode to begin dragging the tab sidebar.
+   * Hiding the sidebar makes the viewable area grow; showing the sidebar makes it shrink.
+   */
+  grabSidebar: function grabSidebar() {
+    this._grabbedSidebar = true;
+    ViewableAreaObserver.update();
+
+    if (TabsPopup.visible) {
+      this._setSidebarOffset(0);
+      this._slideMultiplier = 3;
+    } else {
+      // If the tab bar is hidden, un-collapse it but scroll it offscreen.
+      document.getElementById("tabs-sidebar").style.visibility = "visible";
+      this._setSidebarOffset(ViewableAreaObserver.sidebarWidth);
+      this._slideMultiplier = 6;
+    }
+  },
+
+  /** Move the tablet sidebar by aX pixels. */
+  slideSidebarBy: function slideSidebarBy(aX) {
+    this._setSidebarOffset(this._sidebarOffset + (aX * this._slideMultiplier));
+  },
+
+  /** Call this when tablet sidebar dragging is finished. */
+  ungrabSidebar: function ungrabSidebar() {
+    if (!this._grabbedSidebar)
+      return;
+
+    this._grabbedSidebar = false;
+    document.getElementById("tabs-sidebar").style.visibility = "";
+
+    let finalOffset = this._sidebarOffset;
+    this._setSidebarOffset(0);
+
+    if (finalOffset > (ViewableAreaObserver.sidebarWidth / 2))
+      TabsPopup.hide();
+    else
+      TabsPopup.show();
+  },
+
+  /** Move the tablet sidebar. */
+  _setSidebarOffset: function _setSidebarOffset(aOffset) {
+    this._sidebarOffset = aOffset;
+    let scrollX = Util.clamp(aOffset, 0, ViewableAreaObserver.sidebarWidth);
+    Browser.controlsScrollboxScroller.scrollTo(scrollX, 0);
   }
 };
 
@@ -1290,7 +1344,16 @@ Browser.MainDragger.prototype = {
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
     this._stopAtSidebar = 0;
-    this._panToolbars = !Util.isTablet();
+
+    let isTablet = Util.isTablet();
+    this._panToolbars = !isTablet;
+
+    // In landscape portrait mode, swiping from the left margin drags the tab sidebar.
+    this._grabSidebar = isTablet && !Util.isPortrait() && (clientX - bcr.left < 30);
+
+    if (this._grabSidebar)
+      Browser.grabSidebar();
+
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
       this._sidebarTimeout = null;
@@ -1298,6 +1361,10 @@ Browser.MainDragger.prototype = {
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
+    if (this._grabSidebar) {
+      Browser.ungrabSidebar();
+      return;
+    }
     if (this._contentView && this._contentView._updateCacheViewport)
       this._contentView._updateCacheViewport();
     this._contentView = null;
@@ -1306,6 +1373,11 @@ Browser.MainDragger.prototype = {
   },
 
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
+    if (this._grabSidebar) {
+      Browser.slideSidebarBy(dx);
+      return;
+    }
+
     let doffset = new Point(dx, dy);
     let sidebarOffset = null;
 
@@ -1364,7 +1436,8 @@ Browser.MainDragger.prototype = {
           x: (width + ALLOWED_MARGIN) < contentWidth ? (width - SCROLL_CORNER_SIZE) / contentWidth : 0,
           y: (height + ALLOWED_MARGIN) < contentHeight ? (height - SCROLL_CORNER_SIZE) / contentHeight : 0
         }
-        this._showScrollbars();
+        if (!this._grabSidebar)
+          this._showScrollbars();
         break;
       }
       case "PanFinished":
@@ -3160,7 +3233,7 @@ function rendererFactory(aBrowser, aCanvas) {
 var ViewableAreaObserver = {
   get width() {
     let width = this._width || window.innerWidth;
-    if (Util.isTablet())
+    if (!Browser._grabbedSidebar && Util.isTablet())
       width -= this.sidebarWidth;
     return width;
   },

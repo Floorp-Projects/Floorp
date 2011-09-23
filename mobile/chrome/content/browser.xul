@@ -84,7 +84,7 @@
 
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
-    <broadcaster id="bcast_urlbarState" mode="view"/>
+    <broadcaster id="bcast_urlbarState" mode="view" tablet_sidebar="true"/>
     <broadcaster id="bcast_uidiscovery"/>
   </broadcasterset>
 
