@@ -801,7 +801,8 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
                 JS_ASSERT(!a->analysis->trackSlot(entrySlot(fe)));
                 syncFe(fe);
                 forgetAllRegs(fe);
-                fe->resetSynced();
+                fe->type.setMemory();
+                fe->data.setMemory();
             }
             if (fe->data.inMemory()) {
                 masm.loadPayload(addressOf(fe), nreg);
