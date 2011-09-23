@@ -41,9 +41,6 @@
 #define jsnum_h___
 
 #include <math.h>
-#ifdef WIN32
-#include <float.h>
-#endif
 
 #include "jsstdint.h"
 #include "jsobj.h"
@@ -81,19 +78,18 @@ typedef union jsdpun {
 } jsdpun;
 
 /* Low-level floating-point predicates. See bug 640494. */
+#define JSDOUBLE_HI32_SIGNBIT   0x80000000
+#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
+#define JSDOUBLE_HI32_MANTMASK  0x000fffff
+#define JSDOUBLE_HI32_NAN       0x7ff80000
+#define JSDOUBLE_LO32_NAN       0x00000000
 
 static inline int
 JSDOUBLE_IS_NaN(jsdouble d)
 {
-/* Visual Studio PGO miscompiles the bitwise version, so keep using _isnan
- * from float.h until we figure out what's going on. */
-#ifdef WIN32
-    return _isnan(d);
-#else
     jsdpun u;
     u.d = d;
-    return (u.u64 & ~JSDOUBLE_SIGNBIT) > JSDOUBLE_EXPMASK;
-#endif
+    return (u.s.hi & JSDOUBLE_HI32_NAN) == JSDOUBLE_HI32_NAN;
 }
 
 static inline int
@@ -112,12 +108,6 @@ JSDOUBLE_IS_INFINITE(jsdouble d)
     u.d = d;
     return (u.u64 & ~JSDOUBLE_SIGNBIT) == JSDOUBLE_EXPMASK;
 }
-
-#define JSDOUBLE_HI32_SIGNBIT   0x80000000
-#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
-#define JSDOUBLE_HI32_MANTMASK  0x000fffff
-#define JSDOUBLE_HI32_NAN       0x7ff80000
-#define JSDOUBLE_LO32_NAN       0x00000000
 
 static inline bool
 JSDOUBLE_IS_NEG(jsdouble d)
