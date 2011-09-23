@@ -2848,12 +2848,9 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     // indirectly, regardless of in/out-ness.
     if(type_tag == nsXPTType::T_JSVAL)
     {
-        // Assign the value
-        JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(dp->val));
-        jsval *rootp = (jsval *)&dp->val;
-        dp->ptr = rootp;
-        *rootp = JSVAL_VOID;
-        if(!JS_AddValueRoot(mCallContext, rootp))
+        // Root the value.
+        dp->val.j = JSVAL_VOID;
+        if (!JS_AddValueRoot(mCallContext, &dp->val.j))
             return JS_FALSE;
         dp->SetValIsJSRoot();
     }
