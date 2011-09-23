@@ -282,7 +282,7 @@ var FakeHistory = {
 
   pushState: function(aState) {
     this.pos++;
-    this.states.splice(this.pos);
+    this.states.splice(this.pos, this.states.length);
     this.states.push(aState);
   },
 
@@ -294,7 +294,7 @@ var FakeHistory = {
     if (this.pos == 0)
       throw new Error("Cannot popState from this view");
 
-    this.states.splice(this.pos);
+    this.states.splice(this.pos, this.states.length);
     this.pos--;
 
     gViewController.updateState(this.states[this.pos]);

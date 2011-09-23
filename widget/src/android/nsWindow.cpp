@@ -129,6 +129,7 @@ static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
 static bool sValidSurface;
 static bool sSurfaceExists = false;
+static void *sNativeWindow = nsnull;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -846,11 +847,26 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::SURFACE_CREATED:
             sSurfaceExists = true;
+
+            if (AndroidBridge::Bridge()->HasNativeWindowAccess()) {
+                AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
+                jobject surface = sview.GetSurface();
+                if (surface) {
+                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
+                    if (sNativeWindow) {
+                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                    }
+                }
+            }
             break;
 
         case AndroidGeckoEvent::SURFACE_DESTROYED:
             if (sGLContext && sValidSurface) {
                 sGLContext->ReleaseSurface();
+            }
+            if (sNativeWindow) {
+                AndroidBridge::Bridge()->ReleaseNativeWindow(sNativeWindow);
+                sNativeWindow = nsnull;
             }
             sSurfaceExists = false;
             sValidSurface = false;
@@ -1002,7 +1018,35 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
     if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
-        if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
+        if (sNativeWindow) {
+            unsigned char *bits;
+            int width, height, format, stride;
+            if (!AndroidBridge::Bridge()->LockWindow(sNativeWindow, &bits, &width, &height, &format, &stride)) {
+                ALOG("failed to lock buffer - skipping draw");
+                return;
+            }
+
+            if (!bits || format != AndroidBridge::WINDOW_FORMAT_RGB_565 ||
+                width != mBounds.width || height != mBounds.height) {
+
+                ALOG("surface is not expected dimensions or format - skipping draw");
+                AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface(bits,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    stride * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface from the bitmap");
+            } else {
+                DrawTo(targetSurface);
+            }
+
+            AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
+        } else if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
             jobject bitmap = sview.GetSoftwareDrawBitmap();
             if (!bitmap) {
                 ALOG("no bitmap to draw into - skipping draw");
@@ -1632,12 +1676,15 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             ALOGIME("IME: IME_COMPOSITION_END");
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
             InitEvent(event, nsnull);
+            event.data = mIMELastDispatchedComposingText;
+            mIMELastDispatchedComposingText.Truncate();
             DispatchEvent(&event);
         }
         return;
     case AndroidGeckoEvent::IME_COMPOSITION_BEGIN:
         {
             ALOGIME("IME: IME_COMPOSITION_BEGIN");
+            mIMELastDispatchedComposingText.Truncate();
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
             InitEvent(event, nsnull);
             DispatchEvent(&event);
@@ -1658,6 +1705,20 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             event.theText.Assign(ae->Characters());
             event.rangeArray = mIMERanges.Elements();
             event.rangeCount = mIMERanges.Length();
+
+            if (mIMEComposing &&
+                event.theText != mIMELastDispatchedComposingText) {
+                nsCompositionEvent compositionUpdate(PR_TRUE,
+                                                     NS_COMPOSITION_UPDATE,
+                                                     this);
+                InitEvent(compositionUpdate, nsnull);
+                compositionUpdate.data = event.theText;
+                mIMELastDispatchedComposingText = event.theText;
+                DispatchEvent(&compositionUpdate);
+                // XXX We must check whether this widget is destroyed or not
+                //     before dispatching next event.  However, Android's
+                //     nsWindow has never checked it...
+            }
 
             ALOGIME("IME: IME_SET_TEXT: l=%u, r=%u",
                 event.theText.Length(), mIMERanges.Length());

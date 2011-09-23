@@ -43,7 +43,7 @@
 
 #include "mozilla/jsipc/PObjectWrapperParent.h"
 #include "jsapi.h"
-#include "jsvalue.h"
+#include "jsclass.h"
 #include "nsAutoJSValHolder.h"
 
 namespace mozilla {

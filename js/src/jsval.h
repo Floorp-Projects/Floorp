@@ -40,14 +40,49 @@
 #ifndef jsvalimpl_h__
 #define jsvalimpl_h__
 /*
- * JS value implementation details for operations on jsval and jsid.
- * Embeddings should not rely on any of the definitions in this file. For a
- * description of the value representation and the engine-internal C++ value
- * interface, js::Value, see jsvalue.h.
+ * Implementation details for js::Value in jsapi.h.
  */
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
+
+/******************************************************************************/
+
+/* To avoid a circular dependency, pull in the necessary pieces of jsnum.h. */
+
+#define JSDOUBLE_SIGNBIT (((uint64) 1) << 63)
+#define JSDOUBLE_EXPMASK (((uint64) 0x7ff) << 52)
+#define JSDOUBLE_MANTMASK ((((uint64) 1) << 52) - 1)
+#define JSDOUBLE_HI32_SIGNBIT   0x80000000
+
+static JS_ALWAYS_INLINE JSBool
+JSDOUBLE_IS_NEGZERO(double d)
+{
+    union {
+        struct {
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
+            uint32 lo, hi;
+#else
+            uint32 hi, lo;
+#endif
+        } s;
+        double d;
+    } x;
+    if (d != 0)
+        return JS_FALSE;
+    x.d = d;
+    return (x.s.hi & JSDOUBLE_HI32_SIGNBIT) != 0;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSDOUBLE_IS_INT32(double d, int32* pi)
+{
+    if (JSDOUBLE_IS_NEGZERO(d))
+        return JS_FALSE;
+    return d == (*pi = (int32)d);
+}
+
+/******************************************************************************/
 
 /*
  * Try to get jsvals 64-bit aligned. We could almost assert that all values are
@@ -271,15 +306,6 @@ typedef enum JSWhyMagic
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
-#ifdef __cplusplus
-class                       JSString;
-class                       JSFlatString;
-#else
-typedef struct JSString     JSString;
-typedef struct JSFlatString JSFlatString;
-#endif
-typedef struct JSObject     JSObject;
-
 #if defined(IS_LITTLE_ENDIAN)
 # if JS_BITS_PER_WORD == 32
 typedef union jsval_layout
@@ -294,7 +320,7 @@ typedef union jsval_layout
             JSObject       *obj;
             void           *ptr;
             JSWhyMagic     why;
-            jsuword        word;
+            size_t         word;
         } payload;
         JSValueTag tag;
     } s;
@@ -321,7 +347,7 @@ typedef union jsval_layout
     } s;
     double asDouble;
     void *asPtr;
-    jsuword asWord;
+    size_t asWord;
 } jsval_layout;
 # endif  /* JS_BITS_PER_WORD */
 #else   /* defined(IS_LITTLE_ENDIAN) */
@@ -339,7 +365,7 @@ typedef union jsval_layout
             JSObject       *obj;
             void           *ptr;
             JSWhyMagic     why;
-            jsuword        word;
+            size_t         word;
         } payload;
     } s;
     double asDouble;
@@ -363,7 +389,7 @@ typedef union jsval_layout
     } s;
     double asDouble;
     void *asPtr;
-    jsuword asWord;
+    size_t asWord;
 } jsval_layout;
 # endif /* JS_BITS_PER_WORD */
 #endif  /* defined(IS_LITTLE_ENDIAN) */
@@ -378,8 +404,13 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
  * Thus, all comparisons should explicitly cast operands to uint32.
  */
 
-#define BUILD_JSVAL(tag, payload) \
-    ((((uint64)(uint32)(tag)) << 32) | (uint32)(payload))
+static JS_ALWAYS_INLINE jsval_layout
+BUILD_JSVAL(JSValueTag tag, uint32 payload)
+{
+    jsval_layout l;
+    l.asBits = (((uint64)(uint32)tag) << 32) | payload;
+    return l;
+}
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
@@ -571,10 +602,112 @@ JSVAL_TRACE_KIND_IMPL(jsval_layout l)
     return (uint32)(JSBool)JSVAL_IS_STRING_IMPL(l);
 }
 
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32 i32)
+{
+    return l.s.tag == JSVAL_TAG_INT32 && l.s.payload.i32 == i32;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
+{
+    return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == b);
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
+{
+    jsval_layout l;
+    l.s.tag = JSVAL_TAG_MAGIC;
+    l.s.payload.why = why;
+    return l;
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+MAGIC_OBJ_TO_JSVAL_IMPL(JSObject *obj)
+{
+    jsval_layout l;
+    l.s.tag = JSVAL_TAG_MAGIC;
+    l.s.payload.obj = obj;
+    return l;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
+{
+    JSValueTag ltag = lhs.s.tag, rtag = rhs.s.tag;
+    return ltag == rtag || (ltag < JSVAL_TAG_CLEAR && rtag < JSVAL_TAG_CLEAR);
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+PRIVATE_UINT32_TO_JSVAL_IMPL(uint32 ui)
+{
+    jsval_layout l;
+    l.s.tag = (JSValueTag)0;
+    l.s.payload.u32 = ui;
+    JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
+    return l;
+}
+
+static JS_ALWAYS_INLINE uint32
+JSVAL_TO_PRIVATE_UINT32_IMPL(jsval_layout l)
+{
+    return l.s.payload.u32;
+}
+
+static JS_ALWAYS_INLINE JSValueType
+JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
+{
+    uint32 type = l.s.tag & 0xF;
+    JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+    return (JSValueType)type;
+}
+
+static JS_ALWAYS_INLINE JSValueTag
+JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
+{
+    JSValueTag tag = l.s.tag;
+    JS_ASSERT(tag >= JSVAL_TAG_INT32);
+    return tag;
+}
+
+#ifdef __cplusplus
+JS_STATIC_ASSERT((JSVAL_TYPE_NONFUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
+JS_STATIC_ASSERT((JSVAL_TYPE_FUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
+#endif
+
+static JS_ALWAYS_INLINE jsval_layout
+BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64 *slot)
+{
+    jsval_layout l;
+    JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
+    JS_ASSERT_IF(type == JSVAL_TYPE_STRING ||
+                 type == JSVAL_TYPE_OBJECT ||
+                 type == JSVAL_TYPE_NONFUNOBJ ||
+                 type == JSVAL_TYPE_FUNOBJ,
+                 *(uint32 *)slot != 0);
+    l.s.tag = JSVAL_TYPE_TO_TAG(type & 0xF);
+    /* A 32-bit value in a 64-bit slot always occupies the low-addressed end. */
+    l.s.payload.u32 = *(uint32 *)slot;
+    return l;
+}
+
+static JS_ALWAYS_INLINE void
+UNBOX_NON_DOUBLE_JSVAL(jsval_layout l, uint64 *out)
+{
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
+    *(uint32 *)out = l.s.payload.u32;
+}
+
 #elif JS_BITS_PER_WORD == 64
 
-#define BUILD_JSVAL(tag, payload) \
-    ((((uint64)(uint32)(tag)) << JSVAL_TAG_SHIFT) | (payload))
+static JS_ALWAYS_INLINE jsval_layout
+BUILD_JSVAL(JSValueTag tag, uint64 payload)
+{
+    jsval_layout l;
+    l.asBits = (((uint64)(uint32)tag) << JSVAL_TAG_SHIFT) | payload;
+    return l;
+}
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
@@ -771,7 +904,108 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
     return (void *)(l.asBits << 1);
 }
 
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32 i32)
+{
+    return l.asBits == (((uint64)(uint32)i32) | JSVAL_SHIFTED_TAG_INT32);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
+{
+    return l.asBits == (((uint64)(uint32)b) | JSVAL_SHIFTED_TAG_BOOLEAN);
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
+{
+    jsval_layout l;
+    l.asBits = ((uint64)(uint32)why) | JSVAL_SHIFTED_TAG_MAGIC;
+    return l;
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+MAGIC_OBJ_TO_JSVAL_IMPL(JSObject *obj)
+{
+    jsval_layout l;
+    l.asBits = ((uint64)obj) | JSVAL_SHIFTED_TAG_MAGIC;
+    return l;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
+{
+    uint64 lbits = lhs.asBits, rbits = rhs.asBits;
+    return (lbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE && rbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE) ||
+           (((lbits ^ rbits) & 0xFFFF800000000000LL) == 0);
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+PRIVATE_UINT32_TO_JSVAL_IMPL(uint32 ui)
+{
+    jsval_layout l;
+    l.asBits = (uint64)ui;
+    JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
+    return l;
+}
+
+static JS_ALWAYS_INLINE uint32
+JSVAL_TO_PRIVATE_UINT32_IMPL(jsval_layout l)
+{
+    JS_ASSERT((l.asBits >> 32) == 0);
+    return (uint32)l.asBits;
+}
+
+static JS_ALWAYS_INLINE JSValueType
+JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
+{
+   uint64 type = (l.asBits >> JSVAL_TAG_SHIFT) & 0xF;
+   JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+   return (JSValueType)type;
+}
+
+static JS_ALWAYS_INLINE JSValueTag
+JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
+{
+    uint64 tag = l.asBits >> JSVAL_TAG_SHIFT;
+    JS_ASSERT(tag > JSVAL_TAG_MAX_DOUBLE);
+    return (JSValueTag)tag;
+}
+
+#ifdef __cplusplus
+JS_STATIC_ASSERT((JSVAL_TYPE_NONFUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
+JS_STATIC_ASSERT((JSVAL_TYPE_FUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
 #endif
+
+static JS_ALWAYS_INLINE jsval_layout
+BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64 *slot)
+{
+    uint32 isI32 = (uint32)(type < JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET);
+    uint32 shift = isI32 * 32;
+    uint64 mask = ((uint64)-1) >> shift;
+    uint64 payload = *slot & mask;
+    jsval_layout l;
+
+    /* N.B. for 32-bit payloads, the high 32 bits of the slot are trash. */
+    JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
+    JS_ASSERT_IF(type == JSVAL_TYPE_STRING ||
+                 type == JSVAL_TYPE_OBJECT ||
+                 type == JSVAL_TYPE_NONFUNOBJ ||
+                 type == JSVAL_TYPE_FUNOBJ,
+                 payload != 0);
+
+    l.asBits = payload | JSVAL_TYPE_TO_SHIFTED_TAG(type & 0xF);
+    return l;
+}
+
+static JS_ALWAYS_INLINE void
+UNBOX_NON_DOUBLE_JSVAL(jsval_layout l, uint64 *out)
+{
+    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
+    *out = (l.asBits & JSVAL_PAYLOAD_MASK);
+}
+
+#endif  /* JS_BITS_PER_WORD */
 
 static JS_ALWAYS_INLINE double
 JS_CANONICALIZE_NAN(double d)
@@ -784,65 +1018,11 @@ JS_CANONICALIZE_NAN(double d)
     return d;
 }
 
-/* See JS_USE_JSVAL_JSID_STRUCT_TYPES comment in jsapi.h. */
-#if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
-# define JS_USE_JSVAL_JSID_STRUCT_TYPES
-#endif
-
-#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
-
-typedef JSVAL_ALIGNMENT jsval_layout   jsval;
-typedef struct jsid { size_t asBits; } jsid;
-
-#if defined(__cplusplus)
-extern "C++"
-{
-    static JS_ALWAYS_INLINE bool
-    operator==(jsid lhs, jsid rhs)
-    {
-        return lhs.asBits == rhs.asBits;
-    }
-
-    static JS_ALWAYS_INLINE bool
-    operator!=(jsid lhs, jsid rhs)
-    {
-        return lhs.asBits != rhs.asBits;
-    }
-
-    static JS_ALWAYS_INLINE bool
-    operator==(jsval lhs, jsval rhs)
-    {
-        return lhs.asBits == rhs.asBits;
-    }
-
-    static JS_ALWAYS_INLINE bool
-    operator!=(jsval lhs, jsval rhs)
-    {
-        return lhs.asBits != rhs.asBits;
-    }
-}
-# endif /* defined(__cplusplus) */
-
-/* Internal helper macros */
-#define JSVAL_BITS(v)    ((v).asBits)
-#define JSVAL_FROM_LAYOUT(l) (l)
-#define IMPL_TO_JSVAL(v) (v)
-#define JSID_BITS(id)    ((id).asBits)
-
-#else /* defined(JS_USE_JSVAL_JSID_STRUCT_TYPES) */
-
-/* Use different primitive types so overloading works. */
-typedef JSVAL_ALIGNMENT JSUint64 jsval;
-typedef ptrdiff_t                jsid;
-
-/* Internal helper macros */
-#define JSVAL_BITS(v)    (v)
-#define JSVAL_FROM_LAYOUT(l) ((l).asBits)
-#define IMPL_TO_JSVAL(v) ((v).asBits)
-#define JSID_BITS(id)    (id)
-
-#endif /* defined(JS_USE_JSVAL_JSID_STRUCT_TYPES) */
-
 JS_END_EXTERN_C
+
+#ifdef __cplusplus
+static jsval_layout JSVAL_TO_IMPL(JS::Value);
+static JS::Value IMPL_TO_JSVAL(jsval_layout);
+#endif
 
 #endif /* jsvalimpl_h__ */

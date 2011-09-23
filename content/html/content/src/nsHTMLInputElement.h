@@ -235,6 +235,11 @@ public:
 
   NS_IMETHOD FireAsyncClickHandler();
 
+  virtual void UpdateEditableState(PRBool aNotify)
+  {
+    return UpdateEditableFormControlState(aNotify);
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLInputElement,
                                            nsGenericHTMLFormElement)
 

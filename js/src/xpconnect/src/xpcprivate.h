@@ -725,6 +725,9 @@ public:
         IDX_ITERATOR                ,
         IDX_EXPOSEDPROPS            ,
         IDX_SCRIPTONLY              ,
+        IDX_BASEURIOBJECT           ,
+        IDX_NODEPRINCIPAL           ,
+        IDX_DOCUMENTURIOBJECT       ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -1388,21 +1391,35 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
 // Macros to initialize Object or Function like XPC_WN classes
 #define XPC_WN_WithCall_ObjectOps                                             \
     {                                                                         \
+        nsnull, /* lookupGeneric */                                           \
         nsnull, /* lookupProperty */                                          \
         nsnull, /* lookupElement */                                           \
+        nsnull, /* lookupSpecial */                                           \
+        nsnull, /* defineGeneric */                                           \
         nsnull, /* defineProperty */                                          \
         nsnull, /* defineElement */                                           \
+        nsnull, /* defineSpecial */                                           \
+        nsnull, /* getGeneric    */                                           \
         nsnull, /* getProperty    */                                          \
         nsnull, /* getElement    */                                           \
+        nsnull, /* getSpecial    */                                           \
+        nsnull, /* setGeneric    */                                           \
         nsnull, /* setProperty    */                                          \
         nsnull, /* setElement    */                                           \
+        nsnull, /* setSpecial    */                                           \
+        nsnull, /* getGenericAttributes  */                                   \
         nsnull, /* getAttributes  */                                          \
         nsnull, /* getElementAttributes  */                                   \
+        nsnull, /* getSpecialAttributes  */                                   \
+        nsnull, /* setGenericAttributes  */                                   \
         nsnull, /* setAttributes  */                                          \
         nsnull, /* setElementAttributes  */                                   \
+        nsnull, /* setSpecialAttributes  */                                   \
+        nsnull, /* deleteGeneric */                                           \
         nsnull, /* deleteProperty */                                          \
         nsnull, /* deleteElement */                                           \
-        js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
+        nsnull, /* deleteSpecial */                                           \
+        XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_TypeOf_Function,                                          \
         nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
@@ -1411,21 +1428,35 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
 
 #define XPC_WN_NoCall_ObjectOps                                               \
     {                                                                         \
+        nsnull, /* lookupGeneric */                                           \
         nsnull, /* lookupProperty */                                          \
         nsnull, /* lookupElement */                                           \
+        nsnull, /* lookupSpecial */                                           \
+        nsnull, /* defineGeneric */                                           \
         nsnull, /* defineProperty */                                          \
         nsnull, /* defineElement */                                           \
+        nsnull, /* defineSpecial */                                           \
+        nsnull, /* getGeneric    */                                           \
         nsnull, /* getProperty    */                                          \
         nsnull, /* getElement    */                                           \
+        nsnull, /* getSpecial    */                                           \
+        nsnull, /* setGeneric    */                                           \
         nsnull, /* setProperty    */                                          \
         nsnull, /* setElement    */                                           \
+        nsnull, /* setSpecial    */                                           \
+        nsnull, /* getGenericAttributes  */                                   \
         nsnull, /* getAttributes  */                                          \
         nsnull, /* getElementAttributes  */                                   \
+        nsnull, /* getSpecialAttributes  */                                   \
+        nsnull, /* setGenericAttributes  */                                   \
         nsnull, /* setAttributes  */                                          \
         nsnull, /* setElementAttributes  */                                   \
+        nsnull, /* setSpecialAttributes  */                                   \
+        nsnull, /* deleteGeneric */                                           \
         nsnull, /* deleteProperty */                                          \
         nsnull, /* deleteElement */                                           \
-        js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
+        nsnull, /* deleteSpecial */                                           \
+        XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_TypeOf_Object,                                            \
         nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
@@ -1994,7 +2025,7 @@ public:
     PRUint32                        GetInterfacesBitmap() const
         {return mJSClass.interfacesBitmap;}
     JSClass*                        GetJSClass()
-        {return js::Jsvalify(&mJSClass.base);}
+        {return Jsvalify(&mJSClass.base);}
     JSClass*                        GetSlimJSClass()
         {if(mCanBeSlim) return GetJSClass(); return nsnull;}
 

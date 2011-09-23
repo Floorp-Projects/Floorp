@@ -593,7 +593,7 @@ Debugger::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
     JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj ||
         !wrapDebuggeeValue(cx, &val) ||
-        !DefineNativeProperty(cx, obj, key, val, PropertyStub, StrictPropertyStub,
+        !DefineNativeProperty(cx, obj, key, val, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
         return false;
@@ -902,8 +902,7 @@ Debugger::onTrap(JSContext *cx, Value *vp)
     }
 
     if (site && site->trapHandler) {
-        JSTrapStatus st = site->trapHandler(cx, fp->script(), pc, Jsvalify(vp),
-                                            Jsvalify(site->trapClosure));
+        JSTrapStatus st = site->trapHandler(cx, fp->script(), pc, vp, site->trapClosure);
         if (st != JSTRAP_CONTINUE)
             return st;
     }
@@ -1281,8 +1280,8 @@ Debugger::finalize(JSContext *cx, JSObject *obj)
 
 Class Debugger::jsclass = {
     "Debugger", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, Debugger::finalize,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Debugger::finalize,
     NULL,                 /* reserved0   */
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
@@ -1604,8 +1603,7 @@ Debugger::construct(JSContext *cx, uintN argc, Value *vp)
 
     /* Get Debugger.prototype. */
     Value v;
-    jsid prototypeId = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    if (!args.callee().getProperty(cx, prototypeId, &v))
+    if (!args.callee().getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &v))
         return false;
     JSObject *proto = &v.toObject();
     JS_ASSERT(proto->getClass() == &Debugger::jsclass);
@@ -1868,8 +1866,8 @@ DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 
 Class DebuggerScript_class = {
     "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGSCRIPT_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, NULL,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* reserved0   */
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
@@ -2507,8 +2505,8 @@ static JSFunctionSpec DebuggerScript_methods[] = {
 
 Class DebuggerFrame_class = {
     "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 static JSObject *
@@ -2644,8 +2642,8 @@ DebuggerFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
 
 Class DebuggerArguments_class = {
     "Arguments", JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGARGUMENTS_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 /* The getter used for each element of frame.arguments. See DebuggerFrame_getArguments. */
@@ -2928,7 +2926,7 @@ DebuggerFrameEval(JSContext *cx, uintN argc, Value *vp, EvalBindingsMode mode)
         }
         for (size_t i = 0; i < keys.length(); i++) {
             Value *valp = &values[i];
-            if (!bindingsobj->getProperty(cx, bindingsobj, keys[i], valp) ||
+            if (!bindingsobj->getGeneric(cx, bindingsobj, keys[i], valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
@@ -3024,8 +3022,8 @@ DebuggerObject_trace(JSTracer *trc, JSObject *obj)
 
 Class DebuggerObject_class = {
     "Object", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGOBJECT_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, NULL,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL,
     NULL,                 /* reserved0   */
     NULL,                 /* checkAccess */
     NULL,                 /* call        */

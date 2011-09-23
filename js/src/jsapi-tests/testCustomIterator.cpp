@@ -1,6 +1,6 @@
 #include "tests.h"
 
-#include "jsvalue.h"
+#include "jsclass.h"
 
 int count = 0;
 
@@ -27,13 +27,13 @@ IterHook(JSContext *cx, JSObject *obj, JSBool keysonly)
 js::Class HasCustomIterClass = {
     "HasCustomIter",
     0,
-    js::PropertyStub,
-    js::PropertyStub,
-    js::PropertyStub,
-    js::StrictPropertyStub,
-    js::EnumerateStub,
-    js::ResolveStub,
-    js::ConvertStub,
+    JS_PropertyStub,
+    JS_PropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     NULL,
     NULL, /* reserved0 */
     NULL, /* checkAccess */

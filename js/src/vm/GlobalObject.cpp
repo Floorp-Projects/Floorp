@@ -279,7 +279,7 @@ GlobalObject::initStandardClasses(JSContext *cx)
 
     /* Define a top-level property 'undefined' with the undefined value. */
     if (!defineProperty(cx, ATOM_TO_JSID(state.typeAtoms[JSTYPE_VOID]), UndefinedValue(),
-                        PropertyStub, StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
+                        JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -413,10 +413,10 @@ bool
 LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
 {
     return ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                                ObjectValue(*proto), PropertyStub, StrictPropertyStub,
+                                ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
                                 JSPROP_PERMANENT | JSPROP_READONLY) &&
            proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0);
+                                 ObjectValue(*ctor), JS_PropertyStub, JS_StrictPropertyStub, 0);
 }
 
 bool
@@ -438,8 +438,8 @@ GlobalDebuggees_finalize(JSContext *cx, JSObject *obj)
 static Class
 GlobalDebuggees_class = {
     "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, GlobalDebuggees_finalize
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, GlobalDebuggees_finalize
 };
 
 GlobalObject::DebuggerVector *

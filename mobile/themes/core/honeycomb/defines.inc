@@ -6,7 +6,9 @@
 %define color_background_default rgba(255,255,255,0.95)
 %define color_text_default #222222
 %define color_toolbar_background #eaeaea
+%define color_toolbar_border #d9d9d9
 %define color_divider_border #6699ff
+%define color_url_border #222222
 %define color_button_border rgb(207,207,207)
 %define color_background_dialog #fff
 %define color_text_dialog #000
@@ -25,6 +27,7 @@
 %define color_text_as_link #febc2b
 %define color_background_panelrow #c8c8c8
 %define color_text_panelrow #222222
+%define color_text_toolbutton_inverse #666666
 
 %define color_background_highlight #a7c5f4
 %define color_background_highlight_overlay rgba(167, 197, 244, 0.8)
@@ -101,7 +104,7 @@
 
 %define urlbar_edit_height 6.35mozmm
 %define urlbar_edit_indent 0.85mozmm
-%define urlbar_max_width   96mozmm
+%define identity_popup_tablet_width 72mozmm
 
 %define scroller_thickness 0.64mozmm
 %define scroller_minimum 1.27mozmm

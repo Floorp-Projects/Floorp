@@ -1096,5 +1096,12 @@ done:
   return;
 }
 
+Telemetry::ID
+nsGIFDecoder2::SpeedHistogram()
+{
+  return Telemetry::IMAGE_DECODE_SPEED_GIF;
+}
+
+
 } // namespace imagelib
 } // namespace mozilla

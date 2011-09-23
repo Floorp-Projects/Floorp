@@ -68,7 +68,7 @@ CrossOriginWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid
                                           bool set, js::PropertyDescriptor *desc)
 {
     return JSCrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, set, desc) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(&desc->value));
+           WrapperFactory::WaiveXrayAndWrap(cx, &desc->value);
 }
 
 bool
@@ -76,7 +76,7 @@ CrossOriginWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, j
                                           bool set, js::PropertyDescriptor *desc)
 {
     return JSCrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, set, desc) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(&desc->value));
+           WrapperFactory::WaiveXrayAndWrap(cx, &desc->value);
 }
 
 bool
@@ -84,14 +84,14 @@ CrossOriginWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, js
                         js::Value *vp)
 {
     return JSCrossCompartmentWrapper::get(cx, wrapper, receiver, id, vp) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(vp));
+           WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 bool
 CrossOriginWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp)
 {
     return JSCrossCompartmentWrapper::call(cx, wrapper, argc, vp) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(vp));
+           WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 bool
@@ -99,7 +99,7 @@ CrossOriginWrapper::construct(JSContext *cx, JSObject *wrapper,
                               uintN argc, js::Value *argv, js::Value *rval)
 {
     return JSCrossCompartmentWrapper::construct(cx, wrapper, argc, argv, rval) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(rval));
+           WrapperFactory::WaiveXrayAndWrap(cx, rval);
 }
 
 bool

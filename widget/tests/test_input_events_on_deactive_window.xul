@@ -66,7 +66,7 @@ function startTests()
   }
 
   var keydownHandled, keypressHandled, keyupHandled, compositionstartHandled,
-      compositionendHandled, inputHandled;
+      compositionendHandled, compositionupdateHandled, inputHandled;
 
   function clear()
   {
@@ -75,6 +75,7 @@ function startTests()
     keyupHandled = false;
     compositionstartHandled = false;
     compositionendHandled = false;
+    compositionupdateHandled = false;
     inputHandled = false;
   }
 
@@ -90,6 +91,8 @@ function startTests()
       compositionstartHandled = true;
     } else if (aEvent.type == "compositionend") {
       compositionendHandled = true;
+    } else if (aEvent.type == "compositionupdate") {
+      compositionupdateHandled = true;
     } else if (aEvent.type == "input") {
       inputHandled = true;
     } else {
@@ -102,6 +105,7 @@ function startTests()
   textarea.addEventListener("keyup", onEvent, false);
   textarea.addEventListener("compositionstart", onEvent, false);
   textarea.addEventListener("compositionend", onEvent, false);
+  textarea.addEventListener("compositionupdate", onEvent, false);
   textarea.addEventListener("input", onEvent, false);
 
   startTestsInternal();
@@ -121,12 +125,14 @@ function startTests()
          "input event is (not) handled: " + aDescription);
     }
 
-    function checkCompositionEvents(aStart, aEnd, aInput, aDescription)
+    function checkCompositionEvents(aStart, aEnd, aUpdate, aInput, aDescription)
     {
       is(compositionstartHandled, aStart,
          "compositionstart event is (not) handled: " + aDescription);
       is(compositionendHandled, aEnd,
          "compositionend event is (not) handled: " + aDescription);
+      is(compositionupdateHandled, aUpdate,
+         "compositionupdate event is (not) handled: " + aDescription);
       is(inputHandled, aInput,
          "input event is (not) handled: " + aDescription);
     }
@@ -150,10 +156,11 @@ function startTests()
     const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
     clear();
     // start composition
-    synthesizeComposition(true);
-    checkCompositionEvents(true, false, false, "compositionstart");
+    synthesizeComposition({ type: "compositionstart" });
+    checkCompositionEvents(true, false, false, false, "compositionstart");
     clear();
     // input first character
+    synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
     synthesizeText(
       { "composition":
         { "string": "\u3089",
@@ -164,7 +171,7 @@ function startTests()
         },
         "caret": { "start": 1, "length": 0 }
       });
-    checkCompositionEvents(false, false, false, "composing");
+    checkCompositionEvents(false, false, true, false, "composing");
     var queryText = synthesizeQueryTextContent(0, 100);
     ok(queryText, "query text event result is null");
     if (!queryText) {
@@ -200,7 +207,7 @@ function startTests()
         },
         "caret": { "start": 1, "length": 0 }
       });
-    checkCompositionEvents(false, false, false, "commit composition");
+    checkCompositionEvents(false, false, false, false, "commit composition");
     queryText = synthesizeQueryTextContent(0, 100);
     ok(queryText, "query text event result is null after commit");
     if (!queryText) {
@@ -228,14 +235,15 @@ function startTests()
        "query selected text event returns wrong selected text after commit");
     clear();
     // end composition
-    synthesizeComposition(false);
-    checkCompositionEvents(false, true, true, "compositionend");
+    synthesizeComposition({ type: "compositionend", data: "\u3089" });
+    checkCompositionEvents(false, true, false, true, "compositionend");
   }
 
   textarea.removeEventListener("keydown", onEvent, false);
   textarea.removeEventListener("keypress", onEvent, false);
   textarea.removeEventListener("keyup", onEvent, false);
   textarea.removeEventListener("compositionstart", onEvent, false);
+  textarea.removeEventListener("compositionupdate", onEvent, false);
   textarea.removeEventListener("compositionend", onEvent, false);
   textarea.removeEventListener("input", onEvent, false);
 

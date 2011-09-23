@@ -158,9 +158,9 @@ protected:
     // means offset from the first character of the root element of the editor.
     PRUint32 mCompositionStart;
 
-    // mCompositionString is the current composing string. Even if this is
-    // empty, we can be composing.  See mIsComposing.
-    nsString mCompositionString;
+    // mDispatchedCompositionString is the latest composition string which
+    // was dispatched by compositionupdate event.
+    nsString mDispatchedCompositionString;
 
     // OnKeyEvent() temporarily sets mProcessingKeyEvent to the given native
     // event.
@@ -298,7 +298,8 @@ protected:
 
     // Dispatches a text event.  If aCheckAttr is TRUE, dispatches a committed
     // text event.  Otherwise, dispatches a composing text event.
-    PRBool DispatchTextEvent(PRBool aCheckAttr);
+    PRBool DispatchTextEvent(const nsAString& aCompositionString,
+                             PRBool aCheckAttr);
 
 };
 

@@ -46,7 +46,6 @@
 #include "jshashtable.h"
 #include "jslock.h"
 #include "jsobj.h"
-#include "jsvalue.h"
 #include "jscell.h"
 
 #include "vm/Unicode.h"

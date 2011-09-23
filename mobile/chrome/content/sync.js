@@ -307,8 +307,11 @@ let WeaveGlue = {
 
     // Sync will use the account value and munge it into a username, as needed
     Weave.Service.account = this.setupData.account;
-    Weave.Service.login(Weave.Service.username, this.setupData.password, this.setupData.synckey);
+    Weave.Service.password = this.setupData.password;
+    Weave.Service.passphrase = this.setupData.synckey;
     Weave.Service.persistLogin();
+    Weave.Svc.Obs.notify("weave:service:setup-complete");
+    setTimeout(function () { Weave.Service.sync(); }, 0);
   },
 
   disconnect: function disconnect() {
@@ -345,7 +348,8 @@ let WeaveGlue = {
   },
 
   _addListeners: function _addListeners() {
-    let topics = ["weave:service:sync:start", "weave:service:sync:finish",
+    let topics = ["weave:service:setup-complete",
+      "weave:service:sync:start", "weave:service:sync:finish",
       "weave:service:sync:error", "weave:service:login:start",
       "weave:service:login:finish", "weave:service:login:error",
       "weave:service:logout:finish"];

@@ -232,12 +232,12 @@ spinbuttons {
 toolbar {
   -moz-appearance: none;
   background-color: @color_background_default@;
-  max-height: @touch_button_large@;
+  max-height: @touch_button_small@;
 }
 
 toolbarbutton {
-  min-width: @touch_button_xlarge@ !important; /* primary button size */
-  min-height: @touch_button_xlarge@ !important; /* primary button size */
+  min-width: @touch_button_small@ !important; /* primary button size */
+  min-height: @touch_button_small@ !important; /* primary button size */
   -moz-appearance: none !important;
   padding: @padding_xsmall@;
   -moz-margin-end: @margin_xxxnormal@;

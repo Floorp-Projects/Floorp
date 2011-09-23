@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -93,14 +94,14 @@ NumberDiv(double a, double b) {
     if (b == 0) {
         if (a == 0 || JSDOUBLE_IS_NaN(a) 
 #ifdef XP_WIN
-            || JSDOUBLE_IS_NaN(a) /* XXX MSVC miscompiles such that (NaN == 0) */
+            || JSDOUBLE_IS_NaN(b) /* XXX MSVC miscompiles such that (NaN == 0) */
 #endif
         )
             return js_NaN;    
-        else if (JSDOUBLE_IS_NEG(a) != JSDOUBLE_IS_NEG(b))
+
+        if (JSDOUBLE_IS_NEG(a) != JSDOUBLE_IS_NEG(b))
             return js_NegativeInfinity;
-        else
-            return js_PositiveInfinity; 
+        return js_PositiveInfinity; 
     }
 
     return a / b;

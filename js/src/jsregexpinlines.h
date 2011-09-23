@@ -231,7 +231,7 @@ class RegExpMatchBuilder
 
     bool setProperty(JSAtom *name, Value v) {
         return !!js_DefineProperty(cx, array, ATOM_TO_JSID(name), &v,
-                                   PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE);
+                                   JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
     }
 
   public:
@@ -239,7 +239,7 @@ class RegExpMatchBuilder
 
     bool append(uint32 index, Value v) {
         JS_ASSERT(!array->getOps()->getElement);
-        return !!js_DefineElement(cx, array, index, &v, PropertyStub, StrictPropertyStub,
+        return !!js_DefineElement(cx, array, index, &v, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_ENUMERATE);
     }
 

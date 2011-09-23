@@ -49,7 +49,7 @@ IA2DIR        = $(topsrcdir)/other-licenses/ia2
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES       += -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
+DEFINES       += -DREGISTER_PROXY_DLL
 
 GARBAGE       += $(MIDL_GENERATED_FILES)
 
