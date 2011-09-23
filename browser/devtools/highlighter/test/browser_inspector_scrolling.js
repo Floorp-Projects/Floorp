@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Inspector Tree Selection Tests.
+ * The Original Code is Inspector iframe Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -22,6 +22,8 @@
  *
  * Contributor(s):
  *   Rob Campbell <rcampbell@mozilla.com>
+ *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Julian Viereck <jviereck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,68 +40,67 @@
  * ***** END LICENSE BLOCK ***** */
 
 let doc;
-let h1;
+let div;
+let iframe;
 
 function createDocument()
 {
-  let div = doc.createElement("div");
-  let h1 = doc.createElement("h1");
-  let p1 = doc.createElement("p");
-  let p2 = doc.createElement("p");
-  doc.title = "Inspector Tree Selection Test";
-  h1.textContent = "Inspector Tree Selection Test";
-  p1.textContent = "This is some example text";
-  p2.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  div.appendChild(h1);
-  div.appendChild(p1);
-  div.appendChild(p2);
-  doc.body.appendChild(div);
-  setupSelectionTests();
+  doc.title = "Inspector scrolling Tests";
+
+  iframe = doc.createElement("iframe");
+
+  iframe.addEventListener("load", function () {
+    iframe.removeEventListener("load", arguments.callee, false);
+
+    div = iframe.contentDocument.createElement("div");
+    div.textContent = "big div";
+    div.setAttribute("style", "height:500px; width:500px; border:1px solid gray;");
+    iframe.contentDocument.body.appendChild(div);
+    toggleInspector();
+  }, false);
+
+  iframe.src = "data:text/html,foo bar";
+  doc.body.appendChild(iframe);
 }
 
-function setupSelectionTests()
+function toggleInspector()
 {
-  h1 = doc.querySelectorAll("h1")[0];
-  ok(h1, "we have the header node");
-  Services.obs.addObserver(runSelectionTests,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
-  InspectorUI.openInspectorUI();
+  Services.obs.addObserver(inspectNode, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  InspectorUI.toggleInspectorUI();
 }
 
-function runSelectionTests()
+function inspectNode()
 {
-  Services.obs.removeObserver(runSelectionTests,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
-  Services.obs.addObserver(performTestComparisons,
-    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  Services.obs.removeObserver(inspectNode,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(performScrollingTest,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+
   executeSoon(function() {
-    InspectorUI.inspectNode(h1);
+    InspectorUI.inspectNode(div);
   });
 }
 
-function performTestComparisons(evt)
+function performScrollingTest()
 {
-  Services.obs.removeObserver(performTestComparisons,
-    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  Services.obs.removeObserver(performScrollingTest,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
-  is(h1, InspectorUI.selection, "selection matches node");
-  ok(InspectorUI.highlighter.isHighlighting, "highlighter is highlighting");
-  is(InspectorUI.highlighter.highlitNode, h1, "highlighter highlighting correct node");
+  EventUtils.synthesizeMouseScroll(div, 10, 10,
+    {axis:"vertical", delta:50, type:"MozMousePixelScroll"},
+    iframe.contentWindow);
 
-  finishUp();
-}
+  gBrowser.selectedBrowser.addEventListener("scroll", function() {
+    gBrowser.selectedBrowser.removeEventListener("scroll", arguments.callee,
+      false);
 
-function finishUp() {
-  InspectorUI.closeInspectorUI();
-  doc = h1 = null;
-  gBrowser.removeCurrentTab();
-  finish();
+    is(iframe.contentDocument.body.scrollTop, 50, "inspected iframe scrolled");
+
+    div = iframe = doc = null;
+    InspectorUI.closeInspectorUI();
+    gBrowser.removeCurrentTab();
+    finish();
+  }, false);
 }
 
 function test()
@@ -112,6 +113,5 @@ function test()
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html,basic tests for inspector";
+  content.location = "data:text/html,mouse scrolling test for inspector";
 }
-

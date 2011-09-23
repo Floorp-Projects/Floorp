@@ -42,8 +42,8 @@ let doc = null;
 let xhr = null;
 let expectedResult = "";
 
-const TEST_URI = "http://mochi.test:8888/browser/browser/base/content/test/inspector/browser_inspector_treePanel_input.html";
-const RESULT_URI = "http://mochi.test:8888/browser/browser/base/content/test/inspector/browser_inspector_treePanel_result.html";
+const TEST_URI = "http://mochi.test:8888/browser/browser/devtools/highlighter/test/browser_inspector_treePanel_input.html";
+const RESULT_URI = "http://mochi.test:8888/browser/browser/devtools/highlighter/test/browser_inspector_treePanel_result.html";
 
 function tabFocused()
 {
@@ -64,17 +64,26 @@ function xhr_onReadyStateChange() {
   xhr = null;
 
   Services.obs.addObserver(inspectorOpened,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function inspectorOpened()
 {
   Services.obs.removeObserver(inspectorOpened,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
+
+  Services.obs.addObserver(treePanelOpened, InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
+  InspectorUI.treePanel.open();
+}
+
+function treePanelOpened()
+{
+  Services.obs.removeObserver(treePanelOpened,
+    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
 
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
   InspectorUI.stopInspecting();
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
 
@@ -91,23 +100,23 @@ function inspectorOpened()
   ok(iframeDiv, "Found the div element inside the iframe");
   InspectorUI.inspectNode(iframeDiv);
 
-  ok(InspectorUI.treePanelDiv, "InspectorUI.treePanelDiv is available");
-  is(InspectorUI.treePanelDiv.innerHTML.replace(/^\s+|\s+$/mg, ''),
+  ok(InspectorUI.treePanel.treePanelDiv, "InspectorUI.treePanelDiv is available");
+  is(InspectorUI.treePanel.treePanelDiv.innerHTML.replace(/^\s+|\s+$/mg, ''),
     expectedResult, "treePanelDiv.innerHTML is correct");
   expectedResult = null;
 
   Services.obs.addObserver(inspectorClosed,
-    INSPECTOR_NOTIFICATIONS.CLOSED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
   InspectorUI.closeInspectorUI();
 }
 
 function inspectorClosed()
 {
   Services.obs.removeObserver(inspectorClosed,
-    INSPECTOR_NOTIFICATIONS.CLOSED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is not open");
+  ok(!InspectorUI.treePanel, "Inspector Tree Panel is not open");
 
   gBrowser.removeCurrentTab();
   finish();

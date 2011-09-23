@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
-#ifdef 0
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -26,7 +25,7 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Julian Viereck <jviereck@mozilla.com>
  *   Paul Rouget <paul@mozilla.com>
- *   Kyle Simpson <ksimpson@mozilla.com> 
+ *   Kyle Simpson <ksimpson@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,9 +40,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#endif
 
-#include insideOutBox.js
+const Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+var EXPORTED_SYMBOLS = ["InspectorUI"];
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -72,6 +77,9 @@ const INSPECTOR_NOTIFICATIONS = {
   // Fires once the Inspector is closed.
   CLOSED: "inspector-closed",
 
+  // Fires when the Tree Panel is opened and initialized.
+  TREEPANELREADY: "inspector-treepanel-ready",
+
   // Event notifications for the attribute-value editor
   EDITOR_OPENED: "inspector-editor-opened",
   EDITOR_CLOSED: "inspector-editor-closed",
@@ -90,30 +98,32 @@ const INSPECTOR_NOTIFICATIONS = {
  *   <box id="highlighter-controls>...</vbox>
  * </stack>
  *
- * @param nsIDOMNode aBrowser
- *        The xul:browser object for the content window being highlighted.
+ * @param object aInspector
+ *        The InspectorUI instance.
  */
-function Highlighter(aBrowser)
+function Highlighter(aInspector)
 {
-  this._init(aBrowser);
+  this.IUI = aInspector;
+  this._init();
 }
 
 Highlighter.prototype = {
-
-  _init: function Highlighter__init(aBrowser)
+  _init: function Highlighter__init()
   {
-    this.browser = aBrowser;
+    this.browser = this.IUI.browser;
+    this.chromeDoc = this.IUI.chromeDoc;
+
     let stack = this.browser.parentNode;
     this.win = this.browser.contentWindow;
     this._highlighting = false;
 
-    this.highlighterContainer = document.createElement("stack");
+    this.highlighterContainer = this.chromeDoc.createElement("stack");
     this.highlighterContainer.id = "highlighter-container";
 
-    this.veilContainer = document.createElement("vbox");
+    this.veilContainer = this.chromeDoc.createElement("vbox");
     this.veilContainer.id = "highlighter-veil-container";
 
-    let controlsBox = document.createElement("box");
+    let controlsBox = this.chromeDoc.createElement("box");
     controlsBox.id = "highlighter-controls";
 
     // The veil will make the whole page darker except
@@ -135,7 +145,6 @@ Highlighter.prototype = {
     this.handleResize();
   },
 
-
   /**
    * Build the veil:
    *
@@ -153,32 +162,31 @@ Highlighter.prototype = {
    */
   buildVeil: function Highlighter_buildVeil(aParent)
   {
-
     // We will need to resize these boxes to surround a node.
     // See highlightRectangle().
 
-    this.veilTopBox = document.createElement("box");
+    this.veilTopBox = this.chromeDoc.createElement("box");
     this.veilTopBox.id = "highlighter-veil-topbox";
     this.veilTopBox.className = "highlighter-veil";
 
-    this.veilMiddleBox = document.createElement("hbox");
+    this.veilMiddleBox = this.chromeDoc.createElement("hbox");
     this.veilMiddleBox.id = "highlighter-veil-middlebox";
 
-    this.veilLeftBox = document.createElement("box");
+    this.veilLeftBox = this.chromeDoc.createElement("box");
     this.veilLeftBox.id = "highlighter-veil-leftbox";
     this.veilLeftBox.className = "highlighter-veil";
 
-    this.veilTransparentBox = document.createElement("box");
+    this.veilTransparentBox = this.chromeDoc.createElement("box");
     this.veilTransparentBox.id = "highlighter-veil-transparentbox";
 
     // We don't need any references to veilRightBox and veilBottomBox.
     // These boxes are automatically resized (flex=1)
 
-    let veilRightBox = document.createElement("box");
+    let veilRightBox = this.chromeDoc.createElement("box");
     veilRightBox.id = "highlighter-veil-rightbox";
     veilRightBox.className = "highlighter-veil";
 
-    let veilBottomBox = document.createElement("box");
+    let veilBottomBox = this.chromeDoc.createElement("box");
     veilBottomBox.id = "highlighter-veil-bottombox";
     veilBottomBox.className = "highlighter-veil";
 
@@ -200,15 +208,15 @@ Highlighter.prototype = {
    */
   buildControls: function Highlighter_buildControls(aParent)
   {
-    let closeButton = document.createElement("box");
+    let closeButton = this.chromeDoc.createElement("box");
     closeButton.id = "highlighter-close-button";
-    closeButton.appendChild(document.createElement("image"));
+    closeButton.appendChild(this.chromeDoc.createElement("image"));
 
-    closeButton.setAttribute("onclick", "InspectorUI.closeInspectorUI(false);");
+    closeButton.addEventListener("click",
+      this.IUI.closeInspectorUI.bind(this.IUI), false);
 
     aParent.appendChild(closeButton);
   },
-
 
   /**
    * Destroy the nodes.
@@ -229,7 +237,8 @@ Highlighter.prototype = {
     this.highlighterContainer = null;
     this.win = null
     this.browser = null;
-    this.toolbar = null;
+    this.chromeDoc = null;
+    this.IUI = null;
   },
 
   /**
@@ -308,7 +317,7 @@ Highlighter.prototype = {
       let frameRect = frameWin.frameElement.getBoundingClientRect();
 
       let [offsetTop, offsetLeft] =
-        InspectorUI.getIframeContentOffset(frameWin.frameElement);
+        this.IUI.getIframeContentOffset(frameWin.frameElement);
 
       rect.top += frameRect.top + offsetTop;
       rect.left += frameRect.left + offsetLeft;
@@ -383,7 +392,7 @@ Highlighter.prototype = {
     this.veilMiddleBox.style.height = 0;
     this.veilTransparentBox.style.width = 0;
     Services.obs.notifyObservers(null,
-      INSPECTOR_NOTIFICATIONS.UNHIGHLIGHTING, null);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.UNHIGHLIGHTING, null);
   },
 
   /**
@@ -433,7 +442,7 @@ Highlighter.prototype = {
     // Get midpoint of diagonal line.
     let midpoint = this.midPoint(a, b);
 
-    return InspectorUI.elementFromPoint(this.win.document, midpoint.x,
+    return this.IUI.elementFromPoint(this.win.document, midpoint.x,
       midpoint.y);
   },
 
@@ -445,7 +454,7 @@ Highlighter.prototype = {
    */
   isNodeHighlightable: function Highlighter_isNodeHighlightable()
   {
-    if (!this.node || this.node.nodeType != Node.ELEMENT_NODE) {
+    if (!this.node || this.node.nodeType != this.node.ELEMENT_NODE) {
       return false;
     }
     let nodeName = this.node.nodeName.toLowerCase();
@@ -515,7 +524,7 @@ Highlighter.prototype = {
     // Stop inspection when the user clicks on a node.
     if (aEvent.button == 0) {
       let win = aEvent.target.ownerDocument.defaultView;
-      InspectorUI.stopInspecting();
+      this.IUI.stopInspecting();
       win.focus();
     }
     aEvent.preventDefault();
@@ -530,10 +539,10 @@ Highlighter.prototype = {
    */
   handleMouseMove: function Highlighter_handleMouseMove(aEvent)
   {
-    let element = InspectorUI.elementFromPoint(aEvent.target.ownerDocument,
+    let element = this.IUI.elementFromPoint(aEvent.target.ownerDocument,
       aEvent.clientX, aEvent.clientY);
     if (element && element != this.node) {
-      InspectorUI.inspectNode(element);
+      this.IUI.inspectNode(element);
     }
   },
 
@@ -551,15 +560,30 @@ Highlighter.prototype = {
 
 /**
  * Main controller class for the Inspector.
+ *
+ * @constructor
+ * @param nsIDOMWindow aWindow
+ *        The chrome window for which the Inspector instance is created.
  */
-var InspectorUI = {
+function InspectorUI(aWindow)
+{
+  this.chromeWin = aWindow;
+  this.chromeDoc = aWindow.document;
+  this.tabbrowser = aWindow.gBrowser;
+  this.tools = {};
+  this.toolEvents = {};
+  this.store = new InspectorStore();
+  this.INSPECTOR_NOTIFICATIONS = INSPECTOR_NOTIFICATIONS;
+}
+
+InspectorUI.prototype = {
   browser: null,
-  tools: {},
-  showTextNodesWithWhitespace: false,
+  tools: null,
+  toolEvents: null,
   inspecting: false,
-  treeLoaded: false,
-  prefEnabledName: "devtools.inspector.enabled",
+  treePanelEnabled: true,
   isDirty: false,
+  store: null,
 
   /**
    * Toggle the inspector interface elements on or off.
@@ -569,7 +593,7 @@ var InspectorUI = {
    */
   toggleInspectorUI: function IUI_toggleInspectorUI(aEvent)
   {
-    if (this.isTreePanelOpen) {
+    if (this.isInspectorOpen) {
       this.closeInspectorUI();
     } else {
       this.openInspectorUI();
@@ -590,13 +614,13 @@ var InspectorUI = {
   },
 
   /**
-   * Is the tree panel open?
+   * Is the inspector UI open? Simply check if the toolbar is visible or not.
    *
    * @returns boolean
    */
-  get isTreePanelOpen()
+  get isInspectorOpen()
   {
-    return this.treePanel && this.treePanel.state == "open";
+    return this.toolbar && !this.toolbar.hidden;
   },
 
   /**
@@ -608,199 +632,91 @@ var InspectorUI = {
     return doc.documentElement ? doc.documentElement.lastElementChild : null;
   },
 
-  initializeTreePanel: function IUI_initializeTreePanel()
+  /**
+   * Open inspector UI and HTML tree. Add listeners for document scrolling,
+   * resize, tabContainer.TabSelect and others. If a node is provided, then
+   * start inspecting it.
+   *
+   * @param [optional] aNode
+   *        The node to inspect.
+   */
+  openInspectorUI: function IUI_openInspectorUI(aNode)
   {
-    this.treeBrowserDocument = this.treeIFrame.contentDocument;
-    this.treePanelDiv = this.treeBrowserDocument.createElement("div");
-    this.treeBrowserDocument.body.appendChild(this.treePanelDiv);
-    this.treePanelDiv.ownerPanel = this;
-    this.ioBox = new InsideOutBox(this, this.treePanelDiv);
-    this.ioBox.createObjectBox(this.win.document.documentElement);
-    this.treeLoaded = true;
-    this.editingContext = null;
-    this.editingEvents = {};
+    // InspectorUI is already up and running. Lock a node if asked (via context).
+    if (this.highlighter && aNode) {
+      this.inspectNode(aNode);
+      this.stopInspecting();
+      return;
+    }
+    // Observer used to inspect the specified element from content after the
+    // inspector UI has been opened.
+    function inspectObserver(aElement) {
+      Services.obs.removeObserver(boundInspectObserver,
+                                  INSPECTOR_NOTIFICATIONS.OPENED,
+                                  false);
+      this.inspectNode(aElement);
+      this.stopInspecting();
+    };
+    var boundInspectObserver = inspectObserver.bind(this, aNode);
+
+    if (aNode) {
+      // Add the observer to inspect the node after initialization finishes.
+      Services.obs.addObserver(boundInspectObserver,
+                               INSPECTOR_NOTIFICATIONS.OPENED,
+                               false);
+    }
+    // Start initialization.
+    this.browser = this.tabbrowser.selectedBrowser;
+    this.win = this.browser.contentWindow;
+    this.winID = this.getWindowID(this.win);
+    this.toolbar = this.chromeDoc.getElementById("inspector-toolbar");
+    this.inspectMenuitem = this.chromeDoc.getElementById("Tools:Inspect");
+    this.inspectToolbutton =
+      this.chromeDoc.getElementById("inspector-inspect-toolbutton");
+
+    this.initTools();
+
+    if (!this.TreePanel && this.treePanelEnabled) {
+      Cu.import("resource:///modules/TreePanel.jsm", this);
+      this.treePanel = new this.TreePanel(this.chromeWin, this);
+    }
+
+    this.toolbar.hidden = false;
+    this.inspectMenuitem.setAttribute("checked", true);
+
+    this.isDirty = false;
+
+    this.progressListener = new InspectorProgressListener(this);
 
     // initialize the highlighter
     this.initializeHighlighter();
   },
 
   /**
-   * Open the inspector's tree panel and initialize it.
+   * Register and initialize any included tools.
    */
-  openTreePanel: function IUI_openTreePanel()
+  initTools: function IUI_initTools()
   {
-    if (!this.treePanel) {
-      this.treePanel = document.getElementById("inspector-tree-panel");
-      this.treePanel.hidden = false;
+    // Style inspector
+    if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
+        !this.toolRegistered("styleinspector")) {
+      let stylePanel = StyleInspector.createPanel(true);
+      this.registerTool({
+        id: "styleinspector",
+        label: StyleInspector.l10n("style.highlighter.button.label"),
+        tooltiptext: StyleInspector.l10n("style.highlighter.button.tooltip"),
+        accesskey: StyleInspector.l10n("style.highlighter.accesskey"),
+        context: stylePanel,
+        get isOpen() stylePanel.isOpen(),
+        onSelect: stylePanel.selectNode,
+        show: stylePanel.showTool,
+        hide: stylePanel.hideTool,
+        dim: stylePanel.dimTool,
+        panel: stylePanel,
+        unregister: stylePanel.destroy,
+      });
+      this.stylePanel = stylePanel;
     }
-
-    this.treeIFrame = document.getElementById("inspector-tree-iframe");
-    if (!this.treeIFrame) {
-      let resizerBox = document.getElementById("tree-panel-resizer-box");
-      this.treeIFrame = document.createElement("iframe");
-      this.treeIFrame.setAttribute("id", "inspector-tree-iframe");
-      this.treeIFrame.setAttribute("flex", "1");
-      this.treeIFrame.setAttribute("type", "content");
-      this.treeIFrame.setAttribute("onclick", "InspectorUI.onTreeClick(event)");
-      this.treeIFrame.setAttribute("ondblclick", "InspectorUI.onTreeDblClick(event);");
-      this.treeIFrame = this.treePanel.insertBefore(this.treeIFrame, resizerBox);
-    }
-
-    this.treePanel.addEventListener("popupshown", function treePanelShown() {
-      InspectorUI.treePanel.removeEventListener("popupshown",
-        treePanelShown, false);
-
-        InspectorUI.treeIFrame.addEventListener("load",
-          function loadedInitializeTreePanel() {
-            InspectorUI.treeIFrame.removeEventListener("load",
-              loadedInitializeTreePanel, true);
-            InspectorUI.initializeTreePanel();
-          }, true);
-
-      let src = InspectorUI.treeIFrame.getAttribute("src");
-      if (src != "chrome://browser/content/inspector.html") {
-        InspectorUI.treeIFrame.setAttribute("src",
-          "chrome://browser/content/inspector.html");
-      } else {
-        InspectorUI.treeIFrame.contentWindow.location.reload();
-      }
-
-    }, false);
-
-    const panelWidthRatio = 7 / 8;
-    const panelHeightRatio = 1 / 5;
-
-    let width = parseInt(this.win.outerWidth * panelWidthRatio);
-    let height = parseInt(this.win.outerHeight * panelHeightRatio);
-    let y = Math.min(window.screen.availHeight - height, this.win.innerHeight);
-
-    this.treePanel.openPopup(this.browser, "overlap", 0, 0,
-      false, false);
-
-    this.treePanel.moveTo(80, y);
-    this.treePanel.sizeTo(width, height);
-  },
-
-  createObjectBox: function IUI_createObjectBox(object, isRoot)
-  {
-    let tag = this.domplateUtils.getNodeTag(object);
-    if (tag)
-      return tag.replace({object: object}, this.treeBrowserDocument);
-  },
-
-  getParentObject: function IUI_getParentObject(node)
-  {
-    let parentNode = node ? node.parentNode : null;
-
-    if (!parentNode) {
-      // Documents have no parentNode; Attr, Document, DocumentFragment, Entity,
-      // and Notation. top level windows have no parentNode
-      if (node && node == Node.DOCUMENT_NODE) {
-        // document type
-        if (node.defaultView) {
-          let embeddingFrame = node.defaultView.frameElement;
-          if (embeddingFrame)
-            return embeddingFrame.parentNode;
-        }
-      }
-      // a Document object without a parentNode or window
-      return null;  // top level has no parent
-    }
-
-    if (parentNode.nodeType == Node.DOCUMENT_NODE) {
-      if (parentNode.defaultView) {
-        return parentNode.defaultView.frameElement;
-      }
-      // parent is document element, but no window at defaultView.
-      return null;
-    }
-    if (!parentNode.localName) {
-      return null;
-    }
-    return parentNode;
-  },
-
-  getChildObject: function IUI_getChildObject(node, index, previousSibling)
-  {
-    if (!node)
-      return null;
-
-    if (node.contentDocument) {
-      // then the node is a frame
-      if (index == 0) {
-        return node.contentDocument.documentElement;  // the node's HTMLElement
-      }
-      return null;
-    }
-
-    if (node instanceof GetSVGDocument) {
-      let svgDocument = node.getSVGDocument();
-      if (svgDocument) {
-        // then the node is a frame
-        if (index == 0) {
-          return svgDocument.documentElement;  // the node's SVGElement
-        }
-        return null;
-      }
-    }
-
-    let child = null;
-    if (previousSibling)  // then we are walking
-      child = this.getNextSibling(previousSibling);
-    else
-      child = this.getFirstChild(node);
-
-    if (this.showTextNodesWithWhitespace)
-      return child;
-
-    for (; child; child = this.getNextSibling(child)) {
-      if (!this.domplateUtils.isWhitespaceText(child))
-        return child;
-    }
-
-    return null;  // we have no children worth showing.
-  },
-
-  getFirstChild: function IUI_getFirstChild(node)
-  {
-    this.treeWalker = node.ownerDocument.createTreeWalker(node,
-      NodeFilter.SHOW_ALL, null, false);
-    return this.treeWalker.firstChild();
-  },
-
-  getNextSibling: function IUI_getNextSibling(node)
-  {
-    let next = this.treeWalker.nextSibling();
-
-    if (!next)
-      delete this.treeWalker;
-
-    return next;
-  },
-
-  /**
-   * Open inspector UI. tree. Add listeners for document scrolling,
-   * resize, tabContainer.TabSelect and others.
-   */
-  openInspectorUI: function IUI_openInspectorUI()
-  {
-    // initialization
-    this.browser = gBrowser.selectedBrowser;
-    this.win = this.browser.contentWindow;
-    this.winID = this.getWindowID(this.win);
-    this.toolbar = document.getElementById("inspector-toolbar");
-
-    if (!this.domplate) {
-      Cu.import("resource:///modules/domplate.jsm", this);
-      this.domplateUtils.setDOM(window);
-    }
-
-    this.openTreePanel();
-
-    this.toolbar.hidden = false;
-    this.inspectCmd.setAttribute("checked", true);
-
-    gBrowser.addProgressListener(InspectorProgressListener);
   },
 
   /**
@@ -808,7 +724,7 @@ var InspectorUI = {
    */
   initializeHighlighter: function IUI_initializeHighlighter()
   {
-    this.highlighter = new Highlighter(this.browser);
+    this.highlighter = new Highlighter(this);
     this.highlighterReady();
   },
 
@@ -818,20 +734,23 @@ var InspectorUI = {
   initializeStore: function IUI_initializeStore()
   {
     // First time opened, add the TabSelect listener
-    if (InspectorStore.isEmpty())
-      gBrowser.tabContainer.addEventListener("TabSelect", this, false);
+    if (this.store.isEmpty()) {
+      this.tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
+    }
 
     // Has this windowID been inspected before?
-    if (InspectorStore.hasID(this.winID)) {
-      let selectedNode = InspectorStore.getValue(this.winID, "selectedNode");
+    if (this.store.hasID(this.winID)) {
+      let selectedNode = this.store.getValue(this.winID, "selectedNode");
       if (selectedNode) {
         this.inspectNode(selectedNode);
       }
+      this.isDirty = this.store.getValue(this.winID, "isDirty");
     } else {
       // First time inspecting, set state to no selection + live inspection.
-      InspectorStore.addStore(this.winID);
-      InspectorStore.setValue(this.winID, "selectedNode", null);
-      InspectorStore.setValue(this.winID, "inspecting", true);
+      this.store.addStore(this.winID);
+      this.store.setValue(this.winID, "selectedNode", null);
+      this.store.setValue(this.winID, "inspecting", true);
+      this.store.setValue(this.winID, "isDirty", this.isDirty);
       this.win.addEventListener("pagehide", this, true);
     }
   },
@@ -850,8 +769,8 @@ var InspectorUI = {
   {
     // if currently editing an attribute value, closing the
     // highlighter/HTML panel dismisses the editor
-    if (this.editingContext)
-      this.closeEditor();
+    if (this.treePanel && this.treePanel.editingContext)
+      this.treePanel.closeEditor();
 
     if (this.closing || !this.win || !this.browser) {
       return;
@@ -860,74 +779,50 @@ var InspectorUI = {
     this.closing = true;
     this.toolbar.hidden = true;
 
-    gBrowser.removeProgressListener(InspectorProgressListener);
+    this.progressListener.destroy();
+    delete this.progressListener;
 
     if (!aKeepStore) {
-      InspectorStore.deleteStore(this.winID);
+      this.store.deleteStore(this.winID);
       this.win.removeEventListener("pagehide", this, true);
     } else {
       // Update the store before closing.
       if (this.selection) {
-        InspectorStore.setValue(this.winID, "selectedNode",
+        this.store.setValue(this.winID, "selectedNode",
           this.selection);
       }
-      InspectorStore.setValue(this.winID, "inspecting", this.inspecting);
+      this.store.setValue(this.winID, "inspecting", this.inspecting);
+      this.store.setValue(this.winID, "isDirty", this.isDirty);
     }
 
-    if (InspectorStore.isEmpty()) {
-      gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+    if (this.store.isEmpty()) {
+      this.tabbrowser.tabContainer.removeEventListener("TabSelect", this, false);
     }
 
     this.stopInspecting();
+
+    this.saveToolState(this.winID);
+    this.toolsDo(function IUI_toolsHide(aTool) {
+      this.unregisterTool(aTool);
+    }.bind(this));
+
     if (this.highlighter) {
       this.highlighter.destroy();
       this.highlighter = null;
     }
 
-    if (this.treePanelDiv) {
-      this.treePanelDiv.ownerPanel = null;
-      let parent = this.treePanelDiv.parentNode;
-      parent.removeChild(this.treePanelDiv);
-      delete this.treePanelDiv;
-      delete this.treeBrowserDocument;
-    }
-
-    if (this.treeIFrame) {
-      let parent = this.treeIFrame.parentNode;
-      parent.removeChild(this.treeIFrame);
-      delete this.treeIFrame;
-    }
-    delete this.ioBox;
-
-    if (this.domplate) {
-      this.domplateUtils.setDOM(null);
-      delete this.domplate;
-      delete this.HTMLTemplates;
-      delete this.domplateUtils;
-    }
-
-    this.saveToolState(this.winID);
-    this.toolsDo(function IUI_toolsHide(aTool) {
-      if (aTool.panel) {
-        aTool.panel.hidePopup();
-      }
-    });
-
-    this.inspectCmd.setAttribute("checked", false);
+    this.inspectMenuitem.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
     this.winID = null;
     this.selection = null;
-    this.treeLoaded = false;
+    this.closing = false;
+    this.isDirty = false;
 
-    this.treePanel.addEventListener("popuphidden", function treePanelHidden() {
-      this.removeEventListener("popuphidden", treePanelHidden, false);
-
-      InspectorUI.closing = false;
-      Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
-    }, false);
-
-    this.treePanel.hidePopup();
     delete this.treePanel;
+    delete this.stylePanel;
+    delete this.toolbar;
+    delete this.TreePanel;
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
   },
 
   /**
@@ -938,12 +833,13 @@ var InspectorUI = {
   {
     // if currently editing an attribute value, starting
     // "live inspection" mode closes the editor
-    if (this.editingContext)
-      this.closeEditor();
+    if (this.treePanel && this.treePanel.editingContext)
+      this.treePanel.closeEditor();
 
-    document.getElementById("inspector-inspect-toolbutton").checked = true;
+    this.inspectToolbutton.checked = true;
     this.attachPageListeners();
     this.inspecting = true;
+    this.toolsDim(true);
     this.highlighter.veilContainer.removeAttribute("locked");
   },
 
@@ -959,9 +855,10 @@ var InspectorUI = {
       return;
     }
 
-    document.getElementById("inspector-inspect-toolbutton").checked = false;
+    this.inspectToolbutton.checked = false;
     this.detachPageListeners();
     this.inspecting = false;
+    this.toolsDim(false);
     if (this.highlighter.node) {
       this.select(this.highlighter.node, true, true, !aPreventScroll);
     } else {
@@ -976,15 +873,15 @@ var InspectorUI = {
    *        node to inspect
    * @param forceUpdate
    *        force an update?
-   * @param aScroll
-   *        force scroll?
+   * @param aScroll boolean
+   *        scroll the tree panel?
    */
   select: function IUI_select(aNode, forceUpdate, aScroll)
   {
     // if currently editing an attribute value, using the
     // highlighter dismisses the editor
-    if (this.editingContext)
-      this.closeEditor();
+    if (this.treePanel && this.treePanel.editingContext)
+      this.treePanel.closeEditor();
 
     if (!aNode)
       aNode = this.defaultSelection;
@@ -994,13 +891,9 @@ var InspectorUI = {
       if (!this.inspecting) {
         this.highlighter.highlightNode(this.selection);
       }
-      this.ioBox.select(this.selection, true, true, aScroll);
     }
-    this.toolsDo(function IUI_toolsOnSelect(aTool) {
-      if (aTool.panel.state == "open") {
-        aTool.onSelect.apply(aTool.context, [aNode]);
-      }
-    });
+
+    this.toolsSelect(aScroll);
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -1011,9 +904,11 @@ var InspectorUI = {
     // Setup the InspectorStore or restore state
     this.initializeStore();
 
-    if (InspectorStore.getValue(this.winID, "inspecting")) {
+    if (this.store.getValue(this.winID, "inspecting")) {
       this.startInspecting();
     }
+
+    this.restoreToolState(this.winID);
 
     this.win.focus();
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.OPENED, null);
@@ -1033,28 +928,28 @@ var InspectorUI = {
 
     switch (event.type) {
       case "TabSelect":
-        winID = this.getWindowID(gBrowser.selectedBrowser.contentWindow);
-        if (this.isTreePanelOpen && winID != this.winID) {
+        winID = this.getWindowID(this.tabbrowser.selectedBrowser.contentWindow);
+        if (this.isInspectorOpen && winID != this.winID) {
           this.closeInspectorUI(true);
           inspectorClosed = true;
         }
 
-        if (winID && InspectorStore.hasID(winID)) {
+        if (winID && this.store.hasID(winID)) {
           if (inspectorClosed && this.closing) {
             Services.obs.addObserver(function reopenInspectorForTab() {
               Services.obs.removeObserver(reopenInspectorForTab,
                 INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-              InspectorUI.openInspectorUI();
-            }, INSPECTOR_NOTIFICATIONS.CLOSED, false);
+              this.openInspectorUI();
+            }.bind(this), INSPECTOR_NOTIFICATIONS.CLOSED, false);
           } else {
             this.openInspectorUI();
-            this.restoreToolState(winID);
           }
         }
 
-        if (InspectorStore.isEmpty()) {
-          gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+        if (this.store.isEmpty()) {
+          this.tabbrowser.tabContainer.removeEventListener("TabSelect", this,
+                                                         false);
         }
         break;
       case "pagehide":
@@ -1068,17 +963,18 @@ var InspectorUI = {
 
         winID = this.getWindowID(win);
         if (winID && winID != this.winID) {
-          InspectorStore.deleteStore(winID);
+          this.store.deleteStore(winID);
         }
 
-        if (InspectorStore.isEmpty()) {
-          gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+        if (this.store.isEmpty()) {
+          this.tabbrowser.tabContainer.removeEventListener("TabSelect", this,
+                                                         false);
         }
         break;
       case "keypress":
         switch (event.keyCode) {
-          case KeyEvent.DOM_VK_RETURN:
-          case KeyEvent.DOM_VK_ESCAPE:
+          case this.chromeWin.KeyEvent.DOM_VK_RETURN:
+          case this.chromeWin.KeyEvent.DOM_VK_ESCAPE:
             if (this.inspecting) {
               this.stopInspecting();
               event.preventDefault();
@@ -1088,263 +984,6 @@ var InspectorUI = {
         }
         break;
     }
-  },
-
-  /**
-   * Handle click events in the html tree panel.
-   * @param aEvent
-   *        The mouse event.
-   */
-  onTreeClick: function IUI_onTreeClick(aEvent)
-  {
-    // if currently editing an attribute value, clicking outside
-    // the editor dismisses the editor
-    if (this.editingContext) {
-      this.closeEditor();
-
-      // clicking outside the editor ONLY closes the editor
-      // so, cancel the rest of the processing of this event
-      aEvent.preventDefault();
-      return;
-    }
-
-    let node;
-    let target = aEvent.target;
-    let hitTwisty = false;
-    if (this.hasClass(target, "twisty")) {
-      node = this.getRepObject(aEvent.target.nextSibling);
-      hitTwisty = true;
-    } else {
-      node = this.getRepObject(aEvent.target);
-    }
-
-    if (node) {
-      if (hitTwisty) {
-        this.ioBox.toggleObject(node);
-      } else {
-        if (this.inspecting) {
-          this.stopInspecting(true);
-        } else {
-          this.select(node, true, false);
-          this.highlighter.highlightNode(node);
-        }
-      }
-    }
-  },
-
-  /**
-   * Handle double-click events in the html tree panel.
-   * (double-clicking an attribute value allows it to be edited)
-   * @param aEvent
-   *        The mouse event.
-   */
-  onTreeDblClick: function IUI_onTreeDblClick(aEvent)
-  {
-    // if already editing an attribute value, double-clicking elsewhere
-    // in the tree is the same as a click, which dismisses the editor
-    if (this.editingContext)
-      this.closeEditor();
-
-    let target = aEvent.target;
-    if (this.hasClass(target, "nodeValue")) {
-      let repObj = this.getRepObject(target);
-      let attrName = target.getAttribute("data-attributeName");
-      let attrVal = target.innerHTML;
-
-      this.editAttributeValue(target, repObj, attrName, attrVal);
-    }
-  },
-
-  /**
-   * Starts the editor for an attribute value.
-   * @param aAttrObj
-   *        The DOM object representing the attribute value in the HTML Tree
-   * @param aRepObj
-   *        The original DOM (target) object being inspected/edited
-   * @param aAttrName
-   *        The name of the attribute being edited
-   * @param aAttrVal
-   *        The current value of the attribute being edited
-   */
-  editAttributeValue: 
-  function IUI_editAttributeValue(aAttrObj, aRepObj, aAttrName, aAttrVal)
-  {
-    let editor = this.treeBrowserDocument.getElementById("attribute-editor");
-    let editorInput = 
-      this.treeBrowserDocument.getElementById("attribute-editor-input");
-    let attrDims = aAttrObj.getBoundingClientRect();
-    // figure out actual viewable viewport dimensions (sans scrollbars)
-    let viewportWidth = this.treeBrowserDocument.documentElement.clientWidth;
-    let viewportHeight = this.treeBrowserDocument.documentElement.clientHeight;
-
-    // saves the editing context for use when the editor is saved/closed
-    this.editingContext = {
-      attrObj: aAttrObj,
-      repObj: aRepObj,
-      attrName: aAttrName
-    };
-
-    // highlight attribute-value node in tree while editing
-    this.addClass(aAttrObj, "editingAttributeValue");
-
-    // show the editor
-    this.addClass(editor, "editing");
-
-    // offset the editor below the attribute-value node being edited
-    let editorVeritcalOffset = 2;
-
-    // keep the editor comfortably within the bounds of the viewport
-    let editorViewportBoundary = 5;
-
-    // outer editor is sized based on the <input> box inside it
-    editorInput.style.width = Math.min(attrDims.width, viewportWidth - 
-                                editorViewportBoundary) + "px";
-    editorInput.style.height = Math.min(attrDims.height, viewportHeight - 
-                                editorViewportBoundary) + "px";
-    let editorDims = editor.getBoundingClientRect();
-
-    // calculate position for the editor according to the attribute node
-    let editorLeft = attrDims.left + this.treeIFrame.contentWindow.scrollX -
-                    // center the editor against the attribute value    
-                    ((editorDims.width - attrDims.width) / 2); 
-    let editorTop = attrDims.top + this.treeIFrame.contentWindow.scrollY + 
-                    attrDims.height + editorVeritcalOffset;
-
-    // but, make sure the editor stays within the visible viewport
-    editorLeft = Math.max(0, Math.min(
-                                      (this.treeIFrame.contentWindow.scrollX + 
-                                          viewportWidth - editorDims.width),
-                                      editorLeft)
-                          );
-    editorTop = Math.max(0, Math.min(
-                                      (this.treeIFrame.contentWindow.scrollY + 
-                                          viewportHeight - editorDims.height),
-                                      editorTop)
-                          );
-
-    // position the editor
-    editor.style.left = editorLeft + "px";
-    editor.style.top = editorTop + "px";
-
-    // set and select the text
-    editorInput.value = aAttrVal;
-    editorInput.select();
-
-    // listen for editor specific events
-    this.bindEditorEvent(editor, "click", function(aEvent) {
-      aEvent.stopPropagation();
-    });
-    this.bindEditorEvent(editor, "dblclick", function(aEvent) {
-      aEvent.stopPropagation();
-    });
-    this.bindEditorEvent(editor, "keypress", 
-                          this.handleEditorKeypress.bind(this));
-
-    // event notification    
-    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, 
-                                  null);
-  },
-
-  /**
-   * Handle binding an event handler for the editor.
-   * (saves the callback for easier unbinding later)   
-   * @param aEditor
-   *        The DOM object for the editor
-   * @param aEventName
-   *        The name of the event to listen for
-   * @param aEventCallback
-   *        The callback to bind to the event (and also to save for later 
-   *          unbinding)
-   */
-  bindEditorEvent: 
-  function IUI_bindEditorEvent(aEditor, aEventName, aEventCallback)
-  {
-    this.editingEvents[aEventName] = aEventCallback;
-    aEditor.addEventListener(aEventName, aEventCallback, false);
-  },
-
-  /**
-   * Handle unbinding an event handler from the editor.
-   * (unbinds the previously bound and saved callback)   
-   * @param aEditor
-   *        The DOM object for the editor
-   * @param aEventName
-   *        The name of the event being listened for
-   */
-  unbindEditorEvent: function IUI_unbindEditorEvent(aEditor, aEventName)
-  {
-    aEditor.removeEventListener(aEventName, this.editingEvents[aEventName], 
-                                  false);
-    this.editingEvents[aEventName] = null;
-  },
-
-  /**
-   * Handle keypress events in the editor.
-   * @param aEvent
-   *        The keyboard event.
-   */
-  handleEditorKeypress: function IUI_handleEditorKeypress(aEvent)
-  {
-    if (aEvent.which == KeyEvent.DOM_VK_RETURN) {
-      this.saveEditor();
-    } else if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
-      this.closeEditor();
-    }
-  },
-
-  /**
-   * Close the editor and cleanup.
-   */
-  closeEditor: function IUI_closeEditor()
-  {
-    let editor = this.treeBrowserDocument.getElementById("attribute-editor");
-    let editorInput = 
-      this.treeBrowserDocument.getElementById("attribute-editor-input");
-
-    // remove highlight from attribute-value node in tree
-    this.removeClass(this.editingContext.attrObj, "editingAttributeValue");
-
-    // hide editor
-    this.removeClass(editor, "editing");
-
-    // stop listening for editor specific events
-    this.unbindEditorEvent(editor, "click");
-    this.unbindEditorEvent(editor, "dblclick");
-    this.unbindEditorEvent(editor, "keypress");
-
-    // clean up after the editor
-    editorInput.value = "";
-    editorInput.blur();
-    this.editingContext = null;
-    this.editingEvents = {};
-
-    // event notification    
-    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, 
-                                  null);
-  },
-
-  /**
-   * Commit the edits made in the editor, then close it.
-   */
-  saveEditor: function IUI_saveEditor()
-  {
-    let editorInput = 
-      this.treeBrowserDocument.getElementById("attribute-editor-input");
-
-    // set the new attribute value on the original target DOM element
-    this.editingContext.repObj.setAttribute(this.editingContext.attrName, 
-                                              editorInput.value);
-
-    // update the HTML tree attribute value
-    this.editingContext.attrObj.innerHTML = editorInput.value;
-
-    this.isDirty = true;
-
-    // event notification    
-    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, 
-                                  null);
-    
-    this.closeEditor();
   },
 
   /**
@@ -1396,7 +1035,7 @@ var InspectorUI = {
   {
     let node = aDocument.elementFromPoint(aX, aY);
     if (node && node.contentDocument) {
-      if (node instanceof HTMLIFrameElement) {
+      if (node instanceof Ci.nsIDOMHTMLIFrameElement) {
         let rect = node.getBoundingClientRect();
 
         // Gap between the iframe and its content window.
@@ -1410,8 +1049,8 @@ var InspectorUI = {
           return node;
         }
       }
-      if (node instanceof HTMLIFrameElement ||
-          node instanceof HTMLFrameElement) {
+      if (node instanceof Ci.nsIDOMHTMLIFrameElement ||
+          node instanceof Ci.nsIDOMHTMLFrameElement) {
         let subnode = this.elementFromPoint(node.contentDocument, aX, aY);
         if (subnode) {
           node = subnode;
@@ -1452,47 +1091,6 @@ var InspectorUI = {
   },
 
   /**
-   * Does the given object have a class attribute?
-   * @param aNode
-   *        the DOM node.
-   * @param aClass
-   *        The class string.
-   * @returns boolean
-   */
-  hasClass: function IUI_hasClass(aNode, aClass)
-  {
-    if (!(aNode instanceof Element))
-      return false;
-    return aNode.classList.contains(aClass);
-  },
-
-  /**
-   * Add the class name to the given object.
-   * @param aNode
-   *        the DOM node.
-   * @param aClass
-   *        The class string.
-   */
-  addClass: function IUI_addClass(aNode, aClass)
-  {
-    if (aNode instanceof Element)
-      aNode.classList.add(aClass);
-  },
-
-  /**
-   * Remove the class name from the given object
-   * @param aNode
-   *        the DOM node.
-   * @param aClass
-   *        The class string.
-   */
-  removeClass: function IUI_removeClass(aNode, aClass)
-  {
-    if (aNode instanceof Element)
-      aNode.classList.remove(aClass);
-  },
-
-  /**
    * Retrieve the unique ID of a window object.
    *
    * @param nsIDOMWindow aWindow
@@ -1512,32 +1110,6 @@ var InspectorUI = {
     } catch (ex) { }
 
     return util.currentInnerWindowID;
-  },
-
-  /**
-   * Get the "repObject" from the HTML panel's domplate-constructed DOM node.
-   * In this system, a "repObject" is the Object being Represented by the box
-   * object. It is the "real" object that we're building our facade around.
-   *
-   * @param element
-   *        The element in the HTML panel the user clicked.
-   * @returns either a real node or null
-   */
-  getRepObject: function IUI_getRepObject(element)
-  {
-    let target = null;
-    for (let child = element; child; child = child.parentNode) {
-      if (this.hasClass(child, "repTarget"))
-        target = child;
-
-      if (child.repObject) {
-        if (!target && this.hasClass(child.repObject, "repIgnore"))
-          break;
-        else
-          return child.repObject;
-      }
-    }
-    return null;
   },
 
   /**
@@ -1569,6 +1141,19 @@ var InspectorUI = {
   },
 
   /**
+   * Get the toolbar button name for a given id string. Used by the
+   * registerTools API to retrieve a consistent name for toolbar buttons
+   * based on the ID of the tool.
+   * @param anId String
+   *        id of the tool to be buttonized
+   * @returns String
+   */
+  getToolbarButtonId: function IUI_createButtonId(anId)
+  {
+    return "inspector-" + anId + "-toolbutton";
+  },
+
+  /**
    * Register an external tool with the inspector.
    *
    * aRegObj = {
@@ -1578,93 +1163,187 @@ var InspectorUI = {
    *   icon: "chrome://somepath.png",
    *   tooltiptext: "Button tooltip",
    *   accesskey: "S",
+   *   isOpen: object.property, (getter) returning true if tool is open.
    *   onSelect: object.method,
-   *   onShow: object.method,
-   *   onHide: object.method,
+   *   show: object.method, called to show the tool when button is pressed.
+   *   hide: object.method, called to hide the tool when button is pressed.
+   *   dim: object.method, called to disable a tool during highlighting.
+   *   unregister: object.method, called when tool should be destroyed.
    *   panel: myTool.panel
    * }
    *
-   * @param aRegObj
+   * @param aRegObj Object
+   *        The Registration Object used to register this tool described
+   *        above. The tool should cache this object for later deregistration.
    */
-  registerTool: function IUI_RegisterTool(aRegObj) {
-    if (this.tools[aRegObj.id]) {
+  registerTool: function IUI_registerTool(aRegObj)
+  {
+    if (this.toolRegistered(aRegObj.id)) {
       return;
-    } else {
-      let id = aRegObj.id;
-      let buttonId = "inspector-" + id + "-toolbutton";
-      aRegObj.buttonId = buttonId;
-
-      aRegObj.panel.addEventListener("popuphiding",
-        function IUI_toolPanelHiding() {
-          btn.setAttribute("checked", "false");
-        }, false);
-      aRegObj.panel.addEventListener("popupshowing",
-        function IUI_toolPanelShowing() {
-          btn.setAttribute("checked", "true");
-        }, false);
-
-      this.tools[id] = aRegObj;
     }
 
-    let toolbox = document.getElementById("inspector-tools");
-    let btn = document.createElement("toolbarbutton");
-    btn.setAttribute("id", aRegObj.buttonId);
+    this.tools[aRegObj.id] = aRegObj;
+
+    let buttonContainer = this.chromeDoc.getElementById("inspector-tools");
+    let btn = this.chromeDoc.createElement("toolbarbutton");
+    let buttonId = this.getToolbarButtonId(aRegObj.id);
+    btn.setAttribute("id", buttonId);
     btn.setAttribute("label", aRegObj.label);
     btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
     btn.setAttribute("accesskey", aRegObj.accesskey);
-    btn.setAttribute("class", "toolbarbutton-text");
     btn.setAttribute("image", aRegObj.icon || "");
-    toolbox.appendChild(btn);
+    buttonContainer.appendChild(btn);
 
-    btn.addEventListener("click",
-      function IUI_ToolButtonClick(aEvent) {
-        if (btn.getAttribute("checked") == "true") {
-          aRegObj.onHide.apply(aRegObj.context);
+    /**
+     * Save a registered tool's callback for a specified event.
+     * @param aWidget xul:widget
+     * @param aEvent a DOM event name
+     * @param aCallback Function the click event handler for the button
+     */
+    let toolEvents = this.toolEvents;
+    function bindToolEvent(aWidget, aEvent, aCallback) {
+      toolEvents[aWidget.id + "_" + aEvent] = aCallback;
+      aWidget.addEventListener(aEvent, aCallback, false);
+    }
+
+    bindToolEvent(btn, "click",
+      function IUI_toolButtonClick(aEvent) {
+        if (btn.checked) {
+          this.toolHide(aRegObj);
         } else {
-          aRegObj.onShow.apply(aRegObj.context, [InspectorUI.selection]);
-          aRegObj.onSelect.apply(aRegObj.context, [InspectorUI.selection]);
+          this.toolShow(aRegObj);
         }
-      }, false);
+      }.bind(this));
+
+    if (aRegObj.panel) {
+      bindToolEvent(aRegObj.panel, "popuphiding",
+        function IUI_toolPanelHiding() {
+          btn.checked = false;
+        });
+    }
   },
 
-/**
- * Save a list of open tools to the inspector store.
- *
- * @param aWinID The ID of the window used to save the associated tools
- */
+  /**
+   * Show the specified tool.
+   * @param aTool Object (see comment for IUI_registerTool)
+   */
+  toolShow: function IUI_toolShow(aTool)
+  {
+    aTool.show.call(aTool.context, this.selection);
+    this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id)).checked = true;
+  },
+
+  /**
+   * Hide the specified tool.
+   * @param aTool Object (see comment for IUI_registerTool)
+   */
+  toolHide: function IUI_toolHide(aTool)
+  {
+    aTool.hide.call(aTool.context);
+    this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id)).checked = false;
+  },
+
+  /**
+   * Unregister the registered tool, unbinding click events for the buttons
+   * and showing and hiding events for the panel.
+   * @param aRegObj Object
+   *        The registration object used to register the tool.
+   */
+  unregisterTool: function IUI_unregisterTool(aRegObj)
+  {
+    let button = this.chromeDoc.getElementById(this.getToolbarButtonId(aRegObj.id));
+
+    /**
+     * Unregister the events associated with the registered tool's widget.
+     * @param aWidget XUL:widget (toolbarbutton|panel).
+     * @param aEvent a DOM event.
+     */
+    let toolEvents = this.toolEvents;
+    function unbindToolEvent(aWidget, aEvent) {
+      let toolEvent = aWidget.id + "_" + aEvent;
+      aWidget.removeEventListener(aEvent, toolEvents[toolEvent], false);
+      delete toolEvents[toolEvent]
+    };
+
+    let buttonContainer = this.chromeDoc.getElementById("inspector-tools");
+    unbindToolEvent(button, "click");
+
+    if (aRegObj.panel)
+      unbindToolEvent(aRegObj.panel, "popuphiding");
+
+    buttonContainer.removeChild(button);
+
+    if (aRegObj.unregister)
+      aRegObj.unregister.call(aRegObj.context);
+
+    delete this.tools[aRegObj.id];
+  },
+
+  /**
+   * Save a list of open tools to the inspector store.
+   *
+   * @param aWinID The ID of the window used to save the associated tools
+   */
   saveToolState: function IUI_saveToolState(aWinID)
   {
     let openTools = {};
     this.toolsDo(function IUI_toolsSetId(aTool) {
-      if (aTool.panel.state == "open") {
+      if (aTool.isOpen) {
         openTools[aTool.id] = true;
       }
     });
-    InspectorStore.setValue(aWinID, "openTools", openTools);
+    this.store.setValue(aWinID, "openTools", openTools);
   },
 
-/**
- * Restore tools previously save using saveToolState().
- *
- * @param aWinID The ID of the window to which the associated tools are to be
- *               restored.
- */
+  /**
+   * Restore tools previously save using saveToolState().
+   *
+   * @param aWinID The ID of the window to which the associated tools are to be
+   *               restored.
+   */
   restoreToolState: function IUI_restoreToolState(aWinID)
   {
-    let openTools = InspectorStore.getValue(aWinID, "openTools");
-    InspectorUI.selection = InspectorUI.selection;
+    let openTools = this.store.getValue(aWinID, "openTools");
     if (openTools) {
       this.toolsDo(function IUI_toolsOnShow(aTool) {
         if (aTool.id in openTools) {
-          aTool.onShow.apply(aTool.context, [InspectorUI.selection]);
+          this.toolShow(aTool);
         }
-      });
+      }.bind(this));
     }
   },
-  
+
+  /**
+   * For each tool in the tools collection select the current node that is
+   * selected in the highlighter
+   * @param aScroll boolean
+   *        Do you want to scroll the treepanel?
+   */
+  toolsSelect: function IUI_toolsSelect(aScroll)
+  {
+    let selection = this.selection;
+    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+      if (aTool.isOpen) {
+        aTool.onSelect.call(aTool.context, selection, aScroll);
+      }
+    });
+  },
+
+  /**
+   * Dim or undim each tool in the tools collection
+   * @param aState true = dim, false = undim
+   */
+  toolsDim: function IUI_toolsDim(aState)
+  {
+    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+      if (aTool.isOpen && "dim" in aTool) {
+        aTool.dim.call(aTool.context, aState);
+      }
+    });
+  },
+
   /**
    * Loop through all registered tools and pass each into the provided function
-   *
    * @param aFunction The function to which each tool is to be passed
    */
   toolsDo: function IUI_toolsDo(aFunction)
@@ -1673,13 +1352,42 @@ var InspectorUI = {
       aFunction(tool);
     }
   },
+
+  /**
+   * Check if a tool is registered?
+   * @param aId The id of the tool to check
+   */
+  toolRegistered: function IUI_toolRegistered(aId)
+  {
+    return aId in this.tools;
+  },
+
+  /**
+   * Destroy the InspectorUI instance. This is called by the InspectorUI API
+   * "user", see BrowserShutdown() in browser.js.
+   */
+  destroy: function IUI_destroy()
+  {
+    if (this.isInspectorOpen) {
+      this.closeInspectorUI();
+    }
+
+    delete this.store;
+    delete this.chromeDoc;
+    delete this.chromeWin;
+    delete this.tabbrowser;
+  },
 };
 
 /**
  * The Inspector store is used for storing data specific to each tab window.
+ * @constructor
  */
-var InspectorStore = {
-  store: {},
+function InspectorStore()
+{
+  this.store = {};
+}
+InspectorStore.prototype = {
   length: 0,
 
   /**
@@ -1808,14 +1516,24 @@ var InspectorStore = {
  * changes to the web page and he tries to navigate away, he is prompted to
  * confirm page navigation, such that he's given the chance to prevent the loss
  * of edits.
+ *
+ * @constructor
+ * @param object aInspector
+ *        InspectorUI instance object.
  */
-var InspectorProgressListener = {
+function InspectorProgressListener(aInspector)
+{
+  this.IUI = aInspector;
+  this.IUI.tabbrowser.addProgressListener(this);
+}
+
+InspectorProgressListener.prototype = {
   onStateChange:
   function IPL_onStateChange(aProgress, aRequest, aFlag, aStatus)
   {
     // Remove myself if the Inspector is no longer open.
-    if (!InspectorUI.isTreePanelOpen) {
-      gBrowser.removeProgressListener(InspectorProgressListener);
+    if (!this.IUI.isInspectorOpen) {
+      this.destroy();
       return;
     }
 
@@ -1826,14 +1544,14 @@ var InspectorProgressListener = {
 
     // If the request is about to happen in a new window, we are not concerned
     // about the request.
-    if (aProgress.DOMWindow != InspectorUI.win) {
+    if (aProgress.DOMWindow != this.IUI.win) {
       return;
     }
 
-    if (InspectorUI.isDirty) {
+    if (this.IUI.isDirty) {
       this.showNotification(aRequest);
     } else {
-      InspectorUI.closeInspectorUI();
+      this.IUI.closeInspectorUI();
     }
   },
 
@@ -1849,7 +1567,7 @@ var InspectorProgressListener = {
   {
     aRequest.suspend();
 
-    let notificationBox = gBrowser.getNotificationBox(InspectorUI.browser);
+    let notificationBox = this.IUI.tabbrowser.getNotificationBox(this.IUI.browser);
     let notification = notificationBox.
       getNotificationWithValue("inspector-page-navigation");
 
@@ -1874,29 +1592,29 @@ var InspectorProgressListener = {
     let buttons = [
       {
         id: "inspector.confirmNavigationAway.buttonLeave",
-        label: InspectorUI.strings.
+        label: this.IUI.strings.
           GetStringFromName("confirmNavigationAway.buttonLeave"),
-        accessKey: InspectorUI.strings.
+        accessKey: this.IUI.strings.
           GetStringFromName("confirmNavigationAway.buttonLeaveAccesskey"),
         callback: function onButtonLeave() {
           if (aRequest) {
             aRequest.resume();
             aRequest = null;
-            InspectorUI.closeInspectorUI();
+            this.IUI.closeInspectorUI();
           }
-        },
+        }.bind(this),
       },
       {
         id: "inspector.confirmNavigationAway.buttonStay",
-        label: InspectorUI.strings.
+        label: this.IUI.strings.
           GetStringFromName("confirmNavigationAway.buttonStay"),
-        accessKey: InspectorUI.strings.
+        accessKey: this.IUI.strings.
           GetStringFromName("confirmNavigationAway.buttonStayAccesskey"),
         callback: cancelRequest
       },
     ];
 
-    let message = InspectorUI.strings.
+    let message = this.IUI.strings.
       GetStringFromName("confirmNavigationAway.message");
 
     notification = notificationBox.appendNotification(message,
@@ -1907,17 +1625,38 @@ var InspectorProgressListener = {
     // transient notification removal.
     notification.persistence = -1;
   },
+
+  /**
+   * Destroy the progress listener instance.
+   */
+  destroy: function IPL_destroy()
+  {
+    this.IUI.tabbrowser.removeProgressListener(this);
+
+    let notificationBox = this.IUI.tabbrowser.getNotificationBox(this.IUI.browser);
+    let notification = notificationBox.
+      getNotificationWithValue("inspector-page-navigation");
+
+    if (notification) {
+      notificationBox.removeNotification(notification, true);
+    }
+
+    delete this.IUI;
+  },
 };
 
 /////////////////////////////////////////////////////////////////////////
 //// Initializers
 
-XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
-  return document.getElementById("Tools:Inspect");
-});
+XPCOMUtils.defineLazyGetter(InspectorUI.prototype, "strings",
+  function () {
+    return Services.strings.
+           createBundle("chrome://browser/locale/inspector.properties");
+  });
 
-XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
-  return Services.strings.
-         createBundle("chrome://browser/locale/inspector.properties");
+XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
+  var obj = {};
+  Cu.import("resource:///modules/devtools/StyleInspector.jsm", obj);
+  return obj.StyleInspector;
 });
 
