@@ -114,33 +114,21 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
         // the way they are.
         PTR_IS_DATA    = 0x1,
 
-        VAL_IS_ALLOCD  = 0x2,  // val.p holds alloc'd ptr that must be freed
-        VAL_IS_IFACE   = 0x4,  // val.p holds interface ptr that must be released
-        VAL_IS_ARRAY   = 0x8,  // val.p holds a pointer to an array needing cleanup
-        VAL_IS_DOMSTR  = 0x10, // val.p holds a pointer to domstring needing cleanup
-        VAL_IS_UTF8STR = 0x20, // val.p holds a pointer to utf8string needing cleanup
-        VAL_IS_CSTR    = 0x40, // val.p holds a pointer to cstring needing cleanup
-        VAL_IS_JSROOT  = 0x80  // val.p holds a pointer to a jsval that must be unrooted
+        // Indicates that the value we hold requires some sort of cleanup (memory
+        // deallocation, interface release, jsval unrooting, etc). The precise
+        // cleanup that is performed depends on the 'type' field above.
+        // If the value is an array, this flag specifies whether the elements
+        // within the array require cleanup (we always clean up the array itself,
+        // so this flag would be redundant for that purpose).
+        VAL_NEEDS_CLEANUP = 0x2
     };
 
     void ClearFlags()         {flags = 0;}
     void SetIndirect()        {ptr = &val; flags |= PTR_IS_DATA;}
-    void SetValIsAllocated()  {flags |= VAL_IS_ALLOCD;}
-    void SetValIsInterface()  {flags |= VAL_IS_IFACE;}
-    void SetValIsArray()      {flags |= VAL_IS_ARRAY;}
-    void SetValIsDOMString()  {flags |= VAL_IS_DOMSTR;}
-    void SetValIsUTF8String() {flags |= VAL_IS_UTF8STR;}
-    void SetValIsCString()    {flags |= VAL_IS_CSTR;}
-    void SetValIsJSRoot()     {flags |= VAL_IS_JSROOT;}
+    void SetValNeedsCleanup() {flags |= VAL_NEEDS_CLEANUP;}
 
-    PRBool IsIndirect()      const  {return 0 != (flags & PTR_IS_DATA);}
-    PRBool IsValAllocated()  const  {return 0 != (flags & VAL_IS_ALLOCD);}
-    PRBool IsValInterface()  const  {return 0 != (flags & VAL_IS_IFACE);}
-    PRBool IsValArray()      const  {return 0 != (flags & VAL_IS_ARRAY);}
-    PRBool IsValDOMString()  const  {return 0 != (flags & VAL_IS_DOMSTR);}
-    PRBool IsValUTF8String() const  {return 0 != (flags & VAL_IS_UTF8STR);}
-    PRBool IsValCString()    const  {return 0 != (flags & VAL_IS_CSTR);}    
-    PRBool IsValJSRoot()     const  {return 0 != (flags & VAL_IS_JSROOT);}
+    PRBool IsIndirect()         const  {return 0 != (flags & PTR_IS_DATA);}
+    PRBool DoesValNeedCleanup() const  {return 0 != (flags & VAL_NEEDS_CLEANUP);}
 
     // Internal use only. Use IsIndirect() instead.
     PRBool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
