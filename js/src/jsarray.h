@@ -156,7 +156,7 @@ NewDenseUnallocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
 
 /* Create a dense array with a copy of vp. */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint length, const Value *vp, JSObject *proto=NULL);
+NewDenseCopiedArray(JSContext *cx, uint32 length, const Value *vp, JSObject *proto = NULL);
 
 /* Create a sparse array. */
 extern JSObject *
@@ -180,6 +180,8 @@ extern JSBool
 array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
 
 /*
+ * Copy 'length' elements from aobj to vp.
+ *
  * This function assumes 'length' is effectively the result of calling
  * js_GetLengthProperty on aobj.
  */
