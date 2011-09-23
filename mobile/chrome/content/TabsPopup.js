@@ -97,6 +97,13 @@ var TabsPopup = {
           let iconURI = gFaviconService.getFaviconImageForPage(pageURI);
           icon = iconURI.spec;
         } catch(ex) { }
+      } else {
+        if (caption == "about:blank")
+          caption = browser.currentURI.spec;
+        if (!icon) {
+          let iconURI = gFaviconService.getFaviconImageForPage(browser.currentURI);
+          icon = iconURI.spec;
+        }
       }
       item.setAttribute("img", icon);
       item.setAttribute("label", caption);
