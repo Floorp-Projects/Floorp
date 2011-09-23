@@ -1225,20 +1225,6 @@ var BrowserUI = {
           // to make the sure the dialog stacking is correct.
           AwesomeScreen.activePanel = RemoteTabsList;
           WeaveGlue.open();
-        } else if (!Weave.Service.isLoggedIn && !Services.prefs.getBoolPref("browser.sync.enabled")) {
-          // unchecked the relative command button
-          document.getElementById("remotetabs-button").removeAttribute("checked");
-
-          BrowserUI.showPanel("prefs-container");
-          let prefsBox = document.getElementById("prefs-list");
-          let syncArea = document.getElementById("prefs-sync");
-          if (prefsBox && syncArea) {
-            let prefsBoxY = prefsBox.firstChild.boxObject.screenY;
-            let syncAreaY = syncArea.boxObject.screenY;
-            setTimeout(function() {
-              prefsBox.scrollBoxObject.scrollTo(0, syncAreaY - prefsBoxY);
-            }, 0);
-          }
         } else {
           AwesomeScreen.activePanel = RemoteTabsList;
         }
