@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 let doc;
 let salutation;
+let closing;
 
 function createDocument()
 {
@@ -106,20 +107,59 @@ function runContextMenuTest()
 function inspectNodesFromContextTest()
 {
   Services.obs.removeObserver(inspectNodesFromContextTest, INSPECTOR_NOTIFICATIONS.OPENED, false);
-  Services.obs.addObserver(finishInspectorTests, INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  Services.obs.addObserver(openInspectorForContextTest, INSPECTOR_NOTIFICATIONS.CLOSED, false);
   ok(!InspectorUI.inspecting, "Inspector is not actively highlighting");
   is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
   ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   // TODO: These tests depend on the style inspector patches.
   todo(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
-  todo(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
-  InspectorUI.closeInspectorUI(true);
+  executeSoon(function() {
+    InspectorUI.closeInspectorUI(true);
+  });
+}
+
+function openInspectorForContextTest()
+{
+  Services.obs.removeObserver(openInspectorForContextTest, INSPECTOR_NOTIFICATIONS.CLOSED);
+  Services.obs.addObserver(inspectNodesFromContextTestWhileOpen, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  executeSoon(function() {
+    InspectorUI.openInspectorUI(salutation);
+  });
+}
+
+function inspectNodesFromContextTestWhileOpen()
+{
+  Services.obs.removeObserver(inspectNodesFromContextTestWhileOpen, INSPECTOR_NOTIFICATIONS.OPENED);
+  Services.obs.addObserver(inspectNodesFromContextTestTrap, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(inspectNodesFromContextTestHighlight, INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
+  closing = doc.getElementById("closing");
+  ok(closing, "we have the closing statement");
+  executeSoon(function() {
+    InspectorUI.openInspectorUI(closing);
+  });
+}
+
+function inspectNodesFromContextTestHighlight()
+{
+  Services.obs.removeObserver(inspectNodesFromContextTestHighlight, INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+  Services.obs.addObserver(finishInspectorTests, INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  is(InspectorUI.selection, closing, "InspectorUI.selection is header");
+  executeSoon(function() {
+    InspectorUI.closeInspectorUI(true);
+  });
+}
+
+function inspectNodesFromContextTestTrap()
+{
+  Services.obs.removeObserver(inspectNodesFromContextTestTrap, INSPECTOR_NOTIFICATIONS.OPENED);
+  ok(false, "Inspector UI has been opened again. We Should Not Be Here!");
 }
 
 function finishInspectorTests()
 {
   Services.obs.removeObserver(finishInspectorTests,
-    INSPECTOR_NOTIFICATIONS.CLOSED, false);
+    INSPECTOR_NOTIFICATIONS.CLOSED);
 
   ok(!InspectorUI.highlighter, "Highlighter is gone");
   ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
