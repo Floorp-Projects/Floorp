@@ -92,7 +92,7 @@ mk_add_options() {
 }
 
 ac_echo_options() {
-  echo "Adding configure options from $MOZCONFIG:"
+  echo "Adding configure options from $FOUND_MOZCONFIG:"
   eval "set -- $mozconfig_ac_options"
   for _opt
   do
