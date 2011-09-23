@@ -932,7 +932,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     if(arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
         return JS_FALSE;
 
-    if(arg_param.IsOut())
+    if(arg_param.IsIndirect())
         *result = *(JSUint32*)nativeParams[argnum].val.p;
     else
         *result = nativeParams[argnum].val.u32;
@@ -973,7 +973,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
         if(arg_type.IsPointer() &&
            arg_type.TagPart() == nsXPTType::T_IID)
         {
-            if(arg_param.IsOut())
+            if(arg_param.IsIndirect())
             {
                 nsID** p = (nsID**) nativeParams[argnum].val.p;
                 if(!p || !*p)
@@ -1509,8 +1509,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         {
             nsXPTCMiniVariant* pv;
 
-            // Temporary hack - we'll abstract this away soon.
-            if(param.IsOut() || type.TagPart() == nsXPTType::T_JSVAL)
+            if(param.IsIndirect())
                 pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];

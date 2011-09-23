@@ -2830,6 +2830,10 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     if(paramInfo.IsDipper())
         return HandleDipperParam(dp, paramInfo);
 
+    // Specify the correct storage/calling semantics.
+    if(paramInfo.IsIndirect())
+        dp->SetIndirect();
+
     if(type_tag == nsXPTType::T_INTERFACE)
     {
         dp->SetValIsInterface();
@@ -2844,9 +2848,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     // indirectly, regardless of in/out-ness.
     if(type_tag == nsXPTType::T_JSVAL)
     {
-        // Indicate the storage semantics.
-        dp->SetIndirect();
-
         // Assign the value
         JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(dp->val));
         jsval *rootp = (jsval *)&dp->val;
@@ -2859,8 +2860,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
 
     if(paramInfo.IsOut())
     {
-        dp->SetIndirect();
-
         if(type.IsPointer() &&
            type_tag != nsXPTType::T_INTERFACE &&
            !paramInfo.IsShared())
@@ -2966,6 +2965,10 @@ CallMethodHelper::ConvertDependentParams()
         nsXPTCVariant* dp = GetDispatchParam(i);
         dp->type = type;
 
+        // Specify the correct storage/calling semantics.
+        if(paramInfo.IsIndirect())
+            dp->SetIndirect();
+
         if(isArray)
         {
             dp->SetValIsArray();
@@ -2992,8 +2995,6 @@ CallMethodHelper::ConvertDependentParams()
 
         if(paramInfo.IsOut())
         {
-            dp->SetIndirect();
-
             if(datum_type.IsPointer() &&
                !datum_type.IsInterfacePointer() &&
                (isArray || !paramInfo.IsShared()))
