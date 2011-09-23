@@ -2807,6 +2807,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     uint8 type_tag = type.TagPart();
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
+    NS_ABORT_IF_FALSE(!paramInfo.IsShared(), "[shared] implies [noscript]!");
 
     // Handle dipper types separately.
     if(paramInfo.IsDipper())
@@ -2840,8 +2841,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     if(paramInfo.IsOut())
     {
         if(type.IsPointer() &&
-           type_tag != nsXPTType::T_INTERFACE &&
-           !paramInfo.IsShared())
+           type_tag != nsXPTType::T_INTERFACE)
         {
             useAllocator = JS_TRUE;
             dp->SetValNeedsCleanup();
@@ -2974,7 +2974,7 @@ CallMethodHelper::ConvertDependentParams()
         {
             if(datum_type.IsPointer() &&
                !datum_type.IsInterfacePointer() &&
-               (isArray || !paramInfo.IsShared()))
+               isArray)
             {
                 useAllocator = JS_TRUE;
                 dp->SetValNeedsCleanup();
