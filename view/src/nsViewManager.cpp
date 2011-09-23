@@ -465,13 +465,8 @@ NS_IMETHODIMP nsViewManager::Composite()
   if (!IsRootVM()) {
     return RootViewManager()->Composite();
   }
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE  
-  if (UpdateCount() > 0)
-#endif
-    {
-      ForceUpdate();
-      ClearUpdateCount();
-    }
+  ForceUpdate();
+  ClearUpdateCount();
 
   return NS_OK;
 }
