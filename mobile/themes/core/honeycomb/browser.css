@@ -326,16 +326,10 @@ toolbarbutton.urlbar-button {
 .button-control {
   padding: 0 !important;
   min-width: @sidebar_width_minimum@ !important;
-  border-top: @border_width_tiny@ solid @color_divider_border@ !important;
-  border-bottom: @border_width_tiny@ solid @color_divider_border@ !important;
   background-color: transparent !important;
   -moz-box-align: center;
   -moz-box-pack: center;
   height: @sidebar_button_height@;
-}
-
-.button-control:last-child {
-  border-bottom: 0 solid @color_divider_border@ !important;
 }
 
 .button-control[disabled="true"] {

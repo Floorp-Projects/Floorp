@@ -208,7 +208,7 @@
                 onclosetab="BrowserUI.closeTab(this)"
                 onclosereloadtab="this._container.removeTab(this)"/>
           <hbox id="tabs-controls">
-            <toolbarbutton id="newtab-button" class="button-control" command="cmd_newTab" observes="bcast_urlbarState"/>
+            <toolbarbutton id="newtab-button" class="button-control" command="cmd_newTab" label="&newtab.label;" observes="bcast_urlbarState" crop="end"/>
           </hbox>
         </vbox>
       </vbox>
