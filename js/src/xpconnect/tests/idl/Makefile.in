@@ -36,26 +36,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpconnect_tests
+MODULE = xpctest
 
 XPIDLSRCS	= \
-		xpctest.idl \
-		xpctest2.idl \
-		xpctest_attributes.idl \
-		xpctest_calljs.idl \
-		xpctest_const.idl \
-		xpctest_in.idl \
-		xpctest_inout.idl \
-		xpctest_multiple.idl \
-		xpctest_domstring.idl \
-		xpctest_out.idl \
-		$(NULL)
+  xpctest_attributes.idl \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
