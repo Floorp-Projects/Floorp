@@ -282,7 +282,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                 }
                 v.set(setter.value());
             } else if (!hasGetter) {
-                ok = obj->getProperty(cx, id, v.addr());
+                ok = obj->getGeneric(cx, id, v.addr());
                 if (!ok)
                     break;
             }
@@ -626,7 +626,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
             if (doGet) {
                 valcnt = 1;
                 gsop[0] = NULL;
-                ok = obj->getProperty(cx, id, &val[0]);
+                ok = obj->getGeneric(cx, id, &val[0]);
                 if (!ok)
                     goto error;
             }
@@ -1864,7 +1864,7 @@ GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescript
             return false;
     }
 
-    if (doGet && !obj->getProperty(cx, id, &desc->value))
+    if (doGet && !obj->getGeneric(cx, id, &desc->value))
         return false;
 
     desc->obj = obj;
@@ -1970,7 +1970,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool *foundp)
      * identity will be used by DefinePropertyOnObject, e.g., or reflected via
      * js::GetOwnPropertyDescriptor, as the getter or setter callable object.
      */
-    return !!obj->getProperty(cx, id, vp);
+    return !!obj->getGeneric(cx, id, vp);
 }
 
 PropDesc::PropDesc()
@@ -2543,7 +2543,7 @@ ReadPropertyDescriptors(JSContext *cx, JSObject *props, bool checkAccessors,
         jsid id = (*ids)[i];
         PropDesc* desc = descs->append();
         Value v;
-        if (!desc || !props->getProperty(cx, id, &v) || !desc->initialize(cx, v, checkAccessors))
+        if (!desc || !props->getGeneric(cx, id, &v) || !desc->initialize(cx, v, checkAccessors))
             return false;
     }
     return true;
@@ -2982,7 +2982,7 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     }
 
     Value protov;
-    if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
+    if (!callee->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &protov))
         return NULL;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
@@ -3039,11 +3039,8 @@ JSObject *
 js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 {
     Value protov;
-    if (!callee->getProperty(cx,
-                             ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                             &protov)) {
+    if (!callee->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &protov))
         return NULL;
-    }
     JSObject *proto;
     if (protov.isObject())
         proto = &protov.toObject();
@@ -3278,9 +3275,21 @@ with_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
 }
 
 static JSBool
-with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+with_LookupSpecial(JSContext *cx, JSObject *obj, SpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return obj->getProto()->getProperty(cx, id, vp);
+    return with_LookupProperty(cx, obj, SPECIALID_TO_JSID(sid), objp, propp);
+}
+
+static JSBool
+with_GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+{
+    return obj->getProto()->getGeneric(cx, id, vp);
+}
+
+static JSBool
+with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return with_GetGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
 }
 
 static JSBool
@@ -3289,7 +3298,13 @@ with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, 
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return with_GetProperty(cx, obj, receiver, id, vp);
+    return with_GetGeneric(cx, obj, receiver, id, vp);
+}
+
+static JSBool
+with_GetSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
+{
+    return with_GetGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 static JSBool
@@ -3308,6 +3323,12 @@ with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool st
 }
 
 static JSBool
+with_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict)
+{
+    return with_SetProperty(cx, obj, SPECIALID_TO_JSID(sid), vp, strict);
+}
+
+static JSBool
 with_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     return obj->getProto()->getAttributes(cx, id, attrsp);
@@ -3320,6 +3341,12 @@ with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *att
     if (!IndexToId(cx, index, &id))
         return false;
     return with_GetAttributes(cx, obj, id, attrsp);
+}
+
+static JSBool
+with_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
+{
+    return with_GetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
 }
 
 static JSBool
@@ -3338,6 +3365,12 @@ with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *att
 }
 
 static JSBool
+with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
+{
+    return with_SetAttributes(cx, obj, SPECIALID_TO_JSID(sid), attrsp);
+}
+
+static JSBool
 with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     return obj->getProto()->deleteProperty(cx, id, rval, strict);
@@ -3350,6 +3383,12 @@ with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBo
     if (!IndexToId(cx, index, &id))
         return false;
     return with_DeleteProperty(cx, obj, id, rval, strict);
+}
+
+static JSBool
+with_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
+{
+    return with_DeleteProperty(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 static JSBool
@@ -3392,19 +3431,33 @@ Class js::WithClass = {
     JS_NULL_CLASS_EXT,
     {
         with_LookupProperty,
+        with_LookupProperty,
         with_LookupElement,
-        NULL,                /* defineProperty */
-        NULL,                /* defineElement */
+        with_LookupSpecial,
+        NULL,             /* defineGeneric */
+        NULL,             /* defineProperty */
+        NULL,             /* defineElement */
+        NULL,             /* defineSpecial */
+        with_GetGeneric,
         with_GetProperty,
         with_GetElement,
+        with_GetSpecial,
+        with_SetProperty,
         with_SetProperty,
         with_SetElement,
+        with_SetSpecial,
+        with_GetAttributes,
         with_GetAttributes,
         with_GetElementAttributes,
+        with_GetSpecialAttributes,
+        with_SetAttributes,
         with_SetAttributes,
         with_SetElementAttributes,
+        with_SetSpecialAttributes,
+        with_DeleteProperty,
         with_DeleteProperty,
         with_DeleteElement,
+        with_DeleteSpecial,
         with_Enumerate,
         with_TypeOf,
         NULL,             /* fix   */
@@ -4838,10 +4891,8 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
         parent = ctor->getParent();
     if (!proto) {
         Value rval;
-        if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                               &rval)) {
+        if (!ctor->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &rval))
             return NULL;
-        }
         if (rval.isObjectOrNull())
             proto = rval.toObjectOrNull();
     }
@@ -5855,7 +5906,7 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
     if (!obj2->isNative()) {
         return obj2->isProxy()
                ? JSProxy::get(cx, obj2, receiver, id, vp)
-               : obj2->getProperty(cx, id, vp);
+               : obj2->getGeneric(cx, id, vp);
     }
 
     shape = (Shape *) prop;
@@ -5917,7 +5968,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 {
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
-    PropertyIdOp op = obj->getOps()->getProperty;
+    GenericIdOp op = obj->getOps()->getGeneric;
     if (!op) {
 #if JS_HAS_XML_SUPPORT
         JS_ASSERT(!obj->isXML());
@@ -6662,7 +6713,7 @@ js::FindClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 
     if (IsFunctionObject(v)) {
         JSObject *ctor = &v.toObject();
-        if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &v))
+        if (!ctor->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &v))
             return false;
     }
 

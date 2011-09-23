@@ -241,7 +241,7 @@ class Value
      * constructor prevents Value from being stored in a union.
      */
 
-    /*** Mutatators ***/
+    /*** Mutators ***/
 
     JS_ALWAYS_INLINE
     void setNull() {
@@ -2977,7 +2977,7 @@ struct JSClass {
     JSTraceOp           trace;
 
     JSClassInternal     reserved1;
-    void                *reserved[26];
+    void                *reserved[40];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */

@@ -711,8 +711,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
      * class prototype ourselves.
      */
     Value protov;
-    jsid protoAtom = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
-    if (!args.callee().getProperty(cx, protoAtom, &protov))
+    if (!args.callee().getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &protov))
         return false;
 
     if (!protov.isObject()) {
@@ -793,7 +792,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return JS_FALSE;
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), &v))
+    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &v))
         return JS_FALSE;
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
     vp->setString(name);
@@ -854,7 +853,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), vp))
+    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, vp))
         return false;
     name = js_ValueToString(cx, *vp);
     if (!name)

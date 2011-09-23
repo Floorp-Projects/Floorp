@@ -89,7 +89,7 @@
     function testSteps() {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-      let uri = window.document.documentURIObject;
+      let uri = SpecialPowers.getDocumentURIObject(window.document);
       Components.classes["@mozilla.org/permissionmanager;1"]
                 .getService(Components.interfaces.nsIPermissionManager)
                 .add(uri, "indexedDB",

@@ -154,7 +154,6 @@ public:
   virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget();
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
   virtual PRBool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
-  virtual PRBool IsEditable(nsIDOMNode *aNode);
 
   /* ------------ nsStubMutationObserver overrides --------- */
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED

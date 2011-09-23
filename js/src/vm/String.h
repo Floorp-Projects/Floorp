@@ -146,10 +146,12 @@ js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNot
  *  |     | JSShortString       - / header is fat
  *  |     |        |
  * JSAtom |        |            - / string equality === pointer equality
- *    \   |        |
- *    JSInlineAtom |            - / atomized JSInlineString
- *          \      |
- *          JSShortAtom         - / atomized JSShortString
+ *  | \   |        |
+ *  | JSInlineAtom |            - / atomized JSInlineString
+ *  |       \      |
+ *  |       JSShortAtom         - / atomized JSShortString
+ *  |
+ * js::PropertyName             - / chars don't contain an index (uint32)
  *
  * Classes marked with (abstract) above are not literally C++ Abstract Base
  * Classes (since there are no virtual functions, pure or not, in this
@@ -487,14 +489,14 @@ class JSFlatString : public JSLinearString
     /*
      * Returns true if this string's characters store an unsigned 32-bit
      * integer value, initializing *indexp to that value if so.  (Thus if
-     * calling isElement returns true, js::IndexToString(cx, *indexp) will be a
+     * calling isIndex returns true, js::IndexToString(cx, *indexp) will be a
      * string equal to this string.)
      */
-    bool isElement(uint32 *indexp) const;
+    bool isIndex(uint32 *indexp) const;
 
     /*
      * Returns a property name represented by this string, or null on failure.
-     * You must verify that this is not an element per isElement before calling
+     * You must verify that this is not an index per isIndex before calling
      * this method.
      */
     inline js::PropertyName *toPropertyName(JSContext *cx);
@@ -644,7 +646,7 @@ JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
 class JSAtom : public JSFixedString
 {
   public:
-    /* Returns the PropertyName for this.  isElement() must be false. */
+    /* Returns the PropertyName for this.  isIndex() must be false. */
     inline js::PropertyName *asPropertyName();
 
     inline void finalize(JSRuntime *rt);
@@ -728,9 +730,19 @@ class StaticStrings
 };
 
 /*
- * Represents an atomized string which does not contain an unsigned 32-bit
- * value.  That is, it is never the case that for a PropertyName propname,
- * ToString(ToUint32(propname)) is equal to propname.
+ * Represents an atomized string which does not contain an index (that is, an
+ * unsigned 32-bit value).  Thus for any PropertyName propname,
+ * ToString(ToUint32(propname)) never equals propname.
+ *
+ * To more concretely illustrate the utility of PropertyName, consider that it
+ * is used to partition, in a type-safe manner, the ways to refer to a
+ * property, as follows:
+ *
+ *   - uint32 indexes,
+ *   - PropertyName strings which don't encode uint32 indexes, and
+ *   - jsspecial special properties (non-ES5 properties like object-valued
+ *     jsids, JSID_EMPTY, JSID_VOID, E4X's default XML namespace, and maybe in
+ *     the future Harmony-proposed private names).
  */
 class PropertyName : public JSAtom
 {};
@@ -794,7 +806,7 @@ JSAtom::asPropertyName()
 {
 #ifdef DEBUG
     uint32 dummy;
-    JS_ASSERT(!isElement(&dummy));
+    JS_ASSERT(!isIndex(&dummy));
 #endif
     return static_cast<js::PropertyName *>(this);
 }

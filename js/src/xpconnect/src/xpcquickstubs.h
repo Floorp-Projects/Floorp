@@ -535,7 +535,8 @@ xpc_qsUnwrapThis(JSContext *cx,
                  T **ppThis,
                  nsISupports **pThisRef,
                  jsval *pThisVal,
-                 XPCLazyCallContext *lccx)
+                 XPCLazyCallContext *lccx,
+                 bool failureFatal = true)
 {
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
@@ -545,7 +546,12 @@ xpc_qsUnwrapThis(JSContext *cx,
                         reinterpret_cast<void **>(ppThis), pThisRef, pThisVal,
                         lccx);
 
-    return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
+    if (failureFatal)
+        return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
+
+    if (NS_FAILED(rv))
+        *ppThis = nsnull;
+    return JS_TRUE;
 }
 
 inline nsISupports*
