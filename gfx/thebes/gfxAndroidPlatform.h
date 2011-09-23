@@ -44,6 +44,13 @@
 #include "gfxUserFontSet.h"
 #include "nsTArray.h"
 
+namespace mozilla {
+    namespace dom {
+        class FontListEntry;
+    };
+};
+using mozilla::dom::FontListEntry;
+
 typedef struct FT_LibraryRec_ *FT_Library;
 
 class THEBES_API gfxAndroidPlatform : public gfxPlatform {

@@ -45,7 +45,6 @@
 #include "gfxWindowsPlatform.h"
 #define gfxToolkitPlatform gfxWindowsPlatform
 #elif defined(ANDROID)
-#include "mozilla/dom/ContentChild.h"
 #include "gfxAndroidPlatform.h"
 #define gfxToolkitPlatform gfxAndroidPlatform
 #endif
@@ -56,10 +55,6 @@
 #include "gfxFT2Utils.h"
 #include "gfxFT2FontList.h"
 #include <locale.h>
-#include "cairo-ft.h"
-#include FT_TRUETYPE_TAGS_H
-#include FT_TRUETYPE_TABLES_H
-#include "gfxFontUtils.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxUnicodeProperties.h"
 #include "gfxAtoms.h"
@@ -81,302 +76,6 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("ft2fonts");
 #define MOZ_FT_TRUNC(x) ((x) >> 6)
 #define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
         MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v) , (s))))
-
-static cairo_scaled_font_t *
-CreateScaledFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
-{
-    cairo_scaled_font_t *scaledFont = NULL;
-
-    cairo_matrix_t sizeMatrix;
-    cairo_matrix_t identityMatrix;
-
-    // XXX deal with adjusted size
-    cairo_matrix_init_scale(&sizeMatrix, aStyle->size, aStyle->size);
-    cairo_matrix_init_identity(&identityMatrix);
-
-    // synthetic oblique by skewing via the font matrix
-    PRBool needsOblique =
-        !aFontEntry->mItalic &&
-            (aStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE));
-
-    if (needsOblique) {
-        const double kSkewFactor = 0.25;
-
-        cairo_matrix_t style;
-        cairo_matrix_init(&style,
-                          1,                //xx
-                          0,                //yx
-                          -1 * kSkewFactor,  //xy
-                          1,                //yy
-                          0,                //x0
-                          0);               //y0
-        cairo_matrix_multiply(&sizeMatrix, &sizeMatrix, &style);
-    }
-
-    cairo_font_options_t *fontOptions = cairo_font_options_create();
-
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
-#endif
-
-    scaledFont = cairo_scaled_font_create(aFontEntry->CairoFontFace(),
-                                          &sizeMatrix,
-                                          &identityMatrix, fontOptions);
-    cairo_font_options_destroy(fontOptions);
-
-    NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
-                 "Failed to make scaled font");
-
-    return scaledFont;
-}
-
-/**
- * FontEntry
- */
-
-FontEntry::~FontEntry()
-{
-    // Do nothing for mFTFace here since FTFontDestroyFunc is called by cairo.
-    mFTFace = nsnull;
-
-#ifndef ANDROID
-    if (mFontFace) {
-        cairo_font_face_destroy(mFontFace);
-        mFontFace = nsnull;
-    }
-#endif
-}
-
-gfxFont*
-FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
-{
-    cairo_scaled_font_t *scaledFont = CreateScaledFont(this, aFontStyle);
-    gfxFont *font = new gfxFT2Font(scaledFont, this, aFontStyle, aNeedsBold);
-    cairo_scaled_font_destroy(scaledFont);
-    return font;
-}
-
-/* static */
-FontEntry*
-FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                           const PRUint8 *aFontData,
-                           PRUint32 aLength)
-{
-    // Ownership of aFontData is passed in here; the fontEntry must
-    // retain it as long as the FT_Face needs it, and ensure it is
-    // eventually deleted.
-    FT_Face face;
-    FT_Error error =
-        FT_New_Memory_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(),
-                           aFontData, aLength, 0, &face);
-    if (error != FT_Err_Ok) {
-        NS_Free((void*)aFontData);
-        return nsnull;
-    }
-    FontEntry* fe = FontEntry::CreateFontEntry(face, nsnull, 0, aFontData);
-    if (fe) {
-        fe->mItalic = aProxyEntry.mItalic;
-        fe->mWeight = aProxyEntry.mWeight;
-        fe->mStretch = aProxyEntry.mStretch;
-    }
-    return fe;
-}
-
-class FTUserFontData {
-public:
-    FTUserFontData(FT_Face aFace, const PRUint8* aData)
-        : mFace(aFace), mFontData(aData)
-    {
-    }
-
-    ~FTUserFontData()
-    {
-        FT_Done_Face(mFace);
-        if (mFontData) {
-            NS_Free((void*)mFontData);
-        }
-    }
-
-private:
-    FT_Face        mFace;
-    const PRUint8 *mFontData;
-};
-
-static void
-FTFontDestroyFunc(void *data)
-{
-    FTUserFontData *userFontData = static_cast<FTUserFontData*>(data);
-    delete userFontData;
-}
-
-/* static */ FontEntry*
-FontEntry::CreateFontEntry(const FontListEntry& aFLE)
-{
-    FontEntry *fe = new FontEntry(aFLE.faceName());
-    fe->mFilename = aFLE.filepath();
-    fe->mFTFontIndex = aFLE.index();
-    fe->mWeight = aFLE.weight();
-    fe->mStretch = aFLE.stretch();
-    fe->mItalic = aFLE.italic();
-    return fe;
-}
-
-/* static */ FontEntry*
-FontEntry::CreateFontEntry(FT_Face aFace,
-                           const char* aFilename, PRUint8 aIndex,
-                           const PRUint8 *aFontData)
-{
-    static cairo_user_data_key_t key;
-
-    if (!aFace->family_name) {
-        FT_Done_Face(aFace);
-        return nsnull;
-    }
-    // Construct font name from family name and style name, regular fonts
-    // do not have the modifier by convention.
-    NS_ConvertUTF8toUTF16 fontName(aFace->family_name);
-    if (aFace->style_name && strcmp("Regular", aFace->style_name)) {
-        fontName.AppendLiteral(" ");
-        AppendUTF8toUTF16(aFace->style_name, fontName);
-    }
-    FontEntry *fe = new FontEntry(fontName);
-    fe->mItalic = aFace->style_flags & FT_STYLE_FLAG_ITALIC;
-    fe->mFTFace = aFace;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-#else
-    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, 0);
-#endif
-    fe->mFilename = aFilename;
-    fe->mFTFontIndex = aIndex;
-    FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
-    cairo_font_face_set_user_data(fe->mFontFace, &key,
-                                  userFontData, FTFontDestroyFunc);
-
-    TT_OS2 *os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(aFace, ft_sfnt_os2));
-    PRUint16 os2weight = 0;
-    if (os2 && os2->version != 0xffff) {
-        // Technically, only 100 to 900 are valid, but some fonts
-        // have this set wrong -- e.g. "Microsoft Logo Bold Italic" has
-        // it set to 6 instead of 600.  We try to be nice and handle that
-        // as well.
-        if (os2->usWeightClass >= 100 && os2->usWeightClass <= 900)
-            os2weight = os2->usWeightClass;
-        else if (os2->usWeightClass >= 1 && os2->usWeightClass <= 9)
-            os2weight = os2->usWeightClass * 100;
-    }
-
-    if (os2weight != 0)
-        fe->mWeight = os2weight;
-    else if (aFace->style_flags & FT_STYLE_FLAG_BOLD)
-        fe->mWeight = 700;
-    else
-        fe->mWeight = 400;
-
-    NS_ASSERTION(fe->mWeight >= 100 && fe->mWeight <= 900, "Invalid final weight in font!");
-
-    return fe;
-}
-
-FontEntry*
-gfxFT2Font::GetFontEntry()
-{
-    return static_cast<FontEntry*> (mFontEntry.get());
-}
-
-cairo_font_face_t *
-FontEntry::CairoFontFace()
-{
-    static cairo_user_data_key_t key;
-
-    if (!mFontFace) {
-        FT_Face face;
-        FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
-        mFTFace = face;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-        mFontFace = cairo_ft_font_face_create_for_ft_face(face, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-#else
-        mFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
-#endif
-        FTUserFontData *userFontData = new FTUserFontData(face, nsnull);
-        cairo_font_face_set_user_data(mFontFace, &key,
-                                      userFontData, FTFontDestroyFunc);
-    }
-    return mFontFace;
-}
-
-nsresult
-FontEntry::ReadCMAP()
-{
-    if (mCmapInitialized) {
-        return NS_OK;
-    }
-
-    // attempt this once, if errors occur leave a blank cmap
-    mCmapInitialized = PR_TRUE;
-
-    AutoFallibleTArray<PRUint8,16384> buffer;
-    nsresult rv = GetFontTable(TTAG_cmap, buffer);
-    
-    if (NS_SUCCEEDED(rv)) {
-        PRPackedBool unicodeFont;
-        PRPackedBool symbolFont;
-        rv = gfxFontUtils::ReadCMAP(buffer.Elements(), buffer.Length(),
-                                    mCharacterMap, mUVSOffset,
-                                    unicodeFont, symbolFont);
-    }
-
-    mHasCmapTable = NS_SUCCEEDED(rv);
-    return rv;
-}
-
-nsresult
-FontEntry::GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer)
-{
-    // Ensure existence of mFTFace
-    CairoFontFace();
-    NS_ENSURE_TRUE(mFTFace, NS_ERROR_FAILURE);
-
-    FT_Error status;
-    FT_ULong len = 0;
-    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nsnull, &len);
-    NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
-
-    if (!aBuffer.SetLength(len)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    PRUint8 *buf = aBuffer.Elements();
-    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, buf, &len);
-    NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
-
-    return NS_OK;
-}
-
-FontEntry *
-FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
-{
-    PRBool needsBold = PR_FALSE;
-    return static_cast<FontEntry*>(FindFontForStyle(aFontStyle, needsBold));
-}
-
-void
-FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList)
-{
-    for (int i = 0, n = mAvailableFonts.Length(); i < n; ++i) {
-        const FontEntry *fe =
-            static_cast<const FontEntry*>(mAvailableFonts[i].get());
-        if (!fe) {
-            continue;
-        }
-        
-        aFontList->AppendElement(FontListEntry(Name(), fe->Name(),
-                                               fe->mFilename,
-                                               fe->Weight(), fe->Stretch(),
-                                               fe->IsItalic(),
-                                               fe->mFTFontIndex));
-    }
-}
 
 #ifndef ANDROID // not needed on Android, we use the generic gfxFontGroup
 /**
@@ -852,7 +551,7 @@ gfxFT2Font::AddRange(gfxTextRun *aTextRun, const PRUnichar *str, PRUint32 offset
 }
 
 gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
-                       FontEntry *aFontEntry,
+                       FT2FontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle,
                        PRBool aNeedsBold)
     : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
@@ -882,11 +581,11 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
                           PRBool aNeedsBold)
 {
 #ifdef ANDROID
-    FontEntry *fe = static_cast<FontEntry*>
+    FT2FontEntry *fe = static_cast<FT2FontEntry*>
         (gfxPlatformFontList::PlatformFontList()->
             FindFontForFamily(aName, aStyle, aNeedsBold));
 #else
-    FontEntry *fe = static_cast<FontEntry*>
+    FT2FontEntry *fe = static_cast<FT2FontEntry*>
         (gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle));
 #endif
     if (!fe) {
@@ -899,11 +598,12 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
 }
 
 already_AddRefed<gfxFT2Font>
-gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold)
+gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
+                          PRBool aNeedsBold)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {
-        cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontEntry, aStyle);
+        cairo_scaled_font_t *scaledFont = aFontEntry->CreateScaledFont(aStyle);
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
         cairo_scaled_font_destroy(scaledFont);
         if (!font)
