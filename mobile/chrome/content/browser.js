@@ -1279,13 +1279,15 @@ var Browser = {
     this._grabbedSidebar = true;
     ViewableAreaObserver.update();
 
+    let ltr = (Util.localeDir == Util.LOCALE_DIR_LTR);
+
     if (TabsPopup.visible) {
-      this._setSidebarOffset(0);
+      this._setSidebarOffset(ltr ? 0 : ViewableAreaObserver.sidebarWidth);
       this._slideMultiplier = 3;
     } else {
       // If the tab bar is hidden, un-collapse it but scroll it offscreen.
       document.getElementById("tabs-sidebar").style.visibility = "visible";
-      this._setSidebarOffset(ViewableAreaObserver.sidebarWidth);
+      this._setSidebarOffset(ltr ? ViewableAreaObserver.sidebarWidth : 0);
       this._slideMultiplier = 6;
     }
   },
@@ -1306,7 +1308,8 @@ var Browser = {
     let finalOffset = this._sidebarOffset;
     this._setSidebarOffset(0);
 
-    if (finalOffset > (ViewableAreaObserver.sidebarWidth / 2))
+    let rtl = (Util.localeDir == Util.LOCALE_DIR_RTL);
+    if (finalOffset > (ViewableAreaObserver.sidebarWidth / 2) ^ rtl)
       TabsPopup.hide();
     else
       TabsPopup.show();
@@ -1349,7 +1352,10 @@ Browser.MainDragger.prototype = {
     this._panToolbars = !isTablet;
 
     // In landscape portrait mode, swiping from the left margin drags the tab sidebar.
-    this._grabSidebar = isTablet && !Util.isPortrait() && (clientX - bcr.left < 30);
+    this._grabSidebar = isTablet && !Util.isPortrait() &&
+      ((Util.localeDir == Util.LOCALE_DIR_LTR) ?
+       (clientX - bcr.left < 30) :
+       (bcr.right - clientX < 30));
 
     if (this._grabSidebar)
       Browser.grabSidebar();
