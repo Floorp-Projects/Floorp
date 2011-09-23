@@ -125,6 +125,7 @@ members = [
     #'nsIDOMDocument.location',
     'nsIDOMDocument.elementFromPoint',
     'nsIDOMDocument.activeElement',
+    'nsIDOMDocument.onreadystatechange',
     'nsIDOMElement.removeAttributeNS',
     'nsIDOMElement.removeAttribute',
     'nsIDOMElement.getAttribute',
@@ -913,6 +914,14 @@ customMethodCalls = {
         'code': '    nsCOMPtr<nsIContent> result;\n'
                 '    rv = self->CreateTextNode(arg0, getter_AddRefs(result));'
     },
+    'nsIDOMDocument_GetOnreadystatechange' : {
+        'thisType' : 'nsDocument',
+        'unwrapThisFailureFatal' : False
+        },
+    'nsIDOMDocument_SetOnreadystatechange' : {
+        'thisType' : 'nsDocument',
+        'unwrapThisFailureFatal' : False
+        },
     # WebGL
     'nsIDOMWebGLRenderingContext_BufferData': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_BufferSubData': CUSTOM_QS,
