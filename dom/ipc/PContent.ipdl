@@ -83,13 +83,9 @@ union StorageConstructData
 };
 
 struct FontListEntry {
-    nsString  familyName;
-    nsString  faceName;
+    nsCString familyName;
     nsCString filepath;
-    PRUint16  weight;
-    PRInt16   stretch;
-    PRUint8   italic;
-    PRUint8   index;
+    PRUint32  index;
 };
 
 rpc protocol PContent
