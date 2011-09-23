@@ -278,8 +278,16 @@ var Browser = {
       // Restore the previous scroll position
       let restorePosition = Browser.controlsPosition || { hideSidebars: true };
       if (restorePosition.hideSidebars) {
-        restorePosition.hideSidebars = false;
+        // Since this happens early in the startup process, we need to make sure
+        // the UI has really responded
+        let x = {}, y = {};
         Browser.hideSidebars();
+        Browser.controlsScrollboxScroller.getPosition(x, y);
+        if (x.value > 0) {
+          // Update the control position data so we are set correctly for the next resize
+          restorePosition.hideSidebars = false;
+          restorePosition.x = x.value;
+        }
       } else {
         // Handle Width transformation of the tabs sidebar
         if (restorePosition.x) {
