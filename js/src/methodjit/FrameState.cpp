@@ -744,7 +744,7 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
         }
 
         /* Force syncs for locals which are dead at the current PC. */
-        if (isLocal(fe) && !a->analysis->slotEscapes(entrySlot(fe))) {
+        if (isLocal(fe) && !fe->copied && !a->analysis->slotEscapes(entrySlot(fe))) {
             Lifetime *lifetime = a->analysis->liveness(entrySlot(fe)).live(a->PC - a->script->code);
             if (!lifetime)
                 fakeSync(fe);
