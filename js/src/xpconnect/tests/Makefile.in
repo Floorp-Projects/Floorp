@@ -44,7 +44,7 @@ relativesrcdir = js/src/xpconnect/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = idl mochitest chrome components
+DIRS = idl mochitest chrome components/native
 
 XPCSHELL_TESTS = unit
 
