@@ -75,7 +75,7 @@ mk_add_options() {
 }
 
 mk_echo_options() {
-  echo "Adding client.mk options from $MOZCONFIG:"
+  echo "Adding client.mk options from $FOUND_MOZCONFIG:"
   IFS=^
   for _opt in $opts; do
     echo "    $_opt"
