@@ -544,11 +544,10 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
         returnParam.val.p = value;
     }
     else {
-        returnParam.SetPtrIsData();
+        returnParam.SetIndirect();
         if (returnType == eNODESET || returnType == eOBJECT) {
             returnParam.SetValIsInterface();
         }
-        returnParam.ptr = &returnParam.val;
     }
 
     rv = NS_InvokeByIndex(mHelper, mMethodIndex, paramCount, invokeParams);
