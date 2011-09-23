@@ -1329,8 +1329,17 @@ JSVAL_TO_DOUBLE(jsval v)
 static JS_ALWAYS_INLINE jsval
 DOUBLE_TO_JSVAL(jsdouble d)
 {
-    d = JS_CANONICALIZE_NAN(d);
-    return IMPL_TO_JSVAL(DOUBLE_TO_JSVAL_IMPL(d));
+    /* This is a manually inlined version of:
+     *    d = JS_CANONICALIZE_NAN(d);
+     *    return IMPL_TO_JSVAL(DOUBLE_TO_JSVAL_IMPL(d));
+     * because GCC from XCode 3.1.4 miscompiles the above code. */
+    jsval_layout l;
+    if (JS_UNLIKELY(d != d)) {
+        l.asBits = 0x7FF8000000000000LL;
+    } else {
+        l.asDouble = d;
+    }
+    return IMPL_TO_JSVAL(l);
 }
 
 static JS_ALWAYS_INLINE jsval
