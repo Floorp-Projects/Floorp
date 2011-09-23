@@ -5,12 +5,12 @@ let notificationBox = null;
 
 function startLocationTests() {
   ok(window.InspectorUI, "InspectorUI variable exists");
-  Services.obs.addObserver(runInspectorTests, INSPECTOR_NOTIFICATIONS.OPENED, null);
+  Services.obs.addObserver(runInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, null);
   InspectorUI.toggleInspectorUI();
 }
 
 function runInspectorTests() {
-  Services.obs.removeObserver(runInspectorTests, INSPECTOR_NOTIFICATIONS.OPENED, null);
+  Services.obs.removeObserver(runInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, null);
 
   let para = content.document.querySelector("p");
   ok(para, "found the paragraph element");

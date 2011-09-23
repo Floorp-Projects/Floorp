@@ -84,7 +84,7 @@ function createDocument()
 function setupHighlighterTests()
 {
   ok(h1, "we have the header node");
-  Services.obs.addObserver(inspectorOpen, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(inspectorOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   registerTools();
   InspectorUI.toggleInspectorUI();
 }
@@ -92,17 +92,17 @@ function setupHighlighterTests()
 function inspectorOpen()
 {
   info("we received the inspector-opened notification");
-  Services.obs.removeObserver(inspectorOpen, INSPECTOR_NOTIFICATIONS.OPENED);
+  Services.obs.removeObserver(inspectorOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
   toolsLength = InspectorUI.tools.length;
   toolEvents = InspectorUI.toolEvents.length;
   info("tools registered");
-  Services.obs.addObserver(startToolTests, INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  Services.obs.addObserver(startToolTests, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
   InspectorUI.inspectNode(h1);
 }
 
 function startToolTests(evt)
 {
-  Services.obs.removeObserver(startToolTests, INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+  Services.obs.removeObserver(startToolTests, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
   InspectorUI.stopInspecting();
   info("Getting InspectorUI.tools");
   let tools = InspectorUI.tools;
@@ -168,13 +168,13 @@ function testSecondTab()
   ok(!(tool3 in tools), "Panel 3 not in tools");
 
   info("Closing current tab");
-  Services.obs.addObserver(testOriginalTab, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(testOriginalTab, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   gBrowser.removeCurrentTab();
 }
 
 function testOriginalTab()
 {
-  Services.obs.removeObserver(testOriginalTab, INSPECTOR_NOTIFICATIONS.OPENED);
+  Services.obs.removeObserver(testOriginalTab, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
   info("Checking panel states 6");
 
   info("Tools: " + InspectorUI.tools);
@@ -187,13 +187,13 @@ function testOriginalTab()
   ok(!tool2.isOpen, "Panel 2 is closed after reactivation");
   ok(tool3.isOpen, "Panel 3 is open after reactivation");
 
-  Services.obs.addObserver(unregisterTools, INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  Services.obs.addObserver(unregisterTools, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
   InspectorUI.closeInspectorUI(true);
 }
 
 function unregisterTools()
 {
-  Services.obs.removeObserver(unregisterTools, INSPECTOR_NOTIFICATIONS.CLOSED);
+  Services.obs.removeObserver(unregisterTools, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
   let tools = InspectorUI.tools;
 
   ok(!(tool1 in tools), "Tool 1 removed");
