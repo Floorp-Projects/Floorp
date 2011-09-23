@@ -245,9 +245,11 @@ nsContextMenu.prototype = {
                        this.onImage || this.onCanvas ||
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
+    var showInspect = gPrefService.getBoolPref("devtools.inspector.enabled");
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
-    this.showItem("context-inspect", InspectorUI.enabled);
+    this.showItem("inspect-separator", showInspect);
+    this.showItem("context-inspect", showInspect);
 
     this.showItem("context-sep-viewsource", shouldShow);
 
