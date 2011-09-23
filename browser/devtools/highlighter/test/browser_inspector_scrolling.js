@@ -65,16 +65,16 @@ function createDocument()
 
 function toggleInspector()
 {
-  Services.obs.addObserver(inspectNode, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(inspectNode, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
 }
 
 function inspectNode()
 {
   Services.obs.removeObserver(inspectNode,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   Services.obs.addObserver(performScrollingTest,
-    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   executeSoon(function() {
     InspectorUI.inspectNode(div);
@@ -84,7 +84,7 @@ function inspectNode()
 function performScrollingTest()
 {
   Services.obs.removeObserver(performScrollingTest,
-    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   EventUtils.synthesizeMouseScroll(div, 10, 10,
     {axis:"vertical", delta:50, type:"MozMousePixelScroll"},

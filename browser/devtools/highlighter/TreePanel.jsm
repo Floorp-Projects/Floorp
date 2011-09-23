@@ -141,7 +141,7 @@ TreePanel.prototype = {
     this.treeIFrame.addEventListener("dblclick", this.onTreeDblClick.bind(this), false);
     delete this.initializingTreePanel;
     Services.obs.notifyObservers(null,
-      this.window.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, null);
+      this.IUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, null);
     if (this.IUI.selection)
       this.select(this.IUI.selection, true);
   },
@@ -548,7 +548,7 @@ TreePanel.prototype = {
                           this.handleEditorKeypress.bind(this));
 
     // event notification
-    Services.obs.notifyObservers(null, this.window.INSPECTOR_NOTIFICATIONS.EDITOR_OPENED,
+    Services.obs.notifyObservers(null, this.IUI.INSPECTOR_NOTIFICATIONS.EDITOR_OPENED,
                                   null);
   },
 
@@ -626,7 +626,7 @@ TreePanel.prototype = {
     this.editingEvents = {};
 
     // event notification
-    Services.obs.notifyObservers(null, this.window.INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED,
+    Services.obs.notifyObservers(null, this.IUI.INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED,
                                   null);
   },
 
@@ -648,7 +648,7 @@ TreePanel.prototype = {
     this.IUI.isDirty = true;
 
     // event notification
-    Services.obs.notifyObservers(null, this.window.INSPECTOR_NOTIFICATIONS.EDITOR_SAVED,
+    Services.obs.notifyObservers(null, this.IUI.INSPECTOR_NOTIFICATIONS.EDITOR_SAVED,
                                   null);
 
     this.closeEditor();
