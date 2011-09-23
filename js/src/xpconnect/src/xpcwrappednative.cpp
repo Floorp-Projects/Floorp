@@ -2240,6 +2240,8 @@ class CallMethodHelper
     JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8 i);
     JS_ALWAYS_INLINE JSBool ConvertDependentParams();
 
+    JS_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
+
     JS_ALWAYS_INLINE JSBool HandleDipperParam(nsXPTCVariant* dp,
                                               const nsXPTParamInfo& paramInfo);
 
@@ -2391,69 +2393,49 @@ CallMethodHelper::~CallMethodHelper()
         for(uint8 i = 0; i < paramCount; i++)
         {
             nsXPTCVariant* dp = GetDispatchParam(i);
+            const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
 
-            if(dp->IsValArray())
+            if(paramInfo.GetType().IsArray())
             {
                 void* p = dp->val.p;
                 if(!p)
                     continue;
 
-                // going to have to cleanup the array and perhaps its contents
-                if(dp->IsValAllocated() || dp->IsValInterface())
+                // Clean up the array contents if necessary.
+                if(dp->DoesValNeedCleanup())
                 {
-                    // we need to figure out how many elements are present.
+                    // We need some basic information to properly destroy the array.
                     JSUint32 array_count;
-
-                    if(!GetArraySizeFromParam(i, &array_count))
+                    nsXPTType datum_type;
+                    if(!GetArraySizeFromParam(i, &array_count) ||
+                       !NS_SUCCEEDED(mIFaceInfo->GetTypeForParam(mVTableIndex,
+                                                                 &paramInfo,
+                                                                 1, &datum_type)))
                     {
-                        NS_ERROR("failed to get array length, we'll leak here");
+                        // XXXbholley - I'm not convinced that the above calls will
+                        // ever fail.
+                        NS_ERROR("failed to get array information, we'll leak here");
                         continue;
                     }
-                    if(dp->IsValAllocated())
+
+                    // Loop over the array contents. For each one, we create a
+                    // dummy 'val' and pass it to the cleanup helper.
+                    for(JSUint32 k = 0; k < array_count; k++)
                     {
-                        void** a = (void**)p;
-                        for(JSUint32 k = 0; k < array_count; k++)
-                        {
-                            void* o = a[k];
-                            if(o) nsMemory::Free(o);
-                        }
-                    }
-                    else // if(dp->IsValInterface())
-                    {
-                        nsISupports** a = (nsISupports**)p;
-                        for(JSUint32 k = 0; k < array_count; k++)
-                        {
-                            nsISupports* o = a[k];
-                            NS_IF_RELEASE(o);
-                        }
+                        nsXPTCMiniVariant v;
+                        v.val.p = static_cast<void**>(p)[k];
+                        CleanupParam(v, datum_type);
                     }
                 }
+
                 // always free the array itself
                 nsMemory::Free(p);
             }
             else
             {
-                if(dp->IsValJSRoot())
-                {
-                    NS_ASSERTION(!dp->IsValAllocated() && !dp->IsValInterface(),
-                                 "jsvals are their own class of values");
-                    JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
-                    continue;
-                }
-
-                void* p = dp->val.p;
-                if(!p)
-                    continue;
-                if(dp->IsValAllocated())
-                    nsMemory::Free(p);
-                else if(dp->IsValInterface())
-                    ((nsISupports*)p)->Release();
-                else if(dp->IsValDOMString())
-                    mCallContext.DeleteString((nsAString*)p);
-                else if(dp->IsValUTF8String())
-                    delete (nsCString*) p;
-                else if(dp->IsValCString())
-                    delete (nsCString*) p;
+                // Clean up single parameters (if requested).
+                if (dp->DoesValNeedCleanup())
+                    CleanupParam(*dp, dp->type);
             }
         }
     }
@@ -2836,7 +2818,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
 
     if(type_tag == nsXPTType::T_INTERFACE)
     {
-        dp->SetValIsInterface();
+        dp->SetValNeedsCleanup();
     }
 
     jsval src;
@@ -2852,7 +2834,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
         dp->val.j = JSVAL_VOID;
         if (!JS_AddValueRoot(mCallContext, &dp->val.j))
             return JS_FALSE;
-        dp->SetValIsJSRoot();
+        dp->SetValNeedsCleanup();
     }
 
     if(paramInfo.IsOut())
@@ -2862,7 +2844,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
            !paramInfo.IsShared())
         {
             useAllocator = JS_TRUE;
-            dp->SetValIsAllocated();
+            dp->SetValNeedsCleanup();
         }
 
         if(!paramInfo.IsIn())
@@ -2875,11 +2857,11 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
             switch(type_tag)
             {
             case nsXPTType::T_IID:
-                dp->SetValIsAllocated();
+                dp->SetValNeedsCleanup();
                 useAllocator = JS_TRUE;
                 break;
             case nsXPTType::T_CHAR_STR:
-                dp->SetValIsAllocated();
+                dp->SetValNeedsCleanup();
                 useAllocator = JS_TRUE;
                 break;
             case nsXPTType::T_ASTRING:
@@ -2890,14 +2872,14 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
                 // Is an 'in' DOMString. Set 'useAllocator' to indicate
                 // that JSData2Native should allocate a new
                 // nsAString.
-                dp->SetValIsDOMString();
+                dp->SetValNeedsCleanup();
                 useAllocator = JS_TRUE;
                 break;
 
             case nsXPTType::T_UTF8STRING:
                 // Fall through to the C string case for now...
             case nsXPTType::T_CSTRING:
-                dp->SetValIsCString();
+                dp->SetValNeedsCleanup();
                 useAllocator = JS_TRUE;
                 break;
             }
@@ -2968,8 +2950,6 @@ CallMethodHelper::ConvertDependentParams()
 
         if(isArray)
         {
-            dp->SetValIsArray();
-
             if(NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
                                                      &datum_type)))
             {
@@ -2982,7 +2962,7 @@ CallMethodHelper::ConvertDependentParams()
 
         if(datum_type.IsInterfacePointer())
         {
-            dp->SetValIsInterface();
+            dp->SetValNeedsCleanup();
         }
 
         jsval src;
@@ -2997,7 +2977,7 @@ CallMethodHelper::ConvertDependentParams()
                (isArray || !paramInfo.IsShared()))
             {
                 useAllocator = JS_TRUE;
-                dp->SetValIsAllocated();
+                dp->SetValNeedsCleanup();
             }
 
             if(!paramInfo.IsIn())
@@ -3015,7 +2995,7 @@ CallMethodHelper::ConvertDependentParams()
                (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
                 useAllocator = JS_TRUE;
-                dp->SetValIsAllocated();
+                dp->SetValNeedsCleanup();
             }
         }
 
@@ -3075,6 +3055,45 @@ CallMethodHelper::ConvertDependentParams()
     return JS_TRUE;
 }
 
+// Performs all necessary teardown on a parameter after method invocation.
+//
+// This method should only be called if the value in question was flagged
+// for cleanup (ie, if dp->DoesValNeedCleanup()).
+void
+CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
+{
+    // We handle array elements, but not the arrays themselves.
+    NS_ABORT_IF_FALSE(type.TagPart() != nsXPTType::T_ARRAY, "Can't handle arrays.");
+
+    // Pointers may sometimes be null even if cleanup was requested. Combine
+    // the null checking for all the different types into one check here.
+    if (type.TagPart() != nsXPTType::T_JSVAL && param.val.p == nsnull)
+        return;
+
+    switch(type.TagPart())
+    {
+        case nsXPTType::T_JSVAL:
+            JS_RemoveValueRoot(mCallContext, (jsval*)&param.val);
+            break;
+        case nsXPTType::T_INTERFACE:
+        case nsXPTType::T_INTERFACE_IS:
+            ((nsISupports*)param.val.p)->Release();
+            break;
+        case nsXPTType::T_ASTRING:
+        case nsXPTType::T_DOMSTRING:
+            mCallContext.DeleteString((nsAString*)param.val.p);
+            break;
+        case nsXPTType::T_UTF8STRING:
+        case nsXPTType::T_CSTRING:
+            delete (nsCString*) param.val.p;
+            break;
+        default:
+            NS_ABORT_IF_FALSE(type.IsPointer(), "Cleanup requested on unexpected type.");
+            nsMemory::Free(param.val.p);
+            break;
+    }
+}
+
 // Handle parameters with dipper types.
 //
 // Dipper types are one of the more inscrutable aspects of xpidl. In a
@@ -3117,15 +3136,9 @@ CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
     // ASTRING and DOMSTRING are very similar, and both use nsAutoString.
     // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
     if(type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
-    {
-        dp->SetValIsDOMString();
         dp->val.p = new nsAutoString();
-    }
     else
-    {
-        dp->SetValIsCString();
         dp->val.p = new nsCString();
-    }
 
     // Check for OOM, in either case.
     if(!dp->val.p)
@@ -3133,6 +3146,9 @@ CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
         JS_ReportOutOfMemory(mCallContext);
         return JS_FALSE;
     }
+
+    // We allocated, so we need to deallocate after the method call completes.
+    dp->SetValNeedsCleanup();
 
     return JS_TRUE;
 }
