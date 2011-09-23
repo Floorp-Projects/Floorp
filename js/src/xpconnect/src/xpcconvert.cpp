@@ -672,18 +672,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             break;
         }
     case nsXPTType::T_JSVAL :
-        {
-            if (useAllocator) {
-                // The C++ type is (const jsval &), which here means (jsval *).
-                jsval *buf = new jsval(s);
-                if(!buf)
-                    return JS_FALSE;
-                *((jsval**)d) = buf;
-            } else {
-                *((jsval*)d) = s;
-            }
-            break;
-        }
+        *((jsval*)d) = s;
+        break;
     default:
         if(!type.IsPointer())
         {
