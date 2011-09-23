@@ -207,7 +207,8 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                 uint32 slot;
                 if (shape->previous() == obj->lastProperty() &&
                     entry->vshape() == cx->runtime->protoHazardShape &&
-                    shape->hasDefaultSetter()) {
+                    shape->hasDefaultSetter() &&
+                    obj->getClass()->addProperty == JS_PropertyStub) {
                     slot = shape->slot;
                     JS_ASSERT(slot == obj->slotSpan());
 
