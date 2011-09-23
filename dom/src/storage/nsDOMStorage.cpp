@@ -726,7 +726,7 @@ DOMStorageImpl::DOMStorageImpl(nsDOMStorage* aStorage, DOMStorageImpl& aThat)
 void
 DOMStorageImpl::Init(nsDOMStorage* aStorage)
 {
-  mItemsCached = PR_FALSE;
+  mItemsCachedVersion = 0;
   mItems.Init(8);
   mOwner = aStorage;
   if (nsDOMStorageManager::gStorageManager)
@@ -892,8 +892,6 @@ DOMStorageImpl::SetDBValue(const nsAString& aKey,
                          &usage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Before bug 536544 got fixed we were dropping mItemsCached flag here
-
   if (warnQuota >= 0 && usage > warnQuota) {
     // try to include the window that exceeded the warn quota
     nsCOMPtr<nsIDOMWindow> window;
@@ -947,7 +945,7 @@ void
 DOMStorageImpl::ClearAll()
 {
   mItems.EnumerateEntries(ClearStorageItem, nsnull);
-  mItemsCached = PR_FALSE;
+  mItemsCachedVersion = 0;
 }
 
 struct CopyArgs {
@@ -997,7 +995,7 @@ DOMStorageImpl::CacheKeysFromDB()
   // cache all the keys in the hash. This is used by the Length and Key methods
   // use this cache for better performance. The disadvantage is that the
   // order may break if someone changes the keys in the database directly.
-  if (!mItemsCached) {
+  if (gStorageDB->IsScopeDirty(this)) {
     nsresult rv = InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1006,7 +1004,7 @@ DOMStorageImpl::CacheKeysFromDB()
     rv = gStorageDB->GetAllKeys(this, &mItems);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mItemsCached = PR_TRUE;
+    gStorageDB->MarkScopeCached(this);
   }
 
   return NS_OK;
@@ -1075,7 +1073,6 @@ DOMStorageImpl::GetLength(bool aCallerSecure, PRUint32* aLength)
 {
   // Force reload of items from database.  This ensures sync localStorages for
   // same origins among different windows.
-  mItemsCached = PR_FALSE;
   if (UseDB())
     CacheKeysFromDB();
 
@@ -1135,7 +1132,6 @@ DOMStorageImpl::GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey)
   // something?
 
   if (UseDB()) {
-    mItemsCached = PR_FALSE;
     CacheKeysFromDB();
   }
 
@@ -1255,8 +1251,6 @@ DOMStorageImpl::RemoveValue(bool aCallerSecure, const nsAString& aKey,
     rv = gStorageDB->RemoveKey(this, aKey, !IsOfflineAllowed(mDomain),
                                aKey.Length() + value.Length());
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Before bug 536544 got fixed we were dropping mItemsCached flag here
   }
   else if (entry) {
     // clear string as StorageItems may be referencing this item
