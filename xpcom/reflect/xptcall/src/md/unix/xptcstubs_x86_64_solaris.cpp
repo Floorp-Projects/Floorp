@@ -114,7 +114,7 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
                 // The value in %xmm register is already prepared to
                 // be retrieved as a float. Therefore, we pass the
                 // value verbatim, as a double without conversion.
-                dp->val.d = *(double*) ap++;
+                dp->val.d = fpregs[nr_fpr++];
             else
                 dp->val.f = *(float*) ap++;
             continue;
