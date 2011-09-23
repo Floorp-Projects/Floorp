@@ -463,11 +463,7 @@
 #endif
                   </setting>
                   <setting id="prefs-uilanguage" title="&language.title;" type="menulist">
-                    <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
-                      <menupopup>
-                        <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
-                      </menupopup>
-                    </menulist>
+                    <button id="prefs-uilanguage-button" label="&language.title;" onclick="PreferencesView.showLocalePicker();"/>
                   </setting>
                   <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
                     <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
