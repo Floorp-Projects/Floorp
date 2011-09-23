@@ -45,8 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = xpctest
 
-XPIDLSRCS	= \
+XPIDLSRCS = \
   xpctest_attributes.idl \
+  xpctest_params.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

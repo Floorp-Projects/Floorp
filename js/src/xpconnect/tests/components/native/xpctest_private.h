@@ -46,7 +46,9 @@
 #include "nsISupports.h"
 #include "nsMemory.h"
 #include "jsapi.h"
+#include "nsStringGlue.h"
 #include "xpctest_attributes.h"
+#include "xpctest_params.h"
 
 class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
  public: 
@@ -77,6 +79,18 @@ class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
      float floatProperty;
      char charProperty;
      char *stringProperty;
+};
+
+class nsXPCTestParams : public nsIXPCTestParams
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCTESTPARAMS
+
+    nsXPCTestParams();
+
+private:
+    ~nsXPCTestParams();
 };
 
 #endif /* xpctest_private_h___ */
