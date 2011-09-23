@@ -73,6 +73,7 @@
         height="800"
         onkeypress="onDebugKeyPress(event);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:svg="http://www.w3.org/2000/svg"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
@@ -94,7 +95,7 @@
   <commandset id="mainCommandSet">
     <!-- basic navigation -->
     <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);" observes="bcast_urlbarState"/>
     <command id="cmd_reload" label="&reload.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_forceReload" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_stop" label="&stop.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -768,5 +769,12 @@
         oncommand="Browser.quit();"/>
     </hbox>
   </stack>
+
+  <svg:svg height="0">
+    <svg:mask id="back-button-mask" maskContentUnits="objectBoundingBox">
+      <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
+      <svg:circle cx="-0.5" cy="0.5" r="0.7"/>
+    </svg:mask>
+  </svg:svg>
 
 </window>

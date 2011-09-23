@@ -3,7 +3,7 @@
   visibility: collapse;
 }
 
-.button-actionbar[disabled="true"] {
+.button-actionbar[disabled="true"] .toolbarbutton-icon {
   opacity: 0.5;
 }
 
