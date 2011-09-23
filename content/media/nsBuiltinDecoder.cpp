@@ -402,7 +402,7 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
     return;
   }
 
-  if (!mElement->MayHaveAudioAvailableEventListener()) {
+  if (!mElement || !mElement->MayHaveAudioAvailableEventListener()) {
     return;
   }
 
@@ -442,8 +442,7 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
 
   if (!mResourceLoaded) {
     StartProgress();
-  }
-  else if (mElement) {
+  } else if (mElement) {
     // Resource was loaded during metadata loading, when progress
     // events are being ignored. Fire the final progress event.
     mElement->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
@@ -664,7 +663,9 @@ void nsBuiltinDecoder::NotifyDownloadEnded(nsresult aStatus)
 
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
-    mElement->LoadAborted();
+    if (mElement) {
+      mElement->LoadAborted();
+    }
     return;
   }
 
