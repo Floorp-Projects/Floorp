@@ -50,6 +50,7 @@ NO_DIST_INSTALL = 1
 
 JS_FILES = \
   xpctest_attributes.js \
+  xpctest_params.js \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
