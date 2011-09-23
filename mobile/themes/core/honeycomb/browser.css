@@ -195,8 +195,11 @@ toolbarbutton.urlbar-button {
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
+#urlbar-throbber {
+  width: 24px;
+  height: 24px;
+}
 
-#urlbar-throbber,
 #urlbar-favicon {
   width: 32px;
   height: 32px;
