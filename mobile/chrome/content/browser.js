@@ -3160,10 +3160,8 @@ function rendererFactory(aBrowser, aCanvas) {
 var ViewableAreaObserver = {
   get width() {
     let width = this._width || window.innerWidth;
-    if (Util.isTablet()) {
-      let sidebarWidth = Math.round(Elements.tabs.getBoundingClientRect().width);
-      width -= sidebarWidth;
-    }
+    if (Util.isTablet())
+      width -= this.sidebarWidth;
     return width;
   },
 
@@ -3172,6 +3170,13 @@ var ViewableAreaObserver = {
     if (Util.isTablet())
       height -= BrowserUI.toolbarH;
     return height;
+  },
+
+  _sidebarWidth: null,
+  get sidebarWidth() {
+    if (!this._sidebarWidth)
+      this._sidebarWidth = Math.round(Elements.tabs.getBoundingClientRect().width);
+    return this._sidebarWidth;
   },
 
   _isKeyboardOpened: true,
@@ -3227,6 +3232,8 @@ var ViewableAreaObserver = {
   },
 
   update: function va_update() {
+    this._sidebarWidth = null;
+
     let oldHeight = parseInt(Browser.styles["viewable-height"].height);
     let oldWidth = parseInt(Browser.styles["viewable-width"].width);
 
