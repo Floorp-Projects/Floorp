@@ -3761,7 +3761,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 uint32 slot;
                 if (shape->previous() == obj->lastProperty() &&
                     entry->vshape() == rt->protoHazardShape &&
-                    shape->hasDefaultSetter()) {
+                    shape->hasDefaultSetter() &&
+                    obj->getClass()->addProperty == JS_PropertyStub) {
                     slot = shape->slot;
                     JS_ASSERT(slot == obj->slotSpan());
 
