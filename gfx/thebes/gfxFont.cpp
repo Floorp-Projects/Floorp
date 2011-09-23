@@ -540,21 +540,15 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
 void
 gfxFontFamily::CheckForSimpleFamily()
 {
-    PRUint32 count = mAvailableFonts.Length();
-    if (count > 4 || count == 0) {
+    if (mAvailableFonts.Length() > 4 || mAvailableFonts.Length() == 0) {
         return; // can't be "simple" if there are >4 faces;
                 // if none then the family is unusable anyway
-    }
-
-    if (count == 1) {
-        mIsSimpleFamily = PR_TRUE;
-        return;
     }
 
     PRInt16 firstStretch = mAvailableFonts[0]->Stretch();
 
     gfxFontEntry *faces[4] = { 0 };
-    for (PRUint8 i = 0; i < count; ++i) {
+    for (PRUint8 i = 0; i < mAvailableFonts.Length(); ++i) {
         gfxFontEntry *fe = mAvailableFonts[i];
         if (fe->Stretch() != firstStretch) {
             return; // font-stretch doesn't match, don't treat as simple family

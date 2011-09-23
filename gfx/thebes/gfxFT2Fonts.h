@@ -47,14 +47,17 @@
 #include "gfxFontUtils.h"
 #include "gfxUserFontSet.h"
 
-namespace mozilla {
-    namespace dom {
-        class FontListEntry;
-    };
-};
-using mozilla::dom::FontListEntry;
-
 typedef struct FT_FaceRec_* FT_Face;
+
+class FileAndIndex {
+public:
+    FileAndIndex(nsCString aFilename, PRUint32 aIndex) :
+        filename(aFilename), index(aIndex) {}
+    FileAndIndex(FileAndIndex* fai) :
+        filename(fai->filename), index(fai->index) {}
+    nsCString filename;
+    PRUint32 index;
+};
 
 /**
  * FontFamily is a class that describes one of the fonts on the users system.  It holds
@@ -69,9 +72,13 @@ public:
         gfxFontFamily(aName) { }
 
     FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
+    virtual void FindStyleVariations();
+    void AddFontFileAndIndex(nsCString aFilename, PRUint32 aIndex);
 
-    // Append this family's faces to the IPC fontlist
-    void AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList);
+private:
+    // mFilenames are queus of font files that
+    // need to be lazily processed into font entries
+    nsTArray<FileAndIndex> mFilenames;
 };
 
 class FontEntry : public gfxFontEntry
@@ -91,22 +98,12 @@ public:
         return Name();
     }
 
-    // create a font entry for a downloaded font
     static FontEntry* 
     CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
                     const PRUint8 *aFontData, PRUint32 aLength);
 
-    // create a font entry representing an installed font, identified by
-    // a FontListEntry; the freetype and cairo faces will not be instantiated
-    // until actually needed
-    static FontEntry*
-    CreateFontEntry(const FontListEntry& aFLE);
-
-    // create a font entry for a given freetype face; if it is an installed font,
-    // also record the filename and index
     static FontEntry* 
-    CreateFontEntry(FT_Face aFace, const char *aFilename, PRUint8 aIndex,
-                    const PRUint8 *aFontData = nsnull);
+    CreateFontEntryFromFace(FT_Face aFace, const PRUint8 *aFontData = nsnull);
         // aFontData is NS_Malloc'ed data that aFace depends on, to be freed
         // after the face is destroyed; null if there is no such buffer
 
@@ -137,11 +134,8 @@ public: // new functions
 
     FontEntry *GetFontEntry();
 
-#ifndef ANDROID
     static already_AddRefed<gfxFT2Font>
     GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle, PRBool aNeedsBold = PR_FALSE);
-#endif
-
     static already_AddRefed<gfxFT2Font>
     GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold = PR_FALSE);
 
