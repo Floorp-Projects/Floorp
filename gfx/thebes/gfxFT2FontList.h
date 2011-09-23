@@ -47,7 +47,14 @@
 #endif
 #include "gfxPlatformFontList.h"
 
-#include <bitset>
+namespace mozilla {
+    namespace dom {
+        class FontListEntry;
+    };
+};
+using mozilla::dom::FontListEntry;
+
+class FontNameCache;
 
 class gfxFT2FontList : public gfxPlatformFontList
 {
@@ -64,11 +71,26 @@ public:
                                            const PRUint8 *aFontData,
                                            PRUint32 aLength);
 
+    void GetFontList(InfallibleTArray<FontListEntry>* retValue);
+
+    static gfxFT2FontList* PlatformFontList() {
+        return static_cast<gfxFT2FontList*>(gfxPlatformFontList::PlatformFontList());
+    }
+
 protected:
     virtual nsresult InitFontList();
 
-    void AppendFacesFromFontFile(const PRUnichar *aFileName);
-    void AppendFacesFromFontFile(const char *aFileName);
+    void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
+                                     PRBool isStdFile);
+
+    void AppendFacesFromFontFile(nsCString& aFileName,
+                                 PRBool isStdFile = PR_FALSE,
+                                 FontNameCache *aCache = nsnull);
+
+    void AppendFacesFromCachedFaceList(nsCString& aFileName,
+                                       PRBool isStdFile,
+                                       nsCString& aFaceList);
+
     void FindFonts();
 };
 
