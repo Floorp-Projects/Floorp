@@ -2181,12 +2181,6 @@ class CallMethodHelper
     uint8 mJSContextIndex; // TODO make const
     uint8 mOptArgcIndex; // TODO make const
 
-    // Reserve space for one nsAutoString. We don't want the string itself
-    // to be declared as that would make the ctor and dtors run for each
-    // CallMethodHelper instantiation, and they're only needed in a
-    // fraction of all the calls that come through here.
-    js::Maybe<nsAutoString> mAutoString;
-
     jsval* const mArgv;
     const PRUint32 mArgc;
 
@@ -2880,15 +2874,6 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                         // Is an 'out' DOMString. Make a new nsAString
                         // now and then continue in order to skip the call to
                         // JSData2Native
-
-                        if(mAutoString.empty())
-                        {
-                            mAutoString.construct();
-                            // Don't call SetValIsDOMString because we don't
-                            // want to delete this pointer.
-                            dp->val.p = mAutoString.addr();
-                            continue;
-                        }
 
                         dp->SetValIsDOMString();
                         if(!(dp->val.p = new nsAutoString()))
