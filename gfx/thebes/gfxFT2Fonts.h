@@ -47,103 +47,29 @@
 #include "gfxFontUtils.h"
 #include "gfxUserFontSet.h"
 
-namespace mozilla {
-    namespace dom {
-        class FontListEntry;
-    };
-};
-using mozilla::dom::FontListEntry;
-
-typedef struct FT_FaceRec_* FT_Face;
-
-/**
- * FontFamily is a class that describes one of the fonts on the users system.  It holds
- * each FontEntry (maps more directly to a font face) which holds font type, charset info
- * and character map info.
- */
-class FontEntry;
-class FontFamily : public gfxFontFamily
-{
-public:
-    FontFamily(const nsAString& aName) :
-        gfxFontFamily(aName) { }
-
-    FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
-
-    // Append this family's faces to the IPC fontlist
-    void AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList);
-};
-
-class FontEntry : public gfxFontEntry
-{
-public:
-    FontEntry(const nsAString& aFaceName) :
-        gfxFontEntry(aFaceName)
-    {
-        mFTFace = nsnull;
-        mFontFace = nsnull;
-        mFTFontIndex = 0;
-    }
-
-    ~FontEntry();
-
-    const nsString& GetName() const {
-        return Name();
-    }
-
-    // create a font entry for a downloaded font
-    static FontEntry* 
-    CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                    const PRUint8 *aFontData, PRUint32 aLength);
-
-    // create a font entry representing an installed font, identified by
-    // a FontListEntry; the freetype and cairo faces will not be instantiated
-    // until actually needed
-    static FontEntry*
-    CreateFontEntry(const FontListEntry& aFLE);
-
-    // create a font entry for a given freetype face; if it is an installed font,
-    // also record the filename and index
-    static FontEntry* 
-    CreateFontEntry(FT_Face aFace, const char *aFilename, PRUint8 aIndex,
-                    const PRUint8 *aFontData = nsnull);
-        // aFontData is NS_Malloc'ed data that aFace depends on, to be freed
-        // after the face is destroyed; null if there is no such buffer
-
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
-
-    cairo_font_face_t *CairoFontFace();
-    nsresult ReadCMAP();
-
-    nsresult GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer);
-
-    FT_Face mFTFace;
-    cairo_font_face_t *mFontFace;
-
-    nsCString mFilename;
-    PRUint8 mFTFontIndex;
-};
-
+class FT2FontEntry;
 
 class gfxFT2Font : public gfxFT2FontBase {
 public: // new functions
     gfxFT2Font(cairo_scaled_font_t *aCairoFont,
-               FontEntry *aFontEntry,
+               FT2FontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle,
                PRBool aNeedsBold);
     virtual ~gfxFT2Font ();
 
     cairo_font_face_t *CairoFontFace();
 
-    FontEntry *GetFontEntry();
+    FT2FontEntry *GetFontEntry();
 
 #ifndef ANDROID
     static already_AddRefed<gfxFT2Font>
-    GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle, PRBool aNeedsBold = PR_FALSE);
+    GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
+                  PRBool aNeedsBold = PR_FALSE);
 #endif
 
     static already_AddRefed<gfxFT2Font>
-    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold = PR_FALSE);
+    GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
+                  PRBool aNeedsBold = PR_FALSE);
 
     struct CachedGlyphData {
         CachedGlyphData()
