@@ -671,9 +671,6 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 pref("browser.firstrun.show.uidiscovery", true);
 pref("browser.firstrun.show.localepicker", true);
 
-// initiated by a user
-pref("content.ime.strict_policy", true);
-
 // True if you always want dump() to work
 //
 // On Android, you also need to do the following for the output
