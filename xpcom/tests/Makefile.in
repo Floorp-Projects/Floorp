@@ -98,6 +98,7 @@ CPP_UNIT_TESTS = \
                  TestRefPtr.cpp \
                  TestTextFormatter.cpp \
                  TestCheckedInt.cpp \
+                 TestTArray.cpp \
                  $(NULL)
 
 # XXX Make this tests work in libxul builds.

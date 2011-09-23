@@ -7,9 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
 <window title="Mozilla Bug 664783"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"/>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -61,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
 
     worker.onerror = function(event) {
       ok(false, "Worker had an error: " + event.data);
-      SimpleTest.finish();
+      finish();
     };
 
     worker.onmessage = function(event) {
@@ -73,11 +72,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
         is(event.data.name, file.name, "name proproperty accessed from worker is incorrect.");
         is(event.data.mozFullPath, file.mozFullPath, "mozFullPath proproperty accessed from worker is not the same as on main thread.");
       }
-      SimpleTest.finish();
+      finish();
     };
 
     worker.postMessage(file);
-    SimpleTest.waitForExplicitFinish();
+    waitForWorkerFinish();
   }
 
   // Empty file.

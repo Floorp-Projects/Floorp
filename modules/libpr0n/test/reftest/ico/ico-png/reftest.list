@@ -16,6 +16,7 @@
 == ico-size-31x31-png.ico ico-size-31x31-png.png
 == ico-size-32x32-png.ico ico-size-32x32-png.png
 == ico-size-33x33-png.ico ico-size-33x33-png.png
+== ico-size-256x256-png.ico ico-size-256x256-png.png
 
 # Corrupted files so no image should be loaded
 # x00n0g01 - empty 0x0 grayscale file

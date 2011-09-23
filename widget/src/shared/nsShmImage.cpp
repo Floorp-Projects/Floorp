@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_GTK3)
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #elif defined(MOZ_WIDGET_QT)
@@ -91,7 +91,7 @@ nsShmImage::Create(const gfxIntSize& aSize,
     shm->mInfo.readOnly = False;
 
     int xerror = 0;
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_GTK3)
     gdk_error_trap_push();
     Status attachOk = XShmAttach(dpy, &shm->mInfo);
     XSync(dpy, False);
@@ -162,7 +162,6 @@ nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
     }
     XFreeGC(dpy, gc);
 
-#ifdef MOZ_WIDGET_GTK2
     // FIXME/bug 597336: we need to ensure that the shm image isn't
     // scribbled over before all its pending XShmPutImage()s complete.
     // However, XSync() is an unnecessarily heavyweight
@@ -170,8 +169,38 @@ nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
     // XSync is shown to hurt responsiveness, we need to explore the
     // other options.
     XSync(dpy, False);
-#endif
 }
+
+#elif defined(MOZ_WIDGET_GTK3)
+void
+nsShmImage::Put(GdkWindow* aWindow, cairo_rectangle_list_t* aRects)
+{
+    Display* dpy = gdk_x11_get_default_xdisplay();
+    Drawable d = GDK_WINDOW_XID(aWindow);
+    int dx = 0, dy = 0;
+
+    GC gc = XCreateGC(dpy, d, 0, nsnull);
+    cairo_rectangle_t r;
+    for (int i = 0; i < aRects->num_rectangles; i++) {
+        r = aRects->rectangles[i];
+        XShmPutImage(dpy, d, gc, mImage,
+                     r.x, r.y,
+                     r.x - dx, r.y - dy,
+                     r.width, r.height,
+                     False);
+    }
+
+    XFreeGC(dpy, gc);
+
+    // FIXME/bug 597336: we need to ensure that the shm image isn't
+    // scribbled over before all its pending XShmPutImage()s complete.
+    // However, XSync() is an unnecessarily heavyweight
+    // synchronization mechanism; other options are possible.  If this
+    // XSync is shown to hurt responsiveness, we need to explore the
+    // other options.
+    XSync(dpy, False);
+}
+
 #elif defined(MOZ_WIDGET_QT)
 void
 nsShmImage::Put(QWidget* aWindow, QRect& aRect)

@@ -75,7 +75,7 @@ function testJSInputAndOutputStyling() {
      "JS output node is of the CSS class 'webconsole-msg-output'");
 
   jsterm.clearOutput();
-  jsterm.history.splice(0);   // workaround for bug 592552
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
 
   finishTest();
 }

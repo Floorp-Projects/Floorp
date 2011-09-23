@@ -36,9 +36,7 @@ function init3()
   rng.setEnd(textNode, 1);
   targetWindow.getSelection().addRange(rng);
 
-  try {
-    targetDocument.execCommand("inserthtml", false, "<p>");
-  } catch(e) {}
+  targetDocument.execCommand("inserthtml", false, "<p>");
   
   document.documentElement.removeAttribute("class");
 }

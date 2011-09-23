@@ -67,6 +67,7 @@
 #include "nsIRedirectResultListener.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "nsDOMError.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -1086,6 +1087,25 @@ nsHttpChannel::ProcessResponse()
 nsresult
 nsHttpChannel::ContinueProcessResponse(nsresult rv)
 {
+    if (rv == NS_ERROR_DOM_BAD_URI && mRedirectURI) {
+
+        PRBool isHTTP = PR_FALSE;
+        if (NS_FAILED(mRedirectURI->SchemeIs("http", &isHTTP)))
+            isHTTP = PR_FALSE;
+        if (!isHTTP && NS_FAILED(mRedirectURI->SchemeIs("https", &isHTTP)))
+            isHTTP = PR_FALSE;
+        
+        if (!isHTTP) {
+            // This was a blocked attempt to redirect and subvert the system by
+            // redirecting to another protocol (perhaps javascript:)
+            // In that case we want to throw an error instead of displaying the
+            // non-redirected response body.
+
+            LOG(("ContinueProcessResponse detected rejected Non-HTTP Redirection"));
+            return NS_ERROR_CORRUPTED_CONTENT;
+        }
+    }
+
     if (NS_SUCCEEDED(rv)) {
         InitCacheEntry();
         CloseCacheEntry(PR_FALSE);
@@ -2432,9 +2452,7 @@ nsHttpChannel::CheckCache()
     rv = mCacheEntry->GetMetaDataElement("request-method", getter_Copies(buf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAtom> method = do_GetAtom(buf);
-    NS_ENSURE_TRUE(method, NS_ERROR_OUT_OF_MEMORY);
-
+    nsHttpAtom method = nsHttp::ResolveAtom(buf);
     if (method == nsHttp::Head) {
         // The cached response does not contain an entity.  We can only reuse
         // the response if the current request is also HEAD.
@@ -3004,7 +3022,7 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
     // Store the HTTP request method with the cache entry so we can distinguish
     // for example GET and HEAD responses.
     rv = entry->SetMetaDataElement("request-method",
-                                   nsAtomCString(mRequestHead.Method()).get());
+                                   mRequestHead.Method().get());
     if (NS_FAILED(rv)) return rv;
 
     // Store the HTTP authorization scheme used if any...

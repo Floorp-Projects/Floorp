@@ -427,8 +427,10 @@
    
    function startDiscovery() {
      let win = getChromeWin();
+
+     // If a sidebar is completely open, just bail
      let [leftWidth, rightWidth] = win.Browser.computeSidebarVisibility();
-     if (leftWidth > 0 || rightWidth > 0) {
+     if (leftWidth == 1 || rightWidth == 1) {
        endDiscovery();
        return;
      }
@@ -451,7 +453,6 @@
    }
    
    function initLightbox() {
-
      let prefs = getChromeWin().Services.prefs;
      let channel = prefs.getCharPref("app.update.channel");
      let startupCount = 0;

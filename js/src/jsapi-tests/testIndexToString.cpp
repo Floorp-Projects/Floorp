@@ -68,7 +68,7 @@ BEGIN_TEST(testIndexToString)
 }
 END_TEST(testIndexToString)
 
-BEGIN_TEST(testStringIsElement)
+BEGIN_TEST(testStringIsIndex)
 {
     for (size_t i = 0, sz = JS_ARRAY_LENGTH(tests); i < sz; i++) {
         uint32 u = tests[i].num;
@@ -76,13 +76,13 @@ BEGIN_TEST(testStringIsElement)
         CHECK(str);
 
         uint32 n;
-        CHECK(str->isElement(&n));
+        CHECK(str->isIndex(&n));
         CHECK(u == n);
     }
 
     return true;
 }
-END_TEST(testStringIsElement)
+END_TEST(testStringIsIndex)
 
 BEGIN_TEST(testStringToPropertyName)
 {
@@ -91,19 +91,19 @@ BEGIN_TEST(testStringToPropertyName)
     static const jschar hiChars[] = { 'h', 'i' };
     JSFlatString *hiStr = NewString(cx, hiChars);
     CHECK(hiStr);
-    CHECK(!hiStr->isElement(&index));
+    CHECK(!hiStr->isIndex(&index));
     CHECK(hiStr->toPropertyName(cx) != NULL);
 
     static const jschar maxChars[] = { '4', '2', '9', '4', '9', '6', '7', '2', '9', '5' };
     JSFlatString *maxStr = NewString(cx, maxChars);
     CHECK(maxStr);
-    CHECK(maxStr->isElement(&index));
+    CHECK(maxStr->isIndex(&index));
     CHECK(index == UINT32_MAX);
 
     static const jschar maxPlusOneChars[] = { '4', '2', '9', '4', '9', '6', '7', '2', '9', '6' };
     JSFlatString *maxPlusOneStr = NewString(cx, maxPlusOneChars);
     CHECK(maxPlusOneStr);
-    CHECK(!maxPlusOneStr->isElement(&index));
+    CHECK(!maxPlusOneStr->isIndex(&index));
     CHECK(maxPlusOneStr->toPropertyName(cx) != NULL);
 
     return true;

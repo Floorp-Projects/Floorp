@@ -40,7 +40,6 @@
 
 #include "jsprvtd.h"
 #include "jspubtd.h"
-#include "jsvalue.h"
 #include "jsvector.h"
 
 #define JSON_MAX_DEPTH  2048

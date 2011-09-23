@@ -322,6 +322,7 @@ protected:
 
   nsWindow* mComposingWindow;
   nsString  mCompositionString;
+  nsString  mLastDispatchedCompositionString;
   nsTArray<PRUint32> mClauseArray;
   nsTArray<PRUint8> mAttributeArray;
 

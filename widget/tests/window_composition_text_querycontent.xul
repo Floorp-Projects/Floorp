@@ -154,9 +154,10 @@ function runUndoRedoTest()
   textarea.focus();
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
   synthesizeText(
     { "composition":
       { "string": "\u306D",
@@ -168,6 +169,7 @@ function runUndoRedoTest()
       "caret": { "start": 1, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u306D\u3053" });
   synthesizeText(
     { "composition":
       { "string": "\u306D\u3053",
@@ -180,6 +182,7 @@ function runUndoRedoTest()
     });
 
   // convert
+  synthesizeComposition({ type: "compositionupdate", data: "\u732B" });
   synthesizeText(
     { "composition":
       { "string": "\u732B",
@@ -205,12 +208,13 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u732B" });
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u307E" });
   synthesizeText(
     { "composition":
       { "string": "\u307E",
@@ -223,6 +227,7 @@ function runUndoRedoTest()
     });
 
   // cancel the composition
+  synthesizeComposition({ type: "compositionupdate", data: "" });
   synthesizeText(
     { "composition":
       { "string": "",
@@ -235,12 +240,13 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "" });
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3080" });
   synthesizeText(
     { "composition":
       { "string": "\u3080",
@@ -252,6 +258,7 @@ function runUndoRedoTest()
       "caret": { "start": 1, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3080\u3059" });
   synthesizeText(
     { "composition":
       { "string": "\u3080\u3059",
@@ -263,6 +270,8 @@ function runUndoRedoTest()
       "caret": { "start": 2, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3080\u3059\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3080\u3059\u3081",
@@ -275,6 +284,7 @@ function runUndoRedoTest()
     });
 
   // convert
+  synthesizeComposition({ type: "compositionupdate", data: "\u5A18" });
   synthesizeText(
     { "composition":
       { "string": "\u5A18",
@@ -300,7 +310,7 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u5A18" });
 
   synthesizeKey(" ", {});
   synthesizeKey("m", {});
@@ -336,9 +346,10 @@ function runUndoRedoTest()
   synthesizeKey(" ", {});
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3088" });
   synthesizeText(
     { "composition":
       { "string": "\u3088",
@@ -350,6 +361,7 @@ function runUndoRedoTest()
       "caret": { "start": 1, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3088\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3088\u3046",
@@ -361,6 +373,8 @@ function runUndoRedoTest()
       "caret": { "start": 2, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3088\u3046\u304b" });
   synthesizeText(
     { "composition":
       { "string": "\u3088\u3046\u304b",
@@ -372,6 +386,8 @@ function runUndoRedoTest()
       "caret": { "start": 3, "length": 0 }
     });
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3088\u3046\u304b\u3044" });
   synthesizeText(
     { "composition":
       { "string": "\u3088\u3046\u304b\u3044",
@@ -384,6 +400,7 @@ function runUndoRedoTest()
     });
 
   // convert
+  synthesizeComposition({ type: "compositionupdate", data: "\u5996\u602a" });
   synthesizeText(
     { "composition":
       { "string": "\u5996\u602a",
@@ -408,7 +425,7 @@ function runUndoRedoTest()
     });
 
   // end composition
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u5996\u602a" });
 
   synthesizeKey("VK_BACK_SPACE", {});
   synthesizeKey("VK_BACK_SPACE", {});
@@ -591,9 +608,10 @@ function runCompositionTest()
   caretRects[0] = caretRect;
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input first character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
   synthesizeText(
     { "composition":
       { "string": "\u3089",
@@ -618,6 +636,7 @@ function runCompositionTest()
   caretRects[1] = caretRect;
 
   // input second character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089\u30FC" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC",
@@ -651,6 +670,8 @@ function runCompositionTest()
      "runCompositionTest: caret width is wrong (#1-2)");
 
   // input third character
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -751,6 +772,8 @@ function runCompositionTest()
   is(caretRect.height, caretRects[1].height,
      "runCompositionTest: caret rects are different (#1-3-2, height)");
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -769,6 +792,8 @@ function runCompositionTest()
 
 
   // backspace
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -786,6 +811,8 @@ function runCompositionTest()
   }
 
   // re-input
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -802,6 +829,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055",
@@ -818,6 +847,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044",
@@ -834,6 +865,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
@@ -850,6 +883,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
@@ -868,6 +903,8 @@ function runCompositionTest()
   }
 
   // convert
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
   synthesizeText(
     { "composition":
       { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
@@ -910,6 +947,8 @@ function runCompositionTest()
   }
 
   // reset clauses
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
@@ -958,7 +997,8 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046" });
 
   var textRect3 = synthesizeQueryTextRect(0, 1);
   var textRect4 = synthesizeQueryTextRect(1, 1);
@@ -974,9 +1014,10 @@ function runCompositionTest()
   checkRect(textRect4, textRect2, "runCompositionTest: textRect #1-13-2");
 
   // restart composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3057" });
   synthesizeText(
     { "composition":
       { "string": "\u3057",
@@ -994,6 +1035,7 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3058" });
   synthesizeText(
     { "composition":
       { "string": "\u3058",
@@ -1011,6 +1053,7 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u3058\u3087" });
   synthesizeText(
     { "composition":
       { "string": "\u3058\u3087",
@@ -1028,6 +1071,8 @@ function runCompositionTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3058\u3087\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3058\u3087\u3046",
@@ -1063,7 +1108,7 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u3058\u3087\u3046" });
 
   // set selection
   var selectionSetTest = synthesizeSelectionSet(4, 7, false);
@@ -1074,8 +1119,9 @@ function runCompositionTest()
   }
 
   // start composition with selection
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
+  synthesizeComposition({ type: "compositionupdate", data: "\u304A" });
   synthesizeText(
     { "composition":
       { "string": "\u304A",
@@ -1094,6 +1140,7 @@ function runCompositionTest()
   }
 
   // remove the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "" });
   synthesizeText(
     { "composition":
       { "string": "",
@@ -1112,6 +1159,7 @@ function runCompositionTest()
   }
 
   // re-input the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3046",
@@ -1130,6 +1178,7 @@ function runCompositionTest()
   }
 
   // cancel the composition
+  synthesizeComposition({ type: "compositionupdate", data: "" });
   synthesizeText(
     { "composition":
       { "string": "",
@@ -1141,7 +1190,7 @@ function runCompositionTest()
       "caret": { "start": 0, "length": 0 }
     });
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "" });
 
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
                     "runCompositionTest", "#3-5") ||
@@ -1150,11 +1199,549 @@ function runCompositionTest()
   }
 }
 
+function runCompositionEventTest()
+{
+  const kDescription = "runCompositionEventTest: ";
+  const kEvents = ["compositionstart", "compositionupdate", "compositionend"];
+
+  input.value = "";
+  input.focus();
+
+  var windowEventCounts = [], windowEventData = [], windowEventLocale = [];
+  var inputEventCounts = [], inputEventData = [], inputEventLocale = [];
+  var preventDefault = false;
+  var stopPropagation = false;
+
+  function initResults()
+  {
+    for (var i = 0; i < kEvents.length; i++) {
+      windowEventCounts[kEvents[i]] = 0;
+      windowEventData[kEvents[i]] = "";
+      windowEventLocale[kEvents[i]] = "";
+      inputEventCounts[kEvents[i]] = 0;
+      inputEventData[kEvents[i]] = "";
+      inputEventLocale[kEvents[i]] = "";
+    }
+  }
+
+  function compositionEventHandlerForWindow(aEvent)
+  {
+    windowEventCounts[aEvent.type]++;
+    windowEventData[aEvent.type] = aEvent.data;
+    windowEventLocale[aEvent.type] = aEvent.locale;
+    if (preventDefault) {
+      aEvent.preventDefault();
+    }
+    if (stopPropagation) {
+      aEvent.stopPropagation();
+    }
+  }
+
+  function compositionEventHandlerForInput(aEvent)
+  {
+    inputEventCounts[aEvent.type]++;
+    inputEventData[aEvent.type] = aEvent.data;
+    inputEventLocale[aEvent.type] = aEvent.locale;
+    if (preventDefault) {
+      aEvent.preventDefault();
+    }
+    if (stopPropagation) {
+      aEvent.stopPropagation();
+    }
+  }
+
+  window.addEventListener("compositionstart", compositionEventHandlerForWindow,
+                          true, true);
+  window.addEventListener("compositionend", compositionEventHandlerForWindow,
+                          true, true);
+  window.addEventListener("compositionupdate", compositionEventHandlerForWindow,
+                          true, true);
+
+  input.addEventListener("compositionstart", compositionEventHandlerForInput,
+                         true, true);
+  input.addEventListener("compositionend", compositionEventHandlerForInput,
+                         true, true);
+  input.addEventListener("compositionupdate", compositionEventHandlerForInput,
+                         true, true);
+
+  // test for normal case
+  initResults();
+
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by window #1");
+  is(windowEventData["compositionstart"], "",
+     kDescription + "data of compositionstart isn't empty (window) #1");
+  is(windowEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty (window) #1");
+  is(inputEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by input #1");
+  is(inputEventData["compositionstart"], "",
+     kDescription + "data of compositionstart isn't empty (input) #1");
+  is(inputEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty (input) #1");
+
+  is(windowEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by window #1");
+  is(windowEventData["compositionupdate"], "\u3089",
+     kDescription + "data of compositionupdate doesn't match (window) #1");
+  is(windowEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (window) #1");
+  is(inputEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by input #1");
+  is(inputEventData["compositionupdate"], "\u3089",
+     kDescription + "data of compositionupdate doesn't match (input) #1");
+  is(inputEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (input) #1");
+
+  is(windowEventCounts["compositionend"], 0,
+     kDescription + "compositionend has been handled by window #1");
+  is(inputEventCounts["compositionend"], 0,
+     kDescription + "compositionend has been handled by input #1");
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089\u30FC" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart has been handled more than once by window #2");
+  is(inputEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart has been handled more than once by input #2");
+
+  is(windowEventCounts["compositionupdate"], 2,
+     kDescription + "compositionupdate hasn't been handled by window #2");
+  is(windowEventData["compositionupdate"], "\u3089\u30FC",
+     kDescription + "data of compositionupdate doesn't match (window) #2");
+  is(windowEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (window) #2");
+  is(inputEventCounts["compositionupdate"], 2,
+     kDescription + "compositionupdate hasn't been handled by input #2");
+  is(inputEventData["compositionupdate"], "\u3089\u30FC",
+     kDescription + "data of compositionupdate doesn't match (input) #2");
+  is(inputEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (input) #2");
+
+  is(windowEventCounts["compositionend"], 0,
+     kDescription + "compositionend has been handled during composition by window #2");
+  is(inputEventCounts["compositionend"], 0,
+     kDescription + "compositionend has been handled during composition by input #2");
+
+  // text event shouldn't cause composition update, e.g., at committing.
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  synthesizeComposition({ type: "compositionend", data: "\u3089\u30FC" });
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart has been handled more than once by window #3");
+  is(inputEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart has been handled more than once by input #3");
+
+  is(windowEventCounts["compositionupdate"], 2,
+     kDescription + "compositionupdate has been fired unexpectedly on window #3");
+  is(inputEventCounts["compositionupdate"], 2,
+     kDescription + "compositionupdate has been fired unexpectedly on input #3");
+
+  is(windowEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by window #3");
+  is(windowEventData["compositionend"], "\u3089\u30FC",
+     kDescription + "data of compositionend doesn't match (window) #3");
+  is(windowEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty (window) #3");
+  is(inputEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by input #3");
+  is(inputEventData["compositionend"], "\u3089\u30FC",
+     kDescription + "data of compositionend doesn't match (input) #3");
+  is(inputEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty (input) #3");
+
+  // select the second character, then, data of composition start should be
+  // the selected character.
+  initResults();
+  synthesizeKey("VK_LEFT", { shiftKey: true });
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeComposition({ type: "compositionend", data: "\u3089" });
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by window #4");
+  is(windowEventData["compositionstart"], "\u30FC",
+     kDescription + "data of compositionstart is empty (window) #4");
+  is(windowEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty (window) #4");
+  is(inputEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by input #4");
+  is(inputEventData["compositionstart"], "\u30FC",
+     kDescription + "data of compositionstart is empty (input) #4");
+  is(inputEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty (input) #4");
+
+  is(windowEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by window #4");
+  is(windowEventData["compositionupdate"], "\u3089",
+     kDescription + "data of compositionupdate doesn't match (window) #4");
+  is(windowEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (window) #4");
+  is(inputEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by input #4");
+  is(inputEventData["compositionupdate"], "\u3089",
+     kDescription + "data of compositionupdate doesn't match (input) #4");
+  is(inputEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (input) #4");
+
+  is(windowEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by window #4");
+  is(windowEventData["compositionend"], "\u3089",
+     kDescription + "data of compositionend doesn't match (window) #4");
+  is(windowEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty (window) #4");
+  is(inputEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by input #4");
+  is(inputEventData["compositionend"], "\u3089",
+     kDescription + "data of compositionend doesn't match (input) #4");
+  is(inputEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty (input) #4");
+
+  // preventDefault() should effect nothing.
+  preventDefault = true;
+
+  initResults();
+  synthesizeKey("A", { accelKey: true }); // Select All
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306D",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u306D",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeComposition({ type: "compositionend", data: "\u306D" });
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by window #5");
+  is(windowEventData["compositionstart"], "\u3089\u3089",
+     kDescription + "data of compositionstart is empty (window) #5");
+  is(windowEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty (window) #5");
+  is(inputEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by input #5");
+  is(inputEventData["compositionstart"], "\u3089\u3089",
+     kDescription + "data of compositionstart is empty (input) #5");
+  is(inputEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty (input) #5");
+
+  is(windowEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by window #5");
+  is(windowEventData["compositionupdate"], "\u306D",
+     kDescription + "data of compositionupdate doesn't match (window) #5");
+  is(windowEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (window) #5");
+  is(inputEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by input #5");
+  is(inputEventData["compositionupdate"], "\u306D",
+     kDescription + "data of compositionupdate doesn't match (input) #5");
+  is(inputEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty (input) #5");
+
+  is(windowEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by window #5");
+  is(windowEventData["compositionend"], "\u306D",
+     kDescription + "data of compositionend doesn't match (window) #5");
+  is(windowEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty (window) #5");
+  is(inputEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by input #5");
+  is(inputEventData["compositionend"], "\u306D",
+     kDescription + "data of compositionend doesn't match (input) #5");
+  is(inputEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty (input) #5");
+
+  prevnetDefault = false;
+
+  // stopPropagation() should effect nothing (except event count)
+  stopPropagation = true;
+
+  initResults();
+  synthesizeKey("A", { accelKey: true }); // Select All
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u306E" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeComposition({ type: "compositionend", data: "\u306E" });
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by window #6");
+  is(windowEventData["compositionstart"], "\u306D",
+     kDescription + "data of compositionstart is empty #6");
+  is(windowEventLocale["compositionstart"], "",
+     kDescription + "locale of compositionstart isn't empty #6");
+  is(inputEventCounts["compositionstart"], 0,
+     kDescription + "compositionstart has been handled by input #6");
+
+  is(windowEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by window #6");
+  is(windowEventData["compositionupdate"], "\u306E",
+     kDescription + "data of compositionupdate doesn't match #6");
+  is(windowEventLocale["compositionupdate"], "",
+     kDescription + "locale of compositionupdate isn't empty #6");
+  is(inputEventCounts["compositionupdate"], 0,
+     kDescription + "compositionupdate has been handled by input #6");
+
+  is(windowEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by window #6");
+  is(windowEventData["compositionend"], "\u306E",
+     kDescription + "data of compositionend doesn't match #6");
+  is(windowEventLocale["compositionend"], "",
+     kDescription + "locale of compositionend isn't empty #6");
+  is(inputEventCounts["compositionend"], 0,
+     kDescription + "compositionend has been handled by input #6");
+
+  stopPropagation = false;
+
+  // create event and dispatch it.
+  initResults();
+
+  input.value = "value of input";
+  synthesizeKey("A", { accelKey: true }); // Select All
+
+  var compositionstart = document.createEvent("CompositionEvent");
+  compositionstart.initCompositionEvent("compositionstart",
+                                        true, true, document.defaultView,
+                                        "start data", "start locale");
+  is(compositionstart.type, "compositionstart",
+     kDescription + "type doesn't match #7");
+  is(compositionstart.data, "start data",
+     kDescription + "data doesn't match #7");
+  is(compositionstart.locale, "start locale",
+     kDescription + "locale doesn't match #7");
+  is(compositionstart.detail, 0,
+     kDescription + "detail isn't 0 #7");
+
+  input.dispatchEvent(compositionstart);
+
+  is(windowEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by window #7");
+  is(windowEventData["compositionstart"], "start data",
+     kDescription + "data of compositionstart was changed (window) #7");
+  is(windowEventLocale["compositionstart"], "start locale",
+     kDescription + "locale of compositionstart was changed (window) #7");
+  is(inputEventCounts["compositionstart"], 1,
+     kDescription + "compositionstart hasn't been handled by input #7");
+  is(inputEventData["compositionstart"], "start data",
+     kDescription + "data of compositionstart was changed (input) #7");
+  is(inputEventLocale["compositionstart"], "start locale",
+     kDescription + "locale of compositionstart was changed (input) #7");
+
+  is(input.value, "value of input",
+     kDescription + "input value was changed #7");
+
+  var compositionupdate1 = document.createEvent("compositionevent");
+  compositionupdate1.initCompositionEvent("compositionupdate",
+                                          true, false, document.defaultView,
+                                          "composing string", "composing locale");
+  is(compositionupdate1.type, "compositionupdate",
+     kDescription + "type doesn't match #8");
+  is(compositionupdate1.data, "composing string",
+     kDescription + "data doesn't match #8");
+  is(compositionupdate1.locale, "composing locale",
+     kDescription + "locale doesn't match #8");
+  is(compositionupdate1.detail, 0,
+     kDescription + "detail isn't 0 #8");
+
+  input.dispatchEvent(compositionupdate1);
+
+  is(windowEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by window #8");
+  is(windowEventData["compositionupdate"], "composing string",
+     kDescription + "data of compositionupdate was changed (window) #8");
+  is(windowEventLocale["compositionupdate"], "composing locale",
+     kDescription + "locale of compositionupdate was changed (window) #8");
+  is(inputEventCounts["compositionupdate"], 1,
+     kDescription + "compositionupdate hasn't been handled by input #8");
+  is(inputEventData["compositionupdate"], "composing string",
+     kDescription + "data of compositionupdate was changed (input) #8");
+  is(inputEventLocale["compositionupdate"], "composing locale",
+     kDescription + "locale of compositionupdate was changed (input) #8");
+
+  is(input.value, "value of input",
+     kDescription + "input value was changed #8");
+
+  var compositionupdate2 = document.createEvent("compositionEvent");
+  compositionupdate2.initCompositionEvent("compositionupdate",
+                                          true, false, document.defaultView,
+                                          "commit string", "commit locale");
+  is(compositionupdate2.type, "compositionupdate",
+     kDescription + "type doesn't match #9");
+  is(compositionupdate2.data, "commit string",
+     kDescription + "data doesn't match #9");
+  is(compositionupdate2.locale, "commit locale",
+     kDescription + "locale doesn't match #9");
+  is(compositionupdate2.detail, 0,
+     kDescription + "detail isn't 0 #9");
+
+  input.dispatchEvent(compositionupdate2);
+
+  is(windowEventCounts["compositionupdate"], 2,
+     kDescription + "compositionupdate hasn't been handled by window #9");
+  is(windowEventData["compositionupdate"], "commit string",
+     kDescription + "data of compositionupdate was changed (window) #9");
+  is(windowEventLocale["compositionupdate"], "commit locale",
+     kDescription + "locale of compositionupdate was changed (window) #9");
+  is(inputEventCounts["compositionupdate"], 2,
+     kDescription + "compositionupdate hasn't been handled by input #9");
+  is(inputEventData["compositionupdate"], "commit string",
+     kDescription + "data of compositionupdate was changed (input) #9");
+  is(inputEventLocale["compositionupdate"], "commit locale",
+     kDescription + "locale of compositionupdate was changed (input) #9");
+
+  is(input.value, "value of input",
+     kDescription + "input value was changed #9");
+
+  var compositionend = document.createEvent("Compositionevent");
+  compositionend.initCompositionEvent("compositionend",
+                                      true, false, document.defaultView,
+                                      "end data", "end locale");
+  is(compositionend.type, "compositionend",
+     kDescription + "type doesn't match #10");
+  is(compositionend.data, "end data",
+     kDescription + "data doesn't match #10");
+  is(compositionend.locale, "end locale",
+     kDescription + "locale doesn't match #10");
+  is(compositionend.detail, 0,
+     kDescription + "detail isn't 0 #10");
+
+  input.dispatchEvent(compositionend);
+
+  is(windowEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by window #10");
+  is(windowEventData["compositionend"], "end data",
+     kDescription + "data of compositionend was changed (window) #10");
+  is(windowEventLocale["compositionend"], "end locale",
+     kDescription + "locale of compositionend was changed (window) #10");
+  is(inputEventCounts["compositionend"], 1,
+     kDescription + "compositionend hasn't been handled by input #10");
+  is(inputEventData["compositionend"], "end data",
+     kDescription + "data of compositionend was changed (input) #10");
+  is(inputEventLocale["compositionend"], "end locale",
+     kDescription + "locale of compositionend was changed (input) #10");
+
+  is(input.value, "value of input",
+     kDescription + "input value was changed #10");
+
+  window.removeEventListener("compositionstart",
+                             compositionEventHandlerForWindow, true);
+  window.removeEventListener("compositionend",
+                             compositionEventHandlerForWindow, true);
+  window.removeEventListener("compositionupdate",
+                             compositionEventHandlerForWindow, true);
+
+  input.removeEventListener("compositionstart",
+                            compositionEventHandlerForInput, true);
+  input.removeEventListener("compositionend",
+                            compositionEventHandlerForInput, true);
+  input.removeEventListener("compositionupdate",
+                            compositionEventHandlerForInput, true);
+}
+
 function runCharAtPointTest(aFocusedEditor, aTargetName)
 {
   aFocusedEditor.value = "This is a test of the\nContent Events";
                        // 012345678901234567890  12345678901234
                        // 0         1         2           3    
+
+  aFocusedEditor.focus();
 
   const kLFLen = kIsWin ? 2 : 1;
 
@@ -1277,9 +1864,11 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
                         ": the editor rect coordinates are wrong");
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3078\u3093\u3057\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3078\u3093\u3057\u3093",
@@ -1297,6 +1886,7 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   }
 
   // convert them #1
+  synthesizeComposition({ type: "compositionupdate", data: "\u8FD4\u4FE1" });
   synthesizeText(
     { "composition":
       { "string": "\u8FD4\u4FE1",
@@ -1315,6 +1905,7 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   }
 
   // convert them #2
+  synthesizeComposition({ type: "compositionupdate", data: "\u5909\u8EAB" });
   synthesizeText(
     { "composition":
       { "string": "\u5909\u8EAB",
@@ -1349,7 +1940,7 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u5909\u8EAB" });
 
   is(aFocusedEditor.value, "\u5909\u8EAB",
      aTestName + ": composition isn't in the focused editor");
@@ -1431,9 +2022,10 @@ function runMaxLengthTest()
   var kDesc ="runMaxLengthTest";
 
   // start composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input first character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
   synthesizeText(
     { "composition":
       { "string": "\u3089",
@@ -1451,6 +2043,7 @@ function runMaxLengthTest()
   }
 
   // input second character
+  synthesizeComposition({ type: "compositionupdate", data: "\u3089\u30FC" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC",
@@ -1468,6 +2061,8 @@ function runMaxLengthTest()
   }
 
   // input third character
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -1485,6 +2080,8 @@ function runMaxLengthTest()
   }
 
   // input fourth character
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -1503,6 +2100,8 @@ function runMaxLengthTest()
 
 
   // backspace
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081",
@@ -1520,6 +2119,8 @@ function runMaxLengthTest()
   }
 
   // re-input
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093",
@@ -1536,6 +2137,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055",
@@ -1552,6 +2155,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044",
@@ -1568,6 +2173,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
@@ -1585,6 +2192,8 @@ function runMaxLengthTest()
     return;
   }
 
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046" });
   synthesizeText(
     { "composition":
       { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
@@ -1603,6 +2212,8 @@ function runMaxLengthTest()
   }
 
   // convert
+  synthesizeComposition({ type: "compositionupdate",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
   synthesizeText(
     { "composition":
       { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
@@ -1639,12 +2250,14 @@ function runMaxLengthTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend",
+                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
 
   // restart composition
-  synthesizeComposition(true);
+  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u3057" });
   synthesizeText(
     { "composition":
       { "string": "\u3057",
@@ -1662,6 +2275,7 @@ function runMaxLengthTest()
   }
 
   // commit the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "\u3058" });
   synthesizeText(
     { "composition":
       { "string": "\u3058",
@@ -1678,7 +2292,7 @@ function runMaxLengthTest()
     return;
   }
 
-  synthesizeComposition(false);
+  synthesizeComposition({ type: "compositionend", data: "\u3058" });
 
   // Undo
   synthesizeKey("Z", {accelKey: true});
@@ -1715,6 +2329,7 @@ function runTest()
 {
   runUndoRedoTest();
   runCompositionTest();
+  runCompositionEventTest();
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();
   runFrameTest();

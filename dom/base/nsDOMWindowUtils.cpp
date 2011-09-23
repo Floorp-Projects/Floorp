@@ -1142,7 +1142,9 @@ InitEvent(nsGUIEvent &aEvent, nsIntPoint *aPt = nsnull)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType)
+nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
+                                       const nsAString& aData,
+                                       const nsAString& aLocale)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1159,12 +1161,17 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType)
     msg = NS_COMPOSITION_START;
   } else if (aType.EqualsLiteral("compositionend")) {
     msg = NS_COMPOSITION_END;
+  } else if (aType.EqualsLiteral("compositionupdate")) {
+    msg = NS_COMPOSITION_UPDATE;
   } else {
     return NS_ERROR_FAILURE;
   }
 
   nsCompositionEvent compositionEvent(PR_TRUE, msg, widget);
   InitEvent(compositionEvent);
+  if (msg != NS_COMPOSITION_START) {
+    compositionEvent.data = aData;
+  }
 
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&compositionEvent, status);

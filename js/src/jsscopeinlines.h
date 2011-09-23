@@ -171,7 +171,7 @@ StringObject::init(JSContext *cx, JSString *str)
 }
 
 inline
-Shape::Shape(jsid propid, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot,
+Shape::Shape(jsid propid, PropertyOp getter, StrictPropertyOp setter, uint32 slot,
              uintN attrs, uintN flags, intN shortid, uint32 shapeid, uint32 slotSpan)
   : shapeid(shapeid),
     slotSpan(slotSpan),
@@ -255,7 +255,7 @@ Shape::matches(const js::Shape *other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(js::PropertyOp agetter, js::StrictPropertyOp asetter, uint32 aslot,
+Shape::matchesParamsAfterId(PropertyOp agetter, StrictPropertyOp asetter, uint32 aslot,
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
     JS_ASSERT(!JSID_IS_VOID(propid));

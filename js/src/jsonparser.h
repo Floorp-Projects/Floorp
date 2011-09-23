@@ -45,7 +45,6 @@
 
 #include "jscntxt.h"
 #include "jsstr.h"
-#include "jsvalue.h"
 
 /*
  * NB: This class must only be used on the stack as it contains a js::Value.

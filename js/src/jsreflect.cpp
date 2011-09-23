@@ -59,7 +59,6 @@
 #include "jsiter.h"
 #include "jsbool.h"
 #include "jsval.h"
-#include "jsvalue.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsobj.h"
@@ -3117,7 +3116,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
         return JS_FALSE;
     }
 
-    JSString *src = js_ValueToString(cx, Valueify(JS_ARGV(cx, vp)[0]));
+    JSString *src = js_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!src)
         return JS_FALSE;
 
@@ -3128,7 +3127,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 
     JSObject *builder = NULL;
 
-    Value arg = argc > 1 ? Valueify(JS_ARGV(cx, vp)[1]) : UndefinedValue();
+    Value arg = argc > 1 ? JS_ARGV(cx, vp)[1] : UndefinedValue();
 
     if (!arg.isNullOrUndefined()) {
         if (!arg.isObject()) {
@@ -3221,7 +3220,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
         return JS_FALSE;
     }
 
-    JS_SET_RVAL(cx, vp, Jsvalify(val));
+    JS_SET_RVAL(cx, vp, val);
     return JS_TRUE;
 }
 
