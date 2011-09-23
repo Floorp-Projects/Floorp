@@ -2556,3 +2556,13 @@ panel[dimmed="true"] {
   box-shadow: 0 0 0 1px black;
   outline-color: white;
 }
+
+/*
+ * need a "bumpy" background image for this!
+ */
+#inspector-horizontal-splitter {
+  background: none !important;
+  -moz-appearance: none;
+  cursor: n-resize;
+}
+
