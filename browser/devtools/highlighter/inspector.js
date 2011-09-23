@@ -135,7 +135,6 @@ Highlighter.prototype = {
     this.handleResize();
   },
 
-
   /**
    * Build the veil:
    *
@@ -555,6 +554,7 @@ Highlighter.prototype = {
 var InspectorUI = {
   browser: null,
   tools: {},
+  toolEvents: {},
   showTextNodesWithWhitespace: false,
   inspecting: false,
   treeLoaded: false,
@@ -820,6 +820,8 @@ var InspectorUI = {
     this.winID = this.getWindowID(this.win);
     this.toolbar = document.getElementById("inspector-toolbar");
 
+    this.initTools();
+
     if (!this.domplate) {
       Cu.import("resource:///modules/domplate.jsm", this);
       this.domplateUtils.setDOM(window);
@@ -831,6 +833,13 @@ var InspectorUI = {
     this.inspectCmd.setAttribute("checked", true);
 
     gBrowser.addProgressListener(InspectorProgressListener);
+  },
+
+  /**
+   * Register and initialize any included tools.
+   */
+  initTools: function IUI_initTools()
+  {
   },
 
   /**
@@ -909,6 +918,12 @@ var InspectorUI = {
     }
 
     this.stopInspecting();
+
+    this.saveToolState(this.winID);
+    this.toolsDo(function IUI_toolsHide(aTool) {
+      this.unregisterTool(aTool);
+    }.bind(this));
+
     if (this.highlighter) {
       this.highlighter.destroy();
       this.highlighter = null;
@@ -935,13 +950,6 @@ var InspectorUI = {
       delete this.HTMLTemplates;
       delete this.domplateUtils;
     }
-
-    this.saveToolState(this.winID);
-    this.toolsDo(function IUI_toolsHide(aTool) {
-      if (aTool.panel) {
-        aTool.panel.hidePopup();
-      }
-    });
 
     this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
@@ -1026,11 +1034,8 @@ var InspectorUI = {
       }
       this.ioBox.select(this.selection, true, true, aScroll);
     }
-    this.toolsDo(function IUI_toolsOnSelect(aTool) {
-      if (aTool.panel.state == "open") {
-        aTool.onSelect.apply(aTool.context, [aNode]);
-      }
-    });
+
+    this.toolsSelect();
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -1044,6 +1049,8 @@ var InspectorUI = {
     if (InspectorStore.getValue(this.winID, "inspecting")) {
       this.startInspecting();
     }
+
+    this.restoreToolState(this.winID);
 
     this.win.focus();
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.OPENED, null);
@@ -1079,7 +1086,6 @@ var InspectorUI = {
             }, INSPECTOR_NOTIFICATIONS.CLOSED, false);
           } else {
             this.openInspectorUI();
-            this.restoreToolState(winID);
           }
         }
 
@@ -1599,6 +1605,19 @@ var InspectorUI = {
   },
 
   /**
+   * Get the toolbar button name for a given id string. Used by the
+   * registerTools API to retrieve a consistent name for toolbar buttons
+   * based on the ID of the tool.
+   * @param anId String
+   *        id of the tool to be buttonized
+   * @returns String
+   */
+  getToolbarButtonId: function IUI_createButtonId(anId)
+  {
+    return "inspector-" + anId + "-toolbutton";
+  },
+
+  /**
    * Register an external tool with the inspector.
    *
    * aRegObj = {
@@ -1608,93 +1627,174 @@ var InspectorUI = {
    *   icon: "chrome://somepath.png",
    *   tooltiptext: "Button tooltip",
    *   accesskey: "S",
+   *   isOpen: object.property, (getter) returning true if tool is open.
    *   onSelect: object.method,
-   *   onShow: object.method,
-   *   onHide: object.method,
+   *   show: object.method, called to show the tool when button is pressed.
+   *   hide: object.method, called to hide the tool when button is pressed.
+   *   unregister: object.method, called when tool should be destroyed.
    *   panel: myTool.panel
    * }
    *
-   * @param aRegObj
+   * @param aRegObj Object
+   *        The Registration Object used to register this tool described
+   *        above. The tool should cache this object for later deregistration.
    */
-  registerTool: function IUI_RegisterTool(aRegObj) {
-    if (this.tools[aRegObj.id]) {
+  registerTool: function IUI_registerTool(aRegObj)
+  {
+    if (this.toolRegistered(aRegObj.id)) {
       return;
-    } else {
-      let id = aRegObj.id;
-      let buttonId = "inspector-" + id + "-toolbutton";
-      aRegObj.buttonId = buttonId;
-
-      aRegObj.panel.addEventListener("popuphiding",
-        function IUI_toolPanelHiding() {
-          btn.setAttribute("checked", "false");
-        }, false);
-      aRegObj.panel.addEventListener("popupshowing",
-        function IUI_toolPanelShowing() {
-          btn.setAttribute("checked", "true");
-        }, false);
-
-      this.tools[id] = aRegObj;
     }
 
-    let toolbox = document.getElementById("inspector-tools");
+    this.tools[aRegObj.id] = aRegObj;
+
+    let buttonContainer = document.getElementById("inspector-tools");
     let btn = document.createElement("toolbarbutton");
-    btn.setAttribute("id", aRegObj.buttonId);
+    let buttonId = this.getToolbarButtonId(aRegObj.id);
+    btn.setAttribute("id", buttonId);
     btn.setAttribute("label", aRegObj.label);
     btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
     btn.setAttribute("accesskey", aRegObj.accesskey);
-    btn.setAttribute("class", "toolbarbutton-text");
     btn.setAttribute("image", aRegObj.icon || "");
-    toolbox.appendChild(btn);
+    buttonContainer.appendChild(btn);
 
-    btn.addEventListener("click",
-      function IUI_ToolButtonClick(aEvent) {
-        if (btn.getAttribute("checked") == "true") {
-          aRegObj.onHide.apply(aRegObj.context);
+    /**
+     * Save the registered tool's toolbar button's click handler so we can remove
+     * it at deregistration time.
+     * @param aButton XUL:toolbarbutton
+     * @param aCallback Function the click event handler for the button
+     */
+    function bindToolEvent(aWidget, aEvent, aCallback)
+    {
+      let toolEvent = aWidget.id + "_" + aEvent;
+      InspectorUI.toolEvents[toolEvent] = aCallback;
+      aWidget.addEventListener(aEvent, aCallback, false);
+    }
+
+    bindToolEvent(btn, "click",
+      function IUI_toolButtonClick(aEvent) {
+        if (btn.checked) {
+          this.toolHide(aRegObj);
         } else {
-          aRegObj.onShow.apply(aRegObj.context, [InspectorUI.selection]);
-          aRegObj.onSelect.apply(aRegObj.context, [InspectorUI.selection]);
+          this.toolShow(aRegObj);
         }
-      }, false);
+      }.bind(this));
+
+    if (aRegObj.panel) {
+      bindToolEvent(aRegObj.panel, "popuphiding",
+        function IUI_toolPanelHiding() {
+          btn.checked = false;
+        });
+    }
   },
 
-/**
- * Save a list of open tools to the inspector store.
- *
- * @param aWinID The ID of the window used to save the associated tools
- */
+  /**
+   * Show the specified tool.
+   * @param aTool Object (see comment for IUI_registerTool)
+   */
+  toolShow: function IUI_toolShow(aTool)
+  {
+    aTool.show.call(aTool.context, this.selection);
+    document.getElementById(this.getToolbarButtonId(aTool.id)).checked = true;
+  },
+
+  /**
+   * Hide the specified tool.
+   * @param aTool Object (see comment for IUI_registerTool)
+   */
+  toolHide: function IUI_toolHide(aTool)
+  {
+    aTool.hide.call(aTool.context);
+    document.getElementById(this.getToolbarButtonId(aTool.id)).checked = false;
+  },
+
+  /**
+   * Unregister the registered tool, unbinding click events for the buttons
+   * and showing and hiding events for the panel.
+   * @param aRegObj Object
+   *        The registration object used to register the tool.
+   */
+  unregisterTool: function IUI_unregisterTool(aRegObj)
+  {
+    let button = document.getElementById(this.getToolbarButtonId(aRegObj.id));
+
+    /**
+     * Unregister the click handler for the registered tool's button.
+     * @param aButton XUL:toolbarbutton
+     */
+    function unbindToolEvent(aWidget, aEvent)
+    {
+      let toolEvent = aWidget.id + "_" + aEvent;
+      if (!InspectorUI.toolEvents[toolEvent]) {
+        return;
+      }
+
+      aWidget.removeEventListener(aEvent, InspectorUI.toolEvents[toolEvent], false);
+      delete InspectorUI.toolEvents[toolEvent]
+    }
+
+    let buttonContainer = document.getElementById("inspector-tools");
+    unbindToolEvent(button, "click");
+
+    if (aRegObj.panel)
+      unbindToolEvent(aRegObj.panel, "popuphiding");
+
+    buttonContainer.removeChild(button);
+
+    if (aRegObj.unregister)
+      aRegObj.unregister.call(aRegObj.context);
+
+    delete this.tools[aRegObj.id];
+  },
+
+  /**
+   * Save a list of open tools to the inspector store.
+   *
+   * @param aWinID The ID of the window used to save the associated tools
+   */
   saveToolState: function IUI_saveToolState(aWinID)
   {
     let openTools = {};
     this.toolsDo(function IUI_toolsSetId(aTool) {
-      if (aTool.panel.state == "open") {
+      if (aTool.isOpen) {
         openTools[aTool.id] = true;
       }
     });
     InspectorStore.setValue(aWinID, "openTools", openTools);
   },
 
-/**
- * Restore tools previously save using saveToolState().
- *
- * @param aWinID The ID of the window to which the associated tools are to be
- *               restored.
- */
+  /**
+   * Restore tools previously save using saveToolState().
+   *
+   * @param aWinID The ID of the window to which the associated tools are to be
+   *               restored.
+   */
   restoreToolState: function IUI_restoreToolState(aWinID)
   {
     let openTools = InspectorStore.getValue(aWinID, "openTools");
-    InspectorUI.selection = InspectorUI.selection;
     if (openTools) {
       this.toolsDo(function IUI_toolsOnShow(aTool) {
         if (aTool.id in openTools) {
-          aTool.onShow.apply(aTool.context, [InspectorUI.selection]);
+          this.toolShow(aTool);
         }
-      });
+      }.bind(this));
     }
   },
-  
+
+  /**
+   * For each tool in the tools collection select the current node that is
+   * selected in the highlighter
+   */
+  toolsSelect: function IUI_toolsSelect()
+  {
+    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+      if (aTool.isOpen) {
+        aTool.onSelect.call(aTool.context, InspectorUI.selection);
+      }
+    });
+  },
+
   /**
    * Loop through all registered tools and pass each into the provided function
-   *
    * @param aFunction The function to which each tool is to be passed
    */
   toolsDo: function IUI_toolsDo(aFunction)
@@ -1702,6 +1802,15 @@ var InspectorUI = {
     for each (let tool in this.tools) {
       aFunction(tool);
     }
+  },
+
+  /**
+   * Check if a tool is registered?
+   * @param aId The id of the tool to check
+   */
+  toolRegistered: function IUI_toolRegistered(aId)
+  {
+    return aId in this.tools;
   },
 };
 
