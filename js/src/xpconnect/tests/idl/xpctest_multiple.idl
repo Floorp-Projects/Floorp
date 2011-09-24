@@ -39,29 +39,39 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-/*
- *	This defines the interface for a test object.
- *
- */
 
-[scriptable, uuid(1364941e-4462-11d3-82ee-0060b0eb596f)]
-interface nsIXPCTestObjectReadOnly : nsISupports {
-	readonly attribute string  strReadOnly;
-	readonly attribute boolean boolReadOnly;
-	readonly attribute short   shortReadOnly;
-	readonly attribute long    longReadOnly;
-	readonly attribute float   floatReadOnly;
-	readonly attribute char    charReadOnly;
-
-	string getID();
+[scriptable, uuid(5408fdcc-60a3-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestParentOne : nsISupports {
+	attribute string ParentOneAttribute;
+	string ParentOneMethod();
 };
 
-[scriptable, uuid(3b9b1d38-491a-11d3-82ef-0060b0eb596f)]
-interface nsIXPCTestObjectReadWrite : nsISupports {
-	attribute string  stringProperty;
-	attribute boolean booleanProperty;
-	attribute short   shortProperty;
-	attribute long    longProperty;
-	attribute float   floatProperty;
-	attribute char    charProperty;
+[scriptable, uuid(63137392-60a3-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestParentTwo : nsISupports {
+	attribute string ParentTwoAttribute;
+	string ParentTwoMethod();
+};
+
+[scriptable, uuid(66bed216-60a3-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestChild2 : nsISupports {
+	attribute string ChildAttribute;
+	string ChildMethod();
+};
+
+[scriptable, uuid(62353978-614e-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestChild3 : nsIXPCTestParentOne {
+	attribute string ChildAttribute;
+	string ChildMethod();
+};
+
+[scriptable, uuid(a6d22202-622b-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestChild4 : nsISupports {
+	attribute string ChildAttribute;
+	string ChildMethod();
+};
+
+[scriptable, uuid(ba3eef4e-6250-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestChild5 : nsIXPCTestParentOne {
+	attribute string ChildAttribute;
+	string ChildMethod();
 };

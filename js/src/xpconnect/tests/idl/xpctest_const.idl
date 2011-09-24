@@ -38,30 +38,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-/*
- *	This defines the interface for a test object.
- *
+/**
+ * This describes an interface for objects withconst attributes of 
+ * different types and uses expressions to generate const values.
+ * | ^ & >> << + - * / % and unary - +
+ * scoped literals
  */
 
-[scriptable, uuid(1364941e-4462-11d3-82ee-0060b0eb596f)]
-interface nsIXPCTestObjectReadOnly : nsISupports {
-	readonly attribute string  strReadOnly;
-	readonly attribute boolean boolReadOnly;
-	readonly attribute short   shortReadOnly;
-	readonly attribute long    longReadOnly;
-	readonly attribute float   floatReadOnly;
-	readonly attribute char    charReadOnly;
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
 
-	string getID();
+/**
+ *	Only consts of type short and long are respected.
+ */
+
+[scriptable, uuid(83f57a56-4f55-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestConst : nsISupports {
+
+	const short              shortConst   = 254;
+	const long               longConst    = 1234567890;
 };
 
-[scriptable, uuid(3b9b1d38-491a-11d3-82ef-0060b0eb596f)]
-interface nsIXPCTestObjectReadWrite : nsISupports {
-	attribute string  stringProperty;
-	attribute boolean booleanProperty;
-	attribute short   shortProperty;
-	attribute long    longProperty;
-	attribute float   floatProperty;
-	attribute char    charProperty;
-};

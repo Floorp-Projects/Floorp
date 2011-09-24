@@ -18,7 +18,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,59 +38,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* local header for xpconnect tests components */
+#include "nsISupports.idl"
 
-#ifndef xpctest_private_h___
-#define xpctest_private_h___
+// This is a test it is only a test.
+// This was forward declared in xtestpxc.idl. But this file is *not* included.
 
-#include "nsISupports.h"
-#include "nsMemory.h"
-#include "jsapi.h"
-#include "nsStringGlue.h"
-#include "xpctest_attributes.h"
-#include "xpctest_params.h"
-
-class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
- public: 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCTESTOBJECTREADONLY
-  xpcTestObjectReadOnly();
-   
- private:
-    PRBool  boolProperty;
-    PRInt16 shortProperty;
-    PRInt32 longProperty;
-    float   floatProperty;
-    char    charProperty;
-};
-
-class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
-  public: 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCTESTOBJECTREADWRITE
-
-  xpcTestObjectReadWrite();
-  ~xpcTestObjectReadWrite();
-
- private:
-     PRBool boolProperty;
-     PRInt16 shortProperty;
-     PRInt32 longProperty;
-     float floatProperty;
-     char charProperty;
-     char *stringProperty;
-};
-
-class nsXPCTestParams : public nsIXPCTestParams
+[scriptable, uuid(e8fc0860-3bb1-11d3-988a-006008962422)]
+interface nsITestXPCSomeUselessThing : nsISupports
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCTESTPARAMS
-
-    nsXPCTestParams();
-
-private:
-    ~nsXPCTestParams();
+    /* empty */
 };
 
-#endif /* xpctest_private_h___ */

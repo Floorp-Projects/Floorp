@@ -38,30 +38,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-/*
- *	This defines the interface for a test object.
- *
+/**
+ *	Test the 'in' keyword.
  */
 
-[scriptable, uuid(1364941e-4462-11d3-82ee-0060b0eb596f)]
-interface nsIXPCTestObjectReadOnly : nsISupports {
-	readonly attribute string  strReadOnly;
-	readonly attribute boolean boolReadOnly;
-	readonly attribute short   shortReadOnly;
-	readonly attribute long    longReadOnly;
-	readonly attribute float   floatReadOnly;
-	readonly attribute char    charReadOnly;
+#include "nsISupports.idl"
 
-	string getID();
-};
+[scriptable, uuid(a3cab49d-ae83-4e63-a735-009b9a759204)]
+interface nsIXPCTestIn : nsISupports {
+	long    EchoLong( in long l);
+	short   EchoShort( in short a );
+	char	EchoChar( in char c );
+	boolean EchoBoolean( in boolean b );
+	octet   EchoOctet( in octet o );
+	long long EchoLongLong( in long long ll );
+	unsigned short EchoUnsignedShort( in unsigned short us );
+	unsigned long  EchoUnsignedLong(  in unsigned long ul );
+	float  EchoFloat( in float f );
+	double EchoDouble( in double d );
+	wchar  EchoWchar ( in wchar wc );
+	wstring EchoString( in wstring ws );
 
-[scriptable, uuid(3b9b1d38-491a-11d3-82ef-0060b0eb596f)]
-interface nsIXPCTestObjectReadWrite : nsISupports {
-	attribute string  stringProperty;
-	attribute boolean booleanProperty;
-	attribute short   shortProperty;
-	attribute long    longProperty;
-	attribute float   floatProperty;
-	attribute char    charProperty;
+	PRBool  EchoPRBool( in PRBool b );
+	PRInt32 EchoPRInt32( in PRInt32 l );
+	PRInt16 EchoPRInt16( in PRInt16 l );
+	PRInt64 EchoPRInt64( in PRInt64 i );
+	PRUint8 EchoPRUint8( in PRUint8 i );
+	PRUint16 EchoPRUint16( in PRUint16 i );
+	PRUint32 EchoPRUint32( in PRUint32 i );
+	PRUint32 EchoPRUint32_2( in PRUint32 i );
+	PRUint64 EchoPRUint64( in PRUint64 i );
+	
+	// native types must be marked noscript or they break the idl
+	// compiler
+
+	[noscript] voidPtr EchoVoidPtr( in voidPtr vs );
+	[noscript] charPtr EchoCharPtr( in charPtr cs );
+/*
+	[noscript] voidRef EchoVoidRef( in voidRef vf );
+	[noscript] nsIDRef EchoNsIDRef( in nsIDRef r );
+	[noscript] nsCIDRef EchoNsCIDRef( in nsCIDRef r );
+
+	[noscript] nsIDPtr EchoNsIDPtr( in nsIDPtr p );
+	[noscript] nsIIDPtr EchoNsIIDPtr( in nsIIDPtr p );
+	[noscript] nsCIDPtr EchoNsCIDPtr( in nsCIDPtr p );
+	[noscript] nsQIResult EchoNsQIResult( in nsQIResult r );
+*/
+	void EchoVoid();
 };
