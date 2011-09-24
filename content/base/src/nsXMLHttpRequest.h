@@ -188,6 +188,11 @@ public:
                           aLoaded, aLengthComputable ? aTotal : LL_MAXUINT);
   }
 
+  // Dispatch the "progress" event on the XHR or XHR.upload object if we've
+  // received data since the last "progress" event. Also dispatches
+  // "uploadprogress" as needed.
+  void MaybeDispatchProgressEvents(PRBool aFinalProgress);
+
   // This is called by the factory constructor.
   nsresult Init();
 
@@ -313,7 +318,9 @@ protected:
   nsRefPtr<nsXMLHttpRequestUpload> mUpload;
   PRUint64 mUploadTransferred;
   PRUint64 mUploadTotal;
+  PRPackedBool mUploadLengthComputable;
   PRPackedBool mUploadComplete;
+  PRPackedBool mProgressSinceLastProgressEvent;
   PRUint64 mUploadProgress; // For legacy
   PRUint64 mUploadProgressMax; // For legacy
 
@@ -323,6 +330,7 @@ protected:
   PRPackedBool mProgressEventWasDelayed;
   PRPackedBool mLoadLengthComputable;
   PRUint64 mLoadTotal; // 0 if not known.
+  PRUint64 mLoadTransferred;
   nsCOMPtr<nsITimer> mProgressNotifier;
 
   PRPackedBool mFirstStartRequestSeen;
@@ -332,6 +340,8 @@ protected:
   
   jsval mResultJSON;
   JSObject* mResultArrayBuffer;
+
+  void ResetResponse();
 
   struct RequestHeader
   {
