@@ -278,7 +278,8 @@ public class GeckoAppShell
         GeckoApp geckoApp = GeckoApp.mAppContext;
         String homeDir;
         if (Build.VERSION.SDK_INT < 8 ||
-            geckoApp.getApplication().getPackageResourcePath().startsWith("/data")) {
+            geckoApp.getApplication().getPackageResourcePath().startsWith("/data") ||
+            geckoApp.getApplication().getPackageResourcePath().startsWith("/system")) {
             File home = geckoApp.getFilesDir();
             homeDir = home.getPath();
             // handle the application being moved to phone from sdcard
