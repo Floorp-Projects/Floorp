@@ -17,7 +17,7 @@ function test() {
     waitForFocus(setupTest, content);
   }, true);
 
-  content.location = 'data:text/html,<div style="width: 200px; height: 200px"><p></p></div>';
+  content.location = "data:text/html,<div><p></p></div>";
 
   function setupTest() {
     node1 = doc.querySelector("div");
@@ -28,32 +28,28 @@ function test() {
 
   function runTests() {
     Services.obs.removeObserver(runTests, INSPECTOR_NOTIFICATIONS.OPENED);
-    Services.obs.addObserver(testNode1, INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-    InspectorUI.select(node1, true, true, true);
-    InspectorUI.openTreePanel();
+    testNode1();
   }
 
   function testNode1() {
-    dump("testNode1\n");
-    Services.obs.removeObserver(testNode1, INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-    is(InspectorUI.selection, node1, "selection matches node");
-    is(InspectorUI.highlighter.node, node1, "selection matches node");
-    testNode2();
+    let box = InspectorUI.ioBox.createObjectBox(node1);
+    box.click();
+    executeSoon(function() {
+      is(InspectorUI.selection, node1, "selection matches node");
+      is(InspectorUI.highlighter.node, node1, "selection matches node");
+      testNode2();
+    });
   }
 
   function testNode2() {
-    dump("testNode2\n")
-    Services.obs.addObserver(testHighlightingNode2, INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
-    InspectorUI.treePanelSelect("node2");
-  }
-
-  function testHighlightingNode2() {
-    dump("testHighlightingNode2\n")
-    Services.obs.removeObserver(testHighlightingNode2, INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
-    is(InspectorUI.selection, node2, "selection matches node");
-    is(InspectorUI.highlighter.node, node2, "selection matches node");
-    Services.obs.addObserver(finishUp, INSPECTOR_NOTIFICATIONS.CLOSED, false);
-    InspectorUI.closeInspectorUI();
+    let box = InspectorUI.ioBox.createObjectBox(node2);
+    box.click();
+    executeSoon(function() {
+      is(InspectorUI.selection, node2, "selection matches node");
+      is(InspectorUI.highlighter.node, node2, "selection matches node");
+      Services.obs.addObserver(finishUp, INSPECTOR_NOTIFICATIONS.CLOSED, false);
+      InspectorUI.closeInspectorUI();
+    });
   }
 
   function finishUp() {

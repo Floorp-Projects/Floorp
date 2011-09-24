@@ -26,7 +26,7 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Julian Viereck <jviereck@mozilla.com>
  *   Paul Rouget <paul@mozilla.com>
- *   Kyle Simpson <ksimpson@mozilla.com>
+ *   Kyle Simpson <ksimpson@mozilla.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +42,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #endif
+
+#include insideOutBox.js
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -69,9 +71,6 @@ const INSPECTOR_NOTIFICATIONS = {
 
   // Fires once the Inspector is closed.
   CLOSED: "inspector-closed",
-
-  // Fires when the Tree Panel is opened and initialized.
-  TREEPANELREADY: "inspector-treepanel-ready",
 
   // Event notifications for the attribute-value editor
   EDITOR_OPENED: "inspector-editor-opened",
@@ -555,8 +554,9 @@ var InspectorUI = {
   browser: null,
   tools: {},
   toolEvents: {},
+  showTextNodesWithWhitespace: false,
   inspecting: false,
-  treePanelEnabled: true,
+  treeLoaded: false,
   get enabled()
   {
     return gPrefService.getBoolPref("devtools.inspector.enabled");
@@ -571,7 +571,7 @@ var InspectorUI = {
    */
   toggleInspectorUI: function IUI_toggleInspectorUI(aEvent)
   {
-    if (this.isInspectorOpen) {
+    if (this.isTreePanelOpen) {
       this.closeInspectorUI();
     } else {
       this.openInspectorUI();
@@ -592,13 +592,13 @@ var InspectorUI = {
   },
 
   /**
-   * Is the inspector UI open? Simply check if the toolbar is visible or not.
+   * Is the tree panel open?
    *
    * @returns boolean
    */
-  get isInspectorOpen()
+  get isTreePanelOpen()
   {
-    return this.toolbar && !this.toolbar.hidden;
+    return this.treePanel && this.treePanel.state == "open";
   },
 
   /**
@@ -608,6 +608,176 @@ var InspectorUI = {
   {
     let doc = this.win.document;
     return doc.documentElement ? doc.documentElement.lastElementChild : null;
+  },
+
+  initializeTreePanel: function IUI_initializeTreePanel()
+  {
+    this.treeBrowserDocument = this.treeIFrame.contentDocument;
+    this.treePanelDiv = this.treeBrowserDocument.createElement("div");
+    this.treeBrowserDocument.body.appendChild(this.treePanelDiv);
+    this.treePanelDiv.ownerPanel = this;
+    this.ioBox = new InsideOutBox(this, this.treePanelDiv);
+    this.ioBox.createObjectBox(this.win.document.documentElement);
+    this.treeLoaded = true;
+    this.editingContext = null;
+    this.editingEvents = {};
+
+    // initialize the highlighter
+    this.initializeHighlighter();
+  },
+
+  /**
+   * Open the inspector's tree panel and initialize it.
+   */
+  openTreePanel: function IUI_openTreePanel()
+  {
+    if (!this.treePanel) {
+      this.treePanel = document.getElementById("inspector-tree-panel");
+      this.treePanel.hidden = false;
+    }
+
+    this.treeIFrame = document.getElementById("inspector-tree-iframe");
+    if (!this.treeIFrame) {
+      let resizerBox = document.getElementById("tree-panel-resizer-box");
+      this.treeIFrame = document.createElement("iframe");
+      this.treeIFrame.setAttribute("id", "inspector-tree-iframe");
+      this.treeIFrame.setAttribute("flex", "1");
+      this.treeIFrame.setAttribute("type", "content");
+      this.treeIFrame.setAttribute("onclick", "InspectorUI.onTreeClick(event)");
+      this.treeIFrame.setAttribute("ondblclick", "InspectorUI.onTreeDblClick(event);");
+      this.treeIFrame = this.treePanel.insertBefore(this.treeIFrame, resizerBox);
+    }
+
+    this.treePanel.addEventListener("popupshown", function treePanelShown() {
+      InspectorUI.treePanel.removeEventListener("popupshown",
+        treePanelShown, false);
+
+      InspectorUI.treeIFrame.addEventListener("load",
+        function loadedInitializeTreePanel() {
+          InspectorUI.treeIFrame.removeEventListener("load",
+            loadedInitializeTreePanel, true);
+          InspectorUI.initializeTreePanel();
+        }, true);
+
+      let src = InspectorUI.treeIFrame.getAttribute("src");
+      if (src != "chrome://browser/content/inspector.html") {
+        InspectorUI.treeIFrame.setAttribute("src",
+          "chrome://browser/content/inspector.html");
+      } else {
+        InspectorUI.treeIFrame.contentWindow.location.reload();
+      }
+
+    }, false);
+
+    const panelWidthRatio = 7 / 8;
+    const panelHeightRatio = 1 / 5;
+
+    let width = parseInt(this.win.outerWidth * panelWidthRatio);
+    let height = parseInt(this.win.outerHeight * panelHeightRatio);
+    let y = Math.min(window.screen.availHeight - height, this.win.innerHeight);
+
+    this.treePanel.openPopup(this.browser, "overlap", 0, 0,
+      false, false);
+
+    this.treePanel.moveTo(80, y);
+    this.treePanel.sizeTo(width, height);
+  },
+
+  createObjectBox: function IUI_createObjectBox(object, isRoot)
+  {
+    let tag = this.domplateUtils.getNodeTag(object);
+    if (tag)
+      return tag.replace({object: object}, this.treeBrowserDocument);
+  },
+
+  getParentObject: function IUI_getParentObject(node)
+  {
+    let parentNode = node ? node.parentNode : null;
+
+    if (!parentNode) {
+      // Documents have no parentNode; Attr, Document, DocumentFragment, Entity,
+      // and Notation. top level windows have no parentNode
+      if (node && node == Node.DOCUMENT_NODE) {
+        // document type
+        if (node.defaultView) {
+          let embeddingFrame = node.defaultView.frameElement;
+          if (embeddingFrame)
+            return embeddingFrame.parentNode;
+        }
+      }
+      // a Document object without a parentNode or window
+      return null;  // top level has no parent
+    }
+
+    if (parentNode.nodeType == Node.DOCUMENT_NODE) {
+      if (parentNode.defaultView) {
+        return parentNode.defaultView.frameElement;
+      }
+      // parent is document element, but no window at defaultView.
+      return null;
+    }
+    if (!parentNode.localName) {
+      return null;
+    }
+    return parentNode;
+  },
+
+  getChildObject: function IUI_getChildObject(node, index, previousSibling)
+  {
+    if (!node)
+      return null;
+
+    if (node.contentDocument) {
+      // then the node is a frame
+      if (index == 0) {
+        return node.contentDocument.documentElement;  // the node's HTMLElement
+      }
+      return null;
+    }
+
+    if (node instanceof GetSVGDocument) {
+      let svgDocument = node.getSVGDocument();
+      if (svgDocument) {
+        // then the node is a frame
+        if (index == 0) {
+          return svgDocument.documentElement;  // the node's SVGElement
+        }
+        return null;
+      }
+    }
+
+    let child = null;
+    if (previousSibling)  // then we are walking
+      child = this.getNextSibling(previousSibling);
+    else
+      child = this.getFirstChild(node);
+
+    if (this.showTextNodesWithWhitespace)
+      return child;
+
+    for (; child; child = this.getNextSibling(child)) {
+      if (!this.domplateUtils.isWhitespaceText(child))
+        return child;
+    }
+
+    return null;  // we have no children worth showing.
+  },
+
+  getFirstChild: function IUI_getFirstChild(node)
+  {
+    this.treeWalker = node.ownerDocument.createTreeWalker(node,
+      NodeFilter.SHOW_ALL, null, false);
+    return this.treeWalker.firstChild();
+  },
+
+  getNextSibling: function IUI_getNextSibling(node)
+  {
+    let next = this.treeWalker.nextSibling();
+
+    if (!next)
+      delete this.treeWalker;
+
+    return next;
   },
 
   /**
@@ -621,7 +791,7 @@ var InspectorUI = {
   openInspectorUI: function IUI_openInspectorUI(aNode)
   {
     // InspectorUI is already up and running. Lock a node if asked (via context).
-    if (this.highlighter && aNode) {
+    if (this.treeLoaded && this.highlighter && aNode) {
       this.inspectNode(aNode);
       this.stopInspecting();
       return;
@@ -651,20 +821,17 @@ var InspectorUI = {
 
     this.initTools();
 
-    if (!this.TreePanel && this.treePanelEnabled) {
-      Cu.import("resource:///modules/TreePanel.jsm", this);
-      this.treePanel = new this.TreePanel(window, this);
+    if (!this.domplate) {
+      Cu.import("resource:///modules/domplate.jsm", this);
+      this.domplateUtils.setDOM(window);
     }
 
-    this.toolbar.hidden = false;
-    this.inspectMenuitem.setAttribute("checked", true);
+    this.openTreePanel();
 
-    this.isDirty = false;
+    this.toolbar.hidden = false;
+    this.inspectCmd.setAttribute("checked", true);
 
     gBrowser.addProgressListener(InspectorProgressListener);
-
-    // initialize the highlighter
-    this.initializeHighlighter();
   },
 
   /**
@@ -718,13 +885,11 @@ var InspectorUI = {
       if (selectedNode) {
         this.inspectNode(selectedNode);
       }
-      this.isDirty = InspectorStore.getValue(this.winID, "isDirty");
     } else {
       // First time inspecting, set state to no selection + live inspection.
       InspectorStore.addStore(this.winID);
       InspectorStore.setValue(this.winID, "selectedNode", null);
       InspectorStore.setValue(this.winID, "inspecting", true);
-      InspectorStore.setValue(this.winID, "isDirty", this.isDirty);
       this.win.addEventListener("pagehide", this, true);
     }
   },
@@ -743,8 +908,8 @@ var InspectorUI = {
   {
     // if currently editing an attribute value, closing the
     // highlighter/HTML panel dismisses the editor
-    if (this.treePanel && this.treePanel.editingContext)
-      this.treePanel.closeEditor();
+    if (this.editingContext)
+      this.closeEditor();
 
     if (this.closing || !this.win || !this.browser) {
       return;
@@ -765,7 +930,6 @@ var InspectorUI = {
           this.selection);
       }
       InspectorStore.setValue(this.winID, "inspecting", this.inspecting);
-      InspectorStore.setValue(this.winID, "isDirty", this.isDirty);
     }
 
     if (InspectorStore.isEmpty()) {
@@ -784,18 +948,44 @@ var InspectorUI = {
       this.highlighter = null;
     }
 
-    this.inspectMenuitem.setAttribute("checked", false);
+    if (this.treePanelDiv) {
+      this.treePanelDiv.ownerPanel = null;
+      let parent = this.treePanelDiv.parentNode;
+      parent.removeChild(this.treePanelDiv);
+      delete this.treePanelDiv;
+      delete this.treeBrowserDocument;
+    }
+
+    if (this.treeIFrame) {
+      let parent = this.treeIFrame.parentNode;
+      parent.removeChild(this.treeIFrame);
+      delete this.treeIFrame;
+    }
+    delete this.ioBox;
+
+    if (this.domplate) {
+      this.domplateUtils.setDOM(null);
+      delete this.domplate;
+      delete this.HTMLTemplates;
+      delete this.domplateUtils;
+    }
+
+    this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
     this.winID = null;
     this.selection = null;
-    this.closing = false;
-    this.isDirty = false;
+    this.treeLoaded = false;
 
+    this.treePanel.addEventListener("popuphidden", function treePanelHidden() {
+      this.removeEventListener("popuphidden", treePanelHidden, false);
+
+      InspectorUI.closing = false;
+      Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
+    }, false);
+
+    this.treePanel.hidePopup();
     delete this.treePanel;
     delete this.stylePanel;
-    delete this.toolbar;
-    delete this.TreePanel;
-    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
   },
 
   /**
@@ -806,10 +996,10 @@ var InspectorUI = {
   {
     // if currently editing an attribute value, starting
     // "live inspection" mode closes the editor
-    if (this.treePanel && this.treePanel.editingContext)
-      this.treePanel.closeEditor();
+    if (this.editingContext)
+      this.closeEditor();
 
-    this.inspectToolbutton.checked = true;
+    document.getElementById("inspector-inspect-toolbutton").checked = true;
     this.attachPageListeners();
     this.inspecting = true;
     this.toolsDim(true);
@@ -828,7 +1018,7 @@ var InspectorUI = {
       return;
     }
 
-    this.inspectToolbutton.checked = false;
+    document.getElementById("inspector-inspect-toolbutton").checked = false;
     this.detachPageListeners();
     this.inspecting = false;
     this.toolsDim(false);
@@ -846,15 +1036,15 @@ var InspectorUI = {
    *        node to inspect
    * @param forceUpdate
    *        force an update?
-   * @param aScroll boolean
-   *        scroll the tree panel?
+   * @param aScroll
+   *        force scroll?
    */
   select: function IUI_select(aNode, forceUpdate, aScroll)
   {
     // if currently editing an attribute value, using the
     // highlighter dismisses the editor
-    if (this.treePanel && this.treePanel.editingContext)
-      this.treePanel.closeEditor();
+    if (this.editingContext)
+      this.closeEditor();
 
     if (!aNode)
       aNode = this.defaultSelection;
@@ -864,9 +1054,10 @@ var InspectorUI = {
       if (!this.inspecting) {
         this.highlighter.highlightNode(this.selection);
       }
+      this.ioBox.select(this.selection, true, true, aScroll);
     }
 
-    this.toolsSelect(aScroll);
+    this.toolsSelect();
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -902,7 +1093,7 @@ var InspectorUI = {
     switch (event.type) {
       case "TabSelect":
         winID = this.getWindowID(gBrowser.selectedBrowser.contentWindow);
-        if (this.isInspectorOpen && winID != this.winID) {
+        if (this.isTreePanelOpen && winID != this.winID) {
           this.closeInspectorUI(true);
           inspectorClosed = true;
         }
@@ -955,6 +1146,265 @@ var InspectorUI = {
         }
         break;
     }
+  },
+
+  /**
+   * Handle click events in the html tree panel.
+   * @param aEvent
+   *        The mouse event.
+   */
+  onTreeClick: function IUI_onTreeClick(aEvent)
+  {
+    // if currently editing an attribute value, clicking outside
+    // the editor dismisses the editor
+    if (this.editingContext) {
+      this.closeEditor();
+
+      // clicking outside the editor ONLY closes the editor
+      // so, cancel the rest of the processing of this event
+      aEvent.preventDefault();
+      return;
+    }
+
+    let node;
+    let target = aEvent.target;
+    let hitTwisty = false;
+    if (this.hasClass(target, "twisty")) {
+      node = this.getRepObject(aEvent.target.nextSibling);
+      hitTwisty = true;
+    } else {
+      node = this.getRepObject(aEvent.target);
+    }
+
+    if (node) {
+      if (hitTwisty) {
+        this.ioBox.toggleObject(node);
+      } else {
+        if (this.inspecting) {
+          this.toolsSelect();
+          this.stopInspecting(true);
+        } else {
+          this.select(node, true, false);
+          this.highlighter.highlightNode(node);
+          this.toolsSelect();
+        }
+      }
+    }
+  },
+
+  /**
+   * Handle double-click events in the html tree panel.
+   * (double-clicking an attribute value allows it to be edited)
+   * @param aEvent
+   *        The mouse event.
+   */
+  onTreeDblClick: function IUI_onTreeDblClick(aEvent)
+  {
+    // if already editing an attribute value, double-clicking elsewhere
+    // in the tree is the same as a click, which dismisses the editor
+    if (this.editingContext)
+      this.closeEditor();
+
+    let target = aEvent.target;
+    if (this.hasClass(target, "nodeValue")) {
+      let repObj = this.getRepObject(target);
+      let attrName = target.getAttribute("data-attributeName");
+      let attrVal = target.innerHTML;
+
+      this.editAttributeValue(target, repObj, attrName, attrVal);
+    }
+  },
+
+  /**
+   * Starts the editor for an attribute value.
+   * @param aAttrObj
+   *        The DOM object representing the attribute value in the HTML Tree
+   * @param aRepObj
+   *        The original DOM (target) object being inspected/edited
+   * @param aAttrName
+   *        The name of the attribute being edited
+   * @param aAttrVal
+   *        The current value of the attribute being edited
+   */
+  editAttributeValue: 
+  function IUI_editAttributeValue(aAttrObj, aRepObj, aAttrName, aAttrVal)
+  {
+    let editor = this.treeBrowserDocument.getElementById("attribute-editor");
+    let editorInput = 
+      this.treeBrowserDocument.getElementById("attribute-editor-input");
+    let attrDims = aAttrObj.getBoundingClientRect();
+    // figure out actual viewable viewport dimensions (sans scrollbars)
+    let viewportWidth = this.treeBrowserDocument.documentElement.clientWidth;
+    let viewportHeight = this.treeBrowserDocument.documentElement.clientHeight;
+
+    // saves the editing context for use when the editor is saved/closed
+    this.editingContext = {
+      attrObj: aAttrObj,
+      repObj: aRepObj,
+      attrName: aAttrName
+    };
+
+    // highlight attribute-value node in tree while editing
+    this.addClass(aAttrObj, "editingAttributeValue");
+
+    // show the editor
+    this.addClass(editor, "editing");
+
+    // offset the editor below the attribute-value node being edited
+    let editorVeritcalOffset = 2;
+
+    // keep the editor comfortably within the bounds of the viewport
+    let editorViewportBoundary = 5;
+
+    // outer editor is sized based on the <input> box inside it
+    editorInput.style.width = Math.min(attrDims.width, viewportWidth - 
+                                editorViewportBoundary) + "px";
+    editorInput.style.height = Math.min(attrDims.height, viewportHeight - 
+                                editorViewportBoundary) + "px";
+    let editorDims = editor.getBoundingClientRect();
+
+    // calculate position for the editor according to the attribute node
+    let editorLeft = attrDims.left + this.treeIFrame.contentWindow.scrollX -
+                    // center the editor against the attribute value    
+                    ((editorDims.width - attrDims.width) / 2); 
+    let editorTop = attrDims.top + this.treeIFrame.contentWindow.scrollY + 
+                    attrDims.height + editorVeritcalOffset;
+
+    // but, make sure the editor stays within the visible viewport
+    editorLeft = Math.max(0, Math.min(
+                                      (this.treeIFrame.contentWindow.scrollX + 
+                                          viewportWidth - editorDims.width),
+                                      editorLeft)
+                          );
+    editorTop = Math.max(0, Math.min(
+                                      (this.treeIFrame.contentWindow.scrollY + 
+                                          viewportHeight - editorDims.height),
+                                      editorTop)
+                          );
+
+    // position the editor
+    editor.style.left = editorLeft + "px";
+    editor.style.top = editorTop + "px";
+
+    // set and select the text
+    editorInput.value = aAttrVal;
+    editorInput.select();
+
+    // listen for editor specific events
+    this.bindEditorEvent(editor, "click", function(aEvent) {
+      aEvent.stopPropagation();
+    });
+    this.bindEditorEvent(editor, "dblclick", function(aEvent) {
+      aEvent.stopPropagation();
+    });
+    this.bindEditorEvent(editor, "keypress", 
+                          this.handleEditorKeypress.bind(this));
+
+    // event notification    
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, 
+                                  null);
+  },
+
+  /**
+   * Handle binding an event handler for the editor.
+   * (saves the callback for easier unbinding later)   
+   * @param aEditor
+   *        The DOM object for the editor
+   * @param aEventName
+   *        The name of the event to listen for
+   * @param aEventCallback
+   *        The callback to bind to the event (and also to save for later 
+   *          unbinding)
+   */
+  bindEditorEvent: 
+  function IUI_bindEditorEvent(aEditor, aEventName, aEventCallback)
+  {
+    this.editingEvents[aEventName] = aEventCallback;
+    aEditor.addEventListener(aEventName, aEventCallback, false);
+  },
+
+  /**
+   * Handle unbinding an event handler from the editor.
+   * (unbinds the previously bound and saved callback)   
+   * @param aEditor
+   *        The DOM object for the editor
+   * @param aEventName
+   *        The name of the event being listened for
+   */
+  unbindEditorEvent: function IUI_unbindEditorEvent(aEditor, aEventName)
+  {
+    aEditor.removeEventListener(aEventName, this.editingEvents[aEventName], 
+                                  false);
+    this.editingEvents[aEventName] = null;
+  },
+
+  /**
+   * Handle keypress events in the editor.
+   * @param aEvent
+   *        The keyboard event.
+   */
+  handleEditorKeypress: function IUI_handleEditorKeypress(aEvent)
+  {
+    if (aEvent.which == KeyEvent.DOM_VK_RETURN) {
+      this.saveEditor();
+    } else if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+      this.closeEditor();
+    }
+  },
+
+  /**
+   * Close the editor and cleanup.
+   */
+  closeEditor: function IUI_closeEditor()
+  {
+    let editor = this.treeBrowserDocument.getElementById("attribute-editor");
+    let editorInput = 
+      this.treeBrowserDocument.getElementById("attribute-editor-input");
+
+    // remove highlight from attribute-value node in tree
+    this.removeClass(this.editingContext.attrObj, "editingAttributeValue");
+
+    // hide editor
+    this.removeClass(editor, "editing");
+
+    // stop listening for editor specific events
+    this.unbindEditorEvent(editor, "click");
+    this.unbindEditorEvent(editor, "dblclick");
+    this.unbindEditorEvent(editor, "keypress");
+
+    // clean up after the editor
+    editorInput.value = "";
+    editorInput.blur();
+    this.editingContext = null;
+    this.editingEvents = {};
+
+    // event notification    
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, 
+                                  null);
+  },
+
+  /**
+   * Commit the edits made in the editor, then close it.
+   */
+  saveEditor: function IUI_saveEditor()
+  {
+    let editorInput = 
+      this.treeBrowserDocument.getElementById("attribute-editor-input");
+
+    // set the new attribute value on the original target DOM element
+    this.editingContext.repObj.setAttribute(this.editingContext.attrName, 
+                                              editorInput.value);
+
+    // update the HTML tree attribute value
+    this.editingContext.attrObj.innerHTML = editorInput.value;
+
+    this.isDirty = true;
+
+    // event notification    
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, 
+                                  null);
+    
+    this.closeEditor();
   },
 
   /**
@@ -1062,6 +1512,47 @@ var InspectorUI = {
   },
 
   /**
+   * Does the given object have a class attribute?
+   * @param aNode
+   *        the DOM node.
+   * @param aClass
+   *        The class string.
+   * @returns boolean
+   */
+  hasClass: function IUI_hasClass(aNode, aClass)
+  {
+    if (!(aNode instanceof Element))
+      return false;
+    return aNode.classList.contains(aClass);
+  },
+
+  /**
+   * Add the class name to the given object.
+   * @param aNode
+   *        the DOM node.
+   * @param aClass
+   *        The class string.
+   */
+  addClass: function IUI_addClass(aNode, aClass)
+  {
+    if (aNode instanceof Element)
+      aNode.classList.add(aClass);
+  },
+
+  /**
+   * Remove the class name from the given object
+   * @param aNode
+   *        the DOM node.
+   * @param aClass
+   *        The class string.
+   */
+  removeClass: function IUI_removeClass(aNode, aClass)
+  {
+    if (aNode instanceof Element)
+      aNode.classList.remove(aClass);
+  },
+
+  /**
    * Retrieve the unique ID of a window object.
    *
    * @param nsIDOMWindow aWindow
@@ -1081,6 +1572,32 @@ var InspectorUI = {
     } catch (ex) { }
 
     return util.currentInnerWindowID;
+  },
+
+  /**
+   * Get the "repObject" from the HTML panel's domplate-constructed DOM node.
+   * In this system, a "repObject" is the Object being Represented by the box
+   * object. It is the "real" object that we're building our facade around.
+   *
+   * @param element
+   *        The element in the HTML panel the user clicked.
+   * @returns either a real node or null
+   */
+  getRepObject: function IUI_getRepObject(element)
+  {
+    let target = null;
+    for (let child = element; child; child = child.parentNode) {
+      if (this.hasClass(child, "repTarget"))
+        target = child;
+
+      if (child.repObject) {
+        if (!target && this.hasClass(child.repObject, "repIgnore"))
+          break;
+        else
+          return child.repObject;
+      }
+    }
+    return null;
   },
 
   /**
@@ -1291,14 +1808,12 @@ var InspectorUI = {
   /**
    * For each tool in the tools collection select the current node that is
    * selected in the highlighter
-   * @param aScroll boolean
-   *        Do you want to scroll the treepanel?
    */
-  toolsSelect: function IUI_toolsSelect(aScroll)
+  toolsSelect: function IUI_toolsSelect()
   {
     this.toolsDo(function IUI_toolsOnSelect(aTool) {
       if (aTool.isOpen) {
-        aTool.onSelect.call(aTool.context, InspectorUI.selection, aScroll);
+        aTool.onSelect.call(aTool.context, InspectorUI.selection);
       }
     });
   },
@@ -1476,7 +1991,7 @@ var InspectorProgressListener = {
   function IPL_onStateChange(aProgress, aRequest, aFlag, aStatus)
   {
     // Remove myself if the Inspector is no longer open.
-    if (!InspectorUI.isInspectorOpen) {
+    if (!InspectorUI.isTreePanelOpen) {
       gBrowser.removeProgressListener(InspectorProgressListener);
       return;
     }
@@ -1574,12 +2089,8 @@ var InspectorProgressListener = {
 /////////////////////////////////////////////////////////////////////////
 //// Initializers
 
-XPCOMUtils.defineLazyGetter(InspectorUI, "inspectMenuitem", function () {
+XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
   return document.getElementById("Tools:Inspect");
-});
-
-XPCOMUtils.defineLazyGetter(InspectorUI, "inspectToolbutton", function () {
-  return document.getElementById("inspector-inspect-toolbutton");
 });
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
