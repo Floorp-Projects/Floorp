@@ -68,16 +68,16 @@ function setupSelectionTests()
   h1 = doc.querySelectorAll("h1")[0];
   ok(h1, "we have the header node");
   Services.obs.addObserver(runSelectionTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function runSelectionTests()
 {
   Services.obs.removeObserver(runSelectionTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   Services.obs.addObserver(performTestComparisons,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
   executeSoon(function() {
     InspectorUI.inspectNode(h1);
   });
@@ -86,7 +86,7 @@ function runSelectionTests()
 function performTestComparisons(evt)
 {
   Services.obs.removeObserver(performTestComparisons,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   is(h1, InspectorUI.selection, "selection matches node");
   ok(InspectorUI.highlighter.isHighlighting, "highlighter is highlighting");
