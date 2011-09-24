@@ -49,8 +49,6 @@ Cu.import("resource:///modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["TreePanel"];
 
-const INSPECTOR_URI = "chrome://browser/content/inspector.html";
-
 /**
  * TreePanel
  * A container for the Inspector's HTML Tree Panel widget constructor function.
@@ -64,21 +62,13 @@ function TreePanel(aContext, aIUI) {
 TreePanel.prototype = {
   showTextNodesWithWhitespace: false,
   id: "treepanel", // DO NOT LOCALIZE
-  openInDock: true,
 
   /**
-   * The tree panel container element.
-   * @returns xul:panel|xul:vbox|null
-   *          xul:panel is returned when the tree panel is not docked, or
-   *          xul:vbox when when the tree panel is docked.
-   *          null is returned when no container is available.
+   * container.
+   * @returns xul:panel element
    */
   get container()
   {
-    if (this.openInDock) {
-      return this.document.getElementById("inspector-tree-box");
-    }
-
     return this.document.getElementById("inspector-tree-panel");
   },
 
@@ -108,15 +98,13 @@ TreePanel.prototype = {
       show: this.open,
       hide: this.close,
       onSelect: this.select,
-      panel: this.openInDock ? null : this.container,
+      panel: this.container,
       unregister: this.destroy,
     };
     this.editingEvents = {};
 
-    if (!this.openInDock) {
-      this._boundClose = this.close.bind(this);
-      this.container.addEventListener("popuphiding", this._boundClose, false);
-    }
+    this._boundClose = this.close.bind(this);
+    this.container.addEventListener("popuphiding", this._boundClose, false);
 
     // Register the HTML panel with the highlighter
     this.IUI.registerTool(this.registrationObject);
@@ -156,49 +144,38 @@ TreePanel.prototype = {
     }
 
     this.initializingTreePanel = true;
-    if (!this.openInDock)
-      this.container.hidden = false;
+    this.container.hidden = false;
 
     this.treeIFrame = this.document.getElementById("inspector-tree-iframe");
     if (!this.treeIFrame) {
+      let resizerBox = this.document.getElementById("tree-panel-resizer-box");
       this.treeIFrame = this.document.createElement("iframe");
       this.treeIFrame.setAttribute("id", "inspector-tree-iframe");
-      this.treeIFrame.flex = 1;
+      this.treeIFrame.setAttribute("flex", "1");
       this.treeIFrame.setAttribute("type", "content");
+      this.treeIFrame = this.container.insertBefore(this.treeIFrame, resizerBox);
     }
 
-    if (this.openInDock) { // Create vbox
-      this.openDocked();
-      return;
-    }
+    let self = this;
+    this.container.addEventListener("popupshown", function treePanelShown() {
+      self.container.removeEventListener("popupshown",
+        treePanelShown, false);
 
-    let resizerBox = this.document.getElementById("tree-panel-resizer-box");
-    this.treeIFrame = this.container.insertBefore(this.treeIFrame, resizerBox);
+        self.treeIFrame.addEventListener("load",
+          function loadedInitializeTreePanel() {
+            self.treeIFrame.removeEventListener("load",
+              loadedInitializeTreePanel, true);
+            self.initializeIFrame();
+          }, true);
 
-    let boundLoadedInitializeTreePanel = function loadedInitializeTreePanel()
-    {
-      this.treeIFrame.removeEventListener("load",
-        boundLoadedInitializeTreePanel, true);
-      this.initializeIFrame();
-    }.bind(this);
-
-    let boundTreePanelShown = function treePanelShown()
-    {
-      this.container.removeEventListener("popupshown",
-        boundTreePanelShown, false);
-
-      this.treeIFrame.addEventListener("load",
-        boundLoadedInitializeTreePanel, true);
-
-      let src = this.treeIFrame.getAttribute("src");
-      if (src != INSPECTOR_URI) {
-        this.treeIFrame.setAttribute("src", INSPECTOR_URI);
+      let src = self.treeIFrame.getAttribute("src");
+      if (src != "chrome://browser/content/inspector.html") {
+        self.treeIFrame.setAttribute("src",
+          "chrome://browser/content/inspector.html");
       } else {
-        this.treeIFrame.contentWindow.location.reload();
+        self.treeIFrame.contentWindow.location.reload();
       }
-    }.bind(this);
-
-    this.container.addEventListener("popupshown", boundTreePanelShown, false);
+    }, false);
 
     const panelWidthRatio = 7 / 8;
     const panelHeightRatio = 1 / 5;
@@ -215,68 +192,11 @@ TreePanel.prototype = {
     this.container.sizeTo(width, height);
   },
 
-  openDocked: function TP_openDocked()
-  {
-    let treeBox = null;
-    let toolbar = this.IUI.toolbar.nextSibling; // Addons bar, typically
-    let toolbarParent =
-      this.IUI.browser.ownerDocument.getElementById("browser-bottombox");
-    treeBox = this.document.createElement("vbox");
-    treeBox.id = "inspector-tree-box";
-    treeBox.state = "open"; // for the registerTools API.
-    treeBox.minHeight = 10;
-    treeBox.flex = 1;
-    toolbarParent.insertBefore(treeBox, toolbar);
-    this.createResizer();
-    treeBox.appendChild(this.treeIFrame);
-
-    let boundLoadedInitializeTreePanel = function loadedInitializeTreePanel()
-    {
-      this.treeIFrame.removeEventListener("load",
-        boundLoadedInitializeTreePanel, true);
-      this.initializeIFrame();
-    }.bind(this);
-
-    this.treeIFrame.addEventListener("load",
-      boundLoadedInitializeTreePanel, true);
-
-    let src = this.treeIFrame.getAttribute("src");
-    if (src != INSPECTOR_URI) {
-      this.treeIFrame.setAttribute("src", INSPECTOR_URI);
-    } else {
-      this.treeIFrame.contentWindow.location.reload();
-    }
-  },
-
-  /**
-   * Lame resizer on the toolbar.
-   */
-  createResizer: function TP_createResizer()
-  {
-    let resizer = this.document.createElement("resizer");
-    resizer.id = "inspector-horizontal-splitter";
-    resizer.setAttribute("dir", "top");
-    resizer.flex = 1;
-    resizer.setAttribute("element", "inspector-tree-box");
-    resizer.height = 24;
-    this.IUI.toolbar.appendChild(resizer);
-    this.resizer = resizer;
-  },
-
   /**
    * Close the TreePanel.
    */
   close: function TP_close()
   {
-    if (this.openInDock) {
-      this.IUI.toolbar.removeChild(this.resizer);
-      let treeBox = this.container;
-      let treeBoxParent = treeBox.parentNode;
-      treeBoxParent.removeChild(treeBox);
-    } else {
-      this.container.hidePopup();
-    }
-
     if (this.treePanelDiv) {
       this.treePanelDiv.ownerPanel = null;
       let parent = this.treePanelDiv.parentNode;
@@ -286,6 +206,7 @@ TreePanel.prototype = {
     }
 
     this.treeLoaded = false;
+    this.container.hidePopup();
   },
 
   /**
@@ -294,9 +215,6 @@ TreePanel.prototype = {
    */
   isOpen: function TP_isOpen()
   {
-    if (this.openInDock)
-      return this.treeLoaded && this.container;
-
     return this.treeLoaded && this.container.state == "open";
   },
 
@@ -746,7 +664,6 @@ TreePanel.prototype = {
 
     domplateUtils.setDOM(null);
 
-    delete this.resizer;
     delete this.treeWalker;
 
     if (this.treePanelDiv) {
@@ -770,10 +687,8 @@ TreePanel.prototype = {
       delete this.ioBox;
     }
 
-    if (!this.openInDock) {
-      this.container.removeEventListener("popuphiding", this._boundClose, false);
-      delete this._boundClose;
-    }
+    this.container.removeEventListener("popuphiding", this._boundClose, false);
+    delete this._boundClose;
   }
 };
 
