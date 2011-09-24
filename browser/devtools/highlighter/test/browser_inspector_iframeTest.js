@@ -86,17 +86,17 @@ function moveMouseOver(aElement)
 function setupIframeTests()
 {
   Services.obs.addObserver(runIframeTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function runIframeTests()
 {
   Services.obs.removeObserver(runIframeTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
 
   Services.obs.addObserver(performTestComparisons1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   executeSoon(moveMouseOver.bind(this, div1));
 }
@@ -104,9 +104,9 @@ function runIframeTests()
 function performTestComparisons1()
 {
   Services.obs.removeObserver(performTestComparisons1,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
   Services.obs.addObserver(performTestComparisons2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   is(InspectorUI.selection, div1, "selection matches div1 node");
   is(InspectorUI.highlighter.highlitNode, div1, "highlighter matches selection");
@@ -117,7 +117,7 @@ function performTestComparisons1()
 function performTestComparisons2()
 {
   Services.obs.removeObserver(performTestComparisons2,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+    INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
   is(InspectorUI.selection, div2, "selection matches div2 node");
   is(InspectorUI.highlighter.highlitNode, div2, "highlighter matches selection");
