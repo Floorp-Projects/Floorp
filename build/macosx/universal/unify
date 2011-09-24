@@ -1060,14 +1060,24 @@ sub makeUniversalInternal($$$$) {
     return 1;
   }
   elsif($aSourceFile->lIsRegularFile()) {
-    my ($machPPC, $machX86);
+    my ($machPPC, $machX86, $fileName);
     if (!defined($filePPC) || !defined($fileX86)) {
       # One of the source files isn't present.  The right thing to do is
       # to just copy what does exist straight over, so skip Mach-O checks.
       $machPPC = 0;
       $machX86 = 0;
+      if (defined($filePPC)) {
+        $fileName = $filePPC;
+      } elsif (defined($fileX86)) {
+        $fileName = $fileX86;
+      } else {
+        complain(1, "The file must exist in at least one directory");
+        exit(1);
+      }
     }
     else {
+      # both files exist, pick the name of one.
+      $fileName = $fileX86;
       if (!defined($machPPC=$filePPC->isMachO())) {
         return complain(1, 'makeUniversal: isFileMachO ppc failed for:',
                         $filePPC->path());
@@ -1089,7 +1099,7 @@ sub makeUniversalInternal($$$$) {
       return makeUniversalFile($filePPC, $fileX86, $fileTargetPath);
     }
 
-    if (grep { $filePPC->path() =~ m/$_/; } @gSortMatches) {
+    if (grep { $fileName->path() =~ m/$_/; } @gSortMatches) {
       # Regular files, but should be compared with sorting first.
       # copyIfIdenticalWhenSorted will print an error if it fails.
       return copyIfIdenticalWhenSorted($filePPC, $fileX86, $fileTargetPath);

@@ -24,7 +24,7 @@
 %define color_text_button #000
 %define color_text_disabled #808080
 %define color_text_placeholder #808080
-%define color_text_as_link #febc2b
+%define color_text_as_link #69f
 %define color_background_panelrow #c8c8c8
 %define color_text_panelrow #222222
 %define color_text_toolbutton_inverse #666666

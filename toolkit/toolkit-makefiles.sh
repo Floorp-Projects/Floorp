@@ -714,10 +714,6 @@ MAKEFILES_accessible="
   accessible/build/Makefile
 "
 
-MAKEFILES_zlib="
-  modules/zlib/standalone/Makefile
-"
-
 MAKEFILES_libmar="
   modules/libmar/Makefile
   modules/libmar/src/Makefile
@@ -775,7 +771,6 @@ add_makefiles "
   $MAKEFILES_xulapp
   $MAKEFILES_libpr0n
   $MAKEFILES_accessible
-  $MAKEFILES_zlib
   $MAKEFILES_libmar
   $MAKEFILES_extensions
   $MAKEFILES_startupcache

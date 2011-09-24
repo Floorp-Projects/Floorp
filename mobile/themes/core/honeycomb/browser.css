@@ -180,11 +180,11 @@ toolbarbutton.urlbar-button {
 
 /* add special color */
 #identity-box[mode="verifiedIdentity"] {
-  background-color: #89d715;
+  background-color: #c4eb8a;
 }
 
 #identity-box[mode="verifiedDomain"] {
-  background-color: #6579e3;
+  background-color: #b2bcf1;
 }
 
 #identity-popup-runBy-box,
@@ -195,8 +195,11 @@ toolbarbutton.urlbar-button {
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
+#urlbar-throbber {
+  width: 24px;
+  height: 24px;
+}
 
-#urlbar-throbber,
 #urlbar-favicon {
   width: 32px;
   height: 32px;
@@ -1724,15 +1727,16 @@ setting {
 
 /* Sync setup ------------------------------------------------------------- */
 .content-dialog > .prompt-title {
-  margin: @margin_normal@ @margin_large@ 0px;
+  margin: @margin_large@;
 }
 
-.content-dialog > .prompt-line,
+.content-dialog > .prompt-line {
+  border-bottom: @border_width_xxlarge@ solid @color_divider_border@;
+  margin: 0 @margin_large@;
+}
+
 .content-dialog .prompt-message {
   margin: 0px @margin_large@;
-}
-
-.content-dialog .prompt-message {
   border-bottom: @border_width_tiny@ solid @color_button_border@;
 }
 
@@ -1741,14 +1745,15 @@ setting {
 }
 
 .syncsetup-code {
-  color: @color_text_textbox@;
-  background-color: @color_background_textbox@;
-  font-size: @font_xlarge@ !important;
-  padding: 0.2em 0.4em;
-  -moz-padding-end: 0.2em;
+  color: @color_text_header@;
+  background-color: @color_background_header@;
+  font-size: @font_xnormal@ !important;
+  font-weight: bold;
+  padding: .8em;
   letter-spacing: 0.2em;
   text-align: center;
-  min-width: 5.5em;
+  min-width: 8em;
+  margin: @margin_xtiny@ 0 0 0;
 }
 
 .syncsetup-label {
@@ -1760,7 +1765,7 @@ setting {
 }
 
 #sync-message {
-  padding-bottom: 2em;
+  padding: 1em 0;
 }
 
 /* content scrollbars */
@@ -1954,8 +1959,8 @@ setting {
 }
 
 .documenttab-popup-checkmark {
-  min-width: -moz-calc(26px + 2 * @padding_normal@); /* size of the checkmark image  plus the padding */
-  padding: 0px @padding_normal@;
+  min-width: -moz-calc(26px + @padding_normal@) !important; /* size of the checkmark image  plus the padding */
+  -moz-padding-end: @padding_normal@;
 }
 
 .tab-popup-item.selected .documenttab-popup-checkmark {
