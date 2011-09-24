@@ -791,12 +791,6 @@ var InspectorUI = {
    */
   openInspectorUI: function IUI_openInspectorUI(aNode)
   {
-    // InspectorUI is already up and running. Lock a node if asked (via context).
-    if (this.treeLoaded && this.highlighter && aNode) {
-      this.inspectNode(aNode);
-      this.stopInspecting();
-      return;
-    }
     // Observer used to inspect the specified element from content after the
     // inspector UI has been opened.
     function inspectObserver(aElement) {
