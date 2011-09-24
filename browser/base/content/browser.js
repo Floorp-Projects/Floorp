@@ -173,12 +173,6 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
   }
 });
 
-XPCOMUtils.defineLazyGetter(this, "InspectorUI", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/inspector.jsm", tmp);
-  return new tmp.InspectorUI(window);
-});
-
 let gInitialPages = [
   "about:blank",
   "about:privatebrowsing",
@@ -186,6 +180,7 @@ let gInitialPages = [
 ];
 
 #include browser-fullZoom.js
+#include ../../devtools/highlighter/inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
 #include browser-tabview.js
@@ -1681,8 +1676,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   TabView.init();
 
   // Enable Inspector?
-  let enabled = gPrefService.getBoolPref("devtools.inspector.enabled");
-  if (enabled) {
+  if (InspectorUI.enabled) {
     document.getElementById("menu_pageinspect").hidden = false;
     document.getElementById("Tools:Inspect").removeAttribute("disabled");
 #ifdef MENUBAR_CAN_AUTOHIDE
@@ -1729,9 +1723,6 @@ function BrowserShutdown() {
   // load completes). In that case, there's nothing to do here.
   if (!gStartupRan)
     return;
-
-  if (!__lookupGetter__("InspectorUI"))
-    InspectorUI.destroy();
 
   // First clean up services initialized in BrowserStartup (or those whose
   // uninit methods don't depend on the services having been initialized).
