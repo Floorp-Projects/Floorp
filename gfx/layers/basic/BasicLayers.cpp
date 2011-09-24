@@ -2689,7 +2689,7 @@ public:
 
 protected:
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntSize& aSize)
+  CreateBuffer(ContentType, const nsIntSize&, PRUint32)
   {
     NS_RUNTIMEABORT("ShadowThebesLayer can't paint content");
     return nsnull;
