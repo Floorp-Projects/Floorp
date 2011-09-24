@@ -61,7 +61,7 @@ function inspectorUIOpen1()
 
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   ok(!InspectorStore.isEmpty(), "InspectorStore is not empty");
   is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
@@ -87,7 +87,7 @@ function inspectorTabOpen2()
 {
   // Make sure the inspector is closed.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
+  ok(!InspectorUI.isPanelOpen, "Inspector Tree Panel is closed");
   is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
   // Activate the inspector again.
@@ -105,7 +105,7 @@ function inspectorUIOpen2()
 
   // Make sure the inspector is open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   is(InspectorStore.length, 2, "InspectorStore.length = 2");
 
   // Disable highlighting.
@@ -127,23 +127,7 @@ function inspectorFocusTab1()
 
   // Make sure the inspector is still open.
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorStore.length, 2, "InspectorStore.length = 2");
-  is(InspectorUI.selection, div, "selection matches the div element");
-
-  Services.obs.addObserver(inspectorOpenTreePanelTab1,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-
-  InspectorUI.treePanel.open();
-}
-
-function inspectorOpenTreePanelTab1()
-{
-  Services.obs.removeObserver(inspectorOpenTreePanelTab1,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-
-  ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   is(InspectorStore.length, 2, "InspectorStore.length = 2");
   is(InspectorUI.selection, div, "selection matches the div element");
 
@@ -160,40 +144,7 @@ function inspectorFocusTab2()
 
   // Make sure the inspector is still open.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  is(InspectorStore.length, 2, "InspectorStore.length = 2");
-  isnot(InspectorUI.selection, div, "selection does not match the div element");
-
-  // Switch back to tab 1.
-  Services.obs.addObserver(inspectorSecondFocusTab1,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-  gBrowser.selectedTab = tab1;
-}
-
-function inspectorSecondFocusTab1()
-{
-  Services.obs.removeObserver(inspectorSecondFocusTab1,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
-
-  ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
-  is(InspectorStore.length, 2, "InspectorStore.length = 2");
-  is(InspectorUI.selection, div, "selection matches the div element");
-
-  // Switch back to tab 2.
-  Services.obs.addObserver(inspectorSecondFocusTab2,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
-  gBrowser.selectedTab = tab2;
-}
-
-function inspectorSecondFocusTab2()
-{
-  Services.obs.removeObserver(inspectorSecondFocusTab2,
-    INSPECTOR_NOTIFICATIONS.OPENED);
-
-  // Make sure the inspector is still open.
-  ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   is(InspectorStore.length, 2, "InspectorStore.length = 2");
   isnot(InspectorUI.selection, div, "selection does not match the div element");
 
@@ -210,7 +161,7 @@ function inspectorTabUnload1(evt)
 
   // Make sure the Inspector is still open and that the state is correct.
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
   InspectorUI.closeInspectorUI();
