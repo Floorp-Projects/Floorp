@@ -6825,10 +6825,25 @@ var gPluginHandler = {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
 
-  // Callback for user clicking "submit a report" link
-  submitReport : function(pluginDumpID, browserDumpID) {
-    // The crash reporter wants a DOM element it can append an IFRAME to,
-    // which it uses to submit a form. Let's just give it gBrowser.
+  // When user clicks try, checks if we should also send crash report in bg
+  retryPluginPage: function (browser, plugin, pluginDumpID, browserDumpID) {
+    let doc = plugin.ownerDocument;
+
+    let statusDiv =
+      doc.getAnonymousElementByAttribute(plugin, "class", "submitStatus");
+    let status = statusDiv.getAttribute("status");
+
+    let submitChk =
+      doc.getAnonymousElementByAttribute(plugin, "class", "pleaseSubmitCheckbox");
+
+    // Check status to make sure we haven't submitted already
+    if (status == "please" && submitChk.checked) {
+      this.submitReport(pluginDumpID, browserDumpID);
+    }
+    this.reloadPage(browser);
+  },
+
+  submitReport: function (pluginDumpID, browserDumpID) {
     this.CrashSubmit.submit(pluginDumpID);
     if (browserDumpID)
       this.CrashSubmit.submit(browserDumpID);
@@ -7075,18 +7090,16 @@ var gPluginHandler = {
       status = "noSubmit";
     }
     else { // doPrompt
+      let submitChk = doc.getAnonymousElementByAttribute(
+                        plugin, "class", "pleaseSubmitCheckbox");
+      submitChk.checked = submitReports;
       status = "please";
-      // XXX can we make the link target actually be blank?
-      let pleaseLink = doc.getAnonymousElementByAttribute(
-                            plugin, "class", "pleaseSubmitLink");
-      this.addLinkClickCallback(pleaseLink, "submitReport",
-                                pluginDumpID, browserDumpID);
     }
 
     // If we don't have a minidumpID, we can't (or didn't) submit anything.
     // This can happen if the plugin is killed from the task manager.
     if (!pluginDumpID) {
-        status = "noReport";
+      status = "noReport";
     }
 
     statusDiv.setAttribute("status", status);
@@ -7123,7 +7136,7 @@ var gPluginHandler = {
       // ...alas, now we need something to hold a strong reference to prevent
       // it from being GC. But I don't want to manually manage the reference's
       // lifetime (which should be no greater than the page).
-      // Clever solution? Use a closue with an event listener on the document.
+      // Clever solution? Use a closure with an event listener on the document.
       // When the doc goes away, so do the listener references and the closure.
       doc.addEventListener("mozCleverClosureHack", observer, false);
     }
@@ -7135,7 +7148,12 @@ var gPluginHandler = {
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
 
     let link = doc.getAnonymousElementByAttribute(plugin, "class", "reloadLink");
+#ifdef MOZ_CRASHREPORTER
+    this.addLinkClickCallback(
+      link, "retryPluginPage", browser, plugin, pluginDumpID, browserDumpID);
+#else
     this.addLinkClickCallback(link, "reloadPage", browser);
+#endif
 
     let notificationBox = gBrowser.getNotificationBox(browser);
 
