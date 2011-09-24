@@ -2316,13 +2316,6 @@ ia64*-hpux*)
     cygwin*|msvc*|mks*)
         AC_MSG_ERROR([Using a Cygwin build environment is unsupported. Configure cannot check for presence of necessary headers. Please upgrade to MozillaBuild; see https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         ;;
-    *)
-        AC_CHECK_HEADERS(oleacc.idl)
-        AC_LANG_SAVE
-        AC_LANG_CPLUSPLUS
-        MOZ_CHECK_HEADERS(atlbase.h)
-        AC_LANG_RESTORE
-        ;;
     esac
 
     case "$target" in
@@ -5252,19 +5245,6 @@ MOZ_ARG_DISABLE_BOOL(accessibility,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
-fi
-
-if test -n "$ACCESSIBILITY" -a "$COMPILE_ENVIRONMENT" = "1"; then
-case "$target" in
-*-mingw*)
-    if test "$ac_cv_header_atlbase_h" = "no"; then
-        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
-    fi
-    if test "$ac_cv_header_oleacc_idl" = "no"; then
-        AC_MSG_ERROR([System header oleacc.idl is not available. See http://developer.mozilla.org/en/docs/oleacc.idl for details on fixing this problem.])
-    fi
-    ;;
-esac
 fi
 
 dnl ========================================================
