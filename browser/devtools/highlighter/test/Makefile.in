@@ -61,7 +61,6 @@ _BROWSER_FILES = \
 		browser_inspector_bug_566084_location_changed.js \
 		$(NULL)
 
-# Disabled due to constant failures
 # 		browser_inspector_treePanel_click.js \
 
 libs::	$(_BROWSER_FILES)

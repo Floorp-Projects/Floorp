@@ -39,8 +39,8 @@
 
 function test()
 {
-  let InspectorStore = InspectorUI.store;
-
+  ok(window.InspectorUI, "InspectorUI variable exists");
+  ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   is(InspectorStore.length, 0, "InspectorStore is empty");
   ok(InspectorStore.isEmpty(), "InspectorStore is empty (confirmed)");
   is(typeof InspectorStore.store, "object",
