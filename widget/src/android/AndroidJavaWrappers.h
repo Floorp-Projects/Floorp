@@ -175,8 +175,6 @@ public:
     void Draw2D(jobject bitmap, int width, int height);
     void Draw2D(jobject buffer, int stride);
 
-    jobject GetSurface();
-
     // must have a JNI local frame when calling this,
     // and you'd better know what you're doing
     jobject GetSurfaceHolder();
@@ -189,7 +187,6 @@ protected:
     static jmethodID jDraw2DBufferMethod;
     static jmethodID jGetSoftwareDrawBitmapMethod;
     static jmethodID jGetSoftwareDrawBufferMethod;
-    static jmethodID jGetSurfaceMethod;
     static jmethodID jGetHolderMethod;
 };
 
