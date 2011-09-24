@@ -1902,6 +1902,7 @@ GK_ATOM(_moz_maemo_classic, "-moz-maemo-classic")
 GK_ATOM(_moz_menubar_drag, "-moz-menubar-drag")
 GK_ATOM(_moz_device_pixel_ratio, "-moz-device-pixel-ratio")
 GK_ATOM(_moz_device_orientation, "-moz-device-orientation")
+GK_ATOM(_moz_is_resource_document, "-moz-is-resource-document")
 
 #ifdef ACCESSIBILITY
 GK_ATOM(anonid, "anonid")

@@ -59,7 +59,6 @@ tier_platform_dirs += modules/zlib
 endif
 
 tier_platform_dirs += \
-		modules/libreg \
 		modules/libpref \
 		intl \
 		netwerk \
@@ -75,11 +74,6 @@ endif
 
 ifndef MOZ_NATIVE_JPEG
 tier_platform_dirs	+= jpeg
-endif
-
-# Installer needs standalone libjar, hence standalone zlib
-ifdef MOZ_INSTALLER
-tier_platform_dirs	+= modules/zlib/standalone
 endif
 
 ifdef MOZ_UPDATER
