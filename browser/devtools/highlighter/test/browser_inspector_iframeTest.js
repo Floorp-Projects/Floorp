@@ -43,6 +43,7 @@ let div1;
 let div2;
 let iframe1;
 let iframe2;
+let highlighterFrame;
 
 function createDocument()
 {
@@ -98,6 +99,7 @@ function runIframeTests()
   Services.obs.addObserver(performTestComparisons1,
     INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
+  highlighterFrame = InspectorUI.highlighter.iframe;
   executeSoon(moveMouseOver.bind(this, div1));
 }
 

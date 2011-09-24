@@ -68,27 +68,16 @@ function startInspectorTests()
 function runInspectorTests()
 {
   Services.obs.removeObserver(runInspectorTests,
-    INSPECTOR_NOTIFICATIONS.OPENED);
-  Services.obs.addObserver(treePanelTests,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
-
-  ok(InspectorUI.toolbar, "we have the toolbar.");
-  ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
-  ok(InspectorUI.inspecting, "Inspector is inspecting");
-  ok(!InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is not open");
-  ok(InspectorUI.highlighter, "Highlighter is up");
-
-  InspectorUI.treePanel.open();
-}
-
-function treePanelTests()
-{
-  Services.obs.removeObserver(treePanelTests,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
+    INSPECTOR_NOTIFICATIONS.OPENED, false);
   Services.obs.addObserver(runContextMenuTest,
     INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
-  ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
+  ok(!InspectorUI.toolbar.hidden, "toolbar is visible");
+  let iframe = document.getElementById("inspector-tree-iframe");
+  is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
+  ok(InspectorUI.inspecting, "Inspector is inspecting");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
+  ok(InspectorUI.highlighter, "Highlighter is up");
 
   executeSoon(function() {
     InspectorUI.closeInspectorUI();
@@ -121,7 +110,7 @@ function inspectNodesFromContextTest()
   Services.obs.addObserver(openInspectorForContextTest, INSPECTOR_NOTIFICATIONS.CLOSED, false);
   ok(!InspectorUI.inspecting, "Inspector is not actively highlighting");
   is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
-  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   // TODO: These tests depend on the style inspector patches.
   todo(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
   executeSoon(function() {
@@ -173,9 +162,9 @@ function finishInspectorTests()
     INSPECTOR_NOTIFICATIONS.CLOSED);
 
   ok(!InspectorUI.highlighter, "Highlighter is gone");
-  ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
+  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not inspecting");
-  ok(!InspectorUI.toolbar, "toolbar is hidden");
+  ok(InspectorUI.toolbar.hidden, "toolbar is hidden");
 
   gBrowser.removeCurrentTab();
   finish();
