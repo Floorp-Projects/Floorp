@@ -68,6 +68,7 @@
 
 class nsILoadGroup;
 class AsyncVerifyRedirectCallbackForwarder;
+class nsIUnicodeDecoder;
 
 class nsXHREventTarget : public nsDOMEventTargetWrapperCache,
                          public nsIXMLHttpRequestEventTarget
@@ -206,8 +207,8 @@ public:
 protected:
   friend class nsMultipartProxyListener;
 
-  nsresult DetectCharset(nsACString& aCharset);
-  nsresult ConvertBodyToText(nsAString& aOutBuffer);
+  nsresult DetectCharset();
+  nsresult AppendToResponseText(const char * aBuffer, PRUint32 aBufferLen);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
                 void* closure,
                 const char* fromRawSegment,
@@ -273,15 +274,30 @@ protected:
     nsCString mHeaders;
   };
 
-  // The bytes of our response body
+  // The bytes of our response body. Only used for DEFAULT, ARRAYBUFFER and
+  // BLOB responseTypes
   nsCString mResponseBody;
 
-  // The Unicode version of our response body.  This is just a cache; if the
-  // string is not void, we have a cached value.  This works because we only
-  // allow looking at this value once state is INTERACTIVE, and at that
-  // point our charset can only change due to more data coming in, which
-  // will cause us to clear the cached value anyway.
-  nsString mResponseBodyUnicode;
+  // The text version of our response body. This is incrementally decoded into
+  // as we receive network data. However for the DEFAULT responseType we
+  // lazily decode into this from mResponseBody only when .responseText is
+  // accessed.
+  // Only used for DEFAULT and TEXT responseTypes.
+  nsString mResponseText;
+  
+  // For DEFAULT responseType we use this to keep track of how far we've
+  // lazily decoded from mResponseBody to mResponseText
+  PRUint32 mResponseBodyDecodedPos;
+
+  // Decoder used for decoding into mResponseText
+  // Only used for DEFAULT, TEXT and JSON responseTypes.
+  // In cases where we've only received half a surrogate, the decoder itself
+  // carries the state to remember this. Next time we receive more data we
+  // simply feed the new data into the decoder which will handle the second
+  // part of the surrogate.
+  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+
+  nsCString mResponseCharset;
 
   enum {
     XML_HTTP_RESPONSE_TYPE_DEFAULT,

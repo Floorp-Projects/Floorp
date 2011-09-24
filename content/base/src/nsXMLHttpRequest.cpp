@@ -418,7 +418,8 @@ NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
 /////////////////////////////////////////////
 
 nsXMLHttpRequest::nsXMLHttpRequest()
-  : mResponseType(XML_HTTP_RESPONSE_TYPE_DEFAULT),
+  : mResponseBodyDecodedPos(0),
+    mResponseType(XML_HTTP_RESPONSE_TYPE_DEFAULT),
     mRequestObserver(nsnull), mState(XML_HTTP_REQUEST_UNSENT),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(PR_TRUE),
     mProgressSinceLastProgressEvent(PR_FALSE),
@@ -430,7 +431,6 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mResultJSON(JSVAL_VOID),
     mResultArrayBuffer(nsnull)
 {
-  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   nsLayoutStatics::AddRef();
 }
 
@@ -560,11 +560,12 @@ nsXMLHttpRequest::ResetResponse()
 {
   mResponseXML = nsnull;
   mResponseBody.Truncate();
-  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
+  mResponseText.Truncate();
   mResponseBlob = nsnull;
   mResultArrayBuffer = nsnull;
   mResultJSON = JSVAL_VOID;
   mLoadTransferred = 0;
+  mResponseBodyDecodedPos = 0;
 }
 
 void
@@ -715,149 +716,106 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
  * from HTTP headers.
  */
 nsresult
-nsXMLHttpRequest::DetectCharset(nsACString& aCharset)
+nsXMLHttpRequest::DetectCharset()
 {
-  aCharset.Truncate();
-  nsresult rv;
-  nsCAutoString charsetVal;
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(mReadRequest));
+  mResponseCharset.Truncate();
+  mDecoder = nsnull;
+
+  if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
+      mResponseType != XML_HTTP_RESPONSE_TYPE_TEXT &&
+      mResponseType != XML_HTTP_RESPONSE_TYPE_JSON) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(mReadRequest);
   if (!channel) {
     channel = mChannel;
-    if (!channel) {
-      // There will be no mChannel when we got a necko error in
-      // OnStopRequest or if we were never sent.
-      return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCAutoString charsetVal;
+  nsresult rv = channel ? channel->GetContentCharset(charsetVal) :
+                NS_ERROR_FAILURE;
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsICharsetAlias> calias =
+      do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && calias) {
+      rv = calias->GetPreferred(charsetVal, mResponseCharset);
     }
   }
 
-  rv = channel->GetContentCharset(charsetVal);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID,&rv));
-    if(NS_SUCCEEDED(rv) && calias) {
-      rv = calias->GetPreferred(charsetVal, aCharset);
-    }
+  if (NS_FAILED(rv) || mResponseCharset.IsEmpty()) {
+    // MS documentation states UTF-8 is default for responseText
+    mResponseCharset.AssignLiteral("UTF-8");
   }
-  return rv;
+
+  nsCOMPtr<nsICharsetConverterManager> ccm =
+    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ccm->GetUnicodeDecoderRaw(mResponseCharset.get(),
+                                   getter_AddRefs(mDecoder));
 }
 
 nsresult
-nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
+nsXMLHttpRequest::AppendToResponseText(const char * aSrcBuffer,
+                                       PRUint32 aSrcBufferLen)
 {
+  NS_ENSURE_STATE(mDecoder);
+
+  PRInt32 destBufferLen;
+  nsresult rv = mDecoder->GetMaxLength(aSrcBuffer, aSrcBufferLen,
+                                       &destBufferLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mResponseText.SetCapacity(mResponseText.Length() + destBufferLen)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRUnichar* destBuffer = mResponseText.BeginWriting() + mResponseText.Length();
+
+  PRInt32 totalChars = mResponseText.Length();
+
   // This code here is basically a copy of a similar thing in
   // nsScanner::Append(const char* aBuffer, PRUint32 aLen).
   // If we get illegal characters in the input we replace
   // them and don't just fail.
-  if (!mResponseBodyUnicode.IsVoid()) {
-    aOutBuffer = mResponseBodyUnicode;
-    return NS_OK;
-  }
-  
-  PRInt32 dataLen = mResponseBody.Length();
-  if (!dataLen) {
-    mResponseBodyUnicode.SetIsVoid(PR_FALSE);
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-
-  nsCAutoString dataCharset;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(mResponseXML));
-  if (document) {
-    dataCharset = document->GetDocumentCharacterSet();
-  } else {
-    if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
-      // MS documentation states UTF-8 is default for responseText
-      dataCharset.AssignLiteral("UTF-8");
-    }
-  }
-
-  // XXXbz is the charset ever "ASCII" as opposed to "us-ascii"?
-  if (dataCharset.EqualsLiteral("ASCII")) {
-    CopyASCIItoUTF16(mResponseBody, mResponseBodyUnicode);
-    aOutBuffer = mResponseBodyUnicode;
-    return NS_OK;
-  }
-
-  // can't fast-path UTF-8 using CopyUTF8toUTF16, since above we assumed UTF-8
-  // by default and CopyUTF8toUTF16 will stop if it encounters bytes that aren't
-  // valid UTF-8.  So we have to do the whole unicode decoder thing.
-
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoderRaw(dataCharset.get(),
-                                 getter_AddRefs(decoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  const char * inBuffer = mResponseBody.get();
-  PRInt32 outBufferLength;
-  rv = decoder->GetMaxLength(inBuffer, dataLen, &outBufferLength);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsStringBuffer* buf =
-    nsStringBuffer::Alloc((outBufferLength + 1) * sizeof(PRUnichar));
-  if (!buf) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  PRUnichar* outBuffer = static_cast<PRUnichar*>(buf->Data());
-
-  PRInt32 totalChars = 0,
-          outBufferIndex = 0,
-          outLen = outBufferLength;
-
   do {
-    PRInt32 inBufferLength = dataLen;
-    rv = decoder->Convert(inBuffer,
-                          &inBufferLength,
-                          &outBuffer[outBufferIndex],
-                          &outLen);
-    totalChars += outLen;
+    PRInt32 srclen = (PRInt32)aSrcBufferLen;
+    PRInt32 destlen = (PRInt32)destBufferLen;
+    rv = mDecoder->Convert(aSrcBuffer,
+                           &srclen,
+                           destBuffer,
+                           &destlen);
     if (NS_FAILED(rv)) {
       // We consume one byte, replace it with U+FFFD
       // and try the conversion again.
-      outBuffer[outBufferIndex + outLen++] = (PRUnichar)0xFFFD;
-      outBufferIndex += outLen;
-      outLen = outBufferLength - (++totalChars);
 
-      decoder->Reset();
+      destBuffer[destlen] = (PRUnichar)0xFFFD; // add replacement character
+      destlen++; // skip written replacement character
+      destBuffer += destlen;
+      destBufferLen -= destlen;
 
-      if((inBufferLength + 1) > dataLen) {
-        inBufferLength = dataLen;
-      } else {
-        inBufferLength++;
+      if (srclen < (PRInt32)aSrcBufferLen) {
+        srclen++; // Consume the invalid character
       }
+      aSrcBuffer += srclen;
+      aSrcBufferLen -= srclen;
 
-      inBuffer = &inBuffer[inBufferLength];
-      dataLen -= inBufferLength;
+      mDecoder->Reset();
     }
-  } while ( NS_FAILED(rv) && (dataLen > 0) );
 
-  // Use the string buffer if it is small, or doesn't contain
-  // too much extra data.
-  if (outBufferLength < 127 ||
-      (outBufferLength * 0.9) < totalChars) {
-    outBuffer[totalChars] = PRUnichar(0);
-    // Move ownership to mResponseBodyUnicode.
-    buf->ToString(totalChars, mResponseBodyUnicode, PR_TRUE);
-  } else {
-    mResponseBodyUnicode.Assign(outBuffer, totalChars);
-    buf->Release();
-  }
-  aOutBuffer = mResponseBodyUnicode;
+    totalChars += destlen;
+
+  } while (NS_FAILED(rv) && aSrcBufferLen > 0);
+
+  mResponseText.SetLength(totalChars);
+
   return NS_OK;
 }
 
 /* readonly attribute AString responseText; */
 NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 {
-  nsresult rv = NS_OK;
-
   aResponseText.Truncate();
 
   if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
@@ -865,12 +823,53 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  if (mState & (XML_HTTP_REQUEST_DONE |
-                XML_HTTP_REQUEST_LOADING)) {
-    rv = ConvertBodyToText(aResponseText);
+  if (!(mState & (XML_HTTP_REQUEST_DONE | XML_HTTP_REQUEST_LOADING))) {
+    return NS_OK;
   }
 
-  return rv;
+  // We only decode text lazily if we're also parsing to a doc.
+  // Also, if we've decoded all current data already, then no need to decode
+  // more.
+  if (!mResponseXML ||
+      mResponseBodyDecodedPos == mResponseBody.Length()) {
+    aResponseText = mResponseText;
+    return NS_OK;
+  }
+
+  nsresult rv;
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(mResponseXML);
+  if (mResponseCharset != document->GetDocumentCharacterSet()) {
+    mResponseCharset == document->GetDocumentCharacterSet();
+    mResponseText.Truncate();
+    mResponseBodyDecodedPos = 0;
+
+    nsCOMPtr<nsICharsetConverterManager> ccm =
+      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ccm->GetUnicodeDecoderRaw(mResponseCharset.get(),
+                                   getter_AddRefs(mDecoder));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  NS_ASSERTION(mResponseBodyDecodedPos < mResponseBody.Length(),
+               "Unexpected mResponseBodyDecodedPos");
+  rv = AppendToResponseText(mResponseBody.get() + mResponseBodyDecodedPos,
+                            mResponseBody.Length() - mResponseBodyDecodedPos);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mResponseBodyDecodedPos = mResponseBody.Length();
+  
+  if (mState & XML_HTTP_REQUEST_DONE) {
+    // Free memory buffer which we no longer need
+    mResponseBody.Truncate();
+    mResponseBodyDecodedPos = 0;
+  }
+
+  aResponseText = mResponseText;
+
+  return NS_OK;
 }
 
 nsresult
@@ -880,11 +879,9 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
     return NS_ERROR_FAILURE;
   }
 
-  nsString bodyString;
-  ConvertBodyToText(bodyString);
   if (!JS_ParseJSON(aCx,
-                    (jschar*)PromiseFlatString(bodyString).get(),
-                    bodyString.Length(), &mResultJSON)) {
+                    (jschar*)mResponseText.get(),
+                    mResponseText.Length(), &mResultJSON)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1042,8 +1039,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
         rv = CreateResponseParsedJSON(aCx);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        mResponseBody.Truncate();
-        mResponseBodyUnicode.SetIsVoid(PR_TRUE);
+        mResponseText.Truncate();
       }
       *aResult = mResultJSON;
     } else {
@@ -1605,14 +1601,23 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
     return NS_OK;
   }
 
-  if (xmlHttpRequest->mResponseType != XML_HTTP_RESPONSE_TYPE_DOCUMENT) {
+  if ((xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT &&
+       xmlHttpRequest->mResponseXML) ||
+      xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER ||
+      xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB) {
     // Copy for our own use
     PRUint32 previousLength = xmlHttpRequest->mResponseBody.Length();
     xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
     if (count > 0 && xmlHttpRequest->mResponseBody.Length() == previousLength) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    xmlHttpRequest->mResponseBodyUnicode.SetIsVoid(PR_TRUE);
+  }
+  else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
+           xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_TEXT ||
+           xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_JSON) {
+    NS_ASSERTION(!xmlHttpRequest->mResponseXML,
+                 "We shouldn't be parsing a doc here");
+    xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
   }
 
   nsresult rv = NS_OK;
@@ -1673,7 +1678,6 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
     mResponseBlob =
       new nsDOMFileFile(file, NS_ConvertASCIItoUTF16(contentType), cacheToken);
     mResponseBody.Truncate();
-    mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   }
 }
 
@@ -1796,6 +1800,12 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   ResetResponse();
 
+  if (!mOverrideMimeType.IsEmpty()) {
+    channel->SetContentType(mOverrideMimeType);
+  }
+
+  DetectCharset();
+
   // Set up responseXML
   PRBool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
                      mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT;
@@ -1807,10 +1817,6 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 
   if (parseBody && NS_SUCCEEDED(status)) {
-    if (!mOverrideMimeType.IsEmpty()) {
-      channel->SetContentType(mOverrideMimeType);
-    }
-
     // We can gain a huge performance win by not even trying to
     // parse non-XML data. This also protects us from the situation
     // where we have an XML document and sink, but HTML (or other)
@@ -1969,8 +1975,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
                               NS_ConvertASCIItoUTF16(contentType));
         mResponseBody.Truncate();
       }
-      NS_ASSERTION(mResponseBodyUnicode.IsVoid(),
-                   "mResponseBodyUnicode should be empty");
+      NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
     }
   }
 
