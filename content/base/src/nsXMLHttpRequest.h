@@ -305,7 +305,9 @@ protected:
     XML_HTTP_RESPONSE_TYPE_BLOB,
     XML_HTTP_RESPONSE_TYPE_DOCUMENT,
     XML_HTTP_RESPONSE_TYPE_TEXT,
-    XML_HTTP_RESPONSE_TYPE_JSON
+    XML_HTTP_RESPONSE_TYPE_JSON,
+    XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT,
+    XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER
   } mResponseType;
 
   nsCOMPtr<nsIDOMBlob> mResponseBlob;
@@ -350,6 +352,7 @@ protected:
   nsCOMPtr<nsITimer> mProgressNotifier;
 
   PRPackedBool mFirstStartRequestSeen;
+  PRPackedBool mInLoadProgressEvent;
   
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;

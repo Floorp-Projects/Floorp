@@ -428,6 +428,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mProgressEventWasDelayed(PR_FALSE),
     mLoadLengthComputable(PR_FALSE), mLoadTotal(0),
     mFirstStartRequestSeen(PR_FALSE),
+    mInLoadProgressEvent(PR_FALSE),
     mResultJSON(JSVAL_VOID),
     mResultArrayBuffer(nsnull)
 {
@@ -723,7 +724,8 @@ nsXMLHttpRequest::DetectCharset()
 
   if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
       mResponseType != XML_HTTP_RESPONSE_TYPE_TEXT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_JSON) {
+      mResponseType != XML_HTTP_RESPONSE_TYPE_JSON &&
+      mResponseType != XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT) {
     return NS_OK;
   }
 
@@ -819,8 +821,15 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
   aResponseText.Truncate();
 
   if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_TEXT) {
+      mResponseType != XML_HTTP_RESPONSE_TYPE_TEXT &&
+      mResponseType != XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT &&
+      !mInLoadProgressEvent) {
+    aResponseText.SetIsVoid(PR_TRUE);
+    return NS_OK;
   }
 
   if (!(mState & (XML_HTTP_REQUEST_DONE | XML_HTTP_REQUEST_LOADING))) {
@@ -933,6 +942,12 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseType(nsAString& aResponseType)
   case XML_HTTP_RESPONSE_TYPE_JSON:
     aResponseType.AssignLiteral("moz-json");
     break;
+  case XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT:
+    aResponseType.AssignLiteral("moz-chunked-text");
+    break;
+  case XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER:
+    aResponseType.AssignLiteral("moz-chunked-arraybuffer");
+    break;
   default:
     NS_ERROR("Should not happen");
   }
@@ -962,6 +977,16 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
     mResponseType = XML_HTTP_RESPONSE_TYPE_TEXT;
   } else if (aResponseType.EqualsLiteral("moz-json")) {
     mResponseType = XML_HTTP_RESPONSE_TYPE_JSON;
+  } else if (aResponseType.EqualsLiteral("moz-chunked-text")) {
+    if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+    mResponseType = XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT;
+  } else if (aResponseType.EqualsLiteral("moz-chunked-arraybuffer")) {
+    if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+    mResponseType = XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER;
   }
   // If the given value is not the empty string, "arraybuffer",
   // "blob", "document", or "text" terminate these steps.
@@ -989,20 +1014,29 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
   switch (mResponseType) {
   case XML_HTTP_RESPONSE_TYPE_DEFAULT:
   case XML_HTTP_RESPONSE_TYPE_TEXT:
+  case XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT:
     {
       nsString str;
       rv = GetResponseText(str);
       if (NS_FAILED(rv)) return rv;
-      nsStringBuffer* buf;
-      *aResult = XPCStringConvert::ReadableToJSVal(aCx, str, &buf);
-      if (buf) {
-        str.ForgetSharedBuffer();
+      if (str.IsVoid()) {
+        *aResult = JSVAL_NULL;
+      } else {
+        nsStringBuffer* buf;
+        *aResult = XPCStringConvert::ReadableToJSVal(aCx, str, &buf);
+        if (buf) {
+          str.ForgetSharedBuffer();
+        }
       }
     }
     break;
 
   case XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER:
-    if (mState & XML_HTTP_REQUEST_DONE) {
+  case XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER:
+    if ((mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+         mState & XML_HTTP_REQUEST_DONE) ||
+        (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER &&
+         mInLoadProgressEvent)) {
       if (!mResultArrayBuffer) {
          rv = CreateResponseArrayBuffer(aCx);
          NS_ENSURE_SUCCESS(rv, rv);
@@ -1604,17 +1638,18 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
   if ((xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT &&
        xmlHttpRequest->mResponseXML) ||
       xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER ||
-      xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB) {
+      xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
+      xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
     // Copy for our own use
     PRUint32 previousLength = xmlHttpRequest->mResponseBody.Length();
     xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
     if (count > 0 && xmlHttpRequest->mResponseBody.Length() == previousLength) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
-  else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
-           xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_TEXT ||
-           xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_JSON) {
+  } else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
+             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_TEXT ||
+             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_JSON ||
+             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT) {
     NS_ASSERTION(!xmlHttpRequest->mResponseXML,
                  "We shouldn't be parsing a doc here");
     xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
@@ -2991,9 +3026,17 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(PRBool aFinalProgress)
       mLoadTotal = mLoadTransferred;
       mLoadLengthComputable = PR_TRUE;
     }
+    mInLoadProgressEvent = PR_TRUE;
     DispatchProgressEvent(this, NS_LITERAL_STRING(PROGRESS_STR),
                           PR_TRUE, mLoadLengthComputable, mLoadTransferred,
                           mLoadTotal, mLoadTransferred, mLoadTotal);
+    mInLoadProgressEvent = PR_FALSE;
+    if (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT ||
+        mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
+      mResponseBody.Truncate();
+      mResponseText.Truncate();
+      mResultArrayBuffer = nsnull;
+    }
   }
 
   mProgressSinceLastProgressEvent = PR_FALSE;

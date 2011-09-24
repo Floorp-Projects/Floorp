@@ -499,6 +499,8 @@ _TEST_FILES2 = \
 		accesscontrol.resource^headers^ \
 		invalid_accesscontrol.resource \
 		invalid_accesscontrol.resource^headers^ \
+		test_xhr_progressevents.html \
+		progressserver.sjs \
 		somedatas.resource \
 		somedatas.resource^headers^ \
 		delayedServerEvents.sjs \
