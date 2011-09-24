@@ -40,7 +40,6 @@ asm/signal.h
 ASRegistry.h
 assert.h
 atk/atk.h
-atlbase.h
 atlcom.h
 atlconv.h
 atlctl.cpp

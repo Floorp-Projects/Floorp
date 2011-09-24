@@ -1,0 +1,282 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for XMLHttpRequest Progress Events</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="gen.next();">
+<pre id=l></pre>
+<script type="application/javascript;version=1.7">
+SimpleTest.waitForExplicitFinish();
+
+var gen = runTests();
+
+function log(s) {
+  //document.getElementById("l").textContent += s + "\n";
+}
+
+function getEvent(e) {
+  log("got event: " + e.type + " (" + e.target.readyState + ")");
+  gen.send(e);
+}
+
+function startsWith(a, b) {
+  return a.substr(0, b.length) === b;
+}
+
+function updateProgress(e, data, testName) {
+  var test = " while running " + testName;
+  is(e.type, "progress", "event type" + test);
+  
+  let response;
+  if (data.nodata) {
+    is(e.target.response, null, "response should be null" + test);
+    response = null;
+  }
+  else if (data.text) {
+    is(typeof e.target.response, "string", "response should be a string" + test);
+    response = e.target.response;
+  }
+  else {
+    ok(e.target.response instanceof ArrayBuffer, "response should be a ArrayBuffer" + test);
+    response = bufferToString(e.target.response);
+  }
+
+  if (!data.nodata && !data.encoded) {
+    if (!data.chunked) {
+      is(e.loaded, response.length, "event.loaded matches response size" + test);
+    }
+    else {
+      is(e.loaded - data.receivedBytes, response.length,
+         "event.loaded grew by response size" + test);
+    }
+  }
+  ok(e.loaded > data.receivedBytes, "event.loaded increased" + test);
+  ok(e.loaded - data.receivedBytes <= data.pendingBytes,
+     "event.loaded didn't increase too much" + test);
+
+  if (!data.nodata) {
+    var newData;
+    ok(startsWith(response, data.receivedResult),
+       "response strictly grew" + test);
+    newData = response.substr(data.receivedResult.length);
+  
+    if (!data.encoded) {
+      ok(newData.length > 0, "sanity check for progress" + test);
+    }
+    ok(startsWith(data.pendingResult, newData), "new data matches expected" + test);
+  }
+
+  is(e.lengthComputable, "total" in data, "lengthComputable" + test);
+  if ("total" in data) {
+    is(e.total, data.total, "total" + test);
+  }
+
+  if (!data.nodata) {
+    data.pendingResult = data.pendingResult.substr(newData.length);
+  }
+  data.pendingBytes -= e.loaded - data.receivedBytes;
+  data.receivedResult = response;
+  data.receivedBytes = e.loaded;
+}
+
+function sendData(s) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "progressserver.sjs?send");
+  xhr.sendAsBinary(s);
+}
+
+function closeConn() {
+  log("in closeConn");
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "progressserver.sjs?close");
+  xhr.send();
+}
+
+var longString = "long";
+while(longString.length < 65536)
+  longString += longString;
+
+function utf8encode(s) {
+  return unescape(encodeURIComponent(s));
+}
+
+function bufferToString(buffer) {
+  return String.fromCharCode.apply(String, new Uint8Array(buffer));
+}
+
+function runTests() {
+  var xhr = new XMLHttpRequest();
+  xhr.onprogress = xhr.onload = xhr.onerror = xhr.onreadystatechange = xhr.onloadend = getEvent;
+
+  var responseTypes = [{ type: "text", text: true },
+                       { type: "arraybuffer", text: false, nodata: true },
+                       { type: "blob", text: false, nodata: true },
+                       { type: "document", text: true, nodata: true },
+                       { type: "moz-json", text: true, nodata: true },
+                       { type: "", text: true },
+                       { type: "moz-chunked-text", text: true, chunked: true },
+                       { type: "moz-chunked-arraybuffer", text: false, chunked: true },
+                      ];
+  var responseType;
+  while (responseType = responseTypes.shift()) {
+    let tests = [{ open: "Content-Type=text/plain", name: "simple test" },
+                 { data: "hello world" },
+                 { data: "\u0000\u0001\u0002\u0003" },
+                 { data: longString },
+                 { data: "x" },
+                 { close: true },
+                 { open: "Content-Type=text/plain&Content-Length=20", name: "with length", total: 20 },
+                 // 5 bytes from the "ready" in the open step
+                 { data: "abcde" },
+                 { data: "0123456789" },
+                 { close: true },
+                 { open: "Content-Type=application/xml", data: "ready", name: "without length, as xml" },
+                 { data: "<out>" },
+                 { data: "text" },
+                 { data: "</foo>invalid" },
+                 { close: true },
+                 { open: "Content-Type=text/plain;charset%3dutf-8", name: "utf8 data", encoded: true },
+                 { data: utf8encode("räksmörgås"), utf16: "räksmörgås" },
+                 { data: utf8encode("Å").substr(0,1), utf16: "" },
+                 { data: utf8encode("Å").substr(1), utf16: "Å" },
+                 { data: utf8encode("aöb").substr(0,2), utf16: "a" },
+                 { data: utf8encode("aöb").substr(2), utf16: "öb" },
+                 { data: utf8encode("a\u867Eb").substr(0,3), utf16: "a" },
+                 { data: utf8encode("a\u867Eb").substr(3,1), utf16: "\u867E" },
+                 { data: utf8encode("a\u867Eb").substr(4), utf16: "b" },
+                 { close: true },
+                 ];
+    let testState = { index: 0 };
+  
+    for (let i = 0; i < tests.length; ++i) {
+      let test = tests[i];
+      testState.index++;
+      if ("open" in test) {
+        log("opening " + testState.name);
+        testState = { name: test.name + " for " + responseType.type,
+                      index: 0,
+                      pendingResult: "ready",
+                      pendingBytes: 5,
+                      receivedResult: "",
+                      receivedBytes: 0,
+                      total: test.total,
+                      encoded: test.encoded,
+                      nodata: responseType.nodata,
+                      chunked: responseType.chunked,
+                      text: responseType.text };
+  
+        xhr.onreadystatechange = null;
+        xhr.open("POST", "progressserver.sjs?open&" + test.open);
+        xhr.responseType = responseType.type;
+        xhr.send("ready");
+        xhr.onreadystatechange = getEvent;
+
+        let e = yield;
+        is(e.type, "readystatechange", "should readystate to headers-received starting " + testState.name);
+        is(xhr.readyState, xhr.HEADERS_RECEIVED, "should be in state HEADERS_RECEIVED starting " + testState.name);
+  
+        e = yield;
+        is(e.type, "readystatechange", "should readystate to loading starting " + testState.name);
+        is(xhr.readyState, xhr.LOADING, "should be in state LOADING starting " + testState.name);
+        if (typeof testState.total == "undefined")
+          delete testState.total;
+      }
+      else if ("close" in test) {
+        log("closing");
+        closeConn();
+
+        e = yield;
+        is(e.type, "readystatechange", "should readystate to done closing " + testState.name);
+        is(xhr.readyState, xhr.DONE, "should be in state DONE closing " + testState.name);
+        log("readystate to 4");
+
+        if (responseType.chunked) {
+          xhr.responseType;
+          is(xhr.response, null, "chunked data has null response for " + testState.name);
+        }
+      
+        e = yield;
+        is(e.type, "load", "should fire load closing " + testState.name);
+        is(e.lengthComputable, true, "length should be computable during load closing " + testState.name);
+        log("got load");
+
+        if (responseType.chunked) {
+          is(xhr.response, null, "chunked data has null response for " + testState.name);
+        }
+      
+        e = yield;
+        is(e.type, "loadend", "should fire loadend closing " + testState.name);
+        is(e.lengthComputable, true, "length should be computable during loadend closing " + testState.name);
+        log("got loadend");
+
+        if (responseType.chunked) {
+          is(xhr.response, null, "chunked data has null response for " + testState.name);
+        }
+
+        if (!testState.nodata || responseType.chunked) {
+          // This branch intentionally left blank
+          // Under these conditions we check the response during updateProgress
+        }
+        else if (responseType.type === "arraybuffer") {
+          is(bufferToString(xhr.response), testState.pendingResult,
+             "full response for " + testState.name);
+        }
+        else if (responseType.type === "blob") {
+          let reader = new FileReader;
+          reader.readAsBinaryString(xhr.response);
+          reader.onloadend = getEvent;
+          yield;
+
+          is(reader.result, testState.pendingResult,
+             "full response in blob for " + testState.name);
+        }
+
+        testState.name = "";
+      }
+      else {
+        log("sending");
+        if (responseType.text) {
+          testState.pendingResult += "utf16" in test ? test.utf16 : test.data;
+        }
+        else {
+          testState.pendingResult += test.data;
+        }
+        testState.pendingBytes = test.data.length;
+        sendData(test.data);
+      }
+  
+      while(testState.pendingBytes) {
+        log("waiting for more bytes: " + testState.pendingBytes);
+        e = yield;
+        // Readystate can fire several times between each progress event.
+        if (e.type === "readystatechange")
+          continue;
+  
+        updateProgress(e, testState, "data for " + testState.name + "[" + testState.index + "]");
+        if (responseType.chunked) {
+          testState.receivedResult = "";
+        }
+      }
+
+      if (!testState.nodata) {
+        is(testState.pendingResult, "",
+           "should have consumed the expected result");
+      }
+
+      log("done with this test");
+    }
+  
+    is(testState.name, "", "forgot to close last test");
+  }
+
+  SimpleTest.finish();
+  yield;
+}
+
+</script>
+
+</body>
+</html>
