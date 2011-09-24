@@ -294,12 +294,6 @@ MAKEFILES_libjar="
   modules/libjar/test/Makefile
 "
 
-MAKEFILES_libreg="
-  modules/libreg/Makefile
-  modules/libreg/include/Makefile
-  modules/libreg/src/Makefile
-"
-
 MAKEFILES_libpref="
   modules/libpref/Makefile
   modules/libpref/public/Makefile
@@ -714,10 +708,6 @@ MAKEFILES_accessible="
   accessible/build/Makefile
 "
 
-MAKEFILES_zlib="
-  modules/zlib/standalone/Makefile
-"
-
 MAKEFILES_libmar="
   modules/libmar/Makefile
   modules/libmar/src/Makefile
@@ -754,7 +744,6 @@ add_makefiles "
   $MAKEFILES_content
   $MAKEFILES_layout
   $MAKEFILES_libjar
-  $MAKEFILES_libreg
   $MAKEFILES_libpref
   $MAKEFILES_mathml
   $MAKEFILES_plugin
@@ -775,7 +764,6 @@ add_makefiles "
   $MAKEFILES_xulapp
   $MAKEFILES_libpr0n
   $MAKEFILES_accessible
-  $MAKEFILES_zlib
   $MAKEFILES_libmar
   $MAKEFILES_extensions
   $MAKEFILES_startupcache
