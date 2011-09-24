@@ -672,8 +672,18 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             break;
         }
     case nsXPTType::T_JSVAL :
-        *((jsval*)d) = s;
-        break;
+        {
+            if (useAllocator) {
+                // The C++ type is (const jsval &), which here means (jsval *).
+                jsval *buf = new jsval(s);
+                if(!buf)
+                    return JS_FALSE;
+                *((jsval**)d) = buf;
+            } else {
+                *((jsval*)d) = s;
+            }
+            break;
+        }
     default:
         if(!type.IsPointer())
         {
@@ -689,6 +699,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_FALSE;
         case nsXPTType::T_IID:
         {
+            NS_ASSERTION(useAllocator,"trying to convert a JSID to nsID without allocator : this would leak");
+
             JSObject* obj;
             const nsID* pid=nsnull;
 
@@ -818,6 +830,13 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
         case nsXPTType::T_CHAR_STR:
         {
+            NS_ASSERTION(useAllocator,"cannot convert a JSString to char * without allocator");
+            if(!useAllocator)
+            {
+                NS_ERROR("bad type");
+                return JS_FALSE;
+            }
+            
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
                 if(type.IsReference())
@@ -888,20 +907,31 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
-            if(!(chars = JS_GetStringCharsZ(cx, str)))
+            if(useAllocator)
             {
-                return JS_FALSE;
+                if(!(chars = JS_GetStringCharsZ(cx, str)))
+                {
+                    return JS_FALSE;
+                }
+                int len = JS_GetStringLength(str);
+                int byte_len = (len+1)*sizeof(jschar);
+                if(!(*((void**)d) = nsMemory::Alloc(byte_len)))
+                {
+                    // XXX should report error
+                    return JS_FALSE;
+                }
+                jschar* destchars = *((jschar**)d);
+                memcpy(destchars, chars, byte_len);
+                destchars[len] = 0;
             }
-            int len = JS_GetStringLength(str);
-            int byte_len = (len+1)*sizeof(jschar);
-            if(!(*((void**)d) = nsMemory::Alloc(byte_len)))
+            else
             {
-                // XXX should report error
-                return JS_FALSE;
+                if(!(chars = JS_GetStringCharsZ(cx, str)))
+                {
+                    return JS_FALSE;
+                }
+                *((const jschar**)d) = chars;
             }
-            jschar* destchars = *((jschar**)d);
-            memcpy(destchars, chars, byte_len);
-            destchars[len] = 0;
 
             return JS_TRUE;
         }
@@ -1819,6 +1849,107 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
     return rv;
 }
 
+
+/***************************************************************************/
+
+/*
+** Note: on some platforms va_list is defined as an array,
+** and requires array notation.
+*/
+#ifdef HAVE_VA_COPY
+#define VARARGS_ASSIGN(foo, bar)	VA_COPY(foo,bar)
+#elif defined(HAVE_VA_LIST_AS_ARRAY)
+#define VARARGS_ASSIGN(foo, bar)	foo[0] = bar[0]
+#else
+#define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
+#endif
+
+// We assert below that these formats all begin with "%i".
+const char* XPC_ARG_FORMATTER_FORMAT_STRINGS[] = {"%ip", "%iv", "%is", nsnull};
+
+JSBool
+XPC_JSArgumentFormatter(JSContext *cx, const char *format,
+                        JSBool fromJS, jsval **vpp, va_list *app)
+{
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+    if(!ccx.IsValid())
+        return JS_FALSE;
+
+    jsval *vp;
+    va_list ap;
+
+    vp = *vpp;
+    VARARGS_ASSIGN(ap, *app);
+
+    nsXPTType type;
+    const nsIID* iid;
+    void* p;
+
+    NS_ASSERTION(format[0] == '%' && format[1] == 'i', "bad format!");
+    char which = format[2];
+
+    if(fromJS)
+    {
+        switch(which)
+        {
+            case 'p':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid = &NS_GET_IID(nsISupports);
+                break;
+            case 'v':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid = &NS_GET_IID(nsIVariant);
+                break;
+            case 's':
+                type = nsXPTType((uint8)(TD_DOMSTRING | XPT_TDP_POINTER));                
+                iid = nsnull;
+                p = va_arg(ap, void *);
+                break;
+            default:
+                NS_ERROR("bad format!");
+                return JS_FALSE;
+        }
+
+        if(!XPCConvert::JSData2Native(ccx, &p, vp[0], type, JS_FALSE,
+                                      iid, nsnull))
+            return JS_FALSE;
+        
+        if(which != 's')
+            *va_arg(ap, void **) = p;
+    }
+    else
+    {
+        switch(which)
+        {
+            case 'p':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid  = va_arg(ap, const nsIID*);
+                break;
+            case 'v':
+                type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));                
+                iid = &NS_GET_IID(nsIVariant);
+                break;
+            case 's':
+                type = nsXPTType((uint8)(TD_DOMSTRING | XPT_TDP_POINTER));                
+                iid = nsnull;
+                break;
+            default:
+                NS_ERROR("bad format!");
+                return JS_FALSE;
+        }
+
+        // NOTE: MUST be retrieved *after* the iid in the 'p' case above.
+        p = va_arg(ap, void *);
+
+        ccx.SetScopeForNewJSObjects(JS_GetGlobalForScopeChain(cx));
+        if(!XPCConvert::NativeData2JS(ccx, &vp[0], &p, type, iid, nsnull))
+            return JS_FALSE;
+    }
+    *vpp = vp + 1;
+    VARARGS_ASSIGN(*app, ap);
+    return JS_TRUE;
+}
+
 /***************************************************************************/
 
 // array fun...
@@ -1919,7 +2050,8 @@ failure:
 JSBool
 XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                            JSUint32 count, JSUint32 capacity,
-                           const nsXPTType& type, const nsID* iid,
+                           const nsXPTType& type,
+                           JSBool useAllocator, const nsID* iid,
                            uintN* pErr)
 {
     NS_PRECONDITION(d, "bad param");
@@ -1999,7 +2131,7 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
         {                                                                    \
             if(!JS_GetElement(cx, jsarray, initedCount, &current) ||         \
                !JSData2Native(ccx, ((_t*)array)+initedCount, current, type,  \
-                              JS_TRUE, iid, pErr))                           \
+                              useAllocator, iid, pErr))                      \
                 goto failure;                                                \
         }                                                                    \
     PR_END_MACRO
@@ -2056,7 +2188,7 @@ failure:
                 NS_IF_RELEASE(p);
             }
         }
-        else if(cleanupMode == fr)
+        else if(cleanupMode == fr && useAllocator)
         {
             void** a = (void**) array;
             for(PRUint32 i = 0; i < initedCount; i++)
@@ -2128,6 +2260,7 @@ JSBool
 XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                                     JSUint32 count, JSUint32 capacity,
                                     const nsXPTType& type,
+                                    JSBool useAllocator,
                                     uintN* pErr)
 {
     NS_PRECONDITION(!JSVAL_IS_NULL(s), "bad param");
@@ -2156,6 +2289,13 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
     {
         case nsXPTType::T_PSTRING_SIZE_IS:
         {
+            NS_ASSERTION(useAllocator,"cannot convert a JSString to char * without allocator");
+            if(!useAllocator)
+            {
+                XPC_LOG_ERROR(("XPCConvert::JSStringWithSize2Native : unsupported type"));
+                return JS_FALSE;
+            }
+
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
                 if(0 != count)
@@ -2239,7 +2379,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
                 }
 
-                if(0 != capacity)
+                if(useAllocator && 0 != capacity)
                 {
                     len = (capacity + 1) * sizeof(jschar);
                     if(!(*((void**)d) = nsMemory::Alloc(len)))
@@ -2267,18 +2407,29 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
             if(len < capacity)
                 len = capacity;
 
-            if(!(chars = JS_GetStringCharsZ(cx, str)))
+            if(useAllocator)
             {
-                return JS_FALSE;
+                if(!(chars = JS_GetStringCharsZ(cx, str)))
+                {
+                    return JS_FALSE;
+                }
+                JSUint32 alloc_len = (len + 1) * sizeof(jschar);
+                if(!(*((void**)d) = nsMemory::Alloc(alloc_len)))
+                {
+                    // XXX should report error
+                    return JS_FALSE;
+                }
+                memcpy(*((jschar**)d), chars, alloc_len);
+                (*((jschar**)d))[count] = 0;
             }
-            JSUint32 alloc_len = (len + 1) * sizeof(jschar);
-            if(!(*((void**)d) = nsMemory::Alloc(alloc_len)))
+            else
             {
-                // XXX should report error
-                return JS_FALSE;
+                if(!(chars = JS_GetStringCharsZ(cx, str)))
+                {
+                    return JS_FALSE;
+                }
+                *((const jschar**)d) = chars;
             }
-            memcpy(*((jschar**)d), chars, alloc_len);
-            (*((jschar**)d))[count] = 0;
 
             return JS_TRUE;
         }
