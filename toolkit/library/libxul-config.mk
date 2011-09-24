@@ -64,7 +64,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
 ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-REQUIRES += libreg
 DEFINES	+= -DZLIB_DLL=1
 endif
 
@@ -112,7 +111,6 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	chromium_s \
-	mozreg_s \
 	$(NULL)
 
 # component libraries
