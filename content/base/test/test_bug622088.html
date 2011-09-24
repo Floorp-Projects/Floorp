@@ -21,6 +21,8 @@
 // Bug 622088 - Test that XHR gives the referrer corresponding to the
 // dynamic script context.
 
+const kOriginalLocation = location.href;
+
 SimpleTest.waitForExplicitFinish();
 
 var innerFinishedLoading = false;
@@ -77,6 +79,7 @@ function callXHR() {
     // here and test again with the outer frame.  Calling pushState on the
     // outer frame messes up Mochitest in subtle ways.
 
+    history.replaceState('', '', kOriginalLocation);
     SimpleTest.finish();
   }
   else {

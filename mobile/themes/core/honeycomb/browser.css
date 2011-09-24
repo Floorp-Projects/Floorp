@@ -326,16 +326,10 @@ toolbarbutton.urlbar-button {
 .button-control {
   padding: 0 !important;
   min-width: @sidebar_width_minimum@ !important;
-  border-top: @border_width_tiny@ solid @color_divider_border@ !important;
-  border-bottom: @border_width_tiny@ solid @color_divider_border@ !important;
   background-color: transparent !important;
   -moz-box-align: center;
   -moz-box-pack: center;
   height: @sidebar_button_height@;
-}
-
-.button-control:last-child {
-  border-bottom: 0 solid @color_divider_border@ !important;
 }
 
 .button-control[disabled="true"] {
@@ -496,24 +490,34 @@ toolbarbutton.choice-remotetabs[checked="true"] {
 }
 
 /* awesomescreen panels ---------------------------------------------------- */
-historylist > hbox.history-throbber-box,
-remotetabslist > hbox.remotetabs-throbber-box {
-  display: none;
-}
-
-.history-throbber-box > image,
-.remotetabs-throbber-box > image {
+.history-throbber-box,
+.remotetabs-throbber-box {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
 
-historylist[loading="true"] > hbox.history-throbber-box,
-remotetabslist[loading="true"] > hbox.remotetabs-throbber-box {
-  background-color: white; /* force */
+.remotetabs-message-box {
+  font-size: @font_small@ !important;
+  font-weight: normal;
+  text-align: center;
+  color: grey;
+}
+
+.history-throbber-box,
+.remotetabs-throbber-box,
+.remotetabs-message-box {
+  display: none;
+}
+
+historylist[loading="true"] > .history-throbber-box,
+remotetabslist[loading="true"] > .remotetabs-throbber-box,
+remotetabslist[message] > .remotetabs-message-box {
+  background-color: white;
   display: -moz-box;
 }
 
-historylist[loading="true"] > richlistbox.history-list-children,
-remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
+historylist[loading="true"] > .history-list-children,
+remotetabslist[loading="true"] > .remotetabs-list-children,
+remotetabslist[message] > .remotetabs-list-children {
   visibility: collapse;
 }
 

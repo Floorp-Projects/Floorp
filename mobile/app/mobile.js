@@ -554,8 +554,6 @@ pref("font.default.x-western", "SwissA");
 #endif
 
 #ifdef MOZ_SERVICES_SYNC
-pref("browser.sync.enabled", true);
-
 // sync service
 pref("services.sync.client.type", "mobile");
 pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs");
@@ -670,9 +668,6 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 // True if this is the first time we are showing about:firstrun
 pref("browser.firstrun.show.uidiscovery", true);
 pref("browser.firstrun.show.localepicker", true);
-
-// initiated by a user
-pref("content.ime.strict_policy", true);
 
 // True if you always want dump() to work
 //
