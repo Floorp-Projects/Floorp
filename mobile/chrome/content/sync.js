@@ -52,21 +52,15 @@ let WeaveGlue = {
 
     this.setupData = { account: "", password: "" , synckey: "", serverURL: "" };
 
-    let enableSync = Services.prefs.getBoolPref("browser.sync.enabled");
-    if (enableSync)
-      this._elements.connect.collapsed = false;
-
     // Generating keypairs is expensive on mobile, so disable it
     if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-      if (enableSync) {
-        // Put the settings UI into a state of "connecting..." if we are going to auto-connect
-        this._elements.connect.firstChild.disabled = true;
-        this._elements.connect.setAttribute("title", this._bundle.GetStringFromName("connecting.label"));
+      // Put the settings UI into a state of "connecting..." if we are going to auto-connect
+      this._elements.connect.firstChild.disabled = true;
+      this._elements.connect.setAttribute("title", this._bundle.GetStringFromName("connecting.label"));
 
-        try {
-          this._elements.device.value = Services.prefs.getCharPref("services.sync.client.name");
-        } catch(e) {}
-      }
+      try {
+        this._elements.device.value = Services.prefs.getCharPref("services.sync.client.name");
+      } catch(e) {}
     } else if (Weave.Status.login != Weave.LOGIN_FAILED_NO_USERNAME) {
       this.loadSetupData();
     }
@@ -257,36 +251,33 @@ let WeaveGlue = {
     this._elements.disconnect.collapsed = !show;
   },
 
-  toggleSyncEnabled: function toggleSyncEnabled() {
-    let enabled = this._elements.autosync.value;
-    if (enabled) {
-      // Attempt to go back online
-      if (this.setupData) {
-        if (this.setupData.serverURL && this.setupData.serverURL.length)
-          Weave.Service.serverURL = this.setupData.serverURL;
-
-        // We might still be in the middle of a sync from before Sync was disabled, so
-        // let's force the UI into a state that the Sync code feels comfortable
-        this.observe(null, "", "");
-
-        // Now try to re-connect. If successful, this will reset the UI into the
-        // correct state automatically.
-        Weave.Service.login(Weave.Service.username, this.setupData.password, this.setupData.synckey);
-      } else {
-        // We can't just go back online. We need to be setup again.
-        this._elements.connected.collapsed = true;
-        this._elements.connect.collapsed = false;
-      }
-    } else {
-      this._elements.connect.collapsed = true;
-      this._elements.connected.collapsed = true;
-      Weave.Service.logout();
+  tryConnect: function login() {
+    // If Sync is not configured, simply show the setup dialog
+    if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+      this.open();
+      return;
     }
 
-    // Close any 'Undo' notification, if one is present
-    let notification = this._msg.getNotificationWithValue("undo-disconnect");
-    if (notification)
-      notification.close();
+    // If user is already logged-in, try to connect straight away
+    if (Weave.Service.isLoggedIn) {
+      this.connect();
+      return;
+    }
+
+    // No setup data, do nothing
+    if (!this.setupData)
+      return;
+
+    if (this.setupData.serverURL && this.setupData.serverURL.length)
+      Weave.Service.serverURL = this.setupData.serverURL;
+
+    // We might still be in the middle of a sync from before Sync was disabled, so
+    // let's force the UI into a state that the Sync code feels comfortable
+    this.observe(null, "", "");
+
+    // Now try to re-connect. If successful, this will reset the UI into the
+    // correct state automatically.
+    Weave.Service.login(Weave.Service.username, this.setupData.password, this.setupData.synckey);
   },
 
   connect: function connect(aSetupData) {
@@ -380,7 +371,7 @@ let WeaveGlue = {
       elements[id] = document.getElementById("syncsetup-" + id);
     });
 
-    let settingids = ["device", "connect", "connected", "disconnect", "sync", "autosync", "details"];
+    let settingids = ["device", "connect", "connected", "disconnect", "sync", "details"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -401,28 +392,15 @@ let WeaveGlue = {
     // Make some aliases
     let connect = this._elements.connect;
     let connected = this._elements.connected;
-    let autosync = this._elements.autosync;
     let details = this._elements.details;
     let device = this._elements.device;
     let disconnect = this._elements.disconnect;
     let sync = this._elements.sync;
 
-    let syncEnabled = autosync.value;
     let loggedIn = Weave.Service.isLoggedIn;
 
-    // Sync may successfully log in after it was temporarily disabled by a
-    // canceled master password entry.  If so, then re-enable it.
-    if (loggedIn && !syncEnabled)
-      syncEnabled = autosync.value = true;
-
-    // If Sync is not enabled, hide the connection row visibility
-    if (syncEnabled) {
-      connect.collapsed = loggedIn;
-      connected.collapsed = !loggedIn;
-    } else {
-      connect.collapsed = true;
-      connected.collapsed = true;
-    }
+    connect.collapsed = loggedIn;
+    connected.collapsed = !loggedIn;
 
     if (!loggedIn) {
       connect.setAttribute("title", this._bundle.GetStringFromName("notconnected.label"));
@@ -465,14 +443,10 @@ let WeaveGlue = {
 
     // Show what went wrong with login if necessary
     if (aTopic == "weave:service:login:error") {
-      if (Weave.Status.login == "service.master_password_locked") {
-        // Disable sync temporarily. Sync will try again after a set interval,
-        // or if the user presses the button to enable it again.
-        autosync.value = false;
-        this.toggleSyncEnabled();
-      } else {
+      if (Weave.Status.login == "service.master_password_locked")
+        Weave.Service.logout();
+      else
         connect.setAttribute("desc", Weave.Utils.getErrorString(Weave.Status.login));
-      }
     } else {
       connect.removeAttribute("desc");
     }
