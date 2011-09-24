@@ -121,6 +121,17 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
   list-style-image: url("images/newtab-default-tablet-hdpi.png");
 }
 
+#newtab-button[tablet] > .toolbarbutton-icon {
+  -moz-padding-start: 1em;
+}
+
+#newtab-button[tablet] > .toolbarbutton-text {
+  -moz-padding-start: 0.5em;
+  color: white;
+  display: -moz-initial;
+  text-align: start;
+}
+
 #controls-scrollbox[tablet]:not([tablet_sidebar]) > #tabs-sidebar {
   visibility: collapse;
 }
