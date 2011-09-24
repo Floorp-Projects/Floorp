@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -18,11 +18,11 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   John Bandhauer <jband@netscape.com>
+ *   Mike Shaver <shaver@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,29 +39,21 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-/*
- *	This defines the interface for a test object.
- *
+
+/**
+ * Interface for testing the DOMString-conversion infrastructure.
  */
 
-[scriptable, uuid(1364941e-4462-11d3-82ee-0060b0eb596f)]
-interface nsIXPCTestObjectReadOnly : nsISupports {
-	readonly attribute string  strReadOnly;
-	readonly attribute boolean boolReadOnly;
-	readonly attribute short   shortReadOnly;
-	readonly attribute long    longReadOnly;
-	readonly attribute float   floatReadOnly;
-	readonly attribute char    charReadOnly;
+[scriptable, uuid(646d0b6b-6872-43b9-aa73-3c6b89ac3080)]
+interface nsIXPCTestDOMString : nsISupports {
+    // Implementation should ask for the shared buffer interface and hold
+    // a refcount to it.
+    void hereHaveADOMString(in DOMString str);
 
-	string getID();
-};
+    // don't hold onto this one
+    void dontKeepThisOne(in DOMString str);
+    
+    void giveDOMStringTo(in nsIXPCTestDOMString recv);
 
-[scriptable, uuid(3b9b1d38-491a-11d3-82ef-0060b0eb596f)]
-interface nsIXPCTestObjectReadWrite : nsISupports {
-	attribute string  stringProperty;
-	attribute boolean booleanProperty;
-	attribute short   shortProperty;
-	attribute long    longProperty;
-	attribute float   floatProperty;
-	attribute char    charProperty;
+    void passDOMStringThroughTo(in DOMString str, in nsIXPCTestDOMString recv);
 };

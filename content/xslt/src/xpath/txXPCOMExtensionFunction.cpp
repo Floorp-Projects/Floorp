@@ -350,16 +350,11 @@ txParamArrayHolder::~txParamArrayHolder()
     PRUint8 i;
     for (i = 0; i < mCount; ++i) {
         nsXPTCVariant &variant = mArray[i];
-        if (variant.DoesValNeedCleanup()) {
-            if (variant.type.TagPart() == nsXPTType::T_DOMSTRING)
-                delete (nsAString*)variant.val.p;
-            else {
-                NS_ABORT_IF_FALSE(variant.type.TagPart() == nsXPTType::T_INTERFACE ||
-                                  variant.type.TagPart() == nsXPTType::T_INTERFACE_IS,
-                                  "We only support cleanup of strings and interfaces "
-                                  "here, and this looks like neither!");
-                static_cast<nsISupports*>(variant.val.p)->Release();
-            }
+        if (variant.IsValInterface()) {
+            static_cast<nsISupports*>(variant.val.p)->Release();
+        }
+        else if (variant.IsValDOMString()) {
+            delete (nsAString*)variant.val.p;
         }
     }
 }
@@ -424,7 +419,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
         nsXPTCVariant &invokeParam = invokeParams[0];
         invokeParam.type = paramInfo.GetType();
-        invokeParam.SetValNeedsCleanup();
+        invokeParam.SetValIsInterface();
         NS_ADDREF((txIFunctionEvaluationContext*&)invokeParam.val.p = context);
 
         // Skip first argument, since it's the context.
@@ -472,7 +467,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                 rv = adaptor->Init();
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                invokeParam.SetValNeedsCleanup();
+                invokeParam.SetValIsInterface();
                 nodeSet.swap((txINodeSet*&)invokeParam.val.p);
                 break;
             }
@@ -502,7 +497,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                 rv = expr->evaluateToString(aContext, *value);
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                invokeParam.SetValNeedsCleanup();
+                invokeParam.SetValIsDOMString();
                 invokeParam.val.p = value;
                 break;
             }
@@ -518,7 +513,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                   return NS_ERROR_OUT_OF_MEMORY;
               }
 
-              invokeParam.SetValNeedsCleanup();
+              invokeParam.SetValIsInterface();
               adaptor.swap((txIXPathObject*&)invokeParam.val.p);
               break;
             }
@@ -545,14 +540,15 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
             return NS_ERROR_FAILURE;
         }
 
-        returnParam.SetValNeedsCleanup();
+        returnParam.SetValIsDOMString();
         returnParam.val.p = value;
     }
     else {
-        returnParam.SetIndirect();
+        returnParam.SetPtrIsData();
         if (returnType == eNODESET || returnType == eOBJECT) {
-            returnParam.SetValNeedsCleanup();
+            returnParam.SetValIsInterface();
         }
+        returnParam.ptr = &returnParam.val;
     }
 
     rv = NS_InvokeByIndex(mHelper, mMethodIndex, paramCount, invokeParams);

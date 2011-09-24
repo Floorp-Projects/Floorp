@@ -223,6 +223,7 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 
 /***************************************************************************/
 // data declarations...
+extern const char* XPC_ARG_FORMATTER_FORMAT_STRINGS[]; // format strings
 extern const char XPC_CONTEXT_STACK_CONTRACTID[];
 extern const char XPC_RUNTIME_CONTRACTID[];
 extern const char XPC_EXCEPTION_CONTRACTID[];
@@ -3301,7 +3302,8 @@ public:
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, JSUint32 capacity,
-                                 const nsXPTType& type, const nsID* iid,
+                                 const nsXPTType& type,
+                                 JSBool useAllocator, const nsID* iid,
                                  uintN* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
@@ -3312,7 +3314,9 @@ public:
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                                           JSUint32 count, JSUint32 capacity,
-                                          const nsXPTType& type, uintN* pErr);
+                                          const nsXPTType& type,
+                                          JSBool useAllocator,
+                                          uintN* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
                                         jsval s,
@@ -3360,6 +3364,11 @@ public:
 private:
     XPCStringConvert();         // not implemented
 };
+
+extern JSBool
+XPC_JSArgumentFormatter(JSContext *cx, const char *format,
+                        JSBool fromJS, jsval **vpp, va_list *app);
+
 
 /***************************************************************************/
 // code for throwing exceptions into JS
