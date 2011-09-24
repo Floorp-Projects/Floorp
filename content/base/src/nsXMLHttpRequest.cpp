@@ -421,13 +421,14 @@ nsXMLHttpRequest::nsXMLHttpRequest()
   : mResponseType(XML_HTTP_RESPONSE_TYPE_DEFAULT),
     mRequestObserver(nsnull), mState(XML_HTTP_REQUEST_UNSENT),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(PR_TRUE),
+    mProgressSinceLastProgressEvent(PR_FALSE),
     mUploadProgress(0), mUploadProgressMax(0),
     mErrorLoad(PR_FALSE), mTimerIsActive(PR_FALSE),
     mProgressEventWasDelayed(PR_FALSE),
     mLoadLengthComputable(PR_FALSE), mLoadTotal(0),
     mFirstStartRequestSeen(PR_FALSE),
-    mResultArrayBuffer(nsnull),
-    mResultJSON(JSVAL_VOID)
+    mResultJSON(JSVAL_VOID),
+    mResultArrayBuffer(nsnull)
 {
   mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   nsLayoutStatics::AddRef();
@@ -552,6 +553,18 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
   mScriptContext = sgo->GetContext();
   NS_ENSURE_STATE(mScriptContext);
   return NS_OK; 
+}
+
+void
+nsXMLHttpRequest::ResetResponse()
+{
+  mResponseXML = nsnull;
+  mResponseBody.Truncate();
+  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
+  mResponseBlob = nsnull;
+  mResultArrayBuffer = nsnull;
+  mResultJSON = JSVAL_VOID;
+  mLoadTransferred = 0;
 }
 
 void
@@ -1125,14 +1138,9 @@ nsXMLHttpRequest::Abort()
   if (mCORSPreflightChannel) {
     mCORSPreflightChannel->Cancel(NS_BINDING_ABORTED);
   }
-  mResponseXML = nsnull;
   PRUint32 responseLength = mResponseBody.Length();
-  mResponseBody.Truncate();
-  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
-  mResponseBlob = nsnull;
+  ResetResponse();
   mState |= XML_HTTP_REQUEST_ABORTED;
-  mResultArrayBuffer = nsnull;
-  mResultJSON = JSVAL_VOID;
   
   if (!(mState & (XML_HTTP_REQUEST_UNSENT |
                   XML_HTTP_REQUEST_OPENED |
@@ -1327,7 +1335,9 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                                         PRUint64 aPosition, PRUint64 aTotalSize)
 {
   NS_ASSERTION(aTarget, "null target");
-  if (aType.IsEmpty() ||
+  NS_ASSERTION(!aType.IsEmpty(), "missing event type");
+
+  if (NS_FAILED(CheckInnerWindowCorrectness()) ||
       (!AllowUploadProgress() &&
        (aTarget == mUpload || aType.EqualsLiteral(UPLOADPROGRESS_STR)))) {
     return;
@@ -1591,7 +1601,6 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
 
   if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB &&
       xmlHttpRequest->mResponseBlob) {
-    xmlHttpRequest->ChangeState(XML_HTTP_REQUEST_LOADING);
     *writeCount = count;
     return NS_OK;
   }
@@ -1632,8 +1641,6 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
     }
   }
 
-  xmlHttpRequest->ChangeState(XML_HTTP_REQUEST_LOADING);
-
   if (NS_SUCCEEDED(rv)) {
     *writeCount = count;
   } else {
@@ -1670,9 +1677,12 @@ void nsXMLHttpRequest::CreateResponseBlob(nsIRequest *request)
   }
 }
 
-/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
 NS_IMETHODIMP
-nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
+                                  nsISupports *ctxt,
+                                  nsIInputStream *inStr,
+                                  PRUint32 sourceOffset,
+                                  PRUint32 count)
 {
   NS_ENSURE_ARG_POINTER(inStr);
 
@@ -1682,8 +1692,20 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInp
     CreateResponseBlob(request);
   }
 
+  mProgressSinceLastProgressEvent = PR_TRUE;
+
   PRUint32 totalRead;
-  return inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
+  nsresult rv = inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc,
+                                    (void*)this, count, &totalRead);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mLoadTransferred += totalRead;
+
+  ChangeState(XML_HTTP_REQUEST_LOADING);
+  
+  MaybeDispatchProgressEvents(PR_FALSE);
+
+  return NS_OK;
 }
 
 PRBool
@@ -1743,6 +1765,22 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   channel->SetOwner(documentPrincipal);
 
+  nsresult status;
+  request->GetStatus(&status);
+  mErrorLoad = mErrorLoad || NS_FAILED(status);
+
+  if (mUpload && !mUploadComplete && !mErrorLoad &&
+      (mState & XML_HTTP_REQUEST_ASYNC)) {
+    if (mTimerIsActive) {
+      mTimerIsActive = PR_FALSE;
+      mProgressNotifier->Cancel();
+    }
+    MaybeDispatchProgressEvents(PR_TRUE);
+    mUploadComplete = PR_TRUE;
+    DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOAD_STR),
+                          PR_TRUE, mUploadTotal, mUploadTotal);
+  }
+
   mReadRequest = request;
   mContext = ctxt;
   mState |= XML_HTTP_REQUEST_PARSEBODY;
@@ -1756,22 +1794,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     }
   }
 
-  nsresult status;
-  request->GetStatus(&status);
-  mErrorLoad = mErrorLoad || NS_FAILED(status);
-
-  if (mUpload && !mUploadComplete && !mErrorLoad &&
-      (mState & XML_HTTP_REQUEST_ASYNC)) {
-    mUploadComplete = PR_TRUE;
-    DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOAD_STR),
-                          PR_TRUE, mUploadTotal, mUploadTotal);
-  }
-
-  // Reset responseBody
-  mResponseBody.Truncate();
-  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
-  mResponseBlob = nsnull;
-  mResultArrayBuffer = nsnull;
+  ResetResponse();
 
   // Set up responseXML
   PRBool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
@@ -1918,6 +1941,10 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   mReadRequest = nsnull;
   mContext = nsnull;
 
+  // If we're received data since the last progress event, make sure to fire
+  // an event for it.
+  MaybeDispatchProgressEvents(PR_TRUE);
+
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
@@ -1987,14 +2014,13 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
 
   ChangeState(XML_HTTP_REQUEST_DONE, PR_TRUE);
 
-  PRUint32 responseLength = mResponseBody.Length();
   NS_NAMED_LITERAL_STRING(errorStr, ERROR_STR);
   NS_NAMED_LITERAL_STRING(loadStr, LOAD_STR);
   DispatchProgressEvent(this,
                         mErrorLoad ? errorStr : loadStr,
                         !mErrorLoad,
-                        responseLength,
-                        mErrorLoad ? 0 : responseLength);
+                        mLoadTransferred,
+                        mErrorLoad ? 0 : mLoadTransferred);
   if (mErrorLoad && mUpload && !mUploadComplete) {
     DispatchProgressEvent(mUpload, errorStr, PR_TRUE,
                           mUploadTransferred, mUploadTotal);
@@ -2392,13 +2418,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     }
   }
 
-  // Reset responseBody
-  mResponseBody.Truncate();
-  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
-  mResponseBlob = nsnull;
-
-  // Reset responseXML
-  mResponseXML = nsnull;
+  ResetResponse();
 
   rv = CheckChannelForCrossSiteRequest(mChannel);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2924,6 +2944,56 @@ nsXMLHttpRequest::OnRedirectVerifyCallback(nsresult result)
 // nsIProgressEventSink methods:
 //
 
+void
+nsXMLHttpRequest::MaybeDispatchProgressEvents(PRBool aFinalProgress)
+{
+  if (aFinalProgress && mTimerIsActive) {
+    mTimerIsActive = PR_FALSE;
+    mProgressNotifier->Cancel();
+  }
+
+  if (mTimerIsActive ||
+      !mProgressSinceLastProgressEvent ||
+      mErrorLoad ||
+      !(mState & XML_HTTP_REQUEST_ASYNC)) {
+    return;
+  }
+
+  if (!aFinalProgress) {
+    StartProgressEventTimer();
+  }
+
+  // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
+  // XML_HTTP_REQUEST_SENT
+  if ((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState) {
+    if (aFinalProgress) {
+      mUploadTotal = mUploadTransferred;
+      mUploadProgressMax = mUploadProgress;
+      mUploadLengthComputable = PR_TRUE;
+    }
+    DispatchProgressEvent(this, NS_LITERAL_STRING(UPLOADPROGRESS_STR),
+                          PR_TRUE, mUploadLengthComputable, mUploadTransferred,
+                          mUploadTotal, mUploadProgress,
+                          mUploadProgressMax);
+    if (mUpload && !mUploadComplete) {
+      DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
+                            PR_TRUE, mUploadLengthComputable, mUploadTransferred,
+                            mUploadTotal, mUploadProgress,
+                            mUploadProgressMax);
+    }
+  } else {
+    if (aFinalProgress) {
+      mLoadTotal = mLoadTransferred;
+      mLoadLengthComputable = PR_TRUE;
+    }
+    DispatchProgressEvent(this, NS_LITERAL_STRING(PROGRESS_STR),
+                          PR_TRUE, mLoadLengthComputable, mLoadTransferred,
+                          mLoadTotal, mLoadTransferred, mLoadTotal);
+  }
+
+  mProgressSinceLastProgressEvent = PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint64 aProgress, PRUint64 aProgressMax)
 {
@@ -2937,44 +3007,30 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
   // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
   // XML_HTTP_REQUEST_SENT
   PRBool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
-  PRUint64 loaded = aProgress;
-  PRUint64 total = aProgressMax;
   // When uploading, OnProgress reports also headers in aProgress and aProgressMax.
   // So, try to remove the headers, if possible.
   PRBool lengthComputable = (aProgressMax != LL_MAXUINT);
   if (upload) {
-   if (lengthComputable) {
+    PRUint64 loaded = aProgress;
+    PRUint64 total = aProgressMax;
+    if (lengthComputable) {
       PRUint64 headerSize = aProgressMax - mUploadTotal;
       loaded -= headerSize;
       total -= headerSize;
     }
+    mUploadLengthComputable = lengthComputable;
     mUploadTransferred = loaded;
     mUploadProgress = aProgress;
     mUploadProgressMax = aProgressMax;
+    mProgressSinceLastProgressEvent = PR_TRUE;
+
+    MaybeDispatchProgressEvents(PR_FALSE);
   } else {
     mLoadLengthComputable = lengthComputable;
-    mLoadTotal = mLoadLengthComputable ? total : 0;
-  }
-
-  if (mTimerIsActive) {
-    // The progress event will be dispatched when the notifier calls Notify().
-    mProgressEventWasDelayed = PR_TRUE;
-    return NS_OK;
-  }
-
-  if (!mErrorLoad && (mState & XML_HTTP_REQUEST_ASYNC)) {
-    StartProgressEventTimer();
-    NS_NAMED_LITERAL_STRING(progress, PROGRESS_STR);
-    NS_NAMED_LITERAL_STRING(uploadprogress, UPLOADPROGRESS_STR);
-    DispatchProgressEvent(this, upload ? uploadprogress : progress, PR_TRUE,
-                          lengthComputable, loaded, lengthComputable ? total : 0,
-                          aProgress, aProgressMax);
-
-    if (upload && mUpload && !mUploadComplete) {
-      NS_WARN_IF_FALSE(mUploadTotal == total, "Wrong upload total?");
-      DispatchProgressEvent(mUpload, progress,  PR_TRUE, lengthComputable, loaded,
-                            lengthComputable ? total : 0, aProgress, aProgressMax);
-    }
+    mLoadTotal = lengthComputable ? aProgressMax : 0;
+    
+    // Don't dispatch progress events here. OnDataAvailable will take care
+    // of that.
   }
 
   if (mProgressEventSink) {
@@ -3090,35 +3146,10 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Notify(nsITimer* aTimer)
 {
   mTimerIsActive = PR_FALSE;
-  if (NS_SUCCEEDED(CheckInnerWindowCorrectness()) && !mErrorLoad &&
-      (mState & XML_HTTP_REQUEST_ASYNC)) {
-    if (mProgressEventWasDelayed) {
-      mProgressEventWasDelayed = PR_FALSE;
-      if (!(XML_HTTP_REQUEST_MPART_HEADERS & mState)) {
-        StartProgressEventTimer();
-        // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
-        // XML_HTTP_REQUEST_SENT
-        if ((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState) {
-          DispatchProgressEvent(this, NS_LITERAL_STRING(UPLOADPROGRESS_STR),
-                                PR_TRUE, PR_TRUE, mUploadTransferred,
-                                mUploadTotal, mUploadProgress,
-                                mUploadProgressMax);
-          if (mUpload && !mUploadComplete) {
-            DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
-                                  PR_TRUE, PR_TRUE, mUploadTransferred,
-                                  mUploadTotal, mUploadProgress,
-                                  mUploadProgressMax);
-          }
-        } else {
-          DispatchProgressEvent(this, NS_LITERAL_STRING(PROGRESS_STR),
-                                mLoadLengthComputable, mResponseBody.Length(),
-                                mLoadTotal);
-        }
-      }
-    }
-  } else if (mProgressNotifier) {
-    mProgressNotifier->Cancel();
+  if (!(XML_HTTP_REQUEST_MPART_HEADERS & mState)) {
+    MaybeDispatchProgressEvents(PR_FALSE);
   }
+
   return NS_OK;
 }
 
