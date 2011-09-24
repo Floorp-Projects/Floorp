@@ -1317,15 +1317,16 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Combined go/reload/stop button in location bar */
 
-#go-button,
+#go-button {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   padding: 0;
   border: none;
   cursor: pointer;
-}
-
-#urlbar > toolbarbutton {
   width: 22px;
 }
 
