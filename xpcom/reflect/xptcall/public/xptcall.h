@@ -88,8 +88,26 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
 
     enum
     {
-        // these are bitflags!
-        PTR_IS_DATA    = 0x1,  // ptr points to 'real' data in val
+        //
+        // Bitflag definitions
+        //
+
+        // Indicates that ptr (above, and distinct from val.p) is the value that
+        // should be passed on the stack.
+        //
+        // In theory, ptr could point anywhere. But in practice it always points
+        // to &val. So this flag is used to pass 'val' by reference, letting us
+        // avoid the extra allocation we would incur if we were to use val.p.
+        //
+        // Various parts of XPConnect assume that ptr==&val, so we enforce it
+        // explicitly with SetIndirect() and IsIndirect().
+        //
+        // Since ptr always points to &val, the semantics of this flag are kind of
+        // dumb, since the ptr field is unnecessary. But changing them would
+        // require changing dozens of assembly files, so they're likely to stay
+        // the way they are.
+        PTR_IS_DATA    = 0x1,
+
         VAL_IS_ALLOCD  = 0x2,  // val.p holds alloc'd ptr that must be freed
         VAL_IS_IFACE   = 0x4,  // val.p holds interface ptr that must be released
         VAL_IS_ARRAY   = 0x8,  // val.p holds a pointer to an array needing cleanup
@@ -100,7 +118,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     };
 
     void ClearFlags()         {flags = 0;}
-    void SetPtrIsData()       {flags |= PTR_IS_DATA;}
+    void SetIndirect()        {ptr = &val; flags |= PTR_IS_DATA;}
     void SetValIsAllocated()  {flags |= VAL_IS_ALLOCD;}
     void SetValIsInterface()  {flags |= VAL_IS_IFACE;}
     void SetValIsArray()      {flags |= VAL_IS_ARRAY;}
@@ -109,7 +127,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     void SetValIsCString()    {flags |= VAL_IS_CSTR;}
     void SetValIsJSRoot()     {flags |= VAL_IS_JSROOT;}
 
-    PRBool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
+    PRBool IsIndirect()      const  {return 0 != (flags & PTR_IS_DATA);}
     PRBool IsValAllocated()  const  {return 0 != (flags & VAL_IS_ALLOCD);}
     PRBool IsValInterface()  const  {return 0 != (flags & VAL_IS_IFACE);}
     PRBool IsValArray()      const  {return 0 != (flags & VAL_IS_ARRAY);}
@@ -117,6 +135,9 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     PRBool IsValUTF8String() const  {return 0 != (flags & VAL_IS_UTF8STR);}
     PRBool IsValCString()    const  {return 0 != (flags & VAL_IS_CSTR);}    
     PRBool IsValJSRoot()     const  {return 0 != (flags & VAL_IS_JSROOT);}
+
+    // Internal use only. Use IsIndirect() instead.
+    PRBool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
 
     void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {
