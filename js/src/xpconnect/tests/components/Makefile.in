@@ -37,43 +37,44 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpctest
-LIBRARY_NAME	= xpctest
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= xpconnect_test
-MOZILLA_INTERNAL_API = 1
-
+MODULE = xpctest
+LIBRARY_NAME = xpctest
+IS_COMPONENT = 1
+MODULE_NAME = xpconnect_test
+NO_DIST_INSTALL = 1
+FORCE_SHARED_LIB = 1
 
 CPPSRCS		= \
-		xpctest_array.cpp \
-		xpctest_echo.cpp \
-		xpctest_child.cpp \
-		xpctest_noisy.cpp \
-		xpctest_overloaded.cpp \
-		xpctest_string.cpp \
-		xpctest_module.cpp \
-		xpctest_attributes.cpp \
-		xpctest_calljs.cpp \
-		xpctest_const.cpp \
-		xpctest_in.cpp \
-		xpctest_inout.cpp \
-		xpctest_multiple.cpp \
-		xpctest_out.cpp \
-		xpctest_domstring.cpp \
-		xpctest_variant.cpp \
-		$(NULL)
+  xpctest_module.cpp \
+  xpctest_attributes.cpp \
+  $(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+MANIFEST_FILE = xpctest.manifest
 
 EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
+  $(XPCOM_GLUE_LDOPTS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+
+DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)"
+
+componentdir = js/src/xpconnect/tests/components
+
+libs:: $(SHARED_LIBRARY)
+	$(INSTALL) $^ $(testxpcobjdir)/$(componentdir)
+
+libs:: $(MANIFEST_FILE)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $< > $(testxpcobjdir)/$(componentdir)/$(<F)
