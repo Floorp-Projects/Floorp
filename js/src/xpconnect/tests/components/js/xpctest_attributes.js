@@ -52,4 +52,23 @@ TestObjectReadWrite.prototype = {
   charProperty: "X"
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestObjectReadWrite]);
+
+function TestObjectReadOnly() {}
+TestObjectReadOnly.prototype = {
+
+  /* Boilerplate */
+  QueryInterface: XPCOMUtils.generateQI([Components.interfaces["nsIXPCTestObjectReadOnly"]]),
+  contractID: "@mozilla.org/js/xpc/test/js/ObjectReadOnly;1",
+  classID: Components.ID("{916c4247-253d-4ed0-a425-adfedf53ecc8}"),
+
+  /* nsIXPCTestObjectReadOnly */
+  strReadOnly: "XPConnect Read-Only String",
+  boolReadOnly: true,
+  shortReadOnly: 32767,
+  longReadOnly: 2147483647,
+  floatReadOnly: 5.5,
+  charReadOnly: "X"
+};
+
+
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestObjectReadWrite, TestObjectReadOnly]);

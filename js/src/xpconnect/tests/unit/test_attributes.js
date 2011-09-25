@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Globals
-var gInterface = Components.interfaces["nsIXPCTestObjectReadWrite"];
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 function run_test() {
 
@@ -44,15 +44,16 @@ function run_test() {
   Components.manager.autoRegister(do_get_file('../components/js/xpctest.manifest'));
 
   // Test for each component.
-  test_component("@mozilla.org/js/xpc/test/native/ObjectReadWrite;1");
-  test_component("@mozilla.org/js/xpc/test/js/ObjectReadWrite;1");
-
+  test_component_readwrite("@mozilla.org/js/xpc/test/native/ObjectReadWrite;1");
+  test_component_readwrite("@mozilla.org/js/xpc/test/js/ObjectReadWrite;1");
+  test_component_readonly("@mozilla.org/js/xpc/test/native/ObjectReadOnly;1");
+  test_component_readonly("@mozilla.org/js/xpc/test/js/ObjectReadOnly;1");
 }
 
-function test_component(contractid) {
+function test_component_readwrite(contractid) {
 
   // Instantiate the object.
-  var o = Components.classes[contractid].createInstance(gInterface);
+  var o = Cc[contractid].createInstance(Ci["nsIXPCTestObjectReadWrite"]);
 
   // Test the initial values.
   do_check_eq("XPConnect Read-Writable String", o.stringProperty);
@@ -93,3 +94,16 @@ function test_component(contractid) {
   SetAndTestBooleanProperty({}, true);
 }
 
+function test_component_readonly(contractid) {
+
+  // Instantiate the object.
+  var o = Cc[contractid].createInstance(Ci["nsIXPCTestObjectReadOnly"]);
+
+  // Test the initial values.
+  do_check_eq("XPConnect Read-Only String", o.strReadOnly);
+  do_check_eq(true, o.boolReadOnly);
+  do_check_eq(32767, o.shortReadOnly);
+  do_check_eq(2147483647, o.longReadOnly);
+  do_check_true(5.25 < o.floatReadOnly && 5.75 > o.floatReadOnly);
+  do_check_eq("X", o.charReadOnly);
+}
