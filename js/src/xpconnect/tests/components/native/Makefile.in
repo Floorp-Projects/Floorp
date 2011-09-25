@@ -51,9 +51,10 @@ MODULE_NAME = xpconnect_test
 NO_DIST_INSTALL = 1
 FORCE_SHARED_LIB = 1
 
-CPPSRCS		= \
+CPPSRCS = \
   xpctest_module.cpp \
   xpctest_attributes.cpp \
+  xpctest_params.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
