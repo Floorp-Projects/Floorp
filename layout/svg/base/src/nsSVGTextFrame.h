@@ -123,7 +123,7 @@ private:
 
   void SetWhitespaceHandling(nsSVGGlyphFrame *aFrame);
 
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  nsAutoPtr<gfxMatrix> mCanvasTM;
 
   enum UpdateState { unsuspended, suspended };
   UpdateState mMetricsState;
