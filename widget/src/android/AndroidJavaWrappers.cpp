@@ -109,7 +109,6 @@ jmethodID AndroidGeckoSurfaceView::jDraw2DBitmapMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jDraw2DBufferMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBitmapMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
-jmethodID AndroidGeckoSurfaceView::jGetSurfaceMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
 #define JNI()  (AndroidBridge::JNI())
@@ -184,7 +183,6 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jEndDrawingMethod = getMethod("endDrawing", "()V");
     jDraw2DBitmapMethod = getMethod("draw2D", "(Landroid/graphics/Bitmap;II)V");
     jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
-    jGetSurfaceMethod = getMethod("getSurface", "()Landroid/view/Surface;");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
 }
 
@@ -516,12 +514,6 @@ jobject
 AndroidGeckoSurfaceView::GetSoftwareDrawBuffer()
 {
     return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBufferMethod);
-}
-
-jobject
-AndroidGeckoSurfaceView::GetSurface()
-{
-    return JNI()->CallObjectMethod(wrapped_obj, jGetSurfaceMethod);
 }
 
 jobject
