@@ -205,11 +205,16 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 FRAMEWORK_NAME = XUL
 FRAMEWORK_VERSION = $(MOZILLA_VERSION)
 
-libs:: $(PROGRAM)
-	mkdir -p $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
-	$(NSINSTALL) $(srcdir)/macbuild/InfoPlist.strings $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Resources
-	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Info.plist.in > $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)/Info.plist
-	rsync -av $(DIST)/bin/ $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION) --exclude mangle --exclude shlibsign
+FRAMEWORK_DIR = \
+   $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)
+
+$(FRAMEWORK_DIR)/Resources:
+	$(NSINSTALL) -D $@
+
+libs:: $(PROGRAM) $(FRAMEWORK_DIR)/Resources
+	$(NSINSTALL) $(srcdir)/macbuild/InfoPlist.strings $(FRAMEWORK_DIR)/Resources
+	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Info.plist.in > $(FRAMEWORK_DIR)/Info.plist
+	rsync -av $(DIST)/bin/ $(FRAMEWORK_DIR) --exclude mangle --exclude shlibsign
 	rm -f $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/XUL \

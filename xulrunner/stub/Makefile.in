@@ -102,3 +102,20 @@ include $(topsrcdir)/config/rules.mk
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32)
 endif
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+
+FRAMEWORK_NAME = XUL
+FRAMEWORK_VERSION = $(MOZILLA_VERSION)
+
+FRAMEWORK_DIR = \
+   $(DIST)/$(FRAMEWORK_NAME).framework/Versions/$(FRAMEWORK_VERSION)
+
+$(FRAMEWORK_DIR):
+	$(NSINSTALL) -D $@
+
+$(FRAMEWORK_DIR)/$(PROGRAM): $(PROGRAM) $(FRAMEWORK_DIR)
+	$(NSINSTALL) $(PROGRAM) $(FRAMEWORK_DIR)
+
+libs:: $(FRAMEWORK_DIR)/$(PROGRAM)
+endif
