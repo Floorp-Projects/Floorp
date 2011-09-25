@@ -53,6 +53,7 @@ CPPSRCS		= \
 		DOMSVGAnimatedNumberList.cpp \
 		DOMSVGLength.cpp \
 		DOMSVGLengthList.cpp \
+		DOMSVGMatrix.cpp \
 		DOMSVGNumber.cpp \
 		DOMSVGNumberList.cpp \
 		DOMSVGPathSeg.cpp \
@@ -90,7 +91,6 @@ CPPSRCS		= \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
 		nsSVGMaskElement.cpp \
-		nsSVGMatrix.cpp \
 		nsSVGMetadataElement.cpp \
 		nsSVGNumber2.cpp \
 		nsSVGNumberPair.cpp \
@@ -172,7 +172,6 @@ EXPORTS =  			\
 	nsISVGValueUtils.h         \
 	nsSVGFeatures.h            \
 	nsSVGRect.h                \
-	nsSVGMatrix.h              \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
