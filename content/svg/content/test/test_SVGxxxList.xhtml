@@ -1067,11 +1067,6 @@ function run_list_mutation_tests()
  * animation timeline, using SVGSVGElement.setCurrentTime() to move forward
  * along the timeline.
  *
- * Since Mozilla doesn't currently support moving backwards along the timeline
- * we run over all the tests before moving on to the next point in the
- * timeline and running over all the tests again (rather than having one big
- * 'for' loop).
- *
  * See the comment for create_animate_elements() for details of the animations
  * and their timings.
  */
@@ -1080,20 +1075,21 @@ function run_animation_timeline_tests()
   var svg = document.getElementById('svg');
 
   for each (var t in tests) {
+    // Skip if there is no animVal for this test
+    if (!t.animVal)
+      continue;
+
+    svg.setCurrentTime(0); // reset timeline
+
     // Reset attributes before moving along the timeline and triggering SMIL:
     t.element.setAttribute(t.attr_name, t.attr_val_4);
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 1s    ********************/
+    /********************    t = 1s    ********************/
 
-  svg.setCurrentTime(1); // begin first animation
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(1); // begin first animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1134,16 +1130,11 @@ function run_animation_timeline_tests()
 
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 2s    ********************/
+    /********************    t = 2s    ********************/
 
-  svg.setCurrentTime(2); // begin override animation
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(2); // begin override animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1162,24 +1153,11 @@ function run_animation_timeline_tests()
        'start of that animation.');
 
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 3s    ********************/
+    /********************    t = 3s    ********************/
 
-  svg.setCurrentTime(3); // end of override animation
-
-  // [SVGWG issue] what should happen at the exact instant the override
-  // animation is due to end?
-
-
-  /********************    t = 4s    ********************/
-
-  svg.setCurrentTime(4); // override animation definitely finished
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(3); // end of override animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1198,16 +1176,11 @@ function run_animation_timeline_tests()
        'end of that animation.');
 
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 5s    ********************/
+    /********************    t = 5s    ********************/
 
-  svg.setCurrentTime(5); // animation repeat point
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(5); // animation repeat point
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1219,16 +1192,11 @@ function run_animation_timeline_tests()
        'When an animation repeats, the list items that are at a given '+
        'index in the '+t.list_type+' for '+t.av_path+' should be the exact '+
        'same objects as were at that index before the repeat occured.');
-  }
 
 
-  /********************    t = 6s    ********************/
+    /********************    t = 6s    ********************/
 
-  svg.setCurrentTime(6); // inside animation repeat
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(6); // inside animation repeat
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1240,16 +1208,11 @@ function run_animation_timeline_tests()
        'When an animation repeats, the list items that are at a given '+
        'index in the '+t.list_type+' for '+t.av_path+' should be the exact '+
        'same objects as were at that index before the repeat occured.');
-  }
 
 
-  /********************    t = 7s    ********************/
+    /********************    t = 7s    ********************/
 
-  svg.setCurrentTime(7); // start of additive="sum" animation
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(7); // start of additive="sum" animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1291,16 +1254,11 @@ function run_animation_timeline_tests()
     // Specifically that would not be good for 'x' and 'y' on <text> since
     // lengths there are not naturally zero. See the comment in
     // SVGLengthListSMILAttr::Add().
-  }
 
 
-  /********************    t = 13s    ********************/
+    /********************    t = 13s    ********************/
 
-  svg.setCurrentTime(13); // all animations have finished, but one is frozen
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(13); // all animations have finished, but one is frozen
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
