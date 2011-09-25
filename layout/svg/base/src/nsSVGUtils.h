@@ -48,7 +48,6 @@
 #include "nsRenderingContext.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
-#include "nsSVGMatrix.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -452,12 +451,6 @@ public:
    */
   static gfxIntSize ConvertToSurfaceSize(const gfxSize& aSize,
                                          PRBool *aResultOverflows);
-
-  /*
-   * Convert a nsIDOMSVGMatrix to a gfxMatrix.
-   */
-  static gfxMatrix
-  ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix);
 
   /*
    * Hit test a given rectangle/matrix.
