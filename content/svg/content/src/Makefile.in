@@ -51,6 +51,7 @@ LIBXUL_LIBRARY	= 1
 CPPSRCS		= \
 		DOMSVGAnimatedLengthList.cpp \
 		DOMSVGAnimatedNumberList.cpp \
+		DOMSVGAnimatedTransformList.cpp \
 		DOMSVGLength.cpp \
 		DOMSVGLengthList.cpp \
 		DOMSVGMatrix.cpp \
@@ -67,7 +68,6 @@ CPPSRCS		= \
 		nsSVGAElement.cpp \
 		nsSVGAltGlyphElement.cpp \
 		nsSVGAngle.cpp \
-		nsSVGAnimatedTransformList.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClass.cpp \
@@ -129,6 +129,7 @@ CPPSRCS		= \
 		SVGAnimatedPathSegList.cpp \
 		SVGAnimatedPointList.cpp \
 		SVGAnimatedPreserveAspectRatio.cpp \
+		SVGAnimatedTransformList.cpp \
 		SVGLength.cpp \
 		SVGLengthList.cpp \
 		SVGNumberList.cpp \
@@ -147,7 +148,6 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            nsSVGMpathElement.cpp \
            nsSVGSetElement.cpp \
            nsSVGTransformSMILType.cpp \
-           nsSVGTransformSMILAttr.cpp \
            SVGIntegerPairSMILType.cpp \
            SVGLengthListSMILType.cpp \
            SVGMotionSMILType.cpp \
