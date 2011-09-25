@@ -182,4 +182,94 @@ SVGTransform::SetSkewY(float aAngle)
   return NS_OK;
 }
 
+SVGTransformSMILData::SVGTransformSMILData(const SVGTransform& aTransform)
+  : mTransformType(aTransform.Type())
+{
+  NS_ABORT_IF_FALSE(
+    mTransformType >= nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX &&
+    mTransformType <= nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY,
+    "Unexpected transform type");
+
+  for (PRUint32 i = 0; i < NUM_STORED_PARAMS; ++i) {
+    mParams[i] = 0.f;
+  }
+
+  switch (mTransformType) {
+    case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX: {
+      const gfxMatrix& mx = aTransform.Matrix();
+      mParams[0] = static_cast<float>(mx.xx);
+      mParams[1] = static_cast<float>(mx.yx);
+      mParams[2] = static_cast<float>(mx.xy);
+      mParams[3] = static_cast<float>(mx.yy);
+      mParams[4] = static_cast<float>(mx.x0);
+      mParams[5] = static_cast<float>(mx.y0);
+      break;
+    }
+    case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE: {
+      const gfxMatrix& mx = aTransform.Matrix();
+      mParams[0] = static_cast<float>(mx.x0);
+      mParams[1] = static_cast<float>(mx.y0);
+      break;
+    }
+    case nsIDOMSVGTransform::SVG_TRANSFORM_SCALE: {
+      const gfxMatrix& mx = aTransform.Matrix();
+      mParams[0] = static_cast<float>(mx.xx);
+      mParams[1] = static_cast<float>(mx.yy);
+      break;
+    }
+    case nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE:
+      mParams[0] = aTransform.Angle();
+      aTransform.GetRotationOrigin(mParams[1], mParams[2]);
+      break;
+
+    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX:
+    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY:
+      mParams[0] = aTransform.Angle();
+      break;
+
+    default:
+      NS_NOTREACHED("Unexpected transform type");
+      break;
+  }
+}
+
+SVGTransform
+SVGTransformSMILData::ToSVGTransform() const
+{
+  SVGTransform result;
+
+  switch (mTransformType) {
+    case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX:
+      result.SetMatrix(gfxMatrix(mParams[0], mParams[1],
+                                 mParams[2], mParams[3],
+                                 mParams[4], mParams[5]));
+      break;
+
+    case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE:
+      result.SetTranslate(mParams[0], mParams[1]);
+      break;
+
+    case nsIDOMSVGTransform::SVG_TRANSFORM_SCALE:
+      result.SetScale(mParams[0], mParams[1]);
+      break;
+
+    case nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE:
+      result.SetRotate(mParams[0], mParams[1], mParams[2]);
+      break;
+
+    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX:
+      result.SetSkewX(mParams[0]);
+      break;
+
+    case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY:
+      result.SetSkewY(mParams[0]);
+      break;
+
+    default:
+      NS_NOTREACHED("Unexpected transform type");
+      break;
+  }
+  return result;
+}
+
 } // namespace mozilla
