@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Brian Birtles <birtles@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -66,29 +68,79 @@
  * up.
  */
 
-#ifndef __NS_SVGMATRIX_H__
-#define __NS_SVGMATRIX_H__
+#ifndef MOZILLA_DOMSVGMATRIX_H__
+#define MOZILLA_DOMSVGMATRIX_H__
 
 #include "nsIDOMSVGMatrix.h"
+#include "DOMSVGTransform.h"
 #include "gfxMatrix.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
-nsresult
-NS_NewSVGMatrix(nsIDOMSVGMatrix** result,
-                float a = 1.0f, float b = 0.0f,
-                float c = 0.0f, float d = 1.0f,
-                float e = 0.0f, float f = 0.0f);
+// We make DOMSVGMatrix a pseudo-interface to allow us to QI to it in order
+// to check that the objects that scripts pass in are our *native* matrix
+// objects.
+//
+// {633419E5-7E88-4C3E-8A9A-856F635E90A3}
+#define MOZILLA_DOMSVGMATRIX_IID \
+  { 0x633419E5, 0x7E88, 0x4C3E, \
+    { 0x8A, 0x9A, 0x85, 0x6F, 0x63, 0x5E, 0x90, 0xA3 } }
 
-already_AddRefed<nsIDOMSVGMatrix>
-NS_NewSVGMatrix(const gfxMatrix &aMatrix);
+namespace mozilla {
 
-#define NS_ENSURE_NATIVE_MATRIX(obj, retval)            \
-  {                                                     \
-    nsCOMPtr<nsISVGValue> val = do_QueryInterface(obj); \
-    if (!val) {                                         \
-      *retval = nsnull;                                 \
-      return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;           \
-    }                                                   \
+/**
+ * DOM wrapper for an SVG matrix.
+ */
+class DOMSVGMatrix : public nsIDOMSVGMatrix
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGMATRIX_IID)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGMatrix)
+  NS_DECL_NSIDOMSVGMATRIX
+
+  /**
+   * Ctor for DOMSVGMatrix objects that belong to a DOMSVGTransform.
+   */
+  DOMSVGMatrix(DOMSVGTransform& aTransform) : mTransform(&aTransform) { }
+
+  /**
+   * Ctors for DOMSVGMatrix objects created independently of a DOMSVGTransform.
+   */
+  DOMSVGMatrix() { } // Default ctor for gfxMatrix will produce identity mx
+  DOMSVGMatrix(const gfxMatrix &aMatrix) : mMatrix(aMatrix) { }
+  ~DOMSVGMatrix() {
+    if (mTransform) {
+      mTransform->ClearMatrixTearoff(this);
+    }
   }
 
-#endif //__NS_SVGMATRIX_H__
+  const gfxMatrix& Matrix() const {
+    return mTransform ? mTransform->Matrix() : mMatrix;
+  }
+
+private:
+  void SetMatrix(const gfxMatrix& aMatrix) {
+    if (mTransform) {
+      mTransform->SetMatrix(aMatrix);
+    } else {
+      mMatrix = aMatrix;
+    }
+  }
+
+  PRBool IsAnimVal() const {
+    return mTransform ? mTransform->IsAnimVal() : PR_FALSE;
+  }
+
+  nsRefPtr<DOMSVGTransform> mTransform;
+
+  // Typically we operate on the matrix data accessed via mTransform but for
+  // matrices that exist independently of an SVGTransform we use mMatrix below.
+  gfxMatrix mMatrix;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGMatrix, MOZILLA_DOMSVGMATRIX_IID)
+
+} // namespace mozilla
+
+#endif // MOZILLA_DOMSVGMATRIX_H__
