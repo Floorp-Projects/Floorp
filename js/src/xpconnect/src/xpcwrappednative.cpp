@@ -2840,13 +2840,12 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     if (!GetOutParamSource(i, &src))
         return JS_FALSE;
 
-    // The JSVal proper is always stored within the 'val' union, regardless of
-    // in/out-ness. This is indicated with the SetPtrIsData() song + dance.
+    // The JSVal proper is always stored within the 'val' union and passed
+    // indirectly, regardless of in/out-ness.
     if(type_tag == nsXPTType::T_JSVAL)
     {
         // Indicate the storage semantics.
-        dp->SetPtrIsData();
-        dp->ptr = &dp->val;
+        dp->SetIndirect();
 
         // Assign the value
         JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(dp->val));
@@ -2860,8 +2859,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
 
     if(paramInfo.IsOut())
     {
-        dp->SetPtrIsData();
-        dp->ptr = &dp->val;
+        dp->SetIndirect();
 
         if(type.IsPointer() &&
            type_tag != nsXPTType::T_INTERFACE &&
@@ -2994,8 +2992,7 @@ CallMethodHelper::ConvertDependentParams()
 
         if(paramInfo.IsOut())
         {
-            dp->SetPtrIsData();
-            dp->ptr = &dp->val;
+            dp->SetIndirect();
 
             if(datum_type.IsPointer() &&
                !datum_type.IsInterfacePointer() &&
