@@ -3301,8 +3301,7 @@ public:
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, JSUint32 capacity,
-                                 const nsXPTType& type,
-                                 JSBool useAllocator, const nsID* iid,
+                                 const nsXPTType& type, const nsID* iid,
                                  uintN* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
@@ -3313,9 +3312,7 @@ public:
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                                           JSUint32 count, JSUint32 capacity,
-                                          const nsXPTType& type,
-                                          JSBool useAllocator,
-                                          uintN* pErr);
+                                          const nsXPTType& type, uintN* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
                                         jsval s,
