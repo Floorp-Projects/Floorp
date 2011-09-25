@@ -1861,6 +1861,35 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   return LaunchChild(aNative);
 }
 
+static nsresult
+ImportProfiles(nsIToolkitProfileService* aPService,
+               nsINativeAppSupport* aNative)
+{
+  nsresult rv;
+
+  SaveToEnv("XRE_IMPORT_PROFILES=1");
+
+  // try to import old-style profiles
+  { // scope XPCOM
+    ScopedXPCOMStartup xpcom;
+    rv = xpcom.Initialize();
+    if (NS_SUCCEEDED(rv)) {
+#ifdef XP_MACOSX
+      CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
+#endif
+
+      nsCOMPtr<nsIProfileMigrator> migrator
+        (do_GetService(NS_PROFILEMIGRATOR_CONTRACTID));
+      if (migrator) {
+        migrator->Import();
+      }
+    }
+  }
+
+  aPService->Flush();
+  return LaunchChild(aNative);
+}
+
 // Pick a profile. We need to end up with a profile lock.
 //
 // 1) check for -profile <path>
@@ -2011,6 +2040,12 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   PRUint32 count;
   rv = profileSvc->GetProfileCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR) {
+    if (!count && !EnvHasValue("XRE_IMPORT_PROFILES")) {
+      return ImportProfiles(profileSvc, aNative);
+    }
+  }
 
   ar = CheckArg("p", PR_FALSE, &arg);
   if (ar == ARG_BAD) {
@@ -3433,6 +3468,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         SaveToEnv("XRE_PROFILE_LOCAL_PATH=");
         SaveToEnv("XRE_PROFILE_NAME=");
         SaveToEnv("XRE_START_OFFLINE=");
+        SaveToEnv("XRE_IMPORT_PROFILES=");
         SaveToEnv("NO_EM_RESTART=");
         SaveToEnv("XUL_APP_FILE=");
         SaveToEnv("XRE_BINARY_PATH=");
