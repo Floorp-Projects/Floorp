@@ -6,3 +6,5 @@ contract @mozilla.org/js/xpc/test/js/ObjectReadOnly;1 {916c4247-253d-4ed0-a425-a
 
 component {e3b86f4e-49c0-487c-a2b0-3a986720a044} xpctest_params.js
 contract @mozilla.org/js/xpc/test/js/Params;1 {e3b86f4e-49c0-487c-a2b0-3a986720a044}
+
+interfaces xpctest.xpt
