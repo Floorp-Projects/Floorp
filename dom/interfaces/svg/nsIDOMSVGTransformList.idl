@@ -41,10 +41,11 @@
 interface nsIDOMSVGTransform;
 interface nsIDOMSVGMatrix;
 
-[scriptable, uuid(cee0a9d4-8554-4bf6-bf9b-7d0cebb4269d)]
+[scriptable, uuid(6302eb5d-25d5-4df6-ab8b-e57e37c1a48d)]
 interface nsIDOMSVGTransformList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
+  readonly attribute unsigned long length; // synonym for numberOfItems
 
   void clear();
       // raises( DOMException );

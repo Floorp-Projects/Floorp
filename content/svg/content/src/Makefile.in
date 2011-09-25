@@ -61,6 +61,7 @@ CPPSRCS		= \
 		DOMSVGPoint.cpp \
 		DOMSVGPointList.cpp \
 		DOMSVGTransform.cpp \
+		DOMSVGTransformList.cpp \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
@@ -119,7 +120,6 @@ CPPSRCS		= \
 		nsSVGTextPathElement.cpp \
 		nsSVGTextPositioningElement.cpp \
 		nsSVGTitleElement.cpp \
-		nsSVGTransformList.cpp \
 		nsSVGTransformListParser.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
@@ -136,6 +136,7 @@ CPPSRCS		= \
 		SVGPathSegUtils.cpp \
 		SVGPointList.cpp \
 		SVGTransform.cpp \
+		SVGTransformList.cpp \
 		$(NULL)
 
 ifdef MOZ_SMIL
