@@ -2237,6 +2237,7 @@ class CallMethodHelper
     JS_ALWAYS_INLINE JSBool InitializeDispatchParams();
 
     JS_ALWAYS_INLINE JSBool ConvertIndependentParams(JSBool* foundDependentParam);
+    JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8 i);
     JS_ALWAYS_INLINE JSBool ConvertDependentParams();
 
     JS_ALWAYS_INLINE nsresult Invoke();
@@ -2800,17 +2801,25 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
     const uint8 paramCount = mMethodInfo->GetParamCount();
     for(uint8 i = 0; i < paramCount; i++)
     {
+        const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+
+        if(paramInfo.GetType().IsDependent())
+            *foundDependentParam = JS_TRUE;
+        else if(!ConvertIndependentParam(i))
+            return JS_FALSE;
+
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+CallMethodHelper::ConvertIndependentParam(uint8 i)
+{
         JSBool useAllocator = JS_FALSE;
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
         const nsXPTType& type = paramInfo.GetType();
         uint8 type_tag = type.TagPart();
-
-        if(type.IsDependent())
-        {
-            *foundDependentParam = JS_TRUE;
-            continue;
-        }
-
         nsXPTCVariant* dp = GetDispatchParam(i);
         dp->type = type;
 
@@ -2849,7 +2858,7 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
             }
 
             if(!paramInfo.IsIn())
-                continue;
+                return JS_TRUE;
         }
         else
         {
@@ -2881,7 +2890,7 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                             JS_ReportOutOfMemory(mCallContext);
                             return JS_FALSE;
                         }
-                        continue;
+                        return JS_TRUE;
                     }
                     // else...
 
@@ -2904,7 +2913,7 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                             JS_ReportOutOfMemory(mCallContext);
                             return JS_FALSE;
                         }
-                        continue;
+                        return JS_TRUE;
                     }
                     // else ...
                     // Is an 'in' CString.
@@ -2948,7 +2957,6 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
             ThrowBadParam(err, i, mCallContext);
             return JS_FALSE;
         }
-    }
 
     return JS_TRUE;
 }
