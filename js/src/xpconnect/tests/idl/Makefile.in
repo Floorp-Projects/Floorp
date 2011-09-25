@@ -51,3 +51,8 @@ XPIDLSRCS = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+componentdir = js/src/xpconnect/tests/components
+libs:: $(XPIDL_GEN_DIR)/$(MODULE).xpt
+	$(INSTALL) $^ $(testxpcobjdir)/$(componentdir)/native
+	$(INSTALL) $^ $(testxpcobjdir)/$(componentdir)/js
