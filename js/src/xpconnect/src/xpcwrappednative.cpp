@@ -2240,6 +2240,9 @@ class CallMethodHelper
     JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8 i);
     JS_ALWAYS_INLINE JSBool ConvertDependentParams();
 
+    JS_ALWAYS_INLINE JSBool HandleDipperParam(nsXPTCVariant* dp,
+                                              const nsXPTParamInfo& paramInfo);
+
     JS_ALWAYS_INLINE nsresult Invoke();
 
 public:
@@ -2823,6 +2826,10 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
 
+    // Handle dipper types separately.
+    if(paramInfo.IsDipper())
+        return HandleDipperParam(dp, paramInfo);
+
     if(type_tag == nsXPTType::T_INTERFACE)
     {
         dp->SetValIsInterface();
@@ -2878,21 +2885,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
                 // Fall through to the T_DOMSTRING case
 
             case nsXPTType::T_DOMSTRING:
-                if(paramInfo.IsDipper())
-                {
-                    // Is an 'out' DOMString. Make a new nsAString
-                    // now and then continue in order to skip the call to
-                    // JSData2Native
-
-                    dp->SetValIsDOMString();
-                    if(!(dp->val.p = new nsAutoString()))
-                    {
-                        JS_ReportOutOfMemory(mCallContext);
-                        return JS_FALSE;
-                    }
-                    return JS_TRUE;
-                }
-                // else...
 
                 // Is an 'in' DOMString. Set 'useAllocator' to indicate
                 // that JSData2Native should allocate a new
@@ -2905,18 +2897,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
                 // Fall through to the C string case for now...
             case nsXPTType::T_CSTRING:
                 dp->SetValIsCString();
-                if(paramInfo.IsDipper())
-                {
-                    // Is an 'out' CString.
-                    if(!(dp->val.p = new nsCString()))
-                    {
-                        JS_ReportOutOfMemory(mCallContext);
-                        return JS_FALSE;
-                    }
-                    return JS_TRUE;
-                }
-                // else ...
-                // Is an 'in' CString.
                 useAllocator = JS_TRUE;
                 break;
             }
@@ -3094,6 +3074,68 @@ CallMethodHelper::ConvertDependentParams()
                 return JS_FALSE;
             }
         }
+    }
+
+    return JS_TRUE;
+}
+
+// Handle parameters with dipper types.
+//
+// Dipper types are one of the more inscrutable aspects of xpidl. In a
+// nutshell, dippers are empty container objects, created and passed by
+// the caller, and filled by the callee. The callee receives a
+// fully-formed object, and thus does not have to construct anything. But
+// the object is functionally empty, and the callee is responsible for
+// putting something useful inside of it.
+//
+// XPIDL decides which types to make dippers. The list of these types
+// is given in the isDipperType() function in typelib.py, and is currently
+// limited to 4 string types.
+//
+// When a dipper type is declared as an 'out' parameter, xpidl internally
+// converts it to an 'in', and sets the XPT_PD_DIPPER flag on it. For this
+// reason, dipper types are sometimes referred to as 'out parameters
+// masquerading as in'. The burden of maintaining this illusion falls mostly
+// on XPConnect - we create the empty containers, and harvest the results
+// after the call.
+//
+// This method creates these empty containers.
+JSBool
+CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
+                                    const nsXPTParamInfo& paramInfo)
+{
+    // Get something we can make comparisons with.
+    uint8 type_tag = paramInfo.GetType().TagPart();
+
+    // Dippers always have the 'in' and 'dipper' flags set. Never 'out'.
+    NS_ABORT_IF_FALSE(!paramInfo.IsOut(), "Dipper has unexpected flags.");
+
+    // xpidl.h specifies that dipper types will be used in exactly four
+    // cases, all strings. Verify that here.
+    NS_ABORT_IF_FALSE(type_tag == nsXPTType::T_ASTRING ||
+                      type_tag == nsXPTType::T_DOMSTRING ||
+                      type_tag == nsXPTType::T_UTF8STRING ||
+                      type_tag == nsXPTType::T_CSTRING,
+                      "Unexpected dipper type!");
+
+    // ASTRING and DOMSTRING are very similar, and both use nsAutoString.
+    // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
+    if(type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
+    {
+        dp->SetValIsDOMString();
+        dp->val.p = new nsAutoString();
+    }
+    else
+    {
+        dp->SetValIsCString();
+        dp->val.p = new nsCString();
+    }
+
+    // Check for OOM, in either case.
+    if(!dp->val.p)
+    {
+        JS_ReportOutOfMemory(mCallContext);
+        return JS_FALSE;
     }
 
     return JS_TRUE;
