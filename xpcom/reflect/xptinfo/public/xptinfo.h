@@ -160,6 +160,12 @@ public:
     PRBool IsOptional() const {return 0 != (XPT_PD_IS_OPTIONAL(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
+    // Whether this parameter is passed indirectly on the stack. This mainly
+    // applies to out/inout params, but we use it unconditionally for certain
+    // types.
+    PRBool IsIndirect() const {return IsOut() ||
+                               GetType().TagPart() == nsXPTType::T_JSVAL;}
+
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo
 
 private:
