@@ -67,8 +67,8 @@ static const mozilla::Module::CIDEntry kXPCTestCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kXPCTestContracts[] = {
-    { "@mozilla.org/js/xpc/test/ObjectReadOnly;1", &kNS_XPCTESTOBJECTREADONLY_CID },
-    { "@mozilla.org/js/xpc/test/ObjectReadWrite;1", &kNS_XPCTESTOBJECTREADWRITE_CID },
+    { "@mozilla.org/js/xpc/test/native/ObjectReadOnly;1", &kNS_XPCTESTOBJECTREADONLY_CID },
+    { "@mozilla.org/js/xpc/test/native/ObjectReadWrite;1", &kNS_XPCTESTOBJECTREADWRITE_CID },
     { NULL }
 };
 
