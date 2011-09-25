@@ -73,9 +73,6 @@ public:
 protected:
   // nsSVGElement overrides
   virtual PRBool IsEventName(nsIAtom* aName);
-  
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
 
   nsAutoPtr<mozilla::SVGAnimatedTransformList> mTransforms;
 

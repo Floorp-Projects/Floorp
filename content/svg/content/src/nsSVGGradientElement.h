@@ -92,9 +92,6 @@ protected:
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
-
   // nsIDOMSVGGradientElement values
   nsAutoPtr<mozilla::SVGAnimatedTransformList> mGradientTransform;
 };
