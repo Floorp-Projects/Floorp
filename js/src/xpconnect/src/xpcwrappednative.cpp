@@ -2801,7 +2801,6 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
 JSBool
 CallMethodHelper::ConvertIndependentParam(uint8 i)
 {
-    JSBool useAllocator = JS_FALSE;
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
     uint8 type_tag = type.TagPart();
@@ -2843,7 +2842,6 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
         if(type.IsPointer() &&
            type_tag != nsXPTType::T_INTERFACE)
         {
-            useAllocator = JS_TRUE;
             dp->SetValNeedsCleanup();
         }
 
@@ -2858,29 +2856,21 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
             {
             case nsXPTType::T_IID:
                 dp->SetValNeedsCleanup();
-                useAllocator = JS_TRUE;
                 break;
             case nsXPTType::T_CHAR_STR:
                 dp->SetValNeedsCleanup();
-                useAllocator = JS_TRUE;
                 break;
             case nsXPTType::T_ASTRING:
                 // Fall through to the T_DOMSTRING case
 
             case nsXPTType::T_DOMSTRING:
-
-                // Is an 'in' DOMString. Set 'useAllocator' to indicate
-                // that JSData2Native should allocate a new
-                // nsAString.
                 dp->SetValNeedsCleanup();
-                useAllocator = JS_TRUE;
                 break;
 
             case nsXPTType::T_UTF8STRING:
                 // Fall through to the C string case for now...
             case nsXPTType::T_CSTRING:
                 dp->SetValNeedsCleanup();
-                useAllocator = JS_TRUE;
                 break;
             }
         }
@@ -2909,8 +2899,7 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
 
     uintN err;
     if(!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
-                                  useAllocator, &param_iid, &err))
-    {
+                                  JS_TRUE, &param_iid, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return JS_FALSE;
     }
@@ -2933,7 +2922,6 @@ CallMethodHelper::ConvertDependentParams()
         nsXPTType datum_type;
         JSUint32 array_count;
         JSUint32 array_capacity;
-        JSBool useAllocator = JS_FALSE;
         PRBool isArray = type.IsArray();
 
         PRBool isSizedString = isArray ?
@@ -2976,7 +2964,6 @@ CallMethodHelper::ConvertDependentParams()
                !datum_type.IsInterfacePointer() &&
                isArray)
             {
-                useAllocator = JS_TRUE;
                 dp->SetValNeedsCleanup();
             }
 
@@ -2995,7 +2982,6 @@ CallMethodHelper::ConvertDependentParams()
                  datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS) ||
                (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
-                useAllocator = JS_TRUE;
                 dp->SetValNeedsCleanup();
             }
         }
@@ -3019,7 +3005,6 @@ CallMethodHelper::ConvertDependentParams()
                    !XPCConvert::JSArray2Native(mCallContext, (void**)&dp->val, src,
                                                array_count, array_capacity,
                                                datum_type,
-                                               useAllocator,
                                                &param_iid, &err))
                 {
                     // XXX need exception scheme for arrays to indicate bad element
@@ -3033,8 +3018,7 @@ CallMethodHelper::ConvertDependentParams()
                                                         (void*)&dp->val,
                                                         src,
                                                         array_count, array_capacity,
-                                                        datum_type, useAllocator,
-                                                        &err))
+                                                        datum_type, &err))
                 {
                     ThrowBadParam(err, i, mCallContext);
                     return JS_FALSE;
@@ -3044,8 +3028,7 @@ CallMethodHelper::ConvertDependentParams()
         else
         {
             if(!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
-                                          useAllocator, &param_iid,
-                                          &err))
+                                          JS_TRUE, &param_iid, &err))
             {
                 ThrowBadParam(err, i, mCallContext);
                 return JS_FALSE;
