@@ -98,20 +98,6 @@ nsSVGPatternElement::nsSVGPatternElement(already_AddRefed<nsINodeInfo> aNodeInfo
 {
 }
 
-nsresult
-nsSVGPatternElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   const nsAString* aValue, PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::patternTransform &&
-      !mPatternTransform &&
-      !(mPatternTransform = new SVGAnimatedTransformList()))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return nsSVGPatternElementBase::BeforeSetAttr(aNamespaceID, aName,
-                                                aValue, aNotify);
-}
-
 //----------------------------------------------------------------------
 // nsIDOMNode method
 

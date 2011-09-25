@@ -94,20 +94,6 @@ nsSVGGradientElement::nsSVGGradientElement(already_AddRefed<nsINodeInfo> aNodeIn
 {
 }
 
-nsresult
-nsSVGGradientElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                    const nsAString* aValue, PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::gradientTransform &&
-      !mGradientTransform &&
-      !(mGradientTransform = new SVGAnimatedTransformList()))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return nsSVGGradientElementBase::BeforeSetAttr(aNamespaceID, aName,
-                                                 aValue, aNotify);
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 

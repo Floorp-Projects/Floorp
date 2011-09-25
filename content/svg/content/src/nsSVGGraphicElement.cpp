@@ -220,17 +220,3 @@ nsSVGGraphicElement::GetAnimatedTransformList()
   }
   return mTransforms;
 }
-
-nsresult
-nsSVGGraphicElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   const nsAString* aValue, PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::transform &&
-      !mTransforms &&
-      !(mTransforms = new SVGAnimatedTransformList()))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return nsSVGGraphicElementBase::BeforeSetAttr(aNamespaceID, aName,
-                                                aValue, aNotify);
-}
