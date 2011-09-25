@@ -52,6 +52,7 @@
 #include "nsISupports.h"
 #include "xpt_struct.h"
 #include "xptinfo.h"
+#include "jsapi.h"
 
 struct nsXPTCMiniVariant
 {
@@ -73,6 +74,11 @@ struct nsXPTCMiniVariant
         char      c;
         PRUnichar wc;
         void*     p;
+
+        // Types below here are unknown to the assembly implementations, and
+        // therefore _must_ be passed with indirect semantics. We put them in
+        // the union here for type safety, so that we can avoid void* tricks.
+        jsval j;
     } val;
 };
 
