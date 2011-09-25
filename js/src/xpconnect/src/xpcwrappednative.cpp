@@ -2991,7 +2991,8 @@ CallMethodHelper::ConvertDependentParams()
 
             if((datum_type.IsPointer() &&
                 (datum_type.TagPart() == nsXPTType::T_IID ||
-                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS)) ||
+                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS) ||
+                 datum_type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS) ||
                (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
                 useAllocator = JS_TRUE;
