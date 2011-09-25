@@ -36,24 +36,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGTransformListParser.h"
+#include "SVGTransform.h"
 #include "prdtoa.h"
-#include "nsSVGTransform.h"
-#include "nsSVGMatrix.h"
 #include "nsDOMError.h"
 #include "nsGkAtoms.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include "nsCOMArray.h"
 #include "nsContentUtils.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIAtom.h"
 
-//----------------------------------------------------------------------
-// public interface
-
-nsSVGTransformListParser::nsSVGTransformListParser(nsCOMArray<nsIDOMSVGTransform>* aTransforms)
-    : mTransform(aTransforms)
-{
-}
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // private methods
@@ -61,6 +54,7 @@ nsSVGTransformListParser::nsSVGTransformListParser(nsCOMArray<nsIDOMSVGTransform
 nsresult
 nsSVGTransformListParser::Match()
 {
+  mTransforms.Clear();
   return MatchTransformList();
 }
 
@@ -232,17 +226,6 @@ nsSVGTransformListParser::MatchNumberArguments(float *aResult,
   return NS_OK;
 }
 
-nsIDOMSVGTransform *
-nsSVGTransformListParser::AppendTransform()
-{
-  nsCOMPtr<nsIDOMSVGTransform> transform;
-  NS_NewSVGTransform(getter_AddRefs(transform));
-  if (transform) {
-    mTransform->AppendObject(transform);
-  }
-  return transform;
-}
-
 nsresult
 nsSVGTransformListParser::MatchTranslate()
 {
@@ -259,7 +242,7 @@ nsSVGTransformListParser::MatchTranslate()
       // fall-through
     case 2:
     {
-      nsIDOMSVGTransform *transform = AppendTransform();
+      SVGTransform* transform = mTransforms.AppendElement();
       NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetTranslate(t[0], t[1]);
       break;
@@ -288,7 +271,7 @@ nsSVGTransformListParser::MatchScale()
       // fall-through
     case 2:
     {
-      nsIDOMSVGTransform *transform = AppendTransform();
+      SVGTransform* transform = mTransforms.AppendElement();
       NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetScale(s[0], s[1]);
       break;
@@ -317,7 +300,7 @@ nsSVGTransformListParser::MatchRotate()
       // fall-through
     case 3:
     {
-      nsIDOMSVGTransform *transform = AppendTransform();
+      SVGTransform* transform = mTransforms.AppendElement();
       NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetRotate(r[0], r[1], r[2]);
       break;
@@ -344,7 +327,7 @@ nsSVGTransformListParser::MatchSkewX()
     return NS_ERROR_FAILURE;
   }
 
-  nsIDOMSVGTransform *transform = AppendTransform();
+  SVGTransform* transform = mTransforms.AppendElement();
   NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetSkewX(skew);
 
@@ -366,7 +349,7 @@ nsSVGTransformListParser::MatchSkewY()
     return NS_ERROR_FAILURE;
   }
 
-  nsIDOMSVGTransform *transform = AppendTransform();
+  SVGTransform* transform = mTransforms.AppendElement();
   NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetSkewY(skew);
 
@@ -388,14 +371,9 @@ nsSVGTransformListParser::MatchMatrix()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  NS_NewSVGMatrix(getter_AddRefs(matrix),
-                  m[0], m[1], m[2], m[3], m[4], m[5]);
-  NS_ENSURE_TRUE(matrix, NS_ERROR_OUT_OF_MEMORY);
-
-  nsIDOMSVGTransform *transform = AppendTransform();
+  SVGTransform* transform = mTransforms.AppendElement();
   NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
-  transform->SetMatrix(matrix);
+  transform->SetMatrix(gfxMatrix(m[0], m[1], m[2], m[3], m[4], m[5]));
 
   return NS_OK;
 }
