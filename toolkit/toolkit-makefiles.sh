@@ -196,7 +196,8 @@ MAKEFILES_xpconnect="
   js/src/xpconnect/src/Makefile
   js/src/xpconnect/loader/Makefile
   js/src/xpconnect/tests/Makefile
-  js/src/xpconnect/tests/components/Makefile
+  js/src/xpconnect/tests/components/js/Makefile
+  js/src/xpconnect/tests/components/native/Makefile
   js/src/xpconnect/tests/idl/Makefile
 "
 
