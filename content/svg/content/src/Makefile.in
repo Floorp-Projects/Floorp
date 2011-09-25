@@ -120,7 +120,6 @@ CPPSRCS		= \
 		nsSVGTextPathElement.cpp \
 		nsSVGTextPositioningElement.cpp \
 		nsSVGTitleElement.cpp \
-		nsSVGTransformListParser.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
 		nsSVGViewBox.cpp \
@@ -138,6 +137,7 @@ CPPSRCS		= \
 		SVGPointList.cpp \
 		SVGTransform.cpp \
 		SVGTransformList.cpp \
+		SVGTransformListParser.cpp \
 		$(NULL)
 
 ifdef MOZ_SMIL

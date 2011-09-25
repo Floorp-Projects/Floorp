@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -35,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGTransformListParser.h"
+#include "SVGTransformListParser.h"
 #include "SVGTransform.h"
 #include "prdtoa.h"
 #include "nsDOMError.h"
@@ -52,7 +53,7 @@ using namespace mozilla;
 // private methods
 
 nsresult
-nsSVGTransformListParser::Match()
+SVGTransformListParser::Match()
 {
   mTransforms.Clear();
   return MatchTransformList();
@@ -60,7 +61,7 @@ nsSVGTransformListParser::Match()
 
 
 nsresult
-nsSVGTransformListParser::MatchTransformList()
+SVGTransformListParser::MatchTransformList()
 {
   MatchWsp();
 
@@ -75,7 +76,7 @@ nsSVGTransformListParser::MatchTransformList()
 
 
 nsresult
-nsSVGTransformListParser::MatchTransforms()
+SVGTransformListParser::MatchTransforms()
 {
   ENSURE_MATCHED(MatchTransform());
 
@@ -100,8 +101,8 @@ nsSVGTransformListParser::MatchTransforms()
 
 
 nsresult
-nsSVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
-                                            PRBool aAdvancePos)
+SVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
+                                          PRBool aAdvancePos)
 {
   if (mTokenType != OTHER || *mTokenPos == '\0') {
     return NS_ERROR_FAILURE;
@@ -138,7 +139,7 @@ nsSVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
 
 
 nsresult
-nsSVGTransformListParser::MatchTransform()
+SVGTransformListParser::MatchTransform()
 {
   nsCOMPtr<nsIAtom> keyatom;
 
@@ -168,7 +169,7 @@ nsSVGTransformListParser::MatchTransform()
 
 
 PRBool
-nsSVGTransformListParser::IsTokenTransformStarter()
+SVGTransformListParser::IsTokenTransformStarter()
 {
   nsCOMPtr<nsIAtom> keyatom;
 
@@ -190,9 +191,9 @@ nsSVGTransformListParser::IsTokenTransformStarter()
 }
 
 nsresult
-nsSVGTransformListParser::MatchNumberArguments(float *aResult,
-                                               PRUint32 aMaxNum,
-                                               PRUint32 *aParsedNum)
+SVGTransformListParser::MatchNumberArguments(float *aResult,
+                                             PRUint32 aMaxNum,
+                                             PRUint32 *aParsedNum)
 {
   *aParsedNum = 0;
 
@@ -227,7 +228,7 @@ nsSVGTransformListParser::MatchNumberArguments(float *aResult,
 }
 
 nsresult
-nsSVGTransformListParser::MatchTranslate()
+SVGTransformListParser::MatchTranslate()
 {
   GetNextToken();
 
@@ -256,7 +257,7 @@ nsSVGTransformListParser::MatchTranslate()
 
 
 nsresult
-nsSVGTransformListParser::MatchScale()
+SVGTransformListParser::MatchScale()
 {
   GetNextToken();
 
@@ -285,7 +286,7 @@ nsSVGTransformListParser::MatchScale()
 
 
 nsresult
-nsSVGTransformListParser::MatchRotate()
+SVGTransformListParser::MatchRotate()
 {
   GetNextToken();
 
@@ -314,7 +315,7 @@ nsSVGTransformListParser::MatchRotate()
 
 
 nsresult
-nsSVGTransformListParser::MatchSkewX()
+SVGTransformListParser::MatchSkewX()
 {
   GetNextToken();
 
@@ -336,7 +337,7 @@ nsSVGTransformListParser::MatchSkewX()
 
 
 nsresult
-nsSVGTransformListParser::MatchSkewY()
+SVGTransformListParser::MatchSkewY()
 {
   GetNextToken();
 
@@ -358,7 +359,7 @@ nsSVGTransformListParser::MatchSkewY()
 
 
 nsresult
-nsSVGTransformListParser::MatchMatrix()
+SVGTransformListParser::MatchMatrix()
 {
   GetNextToken();
 
