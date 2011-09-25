@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGTransformList.h"
-#include "nsSVGAnimatedTransformList.h"
+#include "DOMSVGAnimatedTransformList.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGGradientElement.h"
@@ -47,6 +46,8 @@
 #include "nsGkAtoms.h"
 #include "nsSVGGradientElement.h"
 #include "nsIFrame.h"
+
+using namespace mozilla;
 
 //--------------------- Gradients------------------------
 
@@ -94,34 +95,13 @@ nsSVGGradientElement::nsSVGGradientElement(already_AddRefed<nsINodeInfo> aNodeIn
 }
 
 nsresult
-nsSVGGradientElement::CreateTransformList()
-{
-  nsresult rv;
-
-  // DOM property: transform, #IMPLIED attrib: transform
-  nsCOMPtr<nsIDOMSVGTransformList> transformList;
-  rv = nsSVGTransformList::Create(getter_AddRefs(transformList));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mGradientTransform),
-                                      transformList);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = AddMappedSVGValue(nsGkAtoms::gradientTransform, mGradientTransform);
-  if (NS_FAILED(rv)) {
-    mGradientTransform = nsnull;
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsSVGGradientElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                     const nsAString* aValue, PRBool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::gradientTransform &&
       !mGradientTransform &&
-      NS_FAILED(CreateTransformList()))
+      !(mGradientTransform = new SVGAnimatedTransformList()))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return nsSVGGradientElementBase::BeforeSetAttr(aNamespaceID, aName,
@@ -130,18 +110,6 @@ nsSVGGradientElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
-
-void
-nsSVGGradientElement::DidAnimateTransform()
-{
-  nsIFrame* frame = GetPrimaryFrame();
-  
-  if (frame) {
-    frame->AttributeChanged(kNameSpaceID_None,
-                            nsGkAtoms::gradientTransform,
-                            nsIDOMMutationEvent::MODIFICATION);
-  }
-}
 
 nsSVGElement::EnumAttributesInfo
 nsSVGGradientElement::GetEnumInfo()
@@ -169,11 +137,9 @@ NS_IMETHODIMP nsSVGGradientElement::GetGradientUnits(nsIDOMSVGAnimatedEnumeratio
 /* readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform; */
 NS_IMETHODIMP nsSVGGradientElement::GetGradientTransform(nsIDOMSVGAnimatedTransformList * *aGradientTransform)
 {
-  if (!mGradientTransform && NS_FAILED(CreateTransformList()))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aGradientTransform = mGradientTransform;
-  NS_IF_ADDREF(*aGradientTransform);
+  *aGradientTransform =
+    DOMSVGAnimatedTransformList::GetDOMWrapper(GetAnimatedTransformList(), this)
+    .get();
   return NS_OK;
 }
 
@@ -279,6 +245,15 @@ NS_IMETHODIMP nsSVGLinearGradientElement::GetY2(nsIDOMSVGAnimatedLength * *aY2)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
+
+SVGAnimatedTransformList*
+nsSVGGradientElement::GetAnimatedTransformList()
+{
+  if (!mGradientTransform) {
+    mGradientTransform = new SVGAnimatedTransformList();
+  }
+  return mGradientTransform;
+}
 
 nsSVGElement::LengthAttributesInfo
 nsSVGLinearGradientElement::GetLengthInfo()
