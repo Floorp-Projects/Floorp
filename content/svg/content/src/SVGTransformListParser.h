@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -35,31 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGTRANSFORMLISTPARSER_H__
-#define __NS_SVGTRANSFORMLISTPARSER_H__
+#ifndef MOZILLA_SVGTRANSFORMLISTPARSER_H__
+#define MOZILLA_SVGTRANSFORMLISTPARSER_H__
 
 #include "nsSVGDataParser.h"
 #include "nsTArray.h"
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGTransformListParser: taken from nsSVGPathDataParser, a simple
+// SVGTransformListParser: taken from nsSVGPathDataParser, a simple
 //  recursive descent parser that builds the transform lists from the
 //  transform attributes. The grammar for path data
 // can be found in SVG 1.1,  chapter 7.
 // http://www.w3.org/TR/SVG11/coords.html#TransformAttribute
 
 class nsIAtom;
-namespace mozilla { class SVGTransform; }
 
-class nsSVGTransformListParser : public nsSVGDataParser
+namespace mozilla {
+
+class SVGTransform;
+
+class SVGTransformListParser : public nsSVGDataParser
 {
 public:
-  const nsTArray<mozilla::SVGTransform>& GetTransformList() const {
+  const nsTArray<SVGTransform>& GetTransformList() const {
     return mTransforms;
   }
 
 private:
-  nsTArray<mozilla::SVGTransform> mTransforms;
+  nsTArray<SVGTransform> mTransforms;
 
   // helpers
   virtual nsresult Match();
@@ -86,4 +90,6 @@ private:
   nsresult MatchMatrix();
 };
 
-#endif // __NS_SVGTRANSFORMLISTPARSER_H__
+} // namespace mozilla
+
+#endif // MOZILLA_SVGTRANSFORMLISTPARSER_H__
