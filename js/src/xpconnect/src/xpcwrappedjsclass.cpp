@@ -1708,6 +1708,7 @@ pre_call_clean_up:
     for(i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& param = info->params[i];
+        NS_ABORT_IF_FALSE(!param.IsShared(), "[shared] implies [noscript]!");
         if(!param.IsOut() && !param.IsDipper())
             continue;
 
@@ -1745,7 +1746,7 @@ pre_call_clean_up:
                                                   &param_iid)))
                 break;
         }
-        else if(type.IsPointer() && !param.IsShared() && !param.IsDipper())
+        else if(type.IsPointer() && !param.IsDipper())
             useAllocator = JS_TRUE;
 
         if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
@@ -1804,7 +1805,7 @@ pre_call_clean_up:
                                              &param_iid))
                    break;
             }
-            else if(type.IsPointer() && !param.IsShared())
+            else if(type.IsPointer())
                 useAllocator = JS_TRUE;
 
             if(isArray || isSizedString)
