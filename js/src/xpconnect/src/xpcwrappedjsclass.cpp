@@ -1509,7 +1509,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         {
             nsXPTCMiniVariant* pv;
 
-            if(param.IsOut())
+            // Temporary hack - we'll abstract this away soon.
+            if(param.IsOut() || type.TagPart() == nsXPTType::T_JSVAL)
                 pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];
