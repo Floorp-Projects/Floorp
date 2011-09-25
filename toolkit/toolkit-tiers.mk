@@ -59,6 +59,7 @@ tier_platform_dirs += modules/zlib
 endif
 
 tier_platform_dirs += \
+		modules/libreg \
 		modules/libpref \
 		intl \
 		netwerk \
