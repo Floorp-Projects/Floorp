@@ -35,17 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SVGTRANSFORMSMILTYPE_H_
-#define NS_SVGTRANSFORMSMILTYPE_H_
+#ifndef SVGTRANSFORMLISTSMILTYPE_H_
+#define SVGTRANSFORMLISTSMILTYPE_H_
 
 #include "nsISMILType.h"
-#include "nsSVGSMILTransform.h"
 #include "nsTArray.h"
 
 class nsSMILValue;
 
+namespace mozilla {
+
+class SVGTransform;
+class SVGTransformList;
+class SVGTransformSMILData;
+
 ////////////////////////////////////////////////////////////////////////
-// nsSVGTransformSMILType
+// SVGTransformListSMILType
 //
 // Operations for animating an nsSVGTransformList.
 //
@@ -103,11 +108,11 @@ class nsSMILValue;
 // we have seen above can contain 0..n elements) whilst the end-value comes from
 // the <animateTransform> and so can only hold 1 transform.
 //
-class nsSVGTransformSMILType : public nsISMILType
+class SVGTransformListSMILType : public nsISMILType
 {
 public:
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSVGTransformSMILType sSingleton;
+  static SVGTransformListSMILType sSingleton;
 
 protected:
   // nsISMILType Methods
@@ -133,18 +138,21 @@ protected:
 public:
   // Transform array accessors
   // -------------------------
-  static PRUint32 GetNumTransforms(const nsSMILValue& aValue);
-  static const nsSVGSMILTransform* GetTransformAt(PRUint32 aIndex,
-                                                  const nsSMILValue& aValue);
-  static nsresult AppendTransform(const nsSVGSMILTransform& aTransform,
+  static nsresult AppendTransform(const SVGTransformSMILData& aTransform,
                                   nsSMILValue& aValue);
+  static PRBool AppendTransforms(const SVGTransformList& aList,
+                                 nsSMILValue& aValue);
+  static PRBool GetTransforms(const nsSMILValue& aValue,
+                              nsTArray<SVGTransform>& aTransforms);
 
 
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,
   // and prevent others from deleting my singleton.
-  nsSVGTransformSMILType()  {}
-  ~nsSVGTransformSMILType() {}
+  SVGTransformListSMILType() {}
+  ~SVGTransformListSMILType() {}
 };
 
-#endif // NS_SVGTRANSFORMSMILTYPE_H_
+} // end namespace mozilla
+
+#endif // SVGLISTTRANSFORMSMILTYPE_H_
