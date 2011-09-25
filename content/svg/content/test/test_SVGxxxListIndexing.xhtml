@@ -13,11 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=631437
   <text id="text" x="10 20 30" rotate="40 50 60">abcde</text>
   <path id="path" d="M0,0 L100,100"/>
   <polygon id="poly" points="50,50 70,70 90,50"/>
+  <g id="g" transform="translate(20 30) rotate(50 60 70) scale(2)"/>
 </svg>
 <script type="text/javascript;version=1.8"><![CDATA[
 var text = document.getElementById("text"),
     path = document.getElementById("path"),
     poly = document.getElementById("poly");
+    g    = document.getElementById("g");
 
 function CheckList(aListObject, aExpectedListLength, aListDescription)
 {
@@ -58,7 +60,15 @@ var tests = [
     type: "SVGPointList",
     subtests: [ { values: null, length: 3 },
                 { values: "100,100", length: 1 },
-                { values: "0,0 10,10 20,0 30,10 40,0", length: 5 } ] }
+                { values: "0,0 10,10 20,0 30,10 40,0", length: 5 } ] },
+  { element: g,
+    attribute: "transform",
+    listProperty: "transform.baseVal",
+    type: "SVGTransformList",
+    subtests: [ { values: null, length: 3 },
+                { values: "skewX(45)", length: 1 },
+                { values: "translate(1 2) rotate(3) scale(4) skewY(5) skewX(6)",
+                  length: 5 } ] }
 ];
 
 for each (let test in tests) {
