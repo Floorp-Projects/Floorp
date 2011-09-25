@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "SVGTransformList.h"
-#include "nsSVGTransformListParser.h"
+#include "SVGTransformListParser.h"
 
 namespace mozilla {
 
@@ -100,7 +100,7 @@ SVGTransformList::GetValueAsString(nsAString& aValue) const
 nsresult
 SVGTransformList::SetValueFromString(const nsAString& aValue)
 {
-  nsSVGTransformListParser parser;
+  SVGTransformListParser parser;
   nsresult rv = parser.Parse(aValue);
 
   if (NS_FAILED(rv)) {
