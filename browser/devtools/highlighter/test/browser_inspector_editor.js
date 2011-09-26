@@ -26,29 +26,29 @@ function setupEditorTests()
   div.setAttribute("class", "barbaz");
   doc.body.appendChild(div);
 
-  Services.obs.addObserver(setupHTMLPanel, INSPECTOR_NOTIFICATIONS.OPENED, false);
+  Services.obs.addObserver(setupHTMLPanel, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.toggleInspectorUI();
 }
 
 function setupHTMLPanel()
 {
-  Services.obs.removeObserver(setupHTMLPanel, INSPECTOR_NOTIFICATIONS.OPENED);
-  Services.obs.addObserver(runEditorTests, INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
+  Services.obs.removeObserver(setupHTMLPanel, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
+  Services.obs.addObserver(runEditorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
   InspectorUI.treePanel.open();
 }
 
 function runEditorTests()
 {
-  Services.obs.removeObserver(runEditorTests, INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
+  Services.obs.removeObserver(runEditorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
   InspectorUI.stopInspecting();
 
   // setup generator for async test steps
   editorTestSteps = doEditorTestSteps();
 
   // add step listeners
-  Services.obs.addObserver(doNextStep, INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, false);
-  Services.obs.addObserver(doNextStep, INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, false);
-  Services.obs.addObserver(doNextStep, INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, false);
+  Services.obs.addObserver(doNextStep, InspectorUI.INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, false);
+  Services.obs.addObserver(doNextStep, InspectorUI.INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, false);
+  Services.obs.addObserver(doNextStep, InspectorUI.INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, false);
 
   // start the tests
   doNextStep();
@@ -212,9 +212,9 @@ function doEditorTestSteps()
   // End of Step 8
 
   // end of all steps, so clean up
-  Services.obs.removeObserver(doNextStep, INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, false);
-  Services.obs.removeObserver(doNextStep, INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, false);
-  Services.obs.removeObserver(doNextStep, INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, false);
+  Services.obs.removeObserver(doNextStep, InspectorUI.INSPECTOR_NOTIFICATIONS.EDITOR_OPENED, false);
+  Services.obs.removeObserver(doNextStep, InspectorUI.INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED, false);
+  Services.obs.removeObserver(doNextStep, InspectorUI.INSPECTOR_NOTIFICATIONS.EDITOR_SAVED, false);
 
   executeSoon(finishUp);
 }
