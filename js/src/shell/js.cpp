@@ -4635,58 +4635,6 @@ static JSPropertySpec its_props[] = {
     {NULL,0,0,NULL,NULL}
 };
 
-static JSBool
-its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSString *name;
-    JSObject *method;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "So", &name, &method))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(method);
-
-    if (JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes) {
-            JSString *valstr = JS_ValueToString(cx, *vp);
-            if (valstr) {
-                JSAutoByteString valBytes(cx, valstr);
-                if (!!valBytes) {
-                    JS_ReportError(cx, "can't bind method %s to non-callable object %s",
-                                   nameBytes.ptr(), valBytes.ptr());
-                }
-            }
-        }
-        return JS_FALSE;
-    }
-
-    if (method->getFunctionPrivate()->isInterpreted() &&
-        method->getFunctionPrivate()->script()->compileAndGo) {
-        /* Can't reparent compileAndGo scripts. */
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes)
-            JS_ReportError(cx, "can't bind method %s to compileAndGo script", nameBytes.ptr());
-        return JS_FALSE;
-    }
-
-    jsid id;
-    if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
-        return JS_FALSE;
-
-    if (!JS_DefinePropertyById(cx, thisobj, id, *vp, NULL, NULL, JSPROP_ENUMERATE))
-        return JS_FALSE;
-
-    return JS_SetParent(cx, method, thisobj);
-}
-
-static JSFunctionSpec its_methods[] = {
-    {"bindMethod",      its_bindMethod, 2,0},
-    {NULL,NULL,0,0}
-};
-
 #ifdef JSD_LOWLEVEL_SOURCE
 /*
  * This facilitates sending source to JSD (the debugger system) in the shell
@@ -5338,8 +5286,6 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
         if (!it)
             return NULL;
         if (!JS_DefineProperties(cx, it, its_props))
-            return NULL;
-        if (!JS_DefineFunctions(cx, it, its_methods))
             return NULL;
 
         if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
