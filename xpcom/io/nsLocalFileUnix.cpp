@@ -1429,7 +1429,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "air",         // Adobe AIR installer
             "jar"};        // java application bundle
         nsDependentSubstring ext = Substring(path, dotIdx + 1);
-        for (int i = 0; i < NS_ARRAY_LENGTH(executableExts); i++) {
+        for (size_t i = 0; i < NS_ARRAY_LENGTH(executableExts); i++) {
             if (ext.EqualsASCII(executableExts[i])) {
                 // Found a match.  Set result and quit.
                 *_retval = PR_TRUE;
