@@ -58,11 +58,6 @@
 using namespace js;
 using namespace js::mjit;
 
-// Put frame unwinding information into .debug_frame rather than .eh_frame so
-// that it doesn't take up space in the binary. This is for the manually
-// inserted .cfi_* directives in the inline assembly below. If we ever decide
-// to enable exceptions, we'll want to remove this.
-asm(".cfi_sections .debug_frame");
 
 js::mjit::CompilerAllocPolicy::CompilerAllocPolicy(JSContext *cx, Compiler &compiler)
 : TempAllocPolicy(cx),
@@ -213,25 +208,14 @@ asm (
 ".globl " SYMBOL_STRING(JaegerTrampoline) "\n"
 SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Prologue. */
-    ".cfi_startproc"                     "\n"
-    ".cfi_def_cfa_register rsp"          "\n"
-    ".cfi_def_cfa_offset 8"              "\n"
     "pushq %rbp"                         "\n"
-    ".cfi_def_cfa_offset 16"             "\n"
-    ".cfi_offset rbp, -16"               "\n"
     "movq %rsp, %rbp"                    "\n"
-    ".cfi_def_cfa_register rbp"          "\n"
     /* Save non-volatile registers. */
     "pushq %r12"                         "\n"
     "pushq %r13"                         "\n"
     "pushq %r14"                         "\n"
     "pushq %r15"                         "\n"
     "pushq %rbx"                         "\n"
-    ".cfi_offset r12, -24"               "\n"
-    ".cfi_offset r13, -32"               "\n"
-    ".cfi_offset r14, -40"               "\n"
-    ".cfi_offset r15, -48"               "\n"
-    ".cfi_offset rbx, -56"               "\n"
 
     /* Load mask registers. */
     "movq $0xFFFF800000000000, %r13"     "\n"
@@ -266,22 +250,12 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
     /* Jump into the JIT'd code. */
     "jmp *0(%rsp)"                      "\n"
-    ".cfi_endproc"                      "\n"
 );
 
 asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
-    ".cfi_startproc"                     "\n"
-    ".cfi_def_cfa_register rbp"          "\n"
-    ".cfi_def_cfa_offset 16"             "\n"
-    ".cfi_offset rbp, -16"               "\n"
-    ".cfi_offset r12, -24"               "\n"
-    ".cfi_offset r13, -32"               "\n"
-    ".cfi_offset r14, -40"               "\n"
-    ".cfi_offset r15, -48"               "\n"
-    ".cfi_offset rbx, -56"               "\n"
     "or   %rdi, %rsi"                    "\n"
     "movq %rsi, 0x30(%rbx)"              "\n"
     "movq %rsp, %rdi"                    "\n"
@@ -294,25 +268,14 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
     "popq %r13"                          "\n"
     "popq %r12"                          "\n"
     "popq %rbp"                          "\n"
-    ".cfi_def_cfa rsp, 8"                "\n"
     "movq $1, %rax"                      "\n"
     "ret"                                "\n"
-    ".cfi_endproc"                       "\n"
 );
 
 asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
-    ".cfi_startproc"                        "\n"
-    ".cfi_def_cfa_register rbp"             "\n"
-    ".cfi_def_cfa_offset 16"                "\n"
-    ".cfi_offset rbp, -16"                  "\n"
-    ".cfi_offset r12, -24"                  "\n"
-    ".cfi_offset r13, -32"                  "\n"
-    ".cfi_offset r14, -40"                  "\n"
-    ".cfi_offset r15, -48"                  "\n"
-    ".cfi_offset rbx, -56"                  "\n"
     "movq %rsp, %rdi"                       "\n"
     "call " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
     "testq %rax, %rax"                      "\n"
@@ -328,10 +291,8 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "popq %r13"                             "\n"
     "popq %r12"                             "\n"
     "popq %rbp"                             "\n"
-    ".cfi_def_cfa rsp, 8"                   "\n"
     "xorq %rax,%rax"                        "\n"
     "ret"                                   "\n"
-    ".cfi_endproc"                          "\n"
 );
 
 asm (
@@ -391,20 +352,12 @@ asm (
 ".globl " SYMBOL_STRING(JaegerTrampoline) "\n"
 SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Prologue. */
-    ".cfi_startproc"                     "\n"
-    ".cfi_def_cfa esp, 4"                "\n"
     "pushl %ebp"                         "\n"
-    ".cfi_def_cfa_offset 8"              "\n"
-    ".cfi_offset ebp, -8"                "\n"
     "movl %esp, %ebp"                    "\n"
-    ".cfi_def_cfa_register ebp"          "\n"
     /* Save non-volatile registers. */
     "pushl %esi"                         "\n"
     "pushl %edi"                         "\n"
     "pushl %ebx"                         "\n"
-    ".cfi_offset esi, -12"               "\n"
-    ".cfi_offset edi, -16"               "\n"
-    ".cfi_offset ebx, -20"               "\n"
 
     /* Build the JIT frame. Push fields in order, 
      * then align the stack to form esp == VMFrame. */
@@ -427,19 +380,12 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
     "movl 28(%esp), %ebp"                "\n"   /* load fp for JIT code */
     "jmp *88(%esp)"                      "\n"
-    ".cfi_endproc"                       "\n"
 );
 
 asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
-    ".cfi_startproc"                     "\n"
-    ".cfi_def_cfa ebp, 8"                "\n"
-    ".cfi_offset ebp, -8"                "\n"
-    ".cfi_offset esi, -12"               "\n"
-    ".cfi_offset edi, -16"               "\n"
-    ".cfi_offset ebx, -20"               "\n"
     "movl  %esi, 0x18(%ebp)"             "\n"
     "movl  %edi, 0x1C(%ebp)"             "\n"
     "movl  %esp, %ebp"                   "\n"
@@ -452,10 +398,8 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
     "popl %edi"                          "\n"
     "popl %esi"                          "\n"
     "popl %ebp"                          "\n"
-    ".cfi_def_cfa esp, 4"                "\n"
     "movl $1, %eax"                      "\n"
     "ret"                                "\n"
-    ".cfi_endproc"                       "\n"
 );
 
 asm (
@@ -463,12 +407,6 @@ asm (
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     /* Align the stack to 16 bytes. */
-    ".cfi_startproc"                     "\n"
-    ".cfi_def_cfa ebp, 8"                "\n"
-    ".cfi_offset ebp, -8"                "\n"
-    ".cfi_offset esi, -12"               "\n"
-    ".cfi_offset edi, -16"               "\n"
-    ".cfi_offset ebx, -20"               "\n"
     "pushl %esp"                         "\n"
     "pushl (%esp)"                       "\n"
     "pushl (%esp)"                       "\n"
@@ -489,10 +427,8 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "popl %edi"                          "\n"
     "popl %esi"                          "\n"
     "popl %ebp"                          "\n"
-    ".cfi_def_cfa esp, 4"                "\n"
     "xorl %eax, %eax"                    "\n"
     "ret"                                "\n"
-    ".cfi_endproc"                       "\n"
 );
 
 asm (
