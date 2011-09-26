@@ -4545,7 +4545,6 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
        eCSSToken_Number == tk->mType &&
        tk->mNumber == 0.0f)) {
     if ((aVariantMask & VARIANT_POSITIVE_LENGTH) != 0 && 
-        eCSSToken_Number == tk->mType &&
         tk->mNumber <= 0.0) {
         UngetToken();
         return PR_FALSE;
