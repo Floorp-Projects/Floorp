@@ -2178,14 +2178,18 @@ Loader::HandleLoadEvent(SheetLoadData* aEvent)
   // we're unblocking the parser
   // NS_ASSERTION(aEvent->mObserver, "Must have observer");
   NS_ASSERTION(aEvent->mSheet, "Must have sheet");
+
+  // Very important: this needs to come before the SheetComplete call
+  // below, so that HasPendingLoads() will test true as needed under
+  // notifications we send from that SheetComplete call.
+  mPostedEvents.RemoveElement(aEvent);
+
   if (!aEvent->mIsCancelled) {
     // SheetComplete will call Release(), so give it a reference to do
     // that with.
     NS_ADDREF(aEvent);
     SheetComplete(aEvent, NS_OK);
   }
-
-  mPostedEvents.RemoveElement(aEvent);
 
   if (mDocument) {
     mDocument->UnblockOnload(PR_TRUE);

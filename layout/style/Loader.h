@@ -472,6 +472,7 @@ private:
   LoadDataArray     mPostedEvents;
 
   // Our array of "global" observers
+  // XXXbz these are strong refs; should we be cycle collecting CSS loaders?
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver> > mObservers;
 
   // the load data needs access to the document...
