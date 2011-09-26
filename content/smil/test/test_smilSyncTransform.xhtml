@@ -40,26 +40,22 @@ function testChangeBaseVal(anim) {
 
   var target = anim.targetElement;
 
-  // we haven't fully implemented the transform type yet
-  // - when the target isn't animated baseVal and animVal may be the same object
-  // - attempts to change the animVal don't throw exceptions
-  // XXX in the future store the anim val here and query it
-  var transformList = target.transform;
+  var baseList = target.transform.baseVal;
+  var animList = target.transform.animVal;
 
   // make sure element has ended
   svg.setCurrentTime(anim.getSimpleDuration());
 
   // check frozen value is applied
-  is(transformList.baseVal.numberOfItems, 0);
-  is(transformList.animVal.numberOfItems, 1);
+  is(baseList.numberOfItems, 0);
+  is(animList.numberOfItems, 1);
 
   // change base val and re-check
   var newTransform = svg.createSVGTransform();
   newTransform.setScale(1,2);
-  transformList.baseVal.appendItem(newTransform);
-  is(transformList.baseVal.numberOfItems, 1);
-  // Not done yet
-  todo_is(transformList.animVal.numberOfItems, 2);
+  baseList.appendItem(newTransform);
+  is(baseList.numberOfItems, 1);
+  is(animList.numberOfItems, 2);
 }
 
 window.addEventListener("load", main, false);

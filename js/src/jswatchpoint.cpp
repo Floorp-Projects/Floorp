@@ -169,7 +169,7 @@ WatchpointMap::triggerWatchpoint(JSContext *cx, JSObject *obj, jsid id, Value *v
     }
 
     /* Call the handler. */
-    return handler(cx, obj, id, Jsvalify(old), Jsvalify(vp), closure);
+    return handler(cx, obj, id, old, vp, closure);
 }
 
 bool

@@ -417,7 +417,7 @@ class Native(object):
         'utf8string': 'nsACString',
         'cstring': 'nsACString',
         'astring': 'nsAString',
-        'jsval': 'jsval'
+        'jsval': 'JS::Value'
         }
 
     def __init__(self, name, nativename, attlist, location):

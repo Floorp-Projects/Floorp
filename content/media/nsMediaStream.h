@@ -168,8 +168,6 @@ public:
   }
 
   // The following can be called on the main thread only:
-  // Get the decoder
-  nsMediaDecoder* Decoder() { return mDecoder; }
   // Get the URI
   nsIURI* URI() { return mURI; }
   // Close the stream, stop any listeners, channels, etc.

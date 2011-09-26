@@ -115,7 +115,7 @@ TestShellCommandParent::SetCallback(JSContext* aCx,
 JSBool
 TestShellCommandParent::RunCallback(const nsString& aResponse)
 {
-  NS_ENSURE_TRUE(mCallback != JSVAL_NULL && mCx, JS_FALSE);
+  NS_ENSURE_TRUE(*mCallback.ToJSValPtr() != JSVAL_NULL && mCx, JS_FALSE);
 
   JSAutoRequest ar(mCx);
 

@@ -85,10 +85,10 @@
       <method name="_onUndo">
         <body>
           <![CDATA[
-            let closeFn = new Function("event", this._container.getAttribute("onreloadtab"));
+            let container = this._container;
+            let closeFn = new Function("event", container.getAttribute("onreloadtab"));
             closeFn.call(this);
-
-            this._container.removeTab(this);
+            container.removeClosedTab(this);
           ]]>
         </body>
       </method>
@@ -180,6 +180,44 @@
       <field name="_scrollbox">document.getAnonymousElementByAttribute(this, "anonid", "tabs-scrollbox");</field>
       <field name="_tabsUndo">document.getAnonymousElementByAttribute(this, "anonid", "tabs-undo");</field>
       <field name="_selectedTab">null</field>
+
+      <constructor>
+        <![CDATA[
+          // This customDragger wraps the default dragger, and looks for
+          // horizontal movement to hide or show the tab bar in tablet mode.
+          let scrollbox = this._scrollbox;
+          let [,scroller,dragger] = ScrollUtils.getScrollboxFromElement(scrollbox);
+          scrollbox.customDragger = {
+            _grabSidebar: false,
+
+            isDraggable: function isDraggable(target, content) {
+              return { x: true, y: true };
+            },
+
+            dragStart: function dragStart(cx, cy, target) {
+              this._grabSidebar = false;
+              dragger.dragStart(cx, cy, target, scroller);
+            },
+
+            dragStop: function dragStop(dx, dy) {
+              if (this._grabSidebar)
+                Browser.ungrabSidebar();
+              dragger.dragStop(dx, dy, scroller);
+            },
+
+            dragMove: function dragMove(dx, dy) {
+              if (!this._grabSidebar) {
+                this._grabSidebar = dx && Util.isTablet() && !Util.isPortrait();
+                if (this._grabSidebar)
+                  Browser.grabSidebar();
+              }
+              if (this._grabSidebar)
+                Browser.slideSidebarBy(dx);
+              return dragger.dragMove(dx, dy, scroller);
+            }
+          };
+        ]]>
+      </constructor>
 
       <!-- Used by the chrome input handler -->
       <property name="boxObject"

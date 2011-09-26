@@ -47,6 +47,7 @@
     .eabi_attribute 12, 0 /* suppress Tag_Advanced_SIMD_arch */
     .arm
     .altmacro
+    .p2align 2
 
 #include "pixman-arm-neon-asm.h"
 

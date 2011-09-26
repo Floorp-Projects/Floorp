@@ -1260,12 +1260,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_QUERY_SELECTED_TEXT:
-    {
-      if (RemoteQueryContentEvent(aEvent))
-        break;
-      nsContentEventHandler handler(mPresContext);
-      handler.OnQuerySelectedText((nsQueryContentEvent*)aEvent);
-    }
+    DoQuerySelectedText(static_cast<nsQueryContentEvent*>(aEvent));
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
@@ -1373,6 +1368,19 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_COMPOSITION_START:
+    if (NS_IS_TRUSTED_EVENT(aEvent)) {
+      // If the event is trusted event, set the selected text to data of
+      // composition event.
+      nsCompositionEvent *compositionEvent =
+        static_cast<nsCompositionEvent*>(aEvent);
+      nsQueryContentEvent selectedText(PR_TRUE, NS_QUERY_SELECTED_TEXT,
+                                       compositionEvent->widget);
+      DoQuerySelectedText(&selectedText);
+      NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
+      compositionEvent->data = selectedText.mReply.mString;
+    }
+    // through to compositionend handling
+  case NS_COMPOSITION_UPDATE:
   case NS_COMPOSITION_END:
     {
       nsCompositionEvent *compositionEvent =
@@ -4895,6 +4903,16 @@ nsEventStateManager::DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
 
   DoScrollText(aTargetFrame, &msEvent, unit,
                allowOverrideSystemSettings, aEvent);
+}
+
+void
+nsEventStateManager::DoQuerySelectedText(nsQueryContentEvent* aEvent)
+{
+  if (RemoteQueryContentEvent(aEvent)) {
+    return;
+  }
+  nsContentEventHandler handler(mPresContext);
+  handler.OnQuerySelectedText(aEvent);
 }
 
 void

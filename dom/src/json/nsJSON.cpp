@@ -594,7 +594,7 @@ nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 
   if (!js::ParseJSONWithReviver(cx, (jschar*)PromiseFlatString(str).get(),
                                 (uint32)str.Length(), js::NullValue(),
-                                js::Valueify(result), LEGACY)) {
+                                result, LEGACY)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -662,7 +662,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
   const jschar* chars = reinterpret_cast<const jschar*>(mBufferedChars.Elements());
   JSBool ok = js::ParseJSONWithReviver(mCx, chars,
                                        (uint32) mBufferedChars.Length(),
-                                       js::NullValue(), js::Valueify(mRootVal),
+                                       js::NullValue(), mRootVal,
                                        mDecodingMode);
   mBufferedChars.TruncateLength(0);
   return ok ? NS_OK : NS_ERROR_FAILURE;

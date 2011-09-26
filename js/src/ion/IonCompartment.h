@@ -43,7 +43,7 @@
 #define jsion_ion_compartment_h__
 
 #include "IonCode.h"
-#include "jsvalue.h"
+#include "jsval.h"
 #include "jsvector.h"
 #include "vm/Stack.h"
 #include "IonFrames.h"

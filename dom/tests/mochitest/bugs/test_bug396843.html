@@ -232,52 +232,6 @@ function runTest() {
   }
 }
 
-function runTest2() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  isnot(document.nodePrincipal, null, "Must have document principal");
-  is(document.nodePrincipal instanceof Components.interfaces.nsIPrincipal,
-     true, "document principal must be a principal");
-  isnot(document.baseURIObject, null, "Must have document base URI");
-  is(document.baseURIObject instanceof Components.interfaces.nsIURI,
-     true, "document base URI must be a URI");
-  isnot(document.documentURIObject, null, "Must have document URI");
-  is(document.documentURIObject instanceof Components.interfaces.nsIURI,
-     true, "document URI must be a URI");
-  is(document.documentURIObject.spec, document.documentURI,
-     "document URI must be the right URI");
-     
-  for (var i = 0; i < allNodes.length; ++i) {
-    is(allNodes[i].nodePrincipal, document.nodePrincipal,
-       "Unexpected principal for " + allNodes[i].nodeName);
-    is(allNodes[i].baseURIObject, document.baseURIObject,
-       "Unexpected base URI for " + allNodes[i].nodeName);
-  }
-
-  for (i = 0; i < XMLNodes.length; ++i) {
-    is(XMLNodes[i].nodePrincipal, document.nodePrincipal,
-       "Unexpected principal for " + XMLNodes[i].nodeName);
-    is(XMLNodes[i].baseURIObject.spec, "about:blank",
-       "Unexpected base URI for " + XMLNodes[i].nodeName);
-  }
-
-  var doc = $("t").contentDocument;
-  is(doc instanceof $("t").contentWindow.HTMLDocument, true,
-     "Expected an HTMLDocument here");
-  isnot(doc.nodePrincipal, null, "Must have doc principal");
-  is(doc.nodePrincipal instanceof Components.interfaces.nsIPrincipal,
-     true, "doc principal must be a principal");
-  isnot(doc.baseURIObject, null, "Must have doc base URI");
-  is(doc.baseURIObject instanceof Components.interfaces.nsIURI,
-     true, "doc base URI must be a URI");
-  isnot(doc.documentURIObject, null, "Must have doc URI");
-  is(doc.documentURIObject instanceof Components.interfaces.nsIURI,
-     true, "doc URI must be a URI");
-  is(doc.documentURIObject.spec, doc.documentURI,
-     "doc URI must be the right URI");
-}
-
-addLoadEvent(runTest);
-addLoadEvent(runTest2);
 addLoadEvent(runTest);
 addLoadEvent(SimpleTest.finish);
 

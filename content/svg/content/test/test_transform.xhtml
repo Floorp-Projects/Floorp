@@ -23,13 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=512636
 
 SimpleTest.waitForExplicitFinish();
 
-var tolerance = 1 / 65535;
-      
-function isequal( value, expected, tolerance )
-{
-  ok(Math.abs(value - expected) < tolerance, 'matrix value expected:' +expected + ' actual:' + value);
-}
-
 function run()
 {
   var g, svg, t, m, m2;
@@ -41,27 +34,21 @@ function run()
   m = t.matrix;
 
   // test that the SVGTransform correctly reflects the translate()
-  is(t.type, SVGTransform.SVG_TRANSFORM_TRANSLATE, 't.type for translate');
-  is(m.a, 1, 'm.a for translate');
-  is(m.b, 0, 'm.b for translate');
-  is(m.c, 0, 'm.c for translate');
-  is(m.d, 1, 'm.d for translate');
-  is(m.e, 10, 'm.e for translate');
-  is(m.f, 20, 'm.f for translate');
-  is(t.angle, 0, 't.angle for translate');
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_TRANSLATE,
+                 1, 0,
+                 0, 1,
+                 10, 20,
+                 0, "translate");
 
   // set the SVGTransform to be a scale()
   t.setScale(2, 3);
 
   // test that the matrix is live and now reflects the scale()
-  is(t.type, SVGTransform.SVG_TRANSFORM_SCALE, 't.type for scale');
-  is(m.a, 2, 'm.a for scale');
-  is(m.b, 0, 'm.b for scale');
-  is(m.c, 0, 'm.c for scale');
-  is(m.d, 3, 'm.d for scale');
-  is(m.e, 0, 'm.e for scale');
-  is(m.f, 0, 'm.f for scale');
-  is(t.angle, 0, 't.angle for scale');
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_SCALE,
+                 2, 0,
+                 0, 3,
+                 0, 0,
+                 0, "scale");
 
   // set the SVGTransform to be a matrix()
   m2 = svg.createSVGMatrix();
@@ -77,14 +64,11 @@ function run()
   ok(m != m2, 't.matrix identity');
 
   // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_MATRIX, 't.type for matrix');
-  is(m.a, 1, 'm.a for matrix');
-  is(m.b, 2, 'm.b for matrix');
-  is(m.c, 3, 'm.c for matrix');
-  is(m.d, 4, 'm.d for matrix');
-  is(m.e, 5, 'm.e for matrix');
-  is(m.f, 6, 'm.f for matrix');
-  is(t.angle, 0, 't.angle for matrix');
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
+                 1, 2,
+                 3, 4,
+                 5, 6,
+                 0, "matrix");
 
   // set the SVGTransform to be a translate() then convert to a matrix
   t.setTranslate(0, 0);
@@ -97,39 +81,98 @@ function run()
   t.setRotate(90, 0, 0);
 
   // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_ROTATE, 't.type for rotate');
-  isequal(m.a, Math.cos(Math.PI/2), tolerance);
-  isequal(m.b, Math.sin(Math.PI/2), tolerance);
-  isequal(m.c, -Math.sin(Math.PI/2), tolerance);
-  isequal(m.d, Math.cos(Math.PI/2), tolerance);
-  isequal(m.e, 0, tolerance);
-  isequal(m.f, 0, tolerance);
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_ROTATE,
+                 Math.cos(Math.PI/2), Math.sin(Math.PI/2),
+                 -Math.sin(Math.PI/2), Math.cos(Math.PI/2),
+                 0, 0,
+                 90, "rotate");
 
   // set the SVGTransform to be a skewX()
   t.setSkewX(45);
 
   // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_SKEWX, 't.type for skewx');
-  isequal(m.a, 1, tolerance);
-  isequal(m.b, 0, tolerance);
-  isequal(m.c, Math.tan(Math.PI/4), tolerance);
-  isequal(m.d, Math.tan(Math.PI/4), tolerance);
-  isequal(m.e, 0, tolerance);
-  isequal(m.f, 0, tolerance);
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_SKEWX,
+                 1, 0,
+                 Math.tan(Math.PI/4), Math.tan(Math.PI/4),
+                 0, 0,
+                 45, "skewX");
 
   // set the SVGTransform to be a skewY()
   t.setSkewY(45);
 
   // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_SKEWY, 't.type for skewy');
-  isequal(m.a, Math.tan(Math.PI/4), tolerance);
-  isequal(m.b, Math.tan(Math.PI/4), tolerance);
-  isequal(m.c, 0, tolerance);
-  isequal(m.d, 1, tolerance);
-  isequal(m.e, 0, tolerance);
-  isequal(m.f, 0, tolerance);
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_SKEWY,
+                 Math.tan(Math.PI/4), Math.tan(Math.PI/4),
+                 0, 1,
+                 0, 0,
+                 45, "skewY");
+
+  // check angle is reset after changing type
+  t.setTranslate(10, 20);
+  is(t.angle, 0, "Angle not reset after changing to translate type");
+
+  // check read-only properties
+  t.angle = 40;
+  is(t.angle, 0, "t.angle should be read-only");
+  t.type = 7;
+  is(t.type, SVGTransform.SVG_TRANSFORM_TRANSLATE,
+     "t.type should be read-only");
+  t.matrix = m2;
+  ok(t.matrix != m2 && t.matrix.b == 0, "t.matrix should be read-only");
+
+  // check transform object identity after manipulation
+  ok(t === g.transform.baseVal.getItem(0),
+     "Got different transform objects after manipulation");
+  ok(t.matrix === m,
+     "Got different matrix objects after manipulation");
+
+  testCreateTransform();
 
   SimpleTest.finish();
+}
+
+function testCreateTransform()
+{
+  svg = $('svg');
+  var t = svg.createSVGTransform();
+  ok(t != svg.createSVGTransform(),
+     "Got identical objects when creating new transform");
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
+                 1, 0, 0, 1, 0, 0, 0, "createSVGTransform");
+
+  var m = svg.createSVGMatrix();
+  m.a = 1;
+  m.b = 2;
+  m.c = 3;
+  m.d = 4;
+  m.e = 5;
+  m.f = 6;
+  t = svg.createSVGTransformFromMatrix(m);
+  ok(t.matrix != m,
+     'createSVGTransformFromMatrix should copy matrix not adopt it');
+  m.a = 7; // Just to be sure, changing m should not affect t
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
+                 1, 2, 3, 4, 5, 6, 0, "createSVGTransformFromMatrix");
+}
+
+function checkTransform(transform, type, a, b, c, d, e, f, angle, forWhat)
+{
+  var m = transform.matrix;
+  is(transform.type, type, 'transform.type for ' + forWhat);
+  roughlyEqual(m.a, a, 'matrix.a for ' + forWhat);
+  roughlyEqual(m.b, b, 'matrix.b for ' + forWhat);
+  roughlyEqual(m.c, c, 'matrix.c for ' + forWhat);
+  roughlyEqual(m.d, d, 'matrix.d for ' + forWhat);
+  roughlyEqual(m.e, e, 'matrix.e for ' + forWhat);
+  roughlyEqual(m.f, f, 'matrix.f for ' + forWhat);
+  is(transform.angle, angle, 'transform.angle for ' + forWhat);
+}
+
+function roughlyEqual(value, expected, msg)
+{
+  const tolerance = 1 / 65535;
+  ok(Math.abs(value - expected) < tolerance,
+     msg + ' - got ' + value + ', expected ' + expected);
 }
 
 window.addEventListener("load", run, false);

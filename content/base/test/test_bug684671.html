@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=684671
+-->
+<head>
+  <title>Test for Bug 684671</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=684671">Mozilla Bug 684671</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 684671 **/
+function f() {}
+document.onreadystatechange = f;
+is(document.onreadystatechange, f,
+   "Document onreadystatechange should be settable");
+
+window.onreadystatechange = f;
+is(window.onreadystatechange, f,
+   "Window onreadystatechange should be settable");
+
+document.documentElement.onreadystatechange = f;
+is(document.documentElement.onreadystatechange, f,
+   "Element onreadystatechange should be settable");
+
+var canSetReadyStateChange;
+try {
+  XMLDocument.prototype.onreadystatechange = null;
+  canSetReadyStateChange = true;
+} catch (e) {
+  canSetReadyStateChange = false;
+}
+ok(canSetReadyStateChange, "This may break web pages");
+</script>
+</pre>
+</body>
+</html>

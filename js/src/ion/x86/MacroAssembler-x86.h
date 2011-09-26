@@ -85,8 +85,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
                        base.disp() + sizeof(void *));
     }
     void moveValue(const Value &val, const Register &type, const Register &data) {
-        jsval_layout jv;
-        jv.asBits = JSVAL_BITS(Jsvalify(val));
+        jsval_layout jv = JSVAL_TO_IMPL(val);
         movl(Imm32(jv.s.tag), type);
         movl(Imm32(jv.s.payload.i32), data);
     }

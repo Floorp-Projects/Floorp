@@ -3615,7 +3615,7 @@ HeadsUpDisplay.prototype = {
     toolbar.setAttribute("class", "hud-console-filter-toolbar");
     toolbar.setAttribute("mode", "full");
 
-#ifdef XP_MAC
+#ifdef XP_MACOSX
     this.makeCloseButton(toolbar);
 #endif
 
@@ -3631,7 +3631,7 @@ HeadsUpDisplay.prototype = {
     toolbar.appendChild(this.filterBox);
     this.makeClearConsoleButton(toolbar);
 
-#ifndef XP_MAC
+#ifndef XP_MACOSX
     this.makeCloseButton(toolbar);
 #endif
 
@@ -4438,7 +4438,7 @@ function JSTermHelper(aJSTerm)
     if (!errstr) {
       let stylePanel = StyleInspector.createPanel();
       stylePanel.setAttribute("hudToolId", aJSTerm.hudId);
-      stylePanel.selectNode(aNode, true);
+      stylePanel.selectNode(aNode);
     } else {
       aJSTerm.writeOutput(errstr + "\n", CATEGORY_OUTPUT, SEVERITY_ERROR);
     }

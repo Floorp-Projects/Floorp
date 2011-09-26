@@ -204,13 +204,13 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
     WRAPPER_SLOTS,                  // flags;
 
     /* Mandatory non-null function pointer members. */
-    js::PropertyStub,               // addProperty;
-    js::PropertyStub,               // delProperty;
-    js::PropertyStub,               // getProperty;
-    js::StrictPropertyStub,         // setProperty;
-    js::EnumerateStub,              // enumerate;
+    JS_PropertyStub,                // addProperty;
+    JS_PropertyStub,                // delProperty;
+    JS_PropertyStub,                // getProperty;
+    JS_StrictPropertyStub,          // setProperty;
+    JS_EnumerateStub,               // enumerate;
     JS_ResolveStub,                 // resolve;
-    js::ConvertStub,                // convert;
+    JS_ConvertStub,                 // convert;
     nsnull,                         // finalize;
 
     /* Optionally non-null members start here. */

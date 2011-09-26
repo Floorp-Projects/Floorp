@@ -94,8 +94,7 @@ CodeGeneratorX86::ToValue(LInstruction *ins, size_t pos)
 bool
 CodeGeneratorX86::visitValue(LValue *value)
 {
-    jsval_layout jv;
-    jv.asBits = JSVAL_BITS(Jsvalify(value->value()));
+    jsval_layout jv = JSVAL_TO_IMPL(value->value());
 
     LDefinition *type = value->getDef(TYPE_INDEX);
     LDefinition *payload = value->getDef(PAYLOAD_INDEX);

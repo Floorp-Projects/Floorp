@@ -40,7 +40,7 @@
   * listed symbols will exposed on import, and only when and where imported.
   */
 
-var EXPORTED_SYMBOLS = ["HistoryEntry"];
+var EXPORTED_SYMBOLS = ["HistoryEntry", "DumpHistory"];
 
 const CC = Components.classes;
 const CI = Components.interfaces;
@@ -50,6 +50,31 @@ CU.import("resource://gre/modules/Services.jsm");
 CU.import("resource://gre/modules/PlacesUtils.jsm");
 CU.import("resource://tps/logger.jsm");
 CU.import("resource://services-sync/async.js");
+
+var DumpHistory = function TPS_History__DumpHistory() {
+  let writer = {
+    value: "",
+    write: function PlacesItem__dump__write(aStr, aLen) {
+      this.value += aStr;
+    }
+  };
+
+  let query = PlacesUtils.history.getNewQuery();
+  let options = PlacesUtils.history.getNewQueryOptions();
+  let root = PlacesUtils.history.executeQuery(query, options).root;
+  root.containerOpen = true;
+  Logger.logInfo("\n\ndumping history\n", true);
+  for (var i = 0; i < root.childCount; i++) {
+    let node = root.getChild(i);
+    let uri = node.uri;
+    let curvisits = HistoryEntry._getVisits(uri);
+    for each (var visit in curvisits) {
+      Logger.logInfo("URI: " + uri + ", type=" + visit.type + ", date=" + visit.date, true);
+    }
+  }
+  root.containerOpen = false;
+  Logger.logInfo("\nend history dump\n", true);
+};
 
 /**
  * HistoryEntry object
@@ -142,7 +167,7 @@ var HistoryEntry = {
     Logger.AssertTrue("visits" in item && "uri" in item,
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
-    let curvisits = curvisits = this._getVisits(item.uri);
+    let curvisits = this._getVisits(item.uri);
     for each (visit in curvisits) {
       for each (itemvisit in item.visits) {
         let expectedDate = itemvisit.date * 60 * 60 * 1000 * 1000 

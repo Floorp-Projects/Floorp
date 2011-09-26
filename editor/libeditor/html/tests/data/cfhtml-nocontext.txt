@@ -1,0 +1,18 @@
+Version:0.9
+StartHTML:-1
+EndHTML:-1
+StartFragment:0000000111
+EndFragment:0000000246
+<!--StartFragment-->
+<html>
+  <head>
+    <title>Test</title>
+    
+  </head>
+  <body>
+    <p>
+      3.<b>1415926535897932</b>
+    </p>
+  </body>
+</html>
+<!--EndFragment-->

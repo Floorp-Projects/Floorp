@@ -733,7 +733,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     }
 
     for (i = 0; i != nconsts; ++i) {
-        if (!JS_XDRValue(xdr, Jsvalify(&script->consts()->vector[i])))
+        if (!JS_XDRValue(xdr, &script->consts()->vector[i]))
             goto error;
     }
 
@@ -783,20 +783,20 @@ Class js::ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    NULL,                 /* finalize */
-    NULL,                 /* reserved0   */
-    NULL,                 /* checkAccess */
-    NULL,                 /* call        */
-    NULL,                 /* construct   */
-    NULL,                 /* xdrObject   */
-    NULL,                 /* hasInstance */
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                    /* finalize */
+    NULL,                    /* reserved0   */
+    NULL,                    /* checkAccess */
+    NULL,                    /* call        */
+    NULL,                    /* construct   */
+    NULL,                    /* xdrObject   */
+    NULL,                    /* hasInstance */
     script_trace
 };
 

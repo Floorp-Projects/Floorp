@@ -41,7 +41,7 @@
 #include "nsTArray.h"
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -233,7 +233,7 @@ class Object {
 
     PRBool operator<(const Object& other) const {
       // sort based on mStr only
-      return Compare(mStr, other.mStr) < 0;
+      return mStr.Compare(other.mStr) < 0;
     }
 
     const char *Str() const { return mStr.get(); }
@@ -303,7 +303,9 @@ static PRBool test_string_array() {
   const char kdata[] = "hello world";
   PRUint32 i;
   for (i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
-    if (!strArray.AppendElement(nsCString(kdata[i])))
+    nsCString str;
+    str.Assign(kdata[i]);
+    if (!strArray.AppendElement(str))
       return PR_FALSE;
   }
   for (i = 0; i < NS_ARRAY_LENGTH(kdata); ++i) {
@@ -581,6 +583,286 @@ static PRBool test_heap() {
 
 //----
 
+// An array |arr| is using its auto buffer if |&arr < arr.Elements()| and
+// |arr.Elements() - &arr| is small.
+
+#define IS_USING_AUTO(arr) \
+  ((uintptr_t) &(arr) < (uintptr_t) arr.Elements() && \
+   ((PRPtrdiff)arr.Elements() - (PRPtrdiff)&arr) <= 16)
+
+#define CHECK_IS_USING_AUTO(arr) \
+  do {                                                    \
+    if (!(IS_USING_AUTO(arr))) {                          \
+      printf("%s:%d CHECK_IS_USING_AUTO(%s) failed.\n",   \
+             __FILE__, __LINE__, #arr);                   \
+      return PR_FALSE;                                    \
+    }                                                     \
+  } while(0)
+
+#define CHECK_NOT_USING_AUTO(arr) \
+  do {                                                    \
+    if (IS_USING_AUTO(arr)) {                             \
+      printf("%s:%d CHECK_NOT_USING_AUTO(%s) failed.\n",  \
+             __FILE__, __LINE__, #arr);                   \
+      return PR_FALSE;                                    \
+    }                                                     \
+  } while(0)
+
+#define CHECK_USES_SHARED_EMPTY_HDR(arr) \
+  do {                                                    \
+    nsTArray<int> _empty;                                 \
+    if (_empty.Elements() != arr.Elements()) {            \
+      printf("%s:%d CHECK_USES_EMPTY_HDR(%s) failed.\n",  \
+             __FILE__, __LINE__, #arr);                   \
+      return PR_FALSE;                                    \
+    }                                                     \
+  } while(0)
+
+#define CHECK_EQ_INT(actual, expected) \
+  do {                                                                       \
+    if ((actual) != (expected)) {                                            \
+      printf("%s:%d CHECK_EQ_INT(%s=%u, %s=%u) failed.\n",                   \
+             __FILE__, __LINE__, #actual, (actual), #expected, (expected));  \
+      return PR_FALSE;                                                       \
+    }                                                                        \
+  } while(0)
+
+#define CHECK_ARRAY(arr, data) \
+  do {                                                          \
+    CHECK_EQ_INT((arr).Length(), NS_ARRAY_LENGTH(data));        \
+    for (PRUint32 _i = 0; _i < NS_ARRAY_LENGTH(data); _i++) {   \
+      CHECK_EQ_INT((arr)[_i], (data)[_i]);                      \
+    }                                                           \
+  } while(0)
+
+static PRBool test_swap() {
+  // Test nsTArray::SwapElements.  Unfortunately there are many cases.
+  int data1[] = {8, 6, 7, 5};
+  int data2[] = {3, 0, 9};
+
+  // Swap two auto arrays.
+  {
+    nsAutoTArray<int, 8> a;
+    nsAutoTArray<int, 6> b;
+
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
+    CHECK_IS_USING_AUTO(a);
+    CHECK_IS_USING_AUTO(b);
+
+    a.SwapElements(b);
+
+    CHECK_IS_USING_AUTO(a);
+    CHECK_IS_USING_AUTO(b);
+    CHECK_ARRAY(a, data2);
+    CHECK_ARRAY(b, data1);
+  }
+
+  // Swap two auto arrays -- one whose data lives on the heap, the other whose
+  // data lives on the stack -- which each fits into the other's auto storage.
+  {
+    nsAutoTArray<int, 3> a;
+    nsAutoTArray<int, 3> b;
+
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+    a.RemoveElementAt(3);
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
+
+    // Here and elsewhere, we assert that if we start with an auto array
+    // capable of storing N elements, we store N+1 elements into the array, and
+    // then we remove one element, that array is still not using its auto
+    // buffer.
+    //
+    // This isn't at all required by the TArray API. It would be fine if, when
+    // we shrink back to N elements, the TArray frees its heap storage and goes
+    // back to using its stack storage.  But we assert here as a check that the
+    // test does what we expect.  If the TArray implementation changes, just
+    // change the failing assertions.
+    CHECK_NOT_USING_AUTO(a);
+
+    // This check had better not change, though.
+    CHECK_IS_USING_AUTO(b);
+
+    a.SwapElements(b);
+
+    CHECK_IS_USING_AUTO(b);
+    CHECK_ARRAY(a, data2);
+    int expectedB[] = {8, 6, 7};
+    CHECK_ARRAY(b, expectedB);
+  }
+
+  // Swap two auto arrays which are using heap storage such that one fits into
+  // the other's auto storage, but the other needs to stay on the heap.
+  {
+    nsAutoTArray<int, 3> a;
+    nsAutoTArray<int, 2> b;
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+    a.RemoveElementAt(3);
+
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
+    b.RemoveElementAt(2);
+
+    CHECK_NOT_USING_AUTO(a);
+    CHECK_NOT_USING_AUTO(b);
+
+    a.SwapElements(b);
+
+    CHECK_NOT_USING_AUTO(b);
+
+    int expected1[] = {3, 0};
+    int expected2[] = {8, 6, 7};
+
+    CHECK_ARRAY(a, expected1);
+    CHECK_ARRAY(b, expected2);
+  }
+
+  // Swap two arrays, neither of which fits into the other's auto-storage.
+  {
+    nsAutoTArray<int, 1> a;
+    nsAutoTArray<int, 3> b;
+
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
+
+    a.SwapElements(b);
+
+    CHECK_ARRAY(a, data2);
+    CHECK_ARRAY(b, data1);
+  }
+
+  // Swap an empty nsTArray with a non-empty nsAutoTArray.
+  {
+    nsTArray<int> a;
+    nsAutoTArray<int, 3> b;
+
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
+    CHECK_IS_USING_AUTO(b);
+
+    a.SwapElements(b);
+
+    CHECK_ARRAY(a, data2);
+    CHECK_EQ_INT(b.Length(), 0);
+    CHECK_IS_USING_AUTO(b);
+  }
+
+  // Swap two big auto arrays.
+  {
+    const int size = 8192;
+    nsAutoTArray<int, size> a;
+    nsAutoTArray<int, size> b;
+
+    for (int i = 0; i < size; i++) {
+      a.AppendElement(i);
+      b.AppendElement(i + 1);
+    }
+
+    CHECK_IS_USING_AUTO(a);
+    CHECK_IS_USING_AUTO(b);
+
+    a.SwapElements(b);
+
+    CHECK_IS_USING_AUTO(a);
+    CHECK_IS_USING_AUTO(b);
+
+    CHECK_EQ_INT(a.Length(), size);
+    CHECK_EQ_INT(b.Length(), size);
+
+    for (int i = 0; i < size; i++) {
+      CHECK_EQ_INT(a[i], i + 1);
+      CHECK_EQ_INT(b[i], i);
+    }
+  }
+
+  // Swap two arrays and make sure that their capacities don't increase
+  // unnecessarily.
+  {
+    nsTArray<int> a;
+    nsTArray<int> b;
+    b.AppendElements(data2, NS_ARRAY_LENGTH(data2));
+
+    CHECK_EQ_INT(a.Capacity(), 0);
+    PRUint32 bCapacity = b.Capacity();
+
+    a.SwapElements(b);
+
+    // Make sure that we didn't increase the capacity of either array.
+    CHECK_ARRAY(a, data2);
+    CHECK_EQ_INT(b.Length(), 0);
+    CHECK_EQ_INT(b.Capacity(), 0);
+    CHECK_EQ_INT(a.Capacity(), bCapacity);
+  }
+
+  // Swap an auto array with a TArray, then clear the auto array and make sure
+  // it doesn't forget the fact that it has an auto buffer.
+  {
+    nsTArray<int> a;
+    nsAutoTArray<int, 3> b;
+
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+
+    a.SwapElements(b);
+
+    CHECK_EQ_INT(a.Length(), 0);
+    CHECK_ARRAY(b, data1);
+
+    b.Clear();
+
+    CHECK_USES_SHARED_EMPTY_HDR(a);
+    CHECK_IS_USING_AUTO(b);
+  }
+
+  // Same thing as the previous test, but with more auto arrays.
+  {
+    nsAutoTArray<int, 16> a;
+    nsAutoTArray<int, 3> b;
+
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+
+    a.SwapElements(b);
+
+    CHECK_EQ_INT(a.Length(), 0);
+    CHECK_ARRAY(b, data1);
+
+    b.Clear();
+
+    CHECK_IS_USING_AUTO(a);
+    CHECK_IS_USING_AUTO(b);
+  }
+
+  // Swap an empty nsTArray and an empty nsAutoTArray.
+  {
+    nsAutoTArray<int, 8> a;
+    nsTArray<int> b;
+
+    a.SwapElements(b);
+
+    CHECK_IS_USING_AUTO(a);
+    CHECK_NOT_USING_AUTO(b);
+    CHECK_EQ_INT(a.Length(), 0);
+    CHECK_EQ_INT(b.Length(), 0);
+  }
+
+  // Swap empty auto array with non-empty nsAutoTArray using malloc'ed storage.
+  // I promise, all these tests have a point.
+  {
+    nsAutoTArray<int, 2> a;
+    nsAutoTArray<int, 1> b;
+
+    a.AppendElements(data1, NS_ARRAY_LENGTH(data1));
+
+    a.SwapElements(b);
+
+    CHECK_IS_USING_AUTO(a);
+    CHECK_NOT_USING_AUTO(b);
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), 0);
+  }
+
+  return PR_TRUE;
+}
+
+//----
+
 typedef PRBool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
@@ -602,6 +884,7 @@ static const struct Test {
 #endif
   DECL_TEST(test_indexof),
   DECL_TEST(test_heap),
+  DECL_TEST(test_swap),
   { nsnull, nsnull }
 };
 
@@ -617,12 +900,16 @@ int main(int argc, char **argv) {
   if (NS_FAILED(NS_InitXPCOM2(nsnull, nsnull, nsnull)))
     return -1;
 
+  bool success = true;
   while (count--) {
     for (const Test* t = tests; t->name != nsnull; ++t) {
-      printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
+      bool test_result = t->func();
+      printf("%25s : %s\n", t->name, test_result ? "SUCCESS" : "FAILURE");
+      if (!test_result)
+        success = false;
     }
   }
   
   NS_ShutdownXPCOM(nsnull);
-  return 0;
+  return success ? 0 : -1;
 }

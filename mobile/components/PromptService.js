@@ -383,7 +383,7 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
     let doc = this._doc;
-    this._setupPrompt(doc, "prompt", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
+    this._setupPrompt(doc, "confirm", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
 
     dialog.waitForClose();
     return params.result;

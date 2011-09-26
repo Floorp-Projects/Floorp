@@ -275,8 +275,8 @@ OPDEF(JSOP_LOCALDEC,  104,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_IMACOP,    105,"imacop",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Static binding for globals. */
-OPDEF(JSOP_GETGLOBAL, 106,"getglobal",  NULL,         3,  0,  1, 19,  JOF_GLOBAL|JOF_NAME|JOF_TYPESET)
-OPDEF(JSOP_CALLGLOBAL,107,"callglobal", NULL,         3,  0,  2, 19,  JOF_GLOBAL|JOF_NAME|JOF_TYPESET|JOF_CALLOP)
+OPDEF(JSOP_UNUSED0,   106,"unused0",    NULL,         3,  0,  1, 19,  JOF_BYTE)
+OPDEF(JSOP_UNUSED1,   107,"unused1",    NULL,         3,  0,  2, 19,  JOF_BYTE)
 
 /* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */
 OPDEF(JSOP_FUNCALL,   108,"funcall",    NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET)

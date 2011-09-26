@@ -85,6 +85,12 @@ SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
   , mFormat(aSurf->XRenderFormat()->id)
 { }
 
+SurfaceDescriptorX11::SurfaceDescriptorX11(const int aXid, const int aXrenderPictID, const gfxIntSize& aSize)
+  : mId(aXid)
+  , mSize(aSize)
+  , mFormat(aXrenderPictID)
+{ }
+
 already_AddRefed<gfxXlibSurface>
 SurfaceDescriptorX11::OpenForeign() const
 {

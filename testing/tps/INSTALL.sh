@@ -57,6 +57,11 @@ fi
 cd ${CWD}
 python setup.py install
 
+# clean up files created by setup.py
+rm -rf build/
+rm -rf dist/
+rm -rf tps.egg-info/
+
 if [ "$?" -gt 0 ]
 then
   exit 1
