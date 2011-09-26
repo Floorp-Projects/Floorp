@@ -122,7 +122,8 @@ public:
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer);
 
@@ -196,7 +197,8 @@ protected:
   void ClearLayer(Layer* aLayer);
 
   bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   // Widget whose surface should be used as the basis for ThebesLayer
   // buffers.
@@ -237,7 +239,8 @@ public:
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer);
 
