@@ -107,7 +107,7 @@ asserts-if(browserIsRemote,1) load 347898-1.html # bug 622188
 load 348126-1.html
 load 348688-1.html
 load 348708-1.xhtml
-asserts(2) load 348729-1.html # bug 548836
+asserts(4) load 348729-1.html # bug 548836
 load 349095-1.xhtml
 load 350128-1.xhtml
 load 350267-1.html
