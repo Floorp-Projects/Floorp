@@ -692,7 +692,6 @@ void CircleArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 
 nsImageMap::nsImageMap() :
-  mPresShell(nsnull),
   mImageFrame(nsnull),
   mContainsBlockContents(PR_FALSE)
 {
@@ -749,13 +748,12 @@ nsImageMap::FreeAreas()
 }
 
 nsresult
-nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIContent* aMap)
+nsImageMap::Init(nsIFrame* aImageFrame, nsIContent* aMap)
 {
   NS_PRECONDITION(aMap, "null ptr");
   if (!aMap) {
     return NS_ERROR_NULL_POINTER;
   }
-  mPresShell = aPresShell;
   mImageFrame = aImageFrame;
 
   mMap = aMap;
