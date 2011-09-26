@@ -461,7 +461,7 @@
                             oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
                   </setting>
-                  <setting id="prefs-uilanguage" title="&language.title;" type="menulist">
+                  <setting id="prefs-uilanguage" title="&language.title;" type="control">
                     <button id="prefs-uilanguage-button" label="&language.title;" onclick="PreferencesView.showLocalePicker();"/>
                   </setting>
                   <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
