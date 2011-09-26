@@ -863,10 +863,25 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                String text = null;
+                if (android.os.Build.VERSION.SDK_INT >= 11) {
+                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm.hasPrimaryClip()) {
+                        ClipData clip = cm.getPrimaryClip();
+                        if (clip != null) {
+                            ClipData.Item item = clip.getItemAt(0);
+                            text = item.coerceToText(context).toString();
+                        }
+                    }
+                } else {
+                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm.hasText())
+                        text = cm.getText().toString();
+                }
                 try {
-                    sClipboardQueue.put(cm.hasText() ? cm.getText().toString() : "");
+                    sClipboardQueue.put(text != null ? text : "");
                 } catch (InterruptedException ie) {}
             }});
         try {
@@ -880,9 +895,15 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                    context.getSystemService(Context.CLIPBOARD_SERVICE);
-                cm.setText(text);
+                if (android.os.Build.VERSION.SDK_INT >= 11) {
+                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    cm.setPrimaryClip(ClipData.newPlainText("Text", text));
+                } else {
+                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    cm.setText(text);
+                }
             }});
     }
 

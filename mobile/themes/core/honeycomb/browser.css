@@ -377,8 +377,9 @@ toolbarbutton.urlbar-button {
   color: @color_text_toolbutton_inverse@;
   display: -moz-box;
   font-size: @font_small@ !important;
-  -moz-transform: translateY(-0.56em);
-  -moz-padding-end: 33px; /* correct position and alignment */
+  font-weight: bold !important;
+  -moz-transform: translateY(-0.50em);
+  -moz-padding-end: 32px; /* correct position and alignment */
 }
 
 #tool-menu {
