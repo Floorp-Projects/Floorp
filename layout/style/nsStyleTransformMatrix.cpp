@@ -206,34 +206,24 @@ nsStyleTransformMatrix::ProcessInterpolateMatrix(const nsCSSValue::Array* aData,
                                                  PRBool& aCanStoreInRuleTree,
                                                  nsRect& aBounds, float aAppUnitsPerMatrixUnit)
 {
-  NS_PRECONDITION(aData->Count() == 5, "Invalid array!");
+  NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
-  double coeff1 = aData->Item(1).GetPercentValue();
-  gfx3DMatrix matrix1 = ReadTransforms(aData->Item(2).GetListValue(),
-                                       aContext, aPresContext,
-                                       aCanStoreInRuleTree,
-                                       aBounds, aAppUnitsPerMatrixUnit);
-  double coeff2 = aData->Item(3).GetPercentValue();
-  gfx3DMatrix matrix2 = ReadTransforms(aData->Item(4).GetListValue(),
-                                       aContext, aPresContext,
-                                       aCanStoreInRuleTree,
-                                       aBounds, aAppUnitsPerMatrixUnit);
+  gfx3DMatrix matrix1, matrix2;
+  if (aData->Item(1).GetUnit() == eCSSUnit_List) {
+    matrix1 = ReadTransforms(aData->Item(1).GetListValue(),
+                             aContext, aPresContext,
+                             aCanStoreInRuleTree,
+                             aBounds, aAppUnitsPerMatrixUnit);
+  }
+  if (aData->Item(2).GetUnit() == eCSSUnit_List) {
+    matrix2 = ReadTransforms(aData->Item(2).GetListValue(),
+                             aContext, aPresContext,
+                             aCanStoreInRuleTree,
+                             aBounds, aAppUnitsPerMatrixUnit);
+  }
+  double progress = aData->Item(3).GetPercentValue();
 
-  gfxMatrix matrix2d1, matrix2d2;
-#ifdef DEBUG
-  PRBool is2d =
-#endif
-  matrix1.Is2D(&matrix2d1);
-  NS_ABORT_IF_FALSE(is2d, "Can't do animations with 3d transforms!");
-#ifdef DEBUG
-  is2d =
-#endif
-  matrix2.Is2D(&matrix2d2);
-  NS_ABORT_IF_FALSE(is2d, "Can't do animations with 3d transforms!");
-
-  return gfx3DMatrix::From2D(
-    nsStyleAnimation::InterpolateTransformMatrix(matrix2d1, coeff1, 
-                                                 matrix2d2, coeff2));
+  return nsStyleAnimation::InterpolateTransformMatrix(matrix1, matrix2, progress);
 }
 
 /* Helper function to process a translatex function. */

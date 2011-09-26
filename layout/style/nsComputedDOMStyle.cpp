@@ -1058,27 +1058,53 @@ nsComputedDOMStyle::DoGetMozTransform()
                                             bounds,
                                             float(nsDeviceContext::AppUnitsPerCSSPixel()));
 
-  if (!matrix.Is2D()) {
-    nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  PRBool is3D = !matrix.Is2D();
 
-    /* Set it to "none." */
-    val->SetIdent(eCSSKeyword_none);
-    return val;
+  nsAutoString resultString(NS_LITERAL_STRING("matrix"));
+  if (is3D) {
+    resultString.Append(NS_LITERAL_STRING("3d"));
   }
 
-  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
+  resultString.Append(NS_LITERAL_STRING("("));
   resultString.AppendFloat(matrix._11);
   resultString.Append(NS_LITERAL_STRING(", "));
   resultString.AppendFloat(matrix._12);
   resultString.Append(NS_LITERAL_STRING(", "));
+  if (is3D) {
+    resultString.AppendFloat(matrix._13);
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._14);
+    resultString.Append(NS_LITERAL_STRING(", "));
+  }
   resultString.AppendFloat(matrix._21);
   resultString.Append(NS_LITERAL_STRING(", "));
   resultString.AppendFloat(matrix._22);
   resultString.Append(NS_LITERAL_STRING(", "));
+  if (is3D) {
+    resultString.AppendFloat(matrix._23);
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._24);
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._31);
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._32);
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._33);
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._34);
+    resultString.Append(NS_LITERAL_STRING(", "));
+  }
   resultString.AppendFloat(matrix._41);
   resultString.Append(NS_LITERAL_STRING("px, "));
   resultString.AppendFloat(matrix._42);
-  resultString.Append(NS_LITERAL_STRING("px)"));
+  resultString.Append(NS_LITERAL_STRING("px"));
+  if (is3D) {
+    resultString.Append(NS_LITERAL_STRING(", "));
+    resultString.AppendFloat(matrix._43);
+    resultString.Append(NS_LITERAL_STRING("px, "));
+    resultString.AppendFloat(matrix._44);
+  }
+  resultString.Append(NS_LITERAL_STRING(")"));
 
   /* Create a value to hold our result. */
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
