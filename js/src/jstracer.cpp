@@ -9945,7 +9945,7 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
 void
 TraceRecorder::box_undefined_into(Address addr)
 {
-    w.stq(w.nameImmq(JSVAL_BITS(JSVAL_VOID)), addr);
+    w.stq(w.nameImmq(JSVAL_VOID.asRawBits()), addr);
 }
 
 inline LIns *
@@ -10047,14 +10047,14 @@ LIns*
 TraceRecorder::is_boxed_true(Address addr)
 {
     LIns *v_ins = w.ldq(addr);
-    return w.eqq(v_ins, w.immq(JSVAL_BITS(JSVAL_TRUE)));
+    return w.eqq(v_ins, w.immq(JSVAL_TRUE.asRawBits()));
 }
 
 LIns*
 TraceRecorder::is_boxed_magic(Address addr, JSWhyMagic why)
 {
     LIns *v_ins = w.ldq(addr);
-    return w.eqq(v_ins, w.nameImmq(BUILD_JSVAL(JSVAL_TAG_MAGIC, why)));
+    return w.eqq(v_ins, w.nameImmq(MagicValue(why).asRawBits()));
 }
 
 LIns*
@@ -10072,9 +10072,9 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
     }
 
     if (v.isNull())
-        return w.nameImmq(JSVAL_BITS(JSVAL_NULL));
+        return w.nameImmq(JSVAL_NULL.asRawBits());
     if (v.isUndefined())
-        return w.nameImmq(JSVAL_BITS(JSVAL_VOID));
+        return w.nameImmq(JSVAL_VOID.asRawBits());
 
     JSValueTag tag = v.isObject() ? JSVAL_TAG_OBJECT : v.extractNonDoubleObjectTraceTag();
     uint64 shiftedTag = ((uint64)tag) << JSVAL_TAG_SHIFT;
@@ -10280,8 +10280,8 @@ TraceRecorder::guardNativeConversion(Value& v)
     JSObject* obj = &v.toObject();
     LIns* obj_ins = get(&v);
 
-    ConvertOp convert = obj->getClass()->convert;
-    if (convert != ConvertStub)
+    JSConvertOp convert = obj->getClass()->convert;
+    if (convert != JS_ConvertStub)
         RETURN_STOP("operand has convert hook");
 
     VMSideExit* exit = snapshot(BRANCH_EXIT);
@@ -11064,7 +11064,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 #endif
 
     Value pval;
-    if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &pval))
+    if (!ctor->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &pval))
         RETURN_ERROR("error getting prototype from constructor");
 
     /*
@@ -11520,22 +11520,6 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             }
             if (vp[1].isString()) {
                 JSString *str = vp[1].toString();
-#ifdef JS_HAS_STATIC_STRINGS
-                if (native == js_str_charAt) {
-                    jsdouble i = vp[2].toNumber();
-                    if (JSDOUBLE_IS_NaN(i))
-                      i = 0;
-                    if (i < 0 || i >= str->length())
-                        RETURN_STOP("charAt out of bounds");
-                    LIns* str_ins = get(&vp[1]);
-                    LIns* idx_ins = get(&vp[2]);
-                    LIns* char_ins;
-                    CHECK_STATUS(getCharAt(str, str_ins, idx_ins, mode, &char_ins));
-                    set(&vp[0], char_ins);
-                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-                    return RECORD_CONTINUE;
-                } else
-#endif
                 if (native == js_str_charCodeAt) {
                     jsdouble i = vp[2].toNumber();
                     if (JSDOUBLE_IS_NaN(i))
@@ -12236,12 +12220,12 @@ TraceRecorder::addDataProperty(JSObject* obj)
 
     // js_AddProperty does not call the addProperty hook.
     Class* clasp = obj->getClass();
-    if (clasp->addProperty != Valueify(JS_PropertyStub))
+    if (clasp->addProperty != JS_PropertyStub)
         RETURN_STOP("set new property of object with addProperty hook");
 
     // See comment in TR::nativeSet about why we do not support setting a
     // property that has both a setter and a slot.
-    if (clasp->setProperty != Valueify(JS_StrictPropertyStub))
+    if (clasp->setProperty != JS_StrictPropertyStub)
         RETURN_STOP("set new property with setter and slot");
 
 #ifdef DEBUG
@@ -12637,7 +12621,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp)
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
+    if (!RootedStringToId(cx, namep, &id) || !obj->getGeneric(cx, id, vp)) {
         SetBuiltinError(tm);
         return false;
     }
@@ -12709,7 +12693,7 @@ GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp)
     LeaveTraceIfGlobalObject(cx, obj);
 
     AutoIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->getProperty(cx, idr.id(), vp)) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->getGeneric(cx, idr.id(), vp)) {
         SetBuiltinError(tm);
         return JS_FALSE;
     }
@@ -12739,7 +12723,7 @@ GetPropertyById(JSContext* cx, JSObject* obj, jsid id, Value* vp)
     TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
-    if (!obj->getProperty(cx, id, vp)) {
+    if (!obj->getGeneric(cx, id, vp)) {
         SetBuiltinError(tm);
         return JS_FALSE;
     }
@@ -12883,53 +12867,6 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
 JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
 
 
-#ifdef JS_HAS_STATIC_STRINGS
-JS_REQUIRES_STACK LIns*
-TraceRecorder::getUnitString(LIns* str_ins, LIns* idx_ins)
-{
-    LIns *ch_ins = w.getStringChar(str_ins, idx_ins);
-    guard(true, w.ltuiN(ch_ins, JSAtom::UNIT_STATIC_LIMIT), MISMATCH_EXIT);
-    JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
-    return w.addp(w.nameImmpNonGC(JSAtom::unitStaticTable),
-                  w.lshpN(w.ui2p(ch_ins), (sizeof(JSString) == 16) ? 4 : 5));
-}
-
-JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode, LIns** out)
-{
-    CHECK_STATUS(makeNumberInt32(idx_ins, &idx_ins));
-    idx_ins = w.ui2p(idx_ins);
-    LIns *lengthAndFlags_ins = w.ldpStringLengthAndFlags(str_ins);
-    if (MaybeBranch mbr = w.jt(w.eqp0(w.andp(lengthAndFlags_ins,
-                                             w.nameImmw(JSString::ROPE_BIT)))))
-    {
-        LIns *args[] = { str_ins, cx_ins };
-        LIns *ok_ins = w.call(&js_FlattenOnTrace_ci, args);
-        guard(false, w.eqi0(ok_ins), OOM_EXIT);
-        w.label(mbr);
-    }
-
-    LIns* inRange = w.ltup(idx_ins, w.rshupN(lengthAndFlags_ins, JSString::LENGTH_SHIFT));
-
-    if (mode == JSOP_GETELEM) {
-        guard(true, inRange, MISMATCH_EXIT);
-
-        *out = getUnitString(str_ins, idx_ins);
-    } else {
-        LIns *phi_ins = w.allocp(sizeof(JSString *));
-        w.stAlloc(w.nameImmpNonGC(cx->runtime->emptyString), phi_ins);
-
-        if (MaybeBranch mbr = w.jf(inRange)) {
-            LIns *unitstr_ins = getUnitString(str_ins, idx_ins);
-            w.stAlloc(unitstr_ins, phi_ins);
-            w.label(mbr);
-        }
-        *out = w.ldpAlloc(phi_ins);
-    }
-    return RECORD_CONTINUE;
-}
-#endif
-
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED && NJ_F2I_SUPPORTED
 static bool OkToTraceTypedArrays = true;
@@ -12962,21 +12899,6 @@ TraceRecorder::record_JSOP_GETELEM()
 
     LIns* obj_ins = get(&lval);
     LIns* idx_ins = get(&idx);
-
-#ifdef JS_HAS_STATIC_STRINGS
-    // Special case for array-like access of strings.
-    if (lval.isString() && hasInt32Repr(idx)) {
-        if (call)
-            RETURN_STOP_A("JSOP_CALLELEM on a string");
-        int i = asInt32(idx);
-        if (size_t(i) >= lval.toString()->length())
-            RETURN_STOP_A("Invalid string index in JSOP_GETELEM");
-        LIns* char_ins;
-        CHECK_STATUS_A(getCharAt(lval.toString(), obj_ins, idx_ins, JSOP_GETELEM, &char_ins));
-        set(&lval, char_ins);
-        return ARECORD_CONTINUE;
-    }
-#endif
 
     if (lval.isPrimitive())
         RETURN_STOP_A("JSOP_GETLEM on a primitive");
@@ -14139,7 +14061,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          * We could specialize to guard on just JSClass.getProperty, but a mere
          * class guard is simpler and slightly faster.
          */
-        if (obj->getClass()->getProperty != Valueify(JS_PropertyStub)) {
+        if (obj->getClass()->getProperty != JS_PropertyStub) {
             RETURN_STOP_A("can't trace through access to undefined property if "
                           "JSClass.getProperty hook isn't stubbed");
         }
@@ -14931,7 +14853,7 @@ TraceRecorder::storeMagic(JSWhyMagic why, Address addr)
 JS_REQUIRES_STACK void
 TraceRecorder::storeMagic(JSWhyMagic why, Address addr)
 {
-    LIns *magic = w.nameImmq(BUILD_JSVAL(JSVAL_TAG_MAGIC, why));
+    LIns *magic = w.nameImmq(MagicValue(why).asRawBits());
     w.stq(magic, addr);
 }
 #endif
@@ -16449,26 +16371,12 @@ TraceRecorder::record_JSOP_SHARPINIT()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GETGLOBAL()
-{
-    uint32 slot = cx->fp()->script()->getGlobalSlot(GET_SLOTNO(cx->regs().pc));
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    stack(0, get(&globalObj->getSlotRef(slot)));
+TraceRecorder::record_JSOP_UNUSED0() {
     return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CALLGLOBAL()
-{
-    uint32 slot = cx->fp()->script()->getGlobalSlot(GET_SLOTNO(cx->regs().pc));
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    const Value &v = globalObj->getSlot(slot);
-    stack(0, get(&v));
-    stack(1, w.immiUndefined());
+TraceRecorder::record_JSOP_UNUSED1() {
     return ARECORD_CONTINUE;
 }
 
@@ -17114,7 +17022,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
                     increment(OP_RECURSIVE);
             } else {
                 js::Native native = fun->u.n.native;
-                if (js_IsMathFunction(JS_JSVALIFY_NATIVE(native)))
+                if (js_IsMathFunction(native))
                     increment(OP_FLOAT);
             }
         }

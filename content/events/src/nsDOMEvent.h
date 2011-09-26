@@ -96,6 +96,7 @@ public:
     eDOMEvents_text,
     eDOMEvents_compositionstart,
     eDOMEvents_compositionend,
+    eDOMEvents_compositionupdate,
     eDOMEvents_popupShowing,
     eDOMEvents_popupShown,
     eDOMEvents_popupHiding,

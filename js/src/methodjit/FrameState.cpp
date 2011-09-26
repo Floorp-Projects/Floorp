@@ -744,7 +744,7 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
         }
 
         /* Force syncs for locals which are dead at the current PC. */
-        if (isLocal(fe) && !a->analysis->slotEscapes(entrySlot(fe))) {
+        if (isLocal(fe) && !fe->copied && !a->analysis->slotEscapes(entrySlot(fe))) {
             Lifetime *lifetime = a->analysis->liveness(entrySlot(fe)).live(a->PC - a->script->code);
             if (!lifetime)
                 fakeSync(fe);
@@ -801,7 +801,8 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
                 JS_ASSERT(!a->analysis->trackSlot(entrySlot(fe)));
                 syncFe(fe);
                 forgetAllRegs(fe);
-                fe->resetSynced();
+                fe->type.setMemory();
+                fe->data.setMemory();
             }
             if (fe->data.inMemory()) {
                 masm.loadPayload(addressOf(fe), nreg);
@@ -1827,7 +1828,7 @@ FrameState::ensureDouble(FrameEntry *fe)
     if (fe->isConstant()) {
         JS_ASSERT(fe->getValue().isInt32());
         Value newValue = DoubleValue(double(fe->getValue().toInt32()));
-        fe->setConstant(Jsvalify(newValue));
+        fe->setConstant(newValue);
         return;
     }
 
@@ -1878,7 +1879,7 @@ FrameState::ensureInteger(FrameEntry *fe)
 
     if (fe->isConstant()) {
         Value newValue = Int32Value(int32(fe->getValue().toDouble()));
-        fe->setConstant(Jsvalify(newValue));
+        fe->setConstant(newValue);
         return;
     }
 
@@ -1933,7 +1934,7 @@ FrameState::pushCopyOf(FrameEntry *backing)
     FrameEntry *fe = rawPush();
     fe->resetUnsynced();
     if (backing->isConstant()) {
-        fe->setConstant(Jsvalify(backing->getValue()));
+        fe->setConstant(backing->getValue());
     } else {
         if (backing->isCopy())
             backing = backing->copyOf();
@@ -2221,7 +2222,7 @@ FrameState::storeTop(FrameEntry *target)
     /* Constants are easy to propagate. */
     if (top->isConstant()) {
         target->clear();
-        target->setConstant(Jsvalify(top->getValue()));
+        target->setConstant(top->getValue());
         if (trySyncType && target->isType(oldType))
             target->type.sync();
         return;

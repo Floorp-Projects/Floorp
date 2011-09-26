@@ -281,6 +281,8 @@ _TEST_FILES = \
 		file_fullscreen-api.html \
 		file_fullscreen-api-keys.html \
 		test_fullscreen-api.html \
+		test_li_attributes_reflection.html \
+		test_ol_attributes_reflection.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

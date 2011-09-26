@@ -50,6 +50,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __cplusplus
+
+/* The public JS engine namespace. */
+namespace JS {}
+
+/* The mozilla-shared reusable template/utility namespace. */
+namespace mozilla {}
+
+/* The private JS engine namespace. */
+namespace js {
+
+/* The private namespace is a superset of the public/shared namespaces. */
+using namespace JS;
+using namespace mozilla;
+
+}  /* namespace js */
+
+#endif  /* defined __cplusplus */
+
 JS_BEGIN_EXTERN_C
 
 #define JS_CRASH_UNLESS(__cond)                                                 \
@@ -485,8 +504,6 @@ JS_END_EXTERN_C
  * be used, though this is undesirable.
  */
 namespace js {
-/* Import common mfbt declarations into "js". */
-using namespace mozilla;
 
 class OffTheBooks {
 public:

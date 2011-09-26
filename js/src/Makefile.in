@@ -177,6 +177,7 @@ INSTALLED_HEADERS = \
 		jsarena.h \
 		jsatom.h \
 		jsbit.h \
+		jsclass.h \
 		jsclist.h \
 		jsclone.h \
 		jscntxt.h \
@@ -231,7 +232,6 @@ INSTALLED_HEADERS = \
 		jswrapper.h \
 		jsxdrapi.h \
 		jsval.h \
-		jsvalue.h \
 		prmjtime.h \
 		$(NULL)
 

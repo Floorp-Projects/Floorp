@@ -106,7 +106,7 @@ class TPSTestRunner(object):
                           'extensions.checkCompatibility.4.0': False,
                         }
   syncVerRe = re.compile(
-      r"Weave version: (?P<syncversion>.*)\n")
+      r"Sync version: (?P<syncversion>.*)\n")
   ffVerRe = re.compile(
       r"Firefox version: (?P<ffver>.*)\n")
   ffDateRe = re.compile(
@@ -168,31 +168,6 @@ class TPSTestRunner(object):
     for root, dirs, files in os.walk(os.path.join(rootDir, dir)):
       for f in files:
         zip.write(os.path.join(root, f), os.path.join(dir, f))
-
-  def make_xpi(self):
-    """Build the test extension."""
-
-    tpsdir = os.path.join(self.extensionDir, "tps")
-
-    if self.tpsxpi is None:
-      tpsxpi = os.path.join(tpsdir, "tps.xpi")
-
-      if os.access(tpsxpi, os.F_OK):
-        os.remove(tpsxpi)
-      if not os.access(os.path.join(tpsdir, "install.rdf"), os.F_OK):
-        raise Exception("extension code not found in %s" % tpsdir)
-
-      from zipfile import ZipFile
-      z = ZipFile(tpsxpi, 'w')
-      self._zip_add_file(z, 'chrome.manifest', tpsdir)
-      self._zip_add_file(z, 'install.rdf', tpsdir)
-      self._zip_add_dir(z, 'components', tpsdir)
-      self._zip_add_dir(z, 'modules', tpsdir)
-      z.close()
-
-      self.tpsxpi = tpsxpi
-
-    return self.tpsxpi
 
   def run_single_test(self, testdir, testname):
     testpath = os.path.join(testdir, testname)
@@ -405,7 +380,7 @@ class TPSTestRunner(object):
     self.numfailed = 0
 
     # build our tps.xpi extension
-    self.extensions.append(self.make_xpi())
+    self.extensions.append(os.path.join(self.extensionDir, 'tps'))
     self.extensions.append(os.path.join(self.extensionDir, "mozmill"))
 
     # build the test list

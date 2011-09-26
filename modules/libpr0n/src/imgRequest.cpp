@@ -183,7 +183,7 @@ NS_IMPL_ISUPPORTS8(imgRequest,
                    nsIAsyncVerifyRedirectCallback)
 
 imgRequest::imgRequest() : 
-  mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
+  mValidator(nsnull), mImageSniffers("image-sniffing-services"),
   mInnerWindowId(0), mCORSMode(imgIRequest::CORS_NONE),
   mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE), mGotData(PR_FALSE),
   mIsInCache(PR_FALSE)
@@ -204,7 +204,6 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           nsIRequest *aRequest,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
-                          void *aCacheId,
                           void *aLoadId,
                           nsIPrincipal* aLoadingPrincipal,
                           PRInt32 aCORSMode)
@@ -238,8 +237,6 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mChannel->SetNotificationCallbacks(this);
 
   mCacheEntry = aCacheEntry;
-
-  mCacheId = aCacheId;
 
   SetLoadId(aLoadId);
 
@@ -360,12 +357,6 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
     proxy->RemoveFromLoadGroup(PR_TRUE);
 
   return NS_OK;
-}
-
-PRBool imgRequest::IsReusable(void *aCacheId)
-{
-  return (mImage && mImage->GetStatusTracker().IsLoading()) ||
-    (aCacheId == mCacheId);
 }
 
 void imgRequest::CancelAndAbort(nsresult aStatus)

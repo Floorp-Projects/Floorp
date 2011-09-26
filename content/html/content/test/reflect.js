@@ -449,3 +449,174 @@ function reflectBoolean(aParameters)
   is(element[contentAttr], false,
      "When not set, the IDL attribute should return false");
 }
+
+/**
+ * Checks that a given attribute name for a given element is correctly reflected
+ * as an signed integer.
+ *
+ * @param aParameters   Object    object containing the parameters, which are:
+ *  - element           Element   node to test on
+ *  - attribute         String    name of the attribute
+ *  - nonNegative       Boolean   true if the attribute is limited to 'non-negative numbers', false otherwise
+ *  - defaultValue      Integer   [optional] default value, if one exists
+ */
+function reflectInt(aParameters)
+{
+  //TBD: Bug 673820: .setAttribute(exponential) -> incorrect reflection for element[attr]
+  function testExponential(value) {
+    return !!/^[ \t\n\f\r]*[\+\-]?[0-9]+e[0-9]+/.exec(value);
+  }
+
+  // Expected value returned by .getAttribute() when |value| has been previously passed to .setAttribute().
+  function expectedGetAttributeResult(value) {
+    return (value !== null) ? String(value) : "";
+  }
+
+  function stringToInteger(value, nonNegative, defaultValue) {
+    if (nonNegative === false) {
+      // Parse: Ignore leading whitespace, find [+/-][numbers]
+      var result = /^[ \t\n\f\r]*([\+\-]?[0-9]+)/.exec(value);
+      if (result) {
+        if (-0x80000000 <= result[1] && result[1] <= 0x7FFFFFFF) {
+          // If the value is within allowed value range for signed integer, return value
+          return result[1];
+        }
+      }
+    } else {
+      var result = /^[ \t\n\f\r]*(\+?[0-9]+)/.exec(value);
+      if (result) {
+        if (0 <= result[1] && result[1] <= 0x7FFFFFFF) {
+          // If the value is within allowed value range for non-negative integer, return value
+          return result[1];
+        }
+      }
+    }
+    return defaultValue;
+  }
+
+  // Expected value returned by .getAttribute(attr) or .attr if |value| has been set via the IDL attribute.
+  function expectedIdlAttributeResult(value) {
+    // This returns the result of calling the ES ToInt32 algorithm on value.
+    return value << 0;
+  }
+
+  var element = aParameters.element;
+  var attr = aParameters.attribute;
+  var nonNegative = aParameters.nonNegative;
+
+  var defaultValue = aParameters.defaultValue !== undefined
+                      ? aParameters.defaultValue
+                      : nonNegative ? -1 : 0;
+
+  ok(attr in element, attr + " should be an IDL attribute of this element");
+  is(typeof element[attr], "number", attr + " IDL attribute should be a number");
+
+  // Check default value.
+  is(element[attr], defaultValue, "default value should be " + defaultValue);
+  ok(!element.hasAttribute(attr), attr + " shouldn't be present");
+
+  /**
+   * Test various values.
+   * value: The test value that will be set using both setAttribute(value) and
+   *        element[attr] = value
+   */
+  var valuesToTest = [
+    // Test numeric inputs up to max signed integer
+    0, 1, 55555, 2147483647, +42,
+    // Test string inputs up to max signed integer
+    "0", "1", "777777", "2147483647", "+42",
+    // Test negative numeric inputs up to min signed integer
+    -0, -1, -3333, -2147483648,
+    // Test negative string inputs up to min signed integer
+    "-0", "-1", "-222", "-2147483647", "-2147483648",
+    // Test numeric inputs that are outside legal 32 bit signed values
+    -2147483649, -3000000000, -4294967296, 2147483649, 4000000000, -4294967297,
+    // Test string inputs with extra padding
+    "     1111111", "  23456   ",
+    // Test non-numeric string inputs
+    "", " ", "+", "-", "foo", "+foo", "-foo", "+     foo", "-     foo", "+-2", "-+2", "++2", "--2", "hello1234", "1234hello",
+    "444 world 555", "why 567 what", "-3 nots", "2e5", "300e2", "42+-$", "+42foo", "-514not", "\vblah", "0x10FFFF", "-0xABCDEF",
+    // Test decimal numbers
+    1.2345, 42.0, 3456789.1, -2.3456, -6789.12345, -2147483649.1234,
+    // Test decimal strings
+    "1.2345", "42.0", "3456789.1", "-2.3456", "-6789.12345", "-2147483649.1234",
+    // Test special values
+    undefined, null, NaN, Infinity, -Infinity,
+  ];
+
+  valuesToTest.forEach(function(v) {
+    var intValue = stringToInteger(v, nonNegative, defaultValue);
+
+    element.setAttribute(attr, v);
+
+    is(element.getAttribute(attr), expectedGetAttributeResult(v), element.localName + ".setAttribute(" +
+      attr + ", " + v + "), " + element.localName + ".getAttribute(" + attr + ") ");
+
+    if (intValue == -2147483648 && element[attr] == defaultValue) {
+      //TBD: Bug 586761: .setAttribute(attr, -2147483648) --> element[attr] == defaultValue instead of -2147483648
+      todo_is(element[attr], intValue, "Bug 586761: " + element.localName +
+        ".setAttribute(value, " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (testExponential(v)) {
+      //TBD: Bug 673820: .setAttribute(exponential) -> incorrect reflection for element[attr]
+      todo_is(element[attr], intValue, "Bug 673820: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "why 567 what") {
+      //TBD: Bug 679672: .setAttribute() is somehow able to parse "why 567 what" into "567"
+      todo_is(element[attr], intValue, "Bug 679672: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v === "-0" && nonNegative) {
+      //TBD: Bug 688093: Non-negative integers should return defaultValue when attempting to reflect "-0"
+      todo_is(element[attr], intValue, "Bug 688093: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "+42foo") {
+      //TBD: Bug: Unable to correctly parse "+" character in front of string
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "0x10FFFF" && defaultValue != 0) {
+      //TBD: Bug: Integer attributes should parse "0x10FFFF" as 0, but instead incorrectly return defaultValue
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if (v == "-0xABCDEF" && !nonNegative && defaultValue != 0) {
+      //TBD: Bug: Signed integer attributes should parse "-0xABCDEF" as -0, but instead incorrectly return defaultValue
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else if ((v == "++2" || v == "+-2" || v == "--2" || v == "-+2") && element[attr] != defaultValue)  {
+      //TBD: Bug: Should not be able to parse strings with multiple sign characters, should return defaultValue
+      todo_is(element[attr], intValue, "Bug: " + element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    } else {
+      is(element[attr], intValue, element.localName +
+        ".setAttribute(" + attr + ", " + v + "), " + element.localName + "[" + attr + "] ");
+    }
+    element.removeAttribute(attr);
+
+    if (nonNegative && expectedIdlAttributeResult(v) < 0) {
+      try {
+        element[attr] = v;
+        ok(false, element.localName + "[" + attr + "] = " + v + " should throw NS_ERROR_DOM_INDEX_SIZE_ERR");
+      } catch(e) {
+        is(e.code, DOMException.INDEX_SIZE_ERR, element.localName + "[" + attr + "] = " + v +
+          " should throw NS_ERROR_DOM_INDEX_SIZE_ERR");
+      }
+    } else {
+      element[attr] = v;
+      if (expectedIdlAttributeResult(v) == -2147483648 && element[attr] == defaultValue) {
+        //TBD: Bug 586761: .setAttribute(attr, -2147483648) --> element[attr] == defaultValue instead of -2147483648
+        todo_is(element[attr], expectedIdlAttributeResult(v), "Bug 586761: " + element.localName + "[" +
+          attr + "] = " + v + ", " + element.localName + "[" + attr + "] ");
+      } else {
+        is(element[attr], expectedIdlAttributeResult(v), element.localName + "[" + attr + "] = " + v +
+          ", " + element.localName + "[" + attr + "] ");
+        is(element.getAttribute(attr), expectedIdlAttributeResult(v), element.localName + "[" + attr +
+          "] = " + v + ", " + element.localName + ".getAttribute(" + attr + ") ");
+      }
+    }
+    element.removeAttribute(attr);
+  });
+
+  // Tests after removeAttribute() is called. Should be equivalent with not set.
+  is(element.getAttribute(attr), null,
+     "When not set, the content attribute should be null.");
+  is(element[attr], defaultValue,
+     "When not set, the IDL attribute should return default value.");
+}

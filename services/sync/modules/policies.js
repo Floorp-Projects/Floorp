@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Marina Samuel <msamuel@mozilla.com>
  *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Chenxia Liu <liuche@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -453,6 +454,7 @@ let ErrorHandler = {
   initLogs: function initLogs() {
     this._log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
     this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+    this._cleaningUpFileLogs = false;
 
     let root = Log4Moz.repository.getLogger("Sync");
     root.level = Log4Moz.Level[Svc.Prefs.get("log.rootLogger")];
@@ -553,6 +555,46 @@ let ErrorHandler = {
   },
 
   /**
+   * Finds all logs older than maxErrorAge and deletes them without tying up I/O.
+   */
+  cleanupLogs: function cleanupLogs() {
+    let direntries = FileUtils.getDir("ProfD", ["weave", "logs"]).directoryEntries;
+    let oldLogs = [];
+    let index = 0;
+    let threshold = Date.now() - 1000 * Svc.Prefs.get("log.appender.file.maxErrorAge");
+
+    while (direntries.hasMoreElements()) {
+      let logFile = direntries.getNext().QueryInterface(Ci.nsIFile);
+      if (logFile.lastModifiedTime < threshold) {
+        oldLogs.push(logFile);
+      }
+    }
+
+    // Deletes a file from oldLogs each tick until there are none left.
+    function deleteFile() {
+      if (index >= oldLogs.length) {
+        ErrorHandler._cleaningUpFileLogs = false;
+        Svc.Obs.notify("weave:service:cleanup-logs");
+        return;
+      }
+      try {
+        oldLogs[index].remove(false);
+      } catch (ex) {
+        ErrorHandler._log._debug("Encountered error trying to clean up old log file '"
+                                 + oldLogs[index].leafName + "':"
+                                 + Utils.exceptionStr(ex));
+      }
+      index++;
+      Utils.nextTick(deleteFile);
+    }
+
+    if (oldLogs.length > 0) {
+      ErrorHandler._cleaningUpFileLogs = true;
+      Utils.nextTick(deleteFile);
+    }
+  },
+
+  /**
    * Generate a log file for the sync that just completed
    * and refresh the input & output streams.
    *
@@ -573,6 +615,10 @@ let ErrorHandler = {
         let outStream = FileUtils.openFileOutputStream(file);
         NetUtil.asyncCopy(inStream, outStream, function () {
           Svc.Obs.notify("weave:service:reset-file-log");
+          if (filenamePrefix == LOG_PREFIX_ERROR
+              && !ErrorHandler._cleaningUpFileLogs) {
+            Utils.nextTick(ErrorHandler.cleanupLogs, ErrorHandler);
+          }
         });
       } catch (ex) {
         Svc.Obs.notify("weave:service:reset-file-log");

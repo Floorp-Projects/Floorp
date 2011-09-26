@@ -108,7 +108,12 @@ reflectString({
 // .max
 todo("max" in document.createElement("input"), "max isn't implemented yet");
 
-// TODO: maxLength (long)
+// .maxLength
+reflectInt({
+  element: document.createElement("input"),
+  attribute: "maxLength",
+  nonNegative: true,
+});
 
 // .min
 todo("min" in document.createElement("input"), "min isn't implemented yet");

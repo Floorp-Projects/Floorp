@@ -94,6 +94,13 @@ var TPS = {
   },
 
   SetupSyncAccount: function TPS__SetupSyncAccount() {
+    try {
+      let serverURL = prefs.getCharPref('tps.account.serverURL');
+      if (serverURL) {
+        Weave.Service.serverURL = serverURL;
+      }
+    }
+    catch(e) {}
     Weave.Service.account = prefs.getCharPref('tps.account.username');
     Weave.Service.password = prefs.getCharPref('tps.account.password');
     Weave.Service.passphrase = prefs.getCharPref('tps.account.passphrase');

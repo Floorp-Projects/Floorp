@@ -47,6 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 DIRS = \
+  highlighter \
   webconsole \
   scratchpad \
   sourceeditor \

@@ -171,7 +171,7 @@ protected:
   nsTHashtable<nsVoidPtrHashKey> mForeignObjectHash;
 
   PRUint32 mRedrawSuspendCount;
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  nsAutoPtr<gfxMatrix> mCanvasTM;
 
   float mFullZoom;
 

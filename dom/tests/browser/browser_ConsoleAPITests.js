@@ -161,8 +161,21 @@ function observeConsoleTest() {
   expect("info", "arg", "extra arg");
   win.console.info("arg", "extra arg");
 
-  expect("warn", "arg", "extra arg", 1);
-  win.console.warn("arg", "extra arg", 1);
+  // We don't currently support width and precision qualifiers, but we don't
+  // choke on them either.
+  expect("warn", "Lesson 1: PI is approximately equal to 3.14159");
+  win.console.warn("Lesson %d: %s is approximately equal to %1.2f",
+                   1,
+                   "PI",
+                   3.14159);
+  expect("log", "%d, %s, %l");
+  win.console.log("%d, %s, %l");
+  expect("log", "%a %b %c");
+  win.console.log("%a %b %c");
+  expect("log", "%a %b %c", "a", "b");
+  win.console.log("%a %b %c", "a", "b");
+  expect("log", "2, a, %l", 3);
+  win.console.log("%d, %s, %l", 2, "a", 3);
 
   expect("dir", win.toString());
   win.console.dir(win);

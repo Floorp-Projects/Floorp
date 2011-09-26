@@ -112,7 +112,7 @@ class IonFrameIterator
 #elif defined(JS_PUNBOX64)
               layout.asBits = fromLocation(slot.value());
 #endif
-              return Valueify(JSVAL_FROM_LAYOUT(layout));
+              return IMPL_TO_JSVAL(layout);
           }
 
           case SnapshotReader::JS_UNDEFINED:

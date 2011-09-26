@@ -661,14 +661,24 @@ nsSelectAllCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
 
-  // you can select all if there is an editor (and potentially no contents)
-  // some day we may want to change this
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (editor)
-    return editor->GetIsSelectionEditable(outCmdEnabled);
-
+  nsresult rv = NS_OK;
   *outCmdEnabled = PR_FALSE;
-  return NS_OK;
+  PRBool docIsEmpty, selectionIsEditable;
+ 
+  // you can select all if there is an editor which is non-empty
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (editor) {
+    rv = editor->GetIsSelectionEditable(&selectionIsEditable);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (selectionIsEditable) {
+      rv = editor->GetDocumentIsEmpty(&docIsEmpty);
+      NS_ENSURE_SUCCESS(rv, rv);
+      *outCmdEnabled = !docIsEmpty;
+    }
+  } 
+
+  return rv;
 }
 
 

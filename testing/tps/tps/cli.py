@@ -36,10 +36,12 @@
 # ***** END LICENSE BLOCK *****
 
 import json
+import logging
 import optparse
 import os
 import sys
-import logging
+import time
+import traceback
 
 from threading import RLock
 
@@ -116,25 +118,32 @@ def main():
         extensionDir = extensionDir.replace("/", "\\")
 
   if options.binary is None:
-    # If no binary is specified, start the pulse build monitor, and wait
-    # until we receive build notifications before running tests.
-    monitor = TPSPulseMonitor(extensionDir,
-                              config=config,
-                              autolog=options.autolog,
-                              emailresults=options.emailresults,
-                              testfile=options.testfile,
-                              logfile=options.logfile,
-                              rlock=rlock)
-    print "waiting for pulse build notifications"
+    while True:
+      try:
+        # If no binary is specified, start the pulse build monitor, and wait
+        # until we receive build notifications before running tests.
+        monitor = TPSPulseMonitor(extensionDir,
+                                  config=config,
+                                  autolog=options.autolog,
+                                  emailresults=options.emailresults,
+                                  testfile=options.testfile,
+                                  logfile=options.logfile,
+                                  rlock=rlock)
+        print "waiting for pulse build notifications"
 
-    if options.pulsefile:
-      # For testing purposes, inject a pulse message directly into
-      # the monitor.
-      builddata = json.loads(open(options.pulsefile, 'r').read())
-      monitor.onBuildComplete(builddata)
+        if options.pulsefile:
+          # For testing purposes, inject a pulse message directly into
+          # the monitor.
+          builddata = json.loads(open(options.pulsefile, 'r').read())
+          monitor.onBuildComplete(builddata)
 
-    monitor.listen()
-    return
+        monitor.listen()
+      except KeyboardInterrupt:
+        sys.exit()
+      except:
+        traceback.print_exc()
+        print 'sleeping 5 minutes'
+        time.sleep(300)
 
   TPS = TPSTestRunner(extensionDir,
                       emailresults=options.emailresults,

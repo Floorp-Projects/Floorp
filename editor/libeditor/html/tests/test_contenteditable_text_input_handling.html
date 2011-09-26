@@ -221,8 +221,9 @@ function runTests()
     // IME
     const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
     // start composition
-    synthesizeComposition(true);
+    synthesizeComposition({ type: "compositionstart" });
     // input first character
+    synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
     synthesizeText(
       { "composition":
         { "string": "\u3089",
@@ -296,7 +297,7 @@ function runTests()
        "query selected text event returns wrong selected text after commit" +
          when);
     // end composition
-    synthesizeComposition(false);
+    synthesizeComposition({ type: "compositionend", data: "\u3089" });
 
     checkValue(staticContent, "\u3089");
     checkValue(inputInStatic, "\u3089");

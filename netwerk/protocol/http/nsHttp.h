@@ -67,7 +67,6 @@
 #include "nsPromiseFlatString.h"
 #include "nsURLHelper.h"
 #include "netCore.h"
-#include "nsIAtom.h"
 
 #if defined(PR_LOGGING)
 //
@@ -165,8 +164,6 @@ struct nsHttp
     static nsresult CreateAtomTable();
     static void DestroyAtomTable();
 
-    static void CreateMethodAtoms();
-
     // will dynamically add atoms to the table if they don't already exist
     static nsHttpAtom ResolveAtom(const char *);
     static nsHttpAtom ResolveAtom(const nsACString &s)
@@ -218,10 +215,6 @@ struct nsHttp
 #define HTTP_ATOM(_name, _value) static nsHttpAtom _name;
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
-
-#define HTTP_METHOD_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsHttpAtomList.h"
-#undef HTTP_METHOD_ATOM
 };
 
 //-----------------------------------------------------------------------------

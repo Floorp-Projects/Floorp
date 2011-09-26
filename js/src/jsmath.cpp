@@ -109,13 +109,13 @@ MathCache::MathCache() {
 Class js::MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 JSBool
@@ -853,7 +853,7 @@ static JSFunctionSpec math_static_methods[] = {
 };
 
 bool
-js_IsMathFunction(JSNative native)
+js_IsMathFunction(Native native)
 {
     for (size_t i=0; math_static_methods[i].name != NULL; i++) {
         if (native == math_static_methods[i].call)

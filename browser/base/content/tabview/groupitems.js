@@ -492,15 +492,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   options - an object with additional parameters, see below
   //
   // Possible options:
-  //   forceStacked - true to force content bounds for stacked mode
+  //   stacked - true to get content bounds for stacked mode
   getContentBounds: function GroupItem_getContentBounds(options) {
-    var box = this.getBounds();
-    var titleHeight = this.$titlebar.height();
+    let box = this.getBounds();
+    let titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
 
     let appTabTrayContainer = iQ(this.$appTabTray[0].parentNode);
-    var appTabTrayWidth = appTabTrayContainer.width();
+    let appTabTrayWidth = appTabTrayContainer.width();
     if (appTabTrayWidth)
       appTabTrayWidth += parseInt(appTabTrayContainer.css(UI.rtl ? "left" : "right"));
 
@@ -513,9 +513,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // themeable --OR-- compute this from actual bounds. Bug 586546
     box.inset(6, 6);
 
-    // make some room for the expand button if we're stacked
-    let isStacked = (options && options.forceStacked) || this.isStacked();
-    if (isStacked)
+    // make some room for the expand button in stacked mode
+    if (options && options.stacked)
       box.height -= this.$expander.height() + 9; // the button height plus padding
 
     return box;
@@ -1296,8 +1295,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (count <= 1)
       return false;
 
-    var bb = this.getContentBounds();
-    var options = {
+    let bb = this.getContentBounds();
+    let options = {
       return: 'widthAndColumns',
       count: count || this._children.length,
       hideTitle: false
@@ -1403,7 +1402,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       GroupItems.pushArrange(this, options);
       return false;
     }
-    
+
     let shouldStack = this.shouldStack(childrenToArrange.length + (options.addTab ? 1 : 0));
     let shouldStackArrange = (shouldStack && !this.expanded);
     let box;
@@ -1411,12 +1410,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // if we should stack and we're not expanded
     if (shouldStackArrange) {
       this.showExpandControl();
-      box = this.getContentBounds({forceStacked: true});
+      box = this.getContentBounds({stacked: true});
       this._stackArrange(childrenToArrange, box, options);
       return false;
     } else {
       this.hideExpandControl();
-      box = this.getContentBounds({forceStacked: false});
+      box = this.getContentBounds();
       // a dropIndex is returned
       return this._gridArrange(childrenToArrange, box, options);
     }

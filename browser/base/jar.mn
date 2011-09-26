@@ -31,7 +31,6 @@ browser.jar:
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/content.js                    (content/content.js)
 *       content/browser/fullscreen-video.xhtml        (content/fullscreen-video.xhtml)
-*       content/browser/inspector.html                (content/inspector.html)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
 *       content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
 *       content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)

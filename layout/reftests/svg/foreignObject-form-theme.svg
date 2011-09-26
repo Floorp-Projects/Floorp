@@ -1,0 +1,14 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='500' height='200'>
+  <foreignObject width='500' height='500'>
+    <div xmlns='http://www.w3.org/1999/xhtml'>
+      <button style="-moz-appearance: button !important">this is a button inside of SVG</button>
+      <br/>
+      <select style="-moz-appearance: menulist !important">
+        <option>This is a menu inside of SVG</option>
+        <option>a second menu option</option>
+      </select>
+    </div>
+  </foreignObject>
+</svg>
+
+<!-- Bug 686581 -->

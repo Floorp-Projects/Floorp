@@ -145,6 +145,7 @@ _CHROME_TEST_FILES = \
   chromeWorker_subworker.js \
   test_workersDisabled.xul \
   workersDisabled_worker.js \
+  dom_worker_helper.js \
   $(NULL)
 
 ifneq ($(OS_ARCH),WINNT)
