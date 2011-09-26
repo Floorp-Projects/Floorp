@@ -42,6 +42,7 @@
 #include "IonBuilder.h"
 #include "MIR.h"
 #include "MIRGraph.h"
+#include "jsnum.h"
 
 using namespace js;
 using namespace js::ion;
@@ -706,5 +707,22 @@ MResumePoint::inherit(MBasicBlock *block)
 {
     for (size_t i = 0; i < stackDepth(); i++)
         initOperand(i, block->getSlot(i));
+}
+
+MDefinition *
+MToDouble::foldsTo(bool useValueNumbers)
+{
+    if (input()->isConstant()) {
+        const Value &v = input()->toConstant()->value();
+        if (v.isPrimitive()) {
+            double out;
+            DebugOnly<bool> ok = ToNumber(GetIonContext()->cx, v, &out);
+            JS_ASSERT(ok);
+
+            return MConstant::New(DoubleValue(out));
+        }
+    }
+
+    return this;
 }
 

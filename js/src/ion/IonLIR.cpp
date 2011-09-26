@@ -253,8 +253,16 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 {
     JS_ASSERT(!snapshot_);
     snapshot_ = snapshot;
-    IonSpew(IonSpew_Snapshots, "Assigning snapshot %p to instruction %p",
-            (void *)snapshot, (void *)this);
+
+#ifdef DEBUG
+    if (IonSpewEnabled(IonSpew_Snapshots)) {
+        IonSpewHeader(IonSpew_Snapshots);
+        fprintf(IonSpewFile, "Assigning snapshot %p to instruction %p (",
+                (void *)snapshot, (void *)this);
+        printName(IonSpewFile);
+        fprintf(IonSpewFile, ")\n");
+    }
+#endif
 }
 
 void

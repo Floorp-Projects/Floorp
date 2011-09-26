@@ -385,7 +385,15 @@ TypeAnalyzer::specializePhi(MPhi *phi)
 
     for (size_t i = 1; i < phi->numOperands(); i++) {
         MDefinition *other = phi->getOperand(i);
-        if (GetObservedType(other) != first) {
+        MIRType otherType = GetObservedType(other);
+        if (otherType != first) {
+            if (IsNumberType(otherType) && IsNumberType(first)) {
+                // Allow coercion between int/double, and force the phi to be
+                // double.
+                first = MIRType_Double;
+                continue;
+            }
+            // Any other type mismatches are fatal.
             despecializePhi(phi);
             return;
         }
@@ -499,13 +507,27 @@ void
 TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 {
     // If the phi returns a specific type, assert that its inputs are correct.
-    if (phi->type() != MIRType_Value) {
-#ifdef DEBUG
+    MIRType phiType = phi->type();
+    if (phiType != MIRType_Value) {
         for (size_t i = 0; i < phi->numOperands(); i++) {
             MDefinition *in = phi->getOperand(i);
+            MIRType inType = GetObservedType(in);
+
+            if (phiType == MIRType_Double && inType == MIRType_Int32) {
+                MToDouble *convert = MToDouble::New(in);
+
+                // Note that we're relying on the fact that |in| is guaranteed
+                // to become |int| even if its current return type is not
+                // |int|. We're absolutely not allowed to change the observable
+                // type of the input here, only its representation.
+                MBasicBlock *pred = phi->block()->getPredecessor(i);
+                pred->insertBefore(pred->lastIns(), convert);
+                phi->replaceOperand(i, convert);
+                continue;
+            }
+
             JS_ASSERT(GetObservedType(in) == phi->type());
         }
-#endif
         return;
     }
 
