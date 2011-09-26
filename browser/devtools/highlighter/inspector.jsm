@@ -392,7 +392,7 @@ Highlighter.prototype = {
     this.veilMiddleBox.style.height = 0;
     this.veilTransparentBox.style.width = 0;
     Services.obs.notifyObservers(null,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.UNHIGHLIGHTING, null);
+      INSPECTOR_NOTIFICATIONS.UNHIGHLIGHTING, null);
   },
 
   /**
