@@ -129,6 +129,7 @@ static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
 static bool sValidSurface;
 static bool sSurfaceExists = false;
+static void *sNativeWindow = nsnull;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -846,11 +847,26 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::SURFACE_CREATED:
             sSurfaceExists = true;
+
+            if (AndroidBridge::Bridge()->HasNativeWindowAccess()) {
+                AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
+                jobject surface = sview.GetSurface();
+                if (surface) {
+                    sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
+                    if (sNativeWindow) {
+                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                    }
+                }
+            }
             break;
 
         case AndroidGeckoEvent::SURFACE_DESTROYED:
             if (sGLContext && sValidSurface) {
                 sGLContext->ReleaseSurface();
+            }
+            if (sNativeWindow) {
+                AndroidBridge::Bridge()->ReleaseNativeWindow(sNativeWindow);
+                sNativeWindow = nsnull;
             }
             sSurfaceExists = false;
             sValidSurface = false;
@@ -1002,7 +1018,35 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
     if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
-        if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
+        if (sNativeWindow) {
+            unsigned char *bits;
+            int width, height, format, stride;
+            if (!AndroidBridge::Bridge()->LockWindow(sNativeWindow, &bits, &width, &height, &format, &stride)) {
+                ALOG("failed to lock buffer - skipping draw");
+                return;
+            }
+
+            if (!bits || format != AndroidBridge::WINDOW_FORMAT_RGB_565 ||
+                width != mBounds.width || height != mBounds.height) {
+
+                ALOG("surface is not expected dimensions or format - skipping draw");
+                AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
+                return;
+            }
+
+            nsRefPtr<gfxImageSurface> targetSurface =
+                new gfxImageSurface(bits,
+                                    gfxIntSize(mBounds.width, mBounds.height),
+                                    stride * 2,
+                                    gfxASurface::ImageFormatRGB16_565);
+            if (targetSurface->CairoStatus()) {
+                ALOG("### Failed to create a valid surface from the bitmap");
+            } else {
+                DrawTo(targetSurface);
+            }
+
+            AndroidBridge::Bridge()->UnlockWindow(sNativeWindow);
+        } else if (AndroidBridge::Bridge()->HasNativeBitmapAccess()) {
             jobject bitmap = sview.GetSoftwareDrawBitmap();
             if (!bitmap) {
                 ALOG("no bitmap to draw into - skipping draw");
