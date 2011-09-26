@@ -557,8 +557,8 @@ nsNPAPIPlugin::CreatePluginInstance(nsNPAPIPluginInstance **aResult)
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(inst);
   *aResult = inst;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 

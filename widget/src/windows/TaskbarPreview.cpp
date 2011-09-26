@@ -101,8 +101,8 @@ GetRenderingContext(nsIDocShell *shell, gfxASurface *surface,
       NS_WARNING("Could not create nsICanvasRenderingContext2D for tab previews!");
       return rv;
     }
-    NS_ADDREF(ctx);
     gCtx = ctx;
+    NS_ADDREF(gCtx);
   }
 
   nsCOMPtr<nsICanvasRenderingContextInternal> ctxI = do_QueryInterface(ctx, &rv);

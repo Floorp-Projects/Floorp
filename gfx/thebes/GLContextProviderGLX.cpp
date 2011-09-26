@@ -879,8 +879,8 @@ public:
 
     virtual already_AddRefed<gfxASurface> GetBackingSurface()
     {
-        NS_ADDREF(mUpdateSurface);
-        return mUpdateSurface.get();
+        nsRefPtr<gfxASurface> copy = mUpdateSurface;
+        return copy.forget();
     }
 
     virtual PRBool InUpdate() const { return mInUpdate; }
