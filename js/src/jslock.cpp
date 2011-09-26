@@ -37,9 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jstypes.h"
-#include "jspubtd.h"
-
 #ifdef JS_THREADSAFE
 
 /*
@@ -47,7 +44,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include "jspubtd.h"
 #include "jsutil.h"
+#include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
 #include "jscntxt.h"
