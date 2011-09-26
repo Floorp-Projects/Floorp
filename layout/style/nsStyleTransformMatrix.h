@@ -105,7 +105,13 @@ class nsStyleTransformMatrix
                                    nsRect& aBounds, float aAppUnitsPerMatrixUnit,
                                    PRBool *aPercentX = nsnull, 
                                    PRBool *aPercentY = nsnull);
-  static gfx3DMatrix ProcessMatrix3D(const nsCSSValue::Array *aData);
+  static gfx3DMatrix ProcessMatrix3D(const nsCSSValue::Array *aData,
+                                     nsStyleContext *aContext,
+                                     nsPresContext *aPresContext,
+                                     PRBool &aCanStoreInRuleTree,
+                                     nsRect& aBounds, float aAppUnitsPerMatrixUnit,
+                                     PRBool *aPercentX = nsnull, 
+                                     PRBool *aPercentY = nsnull);
   static gfx3DMatrix ProcessInterpolateMatrix(const nsCSSValue::Array *aData,
                                               nsStyleContext *aContext,
                                               nsPresContext *aPresContext,
