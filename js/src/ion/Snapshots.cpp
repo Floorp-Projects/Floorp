@@ -418,8 +418,8 @@ SnapshotWriter::endSnapshot()
     writer_.writeSigned(-1);
 #endif
     
-    IonSpew(IonSpew_Snapshots, "    total size: %d bytes",
-            uint32(writer_.length() - lastStart_));
+    IonSpew(IonSpew_Snapshots, "    total size: %d bytes (start %d)",
+            uint32(writer_.length() - lastStart_), lastStart_);
 }
 
 void

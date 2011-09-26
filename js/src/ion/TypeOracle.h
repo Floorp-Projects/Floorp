@@ -172,6 +172,12 @@ StringFromMIRType(MIRType type)
   }
 }
 
+static inline bool
+IsNumberType(MIRType type)
+{
+    return type == MIRType_Int32 || type == MIRType_Double;
+}
+
 } /* ion */
 } /* js */
 
