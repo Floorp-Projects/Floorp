@@ -140,10 +140,10 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
     
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
-    request->AddRef();
+    nsRefPtr<nsDesktopNotificationRequest> copy = request;
 
     nsCString type = NS_LITERAL_CSTRING("desktop-notification");
-    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
+    child->SendPContentPermissionRequestConstructor(copy.forget().get(), type, IPC::URI(mURI));
     
     request->Sendprompt();
     return;
