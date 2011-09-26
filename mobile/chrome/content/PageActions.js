@@ -261,6 +261,8 @@ var PageActions = {
     let container = document.getElementById("pageactions-container");
     let visibleNodes = container.querySelectorAll("pageaction:not([hidden=true])");
     let visibleCount = visibleNodes.length;
+    if (visibleCount == 0)
+      return;
 
     for (let i = 0; i < visibleCount; i++)
       visibleNodes[i].classList.remove("odd-last-child");
