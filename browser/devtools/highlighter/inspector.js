@@ -208,7 +208,6 @@ Highlighter.prototype = {
     aParent.appendChild(closeButton);
   },
 
-
   /**
    * Destroy the nodes.
    */
@@ -834,6 +833,26 @@ var InspectorUI = {
    */
   initTools: function IUI_initTools()
   {
+    // Style inspector
+    if (Services.prefs.getBoolPref("devtools.styleinspector.enabled") &&
+        !this.toolRegistered("styleinspector")) {
+      let stylePanel = this.StyleInspector.createPanel(true);
+      this.registerTool({
+        id: "styleinspector",
+        label: InspectorUI.StyleInspector.l10n("style.highlighter.button.label"),
+        tooltiptext: InspectorUI.StyleInspector.l10n("style.highlighter.button.tooltip"),
+        accesskey: InspectorUI.StyleInspector.l10n("style.highlighter.accesskey"),
+        context: stylePanel,
+        get isOpen() stylePanel.isOpen(),
+        onSelect: stylePanel.selectNode,
+        show: stylePanel.showTool,
+        hide: stylePanel.hideTool,
+        dim: stylePanel.dimTool,
+        panel: stylePanel,
+        unregister: stylePanel.destroy,
+      });
+      this.stylePanel = stylePanel;
+    }
   },
 
   /**
@@ -960,6 +979,7 @@ var InspectorUI = {
 
     this.treePanel.hidePopup();
     delete this.treePanel;
+    delete this.stylePanel;
   },
 
   /**
@@ -976,6 +996,7 @@ var InspectorUI = {
     document.getElementById("inspector-inspect-toolbutton").checked = true;
     this.attachPageListeners();
     this.inspecting = true;
+    this.toolsDim(true);
     this.highlighter.veilContainer.removeAttribute("locked");
   },
 
@@ -994,6 +1015,7 @@ var InspectorUI = {
     document.getElementById("inspector-inspect-toolbutton").checked = false;
     this.detachPageListeners();
     this.inspecting = false;
+    this.toolsDim(false);
     if (this.highlighter.node) {
       this.select(this.highlighter.node, true, true, !aPreventScroll);
     } else {
@@ -1153,10 +1175,12 @@ var InspectorUI = {
         this.ioBox.toggleObject(node);
       } else {
         if (this.inspecting) {
+          this.toolsSelect();
           this.stopInspecting(true);
         } else {
           this.select(node, true, false);
           this.highlighter.highlightNode(node);
+          this.toolsSelect();
         }
       }
     }
@@ -1625,6 +1649,7 @@ var InspectorUI = {
    *   onSelect: object.method,
    *   show: object.method, called to show the tool when button is pressed.
    *   hide: object.method, called to hide the tool when button is pressed.
+   *   dim: object.method, called to disable a tool during highlighting.
    *   unregister: object.method, called when tool should be destroyed.
    *   panel: myTool.panel
    * }
@@ -1783,6 +1808,19 @@ var InspectorUI = {
     this.toolsDo(function IUI_toolsOnSelect(aTool) {
       if (aTool.isOpen) {
         aTool.onSelect.call(aTool.context, InspectorUI.selection);
+      }
+    });
+  },
+
+  /**
+   * Dim or undim each tool in the tools collection
+   * @param aState true = dim, false = undim
+   */
+  toolsDim: function IUI_toolsDim(aState)
+  {
+    this.toolsDo(function IUI_toolsOnSelect(aTool) {
+      if (aTool.isOpen && "dim" in aTool) {
+        aTool.dim.call(aTool.context, aState);
       }
     });
   },
@@ -2052,5 +2090,11 @@ XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
 XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
   return Services.strings.
          createBundle("chrome://browser/locale/inspector.properties");
+});
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "StyleInspector", function () {
+  var obj = {};
+  Cu.import("resource:///modules/devtools/StyleInspector.jsm", obj);
+  return obj.StyleInspector;
 });
 
