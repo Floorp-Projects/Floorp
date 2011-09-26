@@ -1754,9 +1754,6 @@ var XPIProvider = {
       Services.appinfo.annotateCrashReport("Add-ons", data);
     }
     catch (e) { }
-    
-    const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-    TelemetryPing.observe(null, "Add-ons", data);
   },
 
   /**

@@ -62,7 +62,7 @@ anp_typeface_createFromName(const char name[], ANPTypefaceStyle aStyle)
   ANPTypeface* tf = new ANPTypeface;
   gfxAndroidPlatform * p = (gfxAndroidPlatform*)gfxPlatform::GetPlatform();
   nsRefPtr<gfxFont> font = gfxFT2Font::GetOrMakeFont(NS_ConvertASCIItoUTF16(name), &style);
-  tf->mFont = font.forget();
+  font.forget(&tf->mFont);
   if (tf->mFont) {
     ++tf->mRefCnt;
   }
