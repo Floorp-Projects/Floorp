@@ -61,5 +61,7 @@ _BROWSER_FILES = \
 		browser_inspector_bug_566084_location_changed.js \
 		$(NULL)
 
+# 		browser_inspector_treePanel_click.js \
+
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
