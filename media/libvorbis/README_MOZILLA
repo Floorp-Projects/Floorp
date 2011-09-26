@@ -9,3 +9,4 @@ Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.
 
 alloca.diff - Bug 469639 - Failed to build firefox trunk on OpenSolaris
+bug666672_gccWarnings.diff - Bug 666672 - Fixing some gcc compiler warnings

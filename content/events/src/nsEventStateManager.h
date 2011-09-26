@@ -458,6 +458,7 @@ protected:
 
   void DoQueryScrollTargetInfo(nsQueryContentEvent* aEvent,
                                nsIFrame* aTargetFrame);
+  void DoQuerySelectedText(nsQueryContentEvent* aEvent);
 
   PRBool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();

@@ -669,6 +669,7 @@ struct JITScript {
     void sweepCallICs(JSContext *cx, bool purgeAll);
     void purgeMICs();
     void purgePICs();
+    void purgeNativeCallStubs();
 
     void trace(JSTracer *trc);
 

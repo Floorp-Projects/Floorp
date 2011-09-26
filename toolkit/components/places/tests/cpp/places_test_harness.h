@@ -331,3 +331,39 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
   rv = stmt->GetInt32(2, &result.transitionType);
   do_check_success(rv);
 }
+
+static const char TOPIC_PROFILE_TEARDOWN[] = "profile-change-teardown";
+static const char TOPIC_PROFILE_CHANGE[] = "profile-before-change";
+
+class ShutdownObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  ShutdownObserver()
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    do_check_true(observerService);
+    observerService->AddObserver(this,
+                                 NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
+                                 PR_FALSE);
+  }
+
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const PRUnichar* aData)
+  {
+    if (strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID) == 0) {
+      nsCOMPtr<nsIObserverService> os =
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+      (void)os->NotifyObservers(nsnull, TOPIC_PROFILE_TEARDOWN, nsnull);
+      (void)os->NotifyObservers(nsnull, TOPIC_PROFILE_CHANGE, nsnull);
+    }
+      return NS_OK;
+  }
+};
+NS_IMPL_ISUPPORTS1(
+  ShutdownObserver,
+  nsIObserver
+)

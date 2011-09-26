@@ -3259,7 +3259,7 @@ PlacesSortFolderByNameTransaction.prototype = {
         if (preSep.length > 0) {
           preSep.sort(sortingMethod);
           newOrder = newOrder.concat(preSep);
-          preSep.splice(0);
+          preSep.splice(0, preSep.length);
         }
         newOrder.push(item);
       }

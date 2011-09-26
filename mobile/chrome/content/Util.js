@@ -203,16 +203,6 @@ let Util = {
            (aEvent.metaKey  ? Ci.nsIDOMNSEvent.META_MASK    : 0);
   },
 
-  get isKeyboardOpened() {
-    // This might get called from the child process, or from a frame script in the
-    // parent process (which does not have access to the main "window" global).
-    let isChromeWindow = this.isParentProcess() && typeof window == "object" && window["ViewableAreaObserver"];
-    if (isChromeWindow)
-      return ViewableAreaObserver.isKeyboardOpened;
-
-    return (sendSyncMessage("Content:IsKeyboardOpened", {}))[0];
-  },
-
   get displayDPI() {
     delete this.displayDPI;
     return this.displayDPI = this.getWindowUtils(window).displayDPI;

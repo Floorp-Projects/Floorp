@@ -241,6 +241,9 @@ protected:
   // The latest text event which was dispatched for composition string
   // of the current composing transaction.
   nsTextEvent*                 mLastDispatchedTextEvent;
+  // The latest composition string which was dispatched by composition update
+  // event.
+  nsString                     mLastDispatchedCompositionString;
   // Timer for calling ITextStoreACPSink::OnLayoutChange. This is only used
   // during composing.
   nsCOMPtr<nsITimer>           mCompositionTimer;

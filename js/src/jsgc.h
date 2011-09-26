@@ -658,7 +658,7 @@ struct Chunk {
     inline void addToAvailableList(JSCompartment *compartment);
     inline void removeFromAvailableList();
 
-    ArenaHeader *allocateArena(JSContext *cx, AllocKind kind);
+    ArenaHeader *allocateArena(JSCompartment *comp, AllocKind kind);
 
     void releaseArena(ArenaHeader *aheader);
 };
@@ -1108,7 +1108,7 @@ struct ArenaLists {
     inline void finalizeNow(JSContext *cx, AllocKind thingKind);
     inline void finalizeLater(JSContext *cx, AllocKind thingKind);
 
-    inline void *allocateFromArena(JSContext *cx, AllocKind thingKind);
+    inline void *allocateFromArena(JSCompartment *comp, AllocKind thingKind);
 };
 
 /*
@@ -1156,7 +1156,7 @@ struct WrapperHasher
     typedef Value Lookup;
 
     static HashNumber hash(Value key) {
-        uint64 bits = JSVAL_BITS(Jsvalify(key));
+        uint64 bits = key.asRawBits();
         return (uint32)bits ^ (uint32)(bits >> 32);
     }
 

@@ -136,7 +136,7 @@ struct ValueRemat {
         ValueRemat vr;
         vr.isConstant_ = true;
         vr.isFPRegister_ = false;
-        vr.u.v_ = Jsvalify(v);
+        vr.u.v_ = v;
         return vr;
     }
     static ValueRemat FromFPRegister(FPRegisterID fpreg) {
@@ -199,7 +199,7 @@ struct ValueRemat {
     }
     Value value() const {
         JS_ASSERT(isConstant());
-        return Valueify(u.v_);
+        return u.v_;
     }
     JSValueType knownType() const {
         JS_ASSERT(isTypeKnown());

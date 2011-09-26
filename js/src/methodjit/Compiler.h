@@ -615,7 +615,6 @@ class Compiler : public BaseCompiler
     bool finishLoop(jsbytecode *head);
     void jsop_bindname(JSAtom *atom, bool usePropCache);
     void jsop_setglobal(uint32 index);
-    void jsop_getglobal(uint32 index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
     void jsop_getarg(uint32 slot);
     void jsop_setarg(uint32 slot, bool popped);
@@ -764,6 +763,10 @@ class Compiler : public BaseCompiler
     CompileStatus compileMathAbsInt(FrameEntry *arg);
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
+    CompileStatus compileMathMinMaxDouble(FrameEntry *arg1, FrameEntry *arg2, 
+                                          Assembler::DoubleCondition cond); 
+    CompileStatus compileMathMinMaxInt(FrameEntry *arg1, FrameEntry *arg2, 
+                                       Assembler::Condition cond);                                       
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
     CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
     CompileStatus compileArrayPop(FrameEntry *thisv, bool isPacked);

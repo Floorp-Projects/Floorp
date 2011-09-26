@@ -879,5 +879,12 @@ nsPNGDecoder::warning_callback(png_structp png_ptr, png_const_charp warning_msg)
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
 
+Telemetry::ID
+nsPNGDecoder::SpeedHistogram()
+{
+  return Telemetry::IMAGE_DECODE_SPEED_PNG;
+}
+
+
 } // namespace imagelib
 } // namespace mozilla

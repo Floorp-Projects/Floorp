@@ -313,6 +313,17 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
             JSScript *script = fun->script();
 
             /*
+             * Don't inline calls to scripts which haven't been analyzed.
+             * We need to analyze the inlined scripts to compile them, and
+             * doing so can change type information we have queried already
+             * in making inlining decisions.
+             */
+            if (!script->hasAnalysis() || !script->analysis()->ranInference()) {
+                okay = false;
+                break;
+            }
+
+            /*
              * The outer and inner scripts must have the same scope. This only
              * allows us to inline calls between non-inner functions. Also
              * check for consistent strictness between the functions.
@@ -2119,11 +2130,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRING)
 
           BEGIN_CASE(JSOP_ZERO)
-            frame.push(Valueify(JSVAL_ZERO));
+            frame.push(JSVAL_ZERO);
           END_CASE(JSOP_ZERO)
 
           BEGIN_CASE(JSOP_ONE)
-            frame.push(Valueify(JSVAL_ONE));
+            frame.push(JSVAL_ONE);
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)
@@ -2761,13 +2772,6 @@ mjit::Compiler::generateMethod()
             INLINE_STUBCALL(stubs::UnbrandThis, REJOIN_FALLTHROUGH);
           END_CASE(JSOP_UNBRANDTHIS)
 
-          BEGIN_CASE(JSOP_GETGLOBAL)
-          BEGIN_CASE(JSOP_CALLGLOBAL)
-            jsop_getglobal(GET_SLOTNO(PC));
-            if (op == JSOP_CALLGLOBAL)
-                frame.push(UndefinedValue());
-          END_CASE(JSOP_GETGLOBAL)
-
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
@@ -2898,38 +2902,6 @@ mjit::Compiler::jumpInScript(Jump j, jsbytecode *pc)
         return true;
     }
     return branchPatches.append(BranchPatch(j, pc, a->inlineIndex));
-}
-
-void
-mjit::Compiler::jsop_getglobal(uint32 index)
-{
-    JS_ASSERT(globalObj);
-    uint32 slot = script->getGlobalSlot(index);
-
-    JSObject *singleton = pushedSingleton(0);
-    if (singleton && !hasTypeBarriers(PC) && !globalObj->getSlot(slot).isUndefined()) {
-        frame.push(ObjectValue(*singleton));
-        return;
-    }
-
-    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
-        !globalObj->getType(cx)->unknownProperties()) {
-        Value *value = &globalObj->getSlotRef(slot);
-        if (!value->isUndefined()) {
-            watchGlobalReallocation();
-            RegisterID reg = frame.allocReg();
-            masm.move(ImmPtr(value), reg);
-
-            BarrierState barrier = pushAddressMaybeBarrier(Address(reg), knownPushedType(0), true);
-            finishBarrier(barrier, REJOIN_GETTER, 0);
-            return;
-        }
-    }
-
-    RegisterID reg = frame.allocReg();
-    Address address = masm.objSlotRef(globalObj, reg, slot);
-    BarrierState barrier = pushAddressMaybeBarrier(address, knownPushedType(0), true);
-    finishBarrier(barrier, REJOIN_GETTER, 0);
 }
 
 void
@@ -4472,7 +4444,10 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      * reflect properties with getter hooks).
      */
     pic.canCallHook = pic.forcedTypeBarrier =
-        usePropCache && JSOp(*PC) == JSOP_GETPROP && analysis->getCode(PC).accessGetter;
+        usePropCache &&
+        JSOp(*PC) == JSOP_GETPROP &&
+        atom != cx->runtime->atomState.lengthAtom &&
+        analysis->getCode(PC).accessGetter;
     if (pic.canCallHook)
         frame.syncAndKillEverything();
 
@@ -4560,6 +4535,10 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     /* Guard that the type is an object. */
     pic.typeReg = frame.copyTypeIntoReg(top);
 
+    pic.canCallHook = pic.forcedTypeBarrier = analysis->getCode(PC).accessGetter;
+    if (pic.canCallHook)
+        frame.syncAndKillEverything();
+
     RESERVE_IC_SPACE(masm);
 
     /* Start the hot path where it's easy to patch it. */
@@ -4580,10 +4559,6 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     pic.objReg = objReg;
     pic.shapeReg = shapeReg;
     pic.atom = atom;
-
-    pic.canCallHook = pic.forcedTypeBarrier = analysis->getCode(PC).accessGetter;
-    if (pic.canCallHook)
-        frame.syncAndKillEverything();
 
     /*
      * Store the type and object back. Don't bother keeping them in registers,

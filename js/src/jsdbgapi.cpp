@@ -215,7 +215,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
     BreakpointSite *site = script->compartment()->getOrCreateBreakpointSite(cx, script, pc, NULL);
     if (!site)
         return false;
-    site->setTrap(cx, handler, Valueify(closure));
+    site->setTrap(cx, handler, closure);
     return true;
 }
 
@@ -231,7 +231,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
     if (BreakpointSite *site = script->compartment()->getBreakpointSite(pc)) {
-        site->clearTrap(cx, NULL, handlerp, Valueify(closurep));
+        site->clearTrap(cx, NULL, handlerp, closurep);
     } else {
         if (handlerp)
             *handlerp = NULL;
@@ -525,7 +525,7 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 JS_PUBLIC_API(JSNative)
 JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
 {
-    return Jsvalify(fun->maybeNative());
+    return fun->maybeNative();
 }
 
 JS_PUBLIC_API(JSPrincipals *)
@@ -664,7 +664,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
 
     if (!ComputeThis(cx, fp))
         return false;
-    *thisv = Jsvalify(fp->thisValue());
+    *thisv = fp->thisValue();
     return true;
 }
 
@@ -705,8 +705,8 @@ JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
 
     if (!Valueify(fp)->getValidCalleeObject(cx, &v))
         return false;
-    *vp = v.isObject() ? Jsvalify(v) : JSVAL_VOID;
-    *vp = Jsvalify(v);
+    *vp = v.isObject() ? v : JSVAL_VOID;
+    *vp = v;
     return true;
 }
 
@@ -725,7 +725,7 @@ JS_IsGlobalFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(jsval)
 JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 {
-    return Jsvalify(Valueify(fp)->returnValue());
+    return Valueify(fp)->returnValue();
 }
 
 JS_PUBLIC_API(void)
@@ -736,7 +736,7 @@ JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fpArg, jsval rval)
     JS_ASSERT_IF(fp->isScriptFrame(), fp->script()->debugMode);
 #endif
     assertSameCompartment(cx, fp, rval);
-    fp->setReturnValue(Valueify(rval));
+    fp->setReturnValue(rval);
 }
 
 /************************************************************************/
@@ -810,7 +810,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
         return false;
 
     StackFrame *fp = Valueify(fpArg);
-    return EvaluateInScope(cx, scobj, fp, chars, length, filename, lineno, Valueify(rval));
+    return EvaluateInScope(cx, scobj, fp, chars, length, filename, lineno, rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -875,13 +875,13 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
         lastException = cx->getPendingException();
     cx->clearPendingException();
 
-    if (!js_GetProperty(cx, obj, shape->propid, Valueify(&pd->value))) {
+    if (!js_GetProperty(cx, obj, shape->propid, &pd->value)) {
         if (!cx->isExceptionPending()) {
             pd->flags = JSPD_ERROR;
             pd->value = JSVAL_VOID;
         } else {
             pd->flags = JSPD_EXCEPTION;
-            pd->value = Jsvalify(cx->getPendingException());
+            pd->value = cx->getPendingException();
         }
     } else {
         pd->flags = 0;
@@ -943,14 +943,14 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
         return JS_FALSE;
     uint32 i = 0;
     for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-        if (!js_AddRoot(cx, Valueify(&pd[i].id), NULL))
+        if (!js_AddRoot(cx, &pd[i].id, NULL))
             goto bad;
-        if (!js_AddRoot(cx, Valueify(&pd[i].value), NULL))
+        if (!js_AddRoot(cx, &pd[i].value, NULL))
             goto bad;
         Shape *shape = const_cast<Shape *>(&r.front());
         if (!JS_GetPropertyDesc(cx, obj, reinterpret_cast<JSScopeProperty *>(shape), &pd[i]))
             goto bad;
-        if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, Valueify(&pd[i].alias), NULL))
+        if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
             goto bad;
         if (++i == n)
             break;

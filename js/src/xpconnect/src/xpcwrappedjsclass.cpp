@@ -389,7 +389,10 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
     jsval val;
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
-           XPCConvert::JSData2Native(ccx, aResult, val, type, JS_FALSE, 
+           // Note that this always takes the T_INTERFACE path through
+           // JSData2Native, so the value passed for useAllocator
+           // doesn't really matter. We pass true for consistency.
+           XPCConvert::JSData2Native(ccx, aResult, val, type, JS_TRUE,
                                      &NS_GET_IID(nsIVariant), pErr);
 }
 
@@ -932,7 +935,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     if(arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
         return JS_FALSE;
 
-    if(arg_param.IsOut())
+    if(arg_param.IsIndirect())
         *result = *(JSUint32*)nativeParams[argnum].val.p;
     else
         *result = nativeParams[argnum].val.u32;
@@ -973,7 +976,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
         if(arg_type.IsPointer() &&
            arg_type.TagPart() == nsXPTType::T_IID)
         {
-            if(arg_param.IsOut())
+            if(arg_param.IsIndirect())
             {
                 nsID** p = (nsID**) nativeParams[argnum].val.p;
                 if(!p || !*p)
@@ -1509,7 +1512,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         {
             nsXPTCMiniVariant* pv;
 
-            if(param.IsOut())
+            if(param.IsIndirect())
                 pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];
@@ -1708,6 +1711,7 @@ pre_call_clean_up:
     for(i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& param = info->params[i];
+        NS_ABORT_IF_FALSE(!param.IsShared(), "[shared] implies [noscript]!");
         if(!param.IsOut() && !param.IsDipper())
             continue;
 
@@ -1720,7 +1724,6 @@ pre_call_clean_up:
 
         jsval val;
         uint8 type_tag = type.TagPart();
-        JSBool useAllocator = JS_FALSE;
         nsXPTCMiniVariant* pv;
 
         if(param.IsDipper())
@@ -1745,11 +1748,9 @@ pre_call_clean_up:
                                                   &param_iid)))
                 break;
         }
-        else if(type.IsPointer() && !param.IsShared() && !param.IsDipper())
-            useAllocator = JS_TRUE;
 
         if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                      useAllocator, &param_iid, nsnull))
+                                      !param.IsDipper(), &param_iid, nsnull))
             break;
     }
 
@@ -1769,7 +1770,6 @@ pre_call_clean_up:
             jsval val;
             nsXPTCMiniVariant* pv;
             nsXPTType datum_type;
-            JSBool useAllocator = JS_FALSE;
             JSUint32 array_count;
             PRBool isArray = type.IsArray();
             PRBool isSizedString = isArray ?
@@ -1804,8 +1804,6 @@ pre_call_clean_up:
                                              &param_iid))
                    break;
             }
-            else if(type.IsPointer() && !param.IsShared())
-                useAllocator = JS_TRUE;
 
             if(isArray || isSizedString)
             {
@@ -1820,8 +1818,7 @@ pre_call_clean_up:
                 if(array_count &&
                    !XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
                                                array_count, array_count,
-                                               datum_type,
-                                               useAllocator, &param_iid,
+                                               datum_type, &param_iid,
                                                nsnull))
                     break;
             }
@@ -1830,14 +1827,13 @@ pre_call_clean_up:
                 if(!XPCConvert::JSStringWithSize2Native(ccx,
                                                    (void*)&pv->val, val,
                                                    array_count, array_count,
-                                                   datum_type, useAllocator,
-                                                   nsnull))
+                                                   datum_type, nsnull))
                     break;
             }
             else
             {
                 if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                              useAllocator, &param_iid,
+                                              JS_TRUE, &param_iid,
                                               nsnull))
                     break;
             }

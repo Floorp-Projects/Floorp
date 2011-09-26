@@ -1361,8 +1361,8 @@ protected:
      can forward all the document stuff to this implementation.
   */
 #define EVENT(name_, id_, type_, struct_)                         \
-  NS_IMETHOD GetOn##name_(JSContext *cx, jsval *vp);              \
-  NS_IMETHOD SetOn##name_(JSContext *cx, const jsval &v);
+  NS_IMETHOD GetOn##name_(JSContext *cx, JS::Value *vp);          \
+  NS_IMETHOD SetOn##name_(JSContext *cx, const JS::Value &v);
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
 #include "nsEventNameList.h"

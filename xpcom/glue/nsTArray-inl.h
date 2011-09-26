@@ -85,30 +85,53 @@ nsTArray_base<Alloc>::EnsureCapacity(size_type capacity, size_type elemSize) {
     return PR_TRUE;
   }
 
-  // Use doubling algorithm when forced to increase available
-  // capacity.  (Note that mCapacity is only 31 bits wide, so
-  // multiplication promotes its type. We use |2u| instead of |2|
-  // to make sure it's promoted to unsigned.)
-  capacity = NS_MAX<size_type>(capacity, mHdr->mCapacity * 2U);
+  // We increase our capacity so |capacity * elemSize + sizeof(Header)| is the
+  // next power of two, if this value is less than pageSize bytes, or otherwise
+  // so it's the next multiple of pageSize.
+  const PRUint32 pageSizeBytes = 12;
+  const PRUint32 pageSize = 1 << pageSizeBytes;
+
+  PRUint32 minBytes = capacity * elemSize + sizeof(Header);
+  PRUint32 bytesToAlloc;
+  if (minBytes >= pageSize) {
+    // Round up to the next multiple of pageSize.
+    bytesToAlloc = pageSize * ((minBytes + pageSize - 1) / pageSize);
+  }
+  else {
+    // Round up to the next power of two.  See
+    // http://graphics.stanford.edu/~seander/bithacks.html
+    bytesToAlloc = minBytes - 1;
+    bytesToAlloc |= bytesToAlloc >> 1;
+    bytesToAlloc |= bytesToAlloc >> 2;
+    bytesToAlloc |= bytesToAlloc >> 4;
+    bytesToAlloc |= bytesToAlloc >> 8;
+    bytesToAlloc |= bytesToAlloc >> 16;
+    bytesToAlloc++;
+
+    NS_ASSERTION((bytesToAlloc & (bytesToAlloc - 1)) == 0,
+                 "nsTArray's allocation size should be a power of two!");
+  }
 
   Header *header;
   if (UsesAutoArrayBuffer()) {
     // Malloc() and copy
-    header = static_cast<Header*>
-             (Alloc::Malloc(sizeof(Header) + capacity * elemSize));
+    header = static_cast<Header*>(Alloc::Malloc(bytesToAlloc));
     if (!header)
       return PR_FALSE;
 
     memcpy(header, mHdr, sizeof(Header) + Length() * elemSize);
   } else {
     // Realloc() existing data
-    size_type size = sizeof(Header) + capacity * elemSize;
-    header = static_cast<Header*>(Alloc::Realloc(mHdr, size));
+    header = static_cast<Header*>(Alloc::Realloc(mHdr, bytesToAlloc));
     if (!header)
       return PR_FALSE;
   }
 
-  header->mCapacity = capacity;
+  // How many elements can we fit in bytesToAlloc?
+  PRUint32 newCapacity = (bytesToAlloc - sizeof(Header)) / elemSize;
+  NS_ASSERTION(newCapacity >= capacity, "Didn't enlarge the array enough!");
+  header->mCapacity = newCapacity;
+
   mHdr = header;
 
   return PR_TRUE;
@@ -201,70 +224,122 @@ nsTArray_base<Alloc>::InsertSlotsAt(index_type index, size_type count,
   return PR_TRUE;
 }
 
+// nsTArray_base::IsAutoArrayRestorer is an RAII class which takes
+// |nsTArray_base &array| in its constructor.  When it's destructed, it ensures
+// that
+//
+//   * array.mIsAutoArray has the same value as it did when we started, and
+//   * if array has an auto buffer and mHdr would otherwise point to sEmptyHdr,
+//     array.mHdr points to array's auto buffer.
+
+template<class Alloc>
+nsTArray_base<Alloc>::IsAutoArrayRestorer::IsAutoArrayRestorer(
+  nsTArray_base<Alloc> &array) 
+  : mArray(array),
+    mIsAuto(array.IsAutoArray())
+{
+}
+
+template<class Alloc>
+nsTArray_base<Alloc>::IsAutoArrayRestorer::~IsAutoArrayRestorer() {
+  // Careful: We don't want to set mIsAutoArray = 1 on sEmptyHdr.
+  if (mIsAuto && mArray.mHdr == mArray.EmptyHdr()) {
+    // Call GetAutoArrayBufferUnsafe() because GetAutoArrayBuffer() asserts
+    // that mHdr->mIsAutoArray is true, which surely isn't the case here.
+    mArray.mHdr = mArray.GetAutoArrayBufferUnsafe();
+    mArray.mHdr->mLength = 0;
+  }
+  else {
+    mArray.mHdr->mIsAutoArray = mIsAuto;
+  }
+}
+
 template<class Alloc>
 template<class Allocator>
 PRBool
 nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
                                         size_type elemSize) {
-#ifdef DEBUG
-  PRBool isAuto = IsAutoArray();
-  PRBool otherIsAuto = other.IsAutoArray();
-#endif
 
-  if (!EnsureNotUsingAutoArrayBuffer(elemSize) ||
-      !other.EnsureNotUsingAutoArrayBuffer(elemSize)) {
+  // EnsureNotUsingAutoArrayBuffer will set mHdr = sEmptyHdr even if we have an
+  // auto buffer.  We need to point mHdr back to our auto buffer before we
+  // return, otherwise we'll forget that we have an auto buffer at all!
+  // IsAutoArrayRestorer takes care of this for us.
+
+  IsAutoArrayRestorer ourAutoRestorer(*this);
+  typename nsTArray_base<Allocator>::IsAutoArrayRestorer otherAutoRestorer(other);
+
+  // If neither array uses an auto buffer which is big enough to store the
+  // other array's elements, then ensure that both arrays use malloc'ed storage
+  // and swap their mHdr pointers.
+  if ((!UsesAutoArrayBuffer() || Capacity() < other.Length()) &&
+      (!other.UsesAutoArrayBuffer() || other.Capacity() < Length())) {
+
+    if (!EnsureNotUsingAutoArrayBuffer(elemSize) ||
+        !other.EnsureNotUsingAutoArrayBuffer(elemSize)) {
+      return PR_FALSE;
+    }
+
+    Header *temp = mHdr;
+    mHdr = other.mHdr;
+    other.mHdr = temp;
+
+    return PR_TRUE;
+  }
+
+  // Swap the two arrays using memcpy, since at least one is using an auto
+  // buffer which is large enough to hold all of the other's elements.  We'll
+  // copy the shorter array into temporary storage.
+  //
+  // (We could do better than this in some circumstances.  Suppose we're
+  // swapping arrays X and Y.  X has space for 2 elements in its auto buffer,
+  // but currently has length 4, so it's using malloc'ed storage.  Y has length
+  // 2.  When we swap X and Y, we don't need to use a temporary buffer; we can
+  // write Y straight into X's auto buffer, write X's malloc'ed buffer on top
+  // of Y, and then switch X to using its auto buffer.)
+
+  if (!EnsureCapacity(other.Length(), elemSize) ||
+      !other.EnsureCapacity(Length(), elemSize)) {
     return PR_FALSE;
   }
 
-  NS_ASSERTION(isAuto == IsAutoArray(), "lost auto info");
-  NS_ASSERTION(otherIsAuto == other.IsAutoArray(), "lost auto info");
-  NS_ASSERTION(!UsesAutoArrayBuffer() && !other.UsesAutoArrayBuffer(),
-               "both should be using an alloced buffer now");
+  // The EnsureCapacity calls above shouldn't have caused *both* arrays to
+  // switch from their auto buffers to malloc'ed space.
+  NS_ABORT_IF_FALSE(UsesAutoArrayBuffer() || other.UsesAutoArrayBuffer(),
+                    "One of the arrays should be using its auto buffer.");
 
-  // If the two arrays have different mIsAutoArray values (i.e. one is
-  // an autoarray and one is not) then simply switching the buffers is
-  // going to make that bit wrong. We therefore adjust these
-  // mIsAutoArray bits before switching the buffers so that once the
-  // buffers are switched the mIsAutoArray bits are right again.
-  // However, we have to watch out so that we don't set the bit on
-  // sEmptyHeader. If an array (A) uses the empty header (and the
-  // other (B) therefore must be an nsAutoTArray) we make A point to
-  // the B's autobuffer so that when the buffers are switched B points
-  // to its own autobuffer.
-
-  // Adjust mIsAutoArray flags before swapping the buffers
-  if (IsAutoArray() && !other.IsAutoArray()) {
-    if (other.mHdr == EmptyHdr()) {
-      // Set other to use our built-in buffer so that we use it
-      // after the swap below.
-      other.mHdr = GetAutoArrayBuffer();
-      other.mHdr->mLength = 0;
-    }
-    else {
-      other.mHdr->mIsAutoArray = 1;
-    }
-    mHdr->mIsAutoArray = 0;
+  size_type smallerLength = NS_MIN(Length(), other.Length());
+  size_type largerLength = NS_MAX(Length(), other.Length());
+  void *smallerElements, *largerElements;
+  if (Length() <= other.Length()) {
+    smallerElements = Hdr() + 1;
+    largerElements = other.Hdr() + 1;
   }
-  else if (!IsAutoArray() && other.IsAutoArray()) {
-    if (mHdr == EmptyHdr()) {
-      // Set us to use other's built-in buffer so that other use it
-      // after the swap below.
-      mHdr = other.GetAutoArrayBuffer();
-      mHdr->mLength = 0;
-    }
-    else {
-      mHdr->mIsAutoArray = 1;
-    }
-    other.mHdr->mIsAutoArray = 0;
+  else {
+    smallerElements = other.Hdr() + 1;
+    largerElements = Hdr() + 1;
   }
 
-  // Swap the buffers
-  Header *h = other.mHdr;
-  other.mHdr = mHdr;
-  mHdr = h;
+  // Allocate temporary storage for the smaller of the two arrays.  We want to
+  // allocate this space on the stack, unless it's very large.  Sounds like a
+  // job for AutoTArray!  (One of the two arrays we're swapping is using an
+  // auto buffer, so we're likely not allocating a lot of space here.  But one
+  // could, in theory, allocate a huge AutoTArray on the heap.)
+  nsAutoTArray<PRUint8, 8192, Alloc> temp;
+  if (!temp.SetCapacity(smallerLength * elemSize)) {
+    return PR_FALSE;
+  }
 
-  NS_ASSERTION(isAuto == IsAutoArray(), "lost auto info");
-  NS_ASSERTION(otherIsAuto == other.IsAutoArray(), "lost auto info");
+  memcpy(temp.Elements(), smallerElements, smallerLength * elemSize);
+  memcpy(smallerElements, largerElements, largerLength * elemSize);
+  memcpy(largerElements, temp.Elements(), smallerLength * elemSize);
+
+  // Swap the arrays' lengths.
+  NS_ABORT_IF_FALSE((other.Length() == 0 || mHdr != EmptyHdr()) &&
+                    (Length() == 0 || other.mHdr != EmptyHdr()),
+                    "Don't set sEmptyHdr's length.");
+  size_type tempLength = Length();
+  mHdr->mLength = other.Length();
+  other.mHdr->mLength = tempLength;
 
   return PR_TRUE;
 }
@@ -273,6 +348,16 @@ template<class Alloc>
 PRBool
 nsTArray_base<Alloc>::EnsureNotUsingAutoArrayBuffer(size_type elemSize) {
   if (UsesAutoArrayBuffer()) {
+
+    // If you call this on a 0-length array, we'll set that array's mHdr to
+    // sEmptyHdr, in flagrant violation of the nsAutoTArray invariants.  It's
+    // up to you to set it back!  (If you don't, the nsAutoTArray will forget
+    // that it has an auto buffer.)
+    if (Length() == 0) {
+      mHdr = EmptyHdr();
+      return PR_TRUE;
+    }
+
     size_type size = sizeof(Header) + Length() * elemSize;
 
     Header* header = static_cast<Header*>(Alloc::Malloc(size));

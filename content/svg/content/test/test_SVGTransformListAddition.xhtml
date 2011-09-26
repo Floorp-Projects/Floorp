@@ -1,0 +1,192 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602759
+-->
+<head>
+  <title>Tests specific to SVGLengthList addition</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602759">
+  Mozilla Bug 602759</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
+     onload="this.pauseAnimations();">
+  <g id="g"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of tests specific to addition of SVGTransformList in
+animation.
+*/
+
+function AdditionTestCase(desc, baseVal, animSpecs, expectedTransformList)
+{
+  this.desc = desc;
+  this.baseVal = baseVal;
+  this.animSpecs = animSpecs;
+  this.expectedTransformList = expectedTransformList;
+}
+
+function Transform(type, angle)
+{
+  this.type = type;
+  this.angle = angle;
+}
+
+function main(g)
+{
+  var cases = [
+    new AdditionTestCase("Not additive",
+          "translate(150 50)",
+          {type: 'rotate', from: '0', to: '90'},
+          [new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 90)]
+    ),
+    new AdditionTestCase("To animation",
+          "rotate(-90)",
+          {type: 'rotate', to: '90'},
+          [new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 90)]
+    ),
+    new AdditionTestCase("By animation",
+          "rotate(-90)",
+          {type: 'rotate', by: '180'},
+          [new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, -90),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 180)]
+    ),
+    new AdditionTestCase("Normal additive: same type",
+          "rotate(45)",
+          {type: 'rotate', from: '0', to: '45', additive: 'sum'},
+          [new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45)]
+    ),
+    new AdditionTestCase("Normal additive: different type",
+          "translate(50)",
+          {type: 'rotate', from: '0', to: '90', additive: 'sum'},
+          [new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 90)]
+    ),
+    new AdditionTestCase("Stacked additive: same type",
+          "rotate(-90)",
+          [{type: 'rotate', from: '0', to: '90', additive: 'sum'},
+           {type: 'rotate', from: '0', to: '90', additive: 'sum'}],
+          [new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, -90),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 90),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 90)]
+    ),
+    new AdditionTestCase("Stacked additive: different types #1",
+          "translate(50)",
+          [{type: 'rotate', from: '0', to: '45', additive: 'sum'},
+           {type: 'rotate', from: '0', to: '45', additive: 'sum'}],
+          [new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45)]
+    ),
+    new AdditionTestCase("Stacked additive: different types #2",
+          "skewX(20) translate(50)",
+          [{type: 'rotate', from: '0', to: '45', additive: 'sum'},
+           {type: 'rotate', from: '0', to: '45', additive: 'sum'}],
+          [new Transform(SVGTransform.SVG_TRANSFORM_SKEWX, 20),
+           new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45)]
+    ),
+    new AdditionTestCase("Stacked additive: different types #3",
+          "skewX(20) translate(50)",
+          [{type: 'rotate', from: '0', to: '45', additive: 'sum'},
+           {type: 'translate', from: '0', to: '30', additive: 'sum'},
+           {type: 'translate', from: '0', to: '-30', additive: 'sum'},
+           {type: 'rotate', from: '0', to: '45', additive: 'sum'}],
+          [new Transform(SVGTransform.SVG_TRANSFORM_SKEWX, 20),
+           new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45),
+           new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0),
+           new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0),
+           new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 45)]
+    ),
+    new AdditionTestCase("Base value with rotation around a centre",
+          "rotate(90 50 50)",
+          {type: 'translate', from: '0 0', to: '0 -50', additive: 'sum'},
+          [new Transform(SVGTransform.SVG_TRANSFORM_ROTATE, 90),
+           new Transform(SVGTransform.SVG_TRANSFORM_TRANSLATE, 0)]
+    ),
+  ];
+
+  for (var i = 0; i < cases.length; i++) {
+    runAdditionTestCase(cases[i], $('g'), $('svg'));
+  }
+
+  SimpleTest.finish();
+}
+
+function runAdditionTestCase(test, elem, svg)
+{
+  var anims = createAnims(test.animSpecs);
+
+  elem.setAttribute('transform', test.baseVal);
+  elem.appendChild(anims);
+
+  svg.setCurrentTime(1);
+  var expected = test.expectedTransformList; // Array of Transform objects
+  var actual   = elem.transform.animVal;     // SVGTransformList
+  is(actual.numberOfItems, expected.length,
+     "Unexpected number of transforms");
+
+  if (actual.numberOfItems == expected.length) {
+    for (var i = 0; i < actual.numberOfItems; i++) {
+      var transform = actual.getItem(i);
+      var testDesc = " for transform " + i + " in '" + test.desc + "' test";
+      is(transform.type,  expected[i].type,
+         "Unexpected transform type" + testDesc);
+      is(transform.angle, expected[i].angle,
+         "Unexpected transform angle" + testDesc);
+    }
+  }
+  // We assume the only children of elem are the animation elements we've just
+  // added.
+  while (elem.firstChild) {
+    elem.removeChild(elem.firstChild);
+  }
+}
+
+function createAnims(specs)
+{
+  if (specs.constructor == Array) {
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < specs.length; ++i) {
+      frag.appendChild(createAnim(specs[i]));
+    }
+    return frag;
+  }
+
+  return createAnim(specs);
+}
+
+function createAnim(attrs)
+{
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var anim = document.createElementNS(SVG_NS, 'animateTransform');
+  anim.setAttribute('attributeName', 'transform');
+  anim.setAttribute('dur', '1s');
+  anim.setAttribute('fill', 'freeze');
+  for (attr in attrs) {
+    anim.setAttribute(attr, attrs[attr]);
+  }
+  return anim;
+}
+
+window.addEventListener("load", main, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

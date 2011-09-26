@@ -433,22 +433,6 @@ static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 #endif
 static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 
-static PRBool
-IsAboutBlank(nsIURI* aURI)
-{
-  NS_PRECONDITION(aURI, "Must have URI");
-    
-  // GetSpec can be expensive for some URIs, so check the scheme first.
-  PRBool isAbout = PR_FALSE;
-  if (NS_FAILED(aURI->SchemeIs("about", &isAbout)) || !isAbout) {
-    return PR_FALSE;
-  }
-    
-  nsCAutoString str;
-  aURI->GetSpec(str);
-  return str.EqualsLiteral("about:blank");  
-}
-
 class nsDummyJavaPluginOwner : public nsIPluginInstanceOwner
 {
 public:
@@ -1615,7 +1599,7 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
     return PR_FALSE;
   }
   
-  NS_ASSERTION(IsAboutBlank(mDoc->GetDocumentURI()),
+  NS_ASSERTION(NS_IsAboutBlank(mDoc->GetDocumentURI()),
                "How'd this happen?");
   
   // Great, we're the original document, check for one of the other
@@ -1664,8 +1648,8 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
     // something is really weird.
     nsCOMPtr<nsIURI> uri;
     mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-    NS_ASSERTION(uri && IsAboutBlank(uri) &&
-                 IsAboutBlank(mDoc->GetDocumentURI()),
+    NS_ASSERTION(uri && NS_IsAboutBlank(uri) &&
+                 NS_IsAboutBlank(mDoc->GetDocumentURI()),
                  "Unexpected original document");
 #endif
 
@@ -5013,7 +4997,7 @@ nsGlobalWindow::Focus()
     NS_ASSERTION(doc, "Bogus doc?");
     nsIURI* ourURI = doc->GetDocumentURI();
     if (ourURI) {
-      lookForPresShell = !IsAboutBlank(ourURI);
+      lookForPresShell = !NS_IsAboutBlank(ourURI);
     }
   }
 

@@ -61,6 +61,18 @@ public:
   nsICODecoder();
   virtual ~nsICODecoder();
 
+  // Obtains the width of the icon directory entry
+  PRUint32 GetRealWidth() const
+  {
+    return mDirEntry.mWidth == 0 ? 256 : mDirEntry.mWidth; 
+  }
+
+  // Obtains the height of the icon directory entry
+  PRUint32 GetRealHeight() const
+  {
+    return mDirEntry.mHeight == 0 ? 256 : mDirEntry.mHeight; 
+  }
+
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
   virtual void FinishInternal();
 

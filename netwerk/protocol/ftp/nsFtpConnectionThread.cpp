@@ -74,6 +74,16 @@ extern PRLogModuleInfo* gFTPLog;
 #define LOG(args)         PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
 #define LOG_ALWAYS(args)  PR_LOG(gFTPLog, PR_LOG_ALWAYS, args)
 
+// remove FTP parameters (starting with ";") from the path
+static void
+removeParamsFromPath(nsCString& path)
+{
+  PRInt32 index = path.FindChar(';');
+  if (index >= 0) {
+    path.SetLength(index);
+  }
+}
+
 NS_IMPL_ISUPPORTS_INHERITED4(nsFtpState,
                              nsBaseContentStream,
                              nsIInputStreamCallback, 
@@ -1696,6 +1706,15 @@ nsFtpState::Init(nsFtpChannel *channel)
     if (NS_FAILED(rv))
         return rv;
 
+    removeParamsFromPath(path);
+    
+    // FTP parameters such as type=i are ignored
+    if (url) {
+        url->SetFilePath(path);
+    } else {
+        mChannel->URI()->SetPath(path);
+    }
+        
     // Skip leading slash
     char *fwdPtr = path.BeginWriting();
     if (!fwdPtr)

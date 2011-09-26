@@ -70,14 +70,13 @@ class FrameEntry
         return v_;
     }
 
-    const Value &getValue() const {
+    Value getValue() const {
         JS_ASSERT(isConstant());
-        return Valueify(JSVAL_FROM_LAYOUT(v_));
+        return IMPL_TO_JSVAL(v_);
     }
 
 #if defined JS_NUNBOX32
     uint32 getPayload() const {
-        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
         JS_ASSERT(isConstant());
         return v_.s.payload.u32;
     }
@@ -95,7 +94,7 @@ class FrameEntry
         ValueToECMAInt32(cx, getValue(), &value);
 
         Value newValue = Int32Value(value);
-        setConstant(Jsvalify(newValue));
+        setConstant(newValue);
     }
 
     /*
@@ -212,18 +211,17 @@ class FrameEntry
     /*
      * Marks the FE as having a constant.
      */
-    void setConstant(const jsval &v) {
+    void setConstant(const Value &v) {
         clear();
         type.unsync();
         data.unsync();
         type.setConstant();
         data.setConstant();
-        v_.asBits = JSVAL_BITS(v);
-        Value cv = Valueify(v);
-        if (cv.isDouble())
+        v_ = JSVAL_TO_IMPL(v);
+        if (v.isDouble())
             knownType = JSVAL_TYPE_DOUBLE;
         else
-            knownType = cv.extractNonDoubleType();
+            knownType = v.extractNonDoubleType();
     }
 
     FrameEntry *copyOf() const {

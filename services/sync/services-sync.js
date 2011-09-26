@@ -34,6 +34,7 @@ pref("services.sync.log.appender.dump", "Error");
 pref("services.sync.log.appender.file.level", "Trace");
 pref("services.sync.log.appender.file.logOnError", true);
 pref("services.sync.log.appender.file.logOnSuccess", false);
+pref("services.sync.log.appender.file.maxErrorAge", 864000); // 10 days
 pref("services.sync.log.rootLogger", "Debug");
 pref("services.sync.log.logger.service.main", "Debug");
 pref("services.sync.log.logger.authenticator", "Debug");

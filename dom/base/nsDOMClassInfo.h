@@ -54,6 +54,7 @@ class DOMSVGLengthList;
 class DOMSVGNumberList;
 class DOMSVGPathSegList;
 class DOMSVGPointList;
+class DOMSVGTransformList;
 }
 class nsGlobalWindow;
 class nsIDOMDocument;
@@ -73,7 +74,6 @@ class nsIDOMWindow;
 class nsIForm;
 class nsIHTMLDocument;
 class nsNPAPIPluginInstance;
-class nsSVGTransformList;
 
 struct nsDOMClassInfoData;
 
@@ -511,25 +511,15 @@ protected:
     return IsCapabilityEnabled("UniversalXPConnect");
   }
 
-  // Helper to define a void property with JSPROP_SHARED; this can do all the
-  // work so it's safe to just return whatever it returns.  |obj| is the object
-  // we're defining on, |id| is the name of the prop.  This must be a string
-  // jsval.  |objp| is the out param if we define successfully.
-  nsresult DefineVoidProp(JSContext* cx, JSObject* obj, jsid id,
-                          JSObject** objp);
-
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
-  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
 
   virtual void PreserveWrapper(nsISupports *aNative);
@@ -827,13 +817,10 @@ public:
   }
 
 public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
-  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32* aFlags);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
@@ -1746,5 +1733,6 @@ typedef nsSVGListSH<nsIDOMSVGLengthList, mozilla::DOMSVGLengthList> nsSVGLengthL
 typedef nsSVGListSH<nsIDOMSVGNumberList, mozilla::DOMSVGNumberList> nsSVGNumberListSH;
 typedef nsSVGListSH<nsIDOMSVGPathSegList, mozilla::DOMSVGPathSegList> nsSVGPathSegListSH;
 typedef nsSVGListSH<nsIDOMSVGPointList, mozilla::DOMSVGPointList> nsSVGPointListSH;
+typedef nsSVGListSH<nsIDOMSVGTransformList, mozilla::DOMSVGTransformList> nsSVGTransformListSH;
 
 #endif /* nsDOMClassInfo_h___ */

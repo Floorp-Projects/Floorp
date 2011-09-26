@@ -68,6 +68,18 @@ public:
 
   nsICOEncoder();
   ~nsICOEncoder();
+  
+  // Obtains the width of the icon directory entry
+  PRUint32 GetRealWidth() const
+  {
+    return mICODirEntry.mWidth == 0 ? 256 : mICODirEntry.mWidth; 
+  }
+
+  // Obtains the height of the icon directory entry
+  PRUint32 GetRealHeight() const
+  {
+    return mICODirEntry.mHeight == 0 ? 256 : mICODirEntry.mHeight; 
+  }
 
 protected:
   nsresult ParseOptions(const nsAString& aOptions, PRUint32* bpp, 
@@ -92,7 +104,9 @@ protected:
   // or if no encoding options specified will use the default (PNG)
   nsCOMPtr<imgIEncoder> mContainedEncoder;
 
-  // These headers will always contain endian independent stuff 
+  // These headers will always contain endian independent stuff.
+  // Don't trust the width and height of mICODirEntry directly,
+  // instead use the accessors GetRealWidth() and GetRealHeight().
   mozilla::imagelib::IconFileHeader mICOFileHeader;
   mozilla::imagelib::IconDirEntry mICODirEntry;
 

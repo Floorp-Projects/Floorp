@@ -94,8 +94,8 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
                              XPCNativeMember**    pMember)
 {
     funobj = funobj->unwrap();
-    jsval ifaceVal = js::Jsvalify(funobj->getSlot(0));
-    jsval memberVal = js::Jsvalify(funobj->getSlot(1));
+    jsval ifaceVal = funobj->getSlot(0);
+    jsval memberVal = funobj->getSlot(1);
 
     *pInterface = (XPCNativeInterface*) JSVAL_TO_PRIVATE(ifaceVal);
     *pMember = (XPCNativeMember*) JSVAL_TO_PRIVATE(memberVal);

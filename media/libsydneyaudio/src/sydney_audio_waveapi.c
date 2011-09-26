@@ -131,8 +131,8 @@ int writeBlock(sa_stream_t *s, WAVEHDR* current);
 int writeAudio(sa_stream_t *s, LPSTR data, int bytes);
 int getSAErrorCode(int waveErrorCode);
 
-void CALLBACK waveOutProc(HWAVEOUT hWaveOut, UINT uMsg, 
-    DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
+void CALLBACK waveOutProc(HWAVEOUT hWaveOut, UINT uMsg, DWORD_PTR dwInstance,
+                          DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 /** Normal way to open a PCM device */
 int sa_stream_create_pcm(sa_stream_t **s, 
@@ -616,13 +616,11 @@ int writeAudio(sa_stream_t *s, LPSTR data, int bytes) {
 /**
  * \brief - audio callback function called when next WAVE header is played by audio device
  */
-void CALLBACK waveOutProc(
-    HWAVEOUT hWaveOut, 
-    UINT uMsg, 
-    DWORD dwInstance,  
-    DWORD dwParam1,    
-    DWORD dwParam2     
-)
+void CALLBACK waveOutProc(HWAVEOUT hWaveOut, 
+                          UINT uMsg,
+                          DWORD_PTR dwInstance,
+                          DWORD_PTR dwParam1,
+                          DWORD_PTR dwParam2)
 {
     /*
      * pointer to free block counter

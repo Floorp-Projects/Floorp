@@ -46,8 +46,9 @@ class nsCellMap;
 class BCCellData;
 
 
-#define MAX_ROWSPAN 8190 // the cellmap can not handle more
-#define MAX_COLSPAN 1000 // limit as IE and opera do
+#define MAX_ROWSPAN 65534 // the cellmap can not handle more.
+#define MAX_COLSPAN 1000 // limit as IE and opera do.  If this ever changes,
+                         // change COL_SPAN_OFFSET/COL_SPAN_SHIFT accordingly.
 
 /**
   * Data stored by nsCellMap to rationalize rowspan and colspan cells.
@@ -278,16 +279,30 @@ public:
 };
 
 
+// The layout of a celldata is as follows.  The top 10 bits are the colspan
+// offset (which is enough to represent our allowed values 1-1000 for colspan).
+// Then there are three bits of flags.  Then 16 bits of rowspan offset (which
+// lets us represent numbers up to 65535.  Then another 3 bits of flags.
+
+// num bits to shift right to get right aligned col span
+#define COL_SPAN_SHIFT   22
+// num bits to shift right to get right aligned row span
+#define ROW_SPAN_SHIFT   3
+
+// the col offset to the data containing the original cell.
+#define COL_SPAN_OFFSET  (0x3FF << COL_SPAN_SHIFT)
+// the row offset to the data containing the original cell
+#define ROW_SPAN_OFFSET  (0xFFFF << ROW_SPAN_SHIFT)
+
+// And the flags
 #define SPAN             0x00000001 // there a row or col span
 #define ROW_SPAN         0x00000002 // there is a row span
 #define ROW_SPAN_0       0x00000004 // the row span is 0
-#define ROW_SPAN_OFFSET  0x0000FFF8 // the row offset to the data containing the original cell
-#define COL_SPAN         0x00010000 // there is a col span
-#define COL_SPAN_0       0x00020000 // the col span is 0
-#define OVERLAP          0x00040000 // there is a row span and col span but no by same cell
-#define COL_SPAN_OFFSET  0xFFF80000 // the col offset to the data containing the original cell
-#define ROW_SPAN_SHIFT   3          // num bits to shift to get right justified row span
-#define COL_SPAN_SHIFT   19         // num bits to shift to get right justified col span
+#define COL_SPAN         (1 << (COL_SPAN_SHIFT - 3)) // there is a col span
+#define COL_SPAN_0       (1 << (COL_SPAN_SHIFT - 2)) // the col span is 0
+#define OVERLAP          (1 << (COL_SPAN_SHIFT - 1)) // there is a row span and
+                                                     // col span but not by
+                                                     // same cell
 
 inline nsTableCellFrame* CellData::GetCellFrame() const
 {
