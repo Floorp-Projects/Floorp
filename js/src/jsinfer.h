@@ -43,15 +43,28 @@
 #define jsinfer_h___
 
 #include "jsalloc.h"
+#include "jsarena.h"
 #include "jscell.h"
 #include "jstl.h"
 #include "jsprvtd.h"
 #include "jshashtable.h"
 
-#include "ds/LifoAlloc.h"
+namespace js {
+    class CallArgs;
+    namespace analyze {
+        class ScriptAnalysis;
+    }
+    class GlobalObject;
+}
 
 namespace js {
 namespace types {
+
+/* Forward declarations. */
+class TypeSet;
+struct TypeCallsite;
+struct TypeObject;
+struct TypeCompartment;
 
 /* Type set entry for either a JSObject with singleton type or a non-singleton TypeObject. */
 struct TypeObjectKey {

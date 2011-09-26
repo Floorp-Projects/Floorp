@@ -183,7 +183,6 @@ struct DebugOnly
     DebugOnly& operator=(const T&) { return *this; }
     void operator++(int) {}
     void operator--(int) {}
-    bool operator<(const T&) { return false; }
 #endif
 
     /*

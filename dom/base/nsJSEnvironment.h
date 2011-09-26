@@ -48,7 +48,7 @@
 #include "nsScriptNameSpaceManager.h"
 
 class nsIXPConnectJSObjectHolder;
-class nsRootedJSValueArray;
+class nsAutoPoolRelease;
 namespace js {
 class AutoArrayRooter;
 }
@@ -204,7 +204,8 @@ protected:
                                    void *aScope,
                                    PRUint32 *aArgc,
                                    jsval **aArgv,
-                                   mozilla::Maybe<nsRootedJSValueArray> &aPoolRelease);
+                                   mozilla::Maybe<nsAutoPoolRelease> &aPoolRelease,
+                                   mozilla::Maybe<js::AutoArrayRooter> &aRooter);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
 

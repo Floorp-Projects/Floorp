@@ -199,33 +199,6 @@ nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-class nsRootedJSValueArray {
-public:
-  explicit nsRootedJSValueArray(JSContext *cx) : avr(cx, vals.Length(), vals.Elements()) {}
-
-  PRBool SetCapacity(JSContext *cx, size_t capacity) {
-    PRBool ok = vals.SetCapacity(capacity);
-    if (!ok)
-      return PR_FALSE;
-    // Values must be safe for the GC to inspect (they must not contain garbage).
-    memset(vals.Elements(), 0, vals.SizeOf());
-    resetRooter(cx);
-    return PR_TRUE;
-  }
-
-  jsval *Elements() {
-    return vals.Elements();
-  }
-
-private:
-  void resetRooter(JSContext *cx) {
-    avr.changeArray(vals.Elements(), vals.Length());
-  }
-
-  nsAutoTArray<jsval, 16> vals;
-  js::AutoArrayRooter avr;
-};
-
 /****************************************************************
  ************************** AutoFree ****************************
  ****************************************************************/
@@ -243,6 +216,15 @@ public:
   }
 private:
   void *mPtr;
+};
+
+class nsAutoPoolRelease {
+public:
+  nsAutoPoolRelease(JSArenaPool *p, void *m) : mPool(p), mMark(m) {}
+  ~nsAutoPoolRelease() { JS_ARENA_RELEASE(mPool, mMark); }
+private:
+  JSArenaPool *mPool;
+  void *mMark;
 };
 
 // A utility function for script languages to call.  Although it looks small,
@@ -1930,14 +1912,16 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       return NS_ERROR_FAILURE;
     }
 
-    Maybe<nsRootedJSValueArray> tempStorage;
+    Maybe<nsAutoPoolRelease> poolRelease;
+    Maybe<js::AutoArrayRooter> tvr;
 
     // Use |target| as the scope for wrapping the arguments, since aScope is
     // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
     // was OK because those typically have PreCreate methods that give them the
     // right scope anyway, and we want to make sure that the arguments end up
     // in the same scope as aTarget.
-    rv = ConvertSupportsTojsvals(aargv, target, &argc, &argv, tempStorage);
+    rv = ConvertSupportsTojsvals(aargv, target, &argc,
+                                 &argv, poolRelease, tvr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ++mExecuteDepth;
@@ -2359,10 +2343,12 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
   JSAutoRequest ar(mContext);
 
-  Maybe<nsRootedJSValueArray> tempStorage;
+  Maybe<nsAutoPoolRelease> poolRelease;
+  Maybe<js::AutoArrayRooter> tvr;
 
   nsresult rv;
-  rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc, &argv, tempStorage);
+  rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
+                               &argv, poolRelease, tvr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   jsval vargs;
@@ -2398,7 +2384,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      void *aScope,
                                      PRUint32 *aArgc,
                                      jsval **aArgv,
-                                     Maybe<nsRootedJSValueArray> &aTempStorage)
+                                     Maybe<nsAutoPoolRelease> &aPoolRelease,
+                                     Maybe<js::AutoArrayRooter> &aRooter)
 {
   nsresult rv = NS_OK;
 
@@ -2433,11 +2420,16 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
     argCount = 1; // the nsISupports which is not an array
   }
 
+  void *mark = JS_ARENA_MARK(&mContext->tempPool);
+  jsval *argv;
+  size_t nbytes = argCount * sizeof(jsval);
+  JS_ARENA_ALLOCATE_CAST(argv, jsval *, &mContext->tempPool, nbytes);
+  NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+  memset(argv, 0, nbytes);  /* initialize so GC-able */
+
   // Use the caller's auto guards to release and unroot.
-  aTempStorage.construct(mContext);
-  PRBool ok = aTempStorage.ref().SetCapacity(mContext, argCount);
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  jsval *argv = aTempStorage.ref().Elements();
+  aPoolRelease.construct(&mContext->tempPool, mark);
+  aRooter.construct(mContext, argCount, argv);
 
   if (argsArray) {
     for (argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {

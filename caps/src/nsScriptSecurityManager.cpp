@@ -59,6 +59,7 @@
 #include "nsDOMError.h"
 #include "nsDOMCID.h"
 #include "jsdbgapi.h"
+#include "jsarena.h"
 #include "jsfun.h"
 #include "jsobj.h"
 #include "nsIXPConnect.h"

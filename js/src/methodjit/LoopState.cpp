@@ -157,7 +157,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     RegisterAllocation *&alloc = outerAnalysis->getAllocation(head);
     JS_ASSERT(!alloc);
 
-    alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(true);
+    alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, true);
     if (!alloc)
         return false;
 

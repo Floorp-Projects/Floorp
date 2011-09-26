@@ -48,6 +48,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
+#include "jsarena.h"
 #include "jsutil.h"
 #include "jsbit.h"
 #include "jsprf.h"
@@ -74,7 +75,6 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
-#include "ds/LifoAlloc.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK_LENGTH  1024    /* initial bytecode chunk length */
@@ -515,7 +515,8 @@ AddJumpTarget(AddJumpTargetArgs *args, JSJumpTarget **jtp)
         if (jt) {
             cg->jtFreeList = jt->kids[JT_LEFT];
         } else {
-            jt = args->cx->tempLifoAlloc().new_<JSJumpTarget>();
+            JS_ARENA_ALLOCATE_CAST(jt, JSJumpTarget *, &args->cx->tempPool,
+                                   sizeof *jt);
             if (!jt) {
                 js_ReportOutOfMemory(args->cx);
                 return 0;
@@ -3311,7 +3312,9 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
 static Value *
 AllocateSwitchConstant(JSContext *cx)
 {
-    return cx->tempLifoAlloc().new_<Value>();
+    Value *pv;
+    JS_ARENA_ALLOCATE_TYPE(pv, Value, &cx->tempPool);
+    return pv;
 }
 
 /*
@@ -7749,12 +7752,14 @@ static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
            uintN stackDepth, size_t start, size_t end)
 {
+    JSTryNode *tryNode;
+
     JS_ASSERT((uintN)(uint16)stackDepth == stackDepth);
     JS_ASSERT(start <= end);
     JS_ASSERT((size_t)(uint32)start == start);
     JS_ASSERT((size_t)(uint32)end == end);
 
-    JSTryNode *tryNode = cx->tempLifoAlloc().new_<JSTryNode>();
+    JS_ARENA_ALLOCATE_TYPE(tryNode, JSTryNode, &cx->tempPool);
     if (!tryNode) {
         js_ReportOutOfMemory(cx);
         return JS_FALSE;
