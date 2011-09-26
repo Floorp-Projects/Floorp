@@ -1561,14 +1561,16 @@ ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
 
 void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
-                                  void* aCallbackData)
+                                  void* aCallbackData,
+                                  EndTransactionFlags aFlags)
 {
-  EndTransactionInternal(aCallback, aCallbackData);
+  EndTransactionInternal(aCallback, aCallbackData, aFlags);
 }
 
 bool
 BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
-                                          void* aCallbackData)
+                                          void* aCallbackData,
+                                          EndTransactionFlags aFlags)
 {
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
@@ -1582,7 +1584,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   mTransactionIncomplete = false;
 
-  if (mTarget && mRoot) {
+  if (mTarget && mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     nsIntRect clipRect;
     if (HasShadowManager()) {
       // If this has a shadow manager, the clip extents of mTarget are meaningless.
@@ -3260,9 +3262,10 @@ BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 
 void
 BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
-                                        void* aCallbackData)
+                                        void* aCallbackData,
+                                        EndTransactionFlags aFlags)
 {
-  BasicLayerManager::EndTransaction(aCallback, aCallbackData);
+  BasicLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
   ForwardTransaction();
 }
 
