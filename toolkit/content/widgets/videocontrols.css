@@ -61,10 +61,10 @@
   visibility: collapse;
 }
 
-.controlBar[size="small"] .scrubberStack {
-  visibility: hidden;
-}
-
-.controlBar[size="small"] .scrubberStack > * {
+.controlBar[size="small"] .scrubberStack,
+.controlBar[size="small"] .backgroundBar,
+.controlBar[size="small"] .bufferBar,
+.controlBar[size="small"] .progressBar,
+.controlBar[size="small"] .scrubber {
   visibility: hidden;
 }
