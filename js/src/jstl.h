@@ -40,7 +40,7 @@
 #ifndef jstl_h_
 #define jstl_h_
 
-#include "jsprvtd.h"
+#include "jspubtd.h"
 #include "jsbit.h"
 #include "jsstaticcheck.h"
 #include "jsstdint.h"
@@ -167,7 +167,6 @@ template <> struct IsPodType<long long>             { static const bool result =
 template <> struct IsPodType<unsigned long long>    { static const bool result = true; };
 template <> struct IsPodType<float>                 { static const bool result = true; };
 template <> struct IsPodType<double>                { static const bool result = true; };
-template <> struct IsPodType<wchar_t>               { static const bool result = true; };
 template <typename T> struct IsPodType<T *>         { static const bool result = true; };
 
 /* Return the size/end of an array without using macros. */

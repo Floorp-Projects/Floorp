@@ -74,7 +74,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     hold(false),
-    typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
 #ifdef JS_TRACER
     traceMonitor_(NULL),
 #endif
@@ -132,6 +131,11 @@ JSCompartment::init(JSContext *cx)
 {
     activeAnalysis = activeInference = false;
     types.init(cx);
+
+    /* Duplicated from jscntxt.cpp. :XXX: bug 675150 fix hack. */
+    static const size_t ARENA_HEADER_SIZE_HACK = 40;
+
+    JS_InitArenaPool(&pool, "analysis", 4096 - ARENA_HEADER_SIZE_HACK, 8);
 
     if (!crossCompartmentWrappers.init())
         return false;
@@ -618,8 +622,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
          * Clear the analysis pool, but don't release its data yet. While
          * sweeping types any live data will be allocated into the pool.
          */
-        LifoAlloc oldAlloc(typeLifoAlloc.defaultChunkSize());
-        oldAlloc.steal(&typeLifoAlloc);
+        JSArenaPool oldPool;
+        MoveArenaPool(&pool, &oldPool);
 
         /*
          * Sweep analysis information and everything depending on it from the
@@ -652,6 +656,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
             JSScript *script = i.get<JSScript>();
             script->clearAnalysis();
         }
+
+        /* Reset the analysis pool, releasing all analysis and intermediate type data. */
+        JS_FinishArenaPool(&oldPool);
     }
 
     active = false;

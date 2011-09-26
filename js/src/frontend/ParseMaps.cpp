@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ParseMaps-inl.h"
-#include "jscompartment.h"
 
 using namespace js;
 
@@ -126,12 +125,13 @@ DumpAtomDefnMap(const AtomDefnMapPtr &map)
 AtomDeclNode *
 AtomDecls::allocNode(JSDefinition *defn)
 {
-    AtomDeclNode *p = cx->tempLifoAlloc().new_<AtomDeclNode>(defn);
+    AtomDeclNode *p;
+    JS_ARENA_ALLOCATE_TYPE(p, AtomDeclNode, &cx->tempPool);
     if (!p) {
         js_ReportOutOfMemory(cx);
         return NULL;
     }
-    return p;
+    return new (p) AtomDeclNode(defn);
 }
 
 bool

@@ -48,6 +48,7 @@
 #include <sys/stat.h>
 #include "jstypes.h"
 #include "jsstdint.h"
+#include "jsarena.h"
 #include "jsutil.h"
 #include "jsclist.h"
 #include "jsdhash.h"
@@ -99,7 +100,6 @@
 
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
-#include "ds/LifoAlloc.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -2608,6 +2608,10 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
 
     LeaveTrace(cx);
 
+    /* Don't nuke active arenas if executing or compiling. */
+    if (cx->tempPool.current == &cx->tempPool.first)
+        JS_FinishArenaPool(&cx->tempPool);
+
     GCREASON(PUBLIC_API);
     js_GC(cx, comp, GC_NORMAL);
 }
@@ -2623,6 +2627,10 @@ JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
     LeaveTrace(cx);
+
+    /* Don't nuke active arenas if executing or compiling. */
+    if (cx->tempPool.current == &cx->tempPool.first)
+        JS_FinishArenaPool(&cx->tempPool);
 
     MaybeGC(cx);
 }

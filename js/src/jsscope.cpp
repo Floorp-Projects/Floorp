@@ -46,6 +46,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
+#include "jsarena.h"
 #include "jsbit.h"
 #include "jsclist.h"
 #include "jsdhash.h"

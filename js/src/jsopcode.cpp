@@ -50,6 +50,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
+#include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -318,7 +319,9 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
             else
                 SprintCString(sp, "    ");
         }
-        len = js_Disassemble1(cx, script, next, next - script->code, lines, sp);
+        len = js_Disassemble1(cx, script, next,
+                              next - script->code,
+                              lines, sp);
         if (!len)
             return JS_FALSE;
         next += len;
@@ -335,22 +338,24 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
-    LifoAllocScope las(&cx->tempLifoAlloc());
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
     JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }
 
 JSBool
 js_DumpScript(JSContext *cx, JSScript *script)
 {
-    LifoAllocScope las(&cx->tempLifoAlloc());
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
     JSBool ok = js_Disassemble(cx, script, true, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }
 
@@ -362,13 +367,13 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
     if (JSVAL_IS_STRING(v)) {
         Sprinter sprinter;
-        LifoAlloc &tla = cx->tempLifoAlloc();
-        LifoAllocScope las(&tla);
-        INIT_SPRINTER(cx, &sprinter, &tla, 0);
+        void *mark = JS_ARENA_MARK(&cx->tempPool);
+        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
         char *nbytes = QuoteString(&sprinter, JSVAL_TO_STRING(v), '"');
         if (!nbytes)
             return false;
         nbytes = JS_sprintf_append(NULL, "%s", nbytes);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (!nbytes)
             return false;
         bytes->initBytes(nbytes);
@@ -682,10 +687,11 @@ SprintEnsureBuffer(Sprinter *sp, size_t len)
     if (nb < 0)
         return JS_TRUE;
     base = sp->base;
-    if (!base)
-        base = static_cast<char *>(sp->pool->allocUnaligned(nb));
-    else
-        base = static_cast<char *>(sp->pool->reallocUnaligned(base, sp->size, nb));
+    if (!base) {
+        JS_ARENA_ALLOCATE_CAST(base, char *, sp->pool, nb);
+    } else {
+        JS_ARENA_GROW_CAST(base, char *, sp->pool, sp->size, nb);
+    }
     if (!base) {
         js_ReportOutOfMemory(sp->context);
         return JS_FALSE;
@@ -870,11 +876,16 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
 JSString *
 js_QuoteString(JSContext *cx, JSString *str, jschar quote)
 {
-    LifoAllocScope las(&cx->tempLifoAlloc());
+    void *mark;
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
-    char *bytes = QuoteString(&sprinter, str, quote);
-    JSString *escstr = bytes ? JS_NewStringCopyZ(cx, bytes) : NULL;
+    char *bytes;
+    JSString *escstr;
+
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    bytes = QuoteString(&sprinter, str, quote);
+    escstr = bytes ? JS_NewStringCopyZ(cx, bytes) : NULL;
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return escstr;
 }
 
@@ -882,7 +893,7 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote)
 
 struct JSPrinter {
     Sprinter        sprinter;       /* base class state */
-    LifoAlloc       pool;           /* string allocation pool */
+    JSArenaPool     pool;           /* string allocation pool */
     uintN           indent;         /* indentation in spaces */
     bool            pretty;         /* pretty-print: indent, use newlines */
     bool            grouped;        /* in parenthesized expression context */
@@ -898,11 +909,13 @@ JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
               uintN indent, JSBool pretty, JSBool grouped, JSBool strict)
 {
-    JSPrinter *jp = (JSPrinter *) cx->malloc_(sizeof(JSPrinter));
+    JSPrinter *jp;
+
+    jp = (JSPrinter *) cx->malloc_(sizeof(JSPrinter));
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    new (&jp->pool) LifoAlloc(1024);
+    JS_InitArenaPool(&jp->pool, name, 256, 1);
     jp->indent = indent;
     jp->pretty = !!pretty;
     jp->grouped = !!grouped;
@@ -925,7 +938,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
 void
 js_DestroyPrinter(JSPrinter *jp)
 {
-    jp->pool.freeAll();
+    JS_FinishArenaPool(&jp->pool);
     Foreground::delete_(jp->localNames);
     jp->sprinter.context->free_(jp);
 }
@@ -942,7 +955,7 @@ js_GetPrinterOutput(JSPrinter *jp)
     str = JS_NewStringCopyZ(cx, jp->sprinter.base);
     if (!str)
         return NULL;
-    jp->pool.freeAll();
+    JS_FreeArenaPool(&jp->pool);
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
     return str;
 }
@@ -1893,12 +1906,15 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
 static JSBool
 InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
 {
-    INIT_SPRINTER(cx, &ss->sprinter, &cx->tempLifoAlloc(), PAREN_SLOP);
+    size_t offsetsz, opcodesz;
+    void *space;
+
+    INIT_SPRINTER(cx, &ss->sprinter, &cx->tempPool, PAREN_SLOP);
 
     /* Allocate the parallel (to avoid padding) offset and opcode stacks. */
-    size_t offsetsz = depth * sizeof(ptrdiff_t);
-    size_t opcodesz = depth * sizeof(jsbytecode);
-    void *space = cx->tempLifoAlloc().alloc(offsetsz + opcodesz);
+    offsetsz = depth * sizeof(ptrdiff_t);
+    opcodesz = depth * sizeof(jsbytecode);
+    JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
     if (!space) {
         js_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -4048,6 +4064,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
+                    void *mark;
                     Vector<JSAtom *> *innerLocalNames;
                     Vector<JSAtom *> *outerLocalNames;
                     JSScript *inner, *outer;
@@ -4062,7 +4079,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * Therefore after InitSprintStack succeeds, we must
                      * release to mark before returning.
                      */
-                    LifoAllocScope las(&cx->tempLifoAlloc());
+                    mark = JS_ARENA_MARK(&cx->tempPool);
                     if (fun->script()->bindings.hasLocalNames()) {
                         innerLocalNames = cx->new_<Vector<JSAtom *> >(cx);
                         if (!innerLocalNames ||
@@ -4074,8 +4091,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         innerLocalNames = NULL;
                     }
                     inner = fun->script();
-                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner)))
+                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
+                        JS_ARENA_RELEASE(&cx->tempPool, mark);
                         return NULL;
+                    }
                     ss2.inGenExp = JS_TRUE;
 
                     /*
@@ -4103,8 +4122,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->script = outer;
                     jp->fun = outerfun;
                     jp->localNames = outerLocalNames;
-                    if (!ok)
+                    if (!ok) {
+                        JS_ARENA_RELEASE(&cx->tempPool, mark);
                         return NULL;
+                    }
 
                     /*
                      * Advance over this op and its global |this| push, and
@@ -4174,7 +4195,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * from cx's tempPool.
                      */
                     rval = JS_strdup(cx, PopStr(&ss2, op));
-                    las.releaseEarly();
+                    JS_ARENA_RELEASE(&cx->tempPool, mark);
                     if (!rval)
                         return NULL;
                     todo = SprintCString(&ss->sprinter, rval);
@@ -4812,6 +4833,8 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     uintN depth, i;
     SprintStack ss;
     JSContext *cx;
+    void *mark;
+    JSBool ok;
     JSScript *oldscript;
     char *last;
 
@@ -4822,9 +4845,10 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     AutoScriptUntrapper untrapper(cx, script, &pc);
 
     /* Initialize a sprinter for use with the offset stack. */
-    LifoAllocScope las(&cx->tempLifoAlloc());
-    if (!InitSprintStack(cx, &ss, jp, depth))
-        return false;
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    ok = InitSprintStack(cx, &ss, jp, depth);
+    if (!ok)
+        goto out;
 
     /*
      * If we are called from js_DecompileValueGenerator with a portion of
@@ -4848,7 +4872,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     /* Call recursive subroutine to do the hard work. */
     oldscript = jp->script;
     jp->script = script;
-    bool ok = Decompile(&ss, pc, len, JSOP_NOP) != NULL;
+    ok = Decompile(&ss, pc, len, JSOP_NOP) != NULL;
     jp->script = oldscript;
 
     /* If the given code didn't empty the stack, do it now. */
@@ -4859,6 +4883,9 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
         js_printf(jp, "%s", last);
     }
 
+out:
+    /* Free all temporary stuff allocated under this call. */
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }
 
@@ -4971,6 +4998,7 @@ js_DecompileFunction(JSPrinter *jp)
         JSScript *script = fun->script();
 #if JS_HAS_DESTRUCTURING
         SprintStack ss;
+        void *mark;
 #endif
 
         /* Print the parameters. */
@@ -4982,7 +5010,7 @@ js_DecompileFunction(JSPrinter *jp)
 #if JS_HAS_DESTRUCTURING
         ss.printer = NULL;
         jp->script = script;
-        LifoAllocScope las(&jp->sprinter.context->tempLifoAlloc());
+        mark = JS_ARENA_MARK(&jp->sprinter.context->tempPool);
 #endif
 
         for (i = 0; i < fun->nargs; i++) {
@@ -5033,7 +5061,7 @@ js_DecompileFunction(JSPrinter *jp)
 
 #if JS_HAS_DESTRUCTURING
         jp->script = NULL;
-        las.releaseEarly();
+        JS_ARENA_RELEASE(&jp->sprinter.context->tempPool, mark);
 #endif
         if (!ok)
             return JS_FALSE;
