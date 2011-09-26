@@ -486,7 +486,7 @@ private:
   nsCOMPtr<nsIContent> mCurrentTargetContent;
   nsWeakFrame mLastMouseOverFrame;
   nsCOMPtr<nsIContent> mLastMouseOverElement;
-  nsWeakFrame mLastDragOverFrame;
+  static nsWeakFrame sLastDragOverFrame;
 
   // member variables for the d&d gesture state machine
   nsIntPoint mGestureDownPoint; // screen coordinates
@@ -511,7 +511,7 @@ private:
 
   nsCOMPtr<nsIContent> mActiveContent;
   nsCOMPtr<nsIContent> mHoverContent;
-  nsCOMPtr<nsIContent> mDragOverContent;
+  static nsCOMPtr<nsIContent> sDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
 
   // The last element on which we fired a mouseover event, or null if

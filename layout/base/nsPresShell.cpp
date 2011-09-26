@@ -5453,7 +5453,7 @@ PresShell::GetEventTargetContent(nsEvent* aEvent)
   } else {
     nsIFrame* currentEventFrame = GetCurrentEventFrame();
     if (currentEventFrame) {
-      currentEventFrame->GetContentForEvent(mPresContext, aEvent, &content);
+      currentEventFrame->GetContentForEvent(aEvent, &content);
     } else {
       content = nsnull;
     }
@@ -6086,7 +6086,7 @@ PresShell::HandlePositionedEvent(nsIView*       aView,
 
   if (mCurrentEventFrame) {
     nsCOMPtr<nsIContent> targetElement;
-    mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
+    mCurrentEventFrame->GetContentForEvent(aEvent,
                                            getter_AddRefs(targetElement));
 
     // If there is no content for this frame, target it anyway.  Some
@@ -6334,7 +6334,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         }
         else {
           nsCOMPtr<nsIContent> targetContent;
-          rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
+          rv = mCurrentEventFrame->GetContentForEvent(aEvent,
                                                       getter_AddRefs(targetContent));
           if (NS_SUCCEEDED(rv) && targetContent) {
             nsEventDispatcher::Dispatch(targetContent, mPresContext, aEvent,

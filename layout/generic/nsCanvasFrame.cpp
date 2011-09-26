@@ -620,19 +620,16 @@ nsCanvasFrame::GetType() const
 }
 
 NS_IMETHODIMP 
-nsCanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIContent** aContent)
+nsCanvasFrame::GetContentForEvent(nsEvent* aEvent,
+                                  nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
-  nsresult rv = nsFrame::GetContentForEvent(aPresContext,
-                                            aEvent,
+  nsresult rv = nsFrame::GetContentForEvent(aEvent,
                                             aContent);
   if (NS_FAILED(rv) || !*aContent) {
     nsIFrame* kid = mFrames.FirstChild();
     if (kid) {
-      rv = kid->GetContentForEvent(aPresContext,
-                                   aEvent,
+      rv = kid->GetContentForEvent(aEvent,
                                    aContent);
     }
   }

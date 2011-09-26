@@ -140,8 +140,7 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  NS_IMETHOD GetContentForEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
+  NS_IMETHOD GetContentForEvent(nsEvent* aEvent,
                                 nsIContent** aContent);
 
   nsRect CanvasArea() const;

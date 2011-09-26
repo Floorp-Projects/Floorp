@@ -1175,12 +1175,11 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
   nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
   nsRect inner = f->GetInnerArea() + aPt;
-  nsPresContext* pc = f->PresContext();
 
   aCtx->SetColor(NS_RGB(0, 0, 0));
   aCtx->PushState();
   aCtx->Translate(inner.TopLeft());
-  f->GetImageMap(pc)->Draw(aFrame, *aCtx);
+  f->GetImageMap()->Draw(aFrame, *aCtx);
   aCtx->PopState();
 }
 #endif
@@ -1284,8 +1283,7 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
     nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
     aFlags);
 
-  nsPresContext* presContext = PresContext();
-  nsImageMap* map = GetImageMap(presContext);
+  nsImageMap* map = GetImageMap();
   if (nsnull != map) {
     aRenderingContext.PushState();
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
@@ -1365,7 +1363,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
         
 #ifdef DEBUG
-      if (GetShowFrameBorders() && GetImageMap(PresContext())) {
+      if (GetShowFrameBorders() && GetImageMap()) {
         rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
             nsDisplayGeneric(aBuilder, this, PaintDebugImageMap, "DebugImageMap",
                              nsDisplayItem::TYPE_DEBUG_IMAGE_MAP));
@@ -1445,7 +1443,7 @@ nsImageFrame::ShouldDisplaySelection()
 }
 
 nsImageMap*
-nsImageFrame::GetImageMap(nsPresContext* aPresContext)
+nsImageFrame::GetImageMap()
 {
   if (!mImageMap) {
     nsIDocument* doc = mContent->GetDocument();
@@ -1460,7 +1458,7 @@ nsImageFrame::GetImageMap(nsPresContext* aPresContext)
     if (map) {
       mImageMap = new nsImageMap();
       NS_ADDREF(mImageMap);
-      mImageMap->Init(aPresContext->PresShell(), this, map);
+      mImageMap->Init(this, map);
     }
   }
 
@@ -1525,15 +1523,14 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
 }
 
 NS_IMETHODIMP  
-nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
-                                 nsEvent* aEvent,
+nsImageFrame::GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
 
   nsIFrame* f = nsLayoutUtils::GetNonGeneratedAncestor(this);
   if (f != this) {
-    return f->GetContentForEvent(aPresContext, aEvent, aContent);
+    return f->GetContentForEvent(aEvent, aContent);
   }
 
   // XXX We need to make this special check for area element's capturing the
@@ -1546,8 +1543,7 @@ nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsImageMap* map;
-  map = GetImageMap(aPresContext);
+  nsImageMap* map = GetImageMap();
 
   if (nsnull != map) {
     nsIntPoint p;
@@ -1575,13 +1571,12 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
                           nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  nsImageMap* map;
 
   if ((aEvent->eventStructType == NS_MOUSE_EVENT &&
        aEvent->message == NS_MOUSE_BUTTON_UP && 
        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
       aEvent->message == NS_MOUSE_MOVE) {
-    map = GetImageMap(aPresContext);
+    nsImageMap* map = GetImageMap();
     PRBool isServerMap = IsServerImageMap();
     if ((nsnull != map) || isServerMap) {
       nsIntPoint p;
@@ -1637,8 +1632,7 @@ NS_IMETHODIMP
 nsImageFrame::GetCursor(const nsPoint& aPoint,
                         nsIFrame::Cursor& aCursor)
 {
-  nsPresContext* context = PresContext();
-  nsImageMap* map = GetImageMap(context);
+  nsImageMap* map = GetImageMap();
   if (nsnull != map) {
     nsIntPoint p;
     TranslateEventCoords(aPoint, p);

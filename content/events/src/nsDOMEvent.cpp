@@ -320,7 +320,7 @@ nsDOMEvent::GetTargetFromFrame()
 
   // get the real content
   nsCOMPtr<nsIContent> realEventContent;
-  targetFrame->GetContentForEvent(mPresContext, mEvent, getter_AddRefs(realEventContent));
+  targetFrame->GetContentForEvent(mEvent, getter_AddRefs(realEventContent));
   return realEventContent.forget();
 }
 
