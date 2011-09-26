@@ -224,7 +224,9 @@ public:
 
   // mMustNotify is true if the load data is being loaded async and
   // the original function call that started the load has returned.
-  // XXXbz sort our relationship with load/error events!
+  // This applies only to observer notifications; load/error events
+  // are fired for any SheetLoadData that has a non-null
+  // mOwningElement.
   PRPackedBool               mMustNotify : 1;
 
   // mWasAlternate is true if the sheet was an alternate when the load data was
@@ -245,7 +247,7 @@ public:
   PRPackedBool               mSheetAlreadyComplete : 1;
 
   // This is the element that imported the sheet.  Needed to get the
-  // charset set on it.
+  // charset set on it and to fire load/error events.
   nsCOMPtr<nsIStyleSheetLinkingElement> mOwningElement;
 
   // The observer that wishes to be notified of load completion
@@ -1828,18 +1830,19 @@ Loader::LoadStyleLink(nsIContent* aElement,
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(do_QueryInterface(aElement));
+
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete: 0x%p",
          static_cast<void*>(sheet.get())));
-    if (aObserver || !mObservers.IsEmpty()) {
-      rv = PostLoadEvent(aURL, sheet, aObserver, *aIsAlternate);
+    if (aObserver || !mObservers.IsEmpty() || owningElement) {
+      rv = PostLoadEvent(aURL, sheet, aObserver, *aIsAlternate,
+                         owningElement);
       return rv;
     }
 
     return NS_OK;
   }
-
-  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(do_QueryInterface(aElement));
 
   // Now we need to actually load it
   SheetLoadData* data = new SheetLoadData(this, aTitle, aURL, sheet,
@@ -2092,7 +2095,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
     if (aObserver || !mObservers.IsEmpty()) {
-      rv = PostLoadEvent(aURL, sheet, aObserver, PR_FALSE);
+      rv = PostLoadEvent(aURL, sheet, aObserver, PR_FALSE, nsnull);
     }
     if (aSheet) {
       sheet.swap(*aSheet);
@@ -2123,17 +2126,19 @@ nsresult
 Loader::PostLoadEvent(nsIURI* aURI,
                       nsCSSStyleSheet* aSheet,
                       nsICSSLoaderObserver* aObserver,
-                      PRBool aWasAlternate)
+                      PRBool aWasAlternate,
+                      nsIStyleSheetLinkingElement* aElement)
 {
   LOG(("css::Loader::PostLoadEvent"));
   NS_PRECONDITION(aSheet, "Must have sheet");
-  NS_PRECONDITION(aObserver || !mObservers.IsEmpty(), "Must have observer");
+  NS_PRECONDITION(aObserver || !mObservers.IsEmpty() || aElement,
+                  "Must have observer or element");
 
   nsRefPtr<SheetLoadData> evt =
     new SheetLoadData(this, EmptyString(), // title doesn't matter here
                       aURI,
                       aSheet,
-                      nsnull,  // owning element doesn't matter here
+                      aElement,
                       aWasAlternate,
                       aObserver,
                       nsnull);
