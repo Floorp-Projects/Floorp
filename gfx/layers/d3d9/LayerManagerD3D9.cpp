@@ -168,11 +168,12 @@ LayerManagerD3D9::EndEmptyTransaction()
 
 void
 LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
-                                 void* aCallbackData)
+                                 void* aCallbackData,
+                                 EndTransactionFlags aFlags)
 {
   mDeviceResetCount = mDeviceManager->GetDeviceResetCount();
 
-  if (mRoot) {
+  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     mCurrentCallbackInfo.Callback = aCallback;
     mCurrentCallbackInfo.CallbackData = aCallbackData;
 

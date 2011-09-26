@@ -139,7 +139,8 @@ public:
 
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
