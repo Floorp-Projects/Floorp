@@ -1099,6 +1099,7 @@ class MToDouble : public MUnaryInstruction
         return new MToDouble(def);
     }
 
+    MDefinition *foldsTo(bool useValueNumbers);
     MDefinition *input() const {
         return getOperand(0);
     }
