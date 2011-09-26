@@ -81,6 +81,7 @@
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
 #include "nsDocShellCID.h"
+#include "nsIThreadInternal.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -132,7 +133,8 @@ namespace css {
  *********************************************/
 
 class SheetLoadData : public nsIRunnable,
-                      public nsIUnicharStreamLoaderObserver
+                      public nsIUnicharStreamLoaderObserver,
+                      public nsIThreadObserver
 {
 public:
   virtual ~SheetLoadData(void);
@@ -167,8 +169,11 @@ public:
 
   already_AddRefed<nsIURI> GetReferrerURI();
 
+  void ScheduleLoadEventIfNeeded(nsresult aStatus);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
   // Hold a ref to the CSSLoader so we can call back to it to let it
@@ -259,6 +264,15 @@ public:
   // The charset to use if the transport and sheet don't indicate one.
   // May be empty.  Must be empty if mOwningElement is non-null.
   nsCString                             mCharsetHint;
+
+  // The status our load ended up with; this determines whether we
+  // should fire error events or load events.  This gets initialized
+  // by ScheduleLoadEventIfNeeded, and is only used after that has
+  // been called.
+  nsresult                              mStatus;
+
+private:
+  void FireLoadEvent(nsIThreadInternal* aThread);
 };
 
 #ifdef MOZ_LOGGING
@@ -310,7 +324,8 @@ static const char* const gStateStrings[] = {
 /********************************
  * SheetLoadData implementation *
  ********************************/
-NS_IMPL_ISUPPORTS2(SheetLoadData, nsIUnicharStreamLoaderObserver, nsIRunnable)
+NS_IMPL_ISUPPORTS3(SheetLoadData, nsIUnicharStreamLoaderObserver, nsIRunnable,
+                   nsIThreadObserver)
 
 SheetLoadData::SheetLoadData(Loader* aLoader,
                              const nsSubstring& aTitle,
@@ -435,6 +450,78 @@ SheetLoadData::Run()
 {
   mLoader->HandleLoadEvent(this);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SheetLoadData::OnDispatchedEvent(nsIThreadInternal* aThread)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SheetLoadData::OnProcessNextEvent(nsIThreadInternal* aThread,
+                                  PRBool aMayWait,
+                                  PRUint32 aRecursionDepth)
+{
+  // We want to fire our load even before or after event processing,
+  // whichever comes first.
+  FireLoadEvent(aThread);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SheetLoadData::AfterProcessNextEvent(nsIThreadInternal* aThread,
+                                     PRUint32 aRecursionDepth)
+{
+  // We want to fire our load even before or after event processing,
+  // whichever comes first.
+  FireLoadEvent(aThread);
+  return NS_OK;
+}
+
+void
+SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread)
+{
+  
+  // First remove ourselves as a thread observer.  But we need to keep
+  // ourselves alive while doing that!
+  nsRefPtr<SheetLoadData> kungFuDeathGrip(this);
+  aThread->RemoveObserver(this);
+
+  // Now fire the event
+  nsCOMPtr<nsINode> node = do_QueryInterface(mOwningElement);
+  NS_ASSERTION(node, "How did that happen???");
+
+  nsContentUtils::DispatchTrustedEvent(node->GetOwnerDoc(),
+                                       node,
+                                       NS_SUCCEEDED(mStatus) ?
+                                         NS_LITERAL_STRING("load") :
+                                         NS_LITERAL_STRING("error"),
+                                       PR_FALSE, PR_FALSE);
+
+  // And unblock onload
+  if (mLoader->mDocument) {
+    mLoader->mDocument->UnblockOnload(PR_TRUE);
+  }  
+}
+
+void
+SheetLoadData::ScheduleLoadEventIfNeeded(nsresult aStatus)
+{
+  if (!mOwningElement) {
+    return;
+  }
+
+  mStatus = aStatus;
+
+  nsCOMPtr<nsIThread> thread = do_GetMainThread();
+  nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(thread);
+  if (NS_SUCCEEDED(internalThread->AddObserver(this))) {
+    // Make sure to block onload here
+    if (mLoader->mDocument) {
+      mLoader->mDocument->BlockOnload();
+    }
+  }
 }
 
 /*************************
@@ -1661,6 +1748,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
                       "should not get marked modified during parsing");
     if (!data->mSheetAlreadyComplete) {
       data->mSheet->SetComplete();
+      data->ScheduleLoadEventIfNeeded(aStatus);
     }
     if (data->mMustNotify && (data->mObserver || !mObservers.IsEmpty())) {
       // Don't notify here so we don't trigger script.  Remember the
@@ -1689,7 +1777,10 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
     data = data->mNext;
   }
 
-  // Now that it's marked complete, put the sheet in our cache
+  // Now that it's marked complete, put the sheet in our cache.
+  // If we ever start doing this for failure aStatus, we'll need to
+  // adjust the PostLoadEvent code that thinks anything already
+  // complete must have loaded succesfully.
   if (NS_SUCCEEDED(aStatus) && aLoadData->mURI) {
 #ifdef MOZ_XUL
     if (IsChromeURI(aLoadData->mURI)) {
@@ -2161,6 +2252,12 @@ Loader::PostLoadEvent(nsIURI* aURI,
     // We want to notify the observer for this data.
     evt->mMustNotify = PR_TRUE;
     evt->mSheetAlreadyComplete = PR_TRUE;
+
+    // If we get to this code, aSheet loaded correctly at some point, so
+    // we can just use NS_OK for the status.  Note that we do this here
+    // and not from inside our SheetComplete so that we don't end up
+    // running the load event async.
+    evt->ScheduleLoadEventIfNeeded(NS_OK);
   }
 
   return rv;
