@@ -64,23 +64,23 @@ function xhr_onReadyStateChange() {
   xhr = null;
 
   Services.obs.addObserver(inspectorOpened,
-    INSPECTOR_NOTIFICATIONS.OPENED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
   InspectorUI.openInspectorUI();
 }
 
 function inspectorOpened()
 {
   Services.obs.removeObserver(inspectorOpened,
-    INSPECTOR_NOTIFICATIONS.OPENED);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
 
-  Services.obs.addObserver(treePanelOpened, INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
+  Services.obs.addObserver(treePanelOpened, InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
   InspectorUI.treePanel.open();
 }
 
 function treePanelOpened()
 {
   Services.obs.removeObserver(treePanelOpened,
-    INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY);
 
   ok(InspectorUI.inspecting, "Inspector is highlighting");
   ok(InspectorUI.treePanel.isOpen(), "Inspector Tree Panel is open");
@@ -106,14 +106,14 @@ function treePanelOpened()
   expectedResult = null;
 
   Services.obs.addObserver(inspectorClosed,
-    INSPECTOR_NOTIFICATIONS.CLOSED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
   InspectorUI.closeInspectorUI();
 }
 
 function inspectorClosed()
 {
   Services.obs.removeObserver(inspectorClosed,
-    INSPECTOR_NOTIFICATIONS.CLOSED, false);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   ok(!InspectorUI.treePanel, "Inspector Tree Panel is not open");

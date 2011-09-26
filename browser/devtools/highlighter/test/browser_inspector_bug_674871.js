@@ -47,18 +47,18 @@ function test()
     ok(iframeNode, "we have the iframe node");
     ok(iframeBodyNode, "we have the body node");
     Services.obs.addObserver(runTests,
-      INSPECTOR_NOTIFICATIONS.OPENED, false);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
     InspectorUI.toggleInspectorUI();
   }
 
   function runTests()
   {
     Services.obs.removeObserver(runTests,
-      INSPECTOR_NOTIFICATIONS.OPENED);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
 
     executeSoon(function() {
       Services.obs.addObserver(isTheIframeSelected,
-        INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
       moveMouseOver(iframeNode, 1, 1);
     });
@@ -67,7 +67,7 @@ function test()
   function isTheIframeSelected()
   {
     Services.obs.removeObserver(isTheIframeSelected,
-      INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
 
     is(InspectorUI.selection, iframeNode, "selection matches node");
     iframeNode.style.marginBottom = doc.defaultView.innerHeight + "px";
@@ -75,7 +75,7 @@ function test()
 
     executeSoon(function() {
       Services.obs.addObserver(isTheIframeContentSelected,
-        INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
 
       moveMouseOver(iframeNode, 40, 40);
     });
@@ -84,7 +84,7 @@ function test()
   function isTheIframeContentSelected()
   {
     Services.obs.removeObserver(isTheIframeContentSelected,
-      INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
 
     is(InspectorUI.selection, iframeBodyNode, "selection matches node");
     // 184 == 200 + 11(border) + 13(padding) - 40(scroll)
@@ -92,12 +92,12 @@ function test()
       "highlighter height");
 
     Services.obs.addObserver(finishUp,
-      INSPECTOR_NOTIFICATIONS.CLOSED, false);
+      InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
     InspectorUI.closeInspectorUI();
   }
 
   function finishUp() {
-    Services.obs.removeObserver(finishUp, INSPECTOR_NOTIFICATIONS.CLOSED);
+    Services.obs.removeObserver(finishUp, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
     doc = iframeNode = iframeBodyNode = null;
     gBrowser.removeCurrentTab();
     finish();
