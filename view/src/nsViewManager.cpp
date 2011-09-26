@@ -1425,8 +1425,8 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
 
 NS_IMETHODIMP nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
 {
-  NS_IF_ADDREF(mContext);
   aContext = mContext;
+  NS_IF_ADDREF(aContext);
   return NS_OK;
 }
 

@@ -158,10 +158,8 @@ class PrefCallback : public PLDHashEntryHdr {
     already_AddRefed<nsIObserver> GetObserver() const
     {
       if (!IsWeak()) {
-        NS_IF_ADDREF(mStrongRef);
-        // We need to call get() here because we can't convert an nsCOMPtr to
-        // an already_AddRefed.
-        return mStrongRef.get();
+        nsCOMPtr<nsIObserver> copy = mStrongRef;
+        return copy.forget();
       }
 
       nsCOMPtr<nsIObserver> observer = do_QueryReferent(mWeakRef);

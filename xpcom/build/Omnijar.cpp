@@ -117,7 +117,7 @@ Omnijar::InitOne(nsIFile *aPath, Type aType)
     CleanUpOne(aType);
     sReader[aType] = zipReader;
     sPath[aType] = file;
-    NS_IF_ADDREF(file);
+    NS_IF_ADDREF(sPath[aType]);
 }
 
 void

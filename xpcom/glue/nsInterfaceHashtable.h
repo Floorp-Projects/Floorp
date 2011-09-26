@@ -149,8 +149,8 @@ nsInterfaceHashtable<KeyClass,Interface>::Get(KeyType aKey) const
   if (!ent)
     return NULL;
 
-  NS_IF_ADDREF(ent->mData);
-  return already_AddRefed<Interface>(ent->mData);
+  nsCOMPtr<Interface> copy = ent->mData;
+  return copy.forget();
 }
 
 template<class KeyClass,class Interface>
