@@ -440,7 +440,13 @@ def main():
 
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
-    reftest.runTests(manifest, options)
+    try:
+      reftest.runTests(manifest, options)
+    except:
+      print "TEST-UNEXPECTED-FAIL | | exception while running reftests"
+      reftest.stopWebServer(options)
+      sys.exit(1)
+
     reftest.stopWebServer(options)
 
 if __name__ == "__main__":
