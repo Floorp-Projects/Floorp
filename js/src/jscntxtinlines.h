@@ -407,12 +407,6 @@ inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
 }
 #endif
 
-inline js::LifoAlloc &
-JSContext::typeLifoAlloc()
-{
-    return compartment->typeLifoAlloc;
-}
-
 inline bool
 JSContext::ensureGeneratorStackSpace()
 {

@@ -56,6 +56,7 @@
 #include <math.h>
 #include "jstypes.h"
 #include "jsstdint.h"
+#include "jsarena.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -208,9 +209,9 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
     JSContext *cx = context;
     if (!cx->ensureParseMapPool())
         return false;
-    tempPoolMark = cx->tempLifoAlloc().mark();
+    tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
     if (!tokenStream.init(base, length, filename, lineno, version)) {
-        cx->tempLifoAlloc().release(tempPoolMark);
+        JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
     return true;
@@ -222,7 +223,7 @@ Parser::~Parser()
 
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
-    cx->tempLifoAlloc().release(tempPoolMark);
+    JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
     cx->activeCompilations--;
 }
 
@@ -246,7 +247,8 @@ Parser::newObjectBox(JSObject *obj)
      * containing the entries must be alive until we are done with scanning,
      * parsing and code generation for the whole script or top-level function.
      */
-    JSObjectBox *objbox = context->tempLifoAlloc().new_<JSObjectBox>();
+    JSObjectBox *objbox;
+    JS_ARENA_ALLOCATE_TYPE(objbox, JSObjectBox, &context->tempPool);
     if (!objbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -271,7 +273,8 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
      * containing the entries must be alive until we are done with scanning,
      * parsing and code generation for the whole script or top-level function.
      */
-    JSFunctionBox *funbox = context->tempLifoAlloc().newPod<JSFunctionBox>();
+    JSFunctionBox *funbox;
+    JS_ARENA_ALLOCATE_TYPE(funbox, JSFunctionBox, &context->tempPool);
     if (!funbox) {
         js_ReportOutOfMemory(context);
         return NULL;
@@ -674,7 +677,8 @@ NewOrRecycledNode(JSTreeContext *tc)
     pn = tc->parser->nodeList;
     if (!pn) {
         JSContext *cx = tc->parser->context;
-        pn = cx->tempLifoAlloc().new_<JSParseNode>();
+
+        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
         if (!pn)
             js_ReportOutOfMemory(cx);
     } else {

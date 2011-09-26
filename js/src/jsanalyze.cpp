@@ -109,7 +109,8 @@ Bytecode::mergeDefines(JSContext *cx, ScriptAnalysis *script, bool initial,
                  * with progressively smaller sets of defined variables.
                  */
                 if (!owned) {
-                    uint32 *reallocArray = cx->typeLifoAlloc().newArray<uint32>(defineCount);
+                    uint32 *reallocArray =
+                        ArenaArray<uint32>(cx->compartment->pool, defineCount);
                     if (!reallocArray) {
                         script->setOOM(cx);
                         return false;
@@ -133,11 +134,12 @@ void
 PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     printf("#%u:", script->id());
-    LifoAlloc lifoAlloc(1024);
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &lifoAlloc, 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
     js_Disassemble1(cx, script, pc, pc - script->code, true, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
 }
 #endif
 
@@ -155,7 +157,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     Bytecode *&code = codeArray[offset];
     bool initial = (code == NULL);
     if (initial) {
-        code = cx->typeLifoAlloc().new_<Bytecode>();
+        code = ArenaNew<Bytecode>(cx->compartment->pool);
         if (!code) {
             setOOM(cx);
             return false;
@@ -276,16 +278,16 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
     JS_ASSERT(cx->compartment->activeAnalysis);
     JS_ASSERT(!ranBytecode());
-    LifoAlloc &tla = cx->typeLifoAlloc();
+    JSArenaPool &pool = cx->compartment->pool;
 
     unsigned length = script->length;
     unsigned nargs = script->hasFunction ? script->function()->nargs : 0;
 
     numSlots = TotalSlots(script);
 
-    codeArray = tla.newArray<Bytecode*>(length);
-    definedLocals = tla.newArray<uint32>(script->nfixed);
-    escapedSlots = tla.newArray<JSPackedBool>(numSlots);
+    codeArray = ArenaArray<Bytecode*>(pool, length);
+    definedLocals = ArenaArray<uint32>(pool, script->nfixed);
+    escapedSlots = ArenaArray<JSPackedBool>(pool, numSlots);
 
     if (!codeArray || !definedLocals || !escapedSlots) {
         setOOM(cx);
@@ -369,7 +371,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     unsigned forwardCatch = 0;
 
     /* Fill in stack depth and definitions at initial bytecode. */
-    Bytecode *startcode = tla.new_<Bytecode>();
+    Bytecode *startcode = ArenaNew<Bytecode>(pool);
     if (!startcode) {
         setOOM(cx);
         return;
@@ -701,7 +703,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             if (definedLocals[local] == LOCAL_CONDITIONALLY_DEFINED) {
                 if (forwardJump) {
                     /* Add this local to the variables defined after this bytecode. */
-                    uint32 *newArray = tla.newArray<uint32>(defineCount + 1);
+                    uint32 *newArray = ArenaArray<uint32>(pool, defineCount + 1);
                     if (!newArray) {
                         setOOM(cx);
                         return;
@@ -793,7 +795,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             bool initial = (nextcode == NULL);
 
             if (initial) {
-                nextcode = tla.new_<Bytecode>();
+                nextcode = ArenaNew<Bytecode>(pool);
                 if (!nextcode) {
                     setOOM(cx);
                     return;
@@ -837,9 +839,9 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             return;
     }
 
-    LifoAlloc &tla = cx->typeLifoAlloc();
+    JSArenaPool &pool = cx->compartment->pool;
 
-    lifetimes = tla.newArray<LifetimeVariable>(numSlots);
+    lifetimes = ArenaArray<LifetimeVariable>(pool, numSlots);
     if (!lifetimes) {
         setOOM(cx);
         return;
@@ -967,7 +969,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
-                var.lifetime = tla.new_<Lifetime>(offset, var.savedEnd, var.saved);
+                var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
                 if (!var.lifetime) {
                     cx->free_(saved);
                     setOOM(cx);
@@ -1034,7 +1036,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                 if (loop && loop->entry > loop->lastBlock)
                     loop->lastBlock = loop->entry;
 
-                LoopAnalysis *nloop = tla.new_<LoopAnalysis>();
+                LoopAnalysis *nloop = ArenaNew<LoopAnalysis>(pool);
                 if (!nloop) {
                     cx->free_(saved);
                     setOOM(cx);
@@ -1083,7 +1085,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                          * Jumping to a place where this variable is live. Make a new
                          * lifetime segment for the variable.
                          */
-                        var.lifetime = tla.new_<Lifetime>(offset, var.savedEnd, var.saved);
+                        var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
                         if (!var.lifetime) {
                             cx->free_(saved);
                             setOOM(cx);
@@ -1147,7 +1149,7 @@ ScriptAnalysis::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offse
                 }
             }
         }
-        var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(offset, var.savedEnd, var.saved);
+        var.lifetime = ArenaNew<Lifetime>(cx->compartment->pool, offset, var.savedEnd, var.saved);
         if (!var.lifetime) {
             setOOM(cx);
             return;
@@ -1164,7 +1166,7 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
         /* Make a point lifetime indicating the write. */
         if (!var.saved)
             saved[savedCount++] = &var;
-        var.saved = cx->typeLifoAlloc().new_<Lifetime>(offset, var.savedEnd, var.saved);
+        var.saved = ArenaNew<Lifetime>(cx->compartment->pool, offset, var.savedEnd, var.saved);
         if (!var.saved) {
             setOOM(cx);
             return;
@@ -1250,7 +1252,7 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
         }
         JS_ASSERT(savedEnd <= end);
         if (savedEnd > segment->end) {
-            Lifetime *tail = cx->typeLifoAlloc().new_<Lifetime>(savedEnd, 0, segment->next);
+            Lifetime *tail = ArenaNew<Lifetime>(cx->compartment->pool, savedEnd, 0, segment->next);
             if (!tail) {
                 setOOM(cx);
                 return;
@@ -1327,7 +1329,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             return;
     }
 
-    LifoAlloc &tla = cx->typeLifoAlloc();
+    JSArenaPool &pool = cx->compartment->pool;
     unsigned maxDepth = script->nslots - script->nfixed;
 
     /*
@@ -1488,7 +1490,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         unsigned xuses = ExtendedUse(pc) ? nuses + 1 : nuses;
 
         if (xuses) {
-            code->poppedValues = tla.newArray<SSAValue>(xuses);
+            code->poppedValues = (SSAValue *)ArenaArray<SSAValue>(pool, xuses);
             if (!code->poppedValues) {
                 setOOM(cx);
                 return;
@@ -1511,7 +1513,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             }
 
             if (xuses) {
-                SSAUseChain *useChains = tla.newArray<SSAUseChain>(xuses);
+                SSAUseChain *useChains = ArenaArray<SSAUseChain>(cx->compartment->pool, xuses);
                 if (!useChains) {
                     setOOM(cx);
                     return;
@@ -1538,7 +1540,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         unsigned xdefs = ExtendedDef(pc) ? ndefs + 1 : ndefs;
         if (xdefs) {
-            code->pushedUses = tla.newArray<SSAUseChain *>(xdefs);
+            code->pushedUses = ArenaArray<SSAUseChain *>(cx->compartment->pool, xdefs);
             if (!code->pushedUses) {
                 setOOM(cx);
                 return;
@@ -1729,8 +1731,8 @@ PhiNodeCapacity(unsigned length)
 bool
 ScriptAnalysis::makePhi(JSContext *cx, uint32 slot, uint32 offset, SSAValue *pv)
 {
-    SSAPhiNode *node = cx->typeLifoAlloc().new_<SSAPhiNode>();
-    SSAValue *options = cx->typeLifoAlloc().newArray<SSAValue>(PhiNodeCapacity(0));
+    SSAPhiNode *node = ArenaNew<SSAPhiNode>(cx->compartment->pool);
+    SSAValue *options = ArenaArray<SSAValue>(cx->compartment->pool, PhiNodeCapacity(0));
     if (!node || !options) {
         setOOM(cx);
         return false;
@@ -1762,7 +1764,7 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
     if (trackUseChain(v)) {
         SSAUseChain *&uses = useChain(v);
 
-        SSAUseChain *use = cx->typeLifoAlloc().new_<SSAUseChain>();
+        SSAUseChain *use = ArenaNew<SSAUseChain>(cx->compartment->pool);
         if (!use) {
             setOOM(cx);
             return;
@@ -1780,8 +1782,8 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
         return;
     }
 
-    SSAValue *newOptions =
-        cx->typeLifoAlloc().newArray<SSAValue>(PhiNodeCapacity(node->length + 1));
+    SSAValue *newOptions = ArenaArray<SSAValue>(cx->compartment->pool,
+                                                PhiNodeCapacity(node->length + 1));
     if (!newOptions) {
         setOOM(cx);
         return;
@@ -1920,7 +1922,7 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32 offset)
         return;
     }
 
-    code.newValues = cx->typeLifoAlloc().newArray<SlotValue>(count + 1);
+    code.newValues = ArenaArray<SlotValue>(cx->compartment->pool, count + 1);
     if (!code.newValues) {
         setOOM(cx);
         return;
