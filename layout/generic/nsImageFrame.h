@@ -128,8 +128,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   
-  NS_IMETHOD  GetContentForEvent(nsPresContext* aPresContext,
-                                 nsEvent* aEvent,
+  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent);
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                         nsGUIEvent* aEvent,
@@ -183,7 +182,7 @@ public:
 
   nsRect GetInnerArea() const;
 
-  nsImageMap* GetImageMap(nsPresContext* aPresContext);
+  nsImageMap* GetImageMap();
 
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData);

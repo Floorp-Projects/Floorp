@@ -159,6 +159,8 @@ PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
 PRBool nsEventStateManager::sNormalLMouseEventInProcess = PR_FALSE;
 nsEventStateManager* nsEventStateManager::sActiveESM = nsnull;
 nsIDocument* nsEventStateManager::sMouseOverDocument = nsnull;
+nsWeakFrame nsEventStateManager::sLastDragOverFrame = nsnull;
+nsCOMPtr<nsIContent> nsEventStateManager::sDragOverContent = nsnull;
 
 static PRUint32 gMouseOrKeyboardEventCounter = 0;
 static nsITimer* gUserInteractionTimer = nsnull;
@@ -773,7 +775,6 @@ nsEventStateManager::nsEventStateManager()
   : mLockCursor(0),
     mCurrentTarget(nsnull),
     mLastMouseOverFrame(nsnull),
-    mLastDragOverFrame(nsnull),
     // init d&d gesture state machine variables
     mGestureDownPoint(0,0),
     mPresContext(nsnull),
@@ -890,6 +891,10 @@ nsEventStateManager::~nsEventStateManager()
     }
   }
 
+  if (sDragOverContent && sDragOverContent->GetOwnerDoc() == mDocument) {
+    sDragOverContent = nsnull;
+  }
+
   if (!m_haveShutdown) {
     Shutdown();
 
@@ -994,7 +999,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastRightMouseDownContentParent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mActiveContent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHoverContent);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDragOverContent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mURLTargetContent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOutEventElement);
@@ -1015,7 +1019,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastRightMouseDownContentParent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mActiveContent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHoverContent);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDragOverContent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mURLTargetContent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOutEventElement);
@@ -1969,7 +1972,7 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   mGestureDownPoint = inDownEvent->refPoint +
     inDownEvent->widget->WidgetToScreenOffset();
 
-  inDownFrame->GetContentForEvent(aPresContext, inDownEvent,
+  inDownFrame->GetContentForEvent(inDownEvent,
                                   getter_AddRefs(mGestureDownContent));
 
   mGestureDownFrameOwner = inDownFrame->GetContent();
@@ -2082,8 +2085,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       PRBool isInEditor = PR_FALSE;
       PRBool isSelection = PR_FALSE;
       nsCOMPtr<nsIContent> eventContent, targetContent;
-      mCurrentTarget->GetContentForEvent(aPresContext, aEvent,
-                                         getter_AddRefs(eventContent));
+      mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
       if (eventContent)
         DetermineDragTarget(aPresContext, eventContent, dataTransfer,
                             &isSelection, &isInEditor,
@@ -3066,7 +3068,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         nsCOMPtr<nsIContent> newFocus;      
         PRBool suppressBlur = PR_FALSE;
         if (mCurrentTarget) {
-          mCurrentTarget->GetContentForEvent(mPresContext, aEvent, getter_AddRefs(newFocus));
+          mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(newFocus));
           const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
           suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
           activeContent = mCurrentTarget->GetContent();
@@ -3397,7 +3399,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // now fire the dragdrop event, for compatibility with XUL
       if (mCurrentTarget && nsEventStatus_eConsumeNoDefault != *aStatus) {
         nsCOMPtr<nsIContent> targetContent;
-        mCurrentTarget->GetContentForEvent(presContext, aEvent,
+        mCurrentTarget->GetContentForEvent(aEvent,
                                            getter_AddRefs(targetContent));
 
         nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
@@ -3469,8 +3471,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_MOUSE_ENTER:
     if (mCurrentTarget) {
       nsCOMPtr<nsIContent> targetContent;
-      mCurrentTarget->GetContentForEvent(presContext, aEvent,
-                                         getter_AddRefs(targetContent));
+      mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
       SetContentState(targetContent, NS_EVENT_STATE_HOVER);
     }
     break;
@@ -3479,8 +3480,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_MOUSE_ACTIVATE:
     if (mCurrentTarget) {
       nsCOMPtr<nsIContent> targetContent;
-      mCurrentTarget->GetContentForEvent(presContext, aEvent,
-                                         getter_AddRefs(targetContent));
+      mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
       if (!NodeAllowsClickThrough(targetContent)) {
         *aStatus = nsEventStatus_eConsumeNoDefault;
       }
@@ -4067,29 +4067,31 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
     {
       // when dragging from one frame to another, events are fired in the
       // order: dragexit, dragenter, dragleave
-      if (mLastDragOverFrame != mCurrentTarget) {
+      if (sLastDragOverFrame != mCurrentTarget) {
         //We'll need the content, too, to check if it changed separately from the frames.
         nsCOMPtr<nsIContent> lastContent;
         nsCOMPtr<nsIContent> targetContent;
-        mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(targetContent));
+        mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
 
-        if (mLastDragOverFrame) {
+        if (sLastDragOverFrame) {
           //The frame has changed but the content may not have. Check before dispatching to content
-          mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
+          sLastDragOverFrame->GetContentForEvent(aEvent, getter_AddRefs(lastContent));
 
-          FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_EXIT_SYNTH,
-                              targetContent, lastContent, mLastDragOverFrame);
+          FireDragEnterOrExit(sLastDragOverFrame->PresContext(),
+                              aEvent, NS_DRAGDROP_EXIT_SYNTH,
+                              targetContent, lastContent, sLastDragOverFrame);
         }
 
         FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_ENTER,
                             lastContent, targetContent, mCurrentTarget);
 
-        if (mLastDragOverFrame) {
-          FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_LEAVE_SYNTH,
-                              targetContent, lastContent, mLastDragOverFrame);
+        if (sLastDragOverFrame) {
+          FireDragEnterOrExit(sLastDragOverFrame->PresContext(),
+                              aEvent, NS_DRAGDROP_LEAVE_SYNTH,
+                              targetContent, lastContent, sLastDragOverFrame);
         }
 
-        mLastDragOverFrame = mCurrentTarget;
+        sLastDragOverFrame = mCurrentTarget;
       }
     }
     break;
@@ -4097,16 +4099,19 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
   case NS_DRAGDROP_EXIT:
     {
       //This is actually the window mouse exit event.
-      if (mLastDragOverFrame) {
+      if (sLastDragOverFrame) {
         nsCOMPtr<nsIContent> lastContent;
-        mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
+        sLastDragOverFrame->GetContentForEvent(aEvent, getter_AddRefs(lastContent));
 
-        FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_EXIT_SYNTH,
-                            nsnull, lastContent, mLastDragOverFrame);
-        FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_LEAVE_SYNTH,
-                            nsnull, lastContent, mLastDragOverFrame);
+        nsRefPtr<nsPresContext> lastDragOverFramePresContext = sLastDragOverFrame->PresContext();
+        FireDragEnterOrExit(lastDragOverFramePresContext,
+                            aEvent, NS_DRAGDROP_EXIT_SYNTH,
+                            nsnull, lastContent, sLastDragOverFrame);
+        FireDragEnterOrExit(lastDragOverFramePresContext,
+                            aEvent, NS_DRAGDROP_LEAVE_SYNTH,
+                            nsnull, lastContent, sLastDragOverFrame);
 
-        mLastDragOverFrame = nsnull;
+        sLastDragOverFrame = nsnull;
       }
     }
     break;
@@ -4199,7 +4204,7 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
 {
   nsCOMPtr<nsIContent> mouseContent;
   nsIContent* mouseContentParent = nsnull;
-  mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(mouseContent));
+  mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(mouseContent));
   if (mouseContent) {
     if (mouseContent->IsNodeOfType(nsINode::eTEXT)) {
       mouseContent = mouseContent->GetParent();
@@ -4382,7 +4387,7 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent)
   // Some events here may set mCurrentTarget but not set the corresponding
   // event target in the PresShell.
   if (!content && mCurrentTarget) {
-    mCurrentTarget->GetContentForEvent(mPresContext, aEvent, &content);
+    mCurrentTarget->GetContentForEvent(aEvent, &content);
   }
 
   return content;
@@ -4560,10 +4565,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
   } else {
     updateAncestors = PR_FALSE;
     if (aState == NS_EVENT_STATE_DRAGOVER) {
-      if (aContent != mDragOverContent) {
+      if (aContent != sDragOverContent) {
         notifyContent1 = aContent;
-        notifyContent2 = mDragOverContent;
-        mDragOverContent = aContent;
+        notifyContent2 = sDragOverContent;
+        sDragOverContent = aContent;
       }
     } else if (aState == NS_EVENT_STATE_URLTARGET) {
       if (aContent != mURLTargetContent) {
@@ -4641,9 +4646,10 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
     SetContentState(aContent->GetParent(), NS_EVENT_STATE_ACTIVE);
   }
 
-  if (mDragOverContent &&
-      nsContentUtils::ContentIsDescendantOf(mDragOverContent, aContent)) {
-    mDragOverContent = nsnull;
+  if (sDragOverContent &&
+      sDragOverContent->GetOwnerDoc() == aContent->GetOwnerDoc() &&
+      nsContentUtils::ContentIsDescendantOf(sDragOverContent, aContent)) {
+    sDragOverContent = nsnull;
   }
 
   if (mLastMouseOverElement &&
@@ -4933,6 +4939,9 @@ nsEventStateManager::ClearGlobalActiveContent(nsEventStateManager* aClearer)
 {
   if (aClearer) {
     aClearer->SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+    if (sDragOverContent) {
+      aClearer->SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
+    }
   }
   if (sActiveESM && aClearer != sActiveESM) {
     sActiveESM->SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);

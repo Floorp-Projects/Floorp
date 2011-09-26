@@ -136,6 +136,8 @@ _CHROME_FILES = \
 		test_bug415498.xul \
 		bug415498-doc1.html \
 		bug415498-doc2.html \
+		test_bug591249.xul \
+		bug591249_iframe.xul \
 		bug602962.xul \
 		test_bug602962.xul \
 		test_bug617528.xul \
