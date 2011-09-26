@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +13,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is The Browser Profile Migrator.
+ * The Original Code is Mozilla Communicator.
  *
- * The Initial Developer of the Original Code is Ben Goodger.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Ben Goodger <ben@bengoodger.com>
+ *   Daniel Veditz <dveditz@netscape.com>
+ *   Edward Kandrot <kandrot@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,37 +37,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#ifndef profilemigrator___h___
-#define profilemigrator___h___
 
-#include "nsIBrowserProfileMigrator.h"
-#include "nsIProfileMigrator.h"
-#include "nsCOMPtr.h"
+/* nr_bufio.h
+ * Buffered I/O routines to improve registry performance
+ * 
+ * the routines mirror fopen(), fclose() et al
+ *
+ * __NOTE__: the filenames are *native* filenames, not NSPR names.
+ */
 
-#define NS_FIREFOX_PROFILEMIGRATOR_CID \
-{ 0x4ca3c946, 0x5408, 0x49f0, { 0x9e, 0xca, 0x3a, 0x97, 0xd5, 0xc6, 0x77, 0x50 } }
+#ifndef _NR_BUFIO_H_
+#define _NR_BUFIO_H_
 
-class nsProfileMigrator : public nsIProfileMigrator
-{
-public:
-  NS_DECL_NSIPROFILEMIGRATOR
-  NS_DECL_ISUPPORTS
+typedef struct BufioFileStruct BufioFile;
 
-  nsProfileMigrator() { }
+BufioFile*  bufio_Open(const char* name, const char* mode);
+int         bufio_Close(BufioFile* file);
+int         bufio_Seek(BufioFile* file, PRInt32 offset, int whence);
+PRUint32    bufio_Read(BufioFile* file, char* dest, PRUint32 count);
+PRUint32    bufio_Write(BufioFile* file, const char* src, PRUint32 count);
+PRInt32     bufio_Tell(BufioFile* file);
+int         bufio_Flush(BufioFile* file);
+int         bufio_SetBufferSize(BufioFile* file, int bufsize);
 
-protected:
-  ~nsProfileMigrator() { }
-
-  nsresult GetDefaultBrowserMigratorKey(nsACString& key,
-                                        nsCOMPtr<nsIBrowserProfileMigrator>& bpm);
-
-  /**
-   * Import profiles from ~/.firefox/
-   * @return PR_TRUE if any profiles imported.
-   */
-  PRBool ImportRegistryProfiles(const nsACString& aAppName);
-};
-
-#endif
+#endif  /* _NR_BUFIO_H_ */
 
