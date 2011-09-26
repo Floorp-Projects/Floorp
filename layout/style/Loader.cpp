@@ -240,6 +240,10 @@ public:
   // loads.
   PRPackedBool               mUseSystemPrincipal : 1;
 
+  // If true, this SheetLoadData is being used as a way to handle
+  // async observer notification for an already-complete sheet.
+  PRPackedBool               mSheetAlreadyComplete : 1;
+
   // This is the element that imported the sheet.  Needed to get the
   // charset set on it.
   nsCOMPtr<nsIStyleSheetLinkingElement> mOwningElement;
@@ -330,6 +334,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mWasAlternate(aIsAlternate),
     mAllowUnsafeRules(PR_FALSE),
     mUseSystemPrincipal(PR_FALSE),
+    mSheetAlreadyComplete(PR_FALSE),
     mOwningElement(aOwningElement),
     mObserver(aObserver),
     mLoaderPrincipal(aLoaderPrincipal)
@@ -359,6 +364,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mWasAlternate(PR_FALSE),
     mAllowUnsafeRules(PR_FALSE),
     mUseSystemPrincipal(PR_FALSE),
+    mSheetAlreadyComplete(PR_FALSE),
     mOwningElement(nsnull),
     mObserver(aObserver),
     mLoaderPrincipal(aLoaderPrincipal)
@@ -402,6 +408,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mWasAlternate(PR_FALSE),
     mAllowUnsafeRules(aAllowUnsafeRules),
     mUseSystemPrincipal(aUseSystemPrincipal),
+    mSheetAlreadyComplete(PR_FALSE),
     mOwningElement(nsnull),
     mObserver(aObserver),
     mLoaderPrincipal(aLoaderPrincipal),
@@ -1650,7 +1657,9 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
   while (data) {
     NS_ABORT_IF_FALSE(!data->mSheet->IsModified(),
                       "should not get marked modified during parsing");
-    data->mSheet->SetComplete();
+    if (!data->mSheetAlreadyComplete) {
+      data->mSheet->SetComplete();
+    }
     if (data->mMustNotify && (data->mObserver || !mObservers.IsEmpty())) {
       // Don't notify here so we don't trigger script.  Remember the
       // info we need to notify, then do it later when it's safe.
@@ -1751,11 +1760,6 @@ Loader::LoadInlineStyle(nsIContent* aElement,
                                           owningElement, *aIsAlternate,
                                           aObserver, nsnull);
 
-  if (!data) {
-    sheet->SetComplete();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // We never actually load this, so just set its principal directly
   sheet->SetPrincipal(aElement->NodePrincipal());
 
@@ -1827,7 +1831,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete: 0x%p",
          static_cast<void*>(sheet.get())));
-    if (aObserver) {
+    if (aObserver || !mObservers.IsEmpty()) {
       rv = PostLoadEvent(aURL, sheet, aObserver, *aIsAlternate);
       return rv;
     }
@@ -1841,11 +1845,6 @@ Loader::LoadStyleLink(nsIContent* aElement,
   SheetLoadData* data = new SheetLoadData(this, aTitle, aURL, sheet,
                                           owningElement, *aIsAlternate,
                                           aObserver, principal);
-  if (!data) {
-    sheet->SetComplete();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   NS_ADDREF(data);
 
   // If we have to parse and it's an alternate non-inline, defer it
@@ -1996,11 +1995,6 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
   SheetLoadData* data = new SheetLoadData(this, aURL, sheet, parentData,
                                           observer, principal);
 
-  if (!data) {
-    sheet->SetComplete();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   NS_ADDREF(data);
   PRBool syncLoad = data->mSyncLoad;
 
@@ -2097,7 +2091,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
-    if (aObserver) {
+    if (aObserver || !mObservers.IsEmpty()) {
       rv = PostLoadEvent(aURL, sheet, aObserver, PR_FALSE);
     }
     if (aSheet) {
@@ -2110,11 +2104,6 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
     new SheetLoadData(this, aURL, sheet, syncLoad, aAllowUnsafeRules,
                       aUseSystemPrincipal, aCharset, aObserver,
                       aOriginPrincipal);
-
-  if (!data) {
-    sheet->SetComplete();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(data);
   rv = LoadSheet(data, state);
@@ -2138,7 +2127,7 @@ Loader::PostLoadEvent(nsIURI* aURI,
 {
   LOG(("css::Loader::PostLoadEvent"));
   NS_PRECONDITION(aSheet, "Must have sheet");
-  NS_PRECONDITION(aObserver, "Must have observer");
+  NS_PRECONDITION(aObserver || !mObservers.IsEmpty(), "Must have observer");
 
   nsRefPtr<SheetLoadData> evt =
     new SheetLoadData(this, EmptyString(), // title doesn't matter here
@@ -2166,6 +2155,7 @@ Loader::PostLoadEvent(nsIURI* aURI,
 
     // We want to notify the observer for this data.
     evt->mMustNotify = PR_TRUE;
+    evt->mSheetAlreadyComplete = PR_TRUE;
   }
 
   return rv;
