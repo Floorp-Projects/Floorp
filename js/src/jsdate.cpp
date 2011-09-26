@@ -72,6 +72,8 @@
 #include "jsstr.h"
 #include "jslibmath.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
@@ -2605,34 +2607,52 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
 JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj)
 {
-    /* set static LocalTZA */
+    JS_ASSERT(obj->isNative());
+
+    /* Set the static LocalTZA. */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    JSObject *proto = js_InitClass(cx, obj, NULL, &DateClass, js_Date, MAXARGS,
-                                   NULL, date_methods, NULL, date_static_methods);
-    if (!proto)
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *dateProto = global->createBlankPrototype(cx, &DateClass);
+    if (!dateProto)
+        return NULL;
+    SetDateToNaN(cx, dateProto);
+
+    JSFunction *ctor = global->createConstructor(cx, js_Date, &DateClass,
+                                                 CLASS_ATOM(cx, Date), MAXARGS);
+    if (!ctor)
         return NULL;
 
-    AutoObjectRooter tvr(cx, proto);
+    if (!LinkConstructorAndPrototype(cx, ctor, dateProto))
+        return NULL;
 
-    SetDateToNaN(cx, proto);
+    if (!DefinePropertiesAndBrand(cx, ctor, NULL, date_static_methods))
+        return NULL;
 
     /*
-     * ES5 B.2.6:
-     *   The Function object that is the initial value of
-     *   Date.prototype.toGMTString is the same Function
-     *   object that is the initial value of
-     *   Date.prototype.toUTCString.
+     * Define all Date.prototype.* functions, then brand for trace-jitted code.
+     * Date.prototype.toGMTString has the same initial value as
+     * Date.prototype.toUTCString.
      */
-    AutoValueRooter toUTCStringFun(cx);
+    if (!JS_DefineFunctions(cx, dateProto, date_methods))
+        return NULL;
+    Value toUTCStringFun;
     jsid toUTCStringId = ATOM_TO_JSID(cx->runtime->atomState.toUTCStringAtom);
     jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
-    if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()) ||
-        !js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.addr(),
-                           JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+    if (!js_GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
+        !js_DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
+                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    {
         return NULL;
     }
+    if (!cx->typeInferenceEnabled())
+        dateProto->brand(cx);
 
-    return proto;
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Date, ctor, dateProto))
+        return NULL;
+
+    return dateProto;
 }
 
 JS_FRIEND_API(JSObject *)

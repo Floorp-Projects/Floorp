@@ -89,6 +89,7 @@
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/NumberObject-inl.h"
 #include "vm/StringObject-inl.h"
 
 #if JS_HAS_GENERATORS
@@ -6763,10 +6764,11 @@ PrimitiveToObject(JSContext *cx, const Value &v)
 {
     if (v.isString())
         return StringObject::create(cx, v.toString());
+    if (v.isNumber())
+        return NumberObject::create(cx, v.toNumber());
 
-    JS_ASSERT(v.isNumber() || v.isBoolean());
-    Class *clasp = v.isNumber() ? &NumberClass : &BooleanClass;
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    JS_ASSERT(v.isBoolean());
+    JSObject *obj = NewBuiltinClassInstance(cx, &BooleanClass);
     if (!obj)
         return NULL;
 
