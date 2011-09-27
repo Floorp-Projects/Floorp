@@ -59,6 +59,7 @@ _BROWSER_FILES = \
 		browser_inspector_bug_674871.js \
 		browser_inspector_editor.js \
 		browser_inspector_bug_566084_location_changed.js \
+		browser_inspector_infobar.js \
 		$(NULL)
 
 # Disabled due to constant failures
