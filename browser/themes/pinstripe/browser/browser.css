@@ -2602,3 +2602,13 @@ panel[dimmed="true"] {
 #inspector-tools > toolbarbutton[checked]:hover:active {
   background-color: hsla(210,8%,5%,.2);
 }
+
+/*
+ * need a "bumpy" background image for this!
+ */
+#inspector-horizontal-splitter {
+  background: none !important;
+  -moz-appearance: none;
+  cursor: n-resize;
+}
+
