@@ -349,10 +349,9 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   PRBool allowScripts = AllowScripts();
 
   nsAutoScriptBlocker scriptBlocker;
-
-  PRUint32 childCount = aAnonParent->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; i++) {
-    nsIContent *child = aAnonParent->GetChildAt(i);
+  for (nsIContent* child = aAnonParent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     child->UnbindFromTree();
     nsresult rv =
       child->BindToTree(doc, aElement, mBoundElement, allowScripts);
@@ -387,9 +386,9 @@ nsXBLBinding::UninstallAnonymousContent(nsIDocument* aDocument,
   nsCOMPtr<nsIXULDocument> xuldoc =
     do_QueryInterface(aDocument);
 #endif
-  PRUint32 childCount = aAnonParent->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent* child = aAnonParent->GetChildAt(i);
+  for (nsIContent* child = aAnonParent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     child->UnbindFromTree();
 #ifdef MOZ_XUL
     if (xuldoc) {
@@ -576,11 +575,11 @@ RealizeDefaultContent(nsISupports* aKey,
 
         // Now make sure the kids of the clone are added to the insertion point as
         // children.
-        PRUint32 cloneKidCount = clonedContent->GetChildCount();
-        for (PRUint32 k = 0; k < cloneKidCount; k++) {
-          nsIContent *cloneChild = clonedContent->GetChildAt(k);
-          bm->SetInsertionParent(cloneChild, insParent);
-          currPoint->AddChild(cloneChild);
+        for (nsIContent* child = clonedContent->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+          bm->SetInsertionParent(child, insParent);
+          currPoint->AddChild(child);
         }
       }
     }
@@ -1178,11 +1177,10 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       // Make sure that henceforth we don't claim that mBoundElement's children
       // have insertion parents in the old document.
       nsBindingManager* bindingManager = aOldDocument->BindingManager();
-      for (PRUint32 i = mBoundElement->GetChildCount(); i > 0; --i) {
-        NS_ASSERTION(mBoundElement->GetChildAt(i-1),
-                     "Must have child at i for 0 <= i < GetChildCount()!");
-        bindingManager->SetInsertionParent(mBoundElement->GetChildAt(i-1),
-                                           nsnull);
+      for (nsIContent* child = mBoundElement->GetLastChild();
+           child;
+           child = child->GetPreviousSibling()) {
+        bindingManager->SetInsertionParent(child, nsnull);
       }
     }
   }

@@ -4933,12 +4933,11 @@ GetElementByAttribute(nsIContent* aContent, nsIAtom* aAttrName,
     return CallQueryInterface(aContent, aResult);
   }
 
-  PRUint32 childCount = aContent->GetChildCount();
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
 
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent *current = aContent->GetChildAt(i);
-
-    GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch,
+    GetElementByAttribute(child, aAttrName, aAttrValue, aUniversalMatch,
                           aResult);
 
     if (*aResult)
@@ -5115,10 +5114,11 @@ nsIDocument::GetHtmlChildElement(nsIAtom* aTag)
 
   // Look for the element with aTag inside html. This needs to run
   // forwards to find the first such element.
-  for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
-    nsIContent* result = html->GetChildAt(i);
-    if (result->Tag() == aTag && result->IsHTML())
-      return result->AsElement();
+  for (nsIContent* child = html->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTML(aTag))
+      return child->AsElement();
   }
   return nsnull;
 }
@@ -6013,7 +6013,7 @@ BlastSubtreeToPieces(nsINode *aNode)
 
   count = aNode->GetChildCount();
   for (i = 0; i < count; ++i) {
-    BlastSubtreeToPieces(aNode->GetChildAt(0));
+    BlastSubtreeToPieces(aNode->GetFirstChild());
 #ifdef DEBUG
     nsresult rv =
 #endif

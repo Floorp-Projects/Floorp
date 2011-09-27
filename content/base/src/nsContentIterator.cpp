@@ -569,7 +569,7 @@ nsContentIterator::GetDeepFirstChild(nsINode *aRoot,
   }
 
   nsINode *n = aRoot;
-  nsINode *nChild = n->GetChildAt(0);
+  nsINode *nChild = n->GetFirstChild();
 
   while (nChild)
   {
@@ -579,7 +579,7 @@ nsContentIterator::GetDeepFirstChild(nsINode *aRoot,
       aIndexes->AppendElement(0);
     }
     n = nChild;
-    nChild = n->GetChildAt(0);
+    nChild = n->GetFirstChild();
   }
 
   return n;
@@ -747,7 +747,7 @@ nsContentIterator::NextNode(nsINode *aNode, nsTArray<PRInt32> *aIndexes)
     // if it has children then next node is first child
     if (NodeHasChildren(n))
     {
-      nsINode *nFirstChild = n->GetChildAt(0);
+      nsINode *nFirstChild = n->GetFirstChild();
 
       // update cache
       if (aIndexes)
@@ -889,7 +889,8 @@ nsContentIterator::PrevNode(nsINode *aNode, nsTArray<PRInt32> *aIndexes)
     // if it has children then prev node is last child
     if (numChildren)
     {
-      nsINode *nLastChild = n->GetChildAt(--numChildren);
+      nsINode *nLastChild = n->GetLastChild();
+      numChildren--;
 
       // update cache
       if (aIndexes)
@@ -1300,7 +1301,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // short circuit when start node == end node
   if (startParent == endParent)
   {
-    nsINode* nChild = nStartP->GetChildAt(0);
+    nsINode* nChild = nStartP->GetFirstChild();
   
     if (!nChild) // no children, must be a text node or empty container
     {
@@ -1490,7 +1491,7 @@ nsContentSubtreeIterator::Next()
   {
     // as long as we are finding ancestors of the endpoint of the range,
     // dive down into their children
-    nextNode = nextNode->GetChildAt(0);
+    nextNode = nextNode->GetFirstChild();
     NS_ASSERTION(nextNode, "Iterator error, expected a child node!");
 
     // should be impossible to get a null pointer.  If we went all the way
