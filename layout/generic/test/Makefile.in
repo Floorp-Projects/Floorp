@@ -125,6 +125,7 @@ _TEST_FILES = \
   bug633762_iframe.html \
   $(srcdir)/../../reftests/backgrounds/blue-32x32.png \
   $(srcdir)/../../reftests/backgrounds/fuchsia-32x32.png \
+  test_selection_splitText-normalize.html \
   $(NULL)
 
 _CHROME_FILES = \

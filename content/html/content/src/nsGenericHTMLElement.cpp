@@ -1789,6 +1789,37 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
   }
 }
 
+void
+nsGenericHTMLFormElement::UpdateEditableFormControlState(PRBool aNotify)
+{
+  // nsCSSFrameConstructor::MaybeConstructLazily is based on the logic of this
+  // function, so should be kept in sync with that.
+
+  ContentEditableTristate value = GetContentEditableValue();
+  if (value != eInherit) {
+    DoSetEditableFlag(!!value, aNotify);
+    return;
+  }
+
+  nsIContent *parent = GetParent();
+
+  if (parent && parent->HasFlag(NODE_IS_EDITABLE)) {
+    DoSetEditableFlag(PR_TRUE, aNotify);
+    return;
+  }
+
+  if (!IsTextControl(PR_FALSE)) {
+    DoSetEditableFlag(PR_FALSE, aNotify);
+    return;
+  }
+
+  // If not contentEditable we still need to check the readonly attribute.
+  PRBool roState;
+  GetBoolAttr(nsGkAtoms::readonly, &roState);
+
+  DoSetEditableFlag(!roState, aNotify);
+}
+
 
 /* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
@@ -2881,18 +2912,6 @@ nsGenericHTMLFormElement::IntrinsicState() const
       state |= NS_EVENT_STATE_DEFAULT;
   }
 
-  // Make the text controls read-write
-  if (!state.HasState(NS_EVENT_STATE_MOZ_READWRITE) &&
-      IsTextControl(PR_FALSE)) {
-    PRBool roState;
-    GetBoolAttr(nsGkAtoms::readonly, &roState);
-
-    if (!roState) {
-      state |= NS_EVENT_STATE_MOZ_READWRITE;
-      state &= ~NS_EVENT_STATE_MOZ_READONLY;
-    }
-  }
-
   return state;
 }
 
@@ -3642,14 +3661,10 @@ nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
   }
 
   /* Sync all children */
-  PRUint32 childCount = content->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent* childContent = content->GetChildAt(i);
-    NS_ASSERTION(childContent,
-                 "DOM mutated unexpectedly while syncing editors!");
-    if (childContent) {
-      SyncEditorsOnSubtree(childContent);
-    }
+  for (nsIContent* child = content->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    SyncEditorsOnSubtree(child);
   }
 }
 

@@ -251,7 +251,9 @@ function runTest(testNum) {
                           "context-selectall",    true,
                           "---",                  null,
                           "context-viewsource",   true,
-                          "context-viewinfo",     true]);
+                          "context-viewinfo",     true,
+                          "---",                  null,
+                          "context-inspect",      true]);
         closeContextMenu();
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
@@ -264,14 +266,18 @@ function runTest(testNum) {
                           "context-bookmarklink",  true,
                           "context-savelink",      true,
                           "context-sendlink",      true,
-                          "context-copylink",      true]);
+                          "context-copylink",      true,
+                          "---",                  null,
+                          "context-inspect",      true]);
         closeContextMenu();
         openContextMenuFor(mailto); // Invoke context menu for next test.
         break;
 
     case 4:
         // Context menu for text mailto-link
-        checkContextMenu(["context-copyemail", true]);
+        checkContextMenu(["context-copyemail", true,
+                          "---",                  null,
+                          "context-inspect",      true]);
         closeContextMenu();
         openContextMenuFor(input); // Invoke context menu for next test.
         break;
@@ -285,9 +291,11 @@ function runTest(testNum) {
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
-                          "context-selectall",   true,
+                          "context-selectall",   false,
                           "---",                 null,
-                          "spell-check-enabled", true]);
+                          "spell-check-enabled", true,
+                          "---",                  null,
+                          "context-inspect",      true]);
         closeContextMenu();
         openContextMenuFor(img); // Invoke context menu for next test.
         break;
@@ -301,7 +309,9 @@ function runTest(testNum) {
                           "context-saveimage",            true,
                           "context-sendimage",            true,
                           "context-setDesktopBackground", true,
-                          "context-viewimageinfo",        true]);
+                          "context-viewimageinfo",        true,
+                          "---",                          null,
+                          "context-inspect",              true]);
         closeContextMenu();
         openContextMenuFor(canvas); // Invoke context menu for next test.
         break;
@@ -311,7 +321,9 @@ function runTest(testNum) {
         checkContextMenu(["context-viewimage",    true,
                           "context-saveimage",    true,
                           "context-bookmarkpage", true,
-                          "context-selectall",    true]);
+                          "context-selectall",    true,
+                          "---",                  null,
+                          "context-inspect",      true]);
         closeContextMenu();
         openContextMenuFor(video_ok); // Invoke context menu for next test.
         break;
@@ -327,7 +339,9 @@ function runTest(testNum) {
                           "context-copyvideourl",       true,
                           "---",                        null,
                           "context-savevideo",          true,
-                          "context-sendvideo",          true]);
+                          "context-sendvideo",          true,
+                          "---",                        null,
+                          "context-inspect",            true]);
         closeContextMenu();
         openContextMenuFor(video_bad); // Invoke context menu for next test.
         break;
@@ -343,7 +357,9 @@ function runTest(testNum) {
                           "context-copyvideourl",       true,
                           "---",                        null,
                           "context-savevideo",          true,
-                          "context-sendvideo",          true]);
+                          "context-sendvideo",          true,
+                          "---",                        null,
+                          "context-inspect",            true]);
         closeContextMenu();
         openContextMenuFor(video_bad2); // Invoke context menu for next test.
         break;
@@ -359,7 +375,9 @@ function runTest(testNum) {
                           "context-copyvideourl",       false,
                           "---",                        null,
                           "context-savevideo",          false,
-                          "context-sendvideo",          false]);
+                          "context-sendvideo",          false,
+                          "---",                        null,
+                          "context-inspect",            true]);
         closeContextMenu();
         openContextMenuFor(iframe); // Invoke context menu for next test.
         break;
@@ -393,7 +411,9 @@ function runTest(testNum) {
                                "context-viewframeinfo",     true], null,
                           "---",                  null,
                           "context-viewsource",   true,
-                          "context-viewinfo",     true]);
+                          "context-viewinfo",     true,
+                          "---",                  null,
+                          "context-inspect",      true]);
         closeContextMenu();
         openContextMenuFor(textarea); // Invoke context menu for next test.
         break;
@@ -416,7 +436,9 @@ function runTest(testNum) {
                           "spell-dictionaries",  true,
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
-                               "spell-add-dictionaries",       true], null]);
+                               "spell-add-dictionaries",       true], null,
+                          "---",                  null,
+                          "context-inspect",      true]);
 
         closeContextMenu();
         openContextMenuFor(contenteditable); // Invoke context menu for next test.
@@ -440,7 +462,9 @@ function runTest(testNum) {
                           "spell-dictionaries",  true,
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
-                               "spell-add-dictionaries",       true], null]);
+                               "spell-add-dictionaries",       true], null,
+                          "---",                 null,
+                          "context-inspect",     true]);
 
         closeContextMenu();
         openContextMenuFor(inputspell); // Invoke context menu for next test.
@@ -464,7 +488,9 @@ function runTest(testNum) {
                           "spell-dictionaries",  true,
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
-                               "spell-add-dictionaries",       true], null]);
+                               "spell-add-dictionaries",       true], null,
+                          "---",                 null,
+                          "context-inspect",     true]);
 
         closeContextMenu();
         openContextMenuFor(link); // Invoke context menu for next test.
@@ -511,7 +537,9 @@ function runTest(testNum) {
                           "context-selectall",    true,
                           "---",                  null,
                           "context-viewsource",   true,
-                          "context-viewinfo",     true]);
+                          "context-viewinfo",     true,
+                          "---",                  null,
+                          "context-inspect",      true]);
 
         invokeItemAction("0");
         closeContextMenu();
@@ -534,7 +562,9 @@ function runTest(testNum) {
                           "context-selectall",    true,
                           "---",                  null,
                           "context-viewsource",   true,
-                          "context-viewinfo",     true]);
+                          "context-viewinfo",     true,
+                          "---",                  null,
+                          "context-inspect",      true]);
 
         subwindow.close();
         SimpleTest.finish();

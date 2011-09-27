@@ -267,6 +267,26 @@ public:
 
     void ExecuteNextRunnable();
 
+    /* Copied from Android's native_window.h in newer (platform 9) NDK */
+    enum {
+        WINDOW_FORMAT_RGBA_8888          = 1,
+        WINDOW_FORMAT_RGBX_8888          = 2,
+        WINDOW_FORMAT_RGB_565            = 4,
+    };
+
+    bool HasNativeWindowAccess();
+
+    void *AcquireNativeWindow(jobject surface);
+    void ReleaseNativeWindow(void *window);
+    bool SetNativeWindowFormat(void *window, int format);
+
+    bool LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride);
+    bool UnlockWindow(void *window);
+
+    bool InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps);
+
+    void CloseCamera();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -288,8 +308,11 @@ protected:
 
     void EnsureJNIThread();
 
-    bool mOpenedBitmapLibrary;
+    bool mOpenedGraphicsLibraries;
+    void OpenGraphicsLibraries();
+
     bool mHasNativeBitmapAccess;
+    bool mHasNativeWindowAccess;
 
     nsCOMArray<nsIRunnable> mRunnableQueue;
 
@@ -333,6 +356,8 @@ protected:
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
     jmethodID jPostToJavaThread;
+    jmethodID jInitCamera;
+    jmethodID jCloseCamera;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
@@ -346,6 +371,13 @@ protected:
     int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);
     int (* AndroidBitmap_lockPixels)(JNIEnv *env, jobject bitmap, void **buffer);
     int (* AndroidBitmap_unlockPixels)(JNIEnv *env, jobject bitmap);
+
+    void* (*ANativeWindow_fromSurface)(JNIEnv *env, jobject surface);
+    void (*ANativeWindow_release)(void *window);
+    int (*ANativeWindow_setBuffersGeometry)(void *window, int width, int height, int format);
+
+    int (* ANativeWindow_lock)(void *window, void *outBuffer, void *inOutDirtyBounds);
+    int (* ANativeWindow_unlockAndPost)(void *window);
 };
 
 }

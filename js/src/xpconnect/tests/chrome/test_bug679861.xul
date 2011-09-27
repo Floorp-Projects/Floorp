@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+-->
+<window title="Mozilla Bug 601803"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=601803"
+     target="_blank">Mozilla Bug 601803</a>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for Bug 601803 **/
+
+  function go() {
+    var doc = document.getElementById('ifr').contentDocument;
+    var list = doc.getElementsByTagName("body");
+    var zeroAsString = "0";
+    is(typeof list[zeroAsString], "object",
+       "can lookup nodelist items by string");
+    is(typeof list[0], "object",
+       "can lookup nodelist items by integer after the lookup by string");
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  ]]></script>
+  <iframe type="content" src="about:blank" onload="go()" id="ifr" />
+  </body>
+</window>

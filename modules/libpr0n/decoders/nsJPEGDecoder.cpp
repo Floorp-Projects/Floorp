@@ -153,6 +153,11 @@ nsJPEGDecoder::~nsJPEGDecoder()
           this));
 }
 
+Telemetry::ID
+nsJPEGDecoder::SpeedHistogram()
+{
+  return Telemetry::IMAGE_DECODE_SPEED_JPEG;
+}
 
 void
 nsJPEGDecoder::InitInternal()

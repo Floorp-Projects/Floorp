@@ -45,6 +45,7 @@
 #include "nsSVGAngle.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "gfxMatrix.h"
 
 class nsSVGOrientType
 {
@@ -177,7 +178,7 @@ protected:
   nsSVGOrientType                        mOrientType;
 
   nsSVGSVGElement                       *mCoordCtx;
-  nsCOMPtr<nsIDOMSVGMatrix>         mViewBoxToViewportTransform;
+  nsAutoPtr<gfxMatrix>                   mViewBoxToViewportTransform;
 };
 
 #endif

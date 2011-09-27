@@ -489,21 +489,21 @@ no_such_method_trace(JSTracer *trc, JSObject *obj)
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    PropertyStub,         /* addProperty */
-    PropertyStub,         /* delProperty */
-    PropertyStub,         /* getProperty */
-    StrictPropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    NULL,                 /* finalize */
-    NULL,                 /* reserved0 */
-    NULL,                 /* checkAccess */
-    NULL,                 /* call */
-    NULL,                 /* construct */
-    NULL,                 /* XDR */
-    NULL,                 /* hasInstance */
-    no_such_method_trace  /* trace */
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                    /* finalize */
+    NULL,                    /* reserved0 */
+    NULL,                    /* checkAccess */
+    NULL,                    /* call */
+    NULL,                    /* construct */
+    NULL,                    /* XDR */
+    NULL,                    /* hasInstance */
+    no_such_method_trace     /* trace */
 };
 
 /*
@@ -901,7 +901,7 @@ js::CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
     isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
     if (!isFunction) {
         Value value;
-        if (!obj->getProperty(cx, id, &value))
+        if (!obj->getGeneric(cx, id, &value))
             return JS_FALSE;
         isFunction = IsFunctionObject(value);
     }
@@ -963,7 +963,7 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *re
             JSObject *r = &rval.toObject();
             l->assertSpecialEqualitySynced();
 
-            if (EqualityOp eq = l->getClass()->ext.equality) {
+            if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 return eq(cx, l, &rval, result);
             }
 
@@ -2049,10 +2049,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
             Value rval;
             JSTrapStatus status = JSTRAP_CONTINUE;
-            if (hook) {
-                status = hook(cx, script, regs.pc, Jsvalify(&rval),
-                              cx->debugHooks->interruptHookData);
-            }
+            if (hook)
+                status = hook(cx, script, regs.pc, &rval, cx->debugHooks->interruptHookData);
             if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
                 status = Debugger::onSingleStep(cx, &rval);
             switch (status) {
@@ -2690,7 +2688,7 @@ BEGIN_CASE(JSOP_SETCONST)
     JSObject &obj = regs.fp()->varObj();
     const Value &ref = regs.sp[-1];
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
-                            PropertyStub, StrictPropertyStub,
+                            JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
@@ -2706,7 +2704,7 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     if (!obj->defineProperty(cx, id, ref,
-                             PropertyStub, StrictPropertyStub,
+                             JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
@@ -3227,7 +3225,7 @@ BEGIN_CASE(JSOP_TYPEOFEXPR)
 BEGIN_CASE(JSOP_TYPEOF)
 {
     const Value &ref = regs.sp[-1];
-    JSType type = JS_TypeOfValue(cx, Jsvalify(ref));
+    JSType type = JS_TypeOfValue(cx, ref);
     JSAtom *atom = rt->atomState.typeAtoms[type];
     regs.sp[-1].setString(atom);
 }
@@ -3347,7 +3345,7 @@ do_incop:
      * we have done with obj->setProperty.
      */
     PUSH_NULL();
-    if (!obj->getProperty(cx, id, &regs.sp[-1]))
+    if (!obj->getGeneric(cx, id, &regs.sp[-1]))
         goto error;
 
     const JSCodeSpec *cs = &js_CodeSpec[op];
@@ -3564,7 +3562,8 @@ BEGIN_CASE(JSOP_LENGTH)
                                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                     &rval)
-            : !obj->getProperty(cx, id, &rval)) {
+            : !obj->getGeneric(cx, id, &rval))
+        {
             goto error;
         }
     } while (0);
@@ -3762,7 +3761,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 uint32 slot;
                 if (shape->previous() == obj->lastProperty() &&
                     entry->vshape() == rt->protoHazardShape &&
-                    shape->hasDefaultSetter()) {
+                    shape->hasDefaultSetter() &&
+                    obj->getClass()->addProperty == JS_PropertyStub) {
                     slot = shape->slot;
                     JS_ASSERT(slot == obj->slotSpan());
 
@@ -3906,7 +3906,7 @@ BEGIN_CASE(JSOP_GETELEM)
     if (JSID_IS_STRING(id) && script->hasAnalysis() && !regs.fp()->hasImacropc())
         script->analysis()->getCode(regs.pc).getStringElement = true;
 
-    if (!obj->getProperty(cx, id, &rval))
+    if (!obj->getGeneric(cx, id, &rval))
         goto error;
     copyFrom = &rval;
 
@@ -4167,7 +4167,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getProperty(cx, id, &rval))
+        if (!obj->getGeneric(cx, id, &rval))
             goto error;
     } else {
         shape = (Shape *)prop;
@@ -4581,19 +4581,8 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
 }
 END_CASE(JSOP_GETFCSLOT)
 
-BEGIN_CASE(JSOP_GETGLOBAL)
-BEGIN_CASE(JSOP_CALLGLOBAL)
-{
-    uint32 slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    JSObject *obj = regs.fp()->scopeChain().getGlobal();
-    JS_ASSERT(obj->containsSlot(slot));
-    PUSH_COPY(obj->getSlot(slot));
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-    if (op == JSOP_CALLGLOBAL)
-        PUSH_UNDEFINED();
-}
-END_CASE(JSOP_GETGLOBAL)
+BEGIN_CASE(JSOP_UNUSED0)
+BEGIN_CASE(JSOP_UNUSED1)
 
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
@@ -4635,7 +4624,7 @@ BEGIN_CASE(JSOP_DEFVAR)
 
     /* Bind a variable only if it's not yet defined. */
     if (shouldDefine &&
-        !DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, StrictPropertyStub,
+        !DefineNativeProperty(cx, obj, id, UndefinedValue(), JS_PropertyStub, JS_StrictPropertyStub,
                               attrs, 0, 0)) {
         goto error;
     }
@@ -4713,7 +4702,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     do {
         /* Steps 5d, 5f. */
         if (!prop || pobj != parent) {
-            if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
+            if (!parent->defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
                 goto error;
             break;
         }
@@ -4723,7 +4712,7 @@ BEGIN_CASE(JSOP_DEFFUN)
         Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
-                if (!parent->defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs))
+                if (!parent->defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
                     goto error;
                 break;
             }
@@ -4775,7 +4764,7 @@ BEGIN_CASE(JSOP_DEFFUN_FC)
 
     if ((attrs == JSPROP_ENUMERATE)
         ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
-        : !parent.defineProperty(cx, id, rval, PropertyStub, StrictPropertyStub, attrs)) {
+        : !parent.defineProperty(cx, id, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs)) {
         goto error;
     }
 }
@@ -5052,10 +5041,10 @@ BEGIN_CASE(JSOP_SETTER)
     StrictPropertyOp setter;
     if (op == JSOP_GETTER) {
         getter = CastAsPropertyOp(&rval.toObject());
-        setter = StrictPropertyStub;
+        setter = JS_StrictPropertyStub;
         attrs = JSPROP_GETTER;
     } else {
-        getter = PropertyStub;
+        getter = JS_PropertyStub;
         setter = CastAsStrictPropertyOp(&rval.toObject());
         attrs = JSPROP_SETTER;
     }
@@ -5305,7 +5294,7 @@ BEGIN_CASE(JSOP_USESHARP)
     } else {
         JSObject *obj = &regs.fp()->slots()[slot].toObject();
         jsid id = INT_TO_JSID(i);
-        if (!obj->getProperty(cx, id, &rval))
+        if (!obj->getGeneric(cx, id, &rval))
             goto error;
     }
     if (!rval.isObjectOrNull()) {
@@ -5487,7 +5476,7 @@ BEGIN_CASE(JSOP_DEBUGGER)
     JSTrapStatus st = JSTRAP_CONTINUE;
     Value rval;
     if (JSDebuggerHandler handler = cx->debugHooks->debuggerHandler)
-        st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData);
+        st = handler(cx, script, regs.pc, &rval, cx->debugHooks->debuggerHandlerData);
     if (st == JSTRAP_CONTINUE)
         st = Debugger::onDebuggerStatement(cx, &rval);
     switch (st) {
@@ -5632,7 +5621,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
         goto error;
     Value rval;
-    if (!obj->getProperty(cx, id, &rval))
+    if (!obj->getGeneric(cx, id, &rval))
         goto error;
     regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME)
@@ -5645,19 +5634,19 @@ BEGIN_CASE(JSOP_DELDESC)
 {
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
-    jsval rval = Jsvalify(regs.sp[-1]);
+    jsval rval = regs.sp[-1];
     if (!js_GetXMLDescendants(cx, obj, rval, &rval))
         goto error;
 
     if (op == JSOP_DELDESC) {
-        regs.sp[-1] = Valueify(rval);   /* set local root */
+        regs.sp[-1] = rval;   /* set local root */
         if (!js_DeleteXMLListElements(cx, JSVAL_TO_OBJECT(rval)))
             goto error;
         rval = JSVAL_TRUE;                  /* always succeed */
     }
 
     regs.sp--;
-    regs.sp[-1] = Valueify(rval);
+    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_DESCENDANTS)
 
@@ -6021,7 +6010,7 @@ END_CASE(JSOP_ARRAYPUSH)
             if (st == JSTRAP_CONTINUE) {
                 handler = cx->debugHooks->throwHook;
                 if (handler)
-                    st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->throwHookData);
+                    st = handler(cx, script, regs.pc, &rval, cx->debugHooks->throwHookData);
             }
 
             switch (st) {

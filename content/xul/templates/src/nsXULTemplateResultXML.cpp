@@ -96,9 +96,10 @@ nsXULTemplateResultXML::GetIsEmpty(PRBool* aIsEmpty)
     // a node is considered empty if it has no elements as children
     nsCOMPtr<nsIContent> content = do_QueryInterface(mNode);
     if (content) {
-        PRUint32 count = content->GetChildCount();
-        for (PRUint32 c = 0; c < count; c++) {
-            if (content->GetChildAt(c)->IsElement()) {
+        for (nsIContent* child = content->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+            if (child->IsElement()) {
                 *aIsEmpty = PR_FALSE;
                 return NS_OK;
             }

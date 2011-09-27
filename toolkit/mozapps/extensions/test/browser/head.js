@@ -6,12 +6,12 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 var pathParts = gTestPath.split("/");
 // Drop the test filename
-pathParts.splice(pathParts.length - 1);
+pathParts.splice(pathParts.length - 1, pathParts.length);
 
 var gTestInWindow = /-window$/.test(pathParts[pathParts.length - 1]);
 
 // Drop the UI type
-pathParts.splice(pathParts.length - 1);
+pathParts.splice(pathParts.length - 1, pathParts.length);
 pathParts.push("browser");
 
 const RELATIVE_DIR = pathParts.slice(4).join("/") + "/";

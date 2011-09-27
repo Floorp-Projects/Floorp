@@ -1860,11 +1860,16 @@
         event.stopPropagation();
         ]]>
       </handler>
+      <handler event="command" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="TapSingle" button="0" phase="capturing">
         <![CDATA[
         this.input.setChecked(!this.value);
         this.inputChanged();
-        event.stopPropagation();
+        this.fireEvent("oncommand");
         ]]>
       </handler>
     </handlers>
@@ -1877,11 +1882,16 @@
         event.stopPropagation();
         ]]>
       </handler>
+      <handler event="command" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="TapSingle" button="0" phase="capturing">
         <![CDATA[
         this.input.setChecked(!this.value);
         this.inputChanged();
-        event.stopPropagation();
+        this.fireEvent("oncommand");
         ]]>
       </handler>
     </handlers>
@@ -1894,11 +1904,16 @@
         event.stopPropagation();
         ]]>
       </handler>
+      <handler event="command" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
       <handler event="TapSingle" button="0" phase="capturing">
         <![CDATA[
         this.input.setChecked(!this.value);
         this.inputChanged();
-        event.stopPropagation();
+        this.fireEvent("oncommand");
         ]]>
       </handler>
     </handlers>

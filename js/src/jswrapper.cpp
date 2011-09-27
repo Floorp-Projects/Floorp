@@ -129,8 +129,8 @@ JSWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                  bool set, PropertyDescriptor *desc)
 {
     desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(JS_GetPropertyDescriptorById(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED,
-                                         Jsvalify(desc)), set ? SET : GET);
+    CHECKED(JS_GetPropertyDescriptorById(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED, desc),
+            set ? SET : GET);
 }
 
 static bool
@@ -138,11 +138,8 @@ GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSP
 {
     // If obj is a proxy, we can do better than just guessing. This is
     // important for certain types of wrappers that wrap other wrappers.
-    if (obj->isProxy()) {
-        return JSProxy::getOwnPropertyDescriptor(cx, obj, id,
-                                                 flags & JSRESOLVE_ASSIGNING,
-                                                 Valueify(desc));
-    }
+    if (obj->isProxy())
+        return JSProxy::getOwnPropertyDescriptor(cx, obj, id, flags & JSRESOLVE_ASSIGNING, desc);
 
     if (!JS_GetPropertyDescriptorById(cx, obj, id, flags, desc))
         return false;
@@ -156,16 +153,16 @@ JSWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, b
                                     PropertyDescriptor *desc)
 {
     desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(GetOwnPropertyDescriptor(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED,
-                                     Jsvalify(desc)), set ? SET : GET);
+    CHECKED(GetOwnPropertyDescriptor(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED, desc),
+            set ? SET : GET);
 }
 
 bool
 JSWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                           PropertyDescriptor *desc)
 {
-    SET(JS_DefinePropertyById(cx, wrappedObject(wrapper), id, Jsvalify(desc->value),
-                              Jsvalify(desc->getter), Jsvalify(desc->setter), desc->attrs));
+    SET(JS_DefinePropertyById(cx, wrappedObject(wrapper), id, desc->value,
+                              desc->getter, desc->setter, desc->attrs));
 }
 
 bool
@@ -188,7 +185,7 @@ JSWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     *bp = true; // default result if we refuse to perform this action
     Value v;
-    SET(JS_DeletePropertyById2(cx, wrappedObject(wrapper), id, Jsvalify(&v)) &&
+    SET(JS_DeletePropertyById2(cx, wrappedObject(wrapper), id, &v) &&
         ValueToBoolean(&v, bp));
 }
 
@@ -229,7 +226,7 @@ JSWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
     *bp = false; // default result if we refuse to perform this action
     PropertyDescriptor desc;
     JSObject *wobj = wrappedObject(wrapper);
-    GET(JS_GetPropertyDescriptorById(cx, wobj, id, JSRESOLVE_QUALIFIED, Jsvalify(&desc)) &&
+    GET(JS_GetPropertyDescriptorById(cx, wobj, id, JSRESOLVE_QUALIFIED, &desc) &&
         Cond(desc.obj == wobj, bp));
 }
 
@@ -237,7 +234,7 @@ bool
 JSWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
-    GET(wrappedObject(wrapper)->getProperty(cx, receiver, id, vp));
+    GET(wrappedObject(wrapper)->getGeneric(cx, receiver, id, vp));
 }
 
 bool
@@ -286,7 +283,7 @@ JSWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *
     *bp = false; // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
     JSBool b = JS_FALSE;
-    GET(JS_HasInstance(cx, wrappedObject(wrapper), Jsvalify(*vp), &b) && Cond(b, bp));
+    GET(JS_HasInstance(cx, wrappedObject(wrapper), *vp, &b) && Cond(b, bp));
 }
 
 JSType

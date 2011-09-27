@@ -855,11 +855,23 @@ nsStandardURL::ParsePath(const char *spec, PRUint32 pathPos, PRInt32 pathLen)
 char *
 nsStandardURL::AppendToSubstring(PRUint32 pos,
                                  PRInt32 len,
-                                 const char *tail,
-                                 PRInt32 tailLen)
+                                 const char *tail)
 {
-    if (tailLen < 0)
-        tailLen = strlen(tail);
+    // Verify pos and length are within boundaries
+    if (pos > mSpec.Length())
+        return NULL;
+    if (len < 0)
+        return NULL;
+    if ((PRUint32)len > (mSpec.Length() - pos))
+        return NULL;
+    if (!tail)
+        return NULL;
+
+    PRUint32 tailLen = strlen(tail);
+
+    // Check for int overflow for proposed length of combined string
+    if (PR_UINT32_MAX - ((PRUint32)len + 1) < tailLen)
+        return NULL;
 
     char *result = (char *) NS_Alloc(len + tailLen + 1);
     if (result) {

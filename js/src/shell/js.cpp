@@ -1198,7 +1198,7 @@ GC(JSContext *cx, uintN argc, jsval *vp)
 {
     JSCompartment *comp = NULL;
     if (argc == 1) {
-        Value arg = Valueify(vp[2]);
+        Value arg = vp[2];
         if (arg.isObject())
             comp = arg.toObject().unwrap()->compartment();
     }
@@ -1327,7 +1327,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
         if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
             return JS_FALSE;
     if (argc >= 3)
-        compartment = js_ValueToBoolean(Valueify(vp[3]));
+        compartment = js_ValueToBoolean(vp[3]);
 
     JS_SetGCZeal(cx, (uint8)zeal, frequency, compartment);
     *vp = JSVAL_VOID;
@@ -1351,7 +1351,7 @@ ScheduleGC(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToECMAUint32(cx, vp[2], &count))
         return JS_FALSE;
     if (argc == 2)
-        compartment = js_ValueToBoolean(Valueify(vp[3]));
+        compartment = js_ValueToBoolean(vp[3]);
 
     JS_ScheduleGC(cx, count, compartment);
     *vp = JSVAL_VOID;
@@ -2363,7 +2363,7 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
-                if (!obj->getProperty(cx, id, &value))
+                if (!obj->getGeneric(cx, id, &value))
                     return JS_FALSE;
             }
             if (!prop || !value.isObjectOrNull()) {
@@ -2534,7 +2534,7 @@ DumpStack(JSContext *cx, uintN argc, Value *vp)
         } else {
             v = iter.nativeArgs().calleev();
         }
-        if (!JS_SetElement(cx, arr, index, Jsvalify(&v)))
+        if (!JS_SetElement(cx, arr, index, &v))
             return false;
     }
 
@@ -3039,7 +3039,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
-    if (!cx->compartment->wrap(cx, Valueify(&rval)))
+    if (!cx->compartment->wrap(cx, &rval))
         return false;
 
     JS_SET_RVAL(cx, vp, rval);
@@ -3154,10 +3154,10 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         desc.attrs = shape->attributes();
         desc.getter = shape->getter();
         if (!desc.getter && !(desc.attrs & JSPROP_GETTER))
-            desc.getter = PropertyStub;
+            desc.getter = JS_PropertyStub;
         desc.setter = shape->setter();
         if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
-            desc.setter = StrictPropertyStub;
+            desc.setter = JS_StrictPropertyStub;
         desc.shortid = shape->shortid;
         propFlags = shape->getFlags();
    } else if (referent->isProxy()) {
@@ -3171,13 +3171,13 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
             return false;
         if (*objp != referent)
             return true;
-        if (!referent->getProperty(cx, id, &desc.value) ||
+        if (!referent->getGeneric(cx, id, &desc.value) ||
             !referent->getAttributes(cx, id, &desc.attrs)) {
             return false;
         }
         desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-        desc.getter = PropertyStub;
-        desc.setter = StrictPropertyStub;
+        desc.getter = JS_PropertyStub;
+        desc.setter = JS_StrictPropertyStub;
         desc.shortid = 0;
     }
 
@@ -4177,7 +4177,7 @@ ParseLegacyJSON(JSContext *cx, uintN argc, jsval *vp)
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
     if (!chars)
         return false;
-    return js::ParseJSONWithReviver(cx, chars, length, js::NullValue(), js::Valueify(vp), LEGACY);
+    return js::ParseJSONWithReviver(cx, chars, length, js::NullValue(), vp, LEGACY);
 }
 
 static JSBool
@@ -4630,58 +4630,6 @@ static JSPropertySpec its_props[] = {
     {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
                         its_getter,     its_setter},
     {NULL,0,0,NULL,NULL}
-};
-
-static JSBool
-its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSString *name;
-    JSObject *method;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "So", &name, &method))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(method);
-
-    if (JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes) {
-            JSString *valstr = JS_ValueToString(cx, *vp);
-            if (valstr) {
-                JSAutoByteString valBytes(cx, valstr);
-                if (!!valBytes) {
-                    JS_ReportError(cx, "can't bind method %s to non-callable object %s",
-                                   nameBytes.ptr(), valBytes.ptr());
-                }
-            }
-        }
-        return JS_FALSE;
-    }
-
-    if (method->getFunctionPrivate()->isInterpreted() &&
-        method->getFunctionPrivate()->script()->compileAndGo) {
-        /* Can't reparent compileAndGo scripts. */
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes)
-            JS_ReportError(cx, "can't bind method %s to compileAndGo script", nameBytes.ptr());
-        return JS_FALSE;
-    }
-
-    jsid id;
-    if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
-        return JS_FALSE;
-
-    if (!JS_DefinePropertyById(cx, thisobj, id, *vp, NULL, NULL, JSPROP_ENUMERATE))
-        return JS_FALSE;
-
-    return JS_SetParent(cx, method, thisobj);
-}
-
-static JSFunctionSpec its_methods[] = {
-    {"bindMethod",      its_bindMethod, 2,0},
-    {NULL,NULL,0,0}
 };
 
 #ifdef JSD_LOWLEVEL_SOURCE
@@ -5335,8 +5283,6 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
         if (!it)
             return NULL;
         if (!JS_DefineProperties(cx, it, its_props))
-            return NULL;
-        if (!JS_DefineFunctions(cx, it, its_methods))
             return NULL;
 
         if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,

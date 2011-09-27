@@ -41,7 +41,6 @@
 
 #include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsRegion.h"
 #include "nsIPresShell.h"
 #include "gfxRect.h"
@@ -153,7 +152,7 @@ protected:
   // If width or height is less than or equal to zero we must disable rendering
   PRBool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  nsAutoPtr<gfxMatrix> mCanvasTM;
 
   // Areas dirtied by changes to decendents that are in our document
   nsRegion mSameDocDirtyRegion;

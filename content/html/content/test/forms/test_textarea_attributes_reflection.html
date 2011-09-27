@@ -37,7 +37,13 @@ reflectBoolean({
 });
 
 // TODO: form (HTMLFormElement)
-// TODO: maxLength (long)
+
+// .maxLength
+reflectInt({
+  element: document.createElement("textarea"),
+  attribute: "maxLength",
+  nonNegative: true,
+});
 
 // .name
 reflectString({

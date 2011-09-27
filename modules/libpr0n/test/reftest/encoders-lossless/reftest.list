@@ -101,6 +101,7 @@ HTTP == size-17x17.png encoder.html?img=size-17x17.png&mime=image/vnd.microsoft.
 HTTP == size-31x31.png encoder.html?img=size-31x31.png&mime=image/vnd.microsoft.icon
 HTTP == size-32x32.png encoder.html?img=size-32x32.png&mime=image/vnd.microsoft.icon
 HTTP == size-33x33.png encoder.html?img=size-33x33.png&mime=image/vnd.microsoft.icon
+HTTP == size-256x256.png encoder.html?img=size-256x256.png&mime=image/vnd.microsoft.icon
 
 # ICO using image/vnd.microsoft.icon mime type and 32bpp parse options with bmp 
 HTTP == size-1x1.png   encoder.html?img=size-1x1.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D32%3Bformat%3Dbmp
@@ -118,6 +119,7 @@ HTTP == size-17x17.png encoder.html?img=size-17x17.png&mime=image/vnd.microsoft.
 HTTP == size-31x31.png encoder.html?img=size-31x31.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D32%3Bformat%3Dbmp
 HTTP == size-32x32.png encoder.html?img=size-32x32.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D32%3Bformat%3Dbmp
 HTTP == size-33x33.png encoder.html?img=size-33x33.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D32%3Bformat%3Dbmp
+HTTP == size-256x256.png encoder.html?img=size-256x256.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D32%3Bformat%3Dbmp
 
 # ICO using image/vnd.microsoft.icon mime type and 24bpp parse options with bmp 
 HTTP == size-1x1.png   encoder.html?img=size-1x1.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D24%3Bformat%3Dbmp
@@ -135,6 +137,7 @@ HTTP == size-17x17.png encoder.html?img=size-17x17.png&mime=image/vnd.microsoft.
 HTTP == size-31x31.png encoder.html?img=size-31x31.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D24%3Bformat%3Dbmp
 HTTP == size-32x32.png encoder.html?img=size-32x32.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D24%3Bformat%3Dbmp
 HTTP == size-33x33.png encoder.html?img=size-33x33.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D24%3Bformat%3Dbmp
+HTTP == size-256x256.png encoder.html?img=size-256x256.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Abpp%3D24%3Bformat%3Dbmp
 
 # ICO using image/vnd.microsoft.icon mime type png
 HTTP == size-1x1.png   encoder.html?img=size-1x1.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
@@ -152,4 +155,5 @@ HTTP == size-17x17.png encoder.html?img=size-17x17.png&mime=image/vnd.microsoft.
 HTTP == size-31x31.png encoder.html?img=size-31x31.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
 HTTP == size-32x32.png encoder.html?img=size-32x32.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
 HTTP == size-33x33.png encoder.html?img=size-33x33.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
+HTTP == size-256x256.png encoder.html?img=size-256x256.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
 

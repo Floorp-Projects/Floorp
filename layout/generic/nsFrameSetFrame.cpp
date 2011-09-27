@@ -1361,13 +1361,10 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   if (NS_UNLIKELY(!childTypes)) {
     return;
   }
-  PRUint32 childIndex, childTypeIndex = 0;
+  PRInt32 childTypeIndex = 0;
 
-  // number of any type of children
-  PRUint32 numChildren = mContent->GetChildCount();
-  for (childIndex = 0; childIndex < numChildren; childIndex++) {
-    nsIContent *child = mContent->GetChildAt(childIndex);
-
+  for (nsIContent *child = mContent->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
     if (child->IsHTML()) {
       nsINodeInfo *ni = child->NodeInfo();
 

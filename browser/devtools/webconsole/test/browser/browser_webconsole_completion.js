@@ -89,7 +89,7 @@ function testCompletion() {
   is(jsterm.completeNode.value, "                entById", "'document.getElem' completion");
 
   jsterm.clearOutput();
-  jsterm.history.splice(0);   // workaround for bug 592552
+  jsterm.history.splice(0, jsterm.history.length);   // workaround for bug 592552
 
   input.value = "docu";
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY);

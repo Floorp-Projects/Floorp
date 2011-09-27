@@ -287,8 +287,12 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
                       aObserver, &doneLoading, &isAlternate);
   }
   else {
+    // XXXbz clone the URI here to work around content policies modifying URIs.
+    nsCOMPtr<nsIURI> clonedURI;
+    uri->Clone(getter_AddRefs(clonedURI));
+    NS_ENSURE_TRUE(clonedURI, NS_ERROR_OUT_OF_MEMORY);
     rv = doc->CSSLoader()->
-      LoadStyleLink(thisContent, uri, title, media, isAlternate, aObserver,
+      LoadStyleLink(thisContent, clonedURI, title, media, isAlternate, aObserver,
                     &isAlternate);
     if (NS_FAILED(rv)) {
       // Don't propagate LoadStyleLink() errors further than this, since some

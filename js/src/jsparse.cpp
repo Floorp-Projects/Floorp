@@ -1160,7 +1160,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
          * checks every time it is accessed in the script.
          */
         const Shape *shape =
-            DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
+            DefineNativeProperty(cx, globalObj, id, rval, JS_PropertyStub, JS_StrictPropertyStub,
                                  JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
         if (!shape)
             return false;

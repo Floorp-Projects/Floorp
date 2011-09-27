@@ -43,7 +43,6 @@
 #include "nsSVGEffects.h"
 #include "nsSVGClipPathElement.h"
 #include "gfxContext.h"
-#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -71,7 +70,11 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
   AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent;
-  mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
+  if (mClipParentMatrix) {
+    *mClipParentMatrix = aMatrix;
+  } else {
+    mClipParentMatrix = new gfxMatrix(aMatrix);
+  }
 
   PRBool isTrivial = IsTrivial();
 
@@ -183,7 +186,11 @@ nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
   AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent;
-  mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
+  if (mClipParentMatrix) {
+    *mClipParentMatrix = aMatrix;
+  } else {
+    mClipParentMatrix = new gfxMatrix(aMatrix);
+  }
 
   nsSVGClipPathFrame *clipPathFrame =
     nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull);
@@ -319,8 +326,9 @@ nsSVGClipPathFrame::GetCanvasTM()
 {
   nsSVGClipPathElement *content = static_cast<nsSVGClipPathElement*>(mContent);
 
-  gfxMatrix tm = content->PrependLocalTransformTo(
-    nsSVGUtils::ConvertSVGMatrixToThebes(mClipParentMatrix));
+  gfxMatrix tm =
+    content->PrependLocalTransformTo(mClipParentMatrix ?
+                                     *mClipParentMatrix : gfxMatrix());
 
   return nsSVGUtils::AdjustMatrixForUnits(tm,
                                           &content->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS],

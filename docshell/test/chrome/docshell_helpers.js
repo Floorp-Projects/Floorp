@@ -317,7 +317,10 @@ function finish() {
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.
   if (typeof(gOrigMaxTotalViewers) != "undefined") {
-    SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers",
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefBranch);
+    prefs.setIntPref("browser.sessionhistory.max_total_viewers",
       gOrigMaxTotalViewers);
   }
 
@@ -326,7 +329,8 @@ function finish() {
   let SimpleTest = opener.wrappedJSObject.SimpleTest;
 
   // Wait for the window to be closed before finishing the test
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
+  let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+	             .getService(Components.interfaces.nsIWindowWatcher);
   ww.registerNotification(function(subject, topic, data) {
     if (topic == "domwindowclosed") {
       ww.unregisterNotification(arguments.callee);
@@ -396,21 +400,26 @@ function waitForTrue(fn, onWaitComplete, timeout) {
  *           to 0 (disabled), if a number, set it to that specific number
  */
 function enableBFCache(enable) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+              .getService(Components.interfaces.nsIPrefBranch);
+  
   // If this is the first time the test called enableBFCache(),
   // store the original value of max_total_viewers, so it can
   // be restored at the end of the test.
   if (typeof(gOrigMaxTotalViewers) == "undefined") {
-    gOrigMaxTotalViewers = SpecialPowers.getIntPref("browser.sessionhistory.max_total_viewers");
+    gOrigMaxTotalViewers =
+      prefs.getIntPref("browser.sessionhistory.max_total_viewers");
   }
   
   if (typeof(enable) == "boolean") {
     if (enable)
-      SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers", -1);
+      prefs.setIntPref("browser.sessionhistory.max_total_viewers", -1);
     else
-      SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers", 0);    
+      prefs.setIntPref("browser.sessionhistory.max_total_viewers", 0);    
   }
   else if (typeof(enable) == "number") {
-    SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers", enable);    
+    prefs.setIntPref("browser.sessionhistory.max_total_viewers", enable);    
   }
 }
 

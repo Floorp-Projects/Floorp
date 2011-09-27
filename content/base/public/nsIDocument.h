@@ -1579,7 +1579,7 @@ public:
   void WarnOnceAbout(DeprecatedOperations aOperation);
 
 private:
-  PRUint32 mWarnedAbout;
+  PRUint64 mWarnedAbout;
 
 protected:
   ~nsIDocument()

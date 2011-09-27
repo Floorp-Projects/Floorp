@@ -85,6 +85,10 @@ public:
   // called by nsNavHistory::Init
   static nsresult InitTables(mozIStorageConnection* aDBConn);
 
+  static nsFaviconService* GetFaviconServiceIfAvailable() {
+    return gFaviconService;
+  }
+
   /**
    * Returns a cached pointer to the favicon service for consumers in the
    * places directory.

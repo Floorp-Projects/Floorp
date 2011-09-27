@@ -755,7 +755,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
       return NS_NewDOMMutationEvent(aDOMEvent, aPresContext,
                                     static_cast<nsMutationEvent*>(aEvent));
     case NS_GUI_EVENT:
-    case NS_COMPOSITION_EVENT:
     case NS_SCROLLPORT_EVENT:
     case NS_UI_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
@@ -766,6 +765,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
                                     static_cast<nsKeyEvent*>(aEvent));
+    case NS_COMPOSITION_EVENT:
+      return NS_NewDOMCompositionEvent(
+        aDOMEvent, aPresContext, static_cast<nsCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
     case NS_POPUP_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
@@ -825,6 +827,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
       aEventType.LowerCaseEqualsLiteral("keyevents"))
     return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("compositionevent"))
+    return NS_NewDOMCompositionEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
         aEventType.LowerCaseEqualsLiteral("mutationevents"))
     return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, nsnull);

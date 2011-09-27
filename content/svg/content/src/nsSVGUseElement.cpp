@@ -366,7 +366,7 @@ nsSVGUseElement::CreateAnonymousContent()
     // move the children over
     PRUint32 num = newcontent->GetChildCount();
     for (i = 0; i < num; i++) {
-      nsCOMPtr<nsIContent> child = newcontent->GetChildAt(0);
+      nsCOMPtr<nsIContent> child = newcontent->GetFirstChild();
       newcontent->RemoveChildAt(0, PR_FALSE);
       svgNode->InsertChildAt(child, i, PR_TRUE);
     }

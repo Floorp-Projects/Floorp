@@ -46,7 +46,8 @@
   padding: 0;
   background: @color_toolbar_background@;
   border: none;
-  min-height: @touch_button_xlarge@;
+  border-bottom: @border_width_large@ solid @color_toolbar_border@;
+  min-height: @touch_button_small@;
 }
 
 #toolbar-moveable-container[mode="discovery"],
@@ -129,19 +130,28 @@ toolbarbutton.urlbar-button {
 #urlbar-container {
   color: @color_text_default@;
   background-color: transparent;
-  max-width: @urlbar_max_width@;
   -moz-box-align: center;
-  -moz-margin-end: @margin_xxxnormal@;
+  padding: 0px;
+  margin: 0px;
+  -moz-margin-end: @margin_normal@;
+  -moz-margin-start: 0px;
 }
 
 #urlbar-container[mode="edit"] > #identity-box {
-  visibility: collapse;
+  border-bottom-width: @border_width_large@;
+  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
+                    url("chrome://browser/skin/images/favicon-default-32.png");
+  background-position: bottom left, center center;
+  background-repeat: no-repeat;
+}
+
+#urlbar-container[mode="edit"] > #identity-box > #urlbar-image-box {
+  visibility: hidden;
 }
 
 /* URL bar cap buttons */
 .urlbar-cap-button {
   margin: 0 !important;
-  min-width: @touch_button_small@ !important;
   min-height: @urlbar_edit_height@ !important;
   max-height: @urlbar_edit_height@ !important;
   -moz-box-align: center;
@@ -150,12 +160,11 @@ toolbarbutton.urlbar-button {
 
 /* left cap button --------------------------------------------------------- */
 #identity-box {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom.png");
+  background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom left;
-  background-repeat: no-repeat,
-                     repeat-x;
-  padding: 0px @padding_tiny@;
+  background-repeat: no-repeat;
+  padding: 0px @padding_xnormal@ 0px @padding_xxxnormal@;
+  border-bottom: @border_width_small@ solid @color_url_border@;
 }
 
 #identity-box:hover:active {
@@ -163,20 +172,18 @@ toolbarbutton.urlbar-button {
 }
 
 #identity-box:-moz-locale-dir(rtl) {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom.png");
+  background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom right;
-  background-repeat: no-repeat,
-                     repeat-x;
+  background-repeat: no-repeat;
 }
 
 /* add special color */
 #identity-box[mode="verifiedIdentity"] {
-  background-color: #89d715;
+  background-color: #c4eb8a;
 }
 
 #identity-box[mode="verifiedDomain"] {
-  background-color: #6579e3;
+  background-color: #b2bcf1;
 }
 
 #identity-popup-runBy-box,
@@ -188,7 +195,6 @@ toolbarbutton.urlbar-button {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
 
-#urlbar-throbber,
 #urlbar-favicon {
   width: 32px;
   height: 32px;
@@ -200,31 +206,32 @@ toolbarbutton.urlbar-button {
 }
 
 /* Main urlbar textbox */
+#urlbar-title {
+  padding: @padding_xxnormal@ @padding_tiny@ @padding_xxxnormal@;
+}
+
 #urlbar-title.placeholder {
   color: @color_text_placeholder@;
 }
 
 #urlbar-edit,
 #urlbar-title {
+  font-size: @font_xsmall@ !important;
   background: @color_toolbar_background@;
-  padding: @padding_xxxnormal@ 0px @padding_xsmall@ 0px;
   margin: 0px !important;
   min-height: @urlbar_edit_height@ !important;
   max-height: @urlbar_edit_height@;
-}
-
-#urlbar-title {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom.png");
+  background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom right;
-  background-repeat: no-repeat, repeat-x;
+  background-repeat: no-repeat;
+  -moz-padding-start: @padding_small@ !important;
+  border: none;
+  border-bottom: @border_width_small@ solid @color_url_border@;
 }
 
-#urlbar-title:-moz-locale-dir(rtl) {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom.png");
+#urlbar-title:-moz-locale-dir(rtl),
+#urlbar-edit:-moz-locale-dir(rtl) {
   background-position: bottom left;
-  background-repeat: no-repeat, repeat-x;
 }
 
 #urlbar-title:hover:active {
@@ -233,12 +240,7 @@ toolbarbutton.urlbar-button {
 
 #urlbar-edit {
   -moz-appearance: none !important;
-  background-image: url("chrome://browser/skin/images/urlbar-border-bottom-active.png"),
-                    url("chrome://browser/skin/images/urlbar-border-side-active.png"),
-                    url("chrome://browser/skin/images/urlbar-border-side-active.png");
-  background-position: bottom left, bottom left, bottom right;
-  background-repeat: repeat-x, no-repeat, no-repeat;
-  border: none;
+  border-bottom: @border_width_large@ solid @color_url_border@;
 }
 
 #urlbar-edit > hbox > .textbox-input-box {
@@ -255,29 +257,26 @@ toolbarbutton.urlbar-button {
 
 /* Right cap button --------------------------------------------------------- */
 #urlbar-icons {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom.png");
+  background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom right;
-  background-repeat: no-repeat,
-                     repeat-x;
-  padding-bottom: 1px;
-  -moz-padding-end: 1px;
+  background-repeat: no-repeat;
+  border-bottom: @border_width_small@ solid @color_url_border@;
+  padding: 0px @padding_normal@ @padding_tiny@ @padding_tiny@;
 }
 
 #urlbar-icons:-moz-locale-dir(rtl) {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom.png");
+  background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom left;
 }
 
 #urlbar-container[mode="edit"] > #urlbar-icons {
-  background-image: url("chrome://browser/skin/images/urlbar-border-side-active.png"),
-                    url("chrome://browser/skin/images/urlbar-border-bottom-active.png");
+  border-bottom-width: @border_width_large@;
 }
 
 #urlbar-icons toolbarbutton {
-  padding: 0px @padding_small@ !important;
+  padding: 0px @padding_normal@ !important;
   margin: 0px !important;
+  border: none;
 }
 
 #urlbar-icons[disabled="true"] {
@@ -285,6 +284,7 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-icons[disabled="true"] > toolbarbutton {
+  border: none;
   opacity: 0.5;
 }
 
@@ -327,16 +327,10 @@ toolbarbutton.urlbar-button {
 .button-control {
   padding: 0 !important;
   min-width: @sidebar_width_minimum@ !important;
-  border-top: @border_width_tiny@ solid @color_divider_border@ !important;
-  border-bottom: @border_width_tiny@ solid @color_divider_border@ !important;
   background-color: transparent !important;
   -moz-box-align: center;
   -moz-box-pack: center;
   height: @sidebar_button_height@;
-}
-
-.button-control:last-child {
-  border-bottom: 0 solid @color_divider_border@ !important;
 }
 
 .button-control[disabled="true"] {
@@ -349,23 +343,49 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-tabs {
+  border: none;
   -moz-box-orient: vertical;
   list-style-image: url("chrome://browser/skin/images/tabs-hdpi.png");
+  background-image: url("chrome://browser/skin/images/tabs-default-bg.png");
+  background-position: top left;
+  background-repeat: no-repeat;
+  -moz-margin-end: -@margin_large@; /* allow back button to overlap a bit */
+  min-width: 100px !important; /* same width than bg image */
+}
+#tool-tabs:-moz-locale-dir(rtl) {
+  background-image: url("chrome://browser/skin/images/tabs-default-bg-rtl.png");
+}
+
+#tool-tabs:not([disabled="true"]):active,
+#tool-tabs:not([disabled="true"])[open="true"] {
+  background-image: url("chrome://browser/skin/images/tabs-selected-bg.png");
+  background-color: transparent;
+}
+#tool-tabs:not([disabled="true"]):active:-moz-locale-dir(rtl),
+#tool-tabs:not([disabled="true"])[open="true"]:-moz-locale-dir(rtl) {
+  background-image: url("chrome://browser/skin/images/tabs-selected-bg-rtl.png");
 }
 
 #tool-tabs .toolbarbutton-icon {
-  -moz-transform: translateY(0.5em);
+  -moz-transform: translateY(0.45em);
+  -moz-padding-end: 32px; /* correct position and alignment */
 }
 
 #tool-tabs .toolbarbutton-text {
+  color: @color_text_toolbutton_inverse@;
   display: -moz-box;
   font-size: @font_small@ !important;
-  -moz-transform: translateY(-1.25em);
+  font-weight: bold !important;
+  -moz-transform: translateY(-0.50em);
+  -moz-padding-end: 32px; /* correct position and alignment */
 }
 
 #tool-menu {
   list-style-image: url("chrome://browser/skin/images/menu-hdpi.png");
+  margin: @margin_small@ 0px;
+  padding: @padding_xnormal@ @padding_large@ 0px!important;
   -moz-margin-end: 0px;
+  -moz-border-start: @border_width_tiny@ solid @color_button_border@;
 }
 
 .tool-star {
@@ -382,7 +402,32 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-back2 {
-  -moz-margin-end: @padding_tiny@;
+  margin: @margin_small@ @margin_snormal@;
+  /* adjust the min-width of this button to account for padding */
+  min-width: -moz-calc(@touch_button_small@ - 2 * @margin_snormal@) !important;
+  min-height: -moz-calc(@touch_button_small@ - 2 * @margin_snormal@) !important;
+  border: @border_width_small@ solid @color_url_border@;
+  -moz-border-radius: 100%;
+}
+
+#tool-forward2 {
+  margin: 0px;
+  padding: 0px;
+  -moz-margin-start: -@margin_xxxnormal@;
+  -moz-margin-end: -@padding_tiny@;
+  -moz-padding-start: @padding_xxxnormal@ !important;
+  -moz-padding-end: @margin_xnormal@ !important;
+  min-height: @urlbar_edit_height@ !important;
+  max-height: @urlbar_edit_height@ !important;
+  min-width: 0px !important;
+  mask: url(chrome://browser/content/browser.xul#back-button-mask);
+  border: none;
+  border-bottom: @border_width_large@ solid @color_url_border@;
+  -moz-border-bottom-colors: @color_url_border@ transparent;
+}
+
+#tool-forward2[mode="edit"] {
+  -moz-border-bottom-colors: @color_url_border@;
 }
 
 .tool-back:-moz-locale-dir(rtl),
@@ -456,24 +501,34 @@ toolbarbutton.choice-remotetabs[checked="true"] {
 }
 
 /* awesomescreen panels ---------------------------------------------------- */
-historylist > hbox.history-throbber-box,
-remotetabslist > hbox.remotetabs-throbber-box {
-  display: none;
-}
-
-.history-throbber-box > image,
-.remotetabs-throbber-box > image {
+.history-throbber-box,
+.remotetabs-throbber-box {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
 
-historylist[loading="true"] > hbox.history-throbber-box,
-remotetabslist[loading="true"] > hbox.remotetabs-throbber-box {
-  background-color: white; /* force */
+.remotetabs-message-box {
+  font-size: @font_small@ !important;
+  font-weight: normal;
+  text-align: center;
+  color: grey;
+}
+
+.history-throbber-box,
+.remotetabs-throbber-box,
+.remotetabs-message-box {
+  display: none;
+}
+
+historylist[loading="true"] > .history-throbber-box,
+remotetabslist[loading="true"] > .remotetabs-throbber-box,
+remotetabslist[message] > .remotetabs-message-box {
+  background-color: white;
   display: -moz-box;
 }
 
-historylist[loading="true"] > richlistbox.history-list-children,
-remotetabslist[loading="true"] > richlistbox.remotetabs-list-children {
+historylist[loading="true"] > .history-list-children,
+remotetabslist[loading="true"] > .remotetabs-list-children,
+remotetabslist[message] > .remotetabs-list-children {
   visibility: collapse;
 }
 
@@ -964,10 +1019,6 @@ autocompleteresult.noresults > .autocomplete-item-container {
 #tabs-container {
   -moz-border-end: @border_width_large@ solid #262629;
   background: @color_toolbar_background@;
-}
-
-#tabs:-moz-locale-dir(rtl) {
-  -moz-box-align: start;
 }
 
 #tabs > .tabs-scrollbox {
@@ -1684,15 +1735,16 @@ setting {
 
 /* Sync setup ------------------------------------------------------------- */
 .content-dialog > .prompt-title {
-  margin: @margin_normal@ @margin_large@ 0px;
+  margin: @margin_large@;
 }
 
-.content-dialog > .prompt-line,
+.content-dialog > .prompt-line {
+  border-bottom: @border_width_xxlarge@ solid @color_divider_border@;
+  margin: 0 @margin_large@;
+}
+
 .content-dialog .prompt-message {
   margin: 0px @margin_large@;
-}
-
-.content-dialog .prompt-message {
   border-bottom: @border_width_tiny@ solid @color_button_border@;
 }
 
@@ -1701,14 +1753,15 @@ setting {
 }
 
 .syncsetup-code {
-  color: @color_text_textbox@;
-  background-color: @color_background_textbox@;
-  font-size: @font_xlarge@ !important;
-  padding: 0.2em 0.4em;
-  -moz-padding-end: 0.2em;
+  color: @color_text_header@;
+  background-color: @color_background_header@;
+  font-size: @font_xnormal@ !important;
+  font-weight: bold;
+  padding: .8em;
   letter-spacing: 0.2em;
   text-align: center;
-  min-width: 5.5em;
+  min-width: 8em;
+  margin: @margin_xtiny@ 0 0 0;
 }
 
 .syncsetup-label {
@@ -1720,7 +1773,7 @@ setting {
 }
 
 #sync-message {
-  padding-bottom: 2em;
+  padding: 1em 0;
 }
 
 /* content scrollbars */
@@ -1798,10 +1851,6 @@ setting {
 }
 
 @media (min-width: @tablet_panel_minwidth@) {
-  #toolbar-main {
-    -moz-padding-start: @padding_xxxnormal@;
-  }
-
   #awesome-header {
     -moz-box-orient: vertical;
   }
@@ -1918,8 +1967,8 @@ setting {
 }
 
 .documenttab-popup-checkmark {
-  min-width: -moz-calc(26px + 2 * @padding_normal@); /* size of the checkmark image  plus the padding */
-  padding: 0px @padding_normal@;
+  min-width: -moz-calc(26px + @padding_normal@) !important; /* size of the checkmark image  plus the padding */
+  -moz-padding-end: @padding_normal@;
 }
 
 .tab-popup-item.selected .documenttab-popup-checkmark {
@@ -1953,6 +2002,20 @@ setting {
 
 #tabs-popup-newtab-button .button-text {
   -moz-padding-start: @padding_large@;
+}
+
+/* Capture picker ------------------------------------------------------------- */
+
+#capturepicker-video {
+  border: @border_width_tiny@ solid white;
+}
+
+#capturepicker-container {
+  margin: @margin_normal@;
+}
+
+#capturepicker-container.vertical {
+  height: 330px;
 }
 
 %include ../tablet.css
