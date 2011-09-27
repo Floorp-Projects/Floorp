@@ -846,8 +846,6 @@ nsGenericDOMDataNode::ReplaceWholeText(const nsAString& aContent,
 {
   *aResult = nsnull;
 
-  GetOwnerDoc()->WarnOnceAbout(nsIDocument::eReplaceWholeText);
-
   // Handle parent-less nodes
   nsCOMPtr<nsIContent> parent = GetParent();
   if (!parent) {

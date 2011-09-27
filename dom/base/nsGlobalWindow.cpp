@@ -8159,11 +8159,6 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
 {
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
-  nsIDocument* document = GetExtantDocument();
-  if (document) {
-    document->WarnOnceAbout(nsIDocument::GlobalStorage);
-  }
-
   if (!Preferences::GetBool(kStorageEnabled)) {
     *aGlobalStorage = nsnull;
     return NS_OK;
