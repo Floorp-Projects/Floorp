@@ -67,6 +67,7 @@ class SurfaceDescriptor;
 class ThebesBuffer;
 class Transaction;
 class SharedImage;
+class CanvasSurface;
 
 /**
  * We want to share layer trees across thread contexts and address
@@ -159,14 +160,6 @@ public:
                            const nsIntRegion& aFrontValidRegion,
                            const nsIntRect& aBufferRect,
                            const SurfaceDescriptor& aInitialFrontBuffer);
-  /**
-   * For the next method, |aSize| is the size of
-   * |aInitialFrontSurface|.
-   */
-  void CreatedCanvasBuffer(ShadowableLayer* aCanvas,
-                           nsIntSize aSize,
-                           const SurfaceDescriptor& aInitialFrontSurface,
-                           bool aNeedYFlip);
 
   /**
    * The specified layer is destroying its buffers.
@@ -178,8 +171,6 @@ public:
    */
   void DestroyedThebesBuffer(ShadowableLayer* aThebes,
                              const SurfaceDescriptor& aBackBufferToDestroy);
-  void DestroyedCanvasBuffer(ShadowableLayer* aCanvas);
-
 
   /**
    * At least one attribute of |aMutant| has changed, and |aMutant|
@@ -224,6 +215,7 @@ public:
   void PaintedImage(ShadowableLayer* aImage,
                     const SharedImage& aNewFrontImage);
   void PaintedCanvas(ShadowableLayer* aCanvas,
+                     bool aNeedYFlip,
                      const SurfaceDescriptor& aNewFrontSurface);
 
   /**
@@ -586,17 +578,6 @@ class ShadowCanvasLayer : public ShadowLayer,
                           public CanvasLayer
 {
 public:
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   *
-   * Initialize this with a (temporary) front surface with the given
-   * size.  This is expected to be followed with a Swap() in the same
-   * transaction to bring in real pixels.  Init() may only be called
-   * once.
-   */
-  virtual void Init(const SurfaceDescriptor& front, const nsIntSize& aSize, bool needYFlip) = 0;
-
   /**
    * CONSTRUCTION PHASE ONLY
    *
@@ -604,14 +585,8 @@ public:
    * out the old front surface (the new back surface for the remote
    * layer).
    */
-  virtual void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack) = 0;
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   *
-   * Destroy the current front buffer.
-   */
-  virtual void DestroyFrontBuffer() = 0;
+  virtual void Swap(const CanvasSurface& aNewFront, bool needYFlip,
+                    CanvasSurface* aNewBack) = 0;
 
   virtual ShadowLayer* AsShadowLayer() { return this; }
 

@@ -214,17 +214,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       break;
     }
-    case Edit::TOpCreateCanvasBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasBuffer"));
-
-      const OpCreateCanvasBuffer& ocb = edit.get_OpCreateCanvasBuffer();
-      ShadowCanvasLayer* canvas = static_cast<ShadowCanvasLayer*>(
-        AsShadowLayer(ocb)->AsLayer());
-
-      canvas->Init(ocb.initialFront(), ocb.size(), ocb.needYFlip());
-
-      break;
-    }
     case Edit::TOpDestroyThebesFrontBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] DestroyThebesFrontBuffer"));
 
@@ -234,18 +223,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         AsShadowLayer(odfb)->AsLayer());
 
       thebes->DestroyFrontBuffer();
-
-      break;
-    }
-    case Edit::TOpDestroyCanvasFrontBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] DestroyCanvasFrontBuffer"));
-
-      const OpDestroyCanvasFrontBuffer& odfb =
-        edit.get_OpDestroyCanvasFrontBuffer();
-      ShadowCanvasLayer* canvas = static_cast<ShadowCanvasLayer*>(
-        AsShadowLayer(odfb)->AsLayer());
-
-      canvas->DestroyFrontBuffer();
 
       break;
     }
@@ -384,15 +361,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowCanvasLayer* canvas =
         static_cast<ShadowCanvasLayer*>(shadow->AsLayer());
 
-      SurfaceDescriptor newFront = op.newFrontBuffer();
-      SurfaceDescriptor newBack;
-      canvas->Swap(op.newFrontBuffer(), &newBack);
-      if (newFront == newBack) {
-        newFront = SurfaceDescriptor();
-      }
-
+      canvas->SetAllocator(this);
+      CanvasSurface newBack;
+      canvas->Swap(op.newFrontBuffer(), op.needYFlip(), &newBack);
       canvas->Updated();
-
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack));
 
