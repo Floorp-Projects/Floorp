@@ -1016,7 +1016,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
-    const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     // align; Check for enumerated type (it may be another type if
     // illegal)
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
