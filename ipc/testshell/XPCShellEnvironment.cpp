@@ -407,13 +407,8 @@ GC(JSContext *cx,
    uintN argc,
    jsval *vp)
 {
-    JSRuntime *rt;
-    uint32 preBytes, postBytes;
-
-    rt = JS_GetRuntime(cx);
-    preBytes = JS_GetGCParameter(rt, JSGC_BYTES);
+    JSRuntime *rt = JS_GetRuntime(cx);
     JS_GC(cx);
-    postBytes = JS_GetGCParameter(rt, JSGC_BYTES);
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
