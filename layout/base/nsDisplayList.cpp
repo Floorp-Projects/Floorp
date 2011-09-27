@@ -695,7 +695,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     aState->mItemBuffer.SetLength(i);
 
     if (aRect.Intersects(item->GetBounds(aBuilder))) {
-      nsTArray<nsIFrame*> outFrames;
+      nsAutoTArray<nsIFrame*, 16> outFrames;
       item->HitTest(aBuilder, aRect, aState, &outFrames);
 
       for (PRUint32 j = 0; j < outFrames.Length(); j++) {

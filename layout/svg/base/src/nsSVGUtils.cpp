@@ -60,7 +60,6 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGInnerSVGFrame.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGContainerFrame.h"
@@ -1158,22 +1157,6 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
   }
 
   return surfaceSize;
-}
-
-gfxMatrix
-nsSVGUtils::ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix)
-{
-  if (!aMatrix) {
-    return gfxMatrix();
-  }
-  float A, B, C, D, E, F;
-  aMatrix->GetA(&A);
-  aMatrix->GetB(&B);
-  aMatrix->GetC(&C);
-  aMatrix->GetD(&D);
-  aMatrix->GetE(&E);
-  aMatrix->GetF(&F);
-  return gfxMatrix(A, B, C, D, E, F);
 }
 
 PRBool

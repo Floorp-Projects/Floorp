@@ -138,7 +138,8 @@ public:
   };
 
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT);
 
   const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
 

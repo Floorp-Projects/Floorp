@@ -531,7 +531,7 @@ MouseModule.prototype = {
     this._singleClickTimeout.clear();
     this._mouseOverTimeout.clear();
     this._longClickTimeout.clear();
-    this._downUpEvents.splice(0);
+    this._downUpEvents.splice(0, this._downUpEvents.length);
   },
 
   /* XXXvn this can potentially be moved into ScrollUtils */

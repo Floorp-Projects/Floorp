@@ -142,6 +142,10 @@ static Atom sPluginIMEAtom;
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 
+// If embedding clients want to create widget without real parent window
+// then nsIBaseWindow->Init() should have parent argument equal to PARENTLESS_WIDGET
+#define PARENTLESS_WIDGET (void*)0x13579
+
 #include "nsShmImage.h"
 extern "C" {
 #include "pixman.h"
@@ -2278,11 +2282,9 @@ nsWindow::Create(nsIWidget        *aParent,
 
     if (aParent != nsnull)
         parent = static_cast<MozQWidget*>(aParent->GetNativeData(NS_NATIVE_WIDGET));
-    else
-        parent = static_cast<MozQWidget*>(aNativeParent);
 
     // ok, create our QGraphicsWidget
-    mWidget = createQWidget(parent, aInitData);
+    mWidget = createQWidget(parent, aNativeParent, aInitData);
 
     if (!mWidget)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2628,7 +2630,9 @@ nsPopupWindow::~nsPopupWindow()
 }
 
 MozQWidget*
-nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
+nsWindow::createQWidget(MozQWidget *parent,
+                        nsNativeWidget nativeParent,
+                        nsWidgetInitData *aInitData)
 {
     const char *windowName = NULL;
     Qt::WindowFlags flags = Qt::Widget;
@@ -2664,7 +2668,13 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
         break;
     }
 
-    MozQWidget * widget = new MozQWidget(this, parent);
+    MozQWidget* parentQWidget = nsnull;
+    if (parent) {
+        parentQWidget = parent;
+    } else if (nativeParent && nativeParent != PARENTLESS_WIDGET) {
+        parentQWidget = static_cast<MozQWidget*>(nativeParent);
+    }
+    MozQWidget * widget = new MozQWidget(this, parentQWidget);
     if (!widget)
         return nsnull;
 
@@ -2815,14 +2825,26 @@ nsWindow::contextMenuEvent(QGraphicsSceneContextMenuEvent *)
 nsEventStatus
 nsWindow::imComposeEvent(QInputMethodEvent *event, PRBool &handled)
 {
+    // XXX Needs to check whether this widget has been destroyed or not after
+    //     each DispatchEvent().
+
     nsCompositionEvent start(PR_TRUE, NS_COMPOSITION_START, this);
     DispatchEvent(&start);
 
+    nsAutoString compositionStr(event->commitString().utf16());
+
+    if (!compositionStr.IsEmpty()) {
+      nsCompositionEvent update(PR_TRUE, NS_COMPOSITION_UPDATE, this);
+      update.data = compositionStr;
+      DispatchEvent(&update);
+    }
+
     nsTextEvent text(PR_TRUE, NS_TEXT_TEXT, this);
-    text.theText.Assign(event->commitString().utf16());
+    text.theText = compositionStr;
     DispatchEvent(&text);
 
     nsCompositionEvent end(PR_TRUE, NS_COMPOSITION_END, this);
+    end.data = compositionStr;
     DispatchEvent(&end);
 
     return nsEventStatus_eIgnore;

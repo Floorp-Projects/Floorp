@@ -1,0 +1,3 @@
+#filter substitution
+binary-component @LIBRARY_FILENAME@
+interfaces xpctest.xpt

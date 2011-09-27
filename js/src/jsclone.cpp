@@ -583,7 +583,7 @@ JSStructuredCloneWriter::write(const Value &v)
                 if (prop) {
                     Value val;
                     if (!writeId(id) ||
-                        !obj->getProperty(context(), id, &val) ||
+                        !obj->getGeneric(context(), id, &val) ||
                         !startWrite(val))
                         return false;
                 }
@@ -605,7 +605,7 @@ JSStructuredCloneReader::checkDouble(jsdouble d)
 {
     jsval_layout l;
     l.asDouble = d;
-    if (!JSVAL_IS_DOUBLE(JSVAL_FROM_LAYOUT(l))) {
+    if (!JSVAL_IS_DOUBLE_IMPL(l)) {
         JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
         return false;

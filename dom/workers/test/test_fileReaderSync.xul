@@ -7,9 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
 <window title="Mozilla Bug 664783"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"/>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -82,19 +81,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
       is(event.data.bin, fileData, "readAsBinaryString in worker returned incorrect result.");
       is(event.data.url, convertToDataURL("application/octet-stream", fileData), "readAsDataURL in worker returned incorrect result.");
       is(event.data.arrayBuffer.byteLength, fileData.length, "readAsArrayBuffer returned buffer of incorrect length.");
-      SimpleTest.finish();
+      finish();
     };
 
     worker.onerror = function(event) {
       ok(false, "Worker had an error: " + event.data);
-      SimpleTest.finish();
+      finish();
     };
 
     var params = {file: createFileWithData(fileData), encoding: encoding};
 
     worker.postMessage(params);
 
-    SimpleTest.waitForExplicitFinish();
+    waitForWorkerFinish();
   }
 
   /**
@@ -105,20 +104,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
 
     worker.onerror = function(event) {
       ok(false, "Worker had an error: " + event.data);
-      SimpleTest.finish();
+      finish();
     };
 
     var k = 0;
     worker.onmessage = function(event) {
       is(event.data.url, expected[k], "readAsDataURL in worker returned incorrect result when reusing FileReaderSync.");
       k++;
-      SimpleTest.finish();
+      finish();
     };
 
     for (var i = 0; i < files.length; ++i) {
       var params = {file: files[i], encoding: undefined};
       worker.postMessage(params);
-      SimpleTest.waitForExplicitFinish();
+      waitForWorkerFinish();
     }
   }
 
@@ -130,19 +129,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
 
     worker.onerror = function(event) {
       ok(false, "Worker had an error: " + event.data);
-      SimpleTest.finish();
+      finish();
     };
 
     var k = 0;
     worker.onmessage = function(event) {
       is(event.data.text, expected[k++], "readAsText in worker returned incorrect result when reusing FileReaderSync.");
-      SimpleTest.finish();
+      finish();
     };
 
     for (var i = 0; i < fileData.length; ++i) {
       var params = {file: createFileWithData(fileData[i]), encoding: undefined};
       worker.postMessage(params);
-      SimpleTest.waitForExplicitFinish();
+      waitForWorkerFinish();
     }
   }
 
@@ -158,19 +157,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
       var view = new Uint8Array(event.data.arrayBuffer);
       is(event.data.arrayBuffer.byteLength, fileData.length, "readAsArrayBuffer returned buffer of incorrect length.");
       is(String.fromCharCode.apply(String, view), fileData, "readAsArrayBuffer returned buffer containing incorrect data.");
-      SimpleTest.finish();
+      finish();
     };
 
     worker.onerror = function(event) {
       ok(false, "Worker had an error: " + event.data);
-      SimpleTest.finish();
+      finish();
     };
 
     var params = {file: createFileWithData(fileData), encoding: undefined};
 
     worker.postMessage(params);
 
-    SimpleTest.waitForExplicitFinish();
+    waitForWorkerFinish();
   }
 
   // Empty file.

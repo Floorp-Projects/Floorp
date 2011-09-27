@@ -94,7 +94,7 @@ JSFlatString::toPropertyName(JSContext *cx)
 {
 #ifdef DEBUG
     uint32 dummy;
-    JS_ASSERT(!isElement(&dummy));
+    JS_ASSERT(!isIndex(&dummy));
 #endif
     if (isAtom())
         return asAtom().asPropertyName();

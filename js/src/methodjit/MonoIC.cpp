@@ -594,25 +594,22 @@ mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJum
     Address resultAddress(JSFrameReg, vpOffset);
 
     Vector<Jump> mismatches(f.cx);
-    if (f.cx->typeInferenceEnabled()) {
-        if (!typeReg.isSet()) {
-            /*
-             * Test the result of this native against the known result type set
-             * for the call. We don't assume knowledge about the types that
-             * natives can return, except when generating specialized paths in
-             * FastBuiltins.
-             */
-            types::TypeSet *types = f.script()->analysis()->bytecodeTypes(f.pc());
-            if (!masm.generateTypeCheck(f.cx, resultAddress, types, &mismatches))
-                THROWV(false);
-        }
-
+    if (f.cx->typeInferenceEnabled() && !typeReg.isSet()) {
         /*
-         * Can no longer trigger recompilation in this stub, clear the stub
-         * rejoin on the VMFrame.
+         * Test the result of this native against the known result type set for
+         * the call. We don't assume knowledge about the types that natives can
+         * return, except when generating specialized paths in FastBuiltins.
          */
-        masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
+        types::TypeSet *types = f.script()->analysis()->bytecodeTypes(f.pc());
+        if (!masm.generateTypeCheck(f.cx, resultAddress, types, &mismatches))
+            THROWV(false);
     }
+
+    /*
+     * Can no longer trigger recompilation in this stub, clear the stub rejoin
+     * on the VMFrame.
+     */
+    masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
 
     if (typeReg.isSet())
         masm.loadValueAsComponents(resultAddress, typeReg.reg(), dataReg.reg());
@@ -642,8 +639,7 @@ mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJum
 
     /* Move JaegerThrowpoline into register for very far jump on x64. */
     hasException.linkTo(masm.label(), &masm);
-    if (f.cx->typeInferenceEnabled())
-        masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
+    masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
     masm.throwInJIT();
 
     *result = done;
@@ -752,15 +748,13 @@ class CallCompiler : public BaseCompiler
         masm.loadPtr(Address(t0, offset), t0);
         Jump hasCode = masm.branchPtr(Assembler::Above, t0, ImmPtr(JS_UNJITTABLE_SCRIPT));
 
-        if (cx->typeInferenceEnabled()) {
-            /*
-             * Write the rejoin state to indicate this is a compilation call
-             * made from an IC (the recompiler cannot detect calls made from
-             * ICs automatically).
-             */
-            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), false)),
-                          FrameAddress(offsetof(VMFrame, stubRejoin)));
-        }
+        /*
+         * Write the rejoin state to indicate this is a compilation call made
+         * from an IC (the recompiler cannot detect calls made from ICs
+         * automatically).
+         */
+        masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), false)),
+                      FrameAddress(offsetof(VMFrame, stubRejoin)));
 
         masm.bumpStubCounter(f.script(), f.pc(), Registers::tempCallReg());
 
@@ -969,16 +963,14 @@ class CallCompiler : public BaseCompiler
         /* Guard on the function object identity, for now. */
         Jump funGuard = masm.branchPtr(Assembler::NotEqual, ic.funObjReg, ImmPtr(obj));
 
-        if (cx->typeInferenceEnabled()) {
-            /*
-             * Write the rejoin state for the recompiler to use if this call
-             * triggers recompilation. Natives use a different stack address to
-             * store the return value than FASTCALLs, and without additional
-             * information we cannot tell which one is active on a VMFrame.
-             */
-            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), true)),
-                          FrameAddress(offsetof(VMFrame, stubRejoin)));
-        }
+        /*
+         * Write the rejoin state for the recompiler to use if this call
+         * triggers recompilation. Natives use a different stack address to
+         * store the return value than FASTCALLs, and without additional
+         * information we cannot tell which one is active on a VMFrame.
+         */
+        masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), true)),
+                      FrameAddress(offsetof(VMFrame, stubRejoin)));
 
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
@@ -1465,19 +1457,19 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
          */
         bool fastFunDead = ic.fastGuardedObject &&
             (purgeAll || IsAboutToBeFinalized(cx, ic.fastGuardedObject));
-        bool nativeDead = ic.fastGuardedNative &&
-            (purgeAll || IsAboutToBeFinalized(cx, ic.fastGuardedNative));
+        bool hasNative = ic.fastGuardedNative != NULL;
 
         /*
          * There are three conditions where we need to relink:
          * (1) purgeAll is true.
-         * (2) The native is dead, since it always has a stub.
+         * (2) There is a native stub. These have a NativeCallStub, which will
+         *     all be released if the compartment has no code on the stack.
          * (3) The fastFun is dead *and* there is a closure stub.
          *
          * Note although both objects can be non-NULL, there can only be one
          * of [closure, native] stub per call IC.
          */
-        if (purgeAll || nativeDead || (fastFunDead && ic.hasJsFunCheck)) {
+        if (purgeAll || hasNative || (fastFunDead && ic.hasJsFunCheck)) {
             repatcher.relink(ic.funJump, ic.slowPathStart);
             ic.hit = false;
         }
@@ -1487,7 +1479,7 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
             ic.purgeGuardedObject();
         }
 
-        if (nativeDead)
+        if (hasNative)
             ic.fastGuardedNative = NULL;
 
         if (purgeAll) {

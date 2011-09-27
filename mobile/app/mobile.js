@@ -382,9 +382,6 @@ pref("plugins.force.wmode", "opaque");
 // URL to the Learn More link XXX this is the firefox one.  Bug 495578 fixes this.
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
-// base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
-
 // enable geo
 pref("geo.enabled", true);
 
@@ -554,8 +551,6 @@ pref("font.default.x-western", "SwissA");
 #endif
 
 #ifdef MOZ_SERVICES_SYNC
-pref("browser.sync.enabled", true);
-
 // sync service
 pref("services.sync.client.type", "mobile");
 pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs");
@@ -671,9 +666,6 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 pref("browser.firstrun.show.uidiscovery", true);
 pref("browser.firstrun.show.localepicker", true);
 
-// initiated by a user
-pref("content.ime.strict_policy", true);
-
 // True if you always want dump() to work
 //
 // On Android, you also need to do the following for the output
@@ -683,3 +675,7 @@ pref("content.ime.strict_policy", true);
 // $ adb shell setprop log.redirect-stdio true
 // $ adb shell start
 pref("browser.dom.window.dump.enabled", false);
+
+// controls if we want camera support
+pref("device.camera.enabled", true);
+pref("media.realtime_decoder.enabled", true);

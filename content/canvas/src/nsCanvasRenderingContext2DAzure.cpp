@@ -4313,8 +4313,8 @@ nsCanvasRenderingContext2DAzure::GetThebesSurface(gfxASurface **surface)
     mTarget->Flush();
   }
 
-  mThebesSurface->AddRef();
   *surface = mThebesSurface;
+  NS_ADDREF(*surface);
 
   return NS_OK;
 }

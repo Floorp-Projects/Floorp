@@ -187,7 +187,10 @@ WifiGeoPositionProvider.prototype = {
     LOG("onChange called");
     this.hasSeenWiFi = true;
 
-    let providerUrlBase = Services.prefs.getCharPref("geo.wifi.uri");
+    let providerUrlBase = "https://maps.googleapis.com/maps/api/browserlocation/json";
+    try {
+        providerUrlBase = Services.prefs.getCharPref("geo.wifi.uri");      
+    } catch (x) {};
     let providerUrl;
 
     let query = providerUrlBase.indexOf("?");

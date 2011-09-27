@@ -410,12 +410,11 @@ nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
 already_AddRefed<nsIDOMHTMLTableSectionElement>
 nsHTMLTableElement::GetSection(nsIAtom *aTag)
 {
-  PRUint32 childCount = GetChildCount();
-
   nsCOMPtr<nsIDOMHTMLTableSectionElement> section;
 
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent *child = GetChildAt(i);
+  for (nsIContent* child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
 
     section = do_QueryInterface(child);
 
@@ -767,9 +766,9 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     nsCOMPtr<nsIDOMNode> rowGroup;
 
     PRInt32 namespaceID = mNodeInfo->NamespaceID();
-    PRUint32 childCount = GetChildCount();
-    for (PRUint32 i = 0; i < childCount; ++i) {
-      nsIContent* child = GetChildAt(i);
+    for (nsIContent* child = nsINode::GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
       nsINodeInfo *childInfo = child->NodeInfo();
       nsIAtom *localName = childInfo->NameAtom();
       if (childInfo->NamespaceID() == namespaceID &&

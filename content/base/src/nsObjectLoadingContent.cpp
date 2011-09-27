@@ -1926,13 +1926,10 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
   PRBool hasAlternateContent = PR_FALSE;
 
   // Search for a child <param> with a pluginurl name
-  PRUint32 count = aContent->GetChildCount();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsIContent* child = aContent->GetChildAt(i);
-    NS_ASSERTION(child, "GetChildCount lied!");
-
-    if (child->IsHTML() &&
-        child->Tag() == nsGkAtoms::param) {
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTML(nsGkAtoms::param)) {
       if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                              NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
         return GetPluginDisabledState(aContentType);

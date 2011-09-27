@@ -22,25 +22,25 @@ netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 var observer = {
   observe: function (aSubject, aTopic, aData) {
-    if (aTopic == "alertclickcallback")
+    if (aTopic == "alertclickcallback") { 
       todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
-    else
+    } else {
       is(aTopic, "alertfinished", "Checking the topic for a finished notification");
+    }
     is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
-
-    // finish(), yet let the test actually end first, to be safe.
-    SimpleTest.executeSoon(SimpleTest.finish);
+    SimpleTest.finish();
   }
 };
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+function runTest() {
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
 
-var gNotificationIsAvailable;
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application");
+    return;
+  }
 
-if (!("@mozilla.org/alerts-service;1" in Cc)) {
-  todo(false, "Alerts service does not exist in this application");
-} else {
   ok(true, "Alerts service exists in this application");
 
   var notifier;
@@ -49,28 +49,25 @@ if (!("@mozilla.org/alerts-service;1" in Cc)) {
                getService(Ci.nsIAlertsService);
     ok(true, "Alerts service is available");
   } catch (ex) {
-    todo(false, "Alerts service is not available. (Mac OS X without Growl?)", ex);
+    todo(false, 
+         "Alerts service is not available. (Mac OS X without Growl?)", ex);
+    return;
   }
 
-  if (notifier) {
-    try {
-      notifier.showAlertNotification(null, "Notification test",
-                                     "Surprise! I'm here to test notifications!",
-                                     false, "foobarcookie", observer);
-      ok(true, "showAlertNotification() succeeded");
-
-      gNotificationIsAvailable = true;
-    } catch (ex) {
-      todo(false, "showAlertNotification() failed. (Mac OS X without Growl?)", ex);
-    }
+  try {
+    SimpleTest.waitForExplicitFinish();
+    notifier.showAlertNotification(null, "Notification test",
+                                   "Surprise! I'm here to test notifications!",
+                                   false, "foobarcookie", observer);
+    ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
+  } catch (ex) {
+    todo(false, "showAlertNotification() failed. (Mac OS X without Growl?)", ex);
+    SimpleTest.finish();
   }
 }
 
-if (gNotificationIsAvailable) {
-  // Wait for the (asynchronous) notification callback.
-  SimpleTest.waitForExplicitFinish();
-  ok(true, "Waiting for notification callback to be triggered...");
-}
+runTest();
+
 </script>
 </pre>
 </body>

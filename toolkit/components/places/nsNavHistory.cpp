@@ -5128,23 +5128,23 @@ nsNavHistory::FinalizeInternalStatements()
   nsresult rv = FinalizeStatements();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // nsNavBookmarks
-  nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  rv = bookmarks->FinalizeStatements();
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksServiceIfAvailable();
+  if (bookmarks) {
+    rv = bookmarks->FinalizeStatements();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  // nsAnnotationService
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-  rv = annosvc->FinalizeStatements();
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationServiceIfAvailable();
+  if (annosvc) {
+    rv = annosvc->FinalizeStatements();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  // nsFaviconService
-  nsFaviconService* iconsvc = nsFaviconService::GetFaviconService();
-  NS_ENSURE_TRUE(iconsvc, NS_ERROR_OUT_OF_MEMORY);
-  rv = iconsvc->FinalizeStatements();
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsFaviconService* iconsvc = nsFaviconService::GetFaviconServiceIfAvailable();
+  if (iconsvc) {
+    rv = iconsvc->FinalizeStatements();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -5286,12 +5286,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       (void)os->RemoveObserver(this, TOPIC_PROFILE_CHANGE);
-      // Double notification allows to correctly enqueue tasks without the need
-      // to enqueue notification events to the main-thread.  There is no
-      // guarantee that the event loop will spin before xpcom-shutdown indeed,
-      // see bug 580892.
       (void)os->NotifyObservers(nsnull, TOPIC_PLACES_WILL_CLOSE_CONNECTION, nsnull);
-      (void)os->NotifyObservers(nsnull, TOPIC_PLACES_CONNECTION_CLOSING, nsnull);
     }
 
     // Operations that are unlikely to create issues to implementers should go

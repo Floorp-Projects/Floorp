@@ -279,13 +279,24 @@ function getReportersByProcess()
   var e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
     var rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
-                rOrig.amount, rOrig.description);
+    try {
+      addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
+                  rOrig.amount, rOrig.description);
+    }
+    catch(e) {
+      debug("An error occurred when collecting results from the memory reporter " +
+            rOrig.path + ": " + e);
+    }
   }
   var e = mgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
     var mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    mrOrig.collectReports(addReporter, null);
+    try {
+      mrOrig.collectReports(addReporter, null);
+    }
+    catch(e) {
+      debug("An error occurred when collecting a multi-reporter's results: " + e);
+    }
   }
 
   return reportersByProcess;
@@ -605,7 +616,7 @@ function filterTree(aTotalBytes, aT)
       for ( ; i < aT._kids.length; i++) {
         aggBytes += aT._kids[i]._amount;
       }
-      aT._kids.splice(i0);
+      aT._kids.splice(i0, aT._kids.length);
       var n = i - i0;
       var rSub = new TreeNode("(" + n + " omitted)");
       rSub._amount = aggBytes;
@@ -1073,4 +1084,3 @@ function debug(x)
   div.innerHTML = JSON.stringify(x);
   content.appendChild(div);
 }
-

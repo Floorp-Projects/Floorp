@@ -66,6 +66,10 @@ public:
 
   static nsresult InitTables(mozIStorageConnection* aDBConn);
 
+  static nsAnnotationService* GetAnnotationServiceIfAvailable() {
+    return gAnnotationService;
+  }
+
   /**
    * Returns a cached pointer to the annotation service for consumers in the
    * places directory.
