@@ -80,6 +80,9 @@ chrome.jar:
   content/fullscreen-video.js          (content/fullscreen-video.js)
   content/fullscreen-video.xhtml       (content/fullscreen-video.xhtml)
   content/netError.xhtml               (content/netError.xhtml)
-
+  content/CapturePickerUI.js           (content/CapturePickerUI.js)
+  content/CaptureDialog.js             (content/CaptureDialog.js)
+  content/CaptureDialog.xul            (content/CaptureDialog.xul)
+  
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
