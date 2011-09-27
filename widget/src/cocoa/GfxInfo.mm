@@ -102,6 +102,20 @@ GfxInfo::GetDeviceInfo()
   }
 }
 
+static bool
+IsATIRadeonX1000(PRUint32 aVendorID, PRUint32 aDeviceID)
+{
+  if (aVendorID == 0x1002) {
+    // this list is from the ATIRadeonX1000.kext Info.plist
+    PRUint32 devices[] = {0x7187, 0x7210, 0x71DE, 0x7146, 0x7142, 0x7109, 0x71C5, 0x71C0, 0x7240, 0x7249, 0x7291};
+    for (size_t i = 0; i < NS_ARRAY_LENGTH(devices); i++) {
+      if (aDeviceID == devices[i])
+        return true;
+    }
+  }
+  return false;
+}
+
 nsresult
 GfxInfo::Init()
 {
@@ -109,6 +123,10 @@ GfxInfo::Init()
 
   nsresult rv = GfxInfoBase::Init();
 
+  // Calling CGLQueryRendererInfo causes us to switch to the discrete GPU
+  // even when we don't want to. We'll avoid doing so for now and just
+  // use the device ids.
+#if 0
   CGLRendererInfoObj renderer = 0;
   GLint rendererCount = 0;
 
@@ -138,6 +156,7 @@ GfxInfo::Init()
   }
 
   CGLDestroyRendererInfo(renderer);
+#endif
 
   GetDeviceInfo();
 
@@ -335,6 +354,13 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
   }
 
   if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
+    PRBool foundGoodDevice = PR_FALSE;
+
+    if (!IsATIRadeonX1000(mAdapterVendorID, mAdapterDeviceID)) {
+      foundGoodDevice = PR_TRUE;
+    }
+
+#if 0
     // CGL reports a list of renderers, some renderers are slow (e.g. software)
     // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
     // if any not-known-to-be-bad renderer is found.
@@ -343,7 +369,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
     // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
     // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
     // being used.
-    PRBool foundGoodDevice = PR_FALSE;
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
       switch (mRendererIDs[i]) {
@@ -370,25 +395,20 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
             foundGoodDevice = PR_TRUE;
       }
     }
+#endif
     if (!foundGoodDevice)
       status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
   }
 
   if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL) {
     // same comment as above for FEATURE_OPENGL_LAYERS.
-    bool foundGoodDevice = false;
+    bool foundGoodDevice = true;
 
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
-      switch (mRendererIDs[i]) {
-        case kCGLRendererGeForceFXID: // bug 678053. We must blacklist Geforce 7300 GT. This family
-                                      // covers all Geforce FX, 6, 7 series. Need bug 678330 for finer
-                                      // blacklisting.
-          break;
-        default:
-          if (mRendererIDs[i])
-            foundGoodDevice = true;
-      }
+    // Blacklist the Geforce 7300 GT because of bug 678053
+    if (mAdapterVendorID == 0x10de && mAdapterDeviceID == 0x0393) {
+      foundGoodDevice = false;
     }
+
     if (!foundGoodDevice)
       status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
   }
