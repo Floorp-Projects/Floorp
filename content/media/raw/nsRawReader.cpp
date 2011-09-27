@@ -43,8 +43,6 @@
 #include "nsRawDecoder.h"
 #include "VideoUtils.h"
 
-static const PRUint24 RAW_ID = 0x595556;
-
 nsRawReader::nsRawReader(nsBuiltinDecoder* aDecoder)
   : nsBuiltinDecoderReader(aDecoder),
     mCurrentFrame(0), mFrameSize(0)

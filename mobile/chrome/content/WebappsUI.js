@@ -248,6 +248,11 @@ var WebappsUI = {
     }
   },
 
+  addToHome: function addToHome() {
+    let uri = this._application.appURI + (this._application.manifest.launch_path ? this._application.manifest.launch_path : "");
+    Util.createShortcut(this._application.title, uri, this._application.iconURI, "webapp");
+  },
+
   launch: function launch() {
     let title = document.getElementById("webapps-title").value;
     if (!title)
@@ -258,6 +263,9 @@ var WebappsUI = {
     this._updatePermission("webapps-offline-checkbox", "offline-app");
     this._updatePermission("webapps-geoloc-checkbox", "geo");
     this._updatePermission("webapps-notifications-checkbox", "desktop-notification");
+
+    if (document.getElementById("webapps-homescreen-checkbox").checked)
+      WebappsUI.addToHome(this._application);
 
     this.close();
     try {
