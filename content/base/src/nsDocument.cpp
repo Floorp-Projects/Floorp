@@ -5826,6 +5826,7 @@ nsDocument::SetTextContent(const nsAString & aTextContent)
 NS_IMETHODIMP
 nsDocument::IsSameNode(nsIDOMNode *other, PRBool *aResult)
 {
+  WarnOnceAbout(eIsSameNode);
   *aResult = other == this;
   return NS_OK;
 }
