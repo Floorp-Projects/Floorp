@@ -2167,35 +2167,35 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
   CONTAINER_ENSURE_TRUE(type != eDecoderType_unknown, NS_IMAGELIB_ERROR_NO_DECODER);
 
+  nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   // Instantiate the appropriate decoder
   switch (type) {
     case eDecoderType_png:
-      mDecoder = new nsPNGDecoder();
+      mDecoder = new nsPNGDecoder(this, observer);
       break;
     case eDecoderType_gif:
-      mDecoder = new nsGIFDecoder2();
+      mDecoder = new nsGIFDecoder2(this, observer);
       break;
     case eDecoderType_jpeg:
-      mDecoder = new nsJPEGDecoder();
+      mDecoder = new nsJPEGDecoder(this, observer);
       break;
     case eDecoderType_bmp:
-      mDecoder = new nsBMPDecoder();
+      mDecoder = new nsBMPDecoder(this, observer);
       break;
     case eDecoderType_ico:
-      mDecoder = new nsICODecoder();
+      mDecoder = new nsICODecoder(this, observer);
       break;
     case eDecoderType_icon:
-      mDecoder = new nsIconDecoder();
+      mDecoder = new nsIconDecoder(this, observer);
       break;
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
   }
 
   // Initialize the decoder
-  nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
-  mDecoder->Init(this, observer);
+  mDecoder->Init();
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Create a decode worker
