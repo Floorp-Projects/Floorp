@@ -8156,7 +8156,7 @@ static const char* kWarnings[] = {
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
 {
-  PR_STATIC_ASSERT(eDeprecatedOperationCount <= 32);
+  PR_STATIC_ASSERT(eDeprecatedOperationCount <= 64);
   if (mWarnedAbout & (1 << aOperation)) {
     return;
   }
