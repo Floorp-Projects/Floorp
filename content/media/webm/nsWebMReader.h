@@ -215,11 +215,11 @@ private:
   PRUint32 mVideoTrack;
   PRUint32 mAudioTrack;
 
-  // Time in microseconds of the start of the first audio sample we've decoded.
+  // Time in microseconds of the start of the first audio frame we've decoded.
   PRInt64 mAudioStartUsec;
 
-  // Number of samples we've decoded since decoding began at mAudioStartMs.
-  PRUint64 mAudioSamples;
+  // Number of audio frames we've decoded since decoding began at mAudioStartMs.
+  PRUint64 mAudioFrames;
 
   // Parser state and computed offset-time mappings.  Shared by multiple
   // readers when decoder has been cloned.  Main thread only.
