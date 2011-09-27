@@ -810,7 +810,8 @@ nsLookAndFeel::RefreshImpl()
     InitLookAndFeel();
 }
 
-PRBool GetEchoPasswordImpl() {
+PRBool
+nsLookAndFeel::GetEchoPasswordImpl() {
 #ifdef MOZ_PLATFORM_MAEMO
     return PR_TRUE;
 #else
