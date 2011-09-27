@@ -253,11 +253,8 @@ public:
   virtual ~ShadowImageLayerOGL();
 
   // ShadowImageLayer impl
-  virtual PRBool Init(const SharedImage& aFront, const nsIntSize& aSize);
-
-  virtual void Swap(const SharedImage& aFront, SharedImage* aNewBack);
-
-  virtual void DestroyFrontBuffer();
+  virtual void Swap(const SharedImage& aFront,
+                    SharedImage* aNewBack);
 
   virtual void Disconnect();
 
@@ -270,9 +267,12 @@ public:
                            const nsIntPoint& aOffset);
 
 private:
+  PRBool Init(const SharedImage& aFront);
+
   nsRefPtr<TextureImage> mTexImage;
   GLTexture mYUVTexture[3];
   gfxIntSize mSize;
+  gfxIntSize mCbCrSize;
   nsIntRect mPictureRect;
 };
 
