@@ -42,10 +42,11 @@
 
 #include "gfxPattern.h"
 #include "nsThreadUtils.h"
-#include "nsCoreAnimationSupport.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/mozalloc.h"
+
+class nsIOSurface;
 
 namespace mozilla {
 namespace layers {

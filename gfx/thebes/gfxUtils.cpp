@@ -40,10 +40,15 @@
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
 #include "nsRegion.h"
+#include "yuv_convert.h"
+#include "ycbcr_to_rgb565.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
+
+using namespace mozilla;
+using namespace mozilla::layers;
 
 static PRUint8 sUnpremultiplyTable[256*256];
 static PRUint8 sPremultiplyTable[256*256];
@@ -517,3 +522,136 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
   return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
 }
 
+void
+gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
+                                         gfxASurface::gfxImageFormat& aSuggestedFormat,
+                                         gfxIntSize& aSuggestedSize)
+{
+  gfx::YUVType yuvtype =
+    gfx::TypeFromSize(aData.mYSize.width,
+                      aData.mYSize.height,
+                      aData.mCbCrSize.width,
+                      aData.mCbCrSize.height);
+
+  // 'prescale' is true if the scaling is to be done as part of the
+  // YCbCr to RGB conversion rather than on the RGB data when rendered.
+  PRBool prescale = aSuggestedSize.width > 0 && aSuggestedSize.height > 0 &&
+                    aSuggestedSize != aData.mPicSize;
+
+  if (aSuggestedFormat == gfxASurface::ImageFormatRGB16_565) {
+#if defined(HAVE_YCBCR_TO_RGB565)
+    if (prescale &&
+        !gfx::IsScaleYCbCrToRGB565Fast(aData.mPicX,
+                                       aData.mPicY,
+                                       aData.mPicSize.width,
+                                       aData.mPicSize.height,
+                                       aSuggestedSize.width,
+                                       aSuggestedSize.height,
+                                       yuvtype,
+                                       gfx::FILTER_BILINEAR) &&
+        gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
+                                        aData.mPicY,
+                                        aData.mPicSize.width,
+                                        aData.mPicSize.height,
+                                        yuvtype)) {
+      prescale = PR_FALSE;
+    }
+#else
+    // yuv2rgb16 function not available
+    aSuggestedFormat = gfxASurface::ImageFormatRGB24;
+#endif
+  }
+  else if (aSuggestedFormat != gfxASurface::ImageFormatRGB24) {
+    // No other formats are currently supported.
+    aSuggestedFormat = gfxASurface::ImageFormatRGB24;
+  }
+  if (aSuggestedFormat == gfxASurface::ImageFormatRGB24) {
+    /* ScaleYCbCrToRGB32 does not support a picture offset, nor 4:4:4 data.
+       See bugs 639415 and 640073. */
+    if (aData.mPicX != 0 || aData.mPicY != 0 || yuvtype == gfx::YV24)
+      prescale = PR_FALSE;
+  }
+  if (!prescale) {
+    aSuggestedSize = aData.mPicSize;
+  }
+}
+
+void
+gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrImage::Data& aData,
+                            const gfxASurface::gfxImageFormat& aDestFormat,
+                            const gfxIntSize& aDestSize,
+                            unsigned char* aDestBuffer,
+                            PRInt32 aStride)
+{
+  gfx::YUVType yuvtype =
+    gfx::TypeFromSize(aData.mYSize.width,
+                      aData.mYSize.height,
+                      aData.mCbCrSize.width,
+                      aData.mCbCrSize.height);
+
+  // Convert from YCbCr to RGB now, scaling the image if needed.
+  if (aDestSize != aData.mPicSize) {
+#if defined(HAVE_YCBCR_TO_RGB565)
+    if (aDestFormat == gfxASurface::ImageFormatRGB16_565) {
+      gfx::ScaleYCbCrToRGB565(aData.mYChannel,
+                              aData.mCbChannel,
+                              aData.mCrChannel,
+                              aDestBuffer,
+                              aData.mPicX,
+                              aData.mPicY,
+                              aData.mPicSize.width,
+                              aData.mPicSize.height,
+                              aDestSize.width,
+                              aDestSize.height,
+                              aData.mYStride,
+                              aData.mCbCrStride,
+                              aStride,
+                              yuvtype,
+                              gfx::FILTER_BILINEAR);
+    } else
+#endif
+      gfx::ScaleYCbCrToRGB32(aData.mYChannel,
+                             aData.mCbChannel,
+                             aData.mCrChannel,
+                             aDestBuffer,
+                             aData.mPicSize.width,
+                             aData.mPicSize.height,
+                             aDestSize.width,
+                             aDestSize.height,
+                             aData.mYStride,
+                             aData.mCbCrStride,
+                             aStride,
+                             yuvtype,
+                             gfx::ROTATE_0,
+                             gfx::FILTER_BILINEAR);
+  } else { // no prescale
+#if defined(HAVE_YCBCR_TO_RGB565)
+    if (aDestFormat == gfxASurface::ImageFormatRGB16_565) {
+      gfx::ConvertYCbCrToRGB565(aData.mYChannel,
+                                aData.mCbChannel,
+                                aData.mCrChannel,
+                                aDestBuffer,
+                                aData.mPicX,
+                                aData.mPicY,
+                                aData.mPicSize.width,
+                                aData.mPicSize.height,
+                                aData.mYStride,
+                                aData.mCbCrStride,
+                                aStride,
+                                yuvtype);
+    } else // aDestFormat != gfxASurface::ImageFormatRGB16_565
+#endif
+      gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+                               aData.mCbChannel,
+                               aData.mCrChannel,
+                               aDestBuffer,
+                               aData.mPicX,
+                               aData.mPicY,
+                               aData.mPicSize.width,
+                               aData.mPicSize.height,
+                               aData.mYStride,
+                               aData.mCbCrStride,
+                               aStride,
+                               yuvtype);
+  }
+}

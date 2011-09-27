@@ -41,6 +41,7 @@
 #include "gfxTypes.h"
 #include "gfxPattern.h"
 #include "gfxImageSurface.h"
+#include "ImageLayers.h"
 
 class gfxDrawable;
 class nsIntRegion;
@@ -123,6 +124,32 @@ public:
      * aVal.
      */
     static gfxFloat ClampToScaleFactor(gfxFloat aVal);
+
+    /**
+     * Helper function for ConvertYCbCrToRGB that finds the
+     * RGB buffer size and format for given YCbCrImage.
+     * @param aSuggestedFormat will be set to ImageFormatRGB24
+     *   if the desired format is not supported.
+     * @param aSuggestedSize will be set to the picture size from aData
+     *   if either the suggested size was {0,0}
+     *   or simultaneous scaling and conversion is not supported.
+     */
+    static void
+    GetYCbCrToRGBDestFormatAndSize(const mozilla::layers::PlanarYCbCrImage::Data& aData,
+                                   gfxASurface::gfxImageFormat& aSuggestedFormat,
+                                   gfxIntSize& aSuggestedSize);
+
+    /**
+     * Convert YCbCrImage into RGB aDestBuffer
+     * Format and Size parameters must have
+     *   been passed to GetYCbCrToRGBDestFormatAndSize
+     */
+    static void
+    ConvertYCbCrToRGB(const mozilla::layers::PlanarYCbCrImage::Data& aData,
+                      const gfxASurface::gfxImageFormat& aDestFormat,
+                      const gfxIntSize& aDestSize,
+                      unsigned char* aDestBuffer,
+                      PRInt32 aStride);
 };
 
 #endif
