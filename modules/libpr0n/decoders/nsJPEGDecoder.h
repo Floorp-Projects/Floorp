@@ -86,7 +86,7 @@ class RasterImage;
 class nsJPEGDecoder : public Decoder
 {
 public:
-  nsJPEGDecoder();
+  nsJPEGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver);
   virtual ~nsJPEGDecoder();
 
   virtual void InitInternal();

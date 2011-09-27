@@ -58,7 +58,7 @@ class nsGIFDecoder2 : public Decoder
 {
 public:
 
-  nsGIFDecoder2();
+  nsGIFDecoder2(RasterImage *aImage, imgIDecoderObserver* aObserver);
   ~nsGIFDecoder2();
 
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);

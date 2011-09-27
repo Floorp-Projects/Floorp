@@ -109,7 +109,8 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
 
-nsJPEGDecoder::nsJPEGDecoder()
+nsJPEGDecoder::nsJPEGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+ : Decoder(aImage, aObserver)
 {
   mState = JPEG_HEADER;
   mReading = PR_TRUE;
