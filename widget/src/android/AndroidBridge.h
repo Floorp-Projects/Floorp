@@ -283,6 +283,10 @@ public:
     bool LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride);
     bool UnlockWindow(void *window);
 
+    bool InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps);
+
+    void CloseCamera();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -352,6 +356,8 @@ protected:
     jmethodID jCreateShortcut;
     jmethodID jGetShowPasswordSetting;
     jmethodID jPostToJavaThread;
+    jmethodID jInitCamera;
+    jmethodID jCloseCamera;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

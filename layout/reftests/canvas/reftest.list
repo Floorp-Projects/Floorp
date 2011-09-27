@@ -1,5 +1,5 @@
 == default-size.html default-size-ref.html
-== size-1.html size-1-ref.html
+fails-if(Android&&layersOpenGL) == size-1.html size-1-ref.html
 
 == image-rendering-test.html image-rendering-ref.html
 == image-shadow.html image-shadow-ref.html

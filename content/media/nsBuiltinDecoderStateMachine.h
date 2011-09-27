@@ -137,7 +137,7 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader);
+  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader, PRPackedBool aRealTime = PR_FALSE);
   ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
@@ -623,6 +623,12 @@ protected:
   // waiting to be awakened before it continues decoding. Synchronized
   // by the decoder monitor.
   PRPackedBool mDecodeThreadWaiting;
+
+  // true is we are decoding a realtime stream, like a camera stream
+  PRPackedBool mRealTime;
+  
+  PRUint32 mBufferingWait;
+  PRInt64  mLowDataThresholdUsecs;
 
 private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The
