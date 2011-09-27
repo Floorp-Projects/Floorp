@@ -416,7 +416,7 @@ struct Registers {
 
     /* Get a register which is not live before a FASTCALL. */
     static inline RegisterID tempCallReg() {
-        Registers regs(TempRegs);
+        Registers regs(AvailRegs);
         regs.takeReg(Registers::ArgReg0);
         regs.takeReg(Registers::ArgReg1);
         return regs.takeAnyReg().reg();
