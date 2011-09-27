@@ -407,9 +407,9 @@ GC(JSContext *cx,
    uintN argc,
    jsval *vp)
 {
-    JSRuntime *rt = JS_GetRuntime(cx);
     JS_GC(cx);
 #ifdef JS_GCMETER
+    JSRuntime *rt = JS_GetRuntime(cx);
     js_DumpGCStats(rt, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
