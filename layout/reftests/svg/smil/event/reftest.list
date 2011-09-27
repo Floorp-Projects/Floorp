@@ -10,11 +10,11 @@ random-if(Android) == event-begin-timeevent-3.svg green-box-ref.svg
 == event-bubble-1.svg green-box-ref.svg
 == event-custom-1.svg green-box-ref.svg
 == event-end-1.svg green-box-ref.svg
-== event-end-2.svg green-box-ref.svg
+fails-if(Android&&layersOpenGL) == event-end-2.svg green-box-ref.svg
 == event-end-open-1.svg green-box-ref.svg
 == event-end-trimmed-1.svg green-box-ref.svg
 == event-preventDefault-1.svg green-box-ref.svg
-== event-seek-1.svg green-box-ref.svg
+fails-if(Android&&layersOpenGL) == event-seek-1.svg green-box-ref.svg
 == event-target-default-1.svg green-box-ref.svg
 == event-target-default-2.svg green-box-ref.svg
 == event-target-id-change-1.svg green-box-ref.svg

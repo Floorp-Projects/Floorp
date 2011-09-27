@@ -353,12 +353,11 @@ nsresult nsBuiltinDecoder::Seek(double aTime)
   // above will result in the new seek occurring when the current seek
   // completes.
   if (mPlayState != PLAY_STATE_SEEKING) {
-    if (mPlayState == PLAY_STATE_ENDED) {
-      mNextState = PLAY_STATE_PLAYING;
+    PRBool paused = PR_FALSE;
+    if (mElement) {
+      mElement->GetPaused(&paused);
     }
-    else {
-      mNextState = mPlayState;
-    }
+    mNextState = paused ? PLAY_STATE_PAUSED : PLAY_STATE_PLAYING;
     PinForSeek();
     ChangeState(PLAY_STATE_SEEKING);
   }

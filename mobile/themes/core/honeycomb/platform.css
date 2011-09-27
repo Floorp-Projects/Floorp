@@ -240,7 +240,6 @@ toolbarbutton {
   min-height: @touch_button_small@ !important; /* primary button size */
   -moz-appearance: none !important;
   padding: @padding_xsmall@;
-  -moz-margin-end: @margin_xxxnormal@;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
@@ -581,8 +580,7 @@ dialog,
   background: @color_background_default@;
 }
 
-dialog,
-.arrowbox-dark .panel-arrowcontent {
+dialog {
   border: @border_width_small@ solid @color_dialog_border@;
   box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
 }
