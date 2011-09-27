@@ -566,10 +566,10 @@
                 if (this.mTab.hasAttribute("busy")) {
                   this.mTab.removeAttribute("busy");
                   this.mTabBrowser._tabAttrModified(this.mTab);
-                  if (!this.mTab.selected) {
-                    this.mTab.setAttribute("unread", "true");
                 }
                 this.mTab.removeAttribute("progress");
+                if (!this.mTab.selected)
+                  this.mTab.setAttribute("unread", "true");
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -876,8 +876,7 @@
               (window.windowState != window.STATE_MINIMIZED);
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
-            if (!this._previewMode)
-              this.mCurrentTab.removeAttribute("unread");
+            this.mCurrentTab.removeAttribute("unread");
             this.showTab(this.mCurrentTab);
 
             if (updatePageReport)
