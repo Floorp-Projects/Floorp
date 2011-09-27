@@ -44,6 +44,9 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsToolkit.h"
 
+#import <Foundation/Foundation.h>
+#import <IOKit/IOKitLib.h>
+
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
@@ -51,6 +54,53 @@
 #endif
 
 using namespace mozilla::widget;
+
+GfxInfo::GfxInfo()
+  : mAdapterVendorID(0),
+    mAdapterDeviceID(0)
+{
+}
+
+// The following three functions are derived from Chromium code
+static CFTypeRef SearchPortForProperty(io_registry_entry_t dspPort,
+                                       CFStringRef propertyName)
+{
+  return IORegistryEntrySearchCFProperty(dspPort,
+                                         kIOServicePlane,
+                                         propertyName,
+                                         kCFAllocatorDefault,
+                                         kIORegistryIterateRecursively |
+                                         kIORegistryIterateParents);
+}
+
+static PRUint32 IntValueOfCFData(CFDataRef d)
+{
+  PRUint32 value = 0;
+
+  if (d) {
+    const PRUint32 *vp = reinterpret_cast<const PRUint32*>(CFDataGetBytePtr(d));
+    if (vp != NULL)
+      value = *vp;
+  }
+
+  return value;
+}
+
+void
+GfxInfo::GetDeviceInfo()
+{
+  io_registry_entry_t dsp_port = CGDisplayIOServicePort(kCGDirectMainDisplay);
+  CFTypeRef vendor_id_ref = SearchPortForProperty(dsp_port, CFSTR("vendor-id"));
+  if (vendor_id_ref) {
+    mAdapterVendorID = IntValueOfCFData((CFDataRef)vendor_id_ref);
+    CFRelease(vendor_id_ref);
+  }
+  CFTypeRef device_id_ref = SearchPortForProperty(dsp_port, CFSTR("device-id"));
+  if (device_id_ref) {
+    mAdapterDeviceID = IntValueOfCFData((CFDataRef)device_id_ref);
+    CFRelease(device_id_ref);
+  }
+}
 
 nsresult
 GfxInfo::Init()
@@ -88,6 +138,8 @@ GfxInfo::Init()
   }
 
   CGLDestroyRendererInfo(renderer);
+
+  GetDeviceInfo();
 
   AddCrashReportAnnotations();
 
@@ -205,7 +257,7 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
-  *aAdapterVendorID = 0;
+  *aAdapterVendorID = mAdapterVendorID;
   return NS_OK;
 }
 
@@ -220,7 +272,7 @@ GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
-  *aAdapterDeviceID = 0;
+  *aAdapterDeviceID = mAdapterDeviceID;
   return NS_OK;
 }
 
