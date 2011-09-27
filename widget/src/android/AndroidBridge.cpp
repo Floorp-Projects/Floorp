@@ -151,6 +151,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jCreateShortcut = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jGetShowPasswordSetting = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getShowPasswordSetting", "()Z");
     jPostToJavaThread = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "postToJavaThread", "(Z)V");
+    jInitCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
+    jCloseCamera = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "closeCamera", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1048,6 +1050,38 @@ AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
         return false;
 
     return true;
+}
+
+bool
+AndroidBridge::InitCamera(const nsCString& contentType, PRUint32 camera, PRUint32 *width, PRUint32 *height, PRUint32 *fps)
+{
+    AutoLocalJNIFrame jniFrame;
+
+    NS_ConvertASCIItoUTF16 s(contentType);
+    jstring jstrContentType = mJNIEnv->NewString(s.get(), NS_strlen(s.get()));
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jInitCamera, jstrContentType, camera, *width, *height);
+    jintArray arr = static_cast<jintArray>(obj);
+    if (!arr)
+        return false;
+
+    jint *elements = mJNIEnv->GetIntArrayElements(arr, 0);
+
+    *width = elements[1];
+    *height = elements[2];
+    *fps = elements[3];
+
+    bool res = elements[0] == 1;
+
+    mJNIEnv->ReleaseIntArrayElements(arr, elements, 0);
+
+    return res;
+}
+
+void
+AndroidBridge::CloseCamera() {
+    AutoLocalJNIFrame jniFrame;
+
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jCloseCamera);
 }
 
 void *

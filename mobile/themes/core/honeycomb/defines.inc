@@ -8,7 +8,7 @@
 %define color_toolbar_background #eaeaea
 %define color_toolbar_border #d9d9d9
 %define color_divider_border #6699ff
-%define color_url_border #222222
+%define color_url_border #737373
 %define color_button_border rgb(207,207,207)
 %define color_background_dialog #fff
 %define color_text_dialog #000
@@ -59,8 +59,10 @@
 %define touch_normal 6.77mozmm
 
 %define margin_context_popup 3.39mozmm
+%define margin_xlarge 3.39mozmm
 %define margin_large 2.54mozmm
 %define margin_xxxnormal 1.69mozmm
+%define margin_xxnormal 1.27mozmm
 %define margin_xnormal 1.06mozmm
 %define margin_normal 0.85mozmm
 %define margin_snormal 0.64mozmm
@@ -102,7 +104,7 @@
 
 %define progressmeter_height 3.39mozmm
 
-%define urlbar_edit_height 6.35mozmm
+%define urlbar_edit_height 5.25mozmm
 %define urlbar_edit_indent 0.85mozmm
 %define identity_popup_tablet_width 72mozmm
 
