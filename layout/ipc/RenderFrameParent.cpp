@@ -563,6 +563,7 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
 
 RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
   : mFrameLoader(aFrameLoader)
+  , mFrameLoaderDestroyed(false)
 {
   if (aFrameLoader) {
     mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
@@ -585,6 +586,8 @@ RenderFrameParent::Destroy()
       static_cast<ShadowLayersParent*>(ManagedPLayersParent()[0]);
     layers->Destroy();
   }
+
+  mFrameLoaderDestroyed = true;
 }
 
 nsContentView*
@@ -723,7 +726,7 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 PLayersParent*
 RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType)
 {
-  if (!mFrameLoader) {
+  if (!mFrameLoader || mFrameLoaderDestroyed) {
     *aBackendType = LayerManager::LAYERS_NONE;
     return nsnull;
   }
