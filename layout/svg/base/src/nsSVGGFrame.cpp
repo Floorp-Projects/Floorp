@@ -39,7 +39,6 @@
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGGFrame.h"
 #include "nsIFrame.h"
-#include "nsSVGMatrix.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
@@ -100,9 +99,9 @@ nsSVGGFrame::GetCanvasTM()
 
     gfxMatrix tm = content->PrependLocalTransformTo(parent->GetCanvasTM());
 
-    mCanvasTM = NS_NewSVGMatrix(tm);
+    mCanvasTM = new gfxMatrix(tm);
   }
-  return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
+  return *mCanvasTM;
 }
 
 NS_IMETHODIMP

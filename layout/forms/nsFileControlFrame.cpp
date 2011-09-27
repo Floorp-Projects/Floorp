@@ -438,7 +438,7 @@ nsFileControlFrame::CaptureMouseListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   // Get Loc title
   nsXPIDLString title;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "FileUpload", title);
+                                     "MediaUpload", title);
 
   nsPIDOMWindow* win = doc->GetWindow();
   if (!win) {

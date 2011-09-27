@@ -399,7 +399,7 @@ gTests.push({
       window.removeEventListener("compositionstart", arguments.callee, false);
       setTimeout(gCurrentTest.onCompositionStart, 0)
     }, false);
-    Browser.windowUtils.sendCompositionEvent("compositionstart");
+    Browser.windowUtils.sendCompositionEvent("compositionstart", "", "");
   },
 
   onCompositionStart: function() {
@@ -409,7 +409,7 @@ gTests.push({
       window.removeEventListener("compositionend", arguments.callee, false);
       setTimeout(gCurrentTest.onCompositionEnd, 0)
     }, false);
-    Browser.windowUtils.sendCompositionEvent("compositionend");
+    Browser.windowUtils.sendCompositionEvent("compositionend", "", "");
   },
 
   onCompositionEnd: function() {

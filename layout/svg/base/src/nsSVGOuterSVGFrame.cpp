@@ -53,7 +53,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsSVGMatrix.h"
 
 namespace dom = mozilla::dom;
 
@@ -793,9 +792,9 @@ nsSVGOuterSVGFrame::GetCanvasTM()
     }
 
     gfxMatrix TM = viewBoxTM * zoomPanTM * gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx);
-    mCanvasTM = NS_NewSVGMatrix(TM);
+    mCanvasTM = new gfxMatrix(TM);
   }
-  return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
+  return *mCanvasTM;
 }
 
 //----------------------------------------------------------------------

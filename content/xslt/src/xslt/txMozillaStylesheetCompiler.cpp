@@ -604,14 +604,12 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
         // explicitly destroy the attrs here since we no longer need it
         atts = nsnull;
 
-        PRUint32 childCount = element->GetChildCount();
-        if (childCount > 0) {
-            PRUint32 counter = 0;
-            nsIContent *child;
-            while ((child = element->GetChildAt(counter++))) {
-                rv = handleNode(child, aCompiler);
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
+        for (nsIContent* child = element->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+             
+            rv = handleNode(child, aCompiler);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
 
         rv = aCompiler->endElement();
@@ -624,11 +622,10 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
-        nsIDocument* document = static_cast<nsIDocument*>(aNode);
-
-        PRUint32 counter = 0;
-        nsIContent *child;
-        while ((child = document->GetChildAt(counter++))) {
+        for (nsIContent* child = aNode->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+             
             rv = handleNode(child, aCompiler);
             NS_ENSURE_SUCCESS(rv, rv);
         }

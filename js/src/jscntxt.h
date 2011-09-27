@@ -1519,13 +1519,6 @@ class AutoValueRooter : private AutoGCRooter
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    AutoValueRooter(JSContext *cx, jsval v
-                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, JSVAL), val(js::Valueify(v))
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
     /*
      * If you are looking for Object* overloads, use AutoObjectRooter instead;
      * rooting Object*s as a js::Value requires discerning whether or not it is
@@ -1535,11 +1528,6 @@ class AutoValueRooter : private AutoGCRooter
     void set(Value v) {
         JS_ASSERT(tag == JSVAL);
         val = v;
-    }
-
-    void set(jsval v) {
-        JS_ASSERT(tag == JSVAL);
-        val = js::Valueify(v);
     }
 
     const Value &value() const {
@@ -1554,12 +1542,12 @@ class AutoValueRooter : private AutoGCRooter
 
     const jsval &jsval_value() const {
         JS_ASSERT(tag == JSVAL);
-        return Jsvalify(val);
+        return val;
     }
 
     jsval *jsval_addr() {
         JS_ASSERT(tag == JSVAL);
-        return Jsvalify(&val);
+        return &val;
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
@@ -1632,14 +1620,6 @@ class AutoArrayRooter : private AutoGCRooter {
     AutoArrayRooter(JSContext *cx, size_t len, Value *vec
                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, len), array(vec)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_ASSERT(tag >= 0);
-    }
-
-    AutoArrayRooter(JSContext *cx, size_t len, jsval *vec
-                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, len), array(Valueify(vec))
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(tag >= 0);
@@ -2474,11 +2454,11 @@ class AutoValueVector : public AutoVectorRooter<Value>
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    const jsval *jsval_begin() const { return Jsvalify(begin()); }
-    jsval *jsval_begin() { return Jsvalify(begin()); }
+    const jsval *jsval_begin() const { return begin(); }
+    jsval *jsval_begin() { return begin(); }
 
-    const jsval *jsval_end() const { return Jsvalify(end()); }
-    jsval *jsval_end() { return Jsvalify(end()); }
+    const jsval *jsval_end() const { return end(); }
+    jsval *jsval_end() { return end(); }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

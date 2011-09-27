@@ -137,7 +137,7 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader);
+  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader, PRPackedBool aRealTime = PR_FALSE);
   ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
@@ -209,23 +209,6 @@ public:
     return IsCurrentThread(GetStateMachineThread());
   }
  
-  // The decoder object that created this state machine. The state machine
-  // holds a strong reference to the decoder to ensure that the decoder stays
-  // alive once media element has started the decoder shutdown process, and has
-  // dropped its reference to the decoder. This enables the state machine to
-  // keep using the decoder's monitor until the state machine has finished
-  // shutting down, without fear of the monitor being destroyed. After
-  // shutting down, the state machine will then release this reference,
-  // causing the decoder to be destroyed. This is accessed on the decode,
-  // state machine, audio and main threads.
-  nsRefPtr<nsBuiltinDecoder> mDecoder;
-
-  // The decoder monitor must be obtained before modifying this state.
-  // NotifyAll on the monitor must be called when the state is changed so
-  // that interested threads can wake up and alter behaviour if appropriate
-  // Accessed on state machine, audio, main, and AV thread.
-  State mState;
-
   nsresult GetBuffered(nsTimeRanges* aBuffered);
 
   PRInt64 VideoQueueMemoryInUse() {
@@ -280,6 +263,9 @@ public:
 
   // Set the media fragment end time. aEndTime is in microseconds.
   void SetFragmentEndTime(PRInt64 aEndTime);
+
+  // Drop reference to decoder.  Only called during shutdown dance.
+  void ReleaseDecoder() { mDecoder = nsnull; }
 
 protected:
 
@@ -459,6 +445,23 @@ protected:
   // case as it may not be needed again.
   PRBool IsPausedAndDecoderWaiting();
 
+  // The decoder object that created this state machine. The state machine
+  // holds a strong reference to the decoder to ensure that the decoder stays
+  // alive once media element has started the decoder shutdown process, and has
+  // dropped its reference to the decoder. This enables the state machine to
+  // keep using the decoder's monitor until the state machine has finished
+  // shutting down, without fear of the monitor being destroyed. After
+  // shutting down, the state machine will then release this reference,
+  // causing the decoder to be destroyed. This is accessed on the decode,
+  // state machine, audio and main threads.
+  nsRefPtr<nsBuiltinDecoder> mDecoder;
+
+  // The decoder monitor must be obtained before modifying this state.
+  // NotifyAll on the monitor must be called when the state is changed so
+  // that interested threads can wake up and alter behaviour if appropriate
+  // Accessed on state machine, audio, main, and AV thread.
+  State mState;
+
   // The size of the decoded YCbCr frame.
   // Accessed on state machine thread.
   PRUint32 mCbCrSize;
@@ -620,6 +623,12 @@ protected:
   // waiting to be awakened before it continues decoding. Synchronized
   // by the decoder monitor.
   PRPackedBool mDecodeThreadWaiting;
+
+  // true is we are decoding a realtime stream, like a camera stream
+  PRPackedBool mRealTime;
+  
+  PRUint32 mBufferingWait;
+  PRInt64  mLowDataThresholdUsecs;
 
 private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The

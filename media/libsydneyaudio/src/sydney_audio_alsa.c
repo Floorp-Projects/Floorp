@@ -387,12 +387,13 @@ sa_stream_drain(sa_stream_t *s)
   if (snd_pcm_state(s->output_unit) == SND_PCM_STATE_PREPARED) {
     size_t min_samples = 0;
     size_t min_bytes = 0;
+    void *buf;
 
     if (sa_stream_get_min_write(s, &min_samples) < 0)
       return SA_ERROR_SYSTEM;
     min_bytes = snd_pcm_frames_to_bytes(s->output_unit, min_samples);    
 
-    void* buf = malloc(min_bytes);
+    buf = malloc(min_bytes);
     if (!buf)
       return SA_ERROR_SYSTEM;
     memset(buf, 0, min_bytes);

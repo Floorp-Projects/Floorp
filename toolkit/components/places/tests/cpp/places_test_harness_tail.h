@@ -115,6 +115,8 @@ main(int aArgc,
      char** aArgv)
 {
   ScopedXPCOM xpcom(TEST_NAME);
+  nsRefPtr<ShutdownObserver> shutdownObserver = new ShutdownObserver();
+
 
   // Tinderboxes are constantly on idle.  Since idle tasks can interact with
   // tests, causing random failures, disable the idle service.

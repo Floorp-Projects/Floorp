@@ -531,7 +531,7 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
 
     if (offset > 0)
     {
-      nsIContent *child = parentDIV->GetChildAt(offset - 1);
+      nsIContent *child = parentDIV->GetLastChild();
 
       if (child->Tag() == nsGkAtoms::br)
       {
@@ -1559,9 +1559,6 @@ nsTextEditorState::CreateRootNode()
 nsresult
 nsTextEditorState::InitializeRootNode()
 {
-  // Make our root node editable
-  mRootNode->SetFlags(NODE_IS_EDITABLE);
-
   // Set the necessary classes on the text control. We use class values
   // instead of a 'style' attribute so that the style comes from a user-agent
   // style sheet and is still applied even if author styles are disabled.
@@ -1756,7 +1753,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
       // Grab the current value directly from the text node to make sure that we
       // deal with stale data correctly.
       NS_ASSERTION(mRootNode, "We should have a root node here");
-      nsIContent *textContent = mRootNode->GetChildAt(0);
+      nsIContent *textContent = mRootNode->GetFirstChild();
       nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(textContent);
       if (textNode) {
         textNode->GetData(currentValue);
@@ -1981,8 +1978,8 @@ nsTextEditorState::UpdatePlaceholderText(PRBool aNotify)
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
   content->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholderValue);
   nsContentUtils::RemoveNewlines(placeholderValue);
-  NS_ASSERTION(mPlaceholderDiv->GetChildAt(0), "placeholder div has no child");
-  mPlaceholderDiv->GetChildAt(0)->SetText(placeholderValue, aNotify);
+  NS_ASSERTION(mPlaceholderDiv->GetFirstChild(), "placeholder div has no child");
+  mPlaceholderDiv->GetFirstChild()->SetText(placeholderValue, aNotify);
   ValueWasChanged(aNotify);
 }
 

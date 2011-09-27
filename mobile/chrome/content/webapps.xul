@@ -85,6 +85,10 @@
       </vbox>
     </button>
   </scrollbox>
+  <button id="webapps-homescreen-checkbox" type="checkbox" class="button-checkbox" flex="1">
+    <image class="button-image-icon"/>
+    <description class="prompt-checkbox-label" flex="1">&webapps.add-homescreen;</description>
+  </button>
   <hbox pack="center" class="prompt-buttons">
     <button class="prompt-button" command="cmd_ok" label="&ok.label;"/>
     <separator/>

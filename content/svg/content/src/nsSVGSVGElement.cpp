@@ -47,9 +47,8 @@
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsSVGMatrix.h"
+#include "DOMSVGMatrix.h"
 #include "DOMSVGPoint.h"
-#include "nsSVGTransform.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h" //XXX
@@ -649,7 +648,8 @@ nsSVGSVGElement::CreateSVGPoint(nsIDOMSVGPoint **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGMatrix(nsIDOMSVGMatrix **_retval)
 {
-  return NS_NewSVGMatrix(_retval);
+  NS_ADDREF(*_retval = new DOMSVGMatrix());
+  return NS_OK;
 }
 
 /* nsIDOMSVGRect createSVGRect (); */
@@ -663,7 +663,8 @@ nsSVGSVGElement::CreateSVGRect(nsIDOMSVGRect **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGTransform(nsIDOMSVGTransform **_retval)
 {
-  return NS_NewSVGTransform(_retval);
+  NS_ADDREF(*_retval = new DOMSVGTransform());
+  return NS_OK;
 }
 
 /* nsIDOMSVGTransform createSVGTransformFromMatrix (in nsIDOMSVGMatrix matrix); */
@@ -671,13 +672,12 @@ NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGTransformFromMatrix(nsIDOMSVGMatrix *matrix, 
                                               nsIDOMSVGTransform **_retval)
 {
-  NS_ENSURE_NATIVE_MATRIX(matrix, _retval);
+  nsCOMPtr<DOMSVGMatrix> domItem = do_QueryInterface(matrix);
+  if (!domItem) {
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
 
-  nsresult rv = NS_NewSVGTransform(_retval);
-  if (NS_FAILED(rv))
-    return rv;
-
-  (*_retval)->SetMatrix(matrix);
+  NS_ADDREF(*_retval = new DOMSVGTransform(domItem->Matrix()));
   return NS_OK;
 }
 
@@ -748,7 +748,8 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 {
   gfxMatrix m = nsSVGUtils::GetCTM(this, PR_FALSE);
-  *aCTM = m.IsSingular() ? nsnull : NS_NewSVGMatrix(m).get();
+  *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
+  NS_IF_ADDREF(*aCTM);
   return NS_OK;
 }
 
@@ -757,7 +758,8 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **aCTM)
 {
   gfxMatrix m = nsSVGUtils::GetCTM(this, PR_TRUE);
-  *aCTM = m.IsSingular() ? nsnull : NS_NewSVGMatrix(m).get();
+  *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
+  NS_IF_ADDREF(*aCTM);
   return NS_OK;
 }
 

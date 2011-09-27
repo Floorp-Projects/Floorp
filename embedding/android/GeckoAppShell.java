@@ -278,7 +278,8 @@ public class GeckoAppShell
         GeckoApp geckoApp = GeckoApp.mAppContext;
         String homeDir;
         if (Build.VERSION.SDK_INT < 8 ||
-            geckoApp.getApplication().getPackageResourcePath().startsWith("/data")) {
+            geckoApp.getApplication().getPackageResourcePath().startsWith("/data") ||
+            geckoApp.getApplication().getPackageResourcePath().startsWith("/system")) {
             File home = geckoApp.getFilesDir();
             homeDir = home.getPath();
             // handle the application being moved to phone from sdcard
@@ -862,10 +863,25 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                    context.getSystemService(Context.CLIPBOARD_SERVICE);
+                String text = null;
+                if (android.os.Build.VERSION.SDK_INT >= 11) {
+                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm.hasPrimaryClip()) {
+                        ClipData clip = cm.getPrimaryClip();
+                        if (clip != null) {
+                            ClipData.Item item = clip.getItemAt(0);
+                            text = item.coerceToText(context).toString();
+                        }
+                    }
+                } else {
+                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm.hasText())
+                        text = cm.getText().toString();
+                }
                 try {
-                    sClipboardQueue.put(cm.hasText() ? cm.getText().toString() : "");
+                    sClipboardQueue.put(text != null ? text : "");
                 } catch (InterruptedException ie) {}
             }});
         try {
@@ -879,9 +895,15 @@ public class GeckoAppShell
         getHandler().post(new Runnable() { 
             public void run() {
                 Context context = GeckoApp.surfaceView.getContext();
-                android.text.ClipboardManager cm = (android.text.ClipboardManager)
-                    context.getSystemService(Context.CLIPBOARD_SERVICE);
-                cm.setText(text);
+                if (android.os.Build.VERSION.SDK_INT >= 11) {
+                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    cm.setPrimaryClip(ClipData.newPlainText("Text", text));
+                } else {
+                    android.text.ClipboardManager cm = (android.text.ClipboardManager)
+                        context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    cm.setText(text);
+                }
             }});
     }
 
@@ -1581,5 +1603,96 @@ public class GeckoAppShell
     public static void postToJavaThread(boolean mainThread) {
         Log.i("GeckoShell", "post to " + (mainThread ? "main " : "") + "java thread");
         getMainHandler().post(new GeckoRunnableCallback());
+    }
+    
+    public static android.hardware.Camera sCamera = null;
+    
+    static native void cameraCallbackBridge(byte[] data);
+
+    static int kPreferedFps = 25;
+    static byte[] sCameraBuffer = null;
+ 
+    static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
+        Log.i("GeckoAppJava", "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
+
+        // [0] = 0|1 (failure/success)
+        // [1] = width
+        // [2] = height
+        // [3] = fps
+        int[] result = new int[4];
+        result[0] = 0;
+
+        if (Build.VERSION.SDK_INT >= 9) {
+            if (android.hardware.Camera.getNumberOfCameras() == 0)
+                return result;
+        }
+
+        try {
+            sCamera = android.hardware.Camera.open(aCamera);
+            android.hardware.Camera.Parameters params = sCamera.getParameters();
+            params.setPreviewFormat(ImageFormat.NV21);
+
+            // use the preview fps closest to 25 fps.
+            int fpsDelta = 1000;
+            try {
+                Iterator<Integer> it = params.getSupportedPreviewFrameRates().iterator();
+                while (it.hasNext()) {
+                    int nFps = it.next();
+                    if (Math.abs(nFps - kPreferedFps) < fpsDelta) {
+                        fpsDelta = Math.abs(nFps - kPreferedFps);
+                        params.setPreviewFrameRate(nFps);
+                    }
+                }
+            } catch(Exception e) {
+                params.setPreviewFrameRate(kPreferedFps);
+            }
+
+            // set up the closest preview size available
+            Iterator<android.hardware.Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
+            int sizeDelta = 10000000;
+            int bufferSize = 0;
+            while (sit.hasNext()) {
+                android.hardware.Camera.Size size = sit.next();
+                if (Math.abs(size.width * size.height - aWidth * aHeight) < sizeDelta) {
+                    sizeDelta = Math.abs(size.width * size.height - aWidth * aHeight);
+                    params.setPreviewSize(size.width, size.height);
+                    bufferSize = size.width * size.height;
+                }
+            }
+            
+            sCamera.setParameters(params);
+            sCameraBuffer = new byte[(bufferSize * 12) / 8];
+            sCamera.addCallbackBuffer(sCameraBuffer);
+            sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
+                public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
+                    cameraCallbackBridge(data);
+                    sCamera.addCallbackBuffer(sCameraBuffer);
+                }
+            });
+            sCamera.startPreview();
+            params = sCamera.getParameters();
+            Log.i("GeckoAppJava", "Camera: " + params.getPreviewSize().width + "x" + params.getPreviewSize().height +
+                  " @ " + params.getPreviewFrameRate() + "fps. format is " + params.getPreviewFormat());
+            result[0] = 1;
+            result[1] = params.getPreviewSize().width;
+            result[2] = params.getPreviewSize().height;
+            result[3] = params.getPreviewFrameRate();
+
+            Log.i("GeckoAppJava", "Camera preview started");
+        } catch(RuntimeException e) {
+            Log.e("GeckoAppJava", "initCamera RuntimeException : ", e);
+            result[0] = result[1] = result[2] = result[3] = 0;
+        }
+        return result;
+    }
+
+    static synchronized void closeCamera() {
+        Log.i("GeckoAppJava", "closeCamera() on thread " + Thread.currentThread().getId());
+        if (sCamera != null) {
+            sCamera.stopPreview();
+            sCamera.release();
+            sCamera = null;
+            sCameraBuffer = null;
+        }
     }
 }

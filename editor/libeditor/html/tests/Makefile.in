@@ -50,7 +50,6 @@ _TEST_FILES = \
 		test_bug291780.html \
 		test_bug332636.html \
 		test_bug332636.html^headers^ \
-		test_bug366682.html \
 		test_bug372345.html \
 		test_bug410986.html \
 		test_bug414526.html \
@@ -80,7 +79,6 @@ _TEST_FILES = \
 		test_bug599322.html \
 		test_bug607584.html \
 		test_bug611182.html \
-		test_bug612128.html \
 		test_bug612447.html \
 		test_bug620906.html \
 		test_bug622371.html \
@@ -98,15 +96,22 @@ _TEST_FILES = \
 		test_root_element_replacement.html \
 		$(NULL)
 
+ifneq (mobile,$(MOZ_BUILD_APP))
+_TEST_FILES +=  test_spellcheck_pref.html \
+		$(NULL)
+endif
+
 _DATA_FILES = \
 		data/cfhtml-chromium.txt \
 		data/cfhtml-firefox.txt \
 		data/cfhtml-ie.txt \
 		data/cfhtml-ooo.txt \
+		data/cfhtml-nocontext.txt \
 		$(NULL)
 
 _CHROME_TEST_FILES = \
 		test_contenteditable_text_input_handling.html \
+		test_bug366682.html \
 		test_bug489202.xul \
 		test_bug490879.xul \
 		test_bug607584.xul \

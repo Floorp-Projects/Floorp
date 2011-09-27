@@ -2268,10 +2268,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * by a local variable, and not mutating the variable, try and
              * optimize to a fast, unguarded global access.
              */
-            if (!BindKnownGlobal(cx, cg, dn, pn, atom))
-                return JS_FALSE;
             if (!pn->pn_cookie.isFree()) {
-                pn->setOp(JSOP_GETGLOBAL);
+                pn->setOp(JSOP_GETGNAME);
+                pn->pn_dflags |= PND_BOUND;
                 return JS_TRUE;
             }
         }
@@ -2279,7 +2278,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /*
          * The locally stored cookie here should really come from |pn|, not
          * |dn|. For example, we could have a SETGNAME op's lexdef be a
-         * GETGLOBAL op, and their cookies have very different meanings. As
+         * GETGNAME op, and their cookies have very different meanings. As
          * a workaround, just make the cookie free.
          */
         cookie.makeFree();
@@ -2771,9 +2770,6 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             break;
           case JSOP_GETGNAME:
             op = JSOP_CALLGNAME;
-            break;
-          case JSOP_GETGLOBAL:
-            op = JSOP_CALLGLOBAL;
             break;
           case JSOP_GETARG:
             op = JSOP_CALLARG;
@@ -4659,10 +4655,7 @@ EmitAssignment(JSContext *cx, JSCodeGenerator *cg, JSParseNode *lhs, JSOp op, JS
             } else if (lhs->isOp(JSOP_SETGNAME)) {
                 if (!BindGlobal(cx, cg, lhs, lhs->pn_atom))
                     return false;
-                if (lhs->pn_cookie.isFree())
-                    EmitAtomOp(cx, lhs, JSOP_GETGNAME, cg);
-                else
-                    EMIT_UINT16_IMM_OP(JSOP_GETGLOBAL, lhs->pn_cookie.asInteger());
+                EmitAtomOp(cx, lhs, JSOP_GETGNAME, cg);
             } else {
                 EMIT_UINT16_IMM_OP(lhs->isOp(JSOP_SETARG) ? JSOP_GETARG : JSOP_GETLOCAL, atomIndex);
             }

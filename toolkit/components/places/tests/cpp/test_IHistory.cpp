@@ -399,7 +399,8 @@ test_observer_topic_dispatched()
 
   // Need two Link objects as well - one for each URI.
   nsCOMPtr<Link> visitedLink(new mock_Link(expect_visit, false));
-  NS_ADDREF(visitedLink); // It will release itself when notified.
+  nsCOMPtr<Link> visitedLinkCopy = visitedLink;
+  visitedLinkCopy.forget(); // It will release itself when notified.
   nsCOMPtr<Link> notVisitedLink(new mock_Link(expect_no_visit));
 
   // Add the right observers for the URIs to check results.

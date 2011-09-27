@@ -477,7 +477,7 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
 bool
 TabParent::SendCompositionEvent(nsCompositionEvent& event)
 {
-  mIMEComposing = event.message == NS_COMPOSITION_START;
+  mIMEComposing = event.message != NS_COMPOSITION_END;
   mIMECompositionStart = NS_MIN(mIMESelectionAnchor, mIMESelectionFocus);
   if (mIMECompositionEnding)
     return true;

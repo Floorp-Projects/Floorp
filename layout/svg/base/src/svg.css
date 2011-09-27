@@ -44,7 +44,7 @@ style, script, symbol {
 
 switch {
  -moz-binding: none !important;
-} 
+}
 
 svg:not(:root), symbol, image, marker, pattern, foreignObject {
  overflow: hidden;
@@ -54,6 +54,12 @@ foreignObject {
   margin: 0 ! important;
   padding: 0 ! important;
   border-width: 0 ! important;
+}
+
+@media all and (-moz-is-resource-document) {
+ foreignObject *|* {
+   -moz-appearance: none !important;
+ }
 }
 
 *|*::-moz-svg-foreign-content {

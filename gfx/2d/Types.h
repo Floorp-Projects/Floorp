@@ -110,6 +110,7 @@ enum PatternType { PATTERN_COLOR, PATTERN_SURFACE, PATTERN_LINEAR_GRADIENT, PATT
 enum JoinStyle { JOIN_BEVEL, JOIN_ROUND, JOIN_MITER, JOIN_MITER_OR_BEVEL };
 enum CapStyle { CAP_BUTT, CAP_ROUND, CAP_SQUARE };
 
+/* Color is stored in non-premultiplied form */
 struct Color
 {
 public:
