@@ -219,6 +219,7 @@ _TEST_FILES1 = \
 		file_XHR_fail1.txt^headers^ \
 		file_XHR_binary1.bin \
 		file_XHR_binary1.bin^headers^ \
+		file_XHR_binary2.bin \
 		test_bug428847.html \
 		file_bug428847-1.xhtml \
 		file_bug428847-2.xhtml \
