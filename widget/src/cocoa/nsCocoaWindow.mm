@@ -2175,6 +2175,53 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   [self tryToPerform:aSelector with:nil];
 }
 
+- (id)accessibilityAttributeValue:(NSString *)attribute
+{
+  id retval = [super accessibilityAttributeValue:attribute];
+
+  // The following works around a problem with Text-to-Speech on OS X 10.7.
+  // See bug 674612 for more info.
+  //
+  // When accessibility is off, AXUIElementCopyAttributeValue(), when called
+  // on an AXApplication object to get its AXFocusedUIElement attribute,
+  // always returns an AXWindow object (the actual browser window -- never a
+  // mozAccessible object).  This also happens with accessibility turned on,
+  // if no other object in the browser window has yet been focused.  But if
+  // the browser window has a title bar (as it currently always does), the
+  // AXWindow object will always have four "accessible" children, one of which
+  // is an AXStaticText object (the title bar's "title"; the other three are
+  // the close, minimize and zoom buttons).  This means that (for complicated
+  // reasons, for which see bug 674612) Text-to-Speech on OS X 10.7 will often
+  // "speak" the window title, no matter what text is selected, or even if no
+  // text at all is selected.  (This always happens when accessibility is off.
+  // It doesn't happen in Firefox releases because Apple has (on OS X 10.7)
+  // special-cased the handling of apps whose CFBundleIdentifier is
+  // org.mozilla.firefox.)
+  //
+  // We work around this problem by only returning AXChildren that are
+  // mozAccessible object or are one of the titlebar's buttons (which
+  // instantiate subclasses of NSButtonCell).
+  if (nsToolkit::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
+      [attribute isEqualToString:@"AXChildren"]) {
+    NSMutableArray *holder = [NSMutableArray arrayWithCapacity:10];
+    [holder addObjectsFromArray:(NSArray *)retval];
+    NSUInteger count = [holder count];
+    for (NSInteger i = count - 1; i >= 0; --i) {
+      id item = [holder objectAtIndex:i];
+      // Remove anything from holder that isn't one of the titlebar's buttons
+      // (which instantiate subclasses of NSButtonCell) or a mozAccessible
+      // object (or one of its subclasses).
+      if (![item isKindOfClass:[NSButtonCell class]] &&
+          ![item respondsToSelector:@selector(hasRepresentedView)]) {
+        [holder removeObjectAtIndex:i];
+      }
+    }
+    retval = [NSArray arrayWithArray:holder];
+  }
+
+  return retval;
+}
+
 @end
 
 // This class allows us to have a "unified toolbar" style window. It works like this:
