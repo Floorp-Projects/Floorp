@@ -58,6 +58,7 @@ class nsIContent;
 class nsIDocument;
 class nsCSSParser;
 class nsMediaList;
+class nsIStyleSheetLinkingElement;
 
 namespace mozilla {
 
@@ -422,11 +423,13 @@ private:
   // canceled at some point (in which case it will be sent with
   // NS_BINDING_ABORTED).  aWasAlternate indicates the state when the load was
   // initiated, not the state at some later time.  aURI should be the URI the
-  // sheet was loaded from (may be null for inline sheets).
+  // sheet was loaded from (may be null for inline sheets).  aElement is the
+  // owning element for this sheet.
   nsresult PostLoadEvent(nsIURI* aURI,
                          nsCSSStyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
-                         PRBool aWasAlternate);
+                         PRBool aWasAlternate,
+                         nsIStyleSheetLinkingElement* aElement);
 
   // Start the loads of all the sheets in mPendingDatas
   void StartAlternateLoads();
@@ -472,6 +475,7 @@ private:
   LoadDataArray     mPostedEvents;
 
   // Our array of "global" observers
+  // XXXbz these are strong refs; should we be cycle collecting CSS loaders?
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver> > mObservers;
 
   // the load data needs access to the document...
