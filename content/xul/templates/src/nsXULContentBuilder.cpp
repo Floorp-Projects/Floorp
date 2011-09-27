@@ -498,10 +498,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
     // Iterate through all of the template children, constructing
     // "real" content model nodes for each "template" child.
-    PRUint32 count = aTemplateNode->GetChildCount();
-
-    for (PRUint32 kid = 0; kid < count; kid++) {
-        nsIContent *tmplKid = aTemplateNode->GetChildAt(kid);
+    for (nsIContent* tmplKid = aTemplateNode->GetFirstChild();
+         tmplKid;
+         tmplKid = tmplKid->GetNextSibling()) {
 
         PRInt32 nameSpaceID = tmplKid->GetNameSpaceID();
 
@@ -1935,8 +1934,10 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
                 staticCount = 0;
         } else {
             // compute the "static" XUL element count
-            for (PRUint32 childLoop = 0; childLoop < numChildren; ++childLoop) {
-                child = aContainer->GetChildAt(childLoop);
+            for (nsIContent* child = aContainer->GetFirstChild();
+                 child;
+                 child = child->GetNextSibling()) {
+                 
                 if (nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
                                                     nsGkAtoms::_template))
                     break;

@@ -391,9 +391,10 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   if (aOptions->IsHTML(nsGkAtoms::optgroup)) {
     mOptGroupCount++;
 
-    PRUint32 numChildren = aOptions->GetChildCount();
-    for (PRUint32 i = 0; i < numChildren; ++i) {
-      nsresult rv = InsertOptionsIntoListRecurse(aOptions->GetChildAt(i),
+    for (nsIContent* child = aOptions->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      nsresult rv = InsertOptionsIntoListRecurse(child,
                                                  aInsertIndex, aDepth+1);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -435,9 +436,11 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   if (mOptGroupCount && aOptions->IsHTML(nsGkAtoms::optgroup)) {
     mOptGroupCount--;
 
-    PRUint32 numChildren = aOptions->GetChildCount();
-    for (PRUint32 i = 0; i < numChildren; ++i) {
-      nsresult rv = RemoveOptionsFromListRecurse(aOptions->GetChildAt(i),
+    for (nsIContent* child = aOptions->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+
+      nsresult rv = RemoveOptionsFromListRecurse(child,
                                                  aRemoveIndex,
                                                  aNumRemoved,
                                                  aDepth + 1);
