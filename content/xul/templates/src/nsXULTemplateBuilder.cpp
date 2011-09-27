@@ -1699,10 +1699,9 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     {
         // If root node has no template attribute, then look for a child
         // node which is a template tag
-        PRUint32 count = mRoot->GetChildCount();
-
-        for (PRUint32 i = 0; i < count; ++i) {
-            nsIContent *child = mRoot->GetChildAt(i);
+        for (nsIContent* child = mRoot->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
 
             if (IsTemplateElement(child)) {
                 NS_ADDREF(*aResult = child);
@@ -1856,10 +1855,10 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
     PRBool isQuerySetMode = PR_FALSE;
     PRBool hasQuerySet = PR_FALSE, hasRule = PR_FALSE, hasQuery = PR_FALSE;
 
-    PRUint32 count = aTemplate->GetChildCount();
+    for (nsIContent* rulenode = aTemplate->GetFirstChild();
+         rulenode;
+         rulenode = rulenode->GetNextSibling()) {
 
-    for (PRUint32 i = 0; i < count; i++) {
-        nsIContent *rulenode = aTemplate->GetChildAt(i);
         nsINodeInfo *ni = rulenode->NodeInfo();
 
         // don't allow more queries than can be supported
@@ -2243,12 +2242,11 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
         aRule->SetTag(tagatom);
     }
 
-    PRUint32 count = aCondition->GetChildCount();
-
     nsTemplateCondition* currentCondition = nsnull;
 
-    for (PRUint32 i = 0; i < count; i++) {
-        nsIContent *node = aCondition->GetChildAt(i);
+    for (nsIContent* node = aCondition->GetFirstChild();
+         node;
+         node = node->GetNextSibling()) {
 
         if (node->NodeInfo()->Equals(nsGkAtoms::where, kNameSpaceID_XUL)) {
             nsresult rv = CompileWhereCondition(aRule, node, &currentCondition);
@@ -2366,10 +2364,9 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
     // Add an extended rule's bindings.
     nsresult rv;
 
-    PRUint32 count = aBindings->GetChildCount();
-
-    for (PRUint32 i = 0; i < count; ++i) {
-        nsIContent *binding = aBindings->GetChildAt(i);
+    for (nsIContent* binding = aBindings->GetFirstChild();
+         binding;
+         binding = binding->GetNextSibling()) {
 
         if (binding->NodeInfo()->Equals(nsGkAtoms::binding,
                                         kNameSpaceID_XUL)) {
@@ -2481,10 +2478,11 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule,
         }
 
         // Push kids onto the stack, and search them next.
-        count = element->GetChildCount();
+        for (nsIContent* child = element->GetLastChild();
+             child;
+             child = child->GetPreviousSibling()) {
 
-        while (count-- > 0) {
-            if (elements.AppendElement(element->GetChildAt(count)) == nsnull)
+            if (!elements.AppendElement(child))
                 return NS_ERROR_OUT_OF_MEMORY;
         }
     }

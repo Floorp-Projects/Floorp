@@ -1362,10 +1362,10 @@ nsXULTreeBuilder::EnsureSortVariables()
 
     if (!treecols)
         return NS_OK;
-
-    PRUint32 count = treecols->GetChildCount();
-    for (PRUint32 i = 0; i < count; ++i) {
-        nsIContent *child = treecols->GetChildAt(i);
+        
+    for (nsIContent* child = treecols->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
 
         if (child->NodeInfo()->Equals(nsGkAtoms::treecol,
                                       kNameSpaceID_XUL)) {
@@ -1501,11 +1501,11 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
         aCol->GetAtom(getter_AddRefs(colAtom));
         aCol->GetIndex(&colIndex);
 
-        PRUint32 count = row->GetChildCount();
         PRUint32 j = 0;
-        for (PRUint32 i = 0; i < count; ++i) {
-            nsIContent *child = row->GetChildAt(i);
-
+        for (nsIContent* child = row->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+            
             if (child->NodeInfo()->Equals(nsGkAtoms::treecell,
                                           kNameSpaceID_XUL)) {
                 if (colAtom &&

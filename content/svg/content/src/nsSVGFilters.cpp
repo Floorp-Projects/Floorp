@@ -1826,10 +1826,12 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
   for (int i=0; i<256; i++)
     tableR[i] = tableG[i] = tableB[i] = tableA[i] = i;
   PRUint8* tables[] = { tableR, tableG, tableB, tableA };
-  PRUint32 count = GetChildCount();
-  for (PRUint32 k = 0; k < count; k++) {
+  for (nsIContent* childContent = nsINode::GetFirstChild();
+       childContent;
+       childContent = childContent->GetNextSibling()) {
+
     nsRefPtr<nsSVGComponentTransferFunctionElement> child;
-    CallQueryInterface(GetChildAt(k),
+    CallQueryInterface(childContent,
             (nsSVGComponentTransferFunctionElement**)getter_AddRefs(child));
     if (child) {
       child->GenerateLookupTable(tables[child->GetChannel()]);
@@ -2377,9 +2379,9 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance,
 void
 nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
-  PRUint32 count = GetChildCount();
-  for (PRUint32 i = 0; i < count; i++) {
-    nsIContent* child = GetChildAt(i);
+  for (nsIContent* child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     nsRefPtr<nsSVGFEMergeNodeElement> node;
     CallQueryInterface(child, (nsSVGFEMergeNodeElement**)getter_AddRefs(node));
     if (node) {
@@ -4868,10 +4870,10 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 
   nscolor lightColor = style->GetStyleSVGReset()->mLightingColor;
 
-  // find specified light
-  PRUint32 count = GetChildCount();
-  for (PRUint32 k = 0; k < count; k++) {
-    nsCOMPtr<nsIContent> child = GetChildAt(k);
+  // find specified light  
+  for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     distantLight = do_QueryInterface(child);
     pointLight = do_QueryInterface(child);
     spotLight = do_QueryInterface(child);

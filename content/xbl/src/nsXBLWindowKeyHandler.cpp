@@ -211,8 +211,9 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
   // Since we chain each handler onto the next handler,
   // we'll enumerate them here in reverse so that when we
   // walk the chain they'll come out in the original order
-  for (PRUint32 j = aContent->GetChildCount(); j--; ) {
-    nsIContent *key = aContent->GetChildAt(j);
+  for (nsIContent* key = aContent->GetLastChild();
+       key;
+       key = key->GetPreviousSibling()) {
 
     if (key->NodeInfo()->Equals(nsGkAtoms::key, kNameSpaceID_XUL)) {
       // Check whether the key element has empty value at key/char attribute.

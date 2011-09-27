@@ -4177,6 +4177,11 @@
             aMenuitem.removeAttribute("busy");
           }
 
+          if (aTab.hasAttribute("pending"))
+            aMenuitem.setAttribute("pending", aTab.getAttribute("pending"));
+          else
+            aMenuitem.removeAttribute("pending");
+
           if (aTab.selected)
             aMenuitem.setAttribute("selected", "true");
           else
