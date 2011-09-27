@@ -63,17 +63,18 @@ PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder()
+nsBMPDecoder::nsBMPDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+ : Decoder(aImage, aObserver)
 {
-    mColors = nsnull;
-    mRow = nsnull;
-    mImageData = nsnull;
-    mCurPos = mPos = mNumColors = mRowBytes = 0;
-    mOldLine = mCurLine = 1; // Otherwise decoder will never start
-    mState = eRLEStateInitial;
-    mStateData = 0;
-    mLOH = WIN_HEADER_LENGTH;
-    mUseAlphaData = mHaveAlphaData = PR_FALSE;
+  mColors = nsnull;
+  mRow = nsnull;
+  mImageData = nsnull;
+  mCurPos = mPos = mNumColors = mRowBytes = 0;
+  mOldLine = mCurLine = 1; // Otherwise decoder will never start
+  mState = eRLEStateInitial;
+  mStateData = 0;
+  mLOH = WIN_HEADER_LENGTH;
+  mUseAlphaData = mHaveAlphaData = PR_FALSE;
 }
 
 nsBMPDecoder::~nsBMPDecoder()

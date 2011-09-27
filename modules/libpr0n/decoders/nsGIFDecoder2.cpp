@@ -107,8 +107,9 @@ namespace imagelib {
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 
-nsGIFDecoder2::nsGIFDecoder2()
-  : mCurrentRow(-1)
+nsGIFDecoder2::nsGIFDecoder2(RasterImage *aImage, imgIDecoderObserver* aObserver)
+  : Decoder(aImage, aObserver)
+  , mCurrentRow(-1)
   , mLastFlushedRow(-1)
   , mImageData(nsnull)
   , mOldColor(0)
