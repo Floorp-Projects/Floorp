@@ -55,6 +55,8 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -65,9 +67,7 @@ using namespace js::types;
 
 Class js::BooleanClass = {
     "Boolean",
-    JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
-    JS_PropertyStub,         /* addProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),    JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
@@ -152,12 +152,30 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
 JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &BooleanClass, Boolean, 1,
-                                   NULL, boolean_methods, NULL, NULL);
-    if (!proto)
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *booleanProto = global->createBlankPrototype(cx, &BooleanClass);
+    if (!booleanProto)
         return NULL;
-    proto->setPrimitiveThis(BooleanValue(false));
-    return proto;
+    booleanProto->setPrimitiveThis(BooleanValue(false));
+
+    JSFunction *ctor = global->createConstructor(cx, Boolean, &BooleanClass,
+                                                 CLASS_ATOM(cx, Boolean), 1);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, booleanProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, booleanProto, NULL, boolean_methods))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Boolean, ctor, booleanProto))
+        return NULL;
+
+    return booleanProto;
 }
 
 JSString *
