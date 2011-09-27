@@ -50,6 +50,7 @@ LIBXUL_LIBRARY  = 1
 EXPORTS		+= \
 		nsRawDecoder.h \
                 nsRawReader.h \
+		nsRawStructs.h \
 		$(NULL)
 
 CPPSRCS		+= \
