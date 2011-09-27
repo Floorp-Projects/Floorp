@@ -1263,7 +1263,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
     if (mCurrentOut->Length() < 126) {
       mOutHeader[1] = mCurrentOut->Length() | kMaskBit;
       mHdrOutToSend = 6;
-    } else if (mCurrentOut->Length() < 0xffff) {
+    } else if (mCurrentOut->Length() <= 0xffff) {
       mOutHeader[1] = 126 | kMaskBit;
       ((PRUint16 *)mOutHeader)[1] =
         PR_htons(mCurrentOut->Length());
