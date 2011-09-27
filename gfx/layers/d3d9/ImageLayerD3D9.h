@@ -185,11 +185,8 @@ public:
   virtual ~ShadowImageLayerD3D9();
 
   // ShadowImageLayer impl
-  virtual PRBool Init(const SharedImage& aFront, const nsIntSize& aSize);
-
-  virtual void Swap(const SharedImage& aFront, SharedImage* aNewBack);
-
-  virtual void DestroyFrontBuffer();
+  virtual void Swap(const SharedImage& aFront,
+                    SharedImage* aNewBack);
 
   virtual void Disconnect();
 

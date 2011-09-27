@@ -160,12 +160,9 @@ public:
                            const nsIntRect& aBufferRect,
                            const SurfaceDescriptor& aInitialFrontBuffer);
   /**
-   * For the next two methods, |aSize| is the size of
+   * For the next method, |aSize| is the size of
    * |aInitialFrontSurface|.
    */
-  void CreatedImageBuffer(ShadowableLayer* aImage,
-                          nsIntSize aSize,
-                          const SharedImage& aInitialFrontImage);
   void CreatedCanvasBuffer(ShadowableLayer* aCanvas,
                            nsIntSize aSize,
                            const SurfaceDescriptor& aInitialFrontSurface,
@@ -181,7 +178,6 @@ public:
    */
   void DestroyedThebesBuffer(ShadowableLayer* aThebes,
                              const SurfaceDescriptor& aBackBufferToDestroy);
-  void DestroyedImageBuffer(ShadowableLayer* aImage);
   void DestroyedCanvasBuffer(ShadowableLayer* aCanvas);
 
 
@@ -432,6 +428,17 @@ protected:
   PLayerChild* mShadow;
 };
 
+/**
+ * SurfaceDeallocator interface
+ */
+class ISurfaceDeAllocator
+{
+public:
+  virtual void DestroySharedSurface(gfxSharedImageSurface* aSurface) = 0;
+  virtual void DestroySharedSurface(SurfaceDescriptor* aSurface) = 0;
+protected:
+  ~ISurfaceDeAllocator() {};
+};
 
 /**
  * A ShadowLayer is the representation of a child-context's Layer in a
@@ -447,13 +454,17 @@ public:
   virtual ~ShadowLayer() {}
 
   /**
-   * CONSTRUCTION PHASE ONLY
+   * Set deallocator for data recieved from IPC protocol
+   * We should be able to set allocator right before swap call
+   * that is why allowed multiple call with the same Allocator
    */
-  void SetAllocator(PLayersParent* aAllocator)
+  virtual void SetAllocator(ISurfaceDeAllocator* aAllocator)
   {
-    NS_ABORT_IF_FALSE(!mAllocator, "Stomping allocator?");
+    NS_ASSERTION(!mAllocator || mAllocator == aAllocator, "Stomping allocator?");
     mAllocator = aAllocator;
   }
+
+  virtual void DestroyFrontBuffer() { };
 
   /**
    * The following methods are
@@ -491,7 +502,7 @@ protected:
     , mUseShadowClipRect(PR_FALSE)
   {}
 
-  PLayersParent* mAllocator;
+  ISurfaceDeAllocator* mAllocator;
   nsIntRegion mShadowVisibleRegion;
   gfx3DMatrix mShadowTransform;
   nsIntRect mShadowClipRect;
@@ -619,26 +630,10 @@ class ShadowImageLayer : public ShadowLayer,
 public:
   /**
    * CONSTRUCTION PHASE ONLY
-   *
-   * Initialize this with a (temporary) front surface with the given
-   * size.  This is expected to be followed with a Swap() in the same
-   * transaction to bring in real pixels.  Init() may only be called
-   * once.
-   */
-  virtual PRBool Init(const SharedImage& front, const nsIntSize& aSize) = 0;
-
-  /**
-   * CONSTRUCTION PHASE ONLY
    * @see ShadowCanvasLayer::Swap
    */
-  virtual void Swap(const SharedImage& aFront, SharedImage* aNewBack) = 0;
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   *
-   * Destroy the current front buffer.
-   */
-  virtual void DestroyFrontBuffer() = 0;
+  virtual void Swap(const SharedImage& aFront,
+                    SharedImage* aNewBack) = 0;
 
   virtual ShadowLayer* AsShadowLayer() { return this; }
 
