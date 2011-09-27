@@ -4210,6 +4210,10 @@ nsINode::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
 nsresult
 nsINode::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
+  nsIDocument* owner = GetOwnerDoc();
+  if (owner) {
+    owner->WarnOnceAbout(nsIDocument::eIsSameNode);
+  }
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
   *aReturn = other == this;
   return NS_OK;
