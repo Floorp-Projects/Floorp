@@ -142,7 +142,6 @@ toolbarbutton.urlbar-button {
   background-image: url("chrome://browser/skin/images/urlbar-border-side.png"),
                     url("chrome://browser/skin/images/favicon-default-32.png");
   background-position: bottom left, center center;
-  background-size: auto auto, 24px 24px;
   background-repeat: no-repeat;
 }
 
@@ -195,14 +194,11 @@ toolbarbutton.urlbar-button {
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
-#urlbar-throbber {
-  width: 24px;
-  height: 24px;
-}
 
 #urlbar-favicon {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 #urlbar-favicon[src=""] {
