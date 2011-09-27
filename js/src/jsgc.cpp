@@ -798,6 +798,10 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
     if (!aheader->allocated())
         return CGCT_FREEARENA;
 
+    JSCompartment *curComp = trc->context->runtime->gcCurrentCompartment;
+    if (curComp && curComp != aheader->compartment)
+        return CGCT_OTHERCOMPARTMENT;
+
     AllocKind thingKind = aheader->getAllocKind();
     uintptr_t offset = addr & ArenaMask;
     uintptr_t minOffset = Arena::firstThingOffset(thingKind);
