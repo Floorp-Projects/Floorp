@@ -105,14 +105,13 @@ public:
 
   // CanvasLayer impl
   virtual void Initialize(const Data& aData);
-  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip);
-
   // This isn't meaningful for shadow canvas.
   virtual void Updated(const nsIntRect&) {}
 
   // ShadowCanvasLayer impl
-  virtual void Swap(const SurfaceDescriptor& aNewFront,
-                    SurfaceDescriptor* aNewBack);
+  virtual void Swap(const CanvasSurface& aNewFront,
+                    bool needYFlip,
+                    CanvasSurface* aNewBack);
   virtual void DestroyFrontBuffer();
   virtual void Disconnect();
 
@@ -125,6 +124,8 @@ public:
   virtual void LayerManagerDestroyed();
 
 private:
+  virtual void Init(bool needYFlip);
+
   PRPackedBool mNeedsYFlip;
   nsRefPtr<ShadowBufferD3D9> mBuffer;
 };

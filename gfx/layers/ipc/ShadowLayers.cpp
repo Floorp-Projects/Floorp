@@ -202,29 +202,11 @@ ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
 }
 
 void
-ShadowLayerForwarder::CreatedCanvasBuffer(ShadowableLayer* aCanvas,
-                                          nsIntSize aSize,
-                                          const SurfaceDescriptor& aTempFrontSurface,
-                                          bool aNeedYFlip)
-{
-  mTxn->AddEdit(OpCreateCanvasBuffer(NULL, Shadow(aCanvas),
-                                     aSize,
-                                     aTempFrontSurface,
-                                     aNeedYFlip));
-}
-
-void
 ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
                                             const SurfaceDescriptor& aBackBufferToDestroy)
 {
   mTxn->AddEdit(OpDestroyThebesFrontBuffer(NULL, Shadow(aThebes)));
   mTxn->AddBufferToDestroy(aBackBufferToDestroy);
-}
-
-void
-ShadowLayerForwarder::DestroyedCanvasBuffer(ShadowableLayer* aCanvas)
-{
-  mTxn->AddEdit(OpDestroyCanvasFrontBuffer(NULL, Shadow(aCanvas)));
 }
 
 void
@@ -281,10 +263,12 @@ ShadowLayerForwarder::PaintedImage(ShadowableLayer* aImage,
 }
 void
 ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
+                                    bool aNeedYFlip,
                                     const SurfaceDescriptor& aNewFrontSurface)
 {
   mTxn->AddPaint(OpPaintCanvas(NULL, Shadow(aCanvas),
-                               aNewFrontSurface));
+                               aNewFrontSurface,
+                               aNeedYFlip));
 }
 
 PRBool
