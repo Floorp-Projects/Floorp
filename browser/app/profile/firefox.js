@@ -866,10 +866,6 @@ pref("browser.privatebrowsing.dont_prompt_on_enter", false);
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 
-// base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
-pref("geo.wifi.protocol", 0);
-
 // Whether to use a panel that looks like an OS X sheet for customization
 #ifdef XP_MACOSX
 pref("toolbar.customization.usesheet", true);
