@@ -240,7 +240,6 @@ toolbarbutton {
   min-height: @touch_button_small@ !important; /* primary button size */
   -moz-appearance: none !important;
   padding: @padding_xsmall@;
-  -moz-margin-end: @margin_xxxnormal@;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
