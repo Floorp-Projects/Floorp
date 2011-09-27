@@ -48,4 +48,4 @@ struct THEBES_API gfxPointH3D : public mozilla::gfx::BasePoint4D<float, gfxPoint
     gfxPointH3D(float aX, float aY, float aZ, float aW) : Super(aX, aY, aZ, aW) {}
 };
 
-#endif /* GFX_POINTH3D_H */ 
+#endif /* GFX_POINTH3D_H */

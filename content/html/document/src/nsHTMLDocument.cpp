@@ -2700,9 +2700,9 @@ static void
 NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
                           PRBool aEditable)
 {
-  PRUint32 i, n = aNode->GetChildCount();
-  for (i = 0; i < n; ++i) {
-    nsIContent *child = aNode->GetChildAt(i);
+  for (nsIContent* child = aNode->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     if (child->HasFlag(NODE_IS_EDITABLE) != aEditable &&
         child->IsElement()) {
       child->AsElement()->UpdateState(true);
