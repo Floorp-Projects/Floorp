@@ -45,6 +45,7 @@
 #include "mozilla/mozalloc.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -56,17 +57,10 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(type, msg)
 #endif
 
-// Wait this number of seconds when buffering, then leave and play
+// Wait this number of milliseconds when buffering, then leave and play
 // as best as we can if the required amount of data hasn't been
 // retrieved.
-static const PRUint32 BUFFERING_WAIT = 30;
-
-// The amount of data to retrieve during buffering is computed based
-// on the download rate. BUFFERING_MIN_RATE is the minimum download
-// rate to be used in that calculation to help avoid constant buffering
-// attempts at a time when the average download rate has not stabilised.
-#define BUFFERING_MIN_RATE 50000
-#define BUFFERING_RATE(x) ((x)< BUFFERING_MIN_RATE ? BUFFERING_MIN_RATE : (x))
+static const PRUint32 BUFFERING_WAIT = 30000;
 
 // If audio queue has less than this many usecs of decoded audio, we won't risk
 // trying to decode the video, we'll skip decoding video up to the next
@@ -194,7 +188,8 @@ private:
 };
 
 nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder,
-                                                           nsBuiltinDecoderReader* aReader) :
+                                                           nsBuiltinDecoderReader* aReader,
+                                                           PRPackedBool aRealTime) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
   mCbCrSize(0),
@@ -221,7 +216,8 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mRunAgain(PR_FALSE),
   mDispatchedRunEvent(PR_FALSE),
   mDecodeThreadWaiting(PR_FALSE),
-  mEventManager(aDecoder)
+  mEventManager(aDecoder),
+  mRealTime(aRealTime)
 {
   MOZ_COUNT_CTOR(nsBuiltinDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -233,6 +229,13 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(res), "Can't create media state machine thread");
   }
   gStateMachineCount++;
+
+  // only enable realtime mode when "media.realtime_decoder.enabled" is true.
+  if (Preferences::GetBool("media.realtime_decoder.enabled", PR_FALSE) == PR_FALSE)
+    mRealTime = PR_FALSE;
+
+  mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT;
+  mLowDataThresholdUsecs = mRealTime ? 0 : LOW_DATA_THRESHOLD_USECS;
 }
 
 nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
@@ -332,12 +335,12 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
 
   // Once we've decoded more than videoPumpThreshold video frames, we'll
   // no longer be considered to be "pumping video".
-  const unsigned videoPumpThreshold = AMPLE_VIDEO_FRAMES / 2;
+  const unsigned videoPumpThreshold = mRealTime ? 0 : AMPLE_VIDEO_FRAMES / 2;
 
   // After the audio decode fills with more than audioPumpThreshold usecs
   // of decoded audio, we'll start to check whether the audio or video decode
   // is falling behind.
-  const unsigned audioPumpThreshold = LOW_AUDIO_USECS * 2;
+  const unsigned audioPumpThreshold = mRealTime ? 0 : LOW_AUDIO_USECS * 2;
 
   // Our local low audio threshold. We may increase this if we're slow to
   // decode video frames, in order to reduce the chance of audio underruns.
@@ -429,7 +432,7 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       audioPlaying = mReader->DecodeAudioData();
     }
-    
+
     // Notify to ensure that the AudioLoop() is not waiting, in case it was
     // waiting for more audio to be decoded.
     mDecoder->GetReentrantMonitor().NotifyAll();
@@ -1146,7 +1149,7 @@ PRBool nsBuiltinDecoderStateMachine::HasLowDecodedData(PRInt64 aAudioUsecs) cons
 
 PRBool nsBuiltinDecoderStateMachine::HasLowUndecodedData() const
 {
-  return GetUndecodedData() < LOW_DATA_THRESHOLD_USECS;
+  return GetUndecodedData() < mLowDataThresholdUsecs;
 }
 
 PRInt64 nsBuiltinDecoderStateMachine::GetUndecodedData() const
@@ -1511,9 +1514,9 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
       TimeDuration elapsed = now - mBufferingStart;
       PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
       if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
-            elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
+            elapsed < TimeDuration::FromSeconds(mBufferingWait) &&
             (mQuickBuffering ? HasLowDecodedData(QUICK_BUFFERING_LOW_DATA_USECS)
-                            : (GetUndecodedData() < BUFFERING_WAIT * USECS_PER_S)) &&
+                            : (GetUndecodedData() < mBufferingWait * USECS_PER_S / 1000)) &&
             !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
             !stream->IsSuspended())
       {
@@ -1521,8 +1524,8 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
             ("%p Buffering: %.3lfs/%ds, timeout in %.3lfs %s",
               mDecoder.get(),
               GetUndecodedData() / static_cast<double>(USECS_PER_S),
-              BUFFERING_WAIT,
-              BUFFERING_WAIT - elapsed.ToSeconds(),
+              mBufferingWait,
+              mBufferingWait - elapsed.ToSeconds(),
               (mQuickBuffering ? "(quick exit)" : "")));
         ScheduleStateMachine(USECS_PER_S);
         return NS_OK;
@@ -1683,7 +1686,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
   nsAutoPtr<VideoData> currentFrame;
   if (mReader->mVideoQueue.GetSize() > 0) {
     VideoData* frame = mReader->mVideoQueue.PeekFront();
-    while (clock_time >= frame->mTime) {
+    while (mRealTime || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->mEndTime;
       currentFrame = frame;
       mReader->mVideoQueue.PopFront();
@@ -1989,6 +1992,8 @@ nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine(PRInt64 aUsecs) {
   }
 
   PRUint32 ms = static_cast<PRUint32>((aUsecs / USECS_PER_MS) & 0xFFFFFFFF);
+  if (mRealTime && ms > 40)
+    ms = 40;
   if (ms == 0) {
     if (mIsRunning) {
       // We're currently running this state machine on the state machine
