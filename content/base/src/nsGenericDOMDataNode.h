@@ -334,6 +334,7 @@ protected:
 
   nsresult GetIsElementContentWhitespace(PRBool *aReturn)
   {
+    GetOwnerDoc()->WarnOnceAbout(nsIDocument::eIsElementContentWhitespace);
     *aReturn = TextIsOnlyWhitespace();
     return NS_OK;
   }
