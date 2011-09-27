@@ -2545,9 +2545,7 @@ public:
   }
   virtual ~BasicShadowableCanvasLayer()
   {
-    if (IsSurfaceDescriptorValid(mBackBuffer)) {
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
-    }
+    DestroyBackBuffer();
     MOZ_COUNT_DTOR(BasicShadowableCanvasLayer);
   }
 
@@ -2573,6 +2571,14 @@ public:
     BasicShadowableLayer::Disconnect();
   }
 
+  void DestroyBackBuffer()
+  {
+    if (IsSurfaceDescriptorValid(mBackBuffer)) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
+      mBackBuffer = SurfaceDescriptor();
+    }
+  }
+
 private:
   BasicShadowLayerManager* BasicManager()
   {
@@ -2593,24 +2599,12 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
   // canvas resizes
 
   if (IsSurfaceDescriptorValid(mBackBuffer)) {
-    BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
-
-    BasicManager()->DestroyedCanvasBuffer(BasicManager()->Hold(this));
+    nsRefPtr<gfxASurface> backSurface =
+      BasicManager()->OpenDescriptor(mBackBuffer);
+    if (gfxIntSize(mBounds.width, mBounds.height) != backSurface->GetSize()) {
+      DestroyBackBuffer();
+    }
   }
-
-  SurfaceDescriptor tmpFrontBuffer;
-  // XXX error handling?
-  if (!BasicManager()->AllocDoubleBuffer(
-        gfxIntSize(aData.mSize.width, aData.mSize.height),
-        (GetContentFlags() & CONTENT_OPAQUE) ?
-          gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
-        &tmpFrontBuffer, &mBackBuffer))
-    NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
-
-  BasicManager()->CreatedCanvasBuffer(BasicManager()->Hold(this),
-                                      aData.mSize,
-                                      tmpFrontBuffer,
-                                      mNeedsYFlip ? true : false);
 }
 
 void
@@ -2621,6 +2615,15 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
     return;
   }
 
+  if (!IsSurfaceDescriptorValid(mBackBuffer)) {
+    if (!BasicManager()->AllocBuffer(
+        gfxIntSize(mBounds.width, mBounds.height),
+        (GetContentFlags() & CONTENT_OPAQUE) ?
+          gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
+        &mBackBuffer))
+    NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
+  }
+
   nsRefPtr<gfxASurface> backSurface =
     BasicManager()->OpenDescriptor(mBackBuffer);
 
@@ -2628,6 +2631,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
   FireDidTransactionCallback();
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
+                                mNeedsYFlip ? true : false,
                                 mBackBuffer);
 }
 
@@ -2976,19 +2980,18 @@ public:
   }
   virtual ~BasicShadowCanvasLayer()
   {
+    DestroyFrontBuffer();
     MOZ_COUNT_DTOR(BasicShadowCanvasLayer);
   }
 
   virtual void Disconnect()
   {
-    DestroyFrontBuffer();
+    mFrontSurface = SurfaceDescriptor();
     ShadowCanvasLayer::Disconnect();
   }
 
   virtual void Initialize(const Data& aData);
-  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip);
-
-  void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack);
+  void Swap(const CanvasSurface& aNewFront, bool needYFlip, CanvasSurface* aNewBack);
 
   virtual void DestroyFrontBuffer()
   {
@@ -3017,18 +3020,26 @@ BasicShadowCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicShadowCanvasLayer::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize, bool needYFlip)
+BasicShadowCanvasLayer::Swap(const CanvasSurface& aNewFront, bool needYFlip,
+                             CanvasSurface* aNewBack)
 {
-  mNeedsYFlip = needYFlip;
-  mFrontSurface = aNewFront;
-  mBounds.SetRect(0, 0, aSize.width, aSize.height);
-}
+  nsRefPtr<gfxASurface> surface =
+    BasicManager()->OpenDescriptor(aNewFront);
+  // Destroy mFrontBuffer if size different
+  gfxIntSize sz = surface->GetSize();
+  if (sz != gfxIntSize(mBounds.width, mBounds.height)) {
+    DestroyFrontBuffer();
+    mBounds.SetRect(0, 0, sz.width, sz.height);
+  }
 
-void
-BasicShadowCanvasLayer::Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack)
-{
-  *aNewBack = mFrontSurface;
-  mFrontSurface = aNewFront;
+  mNeedsYFlip = needYFlip;
+  // If mFrontBuffer
+  if (IsSurfaceDescriptorValid(mFrontSurface)) {
+    *aNewBack = mFrontSurface;
+  } else {
+    *aNewBack = null_t();
+  }
+  mFrontSurface = aNewFront.get_SurfaceDescriptor();
 }
 
 void
@@ -3286,8 +3297,14 @@ BasicShadowLayerManager::ForwardTransaction()
         MOZ_LAYERS_LOG(("[LayersForwarder] BufferSwap"));
 
         const OpBufferSwap& obs = reply.get_OpBufferSwap();
-        const SurfaceDescriptor& descr = obs.newBackBuffer();
-        GetBasicShadowable(obs)->SetBackBuffer(descr);
+        const CanvasSurface& newBack = obs.newBackBuffer();
+        if (newBack.type() == CanvasSurface::TSurfaceDescriptor) {
+          GetBasicShadowable(obs)->SetBackBuffer(newBack.get_SurfaceDescriptor());
+        } else if (newBack.type() == CanvasSurface::Tnull_t) {
+          GetBasicShadowable(obs)->SetBackBuffer(SurfaceDescriptor());
+        } else {
+          NS_RUNTIMEABORT("Unknown back image type");
+        }
         break;
       }
 
