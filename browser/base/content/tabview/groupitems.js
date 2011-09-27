@@ -1086,7 +1086,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   tabItem - The tabItem that is closed.
   _onChildClose: function GroupItem__onChildClose(tabItem) {
     let count = this._children.length;
-    let dontArrange = this.expanded || !this.shouldStack(count);
+    let dontArrange = tabItem.closedManually &&
+                      (this.expanded || !this.shouldStack(count));
     let dontClose = !tabItem.closedManually && gBrowser._numPinnedTabs > 0;
     this.remove(tabItem, {dontArrange: dontArrange, dontClose: dontClose});
 
