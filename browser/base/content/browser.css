@@ -511,18 +511,14 @@ statuspanel[type=status] {
 }
 
 statuspanel[type=overLink] {
-  -moz-transition: opacity 120ms ease-out;
+  -moz-transition: opacity 100ms ease-out;
   direction: ltr;
 }
 
-statuspanel[inactive] {
+statuspanel[label=""] {
   -moz-transition: none;
   opacity: 0;
   pointer-events: none;
-}
-
-statuspanel[inactive][previoustype=overLink] {
-  -moz-transition: opacity 200ms ease-out;
 }
 
 .statuspanel-inner {
