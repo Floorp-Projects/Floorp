@@ -314,10 +314,10 @@ protected:
   // Called on the state machine thread.
   PRInt64 GetAudioClock();
 
-  // Returns the presentation time of the first sample or frame in the media.
-  // If the media has video, it returns the first video frame. The decoder
-  // monitor must be held with exactly one lock count. Called on the state
-  // machine thread.
+  // Returns the presentation time of the first audio or video frame in the
+  // media.  If the media has video, it returns the first video frame. The
+  // decoder monitor must be held with exactly one lock count. Called on the
+  // state machine thread.
   VideoData* FindStartTime();
 
   // Update only the state machine's current playback position (and duration,
@@ -331,27 +331,27 @@ protected:
   void RenderVideoFrame(VideoData* aData, TimeStamp aTarget);
  
   // If we have video, display a video frame if it's time for display has
-  // arrived, otherwise sleep until it's time for the next sample. Update
-  // the current frame time as appropriate, and trigger ready state update.
-  // The decoder monitor must be held with exactly one lock count. Called
-  // on the state machine thread.
+  // arrived, otherwise sleep until it's time for the next frame. Update the
+  // current frame time as appropriate, and trigger ready state update.  The
+  // decoder monitor must be held with exactly one lock count. Called on the
+  // state machine thread.
   void AdvanceFrame();
 
-  // Pushes up to aSamples samples of silence onto the audio hardware. Returns
-  // the number of samples acutally pushed to the hardware. This pushes up to
-  // 32KB worth of samples to the hardware before returning, so must be called
-  // in a loop to ensure that the desired number of samples are pushed to the
-  // hardware. This ensures that the playback position advances smoothly, and
-  // guarantees that we don't try to allocate an impossibly large chunk of
-  // memory in order to play back silence. Called on the audio thread.
-  PRUint32 PlaySilence(PRUint32 aSamples,
+  // Write aFrames of audio frames of silence to the audio hardware. Returns
+  // the number of frames actually written. The write size is capped at
+  // SILENCE_BYTES_CHUNK (32kB), so must be called in a loop to write the
+  // desired number of frames. This ensures that the playback position
+  // advances smoothly, and guarantees that we don't try to allocate an
+  // impossibly large chunk of memory in order to play back silence. Called
+  // on the audio thread.
+  PRUint32 PlaySilence(PRUint32 aFrames,
                        PRUint32 aChannels,
-                       PRUint64 aSampleOffset);
+                       PRUint64 aFrameOffset);
 
   // Pops an audio chunk from the front of the audio queue, and pushes its
-  // audio data to the audio hardware. MozAudioAvailable sample data is also
-  // queued here. Called on the audio thread.
-  PRUint32 PlayFromAudioQueue(PRUint64 aSampleOffset, PRUint32 aChannels);
+  // audio data to the audio hardware. MozAudioAvailable data is also queued
+  // here. Called on the audio thread.
+  PRUint32 PlayFromAudioQueue(PRUint64 aFrameOffset, PRUint32 aChannels);
 
   // Stops the decode thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
@@ -502,13 +502,13 @@ protected:
   TimeStamp mBufferingStart;
 
   // Start time of the media, in microseconds. This is the presentation
-  // time of the first sample decoded from the media, and is used to calculate
+  // time of the first frame decoded from the media, and is used to calculate
   // duration and as a bounds for seeking. Accessed on state machine, decode,
   // and main threads. Access controlled by decoder monitor.
   PRInt64 mStartTime;
 
-  // Time of the last page in the media, in microseconds. This is the
-  // end time of the last sample in the media. Accessed on state
+  // Time of the last frame in the media, in microseconds. This is the
+  // end time of the last frame in the media. Accessed on state
   // machine, decode, and main threads. Access controlled by decoder monitor.
   PRInt64 mEndTime;
 
@@ -537,15 +537,15 @@ protected:
   // time value. Synchronised via decoder monitor.
   PRInt64 mCurrentFrameTime;
 
-  // The presentation time of the first audio sample that was played in
+  // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine
   // the current audio time. Accessed on audio and state machine thread.
   // Synchronized by decoder monitor.
   PRInt64 mAudioStartTime;
 
-  // The end time of the last audio sample that's been pushed onto the audio
+  // The end time of the last audio frame that's been pushed onto the audio
   // hardware in microseconds. This will approximately be the end time of the
-  // audio stream, unless another sample is pushed to the hardware.
+  // audio stream, unless another frame is pushed to the hardware.
   PRInt64 mAudioEndTime;
 
   // The presentation end time of the last video frame which has been displayed
@@ -572,7 +572,7 @@ protected:
   PRPackedBool mPositionChangeQueued;
 
   // PR_TRUE if the audio playback thread has finished. It is finished
-  // when either all the audio samples in the Vorbis bitstream have completed
+  // when either all the audio frames in the Vorbis bitstream have completed
   // playing, or we've moved into shutdown state, and the threads are to be
   // destroyed. Written by the audio playback thread and read and written by
   // the state machine thread. Synchronised via decoder monitor.

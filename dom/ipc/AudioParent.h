@@ -54,15 +54,13 @@ class AudioParent : public PAudioParent, public nsITimerCallback
     NS_DECL_NSITIMERCALLBACK
 
     virtual bool
-    RecvWrite(
-            const nsCString& data,
-            const PRUint32& count);
+    RecvWrite(const nsCString& data, const PRUint32& count);
 
     virtual bool
     RecvSetVolume(const float& aVolume);
 
     virtual bool
-    RecvMinWriteSample();
+    RecvMinWriteSize();
 
     virtual bool
     RecvDrain();
@@ -77,7 +75,7 @@ class AudioParent : public PAudioParent, public nsITimerCallback
     RecvShutdown();
 
     virtual bool
-    SendMinWriteSampleDone(PRInt32 minSamples);
+    SendMinWriteSizeDone(PRInt32 minFrames);
 
     virtual bool
     SendDrainDone();

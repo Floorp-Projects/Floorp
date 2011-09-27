@@ -185,10 +185,10 @@ PRBool nsWaveReader::DecodeAudioData()
 
   static const PRInt64 BLOCK_SIZE = 4096;
   PRInt64 readSize = NS_MIN(BLOCK_SIZE, remaining);
-  PRInt64 samples = readSize / mSampleSize;
+  PRInt64 frames = readSize / mFrameSize;
 
   PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(AudioDataValue) / MAX_CHANNELS);
-  const size_t bufferSize = static_cast<size_t>(samples * mChannels);
+  const size_t bufferSize = static_cast<size_t>(frames * mChannels);
   nsAutoArrayPtr<AudioDataValue> sampleBuffer(new AudioDataValue[bufferSize]);
 
   PR_STATIC_ASSERT(PRUint64(BLOCK_SIZE) < UINT_MAX / sizeof(char));
@@ -202,7 +202,7 @@ PRBool nsWaveReader::DecodeAudioData()
   // convert data to samples
   const char* d = dataBuffer.get();
   AudioDataValue* s = sampleBuffer.get();
-  for (int i = 0; i < samples; ++i) {
+  for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mChannels; ++j) {
       if (mSampleFormat == nsAudioStream::FORMAT_U8) {
         PRUint8 v =  ReadUint8(&d);
@@ -227,12 +227,12 @@ PRBool nsWaveReader::DecodeAudioData()
   double readSizeTime = BytesToTime(readSize);
   NS_ASSERTION(posTime <= PR_INT64_MAX / USECS_PER_S, "posTime overflow");
   NS_ASSERTION(readSizeTime <= PR_INT64_MAX / USECS_PER_S, "readSizeTime overflow");
-  NS_ASSERTION(samples < PR_INT32_MAX, "samples overflow");
+  NS_ASSERTION(frames < PR_INT32_MAX, "frames overflow");
 
   mAudioQueue.Push(new AudioData(pos,
                                  static_cast<PRInt64>(posTime * USECS_PER_S),
                                  static_cast<PRInt64>(readSizeTime * USECS_PER_S),
-                                 static_cast<PRInt32>(samples),
+                                 static_cast<PRInt32>(frames),
                                  sampleBuffer.forget(),
                                  mChannels));
 
@@ -258,7 +258,7 @@ nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   NS_ASSERTION(d < PR_INT64_MAX / USECS_PER_S, "Duration overflow"); 
   PRInt64 duration = static_cast<PRInt64>(d * USECS_PER_S);
   double seekTime = NS_MIN(aTarget, duration) / static_cast<double>(USECS_PER_S);
-  PRInt64 position = RoundDownToSample(static_cast<PRInt64>(TimeToBytes(seekTime)));
+  PRInt64 position = RoundDownToFrame(static_cast<PRInt64>(TimeToBytes(seekTime)));
   NS_ASSERTION(PR_INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
   return mDecoder->GetCurrentStream()->Seek(nsISeekableStream::NS_SEEK_SET, position);
@@ -385,7 +385,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
 PRBool
 nsWaveReader::LoadFormatChunk()
 {
-  PRUint32 fmtSize, rate, channels, sampleSize, sampleFormat;
+  PRUint32 fmtSize, rate, channels, frameSize, sampleFormat;
   char waveFormat[WAVE_FORMAT_CHUNK_SIZE];
   const char* p = waveFormat;
 
@@ -420,7 +420,7 @@ nsWaveReader::LoadFormatChunk()
   // Skip over average bytes per second field.
   p += 4;
 
-  sampleSize = ReadUint16LE(&p);
+  frameSize = ReadUint16LE(&p);
 
   sampleFormat = ReadUint16LE(&p);
 
@@ -463,7 +463,7 @@ nsWaveReader::LoadFormatChunk()
   // because that's what the audio backend currently supports.
   if (rate < 100 || rate > 96000 ||
       channels < 1 || channels > MAX_CHANNELS ||
-      (sampleSize != 1 && sampleSize != 2 && sampleSize != 4) ||
+      (frameSize != 1 && frameSize != 2 && frameSize != 4) ||
       (sampleFormat != 8 && sampleFormat != 16)) {
     NS_WARNING("Invalid WAVE metadata");
     return PR_FALSE;
@@ -472,7 +472,7 @@ nsWaveReader::LoadFormatChunk()
   ReentrantMonitorAutoEnter monitor(mDecoder->GetReentrantMonitor());
   mSampleRate = rate;
   mChannels = channels;
-  mSampleSize = sampleSize;
+  mFrameSize = frameSize;
   if (sampleFormat == 8) {
     mSampleFormat = nsAudioStream::FORMAT_U8;
   } else {
@@ -511,21 +511,21 @@ double
 nsWaveReader::BytesToTime(PRInt64 aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
-  return float(aBytes) / mSampleRate / mSampleSize;
+  return float(aBytes) / mSampleRate / mFrameSize;
 }
 
 PRInt64
 nsWaveReader::TimeToBytes(double aTime) const
 {
   NS_ABORT_IF_FALSE(aTime >= 0.0f, "Must be >= 0");
-  return RoundDownToSample(PRInt64(aTime * mSampleRate * mSampleSize));
+  return RoundDownToFrame(PRInt64(aTime * mSampleRate * mFrameSize));
 }
 
 PRInt64
-nsWaveReader::RoundDownToSample(PRInt64 aBytes) const
+nsWaveReader::RoundDownToFrame(PRInt64 aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
-  return aBytes - (aBytes % mSampleSize);
+  return aBytes - (aBytes % mFrameSize);
 }
 
 PRInt64

@@ -223,7 +223,7 @@ nsHTMLAudioElement::MozWriteAudio(const jsval &aData, JSContext *aCx, PRUint32 *
   }
 
   // Don't write more than can be written without blocking.
-  PRUint32 writeLen = NS_MIN(mAudioStream->Available(), dataLength);
+  PRUint32 writeLen = NS_MIN(mAudioStream->Available(), dataLength / mChannels);
 
   nsresult rv = mAudioStream->Write(JS_GetTypedArrayData(tsrc), writeLen);
   if (NS_FAILED(rv)) {
@@ -231,7 +231,7 @@ nsHTMLAudioElement::MozWriteAudio(const jsval &aData, JSContext *aCx, PRUint32 *
   }
 
   // Return the actual amount written.
-  *aRetVal = writeLen;
+  *aRetVal = writeLen * mChannels;
   return rv;
 }
 
@@ -242,7 +242,7 @@ nsHTMLAudioElement::MozCurrentSampleOffset(PRUint64 *aRetVal)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  *aRetVal = mAudioStream->GetSampleOffset();
+  *aRetVal = mAudioStream->GetPositionInFrames() * mChannels;
   return NS_OK;
 }
 
