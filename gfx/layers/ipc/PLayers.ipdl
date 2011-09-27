@@ -94,6 +94,7 @@ struct YUVImage {
 union SharedImage {
   SurfaceDescriptor;
   YUVImage;
+  null_t;
 };
 
 struct ThebesBuffer {
@@ -121,13 +122,6 @@ struct OpCreateCanvasBuffer {
   bool needYFlip;
 };
 struct OpDestroyCanvasFrontBuffer { PLayer layer; };
-
-struct OpCreateImageBuffer {
-  PLayer layer;
-  nsIntSize size;
-  SharedImage initialFront;
-};
-struct OpDestroyImageFrontBuffer { PLayer layer; };
 
 
 // Change a layer's attributes
@@ -205,10 +199,8 @@ union Edit {
   OpCreateCanvasLayer;
   OpCreateCanvasBuffer;
   OpCreateThebesBuffer;
-  OpCreateImageBuffer;
   OpDestroyThebesFrontBuffer;
   OpDestroyCanvasFrontBuffer;
-  OpDestroyImageFrontBuffer;
 
   OpSetLayerAttributes;
 

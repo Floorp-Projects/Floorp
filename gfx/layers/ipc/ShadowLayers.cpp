@@ -202,16 +202,6 @@ ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
 }
 
 void
-ShadowLayerForwarder::CreatedImageBuffer(ShadowableLayer* aImage,
-                                         nsIntSize aSize,
-                                         const SharedImage& aTempFrontImage)
-{
-  mTxn->AddEdit(OpCreateImageBuffer(NULL, Shadow(aImage),
-                                    aSize,
-                                    aTempFrontImage));
-}
-
-void
 ShadowLayerForwarder::CreatedCanvasBuffer(ShadowableLayer* aCanvas,
                                           nsIntSize aSize,
                                           const SurfaceDescriptor& aTempFrontSurface,
@@ -229,12 +219,6 @@ ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
 {
   mTxn->AddEdit(OpDestroyThebesFrontBuffer(NULL, Shadow(aThebes)));
   mTxn->AddBufferToDestroy(aBackBufferToDestroy);
-}
-
-void
-ShadowLayerForwarder::DestroyedImageBuffer(ShadowableLayer* aImage)
-{
-  mTxn->AddEdit(OpDestroyImageFrontBuffer(NULL, Shadow(aImage)));
 }
 
 void
@@ -544,7 +528,9 @@ ShadowLayerForwarder::DestroySharedSurface(SurfaceDescriptor* aSurface)
   if (PlatformDestroySharedSurface(aSurface)) {
     return;
   }
-  DestroySharedShmemSurface(aSurface, mShadowManager);
+  if (aSurface->type() == SurfaceDescriptor::TShmem) {
+    DestroySharedShmemSurface(aSurface, mShadowManager);
+  }
 }
 
 
@@ -570,7 +556,9 @@ ShadowLayerManager::DestroySharedSurface(SurfaceDescriptor* aSurface,
   if (PlatformDestroySharedSurface(aSurface)) {
     return;
   }
-  DestroySharedShmemSurface(aSurface, aDeallocator);
+  if (aSurface->type() == SurfaceDescriptor::TShmem) {
+    DestroySharedShmemSurface(aSurface, aDeallocator);
+  }
 }
 
 

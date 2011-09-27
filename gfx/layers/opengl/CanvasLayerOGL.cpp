@@ -332,7 +332,7 @@ ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
   mTexImage = nsnull;
   if (IsSurfaceDescriptorValid(mDeadweight)) {
-    mOGLManager->DestroySharedSurface(&mDeadweight, mAllocator);
+    mAllocator->DestroySharedSurface(&mDeadweight);
   }
 }
 

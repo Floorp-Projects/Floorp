@@ -184,7 +184,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       nsRefPtr<ShadowImageLayer> layer =
         layer_manager()->CreateShadowImageLayer();
-      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateImageLayer())->Bind(layer);
       break;
     }
@@ -226,17 +225,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       break;
     }
-    case Edit::TOpCreateImageBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] CreateImageBuffer"));
-
-      const OpCreateImageBuffer ocb = edit.get_OpCreateImageBuffer();
-      ShadowImageLayer* image = static_cast<ShadowImageLayer*>(
-        AsShadowLayer(ocb)->AsLayer());
-
-      image->Init(ocb.initialFront(), ocb.size());
-
-      break;
-    }
     case Edit::TOpDestroyThebesFrontBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] DestroyThebesFrontBuffer"));
 
@@ -261,19 +249,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       break;
     }
-    case Edit::TOpDestroyImageFrontBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] DestroyImageFrontBuffer"));
-
-      const OpDestroyImageFrontBuffer& odfb =
-        edit.get_OpDestroyImageFrontBuffer();
-      ShadowImageLayer* image = static_cast<ShadowImageLayer*>(
-        AsShadowLayer(odfb)->AsLayer());
-
-      image->DestroyFrontBuffer();
-
-      break;
-    }
-
       // Attributes
     case Edit::TOpSetLayerAttributes: {
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
@@ -431,13 +406,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowImageLayer* image =
         static_cast<ShadowImageLayer*>(shadow->AsLayer());
 
-      SharedImage newFront = op.newFrontBuffer();
+      image->SetAllocator(this);
       SharedImage newBack;
       image->Swap(op.newFrontBuffer(), &newBack);
-      if (newFront == newBack) {
-        newFront = SharedImage();
-      }
-
       replyv.push_back(OpImageSwap(shadow, NULL,
                                    newBack));
 
@@ -483,6 +454,18 @@ RenderFrameParent*
 ShadowLayersParent::Frame()
 {
   return static_cast<RenderFrameParent*>(Manager());
+}
+
+void
+ShadowLayersParent::DestroySharedSurface(gfxSharedImageSurface* aSurface)
+{
+  layer_manager()->DestroySharedSurface(aSurface, this);
+}
+
+void
+ShadowLayersParent::DestroySharedSurface(SurfaceDescriptor* aSurface)
+{
+  layer_manager()->DestroySharedSurface(aSurface, this);
 }
 
 } // namespace layers
