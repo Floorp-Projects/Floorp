@@ -660,6 +660,11 @@ nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
 NS_IMETHODIMP
 nsDOMAttribute::IsSameNode(nsIDOMNode *other, PRBool *aResult)
 {
+  nsIDocument* document = GetOwnerDoc();
+  if (document) {
+    document->WarnOnceAbout(nsIDocument::eIsSameNode);
+  }
+
   *aResult = other == this;
   return NS_OK;
 }
