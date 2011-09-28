@@ -103,6 +103,18 @@ using namespace mozilla::layers;
 static nsAutoPtr<PRUint8>  sSharedSurfaceData;
 static gfxIntSize          sSharedSurfaceSize;
 
+struct IconMetrics {
+  PRInt32 xMetric;
+  PRInt32 yMetric;
+  PRInt32 defaultSize;
+};
+
+// Corresponds 1:1 to the IconSizeType enum
+static IconMetrics sIconMetrics[] = {
+  {SM_CXSMICON, SM_CYSMICON, 16}, // small icon
+  {SM_CXICON,   SM_CYICON,   32}  // regular icon
+};
+
 /**************************************************************
  **************************************************************
  **
@@ -613,10 +625,22 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   return result;
 }
 
+gfxIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
+  PRInt32 width = ::GetSystemMetrics(sIconMetrics[aSizeType].xMetric);
+  PRInt32 height = ::GetSystemMetrics(sIconMetrics[aSizeType].yMetric);
+
+  if (width == 0 || height == 0) {
+    width = height = sIconMetrics[aSizeType].defaultSize;
+  }
+
+  return gfxIntSize(width, height);
+}
+
 nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   PRBool aIsCursor,
                                   PRUint32 aHotspotX,
                                   PRUint32 aHotspotY,
+                                  gfxIntSize aScaledSize,
                                   HICON *aIcon) {
 
   // Get the image data
@@ -627,10 +651,42 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
-  PRUint8 *data = frame->Data();
-
   PRInt32 width = frame->Width();
   PRInt32 height = frame->Height();
+  if (!width || !height)
+    return NS_ERROR_FAILURE;
+
+  PRUint8 *data;
+  if ((aScaledSize.width == 0 && aScaledSize.height == 0) ||
+      (aScaledSize.width == width && aScaledSize.height == height)) {
+    // We're not scaling the image. The data is simply what's in the frame.
+    data = frame->Data();
+  }
+  else {
+    NS_ENSURE_ARG(aScaledSize.width > 0);
+    NS_ENSURE_ARG(aScaledSize.height > 0);
+    // Draw a scaled version of the image to a temporary surface
+    nsRefPtr<gfxImageSurface> dest = new gfxImageSurface(aScaledSize,
+                                                         gfxASurface::ImageFormatARGB32);
+    if (!dest)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    gfxContext ctx(dest);
+
+    // Set scaling
+    gfxFloat sw = (double) aScaledSize.width / width;
+    gfxFloat sh = (double) aScaledSize.height / height;
+    ctx.Scale(sw, sh);
+
+    // Paint a scaled image
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.SetSource(frame);
+    ctx.Paint();
+
+    data = dest->Data();
+    width = aScaledSize.width;
+    height = aScaledSize.height;
+  }
 
   HBITMAP bmp = DataToBitmap(data, width, -height, 32);
   PRUint8* a1data = Data32BitTo1Bit(data, width, height);
