@@ -115,9 +115,6 @@ __NS_InvokeByIndex_P:
 	lwz	r4,0(r3)                ; get vTable from 'that'
 	lwz	r5,172(r31)             ; methodIndex
 	slwi	r5,r5,2                 ; methodIndex * 4
-#ifndef HAVE_GCC3_ABI
-	addi	r5,r5,8                 ; (methodIndex * 4) + 8
-#endif
 	lwzx	r12,r5,r4               ; get function pointer
 
 	lwz	r4,28(r1)
