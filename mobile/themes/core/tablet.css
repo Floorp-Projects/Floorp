@@ -185,6 +185,7 @@ arrowbox {
 .documenttab-popup-favicon {
   width: 32px;
   height: 32px;
+  image-rendering: -moz-crisp-edges;
 }
 
 .tab-popup-item.selected .documenttab-popup-checkmark {
