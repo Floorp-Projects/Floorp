@@ -76,8 +76,11 @@ TaskbarTabPreview::~TaskbarTabPreview() {
 
   NS_ASSERTION(!mProxyWindow, "Taskbar proxy window was not destroyed!");
 
-  if (mWnd)
+  if (IsWindowAvailable()) {
     DetachFromNSWindow();
+  } else {
+    mWnd = NULL;
+  }
 }
 
 nsresult

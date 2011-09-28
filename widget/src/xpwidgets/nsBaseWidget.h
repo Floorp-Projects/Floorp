@@ -219,6 +219,11 @@ public:
   };
   friend class AutoUseBasicLayerManager;
 
+  PRBool HasDestroyStarted() const 
+  {
+    return mOnDestroyCalled;
+  }
+
   PRBool                  Destroyed() { return mOnDestroyCalled; }
 
 protected:

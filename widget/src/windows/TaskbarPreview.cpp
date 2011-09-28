@@ -282,6 +282,17 @@ TaskbarPreview::Disable() {
   return NS_OK;
 }
 
+PRBool
+TaskbarPreview::IsWindowAvailable() const {
+  if (mWnd) {
+    nsWindow* win = nsWindow::GetNSWindowPtr(mWnd);
+    if(win && !win->HasDestroyStarted()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 void
 TaskbarPreview::DetachFromNSWindow() {
   WindowHook &hook = GetWindowHook();
