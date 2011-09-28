@@ -1,0 +1,150 @@
+<html>
+
+<head>
+  <title>Accessible focus testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function focusElmWhileSubdocIsFocused(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function focusElmWhileSubdocIsFocused_invoke()
+      {
+        this.DOMNode.focus();
+      }
+
+      this.eventSeq = [
+        new focusChecker(this.DOMNode)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_FOCUS, this.DOMNode.ownerDocument)
+      ];
+
+      this.getID = function focusElmWhileSubdocIsFocused_getID()
+      {
+        return "Focus element while subdocument is focused " + prettyName(aID);
+      }
+    }
+
+    function topMenuChecker()
+    {
+      this.type = EVENT_FOCUS;
+      this.match = function topMenuChecker_match(aEvent)
+      {
+        return aEvent.accessible.role == ROLE_PARENT_MENUITEM;
+      }
+    }
+
+    function contextMenuChecker()
+    {
+      this.type = EVENT_MENUPOPUP_START;
+      this.match = function contextMenuChecker_match(aEvent)
+      {
+        return aEvent.accessible.role == ROLE_MENUPOPUP;
+      }
+    }
+
+    function focusContextMenuItemChecker()
+    {
+      this.__proto__ = new focusChecker();
+
+      this.match = function focusContextMenuItemChecker_match(aEvent)
+      {
+        return aEvent.accessible.role == ROLE_MENUITEM;
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTests()
+    {
+      var frameDoc = document.getElementById("iframe").contentDocument;
+
+      var editableDoc = document.getElementById('editabledoc').contentDocument;
+      editableDoc.designMode = 'on';
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("editablearea"));
+      gQueue.push(new synthFocus("navarea"));
+      gQueue.push(new synthTab("navarea", new focusChecker(frameDoc)));
+      gQueue.push(new focusElmWhileSubdocIsFocused("link"));
+
+      gQueue.push(new synthTab(editableDoc, new focusChecker(editableDoc)));
+      if (WIN) {
+        // Alt key is used to active menubar and focus menu item on Windows,
+        // other platforms requires setting a ui.key.menuAccessKeyFocuses
+        // preference.
+        gQueue.push(new toggleTopMenu(editableDoc, new topMenuChecker()));
+        gQueue.push(new toggleTopMenu(editableDoc, new focusChecker(editableDoc)));
+      }
+      gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
+      gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
+      gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
+
+      todo(false, "shift+tab doesn't issue the focus, see bug 684818");
+      //gQuee.push(new synthShiftTab("link", new focusChecker("link")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=352220"
+     title="Inconsistent focus events when returning to a document frame">
+    Mozilla Bug 352220
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=550338"
+     title="Broken focus when returning to editable documents from menus">
+    Mozilla Bug 550338
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+     title="Rework accessible focus handling">
+    Mozilla Bug 673958
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="editablearea" contentEditable="true">editable area</div>
+  <div id="navarea" tabindex="0">navigable area</div>
+  <iframe id="iframe" src="data:text/html,<html></html>"></iframe>
+  <a id="link" href="">link</a>
+  <iframe id="editabledoc" src="about:blank"></iframe>
+
+  <div id="eventdump"></div>
+</body>
+</html>

@@ -2422,12 +2422,8 @@ PresShell::ScrollLine(PRBool aForward)
   nsIScrollableFrame* scrollFrame =
     GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
   if (scrollFrame) {
-    PRInt32 lineCount = 1;
-#ifdef MOZ_WIDGET_COCOA
-    // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
-    // rather than 1.  This vastly improves scrolling speed.
-    lineCount = 2;
-#endif
+    // Scroll 2 lines at a time to improve scrolling speed.
+    PRInt32 lineCount = 2;
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH);

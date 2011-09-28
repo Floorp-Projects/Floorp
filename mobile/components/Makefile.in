@@ -75,6 +75,7 @@ EXTRA_COMPONENTS = \
         LoginManager.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
+        CapturePicker.js \
         $(NULL)
 
 ifdef MOZ_SAFE_BROWSING

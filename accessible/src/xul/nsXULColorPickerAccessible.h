@@ -39,7 +39,6 @@
 #ifndef _nsXULColorPickerAccessible_H_
 #define _nsXULColorPickerAccessible_H_
 
-// NOTE: alphabetically ordered
 #include "nsAccessibleWrap.h"
 
 /**
@@ -57,6 +56,9 @@ public:
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // Widgets
+  virtual nsAccessible* ContainerWidget() const;
 };
 
 
@@ -71,6 +73,11 @@ public:
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
+
+  // Widgets
+  virtual bool IsWidget() const;
+  virtual bool IsActiveWidget() const;
+  virtual bool AreItemsOperable() const;
 
 protected:
 

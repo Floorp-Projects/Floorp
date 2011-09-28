@@ -491,6 +491,7 @@ var BrowserUI = {
       FullScreenVideo.init();
       NewTabPopup.init();
       WebappsUI.init();
+      CapturePickerUI.init();
 
       // If some add-ons were disabled during during an application update, alert user
       let addonIDs = AddonManager.getStartupChanges("disabled");
@@ -712,9 +713,10 @@ var BrowserUI = {
 
     let engine = Services.search.getEngineByName(aName);
     let submission = engine.getSubmission(searchValue, null);
-    Browser.selectedBrowser.userTypedValue = submission.uri.spec;
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
 
+    // loadURI may open a new tab, so get the selectedBrowser afterward.
+    Browser.selectedBrowser.userTypedValue = submission.uri.spec;
     this._titleChanged(Browser.selectedBrowser);
   },
 

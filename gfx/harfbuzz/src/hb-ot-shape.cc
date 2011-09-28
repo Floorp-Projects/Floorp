@@ -40,7 +40,6 @@ struct {
   { HB_TAG('c','a','l','t'), DEFAULT_PRIORITY },
   { HB_TAG('c','c','m','p'), FIRST_PRIORITY },
   { HB_TAG('c','l','i','g'), DEFAULT_PRIORITY },
-  { HB_TAG('c','s','w','h'), DEFAULT_PRIORITY },
   { HB_TAG('c','u','r','s'), DEFAULT_PRIORITY },
   { HB_TAG('k','e','r','n'), DEFAULT_PRIORITY },
   { HB_TAG('l','i','g','a'), DEFAULT_PRIORITY },

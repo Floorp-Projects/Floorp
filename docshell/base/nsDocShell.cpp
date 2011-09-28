@@ -11567,8 +11567,17 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
     NS_ParseContentType(utf8Hint, type, dummy);
     CopyUTF8toUTF16(type, typeHint);
   }
+
+  // Clone the URI now, in case a content policy or something messes
+  // with it under InternalLoad; we do _not_ want to change the URI
+  // our caller passed in.
+  nsCOMPtr<nsIURI> clonedURI;
+  aURI->Clone(getter_AddRefs(clonedURI));
+  if (!clonedURI) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   
-  nsresult rv = InternalLoad(aURI,                      // New URI
+  nsresult rv = InternalLoad(clonedURI,                 // New URI
                              referer,                   // Referer URI
                              aContent->NodePrincipal(), // Owner is our node's
                                                         // principal

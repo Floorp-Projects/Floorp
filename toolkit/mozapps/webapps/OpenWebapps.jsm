@@ -139,6 +139,14 @@ let OpenWebapps = {
       installTime: (new Date()).getTime()
     };
     this._writeFile(this.appsFile, JSON.stringify(this.webapps));
+
+    // now save the icon as icon.png in the app directory
+    let iconFile = dir.clone();
+    iconFile.append("icon.png");
+    let uri = Services.io.newURI(aApplication.iconURI, null, null);
+    let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+    persist.persistFlags = persist.PERSIST_FLAGS_REPLACE_EXISTING_FILES | persist.PERSIST_FLAGS_BYPASS_CACHE;
+    persist.saveURI(uri, null, null, null, "", iconFile);
   },
  
   _appId: function(aURI) {

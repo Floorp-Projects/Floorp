@@ -128,17 +128,17 @@ PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
 // in an integer overflow.
 PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult);
 
-// Converts from number of audio samples (aSamples) to microseconds, given
+// Converts from number of audio frames (aFrames) to microseconds, given
 // the specified audio rate (aRate). Stores result in aOutUsecs. Returns PR_TRUE
 // if the operation succeeded, or PR_FALSE if there was an integer overflow
 // while calulating the conversion.
-PRBool SamplesToUsecs(PRInt64 aSamples, PRUint32 aRate, PRInt64& aOutUsecs);
+PRBool FramesToUsecs(PRInt64 aFrames, PRUint32 aRate, PRInt64& aOutUsecs);
 
-// Converts from microseconds (aUsecs) to number of audio samples, given the
-// specified audio rate (aRate). Stores the result in aOutSamples. Returns
+// Converts from microseconds (aUsecs) to number of audio frames, given the
+// specified audio rate (aRate). Stores the result in aOutFrames. Returns
 // PR_TRUE if the operation succeeded, or PR_FALSE if there was an integer
 // overflow while calulating the conversion.
-PRBool UsecsToSamples(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutSamples);
+PRBool UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutFrames);
 
 // Number of microseconds per second. 1e6.
 static const PRInt64 USECS_PER_S = 1000000;

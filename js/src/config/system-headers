@@ -308,7 +308,6 @@ hlink.h
 ia64/sys/inline.h
 Icons.h
 iconv.h
-IDL.h
 ieeefp.h
 ifaddrs.h
 image.h
@@ -404,7 +403,6 @@ libgnomevfs/gnome-vfs-mime-handlers.h
 libgnomevfs/gnome-vfs-mime-utils.h
 libgnomevfs/gnome-vfs-ops.h
 libgnomevfs/gnome-vfs-standard-callbacks.h
-libIDL/IDL.h
 lib$routines.h
 libnotify/notify.h
 limits
