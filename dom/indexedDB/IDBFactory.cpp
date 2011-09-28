@@ -412,10 +412,16 @@ CreateDatabaseConnection(const nsAString& aName,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    mozStorageTransaction transaction(connection, PR_FALSE,
+                                      mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
     rv = CreateTables(connection);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CreateMetaData(connection, aName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
