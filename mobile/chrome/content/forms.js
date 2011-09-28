@@ -546,6 +546,9 @@ FormAssistant.prototype = {
 
   _isAutocomplete: function formHelperIsAutocomplete(aElement) {
     if (aElement instanceof HTMLInputElement) {
+      if (aElement.getAttribute("type") == "password")
+        return false;
+
       let autocomplete = aElement.getAttribute("autocomplete");
       let allowedValues = ["off", "false", "disabled"];
       if (allowedValues.indexOf(autocomplete) == -1)
