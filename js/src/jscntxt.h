@@ -676,6 +676,17 @@ struct JSRuntime {
 
 #if defined(MOZ_GCTIMER) || defined(JSGC_TESTPILOT)
     struct GCData {
+        GCData()
+          : firstEnter(0),
+            firstEnterValid(false)
+#ifdef JSGC_TESTPILOT
+            , infoEnabled(false),
+            info(),
+            start(0),
+            count(0)
+#endif
+        { }
+
         /*
          * Timestamp of the first GCTimer -- application runtime is determined
          * relative to this value.
@@ -983,6 +994,16 @@ struct JSContext
 
     inline void setCompartment(JSCompartment *compartment);
 
+#ifdef JS_THREADSAFE
+  private:
+    JSThread            *thread_;
+  public:
+    JSThread *thread() const { return thread_; }
+
+    void setThread(JSThread *thread);
+    static const size_t threadOffset() { return offsetof(JSContext, thread_); }
+#endif
+
     /* Current execution stack. */
     js::ContextStack    stack;
 
@@ -1147,14 +1168,6 @@ struct JSContext
     inline js::LifoAlloc &typeLifoAlloc();
 
 #ifdef JS_THREADSAFE
-  private:
-    JSThread            *thread_;
-  public:
-    JSThread *thread() const { return thread_; }
-
-    void setThread(JSThread *thread);
-    static const size_t threadOffset() { return offsetof(JSContext, thread_); }
-
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls
                                                without the corresponding
                                                JS_EndRequest. */
