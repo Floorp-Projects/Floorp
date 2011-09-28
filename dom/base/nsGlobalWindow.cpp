@@ -268,6 +268,7 @@ static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
 static PopupControlState    gPopupControlState         = openAbused;
+static PopupOpenedState     gPopupOpenedState          = noTrack;
 static PRInt32              gRunningTimeoutDepth       = 0;
 static PRPackedBool         gMouseDown                 = PR_FALSE;
 static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
@@ -1711,6 +1712,30 @@ PopupControlState
 nsGlobalWindow::GetPopupControlState() const
 {
   return gPopupControlState;
+}
+
+PopupOpenedState
+GetPopupOpenedState()
+{
+  return gPopupOpenedState;
+}
+
+PopupOpenedState
+nsGlobalWindow::GetPopupOpenedState() const
+{
+  return ::GetPopupOpenedState();
+}
+
+void
+SetPopupOpenedState(PopupOpenedState aValue)
+{
+  gPopupOpenedState = aValue;
+}
+
+void
+nsGlobalWindow::SetPopupOpenedState(PopupOpenedState aValue) const
+{
+  ::SetPopupOpenedState(aValue);
 }
 
 #define WINDOWSTATEHOLDER_IID \
@@ -5712,6 +5737,21 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
     PRInt32 popupMax = Preferences::GetInt("dom.popup_maximum", -1);
     if (popupMax >= 0 && gOpenPopupSpamCount >= popupMax)
       abuse = openOverridden;
+  }
+
+  if (Preferences::GetBool("dom.block_multiple_popups", PR_TRUE)) {
+    // Do not allow opening more than one popup per event.
+    switch (GetPopupOpenedState()) {
+      case noOpenedPopup:
+        SetPopupOpenedState(openedPopup);
+        break;
+      case openedPopup:
+        abuse = openOverridden;
+        break;
+      case noTrack:
+      default:
+        break;
+    }
   }
 
   return abuse;
