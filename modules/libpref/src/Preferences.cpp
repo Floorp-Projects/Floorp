@@ -472,7 +472,7 @@ Preferences::ReadExtensionPrefs(nsILocalFile *aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIUTF8StringEnumerator> files;
-  rv = reader->FindEntries("defaults/preferences/*.(J|j)(S|s)$",
+  rv = reader->FindEntries(nsDependentCString("defaults/preferences/*.(J|j)(S|s)$"),
                            getter_AddRefs(files));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -485,7 +485,7 @@ Preferences::ReadExtensionPrefs(nsILocalFile *aFile)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = reader->GetInputStream(entry.get(), getter_AddRefs(stream));
+    rv = reader->GetInputStream(entry, getter_AddRefs(stream));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 avail, read;
