@@ -314,7 +314,7 @@ ProxyHandler::typeOf(JSContext *cx, JSObject *proxy)
 }
 
 bool
-ProxyHandler::classPropertyIs(JSContext *cx, JSObject *proxy, ESClassValue classValue)
+ProxyHandler::objectClassIs(JSObject *proxy, ESClassValue classValue, JSContext *cx)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     return false;
@@ -872,6 +872,14 @@ Proxy::typeOf(JSContext *cx, JSObject *proxy)
     JS_CHECK_RECURSION(cx, return JSTYPE_OBJECT);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->typeOf(cx, proxy);
+}
+
+bool
+Proxy::objectClassIs(JSObject *proxy, ESClassValue classValue, JSContext *cx)
+{
+    JS_CHECK_RECURSION(cx, JS_NOT_REACHED("cannot reenter"));
+    AutoPendingProxyOperation pending(cx, proxy);
+    return proxy->getProxyHandler()->objectClassIs(proxy, classValue, cx);
 }
 
 JSString *
