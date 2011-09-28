@@ -11,11 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is HTML Parser C++ Translator code.
+ * The Original Code is Dependent UTF-16 Buffer code.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,21 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* aBuffer, PRInt32 aEnd)
-  : buffer(aBuffer)
-  , start(0)
-  , end(aEnd)
+#include "nsHtml5DependentUTF16Buffer.h"
+
+nsHtml5DependentUTF16Buffer::nsHtml5DependentUTF16Buffer(const nsAString& aToWrap)
+  : nsHtml5UTF16Buffer(const_cast<PRUnichar*> (aToWrap.BeginReading()),
+                       aToWrap.Length())
 {
-  MOZ_COUNT_CTOR(nsHtml5UTF16Buffer);
+  MOZ_COUNT_CTOR(nsHtml5DependentUTF16Buffer);
 }
 
-nsHtml5UTF16Buffer::~nsHtml5UTF16Buffer()
+nsHtml5DependentUTF16Buffer::~nsHtml5DependentUTF16Buffer()
 {
-  MOZ_COUNT_DTOR(nsHtml5UTF16Buffer);
+  MOZ_COUNT_DTOR(nsHtml5DependentUTF16Buffer);
 }
 
-void
-nsHtml5UTF16Buffer::DeleteBuffer()
+already_AddRefed<nsHtml5OwningUTF16Buffer>
+nsHtml5DependentUTF16Buffer::FalliblyCopyAsOwningBuffer()
 {
-  delete[] buffer;
+  PRInt32 newLength = getEnd() - getStart();
+  nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
+    nsHtml5OwningUTF16Buffer::FalliblyCreate(newLength);
+  if (!newObj) {
+    return nsnull;
+  }
+  newObj->setEnd(newLength);
+  memcpy(newObj->getBuffer(),
+         getBuffer() + getStart(),
+         newLength * sizeof(PRUnichar));
+  return newObj.forget();
 }

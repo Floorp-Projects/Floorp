@@ -56,7 +56,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIInputStream.h"
 #include "nsDetectionConfident.h"
-#include "nsHtml5UTF16Buffer.h"
+#include "nsHtml5OwningUTF16Buffer.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5StreamParser.h"
 #include "nsHtml5AtomTable.h"
@@ -361,13 +361,13 @@ class nsHtml5Parser : public nsIParser,
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    nsRefPtr<nsHtml5UTF16Buffer>  mFirstBuffer;
+    nsRefPtr<nsHtml5OwningUTF16Buffer>  mFirstBuffer;
 
     /**
-     * The last buffer in the pending UTF-16 buffer queue
+     * The last buffer in the pending UTF-16 buffer queue. Always points
+     * to a sentinel object with nsnull as its parser key.
      */
-    nsHtml5UTF16Buffer*           mLastBuffer; // weak ref; always points to
-                      // a buffer of the size NS_HTML5_PARSER_READ_BUFFER_SIZE
+    nsHtml5OwningUTF16Buffer* mLastBuffer; // weak ref;
 
     /**
      * The tree operation executor

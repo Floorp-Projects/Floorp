@@ -269,6 +269,27 @@ nsHtml5TreeOpExecutor::UpdateChildCounts()
   // No-op
 }
 
+void
+nsHtml5TreeOpExecutor::MarkAsBroken()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!mFragmentMode, "Fragment parsers can't be broken!");
+  mBroken = true;
+  if (mStreamParser) {
+    mStreamParser->Terminate();
+  }
+  // We are under memory pressure, but let's hope the following allocation
+  // works out so that we get to terminate and clean up the parser from
+  // a safer point.
+  if (mParser) { // can mParser ever be null here?
+    nsCOMPtr<nsIRunnable> terminator =
+      NS_NewRunnableMethod(GetParser(), &nsHtml5Parser::Terminate);
+    if (NS_FAILED(NS_DispatchToMainThread(terminator))) {
+      NS_WARNING("failed to dispatch executor flush event");
+    }
+  }
+}
+
 nsresult
 nsHtml5TreeOpExecutor::FlushTags()
 {
@@ -423,6 +444,10 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
     if (!mParser) {
       // Parse has terminated.
       mOpQueue.Clear(); // clear in order to be able to assert in destructor
+      return;
+    }
+
+    if (IsBroken()) {
       return;
     }
 
@@ -836,6 +861,7 @@ nsHtml5TreeOpExecutor::Reset()
   mStarted = PR_FALSE;
   mFlushState = eNotFlushing;
   mRunFlushLoopOnStack = PR_FALSE;
+  NS_ASSERTION(!mBroken, "Fragment parser got broken.");
 }
 
 void

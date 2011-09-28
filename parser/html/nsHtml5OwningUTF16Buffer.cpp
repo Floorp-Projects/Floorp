@@ -35,21 +35,70 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* aBuffer, PRInt32 aEnd)
-  : buffer(aBuffer)
-  , start(0)
-  , end(aEnd)
+#include "nsHtml5OwningUTF16Buffer.h"
+
+nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(PRUnichar* aBuffer)
+  : nsHtml5UTF16Buffer(aBuffer, 0),
+    next(nsnull),
+    key(nsnull)
 {
-  MOZ_COUNT_CTOR(nsHtml5UTF16Buffer);
+  MOZ_COUNT_CTOR(nsHtml5OwningUTF16Buffer);
 }
 
-nsHtml5UTF16Buffer::~nsHtml5UTF16Buffer()
+nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(void* aKey)
+  : nsHtml5UTF16Buffer(nsnull, 0),
+    next(nsnull),
+    key(aKey)
 {
-  MOZ_COUNT_DTOR(nsHtml5UTF16Buffer);
+  MOZ_COUNT_CTOR(nsHtml5OwningUTF16Buffer);
 }
 
-void
-nsHtml5UTF16Buffer::DeleteBuffer()
+nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
 {
-  delete[] buffer;
+  MOZ_COUNT_DTOR(nsHtml5OwningUTF16Buffer);
+  DeleteBuffer();
+}
+
+// static
+already_AddRefed<nsHtml5OwningUTF16Buffer>
+nsHtml5OwningUTF16Buffer::FalliblyCreate(PRInt32 aLength)
+{
+  const mozilla::fallible_t fallible = mozilla::fallible_t();
+  PRUnichar* newBuf = new (fallible) PRUnichar[aLength];
+  if (!newBuf) {
+    return nsnull;
+  }
+  nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
+    new (fallible) nsHtml5OwningUTF16Buffer(newBuf);
+  if (!newObj) {
+    delete[] newBuf;
+    return nsnull;
+  }
+  return newObj.forget();
+}
+
+// Not using macros for AddRef and Release in order to be able to refcount on
+// and create on different threads.
+
+nsrefcnt
+nsHtml5OwningUTF16Buffer::AddRef()
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "Illegal refcount.");
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsHtml5OwningUTF16Buffer", sizeof(*this));
+  return mRefCnt;
+}
+
+nsrefcnt
+nsHtml5OwningUTF16Buffer::Release()
+{
+  NS_PRECONDITION(0 != mRefCnt, "Release without AddRef.");
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsHtml5OwningUTF16Buffer");
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
 }
