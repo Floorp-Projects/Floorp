@@ -537,7 +537,7 @@ LoadEntry(nsIZipReader* aReader, const char* aName)
         return NULL;
 
     nsCOMPtr<nsIInputStream> is;
-    nsresult rv = aReader->GetInputStream(aName, getter_AddRefs(is));
+    nsresult rv = aReader->GetInputStream(nsDependentCString(aName), getter_AddRefs(is));
     if (NS_FAILED(rv))
         return NULL;
 

@@ -149,11 +149,11 @@ nsJARInputThunk::EnsureJarStream()
         NS_ENSURE_STATE(!mJarDirSpec.IsEmpty());
 
         rv = mJarReader->GetInputStreamWithSpec(mJarDirSpec,
-                                                mJarEntry.get(),
+                                                mJarEntry,
                                                 getter_AddRefs(mJarStream));
     }
     else {
-        rv = mJarReader->GetInputStream(mJarEntry.get(),
+        rv = mJarReader->GetInputStream(mJarEntry,
                                         getter_AddRefs(mJarStream));
     }
     if (NS_FAILED(rv)) {
@@ -303,7 +303,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache)
         if (mInnerJarEntry.IsEmpty())
             rv = jarCache->GetZip(mJarFile, getter_AddRefs(reader));
         else 
-            rv = jarCache->GetInnerZip(mJarFile, mInnerJarEntry.get(),
+            rv = jarCache->GetInnerZip(mJarFile, mInnerJarEntry,
                                        getter_AddRefs(reader));
     } else {
         // create an uncached jar reader
@@ -322,7 +322,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache)
             if (NS_FAILED(rv))
                 return rv;
 
-            rv = reader->OpenInner(outerReader, mInnerJarEntry.get());
+            rv = reader->OpenInner(outerReader, mInnerJarEntry);
         }
     }
     if (NS_FAILED(rv))
@@ -535,7 +535,7 @@ nsJARChannel::GetOwner(nsISupports **result)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsIPrincipal> cert;
-    rv = jarReader->GetCertificatePrincipal(mJarEntry.get(), getter_AddRefs(cert));
+    rv = jarReader->GetCertificatePrincipal(mJarEntry, getter_AddRefs(cert));
     if (NS_FAILED(rv)) return rv;
 
     if (cert) {
