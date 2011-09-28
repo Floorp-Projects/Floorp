@@ -174,12 +174,10 @@ nsApplicationAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 nsAccessible*
 nsApplicationAccessible::FocusedChild()
 {
-  if (gLastFocusedNode) {
-    nsAccessible* focusedChild =
-      GetAccService()->GetAccessible(gLastFocusedNode);
-    if (focusedChild && focusedChild->Parent() == this)
-      return focusedChild;
-  }
+  nsAccessible* focus = FocusMgr()->FocusedAccessible();
+  if (focus && focus->Parent() == this)
+    return focus;
+
   return nsnull;
 }
 

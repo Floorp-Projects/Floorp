@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=429547
+-->
+<head>
+  <title>aria-activedescendant focus tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    //gA11yEventDumpToConsole = true; // debugging
+
+    function changeARIAActiveDescendant(aID, aItemID)
+    {
+      this.eventSeq = [
+        new focusChecker(aItemID)
+      ];
+
+      this.invoke = function changeARIAActiveDescendant_invoke()
+      {
+        getNode(aID).setAttribute("aria-activedescendant", aItemID);
+      }
+
+      this.getID = function changeARIAActiveDescendant_getID()
+      {
+        return "change aria-activedescendant on " + aItemID;
+      }
+    }
+
+    function insertItemNFocus(aID, aNewItemID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, aNewItemID),
+        new focusChecker(aNewItemID)
+      ];
+
+      this.invoke = function insertItemNFocus_invoke()
+      {
+        var container  = getNode(aID);
+        var itemNode = document.createElement("div");
+        itemNode.setAttribute("id", aNewItemID);
+        itemNode.textContent = "item3";
+        container.appendChild(itemNode);
+
+        container.setAttribute("aria-activedescendant", aNewItemID);
+      }
+
+      this.getID = function insertItemNFocus_getID()
+      {
+        return "insert new node and focus it with ID: " + aNewItemID;
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("container", new focusChecker("item1")));
+      gQueue.push(new changeARIAActiveDescendant("container", "item2"));
+      todo(false, "No focus for inserted element, bug 687011");
+      //gQueue.push(new insertItemNFocus("container", "item3"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429547"
+     title="Support aria-activedescendant usage in nsIAccesible::TakeFocus()">
+    Mozilla Bug 429547
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="listbox" aria-activedescendant="item1" id="container" tabindex="1">
+    <div role="listitem" id="item1">item1</div>
+    <div role="listitem" id="item2">item2</div>
+  </div>
+</body>
+</html>

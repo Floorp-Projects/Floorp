@@ -78,9 +78,9 @@ public:
      //    will be emitted.
      eCoalesceFromSameSubtree,
 
-    // eCoalesceFromSameDocument : For events of the same type from the same
-    //    document, only the newest event will be emitted.
-    eCoalesceFromSameDocument,
+    // eCoalesceOfSameType : For events of the same type, only the newest event
+    // will be processed.
+    eCoalesceOfSameType,
 
      // eRemoveDupes : For repeat events, only the newest event in queue
      //    will be emitted.
