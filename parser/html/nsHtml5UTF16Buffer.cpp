@@ -58,15 +58,6 @@
 
 #include "nsHtml5UTF16Buffer.h"
 
-
-nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* buffer, PRInt32 start, PRInt32 end)
-  : buffer(buffer),
-    start(start),
-    end(end)
-{
-  MOZ_COUNT_CTOR(nsHtml5UTF16Buffer);
-}
-
 PRInt32 
 nsHtml5UTF16Buffer::getStart()
 {
