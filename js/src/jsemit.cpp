@@ -3368,8 +3368,7 @@ class TempPopScope {
 };
 
 static JSBool
-EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-           JSStmtInfo *stmtInfo)
+EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     JSOp switchOp;
     JSBool ok, hasDefault, constPropagated;
@@ -3384,6 +3383,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 #if JS_HAS_BLOCK_SCOPE
     JSObjectBox *box;
 #endif
+    JSStmtInfo stmtInfo;
 
     /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
     switchOp = JSOP_TABLESWITCH;
@@ -3408,8 +3408,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * find the discriminant on top of stack.
          */
         box = pn2->pn_objbox;
-        js_PushBlockScope(cg, stmtInfo, box, -1);
-        stmtInfo->type = STMT_SWITCH;
+        js_PushBlockScope(cg, &stmtInfo, box, -1);
+        stmtInfo.type = STMT_SWITCH;
 
         /* Emit JSOP_ENTERBLOCK before code to evaluate the discriminant. */
         if (!EmitEnterBlock(cx, pn2, cg))
@@ -3439,10 +3439,10 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     /* Switch bytecodes run from here till end of final case. */
     top = CG_OFFSET(cg);
 #if !JS_HAS_BLOCK_SCOPE
-    js_PushStatement(cg, stmtInfo, STMT_SWITCH, top);
+    js_PushStatement(cg, &stmtInfo, STMT_SWITCH, top);
 #else
     if (pn2->isKind(TOK_LC)) {
-        js_PushStatement(cg, stmtInfo, STMT_SWITCH, top);
+        js_PushStatement(cg, &stmtInfo, STMT_SWITCH, top);
     } else {
         /* Re-push the switch's statement info record. */
         if (!tps.repushBlock(cx, cg))
@@ -3452,7 +3452,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * Set the statement info record's idea of top. Reset top too, since
          * repushBlock emits code.
          */
-        stmtInfo->update = top = CG_OFFSET(cg);
+        stmtInfo.update = top = CG_OFFSET(cg);
 
         /* Advance pn2 to refer to the switch case list. */
         pn2 = pn2->expr();
@@ -4938,11 +4938,641 @@ public:
     ~EmitLevelManager() { cg->emitLevel--; }
 };
 
+static bool
+EmitCatch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    ptrdiff_t catchStart, guardJump;
+
+    /*
+     * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
+     * and save the block object atom.
+     */
+    JSStmtInfo *stmt = cg->topStmt;
+    JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
+    stmt->type = STMT_CATCH;
+    catchStart = stmt->update;
+
+    /* Go up one statement info record to the TRY or FINALLY record. */
+    stmt = stmt->down;
+    JS_ASSERT(stmt->type == STMT_TRY || stmt->type == STMT_FINALLY);
+
+    /* Pick up the pending exception and bind it to the catch variable. */
+    if (js_Emit1(cx, cg, JSOP_EXCEPTION) < 0)
+        return false;
+
+    /*
+     * Dup the exception object if there is a guard for rethrowing to use
+     * it later when rethrowing or in other catches.
+     */
+    if (pn->pn_kid2 && js_Emit1(cx, cg, JSOP_DUP) < 0)
+        return false;
+
+    JSParseNode *pn2 = pn->pn_kid1;
+    switch (pn2->getKind()) {
+#if JS_HAS_DESTRUCTURING
+      case TOK_RB:
+      case TOK_RC:
+        if (!EmitDestructuringOps(cx, cg, JSOP_NOP, pn2))
+            return false;
+        if (js_Emit1(cx, cg, JSOP_POP) < 0)
+            return false;
+        break;
+#endif
+
+      case TOK_NAME:
+        /* Inline and specialize BindNameToSlot for pn2. */
+        JS_ASSERT(!pn2->pn_cookie.isFree());
+        EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.asInteger());
+        break;
+
+      default:
+        JS_ASSERT(0);
+    }
+
+    /* Emit the guard expression, if there is one. */
+    if (pn->pn_kid2) {
+        if (!js_EmitTree(cx, cg, pn->pn_kid2))
+            return false;
+        if (!js_SetSrcNoteOffset(cx, cg, CATCHNOTE(*stmt), 0,
+                                 CG_OFFSET(cg) - catchStart)) {
+            return false;
+        }
+        /* ifeq <next block> */
+        guardJump = EmitJump(cx, cg, JSOP_IFEQ, 0);
+        if (guardJump < 0)
+            return false;
+        GUARDJUMP(*stmt) = guardJump;
+
+        /* Pop duplicated exception object as we no longer need it. */
+        if (js_Emit1(cx, cg, JSOP_POP) < 0)
+            return false;
+    }
+
+    /* Emit the catch body. */
+    if (!js_EmitTree(cx, cg, pn->pn_kid3))
+        return false;
+
+    /*
+     * Annotate the JSOP_LEAVEBLOCK that will be emitted as we unwind via
+     * our TOK_LEXICALSCOPE parent, so the decompiler knows to pop.
+     */
+    ptrdiff_t off = cg->stackDepth;
+    if (js_NewSrcNote2(cx, cg, SRC_CATCH, off) < 0)
+        return false;
+    return true;
+}
+
+static bool
+EmitTry(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    JSStmtInfo stmtInfo;
+    ptrdiff_t catchJump = -1;
+
+    /*
+     * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
+     * for later fixup.
+     *
+     * When a finally block is active (STMT_FINALLY in our tree context),
+     * non-local jumps (including jumps-over-catches) result in a GOSUB
+     * being written into the bytecode stream and fixed-up later (c.f.
+     * EmitBackPatchOp and BackPatch).
+     */
+    js_PushStatement(cg, &stmtInfo, pn->pn_kid3 ? STMT_FINALLY : STMT_TRY, CG_OFFSET(cg));
+
+    /*
+     * Since an exception can be thrown at any place inside the try block,
+     * we need to restore the stack and the scope chain before we transfer
+     * the control to the exception handler.
+     *
+     * For that we store in a try note associated with the catch or
+     * finally block the stack depth upon the try entry. The interpreter
+     * uses this depth to properly unwind the stack and the scope chain.
+     */
+    intN depth = cg->stackDepth;
+
+    /* Mark try location for decompilation, then emit try block. */
+    if (js_Emit1(cx, cg, JSOP_TRY) < 0)
+        return false;
+    ptrdiff_t tryStart = CG_OFFSET(cg);
+    if (!js_EmitTree(cx, cg, pn->pn_kid1))
+        return false;
+    JS_ASSERT(depth == cg->stackDepth);
+
+    /* GOSUB to finally, if present. */
+    if (pn->pn_kid3) {
+        if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+            return false;
+        if (EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(stmtInfo)) < 0)
+            return false;
+    }
+
+    /* Emit (hidden) jump over catch and/or finally. */
+    if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+        return false;
+    if (EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &catchJump) < 0)
+        return false;
+
+    ptrdiff_t tryEnd = CG_OFFSET(cg);
+
+    JSObjectBox *prevBox = NULL;
+    /* If this try has a catch block, emit it. */
+    JSParseNode *lastCatch = NULL;
+    if (JSParseNode *pn2 = pn->pn_kid2) {
+        uintN count = 0;    /* previous catch block's population */
+        
+        /*
+         * The emitted code for a catch block looks like:
+         *
+         * blockchain
+         * [throwing]                          only if 2nd+ catch block
+         * [leaveblock]                        only if 2nd+ catch block
+         * enterblock                          with SRC_CATCH
+         * exception
+         * [dup]                               only if catchguard
+         * setlocalpop <slot>                  or destructuring code
+         * [< catchguard code >]               if there's a catchguard
+         * [ifeq <offset to next catch block>]         " "
+         * [pop]                               only if catchguard
+         * < catch block contents >
+         * leaveblock
+         * goto <end of catch blocks>          non-local; finally applies
+         *
+         * If there's no catch block without a catchguard, the last
+         * <offset to next catch block> points to rethrow code.  This
+         * code will [gosub] to the finally code if appropriate, and is
+         * also used for the catch-all trynote for capturing exceptions
+         * thrown from catch{} blocks.
+         */
+        for (JSParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+            ptrdiff_t guardJump, catchNote;
+
+            JS_ASSERT(cg->stackDepth == depth);
+            guardJump = GUARDJUMP(stmtInfo);
+            if (guardJump != -1) {
+                if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
+                    return false;
+            
+                /* Fix up and clean up previous catch block. */
+                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
+
+                /*
+                 * Account for JSOP_ENTERBLOCK (whose block object count
+                 * is saved below) and pushed exception object that we
+                 * still have after the jumping from the previous guard.
+                 */
+                cg->stackDepth = depth + count + 1;
+
+                /*
+                 * Move exception back to cx->exception to prepare for
+                 * the next catch. We hide [throwing] from the decompiler
+                 * since it compensates for the hidden JSOP_DUP at the
+                 * start of the previous guarded catch.
+                 */
+                if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                    js_Emit1(cx, cg, JSOP_THROWING) < 0) {
+                    return false;
+                }
+                if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+                    return false;
+                if (!EmitLeaveBlock(cx, cg, JSOP_LEAVEBLOCK, prevBox))
+                    return false;
+                JS_ASSERT(cg->stackDepth == depth);
+            }
+
+            /*
+             * Annotate the JSOP_ENTERBLOCK that's about to be generated
+             * by the call to js_EmitTree immediately below.  Save this
+             * source note's index in stmtInfo for use by the TOK_CATCH:
+             * case, where the length of the catch guard is set as the
+             * note's offset.
+             */
+            catchNote = js_NewSrcNote2(cx, cg, SRC_CATCH, 0);
+            if (catchNote < 0)
+                return false;
+            CATCHNOTE(stmtInfo) = catchNote;
+
+            /*
+             * Emit the lexical scope and catch body.  Save the catch's
+             * block object population via count, for use when targeting
+             * guardJump at the next catch (the guard mismatch case).
+             */
+            JS_ASSERT(pn3->isKind(TOK_LEXICALSCOPE));
+            count = OBJ_BLOCK_COUNT(cx, pn3->pn_objbox->object);
+            prevBox = pn3->pn_objbox;
+            if (!js_EmitTree(cx, cg, pn3))
+                return false;
+
+            /* gosub <finally>, if required */
+            if (pn->pn_kid3) {
+                if (EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(stmtInfo)) < 0)
+                    return false;
+                JS_ASSERT(cg->stackDepth == depth);
+            }
+
+            /*
+             * Jump over the remaining catch blocks.  This will get fixed
+             * up to jump to after catch/finally.
+             */
+            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+                return false;
+            if (EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &catchJump) < 0)
+                return false;
+
+            /*
+             * Save a pointer to the last catch node to handle try-finally
+             * and try-catch(guard)-finally special cases.
+             */
+            lastCatch = pn3->expr();
+        }
+    }
+
+    /*
+     * Last catch guard jumps to the rethrow code sequence if none of the
+     * guards match. Target guardJump at the beginning of the rethrow
+     * sequence, just in case a guard expression throws and leaves the
+     * stack unbalanced.
+     */
+    if (lastCatch && lastCatch->pn_kid2) {
+        if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
+            return false;
+        
+        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
+
+        /* Sync the stack to take into account pushed exception. */
+        JS_ASSERT(cg->stackDepth == depth);
+        cg->stackDepth = depth + 1;
+
+        /*
+         * Rethrow the exception, delegating executing of finally if any
+         * to the exception handler.
+         */
+        if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+            js_Emit1(cx, cg, JSOP_THROW) < 0) {
+            return false;
+        }
+
+        if (EmitBlockChain(cx, cg) < 0)
+            return false;
+    }
+
+    JS_ASSERT(cg->stackDepth == depth);
+
+    /* Emit finally handler if any. */
+    ptrdiff_t finallyStart = 0;   /* to quell GCC uninitialized warnings */
+    if (pn->pn_kid3) {
+        /*
+         * Fix up the gosubs that might have been emitted before non-local
+         * jumps to the finally code.
+         */
+        if (!BackPatch(cx, cg, GOSUBS(stmtInfo), CG_NEXT(cg), JSOP_GOSUB))
+            return false;
+
+        finallyStart = CG_OFFSET(cg);
+
+        /* Indicate that we're emitting a subroutine body. */
+        stmtInfo.type = STMT_SUBROUTINE;
+        if (!UpdateLineNumberNotes(cx, cg, pn->pn_kid3->pn_pos.begin.lineno))
+            return false;
+        if (js_Emit1(cx, cg, JSOP_FINALLY) < 0 ||
+            !js_EmitTree(cx, cg, pn->pn_kid3) ||
+            js_Emit1(cx, cg, JSOP_RETSUB) < 0) {
+            return false;
+        }
+        JS_ASSERT(cg->stackDepth == depth);
+    }
+    if (!js_PopStatementCG(cx, cg))
+        return false;
+
+    if (js_NewSrcNote(cx, cg, SRC_ENDBRACE) < 0 || js_Emit1(cx, cg, JSOP_NOP) < 0)
+        return false;
+
+    /* Fix up the end-of-try/catch jumps to come here. */
+    if (!BackPatch(cx, cg, catchJump, CG_NEXT(cg), JSOP_GOTO))
+        return false;
+
+    /*
+     * Add the try note last, to let post-order give us the right ordering
+     * (first to last for a given nesting level, inner to outer by level).
+     */
+    if (pn->pn_kid2 && !NewTryNote(cx, cg, JSTRY_CATCH, depth, tryStart, tryEnd))
+        return false;
+
+    /*
+     * If we've got a finally, mark try+catch region with additional
+     * trynote to catch exceptions (re)thrown from a catch block or
+     * for the try{}finally{} case.
+     */
+    if (pn->pn_kid3 && !NewTryNote(cx, cg, JSTRY_FINALLY, depth, tryStart, finallyStart))
+        return false;
+
+    return true;
+}
+
+static bool
+EmitIf(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    JSStmtInfo stmtInfo;
+
+    /* Initialize so we can detect else-if chains and avoid recursion. */
+    stmtInfo.type = STMT_IF;
+    ptrdiff_t beq = -1;
+    ptrdiff_t jmp = -1;
+    ptrdiff_t noteIndex = -1;
+
+  if_again:
+    /* Emit code for the condition before pushing stmtInfo. */
+    if (!js_EmitTree(cx, cg, pn->pn_kid1))
+        return JS_FALSE;
+    ptrdiff_t top = CG_OFFSET(cg);
+    if (stmtInfo.type == STMT_IF) {
+        js_PushStatement(cg, &stmtInfo, STMT_IF, top);
+    } else {
+        /*
+         * We came here from the goto further below that detects else-if
+         * chains, so we must mutate stmtInfo back into a STMT_IF record.
+         * Also (see below for why) we need a note offset for SRC_IF_ELSE
+         * to help the decompiler.  Actually, we need two offsets, one for
+         * decompiling any else clause and the second for decompiling an
+         * else-if chain without bracing, overindenting, or incorrectly
+         * scoping let declarations.
+         */
+        JS_ASSERT(stmtInfo.type == STMT_ELSE);
+        stmtInfo.type = STMT_IF;
+        stmtInfo.update = top;
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
+            return JS_FALSE;
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - beq))
+            return JS_FALSE;
+    }
+
+    /* Emit an annotated branch-if-false around the then part. */
+    JSParseNode *pn3 = pn->pn_kid3;
+    noteIndex = js_NewSrcNote(cx, cg, pn3 ? SRC_IF_ELSE : SRC_IF);
+    if (noteIndex < 0)
+        return JS_FALSE;
+    beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
+    if (beq < 0)
+        return JS_FALSE;
+
+    /* Emit code for the then and optional else parts. */
+    if (!js_EmitTree(cx, cg, pn->pn_kid2))
+        return JS_FALSE;
+    if (pn3) {
+        /* Modify stmtInfo so we know we're in the else part. */
+        stmtInfo.type = STMT_ELSE;
+
+        /*
+         * Emit a JSOP_BACKPATCH op to jump from the end of our then part
+         * around the else part.  The js_PopStatementCG call at the bottom
+         * of this function will fix up the backpatch chain linked from
+         * stmtInfo.breaks.
+         */
+        jmp = EmitGoto(cx, cg, &stmtInfo, &stmtInfo.breaks);
+        if (jmp < 0)
+            return JS_FALSE;
+
+        /* Ensure the branch-if-false comes here, then emit the else. */
+        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
+        if (pn3->isKind(TOK_IF)) {
+            pn = pn3;
+            goto if_again;
+        }
+
+        if (!js_EmitTree(cx, cg, pn3))
+            return JS_FALSE;
+
+        /*
+         * Annotate SRC_IF_ELSE with the offset from branch to jump, for
+         * the decompiler's benefit.  We can't just "back up" from the pc
+         * of the else clause, because we don't know whether an extended
+         * jump was required to leap from the end of the then clause over
+         * the else clause.
+         */
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
+            return JS_FALSE;
+    } else {
+        /* No else part, fixup the branch-if-false to come here. */
+        CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
+    }
+    return js_PopStatementCG(cx, cg);
+}
+
+#if JS_HAS_BLOCK_SCOPE
+static bool
+EmitLet(JSContext *cx, JSCodeGenerator *cg, JSParseNode *&pn)
+{
+    /*
+     * pn represents one of these syntactic constructs:
+     *   let-expression:                        (let (x = y) EXPR)
+     *   let-statement:                         let (x = y) { ... }
+     *   let-declaration in statement context:  let x = y;
+     *   let-declaration in for-loop head:      for (let ...) ...
+     *
+     * Let-expressions and let-statements are represented as binary nodes
+     * with their variable declarations on the left and the body on the
+     * right.
+     */
+    JSParseNode *pn2;
+    if (pn->isArity(PN_BINARY)) {
+        pn2 = pn->pn_right;
+        pn = pn->pn_left;
+    } else {
+        pn2 = NULL;
+    }
+
+    /*
+     * Non-null pn2 means that pn is the variable list from a let head.
+     *
+     * Use TempPopScope to evaluate the expressions in the enclosing scope.
+     * This also causes the initializing assignments to be emitted in the
+     * enclosing scope, but the assignment opcodes emitted here
+     * (essentially just setlocal, though destructuring assignment uses
+     * other additional opcodes) do not care about the block chain.
+     */
+    JS_ASSERT(pn->isArity(PN_LIST));
+    TempPopScope tps;
+    bool popScope = pn2 || (cg->flags & TCF_IN_FOR_INIT);
+    if (popScope && !tps.popBlock(cx, cg))
+        return false;
+    ptrdiff_t noteIndex;
+    if (!EmitVariables(cx, cg, pn, pn2 != NULL, &noteIndex))
+        return false;
+    ptrdiff_t tmp = CG_OFFSET(cg);
+    if (popScope && !tps.repushBlock(cx, cg))
+        return false;
+
+    /* Thus non-null pn2 is the body of the let block or expression. */
+    if (pn2 && !js_EmitTree(cx, cg, pn2))
+        return false;
+
+    if (noteIndex >= 0 && !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, CG_OFFSET(cg) - tmp))
+        return false;
+
+    return true;
+}
+#endif
+
+#if JS_HAS_XML_SUPPORT
+static bool
+EmitXMLTag(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
+        return false;
+
+    {
+        jsatomid index;
+        JSAtom *tmp = (pn->isKind(TOK_XMLETAGO)) ? cx->runtime->atomState.etagoAtom
+                                                 : cx->runtime->atomState.stagoAtom;
+        if (!cg->makeAtomIndex(tmp, &index))
+            return false;
+        EMIT_INDEX_OP(JSOP_STRING, index);
+    }
+
+    JS_ASSERT(pn->pn_count != 0);
+    JSParseNode *pn2 = pn->pn_head;
+    if (pn2->isKind(TOK_LC) && js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
+        return false;
+    if (!js_EmitTree(cx, cg, pn2))
+        return false;
+    if (js_Emit1(cx, cg, JSOP_ADD) < 0)
+        return false;
+
+    uint32 i;
+    for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
+        if (pn2->isKind(TOK_LC) &&
+            js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0) {
+            return false;
+        }
+        if (!js_EmitTree(cx, cg, pn2))
+            return false;
+        if ((i & 1) && pn2->isKind(TOK_LC)) {
+            if (js_Emit1(cx, cg, JSOP_TOATTRVAL) < 0)
+                return false;
+        }
+        if (js_Emit1(cx, cg,
+                     (i & 1) ? JSOP_ADDATTRVAL : JSOP_ADDATTRNAME) < 0) {
+            return false;
+        }
+    }
+
+    {
+        jsatomid index;
+        JSAtom *tmp = (pn->isKind(TOK_XMLPTAGC)) ? cx->runtime->atomState.ptagcAtom
+                                                 : cx->runtime->atomState.tagcAtom;
+        if (!cg->makeAtomIndex(tmp, &index))
+            return false;
+        EMIT_INDEX_OP(JSOP_STRING, index);
+    }
+    if (js_Emit1(cx, cg, JSOP_ADD) < 0)
+        return false;
+
+    if ((pn->pn_xflags & PNX_XMLROOT) && js_Emit1(cx, cg, pn->getOp()) < 0)
+        return false;
+
+    return true;
+}
+
+static bool
+EmitXMLProcessingInstruction(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    jsatomid index;
+    if (!cg->makeAtomIndex(pn->pn_atom2, &index))
+        return false;
+    if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, cg))
+        return false;
+    if (!EmitAtomOp(cx, pn, JSOP_XMLPI, cg))
+        return false;
+    return true;
+}
+#endif
+
+static bool
+EmitLexicalScope(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok)
+{
+    JSStmtInfo stmtInfo;
+    JSStmtInfo *stmt;
+    JSObjectBox *objbox = pn->pn_objbox;
+    js_PushBlockScope(cg, &stmtInfo, objbox, CG_OFFSET(cg));
+
+    /*
+     * If this lexical scope is not for a catch block, let block or let
+     * expression, or any kind of for loop (where the scope starts in the
+     * head after the first part if for (;;), else in the body if for-in);
+     * and if our container is top-level but not a function body, or else
+     * a block statement; then emit a SRC_BRACE note.  All other container
+     * statements get braces by default from the decompiler.
+     */
+    ptrdiff_t noteIndex = -1;
+    TokenKind type = pn->expr()->getKind();
+    if (type != TOK_CATCH && type != TOK_LET && type != TOK_FOR &&
+        (!(stmt = stmtInfo.down)
+         ? !cg->inFunction()
+         : stmt->type == STMT_BLOCK)) {
+#if defined DEBUG_brendan || defined DEBUG_mrbkap
+        /* There must be no source note already output for the next op. */
+        JS_ASSERT(CG_NOTE_COUNT(cg) == 0 ||
+                  CG_LAST_NOTE_OFFSET(cg) != CG_OFFSET(cg) ||
+                  !GettableNoteForNextOp(cg));
+#endif
+        noteIndex = js_NewSrcNote2(cx, cg, SRC_BRACE, 0);
+        if (noteIndex < 0)
+            return false;
+    }
+
+    ptrdiff_t top = CG_OFFSET(cg);
+    if (!EmitEnterBlock(cx, pn, cg))
+        return false;
+
+    if (!js_EmitTree(cx, cg, pn->pn_expr))
+        return false;
+
+    JSOp op = pn->getOp();
+    if (op == JSOP_LEAVEBLOCKEXPR) {
+        if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
+            return false;
+    } else {
+        if (noteIndex >= 0 &&
+            !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
+                                 CG_OFFSET(cg) - top)) {
+            return false;
+        }
+    }
+
+    /* Emit the JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR opcode. */
+    if (!EmitLeaveBlock(cx, cg, op, objbox))
+        return false;
+
+    ok = js_PopStatementCG(cx, cg);
+    return true;
+}
+
+static bool
+EmitWith(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn, JSBool &ok)
+{
+    JSStmtInfo stmtInfo;
+    if (!js_EmitTree(cx, cg, pn->pn_left))
+        return false;
+    js_PushStatement(cg, &stmtInfo, STMT_WITH, CG_OFFSET(cg));
+    if (js_Emit1(cx, cg, JSOP_ENTERWITH) < 0)
+        return false;
+
+    /* Make blockChain determination quicker. */
+    if (EmitBlockChain(cx, cg) < 0)
+        return false;
+    if (!js_EmitTree(cx, cg, pn->pn_right))
+        return false;
+    if (js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0)
+        return false;
+    ok = js_PopStatementCG(cx, cg);
+    return true;
+}
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
-    JSBool ok, useful, wantval;
-    JSStmtInfo *stmt, stmtInfo;
+    JSBool useful, wantval;
+    JSStmtInfo stmtInfo;
+    JSStmtInfo *stmt;
     ptrdiff_t top, off, tmp, beq, jmp, tmp2, tmp3;
     JSParseNode *pn2, *pn3;
     JSAtom *atom;
@@ -4952,7 +5582,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSSrcNoteType noteType;
     jsbytecode *pc;
     JSOp op;
-    TokenKind type;
     uint32 argc;
     EmitLevelManager elm(cg);
 #if JS_HAS_SHARP_VARS
@@ -4961,7 +5590,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    ok = JS_TRUE;
+    JSBool ok = true;
     pn->pn_offset = top = CG_OFFSET(cg);
 
     /* Emit notes to tell the current bytecode's source line number. */
@@ -5131,92 +5760,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_IF:
-        /* Initialize so we can detect else-if chains and avoid recursion. */
-        stmtInfo.type = STMT_IF;
-        beq = jmp = -1;
-        noteIndex = -1;
-
-      if_again:
-        /* Emit code for the condition before pushing stmtInfo. */
-        if (!js_EmitTree(cx, cg, pn->pn_kid1))
-            return JS_FALSE;
-        top = CG_OFFSET(cg);
-        if (stmtInfo.type == STMT_IF) {
-            js_PushStatement(cg, &stmtInfo, STMT_IF, top);
-        } else {
-            /*
-             * We came here from the goto further below that detects else-if
-             * chains, so we must mutate stmtInfo back into a STMT_IF record.
-             * Also (see below for why) we need a note offset for SRC_IF_ELSE
-             * to help the decompiler.  Actually, we need two offsets, one for
-             * decompiling any else clause and the second for decompiling an
-             * else-if chain without bracing, overindenting, or incorrectly
-             * scoping let declarations.
-             */
-            JS_ASSERT(stmtInfo.type == STMT_ELSE);
-            stmtInfo.type = STMT_IF;
-            stmtInfo.update = top;
-            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
-                return JS_FALSE;
-            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - beq))
-                return JS_FALSE;
-        }
-
-        /* Emit an annotated branch-if-false around the then part. */
-        pn3 = pn->pn_kid3;
-        noteIndex = js_NewSrcNote(cx, cg, pn3 ? SRC_IF_ELSE : SRC_IF);
-        if (noteIndex < 0)
-            return JS_FALSE;
-        beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
-        if (beq < 0)
-            return JS_FALSE;
-
-        /* Emit code for the then and optional else parts. */
-        if (!js_EmitTree(cx, cg, pn->pn_kid2))
-            return JS_FALSE;
-        if (pn3) {
-            /* Modify stmtInfo so we know we're in the else part. */
-            stmtInfo.type = STMT_ELSE;
-
-            /*
-             * Emit a JSOP_BACKPATCH op to jump from the end of our then part
-             * around the else part.  The js_PopStatementCG call at the bottom
-             * of this switch case will fix up the backpatch chain linked from
-             * stmtInfo.breaks.
-             */
-            jmp = EmitGoto(cx, cg, &stmtInfo, &stmtInfo.breaks);
-            if (jmp < 0)
-                return JS_FALSE;
-
-            /* Ensure the branch-if-false comes here, then emit the else. */
-            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-            if (pn3->isKind(TOK_IF)) {
-                pn = pn3;
-                goto if_again;
-            }
-
-            if (!js_EmitTree(cx, cg, pn3))
-                return JS_FALSE;
-
-            /*
-             * Annotate SRC_IF_ELSE with the offset from branch to jump, for
-             * the decompiler's benefit.  We can't just "back up" from the pc
-             * of the else clause, because we don't know whether an extended
-             * jump was required to leap from the end of the then clause over
-             * the else clause.
-             */
-            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
-                return JS_FALSE;
-        } else {
-            /* No else part, fixup the branch-if-false to come here. */
-            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-        }
-        ok = js_PopStatementCG(cx, cg);
+        ok = EmitIf(cx, cg, pn);
         break;
 
       case TOK_SWITCH:
-        /* Out of line to avoid bloating js_EmitTree's stack frame size. */
-        ok = EmitSwitch(cx, cg, pn, &stmtInfo);
+        ok = EmitSwitch(cx, cg, pn);
         break;
 
       case TOK_WHILE:
@@ -5658,365 +6206,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       }
 
       case TOK_WITH:
-        if (!js_EmitTree(cx, cg, pn->pn_left))
-            return JS_FALSE;
-        js_PushStatement(cg, &stmtInfo, STMT_WITH, CG_OFFSET(cg));
-        if (js_Emit1(cx, cg, JSOP_ENTERWITH) < 0)
-            return JS_FALSE;
-
-        /* Make blockChain determination quicker. */
-        if (EmitBlockChain(cx, cg) < 0)
-            return JS_FALSE;
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-        if (js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0)
-            return JS_FALSE;
-        ok = js_PopStatementCG(cx, cg);
+        if (!EmitWith(cx, cg, pn, ok))
+            return false;
         break;
 
       case TOK_TRY:
-      {
-        ptrdiff_t tryStart, tryEnd, catchJump, finallyStart;
-        intN depth;
-        JSParseNode *lastCatch;
-
-        catchJump = -1;
-
-        /*
-         * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
-         * for later fixup.
-         *
-         * When a finally block is active (STMT_FINALLY in our tree context),
-         * non-local jumps (including jumps-over-catches) result in a GOSUB
-         * being written into the bytecode stream and fixed-up later (c.f.
-         * EmitBackPatchOp and BackPatch).
-         */
-        js_PushStatement(cg, &stmtInfo,
-                         pn->pn_kid3 ? STMT_FINALLY : STMT_TRY,
-                         CG_OFFSET(cg));
-
-        /*
-         * Since an exception can be thrown at any place inside the try block,
-         * we need to restore the stack and the scope chain before we transfer
-         * the control to the exception handler.
-         *
-         * For that we store in a try note associated with the catch or
-         * finally block the stack depth upon the try entry. The interpreter
-         * uses this depth to properly unwind the stack and the scope chain.
-         */
-        depth = cg->stackDepth;
-
-        /* Mark try location for decompilation, then emit try block. */
-        if (js_Emit1(cx, cg, JSOP_TRY) < 0)
-            return JS_FALSE;
-        tryStart = CG_OFFSET(cg);
-        if (!js_EmitTree(cx, cg, pn->pn_kid1))
-            return JS_FALSE;
-        JS_ASSERT(depth == cg->stackDepth);
-
-        /* GOSUB to finally, if present. */
-        if (pn->pn_kid3) {
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                return JS_FALSE;
-            jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(stmtInfo));
-            if (jmp < 0)
-                return JS_FALSE;
-        }
-
-        /* Emit (hidden) jump over catch and/or finally. */
-        if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-            return JS_FALSE;
-        jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &catchJump);
-        if (jmp < 0)
-            return JS_FALSE;
-
-        tryEnd = CG_OFFSET(cg);
-
-        JSObjectBox *prevBox = NULL;
-        /* If this try has a catch block, emit it. */
-        pn2 = pn->pn_kid2;
-        lastCatch = NULL;
-        if (pn2) {
-            uintN count = 0;    /* previous catch block's population */
-            
-            /*
-             * The emitted code for a catch block looks like:
-             *
-             * blockchain
-             * [throwing]                          only if 2nd+ catch block
-             * [leaveblock]                        only if 2nd+ catch block
-             * enterblock                          with SRC_CATCH
-             * exception
-             * [dup]                               only if catchguard
-             * setlocalpop <slot>                  or destructuring code
-             * [< catchguard code >]               if there's a catchguard
-             * [ifeq <offset to next catch block>]         " "
-             * [pop]                               only if catchguard
-             * < catch block contents >
-             * leaveblock
-             * goto <end of catch blocks>          non-local; finally applies
-             *
-             * If there's no catch block without a catchguard, the last
-             * <offset to next catch block> points to rethrow code.  This
-             * code will [gosub] to the finally code if appropriate, and is
-             * also used for the catch-all trynote for capturing exceptions
-             * thrown from catch{} blocks.
-             */
-            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                ptrdiff_t guardJump, catchNote;
-
-                JS_ASSERT(cg->stackDepth == depth);
-                guardJump = GUARDJUMP(stmtInfo);
-                if (guardJump != -1) {
-                    if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
-                        return JS_FALSE;
-                
-                    /* Fix up and clean up previous catch block. */
-                    CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
-
-                    /*
-                     * Account for JSOP_ENTERBLOCK (whose block object count
-                     * is saved below) and pushed exception object that we
-                     * still have after the jumping from the previous guard.
-                     */
-                    cg->stackDepth = depth + count + 1;
-
-                    /*
-                     * Move exception back to cx->exception to prepare for
-                     * the next catch. We hide [throwing] from the decompiler
-                     * since it compensates for the hidden JSOP_DUP at the
-                     * start of the previous guarded catch.
-                     */
-                    if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                        js_Emit1(cx, cg, JSOP_THROWING) < 0) {
-                        return JS_FALSE;
-                    }
-                    if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                        return JS_FALSE;
-                    if (!EmitLeaveBlock(cx, cg, JSOP_LEAVEBLOCK, prevBox))
-                        return JS_FALSE;
-                    JS_ASSERT(cg->stackDepth == depth);
-                }
-
-                /*
-                 * Annotate the JSOP_ENTERBLOCK that's about to be generated
-                 * by the call to js_EmitTree immediately below.  Save this
-                 * source note's index in stmtInfo for use by the TOK_CATCH:
-                 * case, where the length of the catch guard is set as the
-                 * note's offset.
-                 */
-                catchNote = js_NewSrcNote2(cx, cg, SRC_CATCH, 0);
-                if (catchNote < 0)
-                    return JS_FALSE;
-                CATCHNOTE(stmtInfo) = catchNote;
-
-                /*
-                 * Emit the lexical scope and catch body.  Save the catch's
-                 * block object population via count, for use when targeting
-                 * guardJump at the next catch (the guard mismatch case).
-                 */
-                JS_ASSERT(pn3->isKind(TOK_LEXICALSCOPE));
-                count = OBJ_BLOCK_COUNT(cx, pn3->pn_objbox->object);
-                prevBox = pn3->pn_objbox;
-                if (!js_EmitTree(cx, cg, pn3))
-                    return JS_FALSE;
-
-                /* gosub <finally>, if required */
-                if (pn->pn_kid3) {
-                    jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH,
-                                          &GOSUBS(stmtInfo));
-                    if (jmp < 0)
-                        return JS_FALSE;
-                    JS_ASSERT(cg->stackDepth == depth);
-                }
-
-                /*
-                 * Jump over the remaining catch blocks.  This will get fixed
-                 * up to jump to after catch/finally.
-                 */
-                if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                    return JS_FALSE;
-                jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &catchJump);
-                if (jmp < 0)
-                    return JS_FALSE;
-
-                /*
-                 * Save a pointer to the last catch node to handle try-finally
-                 * and try-catch(guard)-finally special cases.
-                 */
-                lastCatch = pn3->expr();
-            }
-        }
-
-        /*
-         * Last catch guard jumps to the rethrow code sequence if none of the
-         * guards match. Target guardJump at the beginning of the rethrow
-         * sequence, just in case a guard expression throws and leaves the
-         * stack unbalanced.
-         */
-        if (lastCatch && lastCatch->pn_kid2) {
-            if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
-                return JS_FALSE;
-            
-            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
-
-            /* Sync the stack to take into account pushed exception. */
-            JS_ASSERT(cg->stackDepth == depth);
-            cg->stackDepth = depth + 1;
-
-            /*
-             * Rethrow the exception, delegating executing of finally if any
-             * to the exception handler.
-             */
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                js_Emit1(cx, cg, JSOP_THROW) < 0) {
-                return JS_FALSE;
-            }
-
-            if (EmitBlockChain(cx, cg) < 0)
-                return JS_FALSE;
-        }
-
-        JS_ASSERT(cg->stackDepth == depth);
-
-        /* Emit finally handler if any. */
-        finallyStart = 0;   /* to quell GCC uninitialized warnings */
-        if (pn->pn_kid3) {
-            /*
-             * Fix up the gosubs that might have been emitted before non-local
-             * jumps to the finally code.
-             */
-            if (!BackPatch(cx, cg, GOSUBS(stmtInfo), CG_NEXT(cg), JSOP_GOSUB))
-                return JS_FALSE;
-
-            finallyStart = CG_OFFSET(cg);
-
-            /* Indicate that we're emitting a subroutine body. */
-            stmtInfo.type = STMT_SUBROUTINE;
-            if (!UpdateLineNumberNotes(cx, cg, pn->pn_kid3->pn_pos.begin.lineno))
-                return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_FINALLY) < 0 ||
-                !js_EmitTree(cx, cg, pn->pn_kid3) ||
-                js_Emit1(cx, cg, JSOP_RETSUB) < 0) {
-                return JS_FALSE;
-            }
-            JS_ASSERT(cg->stackDepth == depth);
-        }
-        if (!js_PopStatementCG(cx, cg))
-            return JS_FALSE;
-
-        if (js_NewSrcNote(cx, cg, SRC_ENDBRACE) < 0 ||
-            js_Emit1(cx, cg, JSOP_NOP) < 0) {
-            return JS_FALSE;
-        }
-
-        /* Fix up the end-of-try/catch jumps to come here. */
-        if (!BackPatch(cx, cg, catchJump, CG_NEXT(cg), JSOP_GOTO))
-            return JS_FALSE;
-
-        /*
-         * Add the try note last, to let post-order give us the right ordering
-         * (first to last for a given nesting level, inner to outer by level).
-         */
-        if (pn->pn_kid2 &&
-            !NewTryNote(cx, cg, JSTRY_CATCH, depth, tryStart, tryEnd)) {
-            return JS_FALSE;
-        }
-
-        /*
-         * If we've got a finally, mark try+catch region with additional
-         * trynote to catch exceptions (re)thrown from a catch block or
-         * for the try{}finally{} case.
-         */
-        if (pn->pn_kid3 &&
-            !NewTryNote(cx, cg, JSTRY_FINALLY, depth, tryStart, finallyStart)) {
-            return JS_FALSE;
-        }
+        if (!EmitTry(cx, cg, pn))
+            return false;
         break;
-      }
 
       case TOK_CATCH:
-      {
-        ptrdiff_t catchStart, guardJump;
-
-        /*
-         * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
-         * and save the block object atom.
-         */
-        stmt = cg->topStmt;
-        JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
-        stmt->type = STMT_CATCH;
-        catchStart = stmt->update;
-
-        /* Go up one statement info record to the TRY or FINALLY record. */
-        stmt = stmt->down;
-        JS_ASSERT(stmt->type == STMT_TRY || stmt->type == STMT_FINALLY);
-
-        /* Pick up the pending exception and bind it to the catch variable. */
-        if (js_Emit1(cx, cg, JSOP_EXCEPTION) < 0)
-            return JS_FALSE;
-
-        /*
-         * Dup the exception object if there is a guard for rethrowing to use
-         * it later when rethrowing or in other catches.
-         */
-        if (pn->pn_kid2 && js_Emit1(cx, cg, JSOP_DUP) < 0)
-            return JS_FALSE;
-
-        pn2 = pn->pn_kid1;
-        switch (pn2->getKind()) {
-#if JS_HAS_DESTRUCTURING
-          case TOK_RB:
-          case TOK_RC:
-            if (!EmitDestructuringOps(cx, cg, JSOP_NOP, pn2))
-                return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_POP) < 0)
-                return JS_FALSE;
-            break;
-#endif
-
-          case TOK_NAME:
-            /* Inline and specialize BindNameToSlot for pn2. */
-            JS_ASSERT(!pn2->pn_cookie.isFree());
-            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.asInteger());
-            break;
-
-          default:
-            JS_ASSERT(0);
-        }
-
-        /* Emit the guard expression, if there is one. */
-        if (pn->pn_kid2) {
-            if (!js_EmitTree(cx, cg, pn->pn_kid2))
-                return JS_FALSE;
-            if (!js_SetSrcNoteOffset(cx, cg, CATCHNOTE(*stmt), 0,
-                                     CG_OFFSET(cg) - catchStart)) {
-                return JS_FALSE;
-            }
-            /* ifeq <next block> */
-            guardJump = EmitJump(cx, cg, JSOP_IFEQ, 0);
-            if (guardJump < 0)
-                return JS_FALSE;
-            GUARDJUMP(*stmt) = guardJump;
-
-            /* Pop duplicated exception object as we no longer need it. */
-            if (js_Emit1(cx, cg, JSOP_POP) < 0)
-                return JS_FALSE;
-        }
-
-        /* Emit the catch body. */
-        if (!js_EmitTree(cx, cg, pn->pn_kid3))
-            return JS_FALSE;
-
-        /*
-         * Annotate the JSOP_LEAVEBLOCK that will be emitted as we unwind via
-         * our TOK_LEXICALSCOPE parent, so the decompiler knows to pop.
-         */
-        off = cg->stackDepth;
-        if (js_NewSrcNote2(cx, cg, SRC_CATCH, off) < 0)
-            return JS_FALSE;
+        if (!EmitCatch(cx, cg, pn))
+            return false;
         break;
-      }
 
       case TOK_VAR:
         if (!EmitVariables(cx, cg, pn, JS_FALSE, &noteIndex))
@@ -6790,115 +6992,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       }
 
       case TOK_LEXICALSCOPE:
-      {
-        JSObjectBox *objbox;
-
-        objbox = pn->pn_objbox;
-        js_PushBlockScope(cg, &stmtInfo, objbox, CG_OFFSET(cg));
-
-        /*
-         * If this lexical scope is not for a catch block, let block or let
-         * expression, or any kind of for loop (where the scope starts in the
-         * head after the first part if for (;;), else in the body if for-in);
-         * and if our container is top-level but not a function body, or else
-         * a block statement; then emit a SRC_BRACE note.  All other container
-         * statements get braces by default from the decompiler.
-         */
-        noteIndex = -1;
-        type = pn->expr()->getKind();
-        if (type != TOK_CATCH && type != TOK_LET && type != TOK_FOR &&
-            (!(stmt = stmtInfo.down)
-             ? !cg->inFunction()
-             : stmt->type == STMT_BLOCK)) {
-#if defined DEBUG_brendan || defined DEBUG_mrbkap
-            /* There must be no source note already output for the next op. */
-            JS_ASSERT(CG_NOTE_COUNT(cg) == 0 ||
-                      CG_LAST_NOTE_OFFSET(cg) != CG_OFFSET(cg) ||
-                      !GettableNoteForNextOp(cg));
-#endif
-            noteIndex = js_NewSrcNote2(cx, cg, SRC_BRACE, 0);
-            if (noteIndex < 0)
-                return JS_FALSE;
-        }
-
-        JS_ASSERT(CG_OFFSET(cg) == top);
-        if (!EmitEnterBlock(cx, pn, cg))
-            return JS_FALSE;
-
-        if (!js_EmitTree(cx, cg, pn->pn_expr))
-            return JS_FALSE;
-
-        op = pn->getOp();
-        if (op == JSOP_LEAVEBLOCKEXPR) {
-            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
-                return JS_FALSE;
-        } else {
-            if (noteIndex >= 0 &&
-                !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
-                                     CG_OFFSET(cg) - top)) {
-                return JS_FALSE;
-            }
-        }
-
-        /* Emit the JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR opcode. */
-        if (!EmitLeaveBlock(cx, cg, op, objbox))
-            return JS_FALSE;
-
-        ok = js_PopStatementCG(cx, cg);
+        if (!EmitLexicalScope(cx, cg, pn, ok))
+            return false;
         break;
-      }
 
 #if JS_HAS_BLOCK_SCOPE
-      case TOK_LET: {
-        /*
-         * pn represents one of these syntactic constructs:
-         *   let-expression:                        (let (x = y) EXPR)
-         *   let-statement:                         let (x = y) { ... }
-         *   let-declaration in statement context:  let x = y;
-         *   let-declaration in for-loop head:      for (let ...) ...
-         *
-         * Let-expressions and let-statements are represented as binary nodes
-         * with their variable declarations on the left and the body on the
-         * right.
-         */
-        if (pn->isArity(PN_BINARY)) {
-            pn2 = pn->pn_right;
-            pn = pn->pn_left;
-        } else {
-            pn2 = NULL;
-        }
-
-        /*
-         * Non-null pn2 means that pn is the variable list from a let head.
-         *
-         * Use TempPopScope to evaluate the expressions in the enclosing scope.
-         * This also causes the initializing assignments to be emitted in the
-         * enclosing scope, but the assignment opcodes emitted here
-         * (essentially just setlocal, though destructuring assignment uses
-         * other additional opcodes) do not care about the block chain.
-         */
-        JS_ASSERT(pn->isArity(PN_LIST));
-        TempPopScope tps;
-        bool popScope = pn2 || (cg->flags & TCF_IN_FOR_INIT);
-        if (popScope && !tps.popBlock(cx, cg))
-            return JS_FALSE;
-        if (!EmitVariables(cx, cg, pn, pn2 != NULL, &noteIndex))
-            return JS_FALSE;
-        tmp = CG_OFFSET(cg);
-        if (popScope && !tps.repushBlock(cx, cg))
-            return JS_FALSE;
-
-        /* Thus non-null pn2 is the body of the let block or expression. */
-        if (pn2 && !js_EmitTree(cx, cg, pn2))
-            return JS_FALSE;
-
-        if (noteIndex >= 0 &&
-            !js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
-                                 CG_OFFSET(cg) - tmp)) {
-            return JS_FALSE;
-        }
+      case TOK_LET: 
+        if (!EmitLet(cx, cg, pn))
+            return false;
         break;
-      }
 #endif /* JS_HAS_BLOCK_SCOPE */
 
 #if JS_HAS_GENERATORS
@@ -7201,13 +7303,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ok = EmitNumberOp(cx, pn->pn_dval, cg);
         break;
 
-      case TOK_REGEXP: {
+      case TOK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitIndexOp(cx, JSOP_REGEXP,
-                         cg->regexpList.index(pn->pn_objbox),
-                         cg);
+        ok = EmitIndexOp(cx, JSOP_REGEXP, cg->regexpList.index(pn->pn_objbox), cg);
         break;
-      }
 
 #if JS_HAS_XML_SUPPORT
       case TOK_ANYNAME:
@@ -7270,62 +7369,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_XMLPTAGC:
       case TOK_XMLSTAGO:
       case TOK_XMLETAGO:
-      {
-        uint32 i;
-
-        if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
-            return JS_FALSE;
-
-        {
-            jsatomid index;
-            JSAtom *tmp = (pn->isKind(TOK_XMLETAGO)) ? cx->runtime->atomState.etagoAtom
-                                                     : cx->runtime->atomState.stagoAtom;
-            if (!cg->makeAtomIndex(tmp, &index))
-                return JS_FALSE;
-            EMIT_INDEX_OP(JSOP_STRING, index);
-        }
-
-        JS_ASSERT(pn->pn_count != 0);
-        pn2 = pn->pn_head;
-        if (pn2->isKind(TOK_LC) && js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
-            return JS_FALSE;
-        if (!js_EmitTree(cx, cg, pn2))
-            return JS_FALSE;
-        if (js_Emit1(cx, cg, JSOP_ADD) < 0)
-            return JS_FALSE;
-
-        for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
-            if (pn2->isKind(TOK_LC) &&
-                js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0) {
-                return JS_FALSE;
-            }
-            if (!js_EmitTree(cx, cg, pn2))
-                return JS_FALSE;
-            if ((i & 1) && pn2->isKind(TOK_LC)) {
-                if (js_Emit1(cx, cg, JSOP_TOATTRVAL) < 0)
-                    return JS_FALSE;
-            }
-            if (js_Emit1(cx, cg,
-                         (i & 1) ? JSOP_ADDATTRVAL : JSOP_ADDATTRNAME) < 0) {
-                return JS_FALSE;
-            }
-        }
-
-        {
-            jsatomid index;
-            JSAtom *tmp = (pn->isKind(TOK_XMLPTAGC)) ? cx->runtime->atomState.ptagcAtom
-                                                     : cx->runtime->atomState.tagcAtom;
-            if (!cg->makeAtomIndex(tmp, &index))
-                return JS_FALSE;
-            EMIT_INDEX_OP(JSOP_STRING, index);
-        }
-        if (js_Emit1(cx, cg, JSOP_ADD) < 0)
-            return JS_FALSE;
-
-        if ((pn->pn_xflags & PNX_XMLROOT) && js_Emit1(cx, cg, pn->getOp()) < 0)
-            return JS_FALSE;
+        if (!EmitXMLTag(cx, cg, pn))
+            return false;
         break;
-      }
 
       case TOK_XMLNAME:
         if (pn->isArity(PN_LIST)) {
@@ -7348,16 +7394,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
         break;
 
-      case TOK_XMLPI: {
-        jsatomid index;
-        if (!cg->makeAtomIndex(pn->pn_atom2, &index))
+      case TOK_XMLPI:
+        if (!EmitXMLProcessingInstruction(cx, cg, pn))
             return false;
-        if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, cg))
-            return JS_FALSE;
-        if (!EmitAtomOp(cx, pn, JSOP_XMLPI, cg))
-            return JS_FALSE;
         break;
-      }
 #endif /* JS_HAS_XML_SUPPORT */
 
       default:

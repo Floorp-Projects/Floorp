@@ -306,8 +306,8 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
 
   if (HasAudio()) {
     // Decode audio forward to the seek target.
-    PRInt64 targetSample = 0;
-    if (!UsecsToSamples(aTarget, mInfo.mAudioRate, targetSample)) {
+    PRInt64 targetFrame = 0;
+    if (!UsecsToFrames(aTarget, mInfo.mAudioRate, targetFrame)) {
       return NS_ERROR_FAILURE;
     }
     PRBool eof = PR_FALSE;
@@ -324,20 +324,20 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       const AudioData* audio = mAudioQueue.PeekFront();
       if (!audio)
         break;
-      PRInt64 startSample = 0;
-      if (!UsecsToSamples(audio->mTime, mInfo.mAudioRate, startSample)) {
+      PRInt64 startFrame = 0;
+      if (!UsecsToFrames(audio->mTime, mInfo.mAudioRate, startFrame)) {
         return NS_ERROR_FAILURE;
       }
-      if (startSample + audio->mSamples <= targetSample) {
-        // Our seek target lies after the samples in this AudioData. Pop it
+      if (startFrame + audio->mFrames <= targetFrame) {
+        // Our seek target lies after the frames in this AudioData. Pop it
         // off the queue, and keep decoding forwards.
         delete mAudioQueue.PopFront();
         audio = nsnull;
         continue;
       }
-      if (startSample > targetSample) {
+      if (startFrame > targetFrame) {
         // The seek target doesn't lie in the audio block just after the last
-        // audio samples we've seen which were before the seek target. This
+        // audio frames we've seen which were before the seek target. This
         // could have been the first audio data we've seen after seek, i.e. the
         // seek terminated after the seek target in the audio stream. Just
         // abort the audio decode-to-target, the state machine will play
@@ -347,33 +347,33 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
         break;
       }
 
-      // The seek target lies somewhere in this AudioData's samples, strip off
-      // any samples which lie before the seek target, so we'll begin playback
+      // The seek target lies somewhere in this AudioData's frames, strip off
+      // any frames which lie before the seek target, so we'll begin playback
       // exactly at the seek target.
-      NS_ASSERTION(targetSample >= startSample, "Target must at or be after data start.");
-      NS_ASSERTION(targetSample < startSample + audio->mSamples, "Data must end after target.");
+      NS_ASSERTION(targetFrame >= startFrame, "Target must at or be after data start.");
+      NS_ASSERTION(targetFrame < startFrame + audio->mFrames, "Data must end after target.");
 
-      PRInt64 samplesToPrune = targetSample - startSample;
-      if (samplesToPrune > audio->mSamples) {
-        // We've messed up somehow. Don't try to trim samples, the |samples|
+      PRInt64 framesToPrune = targetFrame - startFrame;
+      if (framesToPrune > audio->mFrames) {
+        // We've messed up somehow. Don't try to trim frames, the |frames|
         // variable below will overflow.
-        NS_WARNING("Can't prune more samples that we have!");
+        NS_WARNING("Can't prune more frames that we have!");
         break;
       }
-      PRUint32 samples = audio->mSamples - static_cast<PRUint32>(samplesToPrune);
+      PRUint32 frames = audio->mFrames - static_cast<PRUint32>(framesToPrune);
       PRUint32 channels = audio->mChannels;
-      nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[samples * channels]);
+      nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[frames * channels]);
       memcpy(audioData.get(),
-             audio->mAudioData.get() + (samplesToPrune * channels),
-             samples * channels * sizeof(AudioDataValue));
+             audio->mAudioData.get() + (framesToPrune * channels),
+             frames * channels * sizeof(AudioDataValue));
       PRInt64 duration;
-      if (!SamplesToUsecs(samples, mInfo.mAudioRate, duration)) {
+      if (!FramesToUsecs(frames, mInfo.mAudioRate, duration)) {
         return NS_ERROR_FAILURE;
       }
       nsAutoPtr<AudioData> data(new AudioData(audio->mOffset,
                                               aTarget,
                                               duration,
-                                              samples,
+                                              frames,
                                               audioData.forget(),
                                               channels));
       delete mAudioQueue.PopFront();

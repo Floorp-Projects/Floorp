@@ -7,7 +7,7 @@ HTTP(..) == scroll-rounding.html scroll-rounding-ref.html
 HTTP(..) == anonymous-block.html anonymous-block-ref.html
 HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
-HTTP(..) == block-padding.html block-padding-ref.html
+fails-if(Android&&layersOpenGL) HTTP(..) == block-padding.html block-padding-ref.html
 HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html

@@ -209,7 +209,7 @@ txXPathTreeWalker::moveToFirstChild()
     NS_ASSERTION(mCurrentIndex != kUnknownIndex || mDescendants.IsEmpty(),
                  "Index should be known if parents index are");
 
-    nsIContent* child = mPosition.mNode->GetChildAt(0);
+    nsIContent* child = mPosition.mNode->GetFirstChild();
     if (!child) {
         return PR_FALSE;
     }
@@ -242,7 +242,7 @@ txXPathTreeWalker::moveToLastChild()
     if (!total) {
         return PR_FALSE;
     }
-    mPosition.mNode = mPosition.mNode->GetChildAt(total - 1);
+    mPosition.mNode = mPosition.mNode->GetLastChild();
 
     if (mCurrentIndex != kUnknownIndex &&
         !mDescendants.AppendValue(mCurrentIndex)) {

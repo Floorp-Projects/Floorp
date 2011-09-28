@@ -726,10 +726,10 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             static const PRUnichar EMPTY_STRING[] = { '\0' };
             static const PRUnichar VOID_STRING[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' };
 
-            const PRUnichar* chars;
+            const PRUnichar* chars = nsnull;
             JSString* str = nsnull;
             JSBool isNewString = JS_FALSE;
-            PRUint32 length;
+            PRUint32 length = 0;
 
             if(JSVAL_IS_VOID(s))
             {

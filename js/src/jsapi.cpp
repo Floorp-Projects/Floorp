@@ -2913,7 +2913,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 #endif
     if (!obj || obj->getJSClass() != clasp) {
         if (argv)
-            ReportIncompatibleMethod(cx, argv - 2, Valueify(clasp));
+            ReportIncompatibleMethod(cx, CallReceiverFromArgv(argv), Valueify(clasp));
         return false;
     }
     return true;
@@ -3233,7 +3233,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
             return js_GetDenseArrayElementValue(cx, obj2, id, vp);
         if (obj2->isProxy()) {
             AutoPropertyDescriptorRooter desc(cx);
-            if (!JSProxy::getPropertyDescriptor(cx, obj2, id, false, &desc))
+            if (!Proxy::getPropertyDescriptor(cx, obj2, id, false, &desc))
                 return false;
             if (!(desc.attrs & JSPROP_SHARED)) {
                 *vp = desc.value;
@@ -3609,8 +3609,8 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);
             return own
-                   ? JSProxy::getOwnPropertyDescriptor(cx, obj2, id, false, desc)
-                   : JSProxy::getPropertyDescriptor(cx, obj2, id, false, desc);
+                   ? Proxy::getOwnPropertyDescriptor(cx, obj2, id, false, desc)
+                   : Proxy::getPropertyDescriptor(cx, obj2, id, false, desc);
         }
         if (!obj2->getAttributes(cx, id, &desc->attrs))
             return false;
@@ -4084,8 +4084,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
-    return obj->isArray() ||
-           (obj->isWrapper() && obj->unwrap()->isArray());
+    return ObjectClassIs(*obj, ESClass_Array, cx);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5061,7 +5060,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 
     args.calleev().setObject(*ctor);
     args.thisv().setNull();
-    memcpy(args.argv(), argv, argc * sizeof(jsval));
+    memcpy(args.array(), argv, argc * sizeof(jsval));
 
     if (!InvokeConstructor(cx, args))
         return NULL;

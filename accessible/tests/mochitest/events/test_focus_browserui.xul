@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessibility Loading Document Events Test.">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Helpers
+
+    function tabBrowser()
+    {
+      return gBrowserWnd.gBrowser;
+    }
+
+    function currentBrowser()
+    {
+      return tabBrowser().selectedBrowser;
+    }
+
+    function currentTabDocument()
+    {
+      return currentBrowser().contentDocument;
+    }
+
+    function inputInDocument()
+    {
+      var tabdoc = currentTabDocument();
+      return tabdoc.getElementById("input");
+    }
+
+    function urlbarInput()
+    {
+      return gBrowserWnd.document.getElementById("urlbar").inputField;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function loadURI(aURI)
+    {
+      this.invoke = function loadURI_invoke()
+      {
+        tabBrowser().loadURI(aURI);
+      }
+
+      this.eventSeq = [
+        new focusChecker(currentTabDocument)
+      ];
+
+      this.getID = function loadURI_getID()
+      {
+        return "load uri " + aURI;
+      }
+    }
+
+    function goBack()
+    {
+      this.invoke = function goBack_invoke()
+      {
+        tabBrowser().goBack();
+      }
+
+      this.eventSeq = [
+        new focusChecker(inputInDocument)
+      ];
+
+      this.getID = function goBack_getID()
+      {
+        return "go back one page in history ";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Testing
+
+    var gInputDocURI = "data:text/html,<html><input id='input'></html>";
+    var gButtonDocURI = "data:text/html,<html><input id='input' type='button' value='button'></html>";
+
+    var gBrowserWnd = null;
+    function loadBrowser()
+    {
+      gBrowserWnd = window.openDialog("chrome://browser/content/", "_blank",
+                                      "chrome,all,dialog=no", gInputDocURI);
+
+      addA11yLoadEvent(startTests, gBrowserWnd);
+    }
+
+    function startTests()
+    {
+      // Wait for tab load.
+      var browser = gBrowserWnd.gBrowser.selectedBrowser;
+      addA11yLoadEvent(doTests, browser.contentWindow);
+    }
+
+    //gA11yEventDumpToConsole = true; // debug
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      var tabDocument = currentTabDocument();
+      var input = inputInDocument();
+
+      // move focus to input inside tab document
+      gQueue.push(new synthTab(tabDocument, new focusChecker(input), gBrowserWnd));
+
+      // open new url, focus moves to new document
+      gQueue.push(new loadURI(gButtonDocURI));
+
+      // back one page in history, moves moves on input of tab document
+      gQueue.push(new goBack());
+
+      // open new tab, focus moves to urlbar
+      gQueue.push(new synthKey(tabDocument, "t", { ctrlKey: true, window: gBrowserWnd },
+                               new focusChecker(urlbarInput)));
+
+      // close open tab, focus goes on input of tab document
+      gQueue.push(new synthKey(tabDocument, "w", { ctrlKey: true, window: gBrowserWnd },
+                               new focusChecker(inputInDocument)));
+
+      gQueue.onFinish = function()
+      {
+        gBrowserWnd.close();
+      }
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(loadBrowser);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=644452"
+       title="Focus not set when switching to cached document with back or forward if anything other than the document was last focused">
+      Mozilla Bug 644452
+    </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=665412"
+       title="Broken focus when returning to editable text field after closing a tab while focused in the Navigation toolbar">
+      Mozilla Bug 665412
+    </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+       title="Rework accessible focus handling">
+      Mozilla Bug 673958
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox id="eventdump"></vbox>
+  </vbox>
+</window>

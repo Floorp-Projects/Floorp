@@ -90,38 +90,6 @@ public:
   // nsRootAccessible
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ROOTACCESSIBLE_IMPL_CID)
 
-  /**
-   * Fire an accessible focus event for the focused accessible and attach a new
-   * selection listener to real focused element, if necessary.
-   *
-   * @param  aFocusAccessible   [in] the accessible which has received focus
-   * @param  aRealFocusContent  [in] the actual DOM element which has received
-   *                              focus (see @note section)
-   * @param  aForceEvent        [in, optional] fire a focus event even if
-   *                              the last focused item was the same
-   * @param  aIsFromUserInput   [in, optional] specifies whether the event is
-   *                              from user input
-   *
-   * @note  Use the originally focused node where the selection lives as real
-   *         focus node. For example, use the anonymous HTML:input instead of
-   *         the containing XUL:textbox. In this case, sometimes it is a later
-   *         focus event which points to the actual anonymous child with focus,
-   *         so to be safe we need to reset the selection listener every time.
-   *         This happens because when some bindings handle focus, they
-   *         retarget focus to the appropriate child inside of themselves, but
-   *         DOM focus stays outside on that binding parent.
-   */
-  void FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
-                                nsIContent* aRealFocusContent,
-                                PRBool aForceEvent = PR_FALSE,
-                                EIsFromUserInput aIsFromUserInput = eAutoDetect);
-
-    /**
-      * Fire an accessible focus event for the current focused node,
-      * if there is a focus.
-      */
-    void FireCurrentFocusEvent();
-
     nsCaretAccessible *GetCaretAccessible();
 
   /**
@@ -130,7 +98,6 @@ public:
   virtual void DocumentActivated(nsDocAccessible* aDocument);
 
 protected:
-  NS_DECL_RUNNABLEMETHOD(nsRootAccessible, FireCurrentFocusEvent)
 
   /**
    * Add/remove DOM event listeners.
@@ -151,7 +118,7 @@ protected:
   /*
    * Process "popuphiding" event. Used by HandleEvent().
    */
-  void HandlePopupHidingEvent(nsINode* aNode, nsAccessible* aAccessible);
+  void HandlePopupHidingEvent(nsINode* aNode);
 
 #ifdef MOZ_XUL
     void HandleTreeRowCountChangedEvent(nsIDOMEvent* aEvent,
@@ -164,7 +131,6 @@ protected:
     already_AddRefed<nsIDocShellTreeItem>
            GetContentDocShell(nsIDocShellTreeItem *aStart);
     nsRefPtr<nsCaretAccessible> mCaretAccessible;
-  nsCOMPtr<nsINode> mCurrentARIAMenubar;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsRootAccessible, NS_ROOTACCESSIBLE_IMPL_CID)

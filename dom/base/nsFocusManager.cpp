@@ -90,6 +90,10 @@
 #include "nsIDOMXULMenuListElement.h"
 #endif
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1891,6 +1895,16 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
       nsDelayedBlurOrFocusEvent(aType, aPresShell, aDocument, eventTarget));
     return;
   }
+
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = GetAccService();
+  if (accService) {
+    if (aType == NS_FOCUS_CONTENT)
+      accService->NotifyOfDOMFocus(aTarget);
+    else
+      accService->NotifyOfDOMBlur(aTarget);
+  }
+#endif
 
   nsContentUtils::AddScriptRunner(
     new FocusBlurEvent(aTarget, aType, aPresShell->GetPresContext(),

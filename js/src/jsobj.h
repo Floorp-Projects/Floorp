@@ -66,7 +66,7 @@ namespace nanojit { class ValidateWriter; }
 namespace js {
 
 class AutoPropDescArrayRooter;
-class JSProxyHandler;
+class ProxyHandler;
 class RegExp;
 class CallObject;
 struct GCMarker;
@@ -380,6 +380,7 @@ extern Class XMLFilterClass;
 class ArgumentsObject;
 class GlobalObject;
 class NormalArgumentsObject;
+class NumberObject;
 class StrictArgumentsObject;
 class StringObject;
 
@@ -1052,6 +1053,7 @@ struct JSObject : js::gc::Cell {
     }
 
   public:
+    inline js::NumberObject *asNumber();
     inline js::StringObject *asString();
 
     /*
@@ -1291,12 +1293,12 @@ struct JSObject : js::gc::Cell {
      * Proxy-specific getters and setters.
      */
 
-    inline js::JSProxyHandler *getProxyHandler() const;
+    inline js::ProxyHandler *getProxyHandler() const;
     inline const js::Value &getProxyPrivate() const;
     inline void setProxyPrivate(const js::Value &priv);
     inline const js::Value &getProxyExtra() const;
     inline void setProxyExtra(const js::Value &extra);
-    inline JSWrapper *getWrapperHandler() const;
+    inline js::Wrapper *getWrapperHandler() const;
 
     /*
      * With object-specific getters and setters.
@@ -2207,10 +2209,10 @@ eval(JSContext *cx, uintN argc, Value *vp);
 /*
  * Performs a direct eval for the given arguments, which must correspond to the
  * currently-executing stack frame, which must be a script frame. On completion
- * the result is returned in call.rval.
+ * the result is returned in args.rval.
  */
 extern JS_REQUIRES_STACK bool
-DirectEval(JSContext *cx, const CallArgs &call);
+DirectEval(JSContext *cx, const CallArgs &args);
 
 /*
  * True iff |v| is the built-in eval function for the global object that
@@ -2225,13 +2227,94 @@ IsAnyBuiltinEval(JSFunction *fun);
 
 /* 'call' should be for the eval/Function native invocation. */
 extern JSPrincipals *
-PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx);
+PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);
 
 extern const char *
 InformalValueTypeName(const Value &v);
-}
+
+/*
+ * Report an error if call.thisv is not compatible with the specified class.
+ *
+ * NB: most callers should be calling or NonGenericMethodGuard,
+ * HandleNonGenericMethodClassMismatch, or BoxedPrimitiveMethodGuard (so that
+ * transparent proxies are handled correctly). Thus, any caller of this
+ * function better have a good explanation for why proxies are being handled
+ * correctly (e.g., by IsCallable) or are not an issue (E4X).
+ */
+extern void
+ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
+
+/*
+ * A non-generic method is specified to report an error if args.thisv is not an
+ * object with a specific [[Class]] internal property (ES5 8.6.2).
+ * NonGenericMethodGuard performs this checking. Canonical usage is:
+ *
+ *   CallArgs args = ...
+ *   bool ok;
+ *   JSObject *thisObj = NonGenericMethodGuard(cx, args, clasp, &ok);
+ *   if (!thisObj)
+ *     return ok;
+ *
+ * Specifically: if obj is a proxy, NonGenericMethodGuard will call the
+ * object's ProxyHandler's nativeCall hook (which may recursively call
+ * args.callee in args.thisv's compartment). Thus, there are three possible
+ * post-conditions:
+ *
+ *   1. thisv is an object of the given clasp: the caller may proceed;
+ *
+ *   2. there was an error: the caller must return 'false';
+ *
+ *   3. thisv wrapped an object of the given clasp and the native was reentered
+ *      and completed succesfully: the caller must return 'true'.
+ *
+ * Case 1 is indicated by a non-NULL return value; case 2 by a NULL return
+ * value with *ok == false; and case 3 by a NULL return value with *ok == true.
+ *
+ * NB: since this guard may reenter the native, the guard must be placed before
+ * any effectful operations are performed.
+ */
+inline JSObject *
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok);
+
+/*
+ * NonGenericMethodGuard tests args.thisv's class using 'clasp'. If more than
+ * one class is acceptable (viz., isDenseArray() || isSlowArray()), the caller
+ * may test the class and delegate to HandleNonGenericMethodClassMismatch to
+ * handle the proxy case and error reporting. The 'clasp' argument is only used
+ * for error reporting (clasp->name).
+ */
+extern bool
+HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Class *clasp);
+
+/*
+ * Implement the extraction of a primitive from a value as needed for the
+ * toString, valueOf, and a few other methods of the boxed primitives classes
+ * Boolean, Number, and String (e.g., ES5 15.6.4.2). If 'true' is returned, the
+ * extracted primitive is stored in |*v|. If 'false' is returned, the caller
+ * must immediately 'return *ok'. For details, see NonGenericMethodGuard.
+ */
+template <typename T>
+inline bool
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok);
+
+/*
+ * Enumeration describing possible values of the [[Class]] internal property
+ * value of objects.
+ */
+enum ESClassValue { ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean };
+
+/*
+ * Return whether the given object has the given [[Class]] internal property
+ * value. Beware, this query says nothing about the js::Class of the JSObject
+ * so the caller must not assume anything about obj's representation (e.g., obj
+ * may be a proxy).
+ */
+inline bool
+ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
+
+}  /* namespace js */
 
 #endif /* jsobj_h___ */

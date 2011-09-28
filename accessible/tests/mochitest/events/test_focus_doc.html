@@ -7,8 +7,10 @@
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
-      src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
   <script type="application/javascript"
       src="../common.js"></script>
   <script type="application/javascript"
@@ -17,34 +19,10 @@
       src="../states.js"></script>
 
   <script type="application/javascript">
-
-    /**
-     * Focus invoker.
-     */
-    function takeFocus(aAcc)
-    {
-      this.DOMNode = aAcc; // xxx rename this expected property in events.js
-
-      this.invoke = function takeFocus_invoke()
-      {
-        this.DOMNode.takeFocus();
-      };
-
-      this.check = function takeFocus_check()
-      {
-        testStates(this.DOMNode, STATE_FOCUSABLE | STATE_FOCUSED);
-      };
-
-      this.getID = function takeFocus_getID() { return aAcc.name + " focus"; };
-    }
-
-
-    /**
-     * Do tests.
-     */
     var gQueue = null;
 
     //var gA11yEventDumpID = "eventdump";
+    //gA11yEventDumpToConsole = true;
 
     function doTests()
     {
@@ -54,14 +32,23 @@
       var frameDocAcc = getAccessible(frameDoc, [nsIAccessibleDocument]);
       var buttonAcc = getAccessible("b1");
 
+      var frame2Doc = document.getElementById("iframe2").contentDocument;
+      var frame2Input = frame2Doc.getElementById("input");
+      var frame2DocAcc = getAccessible(frame2Doc);
+      var frame2InputAcc = getAccessible(frame2Input);
+
       // Test focus events.
-      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
+      gQueue = new eventQueue();
 
       // try to give focus to contentEditable frame twice to cover bug 512059
-      gQueue.push(new takeFocus(buttonAcc));
-      gQueue.push(new takeFocus(frameDocAcc));
-      gQueue.push(new takeFocus(buttonAcc));
-      gQueue.push(new takeFocus(frameDocAcc));
+      gQueue.push(new synthFocus(buttonAcc));
+      gQueue.push(new synthTab(frameDocAcc, new focusChecker(frameDocAcc)));
+      gQueue.push(new synthFocus(buttonAcc));
+      gQueue.push(new synthTab(frameDocAcc, new focusChecker(frameDocAcc)));
+
+      // focus on not editable document
+      gQueue.push(new synthFocus(frame2InputAcc));
+      gQueue.push(new synthShiftTab(frame2DocAcc, new focusChecker(frame2DocAcc)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -83,6 +70,11 @@
      title="Accessibility focus event never fired for designMode document after the first focus">
     Mozilla Bug 512059
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=618046"
+     title="No focus change event when Shift+Tab at top of screen">
+    Mozilla Bug 618046
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -95,6 +87,7 @@
   <button id="b1">a button</button>
   <iframe id="iframe" src="about:blank"></iframe>
   <button id="b2">a button</button>
+  <iframe id="iframe2" src="data:text/html,<html><input id='input'></html>"></iframe>
   </div>
 </body>
 </html>

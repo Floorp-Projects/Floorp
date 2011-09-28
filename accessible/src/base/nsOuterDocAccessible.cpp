@@ -69,12 +69,6 @@ nsOuterDocAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_INTERNAL_FRAME;
 }
 
-PRUint64
-nsOuterDocAccessible::NativeState()
-{
-  return nsAccessible::NativeState() & ~states::FOCUSABLE;
-}
-
 nsAccessible*
 nsOuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    EWhichChildAtPoint aWhichChild)

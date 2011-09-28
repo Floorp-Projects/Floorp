@@ -157,9 +157,9 @@ SVGMotionSMILAnimationFunction::GetCalcMode() const
 static nsSVGMpathElement*
 GetFirstMpathChild(nsIContent* aElem)
 {
-  PRUint32 childCount = aElem->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent* child = aElem->GetChildAt(i);
+  for (nsIContent* child = aElem->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     if (child->Tag() == nsGkAtoms::mpath &&
         child->GetNameSpaceID() == kNameSpaceID_SVG) {
       return static_cast<nsSVGMpathElement*>(child);
