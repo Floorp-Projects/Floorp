@@ -42,8 +42,12 @@ MAKEFILES_crypto="
 MAKEFILES_sync="
   services/sync/Makefile
   services/sync/locales/Makefile
-  services/sync/tests/Makefile
   "
+
+if [ "$ENABLE_TESTS" ]; then
+  MAKEFILES_crypto="$MAKEFILES_crypto services/crypto/tests/Makefile"
+  MAKEFILES_sync="$MAKEFILES_sync services/sync/tests/Makefile"
+fi
 
 add_makefiles "
   services/Makefile
