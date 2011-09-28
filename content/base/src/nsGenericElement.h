@@ -780,7 +780,7 @@ protected:
    * needed for attachment of attribute-defined handlers
    */
   virtual nsEventListenerManager*
-    GetEventListenerManagerForAttr(PRBool* aDefer);
+    GetEventListenerManagerForAttr(nsIAtom* aAttrName, PRBool* aDefer);
 
   /**
    * Copy attributes and state to another element
