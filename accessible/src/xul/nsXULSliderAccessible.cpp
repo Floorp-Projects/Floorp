@@ -38,6 +38,7 @@
 
 #include "nsXULSliderAccessible.h"
 
+#include "nsAccessibilityService.h"
 #include "States.h"
 
 #include "nsIDOMDocument.h"
@@ -82,7 +83,7 @@ nsXULSliderAccessible::NativeState()
   if (frame && frame->IsFocusable())
     states |= states::FOCUSABLE;
 
-  if (gLastFocusedNode == mContent)
+  if (FocusMgr()->IsFocused(this))
     states |= states::FOCUSED;
 
   return states;

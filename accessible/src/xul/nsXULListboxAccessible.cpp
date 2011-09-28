@@ -44,11 +44,14 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 
-#include "nsIDOMXULPopupElement.h"
-#include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMNodeList.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIAutoCompleteInput.h"
+#include "nsIAutoCompletePopup.h"
+#include "nsIDOMXULMenuListElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULPopupElement.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 
 using namespace mozilla::a11y;
 
@@ -131,6 +134,13 @@ nsXULListboxAccessible::
   nsXULListboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsXULSelectableAccessible(aContent, aShell)
 {
+  nsIContent* parentContent = mContent->GetParent();
+  if (parentContent) {
+    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+      do_QueryInterface(parentContent);
+    if (autoCompletePopupElm)
+      mFlags |= eAutoCompletePopupAccessible;
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsXULListboxAccessible, nsXULSelectableAccessible)
@@ -826,6 +836,72 @@ nsXULListboxAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsXULListboxAccessible: Widgets
+
+bool
+nsXULListboxAccessible::IsWidget() const
+{
+  return true;
+}
+
+bool
+nsXULListboxAccessible::IsActiveWidget() const
+{
+  if (IsAutoCompletePopup()) {
+    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+      do_QueryInterface(mContent->GetParent());
+
+    if (autoCompletePopupElm) {
+      PRBool isOpen = PR_FALSE;
+      autoCompletePopupElm->GetPopupOpen(&isOpen);
+      return isOpen;
+    }
+  }
+  return FocusMgr()->HasDOMFocus(mContent);
+}
+
+bool
+nsXULListboxAccessible::AreItemsOperable() const
+{
+  if (IsAutoCompletePopup()) {
+    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+      do_QueryInterface(mContent->GetParent());
+
+    if (autoCompletePopupElm) {
+      PRBool isOpen = PR_FALSE;
+      autoCompletePopupElm->GetPopupOpen(&isOpen);
+      return isOpen;
+    }
+  }
+  return true;
+}
+
+nsAccessible*
+nsXULListboxAccessible::ContainerWidget() const
+{
+  if (IsAutoCompletePopup()) {
+    // This works for XUL autocompletes. It doesn't work for HTML forms
+    // autocomplete because of potential crossprocess calls (when autocomplete
+    // lives in content process while popup lives in chrome process). If that's
+    // a problem then rethink Widgets interface.
+    nsCOMPtr<nsIDOMXULMenuListElement> menuListElm =
+      do_QueryInterface(mContent->GetParent());
+    if (menuListElm) {
+      nsCOMPtr<nsIDOMNode> inputElm;
+      menuListElm->GetInputField(getter_AddRefs(inputElm));
+      if (inputElm) {
+        nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
+        if (inputNode) {
+          nsAccessible* input = GetAccService()->GetAccessible(inputNode);
+          return input ? input->ContainerWidget() : nsnull;
+        }
+      }
+    }
+  }
+  return nsnull;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsXULListitemAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -930,9 +1006,8 @@ nsXULListitemAccessible::NativeState()
     if (isSelected)
       states |= states::SELECTED;
 
-    if (gLastFocusedNode == mContent)
+    if (FocusMgr()->IsFocused(this))
       states |= states::FOCUSED;
-
   }
 
   return states;
@@ -967,6 +1042,15 @@ nsXULListitemAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 {
   nsAccUtils::GetPositionAndSizeForXULSelectControlItem(mContent, aPosInSet,
                                                         aSetSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListitemAccessible: Widgets
+
+nsAccessible*
+nsXULListitemAccessible::ContainerWidget() const
+{
+  return Parent();
 }
 
 

@@ -1242,7 +1242,7 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
                                    oldValueUnused);
   }
 
-  if (gLastFocusedNode == GetNode()) {
+  if (FocusMgr()->IsFocused(this)) {
     PRInt32 lineNumber = GetCaretLineNumber();
     if (lineNumber >= 1) {
       nsAutoString strLineNumber;
@@ -1628,13 +1628,9 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
 
   // No caret if the focused node is not inside this DOM node and this DOM node
   // is not inside of focused node.
-
-  nsINode* thisNode = GetNode();
-  PRBool isInsideOfFocusedNode =
-    nsCoreUtils::IsAncestorOf(gLastFocusedNode, thisNode);
-
-  if (!isInsideOfFocusedNode && thisNode != gLastFocusedNode &&
-      !nsCoreUtils::IsAncestorOf(thisNode, gLastFocusedNode))
+  FocusManager::FocusDisposition focusDisp =
+    FocusMgr()->IsInOrContainsFocus(this);
+  if (focusDisp == FocusManager::eNone)
     return NS_OK;
 
   // Turn the focus node and offset of the selection into caret hypretext
@@ -1655,10 +1651,11 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
   // No caret if this DOM node is inside of focused node but the selection's
   // focus point is not inside of this DOM node.
   nsCOMPtr<nsINode> focusNode(do_QueryInterface(focusDOMNode));
-  if (isInsideOfFocusedNode) {
+  if (focusDisp == FocusManager::eContainedByFocus) {
     nsINode *resultNode =
       nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
 
+    nsINode* thisNode = GetNode();
     if (resultNode != thisNode &&
         !nsCoreUtils::IsAncestorOf(thisNode, resultNode))
       return NS_OK;

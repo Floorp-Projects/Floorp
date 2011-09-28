@@ -108,11 +108,6 @@ public:
   nsRootAccessible* RootAccessible() const;
 
   /**
-   * Reference to a node of focused accessible.
-   */
-  static nsINode *gLastFocusedNode;
-
-  /**
    * Return focused node within accessible window.
    *
    * XXX: it shouldn't break us if we return focused node not depending on

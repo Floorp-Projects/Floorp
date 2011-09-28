@@ -105,6 +105,13 @@ public:
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
 
+  // Widgets
+  virtual bool IsWidget() const;
+  virtual bool IsActiveWidget() const;
+  virtual bool AreItemsOperable() const;
+
+  virtual nsAccessible* ContainerWidget() const;
+
 protected:
   PRBool IsMulticolumn();
 };
@@ -134,6 +141,9 @@ public:
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
   virtual PRBool GetAllowsAnonChildAccessibles();
+
+  // Widgets
+  virtual nsAccessible* ContainerWidget() const;
 
 protected:
   /**

@@ -44,6 +44,7 @@
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 
+#include "nsIAutoCompleteInput.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 
@@ -57,13 +58,17 @@ nsXULComboboxAccessible::
   nsXULComboboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsAccessibleWrap(aContent, aShell)
 {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::autocomplete, eIgnoreCase))
+    mFlags |= eAutoCompleteAccessible;
+  else
+    mFlags |= eComboboxAccessible;
 }
 
 PRUint32
 nsXULComboboxAccessible::NativeRole()
 {
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::autocomplete, eIgnoreCase))
+  if (IsAutoComplete())
     return nsIAccessibleRole::ROLE_AUTOCOMPLETE;
   return nsIAccessibleRole::ROLE_COMBOBOX;
 }
@@ -205,4 +210,49 @@ nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
     aName.AssignLiteral("open"); 
 
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Widgets
+
+bool
+nsXULComboboxAccessible::IsActiveWidget() const
+{
+  if (IsAutoComplete() ||
+     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
+                           nsGkAtoms::_true, eIgnoreCase)) {
+    PRInt32 childCount = mChildren.Length();
+    for (PRInt32 idx = 0; idx < childCount; idx++) {
+      nsAccessible* child = mChildren[idx];
+      if (child->Role() == nsIAccessibleRole::ROLE_ENTRY)
+        return FocusMgr()->HasDOMFocus(child->GetContent());
+    }
+    return false;
+  }
+
+  return FocusMgr()->HasDOMFocus(mContent);
+}
+
+bool
+nsXULComboboxAccessible::AreItemsOperable() const
+{
+  if (IsAutoComplete()) {
+    nsCOMPtr<nsIAutoCompleteInput> autoCompleteInputElm =
+      do_QueryInterface(mContent);
+    if (autoCompleteInputElm) {
+      PRBool isOpen = PR_FALSE;
+      autoCompleteInputElm->GetPopupOpen(&isOpen);
+      return isOpen;
+    }
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = do_QueryInterface(mContent);
+  if (menuListElm) {
+    PRBool isOpen = PR_FALSE;
+    menuListElm->GetOpen(&isOpen);
+    return isOpen;
+  }
+
+  return false;
 }

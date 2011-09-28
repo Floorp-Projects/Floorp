@@ -61,14 +61,11 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDocument.h"
 #include "nsEventListenerManager.h"
 #include "nsIFrame.h"
-#include "nsMenuFrame.h"
 #include "nsIHTMLDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISelectionPrivate.h"
@@ -86,7 +83,7 @@
 #include "nsIXULWindow.h"
 #endif
 
-using namespace mozilla;
+namespace dom = mozilla::dom;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -223,9 +220,6 @@ const char* const docEvents[] = {
   // debugging a11y objects with event viewers
   "mouseover",
 #endif
-  // capture DOM focus and DOM blur events 
-  "focus",
-  "blur",
   // capture Form change events 
   "select",
   // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
@@ -246,6 +240,7 @@ const char* const docEvents[] = {
   "popuphiding",
   "DOMMenuInactive",
   "DOMMenuItemActive",
+  "DOMMenuItemInactive",
   "DOMMenuBarActive",
   "DOMMenuBarInactive"
 };
@@ -306,125 +301,6 @@ nsCaretAccessible*
 nsRootAccessible::GetCaretAccessible()
 {
   return mCaretAccessible;
-}
-
-void
-nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
-                                           nsIContent* aRealFocusContent,
-                                           PRBool aForceEvent,
-                                           EIsFromUserInput aIsFromUserInput)
-{
-  // Implementors: only fire delayed/async events from this method.
-
-  // Set selection listener for focused element.
-  if (mCaretAccessible && aRealFocusContent)
-    mCaretAccessible->SetControlSelectionListener(aRealFocusContent);
-
-  nsAccessible* focusAccessible = aFocusAccessible;
-
-  // Check for aria-activedescendant, which changes which element has focus.
-  // For activedescendant, the ARIA spec does not require that the user agent
-  // checks whether pointed node is actually a DOM descendant of the element
-  // with the aria-activedescendant attribute.
-  nsIContent* content = focusAccessible->GetContent();
-  if (content) {
-    nsAutoString id;
-    if (content->GetAttr(kNameSpaceID_None,
-                         nsGkAtoms::aria_activedescendant, id)) {
-      nsIDocument* DOMDoc = content->GetOwnerDoc();
-      nsIContent* activeDescendantContent = DOMDoc->GetElementById(id);
-
-      // If aria-activedescendant is set to nonexistant ID, then treat as focus
-      // on the activedescendant container (which has real DOM focus).
-      if (activeDescendantContent) {
-        nsAccessible* activeDescendant = 
-          GetAccService()->GetAccessible(activeDescendantContent);
-        if (activeDescendant) {
-          focusAccessible = activeDescendant;
-        }
-      }
-    }
-  }
-
-  // Fire focus only if it changes, but always fire focus events when
-  // aForceEvent == PR_TRUE
-  nsINode* focusNode = focusAccessible->GetNode();
-  if (gLastFocusedNode == focusNode && !aForceEvent)
-    return;
-
-  nsDocAccessible* focusDocument = focusAccessible->GetDocAccessible();
-  NS_ASSERTION(focusDocument, "No document while accessible is in document?!");
-
-  // Fire menu start/end events for ARIA menus.
-  if (focusAccessible->ARIARole() == nsIAccessibleRole::ROLE_MENUITEM) {
-    // The focus is inside a menu.
-    if (!mCurrentARIAMenubar) {
-      // Entering ARIA menu. Fire menu start event.
-      nsAccessible* menuBarAccessible =
-        nsAccUtils::GetAncestorWithRole(focusAccessible,
-                                        nsIAccessibleRole::ROLE_MENUBAR);
-      if (menuBarAccessible) {
-        mCurrentARIAMenubar = menuBarAccessible->GetNode();
-        if (mCurrentARIAMenubar) {
-          nsRefPtr<AccEvent> menuStartEvent =
-            new AccEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                         menuBarAccessible, aIsFromUserInput,
-                         AccEvent::eAllowDupes);
-          if (menuStartEvent)
-            focusDocument->FireDelayedAccessibleEvent(menuStartEvent);
-        }
-      }
-    }
-  }
-  else if (mCurrentARIAMenubar) {
-    // Focus left a menu. Fire menu end event.
-    nsRefPtr<AccEvent> menuEndEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar,
-                   aIsFromUserInput, AccEvent::eAllowDupes);
-    if (menuEndEvent) {
-      focusDocument->FireDelayedAccessibleEvent(menuEndEvent);
-    }
-    mCurrentARIAMenubar = nsnull;
-  }
-
-  NS_IF_RELEASE(gLastFocusedNode);
-  gLastFocusedNode = focusNode;
-  NS_IF_ADDREF(gLastFocusedNode);
-
-  // Coalesce focus events from the same document, because DOM focus event might
-  // be fired for the document node and then for the focused DOM element.
-  nsRefPtr<AccEvent> focusEvent =
-    new AccEvent(nsIAccessibleEvent::EVENT_FOCUS, focusAccessible,
-                 aIsFromUserInput, AccEvent::eCoalesceFromSameDocument);
-  focusDocument->FireDelayedAccessibleEvent(focusEvent);
-}
-
-void
-nsRootAccessible::FireCurrentFocusEvent()
-{
-  if (IsDefunct())
-    return;
-
-  // Simulate a focus event so that we can reuse code that fires focus for
-  // container children like treeitems.
-  nsCOMPtr<nsINode> focusedNode = GetCurrentFocus();
-  if (!focusedNode) {
-    return; // No current focus
-  }
-
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-  if (domDoc) {
-    nsCOMPtr<nsIDOMEvent> event;
-    if (NS_SUCCEEDED(domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                                         getter_AddRefs(event))) &&
-        NS_SUCCEEDED(event->InitEvent(NS_LITERAL_STRING("focus"), PR_TRUE, PR_TRUE))) {
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(focusedNode));
-      privateEvent->SetTarget(target);
-      HandleEvent(event);
-    }
-  }
 }
 
 void
@@ -497,14 +373,13 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   if (!weakShell)
     return;
 
-  nsAccessible* accessible =
-    GetAccService()->GetAccessibleOrContainer(origTargetNode, weakShell);
-
   if (eventType.EqualsLiteral("popuphiding")) {
-    HandlePopupHidingEvent(origTargetNode, accessible);
+    HandlePopupHidingEvent(origTargetNode);
     return;
   }
 
+  nsAccessible* accessible =
+    GetAccService()->GetAccessibleOrContainer(origTargetNode, weakShell);
   if (!accessible)
     return;
 
@@ -559,8 +434,10 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
       new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
     nsEventShell::FireEvent(accEvent);
 
-    if (isEnabled)
-      FireAccessibleFocusEvent(accessible, origTargetContent);
+    if (isEnabled) {
+      FocusMgr()->ActiveItemChanged(accessible);
+      A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("RadioStateChange", accessible)
+    }
 
     return;
   }
@@ -581,20 +458,9 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
   if (isTree) {
-    nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-      do_QueryInterface(targetNode);
-    if (multiSelect) {
-      PRInt32 treeIndex = -1;
-      multiSelect->GetCurrentIndex(&treeIndex);
-      if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
-        if (treeAcc) {
-          treeItemAccessible = treeAcc->GetTreeItemAccessible(treeIndex);
-          if (treeItemAccessible)
-            accessible = treeItemAccessible;
-        }
-      }
-    }
+    treeItemAccessible = accessible->CurrentItem();
+    if (treeItemAccessible)
+      accessible = treeItemAccessible;
   }
 #endif
 
@@ -611,7 +477,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
   if (treeItemAccessible && eventType.EqualsLiteral("select")) {
     // If multiselect tree, we should fire selectionadd or selection removed
-    if (gLastFocusedNode == targetNode) {
+    if (FocusMgr()->HasDOMFocus(targetNode)) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =
         do_QueryInterface(targetNode);
       nsAutoString selType;
@@ -633,41 +499,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
   else
 #endif
-  if (eventType.EqualsLiteral("focus")) {
-    // Keep a reference to the target node. We might want to change
-    // it to the individual radio button or selected item, and send
-    // the focus event to that.
-    nsCOMPtr<nsINode> focusedItem = targetNode;
-    if (!treeItemAccessible) {
-      nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
-        do_QueryInterface(targetNode);
-      if (selectControl) {
-        nsCOMPtr<nsIDOMXULMenuListElement> menuList =
-          do_QueryInterface(targetNode);
-        if (!menuList) {
-          // Don't do this for menu lists, the items only get focused
-          // when the list is open, based on DOMMenuitemActive events
-          nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
-          selectControl->GetSelectedItem(getter_AddRefs(selectedItem));
-          if (selectedItem)
-            focusedItem = do_QueryInterface(selectedItem);
-
-          if (!focusedItem)
-            return;
-
-          accessible = GetAccService()->GetAccessibleInWeakShell(focusedItem,
-                                                                 weakShell);
-          if (!accessible)
-            return;
-        }
-      }
-    }
-    FireAccessibleFocusEvent(accessible, origTargetContent);
-  }
-  else if (eventType.EqualsLiteral("blur")) {
-    NS_IF_RELEASE(gLastFocusedNode);
-  }
-  else if (eventType.EqualsLiteral("AlertActive")) { 
+  if (eventType.EqualsLiteral("AlertActive")) {
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
   }
   else if (eventType.EqualsLiteral("popupshown")) {
@@ -680,70 +512,43 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     }
   }
   else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
-    PRBool fireFocus = PR_FALSE;
-    if (!treeItemAccessible) {
-#ifdef MOZ_XUL
-      if (isTree) {
-        return; // Tree with nothing selected
-      }
-#endif
-
-      nsMenuFrame* menuFrame = do_QueryFrame(accessible->GetFrame());
-      if (menuFrame)
-        fireFocus = PR_TRUE;
-      // QI failed for nsMenuFrame means it's not on menu bar
-      if (menuFrame && menuFrame->IsOnMenuBar() &&
-                       !menuFrame->IsOnActiveMenuBar()) {
-        // It is a top level menuitem. Only fire a focus event when the menu bar
-        // is active.
-        return;
-      } else {
-        nsAccessible* container = accessible->Parent();
-        if (!container)
-          return;
-        // It is not top level menuitem
-        // Only fire focus event if it is not inside collapsed popup
-        // and not a listitem of a combo box
-        if (container->State() & states::COLLAPSED) {
-          nsAccessible* containerParent = container->Parent();
-          if (!containerParent)
-            return;
-          if (containerParent->Role() != nsIAccessibleRole::ROLE_COMBOBOX) {
-            return;
-          }
-        }
-      }
-    }
-    if (!fireFocus) {
-      nsCOMPtr<nsINode> realFocusedNode = GetCurrentFocus();
-      nsIContent* realFocusedContent =
-        realFocusedNode->IsElement() ? realFocusedNode->AsElement() : nsnull;
-      nsIContent* containerContent = targetContent;
-      while (containerContent) {
-        nsCOMPtr<nsIDOMXULPopupElement> popup = do_QueryInterface(containerContent);
-        if (popup || containerContent == realFocusedContent) { 
-          // If we're inside the focus or a popup we can fire focus events
-          // for the changed active item
-          fireFocus = PR_TRUE;
-          break;
-        }
-        containerContent = containerContent->GetParent();
-      }
-    }
-    if (fireFocus) {
-      // Always asynch, always from user input.
-      FireAccessibleFocusEvent(accessible, origTargetContent, PR_TRUE,
-                               eFromUserInput);
+    FocusMgr()->ActiveItemChanged(accessible);
+    A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("DOMMenuItemActive", accessible)
+  }
+  else if (eventType.EqualsLiteral("DOMMenuItemInactive")) {
+    // Process DOMMenuItemInactive event for autocomplete only because this is
+    // unique widget that may acquire focus from autocomplete popup while popup
+    // stays open and has no active item. In case of XUL tree autocomplete
+    // popup this event is fired for tree accessible.
+    nsAccessible* widget =
+      accessible->IsWidget() ? accessible : accessible->ContainerWidget();
+    if (widget && widget->IsAutoCompletePopup()) {
+      FocusMgr()->ActiveItemChanged(nsnull);
+      A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("DOMMenuItemInactive", accessible)
     }
   }
   else if (eventType.EqualsLiteral("DOMMenuBarActive")) {  // Always from user input
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_START,
                             accessible, eFromUserInput);
+
+    // Notify of active item change when menubar gets active and if it has
+    // current item. This is a case of mouseover (set current menuitem) and
+    // mouse click (activate the menubar). If menubar doesn't have current item
+    // (can be a case of menubar activation from keyboard) then ignore this
+    // notification because later we'll receive DOMMenuItemActive event after
+    // current menuitem is set.
+    nsAccessible* activeItem = accessible->CurrentItem();
+    if (activeItem) {
+      FocusMgr()->ActiveItemChanged(activeItem);
+      A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("DOMMenuBarActive", accessible)
+    }
   }
   else if (eventType.EqualsLiteral("DOMMenuBarInactive")) {  // Always from user input
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_END,
                             accessible, eFromUserInput);
-    FireCurrentFocusEvent();
+
+    FocusMgr()->ActiveItemChanged(nsnull);
+    A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("DOMMenuBarInactive", accessible)
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
     targetDocument->
@@ -768,8 +573,6 @@ nsRootAccessible::Shutdown()
   // Called manually or by nsAccessNode::LastRelease()
   if (!mWeakShell)
     return;  // Already shutdown
-
-  mCurrentARIAMenubar = nsnull;
 
   nsDocAccessibleWrap::Shutdown();
 }
@@ -886,37 +689,106 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible* aAccessible)
 }
 
 void
-nsRootAccessible::HandlePopupHidingEvent(nsINode* aNode,
-                                         nsAccessible* aAccessible)
+nsRootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
 {
-  // If accessible focus was on or inside popup that closes, then restore it
-  // to true current focus. This is the case when we've been getting
-  // DOMMenuItemActive events inside of a combo box that closes. The real focus
-  // is on the combo box. It's also the case when a popup gets focus in ATK --
-  // when it closes we need to fire an event to restore focus to where it was.
+  // Get popup accessible. There are cases when popup element isn't accessible
+  // but an underlying widget is and behaves like popup, an example is
+  // autocomplete popups.
+  nsDocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
+  if (!document)
+    return;
 
-  if (gLastFocusedNode &&
-      nsCoreUtils::IsAncestorOf(aNode, gLastFocusedNode)) {
-    // Focus was on or inside of a popup that's being hidden
-    FireCurrentFocusEvent();
+  nsAccessible* popup = document->GetAccessible(aPopupNode);
+  if (!popup) {
+    nsAccessible* popupContainer = document->GetContainerAccessible(aPopupNode);
+    if (!popupContainer)
+      return;
+
+    PRInt32 childCount = popupContainer->GetChildCount();
+    for (PRInt32 idx = 0; idx < childCount; idx++) {
+      nsAccessible* child = popupContainer->GetChildAt(idx);
+      if (child->IsAutoCompletePopup()) {
+        popup = child;
+        break;
+      }
+    }
+
+    // No popup no events. Focus is managed by DOM. This is a case for
+    // menupopups of menus on Linux since there are no accessible for popups.
+    if (!popup)
+      return;
   }
 
-  // Fire expanded state change event for comboboxes and autocompletes.
-  if (!aAccessible ||
-      aAccessible->Role() != nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-    return;
+  // In case of autocompletes and comboboxes fire state change event for
+  // expanded state. Note, HTML form autocomplete isn't a subject of state
+  // change event because they aren't autocompletes strictly speaking.
+  // When popup closes (except nested popups and menus) then fire focus event to
+  // where it was. The focus event is expected even if popup didn't take a focus.
 
-  nsAccessible* combobox = aAccessible->Parent();
-  if (!combobox)
-    return;
+  static const PRUint32 kNotifyOfFocus = 1;
+  static const PRUint32 kNotifyOfState = 2;
+  PRUint32 notifyOf = 0;
 
-  PRUint32 comboboxRole = combobox->Role();
-  if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
-      comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
+  // HTML select is target of popuphidding event. Otherwise get container
+  // widget. No container widget means this is either tooltip or menupopup.
+  // No events in the former case.
+  nsAccessible* widget = nsnull;
+  if (popup->IsCombobox()) {
+    widget = popup;
+  } else {
+    widget = popup->ContainerWidget();
+    if (!widget) {
+      if (!popup->IsMenuPopup())
+        return;
+
+      widget = popup;
+    }
+  }
+
+  if (popup->IsAutoCompletePopup()) {
+    // No focus event for autocomplete because it's managed by
+    // DOMMenuItemInactive events.
+    if (widget->IsAutoComplete())
+      notifyOf = kNotifyOfState;
+
+  } else if (widget->IsCombobox()) {
+    // Fire focus for active combobox, otherwise the focus is managed by DOM
+    // focus notifications. Always fire state change event.
+    if (widget->IsActiveWidget())
+      notifyOf = kNotifyOfFocus;
+    notifyOf |= kNotifyOfState;
+
+  } else if (widget->IsMenuButton()) {
+    // Can be a part of autocomplete.
+    nsAccessible* compositeWidget = widget->ContainerWidget();
+    if (compositeWidget && compositeWidget->IsAutoComplete()) {
+      widget = compositeWidget;
+      notifyOf = kNotifyOfState;
+    }
+
+    // Autocomplete (like searchbar) can be inactive when popup hiddens
+    notifyOf |= kNotifyOfFocus;
+
+  } else if (widget == popup) {
+    // Top level context menus and alerts.
+    // Ignore submenus and menubar. When submenu is closed then sumbenu
+    // container menuitem takes a focus via DOMMenuItemActive notification.
+    // For menubars processing we listen DOMMenubarActive/Inactive
+    // notifications.
+    notifyOf = kNotifyOfFocus;
+  }
+
+  // Restore focus to where it was.
+  if (notifyOf & kNotifyOfFocus) {
+    FocusMgr()->ActiveItemChanged(nsnull);
+    A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("popuphiding", popup)
+  }
+
+  // Fire expanded state change event.
+  if (notifyOf & kNotifyOfState) {
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(combobox, states::EXPANDED, PR_FALSE);
-    if (event)
-      nsEventShell::FireEvent(event);
+      new AccStateChangeEvent(widget, states::EXPANDED, PR_FALSE);
+    document->FireDelayedAccessibleEvent(event);
   }
 }
 

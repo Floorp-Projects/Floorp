@@ -1241,7 +1241,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
         g_signal_emit(atkObj, id, 0);
 
         // Always fire a current focus event after activation.
-        rootAcc->FireCurrentFocusEvent();
+        FocusMgr()->ForceFocusEvent();
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:

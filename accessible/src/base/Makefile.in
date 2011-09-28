@@ -53,6 +53,7 @@ CPPSRCS = \
   AccGroupInfo.cpp \
   AccIterator.cpp \
   filters.cpp \
+  FocusManager.cpp \
   NotificationController.cpp \
   nsAccDocManager.cpp \
   nsAccessNode.cpp \
@@ -89,6 +90,7 @@ EXPORTS = \
 EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
+  FocusManager.h \
   States.h \
   $(NULL)
 
