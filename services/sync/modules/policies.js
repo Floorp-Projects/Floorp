@@ -206,8 +206,13 @@ let SyncScheduler = {
          Svc.Idle.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
          break;
       case "weave:service:start-over":
-         Svc.Idle.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
          SyncScheduler.setDefaults();
+         try {
+           Svc.Idle.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+         } catch (ex if (ex.result == Cr.NS_ERROR_FAILURE)) {
+           // In all likelihood we didn't have an idle observer registered yet.
+           // It's all good.
+         }
          break;
       case "idle":
         this._log.trace("We're idle.");
