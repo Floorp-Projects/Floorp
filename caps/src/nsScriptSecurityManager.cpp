@@ -2974,7 +2974,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const nsACString& certFingerprin
         rv = systemCertZip->Open(systemCertFile);
         if (NS_SUCCEEDED(rv))
         {
-            rv = systemCertZip->GetCertificatePrincipal(nsnull,
+            rv = systemCertZip->GetCertificatePrincipal(EmptyCString(),
                                                         getter_AddRefs(mSystemCertificate));
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         }

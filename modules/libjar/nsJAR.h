@@ -147,7 +147,7 @@ class nsJAR : public nsIZipReader
 
     nsresult ParseManifest();
     void     ReportError(const char* aFilename, PRInt16 errorCode);
-    nsresult LoadEntry(const char* aFilename, char** aBuf, 
+    nsresult LoadEntry(const nsACString &aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
     nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType);
