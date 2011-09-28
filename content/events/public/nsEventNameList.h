@@ -78,6 +78,9 @@
  * Event names that are not exposed as IDL attributes at all should be
  * enclosed in NON_IDL_EVENT.  If NON_IDL_EVENT is not defined, it
  * will be defined to the empty string.
+ *
+ * If you change which macros event names are enclosed in, please
+ * update the tests for bug 689564 and bug 659350 as needed.
  */
 
 #ifdef DEFINED_FORWARDED_EVENT
