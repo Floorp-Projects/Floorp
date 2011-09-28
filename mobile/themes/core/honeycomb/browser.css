@@ -409,6 +409,10 @@ toolbarbutton.urlbar-button {
   border: @border_width_small@ solid @color_url_border@;
   -moz-border-radius: 100%;
 }
+ 
+#tool-back2 image {
+  -moz-margin-end: 0;
+}
 
 #tool-forward2 {
   margin: 0px;
@@ -548,12 +552,27 @@ remotetabslist[message] > .remotetabs-list-children {
 /* browser tools panel UI   ------------------------------------------------ */
 .panel-header {
   margin: 0;
-  padding: @padding_small@ @padding_normal@ @padding_normal@ @padding_normal@;
-  font-weight: bold;
-  background-color: @color_background_header@;
-  color: @color_text_header@ !important;
-  background-repeat: repeat-x;
-  background-size: auto 100%;
+  padding: @padding_small@ @padding_normal@ @padding_xlarge@ @padding_normal@;
+  border-bottom: @border_width_tiny@ solid @color_text_default@;
+  background-color: transparent;
+  color: @color_text_panel_header@ !important;
+  font-size: @font_snormal@;
+}
+
+.panel-listitem {
+  padding-top: @padding_xxxnormal@;
+  padding-bottom: @padding_tiny@;
+  -moz-padding-start: @padding_xlarge@; 
+  -moz-padding-end: 0;
+}
+
+.panel-listitem:not([class="section-header"])[selected="true"] {
+  background-color: @color_background_settings@;
+}
+
+.panel-listitem label.normal,
+.panel-listitem description.normal {
+  color: @color_subtext_settings@;
 }
 
 #tool-addons {
@@ -583,6 +602,10 @@ remotetabslist[message] > .remotetabs-list-children {
 }
 
 /* addons panel UI   ------------------------------------------------------- */
+#addons-list .addon-options {
+  -moz-margin-start: @margin_xlarge@;
+}
+
 #addons-repo {
   -moz-box-orient: horizontal;
   -moz-box-align: center;
@@ -600,8 +623,7 @@ remotetabslist[message] > .remotetabs-list-children {
   list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
   width: 32px;
   height: 32px;
-  -moz-margin-start: @margin_normal@;
-  -moz-margin-end: @margin_normal@;
+  -moz-margin-end: @margin_xxxnormal@;
 }
 
 .addon-rating[rating] {
@@ -643,16 +665,11 @@ remotetabslist[message] > .remotetabs-list-children {
   -moz-margin-end: @margin_normal@;
 }
 
-richlistitem[isDisabled="true"] .title,
-richlistitem[isDisabled="true"] .normal {
-  color: @color_text_disabled@;
-}
-
-richlistitem[isDisabled="true"] image {
-  opacity: 0.25;
-}
-
 /* downloads panel UI   ---------------------------------------------------- */
+#downloads-list image {
+  -moz-margin-end: @margin_xxxnormal@;
+}
+
 .download-retry-failed {
   color: red !important;
   display: none;
@@ -667,10 +684,11 @@ richlistitem[isDisabled="true"] image {
   margin-top: -moz-calc(2 * @touch_row@); /* 2 times row height */
   font-style: italic;
   border-bottom: none;
+  background-color: @color_background_settings@;
 }
 
 #dl-empty-message:active {
-  background-color: @color_background_default@;
+  background-color: @color_background_settings@;
 }
 
 #dl-empty-message > label {
@@ -1409,28 +1427,43 @@ pageaction:not([image]) > hbox >.pageaction-image {
 /* Preferences window   ---------------------------------------------------- */
 .settings-title {
   min-height: 0;
-  color: @color_text_header@;
-  background-color: @color_background_header@;
-  font-size: smaller;
+  color: @color_text_panel_subheader@;
+  background-color: @color_background_button@;
+  font-size: @font_xtiny@;
   font-weight: bold;
   margin: 0;
-  padding: @autocompleteresult_padding@ @padding_xnormal@;
-  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+  padding: @padding_xxnormal@ @padding_large@;
+  border-top: @border_width_tiny@ solid @color_background_settings@;
+  border-bottom: @border_width_large@ solid;
+  -moz-border-bottom-colors: @color_background_button@ @color_background_settings@; 
 }
 
 .setting {
-  padding-left: @padding_xnormal@;
-  border-bottom: @border_width_tiny@ solid #cacdd5;
+  -moz-padding-start: @padding_xxlarge@;
+  border-bottom: @border_width_tiny@ solid @color_background_button@;
 }
 
 setting {
   padding: @padding_xsmall@;
-  border-bottom: @border_width_tiny@ solid @color_divider_border@;
+  -moz-padding-start: @padding_xxlarge@;
+  border-bottom: @border_width_tiny@ solid @color_background_button@;
   min-height: @touch_row@; /* row size */
   -moz-box-align: center;
   -moz-box-orient: horizontal;
 }
 
+setting:hover:active {
+  background-color: @color_background_highlight@;
+}
+
+setting[type="bool"]:hover:active .setting-input > checkbox > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/check-unselected-tap-hdpi.png");
+}
+
+setting[type="bool"]:hover:active .setting-input > checkbox[checked="true"] > .checkbox-spacer-box > .checkbox-check {
+  background-image: url("chrome://browser/skin/images/check-selected-tap-hdpi.png");
+}
+ 
 .setting-label {
   -moz-box-flex: 1;
 }
@@ -1464,7 +1497,7 @@ setting {
 }
 
 .options-box {
-  -moz-margin-start: 28px;  /* sized based on the 32px addon image */
+  -moz-margin-start: @margin_xlarge@;
 }
 
 .options-box > setting:last-child {
@@ -1473,13 +1506,13 @@ setting {
 
 /* XXX should be a richlistitem description.title */
 .preferences-title {
-  font-size: @font_normal@ !important;
+  font-size: @font_snormal@ !important;
 }
 
 /* XXX should be a richlistitem description.normal */
 .preferences-description {
-  font-size: @font_small@ !important;
-  color: @color_subtext_default@;
+  font-size: @font_xtiny@ !important;
+  color: @color_subtext_settings@;
 }
 
 /* alerts popup ----------------------------------------------------------- */
@@ -1664,10 +1697,6 @@ setting {
   border-top: @border_width_tiny@ solid @color_button_border@;
   border-bottom: none;
   background-color: transparent;
-}
-
-#appmenu-popup-appcommands richlistitem:hover:active {
-  background-color: @color_background_highlight_overlay@;
 }
 
 #appmenu-popup-sitecommands {
