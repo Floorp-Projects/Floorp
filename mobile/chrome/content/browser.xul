@@ -253,6 +253,7 @@
                              placeholder="&urlbar.emptytext;"
                              collapsed="true"
                              flex="1"
+                             delaybinding="true"
                              readonly="true"
                              ontextentered="BrowserUI.goToURI();"
                              clickSelectsAll="true"/>
