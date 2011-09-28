@@ -199,8 +199,6 @@ JSString * JS_FASTCALL TypeOf(VMFrame &f);
 JSBool JS_FASTCALL InstanceOf(VMFrame &f);
 void JS_FASTCALL FastInstanceOf(VMFrame &f);
 void JS_FASTCALL ArgCnt(VMFrame &f);
-void JS_FASTCALL Unbrand(VMFrame &f);
-void JS_FASTCALL UnbrandThis(VMFrame &f);
 
 /*
  * Helper for triggering recompilation should a name read miss a type barrier,

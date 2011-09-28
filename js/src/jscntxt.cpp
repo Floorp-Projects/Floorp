@@ -1604,6 +1604,8 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_TRACER
+    traceJitEnabled = false;
+    /*
     traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
                        !IsJITBrokenHere() &&
                        compartment &&
@@ -1611,6 +1613,7 @@ JSContext::updateJITEnabled()
                        (debugHooks == &js_NullDebugHooks ||
                         (debugHooks == &runtime->globalDebugHooks &&
                          !runtime->debuggerInhibitsJIT())));
+    */
 #endif
 #ifdef JS_METHODJIT
     methodJitEnabled = (runOptions & JSOPTION_METHODJIT) &&

@@ -251,11 +251,6 @@ typedef Vector<PropDesc, 1> PropDescArray;
 
 } /* namespace js */
 
-enum {
-    INVALID_SHAPE = 0x8fffffff,
-    SHAPELESS = 0xffffffff
-};
-
 /*
  * On success, and if id was found, return true with *objp non-null and with a
  * property of *objp stored in *propp. If successful but id was not found,
@@ -450,6 +445,10 @@ struct JSObject : js::gc::Cell {
     friend class js::TraceRecorder;
     friend class nanojit::ValidateWriter;
 
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
+
     /*
      * Private pointer to the last added property and methods to manipulate the
      * list it links among properties in this scope.
@@ -482,14 +481,8 @@ struct JSObject : js::gc::Cell {
         DELEGATE                  =       0x01,
         SYSTEM                    =       0x02,
         NOT_EXTENSIBLE            =       0x04,
-        BRANDED                   =       0x08,
         GENERIC                   =       0x10,
-        METHOD_BARRIER            =       0x20,
         INDEXED                   =       0x40,
-        OWN_SHAPE                 =       0x80,
-        METHOD_THRASH_COUNT_MASK  =      0x300,
-        METHOD_THRASH_COUNT_SHIFT =          8,
-        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
         BOUND_FUNCTION            =      0x400,
         HAS_EQUALITY              =      0x800,
         VAROBJ                    =     0x1000,
@@ -503,7 +496,7 @@ struct JSObject : js::gc::Cell {
         FIXED_SLOTS_SHIFT         =         27,
         FIXED_SLOTS_MASK          =       0x1f << FIXED_SLOTS_SHIFT,
 
-        UNUSED_FLAG_BITS          = 0x07FC0000
+        UNUSED_FLAG_BITS          = 0x07FC30A0
     };
 
     /*
@@ -516,7 +509,6 @@ struct JSObject : js::gc::Cell {
     };
 
     uint32      flags;                      /* flags */
-    uint32      objShape;                   /* copy of lastProp->shape, or override if different */
 
     union {
         /* If prototype, type of values using this as their prototype. */
@@ -567,11 +559,6 @@ struct JSObject : js::gc::Cell {
     inline void trace(JSTracer *trc);
     inline void scanSlots(js::GCMarker *gcmarker);
 
-    uint32 shape() const {
-        JS_ASSERT(objShape != INVALID_SHAPE);
-        return objShape;
-    }
-
     bool isDelegate() const     { return !!(flags & DELEGATE); }
     void setDelegate()          { flags |= DELEGATE; }
     void clearDelegate()        { flags &= ~DELEGATE; }
@@ -586,32 +573,8 @@ struct JSObject : js::gc::Cell {
     bool isSystem() const       { return !!(flags & SYSTEM); }
     void setSystem()            { flags |= SYSTEM; }
 
-    /*
-     * A branded object contains plain old methods (function-valued properties
-     * without magic getters and setters), and its shape evolves whenever a
-     * function value changes.
-     */
-    bool branded()              { return !!(flags & BRANDED); }
-
-    /*
-     * NB: these return false on shape overflow but do not report any error.
-     * Callers who depend on shape guarantees should therefore bail off trace,
-     * e.g., on false returns.
-     */
-    bool brand(JSContext *cx);
-    bool unbrand(JSContext *cx);
-
     bool generic()              { return !!(flags & GENERIC); }
     void setGeneric()           { flags |= GENERIC; }
-
-    uintN getMethodThrashCount() const {
-        return (flags & METHOD_THRASH_COUNT_MASK) >> METHOD_THRASH_COUNT_SHIFT;
-    }
-
-    void setMethodThrashCount(uintN count) {
-        JS_ASSERT(count <= METHOD_THRASH_COUNT_MAX);
-        flags = (flags & ~METHOD_THRASH_COUNT_MASK) | (count << METHOD_THRASH_COUNT_SHIFT);
-    }
 
     bool hasSpecialEquality() const { return !!(flags & HAS_EQUALITY); }
     void assertSpecialEqualitySynced() const {
@@ -623,98 +586,37 @@ struct JSObject : js::gc::Cell {
 
     bool watched() const { return !!(flags & WATCHED); }
 
-    void setWatched(JSContext *cx) {
+    bool setWatched(JSContext *cx) {
         if (!watched()) {
             flags |= WATCHED;
-            generateOwnShape(cx);
+            return generateOwnShape(cx);
         }
+        return true;
     }
 
    /* See StackFrame::varObj. */
    inline bool isVarObj() const { return flags & VAROBJ; }
    inline void makeVarObj() { flags |= VAROBJ; }
   private:
-    void generateOwnShape(JSContext *cx);
-
-    inline void setOwnShape(uint32 s);
-    inline void clearOwnShape();
+    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
 
   public:
     inline bool nativeEmpty() const;
-
-    bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
-
     inline void setMap(js::Shape *amap);
 
-    inline void setSharedNonNativeMap();
-
     /* Functions for setting up scope chain object maps and shapes. */
-    void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
-    void initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *priv);
+    bool initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
+    bool initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *priv);
     void setBlockOwnShape(JSContext *cx);
 
-    void deletingShapeChange(JSContext *cx, const js::Shape &shape);
     const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
-    bool methodShapeChange(JSContext *cx, uint32 slot);
-    void protoShapeChange(JSContext *cx);
-    void shadowingShapeChange(JSContext *cx, const js::Shape &shape);
-    bool globalObjectOwnShapeChange(JSContext *cx);
+    bool protoShapeChange(JSContext *cx);
+    bool shadowingShapeChange(JSContext *cx, const js::Shape &shape);
 
-    void extensibleShapeChange(JSContext *cx) {
+    bool extensibleShapeChange(JSContext *cx) {
         /* This will do for now. */
-        generateOwnShape(cx);
+        return generateOwnShape(cx);
     }
-
-    /*
-     * A scope has a method barrier when some compiler-created "null closure"
-     * function objects (functions that do not use lexical bindings above their
-     * scope, only free variable names) that have a correct JSSLOT_PARENT value
-     * thanks to the COMPILE_N_GO optimization are stored as newly added direct
-     * property values of the scope's object.
-     *
-     * The de-facto standard JS language requires each evaluation of such a
-     * closure to result in a unique (according to === and observable effects)
-     * function object. ES3 tried to allow implementations to "join" such
-     * objects to a single compiler-created object, but this makes an overt
-     * mutation hazard, also an "identity hazard" against interoperation among
-     * implementations that join and do not join.
-     *
-     * To stay compatible with the de-facto standard, we store the compiler-
-     * created function object as the method value and set the METHOD_BARRIER
-     * flag.
-     *
-     * The method value is part of the method property tree node's identity, so
-     * it effectively  brands the scope with a predictable shape corresponding
-     * to the method value, but without the overhead of setting the BRANDED
-     * flag, which requires assigning a new shape peculiar to each branded
-     * scope. Instead the shape is shared via the property tree among all the
-     * scopes referencing the method property tree node.
-     *
-     * Then when reading from a scope for which scope->hasMethodBarrier() is
-     * true, we count on the scope's qualified/guarded shape being unique and
-     * add a read barrier that clones the compiler-created function object on
-     * demand, reshaping the scope.
-     *
-     * This read barrier is bypassed when evaluating the callee sub-expression
-     * of a call expression (see the JOF_CALLOP opcodes in jsopcode.tbl), since
-     * such ops do not present an identity or mutation hazard. The compiler
-     * performs this optimization only for null closures that do not use their
-     * own name or equivalent built-in references (arguments.callee).
-     *
-     * The BRANDED write barrier, JSObject::methodWriteBarrer, must check for
-     * METHOD_BARRIER too, and regenerate this scope's shape if the method's
-     * value is in fact changing.
-     */
-    bool hasMethodBarrier()     { return !!(flags & METHOD_BARRIER); }
-    void setMethodBarrier()     { flags |= METHOD_BARRIER; }
-
-    /*
-     * Test whether this object may be branded due to method calls, which means
-     * any assignment to a function-valued property must regenerate shape; else
-     * test whether this object has method properties, which require a method
-     * write barrier.
-     */
-    bool brandedOrHasMethodBarrier() { return !!(flags & (BRANDED | METHOD_BARRIER)); }
 
     /*
      * Read barrier to clone a joined function object stored as a method.
@@ -723,15 +625,8 @@ struct JSObject : js::gc::Cell {
      */
     const js::Shape *methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp);
 
-    /*
-     * Write barrier to check for a change of method value. Defined inline in
-     * jsobjinlines.h after methodReadBarrier. The slot flavor is required by
-     * JSOP_*GVAR, which deals in slots not shapes, while not deoptimizing to
-     * map slot to shape unless JSObject::flags show that this is necessary.
-     * The methodShapeChange overload (above) parallels this.
-     */
-    const js::Shape *methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v);
-    bool methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v);
+    /* Whether method shapes can be added to this object. */
+    inline bool canHaveMethodBarrier() const;
 
     bool isIndexed() const          { return !!(flags & INDEXED); }
     void setIndexed()               { flags |= INDEXED; }
@@ -873,6 +768,7 @@ struct JSObject : js::gc::Cell {
     }
 
     inline const js::Value &nativeGetSlot(uintN slot) const;
+    inline JSFunction *nativeGetMethod(const js::Shape *shape) const;
 
     void setSlot(uintN slot, const js::Value &value) {
         JS_ASSERT(slot < capacity);
@@ -905,7 +801,6 @@ struct JSObject : js::gc::Cell {
     }
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
-    inline void updateShape(JSContext *cx);
     inline void updateFlags(const js::Shape *shape, bool isDefinitelyAtom = false);
 
     /* Extend this object to have shape as its last-added property. */
@@ -1338,16 +1233,14 @@ struct JSObject : js::gc::Cell {
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 
     /*
-     * Allocate and free an object slot. Note that freeSlot is infallible: it
-     * returns true iff this is a dictionary-mode object and the freed slot was
-     * added to the freelist.
+     * Allocate and free an object slot.
      *
      * FIXME: bug 593129 -- slot allocation should be done by object methods
      * after calling object-parameter-free shape methods, avoiding coupling
      * logic across the object vs. shape module wall.
      */
     bool allocSlot(JSContext *cx, uint32 *slotp);
-    bool freeSlot(JSContext *cx, uint32 slot);
+    void freeSlot(JSContext *cx, uint32 slot);
 
   public:
     bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
@@ -1376,7 +1269,7 @@ struct JSObject : js::gc::Cell {
                                          JSPropertyOp getter, JSStrictPropertyOp setter,
                                          uint32 slot, uintN attrs,
                                          uintN flags, intN shortid,
-                                         js::Shape **spp);
+                                         js::Shape **spp, bool allowDictionary);
 
     bool toDictionaryMode(JSContext *cx);
 
@@ -1394,7 +1287,7 @@ struct JSObject : js::gc::Cell {
     const js::Shape *addProperty(JSContext *cx, jsid id,
                                  JSPropertyOp getter, JSStrictPropertyOp setter,
                                  uint32 slot, uintN attrs,
-                                 uintN flags, intN shortid);
+                                 uintN flags, intN shortid, bool allowDictionary = true);
 
     /* Add a data property whose id is not yet in this scope. */
     const js::Shape *addDataProperty(JSContext *cx, jsid id, uint32 slot, uintN attrs) {
@@ -1524,8 +1417,6 @@ struct JSObject : js::gc::Cell {
     bool swap(JSContext *cx, JSObject *other);
 
     const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
-
-    inline bool canHaveMethodBarrier() const;
 
     inline bool isArguments() const { return isNormalArguments() || isStrictArguments(); }
     inline bool isArrayBuffer() const { return clasp == &js::ArrayBufferClass; }
@@ -1874,14 +1765,15 @@ js_CheckForStringIndex(jsid id);
  * js_PurgeScopeChainHelper, which asserts that obj is flagged as a delegate
  * (i.e., obj has ever been on a prototype or parent chain).
  */
-extern void
+extern bool
 js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
 
-inline void
+inline bool
 js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
 {
     if (obj->isDelegate())
-        js_PurgeScopeChainHelper(cx, obj, id);
+        return js_PurgeScopeChainHelper(cx, obj, id);
+    return true;
 }
 
 /*

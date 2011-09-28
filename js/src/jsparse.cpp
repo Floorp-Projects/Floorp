@@ -332,20 +332,6 @@ JSFunctionBox::scopeIsExtensible() const
     return tcflags & TCF_FUN_EXTENSIBLE_SCOPE;
 }
 
-bool
-JSFunctionBox::shouldUnbrand(uintN methods, uintN slowMethods) const
-{
-    if (slowMethods != 0) {
-        for (const JSFunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-            if (!(funbox->tcflags & TCF_FUN_MODULE_PATTERN))
-                return true;
-            if (funbox->inLoop)
-                return true;
-        }
-    }
-    return false;
-}
-
 void
 Parser::trace(JSTracer *trc)
 {
@@ -1164,7 +1150,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
                                  JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
         if (!shape)
             return false;
-        def.knownSlot = shape->slot;
+        def.knownSlot = shape->slot();
     }
 
     js::Vector<JSScript *, 16> worklist(cx);
@@ -1456,7 +1442,7 @@ CheckStrictParameters(JSContext *cx, JSTreeContext *tc)
 
     /* Start with lastVariable(), not lastArgument(), for destructuring. */
     for (Shape::Range r = tc->bindings.lastVariable(); !r.empty(); r.popFront()) {
-        jsid id = r.front().propid;
+        jsid id = r.front().propid();
         if (!JSID_IS_ATOM(id))
             continue;
 
@@ -1994,7 +1980,8 @@ Parser::analyzeFunctions(JSTreeContext *tc)
         return true;
     if (!markFunArgs(tc->functionList))
         return false;
-    markExtensibleScopeDescendants(tc->functionList, false);
+    if (!markExtensibleScopeDescendants(tc->functionList, false))
+        return false;
     setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
@@ -2436,9 +2423,6 @@ ConsiderUnbranding(JSFunctionBox *funbox)
             if (!method->pn_funbox->joinable())
                 ++slowMethodSets;
         }
-
-        if (funbox->shouldUnbrand(methodSets, slowMethodSets))
-            funbox->tcflags |= TCF_FUN_UNBRAND_THIS;
     }
 }
 
@@ -2554,7 +2538,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
  * must have their OWN_SHAPE flags set; the comments for
  * js::Bindings::extensibleParents explain why.
  */
-void
+bool
 Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
 {
     for (; funbox; funbox = funbox->siblings) {
@@ -2564,15 +2548,19 @@ Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensible
          * their 'extensible parents' flag set. Filed as bug 619750. 
          */
 
-        JS_ASSERT(!funbox->bindings.extensibleParents());
-        if (hasExtensibleParent)
-            funbox->bindings.setExtensibleParents();
+        if (hasExtensibleParent) {
+            if (!funbox->bindings.setExtensibleParents(context))
+                return false;
+        }
 
         if (funbox->kids) {
-            markExtensibleScopeDescendants(funbox->kids,
-                                           hasExtensibleParent || funbox->scopeIsExtensible());
+            if (!markExtensibleScopeDescendants(funbox->kids,
+                                                hasExtensibleParent || funbox->scopeIsExtensible()))
+                return false;
         }
     }
+
+    return true;
 }
 
 const char js_argument_str[] = "argument";
@@ -3580,7 +3568,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
      * jsemit.cpp:EmitEnterBlock so they don't tie up unused space in the so-
      * called "static" prototype Block.
      */
-    blockObj->setSlot(shape->slot, PrivateValue(pn));
+    blockObj->setSlot(shape->slot(), PrivateValue(pn));
     return true;
 }
 
@@ -3594,7 +3582,7 @@ PopStatement(JSTreeContext *tc)
         JS_ASSERT(!obj->isClonedBlock());
 
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-            JSAtom *atom = JSID_TO_ATOM(r.front().propid);
+            JSAtom *atom = JSID_TO_ATOM(r.front().propid());
 
             /* Beware the empty destructuring dummy. */
             if (atom == tc->parser->context->runtime->atomState.emptyAtom)
@@ -3671,7 +3659,7 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
                 return true;
             }
             
-            def = GlobalScope::GlobalDef(shape->slot);
+            def = GlobalScope::GlobalDef(shape->slot());
         } else {
             def = GlobalScope::GlobalDef(atom, funbox);
         }

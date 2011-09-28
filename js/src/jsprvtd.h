@@ -187,6 +187,7 @@ class PropertyCache;
 struct PropertyCacheEntry;
 
 struct Shape;
+struct BaseShape;
 struct EmptyShape;
 class Bindings;
 

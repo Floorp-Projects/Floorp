@@ -1204,50 +1204,48 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                 if (!thisp->isNative())
                     continue;
 
-                if (thisp->hasMethodBarrier()) {
-                    const Shape *shape = thisp->nativeLookup(cx, ATOM_TO_JSID(fun->methodAtom()));
-                    if (shape) {
-                        /*
-                         * Two cases follow: the method barrier was not crossed
-                         * yet, so we cross it here; the method barrier *was*
-                         * crossed but after the call, in which case we fetch
-                         * and validate the cloned (unjoined) funobj from the
-                         * method property's slot.
-                         *
-                         * In either case we must allow for the method property
-                         * to have been replaced, or its value overwritten.
-                         */
-                        if (shape->isMethod() && shape->methodObject() == funobj) {
-                            if (!thisp->methodReadBarrier(cx, *shape, vp))
-                                return false;
-                            overwriteCallee(vp->toObject());
-                            return true;
-                        }
-
-                        if (shape->hasSlot()) {
-                            Value v = thisp->getSlot(shape->slot);
-                            JSObject *clone;
-
-                            if (IsFunctionObject(v, &clone) &&
-                                clone->getFunctionPrivate() == fun &&
-                                clone->hasMethodObj(*thisp)) {
-                                /*
-                                 * N.B. If the method barrier was on a function
-                                 * with singleton type, then while crossing the
-                                 * method barrier CloneFunctionObject will have
-                                 * ignored the attempt to clone the function.
-                                 */
-                                JS_ASSERT_IF(!clone->hasSingletonType(), clone != &funobj);
-                                *vp = v;
-                                overwriteCallee(*clone);
-                                return true;
-                            }
-                        }
+                const Shape *shape = thisp->nativeLookup(cx, ATOM_TO_JSID(fun->methodAtom()));
+                if (shape) {
+                    /*
+                     * Two cases follow: the method barrier was not crossed
+                     * yet, so we cross it here; the method barrier *was*
+                     * crossed but after the call, in which case we fetch
+                     * and validate the cloned (unjoined) funobj from the
+                     * method property's slot.
+                     *
+                     * In either case we must allow for the method property
+                     * to have been replaced, or its value overwritten.
+                     */
+                    if (shape->isMethod() && thisp->nativeGetMethod(shape) == &funobj) {
+                        if (!thisp->methodReadBarrier(cx, *shape, vp))
+                            return false;
+                        overwriteCallee(vp->toObject());
+                        return true;
                     }
 
-                    if (!first_barriered_thisp)
-                        first_barriered_thisp = thisp;
+                    if (shape->hasSlot()) {
+                        Value v = thisp->getSlot(shape->slot());
+                        JSObject *clone;
+
+                        if (IsFunctionObject(v, &clone) &&
+                            clone->getFunctionPrivate() == fun &&
+                            clone->hasMethodObj(*thisp)) {
+                            /*
+                             * N.B. If the method barrier was on a function
+                             * with singleton type, then while crossing the
+                             * method barrier CloneFunctionObject will have
+                             * ignored the attempt to clone the function.
+                             */
+                            JS_ASSERT_IF(!clone->hasSingletonType(), clone != &funobj);
+                            *vp = v;
+                            overwriteCallee(*clone);
+                            return true;
+                        }
+                    }
                 }
+
+                if (!first_barriered_thisp)
+                    first_barriered_thisp = thisp;
             } while ((thisp = thisp->getProto()) != NULL);
 
             if (!first_barriered_thisp)
@@ -1905,13 +1903,14 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
     setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
     setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
     if (argslen != 0) {
-        /* FIXME? Burn memory on an empty scope whose shape covers the args slots. */
-        EmptyShape *empty = EmptyShape::create(cx, getClass());
-        if (!empty)
+        /*
+         * FIXME? We need to conver to a dictionary in order to increase the
+         * slot span and cover the arguments.
+         */
+        if (!toDictionaryMode(cx))
             return false;
-
-        empty->slotSpan += argslen;
-        setMap(empty);
+        JS_ASSERT(slotSpan() == JSSLOT_FREE(&FunctionClass));
+        lastProp->base()->slotSpan += argslen;
 
         if (!ensureInstanceReservedSlots(cx, argslen))
             return false;

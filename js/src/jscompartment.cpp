@@ -534,6 +534,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
         initialStringShape = NULL;
 
+    /* Remove dead base shapes */
+    sweepBaseShapeTable(cx);
+
     sweepBreakpoints(cx);
 
 #ifdef JS_TRACER
@@ -559,6 +562,9 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
         if (script->hasJITCode()) {
 #ifdef JS_POLYIC
             mjit::ic::PurgePICs(cx, script);
+#endif
+#ifdef JS_MONOIC
+            mjit::ic::PurgeMICs(cx, script);
 #endif
             if (canPurgeNativeCalls) {
                 if (script->jitNormal)
@@ -687,30 +693,6 @@ JSCompartment::purge(JSContext *cx)
 
     nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
-
-#ifdef JS_TRACER
-    /*
-     * If we are about to regenerate shapes, we have to flush the JIT cache,
-     * which will eventually abort any current recording.
-     */
-    if (cx->runtime->gcRegenShapes)
-        if (hasTraceMonitor())
-            traceMonitor()->needFlush = JS_TRUE;
-#endif
-
-#if defined JS_METHODJIT && defined JS_MONOIC
-    /*
-     * MICs do not refer to data which can be GC'ed and do not generate stubs
-     * which might need to be discarded, but are sensitive to shape regeneration.
-     */
-    if (cx->runtime->gcRegenShapes) {
-        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-            if (script->hasJITCode())
-                mjit::ic::PurgeMICs(cx, script);
-        }
-    }
-#endif
 }
 
 MathCache *

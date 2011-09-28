@@ -351,7 +351,7 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
     if (!shape || !shape->isDataDescriptor())
         vp->setMagic(JS_ARRAY_HOLE);
     else
-        *vp = getSlot(shape->slot);
+        *vp = getSlot(shape->slot());
     return true;
 }
 

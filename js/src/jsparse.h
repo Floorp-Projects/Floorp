@@ -1048,18 +1048,6 @@ struct JSFunctionBox : public JSObjectBox
      * ancestor?
      */
     bool scopeIsExtensible() const;
-
-    /*
-     * Unbrand an object being initialized or constructed if any method cannot
-     * be joined to one compiler-created null closure shared among N different
-     * closure environments.
-     *
-     * We despecialize from caching function objects, caching slots or shapes
-     * instead, because an unbranded object may still have joined methods (for
-     * which shape->isMethod), since PropertyCache::fill gives precedence to
-     * joined methods over branded methods.
-     */
-    bool shouldUnbrand(uintN methods, uintN slowMethods) const;
 };
 
 struct JSFunctionBoxQueue {
@@ -1180,7 +1168,7 @@ struct Parser : private js::AutoGCRooter
     bool analyzeFunctions(JSTreeContext *tc);
     void cleanFunctionList(JSFunctionBox **funbox);
     bool markFunArgs(JSFunctionBox *funbox);
-    void markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
+    bool markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent);
     void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
 
     void trace(JSTracer *trc);

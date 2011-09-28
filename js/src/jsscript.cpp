@@ -94,7 +94,7 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
         return NONE;
 
     if (indexp)
-        *indexp = shape->shortid;
+        *indexp = shape->shortid();
 
     if (shape->getter() == GetCallArg)
         return ARGUMENT;
@@ -115,7 +115,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
      * of the Call objects enumerable. ES5 reformulated all of its Clause 10 to
      * avoid objects as activations, something we should do too.
      */
-    uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
+    uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
     uint16 *indexp;
     PropertyOp getter;
@@ -133,7 +133,8 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         indexp = &nupvars;
         getter = GetCallUpvar;
         setter = SetCallUpvar;
-        slot = SHAPE_INVALID_SLOT;
+        slot = lastBinding->maybeSlot();
+        attrs |= JSPROP_SHARED;
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
         JS_ASSERT(nupvars == 0);
@@ -162,9 +163,15 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         id = ATOM_TO_JSID(name);
     }
 
-    Shape child(id, getter, setter, slot, attrs, Shape::HAS_SHORTID, *indexp);
+    BaseShape base(&CallClass, attrs, getter, setter);
+    BaseShape *nbase = BaseShape::lookup(cx, base);
+    if (!nbase)
+        return NULL;
 
-    Shape *shape = lastBinding->getChild(cx, child, &lastBinding);
+    Shape child(nbase, id, slot, attrs, Shape::HAS_SHORTID, *indexp);
+
+    /* Shapes in bindings cannot be dictionaries. */
+    Shape *shape = lastBinding->getChild(cx, child, &lastBinding, false);
     if (!shape)
         return false;
 
@@ -194,7 +201,7 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
 
     for (Shape::Range r = lastBinding; !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
-        uintN index = uint16(shape.shortid);
+        uintN index = uint16(shape.shortid());
 
         if (shape.getter() == GetCallArg) {
             JS_ASSERT(index < nargs);
@@ -206,10 +213,10 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
             index += nargs;
         }
 
-        if (JSID_IS_ATOM(shape.propid)) {
-            names[index] = JSID_TO_ATOM(shape.propid);
+        if (JSID_IS_ATOM(shape.propid())) {
+            names[index] = JSID_TO_ATOM(shape.propid());
         } else {
-            JS_ASSERT(JSID_IS_INT(shape.propid));
+            JS_ASSERT(JSID_IS_INT(shape.propid()));
             JS_ASSERT(shape.getter() == GetCallArg);
             names[index] = NULL;
         }
@@ -275,13 +282,7 @@ void
 Bindings::makeImmutable()
 {
     JS_ASSERT(lastBinding);
-    Shape *shape = lastBinding;
-    if (shape->inDictionary()) {
-        do {
-            JS_ASSERT(!shape->frozen());
-            shape->setFrozen();
-        } while ((shape = shape->parent) != NULL);
-    }
+    JS_ASSERT(!lastBinding->inDictionary());
 }
 
 void

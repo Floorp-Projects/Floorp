@@ -543,12 +543,11 @@ js::OnUnknownMethod(JSContext *cx, Value *vp)
                 vp[0] = IdToValue(id);
         }
 #endif
-        obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+
+        obj = NewNonFunction<WithProto::Given>(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
 
-        obj->init(cx, &js_NoSuchMethodClass, &emptyTypeObject, NULL, NULL, false);
-        obj->setSharedNonNativeMap();
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
@@ -1444,9 +1443,9 @@ inline InterpreterFrames::~InterpreterFrames()
  */
 #if defined DEBUG && !defined JS_THREADSAFE
 
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry)                \
+# define ASSERT_VALID_PROPERTY_CACHE_HIT(obj,pobj,entry)                      \
     JS_BEGIN_MACRO                                                            \
-        if (!AssertValidPropertyCacheHit(cx, script, regs, pcoff, obj, pobj,  \
+        if (!AssertValidPropertyCacheHit(cx, script, regs, obj, pobj,         \
                                          entry)) {                            \
             goto error;                                                       \
         }                                                                     \
@@ -1454,17 +1453,14 @@ inline InterpreterFrames::~InterpreterFrames()
 
 static bool
 AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
-                            ptrdiff_t pcoff, JSObject *start, JSObject *found,
+                            JSObject *start, JSObject *found,
                             PropertyCacheEntry *entry)
 {
     uint32 sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
     JSAtom *atom;
-    if (pcoff >= 0)
-        GET_ATOM_FROM_BYTECODE(script, regs.pc, pcoff, atom);
-    else
-        atom = cx->runtime->atomState.lengthAtom;
+    GET_ATOM_FROM_BYTECODE(script, regs.pc, 0, atom);
 
     JSObject *obj, *pobj;
     JSProperty *prop;
@@ -1485,34 +1481,13 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
     JS_ASSERT(pobj == found);
 
     const Shape *shape = (Shape *) prop;
-    if (entry->vword.isSlot()) {
-        JS_ASSERT(entry->vword.toSlot() == shape->slot);
-        JS_ASSERT(!shape->isMethod());
-    } else if (entry->vword.isShape()) {
-        JS_ASSERT(entry->vword.toShape() == shape);
-        JS_ASSERT_IF(shape->isMethod(),
-                     shape->methodObject() == pobj->nativeGetSlot(shape->slot).toObject());
-    } else {
-        Value v;
-        JS_ASSERT(entry->vword.isFunObj());
-        JS_ASSERT(!entry->vword.isNull());
-        JS_ASSERT(pobj->brandedOrHasMethodBarrier());
-        JS_ASSERT(shape->hasDefaultGetterOrIsMethod());
-        JS_ASSERT(pobj->containsSlot(shape->slot));
-        v = pobj->nativeGetSlot(shape->slot);
-        JS_ASSERT(entry->vword.toFunObj() == v.toObject());
-
-        if (shape->isMethod()) {
-            JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_CALLOP);
-            JS_ASSERT(shape->methodObject() == v.toObject());
-        }
-    }
+    JS_ASSERT(entry->prop == shape);
 
     return true;
 }
 
 #else
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) ((void) 0)
+# define ASSERT_VALID_PROPERTY_CACHE_HIT(obj,pobj,entry) ((void) 0)
 #endif
 
 /*
@@ -2624,10 +2599,10 @@ END_CASE(JSOP_PICK)
     JS_BEGIN_MACRO                                                            \
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {         \
             /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
+            JS_ASSERT((shape)->slot() != SHAPE_INVALID_SLOT ||                \
                       !shape->hasDefaultSetter());                            \
-            if (((shape)->slot != SHAPE_INVALID_SLOT))                        \
-                *(vp) = (pobj)->nativeGetSlot((shape)->slot);                 \
+            if (((shape)->slot() != SHAPE_INVALID_SLOT))                      \
+                *(vp) = (pobj)->nativeGetSlot((shape)->slot());               \
             else                                                              \
                 (vp)->setUndefined();                                         \
         } else {                                                              \
@@ -2639,8 +2614,8 @@ END_CASE(JSOP_PICK)
 #define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
     JS_BEGIN_MACRO                                                            \
         if (shape->hasDefaultSetter() &&                                      \
-            (shape)->slot != SHAPE_INVALID_SLOT &&                            \
-            !(obj)->brandedOrHasMethodBarrier()) {                            \
+            (shape)->hasSlot() &&                                             \
+            !(shape)->isMethod()) {                                           \
             /* Fast path for, e.g., plain Object instance properties. */      \
             (obj)->nativeSetSlotWithType(cx, shape, *vp);                     \
         } else {                                                              \
@@ -2746,7 +2721,7 @@ BEGIN_CASE(JSOP_BINDNAME)
         JSAtom *atom;
         JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
         if (!atom) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+            ASSERT_VALID_PROPERTY_CACHE_HIT(obj, obj2, entry);
             break;
         }
 
@@ -3235,57 +3210,17 @@ BEGIN_CASE(JSOP_VOID)
     regs.sp[-1].setUndefined();
 END_CASE(JSOP_VOID)
 
-{
-    /*
-     * Property incops are followed by an equivalent decomposed version,
-     * and we have the option of running either. If type inference is enabled
-     * we run the decomposed version to accumulate observed types and
-     * overflows which inference can process, otherwise we run the fat opcode
-     * as doing so is faster and is what the tracer needs while recording.
-     */
-    JSObject *obj;
-    JSAtom *atom;
-    jsid id;
-    jsint i;
-
 BEGIN_CASE(JSOP_INCELEM)
 BEGIN_CASE(JSOP_DECELEM)
 BEGIN_CASE(JSOP_ELEMINC)
 BEGIN_CASE(JSOP_ELEMDEC)
-
-    if (cx->typeInferenceEnabled()) {
-        len = JSOP_INCELEM_LENGTH;
-        DO_NEXT_OP(len);
-    }
-
-    /*
-     * Delay fetching of id until we have the object to ensure the proper
-     * evaluation order. See bug 372331.
-     */
-    id = JSID_VOID;
-    i = -2;
-    goto fetch_incop_obj;
+    /* No-op */
+END_CASE(JSOP_INCELEM)
 
 BEGIN_CASE(JSOP_INCPROP)
 BEGIN_CASE(JSOP_DECPROP)
 BEGIN_CASE(JSOP_PROPINC)
 BEGIN_CASE(JSOP_PROPDEC)
-
-    if (cx->typeInferenceEnabled()) {
-        len = JSOP_INCPROP_LENGTH;
-        DO_NEXT_OP(len);
-    }
-
-    LOAD_ATOM(0, atom);
-    id = ATOM_TO_JSID(atom);
-    i = -1;
-
-  fetch_incop_obj:
-    FETCH_OBJECT(cx, i, obj);
-    if (JSID_IS_VOID(id))
-        FETCH_ELEMENT_ID(obj, -1, id);
-    goto do_incop;
-
 BEGIN_CASE(JSOP_INCNAME)
 BEGIN_CASE(JSOP_DECNAME)
 BEGIN_CASE(JSOP_NAMEINC)
@@ -3294,114 +3229,8 @@ BEGIN_CASE(JSOP_INCGNAME)
 BEGIN_CASE(JSOP_DECGNAME)
 BEGIN_CASE(JSOP_GNAMEINC)
 BEGIN_CASE(JSOP_GNAMEDEC)
-{
-    if (cx->typeInferenceEnabled()) {
-        len = JSOP_INCNAME_LENGTH;
-        DO_NEXT_OP(len);
-    }
-
-    obj = &regs.fp()->scopeChain();
-
-    bool global = (js_CodeSpec[op].format & JOF_GNAME);
-    if (global)
-        obj = obj->getGlobal();
-
-    JSObject *obj2;
-    PropertyCacheEntry *entry;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
-    if (!atom) {
-        ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-        if (obj == obj2 && entry->vword.isSlot()) {
-            uint32 slot = entry->vword.toSlot();
-            const Value &rref = obj->nativeGetSlot(slot);
-            int32_t tmp;
-            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
-                int32_t inc = tmp + ((js_CodeSpec[op].format & JOF_INC) ? 1 : -1);
-                if (!(js_CodeSpec[op].format & JOF_POST))
-                    tmp = inc;
-                obj->nativeSetSlot(slot, Int32Value(inc));
-                PUSH_INT32(tmp);
-                len = JSOP_INCNAME_LENGTH + GetDecomposeLength(regs.pc, JSOP_INCNAME_LENGTH);
-                DO_NEXT_OP(len);
-            }
-        }
-        LOAD_ATOM(0, atom);
-    }
-
-    id = ATOM_TO_JSID(atom);
-    JSProperty *prop;
-    if (!js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop))
-        goto error;
-    if (!prop) {
-        atomNotDefined = atom;
-        goto atom_not_defined;
-    }
-}
-
-do_incop:
-{
-    /*
-     * We need a root to store the value to leave on the stack until
-     * we have done with obj->setProperty.
-     */
-    PUSH_NULL();
-    if (!obj->getGeneric(cx, id, &regs.sp[-1]))
-        goto error;
-
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    JS_ASSERT(cs->ndefs == 1);
-    JS_ASSERT((cs->format & JOF_TMPSLOT_MASK) >= JOF_TMPSLOT2);
-
-    uint32 format = cs->format;
-    uint32 setPropFlags = (JOF_MODE(format) == JOF_NAME)
-                          ? JSRESOLVE_ASSIGNING
-                          : JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED;
-
-    Value &ref = regs.sp[-1];
-    int32_t tmp;
-    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.toInt32()))) {
-        int incr = (format & JOF_INC) ? 1 : -1;
-        if (format & JOF_POST)
-            ref.getInt32Ref() = tmp + incr;
-        else
-            ref.getInt32Ref() = tmp += incr;
-
-        {
-            JSAutoResolveFlags rf(cx, setPropFlags);
-            if (!obj->setProperty(cx, id, &ref, script->strictModeCode))
-                goto error;
-        }
-
-        /*
-         * We must set regs.sp[-1] to tmp for both post and pre increments
-         * as the setter overwrites regs.sp[-1].
-         */
-        ref.setInt32(tmp);
-    } else {
-        /* We need an extra root for the result. */
-        PUSH_NULL();
-        if (!DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
-            goto error;
-
-        {
-            JSAutoResolveFlags rf(cx, setPropFlags);
-            if (!obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode))
-                goto error;
-        }
-
-        regs.sp--;
-    }
-
-    if (cs->nuses == 0) {
-        /* regs.sp[-1] already contains the result of name increment. */
-    } else {
-        regs.sp[-1 - cs->nuses] = regs.sp[-1];
-        regs.sp -= cs->nuses;
-    }
-    len = cs->length + GetDecomposeLength(regs.pc, cs->length);
-    DO_NEXT_OP(len);
-}
-}
+    /* No-op */
+END_CASE(JSOP_INCPROP)
 
 {
     int incr, incr2;
@@ -3467,19 +3296,6 @@ BEGIN_CASE(JSOP_THIS)
     PUSH_COPY(regs.fp()->thisValue());
 END_CASE(JSOP_THIS)
 
-BEGIN_CASE(JSOP_UNBRANDTHIS)
-{
-    if (!ComputeThis(cx, regs.fp()))
-        goto error;
-    Value &thisv = regs.fp()->thisValue();
-    if (thisv.isObject()) {
-        JSObject *obj = &thisv.toObject();
-        if (obj->isNative())
-            obj->unbrand(cx);
-    }
-}
-END_CASE(JSOP_UNBRANDTHIS)
-
 BEGIN_CASE(JSOP_GETPROP)
 BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
@@ -3538,19 +3354,10 @@ BEGIN_CASE(JSOP_LENGTH)
         JSAtom *atom;
         JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
         if (!atom) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
-            if (entry->vword.isFunObj()) {
-                rval.setObject(entry->vword.toFunObj());
-            } else if (entry->vword.isSlot()) {
-                uint32 slot = entry->vword.toSlot();
-                rval = obj2->nativeGetSlot(slot);
-            } else {
-                JS_ASSERT(entry->vword.isShape());
-                const Shape *shape = entry->vword.toShape();
-                NATIVE_GET(cx, obj, obj2, shape,
-                           regs.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                           &rval);
-            }
+            ASSERT_VALID_PROPERTY_CACHE_HIT(aobj, obj2, entry);
+            NATIVE_GET(cx, obj, obj2, entry->prop,
+                       regs.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
+                       &rval);
             break;
         }
 
@@ -3609,17 +3416,8 @@ BEGIN_CASE(JSOP_CALLPROP)
     JSAtom *atom;
     JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
     if (!atom) {
-        ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
-        if (entry->vword.isFunObj()) {
-            rval.setObject(entry->vword.toFunObj());
-        } else if (entry->vword.isSlot()) {
-            uint32 slot = entry->vword.toSlot();
-            rval = obj2->nativeGetSlot(slot);
-        } else {
-            JS_ASSERT(entry->vword.isShape());
-            const Shape *shape = entry->vword.toShape();
-            NATIVE_GET(cx, &objv.toObject(), obj2, shape, JSGET_NO_METHOD_BARRIER, &rval);
-        }
+        ASSERT_VALID_PROPERTY_CACHE_HIT(aobj, obj2, entry);
+        NATIVE_GET(cx, &objv.toObject(), obj2, entry->prop, JSGET_NO_METHOD_BARRIER, &rval);
         regs.sp[-1] = rval;
         assertSameCompartment(cx, regs.sp[-1]);
         PUSH_COPY(lval);
@@ -3667,11 +3465,6 @@ BEGIN_CASE(JSOP_CALLPROP)
 }
 END_CASE(JSOP_CALLPROP)
 
-BEGIN_CASE(JSOP_UNBRAND)
-    JS_ASSERT(regs.sp - regs.fp()->slots() >= 1);
-    regs.sp[-1].toObject().unbrand(cx);
-END_CASE(JSOP_UNBRAND)
-
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
@@ -3717,90 +3510,30 @@ BEGIN_CASE(JSOP_SETMETHOD)
              * know that the entry applies to regs.pc and that obj's shape
              * matches.
              *
-             * The entry predicts either a new property to be added directly to
-             * obj by this set, or on an existing "own" property, or on a
-             * prototype property that has a setter.
+             * The entry predicts a set either an existing "own" property, or
+             * on a prototype property that has a setter.
              */
-            const Shape *shape = entry->vword.toShape();
+            const Shape *shape = entry->prop;
             JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
-            JS_ASSERT_IF(shape->hasSlot(), entry->vcapTag() == 0);
+            JS_ASSERT_IF(shape->hasSlot(), !entry->vindex);
 
-            /*
-             * Fastest path: check whether obj already has the cached shape and
-             * call NATIVE_SET and break to get out of the do-while(0). But we
-             * can call NATIVE_SET only for a direct or proto-setter hit.
-             */
-            if (!entry->adding()) {
-                if (entry->vcapTag() == 0 ||
-                    ((obj2 = obj->getProto()) && obj2->shape() == entry->vshape()))
-                {
+            if (entry->vindex == 0 ||
+                ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape)) {
 #ifdef DEBUG
-                    if (entry->directHit()) {
-                        JS_ASSERT(obj->nativeContains(cx, *shape));
-                    } else {
-                        JS_ASSERT(obj2->nativeContains(cx, *shape));
-                        JS_ASSERT(entry->vcapTag() == 1);
-                        JS_ASSERT(entry->kshape != entry->vshape());
-                        JS_ASSERT(!shape->hasSlot());
-                    }
+                if (entry->directHit()) {
+                    JS_ASSERT(obj->nativeContains(cx, *shape));
+                } else {
+                    JS_ASSERT(obj2->nativeContains(cx, *shape));
+                    JS_ASSERT(entry->vindex == 1);
+                    JS_ASSERT(entry->kshape != entry->pshape);
+                    JS_ASSERT(!shape->hasSlot());
+                }
 #endif
 
-                    PCMETER(cache->pchits++);
-                    PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, shape, entry, script->strictModeCode, &rval);
-                    break;
-                }
-            } else {
-                JS_ASSERT(obj->isExtensible());
-
-                if (obj->nativeEmpty()) {
-                    if (!obj->ensureClassReservedSlotsForEmptyObject(cx))
-                        goto error;
-                }
-
-                uint32 slot;
-                if (shape->previous() == obj->lastProperty() &&
-                    entry->vshape() == rt->protoHazardShape &&
-                    shape->hasDefaultSetter() &&
-                    obj->getClass()->addProperty == JS_PropertyStub) {
-                    slot = shape->slot;
-                    JS_ASSERT(slot == obj->slotSpan());
-
-                    /*
-                     * Fast path: adding a plain old property that was once at
-                     * the frontier of the property tree, whose slot is next to
-                     * claim among the already-allocated slots in obj, where
-                     * shape->table has not been created yet.
-                     */
-                    PCMETER(cache->pchits++);
-                    PCMETER(cache->addpchits++);
-
-                    if (slot < obj->numSlots()) {
-                        JS_ASSERT(obj->getSlot(slot).isUndefined());
-                    } else {
-                        if (!obj->allocSlot(cx, &slot))
-                            goto error;
-                        JS_ASSERT(slot == shape->slot);
-                    }
-
-                    /* Simply extend obj's property tree path with shape! */
-                    obj->extend(cx, shape);
-
-                    /*
-                     * No method change check here because here we are adding a
-                     * new property, not updating an existing slot's value that
-                     * might contain a method of a branded shape.
-                     */
-                    TRACE_1(AddProperty, obj);
-                    obj->nativeSetSlotWithType(cx, shape, rval);
-
-                    /*
-                     * Purge the property cache of the id we may have just
-                     * shadowed in obj's scope and proto chains.
-                     */
-                    js_PurgeScopeChain(cx, obj, shape->propid);
-                    break;
-                }
+                PCMETER(cache->pchits++);
+                PCMETER(cache->setpchits++);
+                NATIVE_SET(cx, obj, shape, entry, script->strictModeCode, &rval);
+                break;
             }
             PCMETER(cache->setpcmisses++);
 
@@ -4118,7 +3851,6 @@ BEGIN_CASE(JSOP_CALLNAME)
     if (global)
         obj = obj->getGlobal();
 
-    const Shape *shape;
     Value rval;
 
     PropertyCacheEntry *entry;
@@ -4126,18 +3858,9 @@ BEGIN_CASE(JSOP_CALLNAME)
     JSAtom *atom;
     JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
     if (!atom) {
-        ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-        if (entry->vword.isFunObj()) {
-            PUSH_OBJECT(entry->vword.toFunObj());
-        } else if (entry->vword.isSlot()) {
-            uintN slot = entry->vword.toSlot();
-            PUSH_COPY(obj2->nativeGetSlot(slot));
-        } else {
-            JS_ASSERT(entry->vword.isShape());
-            shape = entry->vword.toShape();
-            NATIVE_GET(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, &rval);
-            PUSH_COPY(rval);
-        }
+        ASSERT_VALID_PROPERTY_CACHE_HIT(obj, obj2, entry);
+        NATIVE_GET(cx, obj, obj2, entry->prop, JSGET_METHOD_BARRIER, &rval);
+        PUSH_COPY(rval);
 
         TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
@@ -4170,7 +3893,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         if (!obj->getGeneric(cx, id, &rval))
             goto error;
     } else {
-        shape = (Shape *)prop;
+        Shape *shape = (Shape *)prop;
         JSObject *normalized = obj;
         if (normalized->getClass() == &WithClass && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(cx, normalized);
@@ -5153,49 +4876,24 @@ BEGIN_CASE(JSOP_INITMETHOD)
     JS_ASSERT(obj->isObject());
 
     /*
-     * Probe the property cache.
-     *
-     * On a hit, if the cached shape has a non-default setter, it must be
-     * __proto__. If shape->previous() != obj->lastProperty(), there must be a
-     * repeated property name. The fast path does not handle these two cases.
+     * Probe the property cache to see if this is a set on an existing property
+     * added by a NEWOBJECT or a previous INITPROP. If the cached shape has a
+     * non-default setter, it must be __proto__, so don't handle this.
      */
     PropertyCacheEntry *entry;
-    const Shape *shape;
-    if (JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, &shape, &entry) &&
-        shape->hasDefaultSetter() &&
-        shape->previous() == obj->lastProperty())
-    {
+    JSObject *obj2;
+    JSAtom *atom;
+    if (JS_PROPERTY_CACHE(cx).testForSet(cx, regs.pc, obj, &entry, &obj2, &atom) &&
+        entry->prop->hasDefaultSetter() &&
+        entry->vindex == 0) {
+        JS_ASSERT(obj == obj2);
         /* Fast path. Property cache hit. */
-        uint32 slot = shape->slot;
-
-        JS_ASSERT(slot == obj->slotSpan());
-        JS_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
-        if (slot < obj->numSlots()) {
-            JS_ASSERT(obj->getSlot(slot).isUndefined());
-        } else {
-            if (!obj->allocSlot(cx, &slot))
-                goto error;
-            JS_ASSERT(slot == shape->slot);
-        }
-
-        /* A new object, or one we just extended in a recent initprop op. */
-        JS_ASSERT(!obj->lastProperty() ||
-                  obj->shape() == obj->lastProperty()->shapeid);
-        obj->extend(cx, shape);
-
-        /*
-         * No method change check here because here we are adding a new
-         * property, not updating an existing slot's value that might
-         * contain a method of a branded shape.
-         */
-        TRACE_1(AddProperty, obj);
-        obj->nativeSetSlotWithType(cx, shape, rval);
+        obj->nativeSetSlotWithType(cx, entry->prop, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
+        LOAD_ATOM(0, atom);
 
         /* Get the immediate property name into id. */
-        JSAtom *atom;
-        LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
 
         uintN defineHow = (op == JSOP_INITMETHOD)

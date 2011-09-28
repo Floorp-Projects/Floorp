@@ -473,7 +473,8 @@ class Writer
     }
 
     nj::LIns *ldiRuntimeProtoHazardShape(nj::LIns *runtime) const {
-        return name(lir->insLoad(nj::LIR_ldi, runtime, offsetof(JSRuntime, protoHazardShape),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldi, runtime, 0,
                                  ACCSET_RUNTIME),
                     "protoHazardShape");
     }
@@ -490,7 +491,8 @@ class Writer
     }
 
     nj::LIns *ldiObjShape(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldi, obj, offsetof(JSObject, objShape), ACCSET_OBJ_SHAPE),
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldi, obj, 0, ACCSET_OBJ_SHAPE),
                     "objShape");
     }
 

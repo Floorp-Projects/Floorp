@@ -212,7 +212,9 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
     }
 
     JS_ASSERT(obj->getClass() == &ArrayBuffer::slowClass);
-    obj->setSharedNonNativeMap();
+
+    if (!InitNonNativeObject(cx, obj, &ArrayBufferClass))
+        return NULL;
     obj->setClass(&ArrayBufferClass);
 
     /*
@@ -1285,7 +1287,9 @@ class TypedArrayTemplate
         JS_ASSERT(getDataOffset(obj) <= offsetData(obj, bufferByteLength));
 
         JS_ASSERT(obj->getClass() == slowClass());
-        obj->setSharedNonNativeMap();
+
+        if (!InitNonNativeObject(cx, obj, fastClass()))
+            return NULL;
         obj->setClass(fastClass());
 
         // FIXME Bug 599008: make it ok to call preventExtensions here.

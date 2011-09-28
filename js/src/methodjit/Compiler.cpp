@@ -2760,15 +2760,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_DEBUGGER)
 
-          BEGIN_CASE(JSOP_UNBRAND)
-            jsop_unbrand();
-          END_CASE(JSOP_UNBRAND)
-
-          BEGIN_CASE(JSOP_UNBRANDTHIS)
-            prepareStubCall(Uses(1));
-            INLINE_STUBCALL(stubs::UnbrandThis, REJOIN_FALLTHROUGH);
-          END_CASE(JSOP_UNBRANDTHIS)
-
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
@@ -4455,10 +4446,9 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
-    DataLabel32 inlineShapeLabel;
-    Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                                    Imm32(int32(INVALID_SHAPE)),
-                                    inlineShapeLabel);
+    DataLabelPtr inlineShapeLabel;
+    Jump j = masm.branchPtrWithPatch(Assembler::NotEqual, shapeReg,
+                                     inlineShapeLabel, ImmPtr(NULL));
     Label inlineShapeJump = masm.label();
 
     RESERVE_OOL_SPACE(stubcc.masm);
@@ -4492,11 +4482,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     labels.setValueLoad(masm, pic.fastPathRejoin, fastValueLoad);
     if (pic.hasTypeCheck)
         labels.setInlineTypeJump(masm, pic.fastPathStart, typeCheck);
-#ifdef JS_CPU_X64
-    labels.setInlineShapeJump(masm, inlineShapeLabel, inlineShapeJump);
-#else
     labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
-#endif
 
     CHECK_IC_SPACE();
 
@@ -4577,10 +4563,9 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
-    DataLabel32 inlineShapeLabel;
-    Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                           Imm32(int32(INVALID_SHAPE)),
-                           inlineShapeLabel);
+    DataLabelPtr inlineShapeLabel;
+    Jump j = masm.branchPtrWithPatch(Assembler::NotEqual, shapeReg,
+                                     inlineShapeLabel, ImmPtr(NULL));
     Label inlineShapeJump = masm.label();
 
     /* Slow path. */
@@ -4614,11 +4599,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     labels.setInlineShapeOffset(masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
     labels.setValueLoad(masm, pic.fastPathRejoin, fastValueLoad);
     labels.setInlineTypeJump(masm, pic.fastPathStart, typeCheck);
-#ifdef JS_CPU_X64
-    labels.setInlineShapeJump(masm, inlineShapeLabel, inlineShapeJump);
-#else
     labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
-#endif
 
     CHECK_IC_SPACE();
 
@@ -4733,10 +4714,9 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
 
-    DataLabel32 inlineShapeLabel;
-    Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                           Imm32(int32(INVALID_SHAPE)),
-                           inlineShapeLabel);
+    DataLabelPtr inlineShapeLabel;
+    Jump j = masm.branchPtrWithPatch(Assembler::NotEqual, shapeReg,
+                                     inlineShapeLabel, ImmPtr(NULL));
     Label inlineShapeJump = masm.label();
 
     /* Slow path. */
@@ -4785,11 +4765,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     labels.setDslotsLoadOffset(masm.differenceBetween(pic.fastPathRejoin, dslotsLoadLabel));
     labels.setInlineShapeOffset(masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
     labels.setValueLoad(masm, pic.fastPathRejoin, fastValueLoad);
-#ifdef JS_CPU_X64
-    labels.setInlineShapeJump(masm, inlineShapeLabel, inlineShapeJump);
-#else
     labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
-#endif
 
     stubcc.rejoin(Changes(2));
     pics.append(pic);
@@ -4834,7 +4810,7 @@ mjit::Compiler::testSingletonProperty(JSObject *obj, jsid id)
     if (shape->hasDefaultGetter()) {
         if (!shape->hasSlot())
             return false;
-        if (holder->getSlot(shape->slot).isUndefined())
+        if (holder->getSlot(shape->slot()).isUndefined())
             return false;
     } else if (!shape->isMethod()) {
         return false;
@@ -5246,10 +5222,9 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
     /* Guard on shape. */
     masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
-    DataLabel32 inlineShapeData;
-    Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                                    Imm32(int32(INVALID_SHAPE)),
-                                    inlineShapeData);
+    DataLabelPtr inlineShapeData;
+    Jump j = masm.branchPtrWithPatch(Assembler::NotEqual, shapeReg,
+                                     inlineShapeData, ImmPtr(NULL));
     Label afterInlineShapeJump = masm.label();
 
     /* Slow path. */
@@ -5288,8 +5263,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
 
     SetPropLabels &labels = pic.setPropLabels();
     labels.setInlineShapeData(masm, pic.shapeGuard, inlineShapeData);
-    labels.setDslotsLoad(masm, pic.fastPathRejoin, dslotsLoadLabel, vr);
-    labels.setInlineValueStore(masm, pic.fastPathRejoin, inlineValueStore, vr);
+    labels.setDslotsLoad(masm, pic.fastPathRejoin, dslotsLoadLabel);
+    labels.setInlineValueStore(masm, pic.fastPathRejoin, inlineValueStore);
     labels.setInlineShapeJump(masm, pic.shapeGuard, afterInlineShapeJump);
 
     pics.append(pic);
@@ -5963,7 +5938,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
          */
         const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(atom));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
-            Value *value = &globalObj->getSlotRef(shape->slot);
+            Value *value = &globalObj->getSlotRef(shape->slot());
             if (!value->isUndefined() &&
                 !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
                 watchGlobalReallocation();
@@ -5998,9 +5973,9 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
         objReg = frame.allocReg();
 
-        masm.load32FromImm(&obj->objShape, objReg);
-        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
-                                            Imm32(int32(INVALID_SHAPE)), ic.shape);
+        masm.loadPtrFromImm(&obj->lastProp, objReg);
+        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, objReg,
+                                             ic.shape, ImmPtr(NULL));
         masm.move(ImmPtr(obj), objReg);
     } else {
         objReg = frame.ownRegForData(fe);
@@ -6008,8 +5983,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
         RegisterID reg = frame.allocReg();
 
         masm.loadShape(objReg, reg);
-        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
-                                            Imm32(int32(INVALID_SHAPE)), ic.shape);
+        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, reg,
+                                             ic.shape, ImmPtr(NULL));
         frame.freeReg(reg);
     }
     stubcc.linkExit(shapeGuard, Uses(0));
@@ -6049,7 +6024,6 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
     getGlobalNames.append(ic);
     finishBarrier(barrier, REJOIN_GETTER, 0);
-
 #else
     jsop_getgname_slow(index);
 #endif
@@ -6193,7 +6167,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
             watchGlobalReallocation();
-            Value *value = &globalObj->getSlotRef(shape->slot);
+            Value *value = &globalObj->getSlotRef(shape->slot());
             RegisterID reg = frame.allocReg();
             masm.move(ImmPtr(value), reg);
             frame.storeTo(frame.peek(-1), Address(reg), popGuaranteed);
@@ -6226,10 +6200,9 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
         ic.shapeReg = ic.objReg;
         ic.objConst = true;
 
-        masm.load32FromImm(&obj->objShape, ic.shapeReg);
-        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, ic.shapeReg,
-                                            Imm32(int32(INVALID_SHAPE)),
-                                            ic.shape);
+        masm.loadPtrFromImm(&obj->lastProp, ic.shapeReg);
+        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, ic.shapeReg,
+                                             ic.shape, ImmPtr(NULL));
         masm.move(ImmPtr(obj), ic.objReg);
     } else {
         ic.objReg = frame.copyDataIntoReg(objFe);
@@ -6237,9 +6210,8 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
         ic.objConst = false;
 
         masm.loadShape(ic.objReg, ic.shapeReg);
-        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, ic.shapeReg,
-                                            Imm32(int32(INVALID_SHAPE)),
-                                            ic.shape);
+        shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, ic.shapeReg,
+                                             ic.shape, ImmPtr(NULL));
         frame.freeReg(ic.shapeReg);
     }
     ic.shapeGuardJump = shapeGuard;
@@ -6296,13 +6268,6 @@ mjit::Compiler::jsop_getelem_slow()
     testPushedType(REJOIN_FALLTHROUGH, -2, /* ool = */ false);
     frame.popn(2);
     pushSyncedEntry(0);
-}
-
-void
-mjit::Compiler::jsop_unbrand()
-{
-    prepareStubCall(Uses(1));
-    INLINE_STUBCALL(stubs::Unbrand, REJOIN_FALLTHROUGH);
 }
 
 bool

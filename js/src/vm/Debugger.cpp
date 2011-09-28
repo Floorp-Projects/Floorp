@@ -633,7 +633,7 @@ Debugger::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Va
         shape = obj->lastProperty();
         okResumption = shape->previous() &&
              !shape->previous()->previous() &&
-             (shape->propid == returnId || shape->propid == throwId) &&
+             (shape->propid() == returnId || shape->propid() == throwId) &&
              shape->isDataDescriptor();
     }
     if (!okResumption) {
@@ -649,7 +649,7 @@ Debugger::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Va
         vp->setUndefined();
         return JSTRAP_ERROR;
     }
-    return shape->propid == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
+    return shape->propid() == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
 }
 
 bool

@@ -1724,7 +1724,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
 
             if (slotp) {
                 JS_ASSERT(obj->getSlot(JSSLOT_BLOCK_DEPTH).isInt32());
-                *slotp = obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32() + shape->shortid;
+                *slotp = obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32() + shape->shortid();
             }
             return stmt;
         }
@@ -1788,8 +1788,8 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                      * from our variable object here.
                      */
                     if (!shape->writable() && !shape->configurable() &&
-                        shape->hasDefaultGetter() && obj->containsSlot(shape->slot)) {
-                        *constp = obj->getSlot(shape->slot);
+                        shape->hasDefaultGetter() && obj->containsSlot(shape->slot())) {
+                        *constp = obj->getSlot(shape->slot());
                     }
                 }
 
@@ -2029,8 +2029,10 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
      * extensibleParents.
      */
     if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
-        cg->bindings.extensibleParents())
-        blockObj->setBlockOwnShape(cx);
+        cg->bindings.extensibleParents()) {
+        if (!Shape::setExtensibleParents(cx, &blockObj->lastProp))
+            return false;
+    }
 
     return true;
 }
@@ -3947,13 +3949,6 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
     if (cg->needsEagerArguments()) {
         CG_SWITCH_TO_PROLOG(cg);
         if (js_Emit1(cx, cg, JSOP_ARGUMENTS) < 0 || js_Emit1(cx, cg, JSOP_POP) < 0)
-            return false;
-        CG_SWITCH_TO_MAIN(cg);
-    }
-
-    if (cg->flags & TCF_FUN_UNBRAND_THIS) {
-        CG_SWITCH_TO_PROLOG(cg);
-        if (js_Emit1(cx, cg, JSOP_UNBRANDTHIS) < 0)
             return false;
         CG_SWITCH_TO_MAIN(cg);
     }
@@ -7125,11 +7120,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
         }
 
-        if (cg->funbox && cg->funbox->shouldUnbrand(methodInits, slowMethodInits)) {
-            obj = NULL;
-            if (js_Emit1(cx, cg, JSOP_UNBRAND) < 0)
-                return JS_FALSE;
-        }
         if (!EmitEndInit(cx, cg, pn->pn_count))
             return JS_FALSE;
 

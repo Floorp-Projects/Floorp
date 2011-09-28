@@ -849,6 +849,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 "Script",
                 "Xml",
                 "Shape",
+                "BaseShape",
                 "TypeObject",
             };
             JS_STATIC_ASSERT(JS_ARRAY_LENGTH(trace_types) == JSTRACE_LAST + 1);
