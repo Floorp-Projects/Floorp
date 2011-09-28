@@ -101,8 +101,11 @@ TaskbarWindowPreview::TaskbarWindowPreview(ITaskbarList4 *aTaskbar, nsITaskbarPr
 }
 
 TaskbarWindowPreview::~TaskbarWindowPreview() {
-  if (mWnd)
+  if (IsWindowAvailable()) {
     DetachFromNSWindow();
+  } else {
+    mWnd = NULL;
+  }
 }
 
 nsresult

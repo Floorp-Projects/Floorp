@@ -76,6 +76,9 @@ protected:
   // Detaches this preview from the nsWindow instance it's tied to
   virtual void DetachFromNSWindow();
 
+  // Determines if the window is available and a destroy has not yet started
+  PRBool IsWindowAvailable() const;
+
   // Marks this preview as being active
   virtual nsresult ShowActive(PRBool active) = 0;
   // Gets a reference to the window used to handle the preview messages
