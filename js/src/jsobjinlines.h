@@ -91,38 +91,10 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
             return false;
     }
 
-    if (isNative())
-        extensibleShapeChange(cx);
+    if (isNative() && !extensibleShapeChange(cx))
+        return false;
 
     flags |= NOT_EXTENSIBLE;
-    return true;
-}
-
-inline bool
-JSObject::brand(JSContext *cx)
-{
-    JS_ASSERT(!generic());
-    JS_ASSERT(!branded());
-    JS_ASSERT(isNative());
-    JS_ASSERT(!cx->typeInferenceEnabled());
-    generateOwnShape(cx);
-    if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
-        return false;
-    flags |= BRANDED;
-    return true;
-}
-
-inline bool
-JSObject::unbrand(JSContext *cx)
-{
-    JS_ASSERT(isNative());
-    if (branded()) {
-        generateOwnShape(cx);
-        if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
-            return false;
-        flags &= ~BRANDED;
-    }
-    setGeneric();
     return true;
 }
 
@@ -206,53 +178,37 @@ JSObject::finalize(JSContext *cx)
  * Initializer for Call objects for functions and eval frames. Set class,
  * parent, map, and shape, and allocate slots.
  */
-inline void
+inline bool
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
     init(cx, &js::CallClass, &js::types::emptyTypeObject, parent, NULL, false);
-    lastProp = bindings.lastShape();
+    setMap(bindings.lastShape());
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
-     * its Call should have its own shape; see js::Bindings::extensibleParents.
+     * its Call should have its own shape; see js::BaseShape::extensibleParents.
      */
-    if (bindings.extensibleParents())
-        setOwnShape(js_GenerateShape(cx));
-    else
-        objShape = lastProp->shapeid;
+    if (lastProp->extensibleParents())
+        return generateOwnShape(cx);
+    return true;
 }
 
 /*
  * Initializer for cloned block objects. Set class, prototype, frame, map, and
  * shape.
  */
-inline void
+inline bool
 JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
     init(cx, &js::BlockClass, type, NULL, frame, false);
 
     /* Cloned blocks copy their prototype's map; it had better be shareable. */
-    JS_ASSERT(!getProto()->inDictionaryMode() || getProto()->lastProp->frozen());
-    lastProp = getProto()->lastProp;
+    JS_ASSERT(!getProto()->inDictionaryMode());
+    setMap(getProto()->lastProp);
 
-    /*
-     * If the prototype has its own shape, that means the clone should, too; see
-     * js::Bindings::extensibleParents.
-     */
-    if (getProto()->hasOwnShape())
-        setOwnShape(js_GenerateShape(cx));
-    else
-        objShape = lastProp->shapeid;
-}
-
-/* 
- * Mark a compile-time block as OWN_SHAPE, indicating that its run-time clones
- * also need unique shapes. See js::Bindings::extensibleParents.
- */
-inline void
-JSObject::setBlockOwnShape(JSContext *cx) {
-    JS_ASSERT(isStaticBlock());
-    setOwnShape(js_GenerateShape(cx));
+    if (lastProp->extensibleParents())
+        return generateOwnShape(cx);
+    return true;
 }
 
 /*
@@ -262,13 +218,10 @@ JSObject::setBlockOwnShape(JSContext *cx) {
 inline const js::Shape *
 JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp)
 {
-    JS_ASSERT(canHaveMethodBarrier());
-    JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(nativeContains(cx, shape));
     JS_ASSERT(shape.isMethod());
-    JS_ASSERT(shape.methodObject() == vp->toObject());
     JS_ASSERT(shape.writable());
-    JS_ASSERT(shape.slot != SHAPE_INVALID_SLOT);
+    JS_ASSERT(shape.hasSlot());
     JS_ASSERT(shape.hasDefaultSetter());
     JS_ASSERT(!isGlobal());  /* i.e. we are not changing the global shape */
 
@@ -287,47 +240,21 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
      * equivalent to this->setProperty(cx, shape.id, vp) except that any
      * watchpoint on the property is not triggered.
      */
-    uint32 slot = shape.slot;
+    uint32 slot = shape.slot();
     const js::Shape *newshape = methodShapeChange(cx, shape);
     if (!newshape)
         return NULL;
     JS_ASSERT(!newshape->isMethod());
-    JS_ASSERT(newshape->slot == slot);
+    JS_ASSERT(newshape->slot() == slot);
     vp->setObject(*funobj);
     nativeSetSlot(slot, *vp);
     return newshape;
 }
 
-static JS_ALWAYS_INLINE bool
-ChangesMethodValue(const js::Value &prev, const js::Value &v)
-{
-    JSObject *prevObj;
-    return prev.isObject() && (prevObj = &prev.toObject())->isFunction() &&
-           (!v.isObject() || &v.toObject() != prevObj);
-}
-
-inline const js::Shape *
-JSObject::methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v)
-{
-    if (brandedOrHasMethodBarrier() && shape.slot != SHAPE_INVALID_SLOT) {
-        const js::Value &prev = nativeGetSlot(shape.slot);
-
-        if (ChangesMethodValue(prev, v))
-            return methodShapeChange(cx, shape);
-    }
-    return &shape;
-}
-
 inline bool
-JSObject::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
+JSObject::canHaveMethodBarrier() const
 {
-    if (brandedOrHasMethodBarrier()) {
-        const js::Value &prev = nativeGetSlot(slot);
-
-        if (ChangesMethodValue(prev, v))
-            return methodShapeChange(cx, slot);
-    }
-    return true;
+    return isObject() || isFunction() || isPrimitive() || isDate();
 }
 
 inline const js::Value *
@@ -385,12 +312,6 @@ JSObject::setReservedSlot(uintN index, const js::Value &v)
 {
     JS_ASSERT(index < JSSLOT_FREE(getClass()));
     setSlot(index, v);
-}
-
-inline bool
-JSObject::canHaveMethodBarrier() const
-{
-    return isObject() || isFunction() || isPrimitive() || isDate();
 }
 
 inline const js::Value &
@@ -854,15 +775,6 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
 
     JS_ASSERT(denseArray == (aclasp == &js::ArrayClass));
 
-#ifdef DEBUG
-    /*
-     * NB: objShape must not be set here; rather, the caller must call setMap
-     * or setSharedNonNativeMap after calling init. To defend this requirement
-     * we set objShape to a value that obj->shape() is asserted never to return.
-     */
-    objShape = INVALID_SHAPE;
-#endif
-
     privateData = priv;
 
     /*
@@ -943,7 +855,12 @@ JSObject::principals(JSContext *cx)
 inline uint32
 JSObject::slotSpan() const
 {
-    return lastProp->slotSpan;
+    if (inDictionaryMode()) {
+        JS_ASSERT(lastProp->base()->isOwned());
+        return lastProp->base()->slotSpan;
+    }
+    uint32 free = JSSLOT_FREE(getClass());
+    return lastProp->hasMissingSlot() ? free : JS_MAX(free, lastProp->maybeSlot() + 1);
 }
 
 inline bool
@@ -955,9 +872,8 @@ JSObject::containsSlot(uint32 slot) const
 inline void
 JSObject::setMap(js::Shape *amap)
 {
-    JS_ASSERT(!hasOwnShape());
+    JS_ASSERT_IF(lastProp && isNative(), !inDictionaryMode());
     lastProp = amap;
-    objShape = lastProp->shapeid;
 }
 
 inline js::Value &
@@ -976,6 +892,22 @@ JSObject::nativeGetSlot(uintN slot) const
     return getSlot(slot);
 }
 
+inline JSFunction *
+JSObject::nativeGetMethod(const js::Shape *shape) const
+{
+    /*
+     * For method shapes, this object must have an uncloned function object in
+     * the shape's slot.
+     */
+    JS_ASSERT(shape->isMethod());
+#ifdef DEBUG
+    JSObject *obj = &nativeGetSlot(shape->slot()).toObject();
+    JS_ASSERT(obj->isFunction() && obj->getFunctionPrivate() == obj);
+#endif
+
+    return (JSFunction *) &nativeGetSlot(shape->slot()).toObject();
+}
+
 inline void
 JSObject::nativeSetSlot(uintN slot, const js::Value &value)
 {
@@ -987,8 +919,8 @@ JSObject::nativeSetSlot(uintN slot, const js::Value &value)
 inline void
 JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value)
 {
-    nativeSetSlot(shape->slot, value);
-    js::types::AddTypePropertyId(cx, this, shape->propid, value);
+    nativeSetSlot(shape->slot(), value);
+    js::types::AddTypePropertyId(cx, this, shape->propid(), value);
 }
 
 inline bool
@@ -1001,20 +933,6 @@ inline bool
 JSObject::isNewborn() const
 {
     return !lastProp;
-}
-
-inline void
-JSObject::clearOwnShape()
-{
-    flags &= ~OWN_SHAPE;
-    objShape = lastProp->shapeid;
-}
-
-inline void
-JSObject::setOwnShape(uint32 s)
-{
-    flags |= OWN_SHAPE;
-    objShape = s;
 }
 
 inline js::Shape **
@@ -1039,14 +957,14 @@ JSObject::nativeContains(JSContext *cx, jsid id)
 inline bool
 JSObject::nativeContains(JSContext *cx, const js::Shape &shape)
 {
-    return nativeLookup(cx, shape.propid) == &shape;
+    return nativeLookup(cx, shape.propid()) == &shape;
 }
 
 inline const js::Shape *
 JSObject::lastProperty() const
 {
-    JS_ASSERT(isNative());
-    JS_ASSERT(!JSID_IS_VOID(lastProp->propid));
+    JS_ASSERT_IF(!isNative(), lastProp->isEmptyShape());
+    JS_ASSERT_IF(!lastProp->isEmptyShape(), !JSID_IS_EMPTY(lastProp->propid()));
     return lastProp;
 }
 
@@ -1081,8 +999,6 @@ inline void
 JSObject::setLastProperty(const js::Shape *shape)
 {
     JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(!JSID_IS_VOID(shape->propid));
-    JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->propid));
     JS_ASSERT(shape->compartment() == compartment());
 
     lastProp = const_cast<js::Shape *>(shape);
@@ -1092,15 +1008,8 @@ inline void
 JSObject::removeLastProperty()
 {
     JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(!JSID_IS_VOID(lastProp->parent->propid));
 
     lastProp = lastProp->parent;
-}
-
-inline void
-JSObject::setSharedNonNativeMap()
-{
-    setMap(&js::Shape::sharedNonNative);
 }
 
 inline JSBool
@@ -1236,6 +1145,19 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
 }
 
 static inline bool
+InitNonNativeObject(JSContext *cx, JSObject *obj, js::Class *clasp)
+{
+    JS_ASSERT(!clasp->isNative());
+
+    js::EmptyShape *empty = js::BaseShape::lookupEmpty(cx, clasp);
+    if (!empty)
+        return false;
+
+    obj->setMap(empty);
+    return true;
+}
+
+static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
 {
 #ifdef JS_THREADSAFE
@@ -1282,23 +1204,22 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
         kind = GetBackgroundAllocKind(kind);
 
     JSObject* obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
 
-    if (obj) {
-        /*
-         * Default parent to the parent of the prototype, which was set from
-         * the parent of the prototype's constructor.
-         */
-        bool denseArray = (clasp == &ArrayClass);
-        obj->init(cx, clasp, type, parent, NULL, denseArray);
+    /*
+     * Default parent to the parent of the prototype, which was set from
+     * the parent of the prototype's constructor.
+     */
+    bool denseArray = (clasp == &ArrayClass);
+    obj->init(cx, clasp, type, parent, NULL, denseArray);
 
-        JS_ASSERT(type->canProvideEmptyShape(clasp));
-        js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
+    JS_ASSERT(type->canProvideEmptyShape(clasp));
+    js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
+    if (!empty)
+        return NULL;
 
-        if (empty)
-            obj->setMap(empty);
-        else
-            obj = NULL;
-    }
+    obj->setMap(empty);
 
     return obj;
 }
@@ -1458,13 +1379,10 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
               (!parent && proto) ? proto->getParent() : parent,
               NULL, clasp == &ArrayClass);
 
-    if (clasp->isNative()) {
-        if (!InitScopeForObject(cx, obj, clasp, type, kind)) {
-            obj = NULL;
-            goto out;
-        }
-    } else {
-        obj->setSharedNonNativeMap();
+    if (clasp->isNative()
+        ? !InitScopeForObject(cx, obj, clasp, type, kind)
+        : !InitNonNativeObject(cx, obj, clasp)) {
+        obj = NULL;
     }
 
 out:
@@ -1631,7 +1549,6 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
     obj->setType(type);
     obj->flags = baseobj->flags;
     obj->lastProp = baseobj->lastProp;
-    obj->objShape = baseobj->objShape;
 
     return obj;
 }

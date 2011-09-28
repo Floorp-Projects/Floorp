@@ -483,11 +483,26 @@ struct JS_FRIEND_API(JSCompartment) {
     js::EmptyShape               *emptyEnumeratorShape;
     js::EmptyShape               *emptyWithShape;
 
-    typedef js::HashSet<js::EmptyShape *,
-                        js::DefaultHasher<js::EmptyShape *>,
-                        js::SystemAllocPolicy> EmptyShapeSet;
+    /*
+     * Set of all unowned base shapes in the compartment, with optional empty
+     * scopes. For sharing between shapes with common state.
+     */
 
-    EmptyShapeSet                emptyShapes;
+    struct BaseShapeEntry {
+        js::BaseShape *base;
+        js::EmptyShape *empty;
+
+        typedef const js::BaseShape *Lookup;
+
+        static inline js::HashNumber hash(const js::BaseShape *base);
+        static inline bool match(const BaseShapeEntry &key, const js::BaseShape *lookup);
+    };
+
+    typedef js::HashSet<BaseShapeEntry, BaseShapeEntry, js::SystemAllocPolicy> BaseShapeSet;
+
+    BaseShapeSet                 baseShapes;
+
+    void sweepBaseShapeTable(JSContext *cx);
 
     /*
      * Initial shapes given to RegExp and String objects, encoding the initial

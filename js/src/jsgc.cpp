@@ -137,6 +137,7 @@ const uint32 Arena::ThingSizes[] = {
     sizeof(JSFunction),         /* FINALIZE_FUNCTION            */
     sizeof(JSScript),           /* FINALIZE_SCRIPT              */
     sizeof(Shape),              /* FINALIZE_SHAPE               */
+    sizeof(BaseShape),          /* FINALIZE_BASE_SHAPE          */
     sizeof(types::TypeObject),  /* FINALIZE_TYPE_OBJECT         */
 #if JS_HAS_XML_SUPPORT
     sizeof(JSXML),              /* FINALIZE_XML                 */
@@ -164,6 +165,7 @@ const uint32 Arena::FirstThingOffsets[] = {
     OFFSET(JSFunction),         /* FINALIZE_FUNCTION            */
     OFFSET(JSScript),           /* FINALIZE_SCRIPT              */
     OFFSET(Shape),              /* FINALIZE_SHAPE               */
+    OFFSET(BaseShape),          /* FINALIZE_BASE_SHAPE          */
     OFFSET(types::TypeObject),  /* FINALIZE_TYPE_OBJECT         */
 #if JS_HAS_XML_SUPPORT
     OFFSET(JSXML),              /* FINALIZE_XML                 */
@@ -393,6 +395,9 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind)
         break;
       case FINALIZE_SHAPE:
 	FinalizeTypedArenas<Shape>(cx, al, thingKind);
+        break;
+      case FINALIZE_BASE_SHAPE:
+        FinalizeTypedArenas<BaseShape>(cx, al, thingKind);
         break;
       case FINALIZE_TYPE_OBJECT:
 	FinalizeTypedArenas<types::TypeObject>(cx, al, thingKind);
@@ -1422,6 +1427,7 @@ void
 ArenaLists::finalizeShapes(JSContext *cx)
 {
     finalizeNow(cx, FINALIZE_SHAPE);
+    finalizeNow(cx, FINALIZE_BASE_SHAPE);
     finalizeNow(cx, FINALIZE_TYPE_OBJECT);
 }
 
@@ -2198,18 +2204,6 @@ BeginMarkPhase(JSContext *cx, GCMarker *gcmarker, JSGCInvocationKind gckind GCTI
 {
     JSRuntime *rt = cx->runtime;
 
-    /*
-     * Reset the property cache's type id generator so we can compress ids.
-     * Same for the protoHazardShape proxy-shape standing in for all object
-     * prototypes having readonly or setter properties.
-     */
-    if (rt->shapeGen & SHAPE_OVERFLOW_BIT || (rt->gcZeal() && !rt->gcCurrentCompartment)) {
-        JS_ASSERT(!rt->gcCurrentCompartment);
-        rt->gcRegenShapes = true;
-        rt->shapeGen = 0;
-        rt->protoHazardShape = 0;
-    }
-
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->purge(cx);
 
@@ -2656,7 +2650,6 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIMER_P
 #endif
 
     rt->gcMarkAndSweep = false;
-    rt->gcRegenShapes = false;
     rt->setGCLastBytes(rt->gcBytes, gckind);
     rt->gcCurrentCompartment = NULL;
     rt->gcWeakMapList = NULL;
@@ -2693,7 +2686,7 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     RecordNativeStackTopForGC(cx);
 
     GCCrashData crashData;
-    crashData.isRegen = rt->shapeGen & SHAPE_OVERFLOW_BIT;
+    crashData.isRegen = false;
     crashData.isCompartment = !!comp;
     crash::SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
 

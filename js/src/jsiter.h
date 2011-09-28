@@ -73,7 +73,7 @@ struct NativeIterator {
     jsid      *props_array;
     jsid      *props_cursor;
     jsid      *props_end;
-    uint32    *shapes_array;
+    const Shape **shapes_array;
     uint32    shapes_length;
     uint32    shapes_key;
     uint32    flags;

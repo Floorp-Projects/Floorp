@@ -61,7 +61,7 @@ ShapeHasher::hash(const Lookup l)
 inline bool
 ShapeHasher::match(const Key k, const Lookup l)
 {
-    return l->matches(k);
+    return k->matches(l);
 }
 
 Shape *
@@ -95,8 +95,6 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     JS_ASSERT(!parent->inDictionary());
     JS_ASSERT(!child->parent);
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(!JSID_IS_VOID(parent->propid));
-    JS_ASSERT(!JSID_IS_VOID(child->propid));
     JS_ASSERT(cx->compartment == compartment);
     JS_ASSERT(child->compartment() == parent->compartment());
 
@@ -136,7 +134,6 @@ void
 Shape::removeChild(Shape *child)
 {
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(!JSID_IS_VOID(propid));
 
     KidsPointer *kidp = &kids;
     if (kidp->isShape()) {
@@ -154,7 +151,6 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     Shape *shape;
 
     JS_ASSERT(parent);
-    JS_ASSERT(!JSID_IS_VOID(parent->propid));
 
     /*
      * The property tree has extremely low fan-out below its root in
@@ -181,8 +177,12 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     if (!shape)
         return NULL;
 
-    new (shape) Shape(child.propid, child.rawGetter, child.rawSetter, child.slot, child.attrs,
-                      child.flags, child.shortid, js_GenerateShape(cx));
+    BaseShape *base = child.base();
+    if (base->isOwned())
+        base = base->base;
+
+    new (shape) Shape(base, child.propid_, child.slot_, child.attrs,
+                      child.flags, child.shortid_);
 
     if (!insertChild(cx, parent, shape))
         return NULL;
@@ -200,8 +200,6 @@ Shape::finalize(JSContext *cx)
         if (kids.isHash())
             cx->delete_(kids.toHash());
     }
-
-    freeTable(cx);
 }
 
 #ifdef DEBUG
@@ -222,6 +220,8 @@ KidsPointer::checkConsistency(const Shape *aKid) const
 void
 Shape::dump(JSContext *cx, FILE *fp) const
 {
+    jsid propid = this->propid();
+
     JS_ASSERT(!JSID_IS_VOID(propid));
 
     if (JSID_IS_INT(propid)) {
@@ -244,10 +244,11 @@ Shape::dump(JSContext *cx, FILE *fp) const
             FileEscapedString(fp, str, '"');
     }
 
-    fprintf(fp, " g/s %p/%p slot %u attrs %x ",
-            JS_FUNC_TO_DATA_PTR(void *, rawGetter),
-            JS_FUNC_TO_DATA_PTR(void *, rawSetter),
-            slot, attrs);
+    fprintf(fp, " g/s %p/%p slot %d attrs %x ",
+            JS_FUNC_TO_DATA_PTR(void *, base()->rawGetter),
+            JS_FUNC_TO_DATA_PTR(void *, base()->rawSetter),
+            hasSlot() ? slot() : -1, attrs);
+
     if (attrs) {
         int first = 1;
         fputs("(", fp);
@@ -274,7 +275,7 @@ Shape::dump(JSContext *cx, FILE *fp) const
         fputs(") ", fp);
     }
 
-    fprintf(fp, "shortid %d\n", shortid);
+    fprintf(fp, "shortid %d\n", shortid());
 }
 
 void
@@ -282,8 +283,8 @@ Shape::dumpSubtree(JSContext *cx, int level, FILE *fp) const
 {
     if (!parent) {
         JS_ASSERT(level == 0);
-        JS_ASSERT(JSID_IS_EMPTY(propid));
-        fprintf(fp, "class %s emptyShape %u\n", clasp->name, shapeid);
+        JS_ASSERT(JSID_IS_EMPTY(propid_));
+        fprintf(fp, "class %s emptyShape\n", getClass()->name);
     } else {
         fprintf(fp, "%*sid ", level, "");
         dump(cx, fp);
@@ -332,6 +333,7 @@ js::PropertyTree::dumpShapes(JSContext *cx)
 
         fprintf(dumpfp, "*** Compartment %p ***\n", (void *)*c);
 
+        /*
         typedef JSCompartment::EmptyShapeSet HS;
         HS &h = (*c)->emptyShapes;
         for (HS::Range r = h.all(); !r.empty(); r.popFront()) {
@@ -339,6 +341,7 @@ js::PropertyTree::dumpShapes(JSContext *cx)
             empty->dumpSubtree(cx, 0, dumpfp);
             putc('\n', dumpfp);
         }
+        */
     }
 }
 #endif

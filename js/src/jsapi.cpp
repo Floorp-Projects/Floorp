@@ -2256,6 +2256,10 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "shape";
         break;
 
+      case JSTRACE_BASE_SHAPE:
+        name = "base_shape";
+        break;
+
       case JSTRACE_TYPE_OBJECT:
         name = "type_object";
         break;
@@ -2319,6 +2323,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           }
 
           case JSTRACE_SHAPE:
+          case JSTRACE_BASE_SHAPE:
           case JSTRACE_TYPE_OBJECT:
             break;
 
@@ -3219,13 +3224,13 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
         Shape *shape = (Shape *) prop;
 
         if (shape->isMethod()) {
-            vp->setObject(shape->methodObject());
+            vp->setObject(*obj2->nativeGetMethod(shape));
             return !!obj2->methodReadBarrier(cx, *shape, vp);
         }
 
         /* Peek at the native property's slot value, without doing a Get. */
-        if (obj2->containsSlot(shape->slot)) {
-            *vp = obj2->nativeGetSlot(shape->slot);
+        if (shape->hasSlot()) {
+            *vp = obj2->nativeGetSlot(shape->slot());
             return true;
         }
     } else {
@@ -3596,12 +3601,12 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (shape->isMethod()) {
             desc->getter = JS_PropertyStub;
             desc->setter = JS_StrictPropertyStub;
-            desc->value.setObject(shape->methodObject());
+            desc->value.setObject(*obj2->nativeGetMethod(shape));
         } else {
             desc->getter = shape->getter();
             desc->setter = shape->setter();
-            if (obj2->containsSlot(shape->slot))
-                desc->value = obj2->nativeGetSlot(shape->slot);
+            if (shape->hasSlot())
+                desc->value = obj2->nativeGetSlot(shape->slot());
             else
                 desc->value.setUndefined();
         }
@@ -4033,11 +4038,11 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             shape = shape->previous();
 
         if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->propid));
+            JS_ASSERT(shape->isEmptyShape());
             *idp = JSID_VOID;
         } else {
             iterobj->setPrivate(const_cast<Shape *>(shape->previous()));
-            *idp = shape->propid;
+            *idp = shape->propid();
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
@@ -4271,7 +4276,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         }
 
         Value v;
-        if (!obj->getGeneric(cx, r.front().propid, &v))
+        if (!obj->getGeneric(cx, r.front().propid(), &v))
             return NULL;
         clone->getFlatClosureUpvars()[i] = v;
     }

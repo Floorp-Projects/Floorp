@@ -69,6 +69,7 @@ typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 typedef JSC::MacroAssembler::Call Call;
 typedef JSC::MacroAssembler::Label Label;
 typedef JSC::MacroAssembler::DataLabel32 DataLabel32;
+typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
 #if defined JS_MONOIC
 
@@ -97,11 +98,11 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
         stubs::GetGlobalName(f);
         return;
     }
-    uint32 slot = shape->slot;
+    uint32 slot = shape->slot();
 
     /* Patch shape guard. */
     Repatcher repatcher(f.jit());
-    repatcher.repatch(ic->fastPathStart.dataLabel32AtOffset(ic->shapeOffset), obj->shape());
+    repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj->lastProperty());
 
     /* Patch loads. */
     uint32 index = obj->dynamicSlotIndex(slot);
@@ -149,116 +150,19 @@ PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 }
 
 void
-SetGlobalNameIC::patchExtraShapeGuard(Repatcher &repatcher, int32 shape)
+SetGlobalNameIC::patchExtraShapeGuard(Repatcher &repatcher, const Shape *shape)
 {
     JS_ASSERT(hasExtraStub);
 
     JSC::CodeLocationLabel label(JSC::MacroAssemblerCodePtr(extraStub.start()));
-    repatcher.repatch(label.dataLabel32AtOffset(extraShapeGuard), shape);
+    repatcher.repatch(label.dataLabelPtrAtOffset(extraShapeGuard), shape);
 }
 
 void
-SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, int32 shape)
+SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, const Shape *shape)
 {
-    JSC::CodeLocationDataLabel32 label = fastPathStart.dataLabel32AtOffset(shapeOffset);
+    JSC::CodeLocationDataLabelPtr label = fastPathStart.dataLabelPtrAtOffset(shapeOffset);
     repatcher.repatch(label, shape);
-}
-
-static LookupStatus
-UpdateSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Shape *shape)
-{
-    Repatcher repatcher(ic->extraStub);
-
-    ic->patchExtraShapeGuard(repatcher, obj->shape());
-
-    uint32 index = obj->dynamicSlotIndex(shape->slot);
-    JSC::CodeLocationLabel label(JSC::MacroAssemblerCodePtr(ic->extraStub.start()));
-    label = label.labelAtOffset(ic->extraStoreOffset);
-    repatcher.patchAddressOffsetForValueStore(label, index * sizeof(Value),
-                                              ic->vr.isTypeKnown());
-
-    return Lookup_Cacheable;
-}
-
-static LookupStatus
-AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Shape *shape)
-{
-    Assembler masm;
-
-    Label start = masm.label();
-
-    DataLabel32 shapeLabel;
-    Jump guard = masm.branch32WithPatch(Assembler::NotEqual, ic->shapeReg, Imm32(obj->shape()),
-                                        shapeLabel);
-
-    /* A constant object needs rematerialization. */
-    if (ic->objConst)
-        masm.move(ImmPtr(obj), ic->objReg);
-
-    JS_ASSERT(obj->branded());
-
-    /*
-     * Load obj->slots. If ic->objConst, then this clobbers objReg, because
-     * ic->objReg == ic->shapeReg.
-     */
-    JS_ASSERT(!obj->isFixedSlot(shape->slot));
-    masm.loadPtr(Address(ic->objReg, JSObject::offsetOfSlots()), ic->shapeReg);
-
-    /* Test if overwriting a function-tagged slot. */
-    Address slot(ic->shapeReg, sizeof(Value) * obj->dynamicSlotIndex(shape->slot));
-    Jump isNotObject = masm.testObject(Assembler::NotEqual, slot);
-
-    /* Now, test if the object is a function object. */
-    masm.loadPayload(slot, ic->shapeReg);
-    Jump isFun = masm.testFunction(Assembler::Equal, ic->shapeReg);
-
-    /* Restore shapeReg to obj->slots, since we clobbered it. */
-    if (ic->objConst)
-        masm.move(ImmPtr(obj), ic->objReg);
-    masm.loadPtr(Address(ic->objReg, JSObject::offsetOfSlots()), ic->shapeReg);
-
-    /* If the object test fails, shapeReg is still obj->slots. */
-    isNotObject.linkTo(masm.label(), &masm);
-    DataLabel32 store = masm.storeValueWithAddressOffsetPatch(ic->vr, slot);
-
-    Jump done = masm.jump();
-
-    JITScript *jit = f.jit();
-    LinkerHelper linker(masm, JSC::METHOD_CODE);
-    JSC::ExecutablePool *ep = linker.init(f.cx);
-    if (!ep)
-        return Lookup_Error;
-    if (!jit->execPools.append(ep)) {
-        ep->release();
-        js_ReportOutOfMemory(f.cx);
-        return Lookup_Error;
-    }
-
-    if (!linker.verifyRange(jit))
-        return Lookup_Uncacheable;
-
-    linker.link(done, ic->fastPathStart.labelAtOffset(ic->fastRejoinOffset));
-    linker.link(guard, ic->slowPathStart);
-    linker.link(isFun, ic->slowPathStart);
-
-    JSC::CodeLocationLabel cs = linker.finalize();
-    JaegerSpew(JSpew_PICs, "generated setgname stub at %p\n", cs.executableAddress());
-
-    Repatcher repatcher(f.jit());
-    repatcher.relink(ic->fastPathStart.jumpAtOffset(ic->inlineShapeJump), cs);
-
-    int offset = linker.locationOf(shapeLabel) - linker.locationOf(start);
-    ic->extraShapeGuard = offset;
-    JS_ASSERT(ic->extraShapeGuard == offset);
-
-    ic->extraStub = JSC::JITCode(cs.executableAddress(), linker.size());
-    offset = linker.locationOf(store) - linker.locationOf(start);
-    ic->extraStoreOffset = offset;
-    JS_ASSERT(ic->extraStoreOffset == offset);
-
-    ic->hasExtraStub = true;
-
-    return Lookup_Cacheable;
 }
 
 static LookupStatus
@@ -279,36 +183,11 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
         return Lookup_Uncacheable;
     }
 
-    /* Branded sets must guard that they don't overwrite method-valued properties. */
-    if (obj->branded()) {
-        /*
-         * If this slot has a function valued property, the tail of this opcode
-         * could change the shape. Even if it doesn't, the IC is probably
-         * pointless, because it will always hit the function-test path and
-         * bail out. In these cases, don't bother building or updating the IC.
-         */
-        const Value &v = obj->getSlot(shape->slot);
-        if (v.isObject() && v.toObject().isFunction()) {
-            /*
-             * If we're going to rebrand, the object may unbrand, allowing this
-             * IC to come back to life. In that case, we don't disable the IC.
-             */
-            if (!ChangesMethodValue(v, f.regs.sp[-1]))
-                PatchSetFallback(f, ic);
-            return Lookup_Uncacheable;
-        }
-
-        if (ic->hasExtraStub)
-            return UpdateSetGlobalNameStub(f, ic, obj, shape);
-
-        return AttachSetGlobalNameStub(f, ic, obj, shape);
-    }
-
     /* Object is not branded, so we can use the inline path. */
     Repatcher repatcher(f.jit());
-    ic->patchInlineShapeGuard(repatcher, obj->shape());
+    ic->patchInlineShapeGuard(repatcher, obj->lastProperty());
 
-    uint32 index = obj->dynamicSlotIndex(shape->slot);
+    uint32 index = obj->dynamicSlotIndex(shape->slot());
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
     repatcher.patchAddressOffsetForValueStore(label, index * sizeof(Value),
                                               ic->vr.isTypeKnown());
@@ -1386,18 +1265,18 @@ JITScript::purgeMICs()
     ic::GetGlobalNameIC *getGlobalNames_ = getGlobalNames();
     for (uint32 i = 0; i < nGetGlobalNames; i++) {
         ic::GetGlobalNameIC &ic = getGlobalNames_[i];
-        JSC::CodeLocationDataLabel32 label = ic.fastPathStart.dataLabel32AtOffset(ic.shapeOffset);
-        repatch.repatch(label, int(INVALID_SHAPE));
+        JSC::CodeLocationDataLabelPtr label = ic.fastPathStart.dataLabelPtrAtOffset(ic.shapeOffset);
+        repatch.repatch(label, NULL);
     }
 
     ic::SetGlobalNameIC *setGlobalNames_ = setGlobalNames();
     for (uint32 i = 0; i < nSetGlobalNames; i++) {
         ic::SetGlobalNameIC &ic = setGlobalNames_[i];
-        ic.patchInlineShapeGuard(repatch, int32(INVALID_SHAPE));
+        ic.patchInlineShapeGuard(repatch, NULL);
 
         if (ic.hasExtraStub) {
             Repatcher repatcher(ic.extraStub);
-            ic.patchExtraShapeGuard(repatcher, int32(INVALID_SHAPE));
+            ic.patchExtraShapeGuard(repatcher, NULL);
         }
     }
 }
@@ -1405,9 +1284,6 @@ JITScript::purgeMICs()
 void
 ic::PurgeMICs(JSContext *cx, JSScript *script)
 {
-    /* MICs are purged during GC to handle changing shapes. */
-    JS_ASSERT(cx->runtime->gcRegenShapes);
-
     if (script->jitNormal)
         script->jitNormal->purgeMICs();
     if (script->jitCtor)

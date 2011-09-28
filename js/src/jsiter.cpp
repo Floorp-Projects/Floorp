@@ -210,8 +210,8 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     for (Shape::Range r = pobj->lastProperty()->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
 
-        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid) &&
-            !Enumerate(cx, obj, pobj, shape.propid, shape.enumerable(), flags, ht, props))
+        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid()) &&
+            !Enumerate(cx, obj, pobj, shape.propid(), shape.enumerable(), flags, ht, props))
         {
             return false;
         }
@@ -431,7 +431,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVect
 {
     size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
-        cx->malloc_(sizeof(NativeIterator) + plength * sizeof(jsid) + slength * sizeof(uint32));
+        cx->malloc_(sizeof(NativeIterator) + plength * sizeof(jsid) + slength * sizeof(Shape *));
     if (!ni)
         return NULL;
     ni->props_array = ni->props_cursor = (jsid *) (ni + 1);
@@ -446,7 +446,7 @@ NativeIterator::init(JSObject *obj, uintN flags, uint32 slength, uint32 key)
 {
     this->obj = obj;
     this->flags = flags;
-    this->shapes_array = (uint32 *) this->props_end;
+    this->shapes_array = (const Shape **) this->props_end;
     this->shapes_length = slength;
     this->shapes_key = key;
 }
@@ -495,7 +495,7 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
         JSObject *pobj = obj;
         size_t ind = 0;
         do {
-            ni->shapes_array[ind++] = pobj->shape();
+            ni->shapes_array[ind++] = pobj->lastProperty();
             pobj = pobj->getProto();
         } while (pobj);
         JS_ASSERT(ind == slength);
@@ -563,7 +563,7 @@ UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
-    Vector<uint32, 8> shapes(cx);
+    Vector<const Shape *, 8> shapes(cx);
     uint32 key = 0;
 
     bool keysOnly = (flags == JSITER_ENUMERATE);
@@ -593,9 +593,9 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                 NativeIterator *lastni = last->getNativeIterator();
                 if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     obj->isNative() &&
-                    obj->shape() == lastni->shapes_array[0] &&
+                    obj->lastProperty() == lastni->shapes_array[0] &&
                     proto && proto->isNative() &&
-                    proto->shape() == lastni->shapes_array[1] &&
+                    proto->lastProperty() == lastni->shapes_array[1] &&
                     !proto->getProto()) {
                     vp->setObject(*last);
                     UpdateNativeIterator(lastni, obj);
@@ -618,9 +618,9 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                     shapes.clear();
                     goto miss;
                 }
-                uint32 shape = pobj->shape();
-                key = (key + (key << 16)) ^ shape;
-                if (!shapes.append(shape))
+                const Shape *shape = pobj->lastProperty();
+                key = (key + (key << 16)) ^ ((jsuword)shape >> 3);
+                if (!shapes.append((Shape *) shape))
                     return false;
                 pobj = pobj->getProto();
             } while (pobj);
