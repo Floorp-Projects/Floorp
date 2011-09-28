@@ -509,7 +509,7 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
 }
 
 nsEventListenerManager*
-nsXULElement::GetEventListenerManagerForAttr(PRBool* aDefer)
+nsXULElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName, PRBool* aDefer)
 {
     // XXXbz sXBL/XBL2 issue: should we instead use GetCurrentDoc()
     // here, override BindToTree for those classes and munge event
@@ -529,7 +529,7 @@ nsXULElement::GetEventListenerManagerForAttr(PRBool* aDefer)
         return piTarget->GetListenerManager(PR_TRUE);
     }
 
-    return nsStyledElement::GetEventListenerManagerForAttr(aDefer);
+    return nsStyledElement::GetEventListenerManagerForAttr(aAttrName, aDefer);
 }
 
 // returns true if the element is not a list
