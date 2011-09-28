@@ -292,7 +292,7 @@ Wrapper::typeOf(JSContext *cx, JSObject *wrapper)
 }
 
 bool
-Wrapper::classPropertyIs(JSContext *cx, JSObject *wrapper, ESClassValue classValue)
+Wrapper::objectClassIs(JSObject *wrapper, ESClassValue classValue, JSContext *cx)
 {
     return ObjectClassIs(*wrappedObject(wrapper), classValue, cx);
 }
