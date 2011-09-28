@@ -261,7 +261,9 @@ toolbarbutton.urlbar-button {
   background-position: bottom right;
   background-repeat: no-repeat;
   border-bottom: @border_width_small@ solid @color_url_border@;
-  padding: 0px @padding_normal@ @padding_tiny@ @padding_tiny@;
+  padding: 0px @padding_tiny@ @padding_tiny@;
+  /* larger padding on the end to account for the background-image */
+  -moz-padding-end: @padding_xsmall@ !important;
 }
 
 #urlbar-icons:-moz-locale-dir(rtl) {
@@ -274,7 +276,7 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-icons toolbarbutton {
-  padding: 0px @padding_normal@ !important;
+  padding: 0px @padding_xxxnormal@ !important;
   margin: 0px !important;
   border: none;
 }
