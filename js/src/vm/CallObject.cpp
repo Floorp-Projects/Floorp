@@ -75,7 +75,8 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    obj->initCall(cx, bindings, &scopeChain);
+    if (!obj->initCall(cx, bindings, &scopeChain))
+        return NULL;
     obj->makeVarObj();
 
     /* This must come after callobj->lastProp has been set. */
@@ -85,8 +86,8 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
 #ifdef DEBUG
     for (Shape::Range r = obj->lastProp; !r.empty(); r.popFront()) {
         const Shape &s = r.front();
-        if (s.slot != SHAPE_INVALID_SLOT) {
-            JS_ASSERT(s.slot + 1 == obj->slotSpan());
+        if (s.hasSlot()) {
+            JS_ASSERT(s.slot() + 1 == obj->slotSpan());
             break;
         }
     }

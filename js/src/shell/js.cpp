@@ -3112,11 +3112,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ZERO;
         return JS_TRUE;
     }
-    if (!obj->isNative()) {
-        *vp = INT_TO_JSVAL(-1);
-        return JS_TRUE;
-    }
-    return JS_NewNumberValue(cx, obj->shape(), vp);
+    return JS_NewNumberValue(cx, (double) ((jsuword)obj->lastProperty() >> 3), vp);
 }
 
 /*
@@ -3146,7 +3142,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
             if (!shape)
                 return false;
         } else if (shape->hasSlot()) {
-            desc.value = referent->nativeGetSlot(shape->slot);
+            desc.value = referent->nativeGetSlot(shape->slot());
         } else {
             desc.value.setUndefined();
         }
@@ -3158,7 +3154,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         desc.setter = shape->setter();
         if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
             desc.setter = JS_StrictPropertyStub;
-        desc.shortid = shape->shortid;
+        desc.shortid = shape->shortid();
         propFlags = shape->getFlags();
    } else if (referent->isProxy()) {
         PropertyDescriptor desc;

@@ -495,12 +495,6 @@ struct PICInfo : public BasePolyIC {
         return !hasTypeCheck();
     }
 
-#if !defined JS_HAS_IC_LABELS
-    static GetPropLabels getPropLabels_;
-    static SetPropLabels setPropLabels_;
-    static BindNameLabels bindNameLabels_;
-    static ScopeNameLabels scopeNameLabels_;
-#else
     union {
         GetPropLabels getPropLabels_;
         SetPropLabels setPropLabels_;
@@ -523,7 +517,6 @@ struct PICInfo : public BasePolyIC {
         JS_ASSERT(kind == NAME || kind == CALLNAME || kind == XNAME);
         scopeNameLabels_ = labels;
     }
-#endif
 
     GetPropLabels &getPropLabels() {
         JS_ASSERT(isGet());

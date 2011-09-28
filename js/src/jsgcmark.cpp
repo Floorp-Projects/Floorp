@@ -213,6 +213,15 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
 }
 
 void
+MarkBaseShape(JSTracer *trc, BaseShape *base, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(base);
+    JS_SET_TRACING_NAME(trc, name);
+    Mark(trc, base);
+}
+
+void
 MarkTypeObject(JSTracer *trc, types::TypeObject *type, const char *name)
 {
     JS_ASSERT(trc);
@@ -326,6 +335,20 @@ PushMarkStack(GCMarker *gcmarker, const Shape *thing)
 }
 
 static void
+ScanBaseShape(GCMarker *gcmarker, BaseShape *base);
+
+void
+PushMarkStack(GCMarker *gcmarker, BaseShape *thing)
+{
+    JS_OPT_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
+                     thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+
+    /* We mark base shapes directly rather than pushing on the stack. */
+    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+        ScanBaseShape(gcmarker, thing);
+}
+
+static void
 MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
@@ -406,6 +429,9 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
         break;
       case JSTRACE_SHAPE:
         Mark(trc, reinterpret_cast<Shape *>(thing));
+        break;
+      case JSTRACE_BASE_SHAPE:
+        Mark(trc, reinterpret_cast<BaseShape *>(thing));
         break;
       case JSTRACE_TYPE_OBJECT:
         MarkTypeObject(trc, reinterpret_cast<types::TypeObject *>(thing), "type_stack");
@@ -559,7 +585,7 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
 {
     JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
     Shape *shape = (Shape *)trc->debugPrintArg;
-    jsid propid = shape->propid;
+    jsid propid = shape->propid();
     JS_ASSERT(!JSID_IS_VOID(propid));
     const char *name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
 
@@ -567,7 +593,7 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
         size_t n = PutEscapedString(buf, bufsize, JSID_TO_ATOM(propid), 0);
         if (n < bufsize)
             JS_snprintf(buf + n, bufsize - n, " %s", name);
-    } else if (JSID_IS_INT(shape->propid)) {
+    } else if (JSID_IS_INT(propid)) {
         JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(propid), name);
     } else {
         JS_snprintf(buf, bufsize, "<object> %s", name);
@@ -579,7 +605,7 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 {
     JS_ASSERT(trc->debugPrinter == PrintPropertyMethod);
     Shape *shape = (Shape *)trc->debugPrintArg;
-    jsid propid = shape->propid;
+    jsid propid = shape->propid();
     JS_ASSERT(!JSID_IS_VOID(propid));
 
     JS_ASSERT(JSID_IS_ATOM(propid));
@@ -606,26 +632,30 @@ static void
 ScanShape(GCMarker *gcmarker, const Shape *shape)
 {
 restart:
-    JSRuntime *rt = gcmarker->context->runtime;
-    if (rt->gcRegenShapes)
-        shape->shapeid = js_RegenerateShapeForGC(rt);
+    PushMarkStack(gcmarker, shape->base());
 
-    if (JSID_IS_STRING(shape->propid))
-        PushMarkStack(gcmarker, JSID_TO_STRING(shape->propid));
-    else if (JS_UNLIKELY(JSID_IS_OBJECT(shape->propid)))
-        PushMarkStack(gcmarker, JSID_TO_OBJECT(shape->propid));
-
-    if (shape->hasGetterValue() && shape->getter())
-        PushMarkStack(gcmarker, shape->getterObject());
-    if (shape->hasSetterValue() && shape->setter())
-        PushMarkStack(gcmarker, shape->setterObject());
-
-    if (shape->isMethod())
-        PushMarkStack(gcmarker, &shape->methodObject());
+    jsid id = shape->maybePropid();
+    if (JSID_IS_STRING(id))
+        PushMarkStack(gcmarker, JSID_TO_STRING(id));
+    else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
+        PushMarkStack(gcmarker, JSID_TO_OBJECT(id));
 
     shape = shape->previous();
     if (shape && shape->markIfUnmarked(gcmarker->getMarkColor()))
         goto restart;
+}
+
+static void
+ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
+{
+    if (base->flags & BaseShape::HAS_GETTER_OBJECT)
+        PushMarkStack(gcmarker, base->getterObj);
+
+    if (base->flags & BaseShape::HAS_SETTER_OBJECT)
+        PushMarkStack(gcmarker, base->setterObj);
+
+    if (base->base)
+        PushMarkStack(gcmarker, base->base);
 }
 
 static inline void
@@ -710,20 +740,10 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
             PushMarkStack(gcmarker, obj->newType);
     }
 
-    if (obj->isNative()) {
-        js::Shape *shape = obj->lastProp;
-        PushMarkStack(gcmarker, shape);
+    js::Shape *shape = obj->lastProp;
+    PushMarkStack(gcmarker, shape);
 
-        if (gcmarker->context->runtime->gcRegenShapes) {
-            /* We need to regenerate our shape if hasOwnShape(). */
-            uint32 newShape = shape->shapeid;
-            if (obj->hasOwnShape()) {
-                newShape = js_RegenerateShapeForGC(gcmarker->context->runtime);
-                JS_ASSERT(newShape != shape->shapeid);
-            }
-            obj->objShape = newShape;
-        }
-
+    if (shape->isNative()) {
         uint32 nslots = obj->slotSpan();
         JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         if (nslots > LARGE_OBJECT_CHUNK_SIZE) {
@@ -782,9 +802,9 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     if (clasp->trace)
         clasp->trace(trc, obj);
 
-    if (obj->isNative()) {
-        MarkShape(trc, obj->lastProp, "shape");
+    MarkShape(trc, obj->lastProperty(), "shape");
 
+    if (obj->lastProperty()->isNative()) {
         JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         uint32 nslots = obj->slotSpan();
         for (uint32 i = 0; i < nslots; i++) {
@@ -857,19 +877,26 @@ void
 MarkChildren(JSTracer *trc, const Shape *shape)
 {
 restart:
-    MarkId(trc, shape->propid, "propid");
+    MarkBaseShape(trc, shape->base(), "base");
 
-    if (shape->hasGetterValue() && shape->getter())
-        MarkObjectWithPrinter(trc, *shape->getterObject(), PrintPropertyGetterOrSetter, shape, 0);
-    if (shape->hasSetterValue() && shape->setter())
-        MarkObjectWithPrinter(trc, *shape->setterObject(), PrintPropertyGetterOrSetter, shape, 1);
-
-    if (shape->isMethod())
-        MarkObjectWithPrinter(trc, shape->methodObject(), PrintPropertyMethod, shape, 0);
+    MarkId(trc, shape->maybePropid(), "propid");
 
     shape = shape->previous();
     if (shape)
         goto restart;
+}
+
+void
+MarkChildren(JSTracer *trc, BaseShape *base)
+{
+    if (base->flags & BaseShape::HAS_GETTER_OBJECT)
+        MarkObjectWithPrinter(trc, *base->getterObj, PrintPropertyGetterOrSetter, base, 0);
+
+    if (base->flags & BaseShape::HAS_SETTER_OBJECT)
+        MarkObjectWithPrinter(trc, *base->setterObj, PrintPropertyGetterOrSetter, base, 0);
+
+    if (base->base)
+        MarkBaseShape(trc, base->base, "base");
 }
 
 static void
@@ -1011,6 +1038,10 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 
       case JSTRACE_SHAPE:
 	MarkChildren(trc, static_cast<Shape *>(thing));
+        break;
+
+      case JSTRACE_BASE_SHAPE:
+        MarkChildren(trc, static_cast<BaseShape *>(thing));
         break;
 
       case JSTRACE_TYPE_OBJECT:

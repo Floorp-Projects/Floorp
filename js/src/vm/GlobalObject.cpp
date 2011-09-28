@@ -310,9 +310,6 @@ GlobalObject::initStandardClasses(JSContext *cx)
 void
 GlobalObject::clear(JSContext *cx)
 {
-    /* This can return false but that doesn't mean it failed. */
-    unbrand(cx);
-
     for (int key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
         setSlot(key, UndefinedValue());
 
@@ -424,8 +421,6 @@ DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFun
 {
     if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
         return false;
-    if (!cx->typeInferenceEnabled())
-        obj->brand(cx);
     return true;
 }
 

@@ -418,7 +418,7 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         break;
 
       case ACCSET_OBJ_SHAPE:
-        ok = OK_OBJ_FIELD(LIR_ldi, objShape);
+        ok = true; // OK_OBJ_FIELD(LIR_ldi, objShape);
         break;
 
       case ACCSET_OBJ_TYPE:

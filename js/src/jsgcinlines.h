@@ -407,6 +407,12 @@ js_NewGCShape(JSContext *cx)
     return NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
 }
 
+inline js::BaseShape *
+js_NewGCBaseShape(JSContext *cx)
+{
+    return NewGCThing<js::BaseShape>(cx, js::gc::FINALIZE_BASE_SHAPE, sizeof(js::BaseShape));
+}
+
 #if JS_HAS_XML_SUPPORT
 extern JSXML *
 js_NewGCXML(JSContext *cx);

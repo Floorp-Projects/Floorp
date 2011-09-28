@@ -56,8 +56,7 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx)
-  : lastBinding(NULL), nargs(0), nvars(0), nupvars(0),
-    hasExtensibleParents(false)
+  : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
 {
 }
 
@@ -65,29 +64,19 @@ inline void
 Bindings::transfer(JSContext *cx, Bindings *bindings)
 {
     JS_ASSERT(!lastBinding);
+    JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());
 
     *this = *bindings;
 #ifdef DEBUG
     bindings->lastBinding = NULL;
 #endif
-
-    /* Preserve back-pointer invariants across the lastBinding transfer. */
-    if (lastBinding && lastBinding->inDictionary())
-        lastBinding->listp = &this->lastBinding;
 }
 
 inline void
 Bindings::clone(JSContext *cx, Bindings *bindings)
 {
     JS_ASSERT(!lastBinding);
-
-    /*
-     * Non-dictionary bindings are fine to share, as are dictionary bindings if
-     * they're copy-on-modification.
-     */
-    JS_ASSERT(!bindings->lastBinding ||
-              !bindings->lastBinding->inDictionary() ||
-              bindings->lastBinding->frozen());
+    JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());
 
     *this = *bindings;
 }
@@ -96,7 +85,7 @@ Shape *
 Bindings::lastShape() const
 {
     JS_ASSERT(lastBinding);
-    JS_ASSERT_IF(lastBinding->inDictionary(), lastBinding->frozen());
+    JS_ASSERT(!lastBinding->inDictionary());
     return lastBinding;
 }
 
@@ -109,6 +98,12 @@ Bindings::ensureShape(JSContext *cx)
             return false;
     }
     return true;
+}
+
+bool
+Bindings::extensibleParents()
+{
+    return lastBinding && lastBinding->extensibleParents();
 }
 
 extern const char *

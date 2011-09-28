@@ -181,17 +181,17 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         return differenceBetween(startLabel, l);
     }
 
-    void load32FromImm(void *ptr, RegisterID reg) {
-        load32(ptr, reg);
+    void loadPtrFromImm(void *ptr, RegisterID reg) {
+        loadPtr(ptr, reg);
     }
 
     void loadShape(RegisterID obj, RegisterID shape) {
-        load32(Address(obj, offsetof(JSObject, objShape)), shape);
+        loadPtr(Address(obj, offsetof(JSObject, lastProp)), shape);
     }
 
     Jump guardShape(RegisterID objReg, JSObject *obj) {
-        return branch32(NotEqual, Address(objReg, offsetof(JSObject, objShape)),
-                        Imm32(obj->shape()));
+        return branchPtr(NotEqual, Address(objReg, offsetof(JSObject, lastProp)),
+                         ImmPtr(obj->lastProperty()));
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {
@@ -875,13 +875,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
                      const js::Shape *shape,
                      RegisterID typeReg, RegisterID dataReg)
     {
-        JS_ASSERT(shape->hasSlot());
-        if (shape->isMethod())
-            loadValueAsComponents(ObjectValue(shape->methodObject()), typeReg, dataReg);
-        else if (obj->isFixedSlot(shape->slot))
-            loadInlineSlot(objReg, shape->slot, typeReg, dataReg);
+        if (obj->isFixedSlot(shape->slot()))
+            loadInlineSlot(objReg, shape->slot(), typeReg, dataReg);
         else
-            loadDynamicSlot(objReg, obj->dynamicSlotIndex(shape->slot), typeReg, dataReg);
+            loadDynamicSlot(objReg, obj->dynamicSlotIndex(shape->slot()), typeReg, dataReg);
     }
 
 #ifdef JS_METHODJIT_TYPED_ARRAY
@@ -1299,7 +1296,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
         storePtr(ImmPtr(templateObject->getClass()), Address(result, JSObject::offsetOfClassPointer()));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
-        store32(Imm32(templateObject->objShape), Address(result, offsetof(JSObject, objShape)));
         storePtr(ImmPtr(templateObject->newType), Address(result, offsetof(JSObject, newType)));
         storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));
         storePtr(ImmPtr(templateObject->privateData), Address(result, offsetof(JSObject, privateData)));

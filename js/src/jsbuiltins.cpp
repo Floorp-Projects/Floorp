@@ -214,7 +214,7 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyA
     }
 
     uint32 slot;
-    slot = shape->slot;
+    slot = shape->slot();
     JS_ASSERT(slot == obj->slotSpan());
 
     if (slot < obj->numSlots()) {
@@ -222,11 +222,11 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyA
     } else {
         if (!obj->allocSlot(cx, &slot))
             return false;
-        JS_ASSERT(slot == shape->slot);
+        JS_ASSERT(slot == shape->slot());
     }
 
     obj->extend(cx, shape, isDefinitelyAtom);
-    return !js_IsPropertyCacheDisabled(cx);
+    return true;
 }
 
 JSBool FASTCALL

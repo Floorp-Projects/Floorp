@@ -1336,6 +1336,8 @@ class TraceRecorder
 
     void forgetGuardedShapes();
 
+    typedef jsuword PCVal;
+
     JS_REQUIRES_STACK AbortableRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                                      JSObject*& obj2, PCVal& pcval);
     JS_REQUIRES_STACK RecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
