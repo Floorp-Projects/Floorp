@@ -416,6 +416,16 @@ WinTaskbar::GetTaskbarProgress(nsIDocShell *shell, nsITaskbarProgress **_retval)
   return CallQueryInterface(preview, _retval);
 }
 
+NS_IMETHODIMP
+WinTaskbar::GetOverlayIconController(nsIDocShell *shell,
+                                     nsITaskbarOverlayIconController **_retval) {
+  nsCOMPtr<nsITaskbarWindowPreview> preview;
+  nsresult rv = GetTaskbarWindowPreview(shell, getter_AddRefs(preview));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(preview, _retval);
+}
+
 /* nsIJumpListBuilder createJumpListBuilder(); */
 NS_IMETHODIMP
 WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder) {

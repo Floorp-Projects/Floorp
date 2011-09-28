@@ -140,7 +140,9 @@ TaskbarPreviewButton::SetImage(imgIContainer *img) {
     ::DestroyIcon(Button().hIcon);
   if (img) {
     nsresult rv;
-    rv = nsWindowGfx::CreateIcon(img, PR_FALSE, 0, 0, &Button().hIcon);
+    rv = nsWindowGfx::CreateIcon(img, PR_FALSE, 0, 0,
+                                 nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon),
+                                 &Button().hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     Button().hIcon = NULL;

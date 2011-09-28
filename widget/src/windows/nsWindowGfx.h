@@ -60,7 +60,12 @@ public:
 
   static nsIntRegion ConvertHRGNToRegion(HRGN aRgn);
 
-  static nsresult CreateIcon(imgIContainer *aContainer, PRBool aIsCursor, PRUint32 aHotspotX, PRUint32 aHotspotY, HICON *aIcon);
+  enum IconSizeType {
+    kSmallIcon,
+    kRegularIcon
+  };
+  static gfxIntSize GetIconMetrics(IconSizeType aSizeType);
+  static nsresult CreateIcon(imgIContainer *aContainer, PRBool aIsCursor, PRUint32 aHotspotX, PRUint32 aHotspotY, gfxIntSize aScaledSize, HICON *aIcon);
 
 private:
   /**
