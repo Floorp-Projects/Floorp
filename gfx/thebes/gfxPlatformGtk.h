@@ -125,13 +125,16 @@ public:
     static PRInt32 GetDPI();
 
     static PRBool UseClientSideRendering() {
-#if defined(MOZ_X11) && defined(MOZ_GFX_OPTIMIZE_MOBILE)
-        // XRender is not accelerated on the platforms we care about
-        // at the moment, and X server pixman is out of our control;
-        // it's likely to be older than (our) cairo's.  So fall back
-        // on software rendering for more predictable performance.
+#if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)
+        // XRender is not accelerated on the Maemo at the moment, and 
+        // X server pixman is out of our control; it's likely to be 
+        // older than (our) cairo's.   So fall back on software 
+        // rendering for more predictable performance.
         // This setting will likely not be relevant when we have
-        // GL-accelerated compositing.
+        // GL-accelerated compositing. We know of other platforms 
+        // with bad drivers where we'd like to also use client side 
+        // rendering, but until we have the ability to featuer test 
+        // this, we'll only disable this for maemo.
         return PR_TRUE;
 #else
         return PR_FALSE;

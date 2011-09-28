@@ -104,6 +104,10 @@ NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
 
+NS_QUERYFRAME_HEAD(nsMenuPopupFrame)
+  NS_QUERYFRAME_ENTRY(nsMenuPopupFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+
 //
 // nsMenuPopupFrame ctor
 //

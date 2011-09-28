@@ -26,16 +26,11 @@
     {
       this.accessible = getAccessible(aID);
 
-      this.eventSeq = [ new invokerChecker(EVENT_FOCUS, this.accessible) ];
+      this.eventSeq = [ new focusChecker(this.accessible) ];
 
       this.invoke = function takeFocusInvoker_invoke()
       {
         this.accessible.takeFocus();
-      }
-
-      this.finalCheck = function takeFocusInvoker()
-      {
-        testStates(this.accessible, STATE_FOCUSED);
       }
 
       this.getID = function takeFocusInvoker_getID()
@@ -51,6 +46,9 @@
       gQueue.push(new takeFocusInvoker("aria-link"));
       gQueue.push(new takeFocusInvoker("aria-link2"));
       gQueue.push(new takeFocusInvoker("link"));
+      gQueue.push(new takeFocusInvoker("item2"));
+      gQueue.push(new takeFocusInvoker("plugin"));
+      gQueue.push(new takeFocusInvoker(document));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -63,9 +61,19 @@
 <body>
 
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429547"
+     title="Support aria-activedescendant usage in nsIAccesible::TakeFocus()">
+    Mozilla Bug 429547
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=452710"
      title="nsIAccessible::takeFocus testing">
     Mozilla Bug 452710
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=646361"
+     title="No focus event fired on document when focus is set to the document while focused in a plugin">
+    Mozilla Bug 646361
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -77,5 +85,12 @@
 
   <a id="link" href="">link</span>
 
+  <div role="listbox" aria-activedescendant="item1" id="container" tabindex="1">
+    <div role="listitem" id="item1">item1</div>
+    <div role="listitem" id="item2">item2</div>
+    <div role="listitem" id="item3">item3</div>
+  </div>
+
+  <embed id="plugin" type="application/x-test" width="200" height="200" wmode="window"></embed>
 </body>
 </html>

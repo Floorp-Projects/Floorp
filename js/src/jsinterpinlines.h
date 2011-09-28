@@ -71,57 +71,6 @@ class AutoPreserveEnumerators {
     }
 };
 
-namespace detail {
-
-template<typename T> class PrimitiveBehavior { };
-
-template<>
-class PrimitiveBehavior<JSString *> {
-  public:
-    static inline bool isType(const Value &v) { return v.isString(); }
-    static inline JSString *extract(const Value &v) { return v.toString(); }
-    static inline Class *getClass() { return &StringClass; }
-};
-
-template<>
-class PrimitiveBehavior<bool> {
-  public:
-    static inline bool isType(const Value &v) { return v.isBoolean(); }
-    static inline bool extract(const Value &v) { return v.toBoolean(); }
-    static inline Class *getClass() { return &BooleanClass; }
-};
-
-template<>
-class PrimitiveBehavior<double> {
-  public:
-    static inline bool isType(const Value &v) { return v.isNumber(); }
-    static inline double extract(const Value &v) { return v.toNumber(); }
-    static inline Class *getClass() { return &NumberClass; }
-};
-
-} // namespace detail
-
-template <typename T>
-inline bool
-GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
-{
-    typedef detail::PrimitiveBehavior<T> Behavior;
-
-    const Value &thisv = vp[1];
-    if (Behavior::isType(thisv)) {
-        *v = Behavior::extract(thisv);
-        return true;
-    }
-
-    if (thisv.isObject() && thisv.toObject().getClass() == Behavior::getClass()) {
-        *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
-        return true;
-    }
-
-    ReportIncompatibleMethod(cx, vp, Behavior::getClass());
-    return false;
-}
-
 /*
  * Compute the implicit |this| parameter for a call expression where the callee
  * funval was resolved from an unqualified name reference to a property on obj

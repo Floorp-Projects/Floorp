@@ -75,7 +75,6 @@
  */
 
 nsIStringBundle *nsAccessNode::gStringBundle = 0;
-nsINode *nsAccessNode::gLastFocusedNode = nsnull;
 
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
 
@@ -227,7 +226,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   // at exit of program
 
   NS_IF_RELEASE(gStringBundle);
-  NS_IF_RELEASE(gLastFocusedNode);
 
   // Release gApplicationAccessible after everything else is shutdown
   // so we don't accidently create it again while tearing down root accessibles

@@ -931,7 +931,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "width": "300px", "height": "50px" },
 		initial_values: [ "none" ],
-		other_values: [ "translatex(1px)", "translatex(4em)", "translatex(-4px)", "translatex(3px)", "translatex(0px) translatex(1px) translatex(2px) translatex(3px) translatex(4px)", "translatey(4em)", "translate(3px)", "translate(10px, -3px)", "rotate(45deg)", "rotate(45grad)", "rotate(45rad)", "rotate(0)", "scalex(10)", "scaley(10)", "scale(10)", "scale(10, 20)", "skewx(30deg)", "skewx(0)", "skewy(0)", "skewx(30grad)", "skewx(30rad)", "skewy(30deg)", "skewy(30grad)", "skewy(30rad)", "matrix(1, 2, 3, 4, 5px, 6em)", "rotate(45deg) scale(2, 1)", "skewx(45deg) skewx(-50grad)", "translate(0, 0) scale(1, 1) skewx(0) skewy(0) matrix(1, 0, 0, 1, 0, 0)", "translatex(50%)", "translatey(50%)", "translate(50%)", "translate(3%, 5px)", "translate(5px, 3%)", "matrix(1, 2, 3, 4, 5px, 6%)", "matrix(1, 2, 3, 4, 5%, 6px)", "matrix(1, 2, 3, 4, 5%, 6%)",
+		other_values: [ "translatex(1px)", "translatex(4em)", "translatex(-4px)", "translatex(3px)", "translatex(0px) translatex(1px) translatex(2px) translatex(3px) translatex(4px)", "translatey(4em)", "translate(3px)", "translate(10px, -3px)", "rotate(45deg)", "rotate(45grad)", "rotate(45rad)", "rotate(0)", "scalex(10)", "scaley(10)", "scale(10)", "scale(10, 20)", "skewx(30deg)", "skewx(0)", "skewy(0)", "skewx(30grad)", "skewx(30rad)", "skewy(30deg)", "skewy(30grad)", "skewy(30rad)", "matrix(1, 2, 3, 4, 5px, 6em)", "rotate(45deg) scale(2, 1)", "skewx(45deg) skewx(-50grad)", "translate(0, 0) scale(1, 1) skewx(0) skewy(0) matrix(1, 0, 0, 1, 0, 0)", "translatex(50%)", "translatey(50%)", "translate(50%)", "translate(3%, 5px)", "translate(5px, 3%)", "matrix(1, 2, 3, 4, 5px, 6%)", "matrix(1, 2, 3, 4, 5%, 6px)", "matrix(1, 2, 3, 4, 5%, 6%)", "matrix(1, 2, 3, 4, 5, 6)",
 			/* valid calc() values */
 			"translatex(-moz-calc(5px + 10%))",
 			"translatey(-moz-calc(0.25 * 5px + 10% / 3))",
@@ -940,9 +940,9 @@ var gCSSProperties = {
 			"translate(-50px, -moz-calc(5px - 10% * 3))",
 			"matrix(1, 0, 0, 1, -moz-calc(5px * 3), -moz-calc(10% - 3px))"
 		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
-            "translatez(1px)", "translatez(4em)", "translatez(-4px)", "translatez(0px)", "translatez(2px) translatez(5px)", "translate3d(3px, 4px, 5px)", "translate3d(2em, 3px, 1em)", "translatex(2px) translate3d(4px, 5px, 6px) translatey(1px)", "scale3d(4, 4, 4)", "scale3d(-2, 3, -7)", "scalez(4)", "scalez(-6)", "rotate3d(2, 3, 4, 45deg)", "rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)", "rotatez(72rad)", "perspective(1000px)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)"
+            "translatez(1px)", "translatez(4em)", "translatez(-4px)", "translatez(0px)", "translatez(2px) translatez(5px)", "translate3d(3px, 4px, 5px)", "translate3d(2em, 3px, 1em)", "translatex(2px) translate3d(4px, 5px, 6px) translatey(1px)", "scale3d(4, 4, 4)", "scale3d(-2, 3, -7)", "scalez(4)", "scalez(-6)", "rotate3d(2, 3, 4, 45deg)", "rotate3d(-3, 7, 0, 12rad)", "rotatex(15deg)", "rotatey(-12grad)", "rotatez(72rad)", "perspective(1000px)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13px, 14em, 15px, 16)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20%, 10%, 15, 16)"
 		] : []),
-		invalid_values: ["1px", "#0000ff", "red", "auto", "translatex(1px 1px)", "translatex(translatex(1px))", "translatex(#0000ff)", "translatex(red)", "translatey()", "matrix(1, 2, 3, 4, 5, 6)", "matrix(1px, 2px, 3px, 4px, 5px, 6px)", "scale(150%)", "skewx(red)", "matrix(1%, 0, 0, 0, 0px, 0px)", "matrix(0, 1%, 2, 3, 4px,5px)", "matrix(0, 1, 2%, 3, 4px, 5px)", "matrix(0, 1, 2, 3%, 4%, 5%)",
+		invalid_values: ["1px", "#0000ff", "red", "auto", "translatex(1px 1px)", "translatex(translatex(1px))", "translatex(#0000ff)", "translatex(red)", "translatey()", "matrix(1px, 2px, 3px, 4px, 5px, 6px)", "scale(150%)", "skewx(red)", "matrix(1%, 0, 0, 0, 0px, 0px)", "matrix(0, 1%, 2, 3, 4px,5px)", "matrix(0, 1, 2%, 3, 4px, 5px)", "matrix(0, 1, 2, 3%, 4%, 5%)",
 			/* invalid calc() values */
 			"translatey(-moz-min(5px,10%))",
 			"translatex(-moz-max(5px,10%))",
@@ -950,7 +950,7 @@ var gCSSProperties = {
 			"translate(-moz-calc(max(5px,10%)), 10%)",
 			"matrix(1, 0, 0, 1, -moz-max(5px * 3), -moz-calc(10% - 3px))"
 		].concat(SpecialPowers.getBoolPref("layout.3d-transforms.enabled") ? [
-            "perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)", "rotatey(words)", "rotatex(7)", "translate3d(3px, 4px, 1px, 7px)"
+            "perspective(0px)", "perspective(-10px)", "matrix3d(dinosaur)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15%, 16)", "matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16px)", "rotatey(words)", "rotatex(7)", "translate3d(3px, 4px, 1px, 7px)"
 		] : [])
 	},
 	"-moz-transform-origin": {

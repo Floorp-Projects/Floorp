@@ -84,9 +84,9 @@ private:
   // 44.1kHz.
   PRInt64 TimeToBytes(double aTime) const;
 
-  // Rounds aBytes down to the nearest complete sample.  Assumes beginning
-  // of byte range is already sample aligned by caller.
-  PRInt64 RoundDownToSample(PRInt64 aBytes) const;
+  // Rounds aBytes down to the nearest complete audio frame.  Assumes
+  // beginning of byte range is already frame aligned by caller.
+  PRInt64 RoundDownToFrame(PRInt64 aBytes) const;
   PRInt64 GetDataLength();
   PRInt64 GetPosition();
 
@@ -101,9 +101,9 @@ private:
   // Number of channels.  Limited to range [1, 2] in LoadFormatChunk.
   PRUint32 mChannels;
 
-  // Size of a single sample segment, which includes a sample for each
-  // channel (interleaved).
-  PRUint32 mSampleSize;
+  // Size of a single audio frame, which includes a sample for each channel
+  // (interleaved).
+  PRUint32 mFrameSize;
 
   // The sample format of the PCM data.
   nsAudioStream::SampleFormat mSampleFormat;

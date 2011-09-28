@@ -445,6 +445,14 @@ nsCOMPtr_base
           private:
             using T::AddRef;
             using T::Release;
+            
+            ~nsDerivedSafe(); // NOT TO BE IMPLEMENTED
+            /* 
+              This dtor is added to make this class compatible with GCC 4.6.
+              If the destructor for T is private, nsDerivedSafe's unimplemented destructor 
+              will be implicitly-declared by the compiler as deleted.
+              Therefore this explicit dtor exists to avoid that deletion. See bug 689301.
+            */
 
           protected:
             nsDerivedSafe(); // NOT TO BE IMPLEMENTED

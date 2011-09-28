@@ -3661,14 +3661,10 @@ nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
   }
 
   /* Sync all children */
-  PRUint32 childCount = content->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent* childContent = content->GetChildAt(i);
-    NS_ASSERTION(childContent,
-                 "DOM mutated unexpectedly while syncing editors!");
-    if (childContent) {
-      SyncEditorsOnSubtree(childContent);
-    }
+  for (nsIContent* child = content->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    SyncEditorsOnSubtree(child);
   }
 }
 

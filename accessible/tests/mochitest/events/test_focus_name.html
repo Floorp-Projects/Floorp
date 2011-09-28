@@ -20,8 +20,10 @@
     /**
      * Checker for invokers.
      */
-    function actionChecker(aDescription)
+    function actionChecker(aID, aDescription)
     {
+      this.__proto__ = new invokerChecker(EVENT_FOCUS, aID);
+
       this.check = function actionChecker_check(aEvent)
       {
         var target = aEvent.accessible;
@@ -57,6 +59,7 @@
      */
 
     // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
@@ -86,9 +89,9 @@
         gTextboxElm.removeEventListener("blur", gBlurHandler, false);
       }
 
-      var checker = new actionChecker("It's a tooltip");
-      gQueue.push(new synthFocus("button", checker));
-      gQueue.push(new synthTab("textbox", checker));
+      var descr = "It's a tooltip";
+      gQueue.push(new synthFocus("button", new actionChecker("button", descr)));
+      gQueue.push(new synthTab("textbox", new actionChecker("textbox", descr)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

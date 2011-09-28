@@ -793,8 +793,8 @@ NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
     return nsnull;
   }
 
-  JSObject *obj = JSWrapper::New(cx, parent, parent->getProto(), parent,
-                                 &nsOuterWindowProxy::singleton);
+  JSObject *obj = js::Wrapper::New(cx, parent, parent->getProto(), parent,
+                                   &nsOuterWindowProxy::singleton);
   NS_ASSERTION(obj->getClass()->ext.innerObject, "bad class");
   return obj;
 }
@@ -8158,6 +8158,11 @@ NS_IMETHODIMP
 nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
 {
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(GetExtantDocument());
+  if (document) {
+    document->WarnOnceAbout(nsIDocument::eGlobalStorage);
+  }
 
   if (!Preferences::GetBool(kStorageEnabled)) {
     *aGlobalStorage = nsnull;

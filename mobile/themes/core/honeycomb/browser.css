@@ -131,10 +131,10 @@ toolbarbutton.urlbar-button {
   color: @color_text_default@;
   background-color: transparent;
   -moz-box-align: center;
-  -moz-margin-end: @margin_xxxnormal@;
-  -moz-margin-start: 0px;
   padding: 0px;
   margin: 0px;
+  -moz-margin-end: @margin_normal@;
+  -moz-margin-start: 0px;
 }
 
 #urlbar-container[mode="edit"] > #identity-box {
@@ -152,7 +152,6 @@ toolbarbutton.urlbar-button {
 /* URL bar cap buttons */
 .urlbar-cap-button {
   margin: 0 !important;
-  min-width: @touch_button_small@ !important;
   min-height: @urlbar_edit_height@ !important;
   max-height: @urlbar_edit_height@ !important;
   -moz-box-align: center;
@@ -164,7 +163,7 @@ toolbarbutton.urlbar-button {
   background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom left;
   background-repeat: no-repeat;
-  padding: 0px @padding_tiny@;
+  padding: 0px @padding_xnormal@ 0px @padding_xxxnormal@;
   border-bottom: @border_width_small@ solid @color_url_border@;
 }
 
@@ -195,10 +194,6 @@ toolbarbutton.urlbar-button {
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
-#urlbar-throbber {
-  width: 24px;
-  height: 24px;
-}
 
 #urlbar-favicon {
   width: 32px;
@@ -211,24 +206,26 @@ toolbarbutton.urlbar-button {
 }
 
 /* Main urlbar textbox */
+#urlbar-title {
+  padding: @padding_xxnormal@ @padding_tiny@ @padding_xxxnormal@;
+}
+
 #urlbar-title.placeholder {
   color: @color_text_placeholder@;
 }
 
 #urlbar-edit,
 #urlbar-title {
-  font-size: @font_snormal@ !important;
+  font-size: @font_xsmall@ !important;
   background: @color_toolbar_background@;
-  padding: @padding_xxnormal@ @padding_small@;
   margin: 0px !important;
   min-height: @urlbar_edit_height@ !important;
   max-height: @urlbar_edit_height@;
   background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom right;
   background-repeat: no-repeat;
-}
-
-#urlbar-title {
+  -moz-padding-start: @padding_small@ !important;
+  border: none;
   border-bottom: @border_width_small@ solid @color_url_border@;
 }
 
@@ -243,7 +240,6 @@ toolbarbutton.urlbar-button {
 
 #urlbar-edit {
   -moz-appearance: none !important;
-  border: none;
   border-bottom: @border_width_large@ solid @color_url_border@;
 }
 
@@ -264,8 +260,8 @@ toolbarbutton.urlbar-button {
   background-image: url("chrome://browser/skin/images/urlbar-border-side.png");
   background-position: bottom right;
   background-repeat: no-repeat;
-  padding: 0px 2px 1px;
   border-bottom: @border_width_small@ solid @color_url_border@;
+  padding: 0px @padding_normal@ @padding_tiny@ @padding_tiny@;
 }
 
 #urlbar-icons:-moz-locale-dir(rtl) {
@@ -278,8 +274,9 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-icons toolbarbutton {
-  padding: 0px @padding_small@ !important;
+  padding: 0px @padding_normal@ !important;
   margin: 0px !important;
+  border: none;
 }
 
 #urlbar-icons[disabled="true"] {
@@ -287,6 +284,7 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-icons[disabled="true"] > toolbarbutton {
+  border: none;
   opacity: 0.5;
 }
 
@@ -377,13 +375,17 @@ toolbarbutton.urlbar-button {
   color: @color_text_toolbutton_inverse@;
   display: -moz-box;
   font-size: @font_small@ !important;
-  -moz-transform: translateY(-0.56em);
-  -moz-padding-end: 33px; /* correct position and alignment */
+  font-weight: bold !important;
+  -moz-transform: translateY(-0.50em);
+  -moz-padding-end: 32px; /* correct position and alignment */
 }
 
 #tool-menu {
   list-style-image: url("chrome://browser/skin/images/menu-hdpi.png");
+  margin: @margin_small@ 0px;
+  padding: @padding_xnormal@ @padding_large@ 0px!important;
   -moz-margin-end: 0px;
+  -moz-border-start: @border_width_tiny@ solid @color_button_border@;
 }
 
 .tool-star {
@@ -400,26 +402,32 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-back2 {
-  margin: @margin_snormal@;
+  margin: @margin_small@ @margin_snormal@;
   /* adjust the min-width of this button to account for padding */
   min-width: -moz-calc(@touch_button_small@ - 2 * @margin_snormal@) !important;
-  border: @border_width_tiny@ solid @color_dialog_border@;
+  min-height: -moz-calc(@touch_button_small@ - 2 * @margin_snormal@) !important;
+  border: @border_width_small@ solid @color_url_border@;
   -moz-border-radius: 100%;
 }
 
 #tool-forward2 {
   margin: 0px;
   padding: 0px;
-  -moz-margin-start: -15px;
-  -moz-margin-end: -1px; /* cover up one pixel of transparent space created by the mask */
+  -moz-margin-start: -@margin_xxxnormal@;
+  -moz-margin-end: -@padding_tiny@;
+  -moz-padding-start: @padding_xxxnormal@ !important;
+  -moz-padding-end: @margin_xnormal@ !important;
   min-height: @urlbar_edit_height@ !important;
   max-height: @urlbar_edit_height@ !important;
+  min-width: 0px !important;
   mask: url(chrome://browser/content/browser.xul#back-button-mask);
-  border-bottom: @border_width_small@ solid @color_url_border@;
+  border: none;
+  border-bottom: @border_width_large@ solid @color_url_border@;
+  -moz-border-bottom-colors: @color_url_border@ transparent;
 }
 
 #tool-forward2[mode="edit"] {
-  border-bottom-width: @border_width_large@;
+  -moz-border-bottom-colors: @color_url_border@;
 }
 
 .tool-back:-moz-locale-dir(rtl),
@@ -1994,6 +2002,20 @@ setting {
 
 #tabs-popup-newtab-button .button-text {
   -moz-padding-start: @padding_large@;
+}
+
+/* Capture picker ------------------------------------------------------------- */
+
+#capturepicker-video {
+  border: @border_width_tiny@ solid white;
+}
+
+#capturepicker-container {
+  margin: @margin_normal@;
+}
+
+#capturepicker-container.vertical {
+  height: 330px;
 }
 
 %include ../tablet.css

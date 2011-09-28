@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Menu focus testing">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue();
+
+      if (WIN) {
+        gQueue.push(new toggleTopMenu("fruit", new focusChecker("fruit")));
+        gQueue.push(new synthRightKey("fruit", new focusChecker("vehicle")));
+        gQueue.push(new synthEscapeKey("vehicle", new focusChecker(document)));
+      }
+
+      // mouse move activate items but no focus event until menubar is active
+      gQueue.push(new synthMouseMove("fruit", new nofocusChecker("apple")));
+
+      // mouseover and click on menuitem makes it active before menubar is
+      // active
+      gQueue.push(new synthClick("fruit", new focusChecker("fruit")));
+
+      // mouseover on menuitem when menubar is active
+      gQueue.push(new synthMouseMove("apple", new focusChecker("apple")));
+
+      // keydown on disabled menuitem (disabled items are skipped on linux)
+      if (WIN)
+        gQueue.push(new synthDownKey("apple", new focusChecker("orange")));
+
+      // menu and menuitem are both active
+      // XXX: intermitent failure because two focus events may be coalesced,
+      // think to workaround or fix this issue, when done enable queue invoker
+      // below and remove next two.
+      //gQueue.push(new synthRightKey("apple",
+      //                              [ new focusChecker("vehicle"),
+      //                                new focusChecker("cycle")]));
+      gQueue.push(new synthClick("vehicle", new focusChecker("vehicle")));
+      gQueue.push(new synthMouseMove("cycle", new focusChecker("cycle")));
+
+      // open submenu
+      gQueue.push(new synthRightKey("cycle", new focusChecker("tricycle")));
+
+      // move to first menu in cycle, DOMMenuItemActive is fired for fruit,
+      // cycle and apple menuitems (bug 685191)
+      todo(false, "focus is fired for 'cycle' menuitem");
+      //gQueue.push(new synthRightKey("vehicle", new focusChecker("apple")));
+
+      // click menuitem to close menu, focus gets back to document
+      gQueue.push(new synthClick("tricycle", new focusChecker(document)));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+         title="Rework accessible focus handling">
+        Mozilla Bug 673958
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <menubar>
+        <menu id="fruit" label="Fruit">
+          <menupopup>
+            <menuitem id="apple" label="Apple"/>
+            <menuitem id="orange" label="Orange" disabled="true"/>
+          </menupopup>
+        </menu>
+        <menu id="vehicle" label="Vehicle">
+          <menupopup>
+            <menu id="cycle" label="cycle">
+              <menupopup>
+                <menuitem id="tricycle" label="tricycle"/>
+              </menupopup>
+            </menu>
+            <menuitem id="car" label="Car" disabled="true"/>
+          </menupopup>
+        </menu>
+      </menubar>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>
