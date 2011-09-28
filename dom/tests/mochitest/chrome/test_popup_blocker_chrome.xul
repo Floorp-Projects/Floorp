@@ -4,7 +4,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=662519
 -->
-<window title="Mozilla Bug 662519"
+<window title="Mozilla Bug 662519 and Bug 675574"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
@@ -12,6 +12,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=662519
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=662519"
      target="_blank">Mozilla Bug 662519</a>
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=675574"
+     target="_blank">Mozilla Bug 675574</a>
+  <button onclick="window.open('data:text/html,foo', '', 'foo'); window.open('data:text/html,bar', '', 'bar');">click</button>
   </body>
 
   <!-- test code goes here -->
@@ -20,35 +23,93 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=662519
 
   /** Test for Bug 662519 **/
 
+  let Cc = Components.classes;
+  let Ci = Components.interfaces;
+
   SimpleTest.waitForExplicitFinish();
 
   // We have to enable dom.disable_open_during_load which is disabled
   // by the test harness.
-  let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                .getService(Components.interfaces.nsIPrefBranch);
-  var gLastDomLoadValue = prefs.getBoolPref("dom.disable_open_during_load");
+  let prefs = Cc["@mozilla.org/preferences-service;1"]
+                .getService(Ci.nsIPrefBranch);
+  let gLastDomLoadValue = prefs.getBoolPref("dom.disable_open_during_load");
+  let gMultiplePopupsPref = prefs.getBoolPref("dom.block_multiple_popups");
+
   prefs.setBoolPref("dom.disable_open_during_load", true);
+  prefs.setBoolPref("dom.block_multiple_popups", true);
 
-  let w = window.open("data:text/html,foobar", "", "width=200,height=200");
-  ok(w, "The window object shouldn't be null");
-
-  SimpleTest.waitForFocus(function() {
-    w.close();
-    ok(true, "The popup appeared");
+  function test1() {
+    let w = window.open("data:text/html,foobar", "", "width=200,height=200");
+    ok(w, "The window object shouldn't be null");
 
     SimpleTest.waitForFocus(function() {
-      let w = window.open("data:text/html,foobar", "", "width=200,height=200");
-      ok(w, "The window object shouldn't be null");
+      w.close();
+      ok(true, "The popup appeared");
 
       SimpleTest.waitForFocus(function() {
-        w.close();
+        let w = window.open("data:text/html,foobar", "", "width=200,height=200");
+        ok(w, "The window object shouldn't be null");
 
-        ok(true, "The popup appeared");
+        SimpleTest.waitForFocus(function() {
+          w.close();
+
+          ok(true, "The popup appeared");
+          test2();
+        }, w, false);
+      });
+    }, w, false);
+  }
+
+  function test2() {
+    let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+               .getService(Ci.nsIWindowWatcher);
+
+    let gPopupsCount = 0;
+
+    ww.registerNotification(function(aSubject, aTopic, aData) {
+      if (aTopic != "domwindowopened") {
+        return;
+      }
+
+      gPopupsCount++;
+
+      if (gPopupsCount != 2) {
+        return;
+      }
+
+      SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        ww.unregisterNotification(arguments.callee);
+
+        is(gPopupsCount, 2, "Both window appeared");
+
+        // Clean-up and finish.
+        let windowEnumerator = wm.getEnumerator(null);
+
+        while (windowEnumerator.hasMoreElements()) {
+          let win = windowEnumerator.getNext();
+
+          // Close all windows except ourself.
+          if (win != window && !win.closed) {
+            win.close();
+          }
+        }
+
+        prefs.setBoolPref("dom.block_multiple_popups", gMultiplePopupsPref);
         prefs.setBoolPref("dom.disable_open_during_load", gLastDomLoadValue);
         SimpleTest.finish();
-      }, w, false);
+      });
+      });
+      });
+      });
     });
-  }, w, false);
+
+    EventUtils.synthesizeMouseAtCenter(document.getElementsByTagName('button')[0], {});
+  }
+
+  SimpleTest.waitForFocus(test1);
   ]]>
   </script>
 </window>

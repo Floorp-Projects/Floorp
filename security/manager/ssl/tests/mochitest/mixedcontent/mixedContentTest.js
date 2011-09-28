@@ -24,6 +24,8 @@ var testPage = "";
 // Assign a function to this variable to have a clean up at the end
 var testCleanUp = null;
 
+// Backup the dom.block_multiple_popups pref value to re-set it on finish.
+var blockMultiplePopupsPref;
 
 // Internal variables
 var _windowCount = 0;
@@ -67,6 +69,8 @@ window.onload = function onLoad()
     if (openTwoWindows)
     {
       _windowCount = 2;
+      blockMultiplePopupsPref = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+      SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
       window.open(secureTestLocation, "_new1", "");
       window.open(secureTestLocation, "_new2", "");
     }
@@ -88,7 +92,10 @@ function onMessageReceived(event)
       {
         if (testCleanUp)
           testCleanUp();
-          
+
+        if (openTwoWindows) {
+          SpecialPowers.setBoolPref("dom.block_multiple_popups", blockMultiplePopupsPref);
+        }
         SimpleTest.finish();
       }
       break;

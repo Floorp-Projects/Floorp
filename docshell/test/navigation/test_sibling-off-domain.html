@@ -9,6 +9,9 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
+var gBlockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
+
 window.onload = function () {
   document.getElementById('active').innerHTML =
       '<iframe src="http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#parent.frames[0],location"></iframe>' +
@@ -23,6 +26,7 @@ window.onload = function () {
     isBlank(frames[3], "Should not be able to navigate off-domain sibling by targeted hyperlink.");
 
     xpcCleanupWindows();
+    SpecialPowers.setBoolPref("dom.block_multiple_popups", gBlockMultiplePopups);
     SimpleTest.finish();
   }, 4);
 }
