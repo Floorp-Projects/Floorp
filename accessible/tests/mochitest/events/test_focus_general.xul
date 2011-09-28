@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible focus event testing">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    function getColorBtn(aBtnObj)
+    {
+      var colorpicker = aBtnObj.colorpicker;
+      var container = colorpicker.firstChild;
+      var btn = container.getChildAt(aBtnObj.btnIndex);
+      return btn;
+    }
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("textbox"));
+      gQueue.push(new synthFocus("textbox_multiline"));
+      gQueue.push(new synthFocus("scale"));
+      gQueue.push(new synthFocusOnFrame("editabledoc"));
+      gQueue.push(new synthFocus("radioclothes",
+                                 new focusChecker("radiosweater")));
+      gQueue.push(new synthDownKey("radiosweater",
+                                   new focusChecker("radiojacket")));
+      gQueue.push(new synthFocus("checkbox"));
+      gQueue.push(new synthFocus("button"));
+      gQueue.push(new synthFocus("checkbutton"));
+      gQueue.push(new synthFocus("radiobutton"));
+
+      // focus menubutton
+      gQueue.push(new synthFocus("menubutton"));
+      // click menubutton, open popup, focus stays on menu button
+      gQueue.push(new synthClick("menubutton", new nofocusChecker()));
+      // select first menu item ("item 1"), focus on menu item
+      gQueue.push(new synthDownKey("menubutton", new focusChecker("mb_item1")));
+      // choose select menu item, focus gets back to menubutton
+      gQueue.push(new synthEnterKey("mb_item1", new focusChecker("menubutton")));
+      // press enter to open popup, focus stays on menubutton
+      gQueue.push(new synthEnterKey("menubutton", new nofocusChecker()));
+      // select second menu item ("item 2"), focus on menu item
+      gQueue.push(new synthUpKey("menubutton", new focusChecker("mb_item2")));
+
+      // clicking on button having associated popup doesn't change a focus
+      gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
+      // select first menu item ("item 1"), focus on menu item
+      gQueue.push(new synthDownKey("popupbutton", new focusChecker("bp_item1")));
+      // choose select menu item, focus gets back to menubutton
+      gQueue.push(new synthEnterKey("bp_item1", new focusChecker("menubutton")));
+      // show popup again for the next test
+      gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
+
+      // click menubutton of the 'menubutton' button while popup of button open.
+      gQueue.push(new synthClick("mbb", new focusChecker("mbb"), { where: "right" }));
+      // close popup, focus stays on menubutton, fire focus event
+      gQueue.push(new synthEscapeKey("mbb", new focusChecker("mbb")));
+      // click menubutton, open popup, focus stays on menubutton
+      gQueue.push(new synthClick("mbb", new nofocusChecker(), { where: "right" }));
+      // select first menu item ("item 1"), focus on menu item
+      gQueue.push(new synthDownKey("mbb", new focusChecker("mbb_item1")));
+      // choose select menu item, focus gets back to menubutton
+      gQueue.push(new synthEnterKey("mbb_item1", new focusChecker("mbb")));
+      // open popup, focus stays on menubutton
+      gQueue.push(new synthOpenComboboxKey("mbb", new nofocusChecker()));
+      // select second menu item ("item 2"), focus on menu item
+      gQueue.push(new synthUpKey("menubutton", new focusChecker("mbb_item2")));
+      // click on menu item of menubutton menu, focus menubutton
+      gQueue.push(new synthClick("mbb_item2", new focusChecker("mbb")));
+
+      // focus colorpicker button
+      gQueue.push(new synthFocus("colorpicker"));
+      // click on button, open popup, focus goes to current color button
+      var btnObj = { colorpicker: getAccessible("colorpicker"), btnIndex: 0 };
+      var checker = new focusChecker(getColorBtn, btnObj);
+      gQueue.push(new synthClick("colorpicker", checker));
+      // select sibling color button, focus on it
+      btnObj = { colorpicker: getAccessible("colorpicker"), btnIndex: 1 };
+      var checker = new focusChecker(getColorBtn, btnObj);
+      gQueue.push(new synthRightKey("colorpicker", checker));
+      // choose selected color button, close popup, focus on colorpicker button
+      gQueue.push(new synthEnterKey("colorpicker", new focusChecker("colorpicker")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=492518"
+         title="xul:slider accessible of xul:scale is accessible illegally">
+        Mozilla Bug 492518
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552368"
+         title=" fire focus event on document accessible whenever the root or body element is focused">
+        Mozilla Bug 552368
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <textbox id="textbox" value="hello"/>
+      <textbox id="textbox_multiline" multiline="true" value="hello"/>
+      <scale id="scale" min="0" max="9" value="5"/>
+      <iframe id="editabledoc" src="focus.html"/>
+      <radiogroup id="radioclothes">
+        <radio id="radiosweater" label="radiosweater"/>
+        <radio id="radiocap" label="radiocap" disabled="true"/>
+        <radio id="radiojacket" label="radiojacket"/>
+      </radiogroup>
+      <checkbox id="checkbox" label="checkbox"/>
+      <button id="button" label="button"/>
+      <button id="checkbutton" type="checkbox" label="checkbutton"/>
+      <button id="radiobutton" type="radio" group="rbgroup" label="radio1"/>
+
+      <button id="menubutton" type="menu" label="menubutton">
+        <menupopup>
+          <menuitem id="mb_item1" label="item1"/>
+          <menuitem id="mb_item2" label="item2"/>
+        </menupopup>
+      </button>
+      <button id="mbb" type="menu-button" label="menubutton button">
+        <menupopup>
+          <menuitem id="mbb_item1" label="item1"/>
+          <menuitem id="mbb_item2" label="item2"/>
+        </menupopup>
+      </button>
+
+      <colorpicker id="colorpicker" type="button" label="color picker"
+                   color="#FFFFFF"/>
+
+      <popupset>
+        <menupopup id="backpopup" position="after_start">
+          <menuitem id="bp_item1" label="Page 1"/>
+          <menuitem id="bp_item2" label="Page 2"/>
+        </menupopup>
+      </popupset>
+      <button id="popupbutton" label="Pop Me Up" popup="backpopup"/>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>

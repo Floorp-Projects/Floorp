@@ -78,6 +78,10 @@ NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuBarFrame)
 
+NS_QUERYFRAME_HEAD(nsMenuBarFrame)
+  NS_QUERYFRAME_ENTRY(nsMenuBarFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+
 //
 // nsMenuBarFrame cntr
 //

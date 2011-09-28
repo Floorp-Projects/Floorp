@@ -457,6 +457,11 @@ protected:
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
   /**
+   * Process ARIA active-descendant attribute change.
+   */
+  void ARIAActiveDescendantChanged(nsIContent* aElm);
+
+  /**
    * Process the event when the queue of pending events is untwisted. Fire
    * accessible events as result of the processing.
    */
