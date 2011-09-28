@@ -2453,7 +2453,9 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return NS_ERROR_NOT_AVAILABLE;
 
   HCURSOR cursor;
-  rv = nsWindowGfx::CreateIcon(aCursor, PR_TRUE, aHotspotX, aHotspotY, &cursor);
+  // No scaling
+  gfxIntSize size(0, 0);
+  rv = nsWindowGfx::CreateIcon(aCursor, PR_TRUE, aHotspotX, aHotspotY, size, &cursor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCursor = nsCursor(-1);

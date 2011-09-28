@@ -125,7 +125,9 @@ TaskbarTabPreview::SetIcon(imgIContainer *icon) {
   HICON hIcon = NULL;
   if (icon) {
     nsresult rv;
-    rv = nsWindowGfx::CreateIcon(icon, PR_FALSE, 0, 0, &hIcon);
+    rv = nsWindowGfx::CreateIcon(icon, PR_FALSE, 0, 0,
+                                 nsWindowGfx::GetIconMetrics(nsWindowGfx::kSmallIcon),
+                                 &hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
