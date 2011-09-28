@@ -399,14 +399,25 @@ var BrowserUI = {
   },
 
   init: function() {
-    this._edit = document.getElementById("urlbar-edit");
+    let edit = this._edit = document.getElementById("urlbar-edit");
     this._title = document.getElementById("urlbar-title");
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
 
-    this._edit.addEventListener("click", this, false);
-    this._edit.addEventListener("mousedown", this, false);
+    edit.addEventListener("click", this, false);
+
+    // Delay urlbar binding initialization until the user interact with it
+    function urlbarBindOnFocus() {
+      if (!edit.hasAttribute("delaybinding"))
+        return;
+
+      window.removeEventListener("mousedown", urlbarBindOnFocus, true);
+      window.removeEventListener("keydown", urlbarBindOnFocus, true);
+      edit.removeAttribute("delaybinding");
+    };
+    window.addEventListener("mousedown", urlbarBindOnFocus, true);
+    window.addEventListener("keydown", urlbarBindOnFocus, true);
 
     window.addEventListener("NavigationPanelShown", this, false);
     window.addEventListener("NavigationPanelHidden", this, false);
