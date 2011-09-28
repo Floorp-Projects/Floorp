@@ -89,6 +89,7 @@ var DownloadsView = {
       item.setAttribute("downloadID", aAttrs.id);
       item.setAttribute("iconURL", "moz-icon://" + aAttrs.file + "?size=32");
       item.setAttribute("lastSeconds", Infinity);
+      item.setAttribute("class", "panel-listitem");
   
       // Initialize more complex attributes
       this._updateTime(item);
