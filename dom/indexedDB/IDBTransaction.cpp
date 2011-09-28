@@ -280,7 +280,7 @@ IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
     NS_ENSURE_TRUE(connection, NS_ERROR_FAILURE);
 
     nsCString beginTransaction;
-    if (mMode == nsIIDBTransaction::READ_WRITE) {
+    if (mMode != nsIIDBTransaction::READ_ONLY) {
       beginTransaction.AssignLiteral("BEGIN IMMEDIATE TRANSACTION;");
     }
     else {
@@ -978,7 +978,7 @@ CommitHelper::Run()
     IndexedDatabaseManager::SetCurrentDatabase(database);
 
     if (!mAborted) {
-      NS_NAMED_LITERAL_CSTRING(release, "END TRANSACTION");
+      NS_NAMED_LITERAL_CSTRING(release, "COMMIT TRANSACTION");
       if (NS_FAILED(mConnection->ExecuteSimpleSQL(release))) {
         mAborted = true;
       }
