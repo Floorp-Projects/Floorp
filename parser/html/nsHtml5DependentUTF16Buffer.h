@@ -11,11 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is HTML Parser C++ Translator code.
+ * The Original Code is Dependent UTF-16 Buffer code.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,21 +35,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* aBuffer, PRInt32 aEnd)
-  : buffer(aBuffer)
-  , start(0)
-  , end(aEnd)
-{
-  MOZ_COUNT_CTOR(nsHtml5UTF16Buffer);
-}
+#ifndef nsHtml5DependentUTF16Buffer_h_
+#define nsHtml5DependentUTF16Buffer_h_
 
-nsHtml5UTF16Buffer::~nsHtml5UTF16Buffer()
-{
-  MOZ_COUNT_DTOR(nsHtml5UTF16Buffer);
-}
+#include "nscore.h"
+#include "nsHtml5OwningUTF16Buffer.h"
 
-void
-nsHtml5UTF16Buffer::DeleteBuffer()
+class NS_STACK_CLASS nsHtml5DependentUTF16Buffer : public nsHtml5UTF16Buffer
 {
-  delete[] buffer;
-}
+  public:
+    /**
+     * Wraps a string without taking ownership of the buffer. aToWrap MUST NOT
+     * go away or be shortened while nsHtml5DependentUTF16Buffer is in use.
+     */
+    nsHtml5DependentUTF16Buffer(const nsAString& aToWrap);
+
+    ~nsHtml5DependentUTF16Buffer();
+
+    /**
+     * Copies the currently unconsumed part of this buffer into a new
+     * heap-allocated nsHtml5OwningUTF16Buffer. The new object is allocated
+     * with a fallible allocator. If the allocation fails, nsnull is returned.
+     * @return heap-allocated copy or nsnull if memory allocation failed
+     */
+    already_AddRefed<nsHtml5OwningUTF16Buffer> FalliblyCopyAsOwningBuffer();
+};
+
+#endif // nsHtml5DependentUTF16Buffer_h_

@@ -35,21 +35,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-nsHtml5UTF16Buffer::nsHtml5UTF16Buffer(PRUnichar* aBuffer, PRInt32 aEnd)
-  : buffer(aBuffer)
-  , start(0)
-  , end(aEnd)
-{
-  MOZ_COUNT_CTOR(nsHtml5UTF16Buffer);
-}
+#ifndef nsHtml5OwningUTF16Buffer_h_
+#define nsHtml5OwningUTF16Buffer_h_
 
-nsHtml5UTF16Buffer::~nsHtml5UTF16Buffer()
-{
-  MOZ_COUNT_DTOR(nsHtml5UTF16Buffer);
-}
+#include "nsHtml5UTF16Buffer.h"
 
-void
-nsHtml5UTF16Buffer::DeleteBuffer()
+class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
 {
-  delete[] buffer;
-}
+  private:
+
+    /**
+     * Passes a buffer and its length to the superclass constructor.
+     */
+    nsHtml5OwningUTF16Buffer(PRUnichar* aBuffer);
+
+  public:
+
+    /**
+     * Constructor for a parser key placeholder. (No actual buffer.)
+     * @param aKey a parser key
+     */
+    nsHtml5OwningUTF16Buffer(void* aKey);
+
+    /**
+     * Takes care of releasing the owned buffer.
+     */
+    ~nsHtml5OwningUTF16Buffer();
+
+    /**
+     * The next buffer in a queue.
+     */
+    nsRefPtr<nsHtml5OwningUTF16Buffer> next;
+
+    /**
+     * A parser key.
+     */
+    void* key;
+
+    static already_AddRefed<nsHtml5OwningUTF16Buffer>
+    FalliblyCreate(PRInt32 aLength);
+
+    nsrefcnt AddRef();
+    nsrefcnt Release();
+  private:
+    nsAutoRefCnt mRefCnt;
+};
+
+#endif // nsHtml5OwningUTF16Buffer_h_

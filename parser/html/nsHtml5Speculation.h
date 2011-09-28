@@ -38,7 +38,7 @@
 #ifndef nsHtml5Speculation_h__
 #define nsHtml5Speculation_h__
 
-#include "nsHtml5UTF16Buffer.h"
+#include "nsHtml5OwningUTF16Buffer.h"
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsAHtml5TreeOpSink.h"
@@ -48,14 +48,14 @@
 class nsHtml5Speculation : public nsAHtml5TreeOpSink
 {
   public:
-    nsHtml5Speculation(nsHtml5UTF16Buffer* aBuffer, 
+    nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
                        PRInt32 aStart, 
                        PRInt32 aStartLineNumber, 
                        nsAHtml5TreeBuilderState* aSnapshot);
     
     ~nsHtml5Speculation();
 
-    nsHtml5UTF16Buffer* GetBuffer() {
+    nsHtml5OwningUTF16Buffer* GetBuffer() {
       return mBuffer;
     }
     
@@ -83,7 +83,7 @@ class nsHtml5Speculation : public nsAHtml5TreeOpSink
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    nsRefPtr<nsHtml5UTF16Buffer>        mBuffer;
+    nsRefPtr<nsHtml5OwningUTF16Buffer>  mBuffer;
     
     /**
      * The start index of this speculation in the first buffer
