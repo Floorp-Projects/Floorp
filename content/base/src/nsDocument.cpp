@@ -1825,7 +1825,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   }
 
   // Traverse all nsIDocument pointer members.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDisplayDocument)
 
@@ -1906,7 +1905,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mFirstChild = nsnull;
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mXPathEvaluatorTearoff)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootElement)
+  tmp->mCachedRootElement = nsnull; // Avoid a dangling pointer
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
@@ -3397,6 +3396,13 @@ nsDocument::NodeName(nsAString& aNodeName)
 }
 
 Element*
+nsIDocument::GetRootElement() const
+{
+  return (mCachedRootElement && mCachedRootElement->GetNodeParent() == this) ?
+         mCachedRootElement : GetRootElementInternal();
+}
+
+Element*
 nsDocument::GetRootElementInternal() const
 {
   // Loop backwards because any non-elements, such as doctypes and PIs
@@ -3405,7 +3411,7 @@ nsDocument::GetRootElementInternal() const
   for (i = mChildren.ChildCount(); i > 0; --i) {
     nsIContent* child = mChildren.ChildAt(i - 1);
     if (child->IsElement()) {
-      const_cast<nsDocument*>(this)->mCachedRootElement = child;
+      const_cast<nsDocument*>(this)->mCachedRootElement = child->AsElement();
       return child->AsElement();
     }
   }
