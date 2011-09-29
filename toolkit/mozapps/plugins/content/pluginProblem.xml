@@ -58,9 +58,6 @@
             <xul:spacer flex="1"/>
             <xul:box class="icon"/>
             <html:div class="msg msgUnsupported">&missingPlugin;</html:div>
-            <html:div class="msg msgClickToPlay" onclick="var evt = document.createEvent('Events'); evt.initEvent('PluginClickToPlay', true, false); this.dispatchEvent(evt);">
-               &clickToPlayPlugin;
-            </html:div>
             <html:div class="msg msgDisabled">&disabledPlugin;</html:div>
             <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
             <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>
