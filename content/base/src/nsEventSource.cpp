@@ -113,11 +113,17 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsEventSource,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannelEventSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHttpChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTimer)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnOpenListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnMessageListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mUnicodeDecoder)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsEventSource, nsDOMEventTargetWrapperCache)
   tmp->Close();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnOpenListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnMessageListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 DOMCI_DATA(EventSource, nsEventSource)
@@ -156,9 +162,23 @@ nsEventSource::GetReadyState(PRInt32 *aReadyState)
   return NS_OK;
 }
 
-NS_IMPL_EVENT_HANDLER(nsEventSource, open)
-NS_IMPL_EVENT_HANDLER(nsEventSource, error)
-NS_IMPL_EVENT_HANDLER(nsEventSource, message)
+#define NS_EVENTSRC_IMPL_DOMEVENTLISTENER(_eventlistenername, _eventlistener)  \
+  NS_IMETHODIMP                                                                \
+  nsEventSource::GetOn##_eventlistenername(nsIDOMEventListener * *aListener)   \
+  {                                                                            \
+    return GetInnerEventListener(_eventlistener, aListener);                   \
+  }                                                                            \
+                                                                               \
+  NS_IMETHODIMP                                                                \
+  nsEventSource::SetOn##_eventlistenername(nsIDOMEventListener * aListener)    \
+  {                                                                            \
+    return RemoveAddEventListener(NS_LITERAL_STRING(#_eventlistenername),      \
+                                  _eventlistener, aListener);                  \
+  }
+
+NS_EVENTSRC_IMPL_DOMEVENTLISTENER(open, mOnOpenListener)
+NS_EVENTSRC_IMPL_DOMEVENTLISTENER(error, mOnErrorListener)
+NS_EVENTSRC_IMPL_DOMEVENTLISTENER(message, mOnMessageListener)
 
 NS_IMETHODIMP
 nsEventSource::Close()
