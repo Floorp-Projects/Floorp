@@ -33,20 +33,6 @@ function getLocale(aLocaleParams, aAppParams) {
  return l;
 }
 
-let gLocales = [
- getLocale({IDNUMBER: 1}),
-
- /* These locales should fail in the LocaleRepository */
- getLocale({IDNUMBER: 1}),                         // no duplicate ids
- getLocale({IDNUMBER: 2, INSTALL: "INVALID_URL"}),
- getLocale({IDNUMBER: 3}, {APPID: "INVALID_ID"}),
- getLocale({IDNUMBER: 3}, {MAXVERSION: "0"}),
- getLocale({IDNUMBER: 4, TARGETLOCALE: ""}),
- getLocale({IDNUMBER: 5, NAME: ""}),
- getLocale({IDNUMBER: 6, VERSION: ""}),
- getLocale({IDNUMBER: 7, TYPENUMBER: ""})
-];
-
 let appTemplate = "<application>" +
 "<name>{APPNAME}</name>" +
  "<min_version>{MINVERSION}</min_version>" +
@@ -85,21 +71,44 @@ function handleRequest(request, response) {
   response.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
   response.write("<addons>");
 
-  for(var i = 0; i < gLocales.length; i++) {
+  let locales = [];
+  let query = decodeURIComponent(request.queryString || "").split("=");
+  switch(query[0]) {
+   case "numvalid":
+    let numValid = parseInt(query[1]);
+    for (let i = 0; i < numValid; i++) {
+     locales.push( getLocale({IDNUMBER: i}) );
+    }
+    break;
+   default :
+    locales.push( getLocale({IDNUMBER: 1}) );
+    /* These locales should fail in the LocaleRepository */
+    locales.push( getLocale({IDNUMBER: 1}) );                         // no duplicate ids
+    locales.push( getLocale({IDNUMBER: 2, INSTALL: "INVALID_URL"}) );
+    locales.push( getLocale({IDNUMBER: 3}, {APPID: "INVALID_ID"}) );
+    locales.push( getLocale({IDNUMBER: 3}, {MAXVERSION: "0"}) );
+    locales.push( getLocale({IDNUMBER: 4, TARGETLOCALE: ""}) );
+    locales.push( getLocale({IDNUMBER: 5, NAME: ""}) );
+    locales.push( getLocale({IDNUMBER: 6, VERSION: ""}) );
+    locales.push( getLocale({IDNUMBER: 7, TYPENUMBER: ""}) );
+    break;
+  }
+
+  for(var i = 0; i < locales.length; i++) {
    let t = template;
-   t = t.replace(/{TARGETLOCALE}/g, gLocales[i].TARGETLOCALE);
-   t = t.replace(/{NAME}/, gLocales[i].NAME);
-   t = t.replace(/{VERSION}/, gLocales[i].VERSION);
-   t = t.replace(/{INSTALL}/, gLocales[i].INSTALL);
-   t = t.replace(/{TYPENUMBER}/, gLocales[i].TYPENUMBER);
-   t = t.replace(/{TYPENAME}/, gLocales[i].TYPENAME);
-   t = t.replace(/{IDNUMBER}/, gLocales[i].IDNUMBER)
+   t = t.replace(/{TARGETLOCALE}/g, locales[i].TARGETLOCALE);
+   t = t.replace(/{NAME}/, locales[i].NAME);
+   t = t.replace(/{VERSION}/, locales[i].VERSION);
+   t = t.replace(/{INSTALL}/, locales[i].INSTALL);
+   t = t.replace(/{TYPENUMBER}/, locales[i].TYPENUMBER);
+   t = t.replace(/{TYPENAME}/, locales[i].TYPENAME);
+   t = t.replace(/{IDNUMBER}/, locales[i].IDNUMBER)
 
    let a = appTemplate;
-   a = a.replace(/{APPNAME}/, gLocales[i].app.APPNAME);
-   a = a.replace(/{MINVERSION}/, gLocales[i].app.MINVERSION);
-   a = a.replace(/{MAXVERSION}/, gLocales[i].app.MAXVERSION);
-   a = a.replace(/{APPID}/, gLocales[i].app.APPID);
+   a = a.replace(/{APPNAME}/, locales[i].app.APPNAME);
+   a = a.replace(/{MINVERSION}/, locales[i].app.MINVERSION);
+   a = a.replace(/{MAXVERSION}/, locales[i].app.MAXVERSION);
+   a = a.replace(/{APPID}/, locales[i].app.APPID);
 
    t = t.replace(/{APPS}/, a);
    response.write(t);
