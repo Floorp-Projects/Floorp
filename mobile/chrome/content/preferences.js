@@ -37,7 +37,6 @@
 
 var PreferencesView = {
   _currentLocale: null,
-  _languages: null,
   _msg: null,
 
   _messageActions: function pv__messageActions(aData) {
@@ -93,11 +92,10 @@ var PreferencesView = {
   },
 
   delayedInit: function pv__delayedInit() {
-    if (this._languages)
+    if (this._msg)
       return;
 
     this._msg = document.getElementById("prefs-messages");
-    this._languages = document.getElementById("prefs-languages");
     this._loadLocales();
 
     this._loadHomePage();
