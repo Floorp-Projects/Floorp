@@ -283,6 +283,7 @@ let Content = {
     addEventListener("DOMContentLoaded", this, false);
     addEventListener("pagehide", this, false);
     addEventListener("keypress", this, false, false);
+    addEventListener("PluginClickToPlay", this, false, true);
 
     // Attach a listener to watch for "click" events bubbling up from error
     // pages and other similar page. This lets us fix bugs like 401575 which
@@ -393,6 +394,10 @@ let Content = {
       case "pagehide":
         if (aEvent.target == content.document)
           this._resetFontSize();          
+        break;
+
+      case "PluginClickToPlay":
+        sendAsyncMessage("Browser:PluginClickToPlay", { });
         break;
     }
   },
