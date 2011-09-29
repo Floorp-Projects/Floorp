@@ -28,6 +28,7 @@
  *   Dão Gottwald (dao@mozilla.com)
  *   Jim Mathies (jmathies@mozilla.com)
  *   Drew Willcoxon (adw@mozilla.com)
+ *   Paul Rouget (paul@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2566,3 +2567,62 @@ panel[dimmed="true"] {
   cursor: n-resize;
 }
 
+/* Highlighter - Node Infobar */
+
+/* Highlighter - Node Infobar - text */
+
+#highlighter-nodeinfobar-tagname {
+  color: white;
+}
+
+#highlighter-nodeinfobar-id {
+  color: hsl(90, 79%, 52%);
+}
+
+.highlighter-nodeinfobar-class {
+  color: hsl(200, 100%, 65%);
+}
+
+/* Highlighter - Node Infobar - box & arrow */
+
+#highlighter-nodeinfobar {
+  border: 1px solid hsla(210, 19%, 63%, .5);
+  border-radius: 3px;
+  padding: 8px 16px;
+  background: -moz-linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
+}
+
+.highlighter-nodeinfobar-arrow {
+  width: 14px;
+  height: 14px;
+  -moz-margin-start: -moz-calc(50% - 7px);
+  -moz-transform: rotate(-45deg);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+}
+
+#highlighter-nodeinfobar-arrow-top {
+  margin-bottom: -8px;
+  margin-top: 8px;
+  border-right-color: hsla(210, 19%, 63%, .5);
+  border-top-color: hsla(210, 19%, 63%, .5);
+  background-image: -moz-linear-gradient(bottom left, transparent 50%, hsl(209, 18%, 30%) 50%);
+}
+
+#highlighter-nodeinfobar-arrow-bottom {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  border-left-color: hsla(210, 19%, 63%, .5);
+  border-bottom-color: hsla(210, 19%, 63%, .5);
+  background-image: -moz-linear-gradient(top right, transparent 50%, hsl(210, 24%, 16%) 50%);
+}
+
+#highlighter-nodeinfobar-container[position="top"] > #highlighter-nodeinfobar,
+#highlighter-nodeinfobar-container[position="overlap"] > #highlighter-nodeinfobar {
+  box-shadow: 0 1px 0 hsla(0, 0%, 100%, .1) inset;
+}
+
+#highlighter-nodeinfobar-container[hide-arrow] > #highlighter-nodeinfobar {
+  margin: 7px 0;
+}

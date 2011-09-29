@@ -125,6 +125,10 @@ Highlighter.prototype = {
 
     let controlsBox = this.chromeDoc.createElement("box");
     controlsBox.id = "highlighter-controls";
+    this.highlighterContainer.appendChild(this.veilContainer);
+    this.highlighterContainer.appendChild(controlsBox);
+
+    stack.appendChild(this.highlighterContainer);
 
     // The veil will make the whole page darker except
     // for the region of the selected box.
@@ -133,11 +137,6 @@ Highlighter.prototype = {
     // The controlsBox will host the different interactive
     // elements of the highlighter (buttons, toolbars, ...).
     this.buildControls(controlsBox);
-
-    this.highlighterContainer.appendChild(this.veilContainer);
-    this.highlighterContainer.appendChild(controlsBox);
-
-    stack.appendChild(this.highlighterContainer);
 
     this.browser.addEventListener("resize", this, true);
     this.browser.addEventListener("scroll", this, true);
@@ -158,7 +157,8 @@ Highlighter.prototype = {
    *   <box id="highlighter-veil-bottombox" class="highlighter-veil"/>
    * </vbox>
    *
-   * @param nsIDOMNode aParent
+   * @param nsIDOMElement aParent
+   *        The container of the veil boxes.
    */
   buildVeil: function Highlighter_buildVeil(aParent)
   {
@@ -204,9 +204,87 @@ Highlighter.prototype = {
    *
    * <box id="highlighter-close-button"/>
    *
-   * @param nsIDOMNode aParent
+   * @param nsIDOMElement aParent
+   *        The container of the controls elements.
    */
   buildControls: function Highlighter_buildControls(aParent)
+  {
+    this.buildCloseButton(aParent);
+    this.buildInfobar(aParent);
+  },
+
+  /**
+   * Build the node Infobar.
+   *
+   * <box id="highlighter-nodeinfobar-container">
+   *   <box id="Highlighter-nodeinfobar-arrow-top"/>
+   *   <vbox id="highlighter-nodeinfobar">
+   *     <label id="highlighter-nodeinfobar-tagname"/>
+   *     <label id="highlighter-nodeinfobar-id"/>
+   *     <vbox id="highlighter-nodeinfobar-classes"/>
+   *   </vbox>
+   *   <box id="Highlighter-nodeinfobar-arrow-bottom"/>
+   * </box>
+   *
+   * @param nsIDOMElement aParent
+   *        The container of the infobar.
+   */
+  buildInfobar: function Highlighter_buildInfobar(aParent)
+  {
+    let container = this.chromeDoc.createElement("box");
+    container.id = "highlighter-nodeinfobar-container";
+    container.setAttribute("position", "top");
+    container.setAttribute("disabled", "true");
+
+    let nodeInfobar = this.chromeDoc.createElement("hbox");
+    nodeInfobar.id = "highlighter-nodeinfobar";
+
+    let arrowBoxTop = this.chromeDoc.createElement("box");
+    arrowBoxTop.className = "highlighter-nodeinfobar-arrow";
+    arrowBoxTop.id = "highlighter-nodeinfobar-arrow-top";
+
+    let arrowBoxBottom = this.chromeDoc.createElement("box");
+    arrowBoxBottom.className = "highlighter-nodeinfobar-arrow";
+    arrowBoxBottom.id = "highlighter-nodeinfobar-arrow-bottom";
+
+    let tagNameLabel = this.chromeDoc.createElement("label");
+    tagNameLabel.id = "highlighter-nodeinfobar-tagname";
+    tagNameLabel.className = "plain";
+
+    let idLabel = this.chromeDoc.createElement("label");
+    idLabel.id = "highlighter-nodeinfobar-id";
+    idLabel.className = "plain";
+
+    let classesBox = this.chromeDoc.createElement("hbox");
+    classesBox.id = "highlighter-nodeinfobar-classes";
+
+    nodeInfobar.appendChild(tagNameLabel);
+    nodeInfobar.appendChild(idLabel);
+    nodeInfobar.appendChild(classesBox);
+    container.appendChild(arrowBoxTop);
+    container.appendChild(nodeInfobar);
+    container.appendChild(arrowBoxBottom);
+
+    aParent.appendChild(container);
+
+    let barHeight = container.getBoundingClientRect().height;
+
+    this.nodeInfo = {
+      tagNameLabel: tagNameLabel,
+      idLabel: idLabel,
+      classesBox: classesBox,
+      container: container,
+      barHeight: barHeight,
+    };
+  },
+
+  /**
+   * Build the close button.
+   *
+   * @param nsIDOMElement aParent
+   *        The container of the close-button.
+   */
+  buildCloseButton: function Highlighter_buildCloseButton(aParent)
   {
     let closeButton = this.chromeDoc.createElement("box");
     closeButton.id = "highlighter-close-button";
@@ -233,6 +311,7 @@ Highlighter.prototype = {
     this.veilTransparentBox = null;
     this.veilContainer = null;
     this.node = null;
+    this.nodeInfo = null;
     this.highlighterContainer.parentNode.removeChild(this.highlighterContainer);
     this.highlighterContainer = null;
     this.win = null
@@ -327,6 +406,8 @@ Highlighter.prototype = {
 
     this.highlightRectangle(rect);
 
+    this.moveInfobar();
+
     if (this._highlighting) {
       Services.obs.notifyObservers(null,
         INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, null);
@@ -344,6 +425,7 @@ Highlighter.prototype = {
   highlightNode: function Highlighter_highlightNode(aNode, aParams)
   {
     this.node = aNode;
+    this.updateInfobar();
     this.highlight(aParams && aParams.scroll);
   },
 
@@ -393,6 +475,87 @@ Highlighter.prototype = {
     this.veilTransparentBox.style.width = 0;
     Services.obs.notifyObservers(null,
       INSPECTOR_NOTIFICATIONS.UNHIGHLIGHTING, null);
+  },
+
+  /**
+   * Update node information (tagName#id.class) 
+   */
+  updateInfobar: function Highlighter_updateInfobar()
+  {
+    // Tag name
+    this.nodeInfo.tagNameLabel.textContent = this.node.tagName;
+
+    // ID
+    this.nodeInfo.idLabel.textContent = this.node.id;
+
+    // Classes
+    let classes = this.nodeInfo.classesBox;
+    while (classes.hasChildNodes()) {
+      classes.removeChild(classes.firstChild);
+    }
+
+    if (this.node.className) {
+      let fragment = this.chromeDoc.createDocumentFragment();
+      for (let i = 0; i < this.node.classList.length; i++) {
+        let classLabel = this.chromeDoc.createElement("label");
+        classLabel.className = "highlighter-nodeinfobar-class plain";
+        classLabel.textContent = this.node.classList[i];
+        fragment.appendChild(classLabel);
+      }
+      classes.appendChild(fragment);
+    }
+  },
+
+  /**
+   * Move the Infobar to the right place in the highlighter.
+   */
+  moveInfobar: function Highlighter_moveInfobar()
+  {
+    let rect = this._highlightRect;
+    if (rect && this._highlighting) {
+      this.nodeInfo.container.removeAttribute("disabled");
+      // Can the bar be above the node?
+      if (rect.top < this.nodeInfo.barHeight) {
+        // No. Can we move the toolbar under the node?
+        if (rect.top + rect.height +
+            this.nodeInfo.barHeight > this.win.innerHeight) {
+          // No. Let's move it inside.
+          this.nodeInfo.container.style.top = rect.top + "px";
+          this.nodeInfo.container.setAttribute("position", "overlap");
+        } else {
+          // Yes. Let's move it under the node.
+          this.nodeInfo.container.style.top = rect.top + rect.height + "px";
+          this.nodeInfo.container.setAttribute("position", "bottom");
+        }
+      } else {
+        // Yes. Let's move it on top of the node.
+        this.nodeInfo.container.style.top =
+          rect.top - this.nodeInfo.barHeight + "px";
+        this.nodeInfo.container.setAttribute("position", "top");
+      }
+
+      let barWidth = this.nodeInfo.container.getBoundingClientRect().width;
+      let left = rect.left + rect.width / 2 - barWidth / 2;
+
+      // Make sure the whole infobar is visible
+      if (left < 0) {
+        left = 0;
+        this.nodeInfo.container.setAttribute("hide-arrow", "true");
+      } else {
+        if (left + barWidth > this.win.innerWidth) {
+          left = this.win.innerWidth - barWidth;
+          this.nodeInfo.container.setAttribute("hide-arrow", "true");
+        } else {
+          this.nodeInfo.container.removeAttribute("hide-arrow");
+        }
+      }
+      this.nodeInfo.container.style.left = left + "px";
+    } else {
+      this.nodeInfo.container.style.left = "0";
+      this.nodeInfo.container.style.top = "0";
+      this.nodeInfo.container.setAttribute("position", "top");
+      this.nodeInfo.container.setAttribute("hide-arrow", "true");
+    }
   },
 
   /**
