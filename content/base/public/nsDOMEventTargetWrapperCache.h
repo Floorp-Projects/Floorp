@@ -94,52 +94,54 @@ protected:
 };
 
 #define NS_DECL_EVENT_HANDLER(_event)                                         \
-  public:                                                                     \
-    NS_IMETHOD GetOn##_event(JSContext *cx, jsval *vp);                       \
-    NS_IMETHOD SetOn##_event(JSContext *cx, const jsval &vp);
+  protected:                                                                  \
+    nsRefPtr<nsDOMEventListenerWrapper> mOn##_event##Listener;                \
+  public:
 
 #define NS_DECL_AND_IMPL_EVENT_HANDLER(_event)                                \
+  protected:                                                                  \
+    nsRefPtr<nsDOMEventListenerWrapper> mOn##_event##Listener;                \
   public:                                                                     \
-    NS_IMPL_EVENT_HANDLER(_class, _event)
+    NS_IMETHOD GetOn##_event(nsIDOMEventListener** a##_event)                 \
+    {                                                                         \
+      return GetInnerEventListener(mOn##_event##Listener, a##_event);         \
+    }                                                                         \
+    NS_IMETHOD SetOn##_event(nsIDOMEventListener* a##_event)                  \
+    {                                                                         \
+      return RemoveAddEventListener(NS_LITERAL_STRING(#_event),               \
+                                    mOn##_event##Listener, a##_event);        \
+    }
 
 #define NS_IMPL_EVENT_HANDLER(_class, _event)                                 \
   NS_IMETHODIMP                                                               \
-  _class::GetOn##_event(JSContext *cx, jsval *vp)                             \
+  _class::GetOn##_event(nsIDOMEventListener** a##_event)                      \
   {                                                                           \
-    nsEventListenerManager* elm = GetListenerManager(PR_FALSE);               \
-    if (elm) {                                                                \
-      elm->GetJSEventListener(nsGkAtoms::on##_event, vp);                     \
-    } else {                                                                  \
-      *vp = JSVAL_NULL;                                                       \
-    }                                                                         \
-    return NS_OK;                                                             \
+    return GetInnerEventListener(mOn##_event##Listener, a##_event);           \
   }                                                                           \
   NS_IMETHODIMP                                                               \
-  _class::SetOn##_event(JSContext *cx, const jsval &vp)                       \
+  _class::SetOn##_event(nsIDOMEventListener* a##_event)                       \
   {                                                                           \
-    nsEventListenerManager* elm = GetListenerManager(PR_TRUE);                \
-    if (!elm) {                                                               \
-      return NS_ERROR_OUT_OF_MEMORY;                                          \
-    }                                                                         \
-                                                                              \
-    JSObject *obj = GetWrapper();                                             \
-    if (!obj) {                                                               \
-      /* Just silently do nothing */                                          \
-      return NS_OK;                                                           \
-    }                                                                         \
-    return elm->SetJSEventListenerToJsval(nsGkAtoms::on##_event, cx, obj, vp);\
+    return RemoveAddEventListener(NS_LITERAL_STRING(#_event),                 \
+                                  mOn##_event##Listener, a##_event);          \
   }
 
 #define NS_IMPL_FORWARD_EVENT_HANDLER(_class, _event, _baseclass)             \
     NS_IMETHODIMP                                                             \
-    _class::GetOn##_event(JSContext *cx, jsval *vp)                           \
+    _class::GetOn##_event(nsIDOMEventListener** a##_event)                    \
     {                                                                         \
-      return _baseclass::GetOn##_event(cx, vp);                               \
+      return _baseclass::GetOn##_event(a##_event);                            \
     }                                                                         \
     NS_IMETHODIMP                                                             \
-    _class::SetOn##_event(JSContext *cx, const jsval &vp)                     \
+    _class::SetOn##_event(nsIDOMEventListener* a##_event)                     \
     {                                                                         \
-      return _baseclass::SetOn##_event(cx, vp);                               \
+      return _baseclass::SetOn##_event(a##_event);                            \
     }
+
+#define NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(_event)                    \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOn##_event##Listener)
+
+#define NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(_event)                      \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOn##_event##Listener)
+                                    
 
 #endif  // nsDOMEventTargetWrapperCache_h__
