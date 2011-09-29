@@ -69,9 +69,9 @@ function createDocument()
     "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
   let div3 = doc.createElement("div");
   div3.id = "checkOutThisWickedSpread";
-  div3.setAttribute("style", "position: absolute; top: 20px; right: 200px; height: 200px; width: 200px; background-color: yellow; border: 1px solid black;");
+  div3.setAttribute("style", "position: absolute; top: 20px; right: 20px; height: 20px; width: 20px; background-color: yellow; border: 1px dashed black;");
   let p4 = doc.createElement("p");
-  p4.setAttribute("style", "font-weight: 800; font-size: 18px; text-align: center; margin-top: 90px;");
+  p4.setAttribute("style", "font-weight: 200; font-size: 8px; text-align: center;");
   p4.textContent = "Smörgåsbord!";
   div.appendChild(h1);
   div.appendChild(p1);
