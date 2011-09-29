@@ -41,7 +41,7 @@
 
 // Adds two 32bit unsigned numbers, retuns PR_TRUE if addition succeeded,
 // or PR_FALSE the if addition would result in an overflow.
-PRBool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
+bool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
   PRUint64 rl = static_cast<PRUint64>(a) + static_cast<PRUint64>(b);
   if (rl > PR_UINT32_MAX) {
     return PR_FALSE;
@@ -50,7 +50,7 @@ PRBool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
   return true;
 }
 
-PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult)
+bool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult)
 {
   // 32 bit integer multiplication with overflow checking. Returns PR_TRUE
   // if the multiplication was successful, or PR_FALSE if the operation resulted
@@ -66,7 +66,7 @@ PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult)
 
 // Adds two 64bit numbers, retuns PR_TRUE if addition succeeded, or PR_FALSE
 // if addition would result in an overflow.
-PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
+bool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   if (b < 1) {
     if (PR_INT64_MIN - b <= a) {
       aResult = a + b;
@@ -82,7 +82,7 @@ PRBool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
 // 64 bit integer multiplication with overflow checking. Returns PR_TRUE
 // if the multiplication was successful, or PR_FALSE if the operation resulted
 // in an integer overflow.
-PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
+bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   // We break a multiplication a * b into of sign_a * sign_b * abs(a) * abs(b)
   //
   // This is equivalent to:
@@ -178,7 +178,7 @@ PRBool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
 
 // Converts from number of audio frames to microseconds, given the specified
 // audio rate.
-PRBool FramesToUsecs(PRInt64 aFrames, PRUint32 aRate, PRInt64& aOutUsecs)
+bool FramesToUsecs(PRInt64 aFrames, PRUint32 aRate, PRInt64& aOutUsecs)
 {
   PRInt64 x;
   if (!MulOverflow(aFrames, USECS_PER_S, x))
@@ -189,7 +189,7 @@ PRBool FramesToUsecs(PRInt64 aFrames, PRUint32 aRate, PRInt64& aOutUsecs)
 
 // Converts from microseconds to number of audio frames, given the specified
 // audio rate.
-PRBool UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutFrames)
+bool UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutFrames)
 {
   PRInt64 x;
   if (!MulOverflow(aUsecs, aRate, x))

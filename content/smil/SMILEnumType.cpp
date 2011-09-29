@@ -68,7 +68,7 @@ SMILEnumType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
-PRBool
+bool
 SMILEnumType::IsEqual(const nsSMILValue& aLeft,
                       const nsSMILValue& aRight) const
 {

@@ -152,7 +152,7 @@ SVGAnimatedTransformList::ClearAnimValue(nsSVGElement *aElement)
   aElement->DidAnimateTransformList();
 }
 
-PRBool
+bool
 SVGAnimatedTransformList::IsExplicitlySet() const
 {
   // Like other methods of this name, we need to know when a transform value has
@@ -181,7 +181,7 @@ SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   const nsAString& aStr,
   const nsISMILAnimationElement* aSrcElement,
   nsSMILValue& aValue,
-  PRBool& aPreventCachingOfSandwich) const
+  bool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(aSrcElement, NS_ERROR_FAILURE);
   NS_ABORT_IF_FALSE(aValue.IsNull(),

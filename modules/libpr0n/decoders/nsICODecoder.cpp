@@ -134,7 +134,7 @@ nsICODecoder::FinishInternal()
 // reserved	 4 bytes unused (=0)
 // DataOffset	 4 bytes File offset to Raster Data
 // Returns PR_TRUE if successful
-PRBool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh) 
+bool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh) 
 {
   memset(bfh, 0, 14);
   bfh[0] = 'B';

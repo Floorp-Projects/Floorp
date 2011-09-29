@@ -52,7 +52,7 @@ nsSMILNullType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   return NS_OK;
 }
 
-PRBool
+bool
 nsSMILNullType::IsEqual(const nsSMILValue& aLeft,
                         const nsSMILValue& aRight) const
 {

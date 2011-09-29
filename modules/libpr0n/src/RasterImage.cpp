@@ -510,7 +510,7 @@ RasterImage::GetCurrentDrawableImgFrame()
 //******************************************************************************
 /* readonly attribute boolean currentFrameIsOpaque; */
 NS_IMETHODIMP
-RasterImage::GetCurrentFrameIsOpaque(PRBool *aIsOpaque)
+RasterImage::GetCurrentFrameIsOpaque(bool *aIsOpaque)
 {
   NS_ENSURE_ARG_POINTER(aIsOpaque);
 
@@ -572,7 +572,7 @@ RasterImage::GetNumFrames()
 //******************************************************************************
 /* readonly attribute boolean animated; */
 NS_IMETHODIMP
-RasterImage::GetAnimated(PRBool *aAnimated)
+RasterImage::GetAnimated(bool *aAnimated)
 {
   if (mError)
     return NS_ERROR_FAILURE;
@@ -1878,7 +1878,7 @@ RasterImage::ClearFrame(imgFrame *aFrame, nsIntRect &aRect)
 //******************************************************************************
 // Whether we succeed or fail will not cause a crash, and there's not much
 // we can do about a failure, so there we don't return a nsresult
-PRBool
+bool
 RasterImage::CopyFrameImage(imgFrame *aSrcFrame,
                             imgFrame *aDstFrame)
 {
@@ -2041,7 +2041,7 @@ RasterImage::Set(const char *prop, nsISupports *value)
 }
 
 NS_IMETHODIMP
-RasterImage::Has(const char *prop, PRBool *_retval)
+RasterImage::Has(const char *prop, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   if (!mProperties) {
@@ -2631,14 +2631,14 @@ RasterImage::DecodeSomeData(PRUint32 aMaxBytes)
 // task at hand and can shut down the decoder.
 //
 // This method may not be called if there is no decoder.
-PRBool
+bool
 RasterImage::IsDecodeFinished()
 {
   // Precondition
   NS_ABORT_IF_FALSE(mDecoder, "Can't call IsDecodeFinished() without decoder!");
 
   // Assume it's not finished
-  PRBool decodeFinished = PR_FALSE;
+  bool decodeFinished = false;
 
   // There shouldn't be any reason to call this if we're not storing
   // source data

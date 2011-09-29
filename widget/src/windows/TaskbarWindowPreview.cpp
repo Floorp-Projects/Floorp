@@ -53,7 +53,7 @@ namespace mozilla {
 namespace widget {
 
 namespace {
-PRBool WindowHookProc(void *aContext, HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam, LRESULT *aResult)
+bool WindowHookProc(void *aContext, HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam, LRESULT *aResult)
 {
   TaskbarWindowPreview *preview = reinterpret_cast<TaskbarWindowPreview*>(aContext);
   *aResult = preview->WndProc(nMsg, wParam, lParam);
@@ -117,7 +117,7 @@ TaskbarWindowPreview::~TaskbarWindowPreview() {
 }
 
 nsresult
-TaskbarWindowPreview::ShowActive(PRBool active) {
+TaskbarWindowPreview::ShowActive(bool active) {
   return FAILED(mTaskbar->ActivateTab(active ? mWnd : NULL))
        ? NS_ERROR_FAILURE
        : NS_OK;
@@ -160,7 +160,7 @@ TaskbarWindowPreview::GetButton(PRUint32 index, nsITaskbarPreviewButton **_retVa
 }
 
 NS_IMETHODIMP
-TaskbarWindowPreview::SetEnableCustomDrawing(PRBool aEnable) {
+TaskbarWindowPreview::SetEnableCustomDrawing(bool aEnable) {
   if (aEnable == mCustomDrawing)
     return NS_OK;
   mCustomDrawing = aEnable;
@@ -178,7 +178,7 @@ TaskbarWindowPreview::SetEnableCustomDrawing(PRBool aEnable) {
 }
 
 NS_IMETHODIMP
-TaskbarWindowPreview::GetEnableCustomDrawing(PRBool *aEnable) {
+TaskbarWindowPreview::GetEnableCustomDrawing(bool *aEnable) {
   *aEnable = mCustomDrawing;
   return NS_OK;
 }
@@ -213,7 +213,7 @@ TaskbarWindowPreview::SetOverlayIcon(imgIContainer* aStatusIcon,
   nsresult rv;
   if (aStatusIcon) {
     // The image shouldn't be animated
-    PRBool isAnimated;
+    bool isAnimated;
     rv = aStatusIcon->GetAnimated(&isAnimated);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_FALSE(isAnimated, NS_ERROR_INVALID_ARG);
@@ -285,7 +285,7 @@ TaskbarWindowPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 /* static */
-PRBool
+bool
 TaskbarWindowPreview::TaskbarWindowHook(void *aContext,
                                         HWND hWnd, UINT nMsg,
                                         WPARAM wParam, LPARAM lParam,

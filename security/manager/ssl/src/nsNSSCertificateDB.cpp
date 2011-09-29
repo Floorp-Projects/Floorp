@@ -393,7 +393,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   }
 
   PRUint32 trustBits;
-  PRBool allows;
+  bool allows;
   rv = dialogs->ConfirmDownloadCACert(ctx, certToShow, &trustBits, &allows);
   if (NS_FAILED(rv))
     return rv;
@@ -1094,7 +1094,7 @@ NS_IMETHODIMP
 nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert, 
                                   PRUint32 certType,
                                   PRUint32 trustType,
-                                  PRBool *_isTrusted)
+                                  bool *_isTrusted)
 {
   NS_ENSURE_ARG_POINTER(_isTrusted);
   *_isTrusted = PR_FALSE;
@@ -1403,7 +1403,7 @@ finish:
 
 
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetIsOcspOn(PRBool *aOcspOn)
+nsNSSCertificateDB::GetIsOcspOn(bool *aOcspOn)
 {
   nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 

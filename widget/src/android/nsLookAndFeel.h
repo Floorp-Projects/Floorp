@@ -51,13 +51,13 @@ public:
     virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
     virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
-    virtual PRBool GetEchoPasswordImpl();
+    virtual bool GetEchoPasswordImpl();
 
 protected:
-    static PRBool mInitializedSystemColors;
+    static bool mInitializedSystemColors;
     static mozilla::AndroidSystemColors mSystemColors;
-    static PRBool mInitializedShowPassword;
-    static PRBool mShowPassword;
+    static bool mInitializedShowPassword;
+    static bool mShowPassword;
 
     nsresult GetSystemColors();
     nsresult CallRemoteGetSystemColors();

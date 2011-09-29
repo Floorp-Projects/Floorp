@@ -118,7 +118,7 @@ public:
   /**
    * Initialize the access node object, add it to the cache.
    */
-  virtual PRBool Init();
+  virtual bool Init();
 
   /**
    * Shutdown the access node object.
@@ -157,7 +157,7 @@ public:
   /**
    * Return node type information of DOM node associated with the accessible.
    */
-  PRBool IsContent() const
+  bool IsContent() const
   {
     return GetNode() && GetNode()->IsNodeOfType(nsINode::eCONTENT);
   }
@@ -206,12 +206,12 @@ protected:
     /**
      * Notify global nsIObserver's that a11y is getting init'd or shutdown
      */
-    static void NotifyA11yInitOrShutdown(PRBool aIsInit);
+    static void NotifyA11yInitOrShutdown(bool aIsInit);
 
     // Static data, we do our own refcounting for our static data
     static nsIStringBundle *gStringBundle;
 
-    static PRBool gIsFormFillEnabled;
+    static bool gIsFormFillEnabled;
 
 private:
   static nsApplicationAccessible *gApplicationAccessible;

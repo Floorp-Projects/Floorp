@@ -115,7 +115,7 @@ public:
   virtual PRInt64 GetPositionInFrames() = 0;
 
   // Returns PR_TRUE when the audio stream is paused.
-  virtual PRBool IsPaused() = 0;
+  virtual bool IsPaused() = 0;
 
   // Returns the minimum number of audio frames which must be written before
   // you can be sure that something will be played.

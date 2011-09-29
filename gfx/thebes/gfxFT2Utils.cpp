@@ -353,7 +353,7 @@ gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
     return (*sGetCharVariantPtr)(mFace, aCharCode, aVariantSelector);
 }
 
-PRBool
+bool
 gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
 {
     if (!mFace || !FT_IS_SFNT(mFace))

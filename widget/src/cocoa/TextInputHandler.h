@@ -191,7 +191,7 @@ public:
    *                              FALSE.  When TRUE, we use an ANSI keyboard
    *                              instead of the actual keyboard.
    */
-  void InitByLayoutID(SInt32 aLayoutID, PRBool aOverrideKeyboard = PR_FALSE);
+  void InitByLayoutID(SInt32 aLayoutID, bool aOverrideKeyboard = false);
   void InitByCurrentInputSource();
   void InitByCurrentKeyboardLayout();
   void InitByCurrentASCIICapableInputSource();
@@ -201,75 +201,75 @@ public:
 
   const UCKeyboardLayout* GetUCKeyboardLayout();
 
-  PRBool IsOpenedIMEMode();
-  PRBool IsIMEMode();
+  bool IsOpenedIMEMode();
+  bool IsIMEMode();
 
-  PRBool IsASCIICapable()
+  bool IsASCIICapable()
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetBoolProperty(kTISPropertyInputSourceIsASCIICapable);
   }
 
-  PRBool IsEnabled()
+  bool IsEnabled()
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetBoolProperty(kTISPropertyInputSourceIsEnabled);
   }
 
-  PRBool GetLanguageList(CFArrayRef &aLanguageList);
-  PRBool GetPrimaryLanguage(CFStringRef &aPrimaryLanguage);
-  PRBool GetPrimaryLanguage(nsAString &aPrimaryLanguage);
+  bool GetLanguageList(CFArrayRef &aLanguageList);
+  bool GetPrimaryLanguage(CFStringRef &aPrimaryLanguage);
+  bool GetPrimaryLanguage(nsAString &aPrimaryLanguage);
 
-  PRBool GetLocalizedName(CFStringRef &aName)
+  bool GetLocalizedName(CFStringRef &aName)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyLocalizedName, aName);
   }
 
-  PRBool GetLocalizedName(nsAString &aName)
+  bool GetLocalizedName(nsAString &aName)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyLocalizedName, aName);
   }
 
-  PRBool GetInputSourceID(CFStringRef &aID)
+  bool GetInputSourceID(CFStringRef &aID)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyInputSourceID, aID);
   }
 
-  PRBool GetInputSourceID(nsAString &aID)
+  bool GetInputSourceID(nsAString &aID)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyInputSourceID, aID);
   }
 
-  PRBool GetBundleID(CFStringRef &aBundleID)
+  bool GetBundleID(CFStringRef &aBundleID)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyBundleID, aBundleID);
   }
 
-  PRBool GetBundleID(nsAString &aBundleID)
+  bool GetBundleID(nsAString &aBundleID)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyBundleID, aBundleID);
   }
 
-  PRBool GetInputSourceType(CFStringRef &aType)
+  bool GetInputSourceType(CFStringRef &aType)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyInputSourceType, aType);
   }
 
-  PRBool GetInputSourceType(nsAString &aType)
+  bool GetInputSourceType(nsAString &aType)
   {
     NS_ENSURE_TRUE(mInputSource, PR_FALSE);
     return GetStringProperty(kTISPropertyInputSourceType, aType);
   }
 
-  PRBool IsForRTLLanguage();
-  PRBool IsInitializedByCurrentKeyboardLayout();
+  bool IsForRTLLanguage();
+  bool IsInitializedByCurrentKeyboardLayout();
 
   enum {
     // 40 is an actual result of the ::LMGetKbdType() when we connect an
@@ -305,7 +305,7 @@ protected:
    * @return                      If succeeded, TRUE.  Otherwise, FALSE.
    *                              Even if TRUE, aStr can be empty string.
    */
-  PRBool TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
+  bool TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
                            UInt32 aKbType, nsAString &aStr);
 
   /**
@@ -335,16 +335,16 @@ protected:
    */
   void InitKeyPressEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent);
 
-  PRBool GetBoolProperty(const CFStringRef aKey);
-  PRBool GetStringProperty(const CFStringRef aKey, CFStringRef &aStr);
-  PRBool GetStringProperty(const CFStringRef aKey, nsAString &aStr);
+  bool GetBoolProperty(const CFStringRef aKey);
+  bool GetStringProperty(const CFStringRef aKey, CFStringRef &aStr);
+  bool GetStringProperty(const CFStringRef aKey, nsAString &aStr);
 
   TISInputSourceRef mInputSource;
   CFArrayRef mInputSourceList;
   const UCKeyboardLayout* mUCKeyboardLayout;
   PRInt8 mIsRTL;
 
-  PRPackedBool mOverrideKeyboard;
+  bool mOverrideKeyboard;
 };
 
 /**
@@ -383,7 +383,7 @@ public:
    * @return                      TRUE if the event is consumed by web contents
    *                              or chrome contents.  Otherwise, FALSE.
    */
-  PRBool DispatchEvent(nsGUIEvent& aEvent);
+  bool DispatchEvent(nsGUIEvent& aEvent);
 
   /**
    * InitKeyEvent() initializes aKeyEvent for aNativeKeyEvent.
@@ -433,7 +433,7 @@ public:
    * @return                      If the keycode is mapped to a special key,
    *                              TRUE.  Otherwise, FALSE.
    */
-  static PRBool IsSpecialGeckoKey(UInt32 aNativeKeyCode);
+  static bool IsSpecialGeckoKey(UInt32 aNativeKeyCode);
 
 protected:
   nsAutoRefCnt mRefCnt;
@@ -449,7 +449,7 @@ public:
    *                              sub classes should return from this method
    *                              without cleaning up.
    */
-  virtual PRBool OnDestroyWidget(nsChildView* aDestroyingWidget);
+  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);
 
 protected:
   // The creater of this instance and client.
@@ -463,7 +463,7 @@ protected:
   TextInputHandlerBase(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~TextInputHandlerBase();
 
-  PRBool Destroyed() { return !mWidget; }
+  bool Destroyed() { return !mWidget; }
 
   /**
    * mCurrentKeyEvent indicates what key event we are handling.  While
@@ -476,11 +476,11 @@ protected:
     // Handling native key event
     NSEvent* mKeyEvent;
     // Whether keydown event was consumed by web contents or chrome contents.
-    PRPackedBool mKeyDownHandled;
+    bool mKeyDownHandled;
     // Whether keypress event was dispatched for mKeyEvent.
-    PRPackedBool mKeyPressDispatched;
+    bool mKeyPressDispatched;
     // Whether keypress event was consumed by web contents or chrome contents.
-    PRPackedBool mKeyPressHandled;
+    bool mKeyPressHandled;
 
     KeyEventState() : mKeyEvent(nsnull)
     {
@@ -510,7 +510,7 @@ protected:
       mKeyPressHandled = PR_FALSE;
     }
 
-    PRBool KeyDownOrPressHandled()
+    bool KeyDownOrPressHandled()
     {
       return mKeyDownHandled || mKeyPressHandled;
     }
@@ -550,7 +550,7 @@ protected:
    *                              if aChar is a non-printable ASCII character,
    *                              FALSE.
    */
-  static PRBool IsPrintableChar(PRUnichar aChar);
+  static bool IsPrintableChar(PRUnichar aChar);
 
   /**
    * ComputeGeckoKeyCodeFromChar() computes Gecko defined keyCode value from
@@ -569,7 +569,7 @@ protected:
    * @return                      TRUE if the key event causes text input.
    *                              Otherwise, FALSE.
    */
-  static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent);
+  static bool IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent);
 
   /**
    * IsModifierKey() checks whether the native keyCode is for a modifier key.
@@ -578,12 +578,12 @@ protected:
    * @return                      TRUE if aNativeKeyCode is for a modifier key.
    *                              Otherwise, FALSE.
    */
-  static PRBool IsModifierKey(UInt32 aNativeKeyCode);
+  static bool IsModifierKey(UInt32 aNativeKeyCode);
 
 private:
   struct KeyboardLayoutOverride {
     PRInt32 mKeyboardLayout;
-    PRBool mOverrideEnabled;
+    bool mOverrideEnabled;
 
     KeyboardLayoutOverride() :
       mKeyboardLayout(0), mOverrideEnabled(PR_FALSE)
@@ -656,7 +656,7 @@ public:
   /**
    * When a composition starts or finishes, this is called.
    */
-  void SetPluginTSMInComposition(PRBool aInComposition)
+  void SetPluginTSMInComposition(bool aInComposition)
   {
     mPluginTSMInComposition = aInComposition;
   }
@@ -664,7 +664,7 @@ public:
 #endif // #ifndef NP_NO_CARBON
 
 protected:
-  PRPackedBool mIgnoreNextKeyUpEvent;
+  bool mIgnoreNextKeyUpEvent;
 
   PluginTextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   ~PluginTextInputHandler();
@@ -687,7 +687,7 @@ protected:
   static void ConvertCocoaKeyEventToCarbonEvent(
                 NSEvent* aCocoaKeyEvent,
                 EventRecord& aCarbonKeyEvent,
-                PRBool aMakeKeyDownEventIfNSFlagsChanged = PR_FALSE);
+                bool aMakeKeyDownEventIfNSFlagsChanged = false);
 
 #endif // #ifndef NP_NO_CARBON
 
@@ -696,10 +696,10 @@ private:
 #ifndef NP_NO_CARBON
   TSMDocumentID mPluginTSMDoc;
 
-  PRPackedBool mPluginTSMInComposition;
+  bool mPluginTSMInComposition;
 #endif // #ifndef NP_NO_CARBON
 
-  PRPackedBool mPluginComplexTextInputRequested;
+  bool mPluginComplexTextInputRequested;
 
   /**
    * DispatchCocoaNPAPITextEvent() dispatches a text event for Cocoa plugin.
@@ -708,7 +708,7 @@ private:
    * @return                      TRUE if the dispatched event was consumed.
    *                              Otherwise, FALSE.
    */
-  PRBool DispatchCocoaNPAPITextEvent(NSString* aString);
+  bool DispatchCocoaNPAPITextEvent(NSString* aString);
 
   /**
    * Whether the plugin is in composition or not.
@@ -718,7 +718,7 @@ private:
    * @return                      TRUE if plugin is in composition.  Otherwise,
    *                              FALSE.
    */
-  PRBool IsInPluginComposition();
+  bool IsInPluginComposition();
 
 #ifndef NP_NO_CARBON
 
@@ -751,7 +751,7 @@ private:
    * @return                      TRUE if the converting succeeded.
    *                              Otherwise, FALSE.
    */
-  static PRBool ConvertUnicodeToCharCode(PRUnichar aUniChar,
+  static bool ConvertUnicodeToCharCode(PRUnichar aUniChar,
                                          unsigned char* aOutChar);
 
   /**
@@ -788,9 +788,9 @@ private:
 class IMEInputHandler : public PluginTextInputHandler
 {
 public:
-  virtual PRBool OnDestroyWidget(nsChildView* aDestroyingWidget);
+  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);
 
-  virtual void OnFocusChangeInGecko(PRBool aFocus);
+  virtual void OnFocusChangeInGecko(bool aFocus);
 
   /**
    * DispatchTextEvent() dispatches a text event on mWidget.
@@ -802,10 +802,10 @@ public:
    * @param aDoCommit             TRUE if the composition string should be
    *                              committed.  Otherwise, FALSE.
    */
-  PRBool DispatchTextEvent(const nsString& aText,
+  bool DispatchTextEvent(const nsString& aText,
                            NSAttributedString* aAttrString,
                            NSRange& aSelectedRange,
-                           PRBool aDoCommit);
+                           bool aDoCommit);
 
   /**
    * SetMarkedText() is a handler of setMarkedText of NSTextInput.
@@ -884,16 +884,16 @@ public:
    */
   NSArray* GetValidAttributesForMarkedText();
 
-  PRBool HasMarkedText();
+  bool HasMarkedText();
   NSRange MarkedRange();
 
-  PRBool IsIMEComposing() { return mIsIMEComposing; }
-  PRBool IsIMEOpened();
-  PRBool IsIMEEnabled() { return mIsIMEEnabled; }
-  PRBool IsASCIICapableOnly() { return mIsASCIICapableOnly; }
-  PRBool IgnoreIMECommit() { return mIgnoreIMECommit; }
+  bool IsIMEComposing() { return mIsIMEComposing; }
+  bool IsIMEOpened();
+  bool IsIMEEnabled() { return mIsIMEEnabled; }
+  bool IsASCIICapableOnly() { return mIsASCIICapableOnly; }
+  bool IgnoreIMECommit() { return mIgnoreIMECommit; }
 
-  PRBool IgnoreIMEComposition()
+  bool IgnoreIMEComposition()
   {
     // Ignore the IME composition events when we're pending to discard the
     // composition and we are not to handle the IME composition now.
@@ -904,9 +904,9 @@ public:
   void CommitIMEComposition();
   void CancelIMEComposition();
 
-  void EnableIME(PRBool aEnableIME);
-  void SetIMEOpenState(PRBool aOpen);
-  void SetASCIICapableOnly(PRBool aASCIICapableOnly);
+  void EnableIME(bool aEnableIME);
+  void SetIMEOpenState(bool aOpen);
+  void SetASCIICapableOnly(bool aASCIICapableOnly);
 
   static CFArrayRef CreateAllIMEModeList();
   static void DebugPrintAllIMEModes();
@@ -930,7 +930,7 @@ protected:
   IMEInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~IMEInputHandler();
 
-  PRBool IsFocused();
+  bool IsFocused();
   void ResetTimer();
 
   virtual void ExecutePendingMethods();
@@ -952,15 +952,15 @@ private:
 
   NSRange mMarkedRange;
 
-  PRPackedBool mIsIMEComposing;
-  PRPackedBool mIsIMEEnabled;
-  PRPackedBool mIsASCIICapableOnly;
-  PRPackedBool mIgnoreIMECommit;
+  bool mIsIMEComposing;
+  bool mIsIMEEnabled;
+  bool mIsASCIICapableOnly;
+  bool mIgnoreIMECommit;
   // This flag is enabled by OnFocusChangeInGecko, and will be cleared by
   // ExecutePendingMethods.  When this is true, IsFocus() returns TRUE.  At
   // that time, the focus processing in Gecko might not be finished yet.  So,
   // you cannot use nsQueryContentEvent or something.
-  PRPackedBool mIsInFocusProcessing;
+  bool mIsInFocusProcessing;
 
   void KillIMEComposition();
   void SendCommittedText(NSString *aString);
@@ -971,7 +971,7 @@ private:
   void DiscardIMEComposition();
   void SyncASCIICapableOnly();
 
-  static PRBool sStaticMembersInitialized;
+  static bool sStaticMembersInitialized;
   static CFStringRef sLatestIMEOpenedModeInputSourceID;
   static void InitStaticMembers();
   static void OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
@@ -1074,7 +1074,7 @@ public:
    * @return                      TRUE if the event is consumed by web contents
    *                              or chrome contents.  Otherwise, FALSE.
    */
-  PRBool HandleKeyDownEvent(NSEvent* aNativeEvent);
+  bool HandleKeyDownEvent(NSEvent* aNativeEvent);
 
   /**
    * KeyUp event handler.
@@ -1107,7 +1107,7 @@ public:
    * @return                      TRUE if the command is consumed.  Otherwise,
    *                              FALSE.
    */
-  PRBool DoCommandBySelector(const char* aSelector);
+  bool DoCommandBySelector(const char* aSelector);
 
   /**
    * KeyPressWasHandled() checks whether keypress event was handled or not.
@@ -1117,7 +1117,7 @@ public:
    *                              If this handler isn't handling any key events,
    *                              always returns FALSE.
    */
-  PRBool KeyPressWasHandled()
+  bool KeyPressWasHandled()
   {
     return mCurrentKeyEvent.mKeyPressHandled;
   }
@@ -1134,7 +1134,7 @@ protected:
    *                              FALSE.
    */
   void DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
-                                       PRBool aDispatchKeyDown);
+                                       bool aDispatchKeyDown);
 };
 
 } // namespace widget

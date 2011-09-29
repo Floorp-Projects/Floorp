@@ -109,7 +109,7 @@ private:
   };
 
   filters::FilterFuncPtr mFilterFunc;
-  PRBool mIsDeep;
+  bool mIsDeep;
   IteratorState *mState;
 };
 

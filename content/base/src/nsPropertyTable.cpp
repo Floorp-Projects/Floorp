@@ -69,17 +69,17 @@ public:
   PropertyList(nsIAtom*           aName,
                NSPropertyDtorFunc aDtorFunc,
                void*              aDtorData,
-               PRBool             aTransfer) NS_HIDDEN;
+               bool               aTransfer) NS_HIDDEN;
   ~PropertyList() NS_HIDDEN;
 
   // Removes the property associated with the given object, and destroys
   // the property value
-  NS_HIDDEN_(PRBool) DeletePropertyFor(nsPropertyOwner aObject);
+  NS_HIDDEN_(bool) DeletePropertyFor(nsPropertyOwner aObject);
 
   // Destroy all remaining properties (without removing them)
   NS_HIDDEN_(void) Destroy();
 
-  NS_HIDDEN_(PRBool) Equals(nsIAtom *aPropertyName)
+  NS_HIDDEN_(bool) Equals(nsIAtom *aPropertyName)
   {
     return mName == aPropertyName;
   }
@@ -88,7 +88,7 @@ public:
   PLDHashTable       mObjectValueMap; // map of object/value pairs
   NSPropertyDtorFunc mDtorFunc;       // property specific value dtor function
   void*              mDtorData;       // pointer to pass to dtor
-  PRPackedBool       mTransfer;       // whether to transfer in
+  bool               mTransfer;       // whether to transfer in
                                       // TransferOrDeleteAllPropertiesFor
   
   PropertyList*      mNext;
@@ -164,7 +164,7 @@ nsPropertyTable::Enumerate(nsPropertyOwner aObject,
 void*
 nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
                                      nsIAtom    *aPropertyName,
-                                     PRBool      aRemove,
+                                     bool        aRemove,
                                      nsresult   *aResult)
 {
   NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
@@ -198,7 +198,7 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
                                      void               *aPropertyValue,
                                      NSPropertyDtorFunc  aPropDtorFunc,
                                      void               *aPropDtorData,
-                                     PRBool              aTransfer,
+                                     bool                aTransfer,
                                      void              **aOldValue)
 {
   NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
@@ -286,7 +286,7 @@ nsPropertyTable::GetPropertyListFor(nsIAtom* aPropertyName) const
 nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
                                             NSPropertyDtorFunc  aDtorFunc,
                                             void               *aDtorData,
-                                            PRBool              aTransfer)
+                                            bool                aTransfer)
   : mName(aName),
     mDtorFunc(aDtorFunc),
     mDtorData(aDtorData),
@@ -325,7 +325,7 @@ nsPropertyTable::PropertyList::Destroy()
                            nsnull);
 }
 
-PRBool
+bool
 nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
 {
   PropertyListMapEntry *entry = static_cast<PropertyListMapEntry*>

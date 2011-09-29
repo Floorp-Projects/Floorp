@@ -102,7 +102,7 @@ public:
     // AttachSocket will fail if the limit is exceeded.  consumers should
     // call CanAttachSocket and check the result before creating a socket.
     //
-    PRBool CanAttachSocket() {
+    bool CanAttachSocket() {
         return mActiveCount + mIdleCount < gMaxCount;
     }
 
@@ -125,7 +125,7 @@ private:
                             // mThreadEvent.  other threads don't change
                             // mThreadEvent; they need to lock mLock
                             // whenever they access mThreadEvent.
-    PRBool      mAutodialEnabled;
+    bool        mAutodialEnabled;
                             // pref to control autodial code
 
     // Returns mThread, protecting the get-and-addref with mLock
@@ -136,8 +136,8 @@ private:
     //-------------------------------------------------------------------------
 
     Mutex         mLock;
-    PRPackedBool  mInitialized;
-    PRPackedBool  mShuttingDown;
+    bool          mInitialized;
+    bool          mShuttingDown;
                             // indicates whether we are currently in the
                             // process of shutting down
 
@@ -175,8 +175,8 @@ private:
     void MoveToIdleList(SocketContext *sock);
     void MoveToPollList(SocketContext *sock);
 
-    PRBool GrowActiveList();
-    PRBool GrowIdleList();
+    bool GrowActiveList();
+    bool GrowIdleList();
     void   InitMaxCount();
     
     //-------------------------------------------------------------------------
@@ -189,9 +189,9 @@ private:
     PRPollDesc *mPollList;                        /* mListSize + 1 entries */
 
     PRIntervalTime PollTimeout();            // computes ideal poll timeout
-    nsresult       DoPollIteration(PRBool wait);
+    nsresult       DoPollIteration(bool wait);
                                              // perfoms a single poll iteration
-    PRInt32        Poll(PRBool wait, PRUint32 *interval);
+    PRInt32        Poll(bool wait, PRUint32 *interval);
                                              // calls PR_Poll.  the out param
                                              // interval indicates the poll
                                              // duration in seconds.

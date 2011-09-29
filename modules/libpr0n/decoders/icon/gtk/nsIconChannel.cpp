@@ -88,7 +88,7 @@ typedef void (*_GnomeVFSFileInfoClear_fn)(GnomeVFSFileInfo *info);
 static PRLibrary* gLibGnomeUI = nsnull;
 static PRLibrary* gLibGnome = nsnull;
 static PRLibrary* gLibGnomeVFS = nsnull;
-static PRBool gTriedToLoadGnomeLibs = PR_FALSE;
+static bool gTriedToLoadGnomeLibs = false;
 
 static _GnomeIconLookup_fn _gnome_icon_lookup = nsnull;
 static _GnomeIconThemeNew_fn _gnome_icon_theme_new = nsnull;
@@ -374,7 +374,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     url->GetAsciiSpec(spec);
     // Only ask gnome-vfs for a GnomeVFSFileInfo for file: uris, to avoid a
     // network request
-    PRBool isFile;
+    bool isFile;
     if (NS_SUCCEEDED(url->SchemeIs("file", &isFile)) && isFile) {
       _gnome_vfs_get_file_info(spec.get(), &fileInfo, GNOME_VFS_FILE_INFO_DEFAULT);
     }
@@ -465,7 +465,7 @@ nsIconChannel::InitWithGIO(nsIMozIconURI *aIconURI)
 
   // Get icon for file specified by URI
   if (fileURI) {
-    PRBool isFile;
+    bool isFile;
     nsCAutoString spec;
     fileURI->GetAsciiSpec(spec);
     if (NS_SUCCEEDED(fileURI->SchemeIs("file", &isFile)) && isFile) {
@@ -589,9 +589,9 @@ nsIconChannel::Init(nsIURI* aURI)
     direction = GTK_TEXT_DIR_RTL;
   }
 
-  PRBool forceDirection = direction != GTK_TEXT_DIR_NONE;
+  bool forceDirection = direction != GTK_TEXT_DIR_NONE;
   nsCAutoString stockID;
-  PRBool useIconName = PR_FALSE;
+  bool useIconName = false;
   if (!forceDirection) {
     direction = gtk_widget_get_default_direction();
     stockID = stockIcon;

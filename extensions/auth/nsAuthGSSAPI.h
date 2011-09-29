@@ -91,7 +91,7 @@ private:
     nsCString    mServiceName;
     PRUint32     mServiceFlags;
     nsString     mUsername;
-    PRBool       mComplete;
+    bool         mComplete;
 };
 
 #endif /* nsAuthGSSAPI_h__ */

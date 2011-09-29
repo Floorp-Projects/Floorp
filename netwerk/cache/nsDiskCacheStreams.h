@@ -112,7 +112,7 @@ private:
     PRUint32                    mBufPos;        // current mark in buffer
     PRUint32                    mBufEnd;        // current end of data in buffer
     PRUint32                    mBufSize;       // current end of buffer
-    PRBool                      mBufDirty;
+    bool                        mBufDirty;
     char *                      mBuffer;
     
 };

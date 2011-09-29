@@ -410,7 +410,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
     if (profile) {
       PRUint32 profileSpace = qcms_profile_get_color_space(profile);
 
-      PRBool mismatch = PR_FALSE;
+      bool mismatch = false;
       if (color_type & PNG_COLOR_MASK_COLOR) {
         if (profileSpace != icSigRgbData)
           mismatch = PR_TRUE;
@@ -724,7 +724,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
 
     PRUint32 bpr = width * sizeof(PRUint32);
     PRUint32 *cptr32 = (PRUint32*)(decoder->mImageData + (row_num*bpr));
-    PRBool rowHasNoAlpha = PR_TRUE;
+    bool rowHasNoAlpha = true;
 
     if (decoder->mTransform) {
       if (decoder->mCMSLine) {

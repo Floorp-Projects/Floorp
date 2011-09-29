@@ -464,7 +464,7 @@ isColumnSelectedCB(AtkTable *aTable, gint aColumn)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, FALSE);
 
-    PRBool outValue;
+    bool outValue;
     nsresult rv = accTable->IsColumnSelected(aColumn, &outValue);
     return NS_FAILED(rv) ? FALSE : static_cast<gboolean>(outValue);
 }
@@ -481,7 +481,7 @@ isRowSelectedCB(AtkTable *aTable, gint aRow)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, FALSE);
 
-    PRBool outValue;
+    bool outValue;
     nsresult rv = accTable->IsRowSelected(aRow, &outValue);
     return NS_FAILED(rv) ? FALSE : static_cast<gboolean>(outValue);
 }
@@ -498,7 +498,7 @@ isCellSelectedCB(AtkTable *aTable, gint aRow, gint aColumn)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, FALSE);
 
-    PRBool outValue;
+    bool outValue;
     nsresult rv = accTable->IsCellSelected(aRow, aColumn, &outValue);
     return NS_FAILED(rv) ? FALSE : static_cast<gboolean>(outValue);
 }

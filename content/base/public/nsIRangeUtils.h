@@ -62,8 +62,8 @@ public:
                                
   NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
                                 nsIDOMRange* aRange,
-                                PRBool *outNodeBefore,
-                                PRBool *outNodeAfter) = 0;
+                                bool *outNodeBefore,
+                                bool *outNodeAfter) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRangeUtils, NS_IRANGEUTILS_IID)

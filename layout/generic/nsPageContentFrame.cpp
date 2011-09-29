@@ -60,7 +60,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 nsPageContentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                PRBool aShrinkWrap)
+                                bool aShrinkWrap)
 {
   NS_ASSERTION(mPD, "Pages are supposed to have page data");
   nscoord height = (!mPD || mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE)
@@ -172,7 +172,7 @@ nsPageContentFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsPageContentFrame::IsContainingBlock() const
 {
   return PR_TRUE;

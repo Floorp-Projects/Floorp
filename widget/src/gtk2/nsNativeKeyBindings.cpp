@@ -48,7 +48,7 @@
 
 static nsINativeKeyBindings::DoCommandCallback gCurrentCallback;
 static void *gCurrentCallbackData;
-static PRBool gHandled;
+static bool gHandled;
 
 // Common GtkEntry and GtkTextView signals
 static void
@@ -94,7 +94,7 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
   g_signal_stop_emission_by_name(w, "delete_from_cursor");
   gHandled = PR_TRUE;
 
-  PRBool forward = count > 0;
+  bool forward = count > 0;
   if (PRUint32(del_type) >= NS_ARRAY_LENGTH(sDeleteCommands)) {
     // unsupported deletion type
     return;
@@ -185,7 +185,7 @@ move_cursor_cb(GtkWidget *w, GtkMovementStep step, gint count,
 {
   g_signal_stop_emission_by_name(w, "move_cursor");
   gHandled = PR_TRUE;
-  PRBool forward = count > 0;
+  bool forward = count > 0;
   if (PRUint32(step) >= NS_ARRAY_LENGTH(sMoveCommands)) {
     // unsupported movement type
     return;
@@ -262,14 +262,14 @@ nsNativeKeyBindings::~nsNativeKeyBindings()
 
 NS_IMPL_ISUPPORTS1(nsNativeKeyBindings, nsINativeKeyBindings)
 
-PRBool
+bool
 nsNativeKeyBindings::KeyDown(const nsNativeKeyEvent& aEvent,
                              DoCommandCallback aCallback, void *aCallbackData)
 {
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
                               DoCommandCallback aCallback, void *aCallbackData)
 {
@@ -315,7 +315,7 @@ See bugs 411005 406407
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
                                       DoCommandCallback aCallback,
                                       void *aCallbackData,
@@ -344,7 +344,7 @@ nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
   return gHandled;
 }
 
-PRBool
+bool
 nsNativeKeyBindings::KeyUp(const nsNativeKeyEvent& aEvent,
                            DoCommandCallback aCallback, void *aCallbackData)
 {

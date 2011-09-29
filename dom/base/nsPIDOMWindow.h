@@ -98,27 +98,27 @@ public:
 
   virtual nsPIDOMWindow* GetPrivateRoot() = 0;
 
-  virtual void ActivateOrDeactivate(PRBool aActivate) = 0;
+  virtual void ActivateOrDeactivate(bool aActivate) = 0;
 
   // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow::GetWindowRoot
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
-  virtual void SetActive(PRBool aActive)
+  virtual void SetActive(bool aActive)
   {
     mIsActive = aActive;
   }
 
-  PRBool IsActive()
+  bool IsActive()
   {
     return mIsActive;
   }
 
-  virtual void SetIsBackground(PRBool aIsBackground)
+  virtual void SetIsBackground(bool aIsBackground)
   {
     mIsBackground = aIsBackground;
   }
 
-  PRBool IsBackground()
+  bool IsBackground()
   {
     return mIsBackground;
   }
@@ -138,7 +138,7 @@ public:
     return mParentTarget;
   }
 
-  PRBool HasMutationListeners(PRUint32 aMutationEventType) const
+  bool HasMutationListeners(PRUint32 aMutationEventType) const
   {
     const nsPIDOMWindow *win;
 
@@ -229,7 +229,7 @@ public:
     mOuterWindow->SetFrameElementInternal(aFrameElement);
   }
 
-  PRBool IsLoadingOrRunningTimeout() const
+  bool IsLoadingOrRunningTimeout() const
   {
     const nsPIDOMWindow *win = GetCurrentInnerWindow();
 
@@ -241,7 +241,7 @@ public:
   }
 
   // Check whether a document is currently loading
-  PRBool IsLoading() const
+  bool IsLoading() const
   {
     const nsPIDOMWindow *win;
 
@@ -266,7 +266,7 @@ public:
     return !win->mIsDocumentLoaded;
   }
 
-  PRBool IsHandlingResizeEvent() const
+  bool IsHandlingResizeEvent() const
   {
     const nsPIDOMWindow *win;
 
@@ -301,7 +301,7 @@ public:
   virtual nsIPrincipal* GetOpenerScriptPrincipal() = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState,
-                                                  PRBool aForce) const = 0;
+                                                  bool aForce) const = 0;
   virtual void PopPopupControlState(PopupControlState state) const = 0;
   virtual PopupControlState GetPopupControlState() const = 0;
   virtual void SetPopupOpenedState(PopupOpenedState aValue) const = 0;
@@ -316,10 +316,10 @@ public:
 
   // Suspend timeouts in this window and in child windows.
   virtual void SuspendTimeouts(PRUint32 aIncrease = 1,
-                               PRBool aFreezeChildren = PR_TRUE) = 0;
+                               bool aFreezeChildren = true) = 0;
 
   // Resume suspended timeouts in this window and in child windows.
-  virtual nsresult ResumeTimeouts(PRBool aThawChildren = PR_TRUE) = 0;
+  virtual nsresult ResumeTimeouts(bool aThawChildren = true) = 0;
 
   virtual PRUint32 TimeoutSuspendCount() = 0;
 
@@ -327,12 +327,12 @@ public:
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
 
-  virtual PRBool IsFrozen() const = 0;
+  virtual bool IsFrozen() const = 0;
 
   // Add a timeout to this window.
   virtual nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                         PRInt32 interval,
-                                        PRBool aIsInterval, PRInt32 *aReturn) = 0;
+                                        bool aIsInterval, PRInt32 *aReturn) = 0;
 
   // Clear a timeout from this window.
   virtual nsresult ClearTimeoutOrInterval(PRInt32 aTimerID) = 0;
@@ -356,17 +356,17 @@ public:
     return GetCurrentInnerWindow();
   }
 
-  PRBool IsInnerWindow() const
+  bool IsInnerWindow() const
   {
     return mIsInnerWindow;
   }
 
-  PRBool IsOuterWindow() const
+  bool IsOuterWindow() const
   {
     return !IsInnerWindow();
   }
 
-  virtual PRBool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
+  virtual bool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
 
   /**
    * Get the docshell in this window.
@@ -397,7 +397,7 @@ public:
    */
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
                                   nsISupports *aState,
-                                  PRBool aForceReuseInnerWindow) = 0;
+                                  bool aForceReuseInnerWindow) = 0;
 
   /**
    * Set the opener window.  aOriginalOpener is true if and only if this is the
@@ -407,7 +407,7 @@ public:
    * window does not have an opener when it's created.
    */
   virtual void SetOpenerWindow(nsIDOMWindow* aOpener,
-                               PRBool aOriginalOpener) = 0;
+                               bool aOriginalOpener) = 0;
 
   virtual void EnsureSizeUpToDate() = 0;
 
@@ -418,10 +418,10 @@ public:
   virtual nsIDOMWindow *EnterModalState() = 0;
   virtual void LeaveModalState(nsIDOMWindow *) = 0;
 
-  virtual PRBool CanClose() = 0;
+  virtual bool CanClose() = 0;
   virtual nsresult ForceClose() = 0;
 
-  PRBool IsModalContentWindow() const
+  bool IsModalContentWindow() const
   {
     return mIsModalContentWindow;
   }
@@ -439,7 +439,7 @@ public:
    * Call this to check whether some node (this window, its document,
    * or content in that document) has a paint event listener.
    */
-  PRBool HasPaintEventListeners()
+  bool HasPaintEventListeners()
   {
     return mMayHavePaintEventListener;
   }
@@ -454,7 +454,7 @@ public:
     MaybeUpdateTouchState();
   }
 
-  PRBool HasTouchEventListeners()
+  bool HasTouchEventListeners()
   {
     return mMayHaveTouchEventListener;
   }
@@ -463,7 +463,7 @@ public:
    * Call this to check whether some node (this window, its document,
    * or content in that document) has a MozAudioAvailable event listener.
    */
-  PRBool HasAudioAvailableEventListeners()
+  bool HasAudioAvailableEventListeners()
   {
     return mMayHaveAudioAvailableEventListener;
   }
@@ -481,7 +481,7 @@ public:
    * Call this to check whether some node (this window, its document,
    * or content in that document) has a mouseenter/leave event listener.
    */
-  PRBool HasMouseEnterLeaveEventListeners()
+  bool HasMouseEnterLeaveEventListeners()
   {
     return mMayHaveMouseEnterLeaveEventListener;
   }
@@ -521,7 +521,7 @@ public:
   }
   virtual void SetFocusedNode(nsIContent* aNode,
                               PRUint32 aFocusMethod = 0,
-                              PRBool aNeedsFocus = PR_FALSE) = 0;
+                              bool aNeedsFocus = false) = 0;
 
   /**
    * Retrieves the method that was used to focus the current node.
@@ -538,7 +538,7 @@ public:
    * aFocusMethod may be set to one of the focus method constants in
    * nsIFocusManager to indicate how focus was set.
    */
-  virtual PRBool TakeFocus(PRBool aFocus, PRUint32 aFocusMethod) = 0;
+  virtual bool TakeFocus(bool aFocus, PRUint32 aFocusMethod) = 0;
 
   /**
    * Indicates that the window may now accept a document focus event. This
@@ -549,7 +549,7 @@ public:
   /**
    * Whether the focused content within the window should show a focus ring.
    */
-  virtual PRBool ShouldShowFocusRing() = 0;
+  virtual bool ShouldShowFocusRing() = 0;
 
   /**
    * Set the keyboard indicator state for accelerators and focus rings.
@@ -560,8 +560,8 @@ public:
   /**
    * Get the keyboard indicator state for accelerators and focus rings.
    */
-  virtual void GetKeyboardIndicators(PRBool* aShowAccelerators,
-                                     PRBool* aShowFocusRings) = 0;
+  virtual void GetKeyboardIndicators(bool* aShowAccelerators,
+                                     bool* aShowFocusRings) = 0;
 
   /**
    * Indicates that the page in the window has been hidden. This is used to
@@ -611,7 +611,7 @@ public:
    * Dispatch a custom event with name aEventName targeted at this window.
    * Returns whether the default action should be performed.
    */
-  virtual PRBool DispatchCustomEvent(const char *aEventName) = 0;
+  virtual bool DispatchCustomEvent(const char *aEventName) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
@@ -649,26 +649,26 @@ protected:
 
   PRUint32               mMutationBits;
 
-  PRPackedBool           mIsDocumentLoaded;
-  PRPackedBool           mIsHandlingResizeEvent;
-  PRPackedBool           mIsInnerWindow;
-  PRPackedBool           mMayHavePaintEventListener;
-  PRPackedBool           mMayHaveTouchEventListener;
-  PRPackedBool           mMayHaveAudioAvailableEventListener;
-  PRPackedBool           mMayHaveMouseEnterLeaveEventListener;
+  bool                   mIsDocumentLoaded;
+  bool                   mIsHandlingResizeEvent;
+  bool                   mIsInnerWindow;
+  bool                   mMayHavePaintEventListener;
+  bool                   mMayHaveTouchEventListener;
+  bool                   mMayHaveAudioAvailableEventListener;
+  bool                   mMayHaveMouseEnterLeaveEventListener;
 
   // This variable is used on both inner and outer windows (and they
   // should match).
-  PRPackedBool           mIsModalContentWindow;
+  bool                   mIsModalContentWindow;
 
   // Tracks activation state that's used for :-moz-window-inactive.
   // Only used on outer windows.
-  PRPackedBool           mIsActive;
+  bool                   mIsActive;
 
   // Tracks whether our docshell is active.  If it is, mIsBackground
   // is false.  Too bad we have so many different concepts of
   // "active".  Only used on outer windows.
-  PRPackedBool           mIsBackground;
+  bool                   mIsBackground;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;
@@ -684,7 +684,7 @@ protected:
 
   // This is only used by the inner window. Set to true once we've sent
   // the (chrome|content)-document-global-created notification.
-  PRPackedBool mHasNotifiedGlobalCreated;
+  bool mHasNotifiedGlobalCreated;
 };
 
 
@@ -692,7 +692,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindow, NS_PIDOMWINDOW_IID)
 
 #ifdef _IMPL_NS_LAYOUT
 PopupControlState
-PushPopupControlState(PopupControlState aState, PRBool aForce);
+PushPopupControlState(PopupControlState aState, bool aForce);
 
 void
 PopPopupControlState(PopupControlState aState);
@@ -718,7 +718,7 @@ class NS_AUTO_POPUP_STATE_PUSHER
 {
 public:
 #ifdef _IMPL_NS_LAYOUT
-  NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState, PRBool aForce = PR_FALSE)
+  NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState, bool aForce = false)
     : mOldState(::PushPopupControlState(aState, aForce))
     , mPreviousOpenState(::GetPopupOpenedState())
   {

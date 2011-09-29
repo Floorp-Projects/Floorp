@@ -864,7 +864,7 @@ protected:
   Run* mRunsMemory;
 
   /** indicators for whether memory may be allocated after construction */
-  PRBool mMayAllocateText, mMayAllocateRuns;
+  bool mMayAllocateText, mMayAllocateRuns;
 
   const DirProp* mDirProps;
   nsBidiLevel* mLevels;
@@ -893,7 +893,7 @@ private:
 
   void Init();
 
-  PRBool GetMemory(void **aMemory, PRSize* aSize, PRBool aMayAllocate, PRSize aSizeNeeded);
+  bool GetMemory(void **aMemory, PRSize* aSize, bool aMayAllocate, PRSize aSizeNeeded);
 
   void Free();
 
@@ -911,13 +911,13 @@ private:
 
   void SetTrailingWSStart();
 
-  PRBool GetRuns();
+  bool GetRuns();
 
   void GetSingleRun(nsBidiLevel aLevel);
 
   void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
 
-  static PRBool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
+  static bool PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength, PRInt32 *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
 
   PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
                          PRUnichar *dest, PRUint16 options);

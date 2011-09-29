@@ -115,7 +115,7 @@ nsViewSourceChannel::GetName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::IsPending(PRBool *result)
+nsViewSourceChannel::IsPending(bool *result)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
@@ -584,7 +584,7 @@ nsViewSourceChannel::GetRequestHeader(const nsACString & aHeader,
 NS_IMETHODIMP
 nsViewSourceChannel::SetRequestHeader(const nsACString & aHeader,
                                       const nsACString & aValue,
-                                      PRBool aMerge)
+                                      bool aMerge)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->SetRequestHeader(aHeader, aValue, aMerge);
@@ -598,14 +598,14 @@ nsViewSourceChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetAllowPipelining(PRBool *aAllowPipelining)
+nsViewSourceChannel::GetAllowPipelining(bool *aAllowPipelining)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->GetAllowPipelining(aAllowPipelining);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::SetAllowPipelining(PRBool aAllowPipelining)
+nsViewSourceChannel::SetAllowPipelining(bool aAllowPipelining)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->SetAllowPipelining(aAllowPipelining);
@@ -640,7 +640,7 @@ nsViewSourceChannel::GetResponseStatusText(nsACString & aResponseStatusText)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetRequestSucceeded(PRBool *aRequestSucceeded)
+nsViewSourceChannel::GetRequestSucceeded(bool *aRequestSucceeded)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->GetRequestSucceeded(aRequestSucceeded);
@@ -670,7 +670,7 @@ nsViewSourceChannel::GetResponseHeader(const nsACString & aHeader,
 
 NS_IMETHODIMP
 nsViewSourceChannel::SetResponseHeader(const nsACString & header,
-                                       const nsACString & value, PRBool merge)
+                                       const nsACString & value, bool merge)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->SetResponseHeader(header, value, merge);
@@ -692,14 +692,14 @@ nsViewSourceChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::IsNoStoreResponse(PRBool *_retval)
+nsViewSourceChannel::IsNoStoreResponse(bool *_retval)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->IsNoStoreResponse(_retval);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::IsNoCacheResponse(PRBool *_retval)
+nsViewSourceChannel::IsNoCacheResponse(bool *_retval)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->IsNoCacheResponse(_retval);

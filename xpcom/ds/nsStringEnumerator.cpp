@@ -54,20 +54,20 @@ class nsStringEnumerator : public nsIStringEnumerator,
                            public nsISimpleEnumerator
 {
 public:
-    nsStringEnumerator(const nsTArray<nsString>* aArray, PRBool aOwnsArray) :
-        mArray(aArray), mIndex(0), mOwnsArray(aOwnsArray), mIsUnicode(PR_TRUE)
+    nsStringEnumerator(const nsTArray<nsString>* aArray, bool aOwnsArray) :
+        mArray(aArray), mIndex(0), mOwnsArray(aOwnsArray), mIsUnicode(true)
     {}
     
-    nsStringEnumerator(const nsTArray<nsCString>* aArray, PRBool aOwnsArray) :
-        mCArray(aArray), mIndex(0), mOwnsArray(aOwnsArray), mIsUnicode(PR_FALSE)
+    nsStringEnumerator(const nsTArray<nsCString>* aArray, bool aOwnsArray) :
+        mCArray(aArray), mIndex(0), mOwnsArray(aOwnsArray), mIsUnicode(false)
     {}
 
     nsStringEnumerator(const nsTArray<nsString>* aArray, nsISupports* aOwner) :
-        mArray(aArray), mIndex(0), mOwner(aOwner), mOwnsArray(PR_FALSE), mIsUnicode(PR_TRUE)
+        mArray(aArray), mIndex(0), mOwner(aOwner), mOwnsArray(false), mIsUnicode(true)
     {}
     
     nsStringEnumerator(const nsTArray<nsCString>* aArray, nsISupports* aOwner) :
-        mCArray(aArray), mIndex(0), mOwner(aOwner), mOwnsArray(PR_FALSE), mIsUnicode(PR_FALSE)
+        mCArray(aArray), mIndex(0), mOwner(aOwner), mOwnsArray(false), mIsUnicode(false)
     {}
 
     NS_DECL_ISUPPORTS
@@ -104,11 +104,11 @@ private:
 
     // the owner allows us to hold a strong reference to the object
     // that owns the array. Having a non-null value in mOwner implies
-    // that mOwnsArray is PR_FALSE, because we rely on the real owner
+    // that mOwnsArray is false, because we rely on the real owner
     // to release the array
     nsCOMPtr<nsISupports> mOwner;
-    PRPackedBool mOwnsArray;
-    PRPackedBool mIsUnicode;
+    bool mOwnsArray;
+    bool mIsUnicode;
 };
 
 NS_IMPL_ISUPPORTS3(nsStringEnumerator,
@@ -117,7 +117,7 @@ NS_IMPL_ISUPPORTS3(nsStringEnumerator,
                    nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsStringEnumerator::HasMore(PRBool* aResult)
+nsStringEnumerator::HasMore(bool* aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = mIndex < Count();
@@ -125,7 +125,7 @@ nsStringEnumerator::HasMore(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsStringEnumerator::HasMoreElements(PRBool* aResult)
+nsStringEnumerator::HasMoreElements(bool* aResult)
 {
     return HasMore(aResult);
 }
@@ -221,7 +221,7 @@ NS_NewAdoptingStringEnumerator(nsIStringEnumerator** aResult,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(aArray);
     
-    *aResult = new nsStringEnumerator(aArray, PR_TRUE);
+    *aResult = new nsStringEnumerator(aArray, true);
     return StringEnumeratorTail(aResult);
 }
 
@@ -232,7 +232,7 @@ NS_NewAdoptingUTF8StringEnumerator(nsIUTF8StringEnumerator** aResult,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(aArray);
     
-    *aResult = new nsStringEnumerator(aArray, PR_TRUE);
+    *aResult = new nsStringEnumerator(aArray, true);
     return StringEnumeratorTail(aResult);
 }
 
@@ -244,7 +244,7 @@ NS_NewStringEnumerator(nsIStringEnumerator** aResult,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(aArray);
     
-    *aResult = new nsStringEnumerator(aArray, PR_FALSE);
+    *aResult = new nsStringEnumerator(aArray, false);
     return StringEnumeratorTail(aResult);
 }
 
@@ -255,7 +255,7 @@ NS_NewUTF8StringEnumerator(nsIUTF8StringEnumerator** aResult,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(aArray);
     
-    *aResult = new nsStringEnumerator(aArray, PR_FALSE);
+    *aResult = new nsStringEnumerator(aArray, false);
     return StringEnumeratorTail(aResult);
 }
 

@@ -167,8 +167,8 @@ private:
 
 protected:
   // This flag is used to detect loops in xlink:href processing
-  PRPackedBool                      mLoopFlag;
-  PRPackedBool                      mNoHRefURI;
+  bool                              mLoopFlag;
+  bool                              mNoHRefURI;
 };
 
 #endif

@@ -421,7 +421,7 @@ PRUint32 nsGIFDecoder2::OutputRow()
 
 //******************************************************************************
 /* Perform Lempel-Ziv-Welch decoding */
-PRBool
+bool
 nsGIFDecoder2::DoLzw(const PRUint8 *q)
 {
   if (!mGIFStruct.rows_remaining)

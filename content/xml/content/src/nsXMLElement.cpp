@@ -66,10 +66,10 @@ NS_IMPL_ELEMENT_CLONE(nsXMLElement)
 
 nsresult
 nsXMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                        PRBool aNotify)
+                        bool aNotify)
 {
   nsAutoScriptBlocker scriptBlocker;
-  PRBool isId = PR_FALSE;
+  bool isId = false;
   if (aAttribute == GetIDAttributeName() &&
       aNameSpaceID == kNameSpaceID_None) {
     // Have to do this before clearing flag. See RemoveFromIdTable
@@ -144,7 +144,7 @@ nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
   }
 }
 
-PRBool
+bool
 nsXMLElement::ParseAttribute(PRInt32 aNamespaceID,
                              nsIAtom* aAttribute,
                              const nsAString& aValue,
@@ -171,7 +171,7 @@ nsXMLElement::ParseAttribute(PRInt32 aNamespaceID,
 nsresult
 nsXMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                          nsIContent* aBindingParent,
-                         PRBool aCompileEventHandlers)
+                         bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
                                              aBindingParent,
@@ -186,7 +186,7 @@ nsXMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsXMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   RemoveFromIdTable();
 

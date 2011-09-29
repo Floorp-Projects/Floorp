@@ -109,7 +109,7 @@ nsXULContextMenuBuilder::OpenContainer(const nsAString& aLabel)
 
 NS_IMETHODIMP
 nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
-                                    PRBool aCanLoadIcon)
+                                    bool aCanLoadIcon)
 {
   if (!mFragment) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -127,7 +127,7 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
     // the radio type precisely.
     menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                       NS_LITERAL_STRING("checkbox"), PR_FALSE);
-    PRBool checked;
+    bool checked;
     aElement->GetChecked(&checked);
     if (checked) {
       menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
@@ -149,7 +149,7 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
     }
   }
 
-  PRBool disabled;
+  bool disabled;
   aElement->GetDisabled(&disabled);
   if (disabled) {
     menuitem->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,

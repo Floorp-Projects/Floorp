@@ -224,7 +224,7 @@ ImageContainerD3D9::GetCurrentSize()
   return gfxIntSize(0,0);
 }
 
-PRBool
+bool
 ImageContainerD3D9::SetLayerManager(LayerManager *aManager)
 {
   if (aManager->GetBackendType() == LayerManager::LAYERS_D3D9) {

@@ -61,7 +61,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 already_AddRefed<nsDOMEvent>
 CreateGenericEvent(const nsAString& aType,
-                   PRBool aBubblesAndCancelable = PR_FALSE);
+                   bool aBubblesAndCancelable = false);
 
 already_AddRefed<nsIRunnable>
 CreateGenericEventRunnable(const nsAString& aType,

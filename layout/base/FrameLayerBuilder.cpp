@@ -83,7 +83,7 @@ public:
    * Tracks which frames have layers associated with them.
    */
   nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesWithLayers;
-  PRPackedBool mInvalidateAllLayers;
+  bool mInvalidateAllLayers;
   /** Layer manager we belong to, we hold a reference to this object. */
   nsRefPtr<LayerManager> mLayerManager;
 };
@@ -266,19 +266,19 @@ protected:
     /**
      * True if every pixel in mVisibleRegion will have color mSolidColor.
      */
-    PRPackedBool mIsSolidColorInVisibleRegion;
+    bool mIsSolidColorInVisibleRegion;
     /**
      * True if there is any text visible in the layer that's over
      * transparent pixels in the layer.
      */
-    PRPackedBool mNeedComponentAlpha;
+    bool mNeedComponentAlpha;
     /**
      * Set if the layer should be treated as transparent, even if its entire
      * area is covered by opaque display items. For example, this needs to
      * be set if something is going to "punch holes" in the layer by clearing
      * part of its surface.
      */
-    PRPackedBool mForceTransparentSurface;
+    bool mForceTransparentSurface;
 
     /**
      * Stores the pointer to the nsDisplayImage if we want to
@@ -386,7 +386,7 @@ protected:
   PRUint32                         mNextFreeRecycledThebesLayer;
   PRUint32                         mNextFreeRecycledColorLayer;
   PRUint32                         mNextFreeRecycledImageLayer;
-  PRPackedBool                     mInvalidateAllThebesContent;
+  bool                             mInvalidateAllThebesContent;
 };
 
 class ThebesDisplayItemLayerUserData : public LayerUserData
@@ -459,7 +459,7 @@ FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder)
   }
 }
 
-PRBool
+bool
 FrameLayerBuilder::DisplayItemDataEntry::HasNonEmptyContainerLayer()
 {
   for (PRUint32 i = 0; i < mData.Length(); ++i) {
@@ -473,7 +473,7 @@ FrameLayerBuilder::DisplayItemDataEntry::HasNonEmptyContainerLayer()
 /* static */ void
 FrameLayerBuilder::InternalDestroyDisplayItemData(nsIFrame* aFrame,
                                                   void* aPropertyValue,
-                                                  PRBool aRemoveFromFramesWithLayers)
+                                                  bool aRemoveFromFramesWithLayers)
 {
   nsRefPtr<LayerManager> managerRef;
   nsTArray<DisplayItemData>* array =
@@ -616,7 +616,7 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
     builder ? builder->mNewDisplayItemData.GetEntry(f) : nsnull;
   if (!newDisplayItems) {
     // This frame was visible, but isn't anymore.
-    PRBool found;
+    bool found;
     void* prop = props.Remove(DisplayItemDataProperty(), &found);
     NS_ASSERTION(found, "How can the frame property be missing?");
     // Pass PR_FALSE to not remove from mFramesWithLayers, we'll remove it
@@ -690,7 +690,7 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
   return PL_DHASH_REMOVE;
 }
 
-PRBool
+bool
 FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
 {
   void* propValue = aFrame->Properties().Get(DisplayItemDataProperty());
@@ -1063,7 +1063,7 @@ ContainerState::PopThebesLayerData()
 
   nsIntRegion transparentRegion;
   transparentRegion.Sub(data->mVisibleRegion, data->mOpaqueRegion);
-  PRBool isOpaque = transparentRegion.IsEmpty();
+  bool isOpaque = transparentRegion.IsEmpty();
   // For translucent ThebesLayers, try to find an opaque background
   // color that covers the entire area beneath it so we can pull that
   // color into this layer to make it opaque.
@@ -1116,7 +1116,7 @@ ContainerState::PopThebesLayerData()
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
 }
 
-static PRBool
+static bool
 SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
                        nsDisplayItem* aItem,
                        const nsRect& aComponentAlphaBounds)
@@ -1140,7 +1140,7 @@ SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
   return windowTransparentRegion->Intersects(aComponentAlphaBounds);
 }
 
-static PRBool
+static bool
 WindowHasTransparency(nsDisplayListBuilder* aBuilder)
 {
   const nsRegion* windowTransparentRegion = aBuilder->GetFinalTransparentRegion();
@@ -1155,7 +1155,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
                                             const FrameLayerBuilder::Clip& aClip)
 {
   nscolor uniformColor;
-  PRBool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
+  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
   // a color with opacity 0.
@@ -1195,7 +1195,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
     mImage = nsnull;
   }
   
-  PRBool forceTransparentSurface = PR_FALSE;
+  bool forceTransparentSurface = false;
   nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &forceTransparentSurface);
   if (!opaque.IsEmpty()) {
     nsRegionRectIterator iter(opaque);
@@ -1520,7 +1520,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
   }
 }
 
-PRBool
+bool
 FrameLayerBuilder::NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
                                                     nsDisplayItem* aItem)
 {
@@ -1889,13 +1889,13 @@ FrameLayerBuilder::InvalidateThebesLayerContents(nsIFrame* aFrame,
 /**
  * Returns true if we find a descendant with a container layer
  */
-static PRBool
+static bool
 InternalInvalidateThebesLayersInSubtree(nsIFrame* aFrame)
 {
   if (!(aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT))
     return PR_FALSE;
 
-  PRBool foundContainerLayer = PR_FALSE;
+  bool foundContainerLayer = false;
   if (aFrame->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
     // Delete the invalid region to indicate that all Thebes contents
     // need to be invalidated
@@ -2114,7 +2114,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   rc->Init(presContext->DeviceContext(), aContext);
 
   Clip currentClip;
-  PRBool setClipRect = PR_FALSE;
+  bool setClipRect = false;
 
   for (i = 0; i < items.Length(); ++i) {
     ClippedDisplayItem* cdi = &items[i];
@@ -2152,7 +2152,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   }
 }
 
-PRBool
+bool
 FrameLayerBuilder::CheckDOMModified()
 {
   if (!mRootPresContext ||

@@ -90,7 +90,7 @@ nsSimpleNestedURI::Write(nsIObjectOutputStream* aStream)
 
 // nsIIPCSerializable
 
-PRBool
+bool
 nsSimpleNestedURI::Read(const IPC::Message *aMsg, void **aIter)
 {
     if (!nsSimpleURI::Read(aMsg, aIter))
@@ -134,13 +134,13 @@ nsSimpleNestedURI::GetInnermostURI(nsIURI** uri)
 /* virtual */ nsresult
 nsSimpleNestedURI::EqualsInternal(nsIURI* other,
                                   nsSimpleURI::RefHandlingEnum refHandlingMode,
-                                  PRBool* result)
+                                  bool* result)
 {
     *result = PR_FALSE;
     NS_ENSURE_TRUE(mInnerURI, NS_ERROR_NOT_INITIALIZED);
     
     if (other) {
-        PRBool correctScheme;
+        bool correctScheme;
         nsresult rv = other->SchemeIs(mScheme.get(), &correctScheme);
         NS_ENSURE_SUCCESS(rv, rv);
 

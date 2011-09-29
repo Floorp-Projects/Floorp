@@ -67,8 +67,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP
 nsDOMDeviceMotionEvent::InitDeviceMotionEvent(const nsAString & aEventTypeArg,
-                                              PRBool aCanBubbleArg,
-                                              PRBool aCancelableArg,
+                                              bool aCanBubbleArg,
+                                              bool aCancelableArg,
                                               nsIDOMDeviceAcceleration* aAcceleration,
                                               nsIDOMDeviceAcceleration* aAccelerationIncludingGravity,
                                               nsIDOMDeviceRotationRate* aRotationRate,

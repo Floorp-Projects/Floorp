@@ -76,13 +76,13 @@
 static int
 verifyCmdLineCreation(PRUnichar *inCmdLine,
                       PRUnichar *compareCmdLine,
-                      PRBool passes, int testNum)
+                      bool passes, int testNum)
 {
   int rv = 0;
   int i;
   int inArgc;
   int outArgc;
-  PRBool isEqual;
+  bool isEqual;
 
   // When debugging with command lines containing Unicode characters greater
   // than 255 you can set the mode for stdout to Unicode so the console will

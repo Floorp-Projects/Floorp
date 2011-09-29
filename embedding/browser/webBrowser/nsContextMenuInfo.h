@@ -80,7 +80,7 @@ private:
   nsresult          GetImageRequest(nsIDOMNode *aDOMNode,
                                     imgIRequest **aRequest);
 
-  PRBool            HasBackgroundImage(nsIDOMNode *aDOMNode);
+  bool              HasBackgroundImage(nsIDOMNode *aDOMNode);
 
   nsresult          GetBackgroundImageRequest(nsIDOMNode *aDOMNode,
                                               imgIRequest **aRequest);

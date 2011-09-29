@@ -127,7 +127,7 @@ nsImageFrame::IconLoad* nsImageFrame::gIconLoad = nsnull;
 nsIIOService* nsImageFrame::sIOService;
 
 // test if the width and height are fixed, looking at the style data
-static PRBool HaveFixedSize(const nsStylePosition* aStylePosition)
+static bool HaveFixedSize(const nsStylePosition* aStylePosition)
 {
   // check the width and height values in the reflow state's style struct
   // - if width and height are specified as either coord or percentage, then
@@ -138,7 +138,7 @@ static PRBool HaveFixedSize(const nsStylePosition* aStylePosition)
 // use the data in the reflow state to decide if the image has a constrained size
 // (i.e. width and height that are based on the containing block size and not the image size) 
 // so we can avoid animated GIF related reflows
-inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
+inline bool HaveFixedSize(const nsHTMLReflowState& aReflowState)
 { 
   NS_ASSERTION(aReflowState.mStylePosition, "crappy reflowState - null stylePosition");
   // when an image has percent css style height or width, but ComputedHeight() 
@@ -289,7 +289,7 @@ nsImageFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-PRBool
+bool
 nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
 {
   NS_PRECONDITION(aImage, "null image");
@@ -318,7 +318,7 @@ nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
   return mIntrinsicSize != oldIntrinsicSize;
 }
 
-PRBool
+bool
 nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage)
 {
   NS_PRECONDITION(aImage, "null image");
@@ -344,7 +344,7 @@ nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage)
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
-PRBool
+bool
 nsImageFrame::GetSourceToDestTransform(nsTransform2D& aTransform)
 {
   // Set the translation components.
@@ -380,7 +380,7 @@ nsImageFrame::GetSourceToDestTransform(nsTransform2D& aTransform)
  * same as the image container on the current request for our
  * mContent.
  */
-PRBool
+bool
 nsImageFrame::IsPendingLoad(imgIRequest* aRequest) const
 {
   // Default to pending load in case of errors
@@ -393,7 +393,7 @@ nsImageFrame::IsPendingLoad(imgIRequest* aRequest) const
   return requestType != nsIImageLoadingContent::CURRENT_REQUEST;
 }
 
-PRBool
+bool
 nsImageFrame::IsPendingLoad(imgIContainer* aContainer) const
 {
   //  default to pending load in case of errors
@@ -472,7 +472,7 @@ nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
      (_state).HasState(NS_EVENT_STATE_LOADING) && (_loadingOK)))
 
 /* static */
-PRBool
+bool
 nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
                                         nsStyleContext* aStyleContext)
 {
@@ -494,7 +494,7 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
   //    icon.
   //  - if QuirksMode, and the IMG has a size show an icon.
   //  - otherwise, skip the icon
-  PRBool useSizedBox;
+  bool useSizedBox;
   
   if (aStyleContext->GetStyleUIReset()->mForceBrokenImageIcon) {
     useSizedBox = PR_TRUE;
@@ -548,7 +548,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
     return NS_OK;
   }
   
-  PRBool intrinsicSizeChanged = UpdateIntrinsicSize(aImage);
+  bool intrinsicSizeChanged = UpdateIntrinsicSize(aImage);
   intrinsicSizeChanged = UpdateIntrinsicRatio(aImage) || intrinsicSizeChanged;
 
   if (intrinsicSizeChanged && (mState & IMAGE_GOTINITIALREFLOW)) {
@@ -569,7 +569,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
 
 nsresult
 nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
-                              PRBool aCurrentFrame,
+                              bool aCurrentFrame,
                               const nsIntRect *aRect)
 {
   // XXX do we need to make sure that the reflow from the
@@ -632,7 +632,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 
   if (loadType == nsIImageLoadingContent::PENDING_REQUEST) {
     // May have to switch sizes here!
-    PRBool intrinsicSizeChanged = PR_TRUE;
+    bool intrinsicSizeChanged = true;
     if (NS_SUCCEEDED(aStatus)) {
       nsCOMPtr<imgIContainer> imageContainer;
       aRequest->GetImage(getter_AddRefs(imageContainer));
@@ -739,7 +739,7 @@ nsImageFrame::EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext)
 nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                           nsSize aCBSize, nscoord aAvailableWidth,
                           nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                          PRBool aShrinkWrap)
+                          bool aShrinkWrap)
 {
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSizeAndRatio(presContext);
@@ -916,7 +916,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
   while (aLength > 0) {
     // Find the next place we can line break
     PRUint32  len = aLength;
-    PRBool    trailingSpace = PR_FALSE;
+    bool      trailingSpace = false;
     for (PRInt32 i = 0; i < aLength; i++) {
       if (XP_IS_SPACE(aString[i]) && (i > 0)) {
         len = i;  // don't include the space when measuring
@@ -928,7 +928,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
     // Measure this chunk of text, and see if it fits
     nscoord width =
       nsLayoutUtils::GetStringWidth(this, &aContext, aString, len);
-    PRBool  fits = (totalWidth + width) <= aMaxWidth;
+    bool    fits = (totalWidth + width) <= aMaxWidth;
 
     // If it fits on the line, or it's the first word we've processed then
     // include it
@@ -993,7 +993,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   }
 
   // Always show the first line, even if we have to clip it below
-  PRBool firstLine = PR_TRUE;
+  bool firstLine = true;
   while ((strLen > 0) && (firstLine || (y + maxDescent) < aRect.YMost())) {
     // Determine how much of the text to display on this line
     PRUint32  maxFit;  // number of characters that fit
@@ -1093,7 +1093,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
     const nsStyleVisibility* vis = GetStyleVisibility();
     nscoord size = nsPresContext::CSSPixelsToAppUnits(ICON_SIZE);
 
-    PRBool iconUsed = PR_FALSE;
+    bool iconUsed = false;
 
     // If we weren't previously displaying an icon, register ourselves
     // as an observer for load and animation updates and flag that we're
@@ -1324,7 +1324,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     nsEventStates contentState = mContent->AsElement()->State();
-    PRBool imageOK = IMAGE_OK(contentState, PR_TRUE);
+    bool imageOK = IMAGE_OK(contentState, true);
 
     nsCOMPtr<imgIContainer> imgCon;
     if (currentRequest) {
@@ -1332,7 +1332,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     // Determine if the size is available
-    PRBool haveSize = PR_FALSE;
+    bool haveSize = false;
     PRUint32 imageStatus = 0;
     if (currentRequest)
       currentRequest->GetImageStatus(&imageStatus);
@@ -1465,7 +1465,7 @@ nsImageFrame::GetImageMap()
   return mImageMap;
 }
 
-PRBool
+bool
 nsImageFrame::IsServerImageMap()
 {
   return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::ismap);
@@ -1491,11 +1491,11 @@ nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
   aResult.y = nsPresContext::AppUnitsToIntCSSPixels(y);
 }
 
-PRBool
+bool
 nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
                                          nsIContent** aNode)
 {
-  PRBool status = PR_FALSE;
+  bool status = false;
   aTarget.Truncate();
   *aHref = nsnull;
   *aNode = nsnull;
@@ -1549,7 +1549,7 @@ nsImageFrame::GetContentForEvent(nsEvent* aEvent,
     nsIntPoint p;
     TranslateEventCoords(
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
-    PRBool inside = PR_FALSE;
+    bool inside = false;
     nsCOMPtr<nsIContent> area;
     inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
     if (inside && area) {
@@ -1577,12 +1577,12 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
       aEvent->message == NS_MOUSE_MOVE) {
     nsImageMap* map = GetImageMap();
-    PRBool isServerMap = IsServerImageMap();
+    bool isServerMap = IsServerImageMap();
     if ((nsnull != map) || isServerMap) {
       nsIntPoint p;
       TranslateEventCoords(
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
-      PRBool inside = PR_FALSE;
+      bool inside = false;
       // Even though client-side image map triggering happens
       // through content, we need to make sure we're not inside
       // (in case we deal with a case of both client-side and
@@ -1613,7 +1613,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           spec += nsPrintfCString("?%d,%d", p.x, p.y);
           uri->SetSpec(spec);                
           
-          PRBool clicked = PR_FALSE;
+          bool clicked = false;
           if (aEvent->message == NS_MOUSE_BUTTON_UP) {
             *aEventStatus = nsEventStatus_eConsumeDoDefault; 
             clicked = PR_TRUE;
@@ -1921,7 +1921,7 @@ void nsImageFrame::IconLoad::GetPrefs()
     Preferences::GetBool("browser.display.force_inline_alttext");
 
   mPrefShowPlaceholders =
-    Preferences::GetBool("browser.display.show_image_placeholders", PR_TRUE);
+    Preferences::GetBool("browser.display.show_image_placeholders", true);
 }
 
 
@@ -1954,7 +1954,7 @@ nsImageFrame::IconLoad::OnStartFrame(imgIRequest *aRequest,
 
 NS_IMETHODIMP
 nsImageFrame::IconLoad::OnDataAvailable(imgIRequest *aRequest,
-                                        PRBool aCurrentFrame,
+                                        bool aCurrentFrame,
                                         const nsIntRect * aRect)
 {
   return NS_OK;
@@ -1984,7 +1984,7 @@ nsImageFrame::IconLoad::OnStopDecode(imgIRequest *aRequest,
 
 NS_IMETHODIMP
 nsImageFrame::IconLoad::OnStopRequest(imgIRequest *aRequest,
-                                      PRBool aIsLastPart)
+                                      bool aIsLastPart)
 {
   nsTObserverArray<nsImageFrame*>::ForwardIterator iter(mIconObservers);
   nsImageFrame *frame;
@@ -2039,7 +2039,7 @@ NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
-                                               PRBool aCurrentFrame,
+                                               bool aCurrentFrame,
                                                const nsIntRect *aRect)
 {
   if (!mFrame)
@@ -2067,7 +2067,7 @@ NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
   return mFrame->FrameChanged(aContainer, aDirtyRect);
 }
 
-static PRBool
+static bool
 IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
 {
   if (eCompatibility_NavQuirks != aFrame->PresContext()->CompatibilityMode())
@@ -2090,7 +2090,7 @@ nsImageFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
 
   NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
   
-  PRBool canBreak =
+  bool canBreak =
     !CanContinueTextRun() &&
     GetParent()->GetStyleText()->WhiteSpaceCanWrap() &&
     !IsInAutoWidthTableCellForQuirk(this);

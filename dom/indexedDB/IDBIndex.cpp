@@ -169,8 +169,8 @@ public:
                       IDBIndex* aIndex,
                       const Key& aLowerKey,
                       const Key& aUpperKey,
-                      PRBool aLowerOpen,
-                      PRBool aUpperOpen,
+                      bool aLowerOpen,
+                      bool aUpperOpen,
                       PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex),
     mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
@@ -192,8 +192,8 @@ private:
   nsRefPtr<IDBIndex> mIndex;
   const Key mLowerKey;
   const Key mUpperKey;
-  const PRPackedBool mLowerOpen;
-  const PRPackedBool mUpperOpen;
+  const bool mLowerOpen;
+  const bool mUpperOpen;
   const PRUint16 mDirection;
 
   // Out-params.
@@ -212,8 +212,8 @@ public:
                    IDBIndex* aIndex,
                    const Key& aLowerKey,
                    const Key& aUpperKey,
-                   PRBool aLowerOpen,
-                   PRBool aUpperOpen,
+                   bool aLowerOpen,
+                   bool aUpperOpen,
                    PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex),
     mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
@@ -240,8 +240,8 @@ private:
   nsRefPtr<IDBIndex> mIndex;
   const Key mLowerKey;
   const Key mUpperKey;
-  const PRPackedBool mLowerOpen;
-  const PRPackedBool mUpperOpen;
+  const bool mLowerOpen;
+  const bool mUpperOpen;
   const PRUint16 mDirection;
 
   // Out-params.
@@ -357,7 +357,7 @@ IDBIndex::GetKeyPath(nsAString& aKeyPath)
 }
 
 NS_IMETHODIMP
-IDBIndex::GetUnique(PRBool* aUnique)
+IDBIndex::GetUnique(bool* aUnique)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -544,7 +544,7 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
 
   nsresult rv;
   Key lowerKey, upperKey;
-  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
+  bool lowerOpen = false, upperOpen = false;
 
   if (aKeyRange) {
     nsCOMPtr<nsIVariant> variant;
@@ -612,7 +612,7 @@ IDBIndex::OpenKeyCursor(nsIIDBKeyRange* aKeyRange,
 
   nsresult rv;
   Key lowerKey, upperKey;
-  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
+  bool lowerOpen = false, upperOpen = false;
 
   if (aKeyRange) {
     nsCOMPtr<nsIVariant> variant;
@@ -696,7 +696,7 @@ GetKeyHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mKey = Key::UNSETKEY;
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -763,7 +763,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mKey = Key::UNSETKEY;
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -862,7 +862,7 @@ GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  PRBool hasResult;
+  bool hasResult;
   while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     if (mKeys.Capacity() == mKeys.Length()) {
       if (!mKeys.SetCapacity(mKeys.Capacity() * 2)) {
@@ -1026,7 +1026,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  PRBool hasResult;
+  bool hasResult;
   while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     if (mCloneBuffers.Capacity() == mCloneBuffers.Length()) {
       if (!mCloneBuffers.SetCapacity(mCloneBuffers.Capacity() * 2)) {
@@ -1164,7 +1164,7 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -1417,7 +1417,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

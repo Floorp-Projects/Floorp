@@ -55,7 +55,7 @@ public:
                                      nsILoadGroup*       aLoadGroup,
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
-                                     PRBool              aReset = PR_TRUE,
+                                     bool                aReset = true,
                                      nsIContentSink*     aSink = nsnull);
 
 protected:
@@ -75,7 +75,7 @@ VideoDocument::StartDocumentLoad(const char*         aCommand,
                                  nsILoadGroup*       aLoadGroup,
                                  nsISupports*        aContainer,
                                  nsIStreamListener** aDocListener,
-                                 PRBool              aReset,
+                                 bool                aReset,
                                  nsIContentSink*     aSink)
 {
   nsresult rv =

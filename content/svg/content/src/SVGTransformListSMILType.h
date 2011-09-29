@@ -120,7 +120,7 @@ protected:
   virtual void     Init(nsSMILValue& aValue) const;
   virtual void     Destroy(nsSMILValue& aValue) const;
   virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
-  virtual PRBool   IsEqual(const nsSMILValue& aLeft,
+  virtual bool     IsEqual(const nsSMILValue& aLeft,
                            const nsSMILValue& aRight) const;
   virtual nsresult Add(nsSMILValue& aDest,
                        const nsSMILValue& aValueToAdd,
@@ -140,9 +140,9 @@ public:
   // -------------------------
   static nsresult AppendTransform(const SVGTransformSMILData& aTransform,
                                   nsSMILValue& aValue);
-  static PRBool AppendTransforms(const SVGTransformList& aList,
+  static bool AppendTransforms(const SVGTransformList& aList,
                                  nsSMILValue& aValue);
-  static PRBool GetTransforms(const nsSMILValue& aValue,
+  static bool GetTransforms(const nsSMILValue& aValue,
                               nsTArray<SVGTransform>& aTransforms);
 
 

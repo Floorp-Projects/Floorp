@@ -78,9 +78,9 @@ protected:
 
   virtual void CreateExtensionDecoder();
   virtual void Create4BytesDecoder();
-  PRBool TryExtensionDecoder(const char* aSrc, PRUnichar* aDest);
-  PRBool Try4BytesDecoder(const char* aSrc, PRUnichar* aDest);
-  virtual PRBool DecodeToSurrogate(const char* aSrc, PRUnichar* aDest);
+  bool TryExtensionDecoder(const char* aSrc, PRUnichar* aDest);
+  bool Try4BytesDecoder(const char* aSrc, PRUnichar* aDest);
+  virtual bool DecodeToSurrogate(const char* aSrc, PRUnichar* aDest);
 
 };
 
@@ -93,7 +93,7 @@ public:
 protected:
   virtual void CreateExtensionDecoder();
   virtual void Create4BytesDecoder();
-  virtual PRBool DecodeToSurrogate(const char* aSrc, PRUnichar* aDest);
+  virtual bool DecodeToSurrogate(const char* aSrc, PRUnichar* aDest);
 };
 
 #endif /* nsGBK2312ToUnicode_h___ */

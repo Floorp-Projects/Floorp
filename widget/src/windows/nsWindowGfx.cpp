@@ -125,7 +125,7 @@ static IconMetrics sIconMetrics[] = {
  **************************************************************
  **************************************************************/
 
-static PRBool
+static bool
 IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
 {
   return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
@@ -172,7 +172,7 @@ nsWindowGfx::ConvertHRGNToRegion(HRGN aRgn)
  **************************************************************/
 
 // GetRegionToPaint returns the invalidated region that needs to be painted
-nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
+nsIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
                                        PAINTSTRUCT ps, HDC aDC)
 {
   if (aForceFullRepaint) {
@@ -197,7 +197,7 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
 }
 
 #define WORDSSIZE(x) ((x).width * (x).height)
-static PRBool
+static bool
 EnsureSharedSurfaceSize(gfxIntSize size)
 {
   gfxIntSize screenSize;
@@ -219,7 +219,7 @@ EnsureSharedSurfaceSize(gfxIntSize size)
   return (sSharedSurfaceData != nsnull);
 }
 
-PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
+bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 {
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
@@ -259,7 +259,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   willPaintEvent.willSendDidPaint = PR_TRUE;
   DispatchWindowEvent(&willPaintEvent);
 
-  PRBool result = PR_TRUE;
+  bool result = true;
   PAINTSTRUCT ps;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
@@ -303,9 +303,9 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   InitEvent(event);
 
 #ifdef MOZ_XUL
-  PRBool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
+  bool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
 #else
-  PRBool forceRepaint = NULL != aDC;
+  bool forceRepaint = NULL != aDC;
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
   event.willSendDidPaint = PR_TRUE;
@@ -637,7 +637,7 @@ gfxIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
 }
 
 nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
-                                  PRBool aIsCursor,
+                                  bool aIsCursor,
                                   PRUint32 aHotspotX,
                                   PRUint32 aHotspotY,
                                   gfxIntSize aScaledSize,
@@ -746,10 +746,10 @@ PRUint8* nsWindowGfx::Data32BitTo1Bit(PRUint8* aImageData,
   return outData;
 }
 
-PRBool nsWindowGfx::IsCursorTranslucencySupported()
+bool nsWindowGfx::IsCursorTranslucencySupported()
 {
-  static PRBool didCheck = PR_FALSE;
-  static PRBool isSupported = PR_FALSE;
+  static bool didCheck = false;
+  static bool isSupported = false;
   if (!didCheck) {
     didCheck = PR_TRUE;
     // Cursor translucency is supported on Windows XP and newer

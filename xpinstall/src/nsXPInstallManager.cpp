@@ -155,7 +155,7 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
 {
     // If Software Installation is not enabled, we don't want to proceed with
     // update.
-    PRBool xpinstallEnabled = PR_TRUE;
+    bool xpinstallEnabled = true;
     nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (pref)
         pref->GetBoolPref(PREF_XPINSTALL_ENABLED, &xpinstallEnabled);
@@ -270,7 +270,7 @@ nsresult
 nsXPInstallManager::InitManagerInternal()
 {
     nsresult rv;
-    PRBool OKtoInstall = PR_FALSE; // initialize to secure state
+    bool OKtoInstall = false; // initialize to secure state
 
     //-----------------------------------------------------
     // *** Do not return early after this point ***
@@ -364,7 +364,7 @@ nsXPInstallManager::InitManagerInternal()
 
 
 NS_IMETHODIMP
-nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPackageList, PRUint32 aCount, PRBool *aRetval)
+nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPackageList, PRUint32 aCount, bool *aRetval)
 {
     *aRetval = PR_FALSE;
 
@@ -412,7 +412,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
 }
 
 #ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
-PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const PRUnichar **aPackage)
+bool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindow* aParentWindow, const PRUnichar **aPackage)
 {
     // get the dialog strings
     nsXPIDLString applyNowText;
@@ -456,7 +456,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindow* aParentWindow, con
         return PR_FALSE;
 
     // confirmation dialog
-    PRBool bInstall = PR_FALSE;
+    bool bInstall = false;
     nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
     if (dlgService)
     {
@@ -631,7 +631,7 @@ VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
     if (!aPrincipal)
         return NS_OK;
 
-    PRBool hasCert;
+    bool hasCert;
     aPrincipal->GetHasCertificate(&hasCert);
     if (!hasCert)
         return NS_ERROR_FAILURE;
@@ -650,7 +650,7 @@ VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool more;
+    bool more;
     nsCAutoString name;
     while (NS_SUCCEEDED(entries->HasMore(&more)) && more)
     {
@@ -670,7 +670,7 @@ VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
         rv = hZip->GetCertificatePrincipal(name, getter_AddRefs(principal));
         if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
 
-        PRBool equal;
+        bool equal;
         rv = principal->Equals(aPrincipal, &equal);
         if (NS_FAILED(rv) || !equal) return NS_ERROR_FAILURE;
     }
@@ -936,7 +936,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 // the item has no hash value). False if we can't verify the hash
 // for any reason
 //
-PRBool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
+bool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
 {
     NS_ASSERTION(aItem, "Null nsXPITriggerItem passed to VerifyHash");
 
@@ -961,7 +961,7 @@ PRBool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
         hash = PR_sprintf_append(hash,"%.2x", (PRUint8)binaryHash[i]);
     }
 
-    PRBool result = aItem->mHash.EqualsIgnoreCase(hash);
+    bool result = aItem->mHash.EqualsIgnoreCase(hash);
 
     PR_smprintf_free(hash);
     return result;
@@ -1093,7 +1093,7 @@ nsXPInstallManager::CheckCert(nsIChannel* aChannel)
     nsCOMPtr<nsIX509Cert> issuer;
     rv = cert->GetIssuer(getter_AddRefs(issuer));
     NS_ENSURE_SUCCESS(rv, rv);
-    PRBool equal;
+    bool equal;
     while (issuer && NS_SUCCEEDED(cert->Equals(issuer, &equal)) && !equal) {
         cert = issuer;
         rv = cert->GetIssuer(getter_AddRefs(issuer));
@@ -1129,7 +1129,7 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
             request->Cancel(NS_BINDING_ABORTED);
             return NS_OK;
         }
-        PRBool succeeded;
+        bool succeeded;
         if (NS_SUCCEEDED(httpChan->GetRequestSucceeded(&succeeded)) && !succeeded) {
             // HTTP response is not a 2xx!
             request->Cancel(NS_BINDING_ABORTED);
@@ -1193,7 +1193,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         // -- first clean up partially downloaded file
         if ( mItem && mItem->mFile )
         {
-            PRBool flagExists;
+            bool flagExists;
             nsresult rv2 ;
             rv2 = mItem->mFile->Exists(&flagExists);
             if (NS_SUCCEEDED(rv2) && flagExists)
@@ -1344,7 +1344,7 @@ NS_IMETHODIMP
 nsXPInstallManager::NotifyCertProblem(nsIInterfaceRequestor *socketInfo,
                                       nsISSLStatus *status,
                                       const nsACString &targetSite,
-                                      PRBool *_retval)
+                                      bool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -1355,7 +1355,7 @@ NS_IMETHODIMP
 nsXPInstallManager::NotifySSLError(nsIInterfaceRequestor *socketInfo, 
                                     PRInt32 error, 
                                     const nsACString &targetSite, 
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;

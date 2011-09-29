@@ -73,7 +73,7 @@ NS_IMPL_ISUPPORTS1(nsXMLQuery, nsXMLQuery)
 NS_IMPL_ISUPPORTS1(nsXULTemplateResultSetXML, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsXULTemplateResultSetXML::HasMoreElements(PRBool *aResult)
+nsXULTemplateResultSetXML::HasMoreElements(bool *aResult)
 {
     // if GetSnapshotLength failed, then the return type was not a set of
     // nodes, so just return false in this case.
@@ -159,9 +159,9 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
                                               nsIDOMNode* aRootNode,
-                                              PRBool aIsTrusted,
+                                              bool aIsTrusted,
                                               nsIXULTemplateBuilder* aBuilder,
-                                              PRBool* aShouldDelayBuilding,
+                                              bool* aShouldDelayBuilding,
                                               nsISupports** aResult)
 {
     *aResult = nsnull;
@@ -200,7 +200,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
 
     nsIPrincipal *docPrincipal = doc->NodePrincipal();
 
-    PRBool hasHadScriptObject = PR_TRUE;
+    bool hasHadScriptObject = true;
     nsIScriptGlobalObject* scriptObject =
       doc->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(scriptObject);

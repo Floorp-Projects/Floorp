@@ -79,7 +79,7 @@ public:
    * Initiates mouse capture for the listbox
    *
    */
-  virtual void CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
+  virtual void CaptureMouseEvents(bool aGrabMouseEvents) = 0;
 
   /**
    * Returns the height of a single row in the list.  This is the

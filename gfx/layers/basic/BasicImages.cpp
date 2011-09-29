@@ -119,7 +119,7 @@ public:
     {}
 
   virtual void SetData(const Data& aData);
-  virtual void SetDelayedConversion(PRBool aDelayed) { mDelayedConversion = aDelayed; }
+  virtual void SetDelayedConversion(bool aDelayed) { mDelayedConversion = aDelayed; }
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
@@ -138,7 +138,7 @@ protected:
   gfxImageFormat                       mOffscreenFormat;
   Data                                 mData;
   PRUint32                             mBufferSize;
-  PRPackedBool                         mDelayedConversion;
+  bool                                 mDelayedConversion;
 };
 
 void
@@ -237,12 +237,12 @@ public:
   {}
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
-  virtual void SetDelayedConversion(PRBool aDelayed) { mDelayed = aDelayed; }
+  virtual void SetDelayedConversion(bool aDelayed) { mDelayed = aDelayed; }
   virtual void SetCurrentImage(Image* aImage);
   virtual already_AddRefed<Image> GetCurrentImage();
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
   virtual gfxIntSize GetCurrentSize();
-  virtual PRBool SetLayerManager(LayerManager *aManager);
+  virtual bool SetLayerManager(LayerManager *aManager);
   virtual void SetScaleHint(const gfxIntSize& aScaleHint);
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_BASIC; }
@@ -251,13 +251,13 @@ protected:
   nsRefPtr<Image> mImage;
   gfxIntSize mScaleHint;
   gfxImageFormat mOffscreenFormat;
-  PRPackedBool mDelayed;
+  bool mDelayed;
 };
 
 /**
  * Returns true if aFormat is in the given format array.
  */
-static PRBool
+static bool
 FormatInList(const Image::Format* aFormats, PRUint32 aNumFormats,
              Image::Format aFormat)
 {
@@ -334,7 +334,7 @@ void BasicImageContainer::SetScaleHint(const gfxIntSize& aScaleHint)
   mScaleHint = aScaleHint;
 }
 
-PRBool
+bool
 BasicImageContainer::SetLayerManager(LayerManager *aManager)
 {
   if (aManager &&

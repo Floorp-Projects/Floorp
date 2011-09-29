@@ -64,7 +64,7 @@ public:
    * Allocates a new nsXMLNameSpaceMap (with new()) and if aForXML is
    * true initializes it with the xmlns and xml namespaces.
    */
-  static NS_HIDDEN_(nsXMLNameSpaceMap*) Create(PRBool aForXML);
+  static NS_HIDDEN_(nsXMLNameSpaceMap*) Create(bool aForXML);
 
   /**
    * Add a prefix and its corresponding namespace ID to the map.

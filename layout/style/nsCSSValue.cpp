@@ -199,7 +199,7 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
   return *this;
 }
 
-PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
+bool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
   NS_ABORT_IF_FALSE(mUnit != eCSSUnit_ListDep &&
                     aOther.mUnit != eCSSUnit_ListDep &&
@@ -604,7 +604,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
   }
 }
 
-PRBool nsCSSValue::IsNonTransparentColor() const
+bool nsCSSValue::IsNonTransparentColor() const
 {
   // We have the value in the form it was specified in at this point, so we
   // have to look for both the keyword 'transparent' and its equivalent in
@@ -631,7 +631,7 @@ nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs)
   return func;
 }
 
-PRBool
+bool
 nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
 {
   if (mUnit != eCSSUnit_Function) {
@@ -752,7 +752,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     }
 
     nsCSSValue::Array *array = GetArrayValue();
-    PRBool mark = PR_FALSE;
+    bool mark = false;
     for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
       if (aProperty == eCSSProperty_border_image && i >= 5) {
         if (array->Item(i).GetUnit() == eCSSUnit_Null) {
@@ -1337,10 +1337,10 @@ nsCSSValue::URL::~URL()
   mString->Release();
 }
 
-PRBool
+bool
 nsCSSValue::URL::operator==(const URL& aOther) const
 {
-  PRBool eq;
+  bool eq;
   return NS_strcmp(GetBufferValue(mString),
                    GetBufferValue(aOther.mString)) == 0 &&
           (GetURI() == aOther.GetURI() || // handles null == null
@@ -1352,12 +1352,12 @@ nsCSSValue::URL::operator==(const URL& aOther) const
                                                   &eq)) && eq));
 }
 
-PRBool
+bool
 nsCSSValue::URL::URIEquals(const URL& aOther) const
 {
   NS_ABORT_IF_FALSE(mURIResolved && aOther.mURIResolved,
                     "How do you know the URIs aren't null?");
-  PRBool eq;
+  bool eq;
   // Worth comparing GetURI() to aOther.GetURI() and mOriginPrincipal to
   // aOther.mOriginPrincipal, because in the (probably common) case when this
   // value was one of the ones that in fact did not change this will be our
@@ -1424,8 +1424,8 @@ nsCSSValueGradientStop::~nsCSSValueGradientStop()
   MOZ_COUNT_DTOR(nsCSSValueGradientStop);
 }
 
-nsCSSValueGradient::nsCSSValueGradient(PRBool aIsRadial,
-                                       PRBool aIsRepeating)
+nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
+                                       bool aIsRepeating)
   : mIsRadial(aIsRadial),
     mIsRepeating(aIsRepeating),
     mBgPos(eCSSUnit_None),

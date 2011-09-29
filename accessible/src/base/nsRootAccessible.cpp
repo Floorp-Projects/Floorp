@@ -393,7 +393,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     origTargetNode->AsElement() : nsnull;
 
 #ifdef MOZ_XUL
-  PRBool isTree = targetContent ?
+  bool isTree = targetContent ?
     targetContent->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) :
     PR_FALSE;
 
@@ -428,7 +428,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     // and panebutton is exposed as XULListitem in A11y.
     // nsXULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
     // so we need to check states::SELECTED also.
-    PRBool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
+    bool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
 
     nsRefPtr<AccEvent> accEvent =
       new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
@@ -445,7 +445,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
     PRUint64 state = accessible->State();
 
-    PRBool isEnabled = !!(state & states::CHECKED);
+    bool isEnabled = !!(state & states::CHECKED);
 
     nsRefPtr<AccEvent> accEvent =
       new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
@@ -467,7 +467,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 #ifdef MOZ_XUL
   if (treeItemAccessible && eventType.EqualsLiteral("OpenStateChange")) {
     PRUint64 state = accessible->State();
-    PRBool isEnabled = (state & states::EXPANDED) != 0;
+    bool isEnabled = (state & states::EXPANDED) != 0;
 
     nsRefPtr<AccEvent> accEvent =
       new AccStateChangeEvent(accessible, states::EXPANDED, isEnabled);

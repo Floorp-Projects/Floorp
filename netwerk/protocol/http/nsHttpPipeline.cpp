@@ -152,7 +152,7 @@ nsresult
 nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
                                    nsHttpRequestHead *requestHead,
                                    nsHttpResponseHead *responseHead,
-                                   PRBool *reset)
+                                   bool *reset)
 {
     LOG(("nsHttpPipeline::OnHeadersAvailable [this=%x]\n", this));
 
@@ -190,7 +190,7 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     // the specified transaction is to be closed with the given "reason"
     
     PRInt32 index;
-    PRBool killPipeline = PR_FALSE;
+    bool killPipeline = false;
 
     index = mRequestQ.IndexOf(trans);
     if (index >= 0) {
@@ -245,13 +245,13 @@ nsHttpPipeline::GetSecurityInfo(nsISupports **result)
     mConnection->GetSecurityInfo(result);
 }
 
-PRBool
+bool
 nsHttpPipeline::IsPersistent()
 {
     return PR_TRUE; // pipelining requires this
 }
 
-PRBool
+bool
 nsHttpPipeline::IsReused()
 {
     return PR_TRUE; // pipelining requires this
@@ -302,7 +302,7 @@ nsHttpPipeline::PushBack(const char *data, PRUint32 length)
     return NS_OK;
 }
 
-PRBool
+bool
 nsHttpPipeline::LastTransactionExpectedNoContent()
 {
     NS_ABORT_IF_FALSE(mConnection, "no connection");
@@ -310,7 +310,7 @@ nsHttpPipeline::LastTransactionExpectedNoContent()
 }
 
 void
-nsHttpPipeline::SetLastTransactionExpectedNoContent(PRBool val)
+nsHttpPipeline::SetLastTransactionExpectedNoContent(bool val)
 {
     NS_ABORT_IF_FALSE(mConnection, "no connection");
      mConnection->SetLastTransactionExpectedNoContent(val);
@@ -408,7 +408,7 @@ nsHttpPipeline::OnTransportStatus(nsITransport* transport,
     }
 }
 
-PRBool
+bool
 nsHttpPipeline::IsDone()
 {
     return (mRequestQ.Length() == 0) && (mResponseQ.Length() == 0);

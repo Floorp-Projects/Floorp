@@ -126,7 +126,7 @@ protected:
     static nsIDateTimeFormat* gFormat;
     static nsICollation *gCollation;
 
-    static PRBool gDisableXULCache;
+    static bool gDisableXULCache;
 
     static int
     DisableXULCacheChangedCallback(const char* aPrefName, void* aClosure);

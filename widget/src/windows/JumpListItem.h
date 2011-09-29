@@ -97,7 +97,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetType(PRInt16 *aType) { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, PRBool *_retval) { return JumpListItem::Equals(item, _retval); }
+  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) { return JumpListItem::Equals(item, _retval); }
 
   static nsresult GetSeparator(nsRefPtr<IShellLinkW>& aShellLink);
 };
@@ -111,7 +111,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetType(PRInt16 *aType) { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, PRBool *_retval);
+  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval);
   NS_DECL_NSIJUMPLISTLINK
 
   static nsresult GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IShellItem2>& aShellItem);
@@ -138,7 +138,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItem);
   NS_IMETHOD GetType(PRInt16 *aType) { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, PRBool *_retval);
+  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval);
   NS_DECL_NSIJUMPLISTSHORTCUT
 
   static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 
@@ -153,7 +153,7 @@ protected:
   nsCOMPtr<nsIURI> mFaviconPageURI;
   nsCOMPtr<nsILocalHandlerApp> mHandlerApp;
 
-  PRBool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
+  bool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
   static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI, 
                                        nsString &aICOFilePath,
                                        nsCOMPtr<nsIThread> &aIOThread);

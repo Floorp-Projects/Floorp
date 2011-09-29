@@ -55,7 +55,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, PRBool aShrinkWrap);
+                                 nsSize aPadding, bool aShrinkWrap);
 
   virtual nsIFrame* GetParentStyleContextFrame();
 
@@ -99,7 +99,7 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
   
-  virtual PRBool IsContainingBlock() const;
+  virtual bool IsContainingBlock() const;
 
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
@@ -140,7 +140,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, PRBool aShrinkWrap);
+                                 nsSize aPadding, bool aShrinkWrap);
 
   /** process a reflow command for the table.
     * This involves reflowing the caption and the inner table.
@@ -163,7 +163,7 @@ public:
 
   /** SetSelected needs to be overridden to talk to inner tableframe
    */
-  void SetSelected(PRBool aSelected,
+  void SetSelected(bool aSelected,
                    SelectionType aType);
 
   virtual nsIFrame* GetParentStyleContextFrame();
@@ -176,7 +176,7 @@ public:
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
                            PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
-                           PRBool& aIsSelected);
+                           bool& aIsSelected);
 
   /** @see nsITableFrame::GetTableSize */
   NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount);
@@ -200,7 +200,7 @@ protected:
 
   PRUint8 GetCaptionSide(); // NS_STYLE_CAPTION_SIDE_* or NO_SIDE
 
-  PRBool HasSideCaption() {
+  bool HasSideCaption() {
     PRUint8 captionSide = GetCaptionSide();
     return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
            captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;

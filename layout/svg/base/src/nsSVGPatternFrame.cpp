@@ -259,7 +259,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   float patternWidth = bbox.Width();
   float patternHeight = bbox.Height();
 
-  PRBool resultOverflows;
+  bool resultOverflows;
   gfxIntSize surfaceSize =
     nsSVGUtils::ConvertToSurfaceSize(gfxSize(patternWidth, patternHeight),
                                      &resultOverflows);

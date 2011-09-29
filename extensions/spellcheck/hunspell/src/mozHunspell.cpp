@@ -263,7 +263,7 @@ NS_IMETHODIMP mozHunspell::GetLanguage(PRUnichar **aLanguage)
 }
 
 /* readonly attribute boolean providesPersonalDictionary; */
-NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(PRBool *aProvidesPersonalDictionary)
+NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(bool *aProvidesPersonalDictionary)
 {
   NS_ENSURE_ARG_POINTER(aProvidesPersonalDictionary);
 
@@ -272,7 +272,7 @@ NS_IMETHODIMP mozHunspell::GetProvidesPersonalDictionary(PRBool *aProvidesPerson
 }
 
 /* readonly attribute boolean providesWordUtils; */
-NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(PRBool *aProvidesWordUtils)
+NS_IMETHODIMP mozHunspell::GetProvidesWordUtils(bool *aProvidesWordUtils)
 {
   NS_ENSURE_ARG_POINTER(aProvidesWordUtils);
 
@@ -310,7 +310,7 @@ struct AppendNewStruct
 {
   PRUnichar **dics;
   PRUint32 count;
-  PRBool failed;
+  bool failed;
 };
 
 static PLDHashOperator
@@ -399,7 +399,7 @@ mozHunspell::LoadDictionaryList()
     nsCOMPtr<nsIFile> appDir;
     rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
                      NS_GET_IID(nsIFile), getter_AddRefs(appDir));
-    PRBool equals;
+    bool equals;
     if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(appDir->Equals(greDir, &equals)) && !equals) {
       appDir->AppendNative(NS_LITERAL_CSTRING("dictionaries"));
       LoadDictionariesFromDir(appDir);
@@ -413,7 +413,7 @@ mozHunspell::LoadDictionaryList()
   if (NS_FAILED(rv))
     return;
 
-  PRBool hasMore;
+  bool hasMore;
   while (NS_SUCCEEDED(dictDirs->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> elem;
     dictDirs->GetNext(getter_AddRefs(elem));
@@ -452,7 +452,7 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
 {
   nsresult rv;
 
-  PRBool check = PR_FALSE;
+  bool check = false;
   rv = aDir->Exists(&check);
   if (NS_FAILED(rv) || !check)
     return NS_ERROR_UNEXPECTED;
@@ -519,7 +519,7 @@ nsresult mozHunspell::ConvertCharset(const PRUnichar* aStr, char ** aDst)
 }
 
 /* boolean Check (in wstring word); */
-NS_IMETHODIMP mozHunspell::Check(const PRUnichar *aWord, PRBool *aResult)
+NS_IMETHODIMP mozHunspell::Check(const PRUnichar *aWord, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aWord);
   NS_ENSURE_ARG_POINTER(aResult);

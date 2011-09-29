@@ -96,11 +96,11 @@ private:
                                   ElementTransitions *&aElementTransitions,
                                   nsStyleContext *aOldStyleContext,
                                   nsStyleContext *aNewStyleContext,
-                                  PRBool *aStartedAny,
+                                  bool *aStartedAny,
                                   nsCSSPropertySet *aWhichStarted);
   ElementTransitions* GetElementTransitions(mozilla::dom::Element *aElement,
                                             nsCSSPseudoElements::Type aPseudoType,
-                                            PRBool aCreateIfNeeded);
+                                            bool aCreateIfNeeded);
   void WalkTransitionRule(RuleProcessorData* aData,
                           nsCSSPseudoElements::Type aPseudoType);
 };

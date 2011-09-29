@@ -54,7 +54,7 @@ class gfxGDIFont : public gfxFont
 public:
     gfxGDIFont(GDIFontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle,
-               PRBool aNeedsBold,
+               bool aNeedsBold,
                AntialiasOption anAAOption = kAntialiasDefault);
 
     virtual ~gfxGDIFont();
@@ -71,7 +71,7 @@ public:
 
     virtual PRUint32 GetSpaceGlyph();
 
-    virtual PRBool SetupCairoFont(gfxContext *aContext);
+    virtual bool SetupCairoFont(gfxContext *aContext);
 
     /* override Measure to add padding for antialiasing */
     virtual RunMetrics Measure(gfxTextRun *aTextRun,
@@ -83,7 +83,7 @@ public:
     /* required for MathML to suppress effects of ClearType "padding" */
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
-    virtual PRBool ProvidesGlyphWidths() { return PR_TRUE; }
+    virtual bool ProvidesGlyphWidths() { return true; }
 
     // get hinted glyph width in pixels as 16.16 fixed-point value
     virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
@@ -92,13 +92,13 @@ protected:
     virtual void CreatePlatformShaper();
 
     /* override to check for uniscribe failure and fall back to GDI */
-    virtual PRBool InitTextRun(gfxContext *aContext,
+    virtual bool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
                                PRInt32 aRunScript,
-                               PRBool aPreferPlatformShaping = PR_FALSE);
+                               bool aPreferPlatformShaping = false);
 
     void Initialize(); // creates metrics and Cairo fonts
 
@@ -115,7 +115,7 @@ protected:
     Metrics              *mMetrics;
     PRUint32              mSpaceGlyph;
 
-    PRBool                mNeedsBold;
+    bool                  mNeedsBold;
 
     // cache of glyph widths in 16.16 fixed-point pixels
     nsDataHashtable<nsUint32HashKey,PRInt32>    mGlyphWidths;

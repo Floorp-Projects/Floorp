@@ -128,7 +128,7 @@ struct PlaceholderMapEntry : public PLDHashEntryHdr {
   nsPlaceholderFrame *placeholderFrame;
 };
 
-static PRBool
+static bool
 PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -489,7 +489,7 @@ nsresult
 nsFrameManager::RemoveFrame(ChildListID     aListID,
                             nsIFrame*       aOldFrame)
 {
-  PRBool wasDestroyingFrames = mIsDestroyingFrames;
+  bool wasDestroyingFrames = mIsDestroyingFrames;
   mIsDestroyingFrames = PR_TRUE;
 
   // In case the reflow doesn't invalidate anything since it just leaves
@@ -852,7 +852,7 @@ nsFrameManager::ReparentStyleContext(nsIFrame* aFrame)
     nsIFrame *prevContinuation =
       GetPrevContinuationWithPossiblySameStyle(aFrame);
     nsStyleContext *prevContinuationContext;
-    PRBool copyFromContinuation =
+    bool copyFromContinuation =
       prevContinuation &&
       (prevContinuationContext = prevContinuation->GetStyleContext())
         ->GetPseudo() == oldContext->GetPseudo() &&
@@ -1068,7 +1068,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     oldContext->AddRef();
 
 #ifdef ACCESSIBILITY
-    PRBool wasFrameVisible = nsIPresShell::IsAccessibilityActive() ?
+    bool wasFrameVisible = nsIPresShell::IsAccessibilityActive() ?
       oldContext->GetStyleVisibility()->IsVisible() : PR_FALSE;
 #endif
 
@@ -1187,7 +1187,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     nsIFrame *prevContinuation =
       GetPrevContinuationWithPossiblySameStyle(aFrame);
     nsStyleContext *prevContinuationContext;
-    PRBool copyFromContinuation =
+    bool copyFromContinuation =
       prevContinuation &&
       (prevContinuationContext = prevContinuation->GetStyleContext())
         ->GetPseudo() == oldContext->GetPseudo() &&
@@ -1348,7 +1348,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // When the root element is display:none, we still construct *some*
     // frames that have the root element as their mContent, down to the
     // DocElementContainingBlock.
-    PRBool checkUndisplayed;
+    bool checkUndisplayed;
     nsIContent *undisplayedParent;
     if (pseudoTag) {
       checkUndisplayed = aFrame == mPresShell->FrameConstructor()->
@@ -1473,7 +1473,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           !aFrame->GetPrevContinuation() &&
           !nsLayoutUtils::FrameIsNonFirstInIBSplit(aFrame)) {
         if (aDesiredA11yNotifications == eSendAllNotifications) {
-          PRBool isFrameVisible = newContext->GetStyleVisibility()->IsVisible();
+          bool isFrameVisible = newContext->GetStyleVisibility()->IsVisible();
           if (isFrameVisible != wasFrameVisible) {
             if (isFrameVisible) {
               // Notify a11y the element (perhaps with its children) was shown.
@@ -1617,7 +1617,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
                                       nsStyleChangeList *aChangeList,
                                       nsChangeHint       aMinChange,
                                       RestyleTracker&    aRestyleTracker,
-                                      PRBool             aRestyleDescendants)
+                                      bool               aRestyleDescendants)
 {
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, aFrame->GetContent(), aMinChange);

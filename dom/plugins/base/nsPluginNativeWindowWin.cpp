@@ -89,7 +89,7 @@ public:
   UINT   GetMsg()    { return mMsg; };
   WPARAM GetWParam() { return mWParam; };
   LPARAM GetLParam() { return mLParam; };
-  PRBool InUse()     { return (mWnd!=NULL); };
+  bool InUse()     { return (mWnd!=NULL); };
 
   NS_DECL_NSIRUNNABLE
 
@@ -171,11 +171,11 @@ public:
   nsPluginType mPluginType;
 };
 
-static PRBool sInMessageDispatch = PR_FALSE;
-static PRBool sInPreviousMessageDispatch = PR_FALSE;
+static bool sInMessageDispatch = false;
+static bool sInPreviousMessageDispatch = false;
 static UINT sLastMsg = 0;
 
-static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsNPAPIPluginInstance * aInst,
+static bool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsNPAPIPluginInstance * aInst,
                                          HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   NS_ENSURE_TRUE(aWin, NS_ERROR_NULL_POINTER);
@@ -244,7 +244,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
     sLastMsg = msg;
   }
 
-  PRBool enablePopups = PR_FALSE;
+  bool enablePopups = false;
 
   // Activate/deactivate mouse capture on the plugin widget
   // here, before we pass the Windows event to the plugin
@@ -417,7 +417,7 @@ typedef LONG
 static User32SetWindowLongA sUser32SetWindowLongAHookStub = NULL;
 static User32SetWindowLongW sUser32SetWindowLongWHookStub = NULL;
 #endif
-static inline PRBool
+static inline bool
 SetWindowLongHookCheck(HWND hWnd,
                        int nIndex,
                        LONG_PTR newLong)

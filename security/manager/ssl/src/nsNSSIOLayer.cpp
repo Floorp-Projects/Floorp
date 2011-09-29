@@ -189,7 +189,7 @@ nsSSLSocketThreadData::~nsSSLSocketThreadData()
   }
 }
 
-PRBool nsSSLSocketThreadData::ensure_buffer_size(PRInt32 amount)
+bool nsSSLSocketThreadData::ensure_buffer_size(PRInt32 amount)
 {
   if (amount > mSSLDataBufferAllocatedSize) {
     if (mSSLDataBuffer) {
@@ -259,14 +259,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSSocketInfo,
                               nsIClientAuthUserDecision)
 
 nsresult
-nsNSSSocketInfo::GetHandshakePending(PRBool *aHandshakePending)
+nsNSSSocketInfo::GetHandshakePending(bool *aHandshakePending)
 {
   *aHandshakePending = mHandshakePending;
   return NS_OK;
 }
 
 nsresult
-nsNSSSocketInfo::SetHandshakePending(PRBool aHandshakePending)
+nsNSSSocketInfo::SetHandshakePending(bool aHandshakePending)
 {
   mHandshakePending = aHandshakePending;
   return NS_OK;
@@ -300,35 +300,35 @@ nsNSSSocketInfo::GetPort(PRInt32 *aPort)
   return NS_OK;
 }
 
-void nsNSSSocketInfo::SetCanceled(PRBool aCanceled)
+void nsNSSSocketInfo::SetCanceled(bool aCanceled)
 {
   mCanceled = aCanceled;
 }
 
-PRBool nsNSSSocketInfo::GetCanceled()
+bool nsNSSSocketInfo::GetCanceled()
 {
   return mCanceled;
 }
 
-NS_IMETHODIMP nsNSSSocketInfo::GetRememberClientAuthCertificate(PRBool *aRememberClientAuthCertificate)
+NS_IMETHODIMP nsNSSSocketInfo::GetRememberClientAuthCertificate(bool *aRememberClientAuthCertificate)
 {
   NS_ENSURE_ARG_POINTER(aRememberClientAuthCertificate);
   *aRememberClientAuthCertificate = mRememberClientAuthCertificate;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNSSSocketInfo::SetRememberClientAuthCertificate(PRBool aRememberClientAuthCertificate)
+NS_IMETHODIMP nsNSSSocketInfo::SetRememberClientAuthCertificate(bool aRememberClientAuthCertificate)
 {
   mRememberClientAuthCertificate = aRememberClientAuthCertificate;
   return NS_OK;
 }
 
-void nsNSSSocketInfo::SetHasCleartextPhase(PRBool aHasCleartextPhase)
+void nsNSSSocketInfo::SetHasCleartextPhase(bool aHasCleartextPhase)
 {
   mHasCleartextPhase = aHasCleartextPhase;
 }
 
-PRBool nsNSSSocketInfo::GetHasCleartextPhase()
+bool nsNSSSocketInfo::GetHasCleartextPhase()
 {
   return mHasCleartextPhase;
 }
@@ -442,7 +442,7 @@ nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
 }
 
 nsresult
-nsNSSSocketInfo::GetExternalErrorReporting(PRBool* state)
+nsNSSSocketInfo::GetExternalErrorReporting(bool* state)
 {
   nsresult rv = EnsureDocShellDependentStuffKnown();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -451,7 +451,7 @@ nsNSSSocketInfo::GetExternalErrorReporting(PRBool* state)
 }
 
 nsresult
-nsNSSSocketInfo::SetExternalErrorReporting(PRBool aState)
+nsNSSSocketInfo::SetExternalErrorReporting(bool aState)
 {
   mExternalErrorReporting = aState;
   return NS_OK;
@@ -584,14 +584,14 @@ NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
 }
 
 nsresult
-nsNSSSocketInfo::GetForSTARTTLS(PRBool* aForSTARTTLS)
+nsNSSSocketInfo::GetForSTARTTLS(bool* aForSTARTTLS)
 {
   *aForSTARTTLS = mForSTARTTLS;
   return NS_OK;
 }
 
 nsresult
-nsNSSSocketInfo::SetForSTARTTLS(PRBool aForSTARTTLS)
+nsNSSSocketInfo::SetForSTARTTLS(bool aForSTARTTLS)
 {
   mForSTARTTLS = aForSTARTTLS;
   return NS_OK;
@@ -671,7 +671,7 @@ nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
   nsresult rv;
 
   PRUint32 version;
-  PRBool certificatePresent;
+  bool certificatePresent;
 
   // Check what we have here...
   PRUint32 UUID_0;
@@ -890,7 +890,7 @@ nsresult nsNSSSocketInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
   return NS_OK;
 }
 
-void nsNSSSocketInfo::SetHandshakeInProgress(PRBool aIsIn)
+void nsNSSSocketInfo::SetHandshakeInProgress(bool aIsIn)
 {
   mHandshakeInProgress = aIsIn;
 
@@ -900,14 +900,14 @@ void nsNSSSocketInfo::SetHandshakeInProgress(PRBool aIsIn)
   }
 }
 
-void nsNSSSocketInfo::SetAllowTLSIntoleranceTimeout(PRBool aAllow)
+void nsNSSSocketInfo::SetAllowTLSIntoleranceTimeout(bool aAllow)
 {
   mAllowTLSIntoleranceTimeout = aAllow;
 }
 
 #define HANDSHAKE_TIMEOUT_SECONDS 25
 
-PRBool nsNSSSocketInfo::HandshakeTimeout()
+bool nsNSSSocketInfo::HandshakeTimeout()
 {
   if (!mHandshakeInProgress || !mAllowTLSIntoleranceTimeout)
     return PR_FALSE;
@@ -951,7 +951,7 @@ static nsresult
 getErrorMessage(PRInt32 err, 
                 const nsString &host,
                 PRInt32 port,
-                PRBool externalErrorReporting,
+                bool externalErrorReporting,
                 nsINSSComponent *component,
                 nsString &returnedMessage)
 {
@@ -1010,7 +1010,7 @@ AppendErrorTextUntrusted(PRErrorCode errTrust,
   const char *errorID = nsnull;
   nsCOMPtr<nsIX509Cert3> cert3 = do_QueryInterface(ix509);
   if (cert3) {
-    PRBool isSelfSigned;
+    bool isSelfSigned;
     if (NS_SUCCEEDED(cert3->GetIsSelfSigned(&isSelfSigned))
         && isSelfSigned) {
       errorID = "certErrorTrust_SelfSigned";
@@ -1065,7 +1065,7 @@ AppendErrorTextUntrusted(PRErrorCode errTrust,
 // return FALSE if nothing was produced
 // names => a single name or a list of names
 // multipleNames => whether multiple names were delivered
-static PRBool
+static bool
 GetSubjectAltNames(CERTCertificate *nssCert,
                    nsINSSComponent *component,
                    nsString &allNames,
@@ -1148,7 +1148,7 @@ static void
 AppendErrorTextMismatch(const nsString &host,
                         nsIX509Cert* ix509,
                         nsINSSComponent *component,
-                        PRBool wantsHtml,
+                        bool wantsHtml,
                         nsString &returnedMessage)
 {
   const PRUnichar *params[1];
@@ -1177,7 +1177,7 @@ AppendErrorTextMismatch(const nsString &host,
 
   nsString allNames;
   PRUint32 nameCount = 0;
-  PRBool useSAN = PR_FALSE;
+  bool useSAN = false;
 
   if (nssCert)
     useSAN = GetSubjectAltNames(nssCert, component, allNames, nameCount);
@@ -1242,7 +1242,7 @@ static void
 GetDateBoundary(nsIX509Cert* ix509,
                 nsString &formattedDate,
                 nsString &nowDate,
-                PRBool &trueExpired_falseNotYetValid)
+                bool &trueExpired_falseNotYetValid)
 {
   trueExpired_falseNotYetValid = PR_TRUE;
   formattedDate.Truncate();
@@ -1289,7 +1289,7 @@ AppendErrorTextTime(nsIX509Cert* ix509,
                     nsString &returnedMessage)
 {
   nsAutoString formattedDate, nowDate;
-  PRBool trueExpired_falseNotYetValid;
+  bool trueExpired_falseNotYetValid;
   GetDateBoundary(ix509, formattedDate, nowDate, trueExpired_falseNotYetValid);
 
   const PRUnichar *params[2];
@@ -1355,8 +1355,8 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
                            const nsString &hostWithPort,
                            PRInt32 port,
                            nsIX509Cert* ix509,
-                           PRBool externalErrorReporting,
-                           PRBool wantsHtml,
+                           bool externalErrorReporting,
+                           bool wantsHtml,
                            nsINSSComponent *component,
                            nsString &returnedMessage)
 {
@@ -1489,7 +1489,7 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
                            (void**)&proxy_sel);
       if (proxy_sel) {
         nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(socketInfo);
-        PRBool suppressMessage = PR_FALSE;
+        bool suppressMessage = false;
         nsCString hostWithPortString = hostName;
         hostWithPortString.AppendLiteral(":");
         hostWithPortString.AppendInt(port);
@@ -1501,7 +1501,7 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
     }
   }
 
-  PRBool external = PR_FALSE;
+  bool external = false;
   socketInfo->GetExternalErrorReporting(&external);
   
   nsString formattedString;
@@ -1534,7 +1534,7 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
                          PRErrorCode errTrust, 
                          PRErrorCode errMismatch, 
                          PRErrorCode errExpired,
-                         PRBool wantsHtml,
+                         bool wantsHtml,
                          nsIX509Cert* ix509)
 {
   nsresult rv;
@@ -1550,7 +1550,7 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
   // The highest priority has the "external error reporting" feature,
   // if set, we'll provide the strings to be used by the nsINSSErrorsService
 
-  PRBool external = PR_FALSE;
+  bool external = false;
   socketInfo->GetExternalErrorReporting(&external);
   
   nsString formattedString;
@@ -1617,7 +1617,7 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   PRSocketOptionData sockopt;
   sockopt.option = PR_SockOpt_Nonblocking;
   PR_GetSocketOption(fd, &sockopt);
-  PRBool oldBlockVal = sockopt.value.non_blocking;
+  bool oldBlockVal = sockopt.value.non_blocking;
   sockopt.option = PR_SockOpt_Nonblocking;
   sockopt.value.non_blocking = PR_FALSE;
   PR_SetSocketOption(fd, &sockopt);
@@ -1757,7 +1757,7 @@ nsSSLIOLayerHelpers::getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key)
 
 // Call this function to report a site that is possibly TLS intolerant.
 // This function will return true, if the given socket is currently using TLS.
-PRBool
+bool
 nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, nsNSSSocketInfo *socketInfo)
 {
   PRBool currentlyUsesTLS = PR_FALSE;
@@ -1775,7 +1775,7 @@ nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, ns
     return PR_FALSE;
   }
 
-  PRBool enableSSL3 = PR_FALSE;
+  PRBool enableSSL3 = false;
   SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL3, &enableSSL3);
   if (enableSSL3) {
     // Add this site to the list of TLS intolerant sites.
@@ -1893,8 +1893,8 @@ nsDumpBuffer(unsigned char *buf, PRIntn len)
 #define DEBUG_DUMP_BUFFER(buf,len)
 #endif
 
-static PRBool
-isNonSSLErrorThatWeAllowToRetry(PRInt32 err, PRBool withInitialCleartext)
+static bool
+isNonSSLErrorThatWeAllowToRetry(PRInt32 err, bool withInitialCleartext)
 {
   switch (err)
   {
@@ -1910,8 +1910,8 @@ isNonSSLErrorThatWeAllowToRetry(PRInt32 err, PRBool withInitialCleartext)
   return PR_FALSE;
 }
 
-static PRBool
-isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
+static bool
+isTLSIntoleranceError(PRInt32 err, bool withInitialCleartext)
 {
   // This function is supposed to decide, which error codes should
   // be used to conclude server is TLS intolerant.
@@ -1950,7 +1950,7 @@ isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
 
 PRInt32
 nsSSLThread::checkHandshake(PRInt32 bytesTransfered, 
-                            PRBool wasReading,
+                            bool wasReading,
                             PRFileDesc* ssl_layer_fd, 
                             nsNSSSocketInfo *socketInfo)
 {
@@ -1985,10 +1985,10 @@ nsSSLThread::checkHandshake(PRInt32 bytesTransfered,
   // This depends on the fact that Cert UI will not be shown again,
   // should the user override the bad cert.
 
-  PRBool handleHandshakeResultNow;
+  bool handleHandshakeResultNow;
   socketInfo->GetHandshakePending(&handleHandshakeResultNow);
 
-  PRBool wantRetry = PR_FALSE;
+  bool wantRetry = false;
 
   if (0 > bytesTransfered) {
     PRInt32 err = PR_GetError();
@@ -2069,7 +2069,7 @@ nsSSLIOLayerPoll(PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
   return nsSSLThread::requestPoll(socketInfo, in_flags, out_flags);
 }
 
-PRBool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = PR_FALSE;
+bool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = false;
 PRDescIdentity nsSSLIOLayerHelpers::nsSSLIOLayerIdentity;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
 Mutex *nsSSLIOLayerHelpers::mutex = nsnull;
@@ -2077,11 +2077,11 @@ nsCStringHashSet *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
 nsCStringHashSet *nsSSLIOLayerHelpers::mTLSTolerantSites = nsnull;
 nsPSMRememberCertErrorsTable *nsSSLIOLayerHelpers::mHostsWithCertErrors = nsnull;
 nsCStringHashSet *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = nsnull;
-PRBool nsSSLIOLayerHelpers::mTreatUnsafeNegotiationAsBroken = PR_FALSE;
+bool nsSSLIOLayerHelpers::mTreatUnsafeNegotiationAsBroken = false;
 PRInt32 nsSSLIOLayerHelpers::mWarnLevelMissingRFC5746 = 1;
 PRFileDesc *nsSSLIOLayerHelpers::mSharedPollableEvent = nsnull;
 nsNSSSocketInfo *nsSSLIOLayerHelpers::mSocketOwningPollableEvent = nsnull;
-PRBool nsSSLIOLayerHelpers::mPollableEventCurrentlySet = PR_FALSE;
+bool nsSSLIOLayerHelpers::mPollableEventCurrentlySet = false;
 
 static PRIntn _PSM_InvalidInt(void)
 {
@@ -2324,7 +2324,7 @@ void nsSSLIOLayerHelpers::removeIntolerantSite(const nsCString &str)
   nsSSLIOLayerHelpers::mTLSIntolerantSites->Remove(str);
 }
 
-PRBool nsSSLIOLayerHelpers::isKnownAsIntolerantSite(const nsCString &str)
+bool nsSSLIOLayerHelpers::isKnownAsIntolerantSite(const nsCString &str)
 {
   MutexAutoLock lock(*mutex);
   return mTLSIntolerantSites->Contains(str);
@@ -2355,19 +2355,19 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
   }
 }
 
-PRBool nsSSLIOLayerHelpers::isRenegoUnrestrictedSite(const nsCString &str)
+bool nsSSLIOLayerHelpers::isRenegoUnrestrictedSite(const nsCString &str)
 {
   MutexAutoLock lock(*mutex);
   return mRenegoUnrestrictedSites->Contains(str);
 }
 
-void nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(PRBool broken)
+void nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(bool broken)
 {
   MutexAutoLock lock(*mutex);
   mTreatUnsafeNegotiationAsBroken = broken;
 }
 
-PRBool nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()
+bool nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()
 {
   MutexAutoLock lock(*mutex);
   return mTreatUnsafeNegotiationAsBroken;
@@ -2393,8 +2393,8 @@ nsSSLIOLayerNewSocket(PRInt32 family,
                       PRInt32 proxyPort,
                       PRFileDesc **fd,
                       nsISupports** info,
-                      PRBool forSTARTTLS,
-                      PRBool anonymousLoad)
+                      bool forSTARTTLS,
+                      bool anonymousLoad)
 {
 
   PRFileDesc* sock = PR_OpenTCPSocket(family);
@@ -2653,10 +2653,10 @@ static char* _str_to_lower(char* string)
  * (and the port) satisfies the restriction, or PR_FALSE if the hostname (and
  * the port) does not satisfy the restriction
  */
-static PRBool CERT_MatchesScopeOfUse(CERTCertificate* cert, char* hostname,
+static bool CERT_MatchesScopeOfUse(CERTCertificate* cert, char* hostname,
                                      char* hostIP, PRIntn port)
 {
-    PRBool rv = PR_TRUE; /* whether the cert can be presented */
+    bool rv = true; /* whether the cert can be presented */
     SECStatus srv;
     SECItem extData;
     PRArenaPool* arena = NULL;
@@ -2851,7 +2851,7 @@ loser:
 	return ret;
 }
 
-static PRBool hasExplicitKeyUsageNonRepudiation(CERTCertificate *cert)
+static bool hasExplicitKeyUsageNonRepudiation(CERTCertificate *cert)
 {
   /* There is no extension, v1 or v2 certificate */
   if (!cert->extensions)
@@ -3042,10 +3042,10 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       nssComponent->GetClientAuthRememberService(getter_AddRefs(cars));
     }
 
-    PRBool hasRemembered = PR_FALSE;
+    bool hasRemembered = false;
     nsCString rememberedDBKey;
     if (cars) {
-      PRBool found;
+      bool found;
       nsresult rv = cars->HasRememberedDecision(hostname, 
                                                 serverCert,
                                                 rememberedDBKey, &found);
@@ -3054,7 +3054,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       }
     }
 
-    PRBool canceled = PR_FALSE;
+    bool canceled = false;
 
 if (hasRemembered)
 {
@@ -3259,7 +3259,7 @@ if (!hasRemembered)
     if (NS_FAILED(rv)) goto loser;
 
     // even if the user has canceled, we want to remember that, to avoid repeating prompts
-    PRBool wantRemember = PR_FALSE;
+    bool wantRemember = false;
     info->GetRememberClientAuthCertificate(&wantRemember);
 
     int i;
@@ -3538,7 +3538,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   nsrv = infoObject->GetHostName(getter_Copies(hostName));
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
-  PRBool strictTransportSecurityEnabled;
+  bool strictTransportSecurityEnabled;
   nsrv = proxied_stss->IsStsHost(hostName, &strictTransportSecurityEnabled);
   NS_ENSURE_SUCCESS(nsrv, SECFailure);
 
@@ -3551,8 +3551,8 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 
     if (overrideService)
     {
-      PRBool haveOverride;
-      PRBool isTemporaryOverride; // we don't care
+      bool haveOverride;
+      bool isTemporaryOverride; // we don't care
 
       nsrv = overrideService->HasMatchingOverride(hostString, port,
                                                   ix509,
@@ -3578,7 +3578,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   // First, deliver the technical details of the broken SSL status,
   // giving the caller a chance to suppress the error messages.
 
-  PRBool suppressMessage = PR_FALSE;
+  bool suppressMessage = false;
   nsresult rv;
 
   // Try to get a nsIBadCertListener2 implementation from the socket consumer.
@@ -3625,7 +3625,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     errorCodeToReport = errorCodeExpired;
 
   if (!suppressMessage) {
-    PRBool external = PR_FALSE;
+    bool external = false;
     infoObject->GetExternalErrorReporting(&external);
 
     nsHandleInvalidCertError(infoObject,
@@ -3649,7 +3649,7 @@ static PRFileDesc*
 nsSSLIOLayerImportFD(PRFileDesc *fd,
                      nsNSSSocketInfo *infoObject,
                      const char *host,
-                     PRBool anonymousLoad)
+                     bool anonymousLoad)
 {
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
@@ -3684,9 +3684,9 @@ loser:
 }
 
 static nsresult
-nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS, 
+nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS, 
                        const char *proxyHost, const char *host, PRInt32 port,
-                       PRBool anonymousLoad, nsNSSSocketInfo *infoObject)
+                       bool anonymousLoad, nsNSSSocketInfo *infoObject)
 {
   nsNSSShutDownPreventionLock locker;
   if (forSTARTTLS || proxyHost) {
@@ -3757,8 +3757,8 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
                         PRInt32 proxyPort,
                         PRFileDesc* fd,
                         nsISupports** info,
-                        PRBool forSTARTTLS,
-                        PRBool anonymousLoad)
+                        bool forSTARTTLS,
+                        bool anonymousLoad)
 {
   nsNSSShutDownPreventionLock locker;
   PRFileDesc* layer = nsnull;

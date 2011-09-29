@@ -110,15 +110,15 @@ interface nsIDOMEventTarget : nsISupports
   // non-virtual so it won't affect the vtable
   nsresult AddEventListener(const nsAString& aType,
                             nsIDOMEventListener* aListener,
-                            PRBool aUseCapture)
+                            bool aUseCapture)
   {
     return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
   }
   // non-virtual so it won't affect the vtable
   nsresult AddEventListener(const nsAString& aType,
                             nsIDOMEventListener* aListener,
-                            PRBool aUseCapture,
-                            PRBool aWantsUntrusted)
+                            bool aUseCapture,
+                            bool aWantsUntrusted)
   {
     return AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted, 2);
   }

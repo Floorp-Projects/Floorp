@@ -294,7 +294,7 @@ private:
     virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
 
 #if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing);
+    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing);
 #endif
 #if defined(MOZ_WIDGET_QT) && (MOZ_PLATFORM_MAEMO == 6)
     virtual nsresult HandleGUIEvent(NPP instance, const nsGUIEvent& anEvent,
