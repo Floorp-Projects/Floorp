@@ -2824,28 +2824,24 @@ fi
 
 AC_SUBST(_MOZ_RTTI_FLAGS_ON)
 
-dnl Check whether we can use gcc's c++0x mode. We check for some basic
-dnl features that we need.
+dnl Check whether we can use gcc's c++0x mode
 AC_LANG_CPLUSPLUS
 
 if test "$GNU_CXX"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
 
-    CXXFLAGS="$CXXFLAGS $_MOZ_RTTI_FLAGS"
-    AC_CACHE_CHECK(for c++0x support,
-        ac_cv_cxx0x_support,
-        [AC_TRY_COMPILE([#include <memory>
-                         #include <utility>
-                         void f(int&&);], [
-                           int a;
-                           f(std::move(a));
-                        ],
-                        ac_cv_cxx0x_support="yes",
-                        ac_cv_cxx0x_support="no")])
-    CXXFLAGS="$_SAVE_CXXFLAGS"
-    if test "$ac_cv_cxx0x_support" = "yes"; then
-        CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+    if test -z "$_MOZ_USE_RTTI"; then
+        CXXFLAGS="$CXXFLAGS $_MOZ_RTTI_FLAGS"
+        AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
+            ac_cv_cxx0x_headers_bug,
+            [AC_TRY_COMPILE([#include <memory>], [],
+                            ac_cv_cxx0x_headers_bug="no",
+                            ac_cv_cxx0x_headers_bug="yes")])
+        CXXFLAGS="$_SAVE_CXXFLAGS"
+        if test "$ac_cv_cxx0x_headers_bug" = "no"; then
+            CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+        fi
     fi
 fi
 
