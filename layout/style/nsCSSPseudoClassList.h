@@ -156,6 +156,8 @@ CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
 CSS_STATE_PSEUDO_CLASS(mozLoading, ":-moz-loading", NS_EVENT_STATE_LOADING)
 CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
                        NS_EVENT_STATE_TYPE_UNSUPPORTED)
+CSS_STATE_PSEUDO_CLASS(mozHandlerClickToPlay, ":-moz-handler-clicktoplay",
+                       NS_EVENT_STATE_TYPE_CLICK_TO_PLAY)
 CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled",
                        NS_EVENT_STATE_HANDLER_DISABLED)
 CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked",
