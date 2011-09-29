@@ -153,3 +153,26 @@ add_test(function test_storage_request() {
     );
   });
 });
+
+add_test(function test_x_weave_records() {
+  let s = new SyncServer();
+  s.registerUser("john", "password");
+
+  s.createContents("john", {
+    crypto: {foos: {foo: "bar"},
+             bars: {foo: "baz"}}
+  });
+  s.start(8080, function () {
+    let wbo = localRequest("/1.1/john/storage/crypto/foos");
+    wbo.get(function (err) {
+      // WBO fetches don't have one.
+      do_check_false("x-weave-records" in this.response.headers);
+      let col = localRequest("/1.1/john/storage/crypto");
+      col.get(function (err) {
+        // Collection fetches do.
+        do_check_eq(this.response.headers["x-weave-records"], "2");
+        s.stop(run_next_test);
+      });
+    });
+  });
+});
