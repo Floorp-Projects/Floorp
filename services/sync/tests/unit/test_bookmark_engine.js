@@ -119,14 +119,12 @@ add_test(function test_processIncoming_error_orderChildren() {
     // the children.
     let folder1_payload = store.createRecord(folder1_guid).cleartext;
     folder1_payload.children.reverse();
-    collection.wbos[folder1_guid] = new ServerWBO(
-      folder1_guid, encryptPayload(folder1_payload));
+    collection.insert(folder1_guid, encryptPayload(folder1_payload));
 
     // Create a bogus record that when synced down will provoke a
     // network error which in turn provokes an exception in _processIncoming.
     const BOGUS_GUID = "zzzzzzzzzzzz";
-    let bogus_record = collection.wbos[BOGUS_GUID]
-      = new ServerWBO(BOGUS_GUID, "I'm a bogus record!");
+    let bogus_record = collection.insert(BOGUS_GUID, "I'm a bogus record!");
     bogus_record.get = function get() {
       throw "Sync this!";
     };
@@ -230,8 +228,9 @@ add_test(function test_restorePromptsReupload() {
 
     _("Verify that there's only one bookmark on the server, and it's Thunderbird.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
-    let wbos = [id for ([id, wbo] in Iterator(collection.wbos))
-                   if (["menu", "toolbar", "mobile", folder1_guid].indexOf(id) == -1)];
+    let wbos = collection.keys(function (id) {
+      return ["menu", "toolbar", "mobile", folder1_guid].indexOf(id) == -1;
+    });
     do_check_eq(wbos.length, 1);
     do_check_eq(wbos[0], bmk2_guid);
 
@@ -273,9 +272,7 @@ add_test(function test_restorePromptsReupload() {
 
     _("Verify that there's only one bookmark on the server, and it's Firefox.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
-    wbos = [JSON.parse(JSON.parse(wbo.payload).ciphertext)
-            for ([id, wbo] in Iterator(collection.wbos))
-            if (wbo.payload)];
+    wbos = collection.payloads();
 
     _("WBOs: " + JSON.stringify(wbos));
     let bookmarks = [wbo for each (wbo in wbos) if (wbo.type == "bookmark")];
@@ -407,7 +404,7 @@ add_test(function test_bookmark_guidMap_fail() {
   let itemGUID = store.GUIDForId(itemID);
   let itemPayload = store.createRecord(itemGUID).cleartext;
   let encPayload = encryptPayload(itemPayload);
-  collection.wbos[itemGUID] = new ServerWBO(itemGUID, encPayload);
+  collection.insert(itemGUID, encPayload);
 
   engine.lastSync = 1;   // So we don't back up.
 

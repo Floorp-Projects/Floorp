@@ -113,14 +113,15 @@ add_test(function test_annotation_uploaded() {
 
   try {
     engine.sync();
-    let wbos = [id for ([id, wbo] in Iterator(collection.wbos))
-                   if (["menu", "toolbar", "mobile"].indexOf(id) == -1)];
+    let wbos = collection.keys(function (id) {
+                 return ["menu", "toolbar", "mobile"].indexOf(id) == -1;
+               });
     do_check_eq(wbos.length, 1);
 
     _("Verify that the server WBO has the annotation.");
     let serverGUID = wbos[0];
     do_check_eq(serverGUID, guid);
-    let serverWBO = collection.wbos[serverGUID];
+    let serverWBO = collection.wbo(serverGUID);
     do_check_true(!!serverWBO);
     let body = JSON.parse(JSON.parse(serverWBO.payload).ciphertext);
     do_check_eq(body.queryId, "MostVisited");
