@@ -353,8 +353,6 @@ public:
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, bool aForce) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;
   virtual NS_HIDDEN_(PopupControlState) GetPopupControlState() const;
-  virtual NS_HIDDEN_(PopupOpenedState) GetPopupOpenedState() const;
-  virtual NS_HIDDEN_(void) SetPopupOpenedState(PopupOpenedState aValue) const;
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
