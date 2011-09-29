@@ -242,9 +242,6 @@ var expectedState;
 
 function runtests()
 {
-  var blockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
-  SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
-
   registerMockPromptService();
   enableDialogLoopBlocking();
 
@@ -350,8 +347,6 @@ function runtests()
 
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
-
-  SpecialPowers.setBoolPref("dom.block_multiple_popups", blockMultiplePopups);
 
   SimpleTest.finish();
 }
