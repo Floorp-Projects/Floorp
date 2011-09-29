@@ -264,6 +264,8 @@ private:
 // Content is the full screen element, or a frame containing the
 // current full-screen element.
 #define NS_EVENT_STATE_FULL_SCREEN   NS_DEFINE_EVENT_STATE_MACRO(34)
+// Handler for click to play plugin
+#define NS_EVENT_STATE_TYPE_CLICK_TO_PLAY NS_DEFINE_EVENT_STATE_MACRO(35)
 
 /**
  * NOTE: do not go over 63 without updating nsEventStates::InternalType!
