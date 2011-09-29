@@ -645,7 +645,7 @@ CanAddURI(nsIURI* aURI,
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(navHistory, false);
 
-  PRBool canAdd;
+  bool canAdd;
   nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
   if (NS_SUCCEEDED(rv) && canAdd) {
     return true;
@@ -919,7 +919,7 @@ private:
                                   _place.spec);
     NS_ENSURE_SUCCESS(rv, false);
 
-    PRBool hasResult;
+    bool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, false);
     if (!hasResult) {
@@ -1496,7 +1496,7 @@ History::FetchPageInfo(VisitData& _place)
                                 _place.spec);
   NS_ENSURE_SUCCESS(rv, false);
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, false);
   if (!hasResult) {
@@ -1643,7 +1643,7 @@ History::VisitURI(nsIURI* aURI,
   NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
 
   // Silently return if URI is something we shouldn't add to DB.
-  PRBool canAdd;
+  bool canAdd;
   nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!canAdd) {
@@ -1651,7 +1651,7 @@ History::VisitURI(nsIURI* aURI,
   }
 
   if (aLastVisitedURI) {
-    PRBool same;
+    bool same;
     rv = aURI->Equals(aLastVisitedURI, &same);
     NS_ENSURE_SUCCESS(rv, rv);
     if (same) {
@@ -1849,7 +1849,7 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
   //
   NS_ENSURE_TRUE(navHistory, NS_ERROR_FAILURE);
 
-  PRBool canAdd;
+  bool canAdd;
   nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!canAdd) {

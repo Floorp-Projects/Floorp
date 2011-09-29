@@ -57,7 +57,7 @@ static PRUint32 greenMaski[] = { 0x0000ff00, 0x0000ff00, 0x0000ff00, 0x0000ff00 
 static PRUint32 alphaMaski[] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
 #endif
 
-PRBool
+bool
 gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
                                    const gfxImageSurface* whiteSurf)
 {

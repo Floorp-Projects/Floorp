@@ -72,14 +72,14 @@ public:
                                   nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
-  PRBool HandleButtonPress(nsPresContext* aPresContext,
+  bool HandleButtonPress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                                  nsGUIEvent *    aEvent,
                                  nsEventStatus*  aEventStatus,
-                                 PRBool aControlHeld)  { return NS_OK; }
+                                 bool aControlHeld)  { return NS_OK; }
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
@@ -91,7 +91,7 @@ public:
 
 protected:
   virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
-  void DoButtonAction(PRBool aSmoothScroll);
+  void DoButtonAction(bool aSmoothScroll);
 
   void StartRepeat() {
     nsRepeatService::GetInstance()->Start(Notify, this);

@@ -61,7 +61,7 @@ public:
                                      nsILoadGroup*       aLoadGroup,
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
-                                     PRBool              aReset = PR_TRUE,
+                                     bool                aReset = true,
                                      nsIContentSink*     aSink = nsnull);
 
 protected:

@@ -84,7 +84,7 @@ public:
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
+        bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   virtual void MarkIntrinsicWidthsDirty();
@@ -112,10 +112,10 @@ protected:
 
   // helper to set the style of <mi> which has to be italic or normal
   // depending on its textual content
-  PRBool SetTextStyle();
+  bool SetTextStyle();
 
   // helper to set the quotes of <ms>
-  void SetQuotes(PRBool aNotify);
+  void SetQuotes(bool aNotify);
 };
 
 #endif /* nsMathMLTokentFrame_h___ */

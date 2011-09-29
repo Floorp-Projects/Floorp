@@ -67,7 +67,7 @@ protected:
   }
 
   nsresult CheckToken(const nsAString& aStr);
-  PRBool ContainsInternal(const nsAttrValue* aAttr, const nsAString& aToken);
+  bool ContainsInternal(const nsAttrValue* aAttr, const nsAString& aToken);
   void AddInternal(const nsAttrValue* aAttr, const nsAString& aToken);
   void RemoveInternal(const nsAttrValue* aAttr, const nsAString& aToken);
 

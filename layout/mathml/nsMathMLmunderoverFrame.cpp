@@ -262,7 +262,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     }
   }
 
-  PRBool subsupDisplay =
+  bool subsupDisplay =
     NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
     !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
 
@@ -336,7 +336,7 @@ i.e.,:
 
 /* virtual */ nsresult
 nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
-                               PRBool               aPlaceOrigin,
+                               bool                 aPlaceOrigin,
                                nsHTMLReflowMetrics& aDesiredSize)
 {
   nsIAtom* tag = mContent->Tag();

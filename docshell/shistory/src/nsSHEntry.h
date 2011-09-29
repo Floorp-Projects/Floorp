@@ -91,7 +91,7 @@ private:
   PRInt32                  mScrollPositionX;
   PRInt32                  mScrollPositionY;
   nsCOMArray<nsISHEntry>   mChildren;
-  PRPackedBool             mURIWasModified;
+  bool                     mURIWasModified;
   nsCOMPtr<nsIStructuredCloneContainer> mStateData;
 };
 

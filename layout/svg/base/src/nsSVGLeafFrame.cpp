@@ -47,7 +47,7 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }

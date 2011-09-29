@@ -167,7 +167,7 @@ preload(const char *file)
 static const mach_header* sXULLibImage;
 
 static void
-ReadDependentCB(const char *aDependentLib, PRBool do_preload)
+ReadDependentCB(const char *aDependentLib, bool do_preload)
 {
     if (do_preload)
         preload(aDependentLib);

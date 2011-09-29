@@ -96,28 +96,28 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLMediaElement,
                                            nsGenericHTMLElement)
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
+                   const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+                           bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
-                             PRBool aNotify);
+                             bool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
 
   /**
    * Call this to reevaluate whether we should start/stop due to our owner
@@ -134,7 +134,7 @@ public:
   // when it has read the first frame of the video
   // aResourceFullyLoaded should be true if the resource has been
   // fully loaded and the caller will call ResourceLoaded next.
-  void FirstFrameLoaded(PRBool aResourceFullyLoaded);
+  void FirstFrameLoaded(bool aResourceFullyLoaded);
 
   // Called by the video decoder object, on the main thread,
   // when the resource has completed downloading.
@@ -218,7 +218,7 @@ public:
   void ChangeReadyState(nsMediaReadyState aState);
 
   // Return true if we can activate autoplay assuming enough data has arrived.
-  PRBool CanActivateAutoplay();
+  bool CanActivateAutoplay();
 
   // Notify that enough data has arrived to start autoplaying.
   // If the element is 'autoplay' and is ready to play back (not paused,
@@ -227,15 +227,15 @@ public:
 
   // Gets the pref media.enforce_same_site_origin, which determines
   // if we should check Access Controls, or allow cross domain loads.
-  PRBool ShouldCheckAllowOrigin();
+  bool ShouldCheckAllowOrigin();
 
   // Is the media element potentially playing as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#potentially-playing
-  PRBool IsPotentiallyPlaying() const;
+  bool IsPotentiallyPlaying() const;
 
   // Has playback ended as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#ended
-  PRBool IsPlaybackEnded() const;
+  bool IsPlaybackEnded() const;
 
   // principal of the currently playing stream
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
@@ -260,7 +260,7 @@ public:
   // as an <object> or as a toplevel page. If, in practice, our support
   // for the type is more limited than appears in the wild, we should return
   // false here even if CanHandleMediaType would return true.
-  static PRBool ShouldHandleMediaType(const char* aMIMEType);
+  static bool ShouldHandleMediaType(const char* aMIMEType);
 
 #ifdef MOZ_OGG
   static bool IsOggEnabled();
@@ -305,9 +305,9 @@ public:
    * Called in order to check whether some node (this window, its document,
    * or content in that document) has a MozAudioAvailable event listener.
    */
-  PRBool MayHaveAudioAvailableEventListener();
+  bool MayHaveAudioAvailableEventListener();
 
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
   /**
    * Returns the current load ID. Asynchronous events store the ID that was
@@ -326,7 +326,7 @@ public:
    * Returns PR_TRUE if the media has played or completed a seek.
    * Used by video frame to determine whether to paint the poster.
    */
-  PRBool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
+  bool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
@@ -348,7 +348,7 @@ public:
    * last 250ms, as required by the spec when the current time is periodically
    * increasing during playback.
    */
-  void FireTimeUpdate(PRBool aPeriodic);
+  void FireTimeUpdate(bool aPeriodic);
 
 protected:
   class MediaLoadListener;
@@ -358,7 +358,7 @@ protected:
    * we'll force a reflow so that the video frame gets reflowed to reflect
    * the poster hiding or showing immediately.
    */
-  void SetPlayedOrSeeked(PRBool aValue);
+  void SetPlayedOrSeeked(bool aValue);
 
   /**
    * Create a decoder for the given aMIMEType. Returns null if we
@@ -443,7 +443,7 @@ protected:
    * Changes mDelayingLoadEvent, and will call BlockOnLoad()/UnblockOnLoad()
    * on the owning document, so it can delay the load event firing.
    */
-  void ChangeDelayLoadStatus(PRBool aDelay);
+  void ChangeDelayLoadStatus(bool aDelay);
 
   /**
    * If we suspended downloading after the first frame, unsuspend now.
@@ -641,15 +641,15 @@ protected:
 
   // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.
-  PRBool mAllowAudioData;
+  bool mAllowAudioData;
 
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
-  PRPackedBool mBegun;
+  bool mBegun;
 
   // True when the decoder has loaded enough data to display the
   // first frame of the content.
-  PRPackedBool mLoadedFirstFrame;
+  bool mLoadedFirstFrame;
 
   // Indicates whether current playback is a result of user action
   // (ie. calling of the Play method), or automatic playback due to
@@ -660,77 +660,77 @@ protected:
   // is a mirror of the HTML attribute. These are different from this
   // 'mAutoplaying' flag, which indicates whether the current playback
   // is a result of the autoplay attribute.
-  PRPackedBool mAutoplaying;
+  bool mAutoplaying;
 
   // Indicates whether |autoplay| will actually autoplay based on the pref
   // media.autoplay.enabled
-  PRPackedBool mAutoplayEnabled;
+  bool mAutoplayEnabled;
 
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
-  PRPackedBool mPaused;
+  bool mPaused;
 
   // True if the sound is muted
-  PRPackedBool mMuted;
+  bool mMuted;
 
   // If TRUE then the media element was actively playing before the currently
   // in progress seeking. If FALSE then the media element is either not seeking
   // or was not actively playing before the current seek. Used to decide whether
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
-  PRPackedBool mPlayingBeforeSeek;
+  bool mPlayingBeforeSeek;
 
   // PR_TRUE iff this element is paused because the document is inactive
-  PRPackedBool mPausedForInactiveDocument;
+  bool mPausedForInactiveDocument;
 
   // PR_TRUE if we've reported a "waiting" event since the last
   // readyState change to HAVE_CURRENT_DATA.
-  PRPackedBool mWaitingFired;
+  bool mWaitingFired;
 
   // PR_TRUE if we're running the "load()" method.
-  PRPackedBool mIsRunningLoadMethod;
+  bool mIsRunningLoadMethod;
 
   // PR_TRUE if we're loading the resource from the child source elements.
-  PRPackedBool mIsLoadingFromSourceChildren;
+  bool mIsLoadingFromSourceChildren;
 
   // PR_TRUE if we're delaying the "load" event. They are delayed until either
   // an error occurs, or the first frame is loaded.
-  PRPackedBool mDelayingLoadEvent;
+  bool mDelayingLoadEvent;
 
   // PR_TRUE when we've got a task queued to call SelectResource(),
   // or while we're running SelectResource().
-  PRPackedBool mIsRunningSelectResource;
+  bool mIsRunningSelectResource;
 
   // PR_TRUE if we suspended the decoder because we were paused,
   // preloading metadata is enabled, autoplay was not enabled, and we loaded
   // the first frame.
-  PRPackedBool mSuspendedAfterFirstFrame;
+  bool mSuspendedAfterFirstFrame;
 
   // PR_TRUE if we are allowed to suspend the decoder because we were paused,
   // preloading metdata was enabled, autoplay was not enabled, and we loaded
   // the first frame.
-  PRPackedBool mAllowSuspendAfterFirstFrame;
+  bool mAllowSuspendAfterFirstFrame;
 
   // PR_TRUE if we've played or completed a seek. We use this to determine
   // when the poster frame should be shown.
-  PRPackedBool mHasPlayedOrSeeked;
+  bool mHasPlayedOrSeeked;
 
   // PR_TRUE if we've added a reference to ourselves to keep the element
   // alive while no-one is referencing it but the element may still fire
   // events of its own accord.
-  PRPackedBool mHasSelfReference;
+  bool mHasSelfReference;
 
   // PR_TRUE if we've received a notification that the engine is shutting
   // down.
-  PRPackedBool mShuttingDown;
+  bool mShuttingDown;
 
   // PR_TRUE if we've suspended a load in the resource selection algorithm
   // due to loading a preload:none media. When PR_TRUE, the resource we'll
   // load when the user initiates either playback or an explicit load is
   // stored in mPreloadURI.
-  PRPackedBool mLoadIsSuspended;
+  bool mLoadIsSuspended;
 
   // PR_TRUE if a same-origin check has been done for the media element and resource.
-  PRPackedBool mMediaSecurityVerified;
+  bool mMediaSecurityVerified;
 };
 
 #endif

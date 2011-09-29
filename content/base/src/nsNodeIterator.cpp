@@ -57,13 +57,13 @@
  * NodePointer implementation
  */
 nsNodeIterator::NodePointer::NodePointer(nsINode *aNode,
-                                         PRBool aBeforeNode) :
+                                         bool aBeforeNode) :
     mNode(aNode),
     mBeforeNode(aBeforeNode)
 {
 }
 
-PRBool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
+bool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
 {
     if (!mNode)
       return PR_FALSE;
@@ -82,7 +82,7 @@ PRBool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
     return MoveForward(aRoot, mNode);
 }
 
-PRBool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
+bool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
 {
     if (!mNode)
       return PR_FALSE;
@@ -135,7 +135,7 @@ void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode *aRoot,
     MoveBackward(aContainer, aPreviousSibling);
 }
 
-PRBool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
+bool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
 {
     while (1) {
         if (aNode == aRoot)
@@ -171,7 +171,7 @@ void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 nsNodeIterator::nsNodeIterator(nsINode *aRoot,
                                PRUint32 aWhatToShow,
                                nsIDOMNodeFilter *aFilter,
-                               PRBool aExpandEntityReferences) :
+                               bool aExpandEntityReferences) :
     nsTraversal(aRoot, aWhatToShow, aFilter, aExpandEntityReferences),
     mDetached(PR_FALSE),
     mPointer(mRoot, PR_TRUE)
@@ -245,7 +245,7 @@ NS_IMETHODIMP nsNodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 }
 
 /* readonly attribute boolean expandEntityReferences; */
-NS_IMETHODIMP nsNodeIterator::GetExpandEntityReferences(PRBool *aExpandEntityReferences)
+NS_IMETHODIMP nsNodeIterator::GetExpandEntityReferences(bool *aExpandEntityReferences)
 {
     *aExpandEntityReferences = mExpandEntityReferences;
     return NS_OK;
@@ -325,7 +325,7 @@ NS_IMETHODIMP nsNodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
 }
 
 /* readonly attribute boolean pointerBeforeReferenceNode; */
-NS_IMETHODIMP nsNodeIterator::GetPointerBeforeReferenceNode(PRBool *aBeforeNode)
+NS_IMETHODIMP nsNodeIterator::GetPointerBeforeReferenceNode(bool *aBeforeNode)
 {
     *aBeforeNode = mPointer.mBeforeNode;
     return NS_OK;

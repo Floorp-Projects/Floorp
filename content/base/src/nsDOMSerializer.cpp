@@ -84,7 +84,7 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
   if (NS_FAILED(rv))
     return rv;
 
-  PRBool entireDocument = PR_TRUE;
+  bool entireDocument = true;
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aRoot));
   if (!domDoc) {
     entireDocument = PR_FALSE;

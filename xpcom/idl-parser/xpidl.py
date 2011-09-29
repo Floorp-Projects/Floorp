@@ -151,7 +151,7 @@ class Builtin(object):
                             calltype != 'in' and '*' or '')
 
 builtinNames = [
-    Builtin('boolean', 'PRBool'),
+    Builtin('boolean', 'bool'),
     Builtin('void', 'void'),
     Builtin('octet', 'PRUint8'),
     Builtin('short', 'PRInt16', True, True),

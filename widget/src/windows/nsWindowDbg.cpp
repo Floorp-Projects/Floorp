@@ -405,7 +405,7 @@ EventMsgInfo gAllEvents[] = {
 static long gEventCounter = 0;
 static long gLastEventMsg = 0;
 
-void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
+void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves)
 {
   int inx = 0;
   while (gAllEvents[inx].mId != (long)msg && gAllEvents[inx].mStr != NULL) {
@@ -433,7 +433,7 @@ void DDError(const char *msg, HRESULT hr)
 #endif
 
 #ifdef DEBUG_VK
-PRBool is_vk_down(int vk)
+bool is_vk_down(int vk)
 {
    SHORT st = GetKeyState(vk);
 #ifdef DEBUG

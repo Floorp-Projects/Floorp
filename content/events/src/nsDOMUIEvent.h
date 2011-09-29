@@ -56,8 +56,8 @@ public:
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD DuplicatePrivateData();
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
+  virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
+  virtual bool Deserialize(const IPC::Message* aMsg, void** aIter);
   
   // Forward to nsDOMEvent
   NS_FORWARD_TO_NSDOMEVENT

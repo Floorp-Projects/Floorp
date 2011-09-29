@@ -97,7 +97,7 @@ void nsIntervalSet::IncludeInterval(coord_type aBegin, coord_type aEnd)
     }
 }
 
-PRBool nsIntervalSet::Intersects(coord_type aBegin, coord_type aEnd) const
+bool nsIntervalSet::Intersects(coord_type aBegin, coord_type aEnd) const
 {
     Interval *current = mList;
     while (current && current->mBegin <= aEnd) {
@@ -108,7 +108,7 @@ PRBool nsIntervalSet::Intersects(coord_type aBegin, coord_type aEnd) const
     return PR_FALSE;
 }
 
-PRBool nsIntervalSet::Contains(coord_type aBegin, coord_type aEnd) const
+bool nsIntervalSet::Contains(coord_type aBegin, coord_type aEnd) const
 {
     Interval *current = mList;
     while (current && current->mBegin <= aBegin) {

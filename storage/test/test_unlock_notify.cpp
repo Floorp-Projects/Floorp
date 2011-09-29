@@ -86,7 +86,7 @@ public:
     nsCOMPtr<mozIStorageStatement> stmt;
     do_check_success(db->CreateStatement(sql, getter_AddRefs(stmt)));
 
-    PRBool hasResult;
+    bool hasResult;
     do_check_success(stmt->ExecuteStep(&hasResult));
 
     Notify(WRITE_LOCK);
@@ -137,7 +137,7 @@ public:
     nsCOMPtr<mozIStorageStatement> stmt;
     do_check_success(mConnection->CreateStatement(sql, getter_AddRefs(stmt)));
 
-    PRBool hasResult;
+    bool hasResult;
     nsresult rv = stmt->ExecuteStep(&hasResult);
     do_check_eq(rv, NS_ERROR_FILE_IS_LOCKED);
 
@@ -205,7 +205,7 @@ test_step_locked_does_not_block_main_thread()
   // Wait for the locker to notify us that it has locked the database properly.
   locker->WaitFor(WRITE_LOCK);
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   do_check_eq(rv, NS_ERROR_FILE_IS_LOCKED);
 
@@ -232,7 +232,7 @@ test_drop_index_does_not_loop()
   tester->RunInBackground();
 
   // Hold a read lock on the database, and then let the tester try to execute.
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   do_check_success(rv);
   do_check_true(hasResult);
@@ -261,7 +261,7 @@ test_drop_table_does_not_loop()
   tester->RunInBackground();
 
   // Hold a read lock on the database, and then let the tester try to execute.
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   do_check_success(rv);
   do_check_true(hasResult);

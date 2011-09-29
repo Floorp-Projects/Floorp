@@ -54,7 +54,7 @@ class nsPIListBoxObject : public nsIListBoxObject {
    * Get the list box body.  This will search for it as needed.
    * If aFlush is PR_FALSE we don't Flush_Frames though.
    */
-  virtual nsListBoxBodyFrame* GetListBoxBody(PRBool aFlush) = 0;
+  virtual nsListBoxBodyFrame* GetListBoxBody(bool aFlush) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIListBoxObject, NS_PILISTBOXOBJECT_IID)

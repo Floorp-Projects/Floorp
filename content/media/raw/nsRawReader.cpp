@@ -141,7 +141,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
   return NS_OK;
 }
 
- PRBool nsRawReader::DecodeAudioData()
+ bool nsRawReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine thread or decode thread.");
@@ -150,7 +150,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
 
 // Helper method that either reads until it gets aLength bytes 
 // or returns PR_FALSE
-PRBool nsRawReader::ReadFromStream(nsMediaStream *aStream, PRUint8* aBuf,
+bool nsRawReader::ReadFromStream(nsMediaStream *aStream, PRUint8* aBuf,
                                    PRUint32 aLength)
 {
   while (aLength > 0) {
@@ -171,7 +171,7 @@ PRBool nsRawReader::ReadFromStream(nsMediaStream *aStream, PRUint8* aBuf,
   return PR_TRUE;
 }
 
-PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
+bool nsRawReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                      PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(),
@@ -279,7 +279,7 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
   mVideoQueue.Erase();
 
   while(mVideoQueue.GetSize() == 0) {
-    PRBool keyframeSkip = PR_FALSE;
+    bool keyframeSkip = false;
     if (!DecodeVideoFrame(keyframeSkip, 0)) {
       mCurrentFrame = frame;
       return NS_ERROR_FAILURE;

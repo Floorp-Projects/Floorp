@@ -68,7 +68,7 @@ static nsZipArchive *sReader[2];
 /**
  * Has Omnijar::Init() been called?
  */
-static PRPackedBool sInitialized;
+static bool sInitialized;
 
 public:
 enum Type {
@@ -80,7 +80,7 @@ enum Type {
  * Returns whether SetBase has been called at least once with
  * a valid nsIFile
  */
-static inline PRPackedBool
+static inline bool
 IsInitialized()
 {
     return sInitialized;
@@ -117,7 +117,7 @@ GetPath(Type aType)
  * Returns whether GRE or APP use an omni.jar. Returns PR_False for
  * APP when using an omni.jar in the unified case.
  */
-static inline PRBool
+static inline bool
 HasOmnijar(Type aType)
 {
     NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");

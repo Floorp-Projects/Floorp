@@ -57,63 +57,63 @@ nsDOMValidityState::nsDOMValidityState(nsIConstraintValidation* aConstraintValid
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetValueMissing(PRBool* aValueMissing)
+nsDOMValidityState::GetValueMissing(bool* aValueMissing)
 {
   *aValueMissing = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetTypeMismatch(PRBool* aTypeMismatch)
+nsDOMValidityState::GetTypeMismatch(bool* aTypeMismatch)
 {
   *aTypeMismatch = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetPatternMismatch(PRBool* aPatternMismatch)
+nsDOMValidityState::GetPatternMismatch(bool* aPatternMismatch)
 {
   *aPatternMismatch = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetTooLong(PRBool* aTooLong)
+nsDOMValidityState::GetTooLong(bool* aTooLong)
 {
   *aTooLong = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TOO_LONG);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetRangeUnderflow(PRBool* aRangeUnderflow)
+nsDOMValidityState::GetRangeUnderflow(bool* aRangeUnderflow)
 {
   *aRangeUnderflow = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetRangeOverflow(PRBool* aRangeOverflow)
+nsDOMValidityState::GetRangeOverflow(bool* aRangeOverflow)
 {
   *aRangeOverflow = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetStepMismatch(PRBool* aStepMismatch)
+nsDOMValidityState::GetStepMismatch(bool* aStepMismatch)
 {
   *aStepMismatch = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetCustomError(PRBool* aCustomError)
+nsDOMValidityState::GetCustomError(bool* aCustomError)
 {
   *aCustomError = GetValidityState(nsIConstraintValidation::VALIDITY_STATE_CUSTOM_ERROR);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMValidityState::GetValid(PRBool* aValid)
+nsDOMValidityState::GetValid(bool* aValid)
 {
   *aValid = !mConstraintValidation || mConstraintValidation->IsValid();
   return NS_OK;

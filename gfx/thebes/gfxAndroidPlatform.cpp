@@ -104,7 +104,7 @@ nsresult
 gfxAndroidPlatform::ResolveFontName(const nsAString& aFontName,
                                     FontResolverCallback aCallback,
                                     void *aClosure,
-                                    PRBool& aAborted)
+                                    bool& aAborted)
 {
     nsAutoString resolvedName;
     if (!gfxPlatformFontList::PlatformFontList()->
@@ -134,7 +134,7 @@ gfxAndroidPlatform::CreatePlatformFontList()
     return nsnull;
 }
 
-PRBool
+bool
 gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 {
     // check for strange format flags

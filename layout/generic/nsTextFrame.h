@@ -136,7 +136,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
   
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
@@ -162,20 +162,20 @@ public:
    * false otherwise
    * @param aType the type of selection added or removed
    */
-  virtual void SetSelected(PRBool        aSelected,
+  virtual void SetSelected(bool          aSelected,
                            SelectionType aType);
   void SetSelectedRange(PRUint32 aStart,
                         PRUint32 aEnd,
-                        PRBool aSelected,
+                        bool aSelected,
                         SelectionType aType);
 
-  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                                     PRBool aRespectClusters = PR_TRUE);
-  virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
+  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
+  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+                                     bool aRespectClusters = true);
+  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 PRInt32* aOffset, PeekWordState* aState);
 
-  NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
+  NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, bool aRecurse, bool *aFinished, bool *_retval);
   
   // Flags for aSetLengthFlags
   enum { ALLOW_FRAME_CREATION_AND_DESTRUCTION = 0x01 };
@@ -192,33 +192,33 @@ public:
                                 nsPoint*                outPoint);
   
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
-                                            PRBool                  inHint,
+                                            bool                    inHint,
                                             PRInt32*                outFrameContentOffset,
                                             nsIFrame*               *outChildFrame);
   
-  virtual PRBool IsVisibleInSelection(nsISelection* aSelection);
+  virtual bool IsVisibleInSelection(nsISelection* aSelection);
   
-  virtual PRBool IsEmpty();
-  virtual PRBool IsSelfEmpty() { return IsEmpty(); }
+  virtual bool IsEmpty();
+  virtual bool IsSelfEmpty() { return IsEmpty(); }
   virtual nscoord GetBaseline() const;
   
   /**
    * @return PR_TRUE if this text frame ends with a newline character.  It
    * should return PR_FALSE if this is not a text frame.
    */
-  virtual PRBool HasTerminalNewline() const;
+  virtual bool HasTerminalNewline() const;
 
   /**
    * Returns true if this text frame is logically adjacent to the end of the
    * line.
    */
-  PRBool IsAtEndOfLine() const;
+  bool IsAtEndOfLine() const;
   
   /**
    * Call this only after reflow the frame. Returns true if non-collapsed
    * characters are present.
    */
-  PRBool HasNoncollapsedCharacters() const {
+  bool HasNoncollapsedCharacters() const {
     return (GetStateBits() & TEXT_HAS_NONCOLLAPSED_CHARACTERS) != 0;
   }
   
@@ -236,24 +236,24 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap);
+                             bool aShrinkWrap);
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  virtual PRBool CanContinueTextRun() const;
+  virtual bool CanContinueTextRun() const;
   // Method that is called for a text frame that is logically
   // adjacent to the end of the line (i.e. followed only by empty text frames,
   // placeholders or inlines containing such).
   struct TrimOutput {
     // true if we trimmed some space or changed metrics in some other way.
     // In this case, we should call RecomputeOverflow on this frame.
-    PRPackedBool mChanged;
+    bool mChanged;
     // true if the last character is not justifiable so should be subtracted
     // from the count of justifiable characters in the frame, since the last
     // character in a line is not justifiable.
-    PRPackedBool mLastCharIsJustifiable;
+    bool mLastCharIsJustifiable;
     // an amount to *subtract* from the frame's width (zero if !mChanged)
     nscoord      mDeltaWidth;
   };
@@ -400,11 +400,11 @@ public:
     PRInt32 GetEnd() { return mStart + mLength; }
   };
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
-                                   PRBool aTrimAfter);
+                                   bool aTrimAfter);
 
   // Similar to Reflow(), but for use from nsLineLayout
   void ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
-                  nsRenderingContext* aRenderingContext, PRBool aShouldBlink,
+                  nsRenderingContext* aRenderingContext, bool aShouldBlink,
                   nsHTMLReflowMetrics& aMetrics, nsReflowStatus& aStatus);
 
 protected:
@@ -489,16 +489,16 @@ protected:
 
     TextDecorations() { }
 
-    PRBool HasDecorationLines() const {
+    bool HasDecorationLines() const {
       return HasUnderline() || HasOverline() || HasStrikeout();
     }
-    PRBool HasUnderline() const {
+    bool HasUnderline() const {
       return !mUnderlines.IsEmpty();
     }
-    PRBool HasOverline() const {
+    bool HasOverline() const {
       return !mOverlines.IsEmpty();
     }
-    PRBool HasStrikeout() const {
+    bool HasStrikeout() const {
       return !mStrikes.IsEmpty();
     }
   };
@@ -511,7 +511,7 @@ protected:
                    PRUint32 aLength,
                    PropertyProvider& aProvider,
                    gfxFloat& aAdvanceWidth,
-                   PRBool aDrawSoftHyphen);
+                   bool aDrawSoftHyphen);
 
   void DrawTextRunAndDecorations(gfxContext* const aCtx,
                                  const gfxRect& aDirtyRect,
@@ -523,7 +523,7 @@ protected:
                                  const nsTextPaintStyle& aTextStyle,
                              const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                                  gfxFloat& aAdvanceWidth,
-                                 PRBool aDrawSoftHyphen,
+                                 bool aDrawSoftHyphen,
                                  const TextDecorations& aDecorations,
                                  const nscolor* const aDecorationOverrideColor);
 
@@ -537,22 +537,22 @@ protected:
                 const nsTextPaintStyle& aTextStyle,
                 const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                 gfxFloat& aAdvanceWidth,
-                PRBool aDrawSoftHyphen,
+                bool aDrawSoftHyphen,
                 const nscolor* const aDecorationOverrideColor = nsnull);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
   // If the result rect is larger than the given rect, this returns PR_TRUE.
-  PRBool CombineSelectionUnderlineRect(nsPresContext* aPresContext,
+  bool CombineSelectionUnderlineRect(nsPresContext* aPresContext,
                                        nsRect& aRect);
 
-  PRBool IsFloatingFirstLetterChild();
+  bool IsFloatingFirstLetterChild();
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
-                   PRBool aForInsertionPoint);
+                   bool aForInsertionPoint);
 
   void ClearFrameOffsetCache();
 
-  virtual PRBool HasAnyNoncollapsedCharacters();
+  virtual bool HasAnyNoncollapsedCharacters();
 
   void ClearMetrics(nsHTMLReflowMetrics& aMetrics);
 };

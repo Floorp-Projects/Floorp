@@ -90,14 +90,14 @@ static const char gIDFormat2[] =
  * an nsID. It can also handle the old format without the { and }.
  */
 
-PRBool nsID::Parse(const char *aIDStr)
+bool nsID::Parse(const char *aIDStr)
 {
   /* Optimized for speed */
   if(!aIDStr) {
     return PR_FALSE;
   }
 
-  PRBool expectFormat1 = (aIDStr[0] == '{');
+  bool expectFormat1 = (aIDStr[0] == '{');
   if(expectFormat1) aIDStr++;
 
   PARSE_CHARS_TO_NUM(aIDStr, m0, 8);

@@ -198,8 +198,7 @@ public:
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
-  NS_IMETHOD  GetContentForEvent(nsPresContext* aPresContext,
-                                 nsEvent* aEvent,
+  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent);
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor);
@@ -208,7 +207,7 @@ public:
                                  nsPoint*               outPoint);
 
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
-                                 PRBool                 inHint,
+                                 bool                   inHint,
                                  PRInt32*               outFrameContentOffset,
                                  nsIFrame*              *outChildFrame);
 
@@ -234,17 +233,17 @@ public:
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsContainingBlock() const;
+  virtual bool IsContainingBlock() const;
 
-  NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
+  NS_IMETHOD  GetSelected(bool *aSelected) const;
+  NS_IMETHOD  IsSelectable(bool* aIsSelectable, PRUint8* aSelectStyle) const;
 
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon);
 
-  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                                     PRBool aRespectClusters = PR_TRUE);
-  virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
+  virtual bool PeekOffsetNoAmount(bool aForward, PRInt32* aOffset);
+  virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
+                                     bool aRespectClusters = true);
+  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 PRInt32* aOffset, PeekWordState *aState);
   /**
    * Check whether we should break at a boundary between punctuation and
@@ -254,12 +253,12 @@ public:
    * @param aPunctAfter true if the next character is punctuation
    * @param aWhitespaceAfter true if the next character is whitespace
    */
-  PRBool BreakWordBetweenPunctuation(const PeekWordState* aState,
-                                     PRBool aForward,
-                                     PRBool aPunctAfter, PRBool aWhitespaceAfter,
-                                     PRBool aIsKeyboardSelect);
+  bool BreakWordBetweenPunctuation(const PeekWordState* aState,
+                                     bool aForward,
+                                     bool aPunctAfter, bool aWhitespaceAfter,
+                                     bool aIsKeyboardSelect);
 
-  NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
+  NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, bool aRecurse, bool *aFinished, bool *_retval);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   virtual void ChildIsDirty(nsIFrame* aChild);
@@ -281,8 +280,8 @@ public:
    */
   nsIFrame* DoGetParentStyleContextFrame();
 
-  virtual PRBool IsEmpty();
-  virtual PRBool IsSelfEmpty();
+  virtual bool IsEmpty();
+  virtual bool IsSelfEmpty();
 
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
@@ -299,7 +298,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap);
+                             bool aShrinkWrap);
 
   // Compute tight bounds assuming this frame honours its border, background
   // and outline, its children's tight bounds, and nothing else.
@@ -323,7 +322,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, PRBool aShrinkWrap);
+                                 nsSize aPadding, bool aShrinkWrap);
 
   /**
    * Utility function for ComputeAutoSize implementations.  Return
@@ -340,7 +339,7 @@ public:
   NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
-  virtual PRBool CanContinueTextRun() const;
+  virtual bool CanContinueTextRun() const;
 
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)
@@ -353,7 +352,7 @@ public:
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus,
-                         PRBool          aControlHeld);
+                         bool            aControlHeld);
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
@@ -367,8 +366,8 @@ public:
                                     nsSelectionAmount aAmountForward,
                                     PRInt32 aStartPos,
                                     nsPresContext* aPresContext,
-                                    PRBool aJumpLines,
-                                    PRBool aMultipleSelection);
+                                    bool aJumpLines,
+                                    bool aMultipleSelection);
 
 
   // Helper for GetContentAndOffsetsFromPoint; calculation of content offsets
@@ -384,7 +383,7 @@ public:
 
   // We compute and store the HTML content's overflow area. So don't
   // try to compute it in the box code.
-  virtual PRBool ComputesOwnOverflowArea() { return PR_TRUE; }
+  virtual bool ComputesOwnOverflowArea() { return true; }
 
   //--------------------------------------------------
   // Additional methods
@@ -404,7 +403,7 @@ public:
   // the reflow status, and returns PR_TRUE. Otherwise, the frame is
   // unmarked "unflowable" and the metrics and reflow status are not
   // touched and PR_FALSE is returned.
-  PRBool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
+  bool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus);
 
@@ -423,8 +422,8 @@ public:
    * done when the NS_FRAME_TRACE_CALLS bit is set in the log module's
    * level field.
    */
-  void Trace(const char* aMethod, PRBool aEnter);
-  void Trace(const char* aMethod, PRBool aEnter, nsReflowStatus aStatus);
+  void Trace(const char* aMethod, bool aEnter);
+  void Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus);
   void TraceMsg(const char* fmt, ...);
 
   // Helper function that verifies that each frame in the list has the
@@ -506,7 +505,7 @@ public:
    */
   nsresult DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
                                           const nsDisplayListSet& aLists,
-                                          PRBool aForceBackground = PR_FALSE);
+                                          bool aForceBackground = false);
   /**
    * Adds display items for standard CSS borders, background and outline for
    * for this frame, as necessary. Checks IsVisibleForPainting and won't
@@ -518,7 +517,7 @@ public:
    */
   nsresult DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
                                           const nsDisplayListSet& aLists,
-                                          PRBool aForceBackground = PR_FALSE);
+                                          bool aForceBackground = false);
   /**
    * Add a display item for the CSS outline. Does not check visibility.
    */
@@ -557,7 +556,7 @@ protected:
   nsresult DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
       nsDisplayList* aList, PRUint16 aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
-  PRInt16 DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
+  PRInt16 DisplaySelection(nsPresContext* aPresContext, bool isOkToTurnOn = false);
   
   // Style post processing hook
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
@@ -573,11 +572,11 @@ public:
   // If aScrollLock is true, don't break outside scrollframes when looking for a
   // containing block frame.
   static PRInt32 GetLineNumber(nsIFrame *aFrame,
-                               PRBool aLockScroll,
+                               bool aLockScroll,
                                nsIFrame** aContainingBlock = nsnull);
 
   // test whether aFrame should apply paginated overflow clipping.
-  static PRBool ApplyPaginatedOverflowClipping(const nsIFrame* aFrame)
+  static bool ApplyPaginatedOverflowClipping(const nsIFrame* aFrame)
   {
     // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
     // set, then we want to clip our overflow.
@@ -611,7 +610,7 @@ protected:
   virtual void GetBoxName(nsAutoString& aName);
 #endif
 
-  void InitBoxMetrics(PRBool aClear);
+  void InitBoxMetrics(bool aClear);
   nsBoxLayoutMetrics* BoxMetrics() const;
 
   // Fire DOM event. If no aContent argument use frame's mContent.
@@ -626,7 +625,7 @@ private:
                      nscoord aY,
                      nscoord aWidth,
                      nscoord aHeight,
-                     PRBool aMoveFrame = PR_TRUE);
+                     bool aMoveFrame = true);
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
@@ -673,12 +672,12 @@ public:
    * environment variable (any non-zero debug level will work). Or,
    * call SetVerifyStyleTreeEnable with PR_TRUE.
    */
-  static PRBool GetVerifyStyleTreeEnable();
+  static bool GetVerifyStyleTreeEnable();
 
   /**
    * Set the verify-style-tree enable flag.
    */
-  static void SetVerifyStyleTreeEnable(PRBool aEnabled);
+  static void SetVerifyStyleTreeEnable(bool aEnabled);
 
   /**
    * The frame class and related classes share an nspr log module
@@ -690,12 +689,12 @@ public:
   static PRLogModuleInfo* GetLogModuleInfo();
 
   // Show frame borders when rendering
-  static void ShowFrameBorders(PRBool aEnable);
-  static PRBool GetShowFrameBorders();
+  static void ShowFrameBorders(bool aEnable);
+  static bool GetShowFrameBorders();
 
   // Show frame border of event target
-  static void ShowEventTargetFrameBorder(PRBool aEnable);
-  static PRBool GetShowEventTargetFrameBorder();
+  static void ShowEventTargetFrameBorder(bool aEnable);
+  static bool GetShowEventTargetFrameBorder();
 
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
                                const nsDisplayList& aList);

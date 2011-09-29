@@ -67,7 +67,7 @@ public:
    *        as CSS, and doesn't indicate anything about the status of any child
    *        sheets of aSheet.
    */
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) = 0;
 };
 

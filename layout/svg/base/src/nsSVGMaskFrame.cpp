@@ -94,7 +94,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
           clipExtents.Width(), clipExtents.Height());
 #endif
 
-  PRBool resultOverflows;
+  bool resultOverflows;
   gfxIntSize surfaceSize =
     nsSVGUtils::ConvertToSurfaceSize(gfxSize(clipExtents.Width(),
                                              clipExtents.Height()),

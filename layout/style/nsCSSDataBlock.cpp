@@ -82,17 +82,17 @@ inline const nsCSSValue* ValueAtCursor(const char *aCursor) {
  * true if, before the copy, the value at aSource compared unequal
  * to the value at aDest; false otherwise.
  */
-static PRBool
+static bool
 MoveValue(nsCSSValue* aSource, nsCSSValue* aDest)
 {
-    PRBool changed = (*aSource != *aDest);
+    bool changed = (*aSource != *aDest);
     aDest->~nsCSSValue();
     memcpy(aDest, aSource, sizeof(nsCSSValue));
     new (aSource) nsCSSValue();
     return changed;
 }
 
-static PRBool
+static bool
 ShouldIgnoreColors(nsRuleData *aRuleData)
 {
     return aRuleData->mLevel != nsStyleSet::eAgentSheet &&
@@ -138,7 +138,7 @@ TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument,
   }
 }
 
-static inline PRBool
+static inline bool
 ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
 {
   // Don't initiate image loads for if-visited styles.  This is
@@ -231,10 +231,10 @@ nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
     return nsnull;
 }
 
-PRBool
+bool
 nsCSSCompressedDataBlock::TryReplaceValue(nsCSSProperty aProperty,
                                           nsCSSExpandedDataBlock& aFromBlock,
-                                          PRBool *aChanged)
+                                          bool *aChanged)
 {
     nsCSSValue* newValue = aFromBlock.PropertyAt(aProperty);
     NS_ABORT_IF_FALSE(newValue && newValue->GetUnit() != eCSSUnit_Null,
@@ -321,7 +321,7 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
 
 void
 nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
-                                 PRBool aImportant)
+                                 bool aImportant)
 {
     /*
      * Save needless copying and allocation by copying the memory
@@ -427,7 +427,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
             NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(iProp), "out of range");
-            PRBool important =
+            bool important =
                 mPropertiesImportant.HasPropertyAt(iHigh, iLow);
             char *&cursor = important ? cursor_important : cursor_normal;
             nsCSSCompressedDataBlock *result =
@@ -513,12 +513,12 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
     PropertyAt(aPropID)->Reset();
 }
 
-PRBool
+bool
 nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                           nsCSSProperty aPropID,
-                                          PRBool aIsImportant,
-                                          PRBool aOverrideImportant,
-                                          PRBool aMustCallValueAppended,
+                                          bool aIsImportant,
+                                          bool aOverrideImportant,
+                                          bool aMustCallValueAppended,
                                           css::Declaration* aDeclaration)
 {
     if (!nsCSSProps::IsShorthand(aPropID)) {
@@ -527,7 +527,7 @@ nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                    aMustCallValueAppended, aDeclaration);
     }
 
-    PRBool changed = PR_FALSE;
+    bool changed = false;
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
         changed |= DoTransferFromBlock(aFromBlock, *p,
                                        aIsImportant, aOverrideImportant,
@@ -536,15 +536,15 @@ nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
     return changed;
 }
 
-PRBool
+bool
 nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                             nsCSSProperty aPropID,
-                                            PRBool aIsImportant,
-                                            PRBool aOverrideImportant,
-                                            PRBool aMustCallValueAppended,
+                                            bool aIsImportant,
+                                            bool aOverrideImportant,
+                                            bool aMustCallValueAppended,
                                             css::Declaration* aDeclaration)
 {
-  PRBool changed = PR_FALSE;
+  bool changed = false;
   NS_ABORT_IF_FALSE(aFromBlock.HasPropertyBit(aPropID), "oops");
   if (aIsImportant) {
     if (!HasImportantBit(aPropID))

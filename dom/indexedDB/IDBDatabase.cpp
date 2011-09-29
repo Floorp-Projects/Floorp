@@ -924,7 +924,7 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mOwner));
       NS_ASSERTION(target, "How can this happen?!");
 
-      PRBool dummy;
+      bool dummy;
       rv = target->DispatchEvent(duplicateEvent, &dummy);
       NS_ENSURE_SUCCESS(rv, rv);
     }

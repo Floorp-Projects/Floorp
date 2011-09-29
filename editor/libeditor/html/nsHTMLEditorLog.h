@@ -93,32 +93,32 @@ public:
                                    PRInt32 aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText, nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsPlaintextQuotation(const nsAString& aQuotedText,
-                                        PRBool aAddCites,
+                                        bool aAddCites,
                                         nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText, const nsAString& aCitation, 
-                                    PRBool aInsertHTML,
+                                    bool aInsertHTML,
                                     nsIDOMNode** aNodeInserted);
 
   NS_IMETHOD SetDocumentTitle(const nsAString& aTitle);
 
   NS_IMETHOD SetBackgroundColor(const nsAString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsAString& aAttr, const nsAString& aValue);
-  NS_IMETHOD MakeOrChangeList(const nsAString& aListType, PRBool entireList, const nsAString& aBulletType);
+  NS_IMETHOD MakeOrChangeList(const nsAString& aListType, bool entireList, const nsAString& aBulletType);
   NS_IMETHOD Indent(const nsAString& aIndent);
   NS_IMETHOD Align(const nsAString& aAlign);
-  NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
+  NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSelection);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   
   /* Table Editing */
-  NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
-  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
-  NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD InsertTableCell(PRInt32 aNumber, bool aAfter);
+  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, bool aAfter);
+  NS_IMETHOD InsertTableRow(PRInt32 aNumber, bool aAfter);
   NS_IMETHOD DeleteTable();
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
   NS_IMETHOD DeleteTableCellContents();
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
-  NS_IMETHOD JoinTableCells(PRBool aMergeNonContiguousContents);
+  NS_IMETHOD JoinTableCells(bool aMergeNonContiguousContents);
   NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell);

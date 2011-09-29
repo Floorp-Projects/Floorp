@@ -39,9 +39,13 @@ window.onmessage = function (ev) {
     ok(compareSnapshots(one, two, true)[0], "Popups should look identical");
     ok(compareSnapshots(one, three, false)[0], "Popups should not look identical");
 
+    SpecialPowers.setBoolPref("dom.block_multiple_popups", gBlockMultiplePopups);
     SimpleTest.finish();
   }
 }
+
+var gBlockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
 
 var win2 = window.open("data:text/html,<script>window.onload = function() { opener.postMessage('loaded', '*'); }</" + "script><body>Should show</body>", "", "height=500,width=500");
 

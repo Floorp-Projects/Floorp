@@ -305,10 +305,14 @@ include $(topsrcdir)/ipc/app/defs.mk
 
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 
+ifeq ($(CPU_ARCH),x86)
+ABI_DIR = x86
+else
 ifdef MOZ_THUMB2
 ABI_DIR = armeabi-v7a
 else
 ABI_DIR = armeabi
+endif
 endif
 
 PKG_SUFFIX      = .apk

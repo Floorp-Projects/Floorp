@@ -144,7 +144,7 @@ nsDOMWorkerMessageHandler::SetOnXListener(const nsAString& aType,
     const_cast<ListenerCollection*>(GetListenerCollection(aType));
 
 #ifdef DEBUG
-  PRBool removed;
+  bool removed;
 #endif
 
   if (collection) {
@@ -215,7 +215,7 @@ nsDOMWorkerMessageHandler::ClearListeners(const nsAString& aType)
   }
 }
 
-PRBool
+bool
 nsDOMWorkerMessageHandler::HasListeners(const nsAString& aType)
 {
   const ListenerCollection* collection = GetListenerCollection(aType);
@@ -250,7 +250,7 @@ nsDOMWorkerMessageHandler::Trace(JSTracer* aTracer)
 NS_IMETHODIMP
 nsDOMWorkerMessageHandler::RemoveEventListener(const nsAString& aType,
                                                nsIDOMEventListener* aListener,
-                                               PRBool aUseCapture)
+                                               bool aUseCapture)
 {
   ListenerCollection* collection =
     const_cast<ListenerCollection*>(GetListenerCollection(aType));
@@ -271,7 +271,7 @@ nsDOMWorkerMessageHandler::RemoveEventListener(const nsAString& aType,
 
     if (!collection->listeners.Length()) {
 #ifdef DEBUG
-      PRBool removed =
+      bool removed =
 #endif
       mCollections.RemoveElement(*collection);
       NS_ASSERTION(removed, "Somehow this wasn't in the list!");
@@ -286,7 +286,7 @@ nsDOMWorkerMessageHandler::RemoveEventListener(const nsAString& aType,
  */
 NS_IMETHODIMP
 nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent* aEvent,
-                                         PRBool* _retval)
+                                         bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
 
@@ -329,8 +329,8 @@ nsDOMWorkerMessageHandler::DispatchEvent(nsIDOMEvent* aEvent,
 NS_IMETHODIMP
 nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
-                                            PRBool aUseCapture,
-                                            PRBool aWantsUntrusted,
+                                            bool aUseCapture,
+                                            bool aWantsUntrusted,
                                             PRUint8 aOptionalArgc)
 {
   // We don't support aWantsUntrusted yet.
@@ -402,7 +402,7 @@ nsDOMWorkerMessageHandler::DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEv
 }
 
 nsEventListenerManager*
-nsDOMWorkerMessageHandler::GetListenerManager(PRBool aMayCreate)
+nsDOMWorkerMessageHandler::GetListenerManager(bool aMayCreate)
 {
   NS_ERROR("Should not be called");
   return nsnull;

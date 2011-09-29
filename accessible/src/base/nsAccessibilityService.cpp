@@ -117,7 +117,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;
-PRBool nsAccessibilityService::gIsShutdown = PR_TRUE;
+bool nsAccessibilityService::gIsShutdown = true;
 
 nsAccessibilityService::nsAccessibilityService() :
   nsAccDocManager(), FocusManager()
@@ -178,7 +178,7 @@ nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
 
 nsAccessible*
 nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                  PRBool aCanCreate)
+                                                  bool aCanCreate)
 {
   nsIDocument* documentNode = aPresShell->GetDocument();
   if (documentNode) {
@@ -876,7 +876,7 @@ nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode,
   return document ? document->GetAccessibleOrContainer(aNode) : nsnull;
 }
 
-static PRBool HasRelatedContent(nsIContent *aContent)
+static bool HasRelatedContent(nsIContent *aContent)
 {
   nsAutoString id;
   if (!aContent || !nsCoreUtils::GetID(aContent, id) || id.IsEmpty()) {
@@ -995,7 +995,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     return nsnull;
   }
 
-  PRBool isHTML = content->IsHTML();
+  bool isHTML = content->IsHTML();
   if (isHTML && content->Tag() == nsGkAtoms::map) {
     // Create hyper text accessible for HTML map if it is used to group links
     // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML
@@ -1031,11 +1031,11 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   if (weakFrame.IsAlive() && !newAcc && isHTML) {  // HTML accessibles
-    PRBool tryTagNameOrFrame = PR_TRUE;
+    bool tryTagNameOrFrame = true;
 
     nsIAtom *frameType = weakFrame.GetFrame()->GetType();
 
-    PRBool partOfHTMLTable =
+    bool partOfHTMLTable =
       frameType == nsGkAtoms::tableCaptionFrame ||
       frameType == nsGkAtoms::tableCellFrame ||
       frameType == nsGkAtoms::tableRowGroupFrame ||
@@ -1209,7 +1209,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private
 
-PRBool
+bool
 nsAccessibilityService::Init()
 {
   // Initialize accessible document manager.
@@ -1255,7 +1255,7 @@ nsAccessibilityService::Shutdown()
   nsAccessNodeWrap::ShutdownAccessibility();
 }
 
-PRBool
+bool
 nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent)
 {
   // ARIA attributes that take token values (NMTOKEN, bool) are special cased

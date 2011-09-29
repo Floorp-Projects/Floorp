@@ -69,11 +69,11 @@ private:
   bool RecvClear(const bool& aCallerSecure, const bool& aSessionOnly,
                  PRInt32* aOldCount, nsresult* rv);
 
-  bool RecvGetDBValue(const nsString& aKey, nsString* aValue, PRBool* aSecure,
+  bool RecvGetDBValue(const nsString& aKey, nsString* aValue, bool* aSecure,
                       nsresult* rv);
   bool RecvSetDBValue(const nsString& aKey, const nsString& aValue,
-                      const PRBool& aSecure, nsresult* rv);
-  bool RecvSetSecure(const nsString& aKey, const PRBool& aSecure, nsresult* rv);
+                      const bool& aSecure, nsresult* rv);
+  bool RecvSetSecure(const nsString& aKey, const bool& aSecure, nsresult* rv);
 
   bool RecvInit(const bool& aUseDB,
                 const bool& aCanUseChromePersist,

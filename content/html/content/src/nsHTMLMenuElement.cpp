@@ -160,14 +160,14 @@ nsHTMLMenuElement::Build(nsIMenuBuilder* aBuilder)
 }
 
 
-PRBool
+bool
 nsHTMLMenuElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::type) {
-    PRBool success = aResult.ParseEnumValue(aValue, kMenuTypeTable,
+    bool success = aResult.ParseEnumValue(aValue, kMenuTypeTable,
                                             PR_FALSE);
     if (success) {
       mType = aResult.GetEnumValue();
@@ -200,7 +200,7 @@ nsHTMLMenuElement::BuildSubmenu(const nsAString& aLabel,
 }
 
 // static
-PRBool
+bool
 nsHTMLMenuElement::CanLoadIcon(nsIContent* aContent, const nsAString& aIcon)
 {
   if (aIcon.IsEmpty()) {

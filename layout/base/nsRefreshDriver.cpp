@@ -62,7 +62,7 @@ using namespace mozilla;
 #define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1
 
-static PRBool sPrecisePref;
+static bool sPrecisePref;
 
 /* static */ void
 nsRefreshDriver::InitializeStatics()
@@ -163,19 +163,19 @@ nsRefreshDriver::MostRecentRefreshEpochTime() const
   return mMostRecentRefreshEpochTime;
 }
 
-PRBool
+bool
 nsRefreshDriver::AddRefreshObserver(nsARefreshObserver *aObserver,
                                     mozFlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
-  PRBool success = array.AppendElement(aObserver) != nsnull;
+  bool success = array.AppendElement(aObserver) != nsnull;
 
   EnsureTimerStarted(false);
 
   return success;
 }
 
-PRBool
+bool
 nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver *aObserver,
                                        mozFlushType aFlushType)
 {
@@ -469,7 +469,7 @@ nsRefreshDriver::DoRefresh()
 }
 
 #ifdef DEBUG
-PRBool
+bool
 nsRefreshDriver::IsRefreshObserver(nsARefreshObserver *aObserver,
                                    mozFlushType aFlushType)
 {
@@ -478,13 +478,13 @@ nsRefreshDriver::IsRefreshObserver(nsARefreshObserver *aObserver,
 }
 #endif
 
-PRBool
+bool
 nsRefreshDriver::ScheduleBeforePaintEvent(nsIDocument* aDocument)
 {
   NS_ASSERTION(mBeforePaintTargets.IndexOf(aDocument) ==
                mBeforePaintTargets.NoIndex,
                "Shouldn't have a paint event posted for this document");
-  PRBool appended = mBeforePaintTargets.AppendElement(aDocument) != nsnull;
+  bool appended = mBeforePaintTargets.AppendElement(aDocument) != nsnull;
   EnsureTimerStarted(false);
   return appended;
 }

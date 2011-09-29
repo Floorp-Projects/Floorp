@@ -56,7 +56,7 @@ public:
     /**
      * Checks if any more tokens are available.
      */
-    PRBool hasMoreTokens()
+    bool hasMoreTokens()
     {
       return mIter != mEnd;
     }
@@ -95,7 +95,7 @@ public:
     /**
      * Checks if any more tokens are available.
      */
-    PRBool hasMoreTokens()
+    bool hasMoreTokens()
     {
       return mIter != mEnd;
     }

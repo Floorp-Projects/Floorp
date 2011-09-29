@@ -77,8 +77,8 @@ public:
   NS_IMETHOD GetIDForScriptType(const nsAString &aLanguageName,
                                 PRUint32 *aLanguageID);
 
-  NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
-                                   PRBool aIsModalContentWindow,
+  NS_IMETHOD NewScriptGlobalObject(bool aIsChrome,
+                                   bool aIsModalContentWindow,
                                    nsIScriptGlobalObject **aGlobal);
 
   NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID);
@@ -89,11 +89,11 @@ public:
                                   const nsIID *aProtoChainInterface,
                                   const nsIID **aInterfaces,
                                   PRUint32 aScriptableFlags,
-                                  PRBool aHasClassInterface,
+                                  bool aHasClassInterface,
                                   const nsCID *aConstructorCID);
 
 protected:
-  PRBool mLoadedAllLanguages;
+  bool mLoadedAllLanguages;
   nsCOMPtr<nsIScriptRuntime> mLanguageArray[NS_STID_ARRAY_UBOUND];
 };
 

@@ -103,7 +103,7 @@ ParseIntegerOptionalInteger(const nsAString& aValue,
 nsresult
 nsSVGIntegerPair::SetBaseValueString(const nsAString &aValueAsString,
                                     nsSVGElement *aSVGElement,
-                                    PRBool aDoSetAttr)
+                                    bool aDoSetAttr)
 {
   PRInt32 val[2];
 
@@ -146,7 +146,7 @@ nsSVGIntegerPair::GetBaseValueString(nsAString &aValueAsString)
 void
 nsSVGIntegerPair::SetBaseValue(PRInt32 aValue, PairIndex aPairIndex,
                                nsSVGElement *aSVGElement,
-                               PRBool aDoSetAttr)
+                               bool aDoSetAttr)
 {
   PRUint32 index = (aPairIndex == eFirst ? 0 : 1);
   mBaseVal[index] = aValue;
@@ -165,7 +165,7 @@ nsSVGIntegerPair::SetBaseValue(PRInt32 aValue, PairIndex aPairIndex,
 void
 nsSVGIntegerPair::SetBaseValues(PRInt32 aValue1, PRInt32 aValue2,
                                 nsSVGElement *aSVGElement,
-                                PRBool aDoSetAttr)
+                                bool aDoSetAttr)
 {
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
@@ -212,7 +212,7 @@ nsresult
 nsSVGIntegerPair::SMILIntegerPair::ValueFromString(const nsAString& aStr,
                                                    const nsISMILAnimationElement* /*aSrcElement*/,
                                                    nsSMILValue& aValue,
-                                                   PRBool& aPreventCachingOfSandwich) const
+                                                   bool& aPreventCachingOfSandwich) const
 {
   PRInt32 values[2];
 

@@ -82,7 +82,7 @@ public:
 
   NS_DECL_EDITTXN
 
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge);
 
   NS_IMETHOD MarkFixed(void);
 
@@ -115,7 +115,7 @@ protected:
   /** the editor, which is used to get the selection controller */
   nsIEditor *mEditor;
 
-  PRBool	mFixed;
+  bool	mFixed;
 };
 
 #endif

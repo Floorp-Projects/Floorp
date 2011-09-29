@@ -84,7 +84,7 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
+NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 {
   *aIsRTL = PR_FALSE;
 
@@ -121,7 +121,7 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(PRBool* aResult)
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -146,8 +146,8 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
   HKL far* buf;
   HKL locale;
   PRUnichar localeName[KL_NAMELENGTH];
-  PRBool isLTRKeyboardSet = PR_FALSE;
-  PRBool isRTLKeyboardSet = PR_FALSE;
+  bool isLTRKeyboardSet = false;
+  bool isRTLKeyboardSet = false;
   
   // GetKeyboardLayoutList with 0 as first parameter returns the number of keyboard layouts available
   keyboards = ::GetKeyboardLayoutList(0, nsnull);
@@ -222,7 +222,7 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
 //  right-to-left language, using bit 123 of the Unicode subset bitfield in
 //  the LOCALESIGNATURE
 // See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
-PRBool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
+bool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
 {
   LOCALESIGNATURE localesig;
   return (::GetLocaleInfoW(PRIMARYLANGID((DWORD_PTR)aLocale),

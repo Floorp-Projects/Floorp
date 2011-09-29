@@ -140,7 +140,7 @@ nsCacheMetaData::UnflattenMetaData(const char * data, PRUint32 size)
         }
         // Check that there are an even number of zero bytes
         // to match the pattern { key \0 value \0 }
-        PRBool odd = PR_FALSE;
+        bool odd = false;
         for (int i = 0; i < size; i++) {
             if (data[i] == '\0') 
                 odd = !odd;
@@ -170,7 +170,7 @@ nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
         // Skip key part
         data += strlen(data) + 1;
         NS_ABORT_IF_FALSE(data < limit, "Metadata corrupted");
-        PRBool keepGoing;
+        bool keepGoing;
         nsresult rv = visitor->VisitMetaDataElement(key, data, &keepGoing);
         if (NS_FAILED(rv) || !keepGoing)
             break;

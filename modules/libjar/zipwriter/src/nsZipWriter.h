@@ -85,8 +85,8 @@ private:
     ~nsZipWriter();
 
     PRUint32 mCDSOffset;
-    PRPackedBool mCDSDirty;
-    PRPackedBool mInQueue;
+    bool mCDSDirty;
+    bool mInQueue;
 
     nsCOMPtr<nsIFile> mFile;
     nsCOMPtr<nsIRequestObserver> mProcessObserver;
@@ -102,11 +102,11 @@ private:
     nsresult ReadFile(nsIFile *aFile);
     nsresult InternalAddEntryDirectory(const nsACString & aZipEntry,
                                        PRTime aModTime, PRUint32 aPermissions);
-    nsresult BeginProcessingAddition(nsZipQueueItem* aItem, PRBool* complete);
+    nsresult BeginProcessingAddition(nsZipQueueItem* aItem, bool* complete);
     nsresult BeginProcessingRemoval(PRInt32 aPos);
     nsresult AddEntryStream(const nsACString & aZipEntry, PRTime aModTime,
                             PRInt32 aCompression, nsIInputStream *aStream,
-                            PRBool aQueue, PRUint32 aPermissions);
+                            bool aQueue, PRUint32 aPermissions);
     void BeginProcessingNextItem();
     void FinishQueue(nsresult aStatus);
 };

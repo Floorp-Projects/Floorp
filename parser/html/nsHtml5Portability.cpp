@@ -115,13 +115,13 @@ nsHtml5Portability::releaseString(nsString* str)
   delete str;
 }
 
-PRBool
+bool
 nsHtml5Portability::localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length)
 {
   return local->Equals(nsDependentSubstring(buf + offset, buf + offset + length));
 }
 
-PRBool
+bool
 nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string)
 {
   if (!string) {
@@ -149,7 +149,7 @@ nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* 
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string)
 {
   if (!string) {
@@ -158,7 +158,7 @@ nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowe
   return string->LowerCaseEqualsASCII(lowerCaseLiteral);
 }
 
-PRBool
+bool
 nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
 {
   if (!string) {
@@ -167,7 +167,7 @@ nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
   return string->EqualsASCII(literal);
 }
 
-PRBool
+bool
 nsHtml5Portability::stringEqualsString(nsString* one, nsString* other)
 {
   return one->Equals(*other);

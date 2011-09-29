@@ -75,7 +75,7 @@ void nsJSID::Reset()
     mNumber = mName = nsnull;
 }
 
-PRBool
+bool
 nsJSID::SetName(const char* name)
 {
     NS_ASSERTION(!mName || mName == gNoString ,"name already set");
@@ -120,7 +120,7 @@ nsJSID::GetID()
 }
 
 NS_IMETHODIMP
-nsJSID::GetValid(PRBool *aValid)
+nsJSID::GetValid(bool *aValid)
 {
     if(!aValid)
         return NS_ERROR_NULL_POINTER;
@@ -130,7 +130,7 @@ nsJSID::GetValid(PRBool *aValid)
 }
 
 NS_IMETHODIMP
-nsJSID::Equals(nsIJSID *other, PRBool *_retval)
+nsJSID::Equals(nsIJSID *other, bool *_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
@@ -169,7 +169,7 @@ nsJSID::Initialize(const char *idString)
     return NS_ERROR_FAILURE;
 }
 
-PRBool
+bool
 nsJSID::InitWithName(const nsID& id, const char *nameString)
 {
     NS_ASSERTION(nameString, "no name");
@@ -372,13 +372,13 @@ NS_IMETHODIMP_(const nsID*) nsJSIID::GetID()
     return id;
 }
 
-NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
+NS_IMETHODIMP nsJSIID::GetValid(bool *aValid)
 {
     *aValid = PR_TRUE;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, PRBool *_retval)
+NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, bool *_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
@@ -413,7 +413,7 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
         return nsnull;
     }
 
-    PRBool canScript;
+    bool canScript;
     if(NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
         return nsnull;
 
@@ -423,12 +423,12 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 }
 
 
-/* PRBool resolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id); */
+/* bool resolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id); */
 NS_IMETHODIMP
 nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
                     JSContext * cx, JSObject * obj,
                     jsid id, PRUint32 flags,
-                    JSObject * *objp, PRBool *_retval)
+                    JSObject * *objp, bool *_retval)
 {
     XPCCallContext ccx(JS_CALLER, cx);
 
@@ -458,10 +458,10 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* PRBool enumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
+/* bool enumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
 NS_IMETHODIMP
 nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
-                   JSContext * cx, JSObject * obj, PRBool *_retval)
+                   JSContext * cx, JSObject * obj, bool *_retval)
 {
     // In this case, let's just eagerly resolve...
 
@@ -490,11 +490,11 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out PRBool bp); */
+/* bool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out bool bp); */
 NS_IMETHODIMP
 nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * obj,
-                     const jsval &val, PRBool *bp, PRBool *_retval)
+                     const jsval &val, bool *bp, bool *_retval)
 {
     *bp = JS_FALSE;
     nsresult rv = NS_OK;
@@ -629,10 +629,10 @@ NS_IMETHODIMP nsJSCID::GetNumber(char * *aNumber)
 NS_IMETHODIMP_(const nsID*) nsJSCID::GetID()
     {return &mDetails.ID();}
 
-NS_IMETHODIMP nsJSCID::GetValid(PRBool *aValid)
+NS_IMETHODIMP nsJSCID::GetValid(bool *aValid)
     {return mDetails.GetValid(aValid);}
 
-NS_IMETHODIMP nsJSCID::Equals(nsIJSID *other, PRBool *_retval)
+NS_IMETHODIMP nsJSCID::Equals(nsIJSID *other, bool *_retval)
     {return mDetails.Equals(other, _retval);}
 
 NS_IMETHODIMP nsJSCID::Initialize(const char *idString)
@@ -661,7 +661,7 @@ nsJSCID::NewID(const char* str)
     nsJSCID* idObj = new nsJSCID();
     if(idObj)
     {
-        PRBool success = PR_FALSE;
+        bool success = false;
         NS_ADDREF(idObj);
 
         if(str[0] == '{')
@@ -852,12 +852,12 @@ nsJSCID::GetService(nsISupports **_retval)
     return NS_OK;
 }
 
-/* PRBool construct (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
+/* bool construct (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
 NS_IMETHODIMP
 nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
                    JSContext * cx, JSObject * obj,
                    PRUint32 argc, jsval * argv, jsval * vp,
-                   PRBool *_retval)
+                   bool *_retval)
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if(!rt)
@@ -872,11 +872,11 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-/* PRBool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out PRBool bp); */
+/* bool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out bool bp); */
 NS_IMETHODIMP
 nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * obj,
-                     const jsval &val, PRBool *bp, PRBool *_retval)
+                     const jsval &val, bool *bp, bool *_retval)
 {
     *bp = JS_FALSE;
     nsresult rv = NS_OK;

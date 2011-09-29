@@ -60,10 +60,10 @@ protected:
   nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName,
                    const PRUnichar *showAgainName,
-                   PRBool aAsync);
+                   bool aAsync);
   nsresult ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName, 
-                   const PRUnichar *showAgainName, PRBool* _result);
+                   const PRUnichar *showAgainName, bool* _result);
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
 };

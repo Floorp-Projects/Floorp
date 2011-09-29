@@ -81,7 +81,7 @@ public:
   Rule* GetStyleRuleAt(PRInt32 aIndex) const;
 
   typedef nsCOMArray<Rule>::nsCOMArrayEnumFunc RuleEnumFunc;
-  PRBool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
+  bool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
    * The next three methods should never be called unless you have first
@@ -93,7 +93,7 @@ public:
                               nsCOMArray<Rule>& aRules);
   nsresult ReplaceStyleRule(Rule *aOld, Rule *aNew);
 
-  virtual PRBool UseForPresentation(nsPresContext* aPresContext,
+  virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) = 0;
 
 protected:

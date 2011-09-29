@@ -76,7 +76,7 @@ public:
   NS_DECL_ISUPPORTS
   
   // nsIWidget interface
-  NS_IMETHOD              CaptureMouse(PRBool aCapture);
+  NS_IMETHOD              CaptureMouse(bool aCapture);
   NS_IMETHOD              GetClientData(void*& aClientData);
   NS_IMETHOD              SetClientData(void* aClientData);
   NS_IMETHOD              Destroy();
@@ -92,7 +92,7 @@ public:
   NS_IMETHOD              SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD              GetZIndex(PRInt32* aZIndex);
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                      nsIWidget *aWidget, PRBool aActivate);
+                                      nsIWidget *aWidget, bool aActivate);
 
   NS_IMETHOD              SetSizeMode(PRInt32 aMode);
   NS_IMETHOD              GetSizeMode(PRInt32* aMode);
@@ -110,9 +110,9 @@ public:
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void            GetWindowClipRegion(nsTArray<nsIntRect>* aRects);
   NS_IMETHOD              SetWindowShadowStyle(PRInt32 aStyle);
-  virtual void            SetShowsToolbarButton(PRBool aShow) {}
-  NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
-  NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
+  virtual void            SetShowsToolbarButton(bool aShow) {}
+  NS_IMETHOD              HideWindowChrome(bool aShouldHide);
+  NS_IMETHOD              MakeFullScreen(bool aFullScreen);
   virtual nsDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
   virtual LayerManager*   GetLayerManager(PLayersChild* aShadowManager = nsnull,
@@ -123,45 +123,45 @@ public:
   virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
   virtual gfxASurface*    GetThebesSurface();
-  NS_IMETHOD              SetModal(PRBool aModal); 
+  NS_IMETHOD              SetModal(bool aModal); 
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
   NS_IMETHOD              SetBounds(const nsIntRect &aRect);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
   virtual nsIntPoint      GetClientOffset();
-  NS_IMETHOD              EnableDragDrop(PRBool aEnable);
+  NS_IMETHOD              EnableDragDrop(bool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
-  virtual PRBool          HasPendingInputEvent();
+  virtual bool            HasPendingInputEvent();
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec);
   NS_IMETHOD              BeginSecureKeyboardInput();
   NS_IMETHOD              EndSecureKeyboardInput();
-  NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
-  virtual void            SetDrawsInTitlebar(PRBool aState) {}
-  virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
+  NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor, bool aActive);
+  virtual void            SetDrawsInTitlebar(bool aState) {}
+  virtual bool            ShowsResizeIndicator(nsIntRect* aResizerRect);
   virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}
   NS_IMETHOD              BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
   NS_IMETHOD              BeginMoveDrag(nsMouseEvent* aEvent);
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              ResetInputState() { return NS_OK; }
-  NS_IMETHOD              SetIMEOpenState(PRBool aState) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              GetIMEOpenState(PRBool* aState) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD              SetIMEOpenState(bool aState) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD              GetIMEOpenState(bool* aState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              SetInputMode(const IMEContext& aContext) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              GetInputMode(IMEContext& aContext) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              SetIMEEnabled(PRUint32 aState);
   NS_IMETHOD              GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
-  NS_IMETHOD              SetAcceleratedRendering(PRBool aEnabled);
-  virtual PRBool          GetAcceleratedRendering();
-  virtual PRBool          GetShouldAccelerate();
-  NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              OnIMEFocusChange(PRBool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD              SetAcceleratedRendering(bool aEnabled);
+  virtual bool            GetAcceleratedRendering();
+  virtual bool            GetShouldAccelerate();
+  NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD              OnIMEFocusChange(bool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMESelectionChange(void) { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() { return nsIMEUpdatePreference(PR_FALSE, PR_FALSE); }
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
+  NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, bool aIsHorizontal, PRInt32 &aOverriddenDelta);
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               EVENT_CALLBACK   aHandleEventFunction,
@@ -169,11 +169,11 @@ public:
               nsIAppShell      *aAppShell = nsnull,
               nsIToolkit       *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull,
-              PRBool           aForceUseIWidgetParent = PR_FALSE);
+              bool             aForceUseIWidgetParent = false);
   NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
-  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              RegisterTouchWindow();
@@ -187,7 +187,7 @@ public:
   }
 
   // return true if this is a popup widget with a native titlebar
-  PRBool IsPopupWithTitleBar() const
+  bool IsPopupWithTitleBar() const
   {
     return (mWindowType == eWindowType_popup && 
             mBorderStyle != eBorderStyle_default &&
@@ -219,7 +219,12 @@ public:
   };
   friend class AutoUseBasicLayerManager;
 
-  PRBool                  Destroyed() { return mOnDestroyCalled; }
+  bool HasDestroyStarted() const 
+  {
+    return mOnDestroyCalled;
+  }
+
+  bool                    Destroyed() { return mOnDestroyCalled; }
 
 protected:
 
@@ -254,7 +259,7 @@ protected:
 
   // Stores the clip rectangles in aRects into mClipRects. Returns true
   // if the new rectangles are different from the old rectangles.
-  PRBool StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
+  bool StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
@@ -280,9 +285,9 @@ protected:
   nsCursor          mCursor;
   nsWindowType      mWindowType;
   nsBorderStyle     mBorderStyle;
-  PRPackedBool      mOnDestroyCalled;
-  PRPackedBool      mUseAcceleratedRendering;
-  PRPackedBool      mTemporarilyUseBasicLayerManager;
+  bool              mOnDestroyCalled;
+  bool              mUseAcceleratedRendering;
+  bool              mTemporarilyUseBasicLayerManager;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped
@@ -299,12 +304,12 @@ protected:
 #ifdef DEBUG
 protected:
   static nsAutoString debug_GuiEventToString(nsGUIEvent * aGuiEvent);
-  static PRBool debug_WantPaintFlashing();
+  static bool debug_WantPaintFlashing();
 
   static void debug_DumpInvalidate(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRect *     aRect,
-                                   PRBool                aIsSynchronous,
+                                   bool                  aIsSynchronous,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 
@@ -320,7 +325,7 @@ protected:
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 
-  static PRBool debug_GetCachedBoolPref(const char* aPrefName);
+  static bool debug_GetCachedBoolPref(const char* aPrefName);
 #endif
 };
 
@@ -338,7 +343,7 @@ protected:
 // nsIWidget::GetLastRollup on any widget.
 class nsAutoRollup
 {
-  PRBool wasClear;
+  bool wasClear;
 
   public:
 

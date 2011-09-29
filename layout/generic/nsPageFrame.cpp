@@ -175,7 +175,7 @@ nsPageFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsPageFrame::IsContainingBlock() const
 {
   return PR_TRUE;

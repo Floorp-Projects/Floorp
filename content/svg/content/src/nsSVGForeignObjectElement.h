@@ -70,7 +70,7 @@ public:
   virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
 
   // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 

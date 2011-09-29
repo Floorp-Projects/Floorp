@@ -110,7 +110,7 @@ nsResURL::EnsureFile()
     rv = net_GetFileFromURLSpec(spec, getter_AddRefs(mFile));
 #ifdef DEBUG_bsmedberg
     if (NS_SUCCEEDED(rv)) {
-        PRBool exists = PR_TRUE;
+        bool exists = true;
         mFile->Exists(&exists);
         if (!exists) {
             printf("resource %s doesn't exist!\n", spec.get());
@@ -335,7 +335,7 @@ nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsResProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsResProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;
@@ -402,7 +402,7 @@ nsResProtocolHandler::GetSubstitution(const nsACString& root, nsIURI **result)
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::HasSubstitution(const nsACString& root, PRBool *result)
+nsResProtocolHandler::HasSubstitution(const nsACString& root, bool *result)
 {
     NS_ENSURE_ARG_POINTER(result);
 

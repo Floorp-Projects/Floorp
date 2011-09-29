@@ -74,7 +74,7 @@ AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
     if (!aprin || !bprin)
         return true;
 
-    PRBool equals;
+    bool equals;
     nsresult rv = aprin->EqualsIgnoringDomain(bprin, &equals);
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to ask about equality");
@@ -106,7 +106,7 @@ AccessCheck::isChrome(JSCompartment *compartment)
         return false;
     }
 
-    PRBool privileged;
+    bool privileged;
     nsIPrincipal *principal = GetCompartmentPrincipal(compartment);
     return NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) && privileged;
 }
@@ -276,7 +276,7 @@ AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
         object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
     }
 
-    PRBool subsumes;
+    bool subsumes;
     return NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes;
 }
 
@@ -346,7 +346,7 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
         fp = NULL;
     }
 
-    PRBool privileged;
+    bool privileged;
     if (NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) &&
         privileged) {
         return true;
@@ -396,7 +396,7 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
             return true;
 
         // Bypass script-only status if UniversalXPConnect is enabled.
-        PRBool privileged;
+        bool privileged;
         return !NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) ||
                !privileged;
     }
@@ -457,7 +457,7 @@ PermitIfUniversalXPConnect(JSContext *cx, jsid id, Wrapper::Action act,
     if (!ssm) {
         return false;
     }
-    PRBool privileged;
+    bool privileged;
     if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) &&
         privileged) {
         perm = ExposedPropertiesOnly::PermitPropertyAccess;

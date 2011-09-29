@@ -89,22 +89,22 @@ public:
   virtual nsresult ClearUndoStack(void);
   virtual nsresult ClearRedoStack(void);
 
-  virtual nsresult WillDoNotify(nsITransaction *aTransaction, PRBool *aInterrupt);
+  virtual nsresult WillDoNotify(nsITransaction *aTransaction, bool *aInterrupt);
   virtual nsresult DidDoNotify(nsITransaction *aTransaction, nsresult aExecuteResult);
-  virtual nsresult WillUndoNotify(nsITransaction *aTransaction, PRBool *aInterrupt);
+  virtual nsresult WillUndoNotify(nsITransaction *aTransaction, bool *aInterrupt);
   virtual nsresult DidUndoNotify(nsITransaction *aTransaction, nsresult aUndoResult);
-  virtual nsresult WillRedoNotify(nsITransaction *aTransaction, PRBool *aInterrupt);
+  virtual nsresult WillRedoNotify(nsITransaction *aTransaction, bool *aInterrupt);
   virtual nsresult DidRedoNotify(nsITransaction *aTransaction, nsresult aRedoResult);
-  virtual nsresult WillBeginBatchNotify(PRBool *aInterrupt);
+  virtual nsresult WillBeginBatchNotify(bool *aInterrupt);
   virtual nsresult DidBeginBatchNotify(nsresult aResult);
-  virtual nsresult WillEndBatchNotify(PRBool *aInterrupt);
+  virtual nsresult WillEndBatchNotify(bool *aInterrupt);
   virtual nsresult DidEndBatchNotify(nsresult aResult);
   virtual nsresult WillMergeNotify(nsITransaction *aTop,
                                    nsITransaction *aTransaction,
-                                   PRBool *aInterrupt);
+                                   bool *aInterrupt);
   virtual nsresult DidMergeNotify(nsITransaction *aTop,
                                   nsITransaction *aTransaction,
-                                  PRBool aDidMerge,
+                                  bool aDidMerge,
                                   nsresult aMergeResult);
 
 private:

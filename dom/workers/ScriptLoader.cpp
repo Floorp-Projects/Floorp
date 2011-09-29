@@ -413,7 +413,7 @@ public:
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
     if (httpChannel) {
-      PRBool requestSucceeded;
+      bool requestSucceeded;
       rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -484,7 +484,7 @@ public:
       // URIs we're currently considering all URIs with the URI_IS_UI_RESOURCE
       // flag as valid for creating privileged workers.
       if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
-        PRBool isResource;
+        bool isResource;
         rv = NS_URIChainHasFlags(finalURI,
                                  nsIProtocolHandler::URI_IS_UI_RESOURCE,
                                  &isResource);

@@ -1753,7 +1753,7 @@ inline bool
 ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
 {
     if (JS_UNLIKELY(obj.isProxy()))
-        return obj.getProxyHandler()->classPropertyIs(cx, &obj, classValue);
+        return Proxy::objectClassIs(&obj, classValue, cx);
 
     switch (classValue) {
       case ESClass_Array: return obj.isArray();

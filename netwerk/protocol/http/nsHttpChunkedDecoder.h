@@ -53,7 +53,7 @@ public:
                            , mWaitEOF(PR_FALSE) {}
    ~nsHttpChunkedDecoder() { delete mTrailers; }
 
-    PRBool ReachedEOF() { return mReachedEOF; }
+    bool ReachedEOF() { return mReachedEOF; }
 
     // called by the transaction to handle chunked content.
     nsresult HandleChunkedContent(char *buf,
@@ -76,8 +76,8 @@ private:
     nsHttpHeaderArray *mTrailers;
     PRUint32           mChunkRemaining;
     nsCString          mLineBuf; // may hold a partial line
-    PRPackedBool       mReachedEOF;
-    PRPackedBool       mWaitEOF;
+    bool               mReachedEOF;
+    bool               mWaitEOF;
 };
 
 #endif

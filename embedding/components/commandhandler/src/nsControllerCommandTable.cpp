@@ -93,7 +93,7 @@ nsControllerCommandTable::UnregisterCommand(const char * aCommandName, nsIContro
 
   nsCStringKey commandKey(aCommandName);
 
-  PRBool wasRemoved = mCommandsTable.Remove(&commandKey);
+  bool wasRemoved = mCommandsTable.Remove(&commandKey);
   return wasRemoved ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -118,7 +118,7 @@ nsControllerCommandTable::FindCommandHandler(const char * aCommandName, nsIContr
 
 /* boolean isCommandEnabled (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandTable::IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandTable::IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -157,7 +157,7 @@ nsControllerCommandTable::UpdateCommandState(const char * aCommandName, nsISuppo
 }
 
 NS_IMETHODIMP
-nsControllerCommandTable::SupportsCommand(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandTable::SupportsCommand(const char * aCommandName, nsISupports *aCommandRefCon, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 

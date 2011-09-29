@@ -73,7 +73,7 @@ public:
   // nsIHTMLMenu
   NS_DECL_NSIHTMLMENU
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -85,7 +85,7 @@ public:
   PRUint8 GetType() const { return mType; }
 
 protected:
-  static PRBool CanLoadIcon(nsIContent* aContent, const nsAString& aIcon);
+  static bool CanLoadIcon(nsIContent* aContent, const nsAString& aIcon);
 
   void BuildSubmenu(const nsAString& aLabel,
                     nsIContent* aContent,

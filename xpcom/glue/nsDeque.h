@@ -233,7 +233,7 @@ private:
    */
   nsDeque& operator=(const nsDeque& anOther);
 
-  PRBool GrowCapacity();
+  bool GrowCapacity();
 };
 
 /******************************************************
@@ -288,7 +288,7 @@ public:
    * @param   aIter is the object to be compared to
    * @return  TRUE if NOT equal.
    */
-  PRBool operator!=(nsDequeIterator& aIter);
+  bool operator!=(nsDequeIterator& aIter);
 
   /**
    * Compare two iterators for increasing order.
@@ -299,7 +299,7 @@ public:
    *          FALSE if this and aIter are not iterating over
    *          the same deque.
    */
-  PRBool operator<(nsDequeIterator& aIter);
+  bool operator<(nsDequeIterator& aIter);
 
   /**
    * Compare two iterators for equivalence.
@@ -307,7 +307,7 @@ public:
    * @param   aIter is the other iterator to be compared to
    * @return  TRUE if EQUAL
    */
-  PRBool operator==(nsDequeIterator& aIter);
+  bool operator==(nsDequeIterator& aIter);
 
   /**
    * Compare two iterators for non strict decreasing order.
@@ -318,7 +318,7 @@ public:
    *          FALSE if this and aIter are not iterating over
    *          the same deque.
    */
-  PRBool operator>=(nsDequeIterator& aIter);
+  bool operator>=(nsDequeIterator& aIter);
 
   /**
    * Pre-increment operator

@@ -83,7 +83,7 @@ public:
   NS_IMETHOD JoinNodesImpl(nsIDOMNode *aNodeToKeep,
                            nsIDOMNode  *aNodeToJoin,
                            nsIDOMNode  *aParent,
-                           PRBool       aNodeToKeepIsFirst)=0;
+                           bool         aNodeToKeepIsFirst)=0;
 
   static nsresult GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset);
   

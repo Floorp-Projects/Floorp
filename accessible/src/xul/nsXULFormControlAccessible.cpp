@@ -128,7 +128,7 @@ nsXULButtonAccessible::NativeState()
   // get focus and disable status from base class
   PRUint64 state = nsAccessible::NativeState();
 
-  PRBool disabled = PR_FALSE;
+  bool disabled = false;
   nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mContent));
   if (xulFormElement) {
     xulFormElement->GetDisabled(&disabled);
@@ -145,7 +145,7 @@ nsXULButtonAccessible::NativeState()
     xulButtonElement->GetType(type);
     if (type.EqualsLiteral("checkbox") || type.EqualsLiteral("radio")) {
       state |= states::CHECKABLE;
-      PRBool checked = PR_FALSE;
+      bool checked = false;
       PRInt32 checkState = 0;
       xulButtonElement->GetChecked(&checked);
       if (checked) {
@@ -215,12 +215,12 @@ nsXULButtonAccessible::CacheChildren()
 
   // XXX: no children until the button is menu button. Probably it's not
   // totally correct but in general AT wants to have leaf buttons.
-  PRBool isMenu = mContent->AttrValueIs(kNameSpaceID_None,
+  bool isMenu = mContent->AttrValueIs(kNameSpaceID_None,
                                        nsGkAtoms::type,
                                        nsGkAtoms::menu,
                                        eCaseMatters);
 
-  PRBool isMenuButton = isMenu ?
+  bool isMenuButton = isMenu ?
     PR_FALSE :
     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                           nsGkAtoms::menuButton, eCaseMatters);
@@ -264,7 +264,7 @@ nsXULButtonAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULButtonAccessible protected
 
-PRBool
+bool
 nsXULButtonAccessible::ContainsMenu()
 {
   static nsIContent::AttrValuesArray strings[] =
@@ -291,9 +291,9 @@ nsXULDropmarkerAccessible::ActionCount()
   return 1;
 }
 
-PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
+bool nsXULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen)
 {
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
 
   nsCOMPtr<nsIDOMXULButtonElement> parentButtonElement =
     do_QueryInterface(mContent->GetParent());
@@ -422,7 +422,7 @@ nsXULCheckboxAccessible::NativeState()
   nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement =
     do_QueryInterface(mContent);
   if (xulCheckboxElement) {
-    PRBool checked = PR_FALSE;
+    bool checked = false;
     xulCheckboxElement->GetChecked(&checked);
     if (checked) {
       state |= states::CHECKED;
@@ -515,7 +515,7 @@ nsXULRadioButtonAccessible::NativeState()
   nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton =
     do_QueryInterface(mContent);
   if (radioButton) {
-    PRBool selected = PR_FALSE;   // Radio buttons can be selected
+    bool selected = false;   // Radio buttons can be selected
     radioButton->GetSelected(&selected);
     if (selected) {
       state |= states::CHECKED;
@@ -658,7 +658,7 @@ nsXULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
   *aSetSize = setSize;
 }
 
-PRBool
+bool
 nsXULToolbarButtonAccessible::IsSeparator(nsAccessible *aAccessible)
 {
   nsCOMPtr<nsIDOMNode> domNode;
@@ -848,7 +848,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-PRBool
+bool
 nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles()
 {
   return PR_FALSE;

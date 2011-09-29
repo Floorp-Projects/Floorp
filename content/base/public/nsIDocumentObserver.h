@@ -131,7 +131,7 @@ public:
    */
   virtual void StyleSheetAdded(nsIDocument *aDocument,
                                nsIStyleSheet* aStyleSheet,
-                               PRBool aDocumentSheet) = 0;
+                               bool aDocumentSheet) = 0;
 
   /**
    * A StyleSheet has just been removed from the document.  This
@@ -146,7 +146,7 @@ public:
    */
   virtual void StyleSheetRemoved(nsIDocument *aDocument,
                                  nsIStyleSheet* aStyleSheet,
-                                 PRBool aDocumentSheet) = 0;
+                                 bool aDocumentSheet) = 0;
   
   /**
    * A StyleSheet has just changed its applicable state.
@@ -162,7 +162,7 @@ public:
    */
   virtual void StyleSheetApplicableStateChanged(nsIDocument *aDocument,
                                                 nsIStyleSheet* aStyleSheet,
-                                                PRBool aApplicable) = 0;
+                                                bool aApplicable) = 0;
 
   /**
    * A StyleRule has just been modified within a style sheet.
@@ -250,17 +250,17 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                          \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
                                  nsIStyleSheet* aStyleSheet,                 \
-                                 PRBool aDocumentSheet);
+                                 bool aDocumentSheet);
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                        \
     virtual void StyleSheetRemoved(nsIDocument* aDocument,                   \
                                    nsIStyleSheet* aStyleSheet,               \
-                                   PRBool aDocumentSheet);
+                                   bool aDocumentSheet);
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED         \
     virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,    \
                                                   nsIStyleSheet* aStyleSheet,\
-                                                  PRBool aApplicable);
+                                                  bool aApplicable);
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
     virtual void StyleRuleChanged(nsIDocument* aDocument,                    \
@@ -336,19 +336,19 @@ NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)
 void                                                                      \
 _class::StyleSheetAdded(nsIDocument* aDocument,                           \
                         nsIStyleSheet* aStyleSheet,                       \
-                        PRBool aDocumentSheet)                            \
+                        bool aDocumentSheet)                            \
 {                                                                         \
 }                                                                         \
 void                                                                      \
 _class::StyleSheetRemoved(nsIDocument* aDocument,                         \
                           nsIStyleSheet* aStyleSheet,                     \
-                          PRBool aDocumentSheet)                          \
+                          bool aDocumentSheet)                          \
 {                                                                         \
 }                                                                         \
 void                                                                      \
 _class::StyleSheetApplicableStateChanged(nsIDocument* aDocument,          \
                                          nsIStyleSheet* aStyleSheet,      \
-                                         PRBool aApplicable)              \
+                                         bool aApplicable)              \
 {                                                                         \
 }                                                                         \
 void                                                                      \

@@ -102,7 +102,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 
     nsAutoPtr<gfxTextRun> textRun;
     PRUint32 i;
-    PRBool isASCII = PR_TRUE;
+    bool isASCII = true;
     for (i = 0; test->mString[i]; ++i) {
         if (test->mString[i] & 0x80) {
             isASCII = PR_FALSE;

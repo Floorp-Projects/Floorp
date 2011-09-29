@@ -92,12 +92,12 @@ public:
   nsNativeAppSupportCocoa() :
     mCanShowUI(PR_FALSE) { }
 
-  NS_IMETHOD Start(PRBool* aRetVal);
+  NS_IMETHOD Start(bool* aRetVal);
   NS_IMETHOD ReOpen();
   NS_IMETHOD Enable();
 
 private:
-  PRBool mCanShowUI;
+  bool mCanShowUI;
 
 };
 
@@ -108,7 +108,7 @@ nsNativeAppSupportCocoa::Enable()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNativeAppSupportCocoa::Start(PRBool *_retval)
+NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -145,9 +145,9 @@ nsNativeAppSupportCocoa::ReOpen()
   if (!mCanShowUI)
     return NS_ERROR_FAILURE;
 
-  PRBool haveNonMiniaturized = PR_FALSE;
-  PRBool haveOpenWindows = PR_FALSE;
-  PRBool done = PR_FALSE;
+  bool haveNonMiniaturized = false;
+  bool haveOpenWindows = false;
+  bool done = false;
   
   nsCOMPtr<nsIWindowMediator> 
     wm(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
@@ -157,7 +157,7 @@ nsNativeAppSupportCocoa::ReOpen()
   else {
     nsCOMPtr<nsISimpleEnumerator> windowList;
     wm->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowList));
-    PRBool more;
+    bool more;
     windowList->HasMoreElements(&more);
     while (more) {
       nsCOMPtr<nsISupports> nextWindow = nsnull;

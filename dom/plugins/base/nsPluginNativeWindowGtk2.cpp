@@ -120,7 +120,7 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance>
       if (!mSocketWidget) {
         nsresult rv;
 
-        PRBool needXEmbed = PR_FALSE;
+        bool needXEmbed = false;
         rv = aPluginInstance->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
         // If the call returned an error code make sure we still use our default value.
         if (NS_FAILED(rv)) {
