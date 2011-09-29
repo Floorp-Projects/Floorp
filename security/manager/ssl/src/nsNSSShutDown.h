@@ -65,17 +65,17 @@ public:
   void leaveBlockingUIState();
   
   // Is the activity aware of any blocking PSM UI currently shown?
-  PRBool isBlockingUIActive();
+  bool isBlockingUIActive();
 
   // Is it forbidden to bring up an UI while holding resources?
-  PRBool isUIForbidden();
+  bool isUIForbidden();
   
   // Check whether setting the current thread restriction is possible.
   // If it is possible, and the "do_it_for_real" flag is used,
   // the state tracking will have ensured that we will stay in this state.
   // As of writing, this includes forbidding PSM UI.
   enum RealOrTesting {test_only, do_it_for_real};
-  PRBool ifPossibleDisallowUI(RealOrTesting rot);
+  bool ifPossibleDisallowUI(RealOrTesting rot);
 
   // Notify the state tracking that going to the restricted state is
   // no longer planned.
@@ -106,7 +106,7 @@ private:
   int mBlockingUICounter;
 
   // Whether bringing up UI is currently forbidden
-  PRBool mIsUIForbidden;
+  bool mIsUIForbidden;
 
   // nsnull means "no restriction"
   // if != nsnull, activity is only allowed on that thread
@@ -128,7 +128,7 @@ public:
   nsPSMUITracker();
   ~nsPSMUITracker();
   
-  PRBool isUIForbidden();
+  bool isUIForbidden();
 };
 
 // Singleton, used by nsNSSComponent to track the list of PSM objects,
@@ -153,15 +153,15 @@ public:
   // performed by clients using PSM services
   static void trackSSLSocketCreate();
   static void trackSSLSocketClose();
-  static PRBool areSSLSocketsActive();
+  static bool areSSLSocketsActive();
   
   // Are we able to do the early cleanup?
   // Returns failure if at the current time "early cleanup" is not possible.
-  PRBool isUIActive();
+  bool isUIActive();
 
   // If possible to do "early cleanup" at the current time, remember that we want to
   // do it, and disallow actions that would change the possibility.
-  PRBool ifPossibleDisallowUI();
+  bool ifPossibleDisallowUI();
 
   // Notify that it is no longer planned to do the "early cleanup".
   void allowUI();
@@ -297,12 +297,12 @@ public:
     }
   }
   
-  PRBool isAlreadyShutDown() { return mAlreadyShutDown; }
+  bool isAlreadyShutDown() { return mAlreadyShutDown; }
 
 protected:
   virtual void virtualDestroyNSSReference() = 0;
 private:
-  volatile PRBool mAlreadyShutDown;
+  volatile bool mAlreadyShutDown;
 };
 
 class nsOnPK11LogoutCancelObject
@@ -329,13 +329,13 @@ public:
     mIsLoggedOut = PR_TRUE;
   }
   
-  PRBool isPK11LoggedOut()
+  bool isPK11LoggedOut()
   {
     return mIsLoggedOut;
   }
 
 private:
-  volatile PRBool mIsLoggedOut;
+  volatile bool mIsLoggedOut;
 };
 
 #endif

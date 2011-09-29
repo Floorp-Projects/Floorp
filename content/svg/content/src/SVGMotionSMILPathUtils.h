@@ -74,26 +74,26 @@ public:
     // "the specified values for from, by, to, and values" at
     //    http://www.w3.org/TR/SVG11/animate.html#AnimateMotionElement
     void   MoveToOrigin();
-    PRBool MoveToAbsolute(const nsAString& aCoordPairStr);
-    PRBool LineToAbsolute(const nsAString& aCoordPairStr,
+    bool MoveToAbsolute(const nsAString& aCoordPairStr);
+    bool LineToAbsolute(const nsAString& aCoordPairStr,
                           double& aSegmentDistance);
-    PRBool LineToRelative(const nsAString& aCoordPairStr,
+    bool LineToRelative(const nsAString& aCoordPairStr,
                           double& aSegmentDistance);
 
     // Accessor to let clients check if we've received any commands yet.
-    inline PRBool HaveReceivedCommands() { return mHaveReceivedCommands; }
+    inline bool HaveReceivedCommands() { return mHaveReceivedCommands; }
     // Accessor to get the finalized path
     already_AddRefed<gfxFlattenedPath> GetResultingPath();
 
   protected:
     // Helper methods
-    PRBool ParseCoordinatePair(const nsAString& aStr,
+    bool ParseCoordinatePair(const nsAString& aStr,
                                float& aXVal, float& aYVal);
 
     // Member data
     const nsSVGElement* mSVGElement; // context for converting to user units
     gfxContext    mGfxContext;
-    PRPackedBool  mHaveReceivedCommands;
+    bool          mHaveReceivedCommands;
   };
 
   // Class to assist in passing each subcomponent of a |values| attribute to

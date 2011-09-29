@@ -202,6 +202,8 @@ code {
 
 .docType {
   position: absolute;
+  /* position DOCTYPE element above/outside the "nodeBox" that contains it */
+  /* Note: to be fixed in Bug #688439 */
   top: -16px;
   font-family: Menlo, Andale Mono, monospace;
   padding-left: 8px;
@@ -211,7 +213,9 @@ code {
 }
 
 .htmlNodeBox {
-  top: 16px;
+  /* make room for DOCTYPE element to be rendered above/outside "nodeBox" */
+  /* Note: to be fixed in Bug #688439 */
+  margin-top: 16px;
 }
 
 .nodeWhiteSpace {

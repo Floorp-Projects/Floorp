@@ -112,7 +112,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint64* args)
             // in the first NUM_ARG_REGS entries in args
             dp->val.u64 = (i < NUM_ARG_REGS) ? args[i] : *ap;
             break;
-        case nsXPTType::T_BOOL   : dp->val.b   = (PRBool)    *ap;    break;
+        case nsXPTType::T_BOOL   : dp->val.b   = (bool)    *ap;    break;
         case nsXPTType::T_CHAR   : dp->val.c   = (char)      *ap;    break;
         case nsXPTType::T_WCHAR  : dp->val.wc  = (PRUnichar) *ap;    break;
         default:

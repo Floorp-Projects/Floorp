@@ -76,7 +76,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMXULCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetAltKey(PRBool* aIsDown)
+nsDOMXULCommandEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = Event()->isAlt;
@@ -84,7 +84,7 @@ nsDOMXULCommandEvent::GetAltKey(PRBool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetCtrlKey(PRBool* aIsDown)
+nsDOMXULCommandEvent::GetCtrlKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = Event()->isControl;
@@ -92,7 +92,7 @@ nsDOMXULCommandEvent::GetCtrlKey(PRBool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetShiftKey(PRBool* aIsDown)
+nsDOMXULCommandEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = Event()->isShift;
@@ -100,7 +100,7 @@ nsDOMXULCommandEvent::GetShiftKey(PRBool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetMetaKey(PRBool* aIsDown)
+nsDOMXULCommandEvent::GetMetaKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = Event()->isMeta;
@@ -117,11 +117,11 @@ nsDOMXULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
 
 NS_IMETHODIMP
 nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
-                                       PRBool aCanBubble, PRBool aCancelable,
+                                       bool aCanBubble, bool aCancelable,
                                        nsIDOMWindow* aView,
                                        PRInt32 aDetail,
-                                       PRBool aCtrlKey, PRBool aAltKey,
-                                       PRBool aShiftKey, PRBool aMetaKey,
+                                       bool aCtrlKey, bool aAltKey,
+                                       bool aShiftKey, bool aMetaKey,
                                        nsIDOMEvent* aSourceEvent)
 {
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable,

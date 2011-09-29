@@ -68,7 +68,7 @@ public:
    * @param aVal the string to check for
    * @return whether the string is in the set
    */
-  PRBool Contains(const nsAString& aVal)
+  bool Contains(const nsAString& aVal)
   {
     nsStringHashSet* set = GetHash();
     // Check the value from the hash if the hash is there
@@ -142,7 +142,7 @@ public:
    * @param aVal the int to check for
    * @return whether the int is in the set
    */
-  PRBool Contains(PRInt32 aVal)
+  bool Contains(PRInt32 aVal)
   {
     nsInt32HashSet* set = GetHash();
     if (set) {
@@ -163,7 +163,7 @@ private:
     return PtrBits(mValOrHash) & 0x1 ? nsnull : (nsInt32HashSet*)mValOrHash;
   }
   /** Find out whether it is an integer */
-  PRBool IsInt()
+  bool IsInt()
   {
     return !!(PtrBits(mValOrHash) & 0x1);
   }

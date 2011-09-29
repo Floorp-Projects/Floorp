@@ -105,7 +105,7 @@ class nsRecyclingAllocator {
     // mTouched:
     //  says if the allocator touched the freelist. If allocator didn't touch
     //  the freelist over a time time interval, timer will call ClearFreeList()
-    PRBool mTouched;
+    bool mTouched;
 
 #ifdef DEBUG
     // mId:
@@ -129,7 +129,7 @@ class nsRecyclingAllocator {
     nsresult Init(PRUint32 nbucket, PRUint32 recycleAfter, const char *id);
 
     // Allocation and free routines
-    void* Malloc(PRSize size, PRBool zeroit = PR_FALSE);
+    void* Malloc(PRSize size, bool zeroit = false);
     void  Free(void *ptr);
 
     void* Calloc(PRUint32 items, PRSize size)

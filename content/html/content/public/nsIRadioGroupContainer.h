@@ -66,7 +66,7 @@ public:
    */
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
                             nsIRadioVisitor* aVisitor,
-                            PRBool aFlushContent) = 0;
+                            bool aFlushContent) = 0;
 
   /**
    * Set the current radio button in a group
@@ -92,7 +92,7 @@ public:
    * @param aRadio the currently selected radio button [OUT]
    */
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
-                                const PRBool aPrevious,
+                                const bool aPrevious,
                                 nsIDOMHTMLInputElement*  aFocusedRadio,
                                 nsIDOMHTMLInputElement** aRadio) = 0;
 

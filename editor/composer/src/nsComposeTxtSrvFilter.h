@@ -61,10 +61,10 @@ public:
   NS_DECL_NSITEXTSERVICESFILTER
 
   // Helper - Intializer
-  void Init(PRBool aIsForMail) { mIsForMail = aIsForMail; }
+  void Init(bool aIsForMail) { mIsForMail = aIsForMail; }
 
 protected:
-  PRBool            mIsForMail;
+  bool              mIsForMail;
   nsCOMPtr<nsIAtom> mBlockQuoteAtom;
   nsCOMPtr<nsIAtom> mPreAtom;          // mail plain text quotes are wrapped in pre tags
   nsCOMPtr<nsIAtom> mSpanAtom;         //or they may be wrapped in span tags (editor.quotesPreformatted). 

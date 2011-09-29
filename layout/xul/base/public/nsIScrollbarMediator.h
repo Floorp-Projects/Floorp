@@ -53,7 +53,7 @@ public:
   NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
   NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
-  NS_IMETHOD VisibilityChanged(PRBool aVisible) = 0;
+  NS_IMETHOD VisibilityChanged(bool aVisible) = 0;
 };
 
 #endif

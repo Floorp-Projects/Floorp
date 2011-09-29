@@ -149,7 +149,7 @@ nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
   return newObject;
 }
 
-PRBool
+bool
 nsNSSCertificate::InitFromDER(char *certDER, int derLen)
 {
   nsNSSShutDownPreventionLock locker;
@@ -252,7 +252,7 @@ nsNSSCertificate::GetCertType(PRUint32 *aCertType)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetIsSelfSigned(PRBool *aIsSelfSigned)
+nsNSSCertificate::GetIsSelfSigned(bool *aIsSelfSigned)
 {
   NS_ENSURE_ARG(aIsSelfSigned);
 
@@ -707,7 +707,7 @@ nsNSSCertificate::GetEmailAddresses(PRUint32 *aLength, PRUnichar*** aAddresses)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, PRBool *result)
+nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, bool *result)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -1187,7 +1187,7 @@ nsNSSCertificate::ExportAsCMS(PRUint32 chainMode,
      * so make sure we're not adding duplicates, again
      */
     if (issuerCert && issuerCert != mCert) {
-      PRBool includeRoot = 
+      bool includeRoot = 
         (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot);
       CERTCertificateList *certChain = CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot);
       CERTCertificateListCleaner certChainCleaner(certChain);
@@ -1420,7 +1420,7 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
 
 
 NS_IMETHODIMP
-nsNSSCertificate::GetUsagesArray(PRBool localOnly,
+nsNSSCertificate::GetUsagesArray(bool localOnly,
                                  PRUint32 *_verified,
                                  PRUint32 *_count,
                                  PRUnichar ***_usages)
@@ -1475,7 +1475,7 @@ nsNSSCertificate::RequestUsagesArrayAsync(nsICertVerificationListener *aResultLi
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetUsagesString(PRBool localOnly,
+nsNSSCertificate::GetUsagesString(bool localOnly,
                                   PRUint32   *_verified,
                                   nsAString &_usages)
 {
@@ -1509,7 +1509,7 @@ DumpASN1Object(nsIASN1Object *object, unsigned int level)
   nsCOMPtr<nsIMutableArray> asn1Objects;
   nsCOMPtr<nsISupports> isupports;
   nsCOMPtr<nsIASN1Object> currObject;
-  PRBool processObjects;
+  bool processObjects;
   PRUint32 numObjects;
 
   for (i=0; i<level; i++)
@@ -1564,7 +1564,7 @@ nsNSSCertificate::GetASN1Structure(nsIASN1Object * *aASN1Structure)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::Equals(nsIX509Cert *other, PRBool *result)
+nsNSSCertificate::Equals(nsIX509Cert *other, bool *result)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -1604,7 +1604,7 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
   nsNSSShutDownPreventionLock locker;
   char* nickname = nsnull;
   int count;
-  PRBool conflict;
+  bool conflict;
   char* servername = nsnull;
   
   servername = CERT_GetCommonName(&cert->subject);
@@ -1657,7 +1657,7 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertList, nsIX509CertList)
 
-nsNSSCertList::nsNSSCertList(CERTCertList *certList, PRBool adopt)
+nsNSSCertList::nsNSSCertList(CERTCertList *certList, bool adopt)
 {
   if (certList) {
     if (adopt) {
@@ -1788,7 +1788,7 @@ nsNSSCertListEnumerator::~nsNSSCertListEnumerator()
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP
-nsNSSCertListEnumerator::HasMoreElements(PRBool *_retval)
+nsNSSCertListEnumerator::HasMoreElements(bool *_retval)
 { 
   NS_ENSURE_TRUE(mCertList, NS_ERROR_FAILURE);
 

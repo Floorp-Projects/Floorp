@@ -86,9 +86,9 @@ protected:
 protected:
   PRUnichar mSurrogateHigh;
   nsGBKConvUtil mUtil;
-  PRBool TryExtensionEncoder(PRUnichar aChar, char* aDest, PRInt32* aOutLen);
-  PRBool Try4BytesEncoder(PRUnichar aChar, char* aDest, PRInt32* aOutLen);
-  virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
+  bool TryExtensionEncoder(PRUnichar aChar, char* aDest, PRInt32* aOutLen);
+  bool Try4BytesEncoder(PRUnichar aChar, char* aDest, PRInt32* aOutLen);
+  virtual bool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
 };
 
 class nsUnicodeToGB18030: public nsUnicodeToGBK
@@ -99,7 +99,7 @@ public:
 protected:
   virtual void CreateExtensionEncoder();
   virtual void Create4BytesEncoder();
-  virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
+  virtual bool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
 };
 
 #endif /* nsUnicodeToGBK_h___ */

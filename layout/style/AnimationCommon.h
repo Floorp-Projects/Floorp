@@ -67,10 +67,10 @@ public:
 
   // nsIStyleRuleProcessor (parts)
   virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
-  virtual PRBool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
+  virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
-  virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
+  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext);
   virtual PRInt64 SizeOf() const;
 
   /**
@@ -78,7 +78,7 @@ public:
    */
   void Disconnect();
 
-  static PRBool ExtractComputedValueForTransition(
+  static bool ExtractComputedValueForTransition(
                   nsCSSProperty aProperty,
                   nsStyleContext* aStyleContext,
                   nsStyleAnimation::Value& aComputedValue);

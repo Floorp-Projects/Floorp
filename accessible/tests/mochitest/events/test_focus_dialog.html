@@ -1,0 +1,162 @@
+<html>
+
+<head>
+  <title>Accessible focus testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function openCloseDialog(aID)
+    {
+      this.eventSeq = [
+        new focusChecker(getNode(aID))
+      ];
+
+      this.invoke = function openCloseDialog_invoke()
+      {
+        var wnd = window.open("focus.html");
+        wnd.close();
+      }
+
+      this.getID = function openCloseDialog_getID()
+      {
+        return "Open close dialog while focus on " + prettyName(aID);
+      }
+    }
+
+    var gDialogWnd = null;
+    function getDialogDocument()
+    {
+      return gDialogWnd.document;
+    }
+
+    function openDialog(aID)
+    {
+      this.eventSeq = [
+        new focusChecker(getDialogDocument)
+      ];
+
+      this.invoke = function openDialog_invoke()
+      {
+        gDialogWnd = window.open("focus.html");
+      }
+
+      this.getID = function openDialog_getID()
+      {
+        return "Open dialog while focus on " + prettyName(aID);
+      }
+    }
+
+    function closeDialog(aID)
+    {
+      this.eventSeq = [
+        new focusChecker(aID)
+      ];
+
+      this.invoke = function closeDialog_invoke()
+      {
+        gDialogWnd.close();
+      }
+
+      this.getID = function closeDialog_getID()
+      {
+        return "Close dialog while focus on " + prettyName(aID);
+      }
+    }
+
+    function showNFocusAlertDialog()
+    {
+      this.ID = "alertdialog";
+      this.DOMNode = getNode(this.ID);
+
+      this.invoke = function showNFocusAlertDialog_invoke()
+      {
+        document.getElementById(this.ID).style.display = 'block';
+        document.getElementById(this.ID).focus();
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.DOMNode),
+        new focusChecker(this.DOMNode)
+      ];
+
+      this.getID = function showNFocusAlertDialog_getID()
+      {
+        return "Show and focus alert dialog " + prettyName(this.ID);
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTests()
+    {
+      gQueue = new eventQueue(EVENT_FOCUS);
+
+      gQueue.push(new synthFocus("button"));
+      gQueue.push(new openDialog("button"));
+      gQueue.push(new closeDialog("button"));
+
+      var frameNode = getNode("editabledoc");
+      gQueue.push(new synthFocusOnFrame(frameNode));
+      gQueue.push(new openCloseDialog(frameNode.contentDocument));
+
+      gQueue.push(new showNFocusAlertDialog());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=551679"
+     title="focus is not fired for focused document when switching between windows">
+    Mozilla Bug 551679
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=580464"
+     title="Accessible focus incorrect after JS focus() but correct after switching apps or using menu bar">
+    Mozilla Bug 580464
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <button id="button">button</button>
+  <iframe id="editabledoc" src="focus.html"></iframe>
+
+  <div id="alertdialog" style="display: none" tabindex="-1" role="alertdialog" aria-labelledby="title2" aria-describedby="desc2">
+    <div id="title2">Blah blah</div>
+    <div id="desc2">Woof woof woof.</div>
+    <button>Close</button>
+  </div>
+
+
+  <div id="eventdump"></div>
+</body>
+</html>

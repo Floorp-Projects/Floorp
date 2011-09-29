@@ -61,7 +61,7 @@ public:
 
     NS_IMETHOD Init(nsIWidget* aWidget,
                     nsIPrintSettings* aPS,
-                    PRBool aIsPrintPreview);
+                    bool aIsPrintPreview);
     NS_IMETHOD BeginDocument(PRUnichar* aTitle,
                              PRUnichar* aPrintToFileName,
                              PRInt32 aStartPage,
@@ -74,8 +74,8 @@ public:
 
 protected:
     nsCOMPtr<nsIPrintSettings> mPrintSettings;
-    PRPackedBool mToPrinter : 1;      /* If PR_TRUE, print to printer */
-    PRPackedBool mIsPPreview : 1;     /* If PR_TRUE, is print preview */
+    bool mToPrinter : 1;      /* If true, print to printer */
+    bool mIsPPreview : 1;     /* If true, is print preview */
     char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
     char   mPrinter[256];       /* Printer name */
     nsCString              mSpoolName;

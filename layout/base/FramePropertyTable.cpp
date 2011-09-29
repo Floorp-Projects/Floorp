@@ -91,7 +91,7 @@ FramePropertyTable::Set(nsIFrame* aFrame, const FramePropertyDescriptor* aProper
 void*
 FramePropertyTable::Get(const nsIFrame* aFrame,
                         const FramePropertyDescriptor* aProperty,
-                        PRBool* aFoundResult)
+                        bool* aFoundResult)
 {
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
@@ -134,7 +134,7 @@ FramePropertyTable::Get(const nsIFrame* aFrame,
 
 void*
 FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
-                           PRBool* aFoundResult)
+                           bool* aFoundResult)
 {
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
@@ -199,7 +199,7 @@ FramePropertyTable::Delete(nsIFrame* aFrame, const FramePropertyDescriptor* aPro
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
 
-  PRBool found;
+  bool found;
   void* v = Remove(aFrame, aProperty, &found);
   if (found) {
     PropertyValue pv(aProperty, v);

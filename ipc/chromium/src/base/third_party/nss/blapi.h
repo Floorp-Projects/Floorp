@@ -49,7 +49,7 @@ namespace nss {
 /******************************************/
 
 extern SHA256Context *SHA256_NewContext(void);
-extern void SHA256_DestroyContext(SHA256Context *cx, PRBool freeit);
+extern void SHA256_DestroyContext(SHA256Context *cx, bool freeit);
 extern void SHA256_Begin(SHA256Context *cx);
 extern void SHA256_Update(SHA256Context *cx, const unsigned char *input,
 			unsigned int inputLen);
@@ -67,7 +67,7 @@ extern void SHA256_Clone(SHA256Context *dest, SHA256Context *src);
 /******************************************/
 
 extern SHA512Context *SHA512_NewContext(void);
-extern void SHA512_DestroyContext(SHA512Context *cx, PRBool freeit);
+extern void SHA512_DestroyContext(SHA512Context *cx, bool freeit);
 extern void SHA512_Begin(SHA512Context *cx);
 extern void SHA512_Update(SHA512Context *cx, const unsigned char *input,
 			unsigned int inputLen);
@@ -85,7 +85,7 @@ extern void SHA512_Clone(SHA512Context *dest, SHA512Context *src);
 /******************************************/
 
 extern SHA384Context *SHA384_NewContext(void);
-extern void SHA384_DestroyContext(SHA384Context *cx, PRBool freeit);
+extern void SHA384_DestroyContext(SHA384Context *cx, bool freeit);
 extern void SHA384_Begin(SHA384Context *cx);
 extern void SHA384_Update(SHA384Context *cx, const unsigned char *input,
 			unsigned int inputLen);

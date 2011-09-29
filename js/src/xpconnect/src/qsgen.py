@@ -1166,7 +1166,7 @@ traceableArgumentConversionTemplates = {
     'unsigned long long':
           "    PRUint64 ${name} = xpc_qsDoubleToUint64(${argVal});\n",
     'boolean':
-          "    PRBool ${name} = (PRBool) ${argVal};\n",
+          "    bool ${name} = (bool) ${argVal};\n",
     'float':
           "    float ${name} = (float) ${argVal};\n",
     'double':

@@ -62,7 +62,7 @@ public:
 
 protected:
   double mAlpha, mBeta, mGamma;
-  PRBool mAbsolute;
+  bool mAbsolute;
 };
 
 #endif

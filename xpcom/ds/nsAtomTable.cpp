@@ -72,7 +72,7 @@ static nsDataHashtable<nsStringHashKey, nsIAtom*>* gStaticAtomTable = 0;
 /**
  * Whether it is still OK to add atoms to gStaticAtomTable.
  */
-static PRBool gStaticAtomTableSealed = PR_FALSE;
+static bool gStaticAtomTableSealed = false;
 
 //----------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
   const AtomTableKey *k = static_cast<const AtomTableKey*>(key);
 
   if (k->mUTF8String) {
-    PRBool err;
+    bool err;
     PRUint32 hash = nsCRT::HashCodeAsUTF16(k->mUTF8String, k->mLength, &err);
     if (err) {
       AtomTableKey* mutableKey = const_cast<AtomTableKey*>(k);
@@ -121,7 +121,7 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
   return nsCRT::HashCode(k->mUTF16String, k->mLength);
 }
 
-static PRBool
+static bool
 AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                   const void *key)
 {
@@ -162,7 +162,7 @@ AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   }
 }
 
-static PRBool
+static bool
 AtomTableInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                    const void *key)
 {
@@ -313,13 +313,13 @@ NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::Release()
   return 1;
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 AtomImpl::IsPermanent()
 {
   return PR_FALSE;
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 PermanentAtomImpl::IsPermanent()
 {
   return PR_TRUE;
@@ -347,7 +347,7 @@ AtomImpl::ToUTF8String(nsACString& aBuf)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 AtomImpl::EqualsUTF8(const nsACString& aString)
 {
   return CompareUTF8toUTF16(aString,
@@ -355,13 +355,13 @@ AtomImpl::EqualsUTF8(const nsACString& aString)
 }
 
 NS_IMETHODIMP
-AtomImpl::ScriptableEquals(const nsAString& aString, PRBool* aResult)
+AtomImpl::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
   *aResult = aString.Equals(nsDependentString(mString, mLength));
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 AtomImpl::IsStaticAtom()
 {
   return IsPermanent();

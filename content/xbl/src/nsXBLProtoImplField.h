@@ -66,7 +66,7 @@ public:
                         JSObject* aBoundNode,
                         nsIPrincipal* aPrincipal,
                         nsIURI* aBindingDocURI,
-                        PRBool* aDidInstall) const;
+                        bool* aDidInstall) const;
 
   const PRUnichar* GetName() const { return mName; }
 

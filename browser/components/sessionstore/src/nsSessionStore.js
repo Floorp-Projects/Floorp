@@ -2825,6 +2825,7 @@ SessionStoreService.prototype = {
       // a tab gets closed before it's been properly restored
       browser.__SS_data = tabData;
       browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
+      tab.setAttribute("pending", "true");
 
       // Make sure that set/getTabValue will set/read the correct data by
       // wiping out any current value in tab.__SS_extdata.
@@ -3007,6 +3008,7 @@ SessionStoreService.prototype = {
 
     // Set this tab's state to restoring
     browser.__SS_restoreState = TAB_STATE_RESTORING;
+    aTab.removeAttribute("pending");
 
     // Remove the history listener, since we no longer need it once we start restoring
     this._removeSHistoryListener(aTab);

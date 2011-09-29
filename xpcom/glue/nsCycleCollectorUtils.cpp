@@ -52,7 +52,7 @@
 bool
 NS_IsCycleCollectorThread()
 {
-  PRBool result = PR_FALSE;
+  bool result = false;
   nsCOMPtr<nsIThreadManager> mgr =
     do_GetService(NS_THREADMANAGER_CONTRACTID);
   if (mgr)

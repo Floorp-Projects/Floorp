@@ -78,7 +78,7 @@ nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
 
 nsresult
 nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
-                                        PRBool* aCantHandleYet) const
+                                        bool* aCantHandleYet) const
 
 {
     if (aCantHandleYet)
@@ -103,12 +103,12 @@ nsContentTestNode::Constrain(InstantiationSet& aInstantiations)
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
 
         nsCOMPtr<nsIRDFNode> refValue;
-        PRBool hasRefBinding = inst->mAssignments.GetAssignmentFor(mRefVariable,
+        bool hasRefBinding = inst->mAssignments.GetAssignmentFor(mRefVariable,
                                                                    getter_AddRefs(refValue));
         if (hasRefBinding) {
             nsCOMPtr<nsIRDFResource> refResource = do_QueryInterface(refValue);
             if (refResource) {
-                PRBool generated;
+                bool generated;
                 rv = builder->HasGeneratedContent(refResource, mTag, &generated);
                 if (NS_FAILED(rv)) return rv;
 

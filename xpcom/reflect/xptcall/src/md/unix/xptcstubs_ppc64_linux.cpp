@@ -147,7 +147,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
             else if (type == nsXPTType::T_U64)
                 dp->val.u64 = (PRUint64) tempu64;
             else if (type == nsXPTType::T_BOOL)
-                dp->val.b   = (PRBool)   tempu64;
+                dp->val.b   = (bool)   tempu64;
             else if (type == nsXPTType::T_CHAR)
                 dp->val.c   = (char)     tempu64;
             else if (type == nsXPTType::T_WCHAR)

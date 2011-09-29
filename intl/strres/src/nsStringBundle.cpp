@@ -305,7 +305,7 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
   rv = aOverrideStrings->EnumerateKeysInBundle(mPropertiesURL,
                                                getter_AddRefs(overrideEnumerator));
   
-  PRBool hasMore;
+  bool hasMore;
   rv = overrideEnumerator->HasMoreElements(&hasMore);
   NS_ENSURE_SUCCESS(rv, rv);
   while (hasMore) {
@@ -432,7 +432,7 @@ nsExtensibleStringBundle::Init(const char * aCategory,
   rv = catman->EnumerateCategory(aCategory, getter_AddRefs(enumerator));
   if (NS_FAILED(rv)) return rv;
 
-  PRBool hasMore;
+  bool hasMore;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> supports;
     rv = enumerator->GetNext(getter_AddRefs(supports));

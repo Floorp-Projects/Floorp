@@ -45,7 +45,7 @@
 /**
  *  Compares the two ExprResults based on XPath 1.0 Recommendation (section 3.4)
  */
-PRBool
+bool
 RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
                                txAExprResult* aRight)
 {
@@ -105,7 +105,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
 
     // Neither is a NodeSet
     if (mOp == EQUAL || mOp == NOT_EQUAL) {
-        PRBool result;
+        bool result;
         const nsString *lString, *rString;
 
         // If either is a bool, compare as bools.
@@ -197,7 +197,7 @@ RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_2(RelationalExpr, BOOLEAN_RESULT, mLeftExpr, mRightExpr)
 
-PRBool
+bool
 RelationalExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return mLeftExpr->isSensitiveTo(aContext) ||

@@ -73,7 +73,7 @@ public:
    * Our implementation of MouseClicked. 
    * @param aTrustEvent if PR_TRUE and aEvent as null, then assume the event was trusted
    */
-  void DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent);
+  void DoMouseClick(nsGUIEvent* aEvent, bool aTrustEvent);
   void UpdateMouseThrough() { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 }; // class nsButtonBoxFrame
 

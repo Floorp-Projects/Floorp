@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Expanded state change events tests for comboboxes and autocompletes.">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+
+  <script type="application/javascript"
+          src="../autocomplete.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    //gA11yEventDumpToConsole = true; // debuggin
+
+    var gQueue = null;
+    function doTest()
+    {
+      // register 'test-a11y-search' autocomplete search
+      initAutoComplete([ "hello", "hi" ],
+                       [ "Beep beep'm beep beep yeah", "Baby you can drive my car" ]);
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new openCombobox("menulist"));
+      gQueue.push(new closeCombobox("menulist"));
+
+      todo(false, "Autocompletes don't fire expanded state change events when popup open. See bug 688480!");
+      //gQueue.push(new openCombobox("autocomplete"));
+      //gQueue.push(new closeCombobox("autocomplete"));
+
+      // XXX: searchbar doesn't fire state change events because accessible
+      // parent of combobox_list accessible is pushbutton accessible.
+      //var searchbar = document.getElementById("searchbar");
+      //gQueue.push(new openHideCombobox(searchbar, true));
+      //gQueue.push(new openHideCombobox(searchbar, false));
+      todo(false, "Enable states test for XUL searchbar widget!");
+
+      gQueue.onFinish = function()
+      {
+        // unregister 'test-a11y-search' autocomplete search
+        shutdownAutoComplete();
+      }
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    // This is the hack needed for searchbar work outside of browser.
+    function getBrowser()
+    {
+      return {
+        mCurrentBrowser: { engines: new Array() }
+      };
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox style="overflow: auto;" flex="1">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=467057"
+         title="xul menulist doesn't fire expand/collapse state change events">
+        Mozilla Bug 467057
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <menulist id="menulist">
+        <menupopup>
+          <menuitem label="item1"/>
+          <menuitem label="item2"/>
+          <menuitem label="item3"/>
+        </menupopup>
+      </menulist>
+
+      <textbox id="autocomplete" type="autocomplete"
+               autocompletesearch="test-a11y-search"/>
+
+      <searchbar id="searchbar"/>
+    </vbox>
+  </hbox>
+
+</window>
+

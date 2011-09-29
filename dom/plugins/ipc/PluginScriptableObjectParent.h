@@ -170,8 +170,8 @@ public:
   }
 
   JSBool GetPropertyHelper(NPIdentifier aName,
-                           PRBool* aHasProperty,
-                           PRBool* aHasMethod,
+                           bool* aHasProperty,
+                           bool* aHasMethod,
                            NPVariant* aResult);
 
 private:

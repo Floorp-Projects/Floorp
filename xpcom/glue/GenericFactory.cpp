@@ -49,7 +49,7 @@ GenericFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-GenericFactory::LockFactory(PRBool aLock)
+GenericFactory::LockFactory(bool aLock)
 {
   NS_ERROR("Vestigial method, never called!");
   return NS_ERROR_FAILURE;

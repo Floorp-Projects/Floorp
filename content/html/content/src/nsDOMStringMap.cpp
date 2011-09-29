@@ -102,7 +102,7 @@ protected:
 };
 
 /* [notxpcom] boolean hasDataAttr (in DOMString prop); */
-NS_IMETHODIMP_(PRBool) nsDOMStringMap::HasDataAttr(const nsAString& aProp)
+NS_IMETHODIMP_(bool) nsDOMStringMap::HasDataAttr(const nsAString& aProp)
 {
   nsAutoString attr;
   if (!DataPropToAttr(aProp, attr)) {
@@ -251,7 +251,7 @@ nsresult nsDOMStringMap::GetDataPropList(nsTArray<nsString>& aResult)
  * Converts a dataset property name to the corresponding data attribute name.
  * (ex. aBigFish to data-a-big-fish).
  */
-PRBool nsDOMStringMap::DataPropToAttr(const nsAString& aProp,
+bool nsDOMStringMap::DataPropToAttr(const nsAString& aProp,
                                       nsAString& aResult)
 {
   const PRUnichar* cur = aProp.BeginReading();
@@ -294,7 +294,7 @@ PRBool nsDOMStringMap::DataPropToAttr(const nsAString& aProp,
  * Converts a data attribute name to the corresponding dataset property name.
  * (ex. data-a-big-fish to aBigFish).
  */
-PRBool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
+bool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
                                       nsAString& aResult)
 {
   // If the attribute name does not begin with "data-" then it can not be

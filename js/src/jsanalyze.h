@@ -41,11 +41,13 @@
 #ifndef jsanalyze_h___
 #define jsanalyze_h___
 
-#include "jsarena.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 #include "jsinfer.h"
 #include "jsscript.h"
+#include "jstl.h"
+
+#include "ds/LifoAlloc.h"
 
 struct JSScript;
 
@@ -82,11 +84,6 @@ namespace analyze {
  * Intermediate type inference results are additionally stored here. The above
  * analyses are independent from type inference.
  */
-
-class SSAValue;
-struct SSAUseChain;
-struct LoopAnalysis;
-struct SlotValue;
 
 /* Information about a bytecode instruction. */
 class Bytecode
@@ -1370,6 +1367,18 @@ void PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc);
 #endif
 
 } /* namespace analyze */
+} /* namespace js */
+
+namespace js {
+namespace tl {
+
+template <> struct IsPodType<js::analyze::LifetimeVariable> { static const bool result = true; };
+template <> struct IsPodType<js::analyze::LoopAnalysis>     { static const bool result = true; };
+template <> struct IsPodType<js::analyze::SlotValue>        { static const bool result = true; };
+template <> struct IsPodType<js::analyze::SSAValue>         { static const bool result = true; };
+template <> struct IsPodType<js::analyze::SSAUseChain>      { static const bool result = true; };
+
+} /* namespace tl */
 } /* namespace js */
 
 #endif // jsanalyze_h___

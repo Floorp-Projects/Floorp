@@ -53,6 +53,10 @@ int	posix_memalign(void **memptr, size_t alignment, size_t size);
 /* Android doesn't have posix_memalign */
 #ifdef MOZ_MEMORY_ANDROID
 int	posix_memalign(void **memptr, size_t alignment, size_t size);
+/* Android < 2.3 doesn't have pthread_atfork, so we need to call these
+ * when forking the child process. See bug 680190 */
+void    _malloc_prefork(void);
+void    _malloc_postfork(void);
 #endif
 
 #if defined(MOZ_MEMORY_DARWIN) || defined(MOZ_MEMORY_WINDOWS)

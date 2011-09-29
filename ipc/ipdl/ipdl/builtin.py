@@ -61,8 +61,6 @@ Types = (
     'ssize_t',
 
     # NSPR types
-    'PRBool',
-    'PRPackedBool',
     'PRInt8',
     'PRUint8',
     'PRInt16',

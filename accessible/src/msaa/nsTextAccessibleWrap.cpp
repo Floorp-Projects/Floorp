@@ -189,7 +189,7 @@ __try {
 
 nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame, 
                                                    PRInt32 aOffset, 
-                                                   PRBool aPreferNext, 
+                                                   bool aPreferNext, 
                                                    nsPoint& aOutPoint)
 {
   nsIFrame *textFrame = nsnull;

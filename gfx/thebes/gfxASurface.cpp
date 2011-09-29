@@ -223,7 +223,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
 }
 
 void
-gfxASurface::Init(cairo_surface_t* surface, PRBool existingSurface)
+gfxASurface::Init(cairo_surface_t* surface, bool existingSurface)
 {
     if (cairo_surface_status(surface)) {
         // the surface has an error on it
@@ -368,7 +368,7 @@ gfxASurface::CairoStatus()
 }
 
 /* static */
-PRBool
+bool
 gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
 {
     if (sz.width < 0 || sz.height < 0) {
@@ -481,7 +481,7 @@ gfxASurface::FormatFromContent(gfxASurface::gfxContentType type)
 }
 
 void
-gfxASurface::SetSubpixelAntialiasingEnabled(PRBool aEnabled)
+gfxASurface::SetSubpixelAntialiasingEnabled(bool aEnabled)
 {
 #ifdef MOZ_TREE_CAIRO
     if (!mSurfaceValid)
@@ -491,7 +491,7 @@ gfxASurface::SetSubpixelAntialiasingEnabled(PRBool aEnabled)
 #endif
 }
 
-PRBool
+bool
 gfxASurface::GetSubpixelAntialiasingEnabled()
 {
     if (!mSurfaceValid)

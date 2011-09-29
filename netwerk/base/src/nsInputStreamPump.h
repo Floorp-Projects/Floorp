@@ -68,7 +68,7 @@ public:
                              PRInt64              streamLen = -1,
                              PRUint32             segsize = 0,
                              PRUint32             segcount = 0,
-                             PRBool               closeWhenDone = PR_FALSE);
+                             bool                 closeWhenDone = false);
 
     typedef void (*PeekSegmentFun)(void *closure, const PRUint8 *buf,
                                    PRUint32 bufLen);
@@ -112,9 +112,9 @@ protected:
     nsresult                      mStatus;
     PRUint32                      mSuspendCount;
     PRUint32                      mLoadFlags;
-    PRPackedBool                  mIsPending;
-    PRPackedBool                  mWaiting; // true if waiting on async source
-    PRPackedBool                  mCloseWhenDone;
+    bool                          mIsPending;
+    bool                          mWaiting; // true if waiting on async source
+    bool                          mCloseWhenDone;
 };
 
 #endif // !nsInputStreamChannel_h__

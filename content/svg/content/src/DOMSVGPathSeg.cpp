@@ -76,7 +76,7 @@ NS_INTERFACE_MAP_END
 
 DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
                              PRUint32 aListIndex,
-                             PRBool aIsAnimValItem)
+                             bool aIsAnimValItem)
   : mList(aList)
   , mListIndex(aListIndex)
   , mIsAnimValItem(aIsAnimValItem)
@@ -112,7 +112,7 @@ DOMSVGPathSeg::GetPathSegTypeAsLetter(nsAString &aPathSegTypeAsLetter)
 void
 DOMSVGPathSeg::InsertingIntoList(DOMSVGPathSegList *aList,
                                  PRUint32 aListIndex,
-                                 PRBool aIsAnimValItem)
+                                 bool aIsAnimValItem)
 {
   NS_ABORT_IF_FALSE(!HasOwner(), "Inserting item that is already in a list");
 
@@ -156,7 +156,7 @@ DOMSVGPathSeg::InternalItem()
 }
 
 #ifdef DEBUG
-PRBool
+bool
 DOMSVGPathSeg::IndexIsValid()
 {
   SVGAnimatedPathSegList *alist = Element()->GetAnimPathSegList();
@@ -187,7 +187,7 @@ DOMSVGPathSeg::IndexIsValid()
   }                                                                           \
   DOMSVGPathSeg##segName(DOMSVGPathSegList *aList,                            \
                          PRUint32 aListIndex,                                 \
-                         PRBool aIsAnimValItem)                               \
+                         bool aIsAnimValItem)                               \
     : DOMSVGPathSeg(aList, aListIndex, aIsAnimValItem)                        \
   {                                                                           \
     CHECK_ARG_COUNT_IN_SYNC(segType);                                         \
@@ -260,7 +260,7 @@ DOMSVGPathSeg::IndexIsValid()
 
 // For the boolean flags in arc commands
 #define IMPL_BOOL_PROP(segName, propName, index) \
-  IMPL_PROP_WITH_TYPE(segName, propName, index, PRBool)
+  IMPL_PROP_WITH_TYPE(segName, propName, index, bool)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -552,7 +552,7 @@ class DOMSVGPathSegArcAbs
 {
 public:
   DOMSVGPathSegArcAbs(float r1, float r2, float angle,
-                      PRBool largeArcFlag, PRBool sweepFlag,
+                      bool largeArcFlag, bool sweepFlag,
                       float x, float y)
     : DOMSVGPathSeg()
   {
@@ -592,7 +592,7 @@ class DOMSVGPathSegArcRel
 {
 public:
   DOMSVGPathSegArcRel(float r1, float r2, float angle,
-                      PRBool largeArcFlag, PRBool sweepFlag,
+                      bool largeArcFlag, bool sweepFlag,
                       float x, float y)
     : DOMSVGPathSeg()
   {
@@ -855,7 +855,7 @@ IMPL_FLOAT_PROP(CurvetoQuadraticSmoothRel, Y, 1)
 /* static */ DOMSVGPathSeg*
 DOMSVGPathSeg::CreateFor(DOMSVGPathSegList *aList,
                          PRUint32 aListIndex,
-                         PRBool aIsAnimValItem)
+                         bool aIsAnimValItem)
 {
   PRUint32 dataIndex = aList->mItems[aListIndex].mInternalDataIndex;
   float *data = &aList->InternalList().mData[dataIndex];
@@ -983,7 +983,7 @@ NS_NewSVGPathSegCurvetoQuadraticRel(float x, float y,
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegArcAbs(float x, float y,
                        float r1, float r2, float angle,
-                       PRBool largeArcFlag, PRBool sweepFlag)
+                       bool largeArcFlag, bool sweepFlag)
 {
   // See comment in NS_NewSVGPathSegCurvetoCubicAbs!
 
@@ -993,7 +993,7 @@ NS_NewSVGPathSegArcAbs(float x, float y,
 nsIDOMSVGPathSeg*
 NS_NewSVGPathSegArcRel(float x, float y,
                        float r1, float r2, float angle,
-                       PRBool largeArcFlag, PRBool sweepFlag)
+                       bool largeArcFlag, bool sweepFlag)
 {
   // See comment in NS_NewSVGPathSegCurvetoCubicAbs!
 

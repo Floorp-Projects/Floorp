@@ -1,0 +1,81 @@
+<html>
+
+<head>
+  <title>HTML selects accessible states tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // combobox
+      var combobox = getAccessible("combobox");
+      testStates(combobox,
+                 STATE_HASPOPUP | STATE_COLLAPSED | STATE_FOCUSABLE, 0,
+                 STATE_FOCUSED, 0);
+
+      var comboboxList = combobox.firstChild;
+      testStates(comboboxList, 0, 0, STATE_FOCUSABLE, 0);
+
+      var opt1 = comboboxList.firstChild;
+      testStates(opt1, STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE, 0,
+                 STATE_FOCUSED, 0);
+
+      var opt2 = comboboxList.lastChild;
+      testStates(opt2, STATE_SELECTABLE | STATE_FOCUSABLE, 0, STATE_SELECTED, 0,
+                 STATE_FOCUSED, 0);
+
+      // listbox
+      var listbox = getAccessible("listbox");
+      testStates(listbox, STATE_FOCUSABLE, 0,
+                 STATE_HASPOPUP | STATE_COLLAPSED | STATE_FOCUSED, 0);
+
+      testStates(listbox.firstChild, STATE_SELECTABLE, 0,
+                 STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED, 0);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=443889"
+     title="mochitest for selects and lists">
+    Mozilla Bug 443889
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=640716"
+     title="mochitest for selects and lists">
+    Mozilla Bug 640716
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="combobox">
+    <option>item 1</option>
+    <option>item 2</option>
+  </select>
+
+  <select id="listbox" name="component" size="3">
+    <option>Build</option>
+    <option>Disability Access APIs</option>
+    <option>General</option>
+    <option>UI</option>
+  </select>
+
+</body>
+</html>

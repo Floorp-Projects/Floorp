@@ -55,10 +55,10 @@ class gfxMixedFontFamily;
 // parsed CSS @font-face rule information
 // lifetime: from when @font-face rule processed until font is loaded
 struct gfxFontFaceSrc {
-    PRPackedBool           mIsLocal;       // url or local
+    bool                   mIsLocal;       // url or local
 
     // if url, whether to use the origin principal or not
-    PRPackedBool           mUseOriginPrincipal;
+    bool                   mUseOriginPrincipal;
 
     // format hint flags, union of all possible formats
     // (e.g. TrueType, EOT, SVG, etc.)
@@ -142,7 +142,7 @@ public:
     }
 
     // temp method to determine if all proxies are loaded
-    PRBool AllLoaded() 
+    bool AllLoaded() 
     {
         PRUint32 numFonts = mAvailableFonts.Length();
         for (PRUint32 i = 0; i < numFonts; i++) {
@@ -206,7 +206,7 @@ public:
     void AddFontFace(const nsAString& aFamilyName, gfxFontEntry* aFontEntry);
 
     // Whether there is a face with this family name
-    PRBool HasFamily(const nsAString& aFamilyName) const
+    bool HasFamily(const nsAString& aFamilyName) const
     {
         return GetFamily(aFamilyName) != nsnull;
     }
@@ -214,9 +214,9 @@ public:
     // lookup a font entry for a given style, returns null if not loaded
     gfxFontEntry *FindFontEntry(const nsAString& aName,
                                 const gfxFontStyle& aFontStyle,
-                                PRBool& aFoundFamily,
-                                PRBool& aNeedsBold,
-                                PRBool& aWaitForUserFont);
+                                bool& aFoundFamily,
+                                bool& aNeedsBold,
+                                bool& aWaitForUserFont);
                                 
     // initialize the process that loads external font data, which upon 
     // completion will call OnLoadComplete method
@@ -229,7 +229,7 @@ public:
     // reference was next in line)
     // Ownership of aFontData is passed in here; the font set must
     // ensure that it is eventually deleted with NS_Free().
-    PRBool OnLoadComplete(gfxProxyFontEntry *aProxy,
+    bool OnLoadComplete(gfxProxyFontEntry *aProxy,
                           const PRUint8 *aFontData, PRUint32 aLength,
                           nsresult aDownloadStatus);
 
@@ -284,7 +284,7 @@ public:
 
     virtual ~gfxProxyFontEntry();
 
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
 
     // note that code depends on the ordering of these values!
     enum LoadingState {

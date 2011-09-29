@@ -135,13 +135,13 @@ struct nsRequestInfo : public PLDHashEntryHdr
   const void* mKey; // Must be first for the pldhash stubs to work
   PRInt64 mCurrentProgress;
   PRInt64 mMaxProgress;
-  PRBool mUploading;
+  bool mUploading;
 
   nsAutoPtr<nsStatusInfo> mLastStatus;
 };
 
 
-static PRBool
+static bool
 RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                          const void *key)
 {
@@ -386,7 +386,7 @@ nsDocLoader::Stop(void)
 }       
 
 
-PRBool
+bool
 nsDocLoader::IsBusy()
 {
   nsresult rv;
@@ -410,7 +410,7 @@ nsDocLoader::IsBusy()
     return PR_FALSE;
   }
   
-  PRBool busy;
+  bool busy;
   rv = mLoadGroup->IsPending(&busy);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
@@ -535,7 +535,7 @@ nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
             count));
   }
 #endif /* PR_LOGGING */
-  PRBool bJustStartedLoading = PR_FALSE;
+  bool bJustStartedLoading = false;
 
   nsLoadFlags loadFlags = 0;
   request->GetLoadFlags(&loadFlags);
@@ -617,7 +617,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   }
 #endif
 
-  PRBool bFireTransferring = PR_FALSE;
+  bool bFireTransferring = false;
 
   //
   // Set the Maximum progress to the same value as the current progress.
@@ -769,7 +769,7 @@ NS_IMETHODIMP nsDocLoader::GetDocumentChannel(nsIChannel ** aChannel)
 }
 
 
-void nsDocLoader::DocLoaderIsEmpty(PRBool aFlushLayout)
+void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout)
 {
   if (mIsLoadingDocument) {
     /* In the unimagineably rude circumstance that onload event handlers
@@ -1028,7 +1028,7 @@ nsDocLoader::GetDOMWindow(nsIDOMWindow **aResult)
 }
 
 NS_IMETHODIMP
-nsDocLoader::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
+nsDocLoader::GetIsLoadingDocument(bool *aIsLoadingDocument)
 {
   *aIsLoadingDocument = mIsLoadingDocument;
 
@@ -1175,7 +1175,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
     nsRequestInfo *info;
     info = GetRequestInfo(aRequest);
     if (info) {
-      PRBool uploading = (aStatus == nsITransport::STATUS_WRITING ||
+      bool uploading = (aStatus == nsITransport::STATUS_WRITING ||
                           aStatus == nsISocketTransport::STATUS_SENDING_TO);
       // If switching from uploading to downloading (or vice versa), then we
       // need to reset our progress counts.  This is designed with HTTP form
@@ -1470,11 +1470,11 @@ nsDocLoader::FireOnStatusChange(nsIWebProgress* aWebProgress,
   }
 }
 
-PRBool
+bool
 nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress,
                               nsIURI *aURI,
                               PRInt32 aDelay,
-                              PRBool aSameURI)
+                              bool aSameURI)
 {
   /*
    * Returns true if the refresh may proceed,
@@ -1485,7 +1485,7 @@ nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress,
    * Iterate the elements from back to front so that if items
    * get removed from the list it won't affect our iteration
    */
-  PRBool allowRefresh = PR_TRUE;
+  bool allowRefresh = true;
   PRInt32 count = mListenerInfoList.Count();
 
   while (--count >= 0) {
@@ -1510,7 +1510,7 @@ nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress,
     if (!listener2)
       continue;
 
-    PRBool listenerAllowedRefresh;
+    bool listenerAllowedRefresh;
     nsresult listenerRV = listener2->OnRefreshAttempted(
         aWebProgress, aURI, aDelay, aSameURI, &listenerAllowedRefresh);
     if (NS_FAILED(listenerRV))

@@ -74,7 +74,7 @@ public:
                          const PRUnichar* aTargetSpec,
                          nsIInputStream* aPostDataStream,
                          nsIInputStream* aHeadersDataStream,
-                         PRBool aIsTrusted) = 0;
+                         bool aIsTrusted) = 0;
 
   /**
    * Process a click on a link.

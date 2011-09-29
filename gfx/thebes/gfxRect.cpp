@@ -39,13 +39,13 @@
 
 #include "nsMathUtils.h"
 
-static PRBool
+static bool
 WithinEpsilonOfInteger(gfxFloat aX, gfxFloat aEpsilon)
 {
     return fabs(NS_round(aX) - aX) <= fabs(aEpsilon);
 }
 
-PRBool
+bool
 gfxRect::WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const
 {
     NS_ASSERTION(-0.5 < aEpsilon && aEpsilon < 0.5, "Nonsense epsilon value");

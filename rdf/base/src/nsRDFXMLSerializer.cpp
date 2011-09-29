@@ -221,7 +221,7 @@ nsRDFXMLSerializer::EnsureNewPrefix()
 {
     nsAutoString qname;
     nsCOMPtr<nsIAtom> prefix;
-    PRBool isNewPrefix;
+    bool isNewPrefix;
     do {
         isNewPrefix = PR_TRUE;
         qname.AssignLiteral("NS");
@@ -286,7 +286,7 @@ nsRDFXMLSerializer::GetQName(nsIRDFResource* aResource, nsCString& aQName)
     return mQNames.Get(aResource, &aQName) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
-PRBool
+bool
 nsRDFXMLSerializer::IsContainerProperty(nsIRDFResource* aProperty)
 {
     // Return `true' if the property is an internal property related
@@ -297,7 +297,7 @@ nsRDFXMLSerializer::IsContainerProperty(nsIRDFResource* aProperty)
     if (aProperty == kRDF_nextVal)
         return PR_TRUE;
 
-    PRBool isOrdinal = PR_FALSE;
+    bool isOrdinal = false;
     gRDFC->IsOrdinalProperty(aProperty, &isOrdinal);
     if (isOrdinal)
         return PR_TRUE;
@@ -517,7 +517,7 @@ nsresult
 nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
                                       nsIRDFResource* aResource,
                                       nsIRDFResource* aProperty,
-                                      PRBool aInline,
+                                      bool aInline,
                                       PRInt32* aSkipped)
 {
     nsresult rv = NS_OK;
@@ -532,10 +532,10 @@ nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
     // Serializing the assertion inline is ok as long as the property has
     // only one target value, and it is a literal that doesn't include line
     // breaks.
-    PRBool needsChild = PR_FALSE;
+    bool needsChild = false;
 
     while (1) {
-        PRBool hasMore = PR_FALSE;
+        bool hasMore = false;
         assertions->HasMoreElements(&hasMore);
         if (! hasMore)
             break;
@@ -589,7 +589,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
 {
     nsresult rv;
 
-    PRBool isTypedNode = PR_FALSE;
+    bool isTypedNode = false;
     nsCString typeQName;
 
     nsCOMPtr<nsIRDFNode> typeNode;
@@ -652,7 +652,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
             visited.AppendElement(kRDF_type);
 
         while (1) {
-            PRBool hasMore = PR_FALSE;
+            bool hasMore = false;
             arcs->HasMoreElements(&hasMore);
             if (! hasMore)
                 break;
@@ -697,7 +697,7 @@ nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
                 visited.AppendElement(kRDF_type);
 
             while (1) {
-                PRBool hasMore = PR_FALSE;
+                bool hasMore = false;
                 arcs->HasMoreElements(&hasMore);
                 if (! hasMore)
                     break;
@@ -926,7 +926,7 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
 
     if (NS_SUCCEEDED(rv)) {
         while (1) {
-            PRBool hasMore;
+            bool hasMore;
             rv = elements->HasMoreElements(&hasMore);
             if (NS_FAILED(rv)) break;
 
@@ -958,9 +958,9 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
     nsCOMPtr<nsISimpleEnumerator> arcs;
     mDataSource->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
 
-    PRBool wroteDescription = PR_FALSE;
+    bool wroteDescription = false;
     while (! wroteDescription) {
-        PRBool hasMore = PR_FALSE;
+        bool hasMore = false;
         rv = arcs->HasMoreElements(&hasMore);
         if (NS_FAILED(rv)) break;
 
@@ -1052,7 +1052,7 @@ private:
 NS_IMPL_ISUPPORTS1(QNameCollector, rdfITripleVisitor)
 nsresult
 QNameCollector::Visit(nsIRDFNode* aSubject, nsIRDFResource* aPredicate,
-                      nsIRDFNode* aObject, PRBool aTruthValue)
+                      nsIRDFNode* aObject, bool aTruthValue)
 {
     if (aPredicate == mParent->kRDF_type) {
         // try to get a type QName for aObject, should be a resource
@@ -1074,7 +1074,7 @@ QNameCollector::Visit(nsIRDFNode* aSubject, nsIRDFResource* aPredicate,
     if (aPredicate == mParent->kRDF_instanceOf ||
         aPredicate == mParent->kRDF_nextVal)
         return NS_OK;
-    PRBool isOrdinal = PR_FALSE;
+    bool isOrdinal = false;
     mParent->gRDFC->IsOrdinalProperty(aPredicate, &isOrdinal);
     if (isOrdinal)
         return NS_OK;
@@ -1115,7 +1115,7 @@ nsRDFXMLSerializer::Serialize(nsIOutputStream* aStream)
         return rv;
 
     while (1) {
-        PRBool hasMore = PR_FALSE;
+        bool hasMore = false;
         resources->HasMoreElements(&hasMore);
         if (! hasMore)
             break;
@@ -1146,12 +1146,12 @@ nsRDFXMLSerializer::Serialize(nsIOutputStream* aStream)
 }
 
 
-PRBool
+bool
 nsRDFXMLSerializer::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
 {
     nsresult rv;
 
-    PRBool result;
+    bool result;
     rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, PR_TRUE, &result);
     if (NS_FAILED(rv)) return PR_FALSE;
 

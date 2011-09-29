@@ -83,7 +83,7 @@ const int MIN_INT =((int) (1 << (sizeof(int) * 8 - 1)));
 static int g_lastX=MIN_INT;
 static int g_lastY=MIN_INT;
 static PRInt32 g_panning = 0;
-static PRBool g_is_scrollable = PR_FALSE;
+static bool g_is_scrollable = false;
 
 #define EM_MULT 16.
 #define NS_FRAME_HAS_RELATIVE_SIZE 0x01000000
@@ -113,7 +113,7 @@ private:
   void RemoveWindowListeners(nsIDOMWindow *aDOMWin);
   void GetChromeEventHandler(nsIDOMWindow *aDOMWin, nsIDOMEventTarget **aChromeTarget);
   void AttachWindowListeners(nsIDOMWindow *aDOMWin);
-  PRBool IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0);
+  bool IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0);
   nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
   nsresult UpdateFromEvent(nsIDOMEvent *aDOMEvent);
   nsresult MouseDown(nsIDOMEvent* aDOMEvent);
@@ -163,7 +163,7 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
   nsCOMPtr<nsIDOMNode> mOrigNode;
 
   PRUint32 type = 0;
-  PRBool isXul = PR_FALSE;
+  bool isXul = false;
   {
     nsCOMPtr <nsIDOMNSEvent> aEvent = do_QueryInterface(aDOMEvent);
     nsCOMPtr<nsIDOMEventTarget> eventOrigTarget;
@@ -366,10 +366,10 @@ nsWidgetUtils::ShouldProcess(PRUint32          aContentType,
     return NS_OK;
 }
 
-PRBool
+bool
 nsWidgetUtils::IsXULNode(nsIDOMNode *aNode, PRUint32 *aType)
 {
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   if (!aNode) return retval;
 
   nsString sorigNode;

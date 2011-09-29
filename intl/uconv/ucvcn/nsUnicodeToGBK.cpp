@@ -112,7 +112,7 @@ void nsUnicodeToGB18030::Create4BytesEncoder()
   m4BytesEncoder = new nsUnicodeTo4BytesGB18030();
 }
 
-PRBool nsUnicodeToGB18030::EncodeSurrogate(
+bool nsUnicodeToGB18030::EncodeSurrogate(
   PRUnichar aSurrogateHigh,
   PRUnichar aSurrogateLow,
   char* aOut)
@@ -156,7 +156,7 @@ void nsUnicodeToGBK::Create4BytesEncoder()
 {
   m4BytesEncoder = nsnull;
 }
-PRBool nsUnicodeToGBK::TryExtensionEncoder(
+bool nsUnicodeToGBK::TryExtensionEncoder(
   PRUnichar aChar,
   char* aOut,
   PRInt32 *aOutLen
@@ -181,7 +181,7 @@ PRBool nsUnicodeToGBK::TryExtensionEncoder(
   return PR_FALSE;
 }
 
-PRBool nsUnicodeToGBK::Try4BytesEncoder(
+bool nsUnicodeToGBK::Try4BytesEncoder(
   PRUnichar aChar,
   char* aOut,
   PRInt32 *aOutLen
@@ -207,7 +207,7 @@ PRBool nsUnicodeToGBK::Try4BytesEncoder(
   }
   return PR_FALSE;
 }
-PRBool nsUnicodeToGBK::EncodeSurrogate(
+bool nsUnicodeToGBK::EncodeSurrogate(
   PRUnichar aSurrogateHigh,
   PRUnichar aSurrogateLow,
   char* aOut)

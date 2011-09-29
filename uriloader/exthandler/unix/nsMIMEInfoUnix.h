@@ -49,10 +49,10 @@ public:
   nsMIMEInfoUnix(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
   nsMIMEInfoUnix(const nsACString& aType, HandlerClass aClass) :
     nsMIMEInfoImpl(aType, aClass) {}
-  static PRBool HandlerExists(const char *aProtocolScheme);
+  static bool HandlerExists(const char *aProtocolScheme);
 
 protected:
-  NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
+  NS_IMETHOD GetHasDefaultHandler(bool *_retval);
 
   virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
 

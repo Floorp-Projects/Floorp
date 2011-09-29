@@ -56,8 +56,8 @@ public:
   virtual ~EditTxn();
 
   NS_IMETHOD RedoTransaction(void);
-  NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
+  NS_IMETHOD GetIsTransient(bool *aIsTransient);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge);
 };
 
 #define NS_DECL_EDITTXN \

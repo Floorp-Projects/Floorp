@@ -86,7 +86,7 @@ public:
   
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
+        bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
   
   virtual nsresult
@@ -122,9 +122,9 @@ protected:
   virtual ~nsMathMLmencloseFrame();
 
   nsresult PlaceInternal(nsRenderingContext& aRenderingContext,
-                         PRBool               aPlaceOrigin,
+                         bool                 aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize,
-                         PRBool               aWidthOnly);
+                         bool                 aWidthOnly);
   
   // functions to parse the "notation" attribute.
   nsresult AddNotation(const nsAString& aNotation);
@@ -132,7 +132,7 @@ protected:
 
   // Description of the notations to draw
   PRUint32 mNotationsToDraw;
-  PRBool IsToDraw(nsMencloseNotation mask)
+  bool IsToDraw(nsMencloseNotation mask)
   {
     return mask & mNotationsToDraw;
   }

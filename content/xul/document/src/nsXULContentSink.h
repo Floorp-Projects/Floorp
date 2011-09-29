@@ -71,7 +71,7 @@ public:
     // nsIContentSink
     NS_IMETHOD WillParse(void) { return NS_OK; }
     NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-    NS_IMETHOD DidBuildModel(PRBool aTerminated);
+    NS_IMETHOD DidBuildModel(bool aTerminated);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
     NS_IMETHOD SetParser(nsIParser* aParser);
@@ -91,7 +91,7 @@ protected:
     PRUnichar* mText;
     PRInt32 mTextLength;
     PRInt32 mTextSize;
-    PRBool mConstrainSize;
+    bool mConstrainSize;
 
     nsresult AddAttributes(const PRUnichar** aAttributes,
                            const PRUint32 aAttrLen,
@@ -115,14 +115,14 @@ protected:
     nsresult OpenScript(const PRUnichar** aAttributes,
                         const PRUint32 aLineNumber);
 
-    static PRBool IsDataInBuffer(PRUnichar* aBuffer, PRInt32 aLength);
+    static bool IsDataInBuffer(PRUnichar* aBuffer, PRInt32 aLength);
 
     nsresult SetElementScriptType(nsXULPrototypeElement* element,
                                   const PRUnichar** aAttributes,
                                   const PRUint32 aAttrLen);
 
     // Text management
-    nsresult FlushText(PRBool aCreateTextNode = PR_TRUE);
+    nsresult FlushText(bool aCreateTextNode = true);
     nsresult AddText(const PRUnichar* aText, PRInt32 aLength);
 
 

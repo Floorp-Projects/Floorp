@@ -43,18 +43,18 @@
 // nsGBKConvUtil
 //--------------------------------------------------------------------
 
-static PRBool gInitToGBKTable = PR_FALSE;
+static bool gInitToGBKTable = false;
 static const PRUnichar gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
 #include "cp936map.h"
 };
 static PRUint16 gUnicodeToGBKTable[0xA000-0x4e00];
 
-PRBool nsGBKConvUtil::UnicodeToGBKChar(
-  PRUnichar aChar, PRBool aToGL, char* 
+bool nsGBKConvUtil::UnicodeToGBKChar(
+  PRUnichar aChar, bool aToGL, char* 
   aOutByte1, char* aOutByte2)
 {
   NS_ASSERTION(gInitToGBKTable, "gGBKToUnicodeTable is not init yet. need to call InitToGBKTable first");
-  PRBool found=PR_FALSE;
+  bool found=false;
   *aOutByte1 = *aOutByte2 = 0;
   if(UNICHAR_IN_RANGE(0xd800, aChar, 0xdfff))
   {

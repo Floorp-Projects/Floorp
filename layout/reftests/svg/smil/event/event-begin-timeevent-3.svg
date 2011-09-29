@@ -1,16 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
-     onload="
-        document.documentElement.pauseAnimations();
-        document.documentElement.setCurrentTime(0.499);
-        document.documentElement.unpauseAnimations();
-        window.setTimeout(finish, 100, 2);">
+     onload="fastForwardToEvent()">
   <script xlink:href="event-util.js" type="text/javascript"/>
+  <script type="text/javascript">
+    const gTimeoutDur = 60000; // Time until we give up waiting for events in ms
+    var timeoutID;
+    function fastForwardToEvent()
+    {
+      document.documentElement.pauseAnimations();
+      document.documentElement.setCurrentTime(4.99);
+      // This test is designed to pass quickly and fail slowly.
+      // 
+      // In the success case, the second animation will start almost
+      // immediately, fire a beginEvent and trigger gotBegin below.
+      //
+      // In the failure case, the following timeout will fire (after
+      // gTimeoutDur), we'll seek to t=1s (to make sure we show the red
+      // square) and then finish.
+      timeoutID = window.setTimeout(finish, gTimeoutDur,
+                                    1 /*seekTimeInSeconds*/);
+      document.documentElement.unpauseAnimations();
+    }
+    function gotBegin()
+    {
+      window.clearTimeout(timeoutID);
+      finish();
+    }
+  </script>
   <rect width="100" height="100" fill="red">
-    <set attributeName="x" to="0" begin="0s" dur="0.5s" repeatCount="2" id="a"/>
-    <set attributeName="fill" attributeType="CSS"
-      to="green"
-      begin="a.repeatEvent" dur="4s"/>
+    <set attributeName="x" to="0" begin="0s" dur="5s" repeatCount="2" id="a"/>
+    <set attributeName="fill" attributeType="CSS" to="green"
+      begin="a.repeatEvent" onbegin="gotBegin()"/>
   </rect>
 </svg>

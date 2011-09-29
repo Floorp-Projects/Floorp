@@ -54,7 +54,7 @@ public:
    * The presshell calls this when reflow has finished. Return PR_TRUE if
    * you need a Flush_Layout to happen after this.
    */
-  virtual PRBool ReflowFinished() = 0;
+  virtual bool ReflowFinished() = 0;
   /**
    * The presshell calls this on outstanding callback requests in its
    * Destroy() method. The shell removes the request after calling

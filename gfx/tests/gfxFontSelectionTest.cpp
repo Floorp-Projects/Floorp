@@ -134,7 +134,7 @@ struct TestEntry {
             : fontName(aFontName), glyphs(aGlyphs)
         { }
 
-        PRBool Compare(const nsCString& aFontName,
+        bool Compare(const nsCString& aFontName,
                        cairo_glyph_t *aGlyphs,
                        int num_glyphs)
         {
@@ -194,7 +194,7 @@ struct TestEntry {
         expectItems.AppendElement(ExpectItem(fontName, glyphs));
     }
 
-    PRBool Check (gfxFontTestStore *store) {
+    bool Check (gfxFontTestStore *store) {
         if (expectItems.Length() == 0 ||
             store->items.Length() != expectItems.Length())
         {
@@ -216,7 +216,7 @@ struct TestEntry {
 
     int stringType;
     const char *string;
-    PRPackedBool isRTL;
+    bool isRTL;
 
     nsTArray<ExpectItem> expectItems;
 };
@@ -286,7 +286,7 @@ DumpTestExpect (TestEntry *test) {
     }
 }
 
-PRBool
+bool
 RunTest (TestEntry *test, gfxContext *ctx) {
     nsRefPtr<gfxFontGroup> fontGroup;
 
@@ -372,7 +372,7 @@ main (int argc, char **argv) {
          test++)
     {
         printf ("==== Test %d\n", test);
-        PRBool result = RunTest (&testList[test], context);
+        bool result = RunTest (&testList[test], context);
         if (result) {
             printf ("Test %d succeeded\n", test);
             passed++;

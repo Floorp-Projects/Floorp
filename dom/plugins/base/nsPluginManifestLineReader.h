@@ -66,7 +66,7 @@ class nsPluginManifestLineReader
       return mBase;
     }
     
-    PRBool NextLine()
+    bool NextLine()
     {
       if (mNext >= mLimit)
         return PR_FALSE;
@@ -121,7 +121,7 @@ class nsPluginManifestLineReader
     char*       LinePtr() { return mCur; }
     PRUint32    LineLength() { return mLength; }    
 
-    PRBool      IsEOL(char c) {return c == '\n' || c == '\r';}
+    bool        IsEOL(char c) {return c == '\n' || c == '\r';}
 
     char*       mBase;
   private:

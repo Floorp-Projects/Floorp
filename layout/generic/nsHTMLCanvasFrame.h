@@ -84,7 +84,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap);
+                             bool aShrinkWrap);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -99,7 +99,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }

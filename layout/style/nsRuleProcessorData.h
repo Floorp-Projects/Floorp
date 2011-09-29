@@ -84,7 +84,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   }
 
   void SetHaveRelevantLink() { mHaveRelevantLink = PR_TRUE; }
-  PRBool HaveRelevantLink() const { return mHaveRelevantLink; }
+  bool HaveRelevantLink() const { return mHaveRelevantLink; }
 
   nsRuleWalker::VisitedHandlingType VisitedHandling() const
   {
@@ -94,7 +94,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   // Is this matching operation for the creation of a style context?
   // (If it is, we need to set slow selector bits on nodes indicating
   // that certain restyling needs to happen.)
-  const PRBool mForStyling;
+  const bool mForStyling;
 
  private:
   // When mVisitedHandling is eRelevantLinkUnvisited, this is set to true if a
@@ -102,7 +102,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   // encountered during the matching process, which means that matching needs
   // to be rerun with eRelevantLinkVisited.  Otherwise, its behavior is
   // undefined (it might get set appropriately, or might not).
-  PRBool mHaveRelevantLink;
+  bool mHaveRelevantLink;
 
   // How matching should be performed.  See the documentation for
   // nsRuleWalker::VisitedHandlingType.
@@ -119,7 +119,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   // Whether our document is HTML (as opposed to XML of some sort,
   // including XHTML).
   // XXX XBL2 issue: Should we be caching this?  What should it be for XBL2?
-  const PRPackedBool mIsHTMLDocument;
+  const bool mIsHTMLDocument;
 
   // Possibly remove use of mCompatMode in SelectorMatches?
   // XXX XBL2 issue: Should we be caching this?  What should it be for XBL2?
@@ -129,7 +129,7 @@ struct NS_STACK_CLASS TreeMatchContext {
   nsNthIndexCache mNthIndexCache;
 
   // Constructor to use when creating a tree match context for styling
-  TreeMatchContext(PRBool aForStyling,
+  TreeMatchContext(bool aForStyling,
                    nsRuleWalker::VisitedHandlingType aVisitedHandling,
                    nsIDocument* aDocument)
     : mForStyling(aForStyling)
@@ -265,7 +265,7 @@ struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
                              mozilla::dom::Element* aElement,
                              nsIAtom* aAttribute,
                              PRInt32 aModType,
-                             PRBool aAttrHasChanged,
+                             bool aAttrHasChanged,
                              TreeMatchContext& aTreeMatchContext)
     : RuleProcessorData(aPresContext, aElement, nsnull, aTreeMatchContext),
       mAttribute(aAttribute),
@@ -277,7 +277,7 @@ struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
   PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
-  PRBool mAttrHasChanged; // Whether the attribute has already changed.
+  bool mAttrHasChanged; // Whether the attribute has already changed.
 };
 
 #endif /* !defined(nsRuleProcessorData_h_) */

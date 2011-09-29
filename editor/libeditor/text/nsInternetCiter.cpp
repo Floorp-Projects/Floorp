@@ -103,7 +103,7 @@ nsInternetCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString
 nsresult
 nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
                                          nsAString& aOutString,
-                                         PRBool aLinebreaksToo,
+                                         bool aLinebreaksToo,
                                          PRInt32* aCiteLevel)
 {
   if (aCiteLevel)
@@ -172,7 +172,7 @@ BreakLine(nsAString& aOutString, PRUint32& outStringCol,
     outStringCol = 0;
 }
 
-static inline PRBool IsSpace(PRUnichar c)
+static inline bool IsSpace(PRUnichar c)
 {
   return (nsCRT::IsAsciiSpace(c) || (c == nl) || (c == cr) || (c == nbsp));
 }
@@ -180,7 +180,7 @@ static inline PRBool IsSpace(PRUnichar c)
 nsresult
 nsInternetCiter::Rewrap(const nsAString& aInString,
                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
-                        PRBool aRespectNewlines,
+                        bool aRespectNewlines,
                         nsAString& aOutString)
 {
   // There shouldn't be returns in this string, only dom newlines.

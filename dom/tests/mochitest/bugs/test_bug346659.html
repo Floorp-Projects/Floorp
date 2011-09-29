@@ -28,6 +28,9 @@ SimpleTest.waitForExplicitFinish();
 
 var wins = [];
 
+var gBlockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
+
 function r(base, tail) {
   return base.replace(/\/[^\/]*$/, "/" + tail);
 }
@@ -153,6 +156,7 @@ function handleTestEnd() {
       setTimeout(startThirdBatch, 0);
     }
   } else if (!--numTestsSet3) {
+    SpecialPowers.setBoolPref("dom.block_multiple_popups", gBlockMultiplePopups);
     SimpleTest.finish();
   }
 }

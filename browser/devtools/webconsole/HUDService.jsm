@@ -165,7 +165,10 @@ const LEVELS = {
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
   trace: SEVERITY_LOG,
-  dir: SEVERITY_LOG
+  dir: SEVERITY_LOG,
+  group: SEVERITY_LOG,
+  groupCollapsed: SEVERITY_LOG,
+  groupEnd: SEVERITY_LOG
 };
 
 // The lowest HTTP response code (inclusive) that is considered an error.
@@ -251,6 +254,9 @@ const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  MISSING_ARGS: "Missing arguments",
                  LOG_OUTPUT_FAILED: "Log Failure: Could not append messageNode to outputNode",
 };
+
+// The indent of a console group in pixels.
+const GROUP_INDENT = 12;
 
 /**
  * Implements the nsIStreamListener and nsIRequestObserver interface. Used
@@ -2005,6 +2011,20 @@ HUD_SERVICE.prototype =
         sourceLine = aMessage.lineNumber;
         break;
 
+      case "group":
+      case "groupCollapsed":
+        clipboardText = body = formatResult(args);
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
+        hud.groupDepth++;
+        break;
+
+      case "groupEnd":
+        if (hud.groupDepth > 0) {
+          hud.groupDepth--;
+        }
+        return;
+
       default:
         Cu.reportError("Unknown Console API log level: " + level);
         return;
@@ -2014,6 +2034,7 @@ HUD_SERVICE.prototype =
                                               CATEGORY_WEBDEV,
                                               LEVELS[level],
                                               body,
+                                              aHUDId,
                                               sourceURL,
                                               sourceLine,
                                               clipboardText,
@@ -2076,7 +2097,8 @@ HUD_SERVICE.prototype =
     let chromeDocument = hud.HUDBox.ownerDocument;
     let message = stringBundle.GetStringFromName("ConsoleAPIDisabled");
     let node = ConsoleUtils.createMessageNode(chromeDocument, CATEGORY_JS,
-                                              SEVERITY_WARNING, message);
+                                              SEVERITY_WARNING, message,
+                                              aHUDId);
     ConsoleUtils.outputMessageNode(node, aHUDId);
   },
 
@@ -2116,6 +2138,7 @@ HUD_SERVICE.prototype =
                                                   aCategory,
                                                   severity,
                                                   aScriptError.errorMessage,
+                                                  hudId,
                                                   aScriptError.sourceName,
                                                   aScriptError.lineNumber);
 
@@ -2576,6 +2599,7 @@ HUD_SERVICE.prototype =
                                                      CATEGORY_NETWORK,
                                                      SEVERITY_LOG,
                                                      msgNode,
+                                                     hudId,
                                                      null,
                                                      null,
                                                      clipboardText);
@@ -3080,6 +3104,11 @@ function HeadsUpDisplay(aConfig)
 HeadsUpDisplay.prototype = {
 
   consolePanel: null,
+
+  /**
+   * The nesting depth of the currently active console group.
+   */
+  groupDepth: 0,
 
   get mainPopupSet()
   {
@@ -4438,7 +4467,7 @@ function JSTermHelper(aJSTerm)
     if (!errstr) {
       let stylePanel = StyleInspector.createPanel();
       stylePanel.setAttribute("hudToolId", aJSTerm.hudId);
-      stylePanel.selectNode(aNode);
+      stylePanel.showTool(aNode);
     } else {
       aJSTerm.writeOutput(errstr + "\n", CATEGORY_OUTPUT, SEVERITY_ERROR);
     }
@@ -4752,7 +4781,8 @@ JSTerm.prototype = {
     let node = ConsoleUtils.createMessageNode(this.parentNode.ownerDocument,
                                               CATEGORY_OUTPUT,
                                               SEVERITY_LOG,
-                                              aOutputString);
+                                              aOutputString,
+                                              this.hudId);
 
     let linkNode = node.querySelector(".webconsole-msg-body");
 
@@ -4799,7 +4829,7 @@ JSTerm.prototype = {
   {
     let node = ConsoleUtils.createMessageNode(this.parentNode.ownerDocument,
                                               aCategory, aSeverity,
-                                              aOutputMessage);
+                                              aOutputMessage, this.hudId);
 
     ConsoleUtils.outputMessageNode(node, this.hudId);
   },
@@ -5540,6 +5570,8 @@ ConsoleUtils = {
    *        The severity of the message: one of the SEVERITY_* constants;
    * @param string|nsIDOMNode aBody
    *        The body of the message, either a simple string or a DOM node.
+   * @param number aHUDId
+   *        The HeadsUpDisplay ID.
    * @param string aSourceURL [optional]
    *        The URL of the source file that emitted the error.
    * @param number aSourceLine [optional]
@@ -5557,8 +5589,8 @@ ConsoleUtils = {
    */
   createMessageNode:
   function ConsoleUtils_createMessageNode(aDocument, aCategory, aSeverity,
-                                          aBody, aSourceURL, aSourceLine,
-                                          aClipboardText, aLevel) {
+                                          aBody, aHUDId, aSourceURL,
+                                          aSourceLine, aClipboardText, aLevel) {
     if (aBody instanceof Ci.nsIDOMNode && aClipboardText == null) {
       throw new Error("HUDService.createMessageNode(): DOM node supplied " +
                       "without any clipboard text");
@@ -5569,6 +5601,9 @@ ConsoleUtils = {
     // long multi-line messages.
     let iconContainer = aDocument.createElementNS(XUL_NS, "vbox");
     iconContainer.classList.add("webconsole-msg-icon-container");
+    // Apply the curent group by indenting appropriately.
+    let hud = HUDService.getHudReferenceById(aHUDId);
+    iconContainer.style.marginLeft = hud.groupDepth * GROUP_INDENT + "px";
 
     // Make the icon node. It's sprited and the actual region of the image is
     // determined by CSS rules.
@@ -6669,6 +6704,7 @@ ConsoleProgressListener.prototype = {
                                                      CATEGORY_NETWORK,
                                                      SEVERITY_LOG,
                                                      msgNode,
+                                                     this.hudId,
                                                      null,
                                                      null,
                                                      uri.spec);

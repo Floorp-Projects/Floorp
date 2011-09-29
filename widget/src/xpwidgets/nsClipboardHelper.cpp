@@ -83,7 +83,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   // don't go any further if they're asking for the selection
   // clipboard on a platform which doesn't support it (i.e., unix)
   if (nsIClipboard::kSelectionClipboard == aClipboardID) {
-    PRBool clipboardSupported;
+    bool clipboardSupported;
     rv = clipboard->SupportsSelectionClipboard(&clipboardSupported);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!clipboardSupported)

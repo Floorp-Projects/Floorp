@@ -611,7 +611,7 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
   return TRUE;
 }
 
-PRBool
+bool
 nsApplicationAccessibleWrap::Init()
 {
     // XXX following code is copied from widget/src/gtk2/nsWindow.cpp
@@ -619,7 +619,7 @@ nsApplicationAccessibleWrap::Init()
     // see bug 390761
 
     // check if accessibility enabled/disabled by environment variable
-    PRBool isGnomeATEnabled = PR_FALSE;
+    bool isGnomeATEnabled = false;
     const char *envValue = PR_GetEnv(sAccEnv);
     if (envValue) {
         isGnomeATEnabled = !!atoi(envValue);
@@ -752,7 +752,7 @@ gboolean fireRootAccessibleAddedCB(gpointer data)
     return FALSE;
 }
 
-PRBool
+bool
 nsApplicationAccessibleWrap::AppendChild(nsAccessible *aChild)
 {
     if (!nsApplicationAccessible::AppendChild(aChild))
@@ -779,7 +779,7 @@ nsApplicationAccessibleWrap::AppendChild(nsAccessible *aChild)
     return PR_TRUE;
 }
 
-PRBool
+bool
 nsApplicationAccessibleWrap::RemoveChild(nsAccessible* aChild)
 {
     PRInt32 index = aChild->IndexInParent();

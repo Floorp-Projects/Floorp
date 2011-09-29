@@ -93,7 +93,7 @@ RDFBindingSet::AddBinding(nsIAtom* aVar, nsIAtom* aRef, nsIRDFResource* aPredica
     return NS_OK;
 }
 
-PRBool
+bool
 RDFBindingSet::SyncAssignments(nsIRDFResource* aSubject,
                                nsIRDFResource* aPredicate,
                                nsIRDFNode* aTarget,
@@ -105,7 +105,7 @@ RDFBindingSet::SyncAssignments(nsIRDFResource* aSubject,
                  "nsBindingValues not for this RDFBindingSet");
     NS_PRECONDITION(aResult, "Must have result");
 
-    PRBool needSync = PR_FALSE;
+    bool needSync = false;
     nsCOMPtr<nsIRDFNode>* valuesArray = aBindingValues.ValuesArray();
     if (!valuesArray)
         return PR_FALSE;

@@ -1425,20 +1425,23 @@ function test_transform_transition(prop) {
 
     // matrix : skewX
     { start: 'matrix(1, 0, 3, 1, 0px, 0px)', end: 'none',
-      expected: 'matrix(1, 0, ' + Math.tan(Math.atan(3) * 0.75) + ', 1, 0px, 0px)',
+      expected: 'matrix(1, 0, ' + 3 * 0.75 + ', 1, 0px, 0px)',
       round_error_ok: true },
     { start: 'skewX(0)', end: 'skewX(-45deg) translate(0)',
-      expected: 'matrix(1, 0, -0.198912367, 1, 0px, 0px)',
+      expected: 'matrix(1, 0, -0.25, 1, 0px, 0px)',
       round_error_ok: true },
     // matrix : rotate
     { start: 'rotate(-30deg)', end: 'matrix(0, 1, -1, 0, 0px, 0px)',
-      expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
+      expected: 'matrix(1, 0, 0, 1, 0px, 0px)',
+      round_error_ok: true },
     { start: 'rotate(-30deg) translateX(0)',
       end: 'translateX(0) rotate(-90deg)',
-      expected: c('rotate(-45deg)') },
+      expected: c('rotate(-45deg)'),
+      round_error_ok: true },
     // matrix decomposition of skewY
     { start: 'skewY(60deg)', end: 'skewY(-60deg) translateX(0)',
-      expected: c('rotate(30deg) skewX(30deg) scale(2, 0.5)'),
+      /* rotate(30deg) skewX(60deg)/2 scale(2, 0.5) */
+      expected: c('rotate(30deg) skewX(' + Math.atan(Math.tan(Math.PI * 60/180) / 2) + 'rad) scale(2, 0.5)'),
       round_error_ok: true },
 
     // matrix decomposition
@@ -1493,42 +1496,42 @@ function test_transform_transition(prop) {
     { start: 'none',
       end: 'matrix(1, 0, 1.5, 1, 0pt, 0pt)',
       /* skewX(atan(1.5)) */
-      expected: 'matrix(1, 0, ' + Math.tan(Math.atan(1.5) * 0.25).toFixed(6) + ', 1, 0px, 0px)',
+      expected: 'matrix(1, 0, ' + 1.5 * 0.25 + ', 1, 0px, 0px)',
       round_error_ok: true },       
     { start: 'none',
       end: 'matrix(-1, 0, 2, -1, 0pt, 0pt)',
               /* rotate(180deg) skewX(atan(-2)) */
-      expected: c('rotate(45deg) matrix(1, 0, ' + Math.tan(Math.atan(-2) * 0.25) + ', 1, 0px, 0px)'),
+      expected: c('rotate(45deg) matrix(1, 0, ' + -2 * 0.25 + ', 1, 0px, 0px)'),
       round_error_ok: true },
     { start: 'none',
       end: 'matrix(0, -1, 1, -3, 0pt, 0pt)',
               /* rotate(-90deg) skewX(atan(3)) */
-      expected: c('rotate(-22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(3) * 0.25) + ', 1, 0px, 0px)'),
+      expected: c('rotate(-22.5deg) matrix(1, 0, ' + 3 * 0.25 + ', 1, 0px, 0px)'),
       round_error_ok: true },
     { start: 'none',
       end: 'matrix(0, 1, -1, 4, 0pt, 0pt)',
               /* rotate(90deg) skewX(atan(4)) */
-      expected: c('rotate(22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(4) * 0.25) + ', 1, 0px, 0px)'),
+      expected: c('rotate(22.5deg) matrix(1, 0, ' + 4 * 0.25 + ', 1, 0px, 0px)'),
       round_error_ok: true },
     // and then four with negative determinants
     { start: 'none',
       end: 'matrix(1, 0, 1, -1, 0pt, 0pt)',
               /* rotate(-180deg) skewX(atan(-1)) scaleX(-1) */
-      expected: c('rotate(-45deg) matrix(1, 0, ' + Math.tan(Math.atan(-1) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)'),
+      expected: c('rotate(-45deg) matrix(1, 0, ' + -1 * 0.25 + ', 1, 0px, 0px) scaleX(0.5)'),
       round_error_ok: true },
     { start: 'none',
       end: 'matrix(-1, 0, -1, 1, 0pt, 0pt)',
               /* skewX(atan(-1)) scaleX(-1) */
-      expected: c('matrix(1, 0, ' + Math.tan(Math.atan(-1) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)') },
+      expected: c('matrix(1, 0, ' + -1 * 0.25 + ', 1, 0px, 0px) scaleX(0.5)') },
     { start: 'none',
       end: 'matrix(0, 1, 1, -2, 0pt, 0pt)',
               /* rotate(-90deg) skewX(atan(2)) scaleX(-1) */
-      expected: c('rotate(-22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(2) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)'),
+      expected: c('rotate(-22.5deg) matrix(1, 0, ' + 2 * 0.25 + ', 1, 0px, 0px) scaleX(0.5)'),
       round_error_ok: true },
     { start: 'none',
       end: 'matrix(0, -1, -1, 0.5, 0pt, 0pt)',
               /* rotate(90deg) skewX(atan(0.5)) scaleX(-1) */
-      expected: c('rotate(22.5deg) matrix(1, 0, ' + Math.tan(Math.atan(0.5) * 0.25) + ', 1, 0px, 0px) scaleX(0.5)'),
+      expected: c('rotate(22.5deg) matrix(1, 0, ' + 0.5 * 0.25 + ', 1, 0px, 0px) scaleX(0.5)'),
       round_error_ok: true },
 
     // lists vs. matrix decomposition
@@ -1540,14 +1543,14 @@ function test_transform_transition(prop) {
       expected_uncomputed: 'skewY(22.5deg) rotate(90deg)' },
     { start: 'skewY(45deg) rotate(90deg) translate(0)',
       end: 'skewY(-45deg) rotate(90deg)',
-      expected: c('rotate(90deg) skewX(-22.5deg)'),
+      expected: 'matrix(0, 1, -1, -0.5, 0px, 0px)',
       round_error_ok: true },
     { start: 'skewX(45deg) rotate(90deg)',
       end: 'skewX(-45deg) rotate(90deg)',
       expected_uncomputed: 'skewX(22.5deg) rotate(90deg)' },
     { start: 'skewX(-60deg) rotate(90deg) translate(0)',
       end: 'skewX(60deg) rotate(90deg)',
-      expected: c('rotate(120deg) skewX(30deg) scale(2, 0.5)'),
+      expected: c('rotate(120deg) skewX(' + Math.atan(Math.tan(Math.PI * 60/180) / 2) + 'rad) scale(2, 0.5)'),
       round_error_ok: true },
   ];
 

@@ -51,13 +51,13 @@ public:
 
   void SetBaseValue(const nsAString& aValue,
                     nsSVGElement *aSVGElement,
-                    PRBool aDoSetAttr);
+                    bool aDoSetAttr);
   void GetBaseValue(nsAString& aValue, nsSVGElement *aSVGElement) const
     { aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue); }
 
   void SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement);
   void GetAnimValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
-  PRBool IsAnimated() const
+  bool IsAnimated() const
     { return !!mAnimVal; }
 
   nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
@@ -114,7 +114,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement *aSrcElement,
                                      nsSMILValue& aValue,
-                                     PRBool& aPreventCachingOfSandwich) const;
+                                     bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

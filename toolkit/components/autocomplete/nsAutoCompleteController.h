@@ -82,7 +82,7 @@ protected:
   nsresult ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteResult *aResult);
   nsresult PostSearchCleanup();
 
-  nsresult EnterMatch(PRBool aIsPopupSelection);
+  nsresult EnterMatch(bool aIsPopupSelection);
   nsresult RevertTextValue();
 
   nsresult CompleteDefaultIndex(PRInt32 aSearchIndex);
@@ -90,15 +90,15 @@ protected:
 
   nsresult GetResultAt(PRInt32 aIndex, nsIAutoCompleteResult** aResult,
                        PRInt32* aRowIndex);
-  nsresult GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly,
+  nsresult GetResultValueAt(PRInt32 aIndex, bool aValueOnly,
                             nsAString & _retval);
-  nsresult GetResultLabelAt(PRInt32 aIndex, PRBool aValueOnly,
+  nsresult GetResultLabelAt(PRInt32 aIndex, bool aValueOnly,
                             nsAString & _retval);
 private:
-  nsresult GetResultValueLabelAt(PRInt32 aIndex, PRBool aValueOnly,
-                                 PRBool aGetValue, nsAString & _retval);
+  nsresult GetResultValueLabelAt(PRInt32 aIndex, bool aValueOnly,
+                                 bool aGetValue, nsAString & _retval);
 protected:
-  nsresult GetDefaultCompleteValue(PRInt32 aSearchIndex, PRBool aPreserveCasing,
+  nsresult GetDefaultCompleteValue(PRInt32 aSearchIndex, bool aPreserveCasing,
                                    nsAString &_retval);
   nsresult ClearResults();
   
@@ -118,16 +118,16 @@ protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
 
   nsString mSearchString;
-  PRPackedBool mDefaultIndexCompleted;
-  PRPackedBool mBackspaced;
-  PRPackedBool mPopupClosedByCompositionStart;
-  PRPackedBool mIsIMEComposing;
-  PRPackedBool mIgnoreHandleText;
-  PRBool mIsOpen;
+  bool mDefaultIndexCompleted;
+  bool mBackspaced;
+  bool mPopupClosedByCompositionStart;
+  bool mIsIMEComposing;
+  bool mIgnoreHandleText;
+  bool mIsOpen;
   PRUint16 mSearchStatus;
   PRUint32 mRowCount;
   PRUint32 mSearchesOngoing;
-  PRBool mFirstSearchResult;
+  bool mFirstSearchResult;
 };
 
 #endif /* __nsAutoCompleteController__ */

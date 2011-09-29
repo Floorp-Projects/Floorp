@@ -75,7 +75,7 @@ public:
 
   NS_DECL_NSIDOMEVENTTARGET
 
-  PRBool HasListenersFor(const nsAString& aType)
+  bool HasListenersFor(const nsAString& aType)
   {
     return mListenerManager && mListenerManager->HasListenersFor(aType);
   }

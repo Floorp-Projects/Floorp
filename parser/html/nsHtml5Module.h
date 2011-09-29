@@ -49,11 +49,11 @@ class nsHtml5Module
     static already_AddRefed<nsIParser> NewHtml5Parser();
     static nsresult Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer, nsIChannel* aChannel);
     static nsIThread* GetStreamParserThread();
-    static PRBool sEnabled;
-    static PRBool sOffMainThread;
+    static bool sEnabled;
+    static bool sOffMainThread;
   private:
 #ifdef DEBUG
-    static PRBool sNsHtml5ModuleInitialized;
+    static bool sNsHtml5ModuleInitialized;
 #endif
     static nsIThread* sStreamParserThread;
     static nsIThread* sMainThread;

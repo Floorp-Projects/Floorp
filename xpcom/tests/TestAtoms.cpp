@@ -42,7 +42,7 @@
 
 namespace TestAtoms {
 
-PRBool
+bool
 test_basic()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
@@ -73,7 +73,7 @@ test_basic()
   return PR_TRUE;
 }
 
-PRBool
+bool
 test_16vs8()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
@@ -86,7 +86,7 @@ test_16vs8()
   return PR_TRUE;
 }
 
-PRBool
+bool
 test_buffersharing()
 {
   nsString unique;
@@ -97,7 +97,7 @@ test_buffersharing()
   return unique.get() == atom->GetUTF16String();
 }
 
-PRBool
+bool
 test_null()
 {
   nsAutoString str(NS_LITERAL_STRING("string with a \0 char"));
@@ -116,7 +116,7 @@ test_null()
          atomCut->Equals(strCut);
 }
 
-PRBool
+bool
 test_invalid()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid16Strings); ++i) {
@@ -180,7 +180,7 @@ static const nsStaticAtom sAtoms_info[] = {
   NS_STATIC_ATOM(sAtom3_buffer, &sAtom3),
 };
 
-PRBool
+bool
 isStaticAtom(nsIAtom* atom)
 {
   // Don't use logic && in order to ensure that all addrefs/releases are always
@@ -194,7 +194,7 @@ isStaticAtom(nsIAtom* atom)
          (atom->Release() == 1);
 }
 
-PRBool
+bool
 test_atomtable()
 {
   nsrefcnt count = NS_GetNumberOfAtoms();
@@ -225,7 +225,7 @@ test_atomtable()
 #define FIRST_PERM_ATOM_STR "first permanent atom. Hello!"
 #define SECOND_PERM_ATOM_STR "second permanent atom. @World!"
 
-PRBool
+bool
 test_permanent()
 {
   nsrefcnt count = NS_GetNumberOfAtoms();
@@ -259,7 +259,7 @@ test_permanent()
   return NS_GetNumberOfAtoms() == count + 2;
 }
 
-typedef PRBool (*TestFunc)();
+typedef bool (*TestFunc)();
 
 static const struct Test
   {

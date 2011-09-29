@@ -134,7 +134,7 @@ private:
 protected:
     static PRInt32 gNum;
     PRInt32 mNum;
-    PRBool mWasRun;
+    bool mWasRun;
 };
 
 PRInt32 nsStressRunner::gNum = 0;

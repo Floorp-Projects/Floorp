@@ -28,6 +28,7 @@
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
  *   Drew Willcoxon (adw@mozilla.com)
+ *   Paul Rouget (paul@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -603,35 +604,16 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #forward-button {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
-  -moz-transition: 250ms ease-out;
 }
+#forward-button[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+
 #forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
 }
-
-toolbar:not([mode=icons]) #forward-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
-}
-toolbar:not([mode=icons]) #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
+#forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
-}
-
-toolbar[mode=icons] #forward-button[disabled="true"] {
-  -moz-transform: scale(0);
-  opacity: 0;
-  pointer-events: none;
-}
-toolbar[mode=icons] #forward-button[disabled="true"]:-moz-locale-dir(ltr) {
-  margin-left: -36px;
-}
-toolbar[mode=icons] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
-  margin-right: -36px;
-}
-toolbar[mode=icons][iconsize=small] #forward-button[disabled="true"]:-moz-locale-dir(ltr) {
-  margin-left: -28px;
-}
-toolbar[mode=icons][iconsize=small] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
-  margin-right: -28px;
 }
 
 #reload-button {
@@ -805,7 +787,7 @@ toolbar[iconsize="small"] #forward-button {
 .unified-nav-forward[_moz-menuactive] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu") !important;
 }
-toolbar[iconsize="small"]:not([mode=icons]) #forward-button[disabled="true"] {
+toolbar[iconsize="small"] #forward-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
@@ -815,7 +797,7 @@ toolbar[iconsize="small"] #forward-button:-moz-locale-dir(rtl) {
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
 }
-toolbar[iconsize="small"]:not([mode=icons]) #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
+toolbar[iconsize="small"] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
@@ -956,11 +938,11 @@ toolbar[iconsize="small"] #feed-button {
 
 #urlbar-icons {
   -moz-box-align: center;
-  -moz-padding-end: 2px;
 }
 
 .urlbar-icon {
   cursor: pointer;
+  padding: 0 3px;
 }
 
 #urlbar-search-splitter {
@@ -1315,83 +1297,37 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-top: 1px solid GrayText;
 }
 
-/* Go button */
+/* Combined go/reload/stop button in location bar */
 
 #go-button {
-  padding: 3px 2px 2px 2px;
-  list-style-image: url("chrome://browser/skin/Go-arrow.png");
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
-
-#go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
-}
-
-/* Combined go/reload/stop button in location bar */
 
 #urlbar > toolbarbutton {
   -moz-appearance: none;
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  margin: -1px;
-  -moz-margin-start: 0;
-  padding: 0 3px;
-  background-origin: border-box;
+  padding: 0;
   border: none;
-  -moz-border-start: 1px solid rgba(0,0,0,.35);
-  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-              -1px -1px 1px rgba(255,255,255,.2) inset;
+  cursor: pointer;
+  width: 22px;
 }
 
-#urlbar:-moz-locale-dir(ltr) > toolbarbutton {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-}
-
-#urlbar:-moz-locale-dir(rtl) > toolbarbutton {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-}
-
-#urlbar > toolbarbutton:not([disabled]):active:hover,
-#urlbar-reload-button:not(:hover) {
-  -moz-border-start-style: none;
-  -moz-padding-start: 4px;
-  box-shadow: none;
-}
-
-#urlbar > toolbarbutton:not([disabled]):active:hover {
-  box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
-              0 0 2px rgba(0,0,0,.4) inset;
-}
-
+#go-button,
 #urlbar-go-button {
-  -moz-image-region: rect(0px, 56px, 14px, 42px);
-  background-image: -moz-linear-gradient(rgb(143,219,69), rgb(115,177,57));
+  list-style-image: url("chrome://browser/skin/Go-arrow.png");
 }
 
+#go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   -moz-transform: scaleX(-1);
 }
 
-#urlbar-go-button:hover {
-  background-image: -moz-linear-gradient(rgb(163,232,92), rgb(137,196,81));
-}
-
 #urlbar-reload-button {
-  -moz-image-region: rect(0px, 14px, 14px, 0px);
-}
-
-#urlbar-reload-button:not([disabled]):hover {
-  -moz-image-region: rect(0px, 28px, 14px, 14px);
-  background-image: -moz-linear-gradient(rgb(137,183,233), rgb(79,130,195));
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
 #urlbar-stop-button {
-  -moz-image-region: rect(0px, 42px, 14px, 28px);
-  background-image: -moz-linear-gradient(rgb(226,99,99), rgb(199,68,68));
-}
-
-#urlbar-stop-button:hover {
-  background-image: -moz-linear-gradient(rgb(237,120,120), rgb(216,92,92));
+  list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 
 /* Popup blocker button */
@@ -1987,4 +1923,73 @@ panel[dimmed="true"] {
 #highlighter-veil-container[locked] > #highlighter-veil-middlebox > #highlighter-veil-transparentbox {
   box-shadow: 0 0 0 1px black;
   outline-color: white;
+}
+
+/*
+ * need a "bumpy" background image for this!
+ */
+#inspector-horizontal-splitter {
+  background: none !important;
+  -moz-appearance: none;
+  cursor: n-resize;
+}
+
+/* Highlighter - Node Infobar */
+
+/* Highlighter - Node Infobar - text */
+
+#highlighter-nodeinfobar-tagname {
+  color: white;
+}
+
+#highlighter-nodeinfobar-id {
+  color: hsl(90, 79%, 52%);
+}
+
+.highlighter-nodeinfobar-class {
+  color: hsl(200, 100%, 65%);
+}
+
+/* Highlighter - Node Infobar - box & arrow */
+
+#highlighter-nodeinfobar {
+  border: 1px solid hsla(210, 19%, 63%, .5);
+  border-radius: 3px;
+  padding: 8px 16px;
+  background: -moz-linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
+}
+
+.highlighter-nodeinfobar-arrow {
+  width: 14px;
+  height: 14px;
+  -moz-margin-start: -moz-calc(50% - 7px);
+  -moz-transform: rotate(-45deg);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+}
+
+#highlighter-nodeinfobar-arrow-top {
+  margin-bottom: -8px;
+  margin-top: 8px;
+  border-right-color: hsla(210, 19%, 63%, .5);
+  border-top-color: hsla(210, 19%, 63%, .5);
+  background-image: -moz-linear-gradient(bottom left, transparent 50%, hsl(209, 18%, 30%) 50%);
+}
+
+#highlighter-nodeinfobar-arrow-bottom {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  border-left-color: hsla(210, 19%, 63%, .5);
+  border-bottom-color: hsla(210, 19%, 63%, .5);
+  background-image: -moz-linear-gradient(top right, transparent 50%, hsl(210, 24%, 16%) 50%);
+}
+
+#highlighter-nodeinfobar-container[position="top"] > #highlighter-nodeinfobar,
+#highlighter-nodeinfobar-container[position="overlap"] > #highlighter-nodeinfobar {
+  box-shadow: 0 1px 0 hsla(0, 0%, 100%, .1) inset;
+}
+
+#highlighter-nodeinfobar-container[hide-arrow] > #highlighter-nodeinfobar {
+  margin: 7px 0;
 }

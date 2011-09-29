@@ -67,8 +67,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, PRBool aIsCopying,
-                  PRBool aRewriteEncodingDeclaration);
+                  const char* aCharSet, bool aIsCopying,
+                  bool aRewriteEncodingDeclaration);
 
   NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr);
@@ -155,7 +155,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
           nsASingleFragmentString::const_char_iterator &aPos,
           const nsASingleFragmentString::const_char_iterator aEnd,
           const nsASingleFragmentString::const_char_iterator aSequenceStart,
-          PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
+          bool &aMayIgnoreStartOfLineWhitespaceSequence,
           nsAString &aOutputStr);
 
   // used by AppendToStringWrapped and AppendToStringFormatedWrapped
@@ -163,8 +163,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
           nsASingleFragmentString::const_char_iterator &aPos,
           const nsASingleFragmentString::const_char_iterator aEnd,
           const nsASingleFragmentString::const_char_iterator aSequenceStart,
-          PRBool &aMayIgnoreStartOfLineWhitespaceSequence,
-          PRBool &aSequenceStartAfterAWhiteSpace,
+          bool &aMayIgnoreStartOfLineWhitespaceSequence,
+          bool &aSequenceStartAfterAWhiteSpace,
           nsAString &aOutputStr);
 
   /**
@@ -189,7 +189,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                           PRInt32 aStartOffset,
                           PRInt32 aEndOffset,
                           nsAString& aStr,
-                          PRBool aTranslateEntities);
+                          bool aTranslateEntities);
 
   virtual nsresult PushNameSpaceDecl(const nsAString& aPrefix,
                                      const nsAString& aURI,
@@ -214,10 +214,10 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    *                 stack (note that this can happen even if the prefix is
    *                 empty).
    */
-  PRBool ConfirmPrefix(nsAString& aPrefix,
+  bool ConfirmPrefix(nsAString& aPrefix,
                        const nsAString& aURI,
                        nsIContent* aElement,
-                       PRBool aIsAttribute);
+                       bool aIsAttribute);
   /**
    * GenerateNewPrefix generates a new prefix and writes it to aPrefix
    */
@@ -234,15 +234,15 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                    nsIAtom* aTagName,
                                    nsAString& aStr,
                                    PRUint32 aSkipAttr,
-                                   PRBool aAddNSAttr);
+                                   bool aAddNSAttr);
 
   void SerializeAttr(const nsAString& aPrefix,
                      const nsAString& aName,
                      const nsAString& aValue,
                      nsAString& aStr,
-                     PRBool aDoEscapeEntities);
+                     bool aDoEscapeEntities);
 
-  PRBool IsJavaScript(nsIContent * aContent,
+  bool IsJavaScript(nsIContent * aContent,
                       nsIAtom* aAttrNameAtom,
                       PRInt32 aAttrNamespaceID,
                       const nsAString& aValueString);
@@ -255,8 +255,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * by setting aForceFormat to PR_TRUE.
    * @return boolean  PR_TRUE if the element can be output
    */
-  virtual PRBool CheckElementStart(nsIContent * aContent,
-                                   PRBool & aForceFormat,
+  virtual bool CheckElementStart(nsIContent * aContent,
+                                   bool & aForceFormat,
                                    nsAString& aStr);
 
   /**
@@ -285,8 +285,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * by setting aForceFormat to PR_TRUE.
    * @return boolean  PR_TRUE if the element can be output
    */
-  virtual PRBool CheckElementEnd(nsIContent * aContent,
-                                 PRBool & aForceFormat,
+  virtual bool CheckElementEnd(nsIContent * aContent,
+                                 bool & aForceFormat,
                                  nsAString& aStr);
 
   /**
@@ -300,22 +300,22 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   /**
    * Returns PR_TRUE if a line break should be inserted before an element open tag
    */
-  virtual PRBool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakBeforeOpen(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
    * Returns PR_TRUE if a line break should be inserted after an element open tag
    */
-  virtual PRBool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakAfterOpen(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
    * Returns PR_TRUE if a line break should be inserted after an element close tag
    */
-  virtual PRBool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakBeforeClose(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
    * Returns PR_TRUE if a line break should be inserted after an element close tag
    */
-  virtual PRBool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
+  virtual bool LineBreakAfterClose(PRInt32 aNamespaceID, nsIAtom* aName);
 
   /**
    * add intendation. Call only in the case of formating and if the current
@@ -357,14 +357,14 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRUint32   mColPos;
 
   // true = pretty formating should be done (OutputFormated flag)
-  PRPackedBool mDoFormat;
+  bool mDoFormat;
 
   // true = no formatting,(OutputRaw flag)
   // no newline convertion and no rewrap long lines even if OutputWrap is set.
-  PRPackedBool mDoRaw;
+  bool mDoRaw;
 
   // true = wrapping should be done (OutputWrap flag)
-  PRPackedBool mDoWrap;
+  bool mDoWrap;
 
   // number of maximum column in a line, in the wrap mode
   PRUint32   mMaxColumn;
@@ -377,28 +377,28 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRInt32    mIndentOverflow;
 
   // says if the indentation has been already added on the current line
-  PRPackedBool mIsIndentationAddedOnCurrentLine;
+  bool mIsIndentationAddedOnCurrentLine;
 
   // the string which is currently added is in an attribute
-  PRPackedBool mInAttribute;
+  bool mInAttribute;
 
   // true = a newline character should be added. It's only
   // useful when serializing root nodes. see MaybeAddNewlineForRootNode and
   // MaybeFlagNewlineForRootNode
-  PRPackedBool mAddNewlineForRootNode;
+  bool mAddNewlineForRootNode;
 
   // Indicates that a space will be added if and only if content is
   // continued on the same line while serializing source.  Otherwise,
   // the newline character acts as the whitespace and no space is needed.
   // used when mDoFormat = true
-  PRPackedBool  mAddSpace;
+  bool          mAddSpace;
 
   // says that if the next string to add contains a newline character at the
   // begining, then this newline character should be ignored, because a
   // such character has already been added into the output string
-  PRPackedBool  mMayIgnoreLineBreakSequence;
+  bool          mMayIgnoreLineBreakSequence;
 
-  PRPackedBool  mBodyOnly;
+  bool          mBodyOnly;
   PRInt32       mInBody;
 
   // number of nested elements which have preformated content

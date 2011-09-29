@@ -132,7 +132,7 @@ public:
 private:
   ElementAnimations* GetElementAnimations(mozilla::dom::Element *aElement,
                                           nsCSSPseudoElements::Type aPseudoType,
-                                          PRBool aCreateIfNeeded);
+                                          bool aCreateIfNeeded);
   void BuildAnimations(nsStyleContext* aStyleContext,
                        InfallibleTArray<ElementAnimation>& aAnimations);
   bool BuildSegment(InfallibleTArray<AnimationPropertySegment>& aSegments,

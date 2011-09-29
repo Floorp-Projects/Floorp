@@ -170,7 +170,7 @@ DHW_DECLARE_FUN_TYPE_AND_GLOBAL(SYMGETLINEFROMADDR, SymGetLineFromAddr, \
 
 /***************************************************************************/
 
-extern PRBool
+extern bool
 dhwEnsureImageHlpInitialized();
 
 /***************************************************************************/
@@ -184,15 +184,15 @@ public:
     DHWImportHooker(const char* aModuleName,
                     const char* aFunctionName,
                     PROC aHook,
-                    PRBool aExcludeOurModule = PR_FALSE);
+                    bool aExcludeOurModule = false);
                     
     ~DHWImportHooker();
 
     PROC GetOriginalFunction()  {return mOriginal;}
 
-    PRBool PatchAllModules();
-    PRBool PatchOneModule(HMODULE aModule, const char* name);
-    static PRBool ModuleLoaded(HMODULE aModule, DWORD flags);
+    bool PatchAllModules();
+    bool PatchOneModule(HMODULE aModule, const char* name);
+    static bool ModuleLoaded(HMODULE aModule, DWORD flags);
 
 
     // I think that these should be made not static members, but allocated
@@ -215,7 +215,7 @@ private:
     PROC             mOriginal;
     PROC             mHook;
     HMODULE          mIgnoreModule;
-    PRBool           mHooking;
+    bool             mHooking;
 
 private:
     static PRLock* gLock;
@@ -239,13 +239,13 @@ private:
 class DHWAllocationSizeDebugHook
 {
 public:
-    virtual PRBool AllocHook(size_t size) = 0;
-    virtual PRBool ReallocHook(size_t size, size_t sizeOld) = 0;
-    virtual PRBool FreeHook(size_t size) = 0;
+    virtual bool AllocHook(size_t size) = 0;
+    virtual bool ReallocHook(size_t size, size_t sizeOld) = 0;
+    virtual bool FreeHook(size_t size) = 0;
 };
 
-extern PRBool dhwSetAllocationSizeDebugHook(DHWAllocationSizeDebugHook* hook);
-extern PRBool dhwClearAllocationSizeDebugHook();
+extern bool dhwSetAllocationSizeDebugHook(DHWAllocationSizeDebugHook* hook);
+extern bool dhwClearAllocationSizeDebugHook();
 
 /***************************************************************************/
 #endif //0

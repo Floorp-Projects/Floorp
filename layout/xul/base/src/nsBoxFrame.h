@@ -70,7 +70,7 @@ class nsBoxLayoutState;
 
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext,
-                         PRBool aIsRoot,
+                         bool aIsRoot,
                          nsBoxLayout* aLayoutManager);
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext);
@@ -82,7 +82,7 @@ public:
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
                                   nsStyleContext* aContext,
-                                  PRBool aIsRoot,
+                                  bool aIsRoot,
                                   nsBoxLayout* aLayoutManager);
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
@@ -102,14 +102,14 @@ public:
   virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
 #ifdef DEBUG_LAYOUT
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, PRBool aDebug);
-  NS_IMETHOD GetDebug(PRBool& aDebug);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug);
+  NS_IMETHOD GetDebug(bool& aDebug);
 #endif
   virtual Valignment GetVAlign() const { return mValign; }
   virtual Halignment GetHAlign() const { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
+  virtual bool ComputesOwnOverflowArea() { return false; }
 
   // ----- child and sibling operations ---
 
@@ -152,7 +152,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     // record that children that are ignorable whitespace should be excluded 
     // (When content was loaded via the XUL content sink, it's already
@@ -177,11 +177,11 @@ public:
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
-  virtual PRBool HonorPrintBackgroundSettings();
+  virtual bool HonorPrintBackgroundSettings();
 
   virtual ~nsBoxFrame();
   
-  nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = PR_FALSE, nsBoxLayout* aLayoutManager = nsnull);
+  nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot = false, nsBoxLayout* aLayoutManager = nsnull);
 
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it
@@ -194,7 +194,7 @@ public:
                               const nsDisplayListSet& aLists);
   
 #ifdef DEBUG_LAYOUT
-    virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
+    virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, bool aDebug);
     nsresult DisplayDebugInfoFor(nsIBox*  aBox, 
                                  nsPoint& aPoint);
 #endif
@@ -214,7 +214,7 @@ public:
    * This defaults to true, but some box frames (nsListBoxBodyFrame for
    * example) don't support ordinals in their children.
    */
-  virtual PRBool SupportsOrdinalsInChildren();
+  virtual bool SupportsOrdinalsInChildren();
 
 protected:
 #ifdef DEBUG_LAYOUT
@@ -225,12 +225,12 @@ protected:
                               nsPoint aPt);
 #endif
 
-    virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
-    virtual void GetInitialOrientation(PRBool& aIsHorizontal);
-    virtual void GetInitialDirection(PRBool& aIsNormal);
-    virtual PRBool GetInitialHAlignment(Halignment& aHalign); 
-    virtual PRBool GetInitialVAlignment(Valignment& aValign); 
-    virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 
+    virtual bool GetInitialEqualSize(bool& aEqualSize); 
+    virtual void GetInitialOrientation(bool& aIsHorizontal);
+    virtual void GetInitialDirection(bool& aIsNormal);
+    virtual bool GetInitialHAlignment(Halignment& aHalign); 
+    virtual bool GetInitialVAlignment(Valignment& aValign); 
+    virtual bool GetInitialAutoStretch(bool& aStretch); 
   
     virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
@@ -243,15 +243,15 @@ protected:
     nsCOMPtr<nsBoxLayout> mLayoutManager;
 
 protected:
-    nsresult RegUnregAccessKey(PRBool aDoReg);
+    nsresult RegUnregAccessKey(bool aDoReg);
 
   NS_HIDDEN_(void) CheckBoxOrder(nsBoxLayoutState& aState);
 
 private: 
 
 #ifdef DEBUG_LAYOUT
-    nsresult SetDebug(nsPresContext* aPresContext, PRBool aDebug);
-    PRBool GetInitialDebug(PRBool& aDebug);
+    nsresult SetDebug(nsPresContext* aPresContext, bool aDebug);
+    bool GetInitialDebug(bool& aDebug);
     void GetDebugPref(nsPresContext* aPresContext);
 
     void GetDebugBorder(nsMargin& aInset);
@@ -264,9 +264,9 @@ private:
 
     void GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
     void GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
-    void DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
-    void DrawLine(nsRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
-    void FillRect(nsRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
+    void DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, bool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
+    void DrawLine(nsRenderingContext& aRenderingContext,  bool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
+    void FillRect(nsRenderingContext& aRenderingContext,  bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 #endif
     virtual void UpdateMouseThrough();
 
@@ -277,7 +277,7 @@ private:
     Valignment mValign;
 
 #ifdef DEBUG_LAYOUT
-    static PRBool gDebug;
+    static bool gDebug;
     static nsIBox* mDebugChild;
 #endif
 

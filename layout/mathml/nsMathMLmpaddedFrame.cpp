@@ -151,7 +151,7 @@ nsMathMLmpaddedFrame::ProcessAttributes()
 
 // parse an input string in the following format (see bug 148326 for testcases):
 // [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | css-unit | namedspace)
-PRBool
+bool
 nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
                                      PRInt32&    aSign,
                                      nsCSSValue& aCSSValue,
@@ -189,7 +189,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     i++;
 
   // get the number
-  PRBool gotDot = PR_FALSE, gotPercent = PR_FALSE;
+  bool gotDot = false, gotPercent = false;
   for (; i < stringLength; i++) {
     PRUnichar c = aString[i];
     if (gotDot && c == '.') {
@@ -368,7 +368,7 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
 
 /* virtual */ nsresult
 nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
-                            PRBool               aPlaceOrigin,
+                            bool                 aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
   nsresult rv =

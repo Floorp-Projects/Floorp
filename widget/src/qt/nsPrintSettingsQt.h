@@ -63,11 +63,11 @@ public:
     NS_IMETHOD GetEndPageRange(PRInt32* aEndPageRange);
     NS_IMETHOD SetEndPageRange(PRInt32 aEndPageRange);
 
-    NS_IMETHOD GetPrintReversed(PRBool* aPrintReversed);
-    NS_IMETHOD SetPrintReversed(PRBool aPrintReversed);
+    NS_IMETHOD GetPrintReversed(bool* aPrintReversed);
+    NS_IMETHOD SetPrintReversed(bool aPrintReversed);
 
-    NS_IMETHOD GetPrintInColor(PRBool* aPrintInColor);
-    NS_IMETHOD SetPrintInColor(PRBool aPrintInColor);
+    NS_IMETHOD GetPrintInColor(bool* aPrintInColor);
+    NS_IMETHOD SetPrintInColor(bool aPrintInColor);
 
     NS_IMETHOD GetOrientation(PRInt32* aOrientation);
     NS_IMETHOD SetOrientation(PRInt32 aOrientation);

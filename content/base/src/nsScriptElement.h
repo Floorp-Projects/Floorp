@@ -70,7 +70,7 @@ protected:
   /**
    * Check if this element contains any script, linked or inline
    */
-  virtual PRBool HasScriptContent() = 0;
+  virtual bool HasScriptContent() = 0;
 
   /**
    * Processes the script if it's in the document-tree and links to or

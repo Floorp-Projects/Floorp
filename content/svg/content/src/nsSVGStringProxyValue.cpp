@@ -65,7 +65,7 @@ protected:
   
   nsSVGStringProxyValue();
   virtual ~nsSVGStringProxyValue();
-  PRBool Init(nsISVGValue* proxiedValue);
+  bool Init(nsISVGValue* proxiedValue);
   
 public:
   NS_DECL_ISUPPORTS
@@ -86,7 +86,7 @@ public:
 protected:
   nsString mCachedValue;
   nsCOMPtr<nsISVGValue> mProxiedValue;
-  PRPackedBool mUseCachedValue;
+  bool mUseCachedValue;
 };
 
 //----------------------------------------------------------------------
@@ -124,7 +124,7 @@ nsSVGStringProxyValue::~nsSVGStringProxyValue()
 #endif
 }
 
-PRBool nsSVGStringProxyValue::Init(nsISVGValue* proxiedValue)
+bool nsSVGStringProxyValue::Init(nsISVGValue* proxiedValue)
 {
   mProxiedValue = proxiedValue;
   mProxiedValue->AddObserver(this);

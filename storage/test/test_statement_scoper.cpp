@@ -68,7 +68,7 @@ test_automatic_reset()
   // Start executing the statement, which will put it into an executing state.
   {
     mozStorageStatementScoper scoper(stmt);
-    PRBool hasMore;
+    bool hasMore;
     do_check_true(NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)));
 
     // Reality check that we are executing.
@@ -107,7 +107,7 @@ test_Abandon()
   // Start executing the statement, which will put it into an executing state.
   {
     mozStorageStatementScoper scoper(stmt);
-    PRBool hasMore;
+    bool hasMore;
     do_check_true(NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)));
 
     // Reality check that we are executing.

@@ -59,7 +59,7 @@
 
 using namespace mozilla;
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
 {
   if (aFeature.EqualsLiteral("http://www.w3.org/TR/SVG11/feature#Script")) {
@@ -71,7 +71,7 @@ nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
         return PR_FALSE;
       }
     }
-    return Preferences::GetBool("javascript.enabled", PR_FALSE);
+    return Preferences::GetBool("javascript.enabled", false);
   }
 #define SVG_SUPPORTED_FEATURE(str) if (aFeature.EqualsLiteral(str)) return PR_TRUE;
 #define SVG_UNSUPPORTED_FEATURE(str)
@@ -81,7 +81,7 @@ nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
   return PR_FALSE;
 }
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures)
 {
   nsWhitespaceTokenizer tokenizer(aFeatures);
@@ -93,7 +93,7 @@ nsSVGFeatures::HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures)
   return PR_TRUE;
 }
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::HaveExtension(const nsAString& aExtension)
 {
 #define SVG_SUPPORTED_EXTENSION(str) if (aExtension.EqualsLiteral(str)) return PR_TRUE;
@@ -104,7 +104,7 @@ nsSVGFeatures::HaveExtension(const nsAString& aExtension)
   return PR_FALSE;
 }
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::HaveExtensions(const nsSubstring& aExtensions)
 {
   nsWhitespaceTokenizer tokenizer(aExtensions);
@@ -116,7 +116,7 @@ nsSVGFeatures::HaveExtensions(const nsSubstring& aExtensions)
   return PR_TRUE;
 }
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::MatchesLanguagePreferences(const nsSubstring& aAttribute,
                                           const nsSubstring& aAcceptLangs) 
 {
@@ -154,8 +154,8 @@ nsSVGFeatures::GetBestLanguagePreferenceRank(const nsSubstring& aAttribute,
     PRInt32 index = 0;
     while (languageTokenizer.hasMoreTokens()) {
       const nsSubstring &languageToken = languageTokenizer.nextToken();
-      PRBool exactMatch = (languageToken == attributeToken);
-      PRBool prefixOnlyMatch =
+      bool exactMatch = (languageToken == attributeToken);
+      bool prefixOnlyMatch =
         !exactMatch &&
         nsStyleUtil::DashMatchCompare(attributeToken,
                                       languageTokenizer.nextToken(),
@@ -174,7 +174,7 @@ nsSVGFeatures::GetBestLanguagePreferenceRank(const nsSubstring& aAttribute,
   return lowestRank;
 }
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr)
 {
 #define SVG_ELEMENT(_atom, _supports) if (aTagName == nsGkAtoms::_atom) return (_supports & aAttr) != 0;
@@ -185,7 +185,7 @@ nsSVGFeatures::ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr
 
 const nsString * const nsSVGFeatures::kIgnoreSystemLanguage = (nsString *) 0x01;
 
-/*static*/ PRBool
+/*static*/ bool
 nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
                                                 const nsString *aAcceptLangs)
 {

@@ -68,20 +68,20 @@ public:
                                           nsBorderStyle aBorderStyle);
   PRUint32              GetFCFlags(nsWindowType aWindowType,
                                    nsBorderStyle aBorderStyle);
-  nsresult              Show(PRBool aState);
-  void                  SetWindowListVisibility(PRBool aState);
+  nsresult              Show(bool aState);
+  void                  SetWindowListVisibility(bool aState);
   nsresult              GetBounds(nsIntRect& aRect);
   nsresult              Move(PRInt32 aX, PRInt32 aY);
   nsresult              Resize(PRInt32 aWidth, PRInt32 aHeight,
-                               PRBool aRepaint);
+                               bool aRepaint);
   nsresult              Resize(PRInt32 aX, PRInt32 aY, PRInt32 w, PRInt32 h,
-                               PRBool aRepaint);
+                               bool aRepaint);
   void                  ActivateTopLevelWidget();
   nsresult              SetSizeMode(PRInt32 aMode);
-  nsresult              HideWindowChrome(PRBool aShouldHide);
+  nsresult              HideWindowChrome(bool aShouldHide);
   nsresult              SetTitle(const nsAString& aTitle); 
   nsresult              SetIcon(const nsAString& aIconSpec); 
-  nsresult              ConstrainPosition(PRBool aAllowSlop,
+  nsresult              ConstrainPosition(bool aAllowSlop,
                                           PRInt32* aX, PRInt32* aY);
   MRESULT               ProcessFrameMessage(ULONG msg, MPARAM mp1, MPARAM mp2);
   HWND                  GetFrameWnd()       {return mFrameWnd;}
@@ -97,8 +97,8 @@ protected:
   HWND          mMinMax;            //   HideWindowChrome() is called
   PRUint32      mSavedStyle;        // frame style saved by HideWindowChrome()
   HPOINTER      mFrameIcon;         // current frame icon
-  PRBool        mChromeHidden;      // are frame controls hidden?
-  PRBool        mNeedActivation;    // triggers activation when focus changes
+  bool          mChromeHidden;      // are frame controls hidden?
+  bool          mNeedActivation;    // triggers activation when focus changes
   PFNWP         mPrevFrameProc;     // the frame's original wndproc
   nsIntRect     mFrameBounds;       // the frame's location & dimensions
 };

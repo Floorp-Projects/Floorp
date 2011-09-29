@@ -56,7 +56,7 @@ public:
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState);
 
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     // This is bogus, but it's what we've always done.
     // Note that nsLeafFrame is also eReplacedContainsBlock.
@@ -78,7 +78,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, PRBool aShrinkWrap);
+                                 nsSize aPadding, bool aShrinkWrap);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -100,7 +100,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
+  virtual bool ComputesOwnOverflowArea() { return false; }
 
 protected:
 

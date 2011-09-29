@@ -66,7 +66,7 @@ protected:
   /**
    * Helper function to get a validity state from constraint validation instance.
    */
-  inline PRBool GetValidityState(nsIConstraintValidation::ValidityStateType aState) const
+  inline bool GetValidityState(nsIConstraintValidation::ValidityStateType aState) const
   {
     return mConstraintValidation &&
            mConstraintValidation->GetValidityState(aState);

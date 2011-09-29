@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=591249
+-->
+<window title="Mozilla Bug 591249" onload="RunTest()"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=591249">Mozilla Bug 591249</a>
+  <img id="image"
+       src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC"
+       ondragstart="event.preventDefault();"/>
+  <iframe id="iframe" src="chrome://mochitests/content/chrome/content/events/test/bug591249_iframe.xul" style="height: 300px; width: 100%;"></iframe>
+</body>
+
+<script class="testbody" type="application/javascript;version=1.8"><![CDATA[
+/** Test for Bug 591249 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function completeTest(aBox) {
+  ok(window.getComputedStyle(aBox).backgroundColor == "rgb(255, 0, 0)", "The -moz-drag-over style should be removed.");
+  SimpleTest.finish();
+}
+
+function fireEvent(target, event) {
+  var utils =
+    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+           getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.dispatchDOMEventViaPresShell(target, event, true);
+}
+
+function RunTest() {
+  var image = document.getElementById("image");
+  var iframe = document.getElementById("iframe");
+  var iBox = iframe.contentDocument.getElementById("drop-target");
+  var insideBoxX = iBox.offsetWidth + 10;
+  var insideBoxY = iBox.offsetHeight + 10;
+
+  var dataTransfer;
+  var trapDrag = function(event) {
+    dataTransfer = event.dataTransfer;
+    dataTransfer.setData("text/plain", "Hello");
+    dataTransfer.dropEffect = "move";
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // need to use real mouse action to get the dataTransfer
+  window.addEventListener("dragstart", trapDrag, true);
+  synthesizeMouse(image, 2, 2, { type: "mousedown" });
+  synthesizeMouse(image, 11, 11, { type: "mousemove" });
+  synthesizeMouse(image, 20, 20, { type: "mousemove" });
+  window.removeEventListener("dragstart", trapDrag, true);
+  synthesizeMouse(image, 20, 20, { type: "mouseup" });
+
+  var event = document.createEvent("DragEvents");
+  event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, iBox, dataTransfer);
+  fireEvent(iBox, event);
+  synthesizeMouse(image, 3, 3, { type: "mousedown" });
+  synthesizeMouse(image, 23, 23, { type: "mousemove" });
+  synthesizeMouse(iBox, insideBoxX, insideBoxY, { type: "mousemove" });
+  ok(window.getComputedStyle(iBox).backgroundColor == "rgb(255, 255, 0)", "The -moz-drag-over style should be applied.");
+  synthesizeMouse(iBox, insideBoxX, insideBoxY, { type: "mouseup" });
+  window.setTimeout(function () { completeTest(iBox); }, 40);
+}
+]]></script>
+
+</window>

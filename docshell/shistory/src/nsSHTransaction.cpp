@@ -137,14 +137,14 @@ nsSHTransaction::GetPrev(nsISHTransaction ** aResult)
 }
 
 NS_IMETHODIMP
-nsSHTransaction::SetPersist(PRBool aPersist)
+nsSHTransaction::SetPersist(bool aPersist)
 {
    mPersist = aPersist;
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHTransaction::GetPersist(PRBool* aPersist)
+nsSHTransaction::GetPersist(bool* aPersist)
 {
    NS_ENSURE_ARG_POINTER(aPersist);
 

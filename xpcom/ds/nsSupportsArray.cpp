@@ -146,7 +146,7 @@ nsSupportsArray::~nsSupportsArray()
   DeleteArray();
 }
 
-PRBool nsSupportsArray::GrowArrayBy(PRInt32 aGrowBy)
+bool nsSupportsArray::GrowArrayBy(PRInt32 aGrowBy)
 {
   // We have to grow the array. Grow by kGrowArrayBy slots if we're smaller
   // than kLinearThreshold bytes, or a power of two if we're larger.
@@ -294,7 +294,7 @@ void nsSupportsArray::DeleteArray(void)
 }
 
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::Equals(const nsISupportsArray* aOther)
 {
   if (aOther) {
@@ -369,7 +369,7 @@ nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
   return -1;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
   if (aIndex <= mCount) {
@@ -404,7 +404,7 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::InsertElementsAt(nsISupportsArray* aElements, PRUint32 aIndex)
 {
   if (!aElements) {
@@ -449,7 +449,7 @@ nsSupportsArray::InsertElementsAt(nsISupportsArray* aElements, PRUint32 aIndex)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
   if (aIndex < mCount) {
@@ -461,7 +461,7 @@ nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount)
 {
   if (aIndex + aCount <= mCount) {
@@ -478,7 +478,7 @@ nsSupportsArray::RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex)
 {
   PRInt32 theIndex = IndexOfStartingAt(aElement,aStartIndex);
@@ -488,7 +488,7 @@ nsSupportsArray::RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
 {
   PRInt32 theIndex = LastIndexOf(aElement);
@@ -498,7 +498,7 @@ nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::MoveElement(PRInt32 aFrom, PRInt32 aTo)
 {
   nsISupports *tempElement;
@@ -577,7 +577,7 @@ nsSupportsArray::Compact(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::SizeTo(PRInt32 aSize)
 {
 #if DEBUG_SUPPORTSARRAY
@@ -617,11 +617,11 @@ nsSupportsArray::SizeTo(PRInt32 aSize)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData)
 {
   PRInt32 aIndex = -1;
-  PRBool  running = PR_TRUE;
+  bool    running = true;
 
   while (running && (++aIndex < (PRInt32)mCount)) {
     running = (*aFunc)(mArray[aIndex], aData);
@@ -629,11 +629,11 @@ nsSupportsArray::EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData)
   return running;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSupportsArray::EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData)
 {
   PRUint32 aIndex = mCount;
-  PRBool  running = PR_TRUE;
+  bool    running = true;
 
   while (running && (0 < aIndex--)) {
     running = (*aFunc)(mArray[aIndex], aData);
@@ -652,7 +652,7 @@ nsSupportsArray::Enumerate(nsIEnumerator* *result)
   return NS_OK;
 }
 
-static PRBool
+static bool
 CopyElement(nsISupports* aElement, void *aData)
 {
   nsresult rv;
@@ -667,7 +667,7 @@ nsSupportsArray::Clone(nsISupportsArray* *result)
   nsresult rv;
   nsISupportsArray* newArray;
   rv = NS_NewISupportsArray(&newArray);
-  PRBool ok = EnumerateForwards(CopyElement, newArray);
+  bool ok = EnumerateForwards(CopyElement, newArray);
   if (!ok) return NS_ERROR_OUT_OF_MEMORY;
   *result = newArray;
   return NS_OK;
@@ -689,7 +689,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD HasMoreElements(bool* aResult);
     NS_IMETHOD GetNext(nsISupports** aResult);
 
     // nsArrayEnumerator methods
@@ -718,7 +718,7 @@ nsArrayEnumerator::~nsArrayEnumerator(void)
 NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsArrayEnumerator::HasMoreElements(PRBool* aResult)
+nsArrayEnumerator::HasMoreElements(bool* aResult)
 {
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)

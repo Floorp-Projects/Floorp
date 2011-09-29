@@ -64,31 +64,31 @@ public:
   /**
    * Tell the control that value has been deliberately changed (or not).
    */
-  NS_IMETHOD SetValueChanged(PRBool changed) = 0;
+  NS_IMETHOD SetValueChanged(bool changed) = 0;
 
   /**
    * Find out whether this is a single line text control.  (text or password)
    * @return whether this is a single line text control
    */
-  NS_IMETHOD_(PRBool) IsSingleLineTextControl() const = 0;
+  NS_IMETHOD_(bool) IsSingleLineTextControl() const = 0;
 
   /**
    * Find out whether this control is a textarea.
    * @return whether this is a textarea text control
    */
-  NS_IMETHOD_(PRBool) IsTextArea() const = 0;
+  NS_IMETHOD_(bool) IsTextArea() const = 0;
 
   /**
    * Find out whether this control edits plain text.  (Currently always true.)
    * @return whether this is a plain text control
    */
-  NS_IMETHOD_(PRBool) IsPlainTextControl() const = 0;
+  NS_IMETHOD_(bool) IsPlainTextControl() const = 0;
 
   /**
    * Find out whether this is a password control (input type=password)
    * @return whether this is a password ontrol
    */
-  NS_IMETHOD_(PRBool) IsPasswordTextControl() const = 0;
+  NS_IMETHOD_(bool) IsPasswordTextControl() const = 0;
 
   /**
    * Get the cols attribute (if textarea) or a default
@@ -115,7 +115,7 @@ public:
   /**
    * Return true if the value of the control has been changed.
    */
-  NS_IMETHOD_(PRBool) ValueChanged() const = 0;
+  NS_IMETHOD_(bool) ValueChanged() const = 0;
 
   /**
    * Get the current value of the text editor.
@@ -124,7 +124,7 @@ public:
    * @param aIgnoreWrap whether to ignore the text wrapping behavior specified
    * for the element.
    */
-  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, PRBool aIgnoreWrap) const = 0;
+  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const = 0;
 
   /**
    * Set the current value of the text editor.
@@ -132,7 +132,7 @@ public:
    * @param aValue the new value for the text control.
    * @param aUserInput whether this value is coming from user input.
    */
-  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, PRBool aUserInput) = 0;
+  NS_IMETHOD_(void) SetTextEditorValue(const nsAString& aValue, bool aUserInput) = 0;
 
   /**
    * Get the editor object associated with the text editor.
@@ -192,17 +192,17 @@ public:
   /**
    * Notify the text control that the placeholder text needs to be updated.
    */
-  NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify) = 0;
+  NS_IMETHOD_(void) UpdatePlaceholderText(bool aNotify) = 0;
 
   /**
    * Show/hide the placeholder for the control.
    */
-  NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify) = 0;
+  NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify) = 0;
 
   /**
    * Callback called whenever the value is changed.
    */
-  NS_IMETHOD_(void) OnValueChanged(PRBool aNotify) = 0;
+  NS_IMETHOD_(void) OnValueChanged(bool aNotify) = 0;
 
   static const PRInt32 DEFAULT_COLS = 20;
   static const PRInt32 DEFAULT_ROWS = 1;
@@ -216,7 +216,7 @@ public:
     eHTMLTextWrap_Soft    = 3     // the default
   } nsHTMLTextWrap;
 
-  static PRBool
+  static bool
   GetWrapPropertyEnum(nsIContent* aContent, nsHTMLTextWrap& aWrapProp);
 
   /**
@@ -225,7 +225,7 @@ public:
    * Note that this function has the side effect of making the editor for input
    * elements be initialized eagerly.
    */
-  NS_IMETHOD_(PRBool) HasCachedSelection() = 0;
+  NS_IMETHOD_(bool) HasCachedSelection() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,

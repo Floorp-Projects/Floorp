@@ -50,7 +50,7 @@
 namespace mozilla {
 namespace gl {
 
-static PRBool gUseDoubleBufferedWindows = PR_TRUE;
+static bool gUseDoubleBufferedWindows = true;
 
 class CGLLibrary
 {
@@ -61,7 +61,7 @@ public:
         mPixelFormat(nsnull)
     { }
 
-    PRBool EnsureInitialized()
+    bool EnsureInitialized()
     {
         if (mInitialized) {
             return PR_TRUE;
@@ -86,12 +86,13 @@ public:
         if (mPixelFormat == nsnull) {
             NSOpenGLPixelFormatAttribute attribs[] = {
                 NSOpenGLPFAAccelerated,
+                NSOpenGLPFAAllowOfflineRenderers,
                 NSOpenGLPFADoubleBuffer,
                 (NSOpenGLPixelFormatAttribute)nil 
             };
 
             if (!gUseDoubleBufferedWindows) {
-              attribs[1] = (NSOpenGLPixelFormatAttribute)nil;
+              attribs[2] = (NSOpenGLPixelFormatAttribute)nil;
             }
 
             mPixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
@@ -100,7 +101,7 @@ public:
         return mPixelFormat;
     }
 private:
-    PRBool mInitialized;
+    bool mInitialized;
     PRLibrary *mOGLLibrary;
     NSOpenGLPixelFormat *mPixelFormat;
 }; 
@@ -115,7 +116,7 @@ public:
     GLContextCGL(const ContextFormat& aFormat,
                  GLContext *aShareContext,
                  NSOpenGLContext *aContext,
-                 PRBool aIsOffscreen = PR_FALSE)
+                 bool aIsOffscreen = false)
         : GLContext(aFormat, aIsOffscreen, aShareContext),
           mContext(aContext),
           mPBuffer(nsnull),
@@ -147,7 +148,7 @@ public:
         return ContextTypeCGL;
     }
 
-    PRBool Init()
+    bool Init()
     {
         MakeCurrent();
         return InitWithPrefix("gl", PR_TRUE);
@@ -164,7 +165,7 @@ public:
         }
     }
 
-    PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
+    bool MakeCurrentImpl(bool aForce = false)
     {
         if (!aForce && [NSOpenGLContext currentContext] == mContext) {
             return PR_TRUE;
@@ -176,25 +177,25 @@ public:
         return PR_TRUE;
     }
 
-    PRBool SetupLookupFunction()
+    bool SetupLookupFunction()
     {
         return PR_FALSE;
     }
 
-    PRBool IsDoubleBuffered() 
+    bool IsDoubleBuffered() 
     { 
       return gUseDoubleBufferedWindows; 
     }
 
-    PRBool SwapBuffers()
+    bool SwapBuffers()
     {
       [mContext flushBuffer];
       return PR_TRUE;
     }
 
-    PRBool BindTex2DOffscreen(GLContext *aOffscreen);
+    bool BindTex2DOffscreen(GLContext *aOffscreen);
     void UnbindTex2DOffscreen(GLContext *aOffscreen);
-    PRBool ResizeOffscreen(const gfxIntSize& aNewSize);
+    bool ResizeOffscreen(const gfxIntSize& aNewSize);
 
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
@@ -208,7 +209,7 @@ public:
     GLuint mTempTextureName;
 };
 
-PRBool
+bool
 GLContextCGL::BindTex2DOffscreen(GLContext *aOffscreen)
 {
     if (aOffscreen->GetContextType() != ContextTypeCGL) {
@@ -259,7 +260,7 @@ GLContextCGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
     }
 }
 
-PRBool
+bool
 GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     if (mPBuffer) {
@@ -447,7 +448,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
 static already_AddRefed<GLContextCGL>
 CreateOffscreenPBufferContext(const gfxIntSize& aSize,
                               const ContextFormat& aFormat,
-                              PRBool aShare = PR_FALSE)
+                              bool aShare = false)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -529,7 +530,7 @@ CreateOffscreenPBufferContext(const gfxIntSize& aSize,
 static already_AddRefed<GLContextCGL>
 CreateOffscreenFBOContext(const gfxIntSize& aSize,
                           const ContextFormat& aFormat,
-                          PRBool aShare = PR_TRUE)
+                          bool aShare = true)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nsnull;

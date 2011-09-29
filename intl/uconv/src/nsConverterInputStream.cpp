@@ -263,7 +263,7 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
 }
 
 NS_IMETHODIMP
-nsConverterInputStream::ReadLine(nsAString& aLine, PRBool* aResult)
+nsConverterInputStream::ReadLine(nsAString& aLine, bool* aResult)
 {
   if (!mLineBuffer) {
     nsresult rv = NS_InitLineBuffer(&mLineBuffer);

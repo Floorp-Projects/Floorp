@@ -80,13 +80,13 @@ void nsCSSPseudoElements::AddRefAtoms()
                          NS_ARRAY_LENGTH(CSSPseudoElements_info));
 }
 
-PRBool nsCSSPseudoElements::IsPseudoElement(nsIAtom *aAtom)
+bool nsCSSPseudoElements::IsPseudoElement(nsIAtom *aAtom)
 {
   return nsAtomListUtils::IsMember(aAtom, CSSPseudoElements_info,
                                    NS_ARRAY_LENGTH(CSSPseudoElements_info));
 }
 
-/* static */ PRBool
+/* static */ bool
 nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
 {
   // We don't implement this using PseudoElementHasFlags because callers
@@ -94,7 +94,7 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
   NS_ASSERTION(nsCSSPseudoElements::IsPseudoElement(aAtom) ||
                nsCSSAnonBoxes::IsAnonBox(aAtom),
                "must be pseudo element or anon box");
-  PRBool result = aAtom == nsCSSPseudoElements::after ||
+  bool result = aAtom == nsCSSPseudoElements::after ||
                   aAtom == nsCSSPseudoElements::before ||
                   aAtom == nsCSSPseudoElements::firstLetter ||
                   aAtom == nsCSSPseudoElements::firstLine;

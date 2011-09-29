@@ -56,8 +56,8 @@ class nsCopySupport
   public:
     static nsresult HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 aClipboardID);
     static nsresult DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
-                            PRBool *aDoPutOnClipboard);
-    static nsresult IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, PRBool *aIsPlainTextContext);
+                            bool *aDoPutOnClipboard);
+    static nsresult IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, bool *aIsPlainTextContext);
 
     // Get the selection, or entire document, in the format specified by the mime type
     // (text/html or text/plain). If aSel is non-null, use it, otherwise get the entire
@@ -90,7 +90,7 @@ class nsCopySupport
      * Returns true if a copy operation is currently permitted based on the
      * current focus and selection within the specified document.
      */
-    static PRBool CanCopy(nsIDocument* aDocument);
+    static bool CanCopy(nsIDocument* aDocument);
 
     /**
      * Fires a cut, copy or paste event, on the given presshell, depending
@@ -113,7 +113,7 @@ class nsCopySupport
      *
      * If the event is cancelled or an error occurs, false will be returned.
      */
-    static PRBool FireClipboardEvent(PRInt32 aType,
+    static bool FireClipboardEvent(PRInt32 aType,
                                      nsIPresShell* aPresShell,
                                      nsISelection* aSelection);
 };

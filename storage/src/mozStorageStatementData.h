@@ -120,7 +120,7 @@ public:
       // It's possible that we are shutting down the async thread, and this
       // method would return NULL as a result.
       if (asyncThread) {
-        PRBool onAsyncThread;
+        bool onAsyncThread;
         NS_ASSERTION(NS_SUCCEEDED(asyncThread->IsOnCurrentThread(&onAsyncThread)) && onAsyncThread,
                      "This should only be running on the async thread!");
       }

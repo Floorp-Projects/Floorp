@@ -315,7 +315,7 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 }
   
 static nsQueryInterface
-JSvalToInterface(JSContext* cx, jsval val, nsIXPConnect* xpc, PRBool* wasNull)
+JSvalToInterface(JSContext* cx, jsval val, nsIXPConnect* xpc, bool* wasNull)
 {
   if (val == JSVAL_NULL) {
     *wasNull = PR_TRUE;
@@ -344,7 +344,7 @@ GetInitArgs(JSContext *cx, PRUint32 argc, jsval *argv,
             nsIURI** aBaseURI)
 {
   // Only proceed if the caller has UniversalXPConnect.
-  PRBool haveUniversalXPConnect;
+  bool haveUniversalXPConnect;
   nsresult rv = nsContentUtils::GetSecurityManager()->
     IsCapabilityEnabled("UniversalXPConnect", &haveUniversalXPConnect);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -357,7 +357,7 @@ GetInitArgs(JSContext *cx, PRUint32 argc, jsval *argv,
   
   // First arg is our principal.  If someone passes something that's
   // not a principal and not null, die to prevent privilege escalation.
-  PRBool wasNull;
+  bool wasNull;
   nsCOMPtr<nsIPrincipal> prin = JSvalToInterface(cx, argv[0], xpc, &wasNull);
   if (!prin && !wasNull) {
     return NS_ERROR_INVALID_ARG;

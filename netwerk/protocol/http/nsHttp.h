@@ -173,9 +173,9 @@ struct nsHttp
 
     // returns true if the specified token [start,end) is valid per RFC 2616
     // section 2.2
-    static PRBool IsValidToken(const char *start, const char *end);
+    static bool IsValidToken(const char *start, const char *end);
 
-    static inline PRBool IsValidToken(const nsCString &s) {
+    static inline bool IsValidToken(const nsCString &s) {
         const char *start = s.get();
         return IsValidToken(start, start + s.Length());
     }
@@ -196,12 +196,12 @@ struct nsHttp
     //
     // TODO(darin): Replace this with something generic.
     //
-    static PRBool ParseInt64(const char *input, const char **next,
+    static bool ParseInt64(const char *input, const char **next,
                              PRInt64 *result);
 
     // Variant on ParseInt64 that expects the input string to contain nothing
     // more than the value being parsed.
-    static inline PRBool ParseInt64(const char *input, PRInt64 *result) {
+    static inline bool ParseInt64(const char *input, PRInt64 *result) {
         const char *next;
         return ParseInt64(input, &next, result) && *next == '\0';
     }

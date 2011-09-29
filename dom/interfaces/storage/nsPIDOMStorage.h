@@ -70,12 +70,12 @@ public:
 
   virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
   virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI) = 0;
-  virtual PRBool IsForkOf(nsIDOMStorage* aThat) = 0;
+  virtual bool IsForkOf(nsIDOMStorage* aThat) = 0;
 
   virtual nsTArray<nsString> *GetKeys() = 0;
 
   virtual nsIPrincipal* Principal() = 0;
-  virtual PRBool CanAccess(nsIPrincipal *aPrincipal) = 0;
+  virtual bool CanAccess(nsIPrincipal *aPrincipal) = 0;
 
   virtual nsDOMStorageType StorageType() = 0;
 

@@ -46,7 +46,6 @@
 #include <math.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -402,34 +401,6 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, Value *argv)
     return thisp;
 }
 
-void
-js::ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
-{
-    Value &thisv = vp[1];
-
-#ifdef DEBUG
-    if (thisv.isObject()) {
-        JS_ASSERT(thisv.toObject().getClass() != clasp);
-    } else if (thisv.isString()) {
-        JS_ASSERT(clasp != &StringClass);
-    } else if (thisv.isNumber()) {
-        JS_ASSERT(clasp != &NumberClass);
-    } else if (thisv.isBoolean()) {
-        JS_ASSERT(clasp != &BooleanClass);
-    } else {
-        JS_ASSERT(thisv.isUndefined() || thisv.isNull());
-    }
-#endif
-
-    if (JSFunction *fun = js_ValueToFunction(cx, &vp[0], 0)) {
-        JSAutoByteString funNameBytes;
-        if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                 clasp->name, funName, InformalValueTypeName(thisv));
-        }
-    }
-}
-
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -621,10 +592,9 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
  * when done.  Then push the return value.
  */
 bool
-js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
+js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
-    CallArgs args = argsRef;
-    JS_ASSERT(args.argc() <= StackSpace::ARGS_LENGTH_MAX);
+    JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
@@ -643,7 +613,7 @@ js::InvokeKernel(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construc
     if (JS_UNLIKELY(clasp != &FunctionClass)) {
 #if JS_HAS_NO_SUCH_METHOD
         if (JS_UNLIKELY(clasp == &js_NoSuchMethodClass))
-            return NoSuchMethod(cx, args.argc(), args.base());
+            return NoSuchMethod(cx, args.length(), args.base());
 #endif
         JS_ASSERT_IF(construct, !clasp->construct);
         if (!clasp->call) {
@@ -693,7 +663,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Val
 
     args.calleev() = fval;
     args.thisv() = thisv;
-    memcpy(args.argv(), argv, argc * sizeof(Value));
+    memcpy(args.array(), argv, argc * sizeof(Value));
 
     if (args.thisv().isObject()) {
         /*
@@ -723,7 +693,7 @@ js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
 
     args.calleev() = fval;
     args.thisv().setMagic(JS_THIS_POISON);
-    memcpy(args.argv(), argv, argc * sizeof(Value));
+    memcpy(args.array(), argv, argc * sizeof(Value));
 
     if (!InvokeConstructor(cx, args))
         return false;
@@ -1144,7 +1114,7 @@ js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value
 
     args.calleev() = fval;
     /* Initialize args.thisv on all paths below. */
-    memcpy(args.argv(), argv, argc * sizeof(Value));
+    memcpy(args.array(), argv, argc * sizeof(Value));
 
     /* Handle the fast-constructor cases before calling the general case. */
     JSObject &callee = fval.toObject();

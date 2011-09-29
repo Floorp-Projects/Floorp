@@ -57,7 +57,7 @@ public:
     /**
      * Checks if any more tokens are available.
      */
-    PRBool hasMoreTokens()
+    bool hasMoreTokens()
     {
         return mIter != mEnd;
     }
@@ -81,7 +81,7 @@ public:
 private:
     nsSubstring::const_char_iterator mIter, mEnd;
 
-    PRBool isWhitespace(PRUnichar aChar)
+    bool isWhitespace(PRUnichar aChar)
     {
         return aChar <= ' ' &&
                (aChar == ' ' || aChar == '\n' ||
@@ -105,7 +105,7 @@ public:
     /**
      * Checks if any more tokens are available.
      */
-    PRBool hasMoreTokens()
+    bool hasMoreTokens()
     {
         return mIter != mEnd;
     }
@@ -129,7 +129,7 @@ public:
 private:
     nsCSubstring::const_char_iterator mIter, mEnd;
 
-    PRBool isWhitespace(char aChar)
+    bool isWhitespace(char aChar)
     {
         return aChar <= ' ' &&
                (aChar == ' ' || aChar == '\n' ||

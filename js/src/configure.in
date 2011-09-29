@@ -273,6 +273,9 @@ arm-linux*-android*|*-linuxandroid*)
 arm-android-eabi)
     android_tool_prefix="arm-eabi"
     ;;
+i?86-*android*)
+    android_tool_prefix="i686-android-linux"
+    ;;
 *)
     android_tool_prefix="$target_os"
     ;;
@@ -361,20 +364,29 @@ case "$target" in
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
+    case "${target_cpu}" in
+    arm*)
+      ANDROID_CPU_ARCH=armeabi-v7a
+      ;;
+    i?86)
+      ANDROID_CPU_ARCH=x86
+      ;;
+    esac
+
     if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
-       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/libstdc++.a" ; then
+       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/libstdc++.a" ; then
           AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
        fi
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstdc++"
-    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
        STLPORT_LIBS="-lstlport_static"
-    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstlport_static"
     elif test "$target" != "arm-android-eabi"; then
        dnl fail if we're not building with NDKr4
@@ -3876,7 +3888,7 @@ ENABLE_TESTS=1
 USE_ARM_KUSER=
 
 case "${target}" in
-    *-android*|*-linuxandroid*)
+    arm*-android*|arm*-linuxandroid*)
         USE_ARM_KUSER=1
         ;;
 esac

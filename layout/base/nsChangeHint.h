@@ -118,15 +118,15 @@ inline nsChangeHint NS_SubtractHint(nsChangeHint aH1, nsChangeHint aH2) {
 
 // Merge the "src" hint into the "dst" hint
 // Returns true iff the destination changed
-inline PRBool NS_UpdateHint(nsChangeHint& aDest, nsChangeHint aSrc) {
+inline bool NS_UpdateHint(nsChangeHint& aDest, nsChangeHint aSrc) {
   nsChangeHint r = (nsChangeHint)(aDest | aSrc);
-  PRBool changed = (int)r != (int)aDest;
+  bool changed = (int)r != (int)aDest;
   aDest = r;
   return changed;
 }
 
 // Returns true iff the second hint contains all the hints of the first hint
-inline PRBool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
+inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   return (aSubset & aSuperSet) == aSubset;
 }
 

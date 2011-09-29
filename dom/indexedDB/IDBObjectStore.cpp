@@ -198,8 +198,8 @@ public:
                    IDBObjectStore* aObjectStore,
                    const Key& aLowerKey,
                    const Key& aUpperKey,
-                   PRBool aLowerOpen,
-                   PRBool aUpperOpen,
+                   bool aLowerOpen,
+                   bool aUpperOpen,
                    PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
     mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
@@ -227,8 +227,8 @@ private:
   nsRefPtr<IDBObjectStore> mObjectStore;
   const Key mLowerKey;
   const Key mUpperKey;
-  const PRPackedBool mLowerOpen;
-  const PRPackedBool mUpperOpen;
+  const bool mLowerOpen;
+  const bool mUpperOpen;
   const PRUint16 mDirection;
 
   // Out-params.
@@ -318,8 +318,8 @@ public:
                IDBObjectStore* aObjectStore,
                const Key& aLowerKey,
                const Key& aUpperKey,
-               const PRBool aLowerOpen,
-               const PRBool aUpperOpen,
+               const bool aLowerOpen,
+               const bool aUpperOpen,
                const PRUint32 aLimit)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
     mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
@@ -351,8 +351,8 @@ protected:
   nsRefPtr<IDBObjectStore> mObjectStore;
   const Key mLowerKey;
   const Key mUpperKey;
-  const PRPackedBool mLowerOpen;
-  const PRPackedBool mUpperOpen;
+  const bool mLowerOpen;
+  const bool mUpperOpen;
   const PRUint32 mLimit;
 
 private:
@@ -741,7 +741,7 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasResult;
+    bool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1245,7 +1245,7 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
 
   nsresult rv;
   Key lowerKey, upperKey;
-  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
+  bool lowerOpen = false, upperOpen = false;
 
   if (aKeyRange) {
     nsCOMPtr<nsIVariant> variant;
@@ -1387,7 +1387,7 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
 
   nsresult rv;
   Key lowerKey, upperKey;
-  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
+  bool lowerOpen = false, upperOpen = false;
 
   if (aKeyRange) {
     nsCOMPtr<nsIVariant> variant;
@@ -1721,7 +1721,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    PRBool hasResult;
+    bool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -1911,7 +1911,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   // Search for it!
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -2096,7 +2096,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -2372,7 +2372,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
                                       mIndex->ObjectStore()->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  PRBool hasResult;
+  bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     nsCOMPtr<mozIStorageStatement> insertStmt =
       mTransaction->IndexUpdateStatement(mIndex->IsAutoIncrement(),
@@ -2574,7 +2574,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  PRBool hasResult;
+  bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     if (mCloneBuffers.Capacity() == mCloneBuffers.Length()) {
       if (!mCloneBuffers.SetCapacity(mCloneBuffers.Capacity() * 2)) {

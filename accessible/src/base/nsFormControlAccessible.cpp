@@ -76,6 +76,16 @@ ProgressMeterAccessible<Max>::NativeRole()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// ProgressMeterAccessible<Max>: Widgets
+
+template<int Max>
+bool
+ProgressMeterAccessible<Max>::IsWidget() const
+{
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleValue
 
 template<int Max>
@@ -222,3 +232,11 @@ nsRadioButtonAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_RADIOBUTTON;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsRadioButtonAccessible: Widgets
+
+bool
+nsRadioButtonAccessible::IsWidget() const
+{
+  return true;
+}

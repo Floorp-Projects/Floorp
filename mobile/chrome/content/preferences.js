@@ -37,7 +37,6 @@
 
 var PreferencesView = {
   _currentLocale: null,
-  _languages: null,
   _msg: null,
 
   _messageActions: function pv__messageActions(aData) {
@@ -93,17 +92,25 @@ var PreferencesView = {
   },
 
   delayedInit: function pv__delayedInit() {
-    if (this._languages)
+    if (this._msg)
       return;
 
     this._msg = document.getElementById("prefs-messages");
-    this._languages = document.getElementById("prefs-languages");
     this._loadLocales();
 
     this._loadHomePage();
 
     MasterPasswordUI.updatePreference();
     WeaveGlue.init();
+
+    Services.prefs.addObserver("general.useragent.locale", this, false);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aData == "general.useragent.locale") {
+      this.showRestart();
+      this._loadLocales();
+    }
   },
 
   _loadLocales: function _loadLocales() {
@@ -112,13 +119,18 @@ var PreferencesView = {
     chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
 
     let selectedLocale = chrome.getSelectedLocale("browser");
+
+    // the chrome locale may not have updated yet if the user is installing a new
+    // locale. if the pref has a user set value, use it instead
+    if (Services.prefs.prefHasUserValue("general.useragent.locale"))
+      selectedLocale = Services.prefs.getCharPref("general.useragent.locale");
+
     let availableLocales = chrome.getLocalesForPackage("browser");
 
     let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
 
-    // Render locale menulist by iterating through the query result from getLocalesForPackage()
     let selectedItem = null;
-    let localeCount = 0;
+    let selectedLabel = selectedLocale;
     while (availableLocales.hasMore()) {
       let locale = availableLocales.getNext();
       try {
@@ -126,53 +138,17 @@ var PreferencesView = {
       } catch (e) {
         label = locale;
       }
-      let item = this._languages.appendItem(label, locale);
       if (locale == selectedLocale) {
+        selectedLabel = label;
         this._currentLocale = locale;
-        selectedItem = item;
+        break;
       }
-      localeCount++;
     }
-
-    // Are we using auto-detection?
-    let autoDetect = false;
-    try {
-      autoDetect = Services.prefs.getBoolPref("intl.locale.matchOS");
-    }
-    catch (e) {}
-
-    // Highlight current locale (or auto-detect entry)
-    if (autoDetect) {
-      this._languages.selectedItem = document.getElementById("prefs-languages-auto");
-      this._currentLocale = "auto";
-    } else {
-      this._languages.selectedItem = selectedItem;
-    }
-
-    // Hide the setting if we only have one locale
-    if (localeCount == 1)
-      document.getElementById("prefs-uilanguage").hidden = true;
+    document.getElementById("prefs-uilanguage-button").setAttribute("label", selectedLabel);
   },
 
-  updateLocale: function updateLocale() {
-    // Which locale did the user select?
-    let newLocale = this._languages.selectedItem.value;
-    let prefs = Services.prefs;
-
-    if (newLocale == "auto") {
-      if (prefs.prefHasUserValue("general.useragent.locale"))
-        prefs.clearUserPref("general.useragent.locale");
-      prefs.setBoolPref("intl.locale.matchOS", true);
-    } else {
-      prefs.setBoolPref("intl.locale.matchOS", false);
-      prefs.setCharPref("general.useragent.locale", newLocale);
-    }
-
-    // Show the restart notification, if needed
-    if (this._currentLocale == newLocale)
-      this.hideRestart();
-    else
-      this.showRestart();
+  showLocalePicker: function showLocalePicker() {
+    Services.ww.openWindow(window, "chrome://browser/content/localePicker.xul", "_browser", "chrome,dialog=no,all", null);
   },
 
   _showHomePageHint: function _showHomePageHint(aHint) {

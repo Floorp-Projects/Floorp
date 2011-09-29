@@ -96,7 +96,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename,PRBool aCreateStream, const nsACString& aCharset, PRInt32 aSource);
+      nsScanner(nsString& aFilename,bool aCreateStream, const nsACString& aCharset, PRInt32 aSource);
 
       ~nsScanner();
 
@@ -157,7 +157,7 @@ class nsScanner {
       nsresult ReadNumber(nsString& aString,PRInt32 aBase);
       nsresult ReadWhitespace(nsScannerSharedSubstring& aString, 
                               PRInt32& aNewlinesSkipped,
-                              PRBool& aHaveCR);
+                              bool& aHaveCR);
       nsresult ReadWhitespace(nsScannerIterator& aStart, 
                               nsScannerIterator& aEnd,
                               PRInt32& aNewlinesSkipped);
@@ -173,7 +173,7 @@ class nsScanner {
        */
       nsresult ReadUntil(nsAString& aString,
                          PRUnichar aTerminal,
-                         PRBool addTerminal);
+                         bool addTerminal);
 
       /**
        *  Consume characters until you find one contained in given
@@ -187,16 +187,16 @@ class nsScanner {
        */
       nsresult ReadUntil(nsAString& aString,
                          const nsReadEndCondition& aEndCondition, 
-                         PRBool addTerminal);
+                         bool addTerminal);
 
       nsresult ReadUntil(nsScannerSharedSubstring& aString,
                          const nsReadEndCondition& aEndCondition,
-                         PRBool addTerminal);
+                         bool addTerminal);
 
       nsresult ReadUntil(nsScannerIterator& aStart,
                          nsScannerIterator& aEnd,
                          const nsReadEndCondition& aEndCondition, 
-                         PRBool addTerminal);
+                         bool addTerminal);
 
       /**
        *  Records current offset position in input stream. This allows us
@@ -229,7 +229,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool UngetReadable(const nsAString& aBuffer);
+      bool UngetReadable(const nsAString& aBuffer);
 
       /**
        *  
@@ -286,8 +286,8 @@ class nsScanner {
       void CurrentPosition(nsScannerIterator& aPosition);
       void EndReading(nsScannerIterator& aPosition);
       void SetPosition(nsScannerIterator& aPosition,
-                       PRBool aTruncate = PR_FALSE,
-                       PRBool aReverse = PR_FALSE);
+                       bool aTruncate = false,
+                       bool aReverse = false);
       void ReplaceCharacter(nsScannerIterator& aPosition,
                             PRUnichar aChar);
 
@@ -297,8 +297,8 @@ class nsScanner {
        *
        * @update  gess4/3/98
        */
-      PRBool    IsIncremental(void) {return mIncremental;}
-      void      SetIncremental(PRBool anIncrValue) {mIncremental=anIncrValue;}
+      bool      IsIncremental(void) {return mIncremental;}
+      void      SetIncremental(bool anIncrValue) {mIncremental=anIncrValue;}
 
       /**
        * Return the position of the first non-whitespace
@@ -321,8 +321,8 @@ class nsScanner {
 
   protected:
 
-      PRBool AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest, PRInt32 aErrorPos = -1);
-      PRBool AppendToBuffer(const nsAString& aStr)
+      bool AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest, PRInt32 aErrorPos = -1);
+      bool AppendToBuffer(const nsAString& aStr)
       {
         nsScannerString::Buffer* buf = nsScannerString::AllocBufferFromString(aStr);
         if (!buf)
@@ -339,8 +339,8 @@ class nsScanner {
       nsString        mFilename;
       PRUint32        mCountRemaining; // The number of bytes still to be read
                                        // from the scanner buffer
-      PRPackedBool    mIncremental;
-      PRPackedBool    mHasInvalidCharacter;
+      bool            mIncremental;
+      bool            mHasInvalidCharacter;
       PRUnichar       mReplacementCharacter;
       PRInt32         mFirstNonWhitespacePosition;
       PRInt32         mCharsetSource;

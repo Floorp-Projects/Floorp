@@ -1160,7 +1160,7 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
   nsRefPtr<EventRunnable> runnable;
 
   if (progressEvent) {
-    PRBool lengthComputable;
+    bool lengthComputable;
     PRUint64 loaded, total;
     if (NS_FAILED(progressEvent->GetLengthComputable(&lengthComputable)) ||
         NS_FAILED(progressEvent->GetLoaded(&loaded)) ||

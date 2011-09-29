@@ -115,7 +115,7 @@ main(int aArgc,
      char** aArgv)
 {
   ScopedXPCOM xpcom(TEST_NAME);
-  nsCOMPtr<ShutdownObserver> shutdownObserver = new ShutdownObserver();
+  nsRefPtr<ShutdownObserver> shutdownObserver = new ShutdownObserver();
 
 
   // Tinderboxes are constantly on idle.  Since idle tasks can interact with

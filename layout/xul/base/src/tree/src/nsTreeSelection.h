@@ -73,7 +73,7 @@ protected:
   // Members
   nsCOMPtr<nsITreeBoxObject> mTree; // The tree will hold on to us through the view and let go when it dies.
 
-  PRBool mSuppressed; // Whether or not we should be firing onselect events.
+  bool mSuppressed; // Whether or not we should be firing onselect events.
   PRInt32 mCurrentIndex; // The item to draw the rect around. The last one clicked, etc.
   nsCOMPtr<nsITreeColumn> mCurrentColumn;
   PRInt32 mShiftSelectPivot; // Used when multiple SHIFT+selects are performed to pivot on.

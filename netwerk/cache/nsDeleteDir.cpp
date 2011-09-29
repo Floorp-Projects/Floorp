@@ -63,7 +63,7 @@ static void CreateDeleterThread(nsITimer *aTimer, void *arg)
                   PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 }
 
-nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash, PRBool sync,
+nsresult DeleteDir(nsIFile *dirIn, bool moveToTrash, bool sync,
                    PRUint32 delay)
 {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_TRASHRENAME> timer;

@@ -61,7 +61,7 @@ public:
 protected:
 
   nsSupportsHashtable   mCommandsTable;   // hash table of nsIControllerCommands, keyed by command name
-  PRBool                mMutable;         // are we mutable?
+  bool                  mMutable;         // are we mutable?
 };
 
 

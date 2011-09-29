@@ -92,7 +92,7 @@
 #define MAX_RECURSION_COUNT 50
 
 nsIOService* gIOService = nsnull;
-static PRBool gHasWarnedUploadChannel2;
+static bool gHasWarnedUploadChannel2;
 
 // A general port blacklist.  Connections to these ports will not be allowed unless 
 // the protocol overrides.
@@ -427,7 +427,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     if (NS_SUCCEEDED(rv))
         return rv;
 
-    PRBool externalProtocol = PR_FALSE;
+    bool externalProtocol = false;
     nsCOMPtr<nsIPrefBranch2> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
@@ -687,7 +687,7 @@ nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *a
     return NewChannelFromURI(uri, result);
 }
 
-PRBool
+bool
 nsIOService::IsLinkUp()
 {
     if (!mNetworkLinkService) {
@@ -695,7 +695,7 @@ nsIOService::IsLinkUp()
         return PR_TRUE;
     }
 
-    PRBool isLinkUp;
+    bool isLinkUp;
     nsresult rv;
     rv = mNetworkLinkService->GetIsLinkUp(&isLinkUp);
     if (NS_FAILED(rv)) {
@@ -706,14 +706,14 @@ nsIOService::IsLinkUp()
 }
 
 NS_IMETHODIMP
-nsIOService::GetOffline(PRBool *offline)
+nsIOService::GetOffline(bool *offline)
 {
     *offline = mOffline;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::SetOffline(PRBool offline)
+nsIOService::SetOffline(bool offline)
 {
     // When someone wants to go online (!offline) after we got XPCOM shutdown
     // throw ERROR_NOT_AVAILABLE to prevent return to online state.
@@ -806,7 +806,7 @@ nsIOService::SetOffline(PRBool offline)
 
 
 NS_IMETHODIMP
-nsIOService::AllowPort(PRInt32 inPort, const char *scheme, PRBool *_retval)
+nsIOService::AllowPort(PRInt32 inPort, const char *scheme, bool *_retval)
 {
     PRInt16 port = inPort;
     if (port == -1) {
@@ -855,7 +855,7 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         ParsePortList(prefs, PORT_PREF("banned.override"), PR_TRUE);
 
     if (!pref || strcmp(pref, AUTODIAL_PREF) == 0) {
-        PRBool enableAutodial = PR_FALSE;
+        bool enableAutodial = false;
         nsresult rv = prefs->GetBoolPref(AUTODIAL_PREF, &enableAutodial);
         // If pref not found, default to disabled.
         mAutoDialEnabled = enableAutodial;
@@ -866,7 +866,7 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (!pref || strcmp(pref, MANAGE_OFFLINE_STATUS_PREF) == 0) {
-        PRBool manage;
+        bool manage;
         if (NS_SUCCEEDED(prefs->GetBoolPref(MANAGE_OFFLINE_STATUS_PREF,
                                             &manage)))
             SetManageOfflineStatus(manage);
@@ -897,7 +897,7 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 }
 
 void
-nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove)
+nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool remove)
 {
     nsXPIDLCString portList;
 
@@ -993,7 +993,7 @@ nsIOService::Observe(nsISupports *subject,
 NS_IMETHODIMP
 nsIOService::ParseContentType(const nsACString &aTypeHeader,
                               nsACString &aCharset,
-                              PRBool *aHadCharset,
+                              bool *aHadCharset,
                               nsACString &aContentType)
 {
     net_ParseContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
@@ -1003,7 +1003,7 @@ nsIOService::ParseContentType(const nsACString &aTypeHeader,
 NS_IMETHODIMP
 nsIOService::ProtocolHasFlags(nsIURI   *uri,
                               PRUint32  flags,
-                              PRBool   *result)
+                              bool     *result)
 {
     NS_ENSURE_ARG(uri);
 
@@ -1025,7 +1025,7 @@ nsIOService::ProtocolHasFlags(nsIURI   *uri,
 NS_IMETHODIMP
 nsIOService::URIChainHasFlags(nsIURI   *uri,
                               PRUint32  flags,
-                              PRBool   *result)
+                              bool     *result)
 {
     nsresult rv = ProtocolHasFlags(uri, flags, result);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1083,8 +1083,8 @@ nsIOService::NewSimpleNestedURI(nsIURI* aURI, nsIURI** aResult)
 }
 
 NS_IMETHODIMP
-nsIOService::SetManageOfflineStatus(PRBool aManage) {
-    PRBool wasManaged = mManageOfflineStatus;
+nsIOService::SetManageOfflineStatus(bool aManage) {
+    bool wasManaged = mManageOfflineStatus;
     mManageOfflineStatus = aManage;
     if (mManageOfflineStatus && !wasManaged)
         return TrackNetworkLinkStatusForOffline();
@@ -1092,7 +1092,7 @@ nsIOService::SetManageOfflineStatus(PRBool aManage) {
 }
 
 NS_IMETHODIMP
-nsIOService::GetManageOfflineStatus(PRBool* aManage) {
+nsIOService::GetManageOfflineStatus(bool* aManage) {
     *aManage = mManageOfflineStatus;
     return NS_OK;
 }
@@ -1110,7 +1110,7 @@ nsIOService::TrackNetworkLinkStatusForOffline()
   
     // check to make sure this won't collide with Autodial
     if (mSocketTransportService) {
-        PRBool autodialEnabled = PR_FALSE;
+        bool autodialEnabled = false;
         mSocketTransportService->GetAutodialEnabled(&autodialEnabled);
         // If autodialing-on-link-down is enabled, check if the OS auto dial 
         // option is set to always autodial. If so, then we are 
@@ -1128,7 +1128,7 @@ nsIOService::TrackNetworkLinkStatusForOffline()
         }
     }
 
-    PRBool isUp;
+    bool isUp;
     nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
     NS_ENSURE_SUCCESS(rv, rv);
     return SetOffline(!isUp);
@@ -1177,7 +1177,7 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
                                            nsACString &aCharset,
                                            PRInt32 *aCharsetStart,
                                            PRInt32 *aCharsetEnd,
-                                           PRBool *aHadCharset)
+                                           bool *aHadCharset)
 {
     nsCAutoString ignored;
     net_ParseContentType(aTypeHeader, ignored, aCharset, aHadCharset,

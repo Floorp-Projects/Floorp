@@ -168,7 +168,7 @@ static void FreeStringArray(PRUint32 variants, char ** array)
 
 // nsPluginsDir class
 
-PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
+bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
     nsCAutoString leaf;
     if (NS_FAILED(file->GetNativeLeafName(leaf)))

@@ -57,7 +57,7 @@ const PRFloat64 growthRate = 1.2;
 // 0xA0's and a single ending space, so need to treat 0xA0's as spaces.
 // 0xA0 is the Latin1/Unicode character for "non-breaking space (nbsp)"
 // Also recognize the Japanese ideographic space 0x3000 as a space.
-static inline PRBool IsSpace(const PRUnichar aChar)
+static inline bool IsSpace(const PRUnichar aChar)
 {
   return (nsCRT::IsAsciiSpace(aChar) || aChar == 0xA0 || aChar == 0x3000);
 }
@@ -66,7 +66,7 @@ static inline PRBool IsSpace(const PRUnichar aChar)
 // aStringToAppendTo
 void
 mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo,
-                             PRBool inAttribute)
+                             bool inAttribute)
 {
     switch (ch)
     {
@@ -96,7 +96,7 @@ mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo,
 // EscapeStr takes the passed in string and
 // escapes it IN PLACE.
 void
-mozTXTToHTMLConv::EscapeStr(nsString& aInString, PRBool inAttribute)
+mozTXTToHTMLConv::EscapeStr(nsString& aInString, bool inAttribute)
 {
   // the replace substring routines
   // don't seem to work if you have a character
@@ -218,7 +218,7 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
   }
 }
 
-PRBool
+bool
 mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
                                const PRUint32 pos, const modetype check,
                                PRUint32& start)
@@ -272,7 +272,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
     PRInt32 i = pos - 1;
     // This disallows non-ascii-characters for email.
     // Currently correct, but revisit later after standards changed.
-    PRBool isEmail = aInString[pos] == (PRUnichar)'@';
+    bool isEmail = aInString[pos] == (PRUnichar)'@';
     // These chars mark the start of the URL
     for (; i >= 0
              && aInString[PRUint32(i)] != '>' && aInString[PRUint32(i)] != '<'
@@ -306,7 +306,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
   } //switch
 }
 
-PRBool
+bool
 mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLength, const PRUint32 pos,
            const modetype check, const PRUint32 start, PRUint32& end)
 {
@@ -331,8 +331,8 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
   case abbreviated:
   {
     PRUint32 i = pos + 1;
-    PRBool isEmail = aInString[pos] == (PRUnichar)'@';
-    PRBool haveOpeningBracket = PR_FALSE;
+    bool isEmail = aInString[pos] == (PRUnichar)'@';
+    bool haveOpeningBracket = false;
     for (; PRInt32(i) < aInStringLength; i++)
     {
       // These chars mark the end of the URL
@@ -418,7 +418,7 @@ mozTXTToHTMLConv::CalculateURLBoundaries(const PRUnichar * aInString, PRInt32 aI
   return;
 }
 
-PRBool mozTXTToHTMLConv::ShouldLinkify(const nsCString& aURL)
+bool mozTXTToHTMLConv::ShouldLinkify(const nsCString& aURL)
 {
   if (!mIOService)
     return PR_FALSE;
@@ -440,12 +440,12 @@ PRBool mozTXTToHTMLConv::ShouldLinkify(const nsCString& aURL)
    return PR_TRUE; // handler is built-in, linkify it!
 
   // If external app exists for the scheme then linkify it.
-  PRBool exists;
+  bool exists;
   rv = externalHandler->ExternalAppExistsForScheme(scheme, &exists);
   return(NS_SUCCEEDED(rv) && exists);
 }
 
-PRBool
+bool
 mozTXTToHTMLConv::CheckURLAndCreateHTML(
      const nsString& txtURL, const nsString& desc, const modetype mode,
      nsString& outputHTML)
@@ -518,7 +518,7 @@ NS_IMETHODIMP mozTXTToHTMLConv::FindURLInPlaintext(const PRUnichar * aInString, 
   return NS_OK;
 }
 
-PRBool
+bool
 mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
      const PRUint32 whathasbeendone,
      nsString& outputHTML, PRInt32& replaceBefore, PRInt32& replaceAfter)
@@ -599,7 +599,7 @@ mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const 
   return state[check] == success;
 }
 
-PRBool
+bool
 mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
     PRInt32 aInLength, const PRUnichar* rep, PRInt32 aRepLen,
     LIMTYPE before, LIMTYPE after)
@@ -677,8 +677,8 @@ mozTXTToHTMLConv::NumberOfMatches(const PRUnichar * aInString, PRInt32 aInString
 
 // NOTE: the converted html for the phrase is appended to aOutString
 // tagHTML and attributeHTML are plain ASCII (literal strings, in fact)
-PRBool
-mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, PRBool col0,
+bool
+mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, bool col0,
      const PRUnichar* tagTXT, PRInt32 aTagTXTLen, 
      const char* tagHTML, const char* attributeHTML,
      nsString& aOutString, PRUint32& openTags)
@@ -735,8 +735,8 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
 }
 
 
-PRBool
-mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
+bool
+mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool col0,
          const char* tagTXT, const char* imageName,
          nsString& outputHTML, PRInt32& glyphTextLen)
 {
@@ -793,8 +793,8 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
 }
 
 // the glyph is appended to aOutputString instead of the original string...
-PRBool
-mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBool col0,
+bool
+mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, bool col0,
          nsString& aOutputString, PRInt32& glyphTextLen)
 {
   PRUnichar text0 = aInString[0]; 
@@ -803,8 +803,8 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
   // temporary variable used to store the glyph html text
   nsAutoString outputHTML;
-  PRBool bTestSmilie;
-  PRBool bArg;
+  bool bTestSmilie;
+  bool bArg;
   int i;
 
   // refactor some of this mess to avoid code duplication and speed execution a bit
@@ -1057,7 +1057,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
   PRInt32 result = 0;
   PRInt32 lineLength = nsCRT::strlen(line);
 
-  PRBool moreCites = PR_TRUE;
+  bool moreCites = true;
   while (moreCites)
   {
     /* E.g. the following lines count as quote:
@@ -1116,9 +1116,9 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
 void
 mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, PRUint32 whattodo, nsString& aOutString)
 {
-  PRBool doURLs = 0 != (whattodo & kURLs);
-  PRBool doGlyphSubstitution = 0 != (whattodo & kGlyphSubstitution);
-  PRBool doStructPhrase = 0 != (whattodo & kStructPhrase);
+  bool doURLs = 0 != (whattodo & kURLs);
+  bool doGlyphSubstitution = 0 != (whattodo & kGlyphSubstitution);
+  bool doStructPhrase = 0 != (whattodo & kStructPhrase);
 
   PRUint32 structPhrase_strong = 0;  // Number of currently open tags
   PRUint32 structPhrase_underline = 0;

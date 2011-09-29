@@ -755,7 +755,7 @@ nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName, eStateValueType aType,
                                  PRUint64 aPermanentState,
                                  PRUint64 aTrueState,
                                  PRUint64 aFalseState,
-                                 PRBool aDefinedIfAbsent) :
+                                 bool aDefinedIfAbsent) :
   mAttributeName(aAttrName),
   mIsToken(PR_TRUE),
   mPermanentState(aPermanentState),
@@ -801,7 +801,7 @@ nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName,
     mDefaultState = aState1;
 }
 
-PRBool
+bool
 nsStateMapEntry::MapToStates(nsIContent* aContent, PRUint64* aState,
                              eStateMapEntryID aStateMapEntryID)
 {
@@ -814,7 +814,7 @@ nsStateMapEntry::MapToStates(nsIContent* aContent, PRUint64* aState,
   if (entry.mIsToken) {
     // If attribute is considered as defined when it's absent then let's act
     // attribute value is "false" supposedly.
-    PRBool hasAttr = aContent->HasAttr(kNameSpaceID_None, *entry.mAttributeName);
+    bool hasAttr = aContent->HasAttr(kNameSpaceID_None, *entry.mAttributeName);
     if (entry.mDefinedIfAbsent && !hasAttr) {
       if (entry.mPermanentState)
         *aState |= entry.mPermanentState;
@@ -851,7 +851,7 @@ nsStateMapEntry::MapToStates(nsIContent* aContent, PRUint64* aState,
 
   // Apply states for matched value. If no values was matched then apply default
   // states.
-  PRBool applyDefaultStates = PR_TRUE;
+  bool applyDefaultStates = true;
   if (entry.mValue1) {
     if (attrValue.EqualsASCII(entry.mValue1)) {
       applyDefaultStates = PR_FALSE;

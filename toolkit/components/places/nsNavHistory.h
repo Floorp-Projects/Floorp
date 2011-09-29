@@ -81,7 +81,7 @@
 
 // This magic number specified an uninitialized value for the
 // mInPrivateBrowsing member
-#define PRIVATEBROWSING_NOTINITED (PRBool(0xffffffff))
+#define PRIVATEBROWSING_NOTINITED (bool(0xffffffff))
 
 // Clamp title and URL to generously large, but not too large, length.
 // See bug 319004 for details.
@@ -303,7 +303,7 @@ public:
   void GetMonthYear(PRInt32 aMonth, PRInt32 aYear, nsACString& aResult);
 
   // Returns whether history is enabled or not.
-  PRBool IsHistoryDisabled() {
+  bool IsHistoryDisabled() {
     return !mHistoryEnabled || InPrivateBrowsingMode();
   }
 
@@ -368,8 +368,8 @@ public:
   // used by query result nodes to update: see comment on body of CanLiveUpdateQuery
   static PRUint32 GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsNavHistoryQueryOptions* aOptions,
-                                        PRBool* aHasSearchTerms);
-  PRBool EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                                        bool* aHasSearchTerms);
+  bool EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions,
                               nsNavHistoryResultNode* aNode);
 
@@ -398,7 +398,7 @@ public:
   nsresult UpdateSchemaVersion();
 
   // Returns true if we are currently in private browsing mode
-  PRBool InPrivateBrowsingMode()
+  bool InPrivateBrowsingMode()
   {
     if (mInPrivateBrowsing == PRIVATEBROWSING_NOTINITED) {
       mInPrivateBrowsing = PR_FALSE;
@@ -688,7 +688,7 @@ protected:
   NS_DECL_NSICHARSETRESOLVER
 
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
-  nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
+  nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, bool aIsBookmarked, PRInt32 *aFrecency);
 
   /**
    * Initializes the database file.  If the database does not exist, was
@@ -699,7 +699,7 @@ protected:
    *        Indicates if we should close an open database connection or not.
    *        Note: A valid database connection must be opened if this is true.
    */
-  nsresult InitDBFile(PRBool aForceInit);
+  nsresult InitDBFile(bool aForceInit);
 
   /**
    * Set journal mode on the database.
@@ -732,25 +732,25 @@ protected:
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
   nsresult CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString);
 
-  nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
-                          PRBool aToplevel, nsIURI* aReferrer);
+  nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, bool aRedirect,
+                          bool aToplevel, nsIURI* aReferrer);
 
   nsresult AddVisitChain(nsIURI* aURI, PRTime aTime,
-                         PRBool aToplevel, PRBool aRedirect,
+                         bool aToplevel, bool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
                          PRInt64* aSessionID);
   nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
-                              PRBool aHidden, PRBool aTyped,
-                              PRInt32 aVisitCount, PRBool aCalculateFrecency,
+                              bool aHidden, bool aTyped,
+                              PRInt32 aVisitCount, bool aCalculateFrecency,
                               PRInt64* aPageID, nsACString& guid);
   nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                             PRInt64 aSessionID, PRTime aTime,
                             PRInt32 aTransitionType, PRInt64* aVisitID);
-  PRBool FindLastVisit(nsIURI* aURI,
+  bool FindLastVisit(nsIURI* aURI,
                        PRInt64* aVisitID,
                        PRTime* aTime,
                        PRInt64* aSessionID);
-  PRBool IsURIStringVisited(const nsACString& url);
+  bool IsURIStringVisited(const nsACString& url);
 
   /**
    * Loads all of the preferences that we use into member variables.
@@ -776,7 +776,7 @@ protected:
   nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
                                 nsNavHistoryQueryOptions* aOptions,
                                 nsCString& queryString,
-                                PRBool& aParamsPresent,
+                                bool& aParamsPresent,
                                 StringHash& aAddParams);
 
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
@@ -841,7 +841,7 @@ protected:
 
   nsTHashtable<VisitHashKey> mEmbedVisits;
 
-  PRBool CheckIsRecentEvent(RecentEventHash* hashTable,
+  bool CheckIsRecentEvent(RecentEventHash* hashTable,
                             const nsACString& url);
   void ExpireNonrecentEvents(RecentEventHash* hashTable);
 
@@ -855,7 +855,7 @@ protected:
 
   // Whether history is enabled or not.
   // Will mimic value of the places.history.enabled preference.
-  PRBool mHistoryEnabled;
+  bool mHistoryEnabled;
 
   // Frecency preferences.
   PRInt32 mNumVisitsForFrecency;
@@ -887,7 +887,7 @@ protected:
 
   PRInt64 mTagsFolder;
 
-  PRBool mInPrivateBrowsing;
+  bool mInPrivateBrowsing;
 
   PRUint16 mDatabaseStatus;
 
@@ -902,7 +902,7 @@ protected:
 #define PLACES_URI_PREFIX "place:"
 
 /* Returns true if the given URI represents a history query. */
-inline PRBool IsQueryURI(const nsCString &uri)
+inline bool IsQueryURI(const nsCString &uri)
 {
   return StringBeginsWith(uri, NS_LITERAL_CSTRING(PLACES_URI_PREFIX));
 }

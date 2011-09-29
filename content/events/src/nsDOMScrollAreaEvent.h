@@ -58,8 +58,8 @@ public:
 
   NS_FORWARD_TO_NSDOMUIEVENT
 
-    virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-    virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
+    virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
+    virtual bool Deserialize(const IPC::Message* aMsg, void** aIter);
 
 protected:
   nsClientRect mClientArea;

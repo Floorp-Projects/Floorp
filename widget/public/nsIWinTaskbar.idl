@@ -48,6 +48,7 @@ interface nsITaskbarTabPreview;
 interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
 interface nsITaskbarProgress;
+interface nsITaskbarOverlayIconController;
 interface nsIJumpListBuilder;
 interface nsIDOMWindow;
 
@@ -83,7 +84,7 @@ interface nsIDOMWindow;
  * See nsIJumpListBuilder for more information.
  */
 
-[scriptable, uuid(9fc572db-1089-4d43-9121-f4833d77a2df)]
+[scriptable, uuid(3232f40a-e94b-432d-9496-096abf1387bd)]
 interface nsIWinTaskbar : nsISupports
 {
   /**
@@ -131,6 +132,17 @@ interface nsIWinTaskbar : nsISupports
    * information.
    */
   nsITaskbarProgress getTaskbarProgress(in nsIDocShell shell);
+
+  /**
+   * Taskbar icon overlay
+   */
+
+  /**
+   * Gets the taskbar icon overlay controller for a window. The docshell is used
+   * to find the toplevel window. See the documentation in
+   * nsITaskbarOverlayIconController for more details.
+   */
+  nsITaskbarOverlayIconController getOverlayIconController(in nsIDocShell shell);
 
   /**
    * Taskbar and start menu jump list management

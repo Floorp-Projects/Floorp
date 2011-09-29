@@ -68,7 +68,7 @@ NS_INTERFACE_MAP_END
 /* static */ already_AddRefed<DOMSVGPathSegList>
 DOMSVGPathSegList::GetDOMWrapper(void *aList,
                                  nsSVGElement *aElement,
-                                 PRBool aIsAnimValList)
+                                 bool aIsAnimValList)
 {
   DOMSVGPathSegList *wrapper =
     sSVGPathSegListTearoffTable.GetTearoff(aList);
@@ -229,7 +229,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
   NS_ABORT_IF_FALSE(index == length, "Serious counting error");
 }
 
-PRBool
+bool
 DOMSVGPathSegList::AttrIsAnimating() const
 {
   return const_cast<DOMSVGPathSegList*>(this)->InternalAList().IsAnimating();
@@ -439,7 +439,7 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
   float segAsRaw[1 + NS_SVG_PATH_SEG_MAX_ARGS];
   domItem->ToSVGPathSegEncodedData(segAsRaw);
 
-  PRBool ok = !!InternalList().mData.ReplaceElementsAt(
+  bool ok = !!InternalList().mData.ReplaceElementsAt(
                   internalIndex, 1 + oldArgCount,
                   segAsRaw, 1 + newArgCount);
   if (!ok) {

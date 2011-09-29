@@ -51,7 +51,7 @@
 using namespace mozilla;
 
 gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
-                       PRBool aNeedsBold)
+                       bool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle),
       mCGFont(nsnull),
       mFontFace(nsnull),
@@ -90,7 +90,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
     cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
 
     // synthetic oblique by skewing via the font matrix
-    PRBool needsOblique =
+    bool needsOblique =
         (mFontEntry != NULL) &&
         (!mFontEntry->IsItalic() &&
          (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
@@ -147,21 +147,21 @@ gfxMacFont::~gfxMacFont()
     }
 }
 
-PRBool
+bool
 gfxMacFont::InitTextRun(gfxContext *aContext,
                         gfxTextRun *aTextRun,
                         const PRUnichar *aString,
                         PRUint32 aRunStart,
                         PRUint32 aRunLength,
                         PRInt32 aRunScript,
-                        PRBool aPreferPlatformShaping)
+                        bool aPreferPlatformShaping)
 {
     if (!mIsValid) {
         NS_WARNING("invalid font! expect incorrect text rendering");
         return PR_FALSE;
     }
 
-    PRBool ok = gfxFont::InitTextRun(aContext, aTextRun, aString,
+    bool ok = gfxFont::InitTextRun(aContext, aTextRun, aString,
                                      aRunStart, aRunLength, aRunScript,
         static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout());
 
@@ -176,7 +176,7 @@ gfxMacFont::CreatePlatformShaper()
     mPlatformShaper = new gfxCoreTextShaper(this);
 }
 
-PRBool
+bool
 gfxMacFont::SetupCairoFont(gfxContext *aContext)
 {
     if (cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {

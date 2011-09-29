@@ -86,7 +86,7 @@ nsLocalHandlerApp::GetDetailedDescription(nsAString& aDescription)
 }
 
 NS_IMETHODIMP
-nsLocalHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval)
+nsLocalHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aHandlerApp);
 
@@ -212,7 +212,7 @@ nsLocalHandlerApp::GetParameter(PRUint32 parameterIndex, nsAString & _retval)
 
 /* boolean parameterExists (in AString param); */
 NS_IMETHODIMP
-nsLocalHandlerApp::ParameterExists(const nsAString & aParam, PRBool *_retval)
+nsLocalHandlerApp::ParameterExists(const nsAString & aParam, bool *_retval)
 {
   *_retval = mParameters.Contains(aParam);
   return NS_OK;

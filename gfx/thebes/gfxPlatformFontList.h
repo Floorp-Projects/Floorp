@@ -88,7 +88,7 @@ public:
                       const nsACString& aGenericFamily,
                       nsTArray<nsString>& aListOfFonts);
 
-    virtual PRBool ResolveFontName(const nsAString& aFontName,
+    virtual bool ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName);
 
     void UpdateFontList() { InitFontList(); }
@@ -102,9 +102,9 @@ public:
     // TODO: make this virtual, for lazily adding to the font list
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily);
 
-    gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, PRBool& aNeedsBold);
+    gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, bool& aNeedsBold);
 
-    PRBool GetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<gfxFontFamily> > *array);
+    bool GetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<gfxFontFamily> > *array);
     void SetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<gfxFontFamily> >& array);
 
     // name lookup table methods
@@ -115,13 +115,13 @@ public:
 
     void AddPostscriptName(gfxFontEntry *aFontEntry, nsAString& aPostscriptName);
 
-    PRBool NeedFullnamePostscriptNames() { return mNeedFullnamePostscriptNames; }
+    bool NeedFullnamePostscriptNames() { return mNeedFullnamePostscriptNames; }
 
     // pure virtual functions, to be provided by concrete subclasses
 
     // get the system default font
     virtual gfxFontEntry* GetDefaultFont(const gfxFontStyle* aStyle,
-                                         PRBool& aNeedsBold) = 0;
+                                         bool& aNeedsBold) = 0;
 
     // look up a font by name on the host platform
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
@@ -135,10 +135,10 @@ public:
 
     // get the standard family name on the platform for a given font name
     // (platforms may override, eg Mac)
-    virtual PRBool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+    virtual bool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
 protected:
-    gfxPlatformFontList(PRBool aNeedFullnamePostscriptNames = PR_TRUE);
+    gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);
 
     static gfxPlatformFontList *sPlatformFontList;
 
@@ -178,7 +178,7 @@ protected:
 
     // gfxFontInfoLoader overrides, used to load in font cmaps
     virtual void InitLoader();
-    virtual PRBool RunLoader();
+    virtual bool RunLoader();
     virtual void FinishLoader();
 
     // canonical family name ==> family entry (unique, one name per family entry)
@@ -189,13 +189,13 @@ protected:
     nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> mOtherFamilyNames;
 
     // flag set after InitOtherFamilyNames is called upon first name lookup miss
-    PRPackedBool mOtherFamilyNamesInitialized;
+    bool mOtherFamilyNamesInitialized;
 
     // flag set after fullname and Postcript name lists are populated
-    PRPackedBool mFaceNamesInitialized;
+    bool mFaceNamesInitialized;
 
     // whether these are needed for a given platform
-    PRPackedBool mNeedFullnamePostscriptNames;
+    bool mNeedFullnamePostscriptNames;
 
     // fullname ==> font entry (unique, one name per font entry)
     nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mFullnames;

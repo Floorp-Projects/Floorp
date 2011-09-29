@@ -53,7 +53,7 @@ public:
                    nsIDOMCSSPrimitiveValue* aGreen,
                    nsIDOMCSSPrimitiveValue* aBlue,
                    nsIDOMCSSPrimitiveValue* aAlpha,
-                   PRBool aHasAlpha);
+                   bool aHasAlpha);
 
   virtual ~nsDOMCSSRGBColor(void);
 
@@ -61,14 +61,14 @@ public:
   NS_DECL_NSIDOMRGBCOLOR
   NS_DECL_NSIDOMNSRGBACOLOR
 
-  PRBool HasAlpha() const { return mHasAlpha; }
+  bool HasAlpha() const { return mHasAlpha; }
 
 private:
   nsCOMPtr<nsIDOMCSSPrimitiveValue> mRed;
   nsCOMPtr<nsIDOMCSSPrimitiveValue> mGreen;
   nsCOMPtr<nsIDOMCSSPrimitiveValue> mBlue;
   nsCOMPtr<nsIDOMCSSPrimitiveValue> mAlpha;
-  PRBool mHasAlpha;
+  bool mHasAlpha;
 };
 
 #endif // nsDOMCSSRGBColor_h__

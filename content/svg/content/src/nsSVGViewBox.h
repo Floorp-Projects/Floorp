@@ -54,7 +54,7 @@ struct nsSVGViewBoxRect
     x(aX), y(aY), width(aWidth), height(aHeight) {}
   nsSVGViewBoxRect(const nsSVGViewBoxRect& rhs) :
     x(rhs.x), y(rhs.y), width(rhs.width), height(rhs.height) {}
-  PRBool operator==(const nsSVGViewBoxRect& aOther) const;
+  bool operator==(const nsSVGViewBoxRect& aOther) const;
 };
 
 class nsSVGViewBox
@@ -65,13 +65,13 @@ public:
   void Init();
 
   // Used by element to tell if viewBox is defined
-  PRBool IsValid() const
+  bool IsValid() const
     { return (mHasBaseVal || mAnimVal); }
 
   const nsSVGViewBoxRect& GetBaseValue() const
     { return mBaseVal; }
   void SetBaseValue(float aX, float aY, float aWidth, float aHeight,
-                    nsSVGElement *aSVGElement, PRBool aDoSetAttr);
+                    nsSVGElement *aSVGElement, bool aDoSetAttr);
 
   const nsSVGViewBoxRect& GetAnimValue() const
     { return mAnimVal ? *mAnimVal : mBaseVal; }
@@ -80,7 +80,7 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr);
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
 
   nsresult ToDOMAnimatedRect(nsIDOMSVGAnimatedRect **aResult,
@@ -94,7 +94,7 @@ private:
 
   nsSVGViewBoxRect mBaseVal;
   nsAutoPtr<nsSVGViewBoxRect> mAnimVal;
-  PRPackedBool mHasBaseVal;
+  bool mHasBaseVal;
 
   struct DOMBaseVal : public nsIDOMSVGRect
   {
@@ -211,7 +211,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     PRBool& aPreventCachingOfSandwich) const;
+                                     bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

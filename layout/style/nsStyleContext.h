@@ -125,35 +125,35 @@ public:
   already_AddRefed<nsStyleContext>
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
                      nsRuleNode* aRulesIfVisited,
-                     PRBool aRelevantLinkVisited);
+                     bool aRelevantLinkVisited);
 
   // Does this style context or any of its ancestors have text
   // decoration lines?
-  PRBool HasTextDecorationLines() const
+  bool HasTextDecorationLines() const
     { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES); }
 
   // Does this style context represent the style for a pseudo-element or
   // inherit data from such a style context?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns
   // non-null for GetPseudo.
-  PRBool HasPseudoElementData() const
+  bool HasPseudoElementData() const
     { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this style context is for (which is that element
   // or its nearest ancestor that is a link) visited?
-  PRBool RelevantLinkVisited() const
+  bool RelevantLinkVisited() const
     { return !!(mBits & NS_STYLE_RELEVANT_LINK_VISITED); }
 
   // Is this a style context for a link?
-  PRBool IsLinkContext() const {
+  bool IsLinkContext() const {
     return
       GetStyleIfVisited() && GetStyleIfVisited()->GetParent() == GetParent();
   }
 
   // Is this style context the GetStyleIfVisited() for some other style
   // context?
-  PRBool IsStyleIfVisited() const
+  bool IsStyleIfVisited() const
     { return !!(mBits & NS_STYLE_IS_STYLE_IF_VISITED); }
 
   // Tells this style context that it should return true from
@@ -301,7 +301,7 @@ public:
    * be used based on aLinkIsVisited with the A component of aColors[0].
    */
   static nscolor CombineVisitedColors(nscolor *aColors,
-                                      PRBool aLinkIsVisited);
+                                      bool aLinkIsVisited);
 
   /**
    * Allocate a chunk of memory that is scoped to the lifetime of this
@@ -350,7 +350,7 @@ protected:
 
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)      \
-    const nsStyle##name_ * DoGetStyle##name_(PRBool aComputeData) {     \
+    const nsStyle##name_ * DoGetStyle##name_(bool aComputeData) {     \
       const nsStyle##name_ * cachedData =                               \
         static_cast<nsStyle##name_*>(                                   \
           mCachedInheritedData.mStyleStructs[eStyleStruct_##name_]);    \
@@ -360,7 +360,7 @@ protected:
       return mRuleNode->GetStyle##name_(this, aComputeData);            \
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_)          \
-    const nsStyle##name_ * DoGetStyle##name_(PRBool aComputeData) {     \
+    const nsStyle##name_ * DoGetStyle##name_(bool aComputeData) {     \
       const nsStyle##name_ * cachedData = mCachedResetData              \
         ? static_cast<nsStyle##name_*>(                                 \
             mCachedResetData->mStyleStructs[eStyleStruct_##name_])      \

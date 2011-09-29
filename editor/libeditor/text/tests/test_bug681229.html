@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=681229
+-->
+<head>
+  <title>Test for Bug 681229</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=681229">Mozilla Bug 681229</a>
+<p id="display"></p>
+<div id="content">
+<textarea spellcheck="false"></textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 681229 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var t = document.querySelector("textarea");
+  t.focus();
+
+  const kValue = "a\r\nb";
+  const kExpectedValue = (navigator.platform.indexOf("Win") == 0) ?
+    "a\nb" : kValue;
+
+  SimpleTest.waitForClipboard(kExpectedValue,
+    function() {
+      SpecialPowers.copyString(kValue);
+    },
+    function() {
+      synthesizeKey("V", {accelKey: true});
+      is(t.value, "a\nb", "The carriage return has been correctly sanitized");
+      SimpleTest.finish();
+    },
+    function() {
+      SimpleTest.finish();
+    }
+  );
+});
+
+</script>
+</pre>
+</body>
+</html>

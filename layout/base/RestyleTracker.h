@@ -76,7 +76,7 @@ public:
                     "Shouldn't have both root flags");
   }
 
-  PRBool Init() {
+  bool Init() {
     return mPendingRestyles.Init();
   }
 
@@ -88,7 +88,7 @@ public:
    * Add a restyle for the given element to the tracker.  Returns true
    * if the element already had eRestyle_LaterSiblings set on it.
    */
-  PRBool AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
+  bool AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
                            nsChangeHint aMinChangeHint);
 
   /**
@@ -122,7 +122,7 @@ public:
    * the element.  If false is returned, then the state of *aData is
    * undefined.
    */
-  PRBool GetRestyleData(Element* aElement, RestyleData* aData);
+  bool GetRestyleData(Element* aElement, RestyleData* aData);
 
   /**
    * The document we're associated with.
@@ -166,10 +166,10 @@ private:
   // True if we have some entries with the eRestyle_LaterSiblings
   // flag.  We need this to avoid enumerating the hashtable looking
   // for such entries when we can't possibly have any.
-  PRBool mHaveLaterSiblingRestyles;
+  bool mHaveLaterSiblingRestyles;
 };
 
-inline PRBool RestyleTracker::AddPendingRestyle(Element* aElement,
+inline bool RestyleTracker::AddPendingRestyle(Element* aElement,
                                                 nsRestyleHint aRestyleHint,
                                                 nsChangeHint aMinChangeHint)
 {
@@ -186,7 +186,7 @@ inline PRBool RestyleTracker::AddPendingRestyle(Element* aElement,
     aElement->SetFlags(RestyleBit());
   }
 
-  PRBool hadRestyleLaterSiblings =
+  bool hadRestyleLaterSiblings =
     (existingData.mRestyleHint & eRestyle_LaterSiblings) != 0;
   existingData.mRestyleHint =
     nsRestyleHint(existingData.mRestyleHint | aRestyleHint);

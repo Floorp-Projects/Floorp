@@ -59,12 +59,12 @@ class nsIRollupListener {
   /**
    * Asks the RollupListener if it should rollup on mousevents
    */
-  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShould) = 0;
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(bool *aShould) = 0;
 
   /**
    * Asks the RollupListener if it should rollup on mouse activate, eg. X-Mouse
    */
-  NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShould) = 0;
+  NS_IMETHOD ShouldRollupOnMouseActivate(bool *aShould) = 0;
 
 };
 

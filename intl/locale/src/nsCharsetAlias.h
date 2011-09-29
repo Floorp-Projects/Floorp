@@ -51,7 +51,7 @@ public:
 
   NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult);
 
-  NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, PRBool* oResult) ;
+  NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, bool* oResult) ;
   
 };
 

@@ -74,7 +74,7 @@ static NS_DEFINE_CID(kCertOverrideCID, NS_CERTOVERRIDE_CID);
 // stores the number of certs corresponding to that thread.
 struct treeArrayElStr {
   nsString   orgName;     /* heading for thread                   */
-  PRBool     open;        /* toggle open state for thread         */
+  bool       open;        /* toggle open state for thread         */
   PRInt32    certIndex;   /* index into cert array for 1st cert   */
   PRInt32    numChildren; /* number of chidren (certs) for thread */
 };
@@ -97,7 +97,7 @@ CompareCacheHashEntry::CompareCacheHashEntry()
   }
 }
 
-PR_STATIC_CALLBACK(PRBool)
+PR_STATIC_CALLBACK(bool)
 CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -105,7 +105,7 @@ CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entryPtr->entry->key == key;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+PR_STATIC_CALLBACK(bool)
 CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
@@ -511,10 +511,10 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
        !CERT_LIST_END(node, aCertList);
        node = CERT_LIST_NEXT(node)) {
 
-    PRBool wantThisCert = (aWantedType == nsIX509Cert2::ANY_CERT);
-    PRBool wantThisCertIfNoOverrides = PR_FALSE;
-    PRBool wantThisCertIfHaveOverrides = PR_FALSE;
-    PRBool addOverrides = PR_FALSE;
+    bool wantThisCert = (aWantedType == nsIX509Cert2::ANY_CERT);
+    bool wantThisCertIfNoOverrides = false;
+    bool wantThisCertIfHaveOverrides = false;
+    bool addOverrides = false;
 
     if (!wantThisCert) {
       PRUint32 thisCertType = getCertType(node->cert);
@@ -823,7 +823,7 @@ nsCertTree::DeleteEntryObject(PRUint32 index)
       if (certdi->mAddonInfo) {
         cert = certdi->mAddonInfo->mCert;
       }
-      PRBool canRemoveEntry = PR_FALSE;
+      bool canRemoveEntry = false;
 
       if (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override) {
         mOverrideService->ClearValidityOverride(certdi->mAsciiHost, certdi->mPort);
@@ -918,7 +918,7 @@ nsCertTree::GetTreeItem(PRUint32 aIndex, nsICertTreeItem **_treeitem)
 }
 
 NS_IMETHODIMP
-nsCertTree::IsHostPortOverride(PRUint32 aIndex, PRBool *_retval)
+nsCertTree::IsHostPortOverride(PRUint32 aIndex, bool *_retval)
 {
   NS_ENSURE_ARG(_retval);
 
@@ -993,7 +993,7 @@ nsCertTree::GetColumnProperties(nsITreeColumn* col,
 
 /* boolean isContainer (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsContainer(PRInt32 index, PRBool *_retval)
+nsCertTree::IsContainer(PRInt32 index, bool *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1008,7 +1008,7 @@ nsCertTree::IsContainer(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerOpen (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsContainerOpen(PRInt32 index, PRBool *_retval)
+nsCertTree::IsContainerOpen(PRInt32 index, bool *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1023,7 +1023,7 @@ nsCertTree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerEmpty (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
+nsCertTree::IsContainerEmpty(PRInt32 index, bool *_retval)
 {
   *_retval = !mTreeArray;
   return NS_OK;
@@ -1031,7 +1031,7 @@ nsCertTree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 
 /* boolean isSeparator (in long index); */
 NS_IMETHODIMP 
-nsCertTree::IsSeparator(PRInt32 index, PRBool *_retval)
+nsCertTree::IsSeparator(PRInt32 index, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -1060,7 +1060,7 @@ nsCertTree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 /* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
 NS_IMETHODIMP 
 nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
-                               PRBool *_retval)
+                               bool *_retval)
 {
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1361,7 +1361,7 @@ nsCertTree::CycleCell(PRInt32 row, nsITreeColumn* col)
 
 /* boolean isEditable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -1369,7 +1369,7 @@ nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
 
 /* boolean isSelectable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+nsCertTree::IsSelectable(PRInt32 row, nsITreeColumn* col, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -1447,7 +1447,7 @@ nsCertTree::dumpMap()
 // CanDrop
 //
 NS_IMETHODIMP nsCertTree::CanDrop(PRInt32 index, PRInt32 orientation,
-                                  nsIDOMDataTransfer* aDataTransfer, PRBool *_retval)
+                                  nsIDOMDataTransfer* aDataTransfer, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -1470,7 +1470,7 @@ NS_IMETHODIMP nsCertTree::Drop(PRInt32 row, PRInt32 orient, nsIDOMDataTransfer* 
 //
 // ...
 //
-NS_IMETHODIMP nsCertTree::IsSorted(PRBool *_retval)
+NS_IMETHODIMP nsCertTree::IsSorted(bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;

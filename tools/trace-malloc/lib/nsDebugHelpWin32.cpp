@@ -62,11 +62,11 @@ DHWImportHooker*  DHWImportHooker::gHooks = nsnull;
 GETPROCADDRESS    DHWImportHooker::gRealGetProcAddress = nsnull;
 
 
-static PRBool
+static bool
 dhwEnsureImageHlpInitialized()
 {
-  static PRBool gInitialized = PR_FALSE;
-  static PRBool gTried       = PR_FALSE;
+  static bool gInitialized = false;
+  static bool gTried       = false;
 
   if (!gInitialized && !gTried) {
     gTried = PR_TRUE;
@@ -152,7 +152,7 @@ static HMODULE ThisModule()
 DHWImportHooker::DHWImportHooker(const char* aModuleName,
                                  const char* aFunctionName,
                                  PROC aHook,
-                                 PRBool aExcludeOurModule /* = PR_FALSE */)
+                                 bool aExcludeOurModule /* = false */)
     :   mNext(nsnull),
         mModuleName(aModuleName),
         mFunctionName(aFunctionName),
@@ -230,7 +230,7 @@ static BOOL CALLBACK ModuleEnumCallback(PCSTR ModuleName,
     return self->PatchOneModule(aModule, ModuleName);
 }
 
-PRBool 
+bool 
 DHWImportHooker::PatchAllModules()
 {
     // Need to cast to PENUMLOADED_MODULES_CALLBACK because the
@@ -246,7 +246,7 @@ DHWImportHooker::PatchAllModules()
 #endif
 }    
                                 
-PRBool 
+bool 
 DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
 {
     if(aModule == mIgnoreModule)
@@ -325,7 +325,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
     return PR_TRUE;
 }
 
-PRBool 
+bool 
 DHWImportHooker::ModuleLoaded(HMODULE aModule, DWORD flags)
 {
     //printf("ModuleLoaded\n");

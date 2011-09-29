@@ -45,7 +45,6 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
-#include "jsarena.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -270,14 +269,14 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
                 AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
                     if (flags & JSITER_HIDDEN) {
-                        if (!JSProxy::getOwnPropertyNames(cx, pobj, proxyProps))
+                        if (!Proxy::getOwnPropertyNames(cx, pobj, proxyProps))
                             return false;
                     } else {
-                        if (!JSProxy::keys(cx, pobj, proxyProps))
+                        if (!Proxy::keys(cx, pobj, proxyProps))
                             return false;
                     }
                 } else {
-                    if (!JSProxy::enumerate(cx, pobj, proxyProps))
+                    if (!Proxy::enumerate(cx, pobj, proxyProps))
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
@@ -646,7 +645,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
       miss:
         if (obj->isProxy()) {
             types::MarkIteratorUnknown(cx);
-            return JSProxy::iterate(cx, obj, flags, vp);
+            return Proxy::iterate(cx, obj, flags, vp);
         }
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
@@ -715,21 +714,22 @@ js_ThrowStopIteration(JSContext *cx)
 static JSBool
 iterator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
-    if (!obj->isIterator()) {
-        ReportIncompatibleMethod(cx, vp, &IteratorClass);
-        return false;
-    }
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!js_IteratorMore(cx, obj, vp))
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &IteratorClass, &ok);
+    if (!obj)
+        return ok;
+
+    if (!js_IteratorMore(cx, obj, &args.rval()))
         return false;
-    if (!vp->toBoolean()) {
+
+    if (!args.rval().toBoolean()) {
         js_ThrowStopIteration(cx);
         return false;
     }
-    return js_IteratorNext(cx, obj, vp);
+
+    return js_IteratorNext(cx, obj, &args.rval());
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
@@ -1343,13 +1343,12 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 {
     LeaveTrace(cx);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, &GeneratorClass, &ok);
     if (!obj)
-        return JS_FALSE;
-    if (!obj->isGenerator()) {
-        ReportIncompatibleMethod(cx, vp, &GeneratorClass);
-        return JS_FALSE;
-    }
+        return ok;
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {
@@ -1364,18 +1363,18 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
             break;
 
           case JSGENOP_SEND:
-            if (argc >= 1 && !vp[2].isUndefined()) {
+            if (args.length() >= 1 && !args[0].isUndefined()) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
-                                    JSDVG_SEARCH_STACK, vp[2], NULL);
-                return JS_FALSE;
+                                    JSDVG_SEARCH_STACK, args[0], NULL);
+                return false;
             }
             break;
 
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
             gen->state = JSGEN_CLOSED;
-            JS_SET_RVAL(cx, vp, UndefinedValue());
-            return JS_TRUE;
+            args.rval().setUndefined();
+            return true;
         }
     } else if (gen->state == JSGEN_CLOSED) {
       closed_generator:
@@ -1384,21 +1383,21 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            cx->setPendingException(argc >= 1 ? vp[2] : UndefinedValue());
-            return JS_FALSE;
+            cx->setPendingException(args.length() >= 1 ? args[0] : UndefinedValue());
+            return false;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
-            JS_SET_RVAL(cx, vp, UndefinedValue());
-            return JS_TRUE;
+            args.rval().setUndefined();
+            return true;
         }
     }
 
-    bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
-    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : UndefinedValue()))
-        return JS_FALSE;
+    bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && args.length() != 0);
+    if (!SendToGenerator(cx, op, obj, gen, undef ? args[0] : UndefinedValue()))
+        return false;
 
-    JS_SET_RVAL(cx, vp, gen->floatingFrame()->returnValue());
-    return JS_TRUE;
+    args.rval() = gen->floatingFrame()->returnValue();
+    return true;
 }
 
 static JSBool

@@ -1,0 +1,364 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602759
+-->
+<head>
+  <title>Tests specific to SVGTransformList</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="matrixUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602759">
+  Mozilla Bug 602759</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
+     onload="this.pauseAnimations();">
+  <g id="g"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of SVGTransformList specific tests. Generic SVGXxxList
+tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
+to other list types belongs there.
+*/
+
+function main()
+{
+  var g = $('g');
+  var tests =
+    [ testConsolidateMatrix,
+      testConsolidateMatrixOneElem,
+      testConsolidateMatrixZeroElem,
+      testCreateSVGTransformFromMatrix,
+      testReadOnly,
+      testOrphan,
+      testFailedSet
+    ];
+  for (var i = 0; i < tests.length; i++) {
+    tests[i](g);
+  }
+  SimpleTest.finish();
+}
+
+function testConsolidateMatrix(g)
+{
+  // This is the example from SVG 1.1 section 7.5
+  g.setAttribute("transform",
+                 "translate(50 90) rotate(-45) translate(130 160)");
+  var list = g.transform.baseVal;
+  is(list.numberOfItems, 3, "Unexpected length of unconsolidated list");
+
+  // Sanity check -- take ref to first item in list and validate it
+  var first_item = list.getItem(0);
+  is(first_item.type, SVGTransform.SVG_TRANSFORM_TRANSLATE,
+     "Unexpected type of first item in list");
+  cmpMatrix(first_item.matrix, [1, 0, 0, 1, 50, 90],
+     "Unexpected value for first item in list");
+
+  // Consolidate
+  var consolidated = list.consolidate();
+  is(list.numberOfItems, 1, "Unexpected length of consolidated list");
+  ok(consolidated === list.getItem(0),
+     "Consolidate return value should be first item in list, not a copy");
+  is(consolidated.type, SVGTransform.SVG_TRANSFORM_MATRIX,
+     "Consolidated transform not of type matrix");
+  const angle = -Math.PI/4;
+  roughCmpMatrix(consolidated.matrix,
+    [Math.cos(angle), Math.sin(angle),
+     -Math.sin(angle), Math.cos(angle),
+     130 * Math.cos(angle) - 160 * Math.sin(angle) + 50,
+     160 * Math.cos(angle) + 130 * Math.sin(angle) + 90],
+    "Unexpected result after consolidating matrices");
+
+  // Check ref to first item in list
+  // a) should not have changed
+  is(first_item.type, SVGTransform.SVG_TRANSFORM_TRANSLATE,
+     "Unexpected type of cached first item in list after consolidating");
+  cmpMatrix(first_item.matrix, [1, 0, 0, 1, 50, 90],
+     "Unexpected value for cached first item in list after consolidating");
+  // b) should still be useable
+  first_item.setScale(2, 3);
+  is(first_item.type, SVGTransform.SVG_TRANSFORM_SCALE,
+     "Cached first item in list not useable after consolidating");
+
+  // Check consolidated is live
+  // a) Changes to 'consolidated' affect list
+  consolidated.setSkewX(45);
+  is(list.getItem(0).type, SVGTransform.SVG_TRANSFORM_SKEWX,
+     "Changing return value from consolidate doesn't affect list");
+  // b) Changes to list affect 'consolidated'
+  list.getItem(0).setRotate(90, 0, 0);
+  is(consolidated.type, SVGTransform.SVG_TRANSFORM_ROTATE,
+     "Changing list doesn't affect return value from consolidate");
+}
+
+function testConsolidateMatrixOneElem(g)
+{
+  // Check that even if we only have one item in the list it becomes a matrix
+  // transform (as per the spec)
+  g.setAttribute("transform", "translate(50 90)");
+  var list = g.transform.baseVal;
+  is(list.numberOfItems, 1, "Unexpected length of unconsolidated list");
+  var first_item = list.getItem(0);
+  is(first_item.type, SVGTransform.SVG_TRANSFORM_TRANSLATE,
+     "Unexpected type of first item in list");
+  cmpMatrix(first_item.matrix, [1, 0, 0, 1, 50, 90],
+     "Unexpected value for first item in list");
+
+  // Consolidate
+  var consolidated = list.consolidate();
+  is(list.numberOfItems, 1, "Unexpected length of consolidated list");
+  ok(consolidated === list.getItem(0),
+     "Consolidate return value should be first item in list, not a copy");
+  is(consolidated.type, SVGTransform.SVG_TRANSFORM_MATRIX,
+     "Consolidated transform not of type matrix");
+  cmpMatrix(consolidated.matrix, [1, 0, 0, 1, 50, 90],
+     "Unexpected consolidated matrix value");
+}
+  
+function testConsolidateMatrixZeroElem(g)
+{
+  // Check that zero items returns null
+  g.setAttribute("transform", "");
+  var list = g.transform.baseVal;
+  is(list.numberOfItems, 0, "Unexpected length of unconsolidated list");
+  var consolidated = list.consolidate();
+  ok(consolidated === null,
+     "consolidate() should return null for a zero-length transform list");
+}
+
+function testCreateSVGTransformFromMatrix(g)
+{
+  var m = createMatrix(1, 2, 3, 4, 5, 6);
+
+  // "Creates an SVGTransform object which is initialized to transform of type
+  // SVG_TRANSFORM_MATRIX and whose values are the given matrix. The values from
+  // the parameter matrix are copied, the matrix parameter is not adopted as
+  // SVGTransform::matrix."
+  var list = g.transform.baseVal;
+  list.clear();
+  var t = list.createSVGTransformFromMatrix(m);
+
+  // Check that list hasn't changed
+  is(list.numberOfItems, 0,
+     "Transform list changed after calling createSVGTransformFromMatrix");
+
+  // Check return value
+  is(t.type, SVGTransform.SVG_TRANSFORM_MATRIX,
+     "Returned transform not of type matrix");
+  cmpMatrix(t.matrix, [1, 2, 3, 4, 5, 6],
+     "Unexpected returned matrix value");
+
+  // Check values are copied
+  ok(t.matrix != m, "Matrix should be copied not adopted");
+  m.a = 2;
+  is(t.matrix.a, 1,
+     "Changing source matrix should not affect newly created transform");
+
+  // Try passing in bad values (null, "undefined" etc.)
+  var exception = null;
+  try {
+    t = list.createSVGTransformFromMatrix(null);
+  } catch(e) { exception = e; }
+  ok(exception,
+    "Failed to throw for null input to createSVGTransformFromMatrix");
+  exception = null;
+  try {
+    t = list.createSVGTransformFromMatrix("undefined");
+  } catch(e) { exception = e; }
+  ok(exception,
+    "Failed to throw for string input to createSVGTransformFromMatrix");
+  exception = null;
+  try {
+    t = list.createSVGTransformFromMatrix(SVGMatrix(t));
+  } catch(e) { exception = e; }
+  ok(exception,
+    "Failed to throw for bad input to createSVGTransformFromMatrix");
+  exception = null;
+}
+
+function testReadOnly(g)
+{
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  // Just some data to work with
+  g.setAttribute("transform", "translate(50 90)");
+
+  // baseVal / animVal are readonly attributes
+  //   Create another (empty) transform list
+  var otherg = document.createElementNS(SVG_NS, 'g');
+  g.parentNode.appendChild(otherg);
+  is(g.transform.baseVal.numberOfItems, 1,
+    "Unexpected number of items in transform list before attempting to set");
+  is(otherg.transform.baseVal.numberOfItems, 0,
+    "Unexpected number of items in source transform list before attempting to"
+    + " set");
+  //   Attempt to set the base value and check nothing changes
+  g.transform.baseVal = otherg.transform.baseVal;
+  is(g.transform.baseVal.numberOfItems, 1,
+    "baseVal should be read-only but its value has changed");
+  is(otherg.transform.baseVal.numberOfItems, 0,
+    "baseVal changed after attempting to use it set another value");
+ 
+  // Read-only SVGTransformList:
+  // Standard list methods are covered in test_SVGxxxList.xhtml so here we
+  // just add tests for SVGTransformList-specific methods
+  var roList = g.transform.animVal;
+  // consolidate()
+  var threw = false;
+  try {
+    roList.consolidate();
+  } catch (e) {
+    is(e.code, DOMException.NO_MODIFICATION_ALLOWED_ERR,
+      "Got unexpected exception " + e +
+      ", expected NO_MODIFICATION_ALLOWED_ERR");
+    threw = true;
+  }
+  ok(threw,
+     "Failed to throw exception when calling consolidate on read-only list");
+
+  // Read-only SVGTransform:
+  // read-only attributes are tested in test_transform.xhtml. Here we are
+  // concerned with methods that throw because this *object* is read-only
+  // (since it belongs to a read-only transform list)
+  var roTransform = roList.getItem(0);
+  // setMatrix
+  threw = false;
+  try {
+    var m = createMatrix(1, 2, 3, 4, 5, 6);
+    roTransform.setMatrix(m);
+  } catch (e) {
+    is(e.code, DOMException.NO_MODIFICATION_ALLOWED_ERR,
+      "Got unexpected exception " + e +
+      ", expected NO_MODIFICATION_ALLOWED_ERR");
+    threw = true;
+  }
+  ok(threw, "Failed to throw exception when calling setMatrix on read-only"
+            + " transform");
+  // setTranslate
+  threw = false;
+  try {
+    roTransform.setTranslate(2, 3);
+  } catch(e) {
+    threw = true;
+  }
+  ok(threw, "Failed to throw when calling setTranslate on read-only"
+             + " transform");
+  // setScale
+  threw = false;
+  try {
+    roTransform.setScale(2, 3);
+  } catch(e) {
+    threw = true;
+  }
+  ok(threw, "Failed to throw when calling setScale on read-only transform");
+  // setRotate
+  threw = false;
+  try {
+    roTransform.setRotate(1, 2, 3);
+  } catch(e) {
+    threw = true;
+  }
+  ok(threw, "Failed to throw when calling setRotate on read-only transform");
+  // setSkewX
+  threw = false;
+  try {
+    roTransform.setSkewX(2);
+  } catch(e) {
+    threw = true;
+  }
+  ok(threw, "Failed to throw when calling setSkewX on read-only transform");
+  // setSkewY
+  threw = false;
+  try {
+    roTransform.setSkewY(2);
+  } catch(e) {
+    threw = true;
+  }
+  ok(threw, "Failed to throw when calling setSkewY on read-only transform");
+
+  // Read-only SVGMatrix
+  var roMatrix = roTransform.matrix;
+  threw = false;
+  try {
+    roMatrix.a = 1;
+  } catch (e) {
+    is(e.code, DOMException.NO_MODIFICATION_ALLOWED_ERR,
+      "Got unexpected exception " + e +
+      ", expected NO_MODIFICATION_ALLOWED_ERR");
+    threw = true;
+  }
+  ok(threw, "Failed to throw exception when modifying read-only matrix");
+}
+
+function testOrphan(g)
+{
+  // Although this isn't defined, if a read-only object becomes orphaned
+  // (detached from it's parent), then presumably it should become editable
+  // again.
+
+  // As with the read-only test set a value to test with
+  g.setAttribute("transform", "translate(50 90)");
+
+  var roList = g.transform.animVal;
+  var roTransform = roList.getItem(0);
+  var roMatrix = roTransform.matrix;
+
+  // Orphan transform list contents by re-setting transform attribute
+  g.setAttribute("transform", "");
+
+  // Transform should now be editable
+  var exception = null;
+  try {
+    roTransform.setTranslate(5, 3);
+  } catch(e) {
+    exception = e;
+  }
+  ok(exception===null,
+     "Unexpected exception " + exception + " modifying orphaned transform");
+  uexception = null;
+
+  // So should matrix
+  exception = null;
+  try {
+    roMatrix.a = 1;
+  } catch(e) {
+    exception = e;
+  }
+  ok(exception===null,
+     "Unexpected exception " + exception + " modifying orphaned matrix");
+}
+
+function testFailedSet(g)
+{
+  // Check that a parse failure results in the attribute being empty
+
+  // Set initial value
+  g.setAttribute("transform", "translate(50 90)");
+  var list = g.transform.baseVal;
+  is(list.numberOfItems, 1, "Unexpected initial length of list");
+
+  // Attempt to set bad value
+  g.setAttribute("transform", "translate(40 50) scale(a)");
+  is(list.numberOfItems, 0,
+     "Transform list should be empty after setting bad value");
+  is(g.transform.animVal.numberOfItems, 0,
+     "Animated transform list should also be empty after setting bad value");
+}
+
+window.addEventListener("load", main, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

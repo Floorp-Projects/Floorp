@@ -54,7 +54,7 @@ public:
     
   NS_DECL_ISUPPORTS
     
-  NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
+  NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) = 0;
   NS_IMETHOD  DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) = 0;
   
 };
@@ -64,7 +64,7 @@ public:
 class _cmd : public nsBaseEditorCommand                 \
 {                                                       \
 public:                                                 \
-  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval); \
+  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval); \
   NS_IMETHOD DoCommand(const char *aCommandName, nsISupports *aCommandRefCon); \
   NS_IMETHOD DoCommandParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
   NS_IMETHOD GetCommandStateParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
@@ -97,7 +97,7 @@ NS_DECL_EDITOR_COMMAND(nsPasteQuotationCommand)
 #if 0
 // template for new command
 NS_IMETHODIMP
-nsFooCommand::IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval)
+nsFooCommand::IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

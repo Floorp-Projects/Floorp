@@ -70,12 +70,12 @@ public:
   PRTime EndTime() { return mEndTime; }
   PRUint32 EndTimeReference() { return mEndTimeReference; }
   const nsString& SearchTerms() { return mSearchTerms; }
-  PRBool OnlyBookmarked() { return mOnlyBookmarked; }
-  PRBool DomainIsHost() { return mDomainIsHost; }
+  bool OnlyBookmarked() { return mOnlyBookmarked; }
+  bool DomainIsHost() { return mDomainIsHost; }
   const nsCString& Domain() { return mDomain; }
-  PRBool UriIsPrefix() { return mUriIsPrefix; }
+  bool UriIsPrefix() { return mUriIsPrefix; }
   nsIURI* Uri() { return mUri; } // NOT AddRef-ed!
-  PRBool AnnotationIsNot() { return mAnnotationIsNot; }
+  bool AnnotationIsNot() { return mAnnotationIsNot; }
   const nsCString& Annotation() { return mAnnotation; }
   const nsTArray<PRInt64>& Folders() const { return mFolders; }
   const nsTArray<nsString>& Tags() const { return mTags; }
@@ -86,7 +86,7 @@ public:
 
     return NS_OK;
   }
-  PRBool TagsAreNot() { return mTagsAreNot; }
+  bool TagsAreNot() { return mTagsAreNot; }
 
   const nsTArray<PRUint32>& Transitions() const { return mTransitions; }
   nsresult SetTransitions(const nsTArray<PRUint32>& aTransitions)
@@ -110,16 +110,16 @@ protected:
   PRTime mEndTime;
   PRUint32 mEndTimeReference;
   nsString mSearchTerms;
-  PRBool mOnlyBookmarked;
-  PRBool mDomainIsHost;
+  bool mOnlyBookmarked;
+  bool mDomainIsHost;
   nsCString mDomain; // Default is IsVoid, empty string is valid query
-  PRBool mUriIsPrefix;
+  bool mUriIsPrefix;
   nsCOMPtr<nsIURI> mUri;
-  PRBool mAnnotationIsNot;
+  bool mAnnotationIsNot;
   nsCString mAnnotation;
   nsTArray<PRInt64> mFolders;
   nsTArray<nsString> mTags;
-  PRBool mTagsAreNot;
+  bool mTagsAreNot;
   nsTArray<PRUint32> mTransitions;
 };
 
@@ -154,15 +154,15 @@ public:
 
   PRUint16 SortingMode() const { return mSort; }
   PRUint16 ResultType() const { return mResultType; }
-  PRBool ExcludeItems() const { return mExcludeItems; }
-  PRBool ExcludeQueries() const { return mExcludeQueries; }
-  PRBool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
-  PRBool ExpandQueries() const { return mExpandQueries; }
-  PRBool IncludeHidden() const { return mIncludeHidden; }
+  bool ExcludeItems() const { return mExcludeItems; }
+  bool ExcludeQueries() const { return mExcludeQueries; }
+  bool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
+  bool ExpandQueries() const { return mExpandQueries; }
+  bool IncludeHidden() const { return mIncludeHidden; }
   PRUint16 RedirectsMode() const { return mRedirectsMode; }
   PRUint32 MaxResults() const { return mMaxResults; }
   PRUint16 QueryType() const { return mQueryType; }
-  PRBool AsyncEnabled() const { return mAsyncEnabled; }
+  bool AsyncEnabled() const { return mAsyncEnabled; }
 
   nsresult Clone(nsNavHistoryQueryOptions **aResult);
 
@@ -179,15 +179,15 @@ private:
   nsCString mSortingAnnotation;
   nsCString mParentAnnotationToExclude;
   PRUint16 mResultType;
-  PRPackedBool mExcludeItems;
-  PRPackedBool mExcludeQueries;
-  PRPackedBool mExcludeReadOnlyFolders;
-  PRPackedBool mExpandQueries;
-  PRPackedBool mIncludeHidden;
+  bool mExcludeItems;
+  bool mExcludeQueries;
+  bool mExcludeReadOnlyFolders;
+  bool mExpandQueries;
+  bool mIncludeHidden;
   PRUint16 mRedirectsMode;
   PRUint32 mMaxResults;
   PRUint16 mQueryType;
-  PRBool mAsyncEnabled;
+  bool mAsyncEnabled;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQueryOptions, NS_NAVHISTORYQUERYOPTIONS_IID)

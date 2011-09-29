@@ -140,7 +140,7 @@ NS_IMETHODIMP
 nsNullPrincipal::GetPreferences(char** aPrefName, char** aID,
                                 char** aSubjectName,
                                 char** aGrantedList, char** aDeniedList,
-                                PRBool* aIsTrusted)
+                                bool* aIsTrusted)
 {
   // The null principal should never be written to preferences.
   *aPrefName = nsnull;
@@ -154,7 +154,7 @@ nsNullPrincipal::GetPreferences(char** aPrefName, char** aID,
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
+nsNullPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   // Just equal to ourselves.  Note that nsPrincipal::Equals will return false
   // for us since we have a unique domain/origin/etc.
@@ -163,7 +163,7 @@ nsNullPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, PRBool *aResult)
+nsNullPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   return Equals(aOther, aResult);
 }
@@ -223,7 +223,7 @@ nsNullPrincipal::SetCanEnableCapability(const char *aCapability,
 NS_IMETHODIMP 
 nsNullPrincipal::IsCapabilityEnabled(const char *aCapability, 
                                      void *aAnnotation, 
-                                     PRBool *aResult)
+                                     bool *aResult)
 {
   // Nope.  No capabilities, I say!
   *aResult = PR_FALSE;
@@ -304,7 +304,7 @@ nsNullPrincipal::GetOrigin(char** aOrigin)
 }
 
 NS_IMETHODIMP 
-nsNullPrincipal::GetHasCertificate(PRBool* aResult)
+nsNullPrincipal::GetHasCertificate(bool* aResult)
 {
   *aResult = PR_FALSE;
   return NS_OK;
@@ -323,7 +323,7 @@ nsNullPrincipal::GetPrettyName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
+nsNullPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
   // We don't subsume anything except ourselves.  Note that nsPrincipal::Equals
   // will return false for us, since we're not about:blank and not Equals to
@@ -333,7 +333,7 @@ nsNullPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::CheckMayLoad(nsIURI* aURI, PRBool aReport)
+nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
 {
   if (aReport) {
     nsScriptSecurityManager::ReportError(

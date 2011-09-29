@@ -64,7 +64,7 @@ public:
   virtual nsresult HandleAccEvent(AccEvent* aEvent);
 
 protected:
-  virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,
+  virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
                                    PRUint32 *aStartOffset,
                                    PRUint32 *aEndOffset);
 };

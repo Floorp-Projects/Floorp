@@ -61,7 +61,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGDefsElementBase::)
 
   // nsIContent
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -108,7 +108,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGDefsElement)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGDefsElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {

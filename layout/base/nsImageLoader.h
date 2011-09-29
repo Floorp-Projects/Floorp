@@ -83,7 +83,7 @@ public:
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   NS_IMETHOD OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame);
-  NS_IMETHOD OnStopRequest(imgIRequest *aRequest, PRBool aLastPart);
+  NS_IMETHOD OnStopRequest(imgIRequest *aRequest, bool aLastPart);
   // Do not override OnDataAvailable since background images are not
   // displayed incrementally; they are displayed after the entire image
   // has been loaded.

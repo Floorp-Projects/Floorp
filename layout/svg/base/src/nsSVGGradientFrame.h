@@ -134,10 +134,10 @@ private:
   // Flag to mark this frame as "in use" during recursive calls along our
   // gradient's reference chain so we can detect reference loops. See:
   // http://www.w3.org/TR/SVG11/pservers.html#LinearGradientElementHrefAttribute
-  PRPackedBool                           mLoopFlag;
+  bool                                   mLoopFlag;
   // Gradients often don't reference other gradients, so here we cache
   // the fact that that isn't happening.
-  PRPackedBool                           mNoHRefURI;
+  bool                                   mNoHRefURI;
 };
 
 

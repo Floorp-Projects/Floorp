@@ -88,7 +88,7 @@ protected:
 
   void NotifyListener();
 
-  PRPackedBool mFinished;
+  bool mFinished;
 
   // image buffer
   PRUint8* mImageBuffer;

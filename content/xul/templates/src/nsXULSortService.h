@@ -74,11 +74,11 @@ enum nsSortState_direction {
 // the sort state holds info about the current sort
 struct nsSortState
 {
-  PRBool initialized;
-  PRBool invertSort;
-  PRBool inbetweenSeparatorSort;
-  PRBool sortStaticsLast;
-  PRBool isContainerRDFSeq;
+  bool initialized;
+  bool invertSort;
+  bool inbetweenSeparatorSort;
+  bool sortStaticsLast;
+  bool isContainerRDFSeq;
 
   PRUint32 sortHints;
 
@@ -88,7 +88,7 @@ struct nsSortState
 
   nsCOMPtr<nsIXULTemplateQueryProcessor> processor;
   nsCOMPtr<nsIContent> lastContainer;
-  PRBool lastWasFirst, lastWasLast;
+  bool lastWasFirst, lastWasLast;
 
   nsSortState()
     : initialized(PR_FALSE),

@@ -153,7 +153,7 @@ public:
 
         PRPollDesc pollfds[2];
         PRInt32 nfds;
-        PRBool stdoutOpen = PR_TRUE, stderrOpen = PR_TRUE;
+        bool stdoutOpen = true, stderrOpen = true;
         char buf[4096];
         PRInt32 len;
 
@@ -188,7 +188,7 @@ public:
                 if (!pollfds[i].out_flags)
                     continue;
 
-                PRBool isStdout = mStdoutfd == pollfds[i].fd;
+                bool isStdout = mStdoutfd == pollfds[i].fd;
                 
                 if (PR_POLL_READ & pollfds[i].out_flags) {
                     len = PR_Read(pollfds[i].fd, buf, sizeof(buf) - 1);
@@ -230,7 +230,7 @@ public:
     }
 
 private:
-    void Finish(PRBool normalExit) {
+    void Finish(bool normalExit) {
         if (!normalExit) {
             PR_KillProcess(mProc);
             mExitCode = -1;

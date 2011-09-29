@@ -271,7 +271,7 @@
 @BINPATH@/components/xuldoc.xpt
 @BINPATH@/components/xultmpl.xpt
 @BINPATH@/components/zipwriter.xpt
-@BINPATH@/components/webapps.xpt
+@BINPATH@/components/openwebapps.xpt
 
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
@@ -327,6 +327,7 @@
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
+@BINPATH@/components/OpenWebapps.manifest
 
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
@@ -604,13 +605,14 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+@BINPATH@/components/OpenWebapps.js
 #ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/SafeBrowsing.js
 #endif
 #ifdef MOZ_UPDATER
 @BINPATH@/components/UpdatePrompt.js
 #endif
-@BINPATH@/components/WebappsSupport.js
 @BINPATH@/components/XPIDialogService.js
+@BINPATH@/components/CapturePicker.js
 @BINPATH@/components/browsercomps.xpt
 @BINPATH@/extensions/feedback@mobile.mozilla.org.xpi

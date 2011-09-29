@@ -100,13 +100,13 @@ protected:
    * @return
    *   This method returns "true" if a native event was processed.
    */
-  virtual PRBool ProcessNextNativeEvent(PRBool mayWait) = 0;
+  virtual bool ProcessNextNativeEvent(bool mayWait) = 0;
 
   PRInt32 mSuspendNativeCount;
   PRUint32 mEventloopNestingLevel;
 
 private:
-  PRBool DoProcessNextNativeEvent(PRBool mayWait);
+  bool DoProcessNextNativeEvent(bool mayWait);
 
   /**
    * Runs all synchronous sections which are queued up in mSyncSections.
@@ -120,7 +120,7 @@ private:
    * it to PR_FALSE to unblock an outer loop, since all events may
    * have been consumed by the inner event loop(s).
    */
-  PRBool *mBlockedWait;
+  bool *mBlockedWait;
   PRInt32 mFavorPerf;
   PRInt32 mNativeEventPending;
   PRIntervalTime mStarvationDelay;
@@ -133,8 +133,8 @@ private:
   };
   EventloopNestingState mEventloopNestingState;
   nsCOMArray<nsIRunnable> mSyncSections;
-  PRPackedBool mRunning;
-  PRPackedBool mExiting;
+  bool mRunning;
+  bool mExiting;
   /**
    * mBlockNativeEvent blocks the appshell from processing native events.
    * It is set to PR_TRUE while a nested native event loop (eEventloopOther)
@@ -144,7 +144,7 @@ private:
    * events spins up a nested XPCOM event loop (eg. modal window) which would
    * otherwise lead to a "deadlock" where native events aren't processed at all.
    */
-  PRPackedBool mBlockNativeEvent;
+  bool mBlockNativeEvent;
   /**
    * Tracks whether we have processed any gecko events in NativeEventCallback so
    * that we can avoid erroneously entering a blocking loop waiting for gecko
@@ -160,7 +160,7 @@ private:
    * call to DoProcessNextNativeEvent.  It is set to PR_TRUE by
    * NativeEventCallback after calling NS_ProcessPendingEvents.
    */
-  PRPackedBool mProcessedGeckoEvents;
+  bool mProcessedGeckoEvents;
 };
 
 #endif // nsBaseAppShell_h__

@@ -73,7 +73,7 @@ nsMIMEInfoWin::LaunchDefaultWithFile(nsIFile* aFile)
   if (!local)
     return NS_ERROR_FAILURE;
 
-  PRBool executable = PR_TRUE;
+  bool executable = true;
   local->IsExecutable(&executable);
   if (executable)
     return NS_ERROR_FAILURE;
@@ -183,7 +183,7 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoWin::GetHasDefaultHandler(PRBool * _retval)
+nsMIMEInfoWin::GetHasDefaultHandler(bool * _retval)
 {
   // We have a default application if we have a description
   // We can ShellExecute anything; however, callers are probably interested if
@@ -329,7 +329,7 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
 }
 
 // Given a path to a local file, return its nsILocalHandlerApp instance.
-PRBool nsMIMEInfoWin::GetLocalHandlerApp(const nsAString& aCommandHandler,
+bool nsMIMEInfoWin::GetLocalHandlerApp(const nsAString& aCommandHandler,
                                          nsCOMPtr<nsILocalHandlerApp>& aApp)
 {
   nsCOMPtr<nsILocalFile> locfile;
@@ -348,9 +348,9 @@ PRBool nsMIMEInfoWin::GetLocalHandlerApp(const nsAString& aCommandHandler,
 
 // Return the cleaned up file path associated with a command verb 
 // located in root/Applications.
-PRBool nsMIMEInfoWin::GetAppsVerbCommandHandler(const nsAString& appExeName,
+bool nsMIMEInfoWin::GetAppsVerbCommandHandler(const nsAString& appExeName,
                                                 nsAString& applicationPath,
-                                                PRBool edit)
+                                                bool edit)
 {
   nsCOMPtr<nsIWindowsRegKey> appKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -415,10 +415,10 @@ PRBool nsMIMEInfoWin::GetAppsVerbCommandHandler(const nsAString& appExeName,
 // passing information. Used in launchWithFile to trace
 // back to the full handler path based on the dll.
 // (dll, targetfile, return args, open/edit)
-PRBool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile * aDll,
+bool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile * aDll,
                                        nsILocalFile * aFile,
                                        nsAString& args,
-                                       PRBool edit)
+                                       bool edit)
 {
   if (!aDll || !aFile) 
     return PR_FALSE;
@@ -524,9 +524,9 @@ PRBool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile * aDll,
 
 // Return the cleaned up file path associated with a progid command 
 // verb located in root.
-PRBool nsMIMEInfoWin::GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
+bool nsMIMEInfoWin::GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
                                                   nsAString& applicationPath,
-                                                  PRBool edit)
+                                                  bool edit)
 {
   nsCOMPtr<nsIWindowsRegKey> appKey =
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -589,7 +589,7 @@ void nsMIMEInfoWin::ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
 
 // Helper routine that handles a compare between a path
 // and an array of paths.
-static PRBool IsPathInList(nsAString& appPath,
+static bool IsPathInList(nsAString& appPath,
                            nsTArray<nsString>& trackList)
 {
   // trackList data is always lowercase, see ProcessPath
@@ -642,7 +642,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray **_retval)
 
   nsAutoString workingRegistryPath;
 
-  PRBool extKnown = PR_FALSE;
+  bool extKnown = false;
   if (fileExt.IsEmpty()) {
     extKnown = PR_TRUE;
     // Mime type discovery is possible in some cases, through 

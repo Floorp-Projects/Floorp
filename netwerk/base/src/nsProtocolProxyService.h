@@ -118,7 +118,7 @@ protected:
      * @param pacURI
      *        The URI spec of the PAC file to load.
      */
-    NS_HIDDEN_(nsresult) ConfigureFromPAC(const nsCString &pacURI, PRBool forceReload);
+    NS_HIDDEN_(nsresult) ConfigureFromPAC(const nsCString &pacURI, bool forceReload);
 
     /**
      * This method builds a list of nsProxyInfo objects from the given PAC-
@@ -176,7 +176,7 @@ protected:
      *
      * @return True if the specified proxy is disabled.
      */
-    NS_HIDDEN_(PRBool) IsProxyDisabled(nsProxyInfo *pi);
+    NS_HIDDEN_(bool) IsProxyDisabled(nsProxyInfo *pi);
 
     /**
      * This method queries the protocol handler for the given scheme to check
@@ -242,7 +242,7 @@ protected:
     NS_HIDDEN_(nsresult) Resolve_Internal(nsIURI *uri,
                                           const nsProtocolInfo &info,
                                           PRUint32 flags,
-                                          PRBool *usePAC, 
+                                          bool *usePAC, 
                                           nsIProxyInfo **result);
 
     /**
@@ -302,7 +302,7 @@ protected:
      *
      * @return True if the URI can use the specified proxy.
      */
-    NS_HIDDEN_(PRBool) CanUseProxy(nsIURI *uri, PRInt32 defaultPort);
+    NS_HIDDEN_(bool) CanUseProxy(nsIURI *uri, PRInt32 defaultPort);
 
 public:
     // The Sun Forte compiler and others implement older versions of the
@@ -324,7 +324,7 @@ protected:
 
     // simplified array of filters defined by this struct
     struct HostInfo {
-        PRBool  is_ipaddr;
+        bool    is_ipaddr;
         PRInt32 port;
         union {
             HostInfoIP   ip;
@@ -354,7 +354,7 @@ protected:
     };
 
     // Indicates if local hosts (plain hostnames, no dots) should use the proxy
-    PRBool mFilterLocalHosts;
+    bool mFilterLocalHosts;
 
     // Holds an array of HostInfo objects
     nsTArray<nsAutoPtr<HostInfo> > mHostFiltersArray;
@@ -377,7 +377,7 @@ protected:
     nsCString                    mSOCKSProxyHost;
     PRInt32                      mSOCKSProxyPort;
     PRInt32                      mSOCKSProxyVersion;
-    PRBool                       mSOCKSProxyRemoteDNS;
+    bool                         mSOCKSProxyRemoteDNS;
 
     nsRefPtr<nsPACMan>           mPACMan;  // non-null if we are using PAC
     nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;

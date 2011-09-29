@@ -50,13 +50,13 @@ const char sSysPrefString[] = "config.use_system_prefs";
 union MozPrefValue {
     char *      stringVal;
     PRInt32     intVal;
-    PRBool      boolVal;
+    bool        boolVal;
 };
 
 struct SysPrefItem {
     const char *prefName;       // mozilla pref string name
     MozPrefValue defaultValue;  // store the mozilla default value
-    PRBool isLocked;  // store the mozilla lock status
+    bool isLocked;  // store the mozilla lock status
     SysPrefItem() {
         prefName = nsnull;
         defaultValue.intVal = 0;
@@ -194,7 +194,7 @@ nsSystemPref::Observe(nsISupports *aSubject,
         if (NS_FAILED(rv))
             return rv;
 
-        PRBool enabled = mEnabled;
+        bool enabled = mEnabled;
         rv = prefBranch->GetBoolPref(sSysPrefString, &mEnabled);
         if (enabled != mEnabled) {
             if (mEnabled)
@@ -292,7 +292,7 @@ nsSystemPref::ReadSystemPref(const char *aPrefName)
     PRInt32 prefType = nsIPrefBranch::PREF_INVALID;
     nsXPIDLCString strValue;
     PRInt32 intValue = 0;
-    PRBool boolValue = PR_FALSE;
+    bool boolValue = false;
 
     rv = prefBranch->GetPrefType(aPrefName, &prefType);
     if (NS_FAILED(rv))
@@ -360,7 +360,7 @@ nsSystemPref::UseMozillaPrefs()
 nsresult
 nsSystemPref::SaveMozDefaultPref(const char *aPrefName,
                                  MozPrefValue *aPrefValue,
-                                 PRBool *aLocked)
+                                 bool *aLocked)
 {
     NS_ENSURE_ARG_POINTER(aPrefName);
     NS_ENSURE_ARG_POINTER(aPrefValue);
@@ -420,7 +420,7 @@ nsSystemPref::SaveMozDefaultPref(const char *aPrefName,
 nsresult
 nsSystemPref::RestoreMozDefaultPref(const char *aPrefName,
                                     MozPrefValue *aPrefValue,
-                                    PRBool aLocked)
+                                    bool aLocked)
 {
     NS_ENSURE_ARG_POINTER(aPrefName);
 

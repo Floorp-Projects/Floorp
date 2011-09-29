@@ -28,18 +28,18 @@ include zoom/reftest.list
 # Test for canvas "drawImage" method
 # NOTE: The canvas reftests that involve scaling currently fail with fuzziness
 # on various edges, as noted below. These will be fixed in followup bugs.
-== canvas-drawImage-simple-1a.html lime100x100-ref.html
-== canvas-drawImage-simple-1b.html lime100x100-ref.html
+skip-if(Android&&layersOpenGL) == canvas-drawImage-simple-1a.html lime100x100-ref.html
+skip-if(Android&&layersOpenGL) == canvas-drawImage-simple-1b.html lime100x100-ref.html
 
-== canvas-drawImage-scale-1a.html lime100x100-ref.html
-== canvas-drawImage-scale-1b.html lime100x100-ref.html
-== canvas-drawImage-scale-1c.html lime100x100-ref.html
+skip-if(Android&&layersOpenGL) == canvas-drawImage-scale-1a.html lime100x100-ref.html
+skip-if(Android&&layersOpenGL) == canvas-drawImage-scale-1b.html lime100x100-ref.html
+skip-if(Android&&layersOpenGL) == canvas-drawImage-scale-1c.html lime100x100-ref.html
 
-fails == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
-fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
+skip-if(Android&&layersOpenGL) fails == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
+skip-if(Android&&layersOpenGL) fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html # XXX all edges fuzzy
 
-== canvas-drawImage-slice-1a.html lime100x100-ref.html
-fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuzzy
+skip-if(Android&&layersOpenGL) == canvas-drawImage-slice-1a.html lime100x100-ref.html
+skip-if(Android&&layersOpenGL) fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuzzy
 
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html

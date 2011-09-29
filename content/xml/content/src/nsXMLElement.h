@@ -70,11 +70,11 @@ public:
   virtual nsIAtom* DoGetID() const;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                             bool aNotify);
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);

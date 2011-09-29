@@ -103,6 +103,18 @@ using namespace mozilla::layers;
 static nsAutoPtr<PRUint8>  sSharedSurfaceData;
 static gfxIntSize          sSharedSurfaceSize;
 
+struct IconMetrics {
+  PRInt32 xMetric;
+  PRInt32 yMetric;
+  PRInt32 defaultSize;
+};
+
+// Corresponds 1:1 to the IconSizeType enum
+static IconMetrics sIconMetrics[] = {
+  {SM_CXSMICON, SM_CYSMICON, 16}, // small icon
+  {SM_CXICON,   SM_CYICON,   32}  // regular icon
+};
+
 /**************************************************************
  **************************************************************
  **
@@ -113,7 +125,7 @@ static gfxIntSize          sSharedSurfaceSize;
  **************************************************************
  **************************************************************/
 
-static PRBool
+static bool
 IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
 {
   return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
@@ -160,7 +172,7 @@ nsWindowGfx::ConvertHRGNToRegion(HRGN aRgn)
  **************************************************************/
 
 // GetRegionToPaint returns the invalidated region that needs to be painted
-nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
+nsIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
                                        PAINTSTRUCT ps, HDC aDC)
 {
   if (aForceFullRepaint) {
@@ -185,7 +197,7 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
 }
 
 #define WORDSSIZE(x) ((x).width * (x).height)
-static PRBool
+static bool
 EnsureSharedSurfaceSize(gfxIntSize size)
 {
   gfxIntSize screenSize;
@@ -207,7 +219,7 @@ EnsureSharedSurfaceSize(gfxIntSize size)
   return (sSharedSurfaceData != nsnull);
 }
 
-PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
+bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 {
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
@@ -247,7 +259,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   willPaintEvent.willSendDidPaint = PR_TRUE;
   DispatchWindowEvent(&willPaintEvent);
 
-  PRBool result = PR_TRUE;
+  bool result = true;
   PAINTSTRUCT ps;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
@@ -291,9 +303,9 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   InitEvent(event);
 
 #ifdef MOZ_XUL
-  PRBool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
+  bool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
 #else
-  PRBool forceRepaint = NULL != aDC;
+  bool forceRepaint = NULL != aDC;
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
   event.willSendDidPaint = PR_TRUE;
@@ -613,10 +625,22 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   return result;
 }
 
+gfxIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
+  PRInt32 width = ::GetSystemMetrics(sIconMetrics[aSizeType].xMetric);
+  PRInt32 height = ::GetSystemMetrics(sIconMetrics[aSizeType].yMetric);
+
+  if (width == 0 || height == 0) {
+    width = height = sIconMetrics[aSizeType].defaultSize;
+  }
+
+  return gfxIntSize(width, height);
+}
+
 nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
-                                  PRBool aIsCursor,
+                                  bool aIsCursor,
                                   PRUint32 aHotspotX,
                                   PRUint32 aHotspotY,
+                                  gfxIntSize aScaledSize,
                                   HICON *aIcon) {
 
   // Get the image data
@@ -627,10 +651,42 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
-  PRUint8 *data = frame->Data();
-
   PRInt32 width = frame->Width();
   PRInt32 height = frame->Height();
+  if (!width || !height)
+    return NS_ERROR_FAILURE;
+
+  PRUint8 *data;
+  if ((aScaledSize.width == 0 && aScaledSize.height == 0) ||
+      (aScaledSize.width == width && aScaledSize.height == height)) {
+    // We're not scaling the image. The data is simply what's in the frame.
+    data = frame->Data();
+  }
+  else {
+    NS_ENSURE_ARG(aScaledSize.width > 0);
+    NS_ENSURE_ARG(aScaledSize.height > 0);
+    // Draw a scaled version of the image to a temporary surface
+    nsRefPtr<gfxImageSurface> dest = new gfxImageSurface(aScaledSize,
+                                                         gfxASurface::ImageFormatARGB32);
+    if (!dest)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    gfxContext ctx(dest);
+
+    // Set scaling
+    gfxFloat sw = (double) aScaledSize.width / width;
+    gfxFloat sh = (double) aScaledSize.height / height;
+    ctx.Scale(sw, sh);
+
+    // Paint a scaled image
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.SetSource(frame);
+    ctx.Paint();
+
+    data = dest->Data();
+    width = aScaledSize.width;
+    height = aScaledSize.height;
+  }
 
   HBITMAP bmp = DataToBitmap(data, width, -height, 32);
   PRUint8* a1data = Data32BitTo1Bit(data, width, height);
@@ -690,10 +746,10 @@ PRUint8* nsWindowGfx::Data32BitTo1Bit(PRUint8* aImageData,
   return outData;
 }
 
-PRBool nsWindowGfx::IsCursorTranslucencySupported()
+bool nsWindowGfx::IsCursorTranslucencySupported()
 {
-  static PRBool didCheck = PR_FALSE;
-  static PRBool isSupported = PR_FALSE;
+  static bool didCheck = false;
+  static bool isSupported = false;
   if (!didCheck) {
     didCheck = PR_TRUE;
     // Cursor translucency is supported on Windows XP and newer

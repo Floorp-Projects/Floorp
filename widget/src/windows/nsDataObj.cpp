@@ -635,7 +635,7 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC aFormat, LPSTGMEDIUM aMedium, BOOL s
       memset(&pde->stgm, 0, sizeof(STGMEDIUM));
     }
 
-    PRBool result = PR_TRUE;
+    bool result = true;
     if (shouldRel) {
       // If shouldRel is TRUE, the data object called owns the storage medium
       // after the call returns. Store the incoming data in our data array for
@@ -658,7 +658,7 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC aFormat, LPSTGMEDIUM aMedium, BOOL s
   return S_OK;
 }
 
-PRBool
+bool
 nsDataObj::LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BOOL aAddorUpdate)
 {
   *aDataEntry = NULL;
@@ -705,7 +705,7 @@ nsDataObj::LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BO
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsDataObj::CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMATETC aFormat, BOOL aSetData)
 {
   STGMEDIUM stgmOut = *aMediumSrc;
@@ -881,7 +881,7 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
 //
 
 HRESULT 
-nsDataObj :: GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode )
+nsDataObj :: GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, bool aIsUnicode )
 {
   HRESULT res = S_OK;
   
@@ -968,7 +968,7 @@ MangleTextToValidFilename(nsString & aText)
 //
 // It would seem that this is more functionality suited to being in nsILocalFile.
 //
-static PRBool
+static bool
 CreateFilenameFromTextA(nsString & aText, const char * aExtension, 
                          char * aFilename, PRUint32 aFilenameLen)
 {
@@ -1003,7 +1003,7 @@ CreateFilenameFromTextA(nsString & aText, const char * aExtension,
   }
 }
 
-static PRBool
+static bool
 CreateFilenameFromTextW(nsString & aText, const wchar_t * aExtension, 
                          wchar_t * aFilename, PRUint32 aFilenameLen)
 {
@@ -1024,7 +1024,7 @@ CreateFilenameFromTextW(nsString & aText, const wchar_t * aExtension,
 
 #define PAGEINFO_PROPERTIES "chrome://navigator/locale/pageInfo.properties"
 
-static PRBool
+static bool
 GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
 {
   nsCOMPtr<nsIStringBundleService> stringService =
@@ -1177,9 +1177,9 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 } // GetFileContentsInternetShortcut
 
 // check if specified flavour is present in the transferable
-PRBool nsDataObj :: IsFlavourPresent(const char *inFlavour)
+bool nsDataObj :: IsFlavourPresent(const char *inFlavour)
 {
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   NS_ENSURE_TRUE(mTransferable, PR_FALSE);
   
   // get the list of flavors available in the transferable
@@ -1930,7 +1930,7 @@ nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML )
 }
 
 HRESULT 
-nsDataObj :: GetUniformResourceLocator( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode )
+nsDataObj :: GetUniformResourceLocator( FORMATETC& aFE, STGMEDIUM& aSTG, bool aIsUnicode )
 {
   HRESULT res = S_OK;
   if (IsFlavourPresent(kURLMime)) {

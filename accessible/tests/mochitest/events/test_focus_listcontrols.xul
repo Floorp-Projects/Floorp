@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible focus event testing">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      // Test focus events.
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("listbox", new focusChecker("lb_item1")));
+      gQueue.push(new synthDownKey("lb_item1", new focusChecker("lb_item2")));
+      gQueue.push(new synthTab("lb_item2", new focusChecker("mslb_item1")));
+      gQueue.push(new synthDownKey("mslb_item1", new focusChecker("mslb_item2"), { shiftKey: true }));
+      gQueue.push(new synthTab("mslb_item2", new focusChecker("emptylistbox")));
+      gQueue.push(new synthFocus("mcolumnlistbox", new focusChecker("mclb_item1")));
+      gQueue.push(new synthDownKey("mclb_item1", new focusChecker("mclb_item2")));
+      gQueue.push(new synthFocus("headerlistbox", new focusChecker("hlb_item1")));
+      gQueue.push(new synthDownKey("hlb_item1", new focusChecker("hlb_item2")));
+
+      gQueue.push(new synthFocus("richlistbox", new focusChecker("rlb_item1")));
+      gQueue.push(new synthDownKey("rlb_item1", new focusChecker("rlb_item2")));
+      gQueue.push(new synthFocus("multiselrichlistbox", new focusChecker("msrlb_item1")));
+      gQueue.push(new synthDownKey("msrlb_item1", new focusChecker("msrlb_item2"), { shiftKey: true }));
+      gQueue.push(new synthFocus("emptyrichlistbox", new focusChecker("emptyrichlistbox")));
+
+      gQueue.push(new synthFocus("menulist"));
+      gQueue.push(new synthClick("menulist", new focusChecker("ml_tangerine")));
+      gQueue.push(new synthDownKey("ml_tangerine", new focusChecker("ml_marmalade")));
+      gQueue.push(new synthEscapeKey("ml_marmalade", new focusChecker("menulist")));
+      gQueue.push(new synthDownKey("menulist", new nofocusChecker("ml_marmalade")));
+      gQueue.push(new synthOpenComboboxKey("menulist", new focusChecker("ml_marmalade")));
+      gQueue.push(new synthEnterKey("ml_marmalade", new focusChecker("menulist")));
+
+      var textentry = getAccessible("emenulist").firstChild;
+      gQueue.push(new synthFocus("emenulist", new focusChecker(textentry)));
+      gQueue.push(new synthDownKey(textentry, new nofocusChecker("eml_tangerine")));
+      gQueue.push(new synthUpKey(textentry, new focusChecker("eml_marmalade")));
+      gQueue.push(new synthEnterKey("eml_marmalade", new focusChecker(textentry)));
+      gQueue.push(new synthOpenComboboxKey("emenulist", new focusChecker("eml_marmalade")));
+      gQueue.push(new synthEscapeKey("eml_marmalade", new focusChecker(textentry)));
+
+      // no focus events for unfocused list controls when current item is
+      // changed.
+      gQueue.push(new synthFocus("emptylistbox"));
+
+      gQueue.push(new changeCurrentItem("listbox", "lb_item1"));
+      gQueue.push(new changeCurrentItem("richlistbox", "rlb_item1"));
+      gQueue.push(new changeCurrentItem("menulist", "ml_tangerine"));
+      gQueue.push(new changeCurrentItem("emenulist", "eml_tangerine"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=433418"
+         title="Accessibles for focused HTML Select elements are not getting focused state">
+        Mozilla Bug 433418
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=474893"
+         title="List controls should fire a focus event on the selected child when tabbing or when the selected child changes while the list is focused">
+        Mozilla Bug 474893
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552368"
+         title=" fire focus event on document accessible whenever the root or body element is focused">
+        Mozilla Bug 552368
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <listbox id="listbox" rows="3">
+        <listitem id="lb_item1" label="item1"/>
+        <listitem id="lb_item2" label="item1"/>
+      </listbox>
+      <listbox id="multisellistbox" rows="3" seltype="multiple">
+        <listitem id="mslb_item1" label="item1"/>
+        <listitem id="mslb_item2" label="item1"/>
+      </listbox>
+      <listbox id="emptylistbox" rows="3"/>
+      <listbox id="mcolumnlistbox" rows="3">
+        <listcols>
+          <listcol/>
+          <listcol/>
+        </listcols>
+        <listitem id="mclb_item1">
+          <listcell label="George"/>
+          <listcell label="House Painter"/>
+        </listitem>
+        <listitem id="mclb_item2">
+          <listcell label="Mary Ellen"/>
+          <listcell label="Candle Maker"/>
+        </listitem>
+      </listbox>
+      <listbox id="headerlistbox" rows="3">
+        <listhead>
+          <listheader label="Name"/>
+          <listheader label="Occupation"/>
+        </listhead>
+        <listcols>
+          <listcol/>
+          <listcol flex="1"/>
+        </listcols>
+        <listitem id="hlb_item1">
+          <listcell label="George"/>
+          <listcell label="House Painter"/>
+        </listitem>
+        <listitem id="hlb_item2">
+          <listcell label="Mary Ellen"/>
+          <listcell label="Candle Maker"/>
+        </listitem>
+      </listbox>
+
+      <richlistbox id="richlistbox">
+        <richlistitem id="rlb_item1">
+          <description>A XUL Description!</description>
+        </richlistitem>
+        <richlistitem id="rlb_item2">
+          <button label="A XUL Button"/>
+        </richlistitem>
+      </richlistbox>
+      <richlistbox id="multiselrichlistbox" seltype="multiple">
+        <richlistitem id="msrlb_item1">
+          <description>A XUL Description!</description>
+        </richlistitem>
+        <richlistitem id="msrlb_item2">
+          <button label="A XUL Button"/>
+        </richlistitem>
+      </richlistbox>
+      <richlistbox id="emptyrichlistbox" seltype="multiple"/>
+
+      <menulist id="menulist">
+        <menupopup>
+          <menuitem id="ml_tangerine" label="tangerine trees"/>
+          <menuitem id="ml_marmalade" label="marmalade skies"/>
+        </menupopup>
+      </menulist>
+      <menulist id="emenulist" editable="true">
+        <menupopup>
+          <menuitem id="eml_tangerine" label="tangerine trees"/>
+          <menuitem id="eml_marmalade" label="marmalade skies"/>
+        </menupopup>
+      </menulist>
+
+      <vbox id="eventdump"/>
+    </vbox>
+  </hbox>
+</window>

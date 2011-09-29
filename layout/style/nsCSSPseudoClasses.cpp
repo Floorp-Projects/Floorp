@@ -66,7 +66,7 @@ void nsCSSPseudoClasses::AddRefAtoms()
                          NS_ARRAY_LENGTH(CSSPseudoClasses_info));
 }
 
-PRBool
+bool
 nsCSSPseudoClasses::HasStringArg(Type aType)
 {
   return aType == ePseudoClass_lang ||
@@ -75,7 +75,7 @@ nsCSSPseudoClasses::HasStringArg(Type aType)
          aType == ePseudoClass_mozLocaleDir;
 }
 
-PRBool
+bool
 nsCSSPseudoClasses::HasNthPairArg(Type aType)
 {
   return aType == ePseudoClass_nthChild ||

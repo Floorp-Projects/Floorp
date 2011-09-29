@@ -73,7 +73,7 @@ private:
         PRUint32 mOffset;
         nsWriteSegmentFun mWriter;
         void* mClosure;
-        PRBool mDone;
+        bool mDone;
     };
 
     static NS_METHOD ReadSegCb(nsIInputStream* aIn, void* aClosure,
@@ -82,7 +82,7 @@ private:
     
     nsCOMArray<nsIInputStream> mStreams;
     PRUint32 mCurrentStream;
-    PRBool mStartedReadingCurrent;
+    bool mStartedReadingCurrent;
     nsresult mStatus;
 };
 
@@ -129,7 +129,7 @@ nsMultiplexInputStream::AppendStream(nsIInputStream *aStream)
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, PRUint32 aIndex)
 {
-    PRBool result = mStreams.InsertObjectAt(aStream, aIndex);
+    bool result = mStreams.InsertObjectAt(aStream, aIndex);
     NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     if (mCurrentStream > aIndex ||
         (mCurrentStream == aIndex && mStartedReadingCurrent))
@@ -141,7 +141,7 @@ nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, PRUint32 aIndex)
 NS_IMETHODIMP
 nsMultiplexInputStream::RemoveStream(PRUint32 aIndex)
 {
-    PRBool result = mStreams.RemoveObjectAt(aIndex);
+    bool result = mStreams.RemoveObjectAt(aIndex);
     NS_ENSURE_TRUE(result, NS_ERROR_NOT_AVAILABLE);
     if (mCurrentStream > aIndex)
         --mCurrentStream;
@@ -328,7 +328,7 @@ nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
 
 /* readonly attribute boolean nonBlocking; */
 NS_IMETHODIMP
-nsMultiplexInputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsMultiplexInputStream::IsNonBlocking(bool *aNonBlocking)
 {
     PRUint32 len = mStreams.Count();
     for (PRUint32 i = 0; i < len; ++i) {
@@ -426,7 +426,7 @@ nsMultiplexInputStreamConstructor(nsISupports *outer,
     return rv;
 }
 
-PRBool
+bool
 nsMultiplexInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
     using IPC::ReadParam;

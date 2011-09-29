@@ -62,7 +62,7 @@ typedef void (*PrefReader)(void       *closure,
                            const char *pref,
                            PrefValue   val,
                            PrefType    type,
-                           PRBool      defPref);
+                           bool        defPref);
 
 /* structure fields are private */
 typedef struct PrefParseState {
@@ -82,7 +82,7 @@ typedef struct PrefParseState {
     char       *lbend;      /* line buffer end               */
     char       *vb;         /* value buffer (ptr into lb)    */
     PrefType    vtype;      /* PREF_STRING,INT,BOOL          */
-    PRBool      fdefault;   /* PR_TRUE if (default) pref     */
+    bool        fdefault;   /* true if (default) pref     */
 } PrefParseState;
 
 /**
@@ -127,7 +127,7 @@ void PREF_FinalizeParseState(PrefParseState *ps);
  *
  * @return PR_FALSE if buffer contains malformed content.
  */
-PRBool PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen);
+bool PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen);
 
 PR_END_EXTERN_C
 #endif /* prefread_h__ */

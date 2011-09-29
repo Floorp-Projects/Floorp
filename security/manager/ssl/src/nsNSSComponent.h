@@ -106,7 +106,7 @@ enum EnsureNSSOperator
   nssEnsureOnChromeOnly = 101
 };
 
-extern PRBool EnsureNSSInitialized(EnsureNSSOperator op);
+extern bool EnsureNSSInitialized(EnsureNSSOperator op);
 
 //--------------------------------------------
 // Now we need a content listener to register 
@@ -117,7 +117,7 @@ public:
   PSMContentDownloader() {NS_ASSERTION(PR_FALSE, "don't use this constructor."); }
   PSMContentDownloader(PRUint32 type);
   virtual ~PSMContentDownloader();
-  void setSilentDownload(PRBool flag);
+  void setSilentDownload(bool flag);
   void setCrlAutodownloadKey(nsAutoString key);
 
   NS_DECL_ISUPPORTS
@@ -136,7 +136,7 @@ protected:
   PRInt32 mBufferOffset;
   PRInt32 mBufferSize;
   PRUint32 mType;
-  PRBool mDoSilentDownload;
+  bool mDoSilentDownload;
   nsString mCrlAutoDownloadKey;
   nsCOMPtr<nsIURI> mURI;
   nsresult handleContentDownloadError(nsresult errCode);
@@ -192,7 +192,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 
-  NS_IMETHOD IsNSSInitialized(PRBool *initialized) = 0;
+  NS_IMETHOD IsNSSInitialized(bool *initialized) = 0;
 
   NS_IMETHOD GetDefaultCERTValInParam(nsRefPtr<nsCERTValInParamWrapper> &out) = 0;
   NS_IMETHOD GetDefaultCERTValInParamLocalOnly(nsRefPtr<nsCERTValInParamWrapper> &out) = 0;
@@ -212,7 +212,7 @@ private:
   ~nsCryptoHash();
 
   HASHContext* mHashContext;
-  PRBool mInitialized;
+  bool mInitialized;
 
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
@@ -290,13 +290,13 @@ public:
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
   NS_IMETHOD GetClientAuthRememberService(nsClientAuthRememberService **cars);
   NS_IMETHOD EnsureIdentityInfoLoaded();
-  NS_IMETHOD IsNSSInitialized(PRBool *initialized);
+  NS_IMETHOD IsNSSInitialized(bool *initialized);
 
   NS_IMETHOD GetDefaultCERTValInParam(nsRefPtr<nsCERTValInParamWrapper> &out);
   NS_IMETHOD GetDefaultCERTValInParamLocalOnly(nsRefPtr<nsCERTValInParamWrapper> &out);
 private:
 
-  nsresult InitializeNSS(PRBool showWarningBox);
+  nsresult InitializeNSS(bool showWarningBox);
   nsresult ShutdownNSS();
 
 #ifdef XP_MACOSX
@@ -343,19 +343,19 @@ private:
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<nsITimer> mTimer;
-  PRBool mNSSInitialized;
-  PRBool mObserversRegistered;
+  bool mNSSInitialized;
+  bool mObserversRegistered;
   PLHashTable *hashTableCerts;
   nsAutoString mDownloadURL;
   nsAutoString mCrlUpdateKey;
   Mutex mCrlTimerLock;
   nsHashtable *crlsScheduledForDownload;
-  PRBool crlDownloadTimerOn;
-  PRBool mUpdateTimerInitialized;
+  bool crlDownloadTimerOn;
+  bool mUpdateTimerInitialized;
   static int mInstanceCount;
   nsNSSShutDownList *mShutdownObjectList;
   SmartCardThreadList *mThreadList;
-  PRBool mIsNetworkDown;
+  bool mIsNetworkDown;
 
   void deleteBackgroundThreads();
   void createBackgroundThreads();
@@ -371,7 +371,7 @@ private:
   PRCallOnceType mIdentityInfoCallOnce;
 
 public:
-  static PRBool globalConstFlagUsePKIXVerification;
+  static bool globalConstFlagUsePKIXVerification;
 };
 
 class PSMContentListener : public nsIURIContentListener,
@@ -401,10 +401,10 @@ public:
 class nsPSMInitPanic
 {
 private:
-  static PRBool isPanic;
+  static bool isPanic;
 public:
   static void SetPanic() {isPanic = PR_TRUE;}
-  static PRBool GetPanic() {return isPanic;}
+  static bool GetPanic() {return isPanic;}
 };
 
 #endif // _nsNSSComponent_h_

@@ -36,35 +36,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 relativesrcdir = js/src/xpconnect/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= TestXPC
-SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
-
-
-DIRS		= idl mochitest chrome
-
-# XXX Doesn't work in libxul builds.
-#DIRS += components
-#
+DIRS = idl mochitest chrome components/native components/js
 
 XPCSHELL_TESTS = unit
 
-CPPSRCS		= TestXPC.cpp
-
-LIBS		= \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(LIBS_DIR) \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+  $(LIBS_DIR) \
+  $(MOZ_JS_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DJS_THREADSAFE -DJSFILE

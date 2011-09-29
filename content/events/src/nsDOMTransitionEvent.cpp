@@ -91,8 +91,8 @@ nsDOMTransitionEvent::GetElapsedTime(float *aElapsedTime)
 
 NS_IMETHODIMP
 nsDOMTransitionEvent::InitTransitionEvent(const nsAString & typeArg,
-                                          PRBool canBubbleArg,
-                                          PRBool cancelableArg,
+                                          bool canBubbleArg,
+                                          bool cancelableArg,
                                           const nsAString & propertyNameArg,
                                           float elapsedTimeArg)
 {

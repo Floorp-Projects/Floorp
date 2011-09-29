@@ -42,7 +42,7 @@
 #include "nsReadableUtils.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static bool gNoisy = false;
 #endif
 
 
@@ -131,7 +131,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
   NS_ENSURE_TRUE(resultNode, NS_ERROR_NULL_POINTER);
 
   // only set selection to insertion point if editor gives permission
-  PRBool bAdjustSelection;
+  bool bAdjustSelection;
   mEditor->ShouldTxnSetSelection(&bAdjustSelection);
   if (bAdjustSelection)
   {

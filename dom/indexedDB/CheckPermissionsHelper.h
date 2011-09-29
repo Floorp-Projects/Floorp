@@ -84,7 +84,7 @@ private:
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsString mName;
   nsCString mASCIIOrigin;
-  PRBool mHasPrompted;
+  bool mHasPrompted;
   PRUint32 mPromptResult;
 };
 

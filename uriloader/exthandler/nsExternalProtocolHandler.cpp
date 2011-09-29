@@ -84,7 +84,7 @@ private:
     nsCOMPtr<nsIURI> mOriginalURI;
     nsresult mStatus;
     nsLoadFlags mLoadFlags;
-    PRBool mWasOpened;
+    bool mWasOpened;
     
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -174,7 +174,7 @@ nsresult nsExtProtocolChannel::OpenURL()
 #ifdef DEBUG
     nsCAutoString urlScheme;
     mUrl->GetScheme(urlScheme);
-    PRBool haveHandler = PR_FALSE;
+    bool haveHandler = false;
     extProtService->ExternalProtocolHandlerExists(urlScheme.get(), &haveHandler);
     NS_ASSERTION(haveHandler, "Why do we have a channel for this url if we don't support the protocol?");
 #endif
@@ -296,7 +296,7 @@ NS_IMETHODIMP nsExtProtocolChannel::GetName(nsACString &result)
   return mUrl->GetSpec(result);
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::IsPending(PRBool *result)
+NS_IMETHODIMP nsExtProtocolChannel::IsPending(bool *result)
 {
   *result = PR_FALSE;
   return NS_OK; 
@@ -362,16 +362,16 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
 }
 
 NS_IMETHODIMP 
-nsExternalProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsExternalProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;
     return NS_OK;
 }
 // returns TRUE if the OS can handle this protocol scheme and false otherwise.
-PRBool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI * aURI)
+bool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI * aURI)
 {
-  PRBool haveHandler = PR_FALSE;
+  bool haveHandler = false;
   if (aURI)
   {
     nsCAutoString scheme;
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
   // nsOSHelperAppService::LoadUriInternal relies on this to check trustedness
   // for some platforms at least.  (win uses ::ShellExecute and unix uses
   // gnome_url_show.)
-  PRBool haveExternalHandler = HaveExternalProtocolHandler(aURI);
+  bool haveExternalHandler = HaveExternalProtocolHandler(aURI);
   if (haveExternalHandler)
   {
     nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel();
@@ -436,7 +436,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
 ///////////////////////////////////////////////////////////////////////
 // External protocol handler interface implementation
 //////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsExternalProtocolHandler::ExternalAppExistsForScheme(const nsACString& aScheme, PRBool *_retval)
+NS_IMETHODIMP nsExternalProtocolHandler::ExternalAppExistsForScheme(const nsACString& aScheme, bool *_retval)
 {
   if (gExtProtSvc)
     return gExtProtSvc->ExternalProtocolHandlerExists(

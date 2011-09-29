@@ -163,7 +163,7 @@ nsHTMLFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char*
 // converts from HTML to others.
 //
 NS_IMETHODIMP
-nsHTMLFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDataFlavor, PRBool *_retval)
+nsHTMLFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDataFlavor, bool *_retval)
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;

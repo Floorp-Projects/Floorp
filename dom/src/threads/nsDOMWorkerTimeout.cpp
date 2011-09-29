@@ -91,7 +91,7 @@ nsDOMWorkerTimeout::FunctionCallback::FunctionCallback(PRUint32 aArgc,
   // We want enough space for an extra lateness arg.
   mCallbackArgsLength = aArgc > 2 ? aArgc - 1 : 1;
 
-  PRBool success = mCallbackArgs.SetLength(mCallbackArgsLength);
+  bool success = mCallbackArgs.SetLength(mCallbackArgsLength);
   CONSTRUCTOR_ENSURE_TRUE(success, *aRv);
 
   PRUint32 index = 0;
@@ -128,7 +128,7 @@ nsDOMWorkerTimeout::FunctionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
   nsTArray<jsval> argv;
-  PRBool success = argv.SetCapacity(mCallbackArgsLength);
+  bool success = argv.SetCapacity(mCallbackArgsLength);
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
   for (PRUint32 index = 0; index < mCallbackArgsLength; index++) {
@@ -200,7 +200,7 @@ nsDOMWorkerTimeout::ExpressionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   const jschar* string = JS_GetStringCharsAndLength(aCx, expression, &stringLength);
   NS_ENSURE_TRUE(string, NS_ERROR_FAILURE);
 
-  PRBool success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
+  bool success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
                                                     string, stringLength,
                                                     mFileName.get(),
                                                     mLineNumber, nsnull);
@@ -230,7 +230,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsDOMWorkerTimeout, nsDOMWorkerFeature,
 
 nsresult
 nsDOMWorkerTimeout::Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
-                         PRBool aIsInterval)
+                         bool aIsInterval)
 {
   NS_ASSERTION(aCx, "Null pointer!");
   NS_ASSERTION(aArgv, "Null pointer!");

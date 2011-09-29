@@ -199,7 +199,7 @@ protected:
             mChildIndex = aLink.mChildIndex;
             return *this; }
 
-        PRBool
+        bool
         operator==(const Link& aLink) const {
             return (mParent == aLink.mParent)
                 && (mChildIndex == aLink.mChildIndex); }
@@ -255,9 +255,9 @@ public:
         iterator(const iterator& aIterator);
         iterator& operator=(const iterator& aIterator);
 
-        PRBool operator==(const iterator& aIterator) const;
+        bool operator==(const iterator& aIterator) const;
 
-        PRBool operator!=(const iterator& aIterator) const {
+        bool operator!=(const iterator& aIterator) const {
             return !aIterator.operator==(*this); }
 
         const Row& operator*() const { return GetTop().GetRow(); }

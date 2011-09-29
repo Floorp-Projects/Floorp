@@ -71,7 +71,7 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
 
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
@@ -79,7 +79,7 @@ public:
                                   nsRuleData* aRuleData);
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  virtual PRBool SetMappedAttribute(nsIDocument* aDocument,
+  virtual bool SetMappedAttribute(nsIDocument* aDocument,
                                     nsIAtom* aName,
                                     nsAttrValue& aValue,
                                     nsresult* aRetval);

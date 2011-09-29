@@ -86,14 +86,14 @@ public:
   // react.
   void NotifyEvictedFromRenderingObserverList();
 
-  PRBool IsInObserverList() const { return mInObserverList; }
+  bool IsInObserverList() const { return mInObserverList; }
 
   nsIFrame* GetReferencedFrame();
   /**
    * @param aOK this is only for the convenience of callers. We set *aOK to false
    * if the frame is the wrong type
    */
-  nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK);
+  nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, bool* aOK);
 
   Element* GetReferencedElement();
 
@@ -110,7 +110,7 @@ protected:
   virtual Element* GetTarget() = 0;
 
   // Whether we're in our referenced element's observer list at this time.
-  PRPackedBool mInObserverList;
+  bool mInObserverList;
 };
 
 
@@ -128,7 +128,7 @@ class nsSVGIDRenderingObserver : public nsSVGRenderingObserver {
 public:
   typedef mozilla::dom::Element Element;
   nsSVGIDRenderingObserver(nsIURI* aURI, nsIFrame *aFrame,
-                         PRBool aReferenceImage);
+                         bool aReferenceImage);
   virtual ~nsSVGIDRenderingObserver();
 
 protected:
@@ -151,7 +151,7 @@ protected:
      * Override IsPersistent because we want to keep tracking the element
      * for the ID even when it changes.
      */
-    virtual PRBool IsPersistent() { return PR_TRUE; }
+    virtual bool IsPersistent() { return true; }
   private:
     nsSVGIDRenderingObserver* mContainer;
   };
@@ -171,7 +171,7 @@ class nsSVGFilterProperty :
   public nsSVGIDRenderingObserver, public nsISVGFilterProperty {
 public:
   nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame,
-                      PRBool aReferenceImage)
+                      bool aReferenceImage)
     : nsSVGIDRenderingObserver(aURI, aFilteredFrame, aReferenceImage) {}
 
   /**
@@ -192,7 +192,7 @@ private:
 
 class nsSVGMarkerProperty : public nsSVGIDRenderingObserver {
 public:
-  nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+  nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
@@ -201,7 +201,7 @@ protected:
 
 class nsSVGTextPathProperty : public nsSVGIDRenderingObserver {
 public:
-  nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+  nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
@@ -210,7 +210,7 @@ protected:
  
 class nsSVGPaintingProperty : public nsSVGIDRenderingObserver {
 public:
-  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
+  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
@@ -250,10 +250,10 @@ public:
   void Remove(nsSVGRenderingObserver* aObserver)
   { mObservers.RemoveEntry(aObserver); }
 #ifdef DEBUG
-  PRBool Contains(nsSVGRenderingObserver* aObserver)
+  bool Contains(nsSVGRenderingObserver* aObserver)
   { return (mObservers.GetEntry(aObserver) != nsnull); }
 #endif
-  PRBool IsEmpty()
+  bool IsEmpty()
   { return mObservers.Count() == 0; }
 
   /**
@@ -311,21 +311,21 @@ public:
      * exists but is an element of the wrong type, *aOK is set to false.
      * Otherwise *aOK is untouched.
      */
-    nsSVGClipPathFrame *GetClipPathFrame(PRBool *aOK);
+    nsSVGClipPathFrame *GetClipPathFrame(bool *aOK);
     /**
      * @return the mask frame, or null if there is no mask frame
      * @param aOK if a mask was specified and the designated element
      * exists but is an element of the wrong type, *aOK is set to false.
      * Otherwise *aOK is untouched.
      */
-    nsSVGMaskFrame *GetMaskFrame(PRBool *aOK);
+    nsSVGMaskFrame *GetMaskFrame(bool *aOK);
     /**
      * @return the filter frame, or null if there is no filter frame
      * @param aOK if a filter was specified but the designated element
      * does not exist or is an element of the wrong type, *aOK is set
      * to false. Otherwise *aOK is untouched.
      */
-    nsSVGFilterFrame *GetFilterFrame(PRBool *aOK) {
+    nsSVGFilterFrame *GetFilterFrame(bool *aOK) {
       if (!mFilter)
         return nsnull;
       nsSVGFilterFrame *filter = mFilter->GetFilterFrame();

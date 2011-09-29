@@ -95,8 +95,8 @@ public:
   nsresult GetColumns(nsITreeColumns **aColumns);
   nsresult GetView(nsITreeView **aView);
   nsresult SetView(nsITreeView *aView);
-  nsresult GetFocused(PRBool *aFocused);
-  nsresult SetFocused(PRBool aFocused);
+  nsresult GetFocused(bool *aFocused);
+  nsresult SetFocused(bool aFocused);
   nsresult GetTreeBody(nsIDOMElement **aElement);
   nsresult GetRowHeight(PRInt32 *aValue);
   nsresult GetRowWidth(PRInt32 *aValue);
@@ -127,7 +127,7 @@ public:
                                 const nsACString &aElt,
                                 PRInt32 *aX, PRInt32 *aY,
                                 PRInt32 *aWidth, PRInt32 *aHeight);
-  nsresult IsCellCropped(PRInt32 aRow, nsITreeColumn *aCol, PRBool *aResult);
+  nsresult IsCellCropped(PRInt32 aRow, nsITreeColumn *aCol, bool *aResult);
   nsresult RowCountChanged(PRInt32 aIndex, PRInt32 aCount);
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
@@ -136,19 +136,19 @@ public:
   // nsIBox
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         PRBool aRemoveOverflowArea = PR_FALSE);
+                         bool aRemoveOverflowArea = false);
 
   // nsIReflowCallback
-  virtual PRBool ReflowFinished();
+  virtual bool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
   // nsICSSPseudoComparator
-  virtual PRBool PseudoMatches(nsCSSSelector* aSelector);
+  virtual bool PseudoMatches(nsCSSSelector* aSelector);
 
   // nsIScrollbarMediator
   NS_IMETHOD PositionChanged(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
-  NS_IMETHOD VisibilityChanged(PRBool aVisible) { Invalidate(); return NS_OK; }
+  NS_IMETHOD VisibilityChanged(bool aVisible) { Invalidate(); return NS_OK; }
 
   // Overridden from nsIFrame to cache our pres context.
   NS_IMETHOD Init(nsIContent*     aContent,
@@ -186,8 +186,8 @@ public:
 
   nsITreeBoxObject* GetTreeBoxObject() const { return mTreeBoxObject; }
 
-  PRBool GetVerticalOverflow() const { return mVerticalOverflow; }
-  PRBool GetHorizontalOverflow() const {return mHorizontalOverflow; }
+  bool GetVerticalOverflow() const { return mVerticalOverflow; }
+  bool GetHorizontalOverflow() const {return mHorizontalOverflow; }
 
 protected:
   friend class nsOverflowChecker;
@@ -252,7 +252,7 @@ protected:
                  nsRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect,
                  nscoord&             aCurrX,
-                 PRBool               aTextRTL);
+                 bool                 aTextRTL);
 
   // This method paints the checkbox inside a particular cell of the tree.
   void PaintCheckbox(PRInt32              aRowIndex, 
@@ -322,18 +322,18 @@ protected:
                           nsStyleContext* aTwistyContext);
 
   // Fetch an image from the image cache.
-  nsresult GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseContext,
-                    nsStyleContext* aStyleContext, PRBool& aAllowImageRegions, imgIContainer** aResult);
+  nsresult GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, bool aUseContext,
+                    nsStyleContext* aStyleContext, bool& aAllowImageRegions, imgIContainer** aResult);
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
-  nsRect GetImageSize(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseContext, nsStyleContext* aStyleContext);
+  nsRect GetImageSize(PRInt32 aRowIndex, nsTreeColumn* aCol, bool aUseContext, nsStyleContext* aStyleContext);
 
   // Returns the destination size of the image, not including borders and padding.
-  nsSize GetImageDestSize(nsStyleContext* aStyleContext, PRBool useImageRegion, imgIContainer* image);
+  nsSize GetImageDestSize(nsStyleContext* aStyleContext, bool useImageRegion, imgIContainer* image);
 
   // Returns the source rectangle of the image to be displayed.
-  nsRect GetImageSourceRect(nsStyleContext* aStyleContext, PRBool useImageRegion, imgIContainer* image);
+  nsRect GetImageSourceRect(nsStyleContext* aStyleContext, bool useImageRegion, imgIContainer* image);
 
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
@@ -370,7 +370,7 @@ protected:
   // Calls UpdateScrollbars, Invalidate aNeedsFullInvalidation if PR_TRUE,
   // InvalidateScrollbars and finally CheckOverflow.
   // returns PR_TRUE if the frame is still alive after the method call.
-  PRBool FullScrollbarsUpdate(PRBool aNeedsFullInvalidation);
+  bool FullScrollbarsUpdate(bool aNeedsFullInvalidation);
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
@@ -404,9 +404,9 @@ protected:
   // rect to its intersection with mInnerBox in the horizontal direction.
   // Return whether the result has a nonempty intersection with mInnerBox
   // after projecting both onto the horizontal coordinate axis.
-  PRBool OffsetForHorzScroll(nsRect& rect, PRBool clip);
+  bool OffsetForHorzScroll(nsRect& rect, bool clip);
 
-  PRBool CanAutoScroll(PRInt32 aRowIndex);
+  bool CanAutoScroll(PRInt32 aRowIndex);
 
   // Calc the row and above/below/on status given where the mouse currently is hovering.
   // Also calc if we're in the region in which we want to auto-scroll the tree.
@@ -511,7 +511,7 @@ protected: // Data Members
 
     protected:
       // If the drop is actually allowed here or not.
-      PRBool                   mDropAllowed;
+      bool                     mDropAllowed;
 
       // The row the mouse is hovering over during a drop.
       PRInt32                  mDropRow;
@@ -593,15 +593,15 @@ protected: // Data Members
   PRInt32 mMouseOverRow;
 
   // Whether or not we're currently focused.
-  PRPackedBool mFocused;
+  bool mFocused;
 
   // Do we have a fixed number of onscreen rows?
-  PRPackedBool mHasFixedRowCount;
+  bool mHasFixedRowCount;
 
-  PRPackedBool mVerticalOverflow;
-  PRPackedBool mHorizontalOverflow;
+  bool mVerticalOverflow;
+  bool mHorizontalOverflow;
 
-  PRPackedBool mReflowCallbackPosted;
+  bool mReflowCallbackPosted;
 }; // class nsTreeBodyFrame
 
 #endif

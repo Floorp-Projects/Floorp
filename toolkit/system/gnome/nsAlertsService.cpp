@@ -60,7 +60,7 @@ nsAlertsService::Init()
 }
 
 NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
-                                                     const nsAString & aAlertText, PRBool aAlertTextClickable,
+                                                     const nsAString & aAlertText, bool aAlertTextClickable,
                                                      const nsAString & aAlertCookie,
                                                      nsIObserver * aAlertListener,
                                                      const nsAString & aAlertName)

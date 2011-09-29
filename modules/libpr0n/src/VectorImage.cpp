@@ -134,7 +134,7 @@ public:
     mViewport(aViewport),
     mImageFlags(aImageFlags)
   {}
-  virtual PRBool operator()(gfxContext* aContext,
+  virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
                             const gfxPattern::GraphicsFilter& aFilter,
                             const gfxMatrix& aTransform);
@@ -145,7 +145,7 @@ private:
 };
 
 // Based loosely on nsSVGIntegrationUtils' PaintFrameCallback::operator()
-PRBool
+bool
 SVGDrawingCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
                                const gfxPattern::GraphicsFilter& aFilter,
@@ -370,7 +370,7 @@ VectorImage::GetType()
 //******************************************************************************
 /* readonly attribute boolean animated; */
 NS_IMETHODIMP
-VectorImage::GetAnimated(PRBool* aAnimated)
+VectorImage::GetAnimated(bool* aAnimated)
 {
   if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
@@ -382,7 +382,7 @@ VectorImage::GetAnimated(PRBool* aAnimated)
 //******************************************************************************
 /* readonly attribute boolean currentFrameIsOpaque; */
 NS_IMETHODIMP
-VectorImage::GetCurrentFrameIsOpaque(PRBool* aIsOpaque)
+VectorImage::GetCurrentFrameIsOpaque(bool* aIsOpaque)
 {
   NS_ENSURE_ARG_POINTER(aIsOpaque);
   *aIsOpaque = PR_FALSE;   // In general, SVG content is not opaque.

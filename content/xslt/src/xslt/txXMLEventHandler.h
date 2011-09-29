@@ -90,7 +90,7 @@ public:
      * @param aData the characters to receive
      * @param aDOE disable output escaping for these characters
      */
-    virtual nsresult characters(const nsSubstring& aData, PRBool aDOE) = 0;
+    virtual nsresult characters(const nsSubstring& aData, bool aDOE) = 0;
 
     /**
      * Signals to receive data that should be treated as a comment.
@@ -158,7 +158,7 @@ public:
                                const nsSubstring& aLocalName,                \
                                const PRInt32 aNsID,                          \
                                const nsString& aValue);                      \
-    virtual nsresult characters(const nsSubstring& aData, PRBool aDOE);      \
+    virtual nsresult characters(const nsSubstring& aData, bool aDOE);      \
     virtual nsresult comment(const nsString& aData);                         \
     virtual nsresult endDocument(nsresult aResult = NS_OK);                  \
     virtual nsresult endElement();                                           \

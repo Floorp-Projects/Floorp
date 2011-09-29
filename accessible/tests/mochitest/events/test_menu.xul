@@ -77,8 +77,8 @@
     function focusFileMenu()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_MENU_START, getNode("menubar")),
-        new invokerChecker(EVENT_FOCUS, getNode("menuitem-file"))
+        new invokerChecker(EVENT_MENU_START, getNode("menubar"))
+        // new invokerChecker(EVENT_FOCUS, getNode("menuitem-file")) //intermitent failure
       ];
 
       this.invoke = function focusFileMenu_invoke()
@@ -132,7 +132,7 @@
      */
 
     //gA11yEventDumpID = "eventdump";
-    gA11yEventDumpToConsole = true;
+    //gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 

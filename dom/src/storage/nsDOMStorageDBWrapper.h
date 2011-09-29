@@ -108,7 +108,7 @@ public:
   GetKeyValue(DOMStorageImpl* aStorage,
               const nsAString& aKey,
               nsAString& aValue,
-              PRBool* aSecure);
+              bool* aSecure);
 
   /**
    * Set the value and secure flag for a key in storage.
@@ -117,9 +117,9 @@ public:
   SetKey(DOMStorageImpl* aStorage,
          const nsAString& aKey,
          const nsAString& aValue,
-         PRBool aSecure,
+         bool aSecure,
          PRInt32 aQuota,
-         PRBool aExcludeOfflineFromUsage,
+         bool aExcludeOfflineFromUsage,
          PRInt32* aNewUsage);
 
   /**
@@ -129,7 +129,7 @@ public:
   nsresult
   SetSecure(DOMStorageImpl* aStorage,
             const nsAString& aKey,
-            const PRBool aSecure);
+            const bool aSecure);
 
   /**
    * Removes a key from storage.
@@ -137,7 +137,7 @@ public:
   nsresult
   RemoveKey(DOMStorageImpl* aStorage,
             const nsAString& aKey,
-            PRBool aExcludeOfflineFromUsage,
+            bool aExcludeOfflineFromUsage,
             PRInt32 aKeyUsage);
 
   /**
@@ -162,7 +162,7 @@ public:
    * Removes all keys added by a given domain.
    */
   nsresult
-  RemoveOwner(const nsACString& aOwner, PRBool aIncludeSubDomains);
+  RemoveOwner(const nsACString& aOwner, bool aIncludeSubDomains);
 
   /**
    * Removes keys owned by domains that either match or don't match the
@@ -170,7 +170,7 @@ public:
    */
   nsresult
   RemoveOwners(const nsTArray<nsString>& aOwners,
-               PRBool aIncludeSubDomains, PRBool aMatch);
+               bool aIncludeSubDomains, bool aMatch);
 
   /**
    * Removes all keys from storage. Used when clearing storage.
@@ -182,13 +182,32 @@ public:
     * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
     */
   nsresult
-  GetUsage(DOMStorageImpl* aStorage, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
+  GetUsage(DOMStorageImpl* aStorage, bool aExcludeOfflineFromUsage, PRInt32 *aUsage);
 
   /**
     * Returns usage of the domain and optionaly by any subdomain.
     */
   nsresult
-  GetUsage(const nsACString& aDomain, PRBool aIncludeSubDomains, PRInt32 *aUsage);
+  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, PRInt32 *aUsage);
+
+  /**
+   * Marks the storage as "cached" after the DOMStorageImpl object has loaded
+   * all items to its memory copy of the entries - IsScopeDirty returns false
+   * after call of this method for this storage.
+   *
+   * When a key is changed or deleted in the storage, the storage scope is
+   * marked as "dirty" again and makes the DOMStorageImpl object recache its
+   * keys on next access, because IsScopeDirty returns true again.
+   */
+  void
+  MarkScopeCached(DOMStorageImpl* aStorage);
+
+  /**
+   * Test whether the storage for the scope (i.e. origin or host) has been
+   * changed since the last MarkScopeCached call.
+   */
+  bool
+  IsScopeDirty(DOMStorageImpl* aStorage);
 
   /**
     * Turns "http://foo.bar.com:80" to "moc.rab.oof.:http:80",
@@ -210,7 +229,7 @@ public:
     * and appends a dot.
     */
   static nsresult CreateQuotaDomainDBKey(const nsACString& aAsciiDomain,
-                                         PRBool aIncludeSubDomains, PRBool aETLDplus1Only,
+                                         bool aIncludeSubDomains, bool aETLDplus1Only,
                                          nsACString& aKey);
 
   static nsresult GetDomainFromScopeKey(const nsACString& aScope,

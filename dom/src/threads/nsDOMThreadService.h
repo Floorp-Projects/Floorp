@@ -123,7 +123,7 @@ public:
   nsresult ChangeThreadPoolMaxThreads(PRInt16 aDelta);
 
   void NoteThreadsafeContractId(const nsACString& aContractId,
-                                PRBool aIsThreadsafe);
+                                bool aIsThreadsafe);
 
   ThreadsafeStatus GetContractIdThreadsafeStatus(const nsACString& aContractId);
 
@@ -139,7 +139,7 @@ private:
   nsresult Dispatch(nsDOMWorker* aWorker,
                     nsIRunnable* aRunnable,
                     PRIntervalTime aTimeoutInterval = 0,
-                    PRBool aClearQueue = PR_FALSE);
+                    bool aClearQueue = false);
 
   void SetWorkerTimeout(nsDOMWorker* aWorker,
                         PRIntervalTime aTimeoutInterval);
@@ -150,7 +150,7 @@ private:
 
   already_AddRefed<nsDOMWorkerPool>
     GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
-                     PRBool aRemove);
+                     bool aRemove);
 
   void TriggerOperationCallbackForPool(nsDOMWorkerPool* aPool);
   void RescheduleSuspendedWorkerForPool(nsDOMWorkerPool* aPool);
@@ -175,7 +175,7 @@ private:
 
   static PRUint32 GetWorkerCloseHandlerTimeoutMS();
 
-  PRBool QueueSuspendedWorker(nsDOMWorkerRunnable* aRunnable);
+  bool QueueSuspendedWorker(nsDOMWorkerRunnable* aRunnable);
 
   // Our internal thread pool.
   nsCOMPtr<nsIThreadPool> mThreadPool;
@@ -199,14 +199,14 @@ private:
   nsTArray<nsDOMWorkerRunnable*> mSuspendedWorkers;
 
   // Always protected with mReentrantMonitor.
-  nsDataHashtable<nsCStringHashKey, PRBool> mThreadsafeContractIDs;
+  nsDataHashtable<nsCStringHashKey, bool> mThreadsafeContractIDs;
 
   nsString mAppName;
   nsString mAppVersion;
   nsString mPlatform;
   nsString mUserAgent;
 
-  PRBool mNavigatorStringsLoaded;
+  bool mNavigatorStringsLoaded;
 };
 
 #endif /* __NSDOMTHREADSERVICE_H__ */

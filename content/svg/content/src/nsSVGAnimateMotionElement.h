@@ -70,7 +70,7 @@ public:
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
-  virtual PRBool GetTargetAttributeName(PRInt32 *aNamespaceID,
+  virtual bool GetTargetAttributeName(PRInt32 *aNamespaceID,
                                         nsIAtom **aLocalName) const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
 

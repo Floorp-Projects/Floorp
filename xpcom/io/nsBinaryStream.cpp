@@ -100,7 +100,7 @@ nsBinaryOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRU
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsBinaryOutputStream::IsNonBlocking(bool *aNonBlocking)
 {
     NS_ENSURE_STATE(mOutputStream);
     return mOutputStream->IsNonBlocking(aNonBlocking);
@@ -131,7 +131,7 @@ nsBinaryOutputStream::SetOutputStream(nsIOutputStream *aOutputStream)
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteBoolean(PRBool aBoolean)
+nsBinaryOutputStream::WriteBoolean(bool aBoolean)
 {
     return Write8(aBoolean);
 }
@@ -261,7 +261,7 @@ nsBinaryOutputStream::WriteByteArray(PRUint8 *aBytes, PRUint32 aLength)
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteObject(nsISupports* aObject, PRBool aIsStrongRef)
+nsBinaryOutputStream::WriteObject(nsISupports* aObject, bool aIsStrongRef)
 {
     return WriteCompoundObject(aObject, NS_GET_IID(nsISupports),
                                aIsStrongRef);
@@ -277,7 +277,7 @@ nsBinaryOutputStream::WriteSingleRefObject(nsISupports* aObject)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteCompoundObject(nsISupports* aObject,
                                           const nsIID& aIID,
-                                          PRBool aIsStrongRef)
+                                          bool aIsStrongRef)
 {
     // Can't deal with weak refs
     NS_ENSURE_TRUE(aIsStrongRef, NS_ERROR_UNEXPECTED);
@@ -448,7 +448,7 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUi
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsBinaryInputStream::IsNonBlocking(bool *aNonBlocking)
 {
     NS_ENSURE_STATE(mInputStream);
     return mInputStream->IsNonBlocking(aNonBlocking);
@@ -471,7 +471,7 @@ nsBinaryInputStream::SetInputStream(nsIInputStream *aInputStream)
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadBoolean(PRBool* aBoolean)
+nsBinaryInputStream::ReadBoolean(bool* aBoolean)
 {
     PRUint8 byteResult;
     nsresult rv = Read8(&byteResult);
@@ -592,7 +592,7 @@ nsBinaryInputStream::ReadCString(nsACString& aString)
 // bytes, which means we only have half of the last PRUnichar
 struct WriteStringClosure {
     PRUnichar *mWriteCursor;
-    PRPackedBool mHasCarryoverByte;
+    bool mHasCarryoverByte;
     char mCarryoverByte;
 };
 
@@ -750,7 +750,7 @@ nsBinaryInputStream::ReadByteArray(PRUint32 aLength, PRUint8* *_rval)
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
+nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports* *aObject)
 {
     nsCID cid;
     nsIID iid;

@@ -42,7 +42,7 @@
 #include "nsIDOMCharacterData.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static bool gNoisy = false;
 #endif
 
 
@@ -120,7 +120,7 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
   // insert the new node
   result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   if (mNewLeftNode) {
-    PRBool bAdjustSelection;
+    bool bAdjustSelection;
     mEditor->ShouldTxnSetSelection(&bAdjustSelection);
     if (bAdjustSelection)
     {

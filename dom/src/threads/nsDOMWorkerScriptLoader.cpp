@@ -92,7 +92,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsDOMWorkerScriptLoader, nsDOMWorkerFeature,
 nsresult
 nsDOMWorkerScriptLoader::LoadScripts(JSContext* aCx,
                                      const nsTArray<nsString>& aURLs,
-                                     PRBool aExecute)
+                                     bool aExecute)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aCx, "Null context!");
@@ -111,7 +111,7 @@ nsDOMWorkerScriptLoader::LoadScripts(JSContext* aCx,
 
   // Do all the memory work for these arrays now rather than checking for
   // failures all along the way.
-  PRBool success = mLoadInfos.SetCapacity(mScriptCount);
+  bool success = mLoadInfos.SetCapacity(mScriptCount);
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
   // Need one runnable per script and then an extra for the finished
@@ -174,7 +174,7 @@ nsDOMWorkerScriptLoader::DoRunLoop(JSContext* aCx)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  volatile PRBool done = PR_FALSE;
+  volatile bool done = false;
   mDoneRunnable = new ScriptLoaderDone(this, &done);
   NS_ENSURE_TRUE(mDoneRunnable, NS_ERROR_OUT_OF_MEMORY);
 
@@ -269,7 +269,7 @@ nsDOMWorkerScriptLoader::ExecuteScripts(JSContext* aCx)
     uint32 oldOpts =
       JS_SetOptions(aCx, JS_GetOptions(aCx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
-    PRBool success = JS_ExecuteScript(aCx, global, scriptObj, NULL);
+    bool success = JS_ExecuteScript(aCx, global, scriptObj, NULL);
 
     JS_SetOptions(aCx, oldOpts);
 
@@ -339,7 +339,7 @@ nsDOMWorkerScriptLoader::Run()
 
   // If necko is holding a ref to us then we'll end up notifying in the
   // OnStreamComplete method, not here.
-  PRBool needsNotify = PR_TRUE;
+  bool needsNotify = true;
 
   // Cancel any async channels that were already opened.
   for (PRUint32 index = 0; index < mScriptCount; index++) {
@@ -590,7 +590,7 @@ nsDOMWorkerScriptLoader::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel) {
-    PRBool requestSucceeded;
+    bool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -660,7 +660,7 @@ nsDOMWorkerScriptLoader::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
     // URIs we're currently considering all URIs with the URI_IS_UI_RESOURCE
     // flag as valid for creating privileged workers.
     if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
-      PRBool isResource;
+      bool isResource;
       rv = NS_URIChainHasFlags(finalURI,
                                nsIProtocolHandler::URI_IS_UI_RESOURCE,
                                &isResource);
@@ -768,7 +768,7 @@ ScriptLoaderRunnable::~ScriptLoaderRunnable()
   if (!mRevoked) {
     MutexAutoLock lock(mLoader->GetLock());
 #ifdef DEBUG
-    PRBool removed =
+    bool removed =
 #endif
     mLoader->mPendingRunnables.RemoveElement(this);
     NS_ASSERTION(removed, "Someone has changed the array!");
@@ -846,7 +846,7 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
 
 nsDOMWorkerScriptLoader::
 ScriptLoaderDone::ScriptLoaderDone(nsDOMWorkerScriptLoader* aLoader,
-                                   volatile PRBool* aDoneFlag)
+                                   volatile bool* aDoneFlag)
 : ScriptLoaderRunnable(aLoader),
   mDoneFlag(aDoneFlag)
 {

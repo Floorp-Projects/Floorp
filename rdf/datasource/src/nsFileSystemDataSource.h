@@ -69,12 +69,12 @@ private:
     FileSystemDataSource() { }
 
     // helper methods
-    PRBool   isFileURI(nsIRDFResource* aResource);
-    PRBool   isDirURI(nsIRDFResource* aSource);
+    bool     isFileURI(nsIRDFResource* aResource);
+    bool     isDirURI(nsIRDFResource* aSource);
     nsresult GetVolumeList(nsISimpleEnumerator **aResult);
-    nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, PRBool onlyFirst, nsISimpleEnumerator **aResult);
+    nsresult GetFolderList(nsIRDFResource *source, bool allowHidden, bool onlyFirst, nsISimpleEnumerator **aResult);
     nsresult GetName(nsIRDFResource *source, nsIRDFLiteral** aResult);
-    nsresult GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFLiteral** aResult);
+    nsresult GetURL(nsIRDFResource *source, bool *isFavorite, nsIRDFLiteral** aResult);
     nsresult GetFileSize(nsIRDFResource *source, nsIRDFInt** aResult);
     nsresult GetLastMod(nsIRDFResource *source, nsIRDFDate** aResult);
 
@@ -103,7 +103,7 @@ private:
 #endif
 
 #ifdef  XP_WIN
-    PRBool   isValidFolder(nsIRDFResource *source);
+    bool     isValidFolder(nsIRDFResource *source);
     nsresult getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
     nsCOMPtr<nsIRDFResource>       mNC_IEFavoriteObject;
     nsCOMPtr<nsIRDFResource>       mNC_IEFavoriteFolder;

@@ -156,7 +156,7 @@ private:
    * Concatenates strings and appends space between them. Returns true if
    * text equivalent string was appended.
    */
-  static PRBool AppendString(nsAString *aString,
+  static bool AppendString(nsAString *aString,
                              const nsAString& aTextEquivalent);
 
   /**
@@ -164,12 +164,12 @@ private:
    * only. In contrast to nsWhitespaceTokenizer class it takes into account
    * non-breaking space (0xa0).
    */
-  static PRBool IsWhitespaceString(const nsSubstring& aString);
+  static bool IsWhitespaceString(const nsSubstring& aString);
 
   /**
    * Returns true if the given character is whitespace symbol.
    */
-  static PRBool IsWhitespace(PRUnichar aChar);
+  static bool IsWhitespace(PRUnichar aChar);
 
   /**
    * Map array from roles to name rules (constants of ETextEquivRule).

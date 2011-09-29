@@ -414,7 +414,7 @@ txFormatNumberFunctionCall::getReturnType()
     return STRING_RESULT;
 }
 
-PRBool
+bool
 txFormatNumberFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     return argsSensitiveTo(aContext);

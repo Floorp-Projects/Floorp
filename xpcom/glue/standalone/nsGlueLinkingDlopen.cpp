@@ -204,7 +204,7 @@ preload(const char *file)
 #endif
 
 static void
-ReadDependentCB(const char *aDependentLib, PRBool do_preload)
+ReadDependentCB(const char *aDependentLib, bool do_preload)
 {
 #if defined(LINUX) && !defined(ANDROID)
     if (do_preload)

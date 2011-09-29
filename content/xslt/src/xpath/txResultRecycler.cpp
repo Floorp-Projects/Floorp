@@ -265,7 +265,7 @@ txResultRecycler::getNumberResult(double aValue, txAExprResult** aResult)
 }
 
 void
-txResultRecycler::getBoolResult(PRBool aValue, txAExprResult** aResult)
+txResultRecycler::getBoolResult(bool aValue, txAExprResult** aResult)
 {
     *aResult = aValue ? mTrueResult : mFalseResult;
     NS_ADDREF(*aResult);

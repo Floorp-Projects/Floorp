@@ -116,7 +116,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
                                              PRUint32 aInputFormat,
                                              const nsAString& aOutputOptions)
 {
-  PRBool useTransparency = PR_TRUE, skipFirstFrame = PR_FALSE;
+  bool useTransparency = true, skipFirstFrame = false;
   PRUint32 numFrames = 1;
   PRUint32 numPlays = 0; // For animations, 0 == forever
 
@@ -231,7 +231,7 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
                                           PRUint32 aInputFormat,
                                           const nsAString& aFrameOptions)
 {
-  PRBool useTransparency= PR_TRUE;
+  bool useTransparency= true;
   PRUint32 delay_ms = 500;
 #ifdef PNG_APNG_SUPPORTED
   PRUint32 dispose_op = PNG_DISPOSE_OP_NONE;
@@ -370,8 +370,8 @@ NS_IMETHODIMP nsPNGEncoder::EndImageEncode()
 
 nsresult
 nsPNGEncoder::ParseOptions(const nsAString& aOptions,
-                           PRBool* useTransparency,
-                           PRBool* skipFirstFrame,
+                           bool* useTransparency,
+                           bool* skipFirstFrame,
                            PRUint32* numFrames,
                            PRUint32* numPlays,
                            PRUint32* frameDispose,
@@ -577,7 +577,7 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 /* boolean isNonBlocking (); */
-NS_IMETHODIMP nsPNGEncoder::IsNonBlocking(PRBool *_retval)
+NS_IMETHODIMP nsPNGEncoder::IsNonBlocking(bool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;
@@ -626,7 +626,7 @@ NS_IMETHODIMP nsPNGEncoder::CloseWithStatus(nsresult aStatus)
 void
 nsPNGEncoder::ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
                                  PRUint32 aPixelWidth,
-                                 PRBool aUseTransparency)
+                                 bool aUseTransparency)
 {
   PRUint32 pixelStride = aUseTransparency ? 4 : 3;
   for (PRUint32 x = 0; x < aPixelWidth; x ++) {

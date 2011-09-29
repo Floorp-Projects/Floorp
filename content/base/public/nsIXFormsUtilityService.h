@@ -82,22 +82,22 @@ public:
   /**
    * Return true if instance node that element is bound to is readonly.
    */
-  NS_IMETHOD IsReadonly(nsIDOMNode *aElement, PRBool *aState) = 0;
+  NS_IMETHOD IsReadonly(nsIDOMNode *aElement, bool *aState) = 0;
 
   /**
    * Return true if instance node that element is bound to is relevant.
    */
-  NS_IMETHOD IsRelevant(nsIDOMNode *aElement, PRBool *aState) = 0;
+  NS_IMETHOD IsRelevant(nsIDOMNode *aElement, bool *aState) = 0;
 
   /**
    * Return true if instance node that element is bound to is required.
    */
-  NS_IMETHOD IsRequired(nsIDOMNode *aElement, PRBool *aState) = 0;
+  NS_IMETHOD IsRequired(nsIDOMNode *aElement, bool *aState) = 0;
 
   /**
    * Return true if instance node that element is bound to is valid.
    */
-  NS_IMETHOD IsValid(nsIDOMNode *aElement, PRBool *aState) = 0;
+  NS_IMETHOD IsValid(nsIDOMNode *aElement, bool *aState) = 0;
 
   /**
    * Return constant declared above that indicates whether instance node that
@@ -147,7 +147,7 @@ public:
    * otherwise false. Failure if given 'aElement' node is not direct child of
    * combobox element or is not combobox itself.
    */
-  NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, PRBool* aIsOpen) = 0;
+  NS_IMETHOD IsDropmarkerOpen(nsIDOMNode *aElement, bool* aIsOpen) = 0;
 
   /**
    * Toggles dropmarker state (close/open combobox popup). Failure if given
@@ -209,7 +209,7 @@ public:
    * xforms:select.
    */
   NS_IMETHOD IsSelectItemSelected(nsIDOMNode *aElement, nsIDOMNode *aItem,
-                                  PRBool *aIsSelected) = 0;
+                                  bool *aIsSelected) = 0;
 
   /**
    * Return the list of xforms:item or xforms:choices elements that are children

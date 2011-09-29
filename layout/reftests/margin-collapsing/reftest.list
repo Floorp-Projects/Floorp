@@ -4,7 +4,7 @@
 != inline-horizontal-2.html inline-horizontal-2-noref.html
 == inline-horizontal-1-dyn.html inline-horizontal-1-ref.html
 != inline-horizontal-1-dyn.html inline-horizontal-1-noref.html
-== inline-horizontal-2-dyn.html inline-horizontal-2-ref.html
+fails-if(Android&&layersOpenGL) == inline-horizontal-2-dyn.html inline-horizontal-2-ref.html
 != inline-horizontal-2-dyn.html inline-horizontal-2-noref.html
 == block-horizontal-1.html block-horizontal-1-ref.html
 != block-horizontal-1.html block-horizontal-1-noref.html
@@ -18,9 +18,9 @@
 != block-horizontal-1-dyn.html block-horizontal-1-noref.html
 == block-horizontal-2-dyn.html block-horizontal-2-ref.html
 != block-horizontal-2-dyn.html block-horizontal-2-noref.html
-== block-horizontal-3-dyn.html block-horizontal-3-ref.html
+fails-if(Android&&layersOpenGL) == block-horizontal-3-dyn.html block-horizontal-3-ref.html
 != block-horizontal-3-dyn.html block-horizontal-3-noref.html
-== block-horizontal-4-dyn.html block-horizontal-4-ref.html
+fails-if(Android&&layersOpenGL) == block-horizontal-4-dyn.html block-horizontal-4-ref.html
 != block-horizontal-4-dyn.html block-horizontal-4-noref.html
 == inline-block-horizontal-1.html inline-block-horizontal-1-ref.html
 != inline-block-horizontal-1.html inline-block-horizontal-1-noref.html
@@ -28,7 +28,7 @@
 != inline-block-horizontal-2.html inline-block-horizontal-2-noref.html
 == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-ref.html
 != inline-block-horizontal-1-dyn.html inline-block-horizontal-1-noref.html
-== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html
+fails-if(Android&&layersOpenGL) == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-ref.html
 != inline-block-horizontal-2-dyn.html inline-block-horizontal-2-noref.html
 == inline-table-horizontal-1.html inline-table-horizontal-1-ref.html
 != inline-table-horizontal-1.html inline-table-horizontal-1-noref.html
@@ -58,8 +58,8 @@
 == block-sibling-1c-dyn.html block-sibling-1-ref.html
 == block-sibling-1c-dyn.html block-sibling-1-ref2.html
 != block-sibling-1c-dyn.html block-sibling-1-noref2.html
-== block-sibling-2-dyn.html block-sibling-2-ref.html
-== block-sibling-2-dyn.html block-sibling-2-ref2.html
+fails-if(Android&&layersOpenGL) == block-sibling-2-dyn.html block-sibling-2-ref.html
+fails-if(Android&&layersOpenGL) == block-sibling-2-dyn.html block-sibling-2-ref2.html
 != block-sibling-2-dyn.html block-sibling-2-noref.html
 == block-sibling-3-dyn.html block-sibling-1-ref.html
 == block-sibling-3-dyn.html block-sibling-1-ref2.html

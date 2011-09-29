@@ -95,7 +95,7 @@ class nsHtml5AttributeName
     PRInt32 getUri(PRInt32 mode);
     nsIAtom* getLocal(PRInt32 mode);
     nsIAtom* getPrefix(PRInt32 mode);
-    PRBool equalsAnother(nsHtml5AttributeName* another);
+    bool equalsAnother(nsHtml5AttributeName* another);
     static nsHtml5AttributeName* ATTR_D;
     static nsHtml5AttributeName* ATTR_K;
     static nsHtml5AttributeName* ATTR_R;

@@ -61,11 +61,11 @@ public:
    *         PR_FALSE if the attribute doesn't exist, or has a malformed
    *                  value, such as an unknown or unterminated entity.
    */
-  static PRBool
+  static bool
   GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
                           nsAString& aValue);
 
-  static PRBool
+  static bool
   IsJavaScriptLanguage(const nsString& aName, PRUint32 *aVerFlags);
 
   static void

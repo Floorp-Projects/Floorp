@@ -124,16 +124,16 @@ public:
                   nsReflowStatus&          aReflowStatus,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
-                  PRBool                   aConstrainHeight,
-                  PRBool                   aCBWidthChanged,
-                  PRBool                   aCBHeightChanged,
+                  bool                     aConstrainHeight,
+                  bool                     aCBWidthChanged,
+                  bool                     aCBHeightChanged,
                   nsOverflowAreas*         aOverflowAreas);
 
 
   void DestroyFrames(nsIFrame* aDelegatingFrame,
                      nsIFrame* aDestructRoot);
 
-  PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
+  bool    HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
 
   // Mark our size-dependent absolute frames with NS_FRAME_HAS_DIRTY_CHILDREN
   // so that we'll make sure to reflow them.
@@ -146,15 +146,15 @@ protected:
   // Returns PR_TRUE if the position of f depends on the position of
   // its placeholder or if the position or size of f depends on a
   // containing block dimension that changed.
-  PRBool FrameDependsOnContainer(nsIFrame* f, PRBool aCBWidthChanged,
-                                 PRBool aCBHeightChanged);
+  bool FrameDependsOnContainer(nsIFrame* f, bool aCBWidthChanged,
+                                 bool aCBHeightChanged);
 
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                nsPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,
-                               PRBool                   aConstrainHeight,
+                               bool                     aConstrainHeight,
                                nsIFrame*                aKidFrame,
                                nsReflowStatus&          aStatus,
                                nsOverflowAreas*         aOverflowAreas);
@@ -162,7 +162,7 @@ protected:
   // Mark our absolute frames dirty.  If aMarkAllDirty is true, all will be
   // marked with NS_FRAME_IS_DIRTY.  Otherwise, the size-dependant ones will be
   // marked with NS_FRAME_HAS_DIRTY_CHILDREN.
-  void DoMarkFramesDirty(PRBool aMarkAllDirty);
+  void DoMarkFramesDirty(bool aMarkAllDirty);
 
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list

@@ -43,7 +43,7 @@
 // Xray wrappers re-resolve the original native properties on the native
 // object and always directly access to those properties.
 // Because they work so differently from the rest of the wrapper hierarchy,
-// we pull them out of the JSWrapper inheritance hierarchy and create a
+// we pull them out of the Wrapper inheritance hierarchy and create a
 // little world around them.
 
 namespace xpc {

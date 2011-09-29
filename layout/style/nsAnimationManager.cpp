@@ -331,7 +331,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
           mStyleRule->AddEmptyValue(prop.mProperty);
 
 #ifdef DEBUG
-        PRBool result =
+        bool result =
 #endif
           nsStyleAnimation::Interpolate(prop.mProperty,
                                         segment->mFromValue, segment->mToValue,
@@ -345,7 +345,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 ElementAnimations*
 nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                                          nsCSSPseudoElements::Type aPseudoType,
-                                         PRBool aCreateIfNeeded)
+                                         bool aCreateIfNeeded)
 {
   if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementData)) {
     // Early return for the most common case.
@@ -547,7 +547,7 @@ public:
   ~PercentageHashKey() { }
 
   KeyType GetKey() const { return mValue; }
-  PRBool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
+  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
@@ -581,10 +581,10 @@ AppendKeyframeData(const float &aKey, nsCSSKeyframeRule *aRule, void *aData)
 }
 
 struct KeyframeDataComparator {
-  PRBool Equals(const KeyframeData& A, const KeyframeData& B) const {
+  bool Equals(const KeyframeData& A, const KeyframeData& B) const {
     return A.mKey == B.mKey;
   }
-  PRBool LessThan(const KeyframeData& A, const KeyframeData& B) const {
+  bool LessThan(const KeyframeData& A, const KeyframeData& B) const {
     return A.mKey < B.mKey;
   }
 };

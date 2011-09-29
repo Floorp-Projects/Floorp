@@ -127,7 +127,7 @@ nsDeviceMotion::nsDeviceMotion()
     if (NS_SUCCEEDED(rv))
       mUpdateInterval = value;
 
-    PRBool bvalue;
+    bool bvalue;
     rv = prefSrv->GetBoolPref("device.motion.enabled", &bvalue);
     if (NS_SUCCEEDED(rv) && bvalue == PR_FALSE)
       mEnabled = PR_FALSE;
@@ -263,7 +263,7 @@ nsDeviceMotion::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
                                         double gamma)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  PRBool defaultActionEnabled = PR_TRUE;
+  bool defaultActionEnabled = true;
   domdoc->CreateEvent(NS_LITERAL_STRING("DeviceOrientationEvent"), getter_AddRefs(event));
 
   nsCOMPtr<nsIDOMDeviceOrientationEvent> oe = do_QueryInterface(event);
@@ -295,7 +295,7 @@ nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                                    double y,
                                    double z) {
   nsCOMPtr<nsIDOMEvent> event;
-  PRBool defaultActionEnabled = PR_TRUE;
+  bool defaultActionEnabled = true;
   domdoc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"), getter_AddRefs(event));
 
   nsCOMPtr<nsIDOMDeviceMotionEvent> me = do_QueryInterface(event);

@@ -1416,6 +1416,8 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
     /* crappy hack part 1: find the read only region */
     int cnt;
     void * ro_region_end = si->base;
+    unsigned lowest_text_rel = 0xffffffff;
+
     Elf32_Ehdr *ehdr = (Elf32_Ehdr *)si->base;
     Elf32_Phdr *phdr = (Elf32_Phdr *)((unsigned char *)si->base + ehdr->e_phoff);
     for (cnt = 0; cnt < ehdr->e_phnum; ++cnt, ++phdr) {
@@ -1536,6 +1538,8 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
             memcpy(reloc_page, copy_page, PAGE_SIZE);
             remapped_page = reloc_page;
         }
+        if ((reloc < ro_region_end) && (reloc < lowest_text_rel))
+            lowest_text_rel = reloc & ~PAGE_MASK;
 
 /* TODO: This is ugly. Split up the relocations by arch into
  * different files.
@@ -1642,8 +1646,15 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
         }
         rel++;
     }
-    if (copy_page)
+    if (copy_page) {
         munmap(copy_page, PAGE_SIZE);
+#if defined(ANDROID_ARM_LINKER)
+        /* If we have a copy_page, it means we applied text relocations,
+         * which, in turn, means we need to maintain Instruction and Data
+         * caches coherent */
+        cacheflush(lowest_text_rel, (unsigned) ro_region_end, 0);
+#endif
+    }
     return 0;
 }
 
@@ -1802,7 +1813,7 @@ static void call_constructors(soinfo *si)
         TRACE("[ %5d Done calling init_func for '%s' ]\n", pid, si->name);
     }
 
-    if (si->init_array && strncmp(si->name, "libmozalloc.so", 14)) {
+    if (si->init_array) {
         TRACE("[ %5d Calling init_array @ 0x%08x [%d] for '%s' ]\n", pid,
               (unsigned)si->init_array, si->init_array_count, si->name);
         call_array(si->init_array, si->init_array_count, 0);

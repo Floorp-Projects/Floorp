@@ -43,7 +43,6 @@
 #include "nsSVGEffects.h"
 #include "nsSVGClipPathElement.h"
 #include "gfxContext.h"
-#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -71,9 +70,13 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
   AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent;
-  mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
+  if (mClipParentMatrix) {
+    *mClipParentMatrix = aMatrix;
+  } else {
+    mClipParentMatrix = new gfxMatrix(aMatrix);
+  }
 
-  PRBool isTrivial = IsTrivial();
+  bool isTrivial = IsTrivial();
 
   nsAutoSVGRenderMode mode(aContext,
                            isTrivial ? nsSVGRenderState::CLIP
@@ -84,7 +87,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
 
   nsSVGClipPathFrame *clipPathFrame =
     nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull);
-  PRBool referencedClipIsTrivial;
+  bool referencedClipIsTrivial;
   if (clipPathFrame) {
     referencedClipIsTrivial = clipPathFrame->IsTrivial();
     gfx->Save();
@@ -103,14 +106,14 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION | 
                                  nsISVGChildFrame::TRANSFORM_CHANGED);
 
-      PRBool isOK = PR_TRUE;
+      bool isOK = true;
       nsSVGClipPathFrame *clipPathFrame =
         nsSVGEffects::GetEffectProperties(kid).GetClipPathFrame(&isOK);
       if (!isOK) {
         continue;
       }
 
-      PRBool isTrivial;
+      bool isTrivial;
 
       if (clipPathFrame) {
         isTrivial = clipPathFrame->IsTrivial();
@@ -168,7 +171,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
   return NS_OK;
 }
 
-PRBool
+bool
 nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
                                 const gfxMatrix &aMatrix,
                                 const nsPoint &aPoint)
@@ -183,7 +186,11 @@ nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
   AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent;
-  mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
+  if (mClipParentMatrix) {
+    *mClipParentMatrix = aMatrix;
+  } else {
+    mClipParentMatrix = new gfxMatrix(aMatrix);
+  }
 
   nsSVGClipPathFrame *clipPathFrame =
     nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull);
@@ -206,14 +213,14 @@ nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsSVGClipPathFrame::IsTrivial()
 {
   // If the clip path is clipped then it's non-trivial
   if (nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nsnull))
     return PR_FALSE;
 
-  PRBool foundChild = PR_FALSE;
+  bool foundChild = false;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -234,7 +241,7 @@ nsSVGClipPathFrame::IsTrivial()
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsSVGClipPathFrame::IsValid()
 {
   if (mInUse) {
@@ -243,7 +250,7 @@ nsSVGClipPathFrame::IsValid()
   }
   AutoClipPathReferencer clipRef(this);
 
-  PRBool isOK = PR_TRUE;
+  bool isOK = true;
   nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK);
   if (!isOK) {
     return PR_FALSE;
@@ -319,8 +326,9 @@ nsSVGClipPathFrame::GetCanvasTM()
 {
   nsSVGClipPathElement *content = static_cast<nsSVGClipPathElement*>(mContent);
 
-  gfxMatrix tm = content->PrependLocalTransformTo(
-    nsSVGUtils::ConvertSVGMatrixToThebes(mClipParentMatrix));
+  gfxMatrix tm =
+    content->PrependLocalTransformTo(mClipParentMatrix ?
+                                     *mClipParentMatrix : gfxMatrix());
 
   return nsSVGUtils::AdjustMatrixForUnits(tm,
                                           &content->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS],

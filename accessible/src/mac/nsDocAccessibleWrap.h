@@ -53,7 +53,7 @@ public:
   /**
    * Creates the native accessible connected to this one.
    */
-  virtual PRBool Init();
+  virtual bool Init();
 };
 
 #endif

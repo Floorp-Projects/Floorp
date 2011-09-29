@@ -184,7 +184,7 @@ XPCWrappedNativeProto::SystemIsBeingShutDown(JSContext* cx)
     // as we walk to here from various places.
 
 #ifdef XPC_TRACK_PROTO_STATS
-    static PRBool DEBUG_DumpedStats = PR_FALSE;
+    static bool DEBUG_DumpedStats = false;
     if(!DEBUG_DumpedStats)
     {
         printf("%d XPCWrappedNativeProto(s) alive at shutdown\n",
@@ -215,8 +215,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(ClassInfo, "bad param");
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
-    ClassInfo2WrappedNativeProtoMap* map;
-    XPCLock* lock;
+    ClassInfo2WrappedNativeProtoMap* map = nsnull;
+    XPCLock* lock = nsnull;
     JSBool shared;
 
     JSUint32 ciFlags;

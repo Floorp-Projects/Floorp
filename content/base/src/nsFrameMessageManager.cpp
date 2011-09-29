@@ -52,7 +52,7 @@
 #include "nsIConsoleService.h"
 #include "nsIProtocolHandler.h"
 
-static PRBool
+static bool
 IsChromeProcess()
 {
   nsCOMPtr<nsIXULRuntime> rt = do_GetService("@mozilla.org/xre/runtime;1");
@@ -145,7 +145,7 @@ nsFrameMessageManager::RemoveMessageListener(const nsAString& aMessage,
 
 NS_IMETHODIMP
 nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
-                                       PRBool aAllowDelayedLoad)
+                                       bool aAllowDelayedLoad)
 {
   if (aAllowDelayedLoad) {
     if (IsGlobal() || IsWindowLevel()) {
@@ -367,7 +367,7 @@ nsFrameMessageManager::Atob(const nsAString& aAsciiString,
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,
-                                      PRBool aSync, const nsAString& aJSON,
+                                      bool aSync, const nsAString& aJSON,
                                       JSObject* aObjectsArray,
                                       InfallibleTArray<nsString>* aJSONRetVal,
                                       JSContext* aContext)
@@ -510,7 +510,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
 void
 nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager,
-                                       PRBool aLoadScripts)
+                                       bool aLoadScripts)
 {
   mChildManagers.AppendObject(aManager);
   if (aLoadScripts) {
@@ -532,7 +532,7 @@ nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager,
 }
 
 void
-nsFrameMessageManager::SetCallbackData(void* aData, PRBool aLoadScripts)
+nsFrameMessageManager::SetCallbackData(void* aData, bool aLoadScripts)
 {
   if (aData && mCallbackData != aData) {
     mCallbackData = aData;
@@ -549,7 +549,7 @@ nsFrameMessageManager::SetCallbackData(void* aData, PRBool aLoadScripts)
 }
 
 void
-nsFrameMessageManager::Disconnect(PRBool aRemoveFromParent)
+nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
 {
   if (mParentManager && aRemoveFromParent) {
     mParentManager->RemoveChildManager(this);
@@ -755,7 +755,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
     return;
   }
   
-  PRBool hasFlags;
+  bool hasFlags;
   rv = NS_URIChainHasFlags(uri,
                            nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                            &hasFlags);

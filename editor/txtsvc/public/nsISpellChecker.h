@@ -65,7 +65,7 @@ public:
    * @param aFromStartOfDoc If true, start check from beginning of document,
    * if false, start check from current cursor position.
    */
-  NS_IMETHOD SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofDoc) = 0;
+  NS_IMETHOD SetDocument(nsITextServicesDocument *aDoc, bool aFromStartofDoc) = 0;
 
   /**
    * Selects (hilites) the next misspelled word in the document.
@@ -83,7 +83,7 @@ public:
    * suggested replacements for the misspelled word. The array will be empty
    * if there aren't any suggestions.
    */
-  NS_IMETHOD CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArray<nsString> *aSuggestions) = 0;
+  NS_IMETHOD CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray<nsString> *aSuggestions) = 0;
 
   /**
    * Replaces the old word with the specified new word.
@@ -93,7 +93,7 @@ public:
    * word, in the document, with new word when it is true. If
    * false, it will replace the 1st occurrence only!
    */
-  NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, PRBool aAllOccurrences) = 0;
+  NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, bool aAllOccurrences) = 0;
 
   /**
    * Ignores all occurrences of the specified word in the document.

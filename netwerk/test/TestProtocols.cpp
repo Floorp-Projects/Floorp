@@ -102,9 +102,9 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 //static PRTime gElapsedTime; // enable when we time it...
 static int gKeepRunning = 0;
-static PRBool gVerbose = PR_FALSE;
-static PRBool gAskUserForInput = PR_FALSE;
-static PRBool gResume = PR_FALSE;
+static bool gVerbose = false;
+static bool gAskUserForInput = false;
+static bool gResume = false;
 static PRUint64 gStartAt = 0;
 
 static const char* gEntityID;
@@ -314,7 +314,7 @@ TestAuthPrompt::Prompt(const PRUnichar *dialogTitle,
                        PRUint32 savePassword,
                        const PRUnichar *defaultText,
                        PRUnichar **result,
-                       PRBool *_retval)
+                       bool *_retval)
 {
     *_retval = PR_FALSE;
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -327,7 +327,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
                                           PRUint32 savePassword,
                                           PRUnichar **user,
                                           PRUnichar **pwd,
-                                          PRBool *_retval)
+                                          bool *_retval)
 {
     NS_ConvertUTF16toUTF8 text(passwordRealm);
     printf("* --------------------------------------------------------------------------- *\n");
@@ -368,7 +368,7 @@ TestAuthPrompt::PromptPassword(const PRUnichar *dialogTitle,
                                const PRUnichar *passwordRealm,
                                PRUint32 savePassword,
                                PRUnichar **pwd,
-                               PRBool *_retval)
+                               bool *_retval)
 {
     *_retval = PR_FALSE;
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -550,7 +550,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     double connectTime;
     double readTime;
     PRUint32 httpStatus;
-    PRBool bHTTPURL = PR_FALSE;
+    bool bHTTPURL = false;
 
     info->mTotalTime = PR_Now() - info->mTotalTime;
 

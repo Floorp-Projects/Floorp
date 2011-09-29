@@ -81,7 +81,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
   // while the subscript is compressed. So here we collect subscripts and set
   // the compression flag in them.
   PRInt32 count = 0;
-  PRBool isSubScript = PR_FALSE;
+  bool isSubScript = false;
   nsAutoTArray<nsIFrame*, 8> subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
@@ -143,7 +143,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
 
 /* virtual */ nsresult
 nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
-                                  PRBool               aPlaceOrigin,
+                                  bool                 aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {
   ////////////////////////////////////
@@ -239,7 +239,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
 
   nscoord width = 0, prescriptsWidth = 0, rightBearing = 0;
   nsIFrame* mprescriptsFrame = nsnull; // frame of <mprescripts/>, if there.
-  PRBool isSubScript = PR_FALSE;
+  bool isSubScript = false;
   nscoord minSubScriptShift = 0, minSupScriptShift = 0;
   nscoord trySubScriptShift = subScriptShift;
   nscoord trySupScriptShift = supScriptShift;
@@ -253,7 +253,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
   nsIFrame* subScriptFrame = nsnull;
   nsIFrame* supScriptFrame = nsnull;
 
-  PRBool firstPrescriptsPair = PR_FALSE;
+  bool firstPrescriptsPair = false;
   nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
   nscoord italicCorrection = 0;
 

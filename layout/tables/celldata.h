@@ -46,8 +46,9 @@ class nsCellMap;
 class BCCellData;
 
 
-#define MAX_ROWSPAN 8190 // the cellmap can not handle more
-#define MAX_COLSPAN 1000 // limit as IE and opera do
+#define MAX_ROWSPAN 65534 // the cellmap can not handle more.
+#define MAX_COLSPAN 1000 // limit as IE and opera do.  If this ever changes,
+                         // change COL_SPAN_OFFSET/COL_SPAN_SHIFT accordingly.
 
 /**
   * Data stored by nsCellMap to rationalize rowspan and colspan cells.
@@ -63,36 +64,36 @@ public:
   /** does a cell originate from here
     * @return    is true if a cell corresponds to this cellmap entry
     */
-  PRBool IsOrig() const;
+  bool IsOrig() const;
 
   /** is the celldata valid
     * @return    is true if no cell originates and the cell is not spanned by
     *            a row- or colspan. mBits are 0 in this case and mOrigCell is
     *            nsnull
     */
-  PRBool IsDead() const;
+  bool IsDead() const;
 
   /** is the entry spanned by row- or a colspan
     * @return    is true if the entry is spanned by a row- or colspan
     */
-  PRBool IsSpan() const;
+  bool IsSpan() const;
 
   /** is the entry spanned by rowspan
     * @return    is true if the entry is spanned by a rowspan
     */
-  PRBool IsRowSpan() const;
+  bool IsRowSpan() const;
 
   /** is the entry spanned by a zero rowspan
     * zero rowspans span all cells starting from the originating cell down to
     * the end of the rowgroup or a cell originating in the same column
     * @return    is true if the entry is spanned by a zero rowspan
     */
-  PRBool IsZeroRowSpan() const;
+  bool IsZeroRowSpan() const;
 
   /** mark the current entry as spanned by a zero rowspan
     * @param aIsZero    if true mark the entry as covered by a zero rowspan
     */
-  void SetZeroRowSpan(PRBool aIsZero);
+  void SetZeroRowSpan(bool aIsZero);
 
   /** get the distance from the current entry to the corresponding origin of the rowspan
     * @return    containing the distance in the column to the originating cell
@@ -107,7 +108,7 @@ public:
   /** is the entry spanned by colspan
     * @return    is true if the entry is spanned by a colspan
     */
-  PRBool IsColSpan() const;
+  bool IsColSpan() const;
 
   /** is the entry spanned by a zero colspan
     * zero colspans span all cells starting from the originating cell towards
@@ -115,12 +116,12 @@ public:
     * or a rowspanned entry
     * @return    is true if the entry is spanned by a zero colspan
     */
-  PRBool IsZeroColSpan() const;
+  bool IsZeroColSpan() const;
 
   /** mark the current entry as spanned by a zero colspan
     * @param aIsZero    if true mark the entry as covered by a zero colspan
     */
-  void SetZeroColSpan(PRBool aIsZero);
+  void SetZeroColSpan(bool aIsZero);
 
   /** get the distance from the current entry to the corresponding origin of the colspan
     * @return    containing the distance in the row to the originating cell
@@ -135,12 +136,12 @@ public:
   /** is the entry spanned by a row- and a colspan
     * @return    is true if the entry is spanned by a row- and a colspan
     */
-  PRBool IsOverlap() const;
+  bool IsOverlap() const;
 
   /** mark the current entry as spanned by a row- and a colspan
     * @param aOverlap    if true mark the entry as covered by a row- and a colspan
     */
-  void SetOverlap(PRBool aOverlap);
+  void SetOverlap(bool aOverlap);
 
   /** get the table cell frame for this entry
     * @return    a pointer to the cellframe, this will be nsnull when the entry
@@ -219,33 +220,33 @@ public:
   ~BCData();
 
   nscoord GetLeftEdge(BCBorderOwner& aOwner,
-                      PRBool&        aStart) const;
+                      bool&        aStart) const;
 
   void SetLeftEdge(BCBorderOwner aOwner,
                    nscoord       aSize,
-                   PRBool        aStart);
+                   bool          aStart);
 
   nscoord GetTopEdge(BCBorderOwner& aOwner,
-                     PRBool&        aStart) const;
+                     bool&        aStart) const;
 
   void SetTopEdge(BCBorderOwner aOwner,
                   nscoord       aSize,
-                  PRBool        aStart);
+                  bool          aStart);
 
   BCPixelSize GetCorner(mozilla::css::Side&       aCornerOwner,
-                        PRPackedBool&  aBevel) const;
+                        bool&  aBevel) const;
 
   void SetCorner(BCPixelSize aSubSize,
                  mozilla::css::Side aOwner,
-                 PRBool  aBevel);
+                 bool    aBevel);
 
-  PRBool IsLeftStart() const;
+  bool IsLeftStart() const;
 
-  void SetLeftStart(PRBool aValue);
+  void SetLeftStart(bool aValue);
 
-  PRBool IsTopStart() const;
+  bool IsTopStart() const;
 
-  void SetTopStart(PRBool aValue);
+  void SetTopStart(bool aValue);
 
 
 protected:
@@ -278,16 +279,30 @@ public:
 };
 
 
+// The layout of a celldata is as follows.  The top 10 bits are the colspan
+// offset (which is enough to represent our allowed values 1-1000 for colspan).
+// Then there are three bits of flags.  Then 16 bits of rowspan offset (which
+// lets us represent numbers up to 65535.  Then another 3 bits of flags.
+
+// num bits to shift right to get right aligned col span
+#define COL_SPAN_SHIFT   22
+// num bits to shift right to get right aligned row span
+#define ROW_SPAN_SHIFT   3
+
+// the col offset to the data containing the original cell.
+#define COL_SPAN_OFFSET  (0x3FF << COL_SPAN_SHIFT)
+// the row offset to the data containing the original cell
+#define ROW_SPAN_OFFSET  (0xFFFF << ROW_SPAN_SHIFT)
+
+// And the flags
 #define SPAN             0x00000001 // there a row or col span
 #define ROW_SPAN         0x00000002 // there is a row span
 #define ROW_SPAN_0       0x00000004 // the row span is 0
-#define ROW_SPAN_OFFSET  0x0000FFF8 // the row offset to the data containing the original cell
-#define COL_SPAN         0x00010000 // there is a col span
-#define COL_SPAN_0       0x00020000 // the col span is 0
-#define OVERLAP          0x00040000 // there is a row span and col span but no by same cell
-#define COL_SPAN_OFFSET  0xFFF80000 // the col offset to the data containing the original cell
-#define ROW_SPAN_SHIFT   3          // num bits to shift to get right justified row span
-#define COL_SPAN_SHIFT   19         // num bits to shift to get right justified col span
+#define COL_SPAN         (1 << (COL_SPAN_SHIFT - 3)) // there is a col span
+#define COL_SPAN_0       (1 << (COL_SPAN_SHIFT - 2)) // the col span is 0
+#define OVERLAP          (1 << (COL_SPAN_SHIFT - 1)) // there is a row span and
+                                                     // col span but not by
+                                                     // same cell
 
 inline nsTableCellFrame* CellData::GetCellFrame() const
 {
@@ -302,35 +317,35 @@ inline void CellData::Init(nsTableCellFrame* aCellFrame)
   mOrigCell = aCellFrame;
 }
 
-inline PRBool CellData::IsOrig() const
+inline bool CellData::IsOrig() const
 {
   return ((nsnull != mOrigCell) && (SPAN != (SPAN & mBits)));
 }
 
-inline PRBool CellData::IsDead() const
+inline bool CellData::IsDead() const
 {
   return (0 == mBits);
 }
 
-inline PRBool CellData::IsSpan() const
+inline bool CellData::IsSpan() const
 {
   return (SPAN == (SPAN & mBits));
 }
 
-inline PRBool CellData::IsRowSpan() const
+inline bool CellData::IsRowSpan() const
 {
   return (SPAN     == (SPAN & mBits)) &&
          (ROW_SPAN == (ROW_SPAN & mBits));
 }
 
-inline PRBool CellData::IsZeroRowSpan() const
+inline bool CellData::IsZeroRowSpan() const
 {
   return (SPAN       == (SPAN & mBits))     &&
          (ROW_SPAN   == (ROW_SPAN & mBits)) &&
          (ROW_SPAN_0 == (ROW_SPAN_0 & mBits));
 }
 
-inline void CellData::SetZeroRowSpan(PRBool aIsZeroSpan)
+inline void CellData::SetZeroRowSpan(bool aIsZeroSpan)
 {
   if (SPAN == (SPAN & mBits)) {
     if (aIsZeroSpan) {
@@ -358,20 +373,20 @@ inline void CellData::SetRowSpanOffset(PRUint32 aSpan)
   mBits |= ROW_SPAN;
 }
 
-inline PRBool CellData::IsColSpan() const
+inline bool CellData::IsColSpan() const
 {
   return (SPAN     == (SPAN & mBits)) &&
          (COL_SPAN == (COL_SPAN & mBits));
 }
 
-inline PRBool CellData::IsZeroColSpan() const
+inline bool CellData::IsZeroColSpan() const
 {
   return (SPAN       == (SPAN & mBits))     &&
          (COL_SPAN   == (COL_SPAN & mBits)) &&
          (COL_SPAN_0 == (COL_SPAN_0 & mBits));
 }
 
-inline void CellData::SetZeroColSpan(PRBool aIsZeroSpan)
+inline void CellData::SetZeroColSpan(bool aIsZeroSpan)
 {
   if (SPAN == (SPAN & mBits)) {
     if (aIsZeroSpan) {
@@ -400,12 +415,12 @@ inline void CellData::SetColSpanOffset(PRUint32 aSpan)
   mBits |= COL_SPAN;
 }
 
-inline PRBool CellData::IsOverlap() const
+inline bool CellData::IsOverlap() const
 {
   return (SPAN == (SPAN & mBits)) && (OVERLAP == (OVERLAP & mBits));
 }
 
-inline void CellData::SetOverlap(PRBool aOverlap)
+inline void CellData::SetOverlap(bool aOverlap)
 {
   if (SPAN == (SPAN & mBits)) {
     if (aOverlap) {
@@ -431,17 +446,17 @@ inline BCData::~BCData()
 }
 
 inline nscoord BCData::GetLeftEdge(BCBorderOwner& aOwner,
-                                   PRBool&        aStart) const
+                                   bool&        aStart) const
 {
   aOwner = (BCBorderOwner)mLeftOwner;
-  aStart = (PRBool)mLeftStart;
+  aStart = (bool)mLeftStart;
 
   return (nscoord)mLeftSize;
 }
 
 inline void BCData::SetLeftEdge(BCBorderOwner  aOwner,
                                 nscoord        aSize,
-                                PRBool         aStart)
+                                bool           aStart)
 {
   mLeftOwner = aOwner;
   mLeftSize  = (aSize > MAX_BORDER_WIDTH) ? MAX_BORDER_WIDTH : aSize;
@@ -449,17 +464,17 @@ inline void BCData::SetLeftEdge(BCBorderOwner  aOwner,
 }
 
 inline nscoord BCData::GetTopEdge(BCBorderOwner& aOwner,
-                                  PRBool&        aStart) const
+                                  bool&        aStart) const
 {
   aOwner = (BCBorderOwner)mTopOwner;
-  aStart = (PRBool)mTopStart;
+  aStart = (bool)mTopStart;
 
   return (nscoord)mTopSize;
 }
 
 inline void BCData::SetTopEdge(BCBorderOwner  aOwner,
                                nscoord        aSize,
-                               PRBool         aStart)
+                               bool           aStart)
 {
   mTopOwner = aOwner;
   mTopSize  = (aSize > MAX_BORDER_WIDTH) ? MAX_BORDER_WIDTH : aSize;
@@ -467,38 +482,38 @@ inline void BCData::SetTopEdge(BCBorderOwner  aOwner,
 }
 
 inline BCPixelSize BCData::GetCorner(mozilla::css::Side& aOwnerSide,
-                                     PRPackedBool&       aBevel) const
+                                     bool&       aBevel) const
 {
   aOwnerSide = mozilla::css::Side(mCornerSide);
-  aBevel     = (PRBool)mCornerBevel;
+  aBevel     = (bool)mCornerBevel;
   return mCornerSubSize;
 }
 
 inline void BCData::SetCorner(BCPixelSize aSubSize,
                               mozilla::css::Side aOwnerSide,
-                              PRBool  aBevel)
+                              bool    aBevel)
 {
   mCornerSubSize = aSubSize;
   mCornerSide    = aOwnerSide;
   mCornerBevel   = aBevel;
 }
 
-inline PRBool BCData::IsLeftStart() const
+inline bool BCData::IsLeftStart() const
 {
-  return (PRBool)mLeftStart;
+  return (bool)mLeftStart;
 }
 
-inline void BCData::SetLeftStart(PRBool aValue)
+inline void BCData::SetLeftStart(bool aValue)
 {
   mLeftStart = aValue;
 }
 
-inline PRBool BCData::IsTopStart() const
+inline bool BCData::IsTopStart() const
 {
-  return (PRBool)mTopStart;
+  return (bool)mTopStart;
 }
 
-inline void BCData::SetTopStart(PRBool aValue)
+inline void BCData::SetTopStart(bool aValue)
 {
   mTopStart = aValue;
 }

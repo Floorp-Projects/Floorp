@@ -1017,7 +1017,7 @@ nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sElementsMathML = nsnull;
 nsTHashtable<nsISupportsHashKey>* nsTreeSanitizer::sAttributesMathML = nsnull;
 nsIPrincipal* nsTreeSanitizer::sNullPrincipal = nsnull;
 
-nsTreeSanitizer::nsTreeSanitizer(PRBool aAllowStyles, PRBool aAllowComments)
+nsTreeSanitizer::nsTreeSanitizer(bool aAllowStyles, bool aAllowComments)
  : mAllowStyles(aAllowStyles)
  , mAllowComments(aAllowComments)
 {
@@ -1028,7 +1028,7 @@ nsTreeSanitizer::nsTreeSanitizer(PRBool aAllowStyles, PRBool aAllowComments)
   }
 }
 
-PRBool
+bool
 nsTreeSanitizer::MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal)
 {
   if (aNamespace == kNameSpaceID_XHTML) {
@@ -1043,7 +1043,7 @@ nsTreeSanitizer::MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsTreeSanitizer::IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName)
 {
   nsIAtom** atomPtrPtr;
@@ -1056,7 +1056,7 @@ nsTreeSanitizer::IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsTreeSanitizer::MustPrune(PRInt32 aNamespace,
                            nsIAtom* aLocal,
                            mozilla::dom::Element* aElement)
@@ -1096,11 +1096,11 @@ nsTreeSanitizer::MustPrune(PRInt32 aNamespace,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsTreeSanitizer::SanitizeStyleRule(mozilla::css::StyleRule *aRule,
                                    nsAutoString &aRuleText)
 {
-  PRBool didSanitize = PR_FALSE;
+  bool didSanitize = false;
   aRuleText.Truncate();
   mozilla::css::Declaration* style = aRule->GetDeclaration();
   if (style) {
@@ -1111,7 +1111,7 @@ nsTreeSanitizer::SanitizeStyleRule(mozilla::css::StyleRule *aRule,
   return didSanitize;
 }
 
-PRBool
+bool
 nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                                     nsAString& aSanitized,
                                     nsIDocument* aDocument,
@@ -1121,7 +1121,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   aSanitized.Truncate();
   // aSanitized will hold the permitted CSS text.
   // -moz-binding is blacklisted.
-  PRBool didSanitize = PR_FALSE;
+  bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
   nsRefPtr<nsCSSStyleSheet> sheet;
   rv = NS_NewCSSStyleSheet(getter_AddRefs(sheet));
@@ -1168,7 +1168,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
         nsRefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(rule);
         NS_ASSERTION(styleRule, "Must be a style rule");
         nsAutoString decl;
-        PRBool sanitized = SanitizeStyleRule(styleRule, decl);
+        bool sanitized = SanitizeStyleRule(styleRule, decl);
         didSanitize = sanitized || didSanitize;
         if (!sanitized) {
           styleRule->GetCssText(decl);
@@ -1184,9 +1184,9 @@ void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                     nsTHashtable<nsISupportsHashKey>* aAllowed,
                                     nsIAtom*** aURLs,
-                                    PRBool aAllowXLink,
-                                    PRBool aAllowStyle,
-                                    PRBool aAllowDangerousSrc)
+                                    bool aAllowXLink,
+                                    bool aAllowStyle,
+                                    bool aAllowDangerousSrc)
 {
   PRUint32 ac = aElement->GetAttrCount();
 
@@ -1306,7 +1306,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 #endif
 }
 
-PRBool
+bool
 nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
                              PRInt32 aNamespace,
                              nsIAtom* aLocalName)

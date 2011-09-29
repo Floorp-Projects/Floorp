@@ -107,7 +107,7 @@ nsFileResult::nsFileResult(const nsAString& aSearchString,
     if (NS_FAILED(directory->GetDirectoryEntries(getter_AddRefs(dirEntries))))
       return;
     mSearchResult = RESULT_NOMATCH;
-    PRBool hasMore = PR_FALSE;
+    bool hasMore = false;
     nsDependentSubstring prefix(Substring(mSearchString, slashPos + 1));
     while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> nextItem;
@@ -190,7 +190,7 @@ NS_IMETHODIMP nsFileResult::GetImageAt(PRInt32 index, nsAString & aImage)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFileResult::RemoveValueAt(PRInt32 rowIndex, PRBool removeFromDb)
+NS_IMETHODIMP nsFileResult::RemoveValueAt(PRInt32 rowIndex, bool removeFromDb)
 {
   return NS_OK;
 }
@@ -260,9 +260,9 @@ protected:
 
   nsTArray<PRUnichar*> mCurrentFilters;
 
-  PRPackedBool mShowHiddenFiles;
-  PRPackedBool mDirectoryFilter;
-  PRPackedBool mReverseSort;
+  bool mShowHiddenFiles;
+  bool mDirectoryFilter;
+  bool mReverseSort;
 };
 
 // Factory constructor
@@ -344,7 +344,7 @@ NS_IMPL_ISUPPORTS2(nsFileView, nsITreeView, nsIFileView)
 // nsIFileView implementation
 
 NS_IMETHODIMP
-nsFileView::SetShowHiddenFiles(PRBool aShowHidden)
+nsFileView::SetShowHiddenFiles(bool aShowHidden)
 {
   if (aShowHidden != mShowHiddenFiles) {
     mShowHiddenFiles = aShowHidden;
@@ -358,14 +358,14 @@ nsFileView::SetShowHiddenFiles(PRBool aShowHidden)
 }
 
 NS_IMETHODIMP
-nsFileView::GetShowHiddenFiles(PRBool* aShowHidden)
+nsFileView::GetShowHiddenFiles(bool* aShowHidden)
 {
   *aShowHidden = mShowHiddenFiles;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::SetShowOnlyDirectories(PRBool aOnlyDirs)
+nsFileView::SetShowOnlyDirectories(bool aOnlyDirs)
 {
   if (aOnlyDirs == mDirectoryFilter)
     return NS_OK;
@@ -396,7 +396,7 @@ nsFileView::SetShowOnlyDirectories(PRBool aOnlyDirs)
 }
 
 NS_IMETHODIMP
-nsFileView::GetShowOnlyDirectories(PRBool* aOnlyDirs)
+nsFileView::GetShowOnlyDirectories(bool* aOnlyDirs)
 {
   *aOnlyDirs = mDirectoryFilter;
   return NS_OK;
@@ -410,14 +410,14 @@ nsFileView::GetSortType(PRInt16* aSortType)
 }
 
 NS_IMETHODIMP
-nsFileView::GetReverseSort(PRBool* aReverseSort)
+nsFileView::GetReverseSort(bool* aReverseSort)
 {
   *aReverseSort = mReverseSort;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::Sort(PRInt16 aSortType, PRBool aReverseSort)
+nsFileView::Sort(PRInt16 aSortType, bool aReverseSort)
 {
   if (aSortType == mSortType) {
     if (aReverseSort == mReverseSort)
@@ -456,19 +456,19 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
   mFileList->Clear();
   mDirList->Clear();
 
-  PRBool hasMore = PR_FALSE;
+  bool hasMore = false;
 
   while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> nextItem;
     dirEntries->GetNext(getter_AddRefs(nextItem));
     nsCOMPtr<nsIFile> theFile = do_QueryInterface(nextItem);
 
-    PRBool isDirectory = PR_FALSE;
+    bool isDirectory = false;
     if (theFile) {
       theFile->IsDirectory(&isDirectory);
 
       if (isDirectory) {
-        PRBool isHidden;
+        bool isHidden;
         theFile->IsHidden(&isHidden);
         if (mShowHiddenFiles || !isHidden) {
           mDirList->AppendElement(theFile);
@@ -656,35 +656,35 @@ nsFileView::GetColumnProperties(nsITreeColumn* aCol,
 }
 
 NS_IMETHODIMP
-nsFileView::IsContainer(PRInt32 aIndex, PRBool* aIsContainer)
+nsFileView::IsContainer(PRInt32 aIndex, bool* aIsContainer)
 {
   *aIsContainer = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsContainerOpen(PRInt32 aIndex, PRBool* aIsOpen)
+nsFileView::IsContainerOpen(PRInt32 aIndex, bool* aIsOpen)
 {
   *aIsOpen = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsContainerEmpty(PRInt32 aIndex, PRBool* aIsEmpty)
+nsFileView::IsContainerEmpty(PRInt32 aIndex, bool* aIsEmpty)
 {
   *aIsEmpty = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsSeparator(PRInt32 aIndex, PRBool* aIsSeparator)
+nsFileView::IsSeparator(PRInt32 aIndex, bool* aIsSeparator)
 {
   *aIsSeparator = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsSorted(PRBool* aIsSorted)
+nsFileView::IsSorted(bool* aIsSorted)
 {
   *aIsSorted = (mSortType >= 0);
   return NS_OK;
@@ -692,7 +692,7 @@ nsFileView::IsSorted(PRBool* aIsSorted)
 
 NS_IMETHODIMP
 nsFileView::CanDrop(PRInt32 aIndex, PRInt32 aOrientation,
-                    nsIDOMDataTransfer* dataTransfer, PRBool* aCanDrop)
+                    nsIDOMDataTransfer* dataTransfer, bool* aCanDrop)
 {
   *aCanDrop = PR_FALSE;
   return NS_OK;
@@ -713,7 +713,7 @@ nsFileView::GetParentIndex(PRInt32 aRowIndex, PRInt32* aParentIndex)
 
 NS_IMETHODIMP
 nsFileView::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex, 
-                           PRBool* aHasSibling)
+                           bool* aHasSibling)
 {
   *aHasSibling = (aAfterIndex < (mTotalRows - 1));
   return NS_OK;
@@ -755,7 +755,7 @@ nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
   mDirList->Count(&dirCount);
   mFilteredFiles->Count(&fileCount);
 
-  PRBool isDirectory;
+  bool isDirectory;
   nsCOMPtr<nsIFile> curFile;
 
   if (aRow < (PRInt32) dirCount) {
@@ -829,7 +829,7 @@ nsFileView::CycleCell(PRInt32 aRow, nsITreeColumn* aCol)
 
 NS_IMETHODIMP
 nsFileView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol,
-                       PRBool* aIsEditable)
+                       bool* aIsEditable)
 {
   *aIsEditable = PR_FALSE;
   return NS_OK;
@@ -837,7 +837,7 @@ nsFileView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol,
 
 NS_IMETHODIMP
 nsFileView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol,
-                         PRBool* aIsSelectable)
+                         bool* aIsSelectable)
 {
   *aIsSelectable = PR_FALSE;
   return NS_OK;
@@ -891,7 +891,7 @@ nsFileView::FilterFiles()
   nsCOMPtr<nsIFile> file;
   for (PRUint32 i = 0; i < count; ++i) {
     file = do_QueryElementAt(mFileList, i);
-    PRBool isHidden = PR_FALSE;
+    bool isHidden = false;
     if (!mShowHiddenFiles)
       file->IsHidden(&isHidden);
     
@@ -903,7 +903,7 @@ nsFileView::FilterFiles()
     
     if (!isHidden) {
       for (PRUint32 j = 0; j < filterCount; ++j) {
-        PRBool matched = PR_FALSE;
+        bool matched = false;
         if (!nsCRT::strcmp(mCurrentFilters.ElementAt(j),
                            NS_LITERAL_STRING("..apps").get()))
         {

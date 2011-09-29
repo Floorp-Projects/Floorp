@@ -12,7 +12,9 @@
 #include <sys/int_types.h>
 #elif defined (_AIX)
 #include <sys/types.h>
-#elif !defined(ANDROID) && !defined(__OpenBSD__)
+#elif defined(__OpenBSD__)
+#include <inttypes.h>
+#elif !defined(ANDROID)
 typedef PRInt8 int8_t;
 typedef PRUint8 uint8_t;
 typedef PRInt16 int16_t;

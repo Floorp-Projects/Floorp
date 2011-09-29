@@ -137,7 +137,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLCanvasElement, MozOpaque, moz_opaque)
 nsresult
 nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
-                             PRBool aNotify)
+                             bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                               aNotify);
@@ -186,7 +186,7 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   return retval;
 }
 
-PRBool
+bool
 nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsIAtom* aAttribute,
                                     const nsAString& aValue,
@@ -320,7 +320,7 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   // If we haven't parsed the params check for proprietary options.
   // The proprietary option -moz-parse-options will take a image lib encoder
   // parse options string as is and pass it to the encoder.
-  PRBool usingCustomParseOptions = PR_FALSE;
+  bool usingCustomParseOptions = false;
   if (params.Length() == 0) {
     NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
     nsAutoString paramString;
@@ -411,7 +411,7 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
 
 nsresult
 nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
-                                      PRBool aForceThebes,
+                                      bool aForceThebes,
                                       nsICanvasRenderingContextInternal **aContext)
 {
   NS_ENSURE_ARG(aContext);
@@ -469,7 +469,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 {
   nsresult rv;
 
-  PRBool forceThebes = PR_FALSE;
+  bool forceThebes = false;
 
   while (mCurrentContextId.IsEmpty()) {
     rv = GetContextHelper(aContextId, forceThebes, getter_AddRefs(mCurrentContext));
@@ -487,19 +487,17 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIPropertyBag> contextProps;
+    nsCOMPtr<nsIWritablePropertyBag2> contextProps;
     if (!JSVAL_IS_NULL(aContextOptions) &&
         !JSVAL_IS_VOID(aContextOptions))
     {
       JSContext *cx = nsContentUtils::GetCurrentJSContext();
 
-      nsCOMPtr<nsIWritablePropertyBag2> newProps;
-
       // note: if any contexts end up supporting something other
       // than objects, e.g. plain strings, then we'll need to expand
       // this to know how to create nsISupportsStrings etc.
       if (JSVAL_IS_OBJECT(aContextOptions)) {
-        newProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
+        contextProps = do_CreateInstance("@mozilla.org/hash-property-bag;1");
 
         JSObject *opts = JSVAL_TO_OBJECT(aContextOptions);
         JSIdArray *props = JS_Enumerate(cx, opts);
@@ -520,11 +518,11 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
           }
 
           if (JSVAL_IS_BOOLEAN(propval)) {
-            newProps->SetPropertyAsBool(pstr, propval == JSVAL_TRUE ? PR_TRUE : PR_FALSE);
+            contextProps->SetPropertyAsBool(pstr, propval == JSVAL_TRUE ? PR_TRUE : PR_FALSE);
           } else if (JSVAL_IS_INT(propval)) {
-            newProps->SetPropertyAsInt32(pstr, JSVAL_TO_INT(propval));
+            contextProps->SetPropertyAsInt32(pstr, JSVAL_TO_INT(propval));
           } else if (JSVAL_IS_DOUBLE(propval)) {
-            newProps->SetPropertyAsDouble(pstr, JSVAL_TO_DOUBLE(propval));
+            contextProps->SetPropertyAsDouble(pstr, JSVAL_TO_DOUBLE(propval));
           } else if (JSVAL_IS_STRING(propval)) {
             JSString *propvalString = JS_ValueToString(cx, propval);
             nsDependentJSString vstr;
@@ -533,12 +531,10 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
               return NS_ERROR_FAILURE;
             }
 
-            newProps->SetPropertyAsAString(pstr, vstr);
+            contextProps->SetPropertyAsAString(pstr, vstr);
           }
         }
       }
-
-      contextProps = newProps;
     }
 
     rv = UpdateContext(contextProps);
@@ -645,7 +641,7 @@ nsHTMLCanvasElement::GetSize()
   return GetWidthHeight();
 }
 
-PRBool
+bool
 nsHTMLCanvasElement::IsWriteOnly()
 {
   return mWriteOnly;
@@ -727,7 +723,7 @@ nsHTMLCanvasElement::GetContextAtIndex (PRInt32 index)
   return NULL;
 }
 
-PRBool
+bool
 nsHTMLCanvasElement::GetIsOpaque()
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
@@ -744,7 +740,7 @@ nsHTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
 }
 
-PRBool
+bool
 nsHTMLCanvasElement::ShouldForceInactiveLayer(LayerManager *aManager)
 {
   return !mCurrentContext || mCurrentContext->ShouldForceInactiveLayer(aManager);
@@ -781,7 +777,7 @@ nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
   Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-  if (Preferences::GetBool("gfx.canvas.azure.enabled", PR_FALSE)) {
+  if (Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
     nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
     // If Azure fails, fall back to a classic canvas.
     if (NS_SUCCEEDED(rv)) {

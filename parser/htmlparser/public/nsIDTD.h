@@ -118,8 +118,8 @@ public:
      *                        opts to ignore this parameter)
      */
     NS_IMETHOD BuildModel(nsITokenizer* aTokenizer,
-                          PRBool aCanInterrupt,
-                          PRBool aCountLines,
+                          bool aCanInterrupt,
+                          bool aCountLines,
                           const nsCString* aCharsetPtr) = 0;
 
     /**
@@ -131,7 +131,7 @@ public:
      * @param   aChild -- int tag of child container
      * @return PR_TRUE if parent can contain child
      */
-    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const = 0;
+    NS_IMETHOD_(bool) CanContain(PRInt32 aParent,PRInt32 aChild) const = 0;
 
     /**
      * This method gets called to determine whether a given
@@ -141,7 +141,7 @@ public:
      * @param   aTag -- tag to test for containership
      * @return  PR_TRUE if given tag can contain other tags
      */
-    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const = 0;
+    NS_IMETHOD_(bool) IsContainer(PRInt32 aTag) const = 0;
 
     /**
      * Use this id you want to stop the building content model
@@ -169,9 +169,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 #define NS_DECL_NSIDTD \
     NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
     NS_IMETHOD DidBuildModel(nsresult anErrorCode);\
-    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, PRBool aCanInterrupt, PRBool aCountLines, const nsCString* aCharsetPtr);\
-    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
-    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
+    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, bool aCanInterrupt, bool aCountLines, const nsCString* aCharsetPtr);\
+    NS_IMETHOD_(bool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
+    NS_IMETHOD_(bool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD_(void)  Terminate();\
     NS_IMETHOD_(PRInt32) GetType();\
     NS_IMETHOD_(nsDTDMode) GetMode() const;

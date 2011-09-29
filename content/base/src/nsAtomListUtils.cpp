@@ -43,7 +43,7 @@
 #include "nsIAtom.h"
 #include "nsStaticAtom.h"
 
-/* static */ PRBool
+/* static */ bool
 nsAtomListUtils::IsMember(nsIAtom *aAtom,
                           const nsStaticAtom* aInfo,
                           PRUint32 aInfoCount)

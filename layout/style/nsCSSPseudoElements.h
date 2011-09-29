@@ -66,11 +66,11 @@ public:
 
   static void AddRefAtoms();
 
-  static PRBool IsPseudoElement(nsIAtom *aAtom);
+  static bool IsPseudoElement(nsIAtom *aAtom);
 
-  static PRBool IsCSS2PseudoElement(nsIAtom *aAtom);
+  static bool IsCSS2PseudoElement(nsIAtom *aAtom);
 
-  static PRBool PseudoElementContainsElements(nsIAtom *aAtom) {
+  static bool PseudoElementContainsElements(nsIAtom *aAtom) {
     return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
   }
 
@@ -104,7 +104,7 @@ private:
   static PRUint32 FlagsForPseudoElement(nsIAtom *aAtom);
 
   // Does the given pseudo-element have all of the flags given?
-  static PRBool PseudoElementHasFlags(nsIAtom *aAtom, PRUint32 aFlags)
+  static bool PseudoElementHasFlags(nsIAtom *aAtom, PRUint32 aFlags)
   {
     return (FlagsForPseudoElement(aAtom) & aFlags) == aFlags;
   }

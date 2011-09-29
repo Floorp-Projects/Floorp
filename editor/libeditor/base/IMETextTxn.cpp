@@ -141,7 +141,7 @@ NS_IMETHODIMP IMETextTxn::UndoTransaction(void)
   return result;
 }
 
-NS_IMETHODIMP IMETextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
+NS_IMETHODIMP IMETextTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge)
 {
   NS_ASSERTION(aDidMerge, "illegal vaule- null ptr- aDidMerge");
   NS_ASSERTION(aTransaction, "illegal vaule- null ptr- aTransaction");
@@ -295,7 +295,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
         }
 
         nsCOMPtr<nsIPrivateTextRange> textRange;
-        PRBool setCaret=PR_FALSE;
+        bool setCaret=false;
         for(i=0;i<textRangeListLength;i++)
         {
           textRange = mRangeList->Item(i);

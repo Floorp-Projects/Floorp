@@ -177,7 +177,7 @@ NSCursorInfo::NSCursorInfo(const Cursor* aCursor)
   int rowBytes = width * bytesPerPixel;
   int bitmapSize = height * rowBytes;
 
-  PRBool isTransparent = PR_TRUE;
+  bool isTransparent = true;
 
   uint8_t* bitmap = (uint8_t*) moz_xmalloc(bitmapSize);
   // The way we create 'bitmap' is largely "borrowed" from Chrome's
@@ -541,7 +541,7 @@ void NSCursorInfo::SetCustomImageData(uint8_t* aData, uint32_t aDataLength)
 
 // This should never be called from the browser process -- only from the
 // plugin process.
-PRBool NSCursorInfo::GetNativeCursorsSupported()
+bool NSCursorInfo::GetNativeCursorsSupported()
 {
   if (mNativeCursorsSupported == -1) {
     AssertPluginThread();

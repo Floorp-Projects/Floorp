@@ -149,7 +149,7 @@ namespace {
       // at sourceStart.  At the same time, get a pointer to the next character
       // in both the token and the source.
       const_char_iterator sourceNext, tokenCur;
-      PRBool error;
+      bool error;
       if (CaseInsensitiveUTF8CharsEqual(sourceStart, tokenStart,
                                         sourceEnd, tokenEnd,
                                         &sourceNext, &tokenCur, &error)) {
@@ -298,7 +298,7 @@ namespace places {
                         sourceStart(aSourceString.BeginReading()),
                         sourceEnd(aSourceString.EndReading());
 
-    PRBool dummy;
+    bool dummy;
     while (sourceStart < sourceEnd &&
            CaseInsensitiveUTF8CharsEqual(sourceStart, tokenStart,
                                          sourceEnd, tokenEnd,
@@ -510,7 +510,7 @@ namespace places {
                                              NS_LITERAL_CSTRING("livemark/feedURI"));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      PRBool hasResult;
+      bool hasResult;
       rv = getPageInfo->ExecuteStep(&hasResult);
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(hasResult, NS_ERROR_UNEXPECTED);

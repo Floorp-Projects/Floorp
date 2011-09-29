@@ -327,7 +327,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
     // Find out how often we create these objects w/o really looking at
     // (or using) the members.
 
-    PRBool canScript;
+    bool canScript;
     if(NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
         return nsnull;
 

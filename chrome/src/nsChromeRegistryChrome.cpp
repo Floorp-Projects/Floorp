@@ -102,7 +102,7 @@ RemoveAll(PLDHashTable *table, PLDHashEntryHdr *entry, PRUint32 number, void *ar
  * work, any other garbage-in will produce undefined results as long
  * as it does not crash.
  */
-static PRBool
+static bool
 LanguagesMatch(const nsACString& a, const nsACString& b)
 {
   if (a.Length() < 2 || b.Length() < 2)
@@ -166,7 +166,7 @@ nsChromeRegistryChrome::Init()
                          nsnull, sizeof(PackageEntry), 16))
     return NS_ERROR_FAILURE;
 
-  PRBool safeMode = PR_FALSE;
+  bool safeMode = false;
   nsCOMPtr<nsIXULRuntime> xulrun (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
   if (xulrun)
     xulrun->GetInSafeMode(&safeMode);
@@ -270,7 +270,7 @@ getUILangCountry(nsACString& aUILang)
 }
 
 NS_IMETHODIMP
-nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, PRBool *aResult)
+nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
 {
   *aResult = PR_FALSE;
 
@@ -323,7 +323,7 @@ nsresult
 nsChromeRegistryChrome::SelectLocaleFromPref(nsIPrefBranch* prefs)
 {
   nsresult rv;
-  PRBool matchOSLocale = PR_FALSE;
+  bool matchOSLocale = false;
   rv = prefs->GetBoolPref(MATCH_OS_LOCALE_PREF, &matchOSLocale);
 
   if (NS_SUCCEEDED(rv) && matchOSLocale) {
@@ -532,10 +532,10 @@ nsChromeRegistryChrome::CollectPackages(PLDHashTable *table,
   return (PLDHashOperator)PL_DHASH_NEXT;
 }
 
-static PRBool
+static bool
 CanLoadResource(nsIURI* aResourceURI)
 {
-  PRBool isLocalResource = PR_FALSE;
+  bool isLocalResource = false;
   (void)NS_URIChainHasFlags(aResourceURI,
                             nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                             &isLocalResource);
@@ -596,7 +596,7 @@ nsChromeRegistryChrome::HashKey(PLDHashTable *table, const void *key)
   return HashString(str);
 }
 
-PRBool
+bool
 nsChromeRegistryChrome::MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                            const void *key)
 {
@@ -612,7 +612,7 @@ nsChromeRegistryChrome::ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   pentry->~PackageEntry();
 }
 
-PRBool
+bool
 nsChromeRegistryChrome::InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                             const void *key)
 {
@@ -734,7 +734,7 @@ nsChromeRegistryChrome::OverlayListEntry::AddURI(nsIURI* aURI)
 {
   PRInt32 i = mArray.Count();
   while (i--) {
-    PRBool equals;
+    bool equals;
     if (NS_SUCCEEDED(aURI->Equals(mArray[i], &equals)) && equals)
       return;
   }
@@ -1054,7 +1054,7 @@ nsChromeRegistryChrome::ManifestResource(ManifestProcessingContext& cx, int line
   
   nsCOMPtr<nsIResProtocolHandler> rph = do_QueryInterface(ph);
 
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   rv = rph->HasSubstitution(host, &exists);
   if (exists) {
     LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,

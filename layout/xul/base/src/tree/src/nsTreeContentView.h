@@ -78,7 +78,7 @@ class nsTreeContentView : public nsINativeTreeView,
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-    static PRBool CanTrustTreeSelection(nsISupports* aValue);
+    static bool CanTrustTreeSelection(nsISupports* aValue);
 
   protected:
     // Recursive methods which deal with serializing of nested content.

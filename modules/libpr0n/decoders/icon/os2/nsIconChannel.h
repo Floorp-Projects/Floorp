@@ -79,7 +79,7 @@ protected:
   nsCOMPtr<nsIStreamListener>  mListener;
 
   nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension);
-  nsresult MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking);
+  nsresult MakeInputStream(nsIInputStream** _retval, bool nonBlocking);
 };
 
 #define ID_ICO_FILE    5800

@@ -97,7 +97,7 @@ nsDragService::~nsDragService()
   NS_IF_RELEASE(mDataObject);
 }
 
-PRBool
+bool
 nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
                                nsIScriptableRegion *aRegion,
                                SHDRAGIMAGE *psdi)
@@ -491,7 +491,7 @@ nsDragService::SetDroppedLocal()
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
+nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
 {
   if (!aDataFlavor || !mDataObject || !_retval)
     return NS_ERROR_FAILURE;
@@ -572,10 +572,10 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 // collection objects. We know the difference because our collection
 // object will respond to supporting the private |MULTI_MIME| format.
 //
-PRBool
+bool
 nsDragService::IsCollectionObject(IDataObject* inDataObj)
 {
-  PRBool isCollection = PR_FALSE;
+  bool isCollection = false;
 
   // setup the format object to ask for the MULTI_MIME format. We only
   // need to do this once
@@ -604,7 +604,7 @@ nsDragService::IsCollectionObject(IDataObject* inDataObj)
 // w/out crashing when we're still holding onto their data
 //
 NS_IMETHODIMP
-nsDragService::EndDragSession(PRBool aDoneDrag)
+nsDragService::EndDragSession(bool aDoneDrag)
 {
   nsBaseDragService::EndDragSession(aDoneDrag);
   NS_IF_RELEASE(mDataObject);

@@ -107,7 +107,7 @@ static const mozilla::Module::ContractIDEntry kParserContracts[] = {
   { NULL }
 };
 
-static PRBool gInitialized = PR_FALSE;
+static bool gInitialized = false;
 
 static nsresult
 Initialize()

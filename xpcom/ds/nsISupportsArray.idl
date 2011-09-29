@@ -65,7 +65,7 @@ class nsISupportsArray;
 #define NS_SUPPORTSARRAY_CLASSNAME "Supports Array"
  
 // Enumerator callback function. Return PR_FALSE to stop
-typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
+typedef bool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
  
 nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result NS_OUTPARAM,

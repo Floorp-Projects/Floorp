@@ -61,7 +61,7 @@ nsNthIndexCache::Reset()
 
 inline bool
 nsNthIndexCache::SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
-                                       PRBool aIsOfType)
+                                       bool aIsOfType)
 {
   return aSibling->IsElement() &&
     (!aIsOfType ||
@@ -70,8 +70,8 @@ nsNthIndexCache::SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
 
 inline bool
 nsNthIndexCache::IndexDetermined(nsIContent* aSibling, Element* aChild,
-                                 PRBool aIsOfType, PRBool aIsFromEnd,
-                                 PRBool aCheckEdgeOnly, PRInt32& aResult)
+                                 bool aIsOfType, bool aIsFromEnd,
+                                 bool aCheckEdgeOnly, PRInt32& aResult)
 {
   if (SiblingMatchesElement(aSibling, aChild, aIsOfType)) {
     if (aCheckEdgeOnly) {
@@ -103,8 +103,8 @@ nsNthIndexCache::IndexDetermined(nsIContent* aSibling, Element* aChild,
 }
 
 PRInt32
-nsNthIndexCache::GetNthIndex(Element* aChild, PRBool aIsOfType,
-                             PRBool aIsFromEnd, PRBool aCheckEdgeOnly)
+nsNthIndexCache::GetNthIndex(Element* aChild, bool aIsOfType,
+                             bool aIsFromEnd, bool aCheckEdgeOnly)
 {
   NS_ASSERTION(aChild->GetParent(), "caller should check GetParent()");
 

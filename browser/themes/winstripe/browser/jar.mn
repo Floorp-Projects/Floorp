@@ -37,7 +37,6 @@ browser.jar:
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Toolbar.png                             (Toolbar.png)
         skin/classic/browser/Toolbar-inverted.png
-        skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/section_collapsed.png
         skin/classic/browser/section_collapsed-rtl.png
@@ -49,6 +48,7 @@ browser.jar:
         skin/classic/browser/monitor_16-10.png
         skin/classic/browser/urlbar-arrow.png
         skin/classic/browser/urlbar-popup-blocked.png
+        skin/classic/browser/urlbar-history-dropmarker.png
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
         skin/classic/browser/feeds/audioFeedIcon.png                 (feeds/audioFeedIcon.png)
@@ -159,7 +159,6 @@ browser.jar:
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Toolbar-inverted.png
-        skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/section_collapsed.png
         skin/classic/aero/browser/section_collapsed-rtl.png
@@ -171,6 +170,7 @@ browser.jar:
         skin/classic/aero/browser/monitor_16-10.png
         skin/classic/aero/browser/urlbar-arrow.png
         skin/classic/aero/browser/urlbar-popup-blocked.png
+        skin/classic/aero/browser/urlbar-history-dropmarker.png
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
         skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/feeds/audioFeedIcon.png            (feeds/audioFeedIcon-aero.png)

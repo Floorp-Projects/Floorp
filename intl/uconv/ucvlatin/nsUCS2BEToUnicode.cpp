@@ -54,7 +54,7 @@ UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aOddByte,
                       const char * aSrc,
                       PRInt32 * aSrcLength, PRUnichar * aDest,
                       PRInt32 * aDestLength,
-                      PRBool aSwapBytes)
+                      bool aSwapBytes)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;

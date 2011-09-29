@@ -79,7 +79,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                           JSObject *aScopeObj,
                           jsid aId,
                           jsval *_vp,
-                          PRBool *_retval)
+                          bool *_retval)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
@@ -156,7 +156,7 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                          jsid aId,
                          PRUint32 aFlags,
                          JSObject **_objp,
-                         PRBool *_retval)
+                         bool *_retval)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
   // We do not throw at any point after this because we want to allow the

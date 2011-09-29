@@ -52,7 +52,7 @@ public:
   NS_IMETHOD_(PRInt32) GetLength() const;
   NS_IMETHOD_(PRInt32) GetBufferSize() const;
   NS_IMETHOD_(PRUnichar*) GetBuffer() const;
-  NS_IMETHOD_(PRBool) Grow(PRInt32 aNewSize);
+  NS_IMETHOD_(bool) Grow(PRInt32 aNewSize);
 
   PRUnichar* mBuffer;
   PRUint32 mSpace;

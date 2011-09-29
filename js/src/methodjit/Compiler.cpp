@@ -313,6 +313,17 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
             JSScript *script = fun->script();
 
             /*
+             * Don't inline calls to scripts which haven't been analyzed.
+             * We need to analyze the inlined scripts to compile them, and
+             * doing so can change type information we have queried already
+             * in making inlining decisions.
+             */
+            if (!script->hasAnalysis() || !script->analysis()->ranInference()) {
+                okay = false;
+                break;
+            }
+
+            /*
              * The outer and inner scripts must have the same scope. This only
              * allows us to inline calls between non-inner functions. Also
              * check for consistent strictness between the functions.
@@ -1451,13 +1462,12 @@ public:
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
             JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
-            void *mark = JS_ARENA_MARK(&cx->tempPool);                        \
+            LifoAllocScope las(&cx->tempLifoAlloc());                         \
             Sprinter sprinter;                                                \
-            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);                   \
+            INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);            \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
                             JS_TRUE, &sprinter);                              \
             fprintf(stdout, "%s", sprinter.base);                             \
-            JS_ARENA_RELEASE(&cx->tempPool, mark);                            \
         }                                                                     \
     JS_END_MACRO;
 #else
@@ -4430,7 +4440,10 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      * reflect properties with getter hooks).
      */
     pic.canCallHook = pic.forcedTypeBarrier =
-        usePropCache && JSOp(*PC) == JSOP_GETPROP && analysis->getCode(PC).accessGetter;
+        usePropCache &&
+        JSOp(*PC) == JSOP_GETPROP &&
+        atom != cx->runtime->atomState.lengthAtom &&
+        analysis->getCode(PC).accessGetter;
     if (pic.canCallHook)
         frame.syncAndKillEverything();
 
@@ -4518,6 +4531,10 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     /* Guard that the type is an object. */
     pic.typeReg = frame.copyTypeIntoReg(top);
 
+    pic.canCallHook = pic.forcedTypeBarrier = analysis->getCode(PC).accessGetter;
+    if (pic.canCallHook)
+        frame.syncAndKillEverything();
+
     RESERVE_IC_SPACE(masm);
 
     /* Start the hot path where it's easy to patch it. */
@@ -4538,10 +4555,6 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     pic.objReg = objReg;
     pic.shapeReg = shapeReg;
     pic.atom = atom;
-
-    pic.canCallHook = pic.forcedTypeBarrier = analysis->getCode(PC).accessGetter;
-    if (pic.canCallHook)
-        frame.syncAndKillEverything();
 
     /*
      * Store the type and object back. Don't bother keeping them in registers,
@@ -6669,7 +6682,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
     if (cx->typeInferenceEnabled()) {
         RegisterAllocation *&alloc = analysis->getAllocation(target);
         if (!alloc) {
-            alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
+            alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
             if (!alloc)
                 return false;
         }

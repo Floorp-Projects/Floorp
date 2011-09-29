@@ -223,7 +223,6 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 
 /***************************************************************************/
 // data declarations...
-extern const char* XPC_ARG_FORMATTER_FORMAT_STRINGS[]; // format strings
 extern const char XPC_CONTEXT_STACK_CONTRACTID[];
 extern const char XPC_RUNTIME_CONTRACTID[];
 extern const char XPC_EXCEPTION_CONTRACTID[];
@@ -269,7 +268,7 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
     }
     const PtrAndPrincipalHashKey* GetKeyPointer() const { return this; }
 
-    inline PRBool KeyEquals(const PtrAndPrincipalHashKey* aKey) const;
+    inline bool KeyEquals(const PtrAndPrincipalHashKey* aKey) const;
 
     static const PtrAndPrincipalHashKey*
     KeyToPointer(PtrAndPrincipalHashKey* aKey) { return aKey; }
@@ -453,8 +452,8 @@ private:
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
-const PRBool OBJ_IS_GLOBAL = PR_TRUE;
-const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
+const bool OBJ_IS_GLOBAL = true;
+const bool OBJ_IS_NOT_GLOBAL = false;
 
 class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
@@ -568,15 +567,15 @@ public:
     static nsCycleCollectionParticipant *JSContextParticipant();
 
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
-                                       PRBool allowShortCircuit) const;
+                                       bool allowShortCircuit) const;
 
     void RecordTraversal(void *p, nsISupports *s);
-    virtual char* DebugPrintJSStack(PRBool showArgs,
-                                    PRBool showLocals,
-                                    PRBool showThisProps);
+    virtual char* DebugPrintJSStack(bool showArgs,
+                                    bool showLocals,
+                                    bool showThisProps);
 
 
-    static PRBool ReportAllJSExceptions()
+    static bool ReportAllJSExceptions()
     {
       return gReportAllJSExceptions > 0;
     }
@@ -834,7 +833,7 @@ private:
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
     nsTArray<JSGCCallback> extraGCCallbacks;
-    PRBool mWatchdogHibernating;
+    bool mWatchdogHibernating;
     PRTime mLastActiveTime; // -1 if active NOW
 };
 
@@ -1015,8 +1014,8 @@ public:
     NS_IMETHOD GetArgc(PRUint32 *aResult);
     NS_IMETHOD GetArgvPtr(jsval **aResult);
     NS_IMETHOD GetRetValPtr(jsval **aResult);
-    NS_IMETHOD GetReturnValueWasSet(PRBool *aResult);
-    NS_IMETHOD SetReturnValueWasSet(PRBool aValue);
+    NS_IMETHOD GetReturnValueWasSet(bool *aResult);
+    NS_IMETHOD SetReturnValueWasSet(bool aValue);
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult);
     NS_IMETHOD GetCalleeClassInfo(nsIClassInfo **aResult);
     NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext **aResult);
@@ -1210,7 +1209,7 @@ private:
         StringWrapperEntry() : mInUse(PR_FALSE) { }
 
         js::AlignedStorage2<XPCReadableJSStringWrapper> mString;
-        PRBool mInUse;
+        bool mInUse;
     };
 
     StringWrapperEntry mScratchStrings[XPCCCX_STRING_CACHE_SIZE];
@@ -2321,7 +2320,7 @@ private:
 #endif
 
 private:
-    PRBool
+    bool
     InitedOffsets()
     {
         return mOffsets != UNKNOWN_OFFSETS;
@@ -2892,7 +2891,7 @@ public:
     static nsresult CheckForException(XPCCallContext & ccx,
                                       const char * aPropertyName,
                                       const char * anInterfaceName,
-                                      PRBool aForceReport);
+                                      bool aForceReport);
 private:
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
@@ -3174,7 +3173,7 @@ public:
 
 protected:
     xpcObjectHelper(nsISupports *aObject, nsISupports *aCanonical,
-                    nsWrapperCache *aCache, PRBool aIsNode)
+                    nsWrapperCache *aCache, bool aIsNode)
     : mCanonical(aCanonical),
       mObject(aObject),
       mCache(aCache),
@@ -3194,7 +3193,7 @@ private:
     nsWrapperCache*          mCache;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     nsRefPtr<nsXPCClassInfo> mXPCClassInfo;
-    PRBool                   mIsNode;
+    bool                     mIsNode;
 };
 
 // class here just for static methods
@@ -3254,8 +3253,8 @@ public:
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           PRBool allowNativeWrapper,
-                                           PRBool isGlobal,
+                                           bool allowNativeWrapper,
+                                           bool isGlobal,
                                            nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
@@ -3268,8 +3267,8 @@ public:
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           PRBool allowNativeWrapper,
-                                           PRBool isGlobal,
+                                           bool allowNativeWrapper,
+                                           bool isGlobal,
                                            nsresult* pErr);
 
     static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
@@ -3302,8 +3301,7 @@ public:
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, JSUint32 capacity,
-                                 const nsXPTType& type,
-                                 JSBool useAllocator, const nsID* iid,
+                                 const nsXPTType& type, const nsID* iid,
                                  uintN* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
@@ -3314,9 +3312,7 @@ public:
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                                           JSUint32 count, JSUint32 capacity,
-                                          const nsXPTType& type,
-                                          JSBool useAllocator,
-                                          uintN* pErr);
+                                          const nsXPTType& type, uintN* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
                                         jsval s,
@@ -3365,11 +3361,6 @@ private:
     XPCStringConvert();         // not implemented
 };
 
-extern JSBool
-XPC_JSArgumentFormatter(JSContext *cx, const char *format,
-                        JSBool fromJS, jsval **vpp, va_list *app);
-
-
 /***************************************************************************/
 // code for throwing exceptions into JS
 
@@ -3388,7 +3379,7 @@ public:
 
 private:
     static void Verbosify(XPCCallContext& ccx,
-                          char** psz, PRBool own);
+                          char** psz, bool own);
 
     static JSBool ThrowExceptionObject(JSContext* cx, nsIException* e);
 
@@ -3461,7 +3452,7 @@ private:
     char*           mFilename;
     int             mLineNumber;
     nsIException*   mInner;
-    PRBool          mInitialized;
+    bool            mInitialized;
 
     nsAutoJSValHolder mThrownJSVal;
 
@@ -3486,13 +3477,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSID
 
-    PRBool InitWithName(const nsID& id, const char *nameString);
-    PRBool SetName(const char* name);
+    bool InitWithName(const nsID& id, const char *nameString);
+    bool SetName(const char* name);
     void   SetNameToNoString()
         {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}
-    PRBool NameIsSet() const {return nsnull != mName;}
+    bool NameIsSet() const {return nsnull != mName;}
     const nsID& ID() const {return mID;}
-    PRBool IsValid() const {return !mID.Equals(GetInvalidIID());}
+    bool IsValid() const {return !mID.Equals(GetInvalidIID());}
 
     static nsJSID* NewID(const char* str);
     static nsJSID* NewID(const nsID& id);
@@ -3719,7 +3710,7 @@ public:
     void Cleanup();
     void ReleaseNatives();
 
-    PRBool IsValid() const {return mJSContextStack != nsnull;}
+    bool IsValid() const {return mJSContextStack != nsnull;}
 
     static Mutex* GetLock() {return gLock;}
     // Must be called with the threads locked.
@@ -3743,7 +3734,7 @@ public:
     static void ShutDown()
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
-    static PRBool IsMainThread(JSContext *cx)
+    static bool IsMainThread(JSContext *cx)
         { return cx->thread() == sMainJSThread; }
 
 private:
@@ -3984,7 +3975,7 @@ public:
      * @param errorReporter the error reporter callback function to set
      */
 
-    PRBool StartEvaluating(JSObject *scope, JSErrorReporter errorReporter = nsnull);
+    bool StartEvaluating(JSObject *scope, JSErrorReporter errorReporter = nsnull);
     /**
      * Does the post script evaluation and resets the error reporter
      */
@@ -3992,8 +3983,8 @@ public:
 private:
     JSContext* mJSContext;
     JSExceptionState* mState;
-    PRBool mErrorReporterSet;
-    PRBool mEvaluated;
+    bool mErrorReporterSet;
+    bool mEvaluated;
     jsword mContextHasThread;
     JSAutoEnterCompartment mEnterCompartment;
     MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -4148,7 +4139,7 @@ public:                                                                      \
     class_ (XPCCallContext& ccx)                                             \
         : AutoMarkingPtr(ccx), mPtr(nsnull), mCount(0) {}                    \
     class_ (XPCCallContext& ccx, type_** aPtr, PRUint32 aCount,              \
-            PRBool aClear = PR_FALSE)                                        \
+            bool aClear = false)                                        \
         : AutoMarkingPtr(ccx), mPtr(aPtr), mCount(aCount)                    \
     {                                                                        \
         if(!mPtr) mCount = 0;                                                \
@@ -4378,7 +4369,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
-                  JSVersion jsVersion, PRBool returnStringOnly, jsval *rval);
+                  JSVersion jsVersion, bool returnStringOnly, jsval *rval);
 
 /***************************************************************************/
 // Inlined utilities.

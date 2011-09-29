@@ -73,7 +73,7 @@ static const PRUnichar table[] =
     '4','5','6','7','8','9'};
 
 // reduces overhead by preventing calls to nsRwsService when it isn't present
-static PRBool sUseRws = PR_TRUE;
+static bool sUseRws = true;
 
 //------------------------------------------------------------------------
 
@@ -232,7 +232,7 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithFile(nsIFile *aFile)
 
 // if there's a description, there's a handler (which may be the WPS)
 
-NS_IMETHODIMP nsMIMEInfoOS2::GetHasDefaultHandler(PRBool *_retval)
+NS_IMETHODIMP nsMIMEInfoOS2::GetHasDefaultHandler(bool *_retval)
 {
   *_retval = !mDefaultAppDescription.IsEmpty();
   return NS_OK;
@@ -374,7 +374,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
   NS_NAMED_LITERAL_CSTRING(msgid, "%msgid%");
   NS_NAMED_LITERAL_CSTRING(channel, "%channel%");
 
-  PRBool replaced = PR_FALSE;
+  bool replaced = false;
   if (applicationName.IsEmpty() && parameters.IsEmpty()) {
     /* Put application name in parameters */
     applicationName.Append(prefString);

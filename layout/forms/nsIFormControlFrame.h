@@ -59,7 +59,7 @@ public:
    * @param aOn
    * @param aRepaint
    */
-  virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE) = 0;
+  virtual void SetFocus(bool aOn = true, bool aRepaint = false) = 0;
 
   /**
    * Set a property on the form control frame.

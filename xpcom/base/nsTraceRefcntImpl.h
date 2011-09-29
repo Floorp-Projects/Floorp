@@ -71,7 +71,7 @@ public:
    * activity is legal.  This is used to trigger assertions for any such
    * activity that occurs because of static constructors or destructors.
    */
-  static void SetActivityIsLegal(PRBool aLegal);
+  static void SetActivityIsLegal(bool aLegal);
 
   static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 };

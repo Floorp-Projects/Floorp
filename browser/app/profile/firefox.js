@@ -254,7 +254,7 @@ pref("browser.warnOnRestart", false);
 pref("browser.showQuitWarning", false);
 pref("browser.fullscreen.autohide", true);
 pref("browser.fullscreen.animateUp", 1);
-pref("browser.overlink-delay", 70);
+pref("browser.overlink-delay", 80);
 
 #ifdef UNIX_BUT_NOT_MAC
 pref("browser.urlbar.clickSelectsAll", false);
@@ -865,10 +865,6 @@ pref("browser.privatebrowsing.dont_prompt_on_enter", false);
 // Don't try to alter this pref, it'll be reset the next time you use the
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
-
-// base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
-pref("geo.wifi.protocol", 0);
 
 // Whether to use a panel that looks like an OS X sheet for customization
 #ifdef XP_MACOSX

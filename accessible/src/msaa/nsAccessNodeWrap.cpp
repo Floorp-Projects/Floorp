@@ -69,7 +69,7 @@ LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
 LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
 // Used to determine whether an IAccessible2 compatible screen reader is loaded.
-PRBool nsAccessNodeWrap::gIsIA2Disabled = PR_FALSE;
+bool nsAccessNodeWrap::gIsIA2Disabled = false;
 
 AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nsnull;
 
@@ -666,7 +666,7 @@ GetHRESULT(nsresult aResult)
   }
 }
 
-PRBool nsAccessNodeWrap::IsOnlyMsaaCompatibleJawsPresent()
+bool nsAccessNodeWrap::IsOnlyMsaaCompatibleJawsPresent()
 {
   HMODULE jhookhandle = ::GetModuleHandleW(kJAWSModuleHandle);
   if (!jhookhandle)

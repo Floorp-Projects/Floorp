@@ -146,8 +146,8 @@ using namespace mozilla::dom;
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
-static PRBool gInitDetector = PR_FALSE;
-static PRBool gPlugDetector = PR_FALSE;
+static bool gInitDetector = false;
+static bool gPlugDetector = false;
 
 #include "prmem.h"
 #include "prtime.h"
@@ -168,14 +168,14 @@ PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
 // outParam will be Empty if no parameter is needed or if returning a boolean
 // outIsBoolean will determine whether to send param as a boolean or string
 // outBooleanParam will not be set unless outIsBoolean
-static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
+static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                             const nsAString & inParam,
                                             nsACString& outCommandID,
                                             nsACString& outParam,
-                                            PRBool& isBoolean,
-                                            PRBool& boolValue);
+                                            bool& isBoolean,
+                                            bool& boolValue);
 
-static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
+static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                             nsACString& outCommandID);
 static int
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
@@ -223,7 +223,7 @@ RemoveFromAgentSheets(nsCOMArray<nsIStyleSheet> &aAgentSheets, const nsAString& 
     nsIStyleSheet* sheet = aAgentSheets[i];
     nsIURI* sheetURI = sheet->GetSheetURI();
 
-    PRBool equals = PR_FALSE;
+    bool equals = false;
     uri->Equals(sheetURI, &equals);
     if (equals) {
       aAgentSheets.RemoveObjectAt(i);
@@ -379,7 +379,7 @@ nsHTMLDocument::CreateShell(nsPresContext* aContext,
 // should be considered (ie. aCharsetSource < thisCharsetSource) but we failed
 // to get the charset from this source.
 
-PRBool
+bool
 nsHTMLDocument::TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                PRInt32& aCharsetSource, nsACString& aCharset)
 {
@@ -407,7 +407,7 @@ nsHTMLDocument::TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
 }
 
 
-PRBool
+bool
 nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                      nsIDocumentCharsetInfo*  aDocInfo,
                                      PRInt32& aCharsetSource,
@@ -441,7 +441,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsHTMLDocument::TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset)
@@ -465,20 +465,20 @@ nsHTMLDocument::TryCacheCharset(nsICachingChannel* aCachingChannel,
   return PR_FALSE;
 }
 
-static PRBool
+static bool
 CheckSameOrigin(nsINode* aNode1, nsINode* aNode2)
 {
   NS_PRECONDITION(aNode1, "Null node?");
   NS_PRECONDITION(aNode2, "Null node?");
 
-  PRBool equal;
+  bool equal;
   return
     NS_SUCCEEDED(aNode1->NodePrincipal()->
                    Equals(aNode2->NodePrincipal(), &equal)) &&
     equal;
 }
 
-PRBool
+bool
 nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
                                  nsIDocument* aParentDocument,
                                  PRInt32& aCharsetSource,
@@ -525,7 +525,7 @@ nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
                                       nsACString& aCharset)
 {
@@ -544,7 +544,7 @@ nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
                                    PRInt32& aCharsetSource,
                                    nsACString& aCharset)
@@ -643,10 +643,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsILoadGroup* aLoadGroup,
                                   nsISupports* aContainer,
                                   nsIStreamListener **aDocListener,
-                                  PRBool aReset,
+                                  bool aReset,
                                   nsIContentSink* aSink)
 {
-  PRBool loadAsHtml5 = nsHtml5Module::sEnabled;
+  bool loadAsHtml5 = nsHtml5Module::sEnabled;
   if (aSink) {
     loadAsHtml5 = PR_FALSE;
   }
@@ -683,7 +683,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     aChannel->GetOriginalURI(getter_AddRefs(uri));
     // Adapted from nsDocShell:
     // GetSpec can be expensive for some URIs, so check the scheme first.
-    PRBool isAbout = PR_FALSE;
+    bool isAbout = false;
     if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
       nsCAutoString str;
       uri->GetSpec(str);
@@ -695,7 +695,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   
-  PRBool needsParser = PR_TRUE;
+  bool needsParser = true;
   if (aCommand)
   {
     if (!nsCRT::strcmp(aCommand, "view delayedContentLoad")) {
@@ -768,7 +768,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // The following logic is mirrored in nsWebShell::Embed!
   //
   nsCOMPtr<nsIMarkupDocumentViewer> muCV;
-  PRBool muCVIsParent = PR_FALSE;
+  bool muCVIsParent = false;
   nsCOMPtr<nsIContentViewer> cv;
   if (docShell) {
     docShell->GetContentViewer(getter_AddRefs(cv));
@@ -848,7 +848,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
     }
 
-    PRBool isPostPage = PR_FALSE;
+    bool isPostPage = false;
     // check if current doc is from POST command
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
     if (httpChannel) {
@@ -1128,7 +1128,7 @@ nsHTMLDocument::EndLoad()
                mWriteState == eDocumentClosed, "EndLoad called early");
   mWriteState = eNotWriting;
 
-  PRBool turnOnEditing =
+  bool turnOnEditing =
     mParser && (HasFlag(NODE_IS_EDITABLE) || mContentEditableCount > 0);
   // Note: nsDocument::EndLoad nulls out mParser.
   nsDocument::EndLoad();
@@ -1229,7 +1229,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   if (NS_FAILED(newURI->GetAsciiHost(domain)))
     domain.Truncate();
 
-  PRBool ok = current.Equals(domain);
+  bool ok = current.Equals(domain);
   if (current.Length() > domain.Length() &&
       StringEndsWith(current, domain) &&
       current.CharAt(current.Length() - domain.Length() - 1) == '.') {
@@ -1364,7 +1364,7 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
   return NS_OK;
 }
 
-PRBool
+bool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
                            nsIAtom* aAtom, void* aData)
 {
@@ -1409,7 +1409,7 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
   return NS_OK;
 }
 
-PRBool
+bool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
                              nsIAtom* aAtom, void* aData)
 {
@@ -1579,7 +1579,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     return NS_OK;
   }
 
-  PRBool inUnload;
+  bool inUnload;
   shell->GetIsInUnload(&inUnload);
   if (inUnload) {
     return NS_OK;
@@ -1614,7 +1614,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   // needed because of the way we use our XOW code, and is a sane
   // thing to do anyways.
 
-  PRBool equals = PR_FALSE;
+  bool equals = false;
   if (NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &equals)) ||
       !equals) {
 
@@ -1641,7 +1641,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     shell->GetContentViewer(getter_AddRefs(cv));
 
     if (cv) {
-      PRBool okToUnload;
+      bool okToUnload;
       if (NS_SUCCEEDED(cv->PermitUnload(PR_FALSE, &okToUnload)) && !okToUnload) {
         // We don't want to unload, so stop here, but don't throw an
         // exception.
@@ -1692,7 +1692,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
     nsCOMPtr<nsIScriptGlobalObject> oldScope(do_QueryReferent(mScopeObject));
 
 #ifdef DEBUG
-    PRBool willReparent = mWillReparent;
+    bool willReparent = mWillReparent;
     mWillReparent = PR_TRUE;
 #endif
 
@@ -1725,7 +1725,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   // resetting the document.
   mSecurityInfo = securityInfo;
 
-  PRBool loadAsHtml5 = nsHtml5Module::sEnabled;
+  bool loadAsHtml5 = nsHtml5Module::sEnabled;
   if (loadAsHtml5) {
     mParser = nsHtml5Module::NewHtml5Parser();
     rv = NS_OK;
@@ -1864,7 +1864,7 @@ nsHTMLDocument::Close()
 nsresult
 nsHTMLDocument::WriteCommon(JSContext *cx,
                             const nsAString& aText,
-                            PRBool aNewlineTerminate)
+                            bool aNewlineTerminate)
 {
   mTooDeepWriteRecursion =
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
@@ -1971,7 +1971,7 @@ nsHTMLDocument::Writeln(const nsAString& aText, JSContext *cx)
   return WriteCommon(cx, aText, PR_TRUE);
 }
 
-PRBool
+bool
 nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
                                    nsIAtom* aAtom, void* aData)
 {
@@ -2362,7 +2362,7 @@ nsHTMLDocument::GetForms()
   return mForms;
 }
 
-static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
+static bool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
                                 nsIAtom* aAtom, void* aData)
 {
   return aContent->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
@@ -2615,7 +2615,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
   }
 }
 
-static PRBool
+static bool
 DocAllResultMatch(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
                   void* aData)
 {
@@ -2698,11 +2698,11 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID,
 
 static void
 NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
-                          PRBool aEditable)
+                          bool aEditable)
 {
-  PRUint32 i, n = aNode->GetChildCount();
-  for (i = 0; i < n; ++i) {
-    nsIContent *child = aNode->GetChildAt(i);
+  for (nsIContent* child = aNode->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     if (child->HasFlag(NODE_IS_EDITABLE) != aEditable &&
         child->IsElement()) {
       child->AsElement()->UpdateState(true);
@@ -2761,7 +2761,7 @@ nsHTMLDocument::TurnEditingOff()
   return NS_OK;
 }
 
-static PRBool HasPresShell(nsPIDOMWindow *aWindow)
+static bool HasPresShell(nsPIDOMWindow *aWindow)
 {
   nsIDocShell *docShell = aWindow->GetDocShell();
   if (!docShell)
@@ -2790,7 +2790,7 @@ nsHTMLDocument::EditingStateChanged()
     return NS_OK;
   }
 
-  PRBool designMode = HasFlag(NODE_IS_EDITABLE);
+  bool designMode = HasFlag(NODE_IS_EDITABLE);
   EditingState newState = designMode ? eDesignMode :
                           (mContentEditableCount > 0 ? eContentEditable : eOff);
   if (mEditingState == newState) {
@@ -2845,9 +2845,9 @@ nsHTMLDocument::EditingStateChanged()
     return NS_OK;
   }
 
-  PRBool makeWindowEditable = mEditingState == eOff;
+  bool makeWindowEditable = mEditingState == eOff;
   bool updateState = false;
-  PRBool spellRecheckAll = PR_FALSE;
+  bool spellRecheckAll = false;
   nsCOMPtr<nsIEditor> editor;
 
   {
@@ -2940,7 +2940,7 @@ nsHTMLDocument::EditingStateChanged()
     // Set the editor to not insert br's on return when in p
     // elements by default.
     // XXX Do we only want to do this for designMode?
-    PRBool unused;
+    bool unused;
     rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
                      NS_LITERAL_STRING("false"), &unused);
 
@@ -2988,7 +2988,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv, rv);
     if (subject) {
-      PRBool subsumes;
+      bool subsumes;
       rv = subject->Subsumes(NodePrincipal(), &subsumes);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2996,7 +2996,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     }
   }
 
-  PRBool editableMode = HasFlag(NODE_IS_EDITABLE);
+  bool editableMode = HasFlag(NODE_IS_EDITABLE);
   if (aDesignMode.LowerCaseEqualsASCII(editableMode ? "off" : "on")) {
     SetEditableFlag(!editableMode);
 
@@ -3042,8 +3042,8 @@ struct MidasCommand {
   const char*  incomingCommandString;
   const char*  internalCommandString;
   const char*  internalParamString;
-  PRPackedBool useNewParam;
-  PRPackedBool convertToBoolean;
+  bool useNewParam;
+  bool convertToBoolean;
 };
 
 static const struct MidasCommand gMidasCommandTable[] = {
@@ -3120,19 +3120,19 @@ static const char* const gBlocks[] = {
   "PRE"
 };
 
-static PRBool
+static bool
 ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
                                    const nsAString & inParam,
                                    nsACString& outCommandID,
                                    nsACString& outParam,
-                                   PRBool& outIsBoolean,
-                                   PRBool& outBooleanValue,
-                                   PRBool aIgnoreParams)
+                                   bool& outIsBoolean,
+                                   bool& outBooleanValue,
+                                   bool aIgnoreParams)
 {
   NS_ConvertUTF16toUTF8 convertedCommandID(inCommandID);
 
   // Hack to support old boolean commands that were backwards (see bug 301490).
-  PRBool invertBool = PR_FALSE;
+  bool invertBool = false;
   if (convertedCommandID.LowerCaseEqualsLiteral("usecss")) {
     convertedCommandID.Assign("styleWithCSS");
     invertBool = PR_TRUE;
@@ -3143,7 +3143,7 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
   }
 
   PRUint32 i;
-  PRBool found = PR_FALSE;
+  bool found = false;
   for (i = 0; i < MidasCommandCount; ++i) {
     if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
                                   nsCaseInsensitiveCStringComparator())) {
@@ -3216,26 +3216,26 @@ ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
   return found;
 }
 
-static PRBool
+static bool
 ConvertToMidasInternalCommand(const nsAString & inCommandID,
                               const nsAString & inParam,
                               nsACString& outCommandID,
                               nsACString& outParam,
-                              PRBool& outIsBoolean,
-                              PRBool& outBooleanValue)
+                              bool& outIsBoolean,
+                              bool& outBooleanValue)
 {
   return ConvertToMidasInternalCommandInner(inCommandID, inParam, outCommandID,
                                             outParam, outIsBoolean,
                                             outBooleanValue, PR_FALSE);
 }
 
-static PRBool
+static bool
 ConvertToMidasInternalCommand(const nsAString & inCommandID,
                               nsACString& outCommandID)
 {
   nsCAutoString dummyCString;
   nsAutoString dummyString;
-  PRBool dummyBool;
+  bool dummyBool;
   return ConvertToMidasInternalCommandInner(inCommandID, dummyString,
                                             outCommandID, dummyCString,
                                             dummyBool, dummyBool, PR_TRUE);
@@ -3249,7 +3249,7 @@ nsHTMLDocument::sPasteInternal_id = JSID_VOID;
 /* Helper function to check security of clipboard commands. If aPaste is */
 /* true, we check paste, else we check cutcopy */
 nsresult
-nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
+nsHTMLDocument::DoClipboardSecurityCheck(bool aPaste)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -3295,9 +3295,9 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
                                                in DOMString value); */
 NS_IMETHODIMP
 nsHTMLDocument::ExecCommand(const nsAString & commandID,
-                            PRBool doShowUI,
+                            bool doShowUI,
                             const nsAString & value,
-                            PRBool *_retval)
+                            bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -3340,7 +3340,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramStr;
-  PRBool isBool, boolVal;
+  bool isBool, boolVal;
   if (!ConvertToMidasInternalCommand(commandID, value,
                                      cmdToDispatch, paramStr, isBool, boolVal))
     return NS_OK;
@@ -3376,7 +3376,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
 /* boolean execCommandShowHelp(in DOMString commandID); */
 NS_IMETHODIMP
 nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -3391,7 +3391,7 @@ nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
 /* boolean queryCommandEnabled(in DOMString commandID); */
 NS_IMETHODIMP
 nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -3420,7 +3420,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
 /* boolean queryCommandIndeterm (in DOMString commandID); */
 NS_IMETHODIMP
 nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
-                                     PRBool *_retval)
+                                     bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -3440,7 +3440,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramToCheck;
-  PRBool dummy;
+  bool dummy;
   if (!ConvertToMidasInternalCommand(commandID, commandID,
                                      cmdToDispatch, paramToCheck, dummy, dummy))
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -3462,7 +3462,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
 
 /* boolean queryCommandState(in DOMString commandID); */
 NS_IMETHODIMP
-nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
+nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -3482,7 +3482,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramToCheck;
-  PRBool dummy, dummy2;
+  bool dummy, dummy2;
   if (!ConvertToMidasInternalCommand(commandID, commandID,
                                      cmdToDispatch, paramToCheck, dummy, dummy2))
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -3524,7 +3524,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
 /* boolean queryCommandSupported(in DOMString commandID); */
 NS_IMETHODIMP
 nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
-                                      PRBool *_retval)
+                                      bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -3639,7 +3639,7 @@ nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   return CallQueryInterface(clone.get(), aResult);
 }
 
-PRBool
+bool
 nsHTMLDocument::IsEditingOnAfterFlush()
 {
   nsIDocument* doc = GetParentDocument();

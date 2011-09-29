@@ -111,7 +111,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
             if ((PRWord)d & 4) d++;
             *((double*)   d) = s->val.d;      d++;
             break;
-        case nsXPTType::T_BOOL   : *d = (PRBool)  s->val.b;     break;
+        case nsXPTType::T_BOOL   : *d = (bool)  s->val.b;     break;
         case nsXPTType::T_CHAR   : *d = (char)    s->val.c;     break;
         case nsXPTType::T_WCHAR  : *d = (wchar_t) s->val.wc;    break;
         default:

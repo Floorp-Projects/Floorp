@@ -86,7 +86,7 @@ nsAndroidHandlerApp::SetDetailedDescription(const nsAString & aDescription)
 }
 
 NS_IMETHODIMP
-nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *aRetval)
+nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *aRetval)
 {
   nsCOMPtr<nsAndroidHandlerApp> aApp = do_QueryInterface(aHandlerApp);
   *aRetval = aApp && aApp->mName.Equals(mName) &&

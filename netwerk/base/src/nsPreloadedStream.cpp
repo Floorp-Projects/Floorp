@@ -129,7 +129,7 @@ nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::IsNonBlocking(PRBool *_retval NS_OUTPARAM)
+nsPreloadedStream::IsNonBlocking(bool *_retval NS_OUTPARAM)
 {
     return mStream->IsNonBlocking(_retval);
 }

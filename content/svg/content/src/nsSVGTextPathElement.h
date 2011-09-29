@@ -71,7 +71,7 @@ public:
   NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(nsSVGTextPathElementBase::)
 
   // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -82,7 +82,7 @@ protected:
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
 
-  virtual PRBool IsEventName(nsIAtom* aName);
+  virtual bool IsEventName(nsIAtom* aName);
 
   enum { STARTOFFSET };
   nsSVGLength2 mLengthAttributes[1];

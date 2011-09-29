@@ -249,7 +249,7 @@ public:
   // characters. Returns the same hash code as the HashCode method
   // taking a |PRUnichar*| would if the string were converted to UTF16.
   static PRUint32 HashCodeAsUTF16(const char* start, PRUint32 length,
-                                  PRBool* err);
+                                  bool* err);
 
   // String to longlong
   static PRInt64 atoll(const char *str);
@@ -257,16 +257,16 @@ public:
   static char ToUpper(char aChar) { return NS_ToUpper(aChar); }
   static char ToLower(char aChar) { return NS_ToLower(aChar); }
   
-  static PRBool IsUpper(char aChar) { return NS_IsUpper(aChar); }
-  static PRBool IsLower(char aChar) { return NS_IsLower(aChar); }
+  static bool IsUpper(char aChar) { return NS_IsUpper(aChar); }
+  static bool IsLower(char aChar) { return NS_IsLower(aChar); }
 
-  static PRBool IsAscii(PRUnichar aChar) { return NS_IsAscii(aChar); }
-  static PRBool IsAscii(const PRUnichar* aString) { return NS_IsAscii(aString); }
-  static PRBool IsAsciiAlpha(PRUnichar aChar) { return NS_IsAsciiAlpha(aChar); }
-  static PRBool IsAsciiDigit(PRUnichar aChar) { return NS_IsAsciiDigit(aChar); }
-  static PRBool IsAsciiSpace(PRUnichar aChar) { return NS_IsAsciiWhitespace(aChar); }
-  static PRBool IsAscii(const char* aString) { return NS_IsAscii(aString); }
-  static PRBool IsAscii(const char* aString, PRUint32 aLength) { return NS_IsAscii(aString, aLength); }
+  static bool IsAscii(PRUnichar aChar) { return NS_IsAscii(aChar); }
+  static bool IsAscii(const PRUnichar* aString) { return NS_IsAscii(aString); }
+  static bool IsAsciiAlpha(PRUnichar aChar) { return NS_IsAsciiAlpha(aChar); }
+  static bool IsAsciiDigit(PRUnichar aChar) { return NS_IsAsciiDigit(aChar); }
+  static bool IsAsciiSpace(PRUnichar aChar) { return NS_IsAsciiWhitespace(aChar); }
+  static bool IsAscii(const char* aString) { return NS_IsAscii(aString); }
+  static bool IsAscii(const char* aString, PRUint32 aLength) { return NS_IsAscii(aString, aLength); }
 };
 
 

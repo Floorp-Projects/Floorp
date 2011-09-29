@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
 <head>
   <title>Generic tests for SVG animated length lists</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="matrixUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -23,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
   <text id="text">text</text>
   <path id="path"/>
   <polyline id="polyline"/>
+  <g id="g"/>
 </svg>
 </div>
 <pre id="test">
@@ -343,12 +345,9 @@ var tests = [
       return ;
     }
   },
+  */
   {
     // SVGTransformList test:
-
-    // XXX SVGTransformList has two extra methods, so add special case code to
-    // the test_xxx_API() functions below.
-
     target_element_id: 'g',
     attr_name: 'transform', // gradientTransform, patternTransform
     prop_name: 'transform',
@@ -358,17 +357,41 @@ var tests = [
     prop_type: 'SVGAnimatedTransformList',
     list_type: 'SVGTransformList',
     item_type: 'SVGTransform',
-    attr_val_3a: '',
-    attr_val_3b: '',
-    attr_val_4 : '',
-    attr_val_5a: '',
-    attr_val_5b: '',
+    attr_val_3a: 'translate(20 10) rotate(90 10 10) skewX(45)',
+    attr_val_3b: 'translate(30 40) scale(2) matrix(1 2 3 4 5 6)',
+    attr_val_4 : 'scale(3 2) translate(19) skewY(2) rotate(-10)',
+    attr_val_5a:
+      'translate(20) rotate(-10) skewY(3) matrix(1 2 3 4 5 6) scale(0.5)',
+    attr_val_5b:
+      'skewX(45) rotate(45 -10 -10) skewX(-45) scale(2) matrix(6 5 4 3 2 1)',
+    // SVGTransformList animation addition is tested in
+    // test_SVGTransformListAddition.xhtml so we don't need:
+    // - attr_val_3b
+    // - attr_val_3b
+    // - attr_val_5b_firstItem_x3_constructor
+    // But we populate the first two anyway just in case they are later used for
+    // something other than testing animation.
+    // attr_val_5b_firstItem_x3_constructor is only used for animation
     item_constructor: function() {
       // XXX populate the matrix with different values each time
       return document.getElementById('svg').createSVGTransform();
+    },
+    item_is: function(itemA, itemB, message) {
+      ok(typeof(itemA.type) != 'undefined' &&
+         typeof(itemB.type) != 'undefined',
+         'expecting type property');
+      ok(typeof(itemA.matrix) != 'undefined' &&
+         typeof(itemB.matrix) != 'undefined',
+         'expecting matrix property');
+      ok(typeof(itemA.angle) != 'undefined' &&
+         typeof(itemB.angle) != 'undefined',
+         'expecting matrix property');
+
+      is(itemA.type, itemB.type, message);
+      is(itemA.angle, itemB.angle, message);
+      cmpMatrix(itemA.matrix, itemB.matrix, message);
     }
   },
-  */
 ];
 
 
@@ -397,22 +420,18 @@ function create_animate_elements(test)
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var df = document.createDocumentFragment();
 
-  if (test.attr_name == 'transform' ||
-      test.attr_name == 'gradientTransform' ||
-      test.attr_name == 'patternTransform') {
-    ok(false, 'Need to update create_animate_element to handle transforms?')
-    throw new Error('Don\'t know how to handle transforms');
-    var animate1 =
-      document.createElementNS(SVG_NS, 'animateTransform');
-    var animate2 =
-      document.createElementNS(SVG_NS, 'animateTransform');
-    var animate3 =
-      document.createElementNS(SVG_NS, 'animateTransform');
-  } else {
-    var animate1 = document.createElementNS(SVG_NS, 'animate');
-    var animate2 = document.createElementNS(SVG_NS, 'animate');
-    var animate3 = document.createElementNS(SVG_NS, 'animate');
+  if (is_transform_attr(test.attr_name)) {
+    // animateTransform is "special". Although it targets an
+    // nsSVGAnimatedTransformList it only takes nsSVGTransform values as
+    // animation values. Therefore all the assumptions we're testing about the
+    // length of lists don't apply. We simply have to test it separately.
+    // This is done in test_SVGTransformListAddition.xhtml.
+    return df; // Return the empty document fragment
   }
+
+  var animate1 = document.createElementNS(SVG_NS, 'animate');
+  var animate2 = document.createElementNS(SVG_NS, 'animate');
+  var animate3 = document.createElementNS(SVG_NS, 'animate');
 
   animate1.setAttribute('attributeName', test.attr_name);
   animate1.setAttribute('from', test.attr_val_5a);
@@ -440,6 +459,12 @@ function create_animate_elements(test)
   df.appendChild(animate3);
 
   return df;
+}
+
+function is_transform_attr(attr_name) {
+  return attr_name == 'transform' ||
+         attr_name == 'gradientTransform' ||
+         attr_name == 'patternTransform';
 }
 
 function get_array_of_list_items(list)
@@ -1067,11 +1092,6 @@ function run_list_mutation_tests()
  * animation timeline, using SVGSVGElement.setCurrentTime() to move forward
  * along the timeline.
  *
- * Since Mozilla doesn't currently support moving backwards along the timeline
- * we run over all the tests before moving on to the next point in the
- * timeline and running over all the tests again (rather than having one big
- * 'for' loop).
- *
  * See the comment for create_animate_elements() for details of the animations
  * and their timings.
  */
@@ -1080,20 +1100,22 @@ function run_animation_timeline_tests()
   var svg = document.getElementById('svg');
 
   for each (var t in tests) {
+    // Skip if there is no animVal for this test or if it is a transform list
+    // since these are handled specially
+    if (!t.animVal || is_transform_attr(t.attr_name))
+      continue;
+
+    svg.setCurrentTime(0); // reset timeline
+
     // Reset attributes before moving along the timeline and triggering SMIL:
     t.element.setAttribute(t.attr_name, t.attr_val_4);
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 1s    ********************/
+    /********************    t = 1s    ********************/
 
-  svg.setCurrentTime(1); // begin first animation
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(1); // begin first animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1134,16 +1156,11 @@ function run_animation_timeline_tests()
 
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 2s    ********************/
+    /********************    t = 2s    ********************/
 
-  svg.setCurrentTime(2); // begin override animation
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(2); // begin override animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1162,24 +1179,11 @@ function run_animation_timeline_tests()
        'start of that animation.');
 
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 3s    ********************/
+    /********************    t = 3s    ********************/
 
-  svg.setCurrentTime(3); // end of override animation
-
-  // [SVGWG issue] what should happen at the exact instant the override
-  // animation is due to end?
-
-
-  /********************    t = 4s    ********************/
-
-  svg.setCurrentTime(4); // override animation definitely finished
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(3); // end of override animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1198,16 +1202,11 @@ function run_animation_timeline_tests()
        'end of that animation.');
 
     t.old_animVal_items = get_array_of_list_items(t.animVal);
-  }
 
 
-  /********************    t = 5s    ********************/
+    /********************    t = 5s    ********************/
 
-  svg.setCurrentTime(5); // animation repeat point
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(5); // animation repeat point
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1219,16 +1218,11 @@ function run_animation_timeline_tests()
        'When an animation repeats, the list items that are at a given '+
        'index in the '+t.list_type+' for '+t.av_path+' should be the exact '+
        'same objects as were at that index before the repeat occured.');
-  }
 
 
-  /********************    t = 6s    ********************/
+    /********************    t = 6s    ********************/
 
-  svg.setCurrentTime(6); // inside animation repeat
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(6); // inside animation repeat
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1240,16 +1234,11 @@ function run_animation_timeline_tests()
        'When an animation repeats, the list items that are at a given '+
        'index in the '+t.list_type+' for '+t.av_path+' should be the exact '+
        'same objects as were at that index before the repeat occured.');
-  }
 
 
-  /********************    t = 7s    ********************/
+    /********************    t = 7s    ********************/
 
-  svg.setCurrentTime(7); // start of additive="sum" animation
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(7); // start of additive="sum" animation
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],
@@ -1291,16 +1280,11 @@ function run_animation_timeline_tests()
     // Specifically that would not be good for 'x' and 'y' on <text> since
     // lengths there are not naturally zero. See the comment in
     // SVGLengthListSMILAttr::Add().
-  }
 
 
-  /********************    t = 13s    ********************/
+    /********************    t = 13s    ********************/
 
-  svg.setCurrentTime(13); // all animations have finished, but one is frozen
-
-  for each (var t in tests) {
-    if (!t.animVal)
-      continue;
+    svg.setCurrentTime(13); // all animations have finished, but one is frozen
 
     ok(t.baseVal.numberOfItems == t.old_baseVal_items.length &&
        t.baseVal.getItem(3) === t.old_baseVal_items[3],

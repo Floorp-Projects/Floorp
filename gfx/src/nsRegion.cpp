@@ -57,19 +57,19 @@
 // Fast inline analogues of nsRect methods for nsRegion::nsRectFast.
 // Check for emptiness is not required - it is guaranteed by caller.
 
-inline PRBool nsRegion::nsRectFast::Contains (const nsRect& aRect) const
+inline bool nsRegion::nsRectFast::Contains (const nsRect& aRect) const
 {
-  return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+  return (bool) ((aRect.x >= x) && (aRect.y >= y) &&
                    (aRect.XMost () <= XMost ()) && (aRect.YMost () <= YMost ()));
 }
 
-inline PRBool nsRegion::nsRectFast::Intersects (const nsRect& aRect) const
+inline bool nsRegion::nsRectFast::Intersects (const nsRect& aRect) const
 {
-  return (PRBool) ((x < aRect.XMost ()) && (y < aRect.YMost ()) &&
+  return (bool) ((x < aRect.XMost ()) && (y < aRect.YMost ()) &&
                    (aRect.x < XMost ()) && (aRect.y < YMost ()));
 }
 
-inline PRBool nsRegion::nsRectFast::IntersectRect (const nsRect& aRect1, const nsRect& aRect2)
+inline bool nsRegion::nsRectFast::IntersectRect (const nsRect& aRect1, const nsRect& aRect2)
 {
   const nscoord xmost = NS_MIN (aRect1.XMost (), aRect2.XMost ());
   x = NS_MAX (aRect1.x, aRect2.x);
@@ -350,7 +350,7 @@ inline void nsRegion::RestoreLinkChain ()
 // If necessary then bounding rectangle could be updated and rectangle combined
 // with neighbour rectangles. This is usually done in Optimize ()
 
-void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
+void nsRegion::InsertInPlace (RgnRect* aRect, bool aOptimizeOnFly)
 {
   if (mRectCount == 0)
     InsertAfter (aRect, &mRectListHead);
@@ -991,7 +991,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRect& aRect)
   return *this;
 }
 
-PRBool nsRegion::Contains (const nsRect& aRect) const
+bool nsRegion::Contains (const nsRect& aRect) const
 {
   if (aRect.IsEmpty())
     return PR_TRUE;
@@ -1005,7 +1005,7 @@ PRBool nsRegion::Contains (const nsRect& aRect) const
   return tmpRgn.IsEmpty();
 }
 
-PRBool nsRegion::Contains (const nsRegion& aRgn) const
+bool nsRegion::Contains (const nsRegion& aRgn) const
 {
   // XXX this could be made faster
   nsRegionRectIterator iter(aRgn);
@@ -1017,7 +1017,7 @@ PRBool nsRegion::Contains (const nsRegion& aRgn) const
   return PR_TRUE;
 }
 
-PRBool nsRegion::Intersects (const nsRect& aRect) const
+bool nsRegion::Intersects (const nsRect& aRect) const
 {
   if (aRect.IsEmpty() || IsEmpty())
     return PR_FALSE;
@@ -1252,7 +1252,7 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
 }
 
 
-PRBool nsRegion::IsEqual (const nsRegion& aRegion) const
+bool nsRegion::IsEqual (const nsRegion& aRegion) const
 {
   if (mRectCount == 0)
     return (aRegion.mRectCount == 0) ? PR_TRUE : PR_FALSE;
@@ -1542,14 +1542,14 @@ namespace {
       mSize = aOther.mSize;
       return *this;
     }
-    PRBool operator<(const SizePair& aOther) const {
+    bool operator<(const SizePair& aOther) const {
       if (mSizeContainingRect < aOther.mSizeContainingRect)
         return PR_TRUE;
       if (mSizeContainingRect > aOther.mSizeContainingRect)
         return PR_FALSE;
       return mSize < aOther.mSize;
     }
-    PRBool operator>(const SizePair& aOther) const {
+    bool operator>(const SizePair& aOther) const {
       return aOther.operator<(*this);
     }
     SizePair operator+(const SizePair& aOther) const {

@@ -3,7 +3,7 @@ subversion repository using the update.sh script. The only changes
 made were those applied by update.sh and the addition/upate of
 Makefile.in files for the Mozilla build system.
 
-The upstream release used was libvorbis 1.3.2 (SVN r17614).
+The upstream version used was libvorbis svn r18077.
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.

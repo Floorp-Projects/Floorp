@@ -156,7 +156,7 @@ public:
 
   // nsAccessNode
   virtual bool IsDefunct() const;
-  virtual PRBool Init();
+  virtual bool Init();
   virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
@@ -194,7 +194,7 @@ protected:
   /**
    * Return true if value of cell can be modified.
    */
-  PRBool IsEditable() const;
+  bool IsEditable() const;
 
   enum { eAction_Click = 0 };
 

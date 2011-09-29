@@ -130,7 +130,7 @@ NS_IMETHODIMP nsCyrXPCOMDetector::Init(
 
 //----------------------------------------------------------
 NS_IMETHODIMP nsCyrXPCOMDetector::DoIt(
-  const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe)
+  const char* aBuf, PRUint32 aLen, bool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 

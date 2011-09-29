@@ -66,7 +66,7 @@
 NS_IMPL_ISUPPORTS3(nsMacShellService, nsIMacShellService, nsIShellService, nsIWebProgressListener)
 
 NS_IMETHODIMP
-nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
+nsMacShellService::IsDefaultBrowser(bool aStartupCheck, bool* aIsDefaultBrowser)
 {
   *aIsDefaultBrowser = PR_FALSE;
 
@@ -95,7 +95,7 @@ nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrow
 }
 
 NS_IMETHODIMP
-nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
+nsMacShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 {
   // Note: We don't support aForAllUsers on Mac OS X.
 
@@ -124,7 +124,7 @@ nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 }
 
 NS_IMETHODIMP
-nsMacShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
+nsMacShellService::GetShouldCheckDefaultBrowser(bool* aResult)
 {
   // If we've already checked, the browser has been started and this is a 
   // new window open, and we don't want to check again.
@@ -144,7 +144,7 @@ nsMacShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsMacShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
+nsMacShellService::SetShouldCheckDefaultBrowser(bool aShouldCheck)
 {
   nsCOMPtr<nsIPrefBranch> prefs;
   nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -272,7 +272,7 @@ nsMacShellService::OnStateChange(nsIWebProgress* aWebProgress,
     if (os)
       os->NotifyObservers(nsnull, "shell:desktop-background-changed", nsnull);
 
-    PRBool exists = PR_FALSE;
+    bool exists = false;
     mBackgroundFile->Exists(&exists);
     if (!exists)
       return NS_OK;
@@ -362,7 +362,7 @@ nsMacShellService::OpenApplication(PRInt32 aApplication)
       nsCOMPtr<nsILocalFile> lf;
       rv = NS_NewNativeLocalFile(NETWORK_PREFPANE, PR_TRUE, getter_AddRefs(lf));
       NS_ENSURE_SUCCESS(rv, rv);
-      PRBool exists;
+      bool exists;
       lf->Exists(&exists);
       if (!exists)
         return NS_ERROR_FILE_NOT_FOUND;
@@ -374,7 +374,7 @@ nsMacShellService::OpenApplication(PRInt32 aApplication)
       nsCOMPtr<nsILocalFile> lf;
       rv = NS_NewNativeLocalFile(DESKTOP_PREFPANE, PR_TRUE, getter_AddRefs(lf));
       NS_ENSURE_SUCCESS(rv, rv);
-      PRBool exists;
+      bool exists;
       lf->Exists(&exists);
       if (!exists)
         return NS_ERROR_FILE_NOT_FOUND;

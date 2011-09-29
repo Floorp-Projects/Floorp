@@ -56,23 +56,23 @@ public:
   virtual ~nsNSSCertTrust();
 
   /* query */
-  PRBool HasAnyCA();
-  PRBool HasAnyUser();
-  PRBool HasCA(PRBool checkSSL = PR_TRUE, 
-               PRBool checkEmail = PR_TRUE,  
-               PRBool checkObjSign = PR_TRUE);
-  PRBool HasPeer(PRBool checkSSL = PR_TRUE, 
-                 PRBool checkEmail = PR_TRUE,  
-                 PRBool checkObjSign = PR_TRUE);
-  PRBool HasUser(PRBool checkSSL = PR_TRUE, 
-                 PRBool checkEmail = PR_TRUE,  
-                 PRBool checkObjSign = PR_TRUE);
-  PRBool HasTrustedCA(PRBool checkSSL = PR_TRUE, 
-                      PRBool checkEmail = PR_TRUE,  
-                      PRBool checkObjSign = PR_TRUE);
-  PRBool HasTrustedPeer(PRBool checkSSL = PR_TRUE, 
-                        PRBool checkEmail = PR_TRUE,  
-                        PRBool checkObjSign = PR_TRUE);
+  bool HasAnyCA();
+  bool HasAnyUser();
+  bool HasCA(bool checkSSL = true, 
+               bool checkEmail = true,  
+               bool checkObjSign = true);
+  bool HasPeer(bool checkSSL = true, 
+                 bool checkEmail = true,  
+                 bool checkObjSign = true);
+  bool HasUser(bool checkSSL = true, 
+                 bool checkEmail = true,  
+                 bool checkObjSign = true);
+  bool HasTrustedCA(bool checkSSL = true, 
+                      bool checkEmail = true,  
+                      bool checkObjSign = true);
+  bool HasTrustedPeer(bool checkSSL = true, 
+                        bool checkEmail = true,  
+                        bool checkObjSign = true);
 
   /* common defaults */
   /* equivalent to "c,c,c" */
@@ -92,22 +92,22 @@ public:
 
   /* general setters */
   /* read: "p, P, c, C, T, u, w" */
-  void SetSSLTrust(PRBool peer, PRBool tPeer,
-                   PRBool ca,   PRBool tCA, PRBool tClientCA,
-                   PRBool user, PRBool warn); 
+  void SetSSLTrust(bool peer, bool tPeer,
+                   bool ca,   bool tCA, bool tClientCA,
+                   bool user, bool warn); 
 
-  void SetEmailTrust(PRBool peer, PRBool tPeer,
-                     PRBool ca,   PRBool tCA, PRBool tClientCA,
-                     PRBool user, PRBool warn);
+  void SetEmailTrust(bool peer, bool tPeer,
+                     bool ca,   bool tCA, bool tClientCA,
+                     bool user, bool warn);
 
-  void SetObjSignTrust(PRBool peer, PRBool tPeer,
-                       PRBool ca,   PRBool tCA, PRBool tClientCA,
-                       PRBool user, PRBool warn);
+  void SetObjSignTrust(bool peer, bool tPeer,
+                       bool ca,   bool tCA, bool tClientCA,
+                       bool user, bool warn);
 
   /* set c <--> CT */
-  void AddCATrust(PRBool ssl, PRBool email, PRBool objSign);
+  void AddCATrust(bool ssl, bool email, bool objSign);
   /* set p <--> P */
-  void AddPeerTrust(PRBool ssl, PRBool email, PRBool objSign);
+  void AddPeerTrust(bool ssl, bool email, bool objSign);
 
   /* get it (const?) (shallow?) */
   CERTCertTrust * GetTrust() { return &mTrust; }
@@ -115,7 +115,7 @@ public:
 private:
   void addTrust(unsigned int *t, unsigned int v);
   void removeTrust(unsigned int *t, unsigned int v);
-  PRBool hasTrust(unsigned int t, unsigned int v);
+  bool hasTrust(unsigned int t, unsigned int v);
   CERTCertTrust mTrust;
 };
 

@@ -351,7 +351,7 @@ nsHttpHandler::InitConnectionMgr()
 nsresult
 nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
                                          PRUint8 caps,
-                                         PRBool useProxy)
+                                         bool useProxy)
 {
     nsresult rv;
 
@@ -408,7 +408,7 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     return request->SetHeader(header, *connectionType);
 }
 
-PRBool
+bool
 nsHttpHandler::IsAcceptableEncoding(const char *enc)
 {
     if (!enc)
@@ -469,7 +469,7 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
     return NS_OK;
 }
 
-PRBool
+bool
 nsHttpHandler::InPrivateBrowsingMode()
 {
     if (PRIVATE_BROWSING_UNKNOWN == mInPrivateBrowsingMode) {
@@ -479,7 +479,7 @@ nsHttpHandler::InPrivateBrowsingMode()
         if (!pbs)
             return PRIVATE_BROWSING_OFF;
 
-        PRBool p = PR_FALSE;
+        bool p = false;
         pbs->GetPrivateBrowsingEnabled(&p);
         mInPrivateBrowsingMode = p ? PRIVATE_BROWSING_ON : PRIVATE_BROWSING_OFF;
     }
@@ -789,7 +789,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // UA components
     //
 
-    PRBool cVar = PR_FALSE;
+    bool cVar = false;
 
     if (PREF_CHANGED(UA_PREF("compatMode.firefox"))) {
         rv = prefs->GetBoolPref(UA_PREF("compatMode.firefox"), &cVar);
@@ -1087,7 +1087,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     //
 
     if (PREF_CHANGED(NETWORK_ENABLEIDN)) {
-        PRBool enableIDN = PR_FALSE;
+        bool enableIDN = false;
         prefs->GetBoolPref(NETWORK_ENABLEIDN, &enableIDN);
         // No locking is required here since this method runs in the main
         // UI thread, and so do all the methods in nsHttpChannel.cpp
@@ -1269,7 +1269,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
     NS_ENSURE_ARG_POINTER(uri);
     NS_ENSURE_ARG_POINTER(result);
 
-    PRBool isHttp = PR_FALSE, isHttps = PR_FALSE;
+    bool isHttp = false, isHttps = false;
 
     // Verify that we have been given a valid scheme
     nsresult rv = uri->SchemeIs("http", &isHttp);
@@ -1287,7 +1287,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 }
 
 NS_IMETHODIMP 
-nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;
@@ -1314,7 +1314,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         NS_ENSURE_ARG(proxyInfo);
     }
 
-    PRBool https;
+    bool https;
     nsresult rv = uri->SchemeIs("https", &https);
     if (NS_FAILED(rv))
         return rv;
@@ -1525,7 +1525,7 @@ nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval)
+nsHttpsHandler::AllowPort(PRInt32 aPort, const char *aScheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;

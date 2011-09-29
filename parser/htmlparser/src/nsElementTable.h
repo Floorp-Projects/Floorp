@@ -104,10 +104,10 @@ extern void CheckElementTable();
  * @param 
  * @return TRUE or FALSE
  */
-inline PRBool TestBits(int aBitset,int aTest) {
+inline bool TestBits(int aBitset,int aTest) {
   if(aTest) {
     PRInt32 result=(aBitset & aTest);
-    return PRBool(result==aTest);
+    return bool(result==aTest);
   }
   return PR_FALSE;
 }
@@ -127,47 +127,47 @@ struct nsHTMLElement {
   static  void    DebugDumpContainType(const char* aFilename);
 #endif
 
-  static  PRBool  IsInlineEntity(eHTMLTags aTag);
-  static  PRBool  IsFlowEntity(eHTMLTags aTag);
-  static  PRBool  IsBlockCloser(eHTMLTags aTag);
+  static  bool    IsInlineEntity(eHTMLTags aTag);
+  static  bool    IsFlowEntity(eHTMLTags aTag);
+  static  bool    IsBlockCloser(eHTMLTags aTag);
 
-  inline  PRBool  IsBlock(void) const { 
+  inline  bool    IsBlock(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kBlock);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsBlockEntity(void) const { 
+  inline  bool    IsBlockEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kBlockEntity);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsSpecialEntity(void) const { 
+  inline  bool    IsSpecialEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kSpecial);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsPhraseEntity(void) const { 
+  inline  bool    IsPhraseEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kPhrase);
                     } 
                     return PR_FALSE;
                   }
 
-  inline  PRBool  IsFontStyleEntity(void) const { 
+  inline  bool    IsFontStyleEntity(void) const { 
                     if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)){
                       return TestBits(mParentBits,kFontStyle);
                     } 
                     return PR_FALSE;
                   }
   
-  inline  PRBool  IsTableElement(void) const {  //return yes if it's a table or child of a table...
-                    PRBool result=PR_FALSE;
+  inline  bool    IsTableElement(void) const {  //return yes if it's a table or child of a table...
+                    bool result=false;
 
                     switch(mTagID) {
                       case eHTMLTag_table:
@@ -201,32 +201,32 @@ struct nsHTMLElement {
   const TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
   const TagList*        GetSpecialParents(void) const {return mSpecialParents;}
 
-  PRBool          IsMemberOf(PRInt32 aType) const;
-  PRBool          ContainsSet(PRInt32 aType) const;
-  PRBool          CanContainType(PRInt32 aType) const;
+  bool            IsMemberOf(PRInt32 aType) const;
+  bool            ContainsSet(PRInt32 aType) const;
+  bool            CanContainType(PRInt32 aType) const;
 
-  PRBool          CanContain(eHTMLTags aChild,nsDTDMode aMode) const;
-  PRBool          CanExclude(eHTMLTags aChild) const;
-  PRBool          CanOmitEndTag(void) const;
-  PRBool          CanContainSelf(void) const;
-  PRBool          CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,eHTMLTags aTag) const;
-  PRBool          HasSpecialProperty(PRInt32 aProperty) const;
-  PRBool          IsSpecialParent(eHTMLTags aTag) const;
-  PRBool          IsExcludableParent(eHTMLTags aParent) const;
-  PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch) const;
-  PRBool          ShouldVerifyHierarchy() const;
+  bool            CanContain(eHTMLTags aChild,nsDTDMode aMode) const;
+  bool            CanExclude(eHTMLTags aChild) const;
+  bool            CanOmitEndTag(void) const;
+  bool            CanContainSelf(void) const;
+  bool            CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,eHTMLTags aTag) const;
+  bool            HasSpecialProperty(PRInt32 aProperty) const;
+  bool            IsSpecialParent(eHTMLTags aTag) const;
+  bool            IsExcludableParent(eHTMLTags aParent) const;
+  bool            SectionContains(eHTMLTags aTag,bool allowDepthSearch) const;
+  bool            ShouldVerifyHierarchy() const;
 
-  static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode);
-  static  PRBool  IsContainer(eHTMLTags aTag) ;
-  static  PRBool  IsResidualStyleTag(eHTMLTags aTag) ;
-  static  PRBool  IsTextTag(eHTMLTags aTag);
-  static  PRBool  IsWhitespaceTag(eHTMLTags aTag);
+  static  bool    CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode);
+  static  bool    IsContainer(eHTMLTags aTag) ;
+  static  bool    IsResidualStyleTag(eHTMLTags aTag) ;
+  static  bool    IsTextTag(eHTMLTags aTag);
+  static  bool    IsWhitespaceTag(eHTMLTags aTag);
 
-  static  PRBool  IsBlockParent(eHTMLTags aTag);
-  static  PRBool  IsInlineParent(eHTMLTags aTag); 
-  static  PRBool  IsFlowParent(eHTMLTags aTag);
-  static  PRBool  IsSectionTag(eHTMLTags aTag);
-  static  PRBool  IsChildOfHead(eHTMLTags aTag,PRBool& aExclusively) ;
+  static  bool    IsBlockParent(eHTMLTags aTag);
+  static  bool    IsInlineParent(eHTMLTags aTag); 
+  static  bool    IsFlowParent(eHTMLTags aTag);
+  static  bool    IsSectionTag(eHTMLTags aTag);
+  static  bool    IsChildOfHead(eHTMLTags aTag,bool& aExclusively) ;
 
   eHTMLTags       mTagID;
   eHTMLTags       mRequiredAncestor;

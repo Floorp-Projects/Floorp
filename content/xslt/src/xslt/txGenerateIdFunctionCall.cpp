@@ -121,7 +121,7 @@ GenerateIdFunctionCall::getReturnType()
     return STRING_RESULT;
 }
 
-PRBool
+bool
 GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     if (mParams.IsEmpty()) {

@@ -116,15 +116,15 @@ public:
 #undef FORWARDED_EVENT
 #undef EVENT
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
@@ -333,7 +333,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, BgColor, bgcolor)
 
-PRBool
+bool
 nsHTMLBodyElement::ParseAttribute(PRInt32 aNamespaceID,
                                   nsIAtom* aAttribute,
                                   const nsAString& aValue,
@@ -362,7 +362,7 @@ nsHTMLBodyElement::ParseAttribute(PRInt32 aNamespaceID,
 }
 
 void
-nsHTMLBodyElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsHTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
@@ -445,7 +445,7 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLBodyElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {

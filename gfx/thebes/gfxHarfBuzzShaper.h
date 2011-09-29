@@ -50,7 +50,7 @@ public:
     gfxHarfBuzzShaper(gfxFont *aFont);
     virtual ~gfxHarfBuzzShaper();
 
-    virtual PRBool InitTextRun(gfxContext *aContext,
+    virtual bool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
@@ -117,10 +117,10 @@ protected:
 
     // Whether the font implements GetGlyph, or we should read tables
     // directly
-    PRPackedBool mUseFontGetGlyph;
+    bool mUseFontGetGlyph;
     // Whether the font implements GetGlyphWidth, or we should read tables
     // directly to get ideal widths
-    PRPackedBool mUseFontGlyphWidths;
+    bool mUseFontGlyphWidths;
 };
 
 #endif /* GFX_HARFBUZZSHAPER_H */

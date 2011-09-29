@@ -62,35 +62,35 @@ public:
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                              PRUint8 aWidgetType, nsIntMargin* aResult);
 
-  virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsDeviceContext* aContext,
+  virtual NS_HIDDEN_(bool) GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               PRUint8 aWidgetType,
                                               nsIntMargin* aResult);
 
-  virtual NS_HIDDEN_(PRBool) GetWidgetOverflow(nsDeviceContext* aContext,
+  virtual NS_HIDDEN_(bool) GetWidgetOverflow(nsDeviceContext* aContext,
                                                nsIFrame* aFrame,
                                                PRUint8 aWidgetType,
                                                nsRect* aOverflowRect);
 
   NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext,
                                   nsIFrame* aFrame, PRUint8 aWidgetType,
-                                  nsIntSize* aResult, PRBool* aIsOverridable);
+                                  nsIntSize* aResult, bool* aIsOverridable);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
-                                nsIAtom* aAttribute, PRBool* aShouldRepaint);
+                                nsIAtom* aAttribute, bool* aShouldRepaint);
 
   NS_IMETHOD ThemeChanged();
 
-  NS_IMETHOD_(PRBool) ThemeSupportsWidget(nsPresContext* aPresContext,
+  NS_IMETHOD_(bool) ThemeSupportsWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
                                           PRUint8 aWidgetType);
 
-  NS_IMETHOD_(PRBool) WidgetIsContainer(PRUint8 aWidgetType);
+  NS_IMETHOD_(bool) WidgetIsContainer(PRUint8 aWidgetType);
   
-  NS_IMETHOD_(PRBool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
+  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                                nsIFrame* aFrame, PRUint8 aWidgetType);
 
-  PRBool ThemeNeedsComboboxDropmarker();
+  bool ThemeNeedsComboboxDropmarker();
 
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
                                              PRUint8 aWidgetType);
@@ -100,10 +100,10 @@ public:
 
 private:
   gint GetTabMarginPixels(nsIFrame* aFrame);
-  PRBool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
+  bool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                               GtkThemeWidgetType& aGtkWidgetType,
                               GtkWidgetState* aState, gint* aWidgetFlags);
-  PRBool GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
+  bool GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
                                nsIntMargin* aExtra);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);

@@ -52,19 +52,19 @@ public:
 
 protected:
     void ForceRefresh();
-    nsresult GetBoolPref(const char * aPrefName, PRBool *aValue);
-    nsresult SetBoolPrefAndRefresh(const char * aPrefName, PRBool aNewValue);
+    nsresult GetBoolPref(const char * aPrefName, bool *aValue);
+    nsresult SetBoolPrefAndRefresh(const char * aPrefName, bool aNewValue);
 
     nsCOMPtr<nsIDocShell> mDocShell;
 
-    PRBool mEditorMode;
-    PRBool mVisualDebugging;
-    PRBool mVisualEventDebugging;
-    PRBool mPaintFlashing;
-    PRBool mPaintDumping;
-    PRBool mInvalidateDumping;
-    PRBool mEventDumping;
-    PRBool mMotionEventDumping;
-    PRBool mCrossingEventDumping;
-    PRBool mReflowCounts;
+    bool mEditorMode;
+    bool mVisualDebugging;
+    bool mVisualEventDebugging;
+    bool mPaintFlashing;
+    bool mPaintDumping;
+    bool mInvalidateDumping;
+    bool mEventDumping;
+    bool mMotionEventDumping;
+    bool mCrossingEventDumping;
+    bool mReflowCounts;
 };

@@ -70,10 +70,10 @@ interface nsIObjectInputStream : nsIBinaryInputStream
 %{C++
 
 inline nsresult
-NS_ReadOptionalObject(nsIObjectInputStream* aStream, PRBool aIsStrongRef,
+NS_ReadOptionalObject(nsIObjectInputStream* aStream, bool aIsStrongRef,
                       nsISupports* *aResult)
 {
-    PRBool nonnull;
+    bool nonnull;
     nsresult rv = aStream->ReadBoolean(&nonnull);
     if (NS_SUCCEEDED(rv)) {
         if (nonnull)

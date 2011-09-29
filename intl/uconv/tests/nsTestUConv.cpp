@@ -238,7 +238,7 @@ nsresult testStressDecoder(nsIUnicodeDecoder * aDec,
     printf("ERROR at %s.stress.Length() code=0x%x.\n",aTestName,res);
     return res;
   }
-  PRBool exactLength = (res == NS_EXACT_LENGTH);
+  bool exactLength = (res == NS_EXACT_LENGTH);
 
   // prepare for conversion
   PRInt32 srcLen = 0;
@@ -324,7 +324,7 @@ nsresult testStressEncoder(nsIUnicodeEncoder * aEnc,
     printf("ERROR at %s.stress.Length() code=0x%x.\n",aTestName,res);
     return res;
   }
-  PRBool exactLength = (res == NS_OK_UENC_EXACTLENGTH);
+  bool exactLength = (res == NS_OK_UENC_EXACTLENGTH);
 
   // prepare for conversion
   PRInt32 srcLen = 0;

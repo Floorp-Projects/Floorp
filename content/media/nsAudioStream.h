@@ -57,7 +57,7 @@ public:
   virtual ~nsAudioStream();
 
   // Initialize Audio Library. Some Audio backends require initializing the
-  // library before using it. 
+  // library before using it.
   static void InitLibrary();
 
   // Shutdown Audio Library. Some Audio backends require shutting down the
@@ -73,9 +73,9 @@ public:
   // you may receive an implementation which forwards to a compositing process.
   static nsAudioStream* AllocateStream();
 
-  // Initialize the audio stream. aNumChannels is the number of audio channels 
-  // (1 for mono, 2 for stereo, etc) and aRate is the frequency of the audio 
-  // samples (22050, 44100, etc).
+  // Initialize the audio stream. aNumChannels is the number of audio
+  // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
+  // (22050Hz, 44100Hz, etc).
   // Unsafe to call with the decoder monitor held.
   virtual nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat) = 0;
 
@@ -83,15 +83,13 @@ public:
   // Unsafe to call with the decoder monitor held.
   virtual void Shutdown() = 0;
 
-  // Write audio data to the audio hardware.  aBuf is an array of samples in
-  // the format specified by mFormat of length aCount.  aCount should be
-  // evenly divisible by the number of channels in this audio stream.  If
-  // aCount is larger than the result of Available(), the write will block
-  // until sufficient buffer space is available.
-  virtual nsresult Write(const void* aBuf, PRUint32 aCount) = 0;
+  // Write audio data to the audio hardware.  aBuf is an array of frames in
+  // the format specified by mFormat of length aCount.  If aFrames is larger
+  // than the result of Available(), the write will block until sufficient
+  // buffer space is available.
+  virtual nsresult Write(const void* aBuf, PRUint32 aFrames) = 0;
 
-  // Return the number of audio samples that can be written to the audio device
-  // without blocking.
+  // Return the number of audio frames that can be written without blocking.
   virtual PRUint32 Available() = 0;
 
   // Set the current volume of the audio playback. This is a value from
@@ -108,21 +106,21 @@ public:
   // Resume audio playback
   virtual void Resume() = 0;
 
-  // Return the position in microseconds of the sample being played by the
-  // audio hardware.
+  // Return the position in microseconds of the audio frame being played by
+  // the audio hardware.
   virtual PRInt64 GetPosition() = 0;
 
-  // Return the position, measured in samples played since the start, by
-  // the audio hardware.
-  virtual PRInt64 GetSampleOffset() = 0;
+  // Return the position, measured in audio frames played since the stream
+  // was opened, of the audio hardware.
+  virtual PRInt64 GetPositionInFrames() = 0;
 
   // Returns PR_TRUE when the audio stream is paused.
-  virtual PRBool IsPaused() = 0;
+  virtual bool IsPaused() = 0;
 
-  // Returns the minimum number of samples which must be written before
+  // Returns the minimum number of audio frames which must be written before
   // you can be sure that something will be played.
   // Unsafe to call with the decoder monitor held.
-  virtual PRInt32 GetMinWriteSamples() = 0;
+  virtual PRInt32 GetMinWriteSize() = 0;
 
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;

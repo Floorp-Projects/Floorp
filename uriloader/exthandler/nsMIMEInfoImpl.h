@@ -72,7 +72,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     // I'd use NS_DECL_NSIMIMEINFO, but I don't want GetHasDefaultHandler
     NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval);
     NS_IMETHOD SetFileExtensions(const nsACString & aExtensions);
-    NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval);
+    NS_IMETHOD ExtensionExists(const nsACString & aExtension, bool *_retval);
     NS_IMETHOD AppendExtension(const nsACString & aExtension);
     NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension);
     NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension);
@@ -80,7 +80,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetMIMEType(nsACString & aMIMEType);
     NS_IMETHOD GetDescription(nsAString & aDescription);
     NS_IMETHOD SetDescription(const nsAString & aDescription);
-    NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval);
+    NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, bool *_retval);
     NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredAppHandler);
     NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler);
     NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
@@ -90,8 +90,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
                              nsIInterfaceRequestor *aWindowContext);
     NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
     NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
-    NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
-    NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
+    NS_IMETHOD GetAlwaysAskBeforeHandling(bool *aAlwaysAskBeforeHandling);
+    NS_IMETHOD SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling); 
     NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval); 
 
     enum HandlerClass {
@@ -122,7 +122,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     /**
      * Return whether this MIMEInfo has any extensions
      */
-    PRBool HasExtensions() const { return mExtensions.Length() != 0; }
+    bool HasExtensions() const { return mExtensions.Length() != 0; }
 
   protected:
     /**
@@ -177,7 +177,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     nsHandlerInfoAction    mPreferredAction; ///< preferred action to associate with this type
     nsString               mPreferredAppDescription;
     nsString               mDefaultAppDescription;
-    PRBool                 mAlwaysAskBeforeHandling;
+    bool                   mAlwaysAskBeforeHandling;
 };
 
 
@@ -198,7 +198,7 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
     virtual ~nsMIMEInfoImpl() {}
 
     // nsIMIMEInfo methods
-    NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
+    NS_IMETHOD GetHasDefaultHandler(bool *_retval);
     NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
 
     // additional methods

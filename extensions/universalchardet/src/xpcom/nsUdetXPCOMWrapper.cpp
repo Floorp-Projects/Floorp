@@ -79,7 +79,7 @@ NS_IMETHODIMP nsXPCOMDetector::Init(
 }
 //----------------------------------------------------------
 NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
-              PRUint32 aLen, PRBool* oDontFeedMe)
+              PRUint32 aLen, bool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 

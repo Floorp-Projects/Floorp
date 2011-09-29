@@ -69,7 +69,7 @@ nsUnknownDecoder::nsUnknownDecoder()
 {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    PRBool val;
+    bool val;
     if (NS_SUCCEEDED(prefs->GetBoolPref("security.requireHTMLsuffix", &val)))
       mRequireHTMLsuffix = val;
   }
@@ -276,7 +276,7 @@ nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
 
 // Actual sniffing code
 
-PRBool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest)
+bool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest)
 {
   if (!mRequireHTMLsuffix) {
     return PR_TRUE;
@@ -293,7 +293,7 @@ PRBool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest)
     return PR_FALSE;
   }
   
-  PRBool isLocalFile = PR_FALSE;
+  bool isLocalFile = false;
   if (NS_FAILED(uri->SchemeIs("file", &isLocalFile)) || isLocalFile) {
     return PR_FALSE;
   }
@@ -306,7 +306,7 @@ PRBool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest)
  * in the file.  Each entry has either a type associated with it (set
  * these with the SNIFFER_ENTRY macro) or a function to be executed
  * (set these with the SNIFFER_ENTRY_WITH_FUNC macro).  The function
- * should take a single nsIRequest* and returns PRBool -- PR_TRUE if
+ * should take a single nsIRequest* and returns bool -- true if
  * it sets mContentType, PR_FALSE otherwise
  */
 nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
@@ -391,7 +391,7 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
                "Content type should be known by now.");
 }
 
-PRBool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
+bool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
 {
   // Enumerate content sniffers
   nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
@@ -405,7 +405,7 @@ PRBool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
     return PR_FALSE;
   }
 
-  PRBool hasMore;
+  bool hasMore;
   while (NS_SUCCEEDED(sniffers->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> elem;
     sniffers->GetNext(getter_AddRefs(elem));
@@ -434,7 +434,7 @@ PRBool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
   return PR_FALSE;
 }
 
-PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
+bool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
 {
   /*
    * To prevent a possible attack, we will not consider this to be
@@ -512,7 +512,7 @@ PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
   return PR_FALSE;
 }
 
-PRBool nsUnknownDecoder::SniffForXML(nsIRequest* aRequest)
+bool nsUnknownDecoder::SniffForXML(nsIRequest* aRequest)
 {
   // Just like HTML, this should be able to be shut off.
   if (!AllowSniffing(aRequest)) {
@@ -528,7 +528,7 @@ PRBool nsUnknownDecoder::SniffForXML(nsIRequest* aRequest)
   return PR_TRUE;
 }
 
-PRBool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
+bool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
 {
   nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
   if (mimeService) {
@@ -556,7 +556,7 @@ PRBool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
 #define IS_TEXT_CHAR(ch)                                     \
   (((unsigned char)(ch)) > 31 || (9 <= (ch) && (ch) <= 13) || (ch) == 27)
 
-PRBool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
+bool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
 {
   // All we can do now is try to guess whether this is text/plain or
   // application/octet-stream

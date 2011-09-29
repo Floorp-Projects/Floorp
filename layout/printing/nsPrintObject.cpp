@@ -81,7 +81,7 @@ nsPrintObject::~nsPrintObject()
 //------------------------------------------------------------------
 nsresult 
 nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
-                    PRBool aPrintPreview)
+                    bool aPrintPreview)
 {
   mPrintPreview = aPrintPreview;
 

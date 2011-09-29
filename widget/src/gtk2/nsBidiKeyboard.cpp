@@ -80,7 +80,7 @@ nsBidiKeyboard::~nsBidiKeyboard()
 }
 
 NS_IMETHODIMP
-nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
+nsBidiKeyboard::IsLangRTL(bool *aIsRTL)
 {
     if (!mHaveBidiKeyboards)
         return NS_ERROR_FAILURE;
@@ -110,7 +110,7 @@ nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(PRBool* aResult)
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
 {
   // not implemented yet
   return NS_ERROR_NOT_IMPLEMENTED;

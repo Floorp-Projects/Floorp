@@ -65,23 +65,23 @@ public:
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalProtocolService methods
-  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
+  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists);
   nsresult LoadUriInternal(nsIURI * aURL);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
   // method overrides for windows registry look up steps....
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, bool *aFound);
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme, 
-                                          PRBool *found,
+                                          bool *found,
                                           nsIHandlerInfo **_retval);
 
   /** Get the string value of a registry value and store it in result.
    * @return PR_TRUE on success, PR_FALSE on failure
    */
-  static PRBool GetValueString(HKEY hKey, const PRUnichar* pValueName, nsAString& result);
+  static bool GetValueString(HKEY hKey, const PRUnichar* pValueName, nsAString& result);
 
   // Removes registry command handler parameters, quotes, and expands environment strings.
-  static PRBool CleanupCmdHandlerPath(nsAString& aCommandHandler);
+  static bool CleanupCmdHandlerPath(nsAString& aCommandHandler);
 
 protected:
   nsresult GetDefaultAppInfo(const nsAString& aTypeName, nsAString& aDefaultDescription, nsIFile** aDefaultApplication);
@@ -91,7 +91,7 @@ protected:
 
   static nsresult GetMIMEInfoFromRegistry(const nsAFlatString& fileType, nsIMIMEInfo *pInfo);
   /// Looks up the type for the extension aExt and compares it to aType
-  static PRBool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
+  static bool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
 
 private:
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN

@@ -119,7 +119,7 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
 }
 
 nsresult
-nsIConstraintValidation::CheckValidity(PRBool* aValidity)
+nsIConstraintValidation::CheckValidity(bool* aValidity)
 {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     *aValidity = PR_TRUE;
@@ -138,9 +138,9 @@ nsIConstraintValidation::CheckValidity(PRBool* aValidity)
 
 void
 nsIConstraintValidation::SetValidityState(ValidityStateType aState,
-                                          PRBool aValue)
+                                          bool aValue)
 {
-  PRBool previousValidity = IsValid();
+  bool previousValidity = IsValid();
 
   if (aValue) {
     mValidityBitField |= aState;
@@ -169,9 +169,9 @@ nsIConstraintValidation::SetCustomValidity(const nsAString& aError)
 }
 
 void
-nsIConstraintValidation::SetBarredFromConstraintValidation(PRBool aBarred)
+nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred)
 {
-  PRBool previousBarred = mBarredFromConstraintValidation;
+  bool previousBarred = mBarredFromConstraintValidation;
 
   mBarredFromConstraintValidation = aBarred;
 

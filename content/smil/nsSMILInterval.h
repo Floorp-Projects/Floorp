@@ -56,7 +56,7 @@ public:
   nsSMILInterval();
   nsSMILInterval(const nsSMILInterval& aOther);
   ~nsSMILInterval();
-  void Unlink(PRBool aFiltered = PR_FALSE);
+  void Unlink(bool aFiltered = false);
 
   const nsSMILInstanceTime* Begin() const
   {
@@ -92,7 +92,7 @@ public:
   void GetDependentTimes(InstanceTimeList& aTimes);
 
   // Cue for assessing if this interval can be filtered
-  PRBool IsDependencyChainLink() const;
+  bool IsDependencyChainLink() const;
 
 private:
   nsRefPtr<nsSMILInstanceTime> mBegin;
@@ -110,8 +110,8 @@ private:
   //
   // However, if mBegin/EndFixed is PR_TRUE, then BOTH the nsSMILInstanceTime
   // OBJECT returned for that end point and its TIME value will not change.
-  PRPackedBool mBeginFixed;
-  PRPackedBool mEndFixed;
+  bool mBeginFixed;
+  bool mEndFixed;
 };
 
 #endif // NS_SMILINTERVAL_H_

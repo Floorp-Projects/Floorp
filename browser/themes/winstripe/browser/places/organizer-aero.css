@@ -77,7 +77,7 @@
     -moz-padding-start: 4px;
     background-clip: padding-box;
     border: 1px solid ThreeDDarkShadow;
-    border-radius: 3.5px;
+    border-radius: 2.5px;
     @navbarTextboxCustomBorder@
   }
 

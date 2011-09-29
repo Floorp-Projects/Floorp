@@ -154,7 +154,7 @@ public:
 class AsyncPaintWaitEvent : public nsRunnable
 {
 public:
-  AsyncPaintWaitEvent(nsIContent* aContent, PRBool aFinished) :
+  AsyncPaintWaitEvent(nsIContent* aContent, bool aFinished) :
     mContent(aContent), mFinished(aFinished)
   {
   }
@@ -169,7 +169,7 @@ public:
 
 private:
   nsCOMPtr<nsIContent> mContent;
-  PRPackedBool         mFinished;
+  bool                 mFinished;
 };
 
 void
@@ -200,7 +200,7 @@ static void OnDestroyImage(void* aPluginInstanceOwner)
 }
 #endif // XP_MACOSX
 
-PRBool
+bool
 nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
 {
   if (mInstance) {
@@ -255,15 +255,15 @@ nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
   }
 }
 
-PRBool
+bool
 nsPluginInstanceOwner::UseAsyncRendering()
 {
 #ifdef XP_MACOSX
   nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
 #endif
 
-  PRBool useAsyncRendering;
-  PRBool result = (mInstance &&
+  bool useAsyncRendering;
+  bool result = (mInstance &&
           NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
           useAsyncRendering &&
 #ifdef XP_MACOSX
@@ -476,8 +476,8 @@ nsresult nsPluginInstanceOwner::GetInstance(nsNPAPIPluginInstance **aInstance)
 {
   NS_ENSURE_ARG_POINTER(aInstance);
 
-  NS_IF_ADDREF(mInstance);
   *aInstance = mInstance;
+  NS_IF_ADDREF(*aInstance);
   return NS_OK;
 }
 
@@ -1343,12 +1343,12 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
   return drawingModel;
 }
 
-PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
+bool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
 {
   if (!mInstance)
     return PR_FALSE;
 
-  PRBool coreAnimation;
+  bool coreAnimation;
   if (!NS_SUCCEEDED(mInstance->IsRemoteDrawingCoreAnimation(&coreAnimation)))
     return PR_FALSE;
 
@@ -1770,7 +1770,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
     // dispatch key events to a TSM handler, which comes back and calls 
     // [ChildView insertText:] on the cocoa widget, which sends a key
     // event back down.
-    static PRBool sInKeyDispatch = PR_FALSE;
+    static bool sInKeyDispatch = false;
 
     if (sInKeyDispatch)
       return aKeyEvent->PreventDefault(); // consume event
@@ -2654,7 +2654,7 @@ nsPluginInstanceOwner::Destroy()
  * Prepare to stop 
  */
 void
-nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
+nsPluginInstanceOwner::PrepareToStop(bool aDelayedStop)
 {
   // Drop image reference because the child may destroy the surface after we return.
   nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
@@ -2979,7 +2979,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
       Renderer::DRAW_SUPPORTS_ALTERNATE_VISUAL;
   }
 
-  PRBool transparent;
+  bool transparent;
   mInstance->IsTransparent(&transparent);
   if (!transparent)
     rendererFlags |= Renderer::DRAW_IS_OPAQUE;
@@ -3023,7 +3023,7 @@ nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface,
     return NS_ERROR_FAILURE;
 
   // See if the plugin must be notified of new window parameters.
-  PRBool doupdatewindow = PR_FALSE;
+  bool doupdatewindow = false;
 
   if (mWindow->x != offset.x || mWindow->y != offset.y) {
     mWindow->x = offset.x;
@@ -3161,7 +3161,7 @@ void nsPluginInstanceOwner::SendIdleEvent()
 }
 
 #ifdef MAC_CARBON_PLUGINS
-void nsPluginInstanceOwner::StartTimer(PRBool isVisible)
+void nsPluginInstanceOwner::StartTimer(bool isVisible)
 {
   if (GetEventModel() != NPEventModelCarbon)
     return;
@@ -3291,7 +3291,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
   if (mObjectFrame) {
     if (!mWidget) {
-      PRBool windowless = PR_FALSE;
+      bool windowless = false;
       mInstance->IsWindowless(&windowless);
 
       // always create widgets in Twips, not pixels
@@ -3413,7 +3413,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 
   nsIntPoint pluginOrigin;
   nsIntRect widgetClip;
-  PRBool widgetVisible;
+  bool widgetVisible;
   pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, widgetVisible);
   mWidgetVisible = widgetVisible;
 
@@ -3539,7 +3539,7 @@ nsPluginInstanceOwner::HidePluginWindow()
 
 #else // XP_MACOSX
 
-void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
+void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(bool aSetWindow)
 {
   if (!mPluginWindow)
     return;
@@ -3552,7 +3552,7 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
 
   const NPWindow oldWindow = *mPluginWindow;
 
-  PRBool windowless = (mPluginWindow->type == NPWindowTypeDrawable);
+  bool windowless = (mPluginWindow->type == NPWindowTypeDrawable);
   nsIntPoint origin = mObjectFrame->GetWindowOriginInPixels(windowless);
 
   mPluginWindow->x = origin.x;
@@ -3602,14 +3602,14 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
 }
 
 void
-nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
+nsPluginInstanceOwner::UpdateWindowVisibility(bool aVisible)
 {
   mPluginWindowVisible = aVisible;
   UpdateWindowPositionAndClipRect(PR_TRUE);
 }
 
 void
-nsPluginInstanceOwner::UpdateDocumentActiveState(PRBool aIsActive)
+nsPluginInstanceOwner::UpdateDocumentActiveState(bool aIsActive)
 {
   mPluginDocumentActiveState = aIsActive;
   UpdateWindowPositionAndClipRect(PR_TRUE);

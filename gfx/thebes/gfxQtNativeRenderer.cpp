@@ -45,7 +45,7 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
                           DrawOutput* output)
 {
     Display *dpy = DisplayOfScreen(screen);
-    PRBool isOpaque = (flags & DRAW_IS_OPAQUE) ? PR_TRUE : PR_FALSE;
+    bool isOpaque = (flags & DRAW_IS_OPAQUE) ? true : false;
     int screenNumber = screen - ScreenOfDisplay(dpy, 0);
 
     if (!isOpaque) {

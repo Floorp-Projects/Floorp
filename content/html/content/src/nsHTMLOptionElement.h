@@ -91,9 +91,9 @@ public:
                                               PRInt32 aModType) const;
 
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
+                                 const nsAString* aValue, bool aNotify);
   
-  void SetSelectedInternal(PRBool aValue, PRBool aNotify);
+  void SetSelectedInternal(bool aValue, bool aNotify);
 
   // nsIContent
   virtual nsEventStates IntrinsicState() const;
@@ -111,12 +111,12 @@ protected:
    */
   nsHTMLSelectElement* GetSelect();
 
-  PRPackedBool mSelectedChanged;
-  PRPackedBool mIsSelected;
+  bool mSelectedChanged;
+  bool mIsSelected;
 
   // True only while we're under the SetOptionsSelectedByIndex call when our
   // "selected" attribute is changing and mSelectedChanged is false.
-  PRPackedBool mIsInSetDefaultSelected;
+  bool mIsInSetDefaultSelected;
 };
 
 #endif

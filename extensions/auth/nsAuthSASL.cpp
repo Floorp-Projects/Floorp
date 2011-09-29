@@ -79,7 +79,7 @@ nsAuthSASL::Init(const char *serviceName,
     
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
-        PRBool val;
+        bool val;
         rv = prefs->GetBoolPref(kNegotiateAuthSSPI, &val);
         if (NS_SUCCEEDED(rv) && val)
             contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-sspi";
@@ -175,7 +175,7 @@ nsAuthSASL::Unwrap(const void *inToken,
 NS_IMETHODIMP
 nsAuthSASL::Wrap(const void *inToken,
                  PRUint32    inTokenLen,
-                 PRBool      confidential,
+                 bool        confidential,
                  void      **outToken,
                  PRUint32   *outTokenLen)
 {

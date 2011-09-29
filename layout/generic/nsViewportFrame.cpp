@@ -344,7 +344,7 @@ ViewportFrame::GetType() const
   return nsGkAtoms::viewportFrame;
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 ViewportFrame::IsContainingBlock() const
 {
   return PR_TRUE;

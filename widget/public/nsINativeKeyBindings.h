@@ -53,10 +53,10 @@ struct nsNativeKeyEvent
   nsEvent *nativeEvent; // see bug 406407 to see how this is used
   PRUint32 keyCode;
   PRUint32 charCode;
-  PRBool   altKey;
-  PRBool   ctrlKey;
-  PRBool   shiftKey;
-  PRBool   metaKey;
+  bool     altKey;
+  bool     ctrlKey;
+  bool     shiftKey;
+  bool     metaKey;
 };
 
 class nsINativeKeyBindings : public nsISupports
@@ -66,15 +66,15 @@ class nsINativeKeyBindings : public nsISupports
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
 
-  virtual NS_HIDDEN_(PRBool) KeyDown(const nsNativeKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyDown(const nsNativeKeyEvent& aEvent,
                                      DoCommandCallback aCallback,
                                      void *aCallbackData) = 0;
 
-  virtual NS_HIDDEN_(PRBool) KeyPress(const nsNativeKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyPress(const nsNativeKeyEvent& aEvent,
                                       DoCommandCallback aCallback,
                                       void *aCallbackData) = 0;
 
-  virtual NS_HIDDEN_(PRBool) KeyUp(const nsNativeKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyUp(const nsNativeKeyEvent& aEvent,
                                    DoCommandCallback aCallback,
                                    void *aCallbackData) = 0;
 };

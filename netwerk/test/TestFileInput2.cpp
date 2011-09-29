@@ -370,7 +370,7 @@ Test(CreateFun create, PRUint32 count,
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetDirectoryEntries failed");
 
     i = 0;
-    PRBool hasMore;
+    bool hasMore;
     while (i < count && NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore) {
         nsCOMPtr<nsISupports> next;
         rv = entries->GetNext(getter_AddRefs(next));
@@ -390,7 +390,7 @@ Test(CreateFun create, PRUint32 count,
         rv = outSpec->AppendNative(leafName);
         if (NS_FAILED(rv)) goto done;
 
-        PRBool exists;
+        bool exists;
         rv = outSpec->Exists(&exists);
         if (NS_FAILED(rv)) goto done;
 
@@ -410,7 +410,7 @@ Test(CreateFun create, PRUint32 count,
         rv = NS_NewThread(getter_AddRefs(thread), worker, 0, PR_JOINABLE_THREAD);
         if (NS_FAILED(rv)) goto done;
 
-        PRBool inserted = threads.InsertObjectAt(thread, i);
+        bool inserted = threads.InsertObjectAt(thread, i);
         NS_ASSERTION(inserted, "not inserted");
 
         i++;

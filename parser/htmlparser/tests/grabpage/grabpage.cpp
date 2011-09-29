@@ -79,14 +79,14 @@ public:
   NS_IMETHOD OnDataAvailable(nsIRequest* aRequest, nsISupports *, nsIInputStream *pIStream, PRUint32 aOffset, PRUint32 aCount);
   NS_IMETHOD OnStopRequest(nsIRequest* aRequest, nsISupports *, PRUint32 status);
 
-  PRBool IsDone() const { return mDone; }
-  PRBool HaveError() const { return mError; }
+  bool IsDone() const { return mDone; }
+  bool HaveError() const { return mError; }
 
 protected:
   virtual ~StreamToFile();
 
-  PRBool mDone;
-  PRBool mError;
+  bool mDone;
+  bool mError;
   FILE* mFile;
 };
 

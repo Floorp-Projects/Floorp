@@ -72,10 +72,10 @@ NS_IMPL_ISUPPORTS1(nsHttpBasicAuth, nsIHttpAuthenticator)
 NS_IMETHODIMP
 nsHttpBasicAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
                                    const char *challenge,
-                                   PRBool isProxyAuth,
+                                   bool isProxyAuth,
                                    nsISupports **sessionState,
                                    nsISupports **continuationState,
-                                   PRBool *identityInvalid)
+                                   bool *identityInvalid)
 {
     // if challenged, then the username:password that was sent must
     // have been wrong.
@@ -86,7 +86,7 @@ nsHttpBasicAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
 NS_IMETHODIMP
 nsHttpBasicAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                      const char *challenge,
-                                     PRBool isProxyAuth,
+                                     bool isProxyAuth,
                                      const PRUnichar *domain,
                                      const PRUnichar *user,
                                      const PRUnichar *password,
@@ -103,7 +103,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     *aFlags = 0;
 
     // we only know how to deal with Basic auth for http.
-    PRBool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);
+    bool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);
     NS_ENSURE_TRUE(isBasicAuth, NS_ERROR_UNEXPECTED);
 
     // we work with ASCII around here

@@ -70,6 +70,8 @@ using namespace mozilla;
 
 JS_BEGIN_EXTERN_C
 
+#define JS_UPTRDIFF(a_, b_) (uintptr_t(a_) - uintptr_t(b_))
+
 #define JS_CRASH_UNLESS(__cond)                                                 \
     JS_BEGIN_MACRO                                                              \
         if (!(__cond)) {                                                        \

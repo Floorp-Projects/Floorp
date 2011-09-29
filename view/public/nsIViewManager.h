@@ -115,7 +115,7 @@ public:
   /**
    * Do any resizes that are pending.
    */
-  NS_IMETHOD  FlushDelayedResize(PRBool aDoReflow) = 0;
+  NS_IMETHOD  FlushDelayedResize(bool aDoReflow) = 0;
 
   /**
    * Called to force a redrawing of any dirty areas.
@@ -180,7 +180,7 @@ public:
    * @param aAfter after or before in the document order
    */
   NS_IMETHOD  InsertChild(nsIView *aParent, nsIView *aChild, nsIView *aSibling,
-                          PRBool aAfter) = 0;
+                          bool aAfter) = 0;
 
   /**
    * Remove a specific child view from its parent. This will NOT remove its placeholder
@@ -215,7 +215,7 @@ public:
    *     if PR_FALSE Repaint the union of the old and new rectangles.
    */
   NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect,
-                         PRBool aRepaintExposedAreaOnly = PR_FALSE) = 0;
+                         bool aRepaintExposedAreaOnly = false) = 0;
 
   /**
    * Set the visibility of a view. Hidden views have the effect of hiding
@@ -246,7 +246,7 @@ public:
    *        PR_TRUE if the view should be topmost when compared with 
    *        other z-index:auto views.
    */
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZindex, PRBool aTopMost = PR_FALSE) = 0;
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, bool aAutoZIndex, PRInt32 aZindex, bool aTopMost = false) = 0;
 
   /**
    * Set whether the view "floats" above all other views,
@@ -255,7 +255,7 @@ public:
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
    */
-  NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloatingView) = 0;
+  NS_IMETHOD  SetViewFloating(nsIView *aView, bool aFloatingView) = 0;
 
   /**
    * Set the view observer associated with this manager
@@ -368,7 +368,7 @@ public:
    * @param aPainting PR_TRUE if the viewmanager is painting
    *                  PR_FALSE otherwise
    */
-  NS_IMETHOD IsPainting(PRBool& aIsPainting)=0;
+  NS_IMETHOD IsPainting(bool& aIsPainting)=0;
 
   /**
    * Retrieve the time of the last user event. User events

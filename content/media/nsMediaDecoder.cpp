@@ -91,7 +91,7 @@ nsMediaDecoder::~nsMediaDecoder()
   MediaMemoryReporter::RemoveMediaDecoder(this);
 }
 
-PRBool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
+bool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mElement = aElement;
   return PR_TRUE;
@@ -124,7 +124,7 @@ void nsMediaDecoder::Invalidate()
     return;
 
   nsIFrame* frame = mElement->GetPrimaryFrame();
-  PRBool invalidateFrame = PR_FALSE;
+  bool invalidateFrame = false;
 
   {
     MutexAutoLock lock(mVideoUpdateLock);
@@ -165,7 +165,7 @@ static void ProgressCallback(nsITimer* aTimer, void* aClosure)
   decoder->Progress(PR_TRUE);
 }
 
-void nsMediaDecoder::Progress(PRBool aTimer)
+void nsMediaDecoder::Progress(bool aTimer)
 {
   if (!mElement)
     return;
@@ -279,7 +279,7 @@ void nsMediaDecoder::UnpinForSeek()
   stream->Unpin();
 }
 
-PRBool nsMediaDecoder::CanPlayThrough()
+bool nsMediaDecoder::CanPlayThrough()
 {
   Statistics stats = GetStatistics();
   if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {

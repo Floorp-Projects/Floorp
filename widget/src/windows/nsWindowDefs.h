@@ -262,13 +262,13 @@ struct nsFakeCharMessage {
 
 // Used in char processing
 struct nsModifierKeyState {
-  PRBool mIsShiftDown;
-  PRBool mIsControlDown;
-  PRBool mIsAltDown;
+  bool mIsShiftDown;
+  bool mIsControlDown;
+  bool mIsAltDown;
 
   nsModifierKeyState();
-  nsModifierKeyState(PRBool aIsShiftDown, PRBool aIsControlDown,
-                     PRBool aIsAltDown) :
+  nsModifierKeyState(bool aIsShiftDown, bool aIsControlDown,
+                     bool aIsAltDown) :
     mIsShiftDown(aIsShiftDown), mIsControlDown(aIsControlDown),
     mIsAltDown(aIsAltDown)
   {

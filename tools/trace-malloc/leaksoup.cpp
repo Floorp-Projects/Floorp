@@ -68,8 +68,8 @@ struct AllocationNode {
     // which this node belongs.
     PRUint32 index;
 
-    PRPackedBool reached;
-    PRPackedBool is_root;
+    bool reached;
+    bool is_root;
 };
 
 static PLHashNumber hash_pointer(const void *key)
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
                        "<h1 id=\"nonroot\">Non-root components</h1>\n");
             }
             PRUint32 component = (PRUint32)-1;
-            PRBool one_object_component;
+            bool one_object_component;
             for (const AllocationNode *const* sn = sorted_nodes,
                                   *const* sn_end = sorted_nodes + count;
                  sn != sn_end; ++sn) {

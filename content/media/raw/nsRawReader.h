@@ -41,51 +41,7 @@
 #define nsRawReader_h_
 
 #include "nsBuiltinDecoderReader.h"
-
-struct nsRawVideo_PRUint24 {
-  operator PRUint32() const { return value[2] << 16 | value[1] << 8 | value[0]; }
-private:
-  PRUint8 value[3];
-};
-
-struct nsRawPacketHeader {
-  typedef nsRawVideo_PRUint24 PRUint24;
-  PRUint8 packetID;
-  PRUint24 codecID;
-};
-
-// This is Arc's draft from wiki.xiph.org/OggYUV
-struct nsRawVideoHeader {
-  typedef nsRawVideo_PRUint24 PRUint24;
-  PRUint8 headerPacketID;          // Header Packet ID (always 0)
-  PRUint24 codecID;                // Codec identifier (always "YUV")
-  PRUint8 majorVersion;            // Version Major (breaks backwards compat)
-  PRUint8 minorVersion;            // Version Minor (preserves backwards compat)
-  PRUint16 options;                // Bit 1: Color (false = B/W)
-                                   // Bits 2-4: Chroma Pixel Shape
-                                   // Bit 5: 50% horizontal offset for Cr samples
-                                   // Bit 6: 50% vertical ...
-                                   // Bits 7-8: Chroma Blending
-                                   // Bit 9: Packed (false = Planar)
-                                   // Bit 10: Cr Staggered Horizontally
-                                   // Bit 11: Cr Staggered Vertically
-                                   // Bit 12: Unused (format is always little endian)
-                                   // Bit 13: Interlaced (false = Progressive)
-                                   // Bits 14-16: Interlace options (undefined)
-
-  PRUint8 alphaChannelBpp;
-  PRUint8 lumaChannelBpp;
-  PRUint8 chromaChannelBpp;
-  PRUint8 colorspace;
-
-  PRUint24 frameWidth;
-  PRUint24 frameHeight;
-  PRUint24 aspectNumerator;
-  PRUint24 aspectDenominator;
-
-  PRUint32 framerateNumerator;
-  PRUint32 framerateDenominator;
-};
+#include "nsRawStructs.h"
 
 class nsRawReader : public nsBuiltinDecoderReader
 {
@@ -95,17 +51,17 @@ public:
 
   virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
-  virtual PRBool DecodeAudioData();
+  virtual bool DecodeAudioData();
 
-  virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
 
-  virtual PRBool HasAudio()
+  virtual bool HasAudio()
   {
     return PR_FALSE;
   }
 
-  virtual PRBool HasVideo()
+  virtual bool HasVideo()
   {
     return PR_TRUE;
   }
@@ -115,7 +71,7 @@ public:
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
 
 private:
-  PRBool ReadFromStream(nsMediaStream *aStream, PRUint8 *aBuf,
+  bool ReadFromStream(nsMediaStream *aStream, PRUint8 *aBuf,
                         PRUint32 aLength);
 
   nsRawVideoHeader mMetadata;

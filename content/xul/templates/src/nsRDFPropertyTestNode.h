@@ -76,9 +76,9 @@ public:
                           nsIRDFNode* aTarget);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          PRBool* aCantHandleYet) const;
+                                          bool* aCantHandleYet) const;
 
-    virtual PRBool
+    virtual bool
     CanPropagate(nsIRDFResource* aSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
@@ -128,7 +128,7 @@ public:
                 (PLHashNumber(NS_PTR_TO_INT32(mProperty.get())) >> 4) ^
                 (PLHashNumber(NS_PTR_TO_INT32(mTarget.get())) >> 12); }
 
-        virtual PRBool Equals(const MemoryElement& aElement) const {
+        virtual bool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {
                 const Element& element = static_cast<const Element&>(aElement);
                 return mSource == element.mSource

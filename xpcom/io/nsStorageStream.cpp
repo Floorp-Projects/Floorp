@@ -187,7 +187,7 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
     // this stream contains N bytes of data and newInputStream(N) is called),
     // even for N=0 (with the caveat that we require .write("", 0) be called to
     // initialize internal buffers).
-    PRBool firstTime = mSegmentedBuffer->GetSegmentCount() == 0;
+    bool firstTime = mSegmentedBuffer->GetSegmentCount() == 0;
     while (remaining || NS_UNLIKELY(firstTime)) {
         firstTime = PR_FALSE;
         availableInSegment = mSegmentEnd - mWriteCursor;
@@ -236,7 +236,7 @@ nsStorageStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32
 }
 
 NS_IMETHODIMP 
-nsStorageStream::IsNonBlocking(PRBool *aNonBlocking)
+nsStorageStream::IsNonBlocking(bool *aNonBlocking)
 {
     *aNonBlocking = PR_TRUE;
     return NS_OK;
@@ -277,7 +277,7 @@ nsStorageStream::SetLength(PRUint32 aLength)
 }
 
 NS_IMETHODIMP
-nsStorageStream::GetWriteInProgress(PRBool *aWriteInProgress)
+nsStorageStream::GetWriteInProgress(bool *aWriteInProgress)
 {
     NS_ENSURE_ARG(aWriteInProgress);
 
@@ -461,7 +461,7 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
  out:
     *aNumRead = aCount - remainingCapacity;
 
-    PRBool isWriteInProgress = PR_FALSE;
+    bool isWriteInProgress = false;
     if (NS_FAILED(mStorageStream->GetWriteInProgress(&isWriteInProgress)))
         isWriteInProgress = PR_FALSE;
 
@@ -472,7 +472,7 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
 }
 
 NS_IMETHODIMP 
-nsStorageInputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsStorageInputStream::IsNonBlocking(bool *aNonBlocking)
 {
     // TODO: This class should implement nsIAsyncInputStream so that callers
     // have some way of dealing with NS_BASE_STREAM_WOULD_BLOCK errors.

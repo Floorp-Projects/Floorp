@@ -230,7 +230,7 @@ public:
       nsCOMPtr<nsIDOMEvent> event(IDBVersionChangeEvent::Create(mVersion));
       NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
-      PRBool dummy;
+      bool dummy;
       database->DispatchEvent(event, &dummy);
     }
 
@@ -242,7 +242,7 @@ public:
           IDBVersionChangeEvent::CreateBlocked(mVersion);
         NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
-        PRBool dummy;
+        bool dummy;
         mRequest->DispatchEvent(event, &dummy);
 
         break;
@@ -748,7 +748,7 @@ IndexedDatabaseManager::EnsureQuotaManagementForDirectory(nsIFile* aDirectory)
 {
 #ifdef DEBUG
   {
-    PRBool correctThread;
+    bool correctThread;
     NS_ASSERTION(NS_SUCCEEDED(mIOThread->IsOnCurrentThread(&correctThread)) &&
                  correctThread,
                  "Running on the wrong thread!");
@@ -788,13 +788,13 @@ IndexedDatabaseManager::EnsureQuotaManagementForDirectory(nsIFile* aDirectory)
 
   // If the directory exists then we need to see if there are any files in it
   // already. We need to tell SQLite about all of them.
-  PRBool exists;
+  bool exists;
   rv = aDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (exists) {
     // Make sure this really is a directory.
-    PRBool isDirectory;
+    bool isDirectory;
     rv = aDirectory->IsDirectory(&isDirectory);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
@@ -803,7 +803,7 @@ IndexedDatabaseManager::EnsureQuotaManagementForDirectory(nsIFile* aDirectory)
     rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasMore;
+    bool hasMore;
     while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
       nsCOMPtr<nsISupports> entry;
       rv = entries->GetNext(getter_AddRefs(entry));
@@ -889,7 +889,7 @@ IndexedDatabaseManager::CancelGetUsageForURI(
   for (PRUint32 index = 0; index < mUsageRunnables.Length(); index++) {
     nsRefPtr<AsyncUsageRunnable>& runnable = mUsageRunnables[index];
 
-    PRBool equals;
+    bool equals;
     nsresult rv = runnable->mURI->Equals(aURI, &equals);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1090,7 +1090,7 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
   nsresult rv = IDBFactory::GetDirectoryForOrigin(mOrigin,
                                                   getter_AddRefs(directory));
   if (NS_SUCCEEDED(rv)) {
-    PRBool exists;
+    bool exists;
     rv = directory->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists) {
       rv = directory->Remove(PR_TRUE);
@@ -1161,7 +1161,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::RunInternal()
                                                   getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool exists;
+  bool exists;
   rv = directory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1173,7 +1173,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::RunInternal()
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (entries) {
-      PRBool hasMore;
+      bool hasMore;
       while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
              hasMore && !mCanceled) {
         nsCOMPtr<nsISupports> entry;

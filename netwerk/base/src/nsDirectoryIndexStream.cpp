@@ -125,7 +125,7 @@ nsresult
 nsDirectoryIndexStream::Init(nsIFile* aDir)
 {
     nsresult rv;
-    PRBool isDir;
+    bool isDir;
     rv = aDir->IsDirectory(&isDir);
     if (NS_FAILED(rv)) return rv;
     NS_PRECONDITION(isDir, "not a directory");
@@ -152,7 +152,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     // XXX - should we do so here, or when the first item is requested?
     // XXX - use insertion sort instead?
 
-    PRBool more;
+    bool more;
     nsCOMPtr<nsISupports> elem;
     while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
         rv = iter->GetNext(getter_AddRefs(elem));
@@ -276,7 +276,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
         // Okay, now we'll suck stuff off of our iterator into the mBuf...
         while (PRUint32(mBuf.Length()) < aCount) {
-            PRBool more = mPos < mArray.Count();
+            bool more = mPos < mArray.Count();
             if (!more) break;
 
             // don't addref, for speed - an addref happened when it
@@ -298,7 +298,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             // bbaetz: why not?
             nsresult rv;
 #ifndef XP_UNIX
-            PRBool hidden = PR_FALSE;
+            bool hidden = false;
             current->IsHidden(&hidden);
             if (hidden) {
                 PR_LOG(gLog, PR_LOG_DEBUG,
@@ -352,20 +352,20 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 
             // The "file-type" field
-            PRBool isFile = PR_TRUE;
+            bool isFile = true;
             current->IsFile(&isFile);
             if (isFile) {
                 mBuf.AppendLiteral("FILE ");
             }
             else {
-                PRBool isDir;
+                bool isDir;
                 rv = current->IsDirectory(&isDir);
                 if (NS_FAILED(rv)) return rv; 
                 if (isDir) {
                     mBuf.AppendLiteral("DIRECTORY ");
                 }
                 else {
-                    PRBool isLink;
+                    bool isLink;
                     rv = current->IsSymlink(&isLink);
                     if (NS_FAILED(rv)) return rv; 
                     if (isLink) {
@@ -397,7 +397,7 @@ nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, P
 }
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::IsNonBlocking(PRBool *aNonBlocking)
+nsDirectoryIndexStream::IsNonBlocking(bool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;

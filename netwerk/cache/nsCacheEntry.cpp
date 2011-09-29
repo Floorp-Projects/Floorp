@@ -54,7 +54,7 @@
 
 
 nsCacheEntry::nsCacheEntry(nsCString *          key,
-                           PRBool               streamBased,
+                           bool                 streamBased,
                            nsCacheStoragePolicy storagePolicy)
     : mKey(key),
       mFetchCount(0),
@@ -89,7 +89,7 @@ nsCacheEntry::~nsCacheEntry()
 
 nsresult
 nsCacheEntry::Create( const char *          key,
-                      PRBool                streamBased,
+                      bool                  streamBased,
                       nsCacheStoragePolicy  storagePolicy,
                       nsCacheDevice *       device,
                       nsCacheEntry **       result)
@@ -234,7 +234,7 @@ nsCacheEntry::CreateDescriptor(nsCacheRequest *           request,
 }
 
 
-PRBool
+bool
 nsCacheEntry::RemoveRequest(nsCacheRequest * request)
 {
     // XXX if debug: verify this request belongs to this entry
@@ -246,7 +246,7 @@ nsCacheEntry::RemoveRequest(nsCacheRequest * request)
 }
 
 
-PRBool
+bool
 nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
 {
     NS_ASSERTION(descriptor->CacheEntry() == this, "### Wrong cache entry!!");
@@ -375,7 +375,7 @@ nsCacheEntryInfo::GetDataSize(PRUint32 * dataSize)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::IsStreamBased(PRBool * result)
+nsCacheEntryInfo::IsStreamBased(bool * result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -512,7 +512,7 @@ nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
     return PL_DHashStringKey(table,((nsCString *)key)->get());
 }
 
-PRBool
+bool
 nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
                                   const PLDHashEntryHdr * hashEntry,
                                   const void *            key)

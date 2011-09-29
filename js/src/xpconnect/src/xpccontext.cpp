@@ -58,8 +58,6 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
     MOZ_COUNT_CTOR(XPCContext);
 
     PR_INIT_CLIST(&mScopes);
-    for(const char** p =  XPC_ARG_FORMATTER_FORMAT_STRINGS; *p; p++)
-        JS_AddArgumentFormatter(mJSContext, *p, XPC_JSArgumentFormatter);
 
     NS_ASSERTION(!mJSContext->data2, "Must be null");
     mJSContext->data2 = this;

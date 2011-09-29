@@ -99,7 +99,7 @@ class nsScannerBufferList
             void IncrementUsageCount() { ++mUsageCount; }
             void DecrementUsageCount() { --mUsageCount; }
 
-            PRBool IsInUse() const { return mUsageCount != 0; }
+            bool IsInUse() const { return mUsageCount != 0; }
 
             const PRUnichar* DataStart() const { return (const PRUnichar*) (this+1); }
                   PRUnichar* DataStart()       { return (      PRUnichar*) (this+1); }
@@ -232,8 +232,8 @@ class nsScannerSubstring
 
       const nsSubstring& AsString() const;
 
-      PRBool GetNextFragment( nsScannerFragment& ) const;
-      PRBool GetPrevFragment( nsScannerFragment& ) const;
+      bool GetNextFragment( nsScannerFragment& ) const;
+      bool GetPrevFragment( nsScannerFragment& ) const;
 
       static inline Buffer* AllocBufferFromString( const nsAString& aStr ) { return nsScannerBufferList::AllocBufferFromString(aStr); }
       static inline Buffer* AllocBuffer( size_type aCapacity )             { return nsScannerBufferList::AllocBuffer(aCapacity); }
@@ -274,7 +274,7 @@ class nsScannerSubstring
 
       // these fields are used to implement AsString
       nsDependentSubstring mFlattenedRep;
-      PRBool               mIsDirty;
+      bool                 mIsDirty;
 
       friend class nsScannerSharedSubstring;
   };
@@ -472,7 +472,7 @@ class nsScannerIterator
 
 
 inline
-PRBool
+bool
 SameFragment( const nsScannerIterator& a, const nsScannerIterator& b )
   {
     return a.fragment().mFragmentStart == b.fragment().mFragmentStart;
@@ -531,14 +531,14 @@ nsScannerIterator::normalize_backward()
   }
 
 inline
-PRBool
+bool
 operator==( const nsScannerIterator& lhs, const nsScannerIterator& rhs )
   {
     return lhs.get() == rhs.get();
   }
 
 inline
-PRBool
+bool
 operator!=( const nsScannerIterator& lhs, const nsScannerIterator& rhs )
   {
     return lhs.get() != rhs.get();
@@ -607,25 +607,25 @@ AppendUnicodeTo( const nsScannerIterator& aSrcStart,
                  const nsScannerIterator& aSrcEnd,
                  nsScannerSharedSubstring& aDest );
 
-PRBool
+bool
 FindCharInReadable( PRUnichar aChar,
                     nsScannerIterator& aStart,
                     const nsScannerIterator& aEnd );
 
-PRBool
+bool
 FindInReadable( const nsAString& aPattern,
                 nsScannerIterator& aStart,
                 nsScannerIterator& aEnd,
                 const nsStringComparator& = nsDefaultStringComparator() );
 
-PRBool
+bool
 RFindInReadable( const nsAString& aPattern,
                  nsScannerIterator& aStart,
                  nsScannerIterator& aEnd,
                  const nsStringComparator& = nsDefaultStringComparator() );
 
 inline
-PRBool
+bool
 CaseInsensitiveFindInReadable( const nsAString& aPattern, 
                                nsScannerIterator& aStart,
                                nsScannerIterator& aEnd )

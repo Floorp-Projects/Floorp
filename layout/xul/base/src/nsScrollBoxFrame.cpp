@@ -92,9 +92,9 @@ protected:
     static_cast<nsAutoRepeatBoxFrame*>(aData)->Notify();
   }
 
-  PRPackedBool mTrustedEvent;
+  bool mTrustedEvent;
   
-  PRBool IsActivatedOnHover();
+  bool IsActivatedOnHover();
 };
 
 nsIFrame*
@@ -198,7 +198,7 @@ nsAutoRepeatBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsButtonBoxFrame::DestroyFrom(aDestructRoot);
 }
 
-PRBool
+bool
 nsAutoRepeatBoxFrame::IsActivatedOnHover()
 {
   return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::repeat,

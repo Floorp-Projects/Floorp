@@ -152,7 +152,7 @@ nsUsageArrayHelper::verifyFailed(PRUint32 *_verified, int err)
 
 nsresult
 nsUsageArrayHelper::GetUsagesArray(const char *suffix,
-                      PRBool localOnly,
+                      bool localOnly,
                       PRUint32 outArraySize,
                       PRUint32 *_verified,
                       PRUint32 *_count,

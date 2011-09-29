@@ -50,7 +50,7 @@ typedef union
 {
     char*       stringVal;
     PRInt32     intVal;
-    PRBool      boolVal;
+    bool        boolVal;
 } PrefValue;
 
 struct PrefHashEntry : PLDHashEntryHdr
@@ -106,11 +106,11 @@ typedef enum { PREF_INVALID = 0,
 // (triggering a callback), or PREF_NOERROR if the value was unchanged.
 // </font>
 */
-nsresult PREF_SetCharPref(const char *pref,const char* value, PRBool set_default = PR_FALSE);
-nsresult PREF_SetIntPref(const char *pref,PRInt32 value, PRBool set_default = PR_FALSE);
-nsresult PREF_SetBoolPref(const char *pref,PRBool value, PRBool set_default = PR_FALSE);
+nsresult PREF_SetCharPref(const char *pref,const char* value, bool set_default = false);
+nsresult PREF_SetIntPref(const char *pref,PRInt32 value, bool set_default = false);
+nsresult PREF_SetBoolPref(const char *pref,bool value, bool set_default = false);
 
-PRBool   PREF_HasUserPref(const char* pref_name);
+bool     PREF_HasUserPref(const char* pref_name);
 
 /*
 // <font color=blue>
@@ -126,8 +126,8 @@ PRBool   PREF_HasUserPref(const char* pref_name);
 // </font>
 */
 nsresult PREF_GetIntPref(const char *pref,
-                           PRInt32 * return_int, PRBool get_default);	
-nsresult PREF_GetBoolPref(const char *pref, PRBool * return_val, PRBool get_default);	
+                           PRInt32 * return_int, bool get_default);	
+nsresult PREF_GetBoolPref(const char *pref, bool * return_val, bool get_default);	
 /*
 // <font color=blue>
 // These functions are similar to the above "Get" version with the significant
@@ -135,14 +135,14 @@ nsresult PREF_GetBoolPref(const char *pref, PRBool * return_val, PRBool get_defa
 // the caller will need to be responsible for freeing it...
 // </font>
 */
-nsresult PREF_CopyCharPref(const char *pref, char ** return_buf, PRBool get_default);
+nsresult PREF_CopyCharPref(const char *pref, char ** return_buf, bool get_default);
 /*
 // <font color=blue>
-// PRBool function that returns whether or not the preference is locked and therefore
+// bool function that returns whether or not the preference is locked and therefore
 // cannot be changed.
 // </font>
 */
-PRBool PREF_PrefIsLocked(const char *pref_name);
+bool PREF_PrefIsLocked(const char *pref_name);
 
 /*
 // <font color=blue>
@@ -150,7 +150,7 @@ PRBool PREF_PrefIsLocked(const char *pref_name);
 // cannot be changed.
 // </font>
 */
-nsresult PREF_LockPref(const char *key, PRBool lockIt);
+nsresult PREF_LockPref(const char *key, bool lockIt);
 
 PrefType PREF_GetPrefType(const char *pref_name);
 
@@ -208,7 +208,7 @@ void PREF_ReaderCallback( void *closure,
                           const char *pref,
                           PrefValue   value,
                           PrefType    type,
-                          PRBool      isDefault);
+                          bool        isDefault);
 
 PR_END_EXTERN_C
 #endif

@@ -189,7 +189,7 @@ public:
         return mCurrentItem;
     }
     void pushBack();
-    PRBool hasMoreTokens()
+    bool hasMoreTokens()
     {
         return (mCurrentItem->mType != Token::END);
     }
@@ -241,13 +241,13 @@ private:
      * This is a helper for the first bullet of [XPath 3.7]
      *  Lexical Structure
      */
-    PRBool nextIsOperatorToken(Token* aToken);
+    bool nextIsOperatorToken(Token* aToken);
 
     /**
      * Returns true if the given character represents a numeric letter (digit)
      * Implemented in ExprLexerChars.cpp
      */
-    static PRBool isXPathDigit(PRUnichar ch)
+    static bool isXPathDigit(PRUnichar ch)
     {
         return (ch >= '0' && ch <= '9');
     }

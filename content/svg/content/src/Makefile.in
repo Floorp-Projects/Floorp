@@ -51,20 +51,23 @@ LIBXUL_LIBRARY	= 1
 CPPSRCS		= \
 		DOMSVGAnimatedLengthList.cpp \
 		DOMSVGAnimatedNumberList.cpp \
+		DOMSVGAnimatedTransformList.cpp \
 		DOMSVGLength.cpp \
 		DOMSVGLengthList.cpp \
+		DOMSVGMatrix.cpp \
 		DOMSVGNumber.cpp \
 		DOMSVGNumberList.cpp \
 		DOMSVGPathSeg.cpp \
 		DOMSVGPathSegList.cpp \
 		DOMSVGPoint.cpp \
 		DOMSVGPointList.cpp \
+		DOMSVGTransform.cpp \
+		DOMSVGTransformList.cpp \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
 		nsSVGAltGlyphElement.cpp \
 		nsSVGAngle.cpp \
-		nsSVGAnimatedTransformList.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClass.cpp \
@@ -90,7 +93,6 @@ CPPSRCS		= \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
 		nsSVGMaskElement.cpp \
-		nsSVGMatrix.cpp \
 		nsSVGMetadataElement.cpp \
 		nsSVGNumber2.cpp \
 		nsSVGNumberPair.cpp \
@@ -118,9 +120,6 @@ CPPSRCS		= \
 		nsSVGTextPathElement.cpp \
 		nsSVGTextPositioningElement.cpp \
 		nsSVGTitleElement.cpp \
-		nsSVGTransform.cpp \
-		nsSVGTransformList.cpp \
-		nsSVGTransformListParser.cpp \
 		nsSVGUseElement.cpp \
 		nsSVGValue.cpp \
 		nsSVGViewBox.cpp \
@@ -129,12 +128,16 @@ CPPSRCS		= \
 		SVGAnimatedPathSegList.cpp \
 		SVGAnimatedPointList.cpp \
 		SVGAnimatedPreserveAspectRatio.cpp \
+		SVGAnimatedTransformList.cpp \
 		SVGLength.cpp \
 		SVGLengthList.cpp \
 		SVGNumberList.cpp \
 		SVGPathData.cpp \
 		SVGPathSegUtils.cpp \
 		SVGPointList.cpp \
+		SVGTransform.cpp \
+		SVGTransformList.cpp \
+		SVGTransformListParser.cpp \
 		$(NULL)
 
 ifdef MOZ_SMIL
@@ -144,8 +147,6 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            nsSVGAnimationElement.cpp \
            nsSVGMpathElement.cpp \
            nsSVGSetElement.cpp \
-           nsSVGTransformSMILType.cpp \
-           nsSVGTransformSMILAttr.cpp \
            SVGIntegerPairSMILType.cpp \
            SVGLengthListSMILType.cpp \
            SVGMotionSMILType.cpp \
@@ -157,6 +158,7 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            SVGOrientSMILType.cpp \
            SVGPathSegListSMILType.cpp \
            SVGPointListSMILType.cpp \
+           SVGTransformListSMILType.cpp \
            SVGViewBoxSMILType.cpp \
            $(NULL)
 endif
@@ -172,7 +174,6 @@ EXPORTS =  			\
 	nsISVGValueUtils.h         \
 	nsSVGFeatures.h            \
 	nsSVGRect.h                \
-	nsSVGMatrix.h              \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

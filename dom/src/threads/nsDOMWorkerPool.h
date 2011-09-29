@@ -109,8 +109,8 @@ private:
   // ReentrantMonitor for suspending and resuming workers.
   ReentrantMonitor mReentrantMonitor;
 
-  PRPackedBool mCanceled;
-  PRPackedBool mSuspended;
+  bool mCanceled;
+  bool mSuspended;
 
   const PRUint64 mWindowID;
 };

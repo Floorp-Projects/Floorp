@@ -89,24 +89,24 @@ public:
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
 
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
+                   const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+                           bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
-  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
-                                PRBool aIsTrustedEvent);
+                             bool aNotify);
+  virtual void PerformAccesskey(bool aKeyCausesActivation,
+                                bool aIsTrustedEvent);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
@@ -116,7 +116,7 @@ protected:
   mozilla::dom::Element* GetFirstDescendantFormControl();
 
   // XXX It would be nice if we could use an event flag instead.
-  PRPackedBool mHandlingEvent;
+  bool mHandlingEvent;
 };
 
 #endif /* nsHTMLLabelElement_h */

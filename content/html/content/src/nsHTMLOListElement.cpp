@@ -74,12 +74,12 @@ public:
   // nsIDOMHTMLUListElement
   // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo()
   {
@@ -172,7 +172,7 @@ static const nsAttrValue::EnumTable kOldListTypeTable[] = {
   { 0 }
 };
 
-PRBool
+bool
 nsHTMLSharedListElement::ParseAttribute(PRInt32 aNamespaceID,
                                         nsIAtom* aAttribute,
                                         const nsAString& aValue,
@@ -215,7 +215,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol) ||

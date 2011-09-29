@@ -124,6 +124,10 @@
   width: 13px;
 }
 
+.select-keep .addon-keep-checkbox:-moz-focusring {
+  outline: 1px dotted ThreeDDarkShadow;
+}
+
 .select-keep .checkbox-label-box {
   display: none;
 }

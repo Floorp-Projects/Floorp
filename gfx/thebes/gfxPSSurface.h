@@ -65,7 +65,7 @@ public:
     void SetDPI(double x, double y);
     void GetDPI(double *xDPI, double *yDPI);
 
-    virtual PRBool GetRotateForLandscape() { return (mOrientation == LANDSCAPE); }
+    virtual bool GetRotateForLandscape() { return (mOrientation == LANDSCAPE); }
 
     // this is in points!
     virtual const gfxIntSize GetSize() const

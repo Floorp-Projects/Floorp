@@ -57,7 +57,6 @@
 #include "jsstdint.h"
 
 #include "jstypes.h"
-#include "jsarena.h"
 #include "jsutil.h"
 #include "jsclist.h"
 #include "jsprf.h"
@@ -112,6 +111,7 @@ ThreadData::ThreadData()
     maxCodeCacheBytes(DEFAULT_JIT_CACHE_SIZE),
 #endif
     waiveGCQuota(false),
+    tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
     pendingProxyOperation(NULL),
@@ -316,9 +316,6 @@ js_PurgeThreads(JSContext *cx)
 #endif
 }
 
-static const size_t ARENA_HEADER_SIZE_HACK = 40;
-static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
-
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
@@ -344,9 +341,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
-
-    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble));
-    JS_InitArenaPool(&cx->regExpPool, "regExp", TEMP_POOL_CHUNK_SIZE, sizeof(int));
 
     JS_ASSERT(cx->resolveFlags == 0);
 
@@ -1373,9 +1367,6 @@ JSContext::~JSContext()
     if (parseMapPool_)
         Foreground::delete_<ParseMapPool>(parseMapPool_);
 
-    JS_FinishArenaPool(&regExpPool);
-    JS_FinishArenaPool(&tempPool);
-
     if (lastMessage)
         Foreground::free_(lastMessage);
 
@@ -1502,25 +1493,9 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     return NULL;
 }
 
-/*
- * Release pool's arenas if the stackPool has existed for longer than the
- * limit specified by gcEmptyArenaPoolLifespan.
- */
-static void
-FreeOldArenas(JSRuntime *rt, JSArenaPool *pool)
-{
-    JSArena *a = pool->current;
-    if (a == pool->first.next && a->avail == a->base + sizeof(int64)) {
-        int64 age = JS_Now() - *(int64 *) a->base;
-        if (age > int64(rt->gcEmptyArenaPoolLifespan) * 1000)
-            JS_FreeArenaPool(pool);
-    }
-}
-
 void
 JSContext::purge()
 {
-    FreeOldArenas(runtime, &regExpPool);
     if (!activeCompilations) {
         Foreground::delete_<ParseMapPool>(parseMapPool_);
         parseMapPool_ = NULL;

@@ -133,21 +133,21 @@ public:
 
   virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
-  virtual PRBool DecodeAudioData();
+  virtual bool DecodeAudioData();
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.  
-  virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
 
-  virtual PRBool HasAudio()
+  virtual bool HasAudio()
   {
     NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
     return mHasAudio;
   }
 
-  virtual PRBool HasVideo()
+  virtual bool HasVideo()
   {
     NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
     return mHasVideo;
@@ -174,8 +174,8 @@ private:
   // Returns an initialized ogg packet with data obtained from the WebM container.
   ogg_packet InitOggPacket(unsigned char* aData,
                            size_t aLength,
-                           PRBool aBOS,
-                           PRBool aEOS,
+                           bool aBOS,
+                           bool aEOS,
                            PRInt64 aGranulepos);
 
   // Decode a nestegg packet of audio data. Push the audio data on the
@@ -184,7 +184,7 @@ private:
   // or an un-recoverable read error has occured. The reader's monitor
   // must be held during this call. This function will free the packet
   // so the caller must not use the packet after calling.
-  PRBool DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset);
+  bool DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset);
 
   // Release context and set to null. Called when an error occurs during
   // reading metadata or destruction of the reader itself.
@@ -215,11 +215,11 @@ private:
   PRUint32 mVideoTrack;
   PRUint32 mAudioTrack;
 
-  // Time in microseconds of the start of the first audio sample we've decoded.
+  // Time in microseconds of the start of the first audio frame we've decoded.
   PRInt64 mAudioStartUsec;
 
-  // Number of samples we've decoded since decoding began at mAudioStartMs.
-  PRUint64 mAudioSamples;
+  // Number of audio frames we've decoded since decoding began at mAudioStartMs.
+  PRUint64 mAudioFrames;
 
   // Parser state and computed offset-time mappings.  Shared by multiple
   // readers when decoder has been cloned.  Main thread only.
@@ -233,8 +233,8 @@ private:
   nsIntRect mPicture;
 
   // Booleans to indicate if we have audio and/or video data
-  PRPackedBool mHasVideo;
-  PRPackedBool mHasAudio;
+  bool mHasVideo;
+  bool mHasAudio;
 };
 
 #endif

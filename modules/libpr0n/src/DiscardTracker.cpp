@@ -44,8 +44,8 @@
 namespace mozilla {
 namespace imagelib {
 
-static PRBool sInitialized = PR_FALSE;
-static PRBool sTimerOn = PR_FALSE;
+static bool sInitialized = false;
+static bool sTimerOn = false;
 static PRUint32 sMinDiscardTimeoutMs = 10000; /* Default if pref unreadable. */
 static nsITimer *sTimer = nsnull;
 static struct DiscardTrackerNode sHead, sSentinel, sTail;
@@ -59,7 +59,7 @@ DiscardTracker::Reset(DiscardTrackerNode *node)
 {
   nsresult rv;
 #ifdef DEBUG
-  PRBool isSentinel = (node == &sSentinel);
+  bool isSentinel = (node == &sSentinel);
 
   // Sanity check the node.
   NS_ABORT_IF_FALSE(isSentinel || node->curr, "Node doesn't point to anything!");

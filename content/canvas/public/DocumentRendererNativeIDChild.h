@@ -54,7 +54,7 @@ public:
     bool RenderDocument(nsIDOMWindow* window, const PRInt32& x,
                         const PRInt32& y, const PRInt32& w,
                         const PRInt32& h, const nsString& aBGColor,
-                        const PRUint32& flags, const PRBool& flush,
+                        const PRUint32& flags, const bool& flush,
                         const gfxMatrix& aMatrix,
                         const PRInt32& nativeID);
 

@@ -141,7 +141,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   nsAutoPtr<css::Declaration> decl(new css::Declaration());
   decl->InitializeEmpty();
   nsCSSParser cssParser(env.mCSSLoader);
-  PRBool changed;
+  bool changed;
   nsresult result = cssParser.ParseDeclarations(aCssText, env.mSheetURI,
                                                 env.mBaseURI,
                                                 env.mPrincipal, decl, &changed);
@@ -285,7 +285,7 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
 nsresult
 nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                         const nsAString& aPropValue,
-                                        PRBool aIsImportant)
+                                        bool aIsImportant)
 {
   css::Declaration* olddecl = GetCSSDeclaration(PR_TRUE);
   if (!olddecl) {
@@ -307,7 +307,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   css::Declaration* decl = olddecl->EnsureMutable();
 
   nsCSSParser cssParser(env.mCSSLoader);
-  PRBool changed;
+  bool changed;
   nsresult result = cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI,
                                             env.mBaseURI, env.mPrincipal, decl,
                                             &changed, aIsImportant);

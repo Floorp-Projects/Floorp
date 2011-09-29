@@ -87,7 +87,7 @@ APIRET APIENTRY DosQueryModFromEIP(HMODULE *phMod, ULONG *pObjNum,
 
 nsresult RenderToOS2File( PDRAGITEM pditem, HWND hwnd);
 nsresult RenderToOS2FileComplete(PDRAGTRANSFER pdxfer, USHORT usResult,
-                                 PRBool content, char** outText);
+                                 bool content, char** outText);
 nsresult RenderToDTShare( PDRAGITEM pditem, HWND hwnd);
 nsresult RenderToDTShareComplete(PDRAGTRANSFER pdxfer, USHORT usResult,
                                  char** outText);
@@ -378,7 +378,7 @@ NS_IMETHODIMP nsDragService::StartDragSession()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::EndDragSession(PRBool aDragDone)
+NS_IMETHODIMP nsDragService::EndDragSession(bool aDragDone)
 {
   NS_ERROR("OS/2 version of EndDragSession() should never be called!");
   return NS_OK;
@@ -456,7 +456,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable,
 // switch from "any" to "all".
 
 NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
-                                                   PRBool *_retval)
+                                                   bool *_retval)
 {
   if (!_retval)
     return NS_ERROR_INVALID_ARG;
@@ -847,8 +847,8 @@ NS_IMETHODIMP nsDragService::DragOverMsg(PDRAGINFO pdinfo, MRESULT &mr,
 NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
 {
   nsresult  rv = NS_ERROR_FAILURE;
-  PRBool    isFQFile = FALSE;
-  PRBool    isAtom = FALSE;
+  bool      isFQFile = FALSE;
+  bool      isAtom = FALSE;
   PDRAGITEM pditem = 0;
 
   if (pdinfo->cditem != 1)
@@ -878,8 +878,8 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
             do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
     if (trans) {
 
-      PRBool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
-      PRBool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);
+      bool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
+      bool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);
 
         // if this is a fully-qualified file or the item claims to be
         // a Url, identify it as a Url & also offer it as html
@@ -945,7 +945,7 @@ NS_IMETHODIMP nsDragService::GetDragoverResult(MRESULT& mr)
 
   if (mDoingDrag) {
 
-    PRBool canDrop = PR_FALSE;
+    bool canDrop = false;
     USHORT usDrop;
     GetCanDrop(&canDrop);
     if (canDrop)
@@ -1085,7 +1085,7 @@ NS_IMETHODIMP nsDragService::DropMsg(PDRAGINFO pdinfo, HWND hwnd,
     // if this is a native drag, move the source data to a transferable;
     // request rendering if needed
   nsresult rv = NS_OK;
-  PRBool rendering = PR_FALSE;
+  bool rendering = false;
   if (!mSourceNode)
     rv = NativeDrop( pdinfo, hwnd, &rendering);
 
@@ -1123,7 +1123,7 @@ NS_IMETHODIMP nsDragService::DropMsg(PDRAGINFO pdinfo, HWND hwnd,
 // if necessary, requests the source to render it.
 
 NS_IMETHODIMP nsDragService::NativeDrop(PDRAGINFO pdinfo, HWND hwnd,
-                                        PRBool* rendering)
+                                        bool* rendering)
 {
   *rendering = PR_FALSE;
 
@@ -1133,7 +1133,7 @@ NS_IMETHODIMP nsDragService::NativeDrop(PDRAGINFO pdinfo, HWND hwnd,
     return rv;
 
   nsXPIDLCString dropText;
-  PRBool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
+  bool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
 
     // identify format; the order of evaluation here is important
 
@@ -1152,7 +1152,7 @@ NS_IMETHODIMP nsDragService::NativeDrop(PDRAGINFO pdinfo, HWND hwnd,
     // request rendering if it doesn't
   else
   if (DrgVerifyRMF(pditem, "DRM_OS2FILE", 0)) {
-    PRBool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);
+    bool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);
 
       // the file has to be rendered - currently, we only present
       // its content, not its name, to Moz to avoid conflicts
@@ -1277,7 +1277,7 @@ NS_IMETHODIMP nsDragService::NativeRenderComplete(PDRAGTRANSFER pdxfer,
                                    getter_Copies(dropText));
 
     if (NS_SUCCEEDED(rv)) {
-      PRBool isUrl = PR_FALSE;
+      bool isUrl = false;
       IsDataFlavorSupported(kURLMime, &isUrl);
       rv = NativeDataToTransferable( dropText.get(), 0, isUrl);
     }
@@ -1296,7 +1296,7 @@ NS_IMETHODIMP nsDragService::NativeRenderComplete(PDRAGTRANSFER pdxfer,
 // the set of flavors and data the target will see onDrop
 
 NS_IMETHODIMP nsDragService::NativeDataToTransferable( PCSZ pszText,
-                                                PCSZ pszTitle, PRBool isUrl)
+                                                PCSZ pszTitle, bool isUrl)
 {
   nsresult rv = NS_ERROR_FAILURE;
     // the transferable should have been created on DragEnter
@@ -1460,7 +1460,7 @@ nsresult RenderToOS2File( PDRAGITEM pditem, HWND hwnd)
 // return a buffer with the rendered file's Url or contents
 
 nsresult RenderToOS2FileComplete(PDRAGTRANSFER pdxfer, USHORT usResult,
-                                 PRBool content, char** outText)
+                                 bool content, char** outText)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1748,7 +1748,7 @@ void SaveTypeAndSource(nsILocalFile *file, nsIDOMDocument *domDoc,
     return;
 
   // identifying content as coming from chrome is none too useful...
-  PRBool ignore = PR_FALSE;
+  bool ignore = false;
   srcUri->SchemeIs("chrome", &ignore);
   if (ignore)
     return;

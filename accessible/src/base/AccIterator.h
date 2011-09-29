@@ -109,7 +109,7 @@ private:
   };
 
   filters::FilterFuncPtr mFilterFunc;
-  PRBool mIsDeep;
+  bool mIsDeep;
   IteratorState *mState;
 };
 
@@ -155,7 +155,7 @@ private:
 
 
 /**
- * Used to iterate through HTML labels associated with the given element.
+ * Used to iterate through HTML labels associated with the given accessible.
  */
 class HTMLLabelIterator : public AccIterable
 {
@@ -165,7 +165,7 @@ public:
     eSkipAncestorLabel
   };
 
-  HTMLLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement,
+  HTMLLabelIterator(nsDocAccessible* aDocument, const nsAccessible* aAccessible,
                     LabelFilter aFilter = eAllLabels);
 
   virtual ~HTMLLabelIterator() { }
@@ -181,7 +181,9 @@ private:
   HTMLLabelIterator& operator = (const HTMLLabelIterator&);
 
   RelatedAccIterator mRelIter;
-  nsIContent* mElement;
+  // XXX: replace it on weak reference (bug 678429), it's safe to use raw
+  // pointer now because iterators life cycle is short.
+  const nsAccessible* mAcc;
   LabelFilter mLabelFilter;
 };
 

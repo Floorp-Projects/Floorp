@@ -287,7 +287,7 @@ nsDocAccessibleWrap::DoInitialUpdate()
         nativeData = reinterpret_cast<mozilla::WindowsHandle>(
           rootDocument->GetNativeWindow());
 
-      PRBool isActive = PR_TRUE;
+      bool isActive = true;
       PRInt32 x = CW_USEDEFAULT, y = CW_USEDEFAULT, width = 0, height = 0;
       if (nsWinUtils::IsWindowEmulationFor(kDolphinModuleHandle)) {
         GetBounds(&x, &y, &width, &height);

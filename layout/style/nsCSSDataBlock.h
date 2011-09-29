@@ -107,9 +107,9 @@ public:
      * actually made a change to the block, but regardless, if it
      * returns PR_TRUE, the value in |aFromBlock| was erased.
      */
-    PRBool TryReplaceValue(nsCSSProperty aProperty,
+    bool TryReplaceValue(nsCSSProperty aProperty,
                            nsCSSExpandedDataBlock& aFromBlock,
-                           PRBool* aChanged);
+                           bool* aChanged);
 
     /**
      * Clone this block, or return null on out-of-memory.
@@ -232,11 +232,11 @@ public:
      * |ValueAppended| on |aDeclaration| if the property was not
      * previously set, or in any case if |aMustCallValueAppended| is true.
      */
-    PRBool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+    bool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                              nsCSSProperty aPropID,
-                             PRBool aIsImportant,
-                             PRBool aOverrideImportant,
-                             PRBool aMustCallValueAppended,
+                             bool aIsImportant,
+                             bool aOverrideImportant,
+                             bool aMustCallValueAppended,
                              mozilla::css::Declaration* aDeclaration);
 
     void AssertInitialState() {
@@ -255,16 +255,16 @@ private:
     };
     ComputeSizeResult ComputeSize();
 
-    void DoExpand(nsCSSCompressedDataBlock *aBlock, PRBool aImportant);
+    void DoExpand(nsCSSCompressedDataBlock *aBlock, bool aImportant);
 
     /**
      * Worker for TransferFromBlock; cannot be used with shorthands.
      */
-    PRBool DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+    bool DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                nsCSSProperty aPropID,
-                               PRBool aIsImportant,
-                               PRBool aOverrideImportant,
-                               PRBool aMustCallValueAppended,
+                               bool aIsImportant,
+                               bool aOverrideImportant,
+                               bool aMustCallValueAppended,
                                mozilla::css::Declaration* aDeclaration);
 
 #ifdef DEBUG
@@ -302,7 +302,7 @@ private:
         mPropertiesSet.RemoveProperty(aProperty);
     }
 
-    PRBool HasPropertyBit(nsCSSProperty aProperty) {
+    bool HasPropertyBit(nsCSSProperty aProperty) {
         return mPropertiesSet.HasProperty(aProperty);
     }
 
@@ -314,7 +314,7 @@ private:
         mPropertiesImportant.RemoveProperty(aProperty);
     }
 
-    PRBool HasImportantBit(nsCSSProperty aProperty) {
+    bool HasImportantBit(nsCSSProperty aProperty) {
         return mPropertiesImportant.HasProperty(aProperty);
     }
 

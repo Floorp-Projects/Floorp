@@ -111,7 +111,7 @@ interface nsIBinaryInputStream : nsIInputStream {
 inline nsresult
 NS_ReadOptionalCString(nsIBinaryInputStream* aStream, nsACString& aResult)
 {
-    PRBool nonnull;
+    bool nonnull;
     nsresult rv = aStream->ReadBoolean(&nonnull);
     if (NS_SUCCEEDED(rv)) {
         if (nonnull)
@@ -125,7 +125,7 @@ NS_ReadOptionalCString(nsIBinaryInputStream* aStream, nsACString& aResult)
 inline nsresult
 NS_ReadOptionalString(nsIBinaryInputStream* aStream, nsAString& aResult)
 {
-    PRBool nonnull;
+    bool nonnull;
     nsresult rv = aStream->ReadBoolean(&nonnull);
     if (NS_SUCCEEDED(rv)) {
         if (nonnull)

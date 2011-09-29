@@ -95,9 +95,9 @@ interface nsIObjectOutputStream : nsIBinaryOutputStream
 
 inline nsresult
 NS_WriteOptionalObject(nsIObjectOutputStream* aStream, nsISupports* aObject,
-                       PRBool aIsStrongRef)
+                       bool aIsStrongRef)
 {
-    PRBool nonnull = (aObject != nsnull);
+    bool nonnull = (aObject != nsnull);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteObject(aObject, aIsStrongRef);
@@ -108,7 +108,7 @@ inline nsresult
 NS_WriteOptionalSingleRefObject(nsIObjectOutputStream* aStream,
                                 nsISupports* aObject)
 {
-    PRBool nonnull = (aObject != nsnull);
+    bool nonnull = (aObject != nsnull);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteSingleRefObject(aObject);
@@ -119,9 +119,9 @@ inline nsresult
 NS_WriteOptionalCompoundObject(nsIObjectOutputStream* aStream,
                                nsISupports* aObject,
                                const nsIID& aIID,
-                               PRBool aIsStrongRef)
+                               bool aIsStrongRef)
 {
-    PRBool nonnull = (aObject != nsnull);
+    bool nonnull = (aObject != nsnull);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteCompoundObject(aObject, aIID, aIsStrongRef);

@@ -174,7 +174,7 @@ public:
    * @param aPseudoElement the pseudo type we're interested in
    * @return whether aFrame is the generated aPseudoElement frame for aContent
    */
-  static PRBool IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame,
+  static bool IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame,
                                       nsIAtom* aPseudoElement);
 
 #ifdef DEBUG
@@ -295,7 +295,7 @@ public:
    * aAncestorFrame. If non-null, this can bound the search and speed up
    * the function
    */
-  static PRBool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+  static bool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                       nsIFrame* aCommonAncestor = nsnull);
 
   /**
@@ -304,7 +304,7 @@ public:
    * Just like IsAncestorFrameCrossDoc, except that it returns false when
    * aFrame == aAncestorFrame.
    */
-  static PRBool IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+  static bool IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                               nsIFrame* aCommonAncestor = nsnull);
 
   /**
@@ -317,7 +317,7 @@ public:
    * Just like IsProperAncestorFrameCrossDoc, except that it returns true when
    * aFrame == aAncestorFrame.
    */
-  static PRBool IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+  static bool IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                         nsIFrame* aCommonAncestor = nsnull);
 
   /**
@@ -332,9 +332,9 @@ public:
 
   static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
                                             nsDisplayListBuilder* aBuilder,
-                                            PRBool* aShouldFixToViewport = nsnull);
+                                            bool* aShouldFixToViewport = nsnull);
 
-  static PRBool ScrolledByViewportScrolling(nsIFrame* aActiveScrolledRoot,
+  static bool ScrolledByViewportScrolling(nsIFrame* aActiveScrolledRoot,
                                             nsDisplayListBuilder* aBuilder);
 
   /**
@@ -388,7 +388,7 @@ public:
    * @param aPresContext the presentation context
    * @return whether aContent has aPseudoElement style attached to it
    */
-  static PRBool HasPseudoStyle(nsIContent* aContent,
+  static bool HasPseudoStyle(nsIContent* aContent,
                                nsStyleContext* aStyleContext,
                                nsCSSPseudoElements::Type aPseudoElement,
                                nsPresContext* aPresContext);
@@ -478,7 +478,7 @@ public:
   static nsresult GetRemoteContentIds(nsIFrame* aFrame,
                                      const nsRect& aTarget,
                                      nsTArray<ViewID> &aOutIDs,
-                                     PRBool aIgnoreRootScrollFrame);
+                                     bool aIgnoreRootScrollFrame);
 
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant
@@ -491,8 +491,8 @@ public:
    * should ignore the root scroll frame.
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
-                                    PRBool aShouldIgnoreSuppression = PR_FALSE,
-                                    PRBool aIgnoreRootScrollFrame = PR_FALSE);
+                                    bool aShouldIgnoreSuppression = false,
+                                    bool aIgnoreRootScrollFrame = false);
 
   /**
    * Given aFrame, the root frame of a stacking context, find all descendant
@@ -507,8 +507,8 @@ public:
    */
   static nsresult GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
                                    nsTArray<nsIFrame*> &aOutFrames,
-                                   PRBool aShouldIgnoreSuppression = PR_FALSE,
-                                   PRBool aIgnoreRootScrollFrame = PR_FALSE);
+                                   bool aShouldIgnoreSuppression = false,
+                                   bool aIgnoreRootScrollFrame = false);
 
   
 
@@ -659,7 +659,7 @@ public:
    * @param aTextWidth returns the (in twips) the length of the text that falls
    * before the cursor aIndex contains the index of the text where the cursor falls
    */
-  static PRBool
+  static bool
   BinarySearchForPosition(nsRenderingContext* acx,
                           const PRUnichar* aText,
                           PRInt32    aBaseWidth,
@@ -691,7 +691,7 @@ public:
   struct RectAccumulator : public RectCallback {
     nsRect       mResultRect;
     nsRect       mFirstRect;
-    PRPackedBool mSeenFirstRect;
+    bool mSeenFirstRect;
 
     RectAccumulator();
 
@@ -807,7 +807,7 @@ public:
    * @return if TRUE, the frame is a part of the scrollbar or scrollcorner of
    *         the root content.
    */
-  static PRBool IsViewportScrollbarFrame(nsIFrame* aFrame);
+  static bool IsViewportScrollbarFrame(nsIFrame* aFrame);
 
   /**
    * Get the contribution of aFrame to its containing block's intrinsic
@@ -874,7 +874,7 @@ public:
     return result;
   }
 
-  static PRBool IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
+  static bool IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
   {
     nsStyleUnit unit = aCoord.GetUnit();
     return unit == eStyleUnit_Auto ||  // only for 'height'
@@ -882,7 +882,7 @@ public:
            (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
   }
 
-  static PRBool IsPaddingZero(const nsStyleCoord &aCoord)
+  static bool IsPaddingZero(const nsStyleCoord &aCoord)
   {
     return (aCoord.GetUnit() == eStyleUnit_Coord &&
             aCoord.GetCoordValue() == 0) ||
@@ -894,7 +894,7 @@ public:
             nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) <= 0);
   }
 
-  static PRBool IsMarginZero(const nsStyleCoord &aCoord)
+  static bool IsMarginZero(const nsStyleCoord &aCoord)
   {
     return (aCoord.GetUnit() == eStyleUnit_Coord &&
             aCoord.GetCoordValue() == 0) ||
@@ -987,7 +987,7 @@ public:
    * Returns true if a baseline was found (and fills in aResult).
    * Otherwise returns false.
    */
-  static PRBool GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
+  static bool GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
 
   /**
    * Just like GetFirstLineBaseline, except also returns the top and
@@ -1007,7 +1007,7 @@ public:
       return result;
     }
   };
-  static PRBool GetFirstLinePosition(const nsIFrame* aFrame,
+  static bool GetFirstLinePosition(const nsIFrame* aFrame,
                                      LinePosition* aResult);
 
 
@@ -1019,7 +1019,7 @@ public:
    * Returns true if a baseline was found (and fills in aResult).
    * Otherwise returns false.
    */
-  static PRBool GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
+  static bool GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
 
   /**
    * Returns a y coordinate relative to this frame's origin that represents
@@ -1224,13 +1224,13 @@ public:
    * corners are not expected to appear outside of test cases, and it's
    * simpler to implement the test this way.
    */
-  static PRBool HasNonZeroCorner(const nsStyleCorners& aCorners);
+  static bool HasNonZeroCorner(const nsStyleCorners& aCorners);
 
   /**
    * Determine if there is any corner radius on corners adjacent to the
    * given side.
    */
-  static PRBool HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
+  static bool HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
                                        mozilla::css::Side aSide);
 
   /**
@@ -1250,7 +1250,7 @@ public:
    * A frame is a popup if it has its own floating window. Menus, panels
    * and combobox dropdowns are popups.
    */
-  static PRBool IsPopup(nsIFrame* aFrame);
+  static bool IsPopup(nsIFrame* aFrame);
 
   /**
    * Find the nearest "display root". This is the nearest enclosing
@@ -1292,13 +1292,13 @@ public:
    * they're inside an element with -moz-transform.  This function says
    * whether such an element is a real fixed-pos element.
    */
-  static PRBool IsReallyFixedPos(nsIFrame* aFrame);
+  static bool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
    * Return true if aFrame is in an {ib} split and is NOT one of the
    * continuations of the first inline in it.
    */
-  static PRBool FrameIsNonFirstInIBSplit(const nsIFrame* aFrame) {
+  static bool FrameIsNonFirstInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
         Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
@@ -1308,7 +1308,7 @@ public:
    * Return true if aFrame is in an {ib} split and is NOT one of the
    * continuations of the last inline in it.
    */
-  static PRBool FrameIsNonLastInIBSplit(const nsIFrame* aFrame) {
+  static bool FrameIsNonLastInIBSplit(const nsIFrame* aFrame) {
     return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
       aFrame->GetFirstContinuation()->
         Properties().Get(nsIFrame::IBSplitSpecialSibling());
@@ -1363,12 +1363,12 @@ public:
     /* The image request, if the element is an nsIImageLoadingContent */
     nsCOMPtr<imgIRequest> mImageRequest;
     /* Whether the element was "write only", that is, the bits should not be exposed to content */
-    PRPackedBool mIsWriteOnly;
+    bool mIsWriteOnly;
     /* Whether the element was still loading.  Some consumers need to handle
        this case specially. */
-    PRPackedBool mIsStillLoading;
+    bool mIsStillLoading;
     /* Whether the element used CORS when loading. */
-    PRPackedBool mCORSUsed;
+    bool mCORSUsed;
   };
 
   static SurfaceFromElementResult SurfaceFromElement(nsIDOMElement *aElement,
@@ -1401,7 +1401,7 @@ public:
    * Returns true if the passed in prescontext needs the dark grey background
    * that goes behind the page of a print preview presentation.
    */
-  static PRBool NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
+  static bool NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
     return aPresContext->IsRootPaginatedDocument() &&
       (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
        aPresContext->Type() == nsPresContext::eContext_PageLayout);
@@ -1423,13 +1423,13 @@ public:
   static nsresult GetFontFacesForText(nsIFrame* aFrame,
                                       PRInt32 aStartOffset,
                                       PRInt32 aEndOffset,
-                                      PRBool aFollowContinuations,
+                                      bool aFollowContinuations,
                                       nsFontFaceList* aFontFaceList);
 
   /**
    * Checks if CSS 3D transforms are currently enabled.
    */
-  static PRBool Are3DTransformsEnabled();
+  static bool Are3DTransformsEnabled();
 
   static void Shutdown();
 

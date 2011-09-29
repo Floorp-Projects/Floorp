@@ -256,7 +256,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 }
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
-PRBool gXPCOMShuttingDown = PR_FALSE;
+bool gXPCOMShuttingDown = false;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
@@ -423,7 +423,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool value;
+    bool value;
 
     if (binDirectory)
     {
@@ -659,7 +659,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     nsCycleCollector_shutdown();
 
     if (moduleLoaders) {
-        PRBool more;
+        bool more;
         nsCOMPtr<nsISupports> el;
         while (NS_SUCCEEDED(moduleLoaders->HasMoreElements(&more)) &&
                more) {

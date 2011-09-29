@@ -59,7 +59,7 @@ NS_INTERFACE_MAP_END
 
 static nsresult
 GetValueFromString(const nsAString &aValueAsString,
-                   PRBool *aValue)
+                   bool *aValue)
 {
   if (aValueAsString.EqualsLiteral("true")) {
     *aValue = PR_TRUE;
@@ -75,9 +75,9 @@ GetValueFromString(const nsAString &aValueAsString,
 nsresult
 nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
                                  nsSVGElement *aSVGElement,
-                                 PRBool aDoSetAttr)
+                                 bool aDoSetAttr)
 {
-  PRBool val;
+  bool val;
 
   nsresult rv = GetValueFromString(aValueAsString, &val);
   if (NS_FAILED(rv)) {
@@ -109,7 +109,7 @@ nsSVGBoolean::GetBaseValueString(nsAString & aValueAsString)
 }
 
 void
-nsSVGBoolean::SetBaseValue(PRBool aValue,
+nsSVGBoolean::SetBaseValue(bool aValue,
                            nsSVGElement *aSVGElement)
 {
   NS_PRECONDITION(aValue == PR_TRUE || aValue == PR_FALSE, "Boolean out of range");
@@ -129,7 +129,7 @@ nsSVGBoolean::SetBaseValue(PRBool aValue,
 }
 
 void
-nsSVGBoolean::SetAnimValue(PRBool aValue, nsSVGElement *aSVGElement)
+nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement *aSVGElement)
 {
   mAnimVal = aValue;
   mIsAnimated = PR_TRUE;
@@ -159,9 +159,9 @@ nsresult
 nsSVGBoolean::SMILBool::ValueFromString(const nsAString& aStr,
                                         const nsISMILAnimationElement* /*aSrcElement*/,
                                         nsSMILValue& aValue,
-                                        PRBool& aPreventCachingOfSandwich) const
+                                        bool& aPreventCachingOfSandwich) const
 {
-  PRBool value;
+  bool value;
   nsresult rv = GetValueFromString(aStr, &value);
   if (NS_FAILED(rv)) {
     return rv;

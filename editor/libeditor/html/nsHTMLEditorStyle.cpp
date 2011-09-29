@@ -112,7 +112,7 @@ NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty,
                             const nsAString & aAttribute, 
                             const nsAString & aValue)
 {
-  PRBool useCSS;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
   if (useCSS) {
     return SetInlineProperty(aProperty, aAttribute, aValue);
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
-  PRBool isCollapsed;
+  bool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
   if (isCollapsed)
   {
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   nsAutoSelectionReset selectionResetter(selection, this);
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
   
-  PRBool cancel, handled;
+  bool cancel, handled;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kSetTextProperty);
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
@@ -306,8 +306,8 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aTextNode);
   
   // don't need to do anything if property already set on node
-  PRBool bHasProp;
-  PRBool useCSS;
+  bool bHasProp;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
 
   if (useCSS &&
@@ -388,7 +388,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   aProperty->ToString(tag);
   ToLowerCase(tag);
   
-  PRBool useCSS;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
 
   if (useCSS)
@@ -447,7 +447,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   }
   
   // don't need to do anything if property already set on node
-  PRBool bHasProp;
+  bool bHasProp;
   nsCOMPtr<nsIDOMNode> styleNode;
   IsTextPropertySetByContent(aNode, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
   if (bHasProp) return NS_OK;
@@ -585,10 +585,10 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   nsCOMPtr<nsIDOMNode> parent, tmp = *aNode;
   PRInt32 offset;
 
-  PRBool useCSS;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
 
-  PRBool isSet;
+  bool isSet;
   while (tmp && !IsBlockNode(tmp))
   {
     isSet = PR_FALSE;
@@ -620,7 +620,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   return NS_OK;
 }
 
-PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
+bool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
 {
   NS_ENSURE_TRUE(aNode, PR_FALSE);
   if (!IsContainer(aNode))  return PR_FALSE;
@@ -647,7 +647,7 @@ nsresult nsHTMLEditor::ApplyDefaultProperties()
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
                                    nsIAtom *aProperty,   // null here means remove all properties
                                    const nsAString *aAttribute, 
-                                   PRBool aChildrenOnly)
+                                   bool aChildrenOnly)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   if (IsTextNode(aNode)) return NS_OK;
@@ -678,8 +678,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     {
       NS_NAMED_LITERAL_STRING(styleAttr, "style");
       NS_NAMED_LITERAL_STRING(classAttr, "class");
-      PRBool hasStyleAttr = HasAttr(aNode, &styleAttr);
-      PRBool hasClassAtrr = HasAttr(aNode, &classAttr);
+      bool hasStyleAttr = HasAttr(aNode, &styleAttr);
+      bool hasClassAtrr = HasAttr(aNode, &classAttr);
       if (aProperty &&
           (hasStyleAttr || hasClassAtrr)) {
         // aNode carries inline styles or a class attribute so we can't
@@ -732,7 +732,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     }
   }
   else {
-    PRBool useCSS;
+    bool useCSS;
     GetIsCSSEnabled(&useCSS);
 
     if (!aChildrenOnly
@@ -740,7 +740,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
       // the HTML style defined by aProperty/aAttribute has a CSS equivalence
       // in this implementation for the node aNode; let's check if it carries those css styles
       nsAutoString propertyValue;
-      PRBool isSet;
+      bool isSet;
       mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, aAttribute,
                                                          isSet, propertyValue,
                                                          SPECIFIED_STYLE_TYPE);
@@ -768,7 +768,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   return res;
 }
 
-PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode, 
+bool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode, 
                                      const nsAString *aAttribute)
 {
   NS_ENSURE_TRUE(aNode && aAttribute, PR_FALSE);  // ooops
@@ -795,7 +795,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   return PR_TRUE;
 }
 
-PRBool nsHTMLEditor::HasAttr(nsIDOMNode *aNode, 
+bool nsHTMLEditor::HasAttr(nsIDOMNode *aNode, 
                              const nsAString *aAttribute)
 {
   NS_ENSURE_TRUE(aNode, PR_FALSE);
@@ -813,7 +813,7 @@ PRBool nsHTMLEditor::HasAttr(nsIDOMNode *aNode,
 }
 
 
-PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode, 
+bool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode, 
                                 const nsAString *aAttribute, 
                                 const nsAString *aValue)
 {
@@ -830,7 +830,7 @@ PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode,
   if ((NS_FAILED(res)) || !attNode) return PR_FALSE;
   
   // check if attribute has a value
-  PRBool isSet;
+  bool isSet;
   attNode->GetSpecified(&isSet);
   // if no value, and that's what we wanted, then return true
   if (!isSet && (!aValue || aValue->IsEmpty())) return PR_TRUE; 
@@ -947,7 +947,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
   return res;
 }
 
-PRBool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
+bool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
 {
   NS_ENSURE_TRUE(aNode, PR_FALSE);  // oops
   if (!aOffset) {
@@ -970,7 +970,7 @@ PRBool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   }
 }
 
-PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
+bool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
 {
   NS_ENSURE_TRUE(aNode, PR_FALSE);  // oops
   PRUint32 len;
@@ -998,11 +998,11 @@ nsresult
 nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty, 
                              const nsAString *aAttribute,
                              const nsAString *aValue,
-                             PRBool *aFirst, 
-                             PRBool *aAny, 
-                             PRBool *aAll,
+                             bool *aFirst, 
+                             bool *aAny, 
+                             bool *aAll,
                              nsAString *outValue,
-                             PRBool aCheckDefaults)
+                             bool aCheckDefaults)
 {
   NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
 
@@ -1010,9 +1010,9 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   *aAny=PR_FALSE;
   *aAll=PR_TRUE;
   *aFirst=PR_FALSE;
-  PRBool first=PR_TRUE;
+  bool first=true;
 
-  PRBool useCSS;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
 
   nsCOMPtr<nsISelection>selection;
@@ -1021,7 +1021,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
-  PRBool isCollapsed;
+  bool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
   nsCOMPtr<nsIDOMNode> collapsedNode;
   nsCOMPtr<nsIEnumerator> enumerator;
@@ -1036,14 +1036,14 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   // XXX: ERROR_HANDLING can currentItem be null?
   if ((NS_SUCCEEDED(result)) && currentItem)
   {
-    PRBool firstNodeInRange = PR_TRUE; // for each range, set a flag 
+    bool firstNodeInRange = true; // for each range, set a flag 
     nsCOMPtr<nsIDOMRange> range(do_QueryInterface(currentItem));
 
     if (isCollapsed)
     {
       range->GetStartContainer(getter_AddRefs(collapsedNode));
       NS_ENSURE_TRUE(collapsedNode, NS_ERROR_FAILURE);
-      PRBool isSet, theSetting;
+      bool isSet, theSetting;
       if (aAttribute)
       {
         nsString tString(*aAttribute); //MJUDGE SCC NEED HELP
@@ -1111,7 +1111,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       nsCOMPtr<nsIDOMCharacterData>text;
       text = do_QueryInterface(content);
       
-      PRBool skipNode = PR_FALSE;
+      bool skipNode = false;
       
       // just ignore any non-editable nodes
       if (text && !IsEditable(text))
@@ -1145,7 +1145,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       {
         if (node)
         {
-          PRBool isSet = PR_FALSE;
+          bool isSet = false;
           nsCOMPtr<nsIDOMNode>resultNode;
           if (first)
           {
@@ -1208,9 +1208,9 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
 NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty, 
                                               const nsAString &aAttribute, 
                                               const nsAString &aValue,
-                                              PRBool *aFirst, 
-                                              PRBool *aAny, 
-                                              PRBool *aAll)
+                                              bool *aFirst, 
+                                              bool *aAny, 
+                                              bool *aAll)
 {
   NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
   const nsAString *att = nsnull;
@@ -1226,9 +1226,9 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
 NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
                                               const nsAString &aAttribute, 
                                               const nsAString &aValue,
-                                              PRBool *aFirst, 
-                                              PRBool *aAny, 
-                                              PRBool *aAll,
+                                              bool *aFirst, 
+                                              bool *aAny, 
+                                              bool *aAll,
                                               nsAString &outValue)
 {
   NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
@@ -1269,10 +1269,10 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
 
-  PRBool isCollapsed;
+  bool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
 
-  PRBool useCSS;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
 
   if (isCollapsed)
@@ -1292,7 +1292,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   nsAutoSelectionReset selectionResetter(selection, this);
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
   
-  PRBool cancel, handled;
+  bool cancel, handled;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveTextProperty);
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
@@ -1345,7 +1345,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
           // the HTML style defined by aProperty/aAttribute has a CSS equivalence
           // in this implementation for startNode
           nsAutoString cssValue;
-          PRBool isSet = PR_FALSE;
+          bool isSet = false;
           mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(startNode,
                                                     aProperty,
                                                     aAttribute,
@@ -1406,7 +1406,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
             // the HTML style defined by aProperty/aAttribute has a CSS equivalence
             // in this implementation for node
             nsAutoString cssValue;
-            PRBool isSet = PR_FALSE;
+            bool isSet = false;
             mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node,
                                                                aProperty,
                                                                aAttribute,
@@ -1464,7 +1464,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));  
   // Is the selection collapsed?
-  PRBool bCollapsed;
+  bool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
   NS_ENSURE_SUCCESS(res, res);
   
@@ -1832,14 +1832,14 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
+nsHTMLEditor::GetFontFaceState(bool *aMixed, nsAString &outFace)
 {
   NS_ENSURE_TRUE(aMixed, NS_ERROR_FAILURE);
   *aMixed = PR_TRUE;
   outFace.Truncate();
 
   nsresult res;
-  PRBool first, any, all;
+  bool first, any, all;
   
   NS_NAMED_LITERAL_STRING(attr, "face");
   res = GetInlinePropertyBase(nsEditProperty::font, &attr, nsnull, &first, &any, &all, &outFace);
@@ -1871,7 +1871,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
+nsHTMLEditor::GetFontColorState(bool *aMixed, nsAString &aOutColor)
 {
   NS_ENSURE_TRUE(aMixed, NS_ERROR_NULL_POINTER);
   *aMixed = PR_TRUE;
@@ -1879,7 +1879,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
   
   nsresult res;
   NS_NAMED_LITERAL_STRING(colorStr, "color");
-  PRBool first, any, all;
+  bool first, any, all;
   
   res = GetInlinePropertyBase(nsEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);
   NS_ENSURE_SUCCESS(res, res);
@@ -1903,7 +1903,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
 // can handle CSS styles (for instance, Composer can, Messenger can't) and if
 // the CSS preference is checked
 nsresult
-nsHTMLEditor::GetIsCSSEnabled(PRBool *aIsCSSEnabled)
+nsHTMLEditor::GetIsCSSEnabled(bool *aIsCSSEnabled)
 {
   *aIsCSSEnabled = PR_FALSE;
   if (mCSSAware) {
@@ -1916,7 +1916,7 @@ nsHTMLEditor::GetIsCSSEnabled(PRBool *aIsCSSEnabled)
 }
 
 nsresult
-nsHTMLEditor::HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass)
+nsHTMLEditor::HasStyleOrIdOrClass(nsIDOMElement * aElement, bool *aHasStyleOrIdOrClass)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> node  = do_QueryInterface(aElement);
@@ -1925,7 +1925,7 @@ nsHTMLEditor::HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrI
   // remove the node if its style attribute is empty or absent,
   // and if it does not have a class nor an id
   nsAutoString styleVal;
-  PRBool isStyleSet;
+  bool isStyleSet;
   *aHasStyleOrIdOrClass = PR_TRUE;
   nsresult res = GetAttributeValue(aElement,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
   NS_ENSURE_SUCCESS(res, res);
@@ -1946,7 +1946,7 @@ nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAto
   if (!NodeIsType(node, aTag)) {
     return NS_OK;
   }
-  PRBool hasStyleOrIdOrClass;
+  bool hasStyleOrIdOrClass;
   nsresult res = HasStyleOrIdOrClass(aElement, &hasStyleOrIdOrClass);
   if (!hasStyleOrIdOrClass) {
     res = RemoveContainer(node);

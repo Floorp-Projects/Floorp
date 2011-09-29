@@ -72,7 +72,7 @@ private:
     nsresult OpenCacheEntry(nsIURI *, nsICacheEntryDescriptor **);
     nsresult WriteCacheEntryDescription(nsIOutputStream *, nsICacheEntryDescriptor *);
     nsresult WriteCacheEntryUnavailable(nsIOutputStream *);
-    nsresult ParseURI(nsIURI *, nsCString &, PRBool &, nsCString &);
+    nsresult ParseURI(nsIURI *, nsCString &, bool &, nsCString &);
 
 private:
     nsCString *mBuffer;

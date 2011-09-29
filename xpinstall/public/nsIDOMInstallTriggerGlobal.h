@@ -64,11 +64,11 @@ public:
 
   NS_IMETHOD    GetOriginatingURI(nsIScriptGlobalObject* aGlobalObject, nsIURI * *aUri)=0;
 
-  NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn)=0;
+  NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, bool aUseWhitelist, bool* aReturn)=0;
 
-  NS_IMETHOD    UpdateEnabled(nsIURI* aURI, PRBool aUseWhitelist, PRBool* aReturn)=0;
+  NS_IMETHOD    UpdateEnabled(nsIURI* aURI, bool aUseWhitelist, bool* aReturn)=0;
 
-  NS_IMETHOD    StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn)=0;
+  NS_IMETHOD    StartInstall(nsIXPIInstallInfo* aInstallInfo, bool* aReturn)=0;
 
 };
 

@@ -225,6 +225,9 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     JSFunction *throwTypeError = js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, this, NULL);
     if (!throwTypeError)
         return NULL;
+    AutoIdVector ids(cx);
+    if (!throwTypeError->preventExtensions(cx, &ids))
+        return NULL;
     setThrowTypeError(throwTypeError);
 
     /*

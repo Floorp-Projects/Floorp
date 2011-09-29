@@ -187,8 +187,8 @@ nsresult CentralizedAdminPrefManagerFinish()
 }
 
 nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
-                                   const char *filename, PRBool bGlobalContext, 
-                                   PRBool bCallbacks, PRBool skipFirstLine)
+                                   const char *filename, bool bGlobalContext, 
+                                   bool bCallbacks, bool skipFirstLine)
 {
     JSBool ok;
 

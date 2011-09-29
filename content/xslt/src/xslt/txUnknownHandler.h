@@ -53,7 +53,7 @@ public:
     TX_DECL_TXAXMLEVENTHANDLER
 
 private:
-    nsresult createHandlerAndFlush(PRBool aHTMLRoot,
+    nsresult createHandlerAndFlush(bool aHTMLRoot,
                                    const nsSubstring& aName,
                                    const PRInt32 aNsID);
 
@@ -66,7 +66,7 @@ private:
 
     // If mFlushed is true then we've replaced mEs->mResultHandler with a
     // different handler and we should forward to that handler.
-    PRBool mFlushed;
+    bool mFlushed;
 };
 
 #endif /* txUnknownHandler_h___ */

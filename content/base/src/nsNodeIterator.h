@@ -64,7 +64,7 @@ public:
     nsNodeIterator(nsINode *aRoot,
                    PRUint32 aWhatToShow,
                    nsIDOMNodeFilter *aFilter,
-                   PRBool aExpandEntityReferences);
+                   bool aExpandEntityReferences);
     virtual ~nsNodeIterator();
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
@@ -75,13 +75,13 @@ public:
 private:
     struct NodePointer {
         NodePointer() : mNode(nsnull) {};
-        NodePointer(nsINode *aNode, PRBool aBeforeNode);
+        NodePointer(nsINode *aNode, bool aBeforeNode);
 
-        typedef PRBool (NodePointer::*MoveToMethodType)(nsINode*);
-        PRBool MoveToNext(nsINode *aRoot);
-        PRBool MoveToPrevious(nsINode *aRoot);
+        typedef bool (NodePointer::*MoveToMethodType)(nsINode*);
+        bool MoveToNext(nsINode *aRoot);
+        bool MoveToPrevious(nsINode *aRoot);
 
-        PRBool MoveForward(nsINode *aRoot, nsINode *aNode);
+        bool MoveForward(nsINode *aRoot, nsINode *aNode);
         void MoveBackward(nsINode *aParent, nsINode *aNode);
 
         void AdjustAfterRemoval(nsINode *aRoot, nsINode *aContainer, nsIContent *aChild, nsIContent *aPreviousSibling);
@@ -89,14 +89,14 @@ private:
         void Clear() { mNode = nsnull; }
 
         nsINode *mNode;
-        PRBool mBeforeNode;
+        bool mBeforeNode;
     };
 
     inline nsresult
     NextOrPrevNode(NodePointer::MoveToMethodType aMove,
                    nsIDOMNode **_retval);
 
-    PRBool mDetached;
+    bool mDetached;
     NodePointer mPointer;
     NodePointer mWorkingPointer;
 };

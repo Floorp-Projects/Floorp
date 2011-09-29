@@ -153,7 +153,7 @@ static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
   return NS_OK;
 }
 
-nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists)
 {
   // look up the protocol scheme in the windows registry....if we find a match then we have a handler for it...
   *aHandlerExists = PR_FALSE;
@@ -280,7 +280,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry(const nsAFlatString& file
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Looks up the type for the extension aExt and compares it to aType
-/* static */ PRBool
+/* static */ bool
 nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType)
 {
   if (!aType)
@@ -291,7 +291,7 @@ nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType
 
   fileExtToUse.Append(aExt);
 
-  PRBool eq = PR_FALSE;
+  bool eq = false;
   nsCOMPtr<nsIWindowsRegKey> regKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
   if (!regKey) 
@@ -371,7 +371,7 @@ static void StripRundll32(nsString& aCommandString)
 // to launch the associated application as it strips parameters and
 // rundll.exe from the string. Designed for retrieving display information
 // on a particular handler.   
-/* static */ PRBool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
+/* static */ bool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
 {
   nsAutoString handlerCommand(aCommandHandler);
 
@@ -553,7 +553,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
   nsAutoString appInfo;
-  PRBool found;
+  bool found;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Retrieve the default application for this extension
@@ -609,7 +609,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   return mimeInfo;
 }
 
-already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound)
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, bool *aFound)
 {
   *aFound = PR_TRUE;
 
@@ -641,7 +641,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     mi = GetByExtension(fileExtension, flatType.get()).get();
   LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi));
 
-  PRBool hasDefault = PR_FALSE;
+  bool hasDefault = false;
   if (mi) {
     mi->GetHasDefaultHandler(&hasDefault);
     // OK. We might have the case that |aFileExt| is a valid extension for the
@@ -652,7 +652,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     if (!aFileExt.IsEmpty() && typeFromExtEquals(NS_ConvertUTF8toUTF16(flatExt).get(), flatType.get())) {
       LOG(("Appending extension '%s' to mimeinfo, because its mimetype is '%s'\n",
            flatExt.get(), flatType.get()));
-      PRBool extExist = PR_FALSE;
+      bool extExist = false;
       mi->ExtensionExists(aFileExt, &extExist);
       if (!extExist)
         mi->AppendExtension(aFileExt);
@@ -692,7 +692,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
 
 NS_IMETHODIMP
 nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                                   PRBool *found,
+                                                   bool *found,
                                                    nsIHandlerInfo **_retval)
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");

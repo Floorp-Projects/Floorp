@@ -1,0 +1,93 @@
+<html>
+
+<head>
+  <title>Accessible document focus event testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+      src="../common.js"></script>
+  <script type="application/javascript"
+    src="../events.js"></script>
+    <script type="application/javascript"
+      src="../states.js"></script>
+
+  <script type="application/javascript">
+    var gQueue = null;
+
+    //var gA11yEventDumpID = "eventdump";
+    //gA11yEventDumpToConsole = true;
+
+    function doTests()
+    {
+      // setup
+      var frameDoc = document.getElementById("iframe").contentDocument;
+      frameDoc.designMode = "on";
+      var frameDocAcc = getAccessible(frameDoc, [nsIAccessibleDocument]);
+      var buttonAcc = getAccessible("b1");
+
+      var frame2Doc = document.getElementById("iframe2").contentDocument;
+      var frame2Input = frame2Doc.getElementById("input");
+      var frame2DocAcc = getAccessible(frame2Doc);
+      var frame2InputAcc = getAccessible(frame2Input);
+
+      // Test focus events.
+      gQueue = new eventQueue();
+
+      // try to give focus to contentEditable frame twice to cover bug 512059
+      gQueue.push(new synthFocus(buttonAcc));
+      gQueue.push(new synthTab(frameDocAcc, new focusChecker(frameDocAcc)));
+      gQueue.push(new synthFocus(buttonAcc));
+      gQueue.push(new synthTab(frameDocAcc, new focusChecker(frameDocAcc)));
+
+      // focus on not editable document
+      gQueue.push(new synthFocus(frame2InputAcc));
+      gQueue.push(new synthShiftTab(frame2DocAcc, new focusChecker(frame2DocAcc)));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=512058"
+    title="Can't set focus to designMode document via accessibility APIs">
+   Mozilla Bug 512058
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=512059"
+     title="Accessibility focus event never fired for designMode document after the first focus">
+    Mozilla Bug 512059
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=618046"
+     title="No focus change event when Shift+Tab at top of screen">
+    Mozilla Bug 618046
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="eventdump"></div>
+
+  <div id="testContainer">
+  <button id="b1">a button</button>
+  <iframe id="iframe" src="about:blank"></iframe>
+  <button id="b2">a button</button>
+  <iframe id="iframe2" src="data:text/html,<html><input id='input'></html>"></iframe>
+  </div>
+</body>
+</html>
