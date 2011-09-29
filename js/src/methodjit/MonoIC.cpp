@@ -743,7 +743,7 @@ class CallCompiler : public BaseCompiler
         RegisterID t0 = tempRegs.takeAnyReg().reg();
 
         /* Guard that it's actually a function object. */
-        Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, &FunctionClass);
+        Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, t0, &FunctionClass);
 
         /* Guard that it's the same function. */
         JSFunction *fun = obj->getFunctionPrivate();

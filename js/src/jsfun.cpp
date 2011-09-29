@@ -203,7 +203,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     if (!obj)
         return NULL;
 
-    EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx);
+    bool strict = callee.getFunctionPrivate()->inStrictMode();
+    EmptyShape *emptyArgumentsShape = EmptyShape::getEmptyArgumentsShape(cx, strict);
     if (!emptyArgumentsShape)
         return NULL;
 
@@ -214,10 +215,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
     SetValueRangeToUndefined(data->slots, argc);
 
     /* Can't fail from here on, so initialize everything in argsobj. */
-    obj->init(cx, callee.getFunctionPrivate()->inStrictMode()
-              ? &StrictArgumentsObjectClass
-              : &NormalArgumentsObjectClass,
-              type, proto->getParent(), NULL, false);
+    obj->init(cx, type, proto->getParent(), NULL, false);
     obj->setMap(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -766,7 +764,7 @@ NewDeclEnvObject(JSContext *cx, StackFrame *fp)
     EmptyShape *emptyDeclEnvShape = EmptyShape::getEmptyDeclEnvShape(cx);
     if (!emptyDeclEnvShape)
         return NULL;
-    envobj->init(cx, &DeclEnvClass, &emptyTypeObject, &fp->scopeChain(), fp, false);
+    envobj->init(cx, &emptyTypeObject, &fp->scopeChain(), fp, false);
     envobj->setMap(emptyDeclEnvShape);
 
     return envobj;

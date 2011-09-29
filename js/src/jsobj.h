@@ -445,10 +445,6 @@ struct JSObject : js::gc::Cell {
     friend class js::TraceRecorder;
     friend class nanojit::ValidateWriter;
 
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
-
     /*
      * Private pointer to the last added property and methods to manipulate the
      * list it links among properties in this scope.
@@ -456,7 +452,6 @@ struct JSObject : js::gc::Cell {
     js::Shape           *lastProp;
 
   private:
-    js::Class           *clasp;
 
     inline void setLastProperty(const js::Shape *shape);
     inline void removeLastProperty();
@@ -544,17 +539,11 @@ struct JSObject : js::gc::Cell {
     inline bool isNative() const;
     inline bool isNewborn() const;
 
-    void setClass(js::Class *c) { clasp = c; }
-    js::Class *getClass() const { return clasp; }
-    JSClass *getJSClass() const { return Jsvalify(clasp); }
-
-    bool hasClass(const js::Class *c) const {
-        return c == clasp;
-    }
-
-    const js::ObjectOps *getOps() const {
-        return &getClass()->ops;
-    }
+    /* Inline functions defined in jsobjinlines.h */
+    js::Class *getClass() const;
+    JSClass *getJSClass() const;
+    bool hasClass(const js::Class *c) const;
+    const js::ObjectOps *getOps() const;
 
     inline void trace(JSTracer *trc);
     inline void scanSlots(js::GCMarker *gcmarker);
@@ -578,7 +567,7 @@ struct JSObject : js::gc::Cell {
 
     bool hasSpecialEquality() const { return !!(flags & HAS_EQUALITY); }
     void assertSpecialEqualitySynced() const {
-        JS_ASSERT(!!clasp->ext.equality == hasSpecialEquality());
+        JS_ASSERT(!!getClass()->ext.equality == hasSpecialEquality());
     }
 
     /* Sets an object's HAS_EQUALITY flag based on its clasp. */
@@ -1213,7 +1202,7 @@ struct JSObject : js::gc::Cell {
     }
 
     /* The map field is not initialized here and should be set separately. */
-    void init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
+    void init(JSContext *cx, js::types::TypeObject *type,
               JSObject *parent, void *priv, bool denseArray);
 
     inline void finish(JSContext *cx);
@@ -1419,56 +1408,52 @@ struct JSObject : js::gc::Cell {
     const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
 
     inline bool isArguments() const { return isNormalArguments() || isStrictArguments(); }
-    inline bool isArrayBuffer() const { return clasp == &js::ArrayBufferClass; }
-    inline bool isNormalArguments() const { return clasp == &js::NormalArgumentsObjectClass; }
-    inline bool isStrictArguments() const { return clasp == &js::StrictArgumentsObjectClass; }
+    inline bool isArrayBuffer() const { return hasClass(&js::ArrayBufferClass); }
+    inline bool isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
+    inline bool isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
     inline bool isArray() const { return isSlowArray() || isDenseArray(); }
-    inline bool isDenseArray() const { return clasp == &js::ArrayClass; }
-    inline bool isSlowArray() const { return clasp == &js::SlowArrayClass; }
-    inline bool isNumber() const { return clasp == &js::NumberClass; }
-    inline bool isBoolean() const { return clasp == &js::BooleanClass; }
-    inline bool isString() const { return clasp == &js::StringClass; }
+    inline bool isDenseArray() const { return hasClass(&js::ArrayClass); }
+    inline bool isSlowArray() const { return hasClass(&js::SlowArrayClass); }
+    inline bool isNumber() const { return hasClass(&js::NumberClass); }
+    inline bool isBoolean() const { return hasClass(&js::BooleanClass); }
+    inline bool isString() const { return hasClass(&js::StringClass); }
     inline bool isPrimitive() const { return isNumber() || isString() || isBoolean(); }
-    inline bool isDate() const { return clasp == &js::DateClass; }
-    inline bool isFunction() const { return clasp == &js::FunctionClass; }
-    inline bool isObject() const { return clasp == &js::ObjectClass; }
-    inline bool isWith() const { return clasp == &js::WithClass; }
-    inline bool isBlock() const { return clasp == &js::BlockClass; }
+    inline bool isDate() const { return hasClass(&js::DateClass); }
+    inline bool isFunction() const { return hasClass(&js::FunctionClass); }
+    inline bool isObject() const { return hasClass(&js::ObjectClass); }
+    inline bool isWith() const { return hasClass(&js::WithClass); }
+    inline bool isBlock() const { return hasClass(&js::BlockClass); }
     inline bool isStaticBlock() const { return isBlock() && !getProto(); }
     inline bool isClonedBlock() const { return isBlock() && !!getProto(); }
-    inline bool isCall() const { return clasp == &js::CallClass; }
-    inline bool isDeclEnv() const { return clasp == &js::DeclEnvClass; }
-    inline bool isRegExp() const { return clasp == &js::RegExpClass; }
-    inline bool isScript() const { return clasp == &js::ScriptClass; }
-    inline bool isGenerator() const { return clasp == &js::GeneratorClass; }
-    inline bool isIterator() const { return clasp == &js::IteratorClass; }
-    inline bool isStopIteration() const { return clasp == &js::StopIterationClass; }
-    inline bool isError() const { return clasp == &js::ErrorClass; }
-    inline bool isXML() const { return clasp == &js::XMLClass; }
-    inline bool isNamespace() const { return clasp == &js::NamespaceClass; }
-    inline bool isWeakMap() const { return clasp == &js::WeakMapClass; }
-    inline bool isFunctionProxy() const { return clasp == &js::FunctionProxyClass; }
+    inline bool isCall() const { return hasClass(&js::CallClass); }
+    inline bool isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
+    inline bool isRegExp() const { return hasClass(&js::RegExpClass); }
+    inline bool isScript() const { return hasClass(&js::ScriptClass); }
+    inline bool isGenerator() const { return hasClass(&js::GeneratorClass); }
+    inline bool isIterator() const { return hasClass(&js::IteratorClass); }
+    inline bool isStopIteration() const { return hasClass(&js::StopIterationClass); }
+    inline bool isError() const { return hasClass(&js::ErrorClass); }
+    inline bool isXML() const { return hasClass(&js::XMLClass); }
+    inline bool isNamespace() const { return hasClass(&js::NamespaceClass); }
+    inline bool isWeakMap() const { return hasClass(&js::WeakMapClass); }
+    inline bool isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
     inline bool isProxy() const { return isObjectProxy() || isFunctionProxy(); }
 
     inline bool isXMLId() const {
-        return clasp == &js::QNameClass || clasp == &js::AttributeNameClass || clasp == &js::AnyNameClass;
-    }
+    return hasClass(&js::QNameClass) || hasClass(&js::AttributeNameClass) || hasClass(&js::AnyNameClass);
+}
     inline bool isQName() const {
-        return clasp == &js::QNameClass || clasp == &js::AttributeNameClass || clasp == &js::AnyNameClass;
-    }
+    return hasClass(&js::QNameClass) || hasClass(&js::AttributeNameClass) || hasClass(&js::AnyNameClass);
+}
     inline bool isObjectProxy() const {
-        return clasp == &js::ObjectProxyClass || clasp == &js::OuterWindowProxyClass;
-    }
+    return hasClass(&js::ObjectProxyClass) || hasClass(&js::OuterWindowProxyClass);
+}
 
     JS_FRIEND_API(bool) isWrapper() const;
     bool isCrossCompartmentWrapper() const;
     JS_FRIEND_API(JSObject *) unwrap(uintN *flagsp = NULL);
 
     inline void initArrayClass();
-
-    /*** For jit compiler: ***/
-
-    static size_t offsetOfClassPointer() { return offsetof(JSObject, clasp); }
 };
 
 /* Check alignment for any fixed slots allocated after the object. */

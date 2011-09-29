@@ -214,7 +214,7 @@ class Compiler : public BaseCompiler
         RegisterID  objReg;
         ValueRemat  id;
         MaybeJump   typeGuard;
-        Jump        claspGuard;
+        Jump        shapeGuard;
     };
 
     struct SetElementICInfo : public BaseICInfo {
@@ -224,7 +224,7 @@ class Compiler : public BaseCompiler
         StateRemat  objRemat;
         ValueRemat  vr;
         Jump        capacityGuard;
-        Jump        claspGuard;
+        Jump        shapeGuard;
         Jump        holeGuard;
         Int32Key    key;
         uint32      volatileMask;
@@ -436,6 +436,7 @@ class Compiler : public BaseCompiler
     js::Vector<uint32, 16> jumpTableOffsets;
     js::Vector<LoopEntry, 16> loopEntries;
     js::Vector<JSObject *, 0, CompilerAllocPolicy> rootedObjects;
+    Shape *denseArrayShape;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
