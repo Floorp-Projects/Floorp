@@ -96,8 +96,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual bool IsContainingBlock() const;
-
   virtual nsIAtom* GetType() const;  
 
   void SetScrollbarMediatorContent(nsIContent* aMediator);

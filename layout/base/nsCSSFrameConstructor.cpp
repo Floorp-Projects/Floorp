@@ -1023,6 +1023,10 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
    */
   mFixedPosIsAbsPos = (aNewAbsoluteContainingBlock &&
                        aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform());
+
+  if (aNewAbsoluteContainingBlock) {
+    aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
+  }
 }
 
 void
@@ -1218,7 +1222,14 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
   nsresult rv = NS_OK;
   if (childList.IsEmpty() &&
       (containingBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    rv = containingBlock->SetInitialChildList(aChildListID, aFrameItems);
+    // If we're injecting absolutely positioned frames, inject them on the
+    // absolute containing block
+    if (aChildListID == containingBlock->GetAbsoluteListID()) {
+      rv = containingBlock->GetAbsoluteContainingBlock()->
+           SetInitialChildList(containingBlock, aChildListID, aFrameItems);
+    } else {
+      rv = containingBlock->SetInitialChildList(aChildListID, aFrameItems);
+    }
   } else {
     // Note that whether the frame construction context is doing an append or
     // not is not helpful here, since it could be appending to some frame in
@@ -1236,7 +1247,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     if (!lastChild ||
         nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame, containingBlock) < 0) {
       // no lastChild, or lastChild comes before the new children, so just append
-      rv = containingBlock->AppendFrames(aChildListID, aFrameItems);
+      rv = mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameItems);
     } else {
       // try the other children
       nsIFrame* insertionPoint = nsnull;
@@ -1251,8 +1262,8 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
         }
         insertionPoint = f;
       }
-      rv = containingBlock->InsertFrames(aChildListID, insertionPoint,
-                                         aFrameItems);
+      rv = mFrameManager->InsertFrames(containingBlock, aChildListID,
+                                       insertionPoint, aFrameItems);
     }
   }
 
@@ -1738,20 +1749,6 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 // The term pseudo frame is being used instead of anonymous frame, since anonymous
 // frame has been used elsewhere to refer to frames that have generated content
 
-static bool
-IsTableRelated(nsIAtom* aParentType)
-{
-  return
-    nsGkAtoms::tableOuterFrame    == aParentType ||
-    nsGkAtoms::tableFrame         == aParentType ||
-    nsGkAtoms::tableRowGroupFrame == aParentType ||
-    nsGkAtoms::tableRowFrame      == aParentType ||
-    nsGkAtoms::tableCaptionFrame  == aParentType ||
-    nsGkAtoms::tableColGroupFrame == aParentType ||
-    nsGkAtoms::tableColFrame      == aParentType ||
-    IS_TABLE_CELL(aParentType);
-}
-
 // Return whether the given frame is a table pseudo-frame.  Note that
 // cell-content and table-outer frames have pseudo-types, but are always
 // created, even for non-anonymous cells and tables respectively.  So for those
@@ -1933,6 +1930,15 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   }
 
   nsFrameItems childItems;
+
+  // Process children
+  nsFrameConstructorSaveState absoluteSaveState;
+  const nsStyleDisplay* display = outerStyleContext->GetStyleDisplay();
+
+  // Mark the table frame as an absolute container if needed
+  if (display->IsPositioned()) {
+    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+  }
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
                                      innerFrame, childItems);
@@ -2550,6 +2556,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
 
   // The viewport is the containing block for 'fixed' elements
   mFixedContainingBlock = viewportFrame;
+  // Make it an absolute container for fixed-pos elements
+  mFixedContainingBlock->MarkAsAbsoluteContainingBlock();
 
   *aNewFrame = viewportFrame;
   return NS_OK;
@@ -2834,6 +2842,8 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
   pageContentFrame->Init(nsnull, aPageFrame, prevPageContentFrame);
   SetInitialSingleChild(aPageFrame, pageContentFrame);
   mFixedContainingBlock = pageContentFrame;
+  // Make it an absolute container for fixed-pos elements
+  mFixedContainingBlock->MarkAsAbsoluteContainingBlock();
 
   nsRefPtr<nsStyleContext> canvasPseudoStyle;
   canvasPseudoStyle = styleSet->ResolveAnonymousBoxStyle(nsCSSAnonBoxes::canvas,
@@ -2983,9 +2993,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     nsFrameItems                childItems;
 
     if (aStyleDisplay->IsPositioned()) {
-      // The area frame becomes a container for child frames that are
-      // absolutely positioned
-      aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(buttonFrame, absoluteSaveState);
     }
 
 #ifdef DEBUG
@@ -3208,14 +3216,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   }
 
   // Process children
-  nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
-
-  if (display->IsPositioned()) {
-    // The area frame becomes a container for child frames that are
-    // absolutely positioned
-    aState.PushAbsoluteContainingBlock(scrolledFrame, absoluteSaveState);
-  }
 
   ProcessChildren(aState, aContent, aStyleContext, scrolledFrame, PR_FALSE,
                   childItems, PR_FALSE, aPendingBinding);
@@ -3267,11 +3268,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   nsFrameItems                childItems;
 
   if (aStyleDisplay->IsPositioned()) {
-    // The area frame becomes a container for child frames that are
-    // absolutely positioned
-    // XXXbz this is probably wrong, and once arbitrary frames can be absolute
-    // containing blocks we should fix this..
-    aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
   }
 
   ProcessChildren(aState, content, styleContext, blockFrame, PR_TRUE,
@@ -5500,55 +5497,51 @@ nsIFrame*
 nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != mRootElementFrame, "no root element frame");
-  
+
   // Starting with aFrame, look for a frame that is absolutely positioned or
   // relatively positioned
-  nsIFrame* containingBlock = nsnull;
-  for (nsIFrame* frame = aFrame; frame && !containingBlock;
-       frame = frame->GetParent()) {
+  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
     if (frame->IsFrameOfType(nsIFrame::eMathML)) {
       // If it's mathml, bail out -- no absolute positioning out from inside
       // mathml frames.  Note that we don't make this part of the loop
       // condition because of the stuff at the end of this method...
       return nsnull;
     }
-    
-    // Is it positioned?
-    // If it's table-related then ignore it, because for the time
-    // being table-related frames are not containers for absolutely
-    // positioned child frames.
+
+    // If the frame is positioned, we will probably return it as the containing
+    // block (see the exceptions below).  Otherwise, we'll start looking at the
+    // parent frame, unless we're dealing with a scrollframe.
+    // Scrollframes are special since they're not positioned, but their
+    // scrolledframe might be.  So, we need to check this special case to return
+    // the correct containing block (the scrolledframe) in that case.
     const nsStyleDisplay* disp = frame->GetStyleDisplay();
-
-    if (disp->IsPositioned() && !IsTableRelated(frame->GetType())) {
-      // Find the outermost wrapped block under this frame
-      for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
-           wrappedFrame = wrappedFrame->GetParent()) {
-        nsIAtom* frameType = wrappedFrame->GetType();
-        if (nsGkAtoms::blockFrame == frameType ||
-#ifdef MOZ_XUL
-            nsGkAtoms::XULLabelFrame == frameType ||
-#endif
-            nsGkAtoms::positionedInlineFrame == frameType) {
-          containingBlock = wrappedFrame;
-        } else if (nsGkAtoms::fieldSetFrame == frameType) {
-          // If the positioned frame is a fieldset, use the area frame inside it.
-          // We don't use GetContentInsertionFrame for fieldsets yet.
-          containingBlock = GetFieldSetBlockFrame(wrappedFrame);
-        }
-      }
-
-      // We sometimes have a null containing block here because we
-      // haven't yet fixed bug 455338.  Once we fix that we shouldn't
-      // have to loop here.
+    if (!disp->IsPositioned()) {
+      continue;
     }
+    nsIFrame* absPosCBCandidate = nsnull;
+    if (frame->GetType() == nsGkAtoms::scrollFrame) {
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
+      absPosCBCandidate = scrollFrame->GetScrolledFrame();
+    } else {
+      // Only first continuations can be containing blocks.
+      absPosCBCandidate = frame->GetFirstContinuation();
+    }
+    // Is the frame really an absolute container?
+    if (!absPosCBCandidate || !absPosCBCandidate->IsAbsoluteContainer()) {
+      continue;
+    }
+
+    // For tables, return the outer table frame.
+    if (absPosCBCandidate->GetType() == nsGkAtoms::tableFrame) {
+      return absPosCBCandidate->GetParent();
+    }
+    // For outer table frames, we can just return absPosCBCandidate.
+    return absPosCBCandidate;
   }
 
-  // If we found an absolutely positioned containing block, then use the
-  // first-continuation.
-  if (containingBlock)
-    return AdjustAbsoluteContainingBlock(containingBlock);
-
-  // If we didn't find it, then use the document element containing block
+  // It is possible for the search for the containing block to fail, because
+  // no absolute container can be found in the parent chain.  In those cases,
+  // we fall back to the document element's containing block.
   return mHasRootAbsPosContainingBlock ? mDocElementContainingBlock : nsnull;
 }
 
@@ -8487,13 +8480,6 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
     }
-  
-  } else if (nsGkAtoms::positionedInlineFrame == frameType) {
-    newFrame = NS_NewPositionedInlineFrame(shell, styleContext);
-
-    if (newFrame) {
-      newFrame->Init(content, aParentFrame, aFrame);
-    }
 
   } else if (nsGkAtoms::pageFrame == frameType) {
     nsIFrame* canvasFrame;
@@ -10644,7 +10630,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   nsFrameConstructorSaveState absoluteSaveState;
   if (aAbsPosContainer) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
-    aState.PushAbsoluteContainingBlock(blockFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(*aNewFrame, absoluteSaveState);
   }
 
   // Process the child content
@@ -10731,11 +10717,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay &&
     (NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition ||
      aDisplay->HasTransform());
-  if (positioned) {
-    newFrame = NS_NewPositionedInlineFrame(mPresShell, styleContext);
-  } else {
-    newFrame = NS_NewInlineFrame(mPresShell, styleContext);
-  }
+  newFrame = NS_NewInlineFrame(mPresShell, styleContext);
 
   // Initialize the frame
   InitAndRestoreFrame(aState, content, aParentFrame, nsnull, newFrame);
@@ -10744,7 +10726,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                                   // because the object's destructor is significant
                                                   // this is part of the fix for bug 42372
 
-  if (positioned) {                            
+  if (positioned) {
     // Relatively positioned frames becomes a container for child
     // frames that are positioned
     aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
@@ -10848,16 +10830,14 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
 
     // Now grab the initial inlines in aChildItems and put them into an inline
     // frame
-    nsIFrame* inlineFrame;
-    if (aIsPositioned) {
-      inlineFrame = NS_NewPositionedInlineFrame(mPresShell, styleContext);
-    }
-    else {
-      inlineFrame = NS_NewInlineFrame(mPresShell, styleContext);
-    }
+    nsIFrame* inlineFrame = NS_NewInlineFrame(mPresShell, styleContext);
 
     InitAndRestoreFrame(aState, content, parentFrame, nsnull, inlineFrame,
                         PR_FALSE);
+
+    if (aIsPositioned) {
+      inlineFrame->MarkAsAbsoluteContainingBlock();
+    }
 
     if (aChildItems.NotEmpty()) {
       nsFrameList::FrameLinkEnumerator firstBlock(aChildItems);
