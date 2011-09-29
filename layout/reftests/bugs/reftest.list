@@ -18,6 +18,9 @@
 == 9458-zorder-4.html 9458-zorder-ref-inline-block.html
 == 9458-zorder-5.html 9458-zorder-ref-inline-block.html
 == 10036-1.html 10036-1-ref.html
+skip-if(!cocoaWidget) HTTP(..) == 10209-1.html 10209-ref.html # Bug 667079
+HTTP(..) == 10209-2.html 10209-ref.html
+asserts(4) skip-if(!cocoaWidget) HTTP(..) == 10209-3.html 10209-3-ref.html # Assertions: bug 666606, skip because of bug 667079
 == 18217-basic-1.html 18217-basic-1-ref.html
 == 18217-basic-2a.html 18217-basic-2-ref.html
 == 18217-basic-2b.html 18217-basic-2-ref.html
@@ -1437,7 +1440,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 528038-1d.html 528038-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
-asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
+== 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
@@ -1635,7 +1638,7 @@ fails-if(Android) == 635302-1.html 635302-1-ref.html
 fails-if(http.platform=="X11"&&!layersGPUAccelerated) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
-== 637597-1.html 637597-1-ref.html
+random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 == 637852-1.html 637852-1-ref.html
 == 637852-2.html 637852-2-ref.html
 == 637852-3.html 637852-3-ref.html

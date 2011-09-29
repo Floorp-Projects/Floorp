@@ -41,7 +41,6 @@
 #define nsInlineFrame_h___
 
 #include "nsHTMLContainerFrame.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsLineLayout.h"
 
 class nsAnonymousBlockFrame;
@@ -96,6 +95,8 @@ public:
 
   virtual bool IsEmpty();
   virtual bool IsSelfEmpty();
+
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   virtual bool PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
                                      bool aRespectClusters = true);
@@ -227,54 +228,6 @@ protected:
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
                                  InlineReflowState& rs,
                                  bool* aIsComplete);
-};
-
-//----------------------------------------------------------------------
-
-// Derived class created for relatively positioned inline-level elements
-// that acts as a containing block for child absolutely positioned
-// elements
-
-class nsPositionedInlineFrame : public nsInlineFrame
-{
-public:
-  NS_DECL_FRAMEARENA_HELPERS
-
-  nsPositionedInlineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext)
-    , mAbsoluteContainer(kAbsoluteList)
-  {}
-
-  virtual ~nsPositionedInlineFrame() { } // useful for debugging
-
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
-
-  NS_IMETHOD SetInitialChildList(ChildListID  aListID,
-                                 nsFrameList& aChildList);
-  NS_IMETHOD AppendFrames(ChildListID  aListID,
-                          nsFrameList& aFrameList);
-  NS_IMETHOD InsertFrames(ChildListID  aListID,
-                          nsIFrame*    aPrevFrame,
-                          nsFrameList& aFrameList);
-  NS_IMETHOD RemoveFrame(ChildListID aListID,
-                         nsIFrame*   aOldFrame);
-
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
-
-  virtual nsFrameList GetChildList(ChildListID aListID) const;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
-
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-  
-  virtual nsIAtom* GetType() const;
-
-protected:
-  nsAbsoluteContainingBlock mAbsoluteContainer;
 };
 
 #endif /* nsInlineFrame_h___ */

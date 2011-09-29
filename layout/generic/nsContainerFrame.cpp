@@ -345,6 +345,7 @@ nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
     ::AppendIfNonempty(this, propTable, ExcessOverflowContainersProperty(),
                        aLists, kExcessOverflowContainersList);
   }
+  nsSplittableFrame::GetChildLists(aLists);
 }
 
 /////////////////////////////////////////////////////////////////////////////
