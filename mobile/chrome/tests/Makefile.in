@@ -97,6 +97,8 @@ _BROWSER_FILES = \
   browser_thumbnails.js \
   browser_install.xml \
   browser_upgrade.rdf\
+  browser_localerepository.js \
+  locales_list.sjs \
   mock_autocomplete.json\
   $(NULL)
 
