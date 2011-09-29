@@ -67,8 +67,6 @@
 #define DEFLATE  8
 #define LZMA    14
 
-#define NS_EXPORT __attribute__ ((visibility("default")))
-
 struct local_file_header {
   uint32_t signature;
   uint16_t min_version;
