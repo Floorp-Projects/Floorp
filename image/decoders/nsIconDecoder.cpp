@@ -50,7 +50,7 @@
 namespace mozilla {
 namespace imagelib {
 
-nsIconDecoder::nsIconDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+nsIconDecoder::nsIconDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver),
    mWidth(-1),
    mHeight(-1),
@@ -114,9 +114,9 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         }
 
         // Add the frame and signal
-        rv = mImage->EnsureFrame(0, 0, 0, mWidth, mHeight,
-                                 gfxASurface::ImageFormatARGB32,
-                                 &mImageData, &mPixBytesTotal);
+        rv = mImage.EnsureFrame(0, 0, 0, mWidth, mHeight,
+                                gfxASurface::ImageFormatARGB32,
+                                &mImageData, &mPixBytesTotal);
         if (NS_FAILED(rv)) {
           PostDecoderError(rv);
           return;
