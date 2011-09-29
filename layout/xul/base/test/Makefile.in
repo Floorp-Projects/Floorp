@@ -55,7 +55,9 @@ _CHROME_FILES =	test_bug381167.xhtml \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))
-_TEST_FILES +=	test_resizer.xul \
+_TEST_FILES = 	test_resizer_incontent.xul
+
+_CHROME_FILES +=	test_resizer.xul \
 		window_resizer.xul \
 		window_resizer_element.xul \
 		$(NULL)
