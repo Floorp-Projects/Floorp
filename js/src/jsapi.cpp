@@ -2058,13 +2058,6 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx)
-{
-    CHECK_REQUEST(cx);
-    return GetScopeChain(cx);
-}
-
-JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
@@ -4303,7 +4296,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
         if (cx->hasfp())
-            parent = GetScopeChain(cx, cx->fp());
+            parent = &cx->fp()->scopeChain();
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);
