@@ -3628,11 +3628,10 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     {
         JSAutoRequest req(cx);
 
-        callingScope = JS_GetScopeChain(cx);
+        callingScope = JS_GetGlobalForScopeChain(cx);
         if (!callingScope) {
             return NS_ERROR_FAILURE;
         }
-        callingScope = JS_GetGlobalForObject(cx, callingScope);
     }
 
     nsRefPtr<ContextHolder> sandcx = new ContextHolder(cx, sandbox);

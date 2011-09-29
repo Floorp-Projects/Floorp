@@ -2307,9 +2307,6 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetScopeChain(JSContext *cx);
-
-extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)

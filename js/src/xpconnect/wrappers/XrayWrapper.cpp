@@ -570,12 +570,12 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
          // Do the id checks before the QIs and IsPrivilegedScript() checks,
          // since they're cheaper and will tend to fail most of the time
          // anyway.
-         (((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
-            id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
-           Is<nsINode>(wrapper)) ||
-          (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
-           Is<nsIDocument>(wrapper))) &&
-         IsPrivilegedScript())) {
+         ((((id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT) ||
+             id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
+            Is<nsINode>(wrapper)) ||
+           (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
+            Is<nsIDocument>(wrapper))) &&
+          IsPrivilegedScript()))) {
         bool status;
         Wrapper::Action action = set ? Wrapper::SET : Wrapper::GET;
         desc->obj = NULL; // default value
