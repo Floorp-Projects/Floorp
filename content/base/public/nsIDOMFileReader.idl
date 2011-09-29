@@ -41,7 +41,7 @@ interface nsIDOMEventListener;
 interface nsIDOMBlob;
 interface nsIDOMFileError;
 
-[scriptable, builtinclass, uuid(fc316500-87c4-411e-ab75-dd62468f4174)]
+[scriptable, builtinclass, uuid(57d68e17-85fa-4509-bf71-ffac1b22a174)]
 interface nsIDOMFileReader : nsIDOMEventTarget
 {
   [implicit_jscontext]
@@ -61,12 +61,12 @@ interface nsIDOMFileReader : nsIDOMEventTarget
   readonly attribute jsval result;
   readonly attribute nsIDOMFileError error;
 
-  attribute nsIDOMEventListener onloadstart;
-  attribute nsIDOMEventListener onprogress;
-  attribute nsIDOMEventListener onload;
-  attribute nsIDOMEventListener onabort;
-  attribute nsIDOMEventListener onerror;
-  attribute nsIDOMEventListener onloadend;
+  [implicit_jscontext] attribute jsval onloadstart;
+  [implicit_jscontext] attribute jsval onprogress;
+  [implicit_jscontext] attribute jsval onload;
+  [implicit_jscontext] attribute jsval onabort;
+  [implicit_jscontext] attribute jsval onerror;
+  [implicit_jscontext] attribute jsval onloadend;
 };
 
 %{ C++

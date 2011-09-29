@@ -43,6 +43,7 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsEventDispatcher.h"
+#include "nsGkAtoms.h"
 
 #define ERROR_STR "error"
 #define ABORT_STR "abort"
@@ -67,18 +68,16 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FileIOObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileIOObject,
                                                   nsDOMEventTargetWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressNotifier)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(progress)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileIOObject,
                                                 nsDOMEventTargetWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressNotifier)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(progress)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_EVENT_HANDLER(FileIOObject, abort)
+NS_IMPL_EVENT_HANDLER(FileIOObject, error)
+NS_IMPL_EVENT_HANDLER(FileIOObject, progress)
 
 FileIOObject::FileIOObject()
   : mProgressEventWasDelayed(PR_FALSE),
