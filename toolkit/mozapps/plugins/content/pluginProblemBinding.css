@@ -41,12 +41,15 @@
 embed:-moz-handler-disabled,
 embed:-moz-handler-blocked,
 embed:-moz-handler-crashed,
+embed:-moz-handler-clicktoplay,
 applet:-moz-handler-disabled,
 applet:-moz-handler-blocked,
 applet:-moz-handler-crashed,
+applet:-moz-handler-clicktoplay,
 object:-moz-has-handlerref:-moz-handler-disabled,
 object:-moz-has-handlerref:-moz-handler-blocked,
-object:-moz-handler-crashed {
+object:-moz-handler-crashed,
+object:-moz-handler-clicktoplay {
     display: inline-block;
     overflow: hidden;
     -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
