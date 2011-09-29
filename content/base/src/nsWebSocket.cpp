@@ -78,6 +78,7 @@
 #include "nsIRequest.h"
 #include "mozilla/Preferences.h"
 #include "nsDOMLists.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 

@@ -44,6 +44,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
+#include "xpcprivate.h"
 
 #define ERROR_STR "error"
 #define ABORT_STR "abort"
