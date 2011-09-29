@@ -196,13 +196,13 @@ DefaultController::GetThumbnailAspectRatio(float *aThumbnailAspectRatio) {
 }
 
 NS_IMETHODIMP
-DefaultController::DrawPreview(nsIDOMCanvasRenderingContext2D *ctx, PRBool *rDrawFrame) {
+DefaultController::DrawPreview(nsIDOMCanvasRenderingContext2D *ctx, bool *rDrawFrame) {
   *rDrawFrame = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DefaultController::DrawThumbnail(nsIDOMCanvasRenderingContext2D *ctx, PRUint32 width, PRUint32 height, PRBool *rDrawFrame) {
+DefaultController::DrawThumbnail(nsIDOMCanvasRenderingContext2D *ctx, PRUint32 width, PRUint32 height, bool *rDrawFrame) {
   *rDrawFrame = PR_FALSE;
   return NS_OK;
 }
@@ -214,7 +214,7 @@ DefaultController::OnClose(void) {
 }
 
 NS_IMETHODIMP
-DefaultController::OnActivate(PRBool *rAcceptActivation) {
+DefaultController::OnActivate(bool *rAcceptActivation) {
   *rAcceptActivation = PR_TRUE;
   NS_NOTREACHED("OnActivate should not be called for TaskbarWindowPreviews");
   return NS_OK;
@@ -236,7 +236,7 @@ namespace widget {
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
 
-PRBool
+bool
 WinTaskbar::Initialize() {
   if (mTaskbar)
     return PR_TRUE;
@@ -271,7 +271,7 @@ WinTaskbar::~WinTaskbar() {
 }
 
 // static
-PRBool
+bool
 WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
   nsCOMPtr<nsIXULAppInfo> appInfo =
     do_GetService("@mozilla.org/xre/app-info;1");
@@ -314,13 +314,13 @@ WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
 }
 
 // (static) Called from AppShell
-PRBool
+bool
 WinTaskbar::RegisterAppUserModelID() {
   if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
     return PR_FALSE;
 
   SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
-  PRBool retVal = PR_FALSE;
+  bool retVal = false;
 
   nsAutoString uid;
   if (!GetAppUserModelID(uid))
@@ -346,7 +346,7 @@ WinTaskbar::RegisterAppUserModelID() {
 }
 
 NS_IMETHODIMP
-WinTaskbar::GetAvailable(PRBool *aAvailable) {
+WinTaskbar::GetAvailable(bool *aAvailable) {
   *aAvailable = 
     nsWindow::GetWindowsVersion() < WIN7_VERSION ?
     PR_FALSE : PR_TRUE;
@@ -416,6 +416,16 @@ WinTaskbar::GetTaskbarProgress(nsIDocShell *shell, nsITaskbarProgress **_retval)
   return CallQueryInterface(preview, _retval);
 }
 
+NS_IMETHODIMP
+WinTaskbar::GetOverlayIconController(nsIDocShell *shell,
+                                     nsITaskbarOverlayIconController **_retval) {
+  nsCOMPtr<nsITaskbarWindowPreview> preview;
+  nsresult rv = GetTaskbarWindowPreview(shell, getter_AddRefs(preview));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(preview, _retval);
+}
+
 /* nsIJumpListBuilder createJumpListBuilder(); */
 NS_IMETHODIMP
 WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder) {
@@ -443,7 +453,7 @@ WinTaskbar::SetGroupIdForWindow(nsIDOMWindow *aParent,
 
 /* void prepareFullScreen(in nsIDOMWindow aWindow, in boolean aFullScreen); */
 NS_IMETHODIMP
-WinTaskbar::PrepareFullScreen(nsIDOMWindow *aWindow, PRBool aFullScreen) {
+WinTaskbar::PrepareFullScreen(nsIDOMWindow *aWindow, bool aFullScreen) {
   NS_ENSURE_ARG_POINTER(aWindow);
 
   HWND toplevelHWND = ::GetAncestor(GetHWNDFromDOMWindow(aWindow), GA_ROOT);
@@ -455,7 +465,7 @@ WinTaskbar::PrepareFullScreen(nsIDOMWindow *aWindow, PRBool aFullScreen) {
 
 /* void prepareFullScreen(in voidPtr aWindow, in boolean aFullScreen); */
 NS_IMETHODIMP
-WinTaskbar::PrepareFullScreenHWND(void *aHWND, PRBool aFullScreen) {
+WinTaskbar::PrepareFullScreenHWND(void *aHWND, bool aFullScreen) {
   if (!Initialize())
     return NS_ERROR_NOT_AVAILABLE;
 

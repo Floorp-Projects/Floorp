@@ -125,7 +125,7 @@ public:
    */
   virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                                           const nsACString& aFileExt,
-                                                          PRBool     * aFound) = 0;
+                                                          bool       * aFound) = 0;
 
   /**
    * Given a string identifying an application, create an nsIFile representing
@@ -145,13 +145,13 @@ public:
                                        nsIFile ** aFile);
 
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
-                                                       PRBool *aExists) = 0;
+                                                       bool *aExists) = 0;
 
   /**
    * Simple accessor to let nsExternalAppHandler know if we are currently
    * inside the private browsing mode.
    */
-  PRBool InPrivateBrowsing() const { return mInPrivateBrowsing; }
+  bool InPrivateBrowsing() const { return mInPrivateBrowsing; }
 
 protected:
   /**
@@ -181,7 +181,7 @@ protected:
    * @param aMIMEType [out] The found MIME type.
    * @return PR_TRUE if the extension was found, PR_FALSE otherwise.
    */
-  NS_HIDDEN_(PRBool) GetTypeFromExtras(const nsACString& aExtension,
+  NS_HIDDEN_(bool) GetTypeFromExtras(const nsACString& aExtension,
                                        nsACString& aMIMEType);
 
   /**
@@ -231,7 +231,7 @@ protected:
   /**
    * Whether we are in private browsing mode
    */
-  PRBool mInPrivateBrowsing;
+  bool mInPrivateBrowsing;
 };
 
 /**
@@ -267,7 +267,7 @@ public:
   nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
                        nsIInterfaceRequestor * aWindowContext,
                        const nsAString& aFilename,
-                       PRUint32 aReason, PRBool aForceSave);
+                       PRUint32 aReason, bool aForceSave);
 
   ~nsExternalAppHandler();
 
@@ -301,30 +301,30 @@ protected:
    * MIME info settings or anything else, without ever popping up the 
    * unknown content type handling dialog.
    */
-  PRPackedBool mForceSave;
+  bool mForceSave;
   
   /**
    * The canceled flag is set if the user canceled the launching of this
    * application before we finished saving the data to a temp file.
    */
-  PRPackedBool mCanceled;
+  bool mCanceled;
 
   /**
    * This is set based on whether the channel indicates that a new window
    * was opened specifically for this download.  If so, then we
    * close it.
    */
-  PRPackedBool mShouldCloseWindow;
+  bool mShouldCloseWindow;
 
   /**
    * have we received information from the user about how they want to
    * dispose of this content
    */
-  PRPackedBool mReceivedDispositionInfo;
-  PRPackedBool mStopRequestIssued; 
-  PRPackedBool mProgressListenerInitialized;
+  bool mReceivedDispositionInfo;
+  bool mStopRequestIssued; 
+  bool mProgressListenerInitialized;
 
-  PRPackedBool mIsFileChannel;
+  bool mIsFileChannel;
 
   /**
    * One of the REASON_ constants from nsIHelperAppLauncherDialog. Indicates the
@@ -336,7 +336,7 @@ protected:
   /**
    * Track the executable-ness of the temporary file.
    */
-  PRBool mTempFileIsExecutable;
+  bool mTempFileIsExecutable;
 
   PRTime mTimeDownloadStarted;
   PRInt64 mContentLength;
@@ -404,7 +404,7 @@ protected:
   /**
    * Helper routine that searches a pref string for a given mime type
    */
-  PRBool GetNeverAskFlagFromPref(const char * prefName, const char * aContentType);
+  bool GetNeverAskFlagFromPref(const char * prefName, const char * aContentType);
 
   /**
    * Initialize an nsITransfer object for use as a progress object
@@ -439,7 +439,7 @@ protected:
    * Keep request alive in case when helper non-modal dialog shown.
    * Thus in OnStopRequest the mRequest will not be set to null (it will be set to null further).
    */
-  PRBool mKeepRequestAlive;
+  bool mKeepRequestAlive;
 
   /**
    * The request that's being loaded. Initialized in OnStartRequest.

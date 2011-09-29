@@ -193,7 +193,7 @@ nsHtml5AttributeName::getPrefix(PRInt32 mode)
   return prefix[mode];
 }
 
-PRBool 
+bool 
 nsHtml5AttributeName::equalsAnother(nsHtml5AttributeName* another)
 {
   return this->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML) == another->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);

@@ -175,7 +175,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
 
 NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,
         nsIPrintSettings* aPS,
-        PRBool aIsPrintPreview)
+        bool aIsPrintPreview)
 {
     DO_PR_DEBUG_LOG(("nsDeviceContextSpecQt::Init(aPS=%p)\n", aPS));
 
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,
     mIsPPreview = aIsPrintPreview;
 
     // This is only set by embedders
-    PRBool toFile;
+    bool toFile;
     aPS->GetPrintToFile(&toFile);
 
     mToPrinter = !toFile && !aIsPrintPreview;

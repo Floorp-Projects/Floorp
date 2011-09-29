@@ -69,7 +69,7 @@
 using namespace mozilla;
 using namespace mozilla::scache;
 
-static PRBool gDisableXULCache = PR_FALSE; // enabled by default
+static bool gDisableXULCache = false; // enabled by default
 static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
 static const char kXULCacheInfoKey[] = "nsXULPrototypeCache.startupCache";
 static const char kXULCachePrefix[] = "xulcache";
@@ -364,13 +364,13 @@ nsXULPrototypeCache::Flush()
 }
 
 
-PRBool
+bool
 nsXULPrototypeCache::IsEnabled()
 {
     return !gDisableXULCache;
 }
 
-static PRBool gDisableXULDiskCache = PR_FALSE;           // enabled by default
+static bool gDisableXULDiskCache = false;           // enabled by default
 
 void
 nsXULPrototypeCache::AbortCaching()
@@ -463,7 +463,7 @@ nsXULPrototypeCache::GetOutputStream(nsIURI* uri, nsIObjectOutputStream** stream
     nsresult rv;
     nsCOMPtr<nsIObjectOutputStream> objectOutput;
     nsCOMPtr<nsIStorageStream> storageStream;
-    PRBool found = mOutputStreamTable.Get(uri, getter_AddRefs(storageStream));
+    bool found = mOutputStreamTable.Get(uri, getter_AddRefs(storageStream));
     if (found) {
         objectOutput = do_CreateInstance("mozilla.org/binaryoutputstream;1");
         if (!objectOutput) return NS_ERROR_OUT_OF_MEMORY;
@@ -489,7 +489,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
         return NS_ERROR_NOT_AVAILABLE;
     
     nsCOMPtr<nsIStorageStream> storageStream;
-    PRBool found = mOutputStreamTable.Get(uri, getter_AddRefs(storageStream));
+    bool found = mOutputStreamTable.Get(uri, getter_AddRefs(storageStream));
     if (!found)
         return NS_ERROR_UNEXPECTED;
     nsCOMPtr<nsIOutputStream> outputStream
@@ -516,7 +516,7 @@ nsXULPrototypeCache::FinishOutputStream(nsIURI* uri)
 // We have data if we're in the middle of writing it or we already
 // have it in the cache.
 nsresult
-nsXULPrototypeCache::HasData(nsIURI* uri, PRBool* exists)
+nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists)
 {
     if (mOutputStreamTable.Get(uri, nsnull)) {
         *exists = PR_TRUE;
@@ -551,7 +551,7 @@ nsXULPrototypeCache::HasData(nsIURI* uri, PRBool* exists)
 static int
 CachePrefChangedCallback(const char* aPref, void* aClosure)
 {
-    PRBool wasEnabled = !gDisableXULDiskCache;
+    bool wasEnabled = !gDisableXULDiskCache;
     gDisableXULDiskCache =
         Preferences::GetBool(kDisableXULCachePref,
                              gDisableXULDiskCache);

@@ -190,7 +190,7 @@ SetupFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
 {
   const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  PRBool isServer = paint.mType == eStyleSVGPaintType_Server;
+  bool isServer = paint.mType == eStyleSVGPaintType_Server;
   nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
   if (styleIfVisited) {
     const nsStyleSVGPaint &paintIfVisited =
@@ -224,7 +224,7 @@ nsSVGGeometryFrame::MaybeOptimizeOpacity(float aFillOrStrokeOpacity)
   return aFillOrStrokeOpacity;
 }
 
-PRBool
+bool
 nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
 {
   const nsStyleSVG* style = GetStyleSVG();
@@ -252,7 +252,7 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsSVGGeometryFrame::HasStroke()
 {
   const nsStyleSVG *style = GetStyleSVG();
@@ -312,7 +312,7 @@ nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
   }
 }
 
-PRBool
+bool
 nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
 {
   if (!HasStroke()) {

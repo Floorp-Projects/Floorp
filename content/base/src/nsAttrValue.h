@@ -146,18 +146,18 @@ public:
 
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
-  inline PRBool IsEmptyString() const;
+  inline bool IsEmptyString() const;
   const nsCheapString GetStringValue() const;
   inline nsIAtom* GetAtomValue() const;
   inline PRInt32 GetIntegerValue() const;
-  PRBool GetColorValue(nscolor& aColor) const;
+  bool GetColorValue(nscolor& aColor) const;
   inline PRInt16 GetEnumValue() const;
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
   inline mozilla::css::StyleRule* GetCSSStyleRuleValue() const;
   inline nsISVGValue* GetSVGValue() const;
   inline double GetDoubleValue() const;
-  PRBool GetIntMarginValue(nsIntMargin& aMargin) const;
+  bool GetIntMarginValue(nsIntMargin& aMargin) const;
 
   /**
    * Returns the string corresponding to the stored enum value.
@@ -165,7 +165,7 @@ public:
    * @param aResult   the string representing the enum tag
    * @param aRealTag  wheter we want to have the real tag or the saved one
    */
-  void GetEnumString(nsAString& aResult, PRBool aRealTag) const;
+  void GetEnumString(nsAString& aResult, bool aRealTag) const;
 
   // Methods to get access to atoms we may have
   // Returns the number of atoms we have; 0 if we have none.  It's OK
@@ -176,15 +176,15 @@ public:
   nsIAtom* AtomAt(PRInt32 aIndex) const;
 
   PRUint32 HashValue() const;
-  PRBool Equals(const nsAttrValue& aOther) const;
-  PRBool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
-  PRBool Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+  bool Equals(const nsAttrValue& aOther) const;
+  bool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
+  bool Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
 
   /**
    * Returns true if this AttrValue is equal to the given atom, or is an
    * array which contains the given atom.
    */
-  PRBool Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+  bool Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
 
   void ParseAtom(const nsAString& aValue);
   void ParseAtomArray(const nsAString& aValue);
@@ -218,9 +218,9 @@ public:
    *        cause aDefaultValue->value to be stored as the enumeration value.
    * @return whether the enum value was found or not
    */
-  PRBool ParseEnumValue(const nsAString& aValue,
+  bool ParseEnumValue(const nsAString& aValue,
                         const EnumTable* aTable,
-                        PRBool aCaseSensitive,
+                        bool aCaseSensitive,
                         const EnumTable* aDefaultValue = nsnull);
 
   /**
@@ -233,7 +233,7 @@ public:
    *
    * @see http://www.whatwg.org/html/#rules-for-parsing-dimension-values
    */
-  PRBool ParseSpecialIntValue(const nsAString& aString);
+  bool ParseSpecialIntValue(const nsAString& aString);
 
 
   /**
@@ -242,7 +242,7 @@ public:
    * @param aString the string to parse
    * @return whether the value could be parsed
    */
-  PRBool ParseIntValue(const nsAString& aString) {
+  bool ParseIntValue(const nsAString& aString) {
     return ParseIntWithBounds(aString, PR_INT32_MIN, PR_INT32_MAX);
   }
 
@@ -254,7 +254,7 @@ public:
    * @param aMax the maximum value (if value is greater it will be chopped down)
    * @return whether the value could be parsed
    */
-  PRBool ParseIntWithBounds(const nsAString& aString, PRInt32 aMin,
+  bool ParseIntWithBounds(const nsAString& aString, PRInt32 aMin,
                             PRInt32 aMax = PR_INT32_MAX);
 
   /**
@@ -265,7 +265,7 @@ public:
    * @param  aString the string to parse
    * @return whether the value is valid
    */
-  PRBool ParseNonNegativeIntValue(const nsAString& aString);
+  bool ParseNonNegativeIntValue(const nsAString& aString);
 
   /**
    * Parse a string value into a positive integer.
@@ -280,7 +280,7 @@ public:
    * @param aString       the string to parse
    * @return              whether the value was valid
    */
-  PRBool ParsePositiveIntValue(const nsAString& aString);
+  bool ParsePositiveIntValue(const nsAString& aString);
 
   /**
    * Parse a string into a color.  This implements what HTML5 calls the
@@ -289,7 +289,7 @@ public:
    * @param aString the string to parse
    * @return whether the value could be parsed
    */
-  PRBool ParseColor(const nsAString& aString);
+  bool ParseColor(const nsAString& aString);
 
   /**
    * Parse a string value into a double-precision floating point value.
@@ -297,13 +297,13 @@ public:
    * @param aString the string to parse
    * @return whether the value could be parsed
    */
-  PRBool ParseDoubleValue(const nsAString& aString);
+  bool ParseDoubleValue(const nsAString& aString);
 
   /**
    * Parse a lazy URI.  This just sets up the storage for the URI; it
    * doesn't actually allocate it.
    */
-  PRBool ParseLazyURIValue(const nsAString& aString);
+  bool ParseLazyURIValue(const nsAString& aString);
 
   /**
    * Parse a margin string of format 'top, right, bottom, left' into
@@ -312,7 +312,7 @@ public:
    * @param aString the string to parse
    * @return whether the value could be parsed
    */
-  PRBool ParseIntMarginValue(const nsAString& aString);
+  bool ParseIntMarginValue(const nsAString& aString);
 
   PRInt64 SizeOf() const;
 
@@ -369,16 +369,16 @@ private:
   inline MiscContainer* GetMiscContainer() const;
   inline PRInt32 GetIntInternal() const;
 
-  PRBool EnsureEmptyMiscContainer();
-  PRBool EnsureEmptyAtomArray();
+  bool EnsureEmptyMiscContainer();
+  bool EnsureEmptyAtomArray();
   nsStringBuffer* GetStringBuffer(const nsAString& aValue) const;
   // aStrict is set PR_TRUE if stringifying the return value equals with
   // aValue.
   PRInt32 StringToInteger(const nsAString& aValue,
-                          PRBool* aStrict,
+                          bool* aStrict,
                           PRInt32* aErrorCode,
-                          PRBool aCanBePercent = PR_FALSE,
-                          PRBool* aIsPercent = nsnull) const;
+                          bool aCanBePercent = false,
+                          bool* aIsPercent = nsnull) const;
   // Given an enum table and a particular entry in that table, return
   // the actual integer value we should store.
   PRInt32 EnumTableEntryToValue(const EnumTable* aEnumTable,
@@ -460,7 +460,7 @@ nsAttrValue::GetDoubleValue() const
   return GetMiscContainer()->mDoubleValue;
 }
 
-inline PRBool
+inline bool
 nsAttrValue::GetIntMarginValue(nsIntMargin& aMargin) const
 {
   NS_PRECONDITION(Type() == eIntMarginValue, "wrong type");
@@ -520,7 +520,7 @@ nsAttrValue::GetIntInternal() const
          NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
 }
 
-inline PRBool
+inline bool
 nsAttrValue::IsEmptyString() const
 {
   return !mBits;

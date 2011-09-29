@@ -82,7 +82,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap);
+                             bool aShrinkWrap);
   virtual nscoord GetBaseline() const;
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
@@ -106,7 +106,7 @@ public:
                          nsIFrame*      aOldFrame);
 
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsContainingBlock() const;
+  virtual bool IsContainingBlock() const;
 
 #ifdef ACCESSIBILITY  
   virtual already_AddRefed<nsAccessible> CreateAccessible();
@@ -151,7 +151,7 @@ nsFieldSetFrame::GetType() const
   return nsGkAtoms::fieldSetFrame;
 }
 
-PRBool
+bool
 nsFieldSetFrame::IsContainingBlock() const
 {
   return PR_TRUE;
@@ -395,7 +395,7 @@ nsFieldSetFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap)
+                             bool aShrinkWrap)
 {
   nsSize result =
     nsHTMLContainerFrame::ComputeSize(aRenderingContext, aCBSize,
@@ -426,8 +426,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   //------------ Handle Incremental Reflow -----------------
-  PRBool reflowContent;
-  PRBool reflowLegend;
+  bool reflowContent;
+  bool reflowLegend;
 
   if (aReflowState.ShouldReflowAllKids()) {
     reflowContent = mContentFrame != nsnull;

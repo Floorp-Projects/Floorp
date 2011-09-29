@@ -83,7 +83,7 @@ private:
 
     static int compareNodes(const void* aIndexA, const void* aIndexB,
                             void* aSortData);
-    static PRBool calcSortValue(TxObject*& aSortValue, SortKey* aKey,
+    static bool calcSortValue(TxObject*& aSortValue, SortKey* aKey,
                                 SortData* aSortData, PRUint32 aNodeIndex);
     txList mSortKeys;
     unsigned int mNKeys;

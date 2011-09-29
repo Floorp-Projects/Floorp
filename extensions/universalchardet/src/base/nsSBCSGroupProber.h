@@ -61,7 +61,7 @@ public:
 protected:
   nsProbingState mState;
   nsCharSetProber* mProbers[NUM_OF_SBCS_PROBERS];
-  PRBool          mIsActive[NUM_OF_SBCS_PROBERS];
+  bool            mIsActive[NUM_OF_SBCS_PROBERS];
   PRInt32 mBestGuess;
   PRUint32 mActiveNum;
 };

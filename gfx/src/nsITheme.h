@@ -118,7 +118,7 @@ public:
    * so that we don't let specified padding that has no effect change
    * the computed padding and potentially the size.
    */
-  virtual PRBool GetWidgetPadding(nsDeviceContext* aContext,
+  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult) = 0;
@@ -137,7 +137,7 @@ public:
    * words, in layout terms, it affects visual overflow but not
    * scrollable overflow.)
    */
-  virtual PRBool GetWidgetOverflow(nsDeviceContext* aContext,
+  virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    /*INOUT*/ nsRect* aOverflowRect)
@@ -153,7 +153,7 @@ public:
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,
-                                  PRBool* aIsOverridable)=0;
+                                  bool* aIsOverridable)=0;
 
 
   enum Transparency {
@@ -169,30 +169,30 @@ public:
   { return eUnknownTransparency; }
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
-                                nsIAtom* aAttribute, PRBool* aShouldRepaint)=0;
+                                nsIAtom* aAttribute, bool* aShouldRepaint)=0;
 
   NS_IMETHOD ThemeChanged()=0;
 
   /**
    * Can the nsITheme implementation handle this widget?
    */
-  virtual PRBool ThemeSupportsWidget(nsPresContext* aPresContext,
+  virtual bool ThemeSupportsWidget(nsPresContext* aPresContext,
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType)=0;
 
-  virtual PRBool WidgetIsContainer(PRUint8 aWidgetType)=0;
+  virtual bool WidgetIsContainer(PRUint8 aWidgetType)=0;
 
   /**
    * Does the nsITheme implementation draw its own focus ring for this widget?
    */
-  virtual PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
+  virtual bool ThemeDrawsFocusForWidget(nsPresContext* aPresContext,
                                           nsIFrame* aFrame,
                                           PRUint8 aWidgetType)=0;
   
   /**
     * Should we insert a dropmarker inside of combobox button?
    */
-  virtual PRBool ThemeNeedsComboboxDropmarker()=0;
+  virtual bool ThemeNeedsComboboxDropmarker()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)

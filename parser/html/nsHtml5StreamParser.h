@@ -138,7 +138,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * Tree builder uses this to report a late <meta charset>
      */
-    PRBool internalEncodingDeclaration(nsString* aEncoding);
+    bool internalEncodingDeclaration(nsString* aEncoding);
 
     // Not from an external interface
 
@@ -171,7 +171,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
      */
     void ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer, 
                               nsHtml5TreeBuilder* aTreeBuilder,
-                              PRBool aLastWasCR);
+                              bool aLastWasCR);
 
     /**
      * Continues the stream parser if the charset switch failed.
@@ -188,8 +188,8 @@ class nsHtml5StreamParser : public nsIStreamListener,
   private:
 
 #ifdef DEBUG
-    PRBool IsParserThread() {
-      PRBool ret;
+    bool IsParserThread() {
+      bool ret;
       mThread->IsOnCurrentThread(&ret);
       return ret;
     }
@@ -226,12 +226,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
     
     void DoDataAvailable(PRUint8* aBuffer, PRUint32 aLength);
 
-    PRBool IsTerminatedOrInterrupted() {
+    bool IsTerminatedOrInterrupted() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       return mTerminated || mInterrupted;
     }
 
-    PRBool IsTerminated() {
+    bool IsTerminated() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       return mTerminated;
     }
@@ -239,7 +239,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * True when there is a Unicode decoder already
      */
-    inline PRBool HasDecoder() {
+    inline bool HasDecoder() {
       return !!mUnicodeDecoder;
     }
 
@@ -377,7 +377,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * Whether reparse is forbidden
      */
-    PRBool                        mReparseForbidden;
+    bool                          mReparseForbidden;
 
     // Portable parser objects
     /**
@@ -425,7 +425,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * Whether the last character tokenized was a carriage return (for CRLF)
      */
-    PRBool                        mLastWasCR;
+    bool                          mLastWasCR;
 
     /**
      * For tracking stream life cycle
@@ -435,12 +435,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * Whether we are speculating.
      */
-    PRBool                        mSpeculating;
+    bool                          mSpeculating;
 
     /**
      * Whether the tokenizer has reached EOF. (Reset when stream rewinded.)
      */
-    PRBool                        mAtEOF;
+    bool                          mAtEOF;
 
     /**
      * The speculations. The mutex protects the nsTArray itself.
@@ -454,8 +454,8 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * True to terminate early; protected by mTerminatedMutex
      */
-    PRBool                        mTerminated;
-    PRBool                        mInterrupted;
+    bool                          mTerminated;
+    bool                          mInterrupted;
     mozilla::Mutex                mTerminatedMutex;
     
     /**
@@ -475,7 +475,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * If false, don't push data to chardet.
      */
-    PRBool                        mFeedChardet;
+    bool                          mFeedChardet;
 
     /**
      * Timer for flushing tree ops once in a while when not speculating.
@@ -486,12 +486,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * Keeps track whether mFlushTimer has been armed. Unfortunately,
      * nsITimer doesn't enable querying this from the timer itself.
      */
-    PRBool                        mFlushTimerArmed;
+    bool                          mFlushTimerArmed;
 
     /**
      * False initially and true after the timer has fired at least once.
      */
-    PRBool                        mFlushTimerEverFired;
+    bool                          mFlushTimerEverFired;
 
     /**
      * The pref html5.flushtimer.initialdelay: Time in milliseconds between

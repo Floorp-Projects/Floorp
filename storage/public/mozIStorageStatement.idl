@@ -317,8 +317,8 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
     return blob;
   }
 
-  inline PRBool IsNull(PRUint32 idx) {
-    PRBool b = PR_FALSE;
+  inline bool IsNull(PRUint32 idx) {
+    bool b = PR_FALSE;
     mozilla::DebugOnly<nsresult> rv = GetIsNull(idx, &b);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
                       "Getting value failed, wrong column index?");

@@ -89,7 +89,7 @@ public:
   // added.
   virtual void SetLateness(PRIntervalTime aHowLate);
 
-  nsresult Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
+  nsresult Init(nsGlobalWindow *aWindow, bool *aIsInterval,
                 PRInt32 *aInterval);
 
   void ReleaseJSObjects();
@@ -198,7 +198,7 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
 }
 
 nsresult
-nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
+nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
                                PRInt32 *aInterval)
 {
   mContext = aWindow->GetContextInternal();
@@ -292,7 +292,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (csp) {
-        PRBool allowsEval;
+        bool allowsEval;
         // this call will send violation reports as warranted (and return true if
         // reportOnly is set).
         rv = csp->GetAllowsEval(&allowsEval);
@@ -375,7 +375,7 @@ nsJSScriptTimeoutHandler::GetHandlerText()
 }
 
 nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
-                                   PRBool *aIsInterval,
+                                   bool *aIsInterval,
                                    PRInt32 *aInterval,
                                    nsIScriptTimeoutHandler **aRet)
 {

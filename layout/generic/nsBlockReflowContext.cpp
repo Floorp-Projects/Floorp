@@ -81,10 +81,10 @@ static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
   return aFrame;
 }
 
-PRBool
+bool
 nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame,
-  PRBool* aMayNeedRetry, PRBool* aBlockIsEmpty)
+  bool* aMayNeedRetry, bool* aBlockIsEmpty)
 {
   // Include frame's top margin
   aMargin->Include(aRS.mComputedMargin.top);
@@ -98,8 +98,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   printf(": %d => %d\n", aRS.mComputedMargin.top, aMargin->get());
 #endif
 
-  PRBool dirtiedLine = PR_FALSE;
-  PRBool setBlockIsEmpty = PR_FALSE;
+  bool dirtiedLine = false;
+  bool setBlockIsEmpty = false;
 
   // Calculate the frame's generational top-margin from its child
   // blocks. Note that if the frame has a non-zero top-border or
@@ -122,7 +122,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
       for (PRIntn overflowLines = PR_FALSE; overflowLines <= PR_TRUE; ++overflowLines) {
         nsBlockFrame::line_iterator line;
         nsBlockFrame::line_iterator line_end;
-        PRBool anyLines = PR_TRUE;
+        bool anyLines = true;
         if (overflowLines) {
           nsLineList* lines = block->GetOverflowLines();
           if (!lines) {
@@ -145,7 +145,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             dirtiedLine = PR_TRUE;
           }
           
-          PRBool isEmpty;
+          bool isEmpty;
           if (line->IsInline()) {
             isEmpty = line->IsEmpty();
           } else {
@@ -231,10 +231,10 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
 
 nsresult
 nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
-                                  PRBool              aApplyTopMargin,
+                                  bool                aApplyTopMargin,
                                   nsCollapsingMargin& aPrevMargin,
                                   nscoord             aClearance,
-                                  PRBool              aIsAdjacentWithTop,
+                                  bool                aIsAdjacentWithTop,
                                   nsLineBox*          aLine,
                                   nsHTMLReflowState&  aFrameRS,
                                   nsReflowStatus&     aFrameReflowStatus,
@@ -344,9 +344,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
  * it fits, apply horizontal positioning (CSS 10.3.3), collapse
  * margins (CSS2 8.3.1). Also apply relative positioning.
  */
-PRBool
+bool
 nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
-                                 PRBool                   aForceFit,
+                                 bool                     aForceFit,
                                  nsLineBox*               aLine,
                                  nsCollapsingMargin&      aBottomMarginResult,
                                  nsRect&                  aInFlowBounds,
@@ -375,7 +375,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // Mark the frame as non-dirty; it has been reflowed (or we wouldn't
   // be here), and we don't want to assert in CachedIsEmpty()
   mFrame->RemoveStateBits(NS_FRAME_IS_DIRTY);
-  PRBool empty = 0 == mMetrics.height && aLine->CachedIsEmpty();
+  bool empty = 0 == mMetrics.height && aLine->CachedIsEmpty();
   if (empty) {
     // Collapse the bottom margin with the top margin that was already
     // applied.

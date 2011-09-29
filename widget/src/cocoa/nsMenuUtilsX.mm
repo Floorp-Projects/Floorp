@@ -75,7 +75,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
                                                PR_FALSE, PR_FALSE, PR_FALSE,
                                                PR_FALSE, nsnull))) {
       pEvent->SetTrusted(PR_TRUE);
-      PRBool dummy;
+      bool dummy;
       target->DispatchEvent(event, &dummy);
     }
   }
@@ -202,7 +202,7 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-PRBool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
+bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
 {
   return (inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
                                  nsWidgetAtoms::_true, eCaseMatters) ||

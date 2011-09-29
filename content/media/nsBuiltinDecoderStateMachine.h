@@ -137,7 +137,7 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader, PRPackedBool aRealTime = PR_FALSE);
+  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader, bool aRealTime = false);
   ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
@@ -152,7 +152,7 @@ public:
   virtual PRInt64 GetDuration();
   virtual void SetDuration(PRInt64 aDuration);
   void SetEndTime(PRInt64 aEndTime);
-  virtual PRBool OnDecodeThread() const {
+  virtual bool OnDecodeThread() const {
     return IsCurrentThread(mDecodeThread);
   }
 
@@ -161,7 +161,7 @@ public:
   virtual void Seek(double aTime);
   virtual double GetCurrentTime() const;
   virtual void ClearPositionChangeFlag();
-  virtual void SetSeekable(PRBool aSeekable);
+  virtual void SetSeekable(bool aSeekable);
   virtual void UpdatePlaybackPosition(PRInt64 aTime);
   virtual void StartBuffering();
 
@@ -170,30 +170,30 @@ public:
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
-  PRBool HasAudio() const {
+  bool HasAudio() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mInfo.mHasAudio;
   }
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
-  PRBool HasVideo() const {
+  bool HasVideo() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mInfo.mHasVideo;
   }
 
   // Should be called by main thread.
-  PRBool HaveNextFrameData() const;
+  bool HaveNextFrameData() const;
 
   // Must be called with the decode monitor held.
-  PRBool IsBuffering() const {
+  bool IsBuffering() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
     return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
-  PRBool IsSeeking() const {
+  bool IsSeeking() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
     return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_SEEKING;
@@ -201,11 +201,11 @@ public:
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
-  PRBool OnAudioThread() const {
+  bool OnAudioThread() const {
     return IsCurrentThread(mAudioThread);
   }
 
-  PRBool OnStateMachineThread() const {
+  bool OnStateMachineThread() const {
     return IsCurrentThread(GetStateMachineThread());
   }
  
@@ -235,7 +235,7 @@ public:
     return mEndTime;
   }
 
-  PRBool IsSeekable() {
+  bool IsSeekable() {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mSeekable;
   }
@@ -271,11 +271,11 @@ protected:
 
   // Returns PR_TRUE if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
-  PRBool HasLowDecodedData(PRInt64 aAudioUsecs) const;
+  bool HasLowDecodedData(PRInt64 aAudioUsecs) const;
 
   // Returns PR_TRUE if we're running low on data which is not yet decoded.
   // The decoder monitor must be held.
-  PRBool HasLowUndecodedData() const;
+  bool HasLowUndecodedData() const;
 
   // Returns the number of microseconds of undecoded data available for
   // decoding. The decoder monitor must be held.
@@ -289,10 +289,10 @@ protected:
 
   // Returns PR_TRUE when there's decoded audio waiting to play.
   // The decoder monitor must be held.
-  PRBool HasFutureAudio() const;
+  bool HasFutureAudio() const;
 
   // Returns PR_TRUE if we recently exited "quick buffering" mode.
-  PRBool JustExitedQuickBuffering();
+  bool JustExitedQuickBuffering();
 
   // Waits on the decoder ReentrantMonitor for aUsecs microseconds. If the decoder
   // monitor is awoken by a Notify() call, we'll continue waiting, unless
@@ -390,7 +390,7 @@ protected:
 
   // Returns PR_TRUE if we're currently playing. The decoder monitor must
   // be held.
-  PRBool IsPlaying();
+  bool IsPlaying();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
@@ -435,7 +435,7 @@ protected:
   // periodically via timer to ensure the video stays in sync.
   nsresult RunStateMachine();
 
-  PRBool IsStateMachineScheduled() const {
+  bool IsStateMachineScheduled() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return !mTimeout.IsNull() || mRunAgain;
   }
@@ -443,7 +443,7 @@ protected:
   // Returns PR_TRUE if we're not playing and the decode thread has filled its
   // decode buffers and is waiting. We can shut the decode thread down in this
   // case as it may not be needed again.
-  PRBool IsPausedAndDecoderWaiting();
+  bool IsPausedAndDecoderWaiting();
 
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
@@ -562,70 +562,70 @@ protected:
 
   // PR_TRUE if the media resource can be seeked. Accessed from the state
   // machine and main threads. Synchronised via decoder monitor.
-  PRPackedBool mSeekable;
+  bool mSeekable;
 
   // PR_TRUE if an event to notify about a change in the playback
   // position has been queued, but not yet run. It is set to PR_FALSE when
   // the event is run. This allows coalescing of these events as they can be
   // produced many times per second. Synchronised via decoder monitor.
   // Accessed on main and state machine threads.
-  PRPackedBool mPositionChangeQueued;
+  bool mPositionChangeQueued;
 
   // PR_TRUE if the audio playback thread has finished. It is finished
   // when either all the audio frames in the Vorbis bitstream have completed
   // playing, or we've moved into shutdown state, and the threads are to be
   // destroyed. Written by the audio playback thread and read and written by
   // the state machine thread. Synchronised via decoder monitor.
-  PRPackedBool mAudioCompleted;
+  bool mAudioCompleted;
 
   // PR_TRUE if mDuration has a value obtained from an HTTP header, or from
   // the media index/metadata. Accessed on the state machine thread.
-  PRPackedBool mGotDurationFromMetaData;
+  bool mGotDurationFromMetaData;
     
   // PR_FALSE while decode thread should be running. Accessed state machine
   // and decode threads. Syncrhonised by decoder monitor.
-  PRPackedBool mStopDecodeThread;
+  bool mStopDecodeThread;
 
   // PR_TRUE when the decode thread run function has finished, but the thread
   // has not necessarily been shut down yet. This can happen if we switch
   // from COMPLETED state to SEEKING before the state machine has a chance
   // to run in the COMPLETED state and shutdown the decode thread.
   // Synchronised by the decoder monitor.
-  PRPackedBool mDecodeThreadIdle;
+  bool mDecodeThreadIdle;
 
   // PR_FALSE while audio thread should be running. Accessed state machine
   // and audio threads. Syncrhonised by decoder monitor.
-  PRPackedBool mStopAudioThread;
+  bool mStopAudioThread;
 
   // If this is PR_TRUE while we're in buffering mode, we can exit early,
   // as it's likely we may be able to playback. This happens when we enter
   // buffering mode soon after the decode starts, because the decode-ahead
   // ran fast enough to exhaust all data while the download is starting up.
   // Synchronised via decoder monitor.
-  PRPackedBool mQuickBuffering;
+  bool mQuickBuffering;
 
   // PR_TRUE if the shared state machine thread is currently running this
   // state machine.
-  PRPackedBool mIsRunning;
+  bool mIsRunning;
 
   // PR_TRUE if we should run the state machine again once the current
   // state machine run has finished.
-  PRPackedBool mRunAgain;
+  bool mRunAgain;
 
   // PR_TRUE if we've dispatched an event to run the state machine. It's
   // imperative that we don't dispatch multiple events to run the state
   // machine at the same time, as our code assume all events are synchronous.
   // If we dispatch multiple events, the second event can run while the
   // first is shutting down a thread, causing inconsistent state.
-  PRPackedBool mDispatchedRunEvent;
+  bool mDispatchedRunEvent;
 
   // PR_TRUE if the decode thread has gone filled its buffers and is now
   // waiting to be awakened before it continues decoding. Synchronized
   // by the decoder monitor.
-  PRPackedBool mDecodeThreadWaiting;
+  bool mDecodeThreadWaiting;
 
   // true is we are decoding a realtime stream, like a camera stream
-  PRPackedBool mRealTime;
+  bool mRealTime;
   
   PRUint32 mBufferingWait;
   PRInt64  mLowDataThresholdUsecs;

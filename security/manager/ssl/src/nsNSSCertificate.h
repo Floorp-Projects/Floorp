@@ -91,7 +91,7 @@ public:
 
 private:
   CERTCertificate *mCert;
-  PRBool           mPermDelete;
+  bool             mPermDelete;
   PRUint32         mCertType;
   nsCOMPtr<nsIASN1Object> mASN1Structure;
   nsresult CreateASN1Struct();
@@ -100,14 +100,14 @@ private:
   nsresult GetSortableDate(PRTime aTime, nsAString &_aSortableDate);
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
-  PRBool InitFromDER(char* certDER, int derLen);  // return false on failure
+  bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
   enum { 
     ev_status_unknown = -1, ev_status_invalid = 0, ev_status_valid = 1
   } mCachedEVStatus;
   SECOidTag mCachedEVOidTag;
-  nsresult hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV);
-  nsresult getValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV);
+  nsresult hasValidEVOidTag(SECOidTag &resultOidTag, bool &validEV);
+  nsresult getValidEVOidTag(SECOidTag &resultOidTag, bool &validEV);
 };
 
 class nsNSSCertList: public nsIX509CertList
@@ -116,7 +116,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERTLIST
 
-  nsNSSCertList(CERTCertList *certList = nsnull, PRBool adopt = PR_FALSE);
+  nsNSSCertList(CERTCertList *certList = nsnull, bool adopt = false);
   virtual ~nsNSSCertList();
 
   static CERTCertList *DupCertList(CERTCertList *aCertList);

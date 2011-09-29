@@ -358,7 +358,7 @@ ClearContainer(ContainerLayer* aContainer)
 // used for small software rendering tasks, like drawWindow.  That's
 // currently implemented by a BasicLayerManager without a backing
 // widget, and hence in non-retained mode.
-static PRBool
+static bool
 IsTempLayerManager(LayerManager* aManager)
 {
   return (LayerManager::LAYERS_BASIC == aManager->GetBackendType() &&

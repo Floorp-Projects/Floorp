@@ -333,7 +333,7 @@ nsMathMLmencloseFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
 
 /* virtual */ nsresult
 nsMathMLmencloseFrame::Place(nsRenderingContext& aRenderingContext,
-                             PRBool               aPlaceOrigin,
+                             bool                 aPlaceOrigin,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
   return PlaceInternal(aRenderingContext, aPlaceOrigin, aDesiredSize, PR_FALSE);
@@ -341,9 +341,9 @@ nsMathMLmencloseFrame::Place(nsRenderingContext& aRenderingContext,
 
 /* virtual */ nsresult
 nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
-                                     PRBool               aPlaceOrigin,
+                                     bool                 aPlaceOrigin,
                                      nsHTMLReflowMetrics& aDesiredSize,
-                                     PRBool               aWidthOnly)
+                                     bool                 aWidthOnly)
 {
   ///////////////
   // Measure the size of our content using the base class to format like an

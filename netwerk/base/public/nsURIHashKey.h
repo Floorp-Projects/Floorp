@@ -60,8 +60,8 @@ public:
 
     nsIURI* GetKey() const { return mKey; }
 
-    PRBool KeyEquals(const nsIURI* aKey) const {
-        PRBool eq;
+    bool KeyEquals(const nsIURI* aKey) const {
+        bool eq;
         if (NS_SUCCEEDED(mKey->Equals(const_cast<nsIURI*>(aKey), &eq))) {
             return eq;
         }

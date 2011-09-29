@@ -181,7 +181,7 @@ DocumentFunctionCall::getReturnType()
     return NODESET_RESULT;
 }
 
-PRBool
+bool
 DocumentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     return (aContext & PRIVATE_CONTEXT) || argsSensitiveTo(aContext);

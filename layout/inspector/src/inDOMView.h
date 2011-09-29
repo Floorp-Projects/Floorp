@@ -85,10 +85,10 @@ protected:
   nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<inIDOMUtils> mDOMUtils;
 
-  PRPackedBool mShowAnonymous;
-  PRPackedBool mShowSubDocuments;
-  PRPackedBool mShowWhitespaceNodes;
-  PRPackedBool mShowAccessibleNodes;
+  bool mShowAnonymous;
+  bool mShowSubDocuments;
+  bool mShowWhitespaceNodes;
+  bool mShowAccessibleNodes;
   PRUint32 mWhatToShow;
 
   nsCOMPtr<nsIDOMNode> mRootNode;
@@ -99,7 +99,7 @@ protected:
   inDOMViewNode* GetNodeAt(PRInt32 aIndex);
   PRInt32 GetRowCount();
   PRInt32 NodeToRow(inDOMViewNode* aNode);
-  PRBool RowOutOfBounds(PRInt32 aRow, PRInt32 aCount);
+  bool RowOutOfBounds(PRInt32 aRow, PRInt32 aCount);
   inDOMViewNode* CreateNode(nsIDOMNode* aNode, inDOMViewNode* aParent);
   void AppendNode(inDOMViewNode* aNode);
   void InsertNode(inDOMViewNode* aNode, PRInt32 aIndex);

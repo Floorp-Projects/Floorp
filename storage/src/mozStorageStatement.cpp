@@ -577,7 +577,7 @@ Statement::Execute()
   if (!mDBStatement)
     return NS_ERROR_NOT_INITIALIZED;
 
-  PRBool ret;
+  bool ret;
   nsresult rv = ExecuteStep(&ret);
   nsresult rv2 = Reset();
 
@@ -585,7 +585,7 @@ Statement::Execute()
 }
 
 NS_IMETHODIMP
-Statement::ExecuteStep(PRBool *_moreResults)
+Statement::ExecuteStep(bool *_moreResults)
 {
   if (!mDBStatement)
     return NS_ERROR_NOT_INITIALIZED;
@@ -882,7 +882,7 @@ Statement::GetSharedBlob(PRUint32 aIndex,
 
 NS_IMETHODIMP
 Statement::GetIsNull(PRUint32 aIndex,
-                     PRBool *_isNull)
+                     bool *_isNull)
 {
   // Get type of Index will check aIndex for us, so we don't have to.
   PRInt32 type;

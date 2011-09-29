@@ -42,7 +42,7 @@
 #include "nsISimpleEnumerator.h"
 
 nsresult
-nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
+nsObserverList::AddObserver(nsIObserver* anObserver, bool ownsWeak)
 {
     NS_ASSERTION(anObserver, "Null input");
 
@@ -140,7 +140,7 @@ nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
 }
 
 NS_IMETHODIMP
-nsObserverEnumerator::HasMoreElements(PRBool *aResult)
+nsObserverEnumerator::HasMoreElements(bool *aResult)
 {
     *aResult = (mIndex < mObservers.Count());
     return NS_OK;

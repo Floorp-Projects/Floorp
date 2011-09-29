@@ -109,7 +109,7 @@ public:
     mWrapperPtrBits = 0;
   }
 
-  PRBool PreservingWrapper()
+  bool PreservingWrapper()
   {
     return (mWrapperPtrBits & WRAPPER_BIT_PRESERVED) != 0;
   }
@@ -119,14 +119,14 @@ public:
     mWrapperPtrBits |= WRAPPER_IS_PROXY;
   }
 
-  PRBool IsProxy()
+  bool IsProxy()
   {
     return (mWrapperPtrBits & WRAPPER_IS_PROXY) != 0;
   }
 
 private:
   // Only meant to be called by nsContentUtils.
-  void SetPreservingWrapper(PRBool aPreserve)
+  void SetPreservingWrapper(bool aPreserve)
   {
     if(aPreserve) {
       mWrapperPtrBits |= WRAPPER_BIT_PRESERVED;

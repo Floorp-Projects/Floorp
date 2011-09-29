@@ -67,12 +67,12 @@ public:
    * Sets whether the parser is done adding children
    * @param aIsDone whether the parser is done adding children
    */
-  NS_IMETHOD DoneAddingChildren(PRBool aIsDone) = 0;
+  NS_IMETHOD DoneAddingChildren(bool aIsDone) = 0;
 
   /**
    * Notify the frame when an option is selected
    */
-  NS_IMETHOD OnOptionSelected(PRInt32 aIndex, PRBool aSelected) = 0;
+  NS_IMETHOD OnOptionSelected(PRInt32 aIndex, bool aSelected) = 0;
 
   /**
    * Notify the frame when selectedIndex was changed.  This might

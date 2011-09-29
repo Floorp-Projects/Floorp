@@ -73,7 +73,7 @@ public:
   
   NS_DECL_ISUPPORTS
 
-  static PRBool IsAccessKeyPressed(nsIDOMKeyEvent* event);
+  static bool IsAccessKeyPressed(nsIDOMKeyEvent* event);
 
 protected:
   static void InitAccessKey();
@@ -86,10 +86,10 @@ protected:
 
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   // Whether or not the ALT key is currently down.
-  PRPackedBool mAccessKeyDown;
+  bool mAccessKeyDown;
   // Whether or not the ALT key down is canceled by other action.
-  PRPackedBool mAccessKeyDownCanceled;
-  static PRBool mAccessKeyFocuses; // Does the access key by itself focus the menubar?
+  bool mAccessKeyDownCanceled;
+  static bool mAccessKeyFocuses; // Does the access key by itself focus the menubar?
   static PRInt32 mAccessKey;     // See nsIDOMKeyEvent.h for sample values
   static PRUint32 mAccessKeyMask;// Modifier mask for the access key
 };

@@ -427,7 +427,7 @@ XULSortServiceImpl::InitializeSortState(nsIContent* aRootElement,
   aSortState->sort.Assign(sort);
   aSortState->direction = nsSortState_natural;
 
-  PRBool noNaturalState = PR_FALSE;
+  bool noNaturalState = false;
   nsWhitespaceTokenizer tokenizer(aSortHints);
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token(tokenizer.nextToken());

@@ -152,7 +152,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
 
 nsresult
 nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
-                                            PRBool* aCantHandleYet) const
+                                            bool* aCantHandleYet) const
 {
     nsresult rv;
 
@@ -163,7 +163,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
-        PRBool hasSourceBinding;
+        bool hasSourceBinding;
         nsCOMPtr<nsIRDFResource> sourceRes;
 
         if (mSource) {
@@ -177,7 +177,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             sourceRes = do_QueryInterface(sourceValue);
         }
 
-        PRBool hasTargetBinding;
+        bool hasTargetBinding;
         nsCOMPtr<nsIRDFNode> targetValue;
 
         if (mTarget) {
@@ -207,7 +207,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
         if (hasSourceBinding && hasTargetBinding) {
             // it's a consistency check. see if we have a assignment that is consistent
-            PRBool hasAssertion;
+            bool hasAssertion;
             rv = ds->HasAssertion(sourceRes, mProperty, targetValue,
                                   PR_TRUE, &hasAssertion);
             if (NS_FAILED(rv)) return rv;
@@ -255,7 +255,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             }
 
             while (1) {
-                PRBool hasMore;
+                bool hasMore;
                 rv = results->HasMoreElements(&hasMore);
                 if (NS_FAILED(rv)) return rv;
 
@@ -349,13 +349,13 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
     return NS_OK;
 }
 
-PRBool
+bool
 nsRDFPropertyTestNode::CanPropagate(nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget,
                                     Instantiation& aInitialBindings) const
 {
-    PRBool result;
+    bool result;
 
     if ((mProperty.get() != aProperty) ||
         (mSource && mSource.get() != aSource) ||

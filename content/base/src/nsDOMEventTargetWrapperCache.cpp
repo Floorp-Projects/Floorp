@@ -40,6 +40,9 @@
 #include "nsContentUtils.h"
 #include "nsDOMEventTargetWrapperCache.h"
 #include "nsIDocument.h"
+#include "nsIJSContextStack.h"
+#include "nsServiceManagerUtils.h"
+#include "nsDOMJSUtils.h"
 
 nsDOMEventTargetWrapperCache::~nsDOMEventTargetWrapperCache()
 {
@@ -69,3 +72,29 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMEventTargetWrapperCache, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMEventTargetWrapperCache, nsDOMEventTargetHelper)
+
+void
+nsDOMEventTargetWrapperCache::Init(JSContext* aCx)
+{
+  // Set the original mScriptContext and mPrincipal, if available
+  JSContext* cx = aCx;
+  if (!cx) {
+    nsIJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+
+    if (!stack)
+      return;
+
+    if (NS_FAILED(stack->Peek(&cx)) || !cx)
+      return;
+  }
+
+  NS_ASSERTION(cx, "Should have returned earlier ...");
+  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  if (context) {
+    mScriptContext = context;
+    nsCOMPtr<nsPIDOMWindow> window =
+      do_QueryInterface(context->GetGlobalObject());
+    if (window)
+      mOwner = window->GetCurrentInnerWindow();
+  }
+}

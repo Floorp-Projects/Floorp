@@ -89,6 +89,7 @@ var ExtensionsView = {
     item.setAttribute("name", aAddon.name);
     item.setAttribute("version", aAddon.version);
     item.setAttribute("iconURL", aAddon.iconURL);
+    item.setAttribute("class", "panel-listitem");
     return item;
   },
 
@@ -620,6 +621,7 @@ var ExtensionsView = {
 
     let whatare = document.createElement("richlistitem");
     whatare.setAttribute("typeName", "banner");
+    whatare.setAttribute("class", "panel-listitem");
     whatare.setAttribute("label", strings.GetStringFromName("addonsWhatAre.label"));
 
     let desc = strings.GetStringFromName("addonsWhatAre.description");

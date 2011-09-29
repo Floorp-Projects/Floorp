@@ -57,6 +57,6 @@ private:
   nsRefPtr<nsOfflineCacheDevice> mDevice;
   nsCString mGroup;
   nsCString mClientID;
-  PRBool mValid;
+  bool mValid;
 };
 

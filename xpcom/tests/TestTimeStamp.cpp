@@ -45,7 +45,7 @@
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-static void Assert(PRBool aCond, const char* aMsg)
+static void Assert(bool aCond, const char* aMsg)
 {
     if (aCond) {
         passed(aMsg);

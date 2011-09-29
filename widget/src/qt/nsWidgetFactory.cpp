@@ -75,7 +75,7 @@
 #endif
 
 // from nsWindow.cpp
-extern PRBool gDisableNativeTheme;
+extern bool gDisableNativeTheme;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)

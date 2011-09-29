@@ -92,8 +92,8 @@ class nsSTSHostEntry : public PLDHashEntryHdr
 
     nsCString    mHost;
     PRInt64      mExpireTime;
-    PRPackedBool mDeleted;
-    PRPackedBool mIncludeSubdomains;
+    bool mDeleted;
+    bool mIncludeSubdomains;
 
     // Hash methods
     typedef const char* KeyType;
@@ -104,7 +104,7 @@ class nsSTSHostEntry : public PLDHashEntryHdr
       return mHost.get();
     }
 
-    PRBool KeyEquals(KeyTypePointer aKey) const
+    bool KeyEquals(KeyTypePointer aKey) const
     {
       return !strcmp(mHost.get(), aKey);
     }
@@ -138,7 +138,7 @@ public:
 
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
-  nsresult SetStsState(nsIURI* aSourceURI, PRInt64 maxage, PRBool includeSubdomains);
+  nsresult SetStsState(nsIURI* aSourceURI, PRInt64 maxage, bool includeSubdomains);
   nsresult ProcessStsHeaderMutating(nsIURI* aSourceURI, char* aHeader);
 
   // private-mode-preserving permission manager overlay functions
@@ -152,13 +152,13 @@ private:
   nsresult TestPermission(nsIURI     *aURI,
                           const char *aType,
                           PRUint32   *aPermission,
-                          PRBool     testExact);
+                          bool       testExact);
 
   // cached services
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<nsIObserverService> mObserverService;
 
-  PRBool mInPrivateMode;
+  bool mInPrivateMode;
   nsTHashtable<nsSTSHostEntry> mPrivateModeHostTable;
 };
 

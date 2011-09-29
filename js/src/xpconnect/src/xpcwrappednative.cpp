@@ -201,7 +201,7 @@ static int DEBUG_WrappedNativeGetterCalls;
 static int DEBUG_WrappedNativeSetterCalls;
 #define DEBUG_CHUNKS_TO_COUNT 4
 static int DEBUG_WrappedNativeTearOffChunkCounts[DEBUG_CHUNKS_TO_COUNT+1];
-static PRBool  DEBUG_DumpedWrapperStats;
+static bool    DEBUG_DumpedWrapperStats;
 #endif
 
 #ifdef DEBUG
@@ -2056,7 +2056,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                         NS_ASSERTION(proto && proto != our_proto,
                             "!!! xpconnect/xbl check - wrapper has no special proto");
 
-                        PRBool found_our_proto = PR_FALSE;
+                        bool found_our_proto = false;
                         while(proto && !found_our_proto) {
                             proto = proto->getProto();
 
@@ -2555,8 +2555,8 @@ CallMethodHelper::GatherAndConvertResults()
         AUTO_MARK_JSVAL(mCallContext, &v);
         JSUint32 array_count;
         nsXPTType datum_type;
-        PRBool isArray = type.IsArray();
-        PRBool isSizedString = isArray ?
+        bool isArray = type.IsArray();
+        bool isSizedString = isArray ?
                 JS_FALSE :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                 type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
@@ -2922,9 +2922,9 @@ CallMethodHelper::ConvertDependentParams()
         nsXPTType datum_type;
         JSUint32 array_count;
         JSUint32 array_capacity;
-        PRBool isArray = type.IsArray();
+        bool isArray = type.IsArray();
 
-        PRBool isSizedString = isArray ?
+        bool isSizedString = isArray ?
             JS_FALSE :
             type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
             type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
@@ -3576,7 +3576,7 @@ static JSBool InterfacesAreRelated(XPCNativeInterface* iface1,
 
     NS_ASSERTION(info1 != info2, "should not have different iface!");
 
-    PRBool match;
+    bool match;
 
     return
         (NS_SUCCEEDED(info1->HasAncestor(iface2->GetIID(), &match)) && match) ||
@@ -3677,7 +3677,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
             nsnull
         };
 
-        static PRBool warned = JS_FALSE;
+        static bool warned = JS_FALSE;
         if(!warned)
         {
             printf("!!! XPConnect won't warn about Shadowed Members of...\n  ");
@@ -3687,7 +3687,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
             warned = JS_TRUE;
         }
 
-        PRBool quit = JS_FALSE;
+        bool quit = JS_FALSE;
         char* className = nsnull;
         si->GetCallback()->GetClassName(&className);
         if(className)

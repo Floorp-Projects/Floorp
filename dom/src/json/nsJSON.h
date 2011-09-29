@@ -63,13 +63,13 @@ public:
   nsCOMPtr<nsIOutputStream> mStream;
   nsresult Write(const PRUnichar *aBuffer, PRUint32 aLength);
   nsString mOutputString;
-  PRBool DidWrite();
+  bool DidWrite();
   void FlushBuffer();
 
 protected:
   PRUnichar *mBuffer;
   PRUint32 mBufferCount;
-  PRBool mDidWrite;
+  bool mDidWrite;
   nsresult WriteToStream(nsIOutputStream *aStream, nsIUnicodeEncoder *encoder,
                          const PRUnichar *aBuffer, PRUint32 aLength);
 
@@ -90,7 +90,7 @@ protected:
 
   nsresult DecodeInternal(nsIInputStream *aStream,
                           PRInt32 aContentLength,
-                          PRBool aNeedsConverter,
+                          bool aNeedsConverter,
                           DecodingMode mode = STRICT);
   nsCOMPtr<nsIURI> mURI;
 };
@@ -101,7 +101,7 @@ NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 class nsJSONListener : public nsIStreamListener
 {
 public:
-  nsJSONListener(JSContext *cx, jsval *rootVal, PRBool needsConverter,
+  nsJSONListener(JSContext *cx, jsval *rootVal, bool needsConverter,
                  DecodingMode mode);
   virtual ~nsJSONListener();
 
@@ -110,7 +110,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
 protected:
-  PRBool mNeedsConverter;
+  bool mNeedsConverter;
   JSContext *mCx;
   jsval *mRootVal;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;

@@ -97,7 +97,7 @@ class NS_STACK_CLASS nsProxiedService
 {
 public:
     nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
-                     nsIEventTarget* aTarget, PRBool always, nsresult* rv)
+                     nsIEventTarget* aTarget, bool always, nsresult* rv)
     {
         nsCOMPtr<nsISupports> svc = do_GetService(aClass, rv);
         if (NS_SUCCEEDED(*rv))
@@ -105,7 +105,7 @@ public:
     }
 
     nsProxiedService(const char* aContractID, const nsIID &aIID, 
-                     nsIEventTarget* aTarget, PRBool always, nsresult* rv)
+                     nsIEventTarget* aTarget, bool always, nsresult* rv)
     {
         nsCOMPtr<nsISupports> svc = do_GetService(aContractID, rv);
         if (NS_SUCCEEDED(*rv))
@@ -120,7 +120,7 @@ public:
 private:
 
     void InitProxy(nsISupports *aObj, const nsIID &aIID,
-                   nsIEventTarget* aTarget, PRBool always, nsresult*rv)
+                   nsIEventTarget* aTarget, bool always, nsresult*rv)
     {
         PRInt32 proxyType = NS_PROXY_SYNC;
         if (always)

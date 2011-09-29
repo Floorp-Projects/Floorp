@@ -104,7 +104,7 @@ public:
   void
   MakeByteRangeString(NPByteRange* aRangeList, nsACString &string, PRInt32 *numRequests);
   
-  PRBool UseExistingPluginCacheFile(nsPluginStreamListenerPeer* psi);
+  bool UseExistingPluginCacheFile(nsPluginStreamListenerPeer* psi);
   
   // Called by GetURL and PostURL (via NewStream)
   nsresult Initialize(nsIURI *aURL,
@@ -134,7 +134,7 @@ private:
   nsRefPtr<nsNPAPIPluginStreamListener> mPStreamListener;
 
   // Set to PR_TRUE if we request failed (like with a HTTP response of 404)
-  PRPackedBool            mRequestFailed;
+  bool                    mRequestFailed;
   
   /*
    * Set to PR_TRUE after nsIPluginStreamListener::OnStartBinding() has
@@ -142,8 +142,8 @@ private:
    * plugin's OnStartBinding if, for some reason, it has not already
    * been called.
    */
-  PRPackedBool      mStartBinding;
-  PRPackedBool      mHaveFiredOnStartRequest;
+  bool              mStartBinding;
+  bool              mHaveFiredOnStartRequest;
   // these get passed to the plugin stream listener
   PRUint32                mLength;
   PRInt32                 mStreamType;
@@ -155,14 +155,14 @@ private:
   nsHashtable             *mDataForwardToRequest;
   
   nsCString mContentType;
-  PRBool mSeekable;
+  bool mSeekable;
   PRUint32 mModified;
   nsRefPtr<nsNPAPIPluginInstance> mPluginInstance;
   PRInt32 mStreamOffset;
-  PRBool mStreamComplete;
+  bool mStreamComplete;
   
 public:
-  PRBool                  mAbort;
+  bool                    mAbort;
   PRInt32                 mPendingRequests;
   nsWeakPtr               mWeakPtrChannelCallbacks;
   nsWeakPtr               mWeakPtrChannelLoadGroup;

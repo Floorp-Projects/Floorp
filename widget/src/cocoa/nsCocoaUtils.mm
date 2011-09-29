@@ -141,7 +141,7 @@ BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent)
          [aEvent _scrollPhase] != 0;
 }
 
-void nsCocoaUtils::HideOSChromeOnScreen(PRBool aShouldHide, NSScreen* aScreen)
+void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 

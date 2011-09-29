@@ -110,7 +110,7 @@ private:
   nsIFrame *mMaskParent;
   nsAutoPtr<gfxMatrix> mMaskParentMatrix;
   // recursion prevention flag
-  PRPackedBool mInUse;
+  bool mInUse;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();

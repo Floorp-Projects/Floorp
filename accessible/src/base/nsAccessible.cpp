@@ -307,7 +307,7 @@ nsAccessible::Description(nsString& aDescription)
                            aDescription);
 
   if (aDescription.IsEmpty()) {
-    PRBool isXUL = mContent->IsXUL();
+    bool isXUL = mContent->IsXUL();
     if (isXUL) {
       // Try XUL <description control="[id]">description text</description>
       XULDescriptionIterator iter(GetDocAccessible(), mContent);
@@ -356,7 +356,7 @@ nsAccessible::AccessKey() const
     if (mContent->IsHTML()) {
       // Unless it is labeled via an ancestor <label>, in which case that would
       // be redundant.
-      HTMLLabelIterator iter(GetDocAccessible(), mContent,
+      HTMLLabelIterator iter(GetDocAccessible(), this,
                              HTMLLabelIterator::eSkipAncestorLabel);
       label = iter.Next();
 
@@ -549,7 +549,7 @@ nsAccessible::GetChildren(nsIArray **aOutChildren)
   return NS_OK;
 }
 
-PRBool
+bool
 nsAccessible::GetAllowsAnonChildAccessibles()
 {
   return PR_TRUE;
@@ -590,8 +590,8 @@ nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aSt
   return NS_OK;
 }
 
-PRBool
-nsAccessible::IsVisible(PRBool* aIsOffscreen)
+bool
+nsAccessible::IsVisible(bool* aIsOffscreen)
 {
   // We need to know if at least a kMinPixels around the object is visible,
   // otherwise it will be marked states::OFFSCREEN. The states::INVISIBLE flag
@@ -627,7 +627,7 @@ nsAccessible::IsVisible(PRBool* aIsOffscreen)
                              nsPresContext::CSSPixelsToAppUnits(kMinPixels));
 
   if (frame->GetRect().IsEmpty()) {
-    PRBool isEmpty = PR_TRUE;
+    bool isEmpty = true;
 
     nsIAtom *frameType = frame->GetType();
     if (frameType == nsGkAtoms::textFrame) {
@@ -670,7 +670,7 @@ nsAccessible::NativeState()
   if (!document || !document->IsInDocument(this))
     state |= states::STALE;
 
-  PRBool disabled = PR_FALSE;
+  bool disabled = false;
   if (mContent->IsElement()) {
     nsEventStates elementState = mContent->AsElement()->State();
 
@@ -703,7 +703,7 @@ nsAccessible::NativeState()
 
   // Check if states::INVISIBLE and
   // states::OFFSCREEN flags should be turned on for this object.
-  PRBool isOffscreen;
+  bool isOffscreen;
   if (!IsVisible(&isOffscreen)) {
     state |= states::INVISIBLE;
   }
@@ -1019,7 +1019,7 @@ nsIFrame* nsAccessible::GetBoundsFrame()
 }
 
 /* void removeSelection (); */
-NS_IMETHODIMP nsAccessible::SetSelected(PRBool aSelect)
+NS_IMETHODIMP nsAccessible::SetSelected(bool aSelect)
 {
   // Add or remove selection
   if (IsDefunct())
@@ -1120,7 +1120,7 @@ nsAccessible::GetHTMLName(nsAString& aLabel)
   nsAutoString label;
 
   nsAccessible* labelAcc = nsnull;
-  HTMLLabelIterator iter(GetDocAccessible(), mContent);
+  HTMLLabelIterator iter(GetDocAccessible(), this);
   while ((labelAcc = iter.Next())) {
     nsresult rv = nsTextEquivUtils::
       AppendTextEquivFromContent(this, labelAcc->GetContent(), &label);
@@ -1235,7 +1235,7 @@ nsAccessible::HandleAccEvent(AccEvent* aEvent)
 
   NS_ENSURE_STATE(observers);
 
-  PRBool hasObservers = PR_FALSE;
+  bool hasObservers = false;
   observers->HasMoreElements(&hasObservers);
   if (hasObservers) {
     nsRefPtr<nsAccEvent> evnt(aEvent->CreateXPCOMObject());
@@ -1426,7 +1426,7 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   // Expose draggable object attribute?
   nsCOMPtr<nsIDOMNSHTMLElement> htmlElement = do_QueryInterface(mContent);
   if (htmlElement) {
-    PRBool draggable = PR_FALSE;
+    bool draggable = false;
     htmlElement->GetDraggable(&draggable);
     if (draggable) {
       nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::draggable,
@@ -2008,7 +2008,7 @@ nsAccessible::RelationByType(PRUint32 aType)
       Relation rel(new IDRefsIterator(mContent,
                                       nsGkAtoms::aria_labelledby));
       if (mContent->IsHTML()) {
-        rel.AppendIter(new HTMLLabelIterator(GetDocAccessible(), mContent));
+        rel.AppendIter(new HTMLLabelIterator(GetDocAccessible(), this));
       } else if (mContent->IsXUL()) {
         rel.AppendIter(new XULLabelIterator(GetDocAccessible(), mContent));
       }
@@ -2219,7 +2219,7 @@ nsAccessible::DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex)
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 
   // Fire mouse down and mouse up events.
-  PRBool res = nsCoreUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, presShell,
+  bool res = nsCoreUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, presShell,
                                                aContent);
   if (!res)
     return;
@@ -2299,7 +2299,7 @@ NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
     NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, PRBool *aIsSelected)
+NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, bool *aIsSelected)
 {
   NS_ENSURE_ARG_POINTER(aIsSelected);
   *aIsSelected = PR_FALSE;
@@ -2324,7 +2324,7 @@ nsAccessible::ClearSelection()
 }
 
 NS_IMETHODIMP
-nsAccessible::SelectAllSelection(PRBool* aIsMultiSelect)
+nsAccessible::SelectAllSelection(bool* aIsMultiSelect)
 {
   NS_ENSURE_ARG_POINTER(aIsMultiSelect);
   *aIsMultiSelect = PR_FALSE;
@@ -2417,7 +2417,7 @@ nsAccessible::GetAnchor(PRInt32 aIndex, nsIAccessible** aAccessible)
 
 // readonly attribute boolean nsIAccessibleHyperLink::valid
 NS_IMETHODIMP
-nsAccessible::GetValid(PRBool *aValid)
+nsAccessible::GetValid(bool *aValid)
 {
   NS_ENSURE_ARG_POINTER(aValid);
   *aValid = PR_FALSE;
@@ -2431,7 +2431,7 @@ nsAccessible::GetValid(PRBool *aValid)
 
 // readonly attribute boolean nsIAccessibleHyperLink::selected
 NS_IMETHODIMP
-nsAccessible::GetSelected(PRBool *aSelected)
+nsAccessible::GetSelected(bool *aSelected)
 {
   NS_ENSURE_ARG_POINTER(aSelected);
   *aSelected = PR_FALSE;
@@ -2565,7 +2565,7 @@ nsAccessible::InvalidateChildren()
   SetChildrenFlag(eChildrenUninitialized);
 }
 
-PRBool
+bool
 nsAccessible::AppendChild(nsAccessible* aChild)
 {
   if (!aChild)
@@ -2581,7 +2581,7 @@ nsAccessible::AppendChild(nsAccessible* aChild)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
 {
   if (!aChild)
@@ -2604,7 +2604,7 @@ nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsAccessible::RemoveChild(nsAccessible* aChild)
 {
   if (!aChild)
@@ -3127,7 +3127,7 @@ nsAccessible::GetActionRule(PRUint64 aStates)
       return eClickAction;
 
   // Has registered 'click' event handler.
-  PRBool isOnclick = nsCoreUtils::HasClickListener(mContent);
+  bool isOnclick = nsCoreUtils::HasClickListener(mContent);
 
   if (isOnclick)
     return eClickAction;

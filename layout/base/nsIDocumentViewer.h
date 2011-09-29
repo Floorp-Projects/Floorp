@@ -68,7 +68,7 @@ public:
   NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
 
   NS_IMETHOD SetDocumentInternal(nsIDocument* aDocument,
-                                 PRBool aForceReuseInnerWindow) = 0;
+                                 bool aForceReuseInnerWindow) = 0;
 
   virtual nsIView* FindContainerView() = 0;
 

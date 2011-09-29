@@ -91,24 +91,24 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
+                   const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+                           bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
+                             bool aNotify);
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual bool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
   virtual void RequestLinkStateUpdate();
@@ -120,11 +120,11 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(PRBool* aIsInline);
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline);
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
-                                 PRBool* aIsAlternate);
+                                 bool* aIsAlternate);
 };
 
 
@@ -165,7 +165,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLinkElement)
 
 
 NS_IMETHODIMP
-nsHTMLLinkElement::GetDisabled(PRBool* aDisabled)
+nsHTMLLinkElement::GetDisabled(bool* aDisabled)
 {
   nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
   nsresult result = NS_OK;
@@ -180,7 +180,7 @@ nsHTMLLinkElement::GetDisabled(PRBool* aDisabled)
 }
 
 NS_IMETHODIMP 
-nsHTMLLinkElement::SetDisabled(PRBool aDisabled)
+nsHTMLLinkElement::SetDisabled(bool aDisabled)
 {
   nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(GetStyleSheet()));
   nsresult result = NS_OK;
@@ -205,7 +205,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
 nsresult
 nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers)
+                              bool aCompileEventHandlers)
 {
   Link::ResetLinkState(false);
 
@@ -237,7 +237,7 @@ nsHTMLLinkElement::LinkRemoved()
 }
 
 void
-nsHTMLLinkElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsHTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -285,7 +285,7 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 nsresult
 nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify)
+                           bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
@@ -300,7 +300,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    PRBool dropSheet = PR_FALSE;
+    bool dropSheet = false;
     if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel &&
         GetStyleSheet()) {
       nsAutoTArray<nsString, 4> linkTypes;
@@ -321,7 +321,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify)
+                             bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
@@ -358,7 +358,7 @@ nsHTMLLinkElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   return PostHandleEventForAnchors(aVisitor);
 }
 
-PRBool
+bool
 nsHTMLLinkElement::IsLink(nsIURI** aURI) const
 {
   return IsHTMLLink(aURI);
@@ -392,7 +392,7 @@ nsHTMLLinkElement::GetHrefURI() const
 }
 
 already_AddRefed<nsIURI>
-nsHTMLLinkElement::GetStyleSheetURL(PRBool* aIsInline)
+nsHTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
 {
   *aIsInline = PR_FALSE;
   nsAutoString href;
@@ -407,7 +407,7 @@ void
 nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
                                      nsAString& aType,
                                      nsAString& aMedia,
-                                     PRBool* aIsAlternate)
+                                     bool* aIsAlternate)
 {
   aTitle.Truncate();
   aType.Truncate();

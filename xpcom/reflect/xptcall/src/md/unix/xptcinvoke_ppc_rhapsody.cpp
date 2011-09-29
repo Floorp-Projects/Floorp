@@ -122,7 +122,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, double 
         			   if (fpCount < 13)
         			       fprData[fpCount++] = s->val.d;
         			   break;
-        case nsXPTType::T_BOOL   : *((PRBool*)  d) = s->val.b;           break;
+        case nsXPTType::T_BOOL   : *((bool*)  d) = s->val.b;           break;
         case nsXPTType::T_CHAR   : *((PRInt32*)    d) = s->val.c;        break;
         case nsXPTType::T_WCHAR  : *((PRUint32*) d) = s->val.wc;         break;
         default:

@@ -162,8 +162,8 @@ protected:
     };
 
     nsCOMPtr<nsIRDFDataSource> mInner;
-    PRPackedBool        mIsWritable;    // true if the document can be written back
-    PRPackedBool        mIsDirty;       // true if the document should be written back
+    bool                mIsWritable;    // true if the document can be written back
+    bool                mIsDirty;       // true if the document should be written back
     LoadState           mLoadState;     // what we're doing now
     nsCOMArray<nsIRDFXMLSinkObserver> mObservers;
     nsCOMPtr<nsIURI>    mURL;
@@ -182,7 +182,7 @@ protected:
     friend nsresult
     NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult);
 
-    inline PRBool IsLoading() {
+    inline bool IsLoading() {
         return (mLoadState == eLoadState_Pending) || 
                (mLoadState == eLoadState_Loading);
     }
@@ -198,28 +198,28 @@ public:
 
     NS_IMETHOD GetSource(nsIRDFResource* property,
                          nsIRDFNode* target,
-                         PRBool tv,
+                         bool tv,
                          nsIRDFResource** source) {
         return mInner->GetSource(property, target, tv, source);
     }
 
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
-                          PRBool tv,
+                          bool tv,
                           nsISimpleEnumerator** sources) {
         return mInner->GetSources(property, target, tv, sources);
     }
 
     NS_IMETHOD GetTarget(nsIRDFResource* source,
                          nsIRDFResource* property,
-                         PRBool tv,
+                         bool tv,
                          nsIRDFNode** target) {
         return mInner->GetTarget(source, property, tv, target);
     }
 
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
-                          PRBool tv,
+                          bool tv,
                           nsISimpleEnumerator** targets) {
         return mInner->GetTargets(source, property, tv, targets);
     }
@@ -227,7 +227,7 @@ public:
     NS_IMETHOD Assert(nsIRDFResource* aSource,
                       nsIRDFResource* aProperty,
                       nsIRDFNode* aTarget,
-                      PRBool tv);
+                      bool tv);
 
     NS_IMETHOD Unassert(nsIRDFResource* source,
                         nsIRDFResource* property,
@@ -246,8 +246,8 @@ public:
     NS_IMETHOD HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
-                            PRBool tv,
-                            PRBool* hasAssertion) {
+                            bool tv,
+                            bool* hasAssertion) {
         return mInner->HasAssertion(source, property, target, tv, hasAssertion);
     }
 
@@ -259,11 +259,11 @@ public:
         return mInner->RemoveObserver(aObserver);
     }
 
-    NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval) {
+    NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool *_retval) {
         return mInner->HasArcIn(aNode, aArc, _retval);
     }
 
-    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval) {
+    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, bool *_retval) {
         return mInner->HasArcOut(aSource, aArc, _retval);
     }
 
@@ -289,7 +289,7 @@ public:
     NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                                PRBool* aResult) {
+                                bool* aResult) {
         return mInner->IsCommandEnabled(aSources, aCommand, aArguments, aResult);
     }
 
@@ -346,7 +346,7 @@ public:
     } 
 
     // Implementation methods
-    PRBool
+    bool
     MakeQName(nsIRDFResource* aResource,
               nsString& property,
               nsString& nameSpacePrefix,
@@ -363,7 +363,7 @@ public:
                       nsIRDFResource* aResource,
                       nsIRDFResource* aProperty);
 
-    PRBool
+    bool
     IsContainerProperty(nsIRDFResource* aProperty);
 
     nsresult
@@ -385,7 +385,7 @@ public:
     nsresult
     SerializeEpilogue(nsIOutputStream* aStream);
 
-    PRBool
+    bool
     IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
 protected:
@@ -596,7 +596,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 }
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::GetLoaded(PRBool* _result)
+RDFXMLDataSourceImpl::GetLoaded(bool* _result)
 {
     *_result = (mLoadState == eLoadState_Loaded);
     return NS_OK;
@@ -650,14 +650,14 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Assert(nsIRDFResource* aSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget,
-                             PRBool aTruthValue)
+                             bool aTruthValue)
 {
     // We don't accept assertions unless we're writable (except in the
     // case that we're actually _reading_ the datasource in).
     nsresult rv;
 
     if (IsLoading()) {
-        PRBool hasAssertion = PR_FALSE;
+        bool hasAssertion = false;
 
         nsCOMPtr<nsIRDFPurgeableDataSource> gcable = do_QueryInterface(mInner);
         if (gcable) {
@@ -674,7 +674,7 @@ RDFXMLDataSourceImpl::Assert(nsIRDFResource* aSource,
                 // Now mark the new assertion, so it doesn't get
                 // removed when we sweep. Ignore rv, because we want
                 // to return what mInner->Assert() gave us.
-                PRBool didMark;
+                bool didMark;
                 (void) gcable->Mark(aSource, aProperty, aTarget, aTruthValue, &didMark);
             }
 
@@ -877,7 +877,7 @@ RDFXMLDataSourceImpl::Flush(void)
 //
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::GetReadOnly(PRBool* aIsReadOnly)
+RDFXMLDataSourceImpl::GetReadOnly(bool* aIsReadOnly)
 {
     *aIsReadOnly = !mIsWritable;
     return NS_OK;
@@ -885,7 +885,7 @@ RDFXMLDataSourceImpl::GetReadOnly(PRBool* aIsReadOnly)
 
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
+RDFXMLDataSourceImpl::SetReadOnly(bool aIsReadOnly)
 {
     if (mIsWritable && aIsReadOnly)
         mIsWritable = PR_FALSE;
@@ -933,7 +933,7 @@ RDFXMLDataSourceImpl::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 }
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
+RDFXMLDataSourceImpl::Refresh(bool aBlocking)
 {
 #ifdef PR_LOGGING
     nsCAutoString spec;

@@ -79,21 +79,21 @@ protected:
                              nsIWebBrowserFind **aWebBrowserFind);
 
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
-                             PRBool *aIsInsideLink, PRBool *aIsStartingLink);
+                             bool *aIsInsideLink, bool *aIsStartingLink);
 
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
                     nsISelection **aDomSel);
-  PRBool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
-                        nsIDOMRange *aRange, PRBool aMustBeVisible, 
-                        PRBool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
-                        PRBool *aUsesIndependentSelection);
-  nsresult FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
-                     PRBool aIsFirstVisiblePreferred, PRBool aFindPrev,
+  bool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
+                        nsIDOMRange *aRange, bool aMustBeVisible, 
+                        bool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
+                        bool *aUsesIndependentSelection);
+  nsresult FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
+                     bool aIsFirstVisiblePreferred, bool aFindPrev,
                      PRUint16* aResult);
   nsresult GetSearchContainers(nsISupports *aContainer,
                                nsISelectionController *aSelectionController,
-                               PRBool aIsFirstVisiblePreferred,
-                               PRBool aFindPrev, nsIPresShell **aPresShell,
+                               bool aIsFirstVisiblePreferred,
+                               bool aFindPrev, nsIPresShell **aPresShell,
                                nsPresContext **aPresContext);
 
   // Get the pres shell from mPresShell and return it only if it is still
@@ -106,8 +106,8 @@ protected:
 
   // PRBools are used instead of PRPackedBools because the address of the
   // boolean variable is getting passed into a method.
-  PRBool mStartLinksOnlyPref;
-  PRBool mCaretBrowsingOn;
+  bool mStartLinksOnlyPref;
+  bool mCaretBrowsingOn;
   nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
   nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
   nsCOMPtr<nsIDOMWindow> mCurrentWindow;
@@ -118,7 +118,7 @@ protected:
   // Sound is played asynchronously on some platforms.
   // If we destroy mSoundInterface before sound has played, it won't play
   nsCOMPtr<nsISound> mSoundInterface;
-  PRBool mIsSoundInitialized;
+  bool mIsSoundInitialized;
   
   // where selection was when user started the find
   nsCOMPtr<nsIDOMRange> mStartFindRange;

@@ -97,7 +97,7 @@ nsAsyncRedirectVerifyHelper::~nsAsyncRedirectVerifyHelper()
 
 nsresult
 nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
-                                  PRUint32 flags, PRBool synchronize)
+                                  PRUint32 flags, bool synchronize)
 {
     LOG(("nsAsyncRedirectVerifyHelper::Init() "
          "oldChan=%p newChan=%p", oldChan, newChan));
@@ -283,7 +283,7 @@ nsAsyncRedirectVerifyHelper::Run()
 bool
 nsAsyncRedirectVerifyHelper::IsOldChannelCanceled()
 {
-    PRBool canceled;
+    bool canceled;
     nsCOMPtr<nsIHttpChannelInternal> oldChannelInternal =
         do_QueryInterface(mOldChan);
     if (oldChannelInternal) {

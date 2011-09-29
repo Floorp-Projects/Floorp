@@ -52,7 +52,7 @@
 #include "nsIWindowWatcher.h"
 #include "mozilla/Services.h"
 
-static PRBool sInited = 0;
+static bool sInited = 0;
 PRUint32 nsCCUncollectableMarker::sGeneration = 0;
 
 NS_IMPL_ISUPPORTS1(nsCCUncollectableMarker, nsIObserver)

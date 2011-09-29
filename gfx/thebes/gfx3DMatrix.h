@@ -106,8 +106,8 @@ public:
    * (i.e. as obtained by From2D). If it is, optionally returns the 2D
    * matrix in aMatrix.
    */
-  PRBool Is2D(gfxMatrix* aMatrix) const;
-  PRBool Is2D() const;
+  bool Is2D(gfxMatrix* aMatrix) const;
+  bool Is2D() const;
 
   /**
    * Returns true if the matrix can be reduced to a 2D affine transformation
@@ -118,13 +118,13 @@ public:
    * Since drawing is to a 2d plane, any 3d transform without perspective
    * can be reduced by dropping the z row and column.
    */
-  PRBool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
+  bool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
 
   /**
    * Returns true if the matrix is the identity matrix. The most important
    * property we require is that gfx3DMatrix().IsIdentity() returns true.
    */
-  PRBool IsIdentity() const;
+  bool IsIdentity() const;
 
   /**
    * Pre-multiplication transformation functions:
@@ -299,7 +299,7 @@ public:
   /**
    * Check if matrix is singular (no inverse exists).
    */
-  PRBool IsSingular() const;
+  bool IsSingular() const;
 
   /**
    * Create a translation matrix.

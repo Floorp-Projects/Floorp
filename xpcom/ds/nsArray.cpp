@@ -49,7 +49,7 @@ struct findIndexOfClosure
     PRUint32 resultIndex;
 };
 
-static PRBool FindElementCallback(void* aElement, void* aClosure);
+static bool FindElementCallback(void* aElement, void* aClosure);
 
 NS_INTERFACE_MAP_BEGIN(nsArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
@@ -118,7 +118,7 @@ nsArray::IndexOf(PRUint32 aStartIndex, nsISupports* aElement,
     }
 
     findIndexOfClosure closure = { aElement, aStartIndex, 0 };
-    PRBool notFound = mArray.EnumerateForwards(FindElementCallback, &closure);
+    bool notFound = mArray.EnumerateForwards(FindElementCallback, &closure);
     if (notFound)
         return NS_ERROR_FAILURE;
 
@@ -135,9 +135,9 @@ nsArray::Enumerate(nsISimpleEnumerator **aResult)
 // nsIMutableArray implementation
 
 NS_IMETHODIMP
-nsArray::AppendElement(nsISupports* aElement, PRBool aWeak)
+nsArray::AppendElement(nsISupports* aElement, bool aWeak)
 {
-    PRBool result;
+    bool result;
     if (aWeak) {
         nsCOMPtr<nsISupports> elementRef =
             getter_AddRefs(static_cast<nsISupports*>
@@ -158,12 +158,12 @@ nsArray::AppendElement(nsISupports* aElement, PRBool aWeak)
 NS_IMETHODIMP
 nsArray::RemoveElementAt(PRUint32 aIndex)
 {
-    PRBool result = mArray.RemoveObjectAt(aIndex);
+    bool result = mArray.RemoveObjectAt(aIndex);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
+nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
@@ -176,12 +176,12 @@ nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
     } else {
         elementRef = aElement;
     }
-    PRBool result = mArray.InsertObjectAt(elementRef, aIndex);
+    bool result = mArray.InsertObjectAt(elementRef, aIndex);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
+nsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex, bool aWeak)
 {
     nsCOMPtr<nsISupports> elementRef;
     if (aWeak) {
@@ -194,7 +194,7 @@ nsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
     } else {
         elementRef = aElement;
     }
-    PRBool result = mArray.ReplaceObjectAt(elementRef, aIndex);
+    bool result = mArray.ReplaceObjectAt(elementRef, aIndex);
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -208,7 +208,7 @@ nsArray::Clear()
 //
 // static helper routines
 //
-PRBool
+bool
 FindElementCallback(void *aElement, void* aClosure)
 {
     findIndexOfClosure* closure =

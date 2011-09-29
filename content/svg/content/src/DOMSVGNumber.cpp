@@ -178,7 +178,7 @@ DOMSVGNumber::InternalItem()
 }
 
 #ifdef DEBUG
-PRBool
+bool
 DOMSVGNumber::IndexIsValid()
 {
   SVGAnimatedNumberList *alist = Element()->GetAnimatedNumberList(mAttrEnum);

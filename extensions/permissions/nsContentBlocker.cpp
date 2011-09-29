@@ -181,7 +181,7 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
       !scheme.LowerCaseEqualsLiteral("https"))
     return NS_OK;
 
-  PRBool shouldLoad, fromPrefs;
+  bool shouldLoad, fromPrefs;
   rv = TestPermission(aContentLocation, aRequestingLocation, aContentType,
                       &shouldLoad, &fromPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -261,8 +261,8 @@ nsresult
 nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
                                  nsIURI *aFirstURI,
                                  PRInt32 aContentType,
-                                 PRBool *aPermission,
-                                 PRBool *aFromPrefs)
+                                 bool *aPermission,
+                                 bool *aFromPrefs)
 {
   *aFromPrefs = PR_FALSE;
   // This default will also get used if there is an unknown value in the
@@ -302,7 +302,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     if (!aFirstURI)
       return NS_OK;
 
-    PRBool trustedSource = PR_FALSE;
+    bool trustedSource = false;
     rv = aFirstURI->SchemeIs("chrome", &trustedSource);
     NS_ENSURE_SUCCESS(rv,rv);
     if (!trustedSource) {

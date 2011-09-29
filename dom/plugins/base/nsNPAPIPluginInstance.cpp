@@ -116,7 +116,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
-    PRBool useLayersPref;
+    bool useLayersPref;
     nsresult rv = prefs->GetBoolPref("plugins.use_layers", &useLayersPref);
     if (NS_SUCCEEDED(rv))
       mUsePluginLayersPref = useLayersPref;
@@ -403,7 +403,7 @@ nsNPAPIPluginInstance::InitializePlugin()
     }
   }
 
-  PRBool oldVal = mInPluginInitCall;
+  bool oldVal = mInPluginInitCall;
   mInPluginInitCall = PR_TRUE;
 
   // Need this on the stack before calling NPP_New otherwise some callbacks that
@@ -466,7 +466,7 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 
     PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::SetWindow (about to call it) this=%p\n",this));
 
-    PRBool oldVal = mInPluginInitCall;
+    bool oldVal = mInPluginInitCall;
     mInPluginInitCall = PR_TRUE;
 
     NPPAutoPusher nppPusher(&mNPP);
@@ -653,7 +653,7 @@ nsNPAPIPluginInstance::GetURI()
   return mURI.get();
 }
 
-NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
+NPError nsNPAPIPluginInstance::SetWindowless(bool aWindowless)
 {
   mWindowless = aWindowless;
 
@@ -673,25 +673,25 @@ NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetWindowlessLocal(PRBool aWindowlessLocal)
+NPError nsNPAPIPluginInstance::SetWindowlessLocal(bool aWindowlessLocal)
 {
   mWindowlessLocal = aWindowlessLocal;
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetTransparent(PRBool aTransparent)
+NPError nsNPAPIPluginInstance::SetTransparent(bool aTransparent)
 {
   mTransparent = aTransparent;
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetUsesDOMForCursor(PRBool aUsesDOMForCursor)
+NPError nsNPAPIPluginInstance::SetUsesDOMForCursor(bool aUsesDOMForCursor)
 {
   mUsesDOMForCursor = aUsesDOMForCursor;
   return NPERR_NO_ERROR;
 }
 
-PRBool
+bool
 nsNPAPIPluginInstance::UsesDOMForCursor()
 {
   return mUsesDOMForCursor;
@@ -755,7 +755,7 @@ private:
   void* mSurface;
   Mutex* mLock;
   CondVar* mCondVar;
-  PRBool mHaveSurface;
+  bool mHaveSurface;
   NPPluginFuncs* mPluginFunctions;
 };
 
@@ -785,7 +785,7 @@ nsresult nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 #endif
 }
 
-nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(PRBool* aDrawing)
+nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 {
 #ifdef XP_MACOSX
   if (!mPlugin)
@@ -874,7 +874,7 @@ nsNPAPIPluginInstance::DefineJavaProperties()
 }
 
 nsresult
-nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
+nsNPAPIPluginInstance::IsWindowless(bool* isWindowless)
 {
 #ifdef ANDROID
   // On android, pre-honeycomb, all plugins are treated as windowless.
@@ -966,7 +966,7 @@ nsNPAPIPluginInstance::NotifyPainted(void)
 }
 
 nsresult
-nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
+nsNPAPIPluginInstance::UseAsyncPainting(bool* aIsAsync)
 {
   if (!mUsePluginLayersPref) {
     *aIsAsync = mUsePluginLayersPref;
@@ -1023,7 +1023,7 @@ nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
 }
 
 nsresult
-nsNPAPIPluginInstance::IsTransparent(PRBool* isTransparent)
+nsNPAPIPluginInstance::IsTransparent(bool* isTransparent)
 {
   *isTransparent = mTransparent;
   return NS_OK;
@@ -1049,7 +1049,7 @@ nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
 }
 
 nsresult
-nsNPAPIPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
+nsNPAPIPluginInstance::PushPopupsEnabledState(bool aEnabled)
 {
   nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
   if (!window)
@@ -1127,7 +1127,7 @@ nsNPAPIPluginInstance::PrivateModeStateChanged()
     
     nsCOMPtr<nsIPrivateBrowsingService> pbs = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
     if (pbs) {
-      PRBool pme = PR_FALSE;
+      bool pme = false;
       nsresult rv = pbs->GetPrivateBrowsingEnabled(&pme);
       if (NS_FAILED(rv))
         return rv;

@@ -156,7 +156,7 @@ nscoordToCSSValue(nscoord aCoord, nsCSSValue& aCSSValue)
 // Like nsStyleCoord::Calc, but with length in float pixels instead of nscoord.
 struct CalcValue {
   float mLength, mPercent;
-  PRBool mHasPercent;
+  bool mHasPercent;
 };
 
 // Requires a canonical calc() value that we generated.
@@ -261,7 +261,7 @@ GetURIAsUtf16StringBuffer(nsIURI* aUri)
 // CLASS METHODS
 // -------------
 
-PRBool
+bool
 nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                                   const Value& aStartValue,
                                   const Value& aEndValue,
@@ -609,7 +609,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           double colorDistance;
 
         #ifdef DEBUG
-          PRBool ok =
+          bool ok =
         #endif
             nsStyleAnimation::ComputeDistance(eCSSProperty_color,
                                               color1Value, color2Value,
@@ -800,7 +800,7 @@ AddCSSValueAngle(const nsCSSValue &aValue1, double aCoeff1,
                         eCSSUnit_Radian);
 }
 
-static PRBool
+static bool
 AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                double aCoeff2, const nsCSSValue &aValue2,
                nsCSSValueList **&aResultTail)
@@ -839,7 +839,7 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
       (color2.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
     nsStyleAnimation::Value resultColorValue;
   #ifdef DEBUG
-    PRBool ok =
+    bool ok =
   #endif
       nsStyleAnimation::AddWeighted(eCSSProperty_color, aCoeff1, color1Value,
                                     aCoeff2, color2Value, resultColorValue);
@@ -1091,7 +1091,7 @@ AppendTransformFunction(nsCSSKeyword aTransformFunction,
 #define XZSHEAR 1
 #define YZSHEAR 2
 
-static PRBool
+static bool
 Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
                   gfxPoint3D &aTranslate)
@@ -1150,7 +1150,7 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
  * particular as the file GraphicsGems/gemsii/unmatrix.c
  * in http://tog.acm.org/resources/GraphicsGems/AllGems.tar.gz
  */
-static PRBool
+static bool
 Decompose3DMatrix(const gfx3DMatrix &aMatrix, gfxPoint3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
                   gfxPoint3D &aTranslate, gfxPointH3D &aPerspective)
@@ -1353,7 +1353,7 @@ AddDifferentTransformLists(const nsCSSValueList* aList1, double aCoeff1,
   return result.forget();
 }
 
-static PRBool
+static bool
 TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
 {
   if (func1 == func2) {
@@ -1561,7 +1561,7 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
   return result.forget();
 }
 
-PRBool
+bool
 nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                               double aCoeff1, const Value& aValue1,
                               double aCoeff2, const Value& aValue2,
@@ -1685,7 +1685,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       CalcValue v2 = ExtractCalcValue(aValue2);
       double len = aCoeff1 * v1.mLength + aCoeff2 * v2.mLength;
       double pct = aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent;
-      PRBool hasPct = (aCoeff1 != 0.0 && v1.mHasPercent) ||
+      bool hasPct = (aCoeff1 != 0.0 && v1.mHasPercent) ||
                       (aCoeff2 != 0.0 && v2.mHasPercent);
       nsCSSValue *val = new nsCSSValue();
       nsCSSValue::Array *arr = nsCSSValue::Array::Create(1);
@@ -1982,7 +1982,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         if (list2->mValue.GetUnit() == eCSSUnit_None) {
           result = AddTransformLists(list1, 0, list1, aCoeff1);
         } else {
-          PRBool match = PR_TRUE;
+          bool match = true;
 
           {
             const nsCSSValueList *item1 = list1, *item2 = list2;
@@ -2083,13 +2083,13 @@ already_AddRefed<css::StyleRule>
 BuildStyleRule(nsCSSProperty aProperty,
                dom::Element* aTargetElement,
                const nsAString& aSpecifiedValue,
-               PRBool aUseSVGMode)
+               bool aUseSVGMode)
 {
   // Set up an empty CSS Declaration
   nsAutoPtr<css::Declaration> declaration(new css::Declaration());
   declaration->InitializeEmpty();
 
-  PRBool changed; // ignored, but needed as outparam for ParseProperty
+  bool changed; // ignored, but needed as outparam for ParseProperty
   nsIDocument* doc = aTargetElement->GetOwnerDoc();
   nsCOMPtr<nsIURI> baseURI = aTargetElement->GetBaseURI();
   nsCSSParser parser(doc->CSSLoader());
@@ -2129,13 +2129,13 @@ LookupStyleContext(dom::Element* aElement)
   return nsComputedDOMStyle::GetStyleContextForElement(aElement, nsnull, shell);
 }
 
-PRBool
+bool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                dom::Element* aTargetElement,
                                const nsAString& aSpecifiedValue,
-                               PRBool aUseSVGMode,
+                               bool aUseSVGMode,
                                Value& aComputedValue,
-                               PRBool* aIsContextSensitive)
+                               bool* aIsContextSensitive)
 {
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
@@ -2216,7 +2216,7 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }
 
-PRBool
+bool
 nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                                  nsPresContext* aPresContext,
                                  const Value& aComputedValue,
@@ -2307,7 +2307,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                                  nsPresContext* aPresContext,
                                  const Value& aComputedValue,
@@ -2347,7 +2347,7 @@ ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
                    mozilla::css::Side aSide, nsStyleAnimation::Value& aComputedValue)
 {
   nscolor color;
-  PRBool foreground;
+  bool foreground;
   static_cast<const nsStyleBorder*>(aStyleBorder)->
     GetBorderColor(aSide, color, foreground);
   if (foreground) {
@@ -2357,7 +2357,7 @@ ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
   aComputedValue.SetColorValue(color);
 }
 
-static PRBool
+static bool
 StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
 {
   switch (aCoord.GetUnit()) {
@@ -2400,7 +2400,7 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
   return PR_TRUE;
 }
 
-static PRBool
+static bool
 StyleCoordToCSSValue(const nsStyleCoord& aCoord, nsCSSValue& aCSSValue)
 {
   switch (aCoord.GetUnit()) {
@@ -2430,7 +2430,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
                       const nsCSSValue& aInput, nsCSSValue& aOutput)
 {
   if (aInput.IsCalcUnit()) {
-    PRBool canStoreInRuleTree = PR_TRUE;
+    bool canStoreInRuleTree = true;
     nsRuleNode::ComputedCalc c =
       nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
                                               aStyleContext->PresContext(),
@@ -2451,7 +2451,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
     aOutput.SetArrayValue(outputArray, aInput.GetUnit());
   } else if (aInput.IsLengthUnit() &&
              aInput.GetUnit() != eCSSUnit_Pixel) {
-    PRBool canStoreInRuleTree = PR_TRUE;
+    bool canStoreInRuleTree = true;
     nscoord len = nsRuleNode::CalcLength(aInput, aStyleContext,
                                          aStyleContext->PresContext(),
                                          canStoreInRuleTree);
@@ -2462,7 +2462,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
   }
 }
 
-PRBool
+bool
 nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                        nsStyleContext* aStyleContext,
                                        Value& aComputedValue)
@@ -2563,7 +2563,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           const nsStyleTextReset *styleTextReset =
             static_cast<const nsStyleTextReset*>(styleStruct);
           nscolor color;
-          PRBool isForeground;
+          bool isForeground;
           styleTextReset->GetDecorationColor(color, isForeground);
           if (isForeground) {
             color = aStyleContext->GetStyleColor()->mColor;
@@ -3335,7 +3335,7 @@ nsStyleAnimation::Value::FreeValue()
   }
 }
 
-PRBool
+bool
 nsStyleAnimation::Value::operator==(const Value& aOther) const
 {
   if (mUnit != aOther.mUnit) {

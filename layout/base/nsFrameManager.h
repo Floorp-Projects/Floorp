@@ -164,7 +164,7 @@ public:
                           nsStyleChangeList* aChangeList,
                           nsChangeHint aMinChange,
                           RestyleTracker& aRestyleTracker,
-                          PRBool aRestyleDescendants);
+                          bool aRestyleDescendants);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.

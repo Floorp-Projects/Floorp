@@ -84,7 +84,7 @@ public:                                                                       \
   nsresult Put(const KEY_TYPE aKey) {                                         \
     return AddEntry(aKey) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;                   \
   }                                                                           \
-  PRBool Contains(const KEY_TYPE aKey) {                                      \
+  bool Contains(const KEY_TYPE aKey) {                                      \
     return GetEntry(aKey) ? PR_TRUE : PR_FALSE;                               \
   }                                                                           \
 };

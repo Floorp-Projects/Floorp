@@ -102,7 +102,7 @@ protected:
   // This method can return null regardless of the value of aAllocate;
   // however, a null return should only be considered a failure
   // if aAllocate is true.
-  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate) = 0;
+  virtual mozilla::css::Declaration* GetCSSDeclaration(bool aAllocate) = 0;
   virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl) = 0;
   // Document that we must call BeginUpdate/EndUpdate on around the
   // calls to SetCSSDeclaration and the style rule mutation that leads
@@ -135,7 +135,7 @@ protected:
 
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue,
-                              PRBool aIsImportant);
+                              bool aIsImportant);
 
   // Prop-id based version of RemoveProperty.  Note that this does not
   // return the old value; it just does a straight removal.

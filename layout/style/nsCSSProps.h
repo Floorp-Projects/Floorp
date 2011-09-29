@@ -177,7 +177,7 @@ public:
   static nsCSSProperty LookupProperty(const nsAString& aProperty);
   static nsCSSProperty LookupProperty(const nsACString& aProperty);
 
-  static inline PRBool IsShorthand(nsCSSProperty aProperty) {
+  static inline bool IsShorthand(nsCSSProperty aProperty) {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                  "out of range");
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
@@ -203,11 +203,11 @@ public:
 
   // Get a color name for a predefined color value like buttonhighlight or activeborder
   // Sets the aStr param to the name of the propertyID
-  static PRBool GetColorName(PRInt32 aPropID, nsCString &aStr);
+  static bool GetColorName(PRInt32 aPropID, nsCString &aStr);
 
   // Find |aKeyword| in |aTable|, if found set |aValue| to its corresponding value.
   // If not found, return PR_FALSE and do not set |aValue|.
-  static PRBool FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aValue);
+  static bool FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aValue);
   // Return the first keyword in |aTable| that has the corresponding value |aValue|.
   // Return |eCSSKeyword_UNKNOWN| if not found.
   static nsCSSKeyword ValueToKeywordEnum(PRInt32 aValue, const PRInt32 aTable[]);
@@ -224,7 +224,7 @@ private:
   static const PRUint32        kFlagsTable[eCSSProperty_COUNT];
 
 public:
-  static inline PRBool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
+  static inline bool PropHasFlags(nsCSSProperty aProperty, PRUint32 aFlags)
   {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                       "out of range");
@@ -293,7 +293,7 @@ private:
   // single allocation, and is the one pointer that should be |free|d).
   static nsCSSProperty *gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
   static nsCSSProperty* gShorthandsContainingPool;
-  static PRBool BuildShorthandsContainingTable();
+  static bool BuildShorthandsContainingTable();
 
 private:
   static const size_t gPropertyCountInStruct[nsStyleStructID_Length];

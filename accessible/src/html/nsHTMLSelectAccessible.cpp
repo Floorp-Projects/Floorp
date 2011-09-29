@@ -284,7 +284,7 @@ nsHTMLSelectOptionAccessible::NativeState()
     state |= (states::FOCUSABLE | states::SELECTABLE);
 
   // Are we selected?
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(mContent));
   if (option) {
     option->GetSelected(&isSelected);
@@ -348,7 +348,7 @@ nsHTMLSelectOptionAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
   nsIContent *parentContent = mContent->GetParent();
 
   PRInt32 posInSet = 0, setSize = 0;
-  PRBool isContentFound = PR_FALSE;
+  bool isContentFound = false;
 
   PRUint32 childCount = parentContent->GetChildCount();
   for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
@@ -401,7 +401,7 @@ nsHTMLSelectOptionAccessible::DoAction(PRUint8 aIndex)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectOptionAccessible::SetSelected(PRBool aSelect)
+nsHTMLSelectOptionAccessible::SetSelected(bool aSelect)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;

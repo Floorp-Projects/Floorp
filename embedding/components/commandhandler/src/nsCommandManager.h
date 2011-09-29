@@ -76,7 +76,7 @@ public:
 protected:
 
 
-  nsresult  IsCallerChrome(PRBool *aIsCallerChrome);
+  nsresult  IsCallerChrome(bool *aIsCallerChrome);
   nsresult  GetControllerForCommand(const char * aCommand,
                                     nsIDOMWindow *aDirectedToThisWindow,
                                     nsIController** outController);

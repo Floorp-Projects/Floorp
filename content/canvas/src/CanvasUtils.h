@@ -57,7 +57,7 @@ using namespace gfx;
 
 // Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
 
-inline PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
+inline bool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                             PRInt32 realWidth, PRInt32 realHeight) {
     CheckedInt32 checked_xmost  = CheckedInt32(x) + w;
     CheckedInt32 checked_ymost  = CheckedInt32(y) + h;
@@ -74,8 +74,8 @@ inline PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
 
 void DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
                               nsIPrincipal *aPrincipal,
-                              PRBool forceWriteOnly,
-                              PRBool CORSUsed);
+                              bool forceWriteOnly,
+                              bool CORSUsed);
 
 void LogMessage (const nsCString& errorString);
 void LogMessagef (const char *fmt, ...);
@@ -100,32 +100,32 @@ nsresult MatrixToJSVal(const Matrix& matrix,
     /* Float validation stuff */
 #define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
 
-inline PRBool FloatValidate (double f1) {
+inline bool FloatValidate (double f1) {
     VALIDATE(f1);
     return PR_TRUE;
 }
 
-inline PRBool FloatValidate (double f1, double f2) {
+inline bool FloatValidate (double f1, double f2) {
     VALIDATE(f1); VALIDATE(f2);
     return PR_TRUE;
 }
 
-inline PRBool FloatValidate (double f1, double f2, double f3) {
+inline bool FloatValidate (double f1, double f2, double f3) {
     VALIDATE(f1); VALIDATE(f2); VALIDATE(f3);
     return PR_TRUE;
 }
 
-inline PRBool FloatValidate (double f1, double f2, double f3, double f4) {
+inline bool FloatValidate (double f1, double f2, double f3, double f4) {
     VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4);
     return PR_TRUE;
 }
 
-inline PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5) {
+inline bool FloatValidate (double f1, double f2, double f3, double f4, double f5) {
     VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5);
     return PR_TRUE;
 }
 
-inline PRBool FloatValidate (double f1, double f2, double f3, double f4, double f5, double f6) {
+inline bool FloatValidate (double f1, double f2, double f3, double f4, double f5, double f6) {
     VALIDATE(f1); VALIDATE(f2); VALIDATE(f3); VALIDATE(f4); VALIDATE(f5); VALIDATE(f6);
     return PR_TRUE;
 }

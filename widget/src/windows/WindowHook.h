@@ -57,7 +57,7 @@ class WindowHook {
 public:
 
   // It is expected that most callbacks will return false
-  typedef PRBool (*Callback)(void *aContext, HWND hWnd, UINT nMsg,
+  typedef bool (*Callback)(void *aContext, HWND hWnd, UINT nMsg,
                              WPARAM wParam, LPARAM lParam, LRESULT *aResult);
 
   nsresult AddHook(UINT nMsg, Callback callback, void *context);
@@ -72,15 +72,15 @@ private:
 
     CallbackData() : cb(nsnull), context(nsnull) {}
     CallbackData(Callback cb, void *ctx) : cb(cb), context(ctx) {}
-    PRBool Invoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,
+    bool Invoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,
                   LRESULT *aResult);
-    PRBool operator== (const CallbackData &rhs) const {
+    bool operator== (const CallbackData &rhs) const {
       return cb == rhs.cb && context == rhs.context;
     }
-    PRBool operator!= (const CallbackData &rhs) const {
+    bool operator!= (const CallbackData &rhs) const {
       return !(*this == rhs);
     }
-    operator PRBool () const {
+    operator bool () const {
       return !!cb;
     }
   };
@@ -92,7 +92,7 @@ private:
     CallbackDataArray monitors;
   };
 
-  PRBool Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
+  bool Notify(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam,
                 LRESULT *aResult);
 
   MessageData *Lookup(UINT nMsg);

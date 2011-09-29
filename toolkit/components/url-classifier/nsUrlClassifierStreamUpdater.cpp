@@ -149,7 +149,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
 
   // Set the appropriate content type for file/data URIs, for unit testing
   // purposes.
-  PRBool match;
+  bool match;
   if ((NS_SUCCEEDED(aUpdateUrl->SchemeIs("file", &match)) && match) ||
       (NS_SUCCEEDED(aUpdateUrl->SchemeIs("data", &match)) && match)) {
     mChannel->SetContentType(NS_LITERAL_CSTRING("application/vnd.google.safebrowsing-update"));
@@ -188,7 +188,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
                                 nsIUrlClassifierCallback *aSuccessCallback,
                                 nsIUrlClassifierCallback *aUpdateErrorCallback,
                                 nsIUrlClassifierCallback *aDownloadErrorCallback,
-                                PRBool *_retval)
+                                bool *_retval)
 {
   NS_ENSURE_ARG(aSuccessCallback);
   NS_ENSURE_ARG(aUpdateErrorCallback);
@@ -416,7 +416,7 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
                                              nsISupports* context)
 {
   nsresult rv;
-  PRBool downloadError = PR_FALSE;
+  bool downloadError = false;
   nsCAutoString strStatus;
   nsresult status = NS_OK;
 
@@ -433,7 +433,7 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
     }
 
     if (NS_SUCCEEDED(status)) {
-      PRBool succeeded = PR_FALSE;
+      bool succeeded = false;
       rv = httpChannel->GetRequestSucceeded(&succeeded);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -554,7 +554,7 @@ NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::NotifyCertProblem(nsIInterfaceRequestor *socketInfo, 
                                                 nsISSLStatus *status, 
                                                 const nsACString &targetSite, 
-                                                PRBool *_retval)
+                                                bool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;
@@ -567,7 +567,7 @@ NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::NotifySSLError(nsIInterfaceRequestor *socketInfo, 
                                              PRInt32 error, 
                                              const nsACString &targetSite, 
-                                             PRBool *_retval)
+                                             bool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;

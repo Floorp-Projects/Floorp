@@ -188,7 +188,7 @@ gfxFT2FontBase::GetFontTable(PRUint32 aTag)
         return blob;
 
     FallibleTArray<PRUint8> buffer;
-    PRBool haveTable = gfxFT2LockedFace(this).GetFontTable(aTag, buffer);
+    bool haveTable = gfxFT2LockedFace(this).GetFontTable(aTag, buffer);
 
     // Cache even when there is no table to save having to open the FT_Face
     // again.
@@ -218,7 +218,7 @@ gfxFT2FontBase::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
     return NS_lround(0x10000 * extents.x_advance);
 }
 
-PRBool
+bool
 gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
 {
     cairo_t *cr = aContext->GetCairo();

@@ -100,10 +100,10 @@ class nsSHEntryShared : public nsIBFCacheEntry,
     nsCOMPtr<nsISupports>           mOwner;
     nsISHEntry*                     mParent;
     nsCString                       mContentType;
-    PRPackedBool                    mIsFrameNavigation;
-    PRPackedBool                    mSaveLayoutState;
-    PRPackedBool                    mSticky;
-    PRPackedBool                    mDynamicallyCreated;
+    bool                            mIsFrameNavigation;
+    bool                            mSaveLayoutState;
+    bool                            mSticky;
+    bool                            mDynamicallyCreated;
     nsCOMPtr<nsISupports>           mCacheKey;
     PRUint32                        mLastTouched;
 
@@ -113,7 +113,7 @@ class nsSHEntryShared : public nsIBFCacheEntry,
     nsCOMPtr<nsIContentViewer>      mContentViewer;
     nsCOMPtr<nsIDocument>           mDocument;
     nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-    PRPackedBool                    mExpired;
+    bool                            mExpired;
     nsCOMPtr<nsISupports>           mWindowState;
     nsIntRect                       mViewerBounds;
     nsCOMPtr<nsISupportsArray>      mRefreshURIList;

@@ -58,12 +58,12 @@ public:
   /**
    * Indicates whether the list is dropped down
    */
-  virtual PRBool IsDroppedDown() = 0;
+  virtual bool IsDroppedDown() = 0;
 
   /**
    * Shows or hides the drop down
    */
-  virtual void ShowDropDown(PRBool aDoDropDown) = 0;
+  virtual void ShowDropDown(bool aDoDropDown) = 0;
 
   /**
    * Gets the Drop Down List

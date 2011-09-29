@@ -841,7 +841,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // the startupcache.  Note: as a rule, startupcache errors are not fatal
     // to loading the script, since we can always slow-load.
     
-    PRBool writeToCache = PR_FALSE;
+    bool writeToCache = false;
     StartupCache* cache = StartupCache::GetSingleton();
 
     nsCAutoString cachePath(kJSCachePrefix);

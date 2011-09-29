@@ -69,14 +69,14 @@ LayerManagerD3D9::~LayerManagerD3D9()
   Destroy();
 }
 
-PRBool
+bool
 LayerManagerD3D9::Initialize()
 {
   ScopedGfxFeatureReporter reporter("D3D9 Layers");
 
   /* XXX: this preference and blacklist code should move out of the layer manager */
-  PRBool forceAccelerate =
-    Preferences::GetBool("layers.acceleration.force-enabled", PR_FALSE);
+  bool forceAccelerate =
+    Preferences::GetBool("layers.acceleration.force-enabled", false);
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {

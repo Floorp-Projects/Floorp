@@ -83,7 +83,7 @@ SVGTransformListSMILType::Assign(nsSMILValue& aDest,
   TransformArray* dstTransforms = static_cast<TransformArray*>(aDest.mU.mPtr);
 
   // Before we assign, ensure we have sufficient memory
-  PRBool result = dstTransforms->SetCapacity(srcTransforms->Length());
+  bool result = dstTransforms->SetCapacity(srcTransforms->Length());
   NS_ENSURE_TRUE(result,NS_ERROR_OUT_OF_MEMORY);
 
   *dstTransforms = *srcTransforms;
@@ -91,7 +91,7 @@ SVGTransformListSMILType::Assign(nsSMILValue& aDest,
   return NS_OK;
 }
 
-PRBool
+bool
 SVGTransformListSMILType::IsEqual(const nsSMILValue& aLeft,
                                   const nsSMILValue& aRight) const
 {
@@ -361,7 +361,7 @@ SVGTransformListSMILType::AppendTransform(
 }
 
 // static
-PRBool
+bool
 SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
                                            nsSMILValue& aValue)
 {
@@ -381,7 +381,7 @@ SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
 }
 
 // static
-PRBool
+bool
 SVGTransformListSMILType::GetTransforms(const nsSMILValue& aValue,
                                         nsTArray<SVGTransform>& aTransforms)
 {

@@ -86,7 +86,7 @@ nsXULTemplateResultSetStorage::nsXULTemplateResultSetStorage(mozIStorageStatemen
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultSetStorage::HasMoreElements(PRBool *aResult)
+nsXULTemplateResultSetStorage::HasMoreElements(bool *aResult)
 {
     if (!mStatement) {
         *aResult = PR_FALSE;
@@ -184,9 +184,9 @@ nsXULTemplateQueryProcessorStorage::nsXULTemplateQueryProcessorStorage()
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
                                                   nsIDOMNode* aRootNode,
-                                                  PRBool aIsTrusted,
+                                                  bool aIsTrusted,
                                                   nsIXULTemplateBuilder* aBuilder,
-                                                  PRBool* aShouldDelayBuilding,
+                                                  bool* aShouldDelayBuilding,
                                                   nsISupports** aReturn)
 {
     *aReturn = nsnull;
@@ -285,7 +285,7 @@ nsXULTemplateQueryProcessorStorage::InitializeForBuilding(nsISupports* aDatasour
     if (!mStorageConnection)
         return NS_ERROR_INVALID_ARG;
 
-    PRBool ready;
+    bool ready;
     mStorageConnection->GetConnectionReady(&ready);
     if (!ready)
       return NS_ERROR_UNEXPECTED;
