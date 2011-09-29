@@ -77,7 +77,7 @@ function callHandleEvent() {
   catch(e) {
   }
   var e = { target: gXHR };
-  gXHR.onload.handleEvent(e);
+  gXHR.onload(e);
 }
 
 // Helper function for testing mar downloads that have the correct size
