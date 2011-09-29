@@ -1297,9 +1297,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Returns true if the groupItem, given "count", should stack (instead of 
   // grid).
   shouldStack: function GroupItem_shouldStack(count) {
-    if (count <= 1)
-      return false;
-
     let bb = this.getContentBounds();
     let options = {
       return: 'widthAndColumns',
