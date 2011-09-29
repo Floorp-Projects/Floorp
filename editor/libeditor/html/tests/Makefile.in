@@ -85,6 +85,8 @@ _TEST_FILES = \
 		test_bug629845.html \
 		test_bug640321.html \
 		test_bug668599.html \
+		test_bug674770.html \
+		file_bug674770.html \
 		test_bug674861.html \
 		test_bug676401.html \
 		test_bug677752.html \
