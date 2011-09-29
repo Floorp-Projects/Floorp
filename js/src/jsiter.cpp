@@ -178,6 +178,17 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 {
     JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
 
+    /*
+     * We implement __proto__ using a property on |Object.prototype|, but
+     * because __proto__ is highly deserving of removal, we don't want it to
+     * show up in property enumeration, even if only for |Object.prototype|
+     * (think introspection by Prototype-like frameworks that add methods to
+     * the built-in prototypes).  So exclude __proto__ if the object where the
+     * property was found has no [[Prototype]] and might be |Object.prototype|.
+     */
+    if (JS_UNLIKELY(!pobj->getProto() && JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)))
+        return true;
+
     if (!(flags & JSITER_OWNONLY) || pobj->isProxy() || pobj->getOps()->enumerate) {
         /* If we've already seen this, we definitely won't add it. */
         IdSet::AddPtr p = ht.lookupForAdd(id);
