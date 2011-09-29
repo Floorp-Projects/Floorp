@@ -157,6 +157,7 @@ nsSVGMaskElement::IsAttributeMapped(const nsIAtom* name) const
     sFiltersMap,
     sFontSpecificationMap,
     sGradientStopMap,
+    sGraphicsMap,
     sMarkersMap,
     sTextContentElementsMap,
     sViewportsMap
