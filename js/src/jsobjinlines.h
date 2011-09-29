@@ -181,8 +181,11 @@ JSObject::finalize(JSContext *cx)
 inline bool
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
-    init(cx, &js::CallClass, &js::types::emptyTypeObject, parent, NULL, false);
+    init(cx, &js::types::emptyTypeObject, parent, NULL, false);
     setMap(bindings.lastShape());
+
+    JS_ASSERT(isCall());
+    JS_ASSERT(!inDictionaryMode());
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
@@ -200,11 +203,12 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
 inline bool
 JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
-    init(cx, &js::BlockClass, type, NULL, frame, false);
+    init(cx, type, NULL, frame, false);
 
-    /* Cloned blocks copy their prototype's map; it had better be shareable. */
-    JS_ASSERT(!getProto()->inDictionaryMode());
     setMap(getProto()->lastProp);
+
+    JS_ASSERT(!inDictionaryMode());
+    JS_ASSERT(isClonedBlock());
 
     if (lastProp->extensibleParents())
         return generateOwnShape(cx);
@@ -767,13 +771,10 @@ JSObject::setType(js::types::TypeObject *newType)
 }
 
 inline void
-JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
+JSObject::init(JSContext *cx, js::types::TypeObject *type,
                JSObject *parent, void *priv, bool denseArray)
 {
-    clasp = aclasp;
     flags = capacity << FIXED_SLOTS_SHIFT;
-
-    JS_ASSERT(denseArray == (aclasp == &js::ArrayClass));
 
     privateData = priv;
 
@@ -813,15 +814,15 @@ JSObject::initSharingEmptyShape(JSContext *cx,
                                 void *privateValue,
                                 js::gc::AllocKind kind)
 {
-    init(cx, aclasp, type, parent, privateValue, false);
-
-    JS_ASSERT(!isDenseArray());
+    init(cx, type, parent, privateValue, false);
 
     js::EmptyShape *empty = type->getEmptyShape(cx, aclasp, kind);
     if (!empty)
         return false;
 
     setMap(empty);
+
+    JS_ASSERT(!isDenseArray());
     return true;
 }
 
@@ -1124,24 +1125,25 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
     /* Share proto's emptyShape only if obj is similar to proto. */
     js::EmptyShape *empty = NULL;
 
-    uint32 freeslot = JSSLOT_FREE(clasp);
-    if (freeslot > obj->numSlots() && !obj->allocSlots(cx, freeslot))
-        goto bad;
-
     if (type->canProvideEmptyShape(clasp))
         empty = type->getEmptyShape(cx, clasp, kind);
     else
         empty = js::EmptyShape::create(cx, clasp);
-    if (!empty)
-        goto bad;
+    if (!empty) {
+        JS_ASSERT(obj->isNewborn());
+        return false;
+    }
 
     obj->setMap(empty);
-    return true;
 
-  bad:
-    /* The GC nulls map initially. It should still be null on error. */
-    JS_ASSERT(obj->isNewborn());
-    return false;
+    uint32 freeslot = JSSLOT_FREE(clasp);
+    if (freeslot > obj->numSlots() && !obj->allocSlots(cx, freeslot)) {
+        obj->setMap(NULL);
+        JS_ASSERT(obj->isNewborn());
+        return false;
+    }
+
+    return true;
 }
 
 static inline bool
@@ -1212,7 +1214,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
      * the parent of the prototype's constructor.
      */
     bool denseArray = (clasp == &ArrayClass);
-    obj->init(cx, clasp, type, parent, NULL, denseArray);
+    obj->init(cx, type, parent, NULL, denseArray);
 
     JS_ASSERT(type->canProvideEmptyShape(clasp));
     js::EmptyShape *empty = type->getEmptyShape(cx, clasp, kind);
@@ -1375,7 +1377,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->init(cx, clasp, type,
+    obj->init(cx, type,
               (!parent && proto) ? proto->getParent() : parent,
               NULL, clasp == &ArrayClass);
 
@@ -1462,7 +1464,7 @@ NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->init(cx, &ObjectClass, type,
+    obj->init(cx, type,
               (!parent && type->proto) ? type->proto->getParent() : parent,
               NULL, false);
 
@@ -1607,6 +1609,26 @@ inline JSObject *
 js_GetProtoIfDenseArray(JSObject *obj)
 {
     return obj->isDenseArray() ? obj->getProto() : obj;
+}
+
+inline js::Class *
+JSObject::getClass() const {
+    return lastProp->getClass();
+}
+
+inline JSClass *
+JSObject::getJSClass() const {
+    return Jsvalify(getClass());
+}
+
+inline bool
+JSObject::hasClass(const js::Class *c) const {
+    return getClass() == c;
+}
+
+inline const js::ObjectOps *
+JSObject::getOps() const {
+    return &getClass()->ops;
 }
 
 #endif /* jsobjinlines_h___ */

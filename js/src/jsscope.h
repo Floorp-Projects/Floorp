@@ -764,6 +764,9 @@ struct Shape : public js::gc::Cell
     void finalize(JSContext *cx);
     void removeChild(js::Shape *child);
     void removeChildSlowly(js::Shape *child);
+
+    /* For JIT usage */
+    static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
 };
 
 struct EmptyShape : public js::Shape
@@ -792,8 +795,7 @@ struct EmptyShape : public js::Shape
         return shape;
     }
 
-    static inline EmptyShape *getEmptyArgumentsShape(JSContext *cx);
-
+    static inline EmptyShape *getEmptyArgumentsShape(JSContext *cx, bool strict);
     static inline EmptyShape *getEmptyBlockShape(JSContext *cx);
     static inline EmptyShape *getEmptyCallShape(JSContext *cx);
     static inline EmptyShape *getEmptyDeclEnvShape(JSContext *cx);

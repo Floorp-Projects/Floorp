@@ -5609,7 +5609,7 @@ JSObject::makeLazyType(JSContext *cx)
         type->markUnknown(cx);
 #endif
 
-    if (clasp->ext.equality)
+    if (getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
     if (type->unknownProperties()) {
@@ -5662,7 +5662,7 @@ JSObject::makeNewType(JSContext *cx, JSFunction *fun, bool unknown)
         type->flags |= OBJECT_FLAG_UNKNOWN_MASK;
 #endif
 
-    if (clasp->ext.equality)
+    if (getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
     /*

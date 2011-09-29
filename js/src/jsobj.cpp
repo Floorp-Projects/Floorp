@@ -3479,7 +3479,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 
     StackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, &WithClass, type, parent, priv, false);
+    obj->init(cx, type, parent, priv, false);
 
     EmptyShape *emptyWithShape = EmptyShape::getEmptyWithShape(cx);
     if (!emptyWithShape)
@@ -3513,7 +3513,7 @@ js_NewBlockObject(JSContext *cx)
     EmptyShape *emptyBlockShape = EmptyShape::getEmptyBlockShape(cx);
     if (!emptyBlockShape)
         return NULL;
-    blockObj->init(cx, &BlockClass, &emptyTypeObject, NULL, NULL, false);
+    blockObj->init(cx, &emptyTypeObject, NULL, NULL, false);
     blockObj->setMap(emptyBlockShape);
 
     return blockObj;

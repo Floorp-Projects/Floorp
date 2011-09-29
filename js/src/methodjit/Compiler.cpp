@@ -123,6 +123,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     rootedObjects(CompilerAllocPolicy(cx, *thisFromCtor())),
+    denseArrayShape(NULL),
     stubcc(cx, *thisFromCtor(), frame),
     debugMode_(cx->compartment->debugMode()),
 #if defined JS_TRACER
@@ -996,6 +997,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
     }
     jit->pcLengths = pcLengths;
+    jit->denseArrayShape = denseArrayShape;
 
     /*
      * WARNING: mics(), callICs() et al depend on the ordering of these
@@ -1313,10 +1315,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             to.inlineTypeGuard = inlineTypeGuard;
             JS_ASSERT(to.inlineTypeGuard == inlineTypeGuard);
         }
-        int inlineClaspGuard = fullCode.locationOf(from.claspGuard) -
+        int inlineShapeGuard = fullCode.locationOf(from.shapeGuard) -
                                fullCode.locationOf(from.fastPathStart);
-        to.inlineClaspGuard = inlineClaspGuard;
-        JS_ASSERT(to.inlineClaspGuard == inlineClaspGuard);
+        to.inlineShapeGuard = inlineShapeGuard;
+        JS_ASSERT(to.inlineShapeGuard == inlineShapeGuard);
 
         stubCode.patch(from.paramAddr, &to);
     }
@@ -1343,10 +1345,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         else
             to.keyReg = from.key.reg();
 
-        int inlineClaspGuard = fullCode.locationOf(from.claspGuard) -
+        int inlineShapeGuard = fullCode.locationOf(from.shapeGuard) -
                                fullCode.locationOf(from.fastPathStart);
-        to.inlineClaspGuard = inlineClaspGuard;
-        JS_ASSERT(to.inlineClaspGuard == inlineClaspGuard);
+        to.inlineShapeGuard = inlineShapeGuard;
+        JS_ASSERT(to.inlineShapeGuard == inlineShapeGuard);
 
         int inlineHoleGuard = fullCode.locationOf(from.holeGuard) -
                                fullCode.locationOf(from.fastPathStart);
@@ -3320,6 +3322,16 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
 {
     JS_ASSERT(IsLowerableFunCallOrApply(PC));
 
+    RegisterID temp;
+    Registers tempRegs(Registers::AvailRegs);
+    if (origCalleeType.isSet())
+        tempRegs.takeReg(origCalleeType.reg());
+    tempRegs.takeReg(origCalleeData);
+    if (origThisType.isSet())
+        tempRegs.takeReg(origThisType.reg());
+    tempRegs.takeReg(origThisData);
+    temp = tempRegs.takeAnyReg().reg();
+
     /*
      * if (origCallee.isObject() &&
      *     origCallee.toObject().isFunction &&
@@ -3328,7 +3340,7 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
     MaybeJump isObj;
     if (origCalleeType.isSet())
         isObj = masm.testObject(Assembler::NotEqual, origCalleeType.reg());
-    Jump isFun = masm.testFunction(Assembler::NotEqual, origCalleeData);
+    Jump isFun = masm.testFunction(Assembler::NotEqual, origCalleeData, temp);
     masm.loadObjPrivate(origCalleeData, origCalleeData);
     Native native = *PC == JSOP_FUNCALL ? js_fun_call : js_fun_apply;
     Jump isNative = masm.branchPtr(Assembler::NotEqual,
@@ -3601,14 +3613,15 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
         stubcc.linkExitDirect(j, stubcc.masm.label());
         callIC.slowPathStart = stubcc.masm.label();
 
+        RegisterID tmp = tempRegs.takeAnyReg().reg();
+
         /*
          * Test if the callee is even a function. If this doesn't match, we
          * take a _really_ slow path later.
          */
-        Jump notFunction = stubcc.masm.testFunction(Assembler::NotEqual, icCalleeData);
+        Jump notFunction = stubcc.masm.testFunction(Assembler::NotEqual, icCalleeData, tmp);
 
         /* Test if the function is scripted. */
-        RegisterID tmp = tempRegs.takeAnyReg().reg();
         stubcc.masm.loadObjPrivate(icCalleeData, funPtrReg);
         stubcc.masm.load16(Address(funPtrReg, offsetof(JSFunction, flags)), tmp);
         stubcc.masm.and32(Imm32(JSFUN_KINDMASK), tmp);
@@ -5740,7 +5753,7 @@ mjit::Compiler::iterNext(ptrdiff_t offset)
     frame.unpinReg(reg);
 
     /* Test clasp */
-    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, &IteratorClass);
+    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, T1, &IteratorClass);
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
@@ -5795,7 +5808,7 @@ mjit::Compiler::iterMore(jsbytecode *target)
     RegisterID tempreg = frame.allocReg();
 
     /* Test clasp */
-    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, &IteratorClass);
+    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, tempreg, &IteratorClass);
     stubcc.linkExitForBranch(notFast);
 
     /* Get private from iter obj. */
@@ -5834,7 +5847,7 @@ mjit::Compiler::iterEnd()
     frame.unpinReg(reg);
 
     /* Test clasp */
-    Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, &IteratorClass);
+    Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, T1, &IteratorClass);
     stubcc.linkExit(notIterator, Uses(1));
 
     /* Get private from iter obj. */
@@ -6094,6 +6107,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     /* If the callee is not an object, jump to the inline fast path. */
     MaybeRegisterID typeReg = frame.maybePinType(fval);
     RegisterID objReg = frame.copyDataIntoReg(fval);
+    RegisterID tempReg = frame.allocReg();
 
     MaybeJump isNotObj;
     if (!fval->isType(JSVAL_TYPE_OBJECT)) {
@@ -6104,7 +6118,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     /*
      * If the callee is not a function, jump to OOL slow path.
      */
-    Jump notFunction = masm.testFunction(Assembler::NotEqual, objReg);
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, objReg, tempReg);
     stubcc.linkExit(notFunction, Uses(1));
 
     /*
@@ -6115,6 +6129,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     Jump globalMismatch = masm.branchPtr(Assembler::NotEqual, objReg, ImmPtr(globalObj));
     stubcc.linkExit(globalMismatch, Uses(1));
     frame.freeReg(objReg);
+    frame.freeReg(tempReg);
 
     /* OOL stub call path. */
     stubcc.leave();
@@ -6292,9 +6307,13 @@ mjit::Compiler::jsop_instanceof()
     frame.forgetMismatchedObject(lhs);
     frame.forgetMismatchedObject(rhs);
 
+    RegisterID tmp = frame.allocReg();
     RegisterID obj = frame.tempRegForData(rhs);
-    Jump notFunction = masm.testFunction(Assembler::NotEqual, obj);
+
+    Jump notFunction = masm.testFunction(Assembler::NotEqual, obj, tmp);
     stubcc.linkExit(notFunction, Uses(2));
+
+    frame.freeReg(tmp);
 
     /* Test for bound functions. */
     Jump isBound = masm.branchTest32(Assembler::NonZero, Address(obj, offsetof(JSObject, flags)),

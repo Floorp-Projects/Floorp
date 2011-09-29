@@ -476,7 +476,8 @@ struct JS_FRIEND_API(JSCompartment) {
      * Runtime-shared empty scopes for well-known built-in objects that lack
      * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
      */
-    js::EmptyShape               *emptyArgumentsShape;
+    js::EmptyShape               *emptyStrictArgumentsShape;
+    js::EmptyShape               *emptyNormalArgumentsShape;
     js::EmptyShape               *emptyBlockShape;
     js::EmptyShape               *emptyCallShape;
     js::EmptyShape               *emptyDeclEnvShape;

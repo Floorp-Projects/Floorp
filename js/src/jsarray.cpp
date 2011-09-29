@@ -1296,6 +1296,21 @@ JSObject::makeDenseArraySlow(JSContext *cx)
                         OBJECT_FLAG_NON_PACKED_ARRAY |
                         OBJECT_FLAG_NON_DENSE_ARRAY);
     markDenseArrayNotPacked(cx);
+    backfillDenseArrayHoles(cx);
+
+    uint32 arrayCapacity = getDenseArrayCapacity();
+    uint32 arrayInitialized = getDenseArrayInitializedLength();
+
+    /*
+     * Adjust the slots to account for the different layout between dense
+     * arrays and other objects. The slots must be dynamic, and the fixed slots
+     * are now available for newly added properties.
+     */
+    if (denseArrayHasInlineSlots()) {
+        if (!allocSlots(cx, numSlots()))
+            return false;
+        JS_ASSERT(!denseArrayHasInlineSlots());
+    }
 
     /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
@@ -1309,25 +1324,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     if (!InitScopeForObject(cx, this, &SlowArrayClass, getProto()->getNewType(cx), kind))
         return false;
 
-    backfillDenseArrayHoles(cx);
-
-    uint32 arrayCapacity = getDenseArrayCapacity();
-    uint32 arrayInitialized = getDenseArrayInitializedLength();
-
-    /*
-     * Adjust the slots to account for the different layout between dense
-     * arrays and other objects. The slots must be dynamic, and the fixed slots
-     * are now available for newly added properties.
-     */
-    if (denseArrayHasInlineSlots()) {
-        if (!allocSlots(cx, numSlots())) {
-            setMap(oldMap);
-            return false;
-        }
-        JS_ASSERT(!denseArrayHasInlineSlots());
-    }
     capacity = numFixedSlots() + arrayCapacity;
-    clasp = &SlowArrayClass;
 
     /*
      * Root all values in the array during conversion, as SlowArrayClass only
@@ -1347,7 +1344,6 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         setMap(oldMap);
         capacity = arrayCapacity;
         initializedLength = arrayInitialized;
-        clasp = &ArrayClass;
         return false;
     }
 
@@ -1370,7 +1366,6 @@ JSObject::makeDenseArraySlow(JSContext *cx)
             setMap(oldMap);
             capacity = arrayCapacity;
             initializedLength = arrayInitialized;
-            clasp = &ArrayClass;
             return false;
         }
 
