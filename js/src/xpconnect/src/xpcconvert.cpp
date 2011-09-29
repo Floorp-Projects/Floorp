@@ -269,10 +269,10 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     case nsXPTType::T_DOUBLE: *d = DOUBLE_TO_JSVAL(*((double*)s));                   break;
     case nsXPTType::T_BOOL  :
         {
-            PRBool b = *((PRBool*)s);
+            bool b = *((bool*)s);
             
             NS_WARN_IF_FALSE(b == 1 || b == 0,
-                    "Passing a malformed PRBool through XPConnect");
+                    "Passing a malformed bool through XPConnect");
             *d = BOOLEAN_TO_JSVAL(!!b);
             break;
         }
@@ -373,7 +373,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     break;
 
 #ifdef STRICT_CHECK_OF_UNICODE
-                PRBool isAscii = PR_TRUE;
+                bool isAscii = true;
                 char* t;
                 for(t=p; *t && isAscii ; t++) {
                   if(ILLEGAL_CHAR_RANGE(*t))
@@ -628,7 +628,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         break;
     case nsXPTType::T_BOOL   :
         JS_ValueToBoolean(cx, s, &tb);
-        *((PRBool*)d) = tb;
+        *((bool*)d) = tb;
         break;
     case nsXPTType::T_CHAR   :
         {
@@ -840,7 +840,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             const jschar* chars=nsnull;
             if(nsnull != (chars = JS_GetStringCharsZ(cx, str)))
             {
-                PRBool legalRange = PR_TRUE;
+                bool legalRange = true;
                 int len = JS_GetStringLength(str);
                 const jschar* t;
                 PRInt32 i=0;
@@ -1114,8 +1114,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                      xpcObjectHelper& aHelper,
                                      const nsID* iid,
                                      XPCNativeInterface** Interface,
-                                     PRBool allowNativeWrapper,
-                                     PRBool isGlobal,
+                                     bool allowNativeWrapper,
+                                     bool isGlobal,
                                      nsresult* pErr)
 {
     NS_ASSERTION(!Interface || iid,
@@ -1155,7 +1155,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // object will create (and fill the cache) from its PreCreate call.
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
-    PRBool tryConstructSlimWrapper = PR_FALSE;
+    bool tryConstructSlimWrapper = false;
     JSObject *flat;
     if(cache)
     {
@@ -1889,7 +1889,7 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
     case nsXPTType::T_U64           : POPULATE(uint64);         break;
     case nsXPTType::T_FLOAT         : POPULATE(float);          break;
     case nsXPTType::T_DOUBLE        : POPULATE(double);         break;
-    case nsXPTType::T_BOOL          : POPULATE(PRBool);         break;
+    case nsXPTType::T_BOOL          : POPULATE(bool);         break;
     case nsXPTType::T_CHAR          : POPULATE(char);           break;
     case nsXPTType::T_WCHAR         : POPULATE(jschar);         break;
     case nsXPTType::T_VOID          : NS_ERROR("bad type"); goto failure;
@@ -2022,7 +2022,7 @@ fill_array:
     case nsXPTType::T_U64           : POPULATE(na, uint64);         break;
     case nsXPTType::T_FLOAT         : POPULATE(na, float);          break;
     case nsXPTType::T_DOUBLE        : POPULATE(na, double);         break;
-    case nsXPTType::T_BOOL          : POPULATE(na, PRBool);         break;
+    case nsXPTType::T_BOOL          : POPULATE(na, bool);         break;
     case nsXPTType::T_CHAR          : POPULATE(na, char);           break;
     case nsXPTType::T_WCHAR         : POPULATE(na, jschar);         break;
     case nsXPTType::T_VOID          : NS_ERROR("bad type"); goto failure;

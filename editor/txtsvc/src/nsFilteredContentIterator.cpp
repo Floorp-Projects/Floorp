@@ -135,7 +135,7 @@ nsFilteredContentIterator::Init(nsIRange* aRange)
 
 //------------------------------------------------------------
 nsresult 
-nsFilteredContentIterator::SwitchDirections(PRPackedBool aChangeToForward)
+nsFilteredContentIterator::SwitchDirections(bool aChangeToForward)
 {
   nsINode *node = mCurrentIterator->GetCurrentNode();
 
@@ -184,7 +184,7 @@ nsFilteredContentIterator::First()
   nsINode *currentNode = mCurrentIterator->GetCurrentNode();
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(currentNode));
 
-  PRPackedBool didCross;
+  bool didCross;
   CheckAdvNode(node, didCross, eForward);
 }
 
@@ -215,7 +215,7 @@ nsFilteredContentIterator::Last()
   nsINode *currentNode = mCurrentIterator->GetCurrentNode();
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(currentNode));
 
-  PRPackedBool didCross;
+  bool didCross;
   CheckAdvNode(node, didCross, eBackward);
 }
 
@@ -249,8 +249,8 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
 // ContentIsInTraversalRange: returns true if content is visited during
 // the traversal of the range in the specified mode.
 //
-static PRBool
-ContentIsInTraversalRange(nsIContent *aContent,   PRBool aIsPreMode,
+static bool
+ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
                           nsIDOMNode *aStartNode, PRInt32 aStartOffset,
                           nsIDOMNode *aEndNode,   PRInt32 aEndOffset)
 {
@@ -277,8 +277,8 @@ ContentIsInTraversalRange(nsIContent *aContent,   PRBool aIsPreMode,
   return (startRes <= 0) && (endRes >= 0);
 }
 
-static PRBool
-ContentIsInTraversalRange(nsIDOMNSRange *aRange, nsIDOMNode* aNextNode, PRBool aIsPreMode)
+static bool
+ContentIsInTraversalRange(nsIDOMNSRange *aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
 {
   nsCOMPtr<nsIContent>  content(do_QueryInterface(aNextNode));
   nsCOMPtr<nsIDOMRange> range(do_QueryInterface(aRange));
@@ -312,7 +312,7 @@ nsFilteredContentIterator::AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode,
   if (nextNode) {
     // If we got here, that means we found the nxt/prv node
     // make sure it is in our DOMRange
-    PRBool intersects = ContentIsInTraversalRange(mRange, nextNode, aDir == eForward);
+    bool intersects = ContentIsInTraversalRange(mRange, nextNode, aDir == eForward);
     if (intersects) {
       aNewNode = nextNode;
       NS_ADDREF(aNewNode);
@@ -325,7 +325,7 @@ nsFilteredContentIterator::AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode,
     NS_ASSERTION(parent, "parent can't be NULL");
 
     // Make sure the parent is in the DOMRange before going further
-    PRBool intersects = ContentIsInTraversalRange(mRange, nextNode, aDir == eForward);
+    bool intersects = ContentIsInTraversalRange(mRange, nextNode, aDir == eForward);
     if (intersects) {
       // Now find the nxt/prv node after/before this node
       nsresult rv = AdvanceNode(parent, aNewNode, aDir);
@@ -345,14 +345,14 @@ nsFilteredContentIterator::AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode,
 //------------------------------------------------------------
 // Helper function to see if the next/prev node should be skipped
 void
-nsFilteredContentIterator::CheckAdvNode(nsIDOMNode* aNode, PRPackedBool& aDidSkip, eDirectionType aDir)
+nsFilteredContentIterator::CheckAdvNode(nsIDOMNode* aNode, bool& aDidSkip, eDirectionType aDir)
 {
   aDidSkip      = PR_FALSE;
   mIsOutOfRange = PR_FALSE;
 
   if (aNode && mFilter) {
     nsCOMPtr<nsIDOMNode> currentNode = aNode;
-    PRBool skipIt;
+    bool skipIt;
     while (1) {
       nsresult rv = mFilter->Skip(aNode, &skipIt);
       if (NS_SUCCEEDED(rv) && skipIt) {
@@ -451,7 +451,7 @@ nsFilteredContentIterator::GetCurrentNode()
   return mCurrentIterator->GetCurrentNode();
 }
 
-PRBool
+bool
 nsFilteredContentIterator::IsDone()
 {
   if (mIsOutOfRange || !mCurrentIterator) {

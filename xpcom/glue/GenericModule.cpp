@@ -115,7 +115,7 @@ GenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
 }
 
 NS_IMETHODIMP
-GenericModule::CanUnload(nsIComponentManager* aCompMgr, PRBool* aResult)
+GenericModule::CanUnload(nsIComponentManager* aCompMgr, bool* aResult)
 {
   NS_ERROR("Nobody should ever call CanUnload!");
   *aResult = false;

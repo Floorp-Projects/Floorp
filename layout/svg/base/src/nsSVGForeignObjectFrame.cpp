@@ -370,7 +370,7 @@ nsSVGForeignObjectFrame::InitialUpdate()
 void
 nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  PRBool reflow = PR_FALSE;
+  bool reflow = false;
 
   if (aFlags & TRANSFORM_CHANGED) {
     // In an ideal world we would reflow when our CTM changes. This is because

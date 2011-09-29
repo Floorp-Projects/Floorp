@@ -80,7 +80,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    PRBool IsCached(nsIURI* aURI) {
+    bool IsCached(nsIURI* aURI) {
         return GetPrototype(aURI) != nsnull;
     }
     void AbortCaching();
@@ -89,7 +89,7 @@ public:
     /**
      * Whether the prototype cache is enabled.
      */
-    PRBool IsEnabled();
+    bool IsEnabled();
 
     /**
      * Flush the cache; remove all XUL prototype documents, style
@@ -145,7 +145,7 @@ public:
     nsresult FinishInputStream(nsIURI* aURI);
     nsresult GetOutputStream(nsIURI* aURI, nsIObjectOutputStream** objectOutput);
     nsresult FinishOutputStream(nsIURI* aURI);
-    nsresult HasData(nsIURI* aURI, PRBool* exists);
+    nsresult HasData(nsIURI* aURI, bool* exists);
 
     static StartupCache* GetStartupCache();
 

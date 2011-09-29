@@ -539,7 +539,7 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   if (!editor) {
     return NS_OK;
   }
-  PRBool isEditable;
+  bool isEditable;
   editor->GetIsDocumentEditable(&isEditable);
   if (isEditable) {
     NS_ADDREF(*aEditor = editor);
@@ -578,7 +578,7 @@ nsDocAccessible::GetAccessible(nsINode* aNode) const
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode
 
-PRBool
+bool
 nsDocAccessible::Init()
 {
   NS_LOG_ACCDOCCREATE_FOR("document initialize", mDocument, this)
@@ -723,7 +723,7 @@ nsresult nsDocAccessible::AddEventListeners()
   PRInt32 itemType;
   docShellTreeItem->GetItemType(&itemType);
 
-  PRBool isContent = (itemType == nsIDocShellTreeItem::typeContent);
+  bool isContent = (itemType == nsIDocShellTreeItem::typeContent);
 
   if (isContent) {
     // We're not an editor yet, but we might become one
@@ -1034,7 +1034,7 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   if (aAttribute == nsGkAtoms::aria_busy) {
-    PRBool isOn = aContent->AttrValueIs(aNameSpaceID, aAttribute,
+    bool isOn = aContent->AttrValueIs(aNameSpaceID, aAttribute,
                                         nsGkAtoms::_true, eCaseMatters);
     nsRefPtr<AccEvent> event = new AccStateChangeEvent(aContent, states::BUSY, isOn);
     FireDelayedAccessibleEvent(event);

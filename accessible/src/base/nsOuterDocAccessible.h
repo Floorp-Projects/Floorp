@@ -72,8 +72,8 @@ public:
                                      EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
-  virtual PRBool AppendChild(nsAccessible *aAccessible);
-  virtual PRBool RemoveChild(nsAccessible *aAccessible);
+  virtual bool AppendChild(nsAccessible *aAccessible);
+  virtual bool RemoveChild(nsAccessible *aAccessible);
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

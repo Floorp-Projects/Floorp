@@ -187,7 +187,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
-  PRBool hasImageAttr = mContent->GetAttr(kNameSpaceID_None,
+  bool hasImageAttr = mContent->GetAttr(kNameSpaceID_None,
                                           nsWidgetAtoms::image,
                                           imageURIString);
 
@@ -324,7 +324,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     // position that it will be displayed when the real icon is loaded, and
     // prevents it from jumping around or looking misaligned.
 
-    static PRBool sInitializedPlaceholder;
+    static bool sInitializedPlaceholder;
     static NSImage* sPlaceholderIconImage;
     if (!sInitializedPlaceholder) {
       sInitializedPlaceholder = PR_TRUE;
@@ -397,7 +397,7 @@ nsMenuItemIconX::OnStartFrame(imgIRequest* aRequest, PRUint32 aFrame)
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnDataAvailable(imgIRequest*     aRequest,
-                                 PRBool           aCurrentFrame,
+                                 bool             aCurrentFrame,
                                  const nsIntRect* aRect)
 {
   return NS_OK;
@@ -458,7 +458,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  PRBool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
+  bool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
                             mImageRegionRect.width == origWidth && mImageRegionRect.height == origHeight);
   
   CGImageRef finalImage = NULL;
@@ -546,7 +546,7 @@ nsMenuItemIconX::OnStopDecode(imgIRequest*     aRequest,
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStopRequest(imgIRequest* aRequest,
-                              PRBool       aIsLastPart)
+                              bool         aIsLastPart)
 {
   if (mIconRequest && mIconRequest == aRequest) {
     mIconRequest->Cancel(NS_BINDING_ABORTED);

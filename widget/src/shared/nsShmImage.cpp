@@ -55,8 +55,8 @@ using namespace mozilla::ipc;
 
 // If XShm isn't available to our client, we'll try XShm once, fail,
 // set this to false and then never try again.
-static PRBool gShmAvailable = PR_TRUE;
-PRBool nsShmImage::UseShm()
+static bool gShmAvailable = true;
+bool nsShmImage::UseShm()
 {
     return gfxPlatform::GetPlatform()->
         ScreenReferenceSurface()->GetType() == gfxASurface::SurfaceTypeImage

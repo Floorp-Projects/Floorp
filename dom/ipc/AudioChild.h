@@ -64,7 +64,7 @@ class AudioChild : public PAudioChild
     PRInt64 GetLastKnownPosition();
     PRInt64 GetLastKnownPositionTimestamp();
 
-    PRBool IsIPCOpen() { return mIPCOpen; };
+    bool IsIPCOpen() { return mIPCOpen; };
  private:
     nsAutoRefCnt mRefCnt;
     NS_DECL_OWNINGTHREAD
@@ -72,8 +72,8 @@ class AudioChild : public PAudioChild
     PRInt64 mLastPositionTimestamp;
     PRInt32 mMinWriteSize;
     mozilla::ReentrantMonitor mAudioReentrantMonitor;
-    PRPackedBool mIPCOpen;
-    PRPackedBool mDrained;
+    bool mIPCOpen;
+    bool mDrained;
 };
 
 } // namespace dom

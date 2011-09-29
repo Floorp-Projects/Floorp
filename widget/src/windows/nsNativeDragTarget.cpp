@@ -129,7 +129,7 @@ nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect,
 {
   // If a window is disabled or a modal window is on top of 
   // it (which implies it is disabled), then we should not allow dropping.
-  PRBool isEnabled;
+  bool isEnabled;
   if (NS_SUCCEEDED(mWindow->IsEnabled(&isEnabled)) && !isEnabled) {
     *pdwEffect = DROPEFFECT_NONE;
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_NONE;
@@ -168,7 +168,7 @@ nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect,
 }
 
 inline
-PRBool
+bool
 IsKeyDown(char key)
 {
   return GetKeyState(key) < 0;
@@ -230,7 +230,7 @@ nsNativeDragTarget::ProcessDrag(PRUint32     aEventType,
   if (aEventType != NS_DRAGDROP_DROP) {
     // Get the cached drag effect from the drag service, the data member should
     // have been set by whoever handled the nsGUIEvent or nsIDOMEvent on drags.
-    PRBool canDrop;
+    bool canDrop;
     currSession->GetCanDrop(&canDrop);
     if (!canDrop) {
       *pdwEffect = DROPEFFECT_NONE;

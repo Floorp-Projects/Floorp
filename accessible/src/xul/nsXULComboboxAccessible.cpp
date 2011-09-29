@@ -88,7 +88,7 @@ nsXULComboboxAccessible::NativeState()
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
-    PRBool isOpen;
+    bool isOpen;
     menuList->GetOpen(&isOpen);
     if (isOpen) {
       states |= states::EXPANDED;
@@ -140,7 +140,7 @@ nsXULComboboxAccessible::Description(nsString& aDescription)
   }
 }
 
-PRBool
+bool
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
   if (mContent->NodeInfo()->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL) ||
@@ -178,7 +178,7 @@ nsXULComboboxAccessible::DoAction(PRUint8 aIndex)
   if (!menuList) {
     return NS_ERROR_FAILURE;
   }
-  PRBool isDroppedDown;
+  bool isDroppedDown;
   menuList->GetOpen(&isDroppedDown);
   return menuList->SetOpen(!isDroppedDown);
 }
@@ -202,7 +202,7 @@ nsXULComboboxAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (!menuList) {
     return NS_ERROR_FAILURE;
   }
-  PRBool isDroppedDown;
+  bool isDroppedDown;
   menuList->GetOpen(&isDroppedDown);
   if (isDroppedDown)
     aName.AssignLiteral("close"); 
@@ -240,7 +240,7 @@ nsXULComboboxAccessible::AreItemsOperable() const
     nsCOMPtr<nsIAutoCompleteInput> autoCompleteInputElm =
       do_QueryInterface(mContent);
     if (autoCompleteInputElm) {
-      PRBool isOpen = PR_FALSE;
+      bool isOpen = false;
       autoCompleteInputElm->GetPopupOpen(&isOpen);
       return isOpen;
     }
@@ -249,7 +249,7 @@ nsXULComboboxAccessible::AreItemsOperable() const
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = do_QueryInterface(mContent);
   if (menuListElm) {
-    PRBool isOpen = PR_FALSE;
+    bool isOpen = false;
     menuListElm->GetOpen(&isOpen);
     return isOpen;
   }

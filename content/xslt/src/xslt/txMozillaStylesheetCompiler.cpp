@@ -112,7 +112,7 @@ public:
 
     // nsIContentSink
     NS_IMETHOD WillParse(void) { return NS_OK; }
-    NS_IMETHOD DidBuildModel(PRBool aTerminated);
+    NS_IMETHOD DidBuildModel(bool aTerminated);
     NS_IMETHOD WillInterrupt(void) { return NS_OK; }
     NS_IMETHOD WillResume(void) { return NS_OK; }
     NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
@@ -123,7 +123,7 @@ public:
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;
     nsCOMPtr<nsIStreamListener> mListener;
-    PRPackedBool mCheckedForXML;
+    bool mCheckedForXML;
 
 protected:
     // This exists solely to suppress a warning from nsDerivedSafe
@@ -234,7 +234,7 @@ NS_IMETHODIMP
 txStylesheetSink::ReportError(const PRUnichar *aErrorText,
                               const PRUnichar *aSourceText,
                               nsIScriptError *aError,
-                              PRBool *_retval)
+                              bool *_retval)
 {
     NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
@@ -247,7 +247,7 @@ txStylesheetSink::ReportError(const PRUnichar *aErrorText,
 }
 
 NS_IMETHODIMP 
-txStylesheetSink::DidBuildModel(PRBool aTerminated)
+txStylesheetSink::DidBuildModel(bool aTerminated)
 {  
     return mCompiler->doneLoading();
 }
@@ -315,7 +315,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     // sniffing themselves.
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-    PRBool sniff;
+    bool sniff;
     if (NS_SUCCEEDED(uri->SchemeIs("file", &sniff)) && sniff &&
         contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
         nsCOMPtr<nsIStreamConverterService> serv =
@@ -340,7 +340,7 @@ NS_IMETHODIMP
 txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                 nsresult aStatusCode)
 {
-    PRBool success = PR_TRUE;
+    bool success = true;
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
     if (httpChannel) {

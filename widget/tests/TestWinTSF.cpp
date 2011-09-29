@@ -127,34 +127,34 @@ public:
   ~TestApp() {}
 
   nsresult Run(void);
-  PRBool CheckFailed(void);
+  bool CheckFailed(void);
 
-  typedef PRBool (TestApp::*test_type)(void);
+  typedef bool (TestApp::*test_type)(void);
 
 protected:
   nsresult Init(void);
   nsresult Term(void);
-  PRBool RunTest(test_type aTest, PRBool aLock = PR_TRUE);
+  bool RunTest(test_type aTest, bool aLock = true);
 
-  PRBool TestFocus(void);
-  PRBool TestClustering(void);
-  PRBool TestSelection(void);
-  PRBool TestText(void);
-  PRBool TestExtents(void);
-  PRBool TestComposition(void);
-  PRBool TestNotification(void);
-  PRBool TestEditMessages(void);
-  PRBool TestScrollMessages(void);
+  bool TestFocus(void);
+  bool TestClustering(void);
+  bool TestSelection(void);
+  bool TestText(void);
+  bool TestExtents(void);
+  bool TestComposition(void);
+  bool TestNotification(void);
+  bool TestEditMessages(void);
+  bool TestScrollMessages(void);
 
-  PRBool TestSelectionInternal(char* aTestName,
+  bool TestSelectionInternal(char* aTestName,
                                         LONG aStart,
                                         LONG aEnd,
                                         TsActiveSelEnd aSelEnd);
-  PRBool TestCompositionSelectionAndText(char* aTestName,
+  bool TestCompositionSelectionAndText(char* aTestName,
                                          LONG aExpectedSelStart,
                                          LONG aExpectedSelEnd,
                                          nsString& aReferenceString);
-  PRBool TestNotificationTextChange(nsIWidget* aWidget,
+  bool TestNotificationTextChange(nsIWidget* aWidget,
                                     PRUint32 aCode,
                                     const nsAString& aCharacter,
                                     LONG aStart,
@@ -162,9 +162,9 @@ protected:
                                     LONG aNewEnd);
   nsresult GetSelCon(nsISelectionController** aSelCon);
 
-  PRBool GetWidget(nsIWidget** aWidget);
+  bool GetWidget(nsIWidget** aWidget);
 
-  PRBool mFailed;
+  bool mFailed;
   nsString mTestString;
   nsRefPtr<TSFMgrImpl> mMgr;
   nsCOMPtr<nsIAppShell> mAppShell;
@@ -785,8 +785,8 @@ private:
 public:
   nsRefPtr<TSFAttrPropImpl> mAttrProp;
   nsRefPtr<TSFDocumentMgrImpl> mDocMgr;
-  PRBool mTextChanged;
-  PRBool mSelChanged;
+  bool mTextChanged;
+  bool mSelChanged;
   TS_TEXTCHANGE mTextChangeData;
 
 public:
@@ -1151,7 +1151,7 @@ private:
 public:
   nsRefPtr<TestApp> mTestApp;
   TestApp::test_type mTest;
-  PRBool mDeactivated;
+  bool mDeactivated;
   TSFDocumentMgrImpl* mFocusedDocument; // Must be raw pointer, but strong.
   PRInt32 mFocusCount;
 
@@ -1485,7 +1485,7 @@ TestApp::Run(void)
   return NS_OK;
 }
 
-PRBool
+bool
 TestApp::CheckFailed(void)
 {
   // All windows should be closed by now
@@ -1635,10 +1635,10 @@ TestApp::Term(void)
   return NS_OK;
 }
 
-PRBool
-TestApp::RunTest(test_type aTest, PRBool aLock)
+bool
+TestApp::RunTest(test_type aTest, bool aLock)
 {
-  PRBool succeeded;
+  bool succeeded;
   if (aLock && mMgr && mMgr->GetFocusedStore()) {
     mMgr->mTest = aTest;
     HRESULT hr = E_FAIL;
@@ -1732,7 +1732,7 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-PRBool
+bool
 TestApp::TestFocus(void)
 {
   PRUint32 focus = mMgr->mFocusCount;
@@ -1776,7 +1776,7 @@ TestApp::TestFocus(void)
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::TestClustering(void)
 {
   // Text for testing
@@ -1867,13 +1867,13 @@ TestApp::TestClustering(void)
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::TestSelectionInternal(char* aTestName,
                                LONG aStart,
                                LONG aEnd,
                                TsActiveSelEnd aSelEnd)
 {
-  PRBool succeeded = PR_TRUE, continueTest = PR_TRUE;
+  bool succeeded = true, continueTest = true;
   TS_SELECTION_ACP sel, testSel;
   ULONG selFetched;
 
@@ -1910,10 +1910,10 @@ TestApp::TestSelectionInternal(char* aTestName,
   return succeeded;
 }
 
-PRBool
+bool
 TestApp::TestSelection(void)
 {
-  PRBool succeeded = PR_TRUE;
+  bool succeeded = true;
 
   /* If these fail the cause is probably one or more of:
    * nsTextStore::GetSelection not sending NS_QUERY_SELECTED_TEXT
@@ -1975,13 +1975,13 @@ TestApp::TestSelection(void)
   return succeeded;
 }
 
-PRBool
+bool
 TestApp::TestText(void)
 {
   const PRUint32 BUFFER_SIZE  = (0x100);
   const PRUint32 RUNINFO_SIZE = (0x10);
 
-  PRBool succeeded = PR_TRUE, continueTest;
+  bool succeeded = true, continueTest;
   PRUnichar buffer[BUFFER_SIZE];
   TS_RUNINFO runInfo[RUNINFO_SIZE];
   ULONG bufferRet, runInfoRet;
@@ -2156,7 +2156,7 @@ TestApp::TestText(void)
   return succeeded;
 }
 
-PRBool
+bool
 TestApp::TestExtents(void)
 {
   if (!mMgr->GetFocusedStore()) {
@@ -2219,7 +2219,7 @@ TestApp::TestExtents(void)
     return PR_FALSE;
   }
 
-  PRBool succeeded = PR_TRUE;
+  bool succeeded = true;
   HWND hwnd;
   hr = mMgr->GetFocusedStore()->GetWnd(view, &hwnd);
   if (!(SUCCEEDED(hr) &&
@@ -2328,7 +2328,7 @@ TestApp::TestExtents(void)
   return succeeded;
 }
 
-PRBool
+bool
 TestApp::TestCompositionSelectionAndText(char* aTestName,
                                          LONG aExpectedSelStart,
                                          LONG aExpectedSelEnd,
@@ -2383,7 +2383,7 @@ TestApp::TestCompositionSelectionAndText(char* aTestName,
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::TestComposition(void)
 {
   if (!mMgr->GetFocusedStore()) {
@@ -2601,7 +2601,7 @@ TestApp::TestComposition(void)
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::TestNotificationTextChange(nsIWidget* aWidget,
                                     PRUint32 aCode,
                                     const nsAString& aCharacter,
@@ -2630,7 +2630,7 @@ TestApp::TestNotificationTextChange(nsIWidget* aWidget,
          aNewEnd == mMgr->GetFocusedContext()->mTextChangeData.acpNewEnd;
 }
 
-PRBool
+bool
 TestApp::TestNotification(void)
 {
   nsresult nsr;
@@ -2718,7 +2718,7 @@ TestApp::TestNotification(void)
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::TestEditMessages(void)
 {
   mTestString = NS_LITERAL_STRING(
@@ -2739,7 +2739,7 @@ TestApp::TestEditMessages(void)
   }
 
   HWND wnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
-  PRBool result = PR_TRUE;
+  bool result = true;
 
   if (!::SendMessage(wnd, EM_CANUNDO, 0, 0)) {
     fail("TestEditMessages: EM_CANUNDO");
@@ -2903,7 +2903,7 @@ TestApp::TestEditMessages(void)
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::TestScrollMessages(void)
 {
   NS_NAMED_LITERAL_STRING(kLine, "ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n");
@@ -3161,7 +3161,7 @@ TestApp::TestScrollMessages(void)
   return PR_TRUE;
 }
 
-PRBool
+bool
 TestApp::GetWidget(nsIWidget** aWidget)
 {
   nsCOMPtr<nsIDocShell> docShell;

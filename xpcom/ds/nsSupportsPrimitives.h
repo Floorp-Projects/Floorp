@@ -107,7 +107,7 @@ public:
 private:
     ~nsSupportsPRBoolImpl() {}
 
-    PRBool mData;
+    bool mData;
 };
 
 /***************************************************************************/

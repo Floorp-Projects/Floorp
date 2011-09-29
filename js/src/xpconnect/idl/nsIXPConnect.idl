@@ -769,10 +769,10 @@ interface nsIXPConnect : nsISupports
      * that this wrapper doesn't have an intrinsic one.
      */
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
-                                       PRBool allowShortCircuit) const = 0;
-    virtual char* DebugPrintJSStack(PRBool showArgs,
-                                    PRBool showLocals,
-                                    PRBool showThisProps) = 0;
+                                       bool allowShortCircuit) const = 0;
+    virtual char* DebugPrintJSStack(bool showArgs,
+                                    bool showLocals,
+                                    bool showThisProps) = 0;
 %}
 
     /**

@@ -298,7 +298,7 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
 {
   SetWhitespaceCompression();
 
-  PRBool trimLeadingWhitespace = PR_TRUE;
+  bool trimLeadingWhitespace = true;
   nsSVGGlyphFrame* lastNonWhitespaceFrame = aFrame;
 
   while (aFrame) {
@@ -316,7 +316,7 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
 }
 
 void
-nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
+nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
 {
   if (mMetricsState == suspended || !mPositioningDirty)
     return;

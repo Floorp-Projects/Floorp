@@ -48,7 +48,7 @@
 NS_SPECIALIZE_TEMPLATE
 class nsDefaultComparator <nsNameSpaceEntry, nsIAtom*> {
   public:
-    PRBool Equals(const nsNameSpaceEntry& aEntry, nsIAtom* const& aPrefix) const {
+    bool Equals(const nsNameSpaceEntry& aEntry, nsIAtom* const& aPrefix) const {
       return aEntry.prefix == aPrefix;
     }
 };
@@ -56,14 +56,14 @@ class nsDefaultComparator <nsNameSpaceEntry, nsIAtom*> {
 NS_SPECIALIZE_TEMPLATE
 class nsDefaultComparator <nsNameSpaceEntry, PRInt32> {
   public:
-    PRBool Equals(const nsNameSpaceEntry& aEntry, const PRInt32& aNameSpace) const {
+    bool Equals(const nsNameSpaceEntry& aEntry, const PRInt32& aNameSpace) const {
       return aEntry.nameSpaceID == aNameSpace;
     }
 };
 
 
 /* static */ nsXMLNameSpaceMap*
-nsXMLNameSpaceMap::Create(PRBool aForXML)
+nsXMLNameSpaceMap::Create(bool aForXML)
 {
   nsXMLNameSpaceMap *map = new nsXMLNameSpaceMap();
   NS_ENSURE_TRUE(map, nsnull);

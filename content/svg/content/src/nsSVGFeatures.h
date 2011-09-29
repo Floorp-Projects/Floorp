@@ -55,7 +55,7 @@ public:
    * @param aFeature one of the feature strings specified at
    *    http://www.w3.org/TR/SVG11/feature.html
    */
-  static PRBool
+  static bool
   HaveFeature(nsISupports* aObject, const nsAString& aFeature);
 
   /**
@@ -91,7 +91,7 @@ public:
    *   Alternatively, pass in kIgnoreSystemLanguage to skip the systemLanguage
    *   check if the caller is giving that special treatment.
    */
-  static PRBool
+  static bool
   PassesConditionalProcessingTests(nsIContent *aContent,
                                    const nsString *aAcceptLangs = nsnull);
 
@@ -104,7 +104,7 @@ private:
    * @param aFeatures a whitespace separated list containing one or more of the
    *   feature strings specified at http://www.w3.org/TR/SVG11/feature.html
    */
-  static PRBool
+  static bool
   HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures);
 
   /**
@@ -113,7 +113,7 @@ private:
    * @param aExtension the URI of an extension. Known extensions are
    *   "http://www.w3.org/1999/xhtml" and "http://www.w3.org/1998/Math/MathML"
    */
-  static PRBool
+  static bool
   HaveExtension(const nsAString& aExtension);
 
   /**
@@ -122,7 +122,7 @@ private:
    * @param aExtension a whitespace separated list containing one or more
    *   extension strings
    */
-  static PRBool
+  static bool
   HaveExtensions(const nsSubstring& aExtensions);
 
   /**
@@ -134,7 +134,7 @@ private:
    * one of the language names in the systemLanguage attribute.
    * XXX This algorithm is O(M*N).
    */
-  static PRBool
+  static bool
   MatchesLanguagePreferences(const nsSubstring& aAttribute,
                              const nsSubstring& aAcceptLangs); 
 
@@ -147,7 +147,7 @@ private:
    * @param aAttr the conditional to test for, either
    *    ATTRS_TEST or ATTRS_EXTERNAL
    */
-  static PRBool
+  static bool
   ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr);
 };
 

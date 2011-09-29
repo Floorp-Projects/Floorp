@@ -112,9 +112,9 @@ static void SearchForSoname(const char* name, char** soname)
     PR_CloseDir(fdDir);
 }
 
-static PRBool LoadExtraSharedLib(const char *name, char **soname, PRBool tryToGetSoname)
+static bool LoadExtraSharedLib(const char *name, char **soname, bool tryToGetSoname)
 {
-    PRBool ret = PR_TRUE;
+    bool ret = true;
     PRLibSpec tempSpec;
     PRLibrary *handle;
     tempSpec.type = PR_LibSpec_Pathname;
@@ -154,7 +154,7 @@ static void LoadExtraSharedLibs()
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
     if (NS_SUCCEEDED(res) && (prefs != nsnull)) {
         char *sonameList = NULL;
-        PRBool prefSonameListIsSet = PR_TRUE;
+        bool prefSonameListIsSet = true;
         res = prefs->GetCharPref(PREF_PLUGINS_SONAME, &sonameList);
         if (!sonameList) {
             // pref is not set, lets use hardcoded list
@@ -177,7 +177,7 @@ static void LoadExtraSharedLibs()
             char sonameListToSave[PLUGIN_MAX_LEN_OF_TMP_ARR] = "";
             for (int i=0; i<numOfLibs; i++) {
                 // trim out head/tail white spaces (just in case)
-                PRBool head = PR_TRUE;
+                bool head = true;
                 p = arrayOfLibs[i];
                 while (*p) {
                     if (*p == ' ' || *p == '\t') {
@@ -194,7 +194,7 @@ static void LoadExtraSharedLibs()
                 if (!arrayOfLibs[i][0]) {
                     continue; // null string
                 }
-                PRBool tryToGetSoname = PR_TRUE;
+                bool tryToGetSoname = true;
                 if (PL_strchr(arrayOfLibs[i], '/')) {
                     //assuming it's real name, try to stat it
                     struct stat st;
@@ -241,7 +241,7 @@ static void LoadExtraSharedLibs()
 
 /* nsPluginsDir implementation */
 
-PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
+bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
     nsCAutoString filename;
     if (NS_FAILED(file->GetNativeLeafName(filename)))
@@ -286,7 +286,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 {
     PRLibSpec libSpec;
     libSpec.type = PR_LibSpec_Pathname;
-    PRBool exists = PR_FALSE;
+    bool exists = false;
     mPlugin->Exists(&exists);
     if (!exists)
         return NS_ERROR_FILE_NOT_FOUND;

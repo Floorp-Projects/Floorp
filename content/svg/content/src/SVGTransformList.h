@@ -70,7 +70,7 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  PRBool IsEmpty() const {
+  bool IsEmpty() const {
     return mItems.IsEmpty();
   }
 
@@ -82,11 +82,11 @@ public:
     return mItems[aIndex];
   }
 
-  PRBool operator==(const SVGTransformList& rhs) const {
+  bool operator==(const SVGTransformList& rhs) const {
     return mItems == rhs.mItems;
   }
 
-  PRBool SetCapacity(PRUint32 size) {
+  bool SetCapacity(PRUint32 size) {
     return mItems.SetCapacity(size);
   }
 
@@ -120,7 +120,7 @@ protected:
    * This may fail (return PR_FALSE) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  PRBool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(PRUint32 aNumberOfItems) {
     return mItems.SetLength(aNumberOfItems);
   }
 
@@ -136,7 +136,7 @@ private:
     mItems.Clear();
   }
 
-  PRBool InsertItem(PRUint32 aIndex, const SVGTransform& aTransform) {
+  bool InsertItem(PRUint32 aIndex, const SVGTransform& aTransform) {
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
@@ -155,7 +155,7 @@ private:
     mItems.RemoveElementAt(aIndex);
   }
 
-  PRBool AppendItem(const SVGTransform& aTransform) {
+  bool AppendItem(const SVGTransform& aTransform) {
     return !!mItems.AppendElement(aTransform);
   }
 

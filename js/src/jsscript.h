@@ -146,8 +146,6 @@ typedef struct JSConstArray {
     uint32          length;
 } JSConstArray;
 
-struct JSArenaPool;
-
 namespace js {
 
 struct GlobalSlotArray {

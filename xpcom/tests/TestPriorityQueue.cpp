@@ -79,7 +79,7 @@ CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
 template<class A>
 class MaxCompare {
 public:
-  PRBool LessThan(const A& a, const A& b) {
+  bool LessThan(const A& a, const A& b) {
     return a > b;
   }
 };

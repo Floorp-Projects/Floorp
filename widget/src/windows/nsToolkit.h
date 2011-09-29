@@ -105,9 +105,9 @@ protected:
 public:
     static HINSTANCE mDllInstance;
     // OS flag
-    static PRBool    mIsWinXP;
+    static bool      mIsWinXP;
 
-    static PRBool InitVersionInfo();
+    static bool InitVersionInfo();
     static void Startup(HINSTANCE hModule);
     static void Shutdown();
     static void StartAllowingD3D9();
@@ -147,8 +147,8 @@ private:
     // Information for mouse enter/exit events
     HWND                  mMouseTrailerWindow;
     HWND                  mCaptureWindow;
-    PRBool                mIsInCaptureMode;
-    PRBool                mEnabled;
+    bool                  mIsInCaptureMode;
+    bool                  mEnabled;
     nsCOMPtr<nsITimer>    mTimer;
 };
 

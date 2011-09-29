@@ -119,7 +119,7 @@ nsHTMLCheckboxAccessible::NativeState()
   PRUint64 state = nsFormControlAccessible::NativeState();
 
   state |= states::CHECKABLE;
-  PRBool checkState = PR_FALSE;   // Radio buttons and check boxes can be checked or mixed
+  bool checkState = false;   // Radio buttons and check boxes can be checked or mixed
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement =
     do_QueryInterface(mContent);
@@ -140,6 +140,16 @@ nsHTMLCheckboxAccessible::NativeState()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsHTMLCheckboxAccessible: Widgets
+
+bool
+nsHTMLCheckboxAccessible::IsWidget() const
+{
+  return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // nsHTMLRadioButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +166,7 @@ nsHTMLRadioButtonAccessible::NativeState()
 
   state |= states::CHECKABLE;
   
-  PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
+  bool checked = false;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement =
     do_QueryInterface(mContent);
@@ -314,6 +324,15 @@ nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLButtonAccessible: Widgets
+
+bool
+nsHTMLButtonAccessible::IsWidget() const
+{
+  return true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTML4ButtonAccessible
@@ -368,6 +387,15 @@ nsHTML4ButtonAccessible::NativeState()
     state |= states::DEFAULT;
 
   return state;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTML4ButtonAccessible: Widgets
+
+bool
+nsHTML4ButtonAccessible::IsWidget() const
+{
+  return true;
 }
 
 
@@ -550,7 +578,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor
   // whatever script is currently running.
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+  bool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
 
   nsCOMPtr<nsIEditor> editor;
   nsresult rv = editableElt->GetEditor(aEditor);

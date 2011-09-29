@@ -114,7 +114,7 @@ nsBaseAppShell::NativeEventCallback()
   // our only opportunity to process pending gecko events.
 
   nsIThread *thread = NS_GetCurrentThread();
-  PRBool prevBlockNativeEvent = mBlockNativeEvent;
+  bool prevBlockNativeEvent = mBlockNativeEvent;
   if (mEventloopNestingState == eEventloopOther) {
     if (!NS_HasPendingEvents(thread))
       return;
@@ -150,8 +150,8 @@ nsBaseAppShell::DoProcessMoreGeckoEvents()
 
 
 // Main thread via OnProcessNextEvent below
-PRBool
-nsBaseAppShell::DoProcessNextNativeEvent(PRBool mayWait)
+bool
+nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait)
 {
   // The next native event to be processed may trigger our NativeEventCallback,
   // in which case we do not want it to process any thread events since we'll
@@ -168,7 +168,7 @@ nsBaseAppShell::DoProcessNextNativeEvent(PRBool mayWait)
   mEventloopNestingState = eEventloopXPCOM;
 
   ++mEventloopNestingLevel;
-  PRBool result = ProcessNextNativeEvent(mayWait);
+  bool result = ProcessNextNativeEvent(mayWait);
   --mEventloopNestingLevel;
 
   mEventloopNestingState = prevVal;
@@ -205,7 +205,7 @@ nsBaseAppShell::Exit(void)
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::FavorPerformanceHint(PRBool favorPerfOverStarvation,
+nsBaseAppShell::FavorPerformanceHint(bool favorPerfOverStarvation,
                                      PRUint32 starvationDelay)
 {
   mStarvationDelay = PR_MillisecondsToInterval(starvationDelay);
@@ -264,7 +264,7 @@ nsBaseAppShell::OnDispatchedEvent(nsIThreadInternal *thr)
 
 // Called from the main thread
 NS_IMETHODIMP
-nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
+nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
                                    PRUint32 recursionDepth)
 {
   if (mBlockNativeEvent) {
@@ -286,13 +286,13 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   if (mBlockedWait)
     *mBlockedWait = PR_FALSE;
 
-  PRBool *oldBlockedWait = mBlockedWait;
+  bool *oldBlockedWait = mBlockedWait;
   mBlockedWait = &mayWait;
 
   // When mayWait is true, we need to make sure that there is an event in the
   // thread's event queue before we return.  Otherwise, the thread will block
   // on its event queue waiting for an event.
-  PRBool needEvent = mayWait;
+  bool needEvent = mayWait;
   // Reset prior to invoking DoProcessNextNativeEvent which might cause
   // NativeEventCallback to process gecko events.
   mProcessedGeckoEvents = PR_FALSE;
@@ -300,7 +300,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   if (mFavorPerf <= 0 && start > mSwitchTime + mStarvationDelay) {
     // Favor pending native events
     PRIntervalTime now = start;
-    PRBool keepGoing;
+    bool keepGoing;
     do {
       mLastNativeEventTime = now;
       keepGoing = DoProcessNextNativeEvent(PR_FALSE);

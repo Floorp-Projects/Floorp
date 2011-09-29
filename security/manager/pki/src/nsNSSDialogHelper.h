@@ -55,6 +55,6 @@ public:
                   nsIDOMWindow *window,
                   const char *url,
                   nsISupports *params,
-                  PRBool modal = PR_TRUE);
+                  bool modal = true);
 };
 

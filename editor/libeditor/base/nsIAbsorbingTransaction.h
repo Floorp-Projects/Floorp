@@ -70,7 +70,7 @@ public:
   
   NS_IMETHOD GetTxnName(nsIAtom **aName)=0;
 
-  NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, PRBool *aResult)=0;
+  NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, bool *aResult)=0;
 
   NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)=0;
   

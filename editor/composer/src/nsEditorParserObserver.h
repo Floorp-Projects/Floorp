@@ -74,7 +74,7 @@ public:
   NS_IMETHOD                End();
 
   /* query, did we find a bad tag? */
-  NS_IMETHOD                GetBadTagFound(PRBool *aFound);
+  NS_IMETHOD                GetBadTagFound(bool *aFound);
 
 protected:
 
@@ -82,7 +82,7 @@ protected:
   
 protected:
 
-  PRBool                    mBadTagFound;
+  bool                      mBadTagFound;
 };
 
 

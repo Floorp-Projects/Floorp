@@ -66,8 +66,8 @@ using namespace mozilla;
 
 #define PREFLIGHT_CACHE_SIZE 100
 
-static PRBool gDisableCORS = PR_FALSE;
-static PRBool gDisableCORSPrivateData = PR_FALSE;
+static bool gDisableCORS = false;
+static bool gDisableCORSPrivateData = false;
 
 //////////////////////////////////////////////////////////////////////////
 // Preflight cache
@@ -95,7 +95,7 @@ public:
     }
 
     void PurgeExpired(PRTime now);
-    PRBool CheckRequest(const nsCString& aMethod,
+    bool CheckRequest(const nsCString& aMethod,
                         const nsTArray<nsCString>& aCustomHeaders);
 
     nsCString mKey;
@@ -115,13 +115,13 @@ public:
     MOZ_COUNT_DTOR(nsPreflightCache);
   }
 
-  PRBool Initialize()
+  bool Initialize()
   {
     return mTable.Init();
   }
 
   CacheEntry* GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                       PRBool aWithCredentials, PRBool aCreate);
+                       bool aWithCredentials, bool aCreate);
   void RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal);
 
   void Clear();
@@ -131,8 +131,8 @@ private:
     RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
                          void* aUserData);
 
-  static PRBool GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                            PRBool aWithCredentials, nsACString& _retval);
+  static bool GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                            bool aWithCredentials, nsACString& _retval);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   PRCList mList;
@@ -141,7 +141,7 @@ private:
 // Will be initialized in EnsurePreflightCache.
 static nsPreflightCache* sPreflightCache = nsnull;
 
-static PRBool EnsurePreflightCache()
+static bool EnsurePreflightCache()
 {
   if (sPreflightCache)
     return PR_TRUE;
@@ -172,7 +172,7 @@ nsPreflightCache::CacheEntry::PurgeExpired(PRTime now)
   }
 }
 
-PRBool
+bool
 nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
                                            const nsTArray<nsCString>& aHeaders)
 {
@@ -208,8 +208,8 @@ nsPreflightCache::CacheEntry::CheckRequest(const nsCString& aMethod,
 nsPreflightCache::CacheEntry*
 nsPreflightCache::GetEntry(nsIURI* aURI,
                            nsIPrincipal* aPrincipal,
-                           PRBool aWithCredentials,
-                           PRBool aCreate)
+                           bool aWithCredentials,
+                           bool aCreate)
 {
   nsCString key;
   if (!GetCacheKey(aURI, aPrincipal, aWithCredentials, key)) {
@@ -321,10 +321,10 @@ nsPreflightCache::RemoveExpiredEntries(const nsACString& aKey,
   return PL_DHASH_NEXT;
 }
 
-/* static */ PRBool
+/* static */ bool
 nsPreflightCache::GetCacheKey(nsIURI* aURI,
                               nsIPrincipal* aPrincipal,
-                              PRBool aWithCredentials,
+                              bool aWithCredentials,
                               nsACString& _retval)
 {
   NS_ASSERTION(aURI, "Null uri!");
@@ -389,7 +389,7 @@ nsCORSListenerProxy::Shutdown()
 nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          nsIPrincipal* aRequestingPrincipal,
                                          nsIChannel* aChannel,
-                                         PRBool aWithCredentials,
+                                         bool aWithCredentials,
                                          nsresult* aResult)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
@@ -412,7 +412,7 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
 nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          nsIPrincipal* aRequestingPrincipal,
                                          nsIChannel* aChannel,
-                                         PRBool aWithCredentials,
+                                         bool aWithCredentials,
                                          const nsCString& aPreflightMethod,
                                          const nsTArray<nsCString>& aPreflightHeaders,
                                          nsresult* aResult)
@@ -467,7 +467,7 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
   return mOuterListener->OnStartRequest(aRequest, aContext);
 }
 
-PRBool
+bool
 IsValidHTTPToken(const nsCSubstring& aToken)
 {
   if (aToken.IsEmpty()) {
@@ -558,7 +558,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
   }
 
   if (mIsPreflight) {
-    PRBool succeeded;
+    bool succeeded;
     rv = http->GetRequestSucceeded(&succeeded);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!succeeded) {
@@ -570,7 +570,7 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
     // list of method names.
     http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Allow-Methods"),
                             headerVal);
-    PRBool foundMethod = mPreflightMethod.EqualsLiteral("GET") ||
+    bool foundMethod = mPreflightMethod.EqualsLiteral("GET") ||
                          mPreflightMethod.EqualsLiteral("HEAD") ||
                          mPreflightMethod.EqualsLiteral("POST");
     nsCCharSeparatedTokenizer methodTokens(headerVal, ',');
@@ -821,7 +821,7 @@ public:
                           nsISupports* aOuterContext,
                           nsIPrincipal* aReferrerPrincipal,
                           const nsACString& aRequestMethod,
-                          PRBool aWithCredentials)
+                          bool aWithCredentials)
    : mOuterChannel(aOuterChannel), mOuterListener(aOuterListener),
      mOuterContext(aOuterContext), mReferrerPrincipal(aReferrerPrincipal),
      mRequestMethod(aRequestMethod), mWithCredentials(aWithCredentials)
@@ -841,7 +841,7 @@ private:
   nsCOMPtr<nsISupports> mOuterContext;
   nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
   nsCString mRequestMethod;
-  PRBool mWithCredentials;
+  bool mWithCredentials;
 };
 
 NS_IMPL_ISUPPORTS4(nsCORSPreflightListener, nsIStreamListener,
@@ -1037,7 +1037,7 @@ nsresult
 NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsIStreamListener* aListener,
                       nsIPrincipal* aPrincipal,
-                      PRBool aWithCredentials,
+                      bool aWithCredentials,
                       nsTArray<nsCString>& aUnsafeHeaders,
                       nsIChannel** aPreflightChannel)
 {

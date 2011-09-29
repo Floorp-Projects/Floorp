@@ -61,7 +61,7 @@ public:
   static nsresult OnChangeFocus(nsPresContext* aPresContext,
                                 nsIContent* aContent,
                                 PRUint32 aReason);
-  static void OnInstalledMenuKeyboardListener(PRBool aInstalling);
+  static void OnInstalledMenuKeyboardListener(bool aInstalling);
 
   // These two methods manage focus and selection/text observers.
   // They are separate from OnChangeFocus above because this offers finer
@@ -99,8 +99,8 @@ protected:
 
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
-  static PRBool         sInstalledMenuKeyboardListener;
-  static PRBool         sInSecureInputMode;
+  static bool           sInstalledMenuKeyboardListener;
+  static bool           sInSecureInputMode;
 
   static nsTextStateManager* sTextStateObserver;
 };

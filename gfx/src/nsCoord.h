@@ -64,7 +64,7 @@ inline float NS_IEEEPositiveInfinity() {
   pun.mPRUint32 = 0x7F800000;
   return pun.mFloat;
 }
-inline PRBool NS_IEEEIsNan(float aF) {
+inline bool NS_IEEEIsNan(float aF) {
   union { PRUint32 mBits; float mFloat; } pun;
   pun.mFloat = aF;
   return (pun.mBits & 0x7F800000) == 0x7F800000 &&
@@ -131,7 +131,7 @@ inline nscoord NSToCoordRoundWithClamp(float aValue)
  * parametrization to get a check of that fact in debug builds.
  */
 inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
-                                          PRBool requireNotNegative) {
+                                          bool requireNotNegative) {
   VERIFY_COORD(aCoord);
   if (requireNotNegative) {
     NS_ABORT_IF_FALSE(aScale >= 0.0f,
@@ -301,7 +301,7 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
   * "a" must not be unconstrained.
   * Every number is smaller than a unconstrained one
   */
-inline PRBool
+inline bool
 NSCoordLessThan(nscoord a,nscoord b)
 {
   NS_ASSERTION(a != nscoord_MAX, 
@@ -313,7 +313,7 @@ NSCoordLessThan(nscoord a,nscoord b)
   * "a" must not be unconstrained
   * No number is larger than a unconstrained one.
   */
-inline PRBool
+inline bool
 NSCoordGreaterThan(nscoord a,nscoord b)
 {
   NS_ASSERTION(a != nscoord_MAX, 

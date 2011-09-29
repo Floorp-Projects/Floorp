@@ -146,14 +146,14 @@ public:
   virtual  ~nsHTMLEditor();
 
   /* ------------ nsPlaintextEditor overrides -------------- */
-  NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
+  NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable);
   NS_IMETHOD BeginningOfDocument();
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual already_AddRefed<nsIContent> GetFocusedContent();
-  virtual PRBool IsActiveInDOMWindow();
+  virtual bool IsActiveInDOMWindow();
   virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget();
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
-  virtual PRBool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
+  virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
 
   /* ------------ nsStubMutationObserver overrides --------- */
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -185,9 +185,9 @@ public:
 
   NS_IMETHOD LoadHTML(const nsAString &aInputString);
 
-  nsresult GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor,
-                                      PRBool aBlockLevel);
-  NS_IMETHOD GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &outColor);
+  nsresult GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor,
+                                      bool aBlockLevel);
+  NS_IMETHOD GetHTMLBackgroundColorState(bool *aMixed, nsAString &outColor);
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
@@ -199,7 +199,7 @@ public:
   NS_IMETHOD ReplaceOverrideStyleSheet(const nsAString& aURL);
   NS_IMETHOD RemoveOverrideStyleSheet(const nsAString &aURL);
 
-  NS_IMETHOD EnableStyleSheet(const nsAString& aURL, PRBool aEnable);
+  NS_IMETHOD EnableStyleSheet(const nsAString& aURL, bool aEnable);
 
   /* ------------ nsIEditorMailSupport methods -------------- */
 
@@ -207,9 +207,9 @@ public:
 
   /* ------------ nsITableEditor methods -------------- */
 
-  NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
-  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
-  NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);
+  NS_IMETHOD InsertTableCell(PRInt32 aNumber, bool aAfter);
+  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, bool aAfter);
+  NS_IMETHOD InsertTableRow(PRInt32 aNumber, bool aAfter);
   NS_IMETHOD DeleteTable();
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
   NS_IMETHOD DeleteTableCellContents();
@@ -222,7 +222,7 @@ public:
   NS_IMETHOD SelectTable();
   NS_IMETHOD SelectAllTableCells();
   NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell);
-  NS_IMETHOD JoinTableCells(PRBool aMergeNonContiguousContents);
+  NS_IMETHOD JoinTableCells(bool aMergeNonContiguousContents);
   NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell,
@@ -236,13 +236,13 @@ public:
                            PRInt32* aStartRowIndex, PRInt32* aStartColIndex,
                            PRInt32* aRowSpan, PRInt32* aColSpan, 
                            PRInt32* aActualRowSpan, PRInt32* aActualColSpan, 
-                           PRBool* aIsSelected);
+                           bool* aIsSelected);
   NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode);
   NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode);
   NS_IMETHOD GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
 
   NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, 
-                                        PRInt32 aDirection, PRBool aSelected);
+                                        PRInt32 aDirection, bool aSelected);
   NS_IMETHOD GetSelectedOrParentTableElement(nsAString& aTagName,
                                              PRInt32 *aSelectedCount,
                                              nsIDOMElement** aTableElement);
@@ -307,14 +307,14 @@ public:
   static already_AddRefed<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
   nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, 
                                 PRInt32 aOffset, 
-                                PRBool *outIsSpace, 
-                                PRBool *outIsNBSP,
+                                bool *outIsSpace, 
+                                bool *outIsNBSP,
                                 nsCOMPtr<nsIDOMNode> *outNode = 0,
                                 PRInt32 *outOffset = 0);
   nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, 
                                 PRInt32 aOffset, 
-                                PRBool *outIsSpace, 
-                                PRBool *outIsNBSP,
+                                bool *outIsSpace, 
+                                bool *outIsNBSP,
                                 nsCOMPtr<nsIDOMNode> *outNode = 0,
                                 PRInt32 *outOffset = 0);
 
@@ -324,18 +324,18 @@ public:
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
-  NS_IMETHOD PreDestroy(PRBool aDestroyingFrames);
+  NS_IMETHOD PreDestroy(bool aDestroyingFrames);
 
   /** Internal, static version */
-  static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock);
+  static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, bool *aIsBlock);
 
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
   NS_IMETHOD Paste(PRInt32 aSelectionType);
-  NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste);
+  NS_IMETHOD CanPaste(PRInt32 aSelectionType, bool *aCanPaste);
 
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
-  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, PRBool *aCanPaste);
+  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
@@ -348,10 +348,10 @@ public:
   NS_IMETHOD EndOperation();
 
   /** returns PR_TRUE if aParentTag can contain a child of type aChildTag */
-  virtual PRBool TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag);
+  virtual bool TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag);
   
   /** returns PR_TRUE if aNode is a container */
-  virtual PRBool IsContainer(nsIDOMNode *aNode);
+  virtual bool IsContainer(nsIDOMNode *aNode);
 
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
@@ -359,15 +359,15 @@ public:
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
                                       const nsAString & aValue,
-                                      PRBool aSuppressTransaction);
+                                      bool aSuppressTransaction);
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
                                          const nsAString & aAttribute,
-                                         PRBool aSuppressTransaction);
+                                         bool aSuppressTransaction);
 
   /** join together any afjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
 
-  virtual PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  virtual bool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
 
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
   NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
@@ -377,14 +377,14 @@ public:
                             nsCOMPtr<nsIDOMNode> *aInOutNode, 
                             PRInt32 *aInOutOffset,
                             nsIDOMDocument *aDoc);
-  NS_IMETHOD_(PRBool) IsModifiableNode(nsIDOMNode *aNode);
+  NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
 
   NS_IMETHOD SelectAll();
 
   NS_IMETHOD GetRootElement(nsIDOMElement **aRootElement);
 
   /* ------------ nsICSSLoaderObserver -------------- */
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet*aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet*aSheet, bool aWasAlternate,
                               nsresult aStatus);
 
   /* ------------ Utility Routines, not part of public API -------------- */
@@ -392,7 +392,7 @@ public:
   nsresult InsertNodeAtPoint( nsIDOMNode *aNode, 
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               PRInt32 *ioOffset, 
-                              PRBool aNoEmptyNodes);
+                              bool aNoEmptyNodes);
   already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode);
                                 
 
@@ -411,24 +411,24 @@ public:
   // aSelection is optional -- if null, we get current seletion
   nsresult CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode);
 
-  virtual PRBool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
+  virtual bool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
 
   nsresult IsVisTextNode( nsIDOMNode *aNode, 
-                          PRBool *outIsEmptyNode, 
-                          PRBool aSafeToAskFrames);
-  nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
-                       PRBool aMozBRDoesntCount = PR_FALSE,
-                       PRBool aListOrCellNotEmpty = PR_FALSE,
-                       PRBool aSafeToAskFrames = PR_FALSE);
+                          bool *outIsEmptyNode, 
+                          bool aSafeToAskFrames);
+  nsresult IsEmptyNode(nsIDOMNode *aNode, bool *outIsEmptyBlock, 
+                       bool aMozBRDoesntCount = false,
+                       bool aListOrCellNotEmpty = false,
+                       bool aSafeToAskFrames = false);
   nsresult IsEmptyNodeImpl(nsIDOMNode *aNode,
-                           PRBool *outIsEmptyBlock, 
-                           PRBool aMozBRDoesntCount,
-                           PRBool aListOrCellNotEmpty,
-                           PRBool aSafeToAskFrames,
-                           PRBool *aSeenBR);
+                           bool *outIsEmptyBlock, 
+                           bool aMozBRDoesntCount,
+                           bool aListOrCellNotEmpty,
+                           bool aSafeToAskFrames,
+                           bool *aSeenBR);
 
   // Returns TRUE if sheet was loaded, false if it wasn't
-  PRBool   EnableExistingStyleSheet(const nsAString& aURL);
+  bool     EnableExistingStyleSheet(const nsAString& aURL);
 
   // Dealing with the internal style sheet lists:
   NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
@@ -451,7 +451,7 @@ protected:
   virtual nsresult InstallEventListeners();
   virtual void RemoveEventListeners();
 
-  PRBool ShouldReplaceRootElement();
+  bool ShouldReplaceRootElement();
   void ResetRootElementAndEventTarget();
   nsresult GetBodyElement(nsIDOMHTMLElement** aBody);
   // Get the focused node of this editor.
@@ -460,11 +460,11 @@ protected:
   already_AddRefed<nsINode> GetFocusedNode();
 
   // Return TRUE if aElement is a table-related elemet and caret was set
-  PRBool SetCaretInTableCell(nsIDOMElement* aElement);
-  PRBool IsNodeInActiveEditor(nsIDOMNode* aNode);
+  bool SetCaretInTableCell(nsIDOMElement* aElement);
+  bool IsNodeInActiveEditor(nsIDOMNode* aNode);
 
   // key event helpers
-  NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
+  NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone);
   NS_IMETHOD CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, 
@@ -481,7 +481,7 @@ protected:
   //  Optional: If aNewCell supplied, returns the newly-created cell (addref'd, of course)
   // This doesn't change or use the current selection
   NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan,
-                        PRBool aAfter, PRBool aIsHeader, nsIDOMElement **aNewCell);
+                        bool aAfter, bool aIsHeader, nsIDOMElement **aNewCell);
 
   // Helpers that don't touch the selection or do batch transactions
   NS_IMETHOD DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex);
@@ -489,7 +489,7 @@ protected:
   NS_IMETHOD DeleteCellContents(nsIDOMElement *aCell);
 
   // Move all contents from aCellToMerge into aTargetCell (append at end)
-  NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, PRBool aDeleteCellToMerge);
+  NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, bool aDeleteCellToMerge);
 
   NS_IMETHOD DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection);
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan);
@@ -501,10 +501,10 @@ protected:
   // This doesn't count cells that don't start in the given row (are spanning from row above)
   PRInt32  GetNumberOfCellsInRow(nsIDOMElement* aTable, PRInt32 rowIndex);
   // Test if all cells in row or column at given index are selected
-  PRBool AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aNumberOfColumns);
-  PRBool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
+  bool AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aNumberOfColumns);
+  bool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
 
-  PRBool   IsEmptyCell(nsIDOMElement *aCell);
+  bool     IsEmptyCell(nsIDOMElement *aCell);
 
   // Most insert methods need to get the same basic context data
   // Any of the pointers may be null if you don't need that datum (for more efficiency)
@@ -538,9 +538,9 @@ protected:
 
 // End of Table Editing utilities
   
-  NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
+  NS_IMETHOD IsRootTag(nsString &aTag, bool &aIsTag);
 
-  virtual PRBool IsBlockNode(nsIDOMNode *aNode);
+  virtual bool IsBlockNode(nsIDOMNode *aNode);
   
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
@@ -563,7 +563,7 @@ protected:
                                           nsIAtom           *aProperty, 
                                           const nsAString   *aAttribute,
                                           const nsAString   *aValue,
-                                          PRBool            &aIsSet,
+                                          bool              &aIsSet,
                                           nsIDOMNode       **aStyleNode,
                                           nsAString *outValue = nsnull);
 
@@ -580,12 +580,12 @@ protected:
     *                        If aAddCites is false, this will be null.
     */
   NS_IMETHOD InsertAsPlaintextQuotation(const nsAString & aQuotedText,
-                                        PRBool aAddCites,
+                                        bool aAddCites,
                                         nsIDOMNode **aNodeInserted);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
-  NS_IMETHOD PrepareHTMLTransferable(nsITransferable **transferable, PRBool havePrivFlavor);
+  NS_IMETHOD PrepareHTMLTransferable(nsITransferable **transferable, bool havePrivFlavor);
   nsresult   PutDragDataInTransferable(nsITransferable **aTransferable);
   NS_IMETHOD InsertFromTransferable(nsITransferable *transferable, 
                                     nsIDOMDocument *aSourceDoc,
@@ -593,12 +593,12 @@ protected:
                                     const nsAString & aInfoStr,
                                     nsIDOMNode *aDestinationNode,
                                     PRInt32 aDestinationOffset,
-                                    PRBool aDoDeleteSelection);
-  PRBool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
+                                    bool aDoDeleteSelection);
+  bool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
   nsresult   ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext);
   nsresult   DoContentFilterCallback(const nsAString &aFlavor,
                                      nsIDOMDocument *aSourceDoc,
-                                     PRBool aWillDeleteSelection,
+                                     bool aWillDeleteSelection,
                                      nsIDOMNode **aFragmentAsNode,      
                                      nsIDOMNode **aFragStartNode,
                                      PRInt32 *aFragStartOffset,
@@ -606,7 +606,7 @@ protected:
                                      PRInt32 *aFragEndOffset,
                                      nsIDOMNode **aTargetNode,       
                                      PRInt32 *aTargetOffset,   
-                                     PRBool *aDoContinue);
+                                     bool *aDoContinue);
   nsresult   RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeList,
                                         const nsAString &aFlavor,
                                         nsIDOMDocument *aSourceDoc,
@@ -614,8 +614,8 @@ protected:
   nsresult   RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL);
   nsresult   GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttrib);
 
-  PRBool     IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
-  nsresult   StripFormattingNodes(nsIDOMNode *aNode, PRBool aOnlyList = PR_FALSE);
+  bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
+  nsresult   StripFormattingNodes(nsIDOMNode *aNode, bool aOnlyList = false);
   nsresult   CreateDOMFragmentFromPaste(const nsAString & aInputString,
                                         const nsAString & aContextStr,
                                         const nsAString & aInfoStr,
@@ -624,11 +624,11 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outEndNode,
                                         PRInt32 *outStartOffset,
                                         PRInt32 *outEndOffset,
-                                        PRBool aTrustedInput);
+                                        bool aTrustedInput);
   nsresult   ParseFragment(const nsAString & aStr, nsIAtom* aContextLocalName,
                            nsIDocument* aTargetDoc,
                            nsCOMPtr<nsIDOMNode> *outNode,
-                           PRBool aTrustedInput);
+                           bool aTrustedInput);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                       nsCOMArray<nsIDOMNode>& outNodeList,
                                       nsIDOMNode *aStartNode,
@@ -637,24 +637,24 @@ protected:
                                       PRInt32 aEndOffset);
   nsresult CreateTagStack(nsTArray<nsString> &aTagStack,
                           nsIDOMNode *aNode);
-  nsresult GetListAndTableParents( PRBool aEnd, 
+  nsresult GetListAndTableParents( bool aEnd, 
                                    nsCOMArray<nsIDOMNode>& aListOfNodes,
                                    nsCOMArray<nsIDOMNode>& outArray);
   nsresult DiscoverPartialListsAndTables(nsCOMArray<nsIDOMNode>& aPasteNodes,
                                          nsCOMArray<nsIDOMNode>& aListsAndTables,
                                          PRInt32 *outHighWaterMark);
-  nsresult ScanForListAndTableStructure(PRBool aEnd,
+  nsresult ScanForListAndTableStructure(bool aEnd,
                                         nsCOMArray<nsIDOMNode>& aNodes,
                                         nsIDOMNode *aListOrTable,
                                         nsCOMPtr<nsIDOMNode> *outReplaceNode);
-  nsresult ReplaceOrphanedStructure( PRBool aEnd,
+  nsresult ReplaceOrphanedStructure( bool aEnd,
                                      nsCOMArray<nsIDOMNode>& aNodeArray,
                                      nsCOMArray<nsIDOMNode>& aListAndTableArray,
                                      PRInt32 aHighWaterMark);
-  nsIDOMNode* GetArrayEndpoint(PRBool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
+  nsIDOMNode* GetArrayEndpoint(bool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
 
   /* small utility routine to test if a break node is visible to user */
-  PRBool   IsVisBreak(nsIDOMNode *aNode);
+  bool     IsVisBreak(nsIDOMNode *aNode);
 
   /* utility routine to possibly adjust the insertion position when 
      inserting a block level element */
@@ -663,7 +663,7 @@ protected:
                                   PRInt32 *insertOffset);
 
   /* small utility routine to test the eEditorReadonly bit */
-  PRBool IsModifiable();
+  bool IsModifiable();
 
   /* helpers for block transformations */
   nsresult MakeDefinitionItem(const nsAString & aItemType);
@@ -709,28 +709,28 @@ protected:
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 
                              const nsAString *aAttribute, 
-                             PRBool aChildrenOnly = PR_FALSE);
+                             bool aChildrenOnly = false);
   nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute);
 
-  PRBool NodeIsProperty(nsIDOMNode *aNode);
-  PRBool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
-  PRBool HasAttrVal(nsIDOMNode *aNode, const nsAString *aAttribute, const nsAString *aValue);
-  PRBool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
-  PRBool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
-  PRBool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
+  bool NodeIsProperty(nsIDOMNode *aNode);
+  bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
+  bool HasAttrVal(nsIDOMNode *aNode, const nsAString *aAttribute, const nsAString *aValue);
+  bool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
+  bool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
+  bool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing = PR_FALSE);
-  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing = PR_FALSE);
-  nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing = PR_FALSE);
-  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing = PR_FALSE);
+  nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
 
-  nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
-  nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
+  nsresult IsFirstEditableChild( nsIDOMNode *aNode, bool *aOutIsFirst);
+  nsresult IsLastEditableChild( nsIDOMNode *aNode, bool *aOutIsLast);
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
@@ -738,21 +738,21 @@ protected:
   nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
 
   //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
-  PRBool   mIgnoreSpuriousDragEvent;
+  bool     mIgnoreSpuriousDragEvent;
 
   nsresult GetInlinePropertyBase(nsIAtom *aProperty, 
                              const nsAString *aAttribute,
                              const nsAString *aValue,
-                             PRBool *aFirst, 
-                             PRBool *aAny, 
-                             PRBool *aAll,
+                             bool *aFirst, 
+                             bool *aAny, 
+                             bool *aAll,
                              nsAString *outValue,
-                             PRBool aCheckDefaults = PR_TRUE);
-  nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass);
+                             bool aCheckDefaults = true);
+  nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, bool *aHasStyleOrIdOrClass);
   nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag);
 
   // Whether the outer window of the DOM event target has focus or not.
-  PRBool   OurWindowHasFocus();
+  bool     OurWindowHasFocus();
 
   // This function is used to insert a string of HTML input optionally with some
   // context information into the editable field.  The HTML input either comes
@@ -768,8 +768,8 @@ protected:
                                    nsIDOMDocument* aSourceDoc,
                                    nsIDOMNode* aDestNode,
                                    PRInt32 aDestOffset,
-                                   PRBool aDeleteSelection,
-                                   PRBool aTrustedInput);
+                                   bool aDeleteSelection,
+                                   bool aTrustedInput);
 
 // Data members
 protected:
@@ -778,9 +778,9 @@ protected:
 
   nsRefPtr<TypeInState>        mTypeInState;
 
-  PRPackedBool mCRInParagraphCreatesParagraph;
+  bool mCRInParagraphCreatesParagraph;
 
-  PRPackedBool mCSSAware;
+  bool mCSSAware;
   nsAutoPtr<nsHTMLCSSUtils> mHTMLCSSUtils;
 
   // Used by GetFirstSelectedCell and GetNextSelectedCell
@@ -811,7 +811,7 @@ protected:
   /* ANONYMOUS UTILS */
   void     RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                       nsIDOMEventListener* aListener,
-                                      PRBool aUseCapture,
+                                      bool aUseCapture,
                                       nsIDOMElement* aElement,
                                       nsIContent* aParentContent,
                                       nsIPresShell* aShell);
@@ -835,22 +835,22 @@ protected:
   /* INLINE TABLE EDITING */
 
   // resizing
-  PRPackedBool mIsObjectResizingEnabled;
-  PRPackedBool mIsResizing;
-  PRPackedBool mPreserveRatio;
-  PRPackedBool mResizedObjectIsAnImage;
+  bool mIsObjectResizingEnabled;
+  bool mIsResizing;
+  bool mPreserveRatio;
+  bool mResizedObjectIsAnImage;
 
   // absolute positioning
-  PRPackedBool mIsAbsolutelyPositioningEnabled;
-  PRPackedBool mResizedObjectIsAbsolutelyPositioned;
+  bool mIsAbsolutelyPositioningEnabled;
+  bool mResizedObjectIsAbsolutelyPositioned;
 
-  PRPackedBool mGrabberClicked;
-  PRPackedBool mIsMoving;
+  bool mGrabberClicked;
+  bool mIsMoving;
 
-  PRPackedBool mSnapToGridEnabled;
+  bool mSnapToGridEnabled;
 
   // inline table editing
-  PRPackedBool mIsInlineTableEditingEnabled;
+  bool mIsInlineTableEditingEnabled;
 
   /* RESIZING */
 
@@ -922,7 +922,7 @@ protected:
   void     HideShadowAndInfo();
   void     SetFinalSize(PRInt32 aX, PRInt32 aY);
   void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
-  void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, PRBool aPreserveRatio);
+  void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, bool aPreserveRatio);
   void     HideAnonymousEditingUIs();
 
   /* ABSOLUTE POSITIONING */

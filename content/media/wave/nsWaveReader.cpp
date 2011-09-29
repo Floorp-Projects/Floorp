@@ -154,7 +154,7 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  PRBool loaded = LoadRIFFChunk() && LoadFormatChunk() && FindDataOffset();
+  bool loaded = LoadRIFFChunk() && LoadFormatChunk() && FindDataOffset();
   if (!loaded) {
     return NS_ERROR_FAILURE;
   }
@@ -174,7 +174,7 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo)
   return NS_OK;
 }
 
-PRBool nsWaveReader::DecodeAudioData()
+bool nsWaveReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -239,7 +239,7 @@ PRBool nsWaveReader::DecodeAudioData()
   return PR_TRUE;
 }
 
-PRBool nsWaveReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
+bool nsWaveReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                       PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -287,7 +287,7 @@ nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
   return NS_OK;
 }
 
-PRBool
+bool
 nsWaveReader::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead)
 {
   PRUint32 got = 0;
@@ -312,7 +312,7 @@ nsWaveReader::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsWaveReader::LoadRIFFChunk()
 {
   char riffHeader[RIFF_INITIAL_SIZE];
@@ -342,7 +342,7 @@ nsWaveReader::LoadRIFFChunk()
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
 {
   NS_ABORT_IF_FALSE(aChunkSize, "Require aChunkSize argument");
@@ -382,7 +382,7 @@ nsWaveReader::ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize)
   }
 }
 
-PRBool
+bool
 nsWaveReader::LoadFormatChunk()
 {
   PRUint32 fmtSize, rate, channels, frameSize, sampleFormat;
@@ -481,7 +481,7 @@ nsWaveReader::LoadFormatChunk()
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsWaveReader::FindDataOffset()
 {
   // RIFF chunks are always word (two byte) aligned.

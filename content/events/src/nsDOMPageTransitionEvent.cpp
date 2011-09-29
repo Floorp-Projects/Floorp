@@ -50,7 +50,7 @@ NS_IMPL_ADDREF_INHERITED(nsDOMPageTransitionEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMPageTransitionEvent, nsDOMEvent)
 
 NS_IMETHODIMP
-nsDOMPageTransitionEvent::GetPersisted(PRBool* aPersisted)
+nsDOMPageTransitionEvent::GetPersisted(bool* aPersisted)
 {
   *aPersisted = mPersisted;
   return NS_OK;
@@ -58,9 +58,9 @@ nsDOMPageTransitionEvent::GetPersisted(PRBool* aPersisted)
 
 NS_IMETHODIMP
 nsDOMPageTransitionEvent::InitPageTransitionEvent(const nsAString &aTypeArg,
-                                                  PRBool aCanBubbleArg,
-                                                  PRBool aCancelableArg,
-                                                  PRBool aPersisted)
+                                                  bool aCanBubbleArg,
+                                                  bool aCancelableArg,
+                                                  bool aPersisted)
 {
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);

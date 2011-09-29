@@ -97,7 +97,7 @@ public:
 
   // nsIRequest
   NS_IMETHOD GetName(nsACString& aName);
-  NS_IMETHOD IsPending(PRBool *aIsPending);
+  NS_IMETHOD IsPending(bool *aIsPending);
   NS_IMETHOD GetStatus(nsresult *aStatus);
   NS_IMETHOD GetLoadGroup(nsILoadGroup **aLoadGroup);
   NS_IMETHOD SetLoadGroup(nsILoadGroup *aLoadGroup);
@@ -124,8 +124,8 @@ public:
   NS_IMETHOD Open(nsIInputStream **aResult);
 
   // nsIEncodedChannel
-  NS_IMETHOD GetApplyConversion(PRBool *value);
-  NS_IMETHOD SetApplyConversion(PRBool value);
+  NS_IMETHOD GetApplyConversion(bool *value);
+  NS_IMETHOD SetApplyConversion(bool value);
   NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator** aEncodings);
 
   // HttpBaseChannel::nsIHttpChannel
@@ -135,21 +135,21 @@ public:
   NS_IMETHOD SetReferrer(nsIURI *referrer);
   NS_IMETHOD GetRequestHeader(const nsACString& aHeader, nsACString& aValue);
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader, 
-                              const nsACString& aValue, PRBool aMerge);
+                              const nsACString& aValue, bool aMerge);
   NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *visitor);
   NS_IMETHOD GetResponseHeader(const nsACString &header, nsACString &value);
   NS_IMETHOD SetResponseHeader(const nsACString& header, 
-                               const nsACString& value, PRBool merge);
+                               const nsACString& value, bool merge);
   NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *visitor);
-  NS_IMETHOD GetAllowPipelining(PRBool *value);
-  NS_IMETHOD SetAllowPipelining(PRBool value);
+  NS_IMETHOD GetAllowPipelining(bool *value);
+  NS_IMETHOD SetAllowPipelining(bool value);
   NS_IMETHOD GetRedirectionLimit(PRUint32 *value);
   NS_IMETHOD SetRedirectionLimit(PRUint32 value);
-  NS_IMETHOD IsNoStoreResponse(PRBool *value);
-  NS_IMETHOD IsNoCacheResponse(PRBool *value);
+  NS_IMETHOD IsNoStoreResponse(bool *value);
+  NS_IMETHOD IsNoCacheResponse(bool *value);
   NS_IMETHOD GetResponseStatus(PRUint32 *aValue);
   NS_IMETHOD GetResponseStatusText(nsACString& aValue);
-  NS_IMETHOD GetRequestSucceeded(PRBool *aValue);
+  NS_IMETHOD GetRequestSucceeded(bool *aValue);
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI);
@@ -157,11 +157,11 @@ public:
   NS_IMETHOD GetRequestVersion(PRUint32 *major, PRUint32 *minor);
   NS_IMETHOD GetResponseVersion(PRUint32 *major, PRUint32 *minor);
   NS_IMETHOD SetCookie(const char *aCookieHeader);
-  NS_IMETHOD GetForceAllowThirdPartyCookie(PRBool *aForce);
-  NS_IMETHOD SetForceAllowThirdPartyCookie(PRBool aForce);
-  NS_IMETHOD GetCanceled(PRBool *aCanceled);
-  NS_IMETHOD GetChannelIsForDownload(PRBool *aChannelIsForDownload);
-  NS_IMETHOD SetChannelIsForDownload(PRBool aChannelIsForDownload);
+  NS_IMETHOD GetForceAllowThirdPartyCookie(bool *aForce);
+  NS_IMETHOD SetForceAllowThirdPartyCookie(bool aForce);
+  NS_IMETHOD GetCanceled(bool *aCanceled);
+  NS_IMETHOD GetChannelIsForDownload(bool *aChannelIsForDownload);
+  NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload);
   NS_IMETHOD SetCacheKeysRedirectChain(nsTArray<nsCString> *cacheKeys);
   NS_IMETHOD GetLocalAddress(nsACString& addr);
   NS_IMETHOD GetLocalPort(PRInt32* port);
@@ -205,7 +205,7 @@ public:
         // header with it.
         nsCOMPtr<nsIHttpChannel> mChannel;
         
-        PRPackedBool mReady;
+        bool mReady;
     };
 
     nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
@@ -227,7 +227,7 @@ protected:
   void AddCookiesToRequest();
   virtual nsresult SetupReplacementChannel(nsIURI *,
                                            nsIChannel *,
-                                           PRBool preserveMethod);
+                                           bool preserveMethod);
 
   // Helper function to simplify getting notification callbacks.
   template <class T>

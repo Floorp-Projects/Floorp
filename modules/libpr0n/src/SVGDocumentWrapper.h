@@ -94,7 +94,7 @@ public:
    *         percent value.  Otherwise, PR_TRUE.
    *
    */
-  PRBool    GetWidthOrHeight(Dimension aDimension, PRInt32& aResult);
+  bool      GetWidthOrHeight(Dimension aDimension, PRInt32& aResult);
 
   /**
    * Returns the root <svg> element for the wrapped document, or nsnull on
@@ -121,13 +121,13 @@ public:
     { return mViewer->GetPresShell(aPresShell); }
 
   /**
-   * Returns a PRBool indicating whether the wrapped document has been parsed
+   * Returns a bool indicating whether the wrapped document has been parsed
    * successfully.
    *
    * @return PR_TRUE if the document has been parsed successfully,
    *         PR_FALSE otherwise (e.g. if there's a syntax error in the SVG).
    */
-  inline PRBool    ParsedSuccessfully()  { return !!GetRootSVGElem(); }
+  inline bool      ParsedSuccessfully()  { return !!GetRootSVGElem(); }
 
   /**
    * Modifier to update the viewport dimensions of the wrapped document. This
@@ -148,11 +148,11 @@ public:
   void FlushImageTransformInvalidation();
 
   /**
-   * Returns a PRBool indicating whether the document has any SMIL animations.
+   * Returns a bool indicating whether the document has any SMIL animations.
    *
    * @return PR_TRUE if the document has any SMIL animations. Else, PR_FALSE.
    */
-  PRBool    IsAnimated();
+  bool      IsAnimated();
 
   /**
    * Indicates whether we should currently ignore rendering invalidations sent
@@ -160,7 +160,7 @@ public:
    *
    * @return PR_TRUE if we should ignore invalidations sent from this SVG doc.
    */
-  PRBool ShouldIgnoreInvalidation() { return mIgnoreInvalidation; }
+  bool ShouldIgnoreInvalidation() { return mIgnoreInvalidation; }
 
   /**
    * Methods to control animation.
@@ -182,8 +182,8 @@ private:
   nsCOMPtr<nsIDocumentViewer> mViewer;
   nsCOMPtr<nsILoadGroup>      mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
-  PRPackedBool                mIgnoreInvalidation;
-  PRPackedBool                mRegisteredForXPCOMShutdown;
+  bool                        mIgnoreInvalidation;
+  bool                        mRegisteredForXPCOMShutdown;
 
   // Lazily-initialized pointer to nsGkAtoms::svg, to make life easier in
   // non-libxul builds, which don't let us reference nsGkAtoms from imagelib.

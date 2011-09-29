@@ -606,7 +606,7 @@ iso_pair dbg_list[] =
 void
 nsWin32Locale::initFunctionPointers(void)
 {
-  static PRBool sInitialized = PR_FALSE;
+  static bool sInitialized = false;
   // We use the Vista and above functions if we have them
   if (!sInitialized) {
     HMODULE kernelDLL = GetModuleHandleW(L"kernel32.dll");

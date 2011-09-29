@@ -192,7 +192,7 @@ public:
   NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
                        PRInt32 *aWidth, PRInt32 *aHeight);
 
-  NS_IMETHOD SetSelected(PRBool aSelect); 
+  NS_IMETHOD SetSelected(bool aSelect); 
   NS_IMETHOD TakeFocus();
 
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel,
@@ -252,7 +252,7 @@ protected:
   /**
    * Return true if the tree item accessible is expandable (contains subrows).
    */
-  PRBool IsExpandable();
+  bool IsExpandable();
 
   /**
    * Return name for cell at the given column.
@@ -287,7 +287,7 @@ public:
 
   // nsAccessNode
   virtual bool IsDefunct() const;
-  virtual PRBool Init();
+  virtual bool Init();
   virtual void Shutdown();
 
   // nsAccessible

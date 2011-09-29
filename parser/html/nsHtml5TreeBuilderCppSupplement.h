@@ -391,7 +391,7 @@ nsHtml5TreeBuilder::markMalformedIfScript(nsIContent** aElement)
 }
 
 void
-nsHtml5TreeBuilder::start(PRBool fragment)
+nsHtml5TreeBuilder::start(bool fragment)
 {
   mCurrentHtmlScriptIsAsyncOrDefer = PR_FALSE;
   deepTreeSurrogateParent = nsnull;
@@ -596,7 +596,7 @@ nsHtml5TreeBuilder::AllocateContentHandle()
   return &mHandles[mHandlesUsed++];
 }
 
-PRBool
+bool
 nsHtml5TreeBuilder::HasScript()
 {
   PRUint32 len = mOpQueue.Length();
@@ -606,8 +606,8 @@ nsHtml5TreeBuilder::HasScript()
   return mOpQueue.ElementAt(len - 1).IsRunScript();
 }
 
-PRBool
-nsHtml5TreeBuilder::Flush(PRBool aDiscretionary)
+bool
+nsHtml5TreeBuilder::Flush(bool aDiscretionary)
 {
   if (!aDiscretionary ||
       !(charBufferLen &&
@@ -621,7 +621,7 @@ nsHtml5TreeBuilder::Flush(PRBool aDiscretionary)
   }
   FlushLoads();
   if (mOpSink) {
-    PRBool hasOps = !mOpQueue.IsEmpty();
+    bool hasOps = !mOpQueue.IsEmpty();
     if (hasOps) {
       mOpSink->MoveOpsFrom(mOpQueue);
     }

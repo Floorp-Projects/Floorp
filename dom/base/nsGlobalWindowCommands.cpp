@@ -168,7 +168,7 @@ NS_IMPL_ISUPPORTS1(nsSelectionCommandsBase, nsIControllerCommand)
 NS_IMETHODIMP
 nsSelectionCommandsBase::IsCommandEnabled(const char * aCommandName,
                                       nsISupports *aCommandContext,
-                                      PRBool *outCmdEnabled)
+                                      bool *outCmdEnabled)
 {
   // XXX this needs fixing. e.g. you can't scroll up if you're already at the top of
   // the document.
@@ -245,7 +245,7 @@ nsSelectMoveScrollCommand::DoSelectCommand(const char *aCommandName, nsIDOMWindo
   // We allow the caret to be moved with arrow keys on any window for which
   // the caret is enabled. In particular, this includes caret-browsing mode
   // in non-chrome documents.
-  PRBool caretOn = PR_FALSE;
+  bool caretOn = false;
   selCont->GetCaretEnabled(&caretOn);
   if (!caretOn) {
     caretOn = Preferences::GetBool("accessibility.browsewithcaret");
@@ -421,7 +421,7 @@ public:
 NS_IMPL_ISUPPORTS1(nsClipboardCommand, nsIControllerCommand)
 
 nsresult
-nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aContext, PRBool *outCmdEnabled)
+nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aContext, bool *outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   *outCmdEnabled = PR_FALSE;
@@ -483,7 +483,7 @@ public:
 
 protected:
 
-  virtual nsresult    IsClipboardCommandEnabled(const char * aCommandName, nsIContentViewerEdit* aEdit, PRBool *outCmdEnabled) = 0;
+  virtual nsresult    IsClipboardCommandEnabled(const char * aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled) = 0;
   virtual nsresult    DoClipboardCommand(const char *aCommandName, nsIContentViewerEdit* aEdit, nsICommandParams* aParams) = 0;
   
   static nsresult     GetContentViewerEditFromContext(nsISupports *aContext, nsIContentViewerEdit **aEditInterface);
@@ -504,7 +504,7 @@ NS_IMPL_ISUPPORTS1(nsSelectionCommand, nsIControllerCommand)
 NS_IMETHODIMP
 nsSelectionCommand::IsCommandEnabled(const char * aCommandName,
                                      nsISupports *aCommandContext,
-                                     PRBool *outCmdEnabled)
+                                     bool *outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   *outCmdEnabled = PR_FALSE;
@@ -580,7 +580,7 @@ class _cmd : public nsSelectionCommand                                          
 protected:                                                                                  \
                                                                                             \
   virtual nsresult    IsClipboardCommandEnabled(const char* aCommandName,                   \
-                                  nsIContentViewerEdit* aEdit, PRBool *outCmdEnabled);      \
+                                  nsIContentViewerEdit* aEdit, bool *outCmdEnabled);      \
   virtual nsresult    DoClipboardCommand(const char* aCommandName,                          \
                                   nsIContentViewerEdit* aEdit, nsICommandParams* aParams);  \
   /* no member variables, please, we're stateless! */                                       \
@@ -592,7 +592,7 @@ NS_DECL_CLIPBOARD_COMMAND(nsClipboardSelectAllNoneCommands)
 NS_DECL_CLIPBOARD_COMMAND(nsClipboardGetContentsCommand)
 
 nsresult
-nsClipboardCopyLinkCommand::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, PRBool *outCmdEnabled)
+nsClipboardCopyLinkCommand::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled)
 {
   return aEdit->GetInLink(outCmdEnabled);
 }
@@ -608,7 +608,7 @@ nsClipboardCopyLinkCommand::DoClipboardCommand(const char *aCommandName, nsICont
 #endif
 
 nsresult
-nsClipboardImageCommands::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, PRBool *outCmdEnabled)
+nsClipboardImageCommands::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled)
 {
   return aEdit->GetInImage(outCmdEnabled);
 }
@@ -632,7 +632,7 @@ nsClipboardImageCommands::DoClipboardCommand(const char *aCommandName, nsIConten
 #endif
 
 nsresult
-nsClipboardSelectAllNoneCommands::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, PRBool *outCmdEnabled)
+nsClipboardSelectAllNoneCommands::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled)
 {
   *outCmdEnabled = PR_TRUE;
   return NS_OK;
@@ -653,7 +653,7 @@ nsClipboardSelectAllNoneCommands::DoClipboardCommand(const char *aCommandName, n
 #endif
 
 nsresult
-nsClipboardGetContentsCommand::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, PRBool *outCmdEnabled)
+nsClipboardGetContentsCommand::IsClipboardCommandEnabled(const char* aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled)
 {
   return aEdit->GetCanGetContents(outCmdEnabled);
 }
@@ -669,7 +669,7 @@ nsClipboardGetContentsCommand::DoClipboardCommand(const char *aCommandName, nsIC
   if (NS_SUCCEEDED(aParams->GetCStringValue("format", getter_Copies(format))))
     mimeType.Assign(format);
   
-  PRBool selectionOnly = PR_FALSE;
+  bool selectionOnly = false;
   aParams->GetBooleanValue("selection_only", &selectionOnly);
   
   nsAutoString contents;
@@ -694,7 +694,7 @@ public:
 
 protected:
 
-  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, PRBool *outCmdEnabled) = 0;
+  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled) = 0;
   virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation) = 0;
   
   static nsresult     GetWebNavigationFromContext(nsISupports *aContext, nsIWebNavigation **aWebNavigation);
@@ -707,7 +707,7 @@ class nsGoForwardCommand : public nsWebNavigationBaseCommand
 {
 protected:
 
-  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, PRBool *outCmdEnabled);
+  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled);
   virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation);
   // no member variables, please, we're stateless!
 };
@@ -716,7 +716,7 @@ class nsGoBackCommand : public nsWebNavigationBaseCommand
 {
 protected:
 
-  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, PRBool *outCmdEnabled);
+  virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled);
   virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation);
   // no member variables, please, we're stateless!
 };
@@ -733,7 +733,7 @@ NS_IMPL_ISUPPORTS1(nsWebNavigationBaseCommand, nsIControllerCommand)
 NS_IMETHODIMP
 nsWebNavigationBaseCommand::IsCommandEnabled(const char * aCommandName,
                                           nsISupports *aCommandContext,
-                                          PRBool *outCmdEnabled)
+                                          bool *outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   *outCmdEnabled = PR_FALSE;
@@ -786,7 +786,7 @@ nsWebNavigationBaseCommand::GetWebNavigationFromContext(nsISupports *aContext, n
 
 #if 0   // Remove unless needed again, bug 204777
 nsresult
-nsGoForwardCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, PRBool *outCmdEnabled)
+nsGoForwardCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled)
 {
   return aWebNavigation->GetCanGoForward(outCmdEnabled);
 }
@@ -798,7 +798,7 @@ nsGoForwardCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* 
 }
 
 nsresult
-nsGoBackCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, PRBool *outCmdEnabled)
+nsGoBackCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled)
 {
   return aWebNavigation->GetCanGoBack(outCmdEnabled);
 }
@@ -836,7 +836,7 @@ NS_IMPL_ISUPPORTS1(nsClipboardDragDropHookCommand, nsIControllerCommand)
 NS_IMETHODIMP
 nsClipboardDragDropHookCommand::IsCommandEnabled(const char * aCommandName,
                                                  nsISupports *aCommandContext,
-                                                 PRBool *outCmdEnabled)
+                                                 bool *outCmdEnabled)
 {
   *outCmdEnabled = PR_TRUE;
   return NS_OK;

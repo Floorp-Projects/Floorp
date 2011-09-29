@@ -74,18 +74,18 @@ public:
     mDisabledSet = PR_FALSE;
   }
 
-  PRBool GetDisabled()
+  bool GetDisabled()
   {
     return mDisabled;
   }
 
-  void SetDisabled(PRBool aDisabled)
+  void SetDisabled(bool aDisabled)
   {
     mDisabled = aDisabled;
     mDisabledSet = PR_TRUE;
   }
 
-  PRBool IsDisabledSet()
+  bool IsDisabledSet()
   {
     return mDisabledSet;
   }
@@ -104,8 +104,8 @@ public:
 protected:
   nsCOMPtr<nsISupports> mContentData;
   nsPoint mScrollState;
-  PRPackedBool mDisabledSet;
-  PRPackedBool mDisabled;
+  bool mDisabledSet;
+  bool mDisabled;
 };
 
 #endif /* nsPresState_h_ */

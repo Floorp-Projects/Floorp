@@ -79,12 +79,12 @@ function run_test() {
                 .createInstance(Components.interfaces.nsIXMLHttpRequest);
   request.open("GET", redirectURL, true);
   request.setRequestHeader("X-Custom-Header", "present");
-  request.onreadystatechange = function() {
+  request.addEventListener("readystatechange", function() {
     if (request.readyState == 4) {
       do_check_eq(request.status, 200);
       server.stop(do_test_finished);
     }
-  };
+  }, false);
   request.send();
   try {
     request.setRequestHeader("X-Unwanted-Header", "present");

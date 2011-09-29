@@ -93,7 +93,7 @@ public:
   }
   const URIAndPrincipalHashKey* GetKeyPointer() const { return this; }
 
-  PRBool KeyEquals(const URIAndPrincipalHashKey* aKey) const {
+  bool KeyEquals(const URIAndPrincipalHashKey* aKey) const {
     if (!nsURIHashKey::KeyEquals(aKey->mKey)) {
       return PR_FALSE;
     }
@@ -103,7 +103,7 @@ public:
       return PR_FALSE;
     }
 
-    PRBool eq;
+    bool eq;
     return !mPrincipal ||
       (NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq);
   }
@@ -183,8 +183,8 @@ public:
                            const nsAString& aTitle,
                            const nsAString& aMedia,
                            nsICSSLoaderObserver* aObserver,
-                           PRBool* aCompleted,
-                           PRBool* aIsAlternate);
+                           bool* aCompleted,
+                           bool* aIsAlternate);
 
   /**
    * Load a linked (document) stylesheet.  If a successful result is returned,
@@ -209,9 +209,9 @@ public:
                          nsIURI* aURL,
                          const nsAString& aTitle,
                          const nsAString& aMedia,
-                         PRBool aHasAlternateRel,
+                         bool aHasAlternateRel,
                          nsICSSLoaderObserver* aObserver,
-                         PRBool* aIsAlternate);
+                         bool* aIsAlternate);
 
   /**
    * Load a child (@import-ed) style sheet.  In addition to loading the sheet,
@@ -261,8 +261,8 @@ public:
    * whether the data could be parsed as CSS and doesn't indicate anything
    * about the status of child sheets of the returned sheet.
    */
-  nsresult LoadSheetSync(nsIURI* aURL, PRBool aEnableUnsafeRules,
-                         PRBool aUseSystemPrincipal,
+  nsresult LoadSheetSync(nsIURI* aURL, bool aEnableUnsafeRules,
+                         bool aUseSystemPrincipal,
                          nsCSSStyleSheet** aSheet);
 
   /**
@@ -326,8 +326,8 @@ public:
    * NS_ERROR_NOT_AVAILABLE. Note that this DOES NOT disable
    * currently loading styles or already processed styles.
    */
-  PRBool GetEnabled() { return mEnabled; }
-  void SetEnabled(PRBool aEnabled) { mEnabled = aEnabled; }
+  bool GetEnabled() { return mEnabled; }
+  void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
 
   /**
    * Get the document we live for. May return null.
@@ -344,7 +344,7 @@ public:
    * will return PR_TRUE during notification for the first one, and PR_FALSE
    * during notification for the second one.
    */
-  PRBool HasPendingLoads();
+  bool HasPendingLoads();
 
   /**
    * Add an observer to this loader.  The observer will be notified
@@ -367,7 +367,7 @@ public:
 
   // IsAlternate can change our currently selected style set if none
   // is selected and aHasAlternateRel is false.
-  PRBool IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel);
+  bool IsAlternate(const nsAString& aTitle, bool aHasAlternateRel);
 
   typedef nsTArray<nsRefPtr<SheetLoadData> > LoadDataArray;
 
@@ -387,7 +387,7 @@ private:
   nsresult CreateSheet(nsIURI* aURI,
                        nsIContent* aLinkingContent,
                        nsIPrincipal* aLoaderPrincipal,
-                       PRBool aSyncLoad,
+                       bool aSyncLoad,
                        StyleSheetState& aSheetState,
                        nsCSSStyleSheet** aSheet);
 
@@ -399,8 +399,8 @@ private:
                         const nsAString& aTitle,
                         const nsAString& aMediaString,
                         nsMediaList* aMediaList,
-                        PRBool aHasAlternateRel = PR_FALSE,
-                        PRBool *aIsAlternate = nsnull);
+                        bool aHasAlternateRel = false,
+                        bool *aIsAlternate = nsnull);
 
   nsresult InsertSheetInDoc(nsCSSStyleSheet* aSheet,
                             nsIContent* aLinkingContent,
@@ -411,8 +411,8 @@ private:
                             ImportRule* aParentRule);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
-                                        PRBool aAllowUnsafeRules,
-                                        PRBool aUseSystemPrincipal,
+                                        bool aAllowUnsafeRules,
+                                        bool aUseSystemPrincipal,
                                         nsIPrincipal* aOriginPrincipal,
                                         const nsCString& aCharset,
                                         nsCSSStyleSheet** aSheet,
@@ -428,7 +428,7 @@ private:
   nsresult PostLoadEvent(nsIURI* aURI,
                          nsCSSStyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
-                         PRBool aWasAlternate,
+                         bool aWasAlternate,
                          nsIStyleSheetLinkingElement* aElement);
 
   // Start the loads of all the sheets in mPendingDatas
@@ -447,7 +447,7 @@ private:
   // ParseSheet also called SheetComplete on aLoadData.
   nsresult ParseSheet(const nsAString& aInput,
                       SheetLoadData* aLoadData,
-                      PRBool& aCompleted);
+                      bool& aCompleted);
 
   // The load of the sheet in aLoadData is done, one way or another.  Do final
   // cleanup, including releasing aLoadData.
@@ -494,10 +494,10 @@ private:
   nsCompatibility   mCompatMode;
   nsString          mPreferredSheet;  // title of preferred sheet
 
-  PRPackedBool      mEnabled; // is enabled to load new styles
+  bool              mEnabled; // is enabled to load new styles
 
 #ifdef DEBUG
-  PRPackedBool      mSyncCallback;
+  bool              mSyncCallback;
 #endif
 };
 

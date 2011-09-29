@@ -40,7 +40,7 @@ namespace mozilla {
 namespace net {
 
 template<class KeyClass, class T>
-PRBool
+bool
 RedirectChannelRegistrar::nsCOMPtrHashtable<KeyClass,T>::Get(KeyType aKey, T** retVal) const
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);

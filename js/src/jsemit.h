@@ -668,11 +668,9 @@ struct JSCodeGenerator : public JSTreeContext
     }
 
     /*
-     * Release cg->codePool, cg->notePool, and parser->context->tempPool to
-     * marks set by JSCodeGenerator's ctor. Note that cgs are magic: they own
-     * the arena pool "tops-of-stack" space above their codeMark, noteMark, and
-     * tempMark points.  This means you cannot alloc from tempPool and save the
-     * pointer beyond the next JSCodeGenerator destructor call.
+     * Note that cgs are magic: they own the arena "top-of-stack" space above
+     * their tempMark points. This means that you cannot alloc from tempPool
+     * and save the pointer beyond the next JSCodeGenerator destructor call.
      */
     ~JSCodeGenerator();
 

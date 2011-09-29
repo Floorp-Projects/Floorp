@@ -156,7 +156,7 @@ nsPartChannel::GetName(nsACString &aResult)
 }
 
 NS_IMETHODIMP
-nsPartChannel::IsPending(PRBool *aResult)
+nsPartChannel::IsPending(bool *aResult)
 {
     // For now, consider the active lifetime of each part the same as
     // the underlying multipart channel...  This is not exactly right,
@@ -313,7 +313,7 @@ nsPartChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsPartChannel::SetContentType(const nsACString &aContentType)
 {
-    PRBool dummy;
+    bool dummy;
     net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
     return NS_OK;
 }
@@ -384,7 +384,7 @@ nsPartChannel::GetPartID(PRUint32 *aPartID)
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetIsLastPart(PRBool *aIsLastPart)
+nsPartChannel::GetIsLastPart(bool *aIsLastPart)
 {
     *aIsLastPart = mIsLastPart;
     return NS_OK;
@@ -395,7 +395,7 @@ nsPartChannel::GetIsLastPart(PRBool *aIsLastPart)
 //
 
 NS_IMETHODIMP 
-nsPartChannel::GetIsByteRangeRequest(PRBool *aIsByteRangeRequest)
+nsPartChannel::GetIsByteRangeRequest(bool *aIsByteRangeRequest)
 {
     *aIsByteRangeRequest = mIsByteRangeRequest;
 
@@ -546,7 +546,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         // we were not able to process all the headers
         // for this "part" given the previous buffer given to 
         // us in the previous OnDataAvailable callback.
-        PRBool done = PR_FALSE;
+        bool done = false;
         rv = ParseHeaders(channel, cursor, bufLen, &done);
         if (NS_FAILED(rv)) ERR_OUT
 
@@ -584,7 +584,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             // parse headers
             mNewPart = PR_FALSE;
             cursor = token;
-            PRBool done = PR_FALSE; 
+            bool done = false; 
             rv = ParseHeaders(channel, cursor, bufLen, &done);
             if (NS_FAILED(rv)) ERR_OUT
             if (done) {
@@ -919,13 +919,13 @@ nsMultiMixedConv::PushOverLine(char *&aPtr, PRUint32 &aLen) {
 
 nsresult
 nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr, 
-                               PRUint32 &aLen, PRBool *_retval) {
+                               PRUint32 &aLen, bool *_retval) {
     // NOTE: this data must be ascii.
     // NOTE: aPtr is NOT null terminated!
     nsresult rv = NS_OK;
     char *cursor = aPtr, *newLine = nsnull;
     PRUint32 cursorLen = aLen;
-    PRBool done = PR_FALSE;
+    bool done = false;
     PRUint32 lineFeedIncrement = 1;
     
     mContentLength = LL_MAXUINT; // XXX what if we were already called?

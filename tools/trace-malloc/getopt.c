@@ -73,7 +73,7 @@ char    *optarg;                /* argument associated with option */
 #define BADCH   (int)'?'
 #define EMSG    ""
 
-getopt(int nargc, char **nargv, char *ostr)
+int getopt(int nargc, char **nargv, char *ostr)
 {
 	static char *place = EMSG;              /* option letter processing */
 	register char *oli;                     /* option letter list index */

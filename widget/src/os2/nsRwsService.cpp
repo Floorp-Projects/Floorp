@@ -101,7 +101,7 @@ static nsresult AssignTitleString(const char *aTitle, nsAString& result);
 //------------------------------------------------------------------------
 
 static nsRwsService *sRwsInstance = 0;   // our singleton instance
-static PRBool        sInit = FALSE;      // have we tried to load RWS
+static bool          sInit = FALSE;      // have we tried to load RWS
 
 // RWS administrative functions
 static ULONG (* _System sRwsClientInit)(BOOL);
@@ -138,14 +138,14 @@ public:
   ExtCache();
   ~ExtCache();
 
-  nsresult GetIcon(const char *aExt, PRBool aNeedMini, PRUint32 *oIcon);
-  nsresult SetIcon(const char *aExt, PRBool aIsMini, PRUint32 aIcon);
+  nsresult GetIcon(const char *aExt, bool aNeedMini, PRUint32 *oIcon);
+  nsresult SetIcon(const char *aExt, bool aIsMini, PRUint32 aIcon);
   nsresult GetHandler(const char *aExt, PRUint32 *oHandle, nsAString& oTitle);
   nsresult SetHandler(const char *aExt, PRUint32 aHandle, nsAString& aTitle);
   void     EmptyCache();
 
 protected:
-  ExtInfo *FindExtension(const char *aExt, PRBool aSet = PR_FALSE);
+  ExtInfo *FindExtension(const char *aExt, bool aSet = false);
 
   PRUint32 mPid;
   PRUint32 mMutex;
@@ -178,7 +178,7 @@ nsRwsService::~nsRwsService()
 // retrieves its icon, deletes the temp file, then caches the icon
 
 NS_IMETHODIMP
-nsRwsService::IconFromExtension(const char *aExt, PRBool aNeedMini,
+nsRwsService::IconFromExtension(const char *aExt, bool aNeedMini,
                                 PRUint32 *_retval)
 {
   if (!aExt || !*aExt || !_retval)
@@ -207,8 +207,8 @@ nsRwsService::IconFromExtension(const char *aExt, PRBool aNeedMini,
 // Transient object;  locating non-file objects is fairly expensive
 
 NS_IMETHODIMP
-nsRwsService::IconFromPath(const char *aPath, PRBool aAbstract,
-                           PRBool aNeedMini, PRUint32 *_retval)
+nsRwsService::IconFromPath(const char *aPath, bool aAbstract,
+                           bool aNeedMini, PRUint32 *_retval)
 {
   if (!aPath || !*aPath || !_retval)
     return NS_ERROR_INVALID_ARG;
@@ -228,7 +228,7 @@ nsRwsService::IconFromPath(const char *aPath, PRBool aAbstract,
 // retrieve's an object's icon using its persistent handle
 
 NS_IMETHODIMP
-nsRwsService::IconFromHandle(PRUint32 aHandle, PRBool aNeedMini,
+nsRwsService::IconFromHandle(PRUint32 aHandle, bool aNeedMini,
                              PRUint32 *_retval)
 {
   if (!aHandle || !_retval)
@@ -483,7 +483,7 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
 // Transient object;  locating non-file objects is fairly expensive
 
 NS_IMETHODIMP
-nsRwsService::MenuFromPath(const char *aPath, PRBool aAbstract)
+nsRwsService::MenuFromPath(const char *aPath, bool aAbstract)
 {
   if (!aPath || !*aPath)
     return NS_ERROR_INVALID_ARG;
@@ -806,7 +806,7 @@ static nsresult AssignTitleString(const char *aTitle, nsAString& result)
 
   PRUnichar *pSrc;
   PRUnichar *pDst;
-  PRBool     fSkip;
+  bool       fSkip;
 
   // remove line breaks, leading whitespace, & extra embedded whitespace
   // (primitive, but gcc 3.2.2 doesn't support wchar)
@@ -857,7 +857,7 @@ ExtCache::~ExtCache() {}
 
 // retrieve the WPS's default icon for files with this extension
 
-nsresult ExtCache::GetIcon(const char *aExt, PRBool aNeedMini,
+nsresult ExtCache::GetIcon(const char *aExt, bool aNeedMini,
                            PRUint32 *oIcon)
 {
   PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
@@ -888,7 +888,7 @@ nsresult ExtCache::GetIcon(const char *aExt, PRBool aNeedMini,
 
 // save the WPS's default icon for files with this extension
 
-nsresult ExtCache::SetIcon(const char *aExt, PRBool aIsMini,
+nsresult ExtCache::SetIcon(const char *aExt, bool aIsMini,
                            PRUint32 aIcon)
 {
   PRUint32 rc = DosRequestMutexSem(mMutex, kMutexTimeout);
@@ -990,7 +990,7 @@ nsresult ExtCache::SetHandler(const char *aExt, PRUint32 aHandle,
 // find the entry for the requested extension;  if not found,
 // create a new entry, expanding the array as needed
 
-ExtInfo *ExtCache::FindExtension(const char *aExt, PRBool aSet)
+ExtInfo *ExtCache::FindExtension(const char *aExt, bool aSet)
 {
   // eliminate any leading dot & null extensions
   if (*aExt == '.')

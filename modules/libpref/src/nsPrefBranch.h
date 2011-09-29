@@ -123,7 +123,7 @@ class PrefCallback : public PLDHashEntryHdr {
       MOZ_COUNT_DTOR(PrefCallback);
     }
 
-    PRBool KeyEquals(const PrefCallback *aKey) const
+    bool KeyEquals(const PrefCallback *aKey) const
     {
       // We want to be able to look up a weakly-referencing PrefCallback after
       // its observer has died so we can remove it from the table.  Once the
@@ -177,7 +177,7 @@ class PrefCallback : public PLDHashEntryHdr {
     }
 
     // Has this callback's weak reference died?
-    PRBool IsExpired() const
+    bool IsExpired() const
     {
       if (!IsWeak())
         return PR_FALSE;
@@ -199,7 +199,7 @@ class PrefCallback : public PLDHashEntryHdr {
     // We need a canonical nsISupports pointer, per bug 578392.
     nsISupports          *mCanonical;
 
-    PRBool IsWeak() const
+    bool IsWeak() const
     {
       return !!mWeakRef;
     }
@@ -215,7 +215,7 @@ public:
   NS_DECL_NSIPREFBRANCH2
   NS_DECL_NSIOBSERVER
 
-  nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch);
+  nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch);
   virtual ~nsPrefBranch();
 
   PRInt32 GetRootLength() { return mPrefRootLength; }
@@ -241,9 +241,9 @@ protected:
 private:
   PRInt32               mPrefRootLength;
   nsCString             mPrefRoot;
-  PRBool                mIsDefault;
+  bool                  mIsDefault;
 
-  PRBool                mFreeingObserverList;
+  bool                  mFreeingObserverList;
   nsClassHashtable<PrefCallback, PrefCallback> mObservers;
 };
 

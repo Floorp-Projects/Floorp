@@ -58,7 +58,7 @@ class nsGIFDecoder2 : public Decoder
 {
 public:
 
-  nsGIFDecoder2();
+  nsGIFDecoder2(RasterImage *aImage, imgIDecoderObserver* aObserver);
   ~nsGIFDecoder2();
 
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
@@ -77,7 +77,7 @@ private:
 
   nsresult  GifWrite(const PRUint8 * buf, PRUint32 numbytes);
   PRUint32  OutputRow();
-  PRBool    DoLzw(const PRUint8 *q);
+  bool      DoLzw(const PRUint8 *q);
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
@@ -96,8 +96,8 @@ private:
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
   PRUint8 mColorMask;        // Apply this to the pixel to keep within colormap
-  PRPackedBool mGIFOpen;
-  PRPackedBool mSawTransparency;
+  bool mGIFOpen;
+  bool mSawTransparency;
 
   gif_struct mGIFStruct;
 };

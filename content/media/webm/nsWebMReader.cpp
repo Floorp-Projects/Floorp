@@ -90,7 +90,7 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
   NS_ASSERTION(stream, "Decoder has no media stream");
 
   nsresult rv = NS_OK;
-  PRBool eof = PR_FALSE;
+  bool eof = false;
 
   char *p = static_cast<char *>(aBuffer);
   while (NS_SUCCEEDED(rv) && aLength > 0) {
@@ -393,8 +393,8 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
 
 ogg_packet nsWebMReader::InitOggPacket(unsigned char* aData,
                                        size_t aLength,
-                                       PRBool aBOS,
-                                       PRBool aEOS,
+                                       bool aBOS,
+                                       bool aEOS,
                                        PRInt64 aGranulepos)
 {
   ogg_packet packet;
@@ -407,7 +407,7 @@ ogg_packet nsWebMReader::InitOggPacket(unsigned char* aData,
   return packet;
 }
  
-PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
+bool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -534,11 +534,11 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
 
   // Flag to indicate that we do need to playback these types of
   // packets.
-  PRPackedBool hasType = aTrackType == VIDEO ? mHasVideo : mHasAudio;
+  bool hasType = aTrackType == VIDEO ? mHasVideo : mHasAudio;
 
   // Flag to indicate that we do need to playback the other type
   // of track.
-  PRPackedBool hasOtherType = aTrackType == VIDEO ? mHasAudio : mHasVideo;
+  bool hasOtherType = aTrackType == VIDEO ? mHasAudio : mHasVideo;
 
   // Track we are interested in
   PRUint32 ourTrack = aTrackType == VIDEO ? mVideoTrack : mAudioTrack;
@@ -584,7 +584,7 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
   return holder.out();
 }
 
-PRBool nsWebMReader::DecodeAudioData()
+bool nsWebMReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -597,7 +597,7 @@ PRBool nsWebMReader::DecodeAudioData()
   return DecodeAudioPacket(holder->mPacket, holder->mOffset);
 }
 
-PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
+bool nsWebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                       PRInt64 aTimeThreshold)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");

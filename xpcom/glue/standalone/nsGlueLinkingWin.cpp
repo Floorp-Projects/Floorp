@@ -90,7 +90,7 @@ preload(LPCWSTR dll)
 }
 
 static void
-ReadDependentCB(const char *aDependentLib, PRBool do_preload)
+ReadDependentCB(const char *aDependentLib, bool do_preload)
 {
     wchar_t wideDependentLib[MAX_PATH];
     MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);

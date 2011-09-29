@@ -60,7 +60,7 @@ public:
 
     /** Implement nsIFrame::GetPrefWidth for the table */
     virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
-                                 PRBool aComputingSize) = 0;
+                                 bool aComputingSize) = 0;
 
     /** Implement nsIFrame::MarkIntrinsicWidthsDirty for the table */
     virtual void MarkIntrinsicWidthsDirty() = 0;

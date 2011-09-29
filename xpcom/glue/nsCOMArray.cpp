@@ -39,7 +39,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 
-static PRBool ReleaseObjects(void* aElement, void*);
+static bool ReleaseObjects(void* aElement, void*);
 
 // implementations of non-trivial methods in nsCOMArray_base
 
@@ -77,17 +77,17 @@ nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
     return retval;
 }
 
-PRBool
+bool
 nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
-    PRBool result = mArray.InsertElementAt(aObject, aIndex);
+    bool result = mArray.InsertElementAt(aObject, aIndex);
     if (result)
         NS_IF_ADDREF(aObject);
     return result;
 }
 
-PRBool
+bool
 nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex) {
-    PRBool result = mArray.InsertElementsAt(aObjects.mArray, aIndex);
+    bool result = mArray.InsertElementsAt(aObjects.mArray, aIndex);
     if (result) {
         // need to addref all these
         PRInt32 count = aObjects.Count();
@@ -98,14 +98,14 @@ nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex
     return result;
 }
 
-PRBool
+bool
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
 {
     // its ok if oldObject is null here
     nsISupports *oldObject =
         reinterpret_cast<nsISupports*>(mArray.SafeElementAt(aIndex));
 
-    PRBool result = mArray.ReplaceElementAt(aObject, aIndex);
+    bool result = mArray.ReplaceElementAt(aObject, aIndex);
 
     // ReplaceElementAt could fail, such as if the array grows
     // so only release the existing object if the replacement succeeded
@@ -117,22 +117,22 @@ nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
     return result;
 }
 
-PRBool
+bool
 nsCOMArray_base::RemoveObject(nsISupports *aObject)
 {
-    PRBool result = mArray.RemoveElement(aObject);
+    bool result = mArray.RemoveElement(aObject);
     if (result)
         NS_IF_RELEASE(aObject);
     return result;
 }
 
-PRBool
+bool
 nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
 {
     if (PRUint32(aIndex) < PRUint32(Count())) {
         nsISupports* element = ObjectAt(aIndex);
 
-        PRBool result = mArray.RemoveElementAt(aIndex);
+        bool result = mArray.RemoveElementAt(aIndex);
         NS_IF_RELEASE(element);
         return result;
     }
@@ -140,7 +140,7 @@ nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsCOMArray_base::RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount)
 {
     if (PRUint32(aIndex) + PRUint32(aCount) <= PRUint32(Count())) {
@@ -148,7 +148,7 @@ nsCOMArray_base::RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount)
         for (PRInt32 i = 0; i < aCount; ++i) {
             elementsToDestroy.InsertElementAt(mArray.FastElementAt(aIndex + i), i);
         }
-        PRBool result = mArray.RemoveElementsAt(aIndex, aCount);
+        bool result = mArray.RemoveElementsAt(aIndex, aCount);
         for (PRInt32 i = 0; i < aCount; ++i) {
             nsISupports* element = static_cast<nsISupports*> (elementsToDestroy.FastElementAt(i));
             NS_IF_RELEASE(element);
@@ -160,7 +160,7 @@ nsCOMArray_base::RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount)
 }
 
 // useful for destructors
-PRBool
+bool
 ReleaseObjects(void* aElement, void*)
 {
     nsISupports* element = static_cast<nsISupports*>(aElement);
@@ -177,7 +177,7 @@ nsCOMArray_base::Clear()
     objects.EnumerateForwards(ReleaseObjects, nsnull);
 }
 
-PRBool
+bool
 nsCOMArray_base::SetCount(PRInt32 aNewCount)
 {
     NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
@@ -192,7 +192,7 @@ nsCOMArray_base::SetCount(PRInt32 aNewCount)
             objects.ReplaceElementAt(ObjectAt(i), i - aNewCount);
         }
     }
-    PRBool result = mArray.SetCount(aNewCount);
+    bool result = mArray.SetCount(aNewCount);
     objects.EnumerateForwards(ReleaseObjects, nsnull);
     return result;
 }

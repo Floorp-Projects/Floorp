@@ -62,7 +62,7 @@ private:
 
     nsCOMPtr<nsIAuthModule> mInnerModule;
     nsString       mUsername;
-    PRBool         mSASLReady;
+    bool           mSASLReady;
 };
 
 #endif /* nsAuthSASL_h__ */

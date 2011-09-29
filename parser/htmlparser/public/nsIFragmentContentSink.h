@@ -97,7 +97,7 @@ public:
   /**
    * Sets whether scripts elements are marked as unexecutable.
    */
-  NS_IMETHOD SetPreventScriptExecution(PRBool aPreventScriptExecution) = 0;
+  NS_IMETHOD SetPreventScriptExecution(bool aPreventScriptExecution) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFragmentContentSink,

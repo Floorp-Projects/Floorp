@@ -63,14 +63,14 @@ nsNetworkLinkService::~nsNetworkLinkService()
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetIsLinkUp(PRBool *aIsUp)
+nsNetworkLinkService::GetIsLinkUp(bool *aIsUp)
 {
     *aIsUp = mLinkUp;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetLinkStatusKnown(PRBool *aIsUp)
+nsNetworkLinkService::GetLinkStatusKnown(bool *aIsUp)
 {
     *aIsUp = mStatusKnown;
     return NS_OK;
@@ -190,8 +190,8 @@ nsNetworkLinkService::UpdateReachability()
         return;
     }
 
-    PRBool reachable = (flags & kSCNetworkFlagsReachable) != 0;
-    PRBool needsConnection = (flags & kSCNetworkFlagsConnectionRequired) != 0;
+    bool reachable = (flags & kSCNetworkFlagsReachable) != 0;
+    bool needsConnection = (flags & kSCNetworkFlagsConnectionRequired) != 0;
 
     mLinkUp = (reachable && !needsConnection);
     mStatusKnown = PR_TRUE;

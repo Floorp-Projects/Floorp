@@ -166,19 +166,19 @@ GfxInfo::Init()
 }
 
 NS_IMETHODIMP
-GfxInfo::GetD2DEnabled(PRBool *aEnabled)
+GfxInfo::GetD2DEnabled(bool *aEnabled)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAzureEnabled(PRBool *aEnabled)
+GfxInfo::GetAzureEnabled(bool *aEnabled)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+GfxInfo::GetDWriteEnabled(bool *aEnabled)
 {
   return NS_ERROR_FAILURE;
 }
@@ -304,7 +304,7 @@ GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
 
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
-GfxInfo::GetIsGPU2Active(PRBool* aIsGPU2Active)
+GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 {
   return NS_ERROR_FAILURE;
 }
@@ -354,7 +354,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
   }
 
   if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
-    PRBool foundGoodDevice = PR_FALSE;
+    bool foundGoodDevice = false;
 
     if (!IsATIRadeonX1000(mAdapterVendorID, mAdapterDeviceID)) {
       foundGoodDevice = PR_TRUE;

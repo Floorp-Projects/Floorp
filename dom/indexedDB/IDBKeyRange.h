@@ -59,8 +59,8 @@ public:
   static
   already_AddRefed<IDBKeyRange> Create(nsIVariant* aLower,
                                        nsIVariant* aUpper,
-                                       PRBool aLowerOpen,
-                                       PRBool aUpperOpen);
+                                       bool aLowerOpen,
+                                       bool aUpperOpen);
 
 protected:
   IDBKeyRange()
@@ -71,8 +71,8 @@ protected:
 
   nsCOMPtr<nsIVariant> mLower;
   nsCOMPtr<nsIVariant> mUpper;
-  PRPackedBool mLowerOpen;
-  PRPackedBool mUpperOpen;
+  bool mLowerOpen;
+  bool mUpperOpen;
 };
 
 END_INDEXEDDB_NAMESPACE

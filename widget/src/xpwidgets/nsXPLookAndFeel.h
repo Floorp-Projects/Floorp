@@ -46,7 +46,7 @@ struct nsLookAndFeelIntPref
 {
   const char* name;
   mozilla::LookAndFeel::IntID id;
-  PRPackedBool isSet;
+  bool isSet;
   PRInt32 intVar;
 };
 
@@ -54,7 +54,7 @@ struct nsLookAndFeelFloatPref
 {
   const char* name;
   mozilla::LookAndFeel::FloatID id;
-  PRPackedBool isSet;
+  bool isSet;
   float floatVar;
 };
 
@@ -95,7 +95,7 @@ public:
     return PRUnichar('*');
   }
 
-  virtual PRBool GetEchoPasswordImpl()
+  virtual bool GetEchoPasswordImpl()
   {
     return PR_FALSE;
   }
@@ -110,11 +110,11 @@ protected:
   void InitFromPref(nsLookAndFeelFloatPref* aPref);
   void InitColorFromPref(PRInt32 aIndex);
   virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult) = 0;
-  PRBool IsSpecialColor(ColorID aID, nscolor &aColor);
+  bool IsSpecialColor(ColorID aID, nscolor &aColor);
 
   static int OnPrefChanged(const char* aPref, void* aClosure);
 
-  static PRBool sInitialized;
+  static bool sInitialized;
   static nsLookAndFeelIntPref sIntPrefs[];
   static nsLookAndFeelFloatPref sFloatPrefs[];
   /* this length must not be shorter than the length of the longest string in the array
@@ -123,10 +123,10 @@ protected:
   static const char sColorPrefs[][38];
   static PRInt32 sCachedColors[LookAndFeel::eColorID_LAST_COLOR];
   static PRInt32 sCachedColorBits[COLOR_CACHE_SIZE];
-  static PRBool sUseNativeColors;
+  static bool sUseNativeColors;
 
   static nsLookAndFeel* sInstance;
-  static PRBool sShutdown;
+  static bool sShutdown;
 };
 
 #endif

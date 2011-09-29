@@ -679,7 +679,7 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = BindArgumentsToStatement(stmt);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  PRBool hasResult;
+  bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

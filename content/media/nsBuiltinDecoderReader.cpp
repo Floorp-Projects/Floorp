@@ -72,7 +72,7 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-static PRBool
+static bool
 ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
 {
   return aPlane.mWidth <= PlanarYCbCrImage::MAX_DIMENSION &&
@@ -81,7 +81,7 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
          aPlane.mStride > 0;
 }
 
-PRBool
+bool
 nsVideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
                                  const nsIntRect& aPicture,
                                  const nsIntSize& aDisplay)
@@ -111,7 +111,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
                              PRInt64 aTime,
                              PRInt64 aEndTime,
                              const YCbCrBuffer& aBuffer,
-                             PRBool aKeyframe,
+                             bool aKeyframe,
                              PRInt64 aTimecode,
                              nsIntRect aPicture)
 {
@@ -247,7 +247,7 @@ template<class Data>
 Data* nsBuiltinDecoderReader::DecodeToFirstData(DecodeFn aDecodeFn,
                                                 MediaQueue<Data>& aQueue)
 {
-  PRBool eof = PR_FALSE;
+  bool eof = false;
   while (!eof && aQueue.GetSize() == 0) {
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
@@ -265,11 +265,11 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
 {
   // Decode forward to the target frame. Start with video, if we have it.
   if (HasVideo()) {
-    PRBool eof = PR_FALSE;
+    bool eof = false;
     PRInt64 startTime = -1;
     while (HasVideo() && !eof) {
       while (mVideoQueue.GetSize() == 0 && !eof) {
-        PRBool skip = PR_FALSE;
+        bool skip = false;
         eof = !DecodeVideoFrame(skip, 0);
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
@@ -310,7 +310,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
     if (!UsecsToFrames(aTarget, mInfo.mAudioRate, targetFrame)) {
       return NS_ERROR_FAILURE;
     }
-    PRBool eof = PR_FALSE;
+    bool eof = false;
     while (HasAudio() && !eof) {
       while (!eof && mAudioQueue.GetSize() == 0) {
         eof = !DecodeAudioData();

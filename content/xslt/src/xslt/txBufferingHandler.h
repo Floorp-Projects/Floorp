@@ -76,7 +76,7 @@ public:
 
 protected:
     nsAutoPtr<txResultBuffer> mBuffer;
-    PRPackedBool mCanAddAttribute;
+    bool mCanAddAttribute;
 };
 
 #endif /* txBufferingHandler_h__ */

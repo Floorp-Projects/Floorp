@@ -92,8 +92,8 @@ public:
   PRInt32 mNodeOffset;
   PRInt32 mStrOffset;
   PRInt32 mLength;
-  PRBool  mIsInsertedText;
-  PRBool  mIsValid;
+  bool    mIsInsertedText;
+  bool    mIsValid;
 };
 
 #define TS_ATOM(name_, value_) nsIAtom* nsTextServicesDocument::name_ = 0;
@@ -553,7 +553,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   }
 
   nsCOMPtr<nsISelection> selection;
-  PRBool isCollapsed = PR_FALSE;
+  bool isCollapsed = false;
 
   result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
@@ -1155,7 +1155,7 @@ nsTextServicesDocument::NextBlock()
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::IsDone(PRBool *aIsDone)
+nsTextServicesDocument::IsDone(bool *aIsDone)
 {
   NS_ENSURE_TRUE(aIsDone, NS_ERROR_NULL_POINTER);
 
@@ -1532,7 +1532,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   // retain as much of the original style of the content
   // being deleted.
 
-  PRBool collapsedSelection = SelectionIsCollapsed();
+  bool collapsedSelection = SelectionIsCollapsed();
   PRInt32 savedSelOffset = mSelStartOffset;
   PRInt32 savedSelLength = mSelEndOffset - mSelStartOffset;
 
@@ -1810,7 +1810,7 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
   LOCK_DOC(this);
 
   PRInt32 nodeIndex = 0;
-  PRBool hasEntry = PR_FALSE;
+  bool hasEntry = false;
   OffsetEntry *entry;
 
   nsresult result = NodeHasOffsetEntry(&mOffsetTable, aChild, &hasEntry, &nodeIndex);
@@ -1926,8 +1926,8 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
   PRInt32 leftIndex = 0;
   PRInt32 rightIndex = 0;
-  PRBool leftHasEntry = PR_FALSE;
-  PRBool rightHasEntry = PR_FALSE;
+  bool leftHasEntry = false;
+  bool rightHasEntry = false;
 
   result = NodeHasOffsetEntry(&mOffsetTable, aLeftNode, &leftHasEntry, &leftIndex);
 
@@ -2137,7 +2137,7 @@ nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
 }
 
 nsresult
-nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange)
+nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, bool aToStart, nsIDOMRange **aRange)
 {
   nsresult result;
 
@@ -2252,7 +2252,7 @@ nsTextServicesDocument::AdjustContentIterator()
 
   nsIDOMNode *prevValidNode = 0;
   nsIDOMNode *nextValidNode = 0;
-  PRBool foundEntry = PR_FALSE;
+  bool foundEntry = false;
   OffsetEntry *entry;
 
   for (PRInt32 i = 0; i < tcount && !nextValidNode; i++)
@@ -2343,7 +2343,7 @@ nsTextServicesDocument::AdjustContentIterator()
   return NS_OK;
 }
 
-PRBool
+bool
 nsTextServicesDocument::DidSkip(nsIContentIterator* aFilteredIter)
 {
   // We can assume here that the Iterator is a nsFilteredContentIterator because
@@ -2370,7 +2370,7 @@ nsTextServicesDocument::ClearDidSkip(nsIContentIterator* aFilteredIter)
   }
 }
 
-PRBool
+bool
 nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 {
   if (!aContent) {
@@ -2409,7 +2409,7 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
           sWbrAtom     != atom);
 }
 
-PRBool
+bool
 nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2)
 {
   nsIContent* p1 = aContent1->GetParent();
@@ -2435,7 +2435,7 @@ nsTextServicesDocument::HasSameBlockNodeParent(nsIContent *aContent1, nsIContent
   return p1 == p2;
 }
 
-PRBool
+bool
 nsTextServicesDocument::IsTextNode(nsIContent *aContent)
 {
   NS_ENSURE_TRUE(aContent, PR_FALSE);
@@ -2445,7 +2445,7 @@ nsTextServicesDocument::IsTextNode(nsIContent *aContent)
   return IsTextNode(node);
 }
 
-PRBool
+bool
 nsTextServicesDocument::IsTextNode(nsIDOMNode *aNode)
 {
   NS_ENSURE_TRUE(aNode, PR_FALSE);
@@ -2460,7 +2460,7 @@ nsTextServicesDocument::IsTextNode(nsIDOMNode *aNode)
 }
 
 nsresult
-nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, PRBool aDoUpdate)
+nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, bool aDoUpdate)
 {
   nsresult result = NS_OK;
 
@@ -2491,7 +2491,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
       }
       else if (aOffset >= entry->mStrOffset)
       {
-        PRBool foundEntry = PR_FALSE;
+        bool foundEntry = false;
         PRInt32 strEndOffset = entry->mStrOffset + entry->mLength;
 
         if (aOffset < strEndOffset)
@@ -2629,7 +2629,7 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
     return NS_OK;
 
   nsCOMPtr<nsISelection> selection;
-  PRBool isCollapsed;
+  bool isCollapsed;
 
   result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
 
@@ -2769,7 +2769,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   nsCOMPtr<nsIDOMNode> node, saveNode;
   nsCOMPtr<nsIDOMNodeList> children;
   nsCOMPtr<nsIContentIterator> iter;
-  PRBool hasChildren;
+  bool hasChildren;
 
   result = CreateRange(eStart->mNode, eStartOffset, eEnd->mNode, eEndOffset, getter_AddRefs(range));
 
@@ -3119,7 +3119,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   // Find the first text node in the range.
   
-  PRBool found;
+  bool found;
   nsCOMPtr<nsIContent> content;
 
   iter->First();
@@ -3245,13 +3245,13 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   return result;
 }
 
-PRBool
+bool
 nsTextServicesDocument::SelectionIsCollapsed()
 {
   return(mSelStartIndex == mSelEndIndex && mSelStartOffset == mSelEndOffset);
 }
 
-PRBool
+bool
 nsTextServicesDocument::SelectionIsValid()
 {
   return(mSelStartIndex >= 0);
@@ -3461,7 +3461,7 @@ nsresult
 nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
 {
   nsCOMPtr<nsIContent> prev;
-  PRBool crossedBlockBoundary = PR_FALSE;
+  bool crossedBlockBoundary = false;
 
   NS_ENSURE_TRUE(aIterator, NS_ERROR_NULL_POINTER);
 
@@ -3640,7 +3640,7 @@ nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
 
           PRInt32 startOffset = 0;
           PRInt32 endOffset   = str.Length();
-          PRBool adjustStr    = PR_FALSE;
+          bool adjustStr    = false;
 
           if (entry->mNode == rngStartNode)
           {
@@ -3792,7 +3792,7 @@ nsTextServicesDocument::SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aNewEntryL
 }
 
 nsresult
-nsTextServicesDocument::NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable, nsIDOMNode *aNode, PRBool *aHasEntry, PRInt32 *aEntryIndex)
+nsTextServicesDocument::NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable, nsIDOMNode *aNode, bool *aHasEntry, PRInt32 *aEntryIndex)
 {
   OffsetEntry *entry;
   PRUint32 i;
@@ -3845,7 +3845,7 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
     *aWordEndOffset = 0;
 
   PRInt32 entryIndex = 0;
-  PRBool hasEntry = PR_FALSE;
+  bool hasEntry = false;
 
   // It's assumed that aNode is a text node. The first thing
   // we do is get it's index in the offset table so we can

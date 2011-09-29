@@ -307,10 +307,8 @@ ShadowCanvasLayerD3D9::Initialize(const Data& aData)
 }
 
 void
-ShadowCanvasLayerD3D9::Init(const SurfaceDescriptor& aNewFront, 
-                            const nsIntSize& aSize, bool needYFlip)
+ShadowCanvasLayerD3D9::Init(bool needYFlip)
 {
-
   if (!mBuffer) {
     mBuffer = new ShadowBufferD3D9(this);
   }
@@ -319,18 +317,19 @@ ShadowCanvasLayerD3D9::Init(const SurfaceDescriptor& aNewFront,
 }
 
 void
-ShadowCanvasLayerD3D9::Swap(const SurfaceDescriptor& aNewFront,
-                           SurfaceDescriptor* aNewBack)
+ShadowCanvasLayerD3D9::Swap(const CanvasSurface& aNewFront,
+                            bool needYFlip,
+                            CanvasSurface* aNewBack)
 {
-  NS_ASSERTION(aNewFront.type() == SharedImage::TSurfaceDescriptor, 
-    "ShadowCanvasLayerD3D9::Swap expected SharedImage surface");
+  NS_ASSERTION(aNewFront.type() == CanvasSurface::TSurfaceDescriptor, 
+    "ShadowCanvasLayerD3D9::Swap expected CanvasSurface surface");
 
   nsRefPtr<gfxASurface> surf = 
     ShadowLayerForwarder::OpenDescriptor(aNewFront);
-   
-  if (mBuffer) {
-    mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
+  if (!mBuffer) {
+    Init(needYFlip);
   }
+  mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
 
   *aNewBack = aNewFront;
 }

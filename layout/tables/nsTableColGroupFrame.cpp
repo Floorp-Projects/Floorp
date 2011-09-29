@@ -99,7 +99,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
 
 nsresult
 nsTableColGroupFrame::AddColsToTable(PRInt32                   aFirstColIndex,
-                                     PRBool                    aResetSubsequentColIndices,
+                                     bool                      aResetSubsequentColIndices,
                                      const nsFrameList::Slice& aCols)
 {
   nsresult rv = NS_OK;
@@ -292,7 +292,7 @@ nsTableColGroupFrame::InsertColsReflow(PRInt32                   aColIndex,
 
 void
 nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
-                                  PRBool           aResetSubsequentColIndices)
+                                  bool             aResetSubsequentColIndices)
 {
   PRInt32 colIndex = 0;
   nsIFrame* nextChild = nsnull;
@@ -325,7 +325,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   if (!aOldFrame) return NS_OK;
-  PRBool contentRemoval = PR_FALSE;
+  bool contentRemoval = false;
   
   if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
@@ -400,7 +400,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv=NS_OK;
   
   const nsStyleVisibility* groupVis = GetStyleVisibility();
-  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame)  {
@@ -429,7 +429,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsTableColGroupFrame::IsContainingBlock() const
 {
   return PR_TRUE;

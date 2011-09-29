@@ -46,7 +46,6 @@
 #include <string.h>
 
 #include "jsprvtd.h"
-#include "jsarena.h"
 #include "jsclist.h"
 #include "jsatom.h"
 #include "jsdhash.h"
@@ -64,6 +63,7 @@
 #include "jsvector.h"
 #include "prmjtime.h"
 
+#include "ds/LifoAlloc.h"
 #include "vm/Stack.h"
 #include "vm/String.h"
 
@@ -190,6 +190,10 @@ struct ThreadData {
      */
     bool                waiveGCQuota;
 
+    /* Temporary arena pool used while compiling and decompiling. */
+    static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
+    LifoAlloc           tempLifoAlloc;
+
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
      * do not interleave js_GetSrcNote calls.
@@ -224,6 +228,7 @@ struct ThreadData {
     }
 
     void purge(JSContext *cx) {
+        tempLifoAlloc.freeUnused();
         gsnCache.purge();
 
         /* FIXME: bug 506341. */
@@ -994,17 +999,11 @@ struct JSContext
     /* Wrap cx->exception for the current compartment. */
     void wrapPendingException();
 
-    /* Temporary arena pool used while compiling and decompiling. */
-    JSArenaPool         tempPool;
-
   private:
     /* Lazily initialized pool of maps used during parse/emit. */
     js::ParseMapPool    *parseMapPool_;
 
   public:
-    /* Temporary arena pool used while evaluate regular expressions. */
-    JSArenaPool         regExpPool;
-
     /* Top-level object and pointer to top stack frame's scope chain. */
     JSObject            *globalObject;
 
@@ -1143,6 +1142,9 @@ struct JSContext
     bool hasStrictOption() const { return hasRunOption(JSOPTION_STRICT); }
     bool hasWErrorOption() const { return hasRunOption(JSOPTION_WERROR); }
     bool hasAtLineOption() const { return hasRunOption(JSOPTION_ATLINE); }
+
+    js::LifoAlloc &tempLifoAlloc() { return JS_THREAD_DATA(this)->tempLifoAlloc; }
+    inline js::LifoAlloc &typeLifoAlloc();
 
 #ifdef JS_THREADSAFE
   private:
@@ -1875,28 +1877,6 @@ class AutoKeepAtoms {
         JS_KEEP_ATOMS(rt);
     }
     ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
-};
-
-class AutoArenaAllocator {
-    JSArenaPool *pool;
-    void        *mark;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-  public:
-    explicit AutoArenaAllocator(JSArenaPool *pool
-                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : pool(pool), mark(JS_ARENA_MARK(pool))
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~AutoArenaAllocator() { JS_ARENA_RELEASE(pool, mark); }
-
-    template <typename T>
-    T *alloc(size_t elems) {
-        void *ptr;
-        JS_ARENA_ALLOCATE(ptr, pool, elems * sizeof(T));
-        return static_cast<T *>(ptr);
-    }
 };
 
 class AutoReleasePtr {

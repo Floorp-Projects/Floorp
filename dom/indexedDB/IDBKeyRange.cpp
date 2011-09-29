@@ -288,8 +288,8 @@ IDBKeyRange::DefineConstructors(JSContext* aCx,
 already_AddRefed<IDBKeyRange>
 IDBKeyRange::Create(nsIVariant* aLower,
                     nsIVariant* aUpper,
-                    PRBool aLowerOpen,
-                    PRBool aUpperOpen)
+                    bool aLowerOpen,
+                    bool aUpperOpen)
 {
   nsRefPtr<IDBKeyRange> keyRange(new IDBKeyRange());
   keyRange->mLower = aLower;
@@ -332,7 +332,7 @@ IDBKeyRange::GetUpper(nsIVariant** aUpper)
 }
 
 NS_IMETHODIMP
-IDBKeyRange::GetLowerOpen(PRBool* aLowerOpen)
+IDBKeyRange::GetLowerOpen(bool* aLowerOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -342,7 +342,7 @@ IDBKeyRange::GetLowerOpen(PRBool* aLowerOpen)
 
 
 NS_IMETHODIMP
-IDBKeyRange::GetUpperOpen(PRBool* aUpperOpen)
+IDBKeyRange::GetUpperOpen(bool* aUpperOpen)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

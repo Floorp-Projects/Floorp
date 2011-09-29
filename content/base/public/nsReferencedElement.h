@@ -91,8 +91,8 @@ public:
    * @param aReferenceImage whether the ID references image elements which are
    * subject to the document's mozSetImageElement overriding mechanism.
    */
-  void Reset(nsIContent* aFrom, nsIURI* aURI, PRBool aWatch = PR_TRUE,
-             PRBool aReferenceImage = PR_FALSE);
+  void Reset(nsIContent* aFrom, nsIURI* aURI, bool aWatch = true,
+             bool aReferenceImage = false);
 
   /**
    * A variation on Reset() to set up a reference that consists of the ID of
@@ -104,7 +104,7 @@ public:
    * value, the current element for the ID.
    */
   void ResetWithID(nsIContent* aFrom, const nsString& aID,
-                   PRBool aWatch = PR_TRUE);
+                   bool aWatch = true);
 
   /**
    * Clears the reference. ElementChanged is not triggered. get() will return
@@ -128,17 +128,17 @@ protected:
    * Override this to convert from a single-shot notification to
    * a persistent notification.
    */
-  virtual PRBool IsPersistent() { return PR_FALSE; }
+  virtual bool IsPersistent() { return false; }
 
   /**
    * Set ourselves up with our new document.  Note that aDocument might be
    * null.  Either aWatch must be false or aRef must be empty.
    */
-  void HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
+  void HaveNewDocument(nsIDocument* aDocument, bool aWatch,
                        const nsString& aRef);
   
 private:
-  static PRBool Observe(Element* aOldElement,
+  static bool Observe(Element* aOldElement,
                         Element* aNewElement, void* aData);
 
   class Notification : public nsISupports {
@@ -211,7 +211,7 @@ private:
   nsCOMPtr<nsIDocument>  mWatchDocument;
   nsRefPtr<Element> mElement;
   nsRefPtr<Notification> mPendingNotification;
-  PRPackedBool           mReferencingImage;
+  bool                   mReferencingImage;
 };
 
 #endif /*NSREFERENCEDELEMENT_H_*/

@@ -81,21 +81,21 @@ public:
 
   /** nsITransactionListener interfaces
     */  
-  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt);
   NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult);
-  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt);
   NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult);
-  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt);
   NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult);
-  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, bool *aInterrupt);
   NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult);
-  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, bool *aInterrupt);
   NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult);
   NS_IMETHOD WillMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
-                       nsITransaction *aTransactionToMerge, PRBool *aInterrupt);
+                       nsITransaction *aTransactionToMerge, bool *aInterrupt);
   NS_IMETHOD DidMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
                       nsITransaction *aTransactionToMerge,
-                      PRBool aDidMerge, nsresult aMergeResult);
+                      bool aDidMerge, nsresult aMergeResult);
 
 
   nsresult   Init(nsIDOMWindow* aDOMWindow);
@@ -108,8 +108,8 @@ protected:
     eStateOn              = PR_TRUE
   };
   
-  PRBool        SelectionIsCollapsed();
-  nsresult      UpdateDirtyState(PRBool aNowDirty);  
+  bool          SelectionIsCollapsed();
+  nsresult      UpdateDirtyState(bool aNowDirty);  
   nsresult      UpdateOneCommand(const char* aCommand);
   nsresult      UpdateCommandGroup(const nsAString& aCommandGroup);
 
@@ -123,7 +123,7 @@ protected:
   nsWeakPtr     mDocShell;
   PRInt8        mDirtyState;  
   PRInt8        mSelectionCollapsed;  
-  PRPackedBool  mFirstDoOfFirstUndo;
+  bool          mFirstDoOfFirstUndo;
     
 
 };

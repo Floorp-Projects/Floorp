@@ -70,7 +70,7 @@ public:
 
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 
- static PRBool DashMatchCompare(const nsAString& aAttributeValue,
+ static bool DashMatchCompare(const nsAString& aAttributeValue,
                                 const nsAString& aSelectorValue,
                                 const nsStringComparator& aComparator);
                                 
@@ -112,9 +112,9 @@ public:
   /*
    * Does this child count as significant for selector matching?
    */
-  static PRBool IsSignificantChild(nsIContent* aChild,
-                                   PRBool aTextIsSignificant,
-                                   PRBool aWhitespaceIsSignificant);
+  static bool IsSignificantChild(nsIContent* aChild,
+                                   bool aTextIsSignificant,
+                                   bool aWhitespaceIsSignificant);
 };
 
 
