@@ -80,6 +80,14 @@ public:
                                            nsDOMEventTargetWrapperCache)
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
+
+protected:
+  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadStartListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadendListener;
 };
 
 class nsXMLHttpRequestUpload : public nsXHREventTarget,
@@ -125,7 +133,8 @@ public:
   NS_DECL_NSIXMLHTTPREQUEST
 
   // nsIJSXMLHttpRequest
-  NS_DECL_NSIJSXMLHTTPREQUEST
+  NS_IMETHOD GetOnuploadprogress(nsIDOMEventListener** aOnuploadprogress);
+  NS_IMETHOD SetOnuploadprogress(nsIDOMEventListener* aOnuploadprogress);
 
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
 
@@ -247,6 +256,9 @@ protected:
   nsCOMPtr<nsIDOMDocument> mResponseXML;
   nsCOMPtr<nsIChannel> mCORSPreflightChannel;
   nsTArray<nsCString> mCORSUnsafeHeaders;
+
+  nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 
