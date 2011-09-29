@@ -256,8 +256,8 @@ public:
 protected:
     RenderMode mRenderMode;
 
-    bool mUseClearTypeForDownloadableFonts;
-    bool mUseClearTypeAlways;
+    PRInt8 mUseClearTypeForDownloadableFonts;
+    PRInt8 mUseClearTypeAlways;
     HDC mScreenDC;
 
 private:

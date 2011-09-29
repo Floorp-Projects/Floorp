@@ -239,10 +239,10 @@ WifiGeoPositionProvider.prototype = {
     xhr.mozBackgroundRequest = true;
     xhr.open("GET", providerUrl, false);
     xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
-    xhr.onerror = function(req) {
+    xhr.addEventListener("error", function(req) {
         LOG("onerror: " + req);
-    };
-    xhr.onload = function (req) {  
+    }, false);
+    xhr.addEventListener("load", function (req) {  
         LOG("service returned: " + req.target.responseText);
         response = JSON.parse(req.target.responseText);
         /*
@@ -288,7 +288,7 @@ WifiGeoPositionProvider.prototype = {
               }
           }
         }
-    };
+    }, false);
 
     LOG("************************************* ------>>>> sending.");
     xhr.send(null);
