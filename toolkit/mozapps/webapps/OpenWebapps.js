@@ -166,7 +166,7 @@ OpenWebapps.prototype = {
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", aURL, true);
 
-    xhr.onload = function() {
+    xhr.addEventListener("load", function() {
       if (xhr.status == 200) {
         try {
           let manifest = JSON.parse(xhr.responseText);
@@ -185,12 +185,12 @@ OpenWebapps.prototype = {
       else if (aError) {
         aError.handle({ code: "networkError", message: "Unable to retrieve manifest" });
       }      
-    }
+    }, false);
 
-    xhr.onerror = function() {
+    xhr.addEventListener("error", function() {
       if (aError)
         aError.handle({ code: "networkError", message: "Unable to retrieve manifest" });
-    }
+    }, false);
 
     xhr.send(null);
   },

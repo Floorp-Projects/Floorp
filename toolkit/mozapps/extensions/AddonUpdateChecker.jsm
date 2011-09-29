@@ -451,8 +451,8 @@ function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     this.request.overrideMimeType("text/xml");
     var self = this;
-    this.request.onload = function(event) { self.onLoad() };
-    this.request.onerror = function(event) { self.onError() };
+    this.request.addEventListener("load", function(event) { self.onLoad() }, false);
+    this.request.addEventListener("error", function(event) { self.onError() }, false);
     this.request.send(null);
   }
   catch (e) {
