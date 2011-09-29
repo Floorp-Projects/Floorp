@@ -1007,6 +1007,9 @@ xhr.prototype = {
   _onload: null,
   set onload(val) { gXHR._onload = makeHandler(val); },
   get onload() { return gXHR._onload; },
+  addEventListener: function(event, val, capturing) {
+    eval("gXHR._on" + event + " = val");
+  },
   flags: AUS_Ci.nsIClassInfo.SINGLETON,
   implementationLanguage: AUS_Ci.nsIProgrammingLanguage.JAVASCRIPT,
   getHelperForLanguage: function(language) null,
