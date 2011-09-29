@@ -815,7 +815,7 @@ class GetPropCompiler : public PICStubCompiler
     {
         Assembler masm;
 
-        Jump notArgs = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
+        Jump notArgs = masm.guardShape(pic.objReg, obj);
 
         masm.load32(Address(pic.objReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
@@ -896,7 +896,7 @@ class GetPropCompiler : public PICStubCompiler
     {
         Assembler masm;
 
-        Jump notStringObj = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
+        Jump notStringObj = masm.guardShape(pic.objReg, obj);
 
         masm.loadPayload(Address(pic.objReg, JSObject::getPrimitiveThisOffset()), pic.objReg);
         masm.loadPtr(Address(pic.objReg, JSString::offsetOfLengthAndFlags()), pic.objReg);
@@ -1185,7 +1185,9 @@ class GetPropCompiler : public PICStubCompiler
         bool setStubShapeOffset = true;
         if (obj->isDenseArray()) {
             start = masm.label();
-            shapeGuardJump = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
+            shapeGuardJump = masm.branchPtr(Assembler::NotEqual,
+                                            Address(pic.objReg, offsetof(JSObject, lastProp)),
+                                            ImmPtr(obj->lastProperty()));
 
             /*
              * No need to assert validity of GETPROP_STUB_SHAPE_JUMP in this case:
@@ -2331,8 +2333,8 @@ GetElementIC::purge(Repatcher &repatcher)
     // Repatch the inline jumps.
     if (inlineTypeGuardPatched)
         repatcher.relink(fastPathStart.jumpAtOffset(inlineTypeGuard), slowPathStart);
-    if (inlineClaspGuardPatched)
-        repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), slowPathStart);
+    if (inlineShapeGuardPatched)
+        repatcher.relink(fastPathStart.jumpAtOffset(inlineShapeGuard), slowPathStart);
 
     if (slowCallPatched) {
         if (op == JSOP_GETELEM) {
@@ -2392,13 +2394,8 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
     if (!idRemat.isConstant())
         atomIdGuard = masm.branchPtr(Assembler::NotEqual, idRemat.dataReg(), ImmPtr(v.toString()));
 
-    // Guard on the base shape (or in the dense array case, the clasp).
-    Jump shapeGuard;
-    if (obj->isDenseArray()) {
-        shapeGuard = masm.testObjClass(Assembler::NotEqual, objReg, obj->getClass());
-    } else {
-        shapeGuard = masm.branchPtr(Assembler::NotEqual, typeReg, ImmPtr(obj->lastProperty()));
-    }
+    // Guard on the base shape.
+    Jump shapeGuard = masm.branchPtr(Assembler::NotEqual, typeReg, ImmPtr(obj->lastProperty()));
 
     // Guard on the prototype, if applicable.
     MaybeJump protoGuard;
@@ -2455,7 +2452,7 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
 #endif
 
     // Update the inline guards, if needed.
-    if (shouldPatchInlineTypeGuard() || shouldPatchUnconditionalClaspGuard()) {
+    if (shouldPatchInlineTypeGuard() || shouldPatchUnconditionalShapeGuard()) {
         Repatcher repatcher(cx->fp()->jit());
 
         if (shouldPatchInlineTypeGuard()) {
@@ -2468,15 +2465,15 @@ GetElementIC::attachGetProp(VMFrame &f, JSContext *cx, JSObject *obj, const Valu
             inlineTypeGuardPatched = true;
         }
 
-        if (shouldPatchUnconditionalClaspGuard()) {
-            // The clasp guard is unconditional, meaning there is no type
+        if (shouldPatchUnconditionalShapeGuard()) {
+            // The shape guard is unconditional, meaning there is no type
             // check. This is the first stub, so it has to be patched. Note
-            // that it is wrong to patch the inline clasp guard otherwise,
+            // that it is wrong to patch the inline shape guard otherwise,
             // because it follows an integer-id guard.
             JS_ASSERT(!hasInlineTypeGuard());
 
-            repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), cs);
-            inlineClaspGuardPatched = true;
+            repatcher.relink(fastPathStart.jumpAtOffset(inlineShapeGuard), cs);
+            inlineShapeGuardPatched = true;
         }
     }
 
@@ -2536,7 +2533,7 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
 
     Assembler masm;
 
-    Jump claspGuard = masm.testObjClass(Assembler::NotEqual, objReg, obj->getClass());
+    Jump shapeGuard = masm.guardShape(objReg, obj);
 
     masm.move(objReg, typeReg);
     masm.load32(Address(objReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
@@ -2642,7 +2639,7 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
     if (!buffer.verifyRange(cx->fp()->jit()))
         return disable(cx, "code memory is out of range");
 
-    buffer.link(claspGuard, slowPathStart);
+    buffer.link(shapeGuard, slowPathStart);
     buffer.link(overridden, slowPathStart);
     buffer.link(outOfBounds, slowPathStart);
     buffer.link(holeCheck, slowPathStart);
@@ -2654,12 +2651,12 @@ GetElementIC::attachArguments(JSContext *cx, JSObject *obj, const Value &v, jsid
     JaegerSpew(JSpew_PICs, "generated getelem arguments stub at %p\n", cs.executableAddress());
 
     Repatcher repatcher(cx->fp()->jit());
-    repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), cs);
+    repatcher.relink(fastPathStart.jumpAtOffset(inlineShapeGuard), cs);
 
-    JS_ASSERT(!shouldPatchUnconditionalClaspGuard());
-    JS_ASSERT(!inlineClaspGuardPatched);
+    JS_ASSERT(!shouldPatchUnconditionalShapeGuard());
+    JS_ASSERT(!inlineShapeGuardPatched);
 
-    inlineClaspGuardPatched = true;
+    inlineShapeGuardPatched = true;
     stubsGenerated++;
 
     if (stubsGenerated == MAX_GETELEM_IC_STUBS)
@@ -2683,14 +2680,14 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     if (op == JSOP_CALLELEM)
         return disable(cx, "typed array with call");
 
-    // The fast-path guarantees that after the dense clasp guard, the type is
+    // The fast-path guarantees that after the dense shape guard, the type is
     // known to be int32, either via type inference or the inline type check.
     JS_ASSERT(hasInlineTypeGuard() || idRemat.knownType() == JSVAL_TYPE_INT32);
 
     Assembler masm;
 
-    // Guard on this typed array's clasp.
-    Jump claspGuard = masm.testObjClass(Assembler::NotEqual, objReg, obj->getClass());
+    // Guard on this typed array's shape/class.
+    Jump shapeGuard = masm.guardShape(objReg, obj);
 
     // Bounds check.
     Jump outOfBounds;
@@ -2724,21 +2721,21 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
     if (!buffer.verifyRange(cx->fp()->jit()))
         return disable(cx, "code memory is out of range");
 
-    buffer.link(claspGuard, slowPathStart);
+    buffer.link(shapeGuard, slowPathStart);
     buffer.link(outOfBounds, slowPathStart);
     buffer.link(done, fastPathRejoin);
 
     CodeLocationLabel cs = buffer.finalizeCodeAddendum();
     JaegerSpew(JSpew_PICs, "generated getelem typed array stub at %p\n", cs.executableAddress());
 
-    // If we can generate a typed array stub, the clasp guard is conditional.
+    // If we can generate a typed array stub, the shape guard is conditional.
     // Also, we only support one typed array.
-    JS_ASSERT(!shouldPatchUnconditionalClaspGuard());
-    JS_ASSERT(!inlineClaspGuardPatched);
+    JS_ASSERT(!shouldPatchUnconditionalShapeGuard());
+    JS_ASSERT(!inlineShapeGuardPatched);
 
     Repatcher repatcher(cx->fp()->jit());
-    repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), cs);
-    inlineClaspGuardPatched = true;
+    repatcher.relink(fastPathStart.jumpAtOffset(inlineShapeGuard), cs);
+    inlineShapeGuardPatched = true;
 
     stubsGenerated++;
 
@@ -2914,8 +2911,8 @@ void
 SetElementIC::purge(Repatcher &repatcher)
 {
     // Repatch the inline jumps.
-    if (inlineClaspGuardPatched)
-        repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), slowPathStart);
+    if (inlineShapeGuardPatched)
+        repatcher.relink(fastPathStart.jumpAtOffset(inlineShapeGuard), slowPathStart);
     if (inlineHoleGuardPatched)
         repatcher.relink(fastPathStart.jumpAtOffset(inlineHoleGuard), slowPathStart);
 
@@ -3028,13 +3025,13 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
 LookupStatus
 SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
 {
-    // Right now, only one clasp guard extension is supported.
-    JS_ASSERT(!inlineClaspGuardPatched);
+    // Right now, only one shape guard extension is supported.
+    JS_ASSERT(!inlineShapeGuardPatched);
 
     Assembler masm;
 
-    // Guard on this typed array's clasp.
-    Jump claspGuard = masm.testObjClass(Assembler::NotEqual, objReg, obj->getClass());
+    // Guard on this typed array's shape.
+    Jump shapeGuard = masm.guardShape(objReg, obj);
 
     // Bounds check.
     Jump outOfBounds;
@@ -3089,7 +3086,7 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
         return disable(cx, "code memory is out of range");
 
     // Note that the out-of-bounds path simply does nothing.
-    buffer.link(claspGuard, slowPathStart);
+    buffer.link(shapeGuard, slowPathStart);
     buffer.link(outOfBounds, fastPathRejoin);
     buffer.link(done, fastPathRejoin);
     masm.finalize(buffer);
@@ -3098,8 +3095,8 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
     JaegerSpew(JSpew_PICs, "generated setelem typed array stub at %p\n", cs.executableAddress());
 
     Repatcher repatcher(cx->fp()->jit());
-    repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), cs);
-    inlineClaspGuardPatched = true;
+    repatcher.relink(fastPathStart.jumpAtOffset(inlineShapeGuard), cs);
+    inlineShapeGuardPatched = true;
 
     stubsGenerated++;
 

@@ -1325,6 +1325,9 @@ JITScript::trace(JSTracer *trc)
 
     for (uint32 i = 0; i < nRootedObjects; ++i)
         MarkObject(trc, *rootedObjects()[i], "mjit rooted object");
+
+    if (denseArrayShape)
+        MarkShape(trc, denseArrayShape, "mjit rooted shape");
 }
 
 /* static */ const double mjit::Assembler::oneDouble = 1.0;

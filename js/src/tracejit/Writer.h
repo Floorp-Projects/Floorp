@@ -480,7 +480,8 @@ class Writer
     }
 
     nj::LIns *ldpObjClasp(nj::LIns *obj, nj::LoadQual loadQual) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, JSObject::offsetOfClassPointer(), ACCSET_OBJ_CLASP,
+        JS_NOT_REACHED("FIXME");
+        return name(lir->insLoad(nj::LIR_ldp, obj, 0, ACCSET_OBJ_CLASP,
                                  loadQual),
                     "clasp");
     }

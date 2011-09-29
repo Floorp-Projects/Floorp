@@ -215,7 +215,6 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
 
     if (!InitNonNativeObject(cx, obj, &ArrayBufferClass))
         return NULL;
-    obj->setClass(&ArrayBufferClass);
 
     /*
      * The first 8 bytes hold the length.
@@ -1290,7 +1289,6 @@ class TypedArrayTemplate
 
         if (!InitNonNativeObject(cx, obj, fastClass()))
             return NULL;
-        obj->setClass(fastClass());
 
         // FIXME Bug 599008: make it ok to call preventExtensions here.
         obj->flags |= JSObject::NOT_EXTENSIBLE;

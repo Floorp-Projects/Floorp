@@ -194,11 +194,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
                          ImmPtr(obj->lastProperty()));
     }
 
-    Jump testFunction(Condition cond, RegisterID fun) {
-        return branchPtr(cond, Address(fun, JSObject::offsetOfClassPointer()),
-                         ImmPtr(&FunctionClass));
-    }
-
     /*
      * Finds and returns the address of a known object and slot.
      */
@@ -818,16 +813,24 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         addPtr(JSFrameReg, reg);
     }
 
-    void loadObjClass(RegisterID objReg, RegisterID destReg) {
-        loadPtr(Address(objReg, JSObject::offsetOfClassPointer()), destReg);
+    void loadObjClass(RegisterID obj, RegisterID dest) {
+        loadPtr(Address(obj, offsetof(JSObject, lastProp)), dest);
+        loadPtr(Address(dest, Shape::offsetOfBase()), dest);
+        loadPtr(Address(dest, offsetof(BaseShape, clasp)), dest);
     }
 
     Jump testClass(Condition cond, RegisterID claspReg, js::Class *clasp) {
         return branchPtr(cond, claspReg, ImmPtr(clasp));
     }
 
-    Jump testObjClass(Condition cond, RegisterID objReg, js::Class *clasp) {
-        return branchPtr(cond, Address(objReg, JSObject::offsetOfClassPointer()), ImmPtr(clasp));
+    Jump testObjClass(Condition cond, RegisterID obj, RegisterID temp, js::Class *clasp) {
+        loadPtr(Address(obj, offsetof(JSObject, lastProp)), temp);
+        loadPtr(Address(temp, Shape::offsetOfBase()), temp);
+        return branchPtr(cond, Address(temp, offsetof(BaseShape, clasp)), ImmPtr(clasp));
+    }
+
+    Jump testFunction(Condition cond, RegisterID fun, RegisterID temp) {
+        return testObjClass(cond, fun, temp, &js::FunctionClass);
     }
 
     void branchValue(Condition cond, RegisterID reg, int32 value, RegisterID result)
@@ -1294,7 +1297,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         }
 
         storePtr(ImmPtr(templateObject->lastProp), Address(result, offsetof(JSObject, lastProp)));
-        storePtr(ImmPtr(templateObject->getClass()), Address(result, JSObject::offsetOfClassPointer()));
         store32(Imm32(templateObject->flags), Address(result, offsetof(JSObject, flags)));
         storePtr(ImmPtr(templateObject->newType), Address(result, offsetof(JSObject, newType)));
         storePtr(ImmPtr(templateObject->parent), Address(result, offsetof(JSObject, parent)));

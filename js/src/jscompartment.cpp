@@ -87,7 +87,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     regExpAllocator(NULL),
 #endif
     propertyTree(thisForCtor()),
-    emptyArgumentsShape(NULL),
+    emptyStrictArgumentsShape(NULL),
+    emptyNormalArgumentsShape(NULL),
     emptyBlockShape(NULL),
     emptyCallShape(NULL),
     emptyDeclEnvShape(NULL),
@@ -501,6 +502,14 @@ JSCompartment::markTypes(JSTracer *trc)
         MarkTypeObject(trc, i.get<types::TypeObject>(), "mark_types_scan");
 }
 
+template <class T>
+void
+CheckWeakShape(JSContext *cx, T *&shape)
+{
+    if (shape && IsAboutToBeFinalized(cx, shape))
+        shape = NULL;
+}
+
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
@@ -516,23 +525,16 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     }
 
     /* Remove dead empty shapes. */
-    if (emptyArgumentsShape && IsAboutToBeFinalized(cx, emptyArgumentsShape))
-        emptyArgumentsShape = NULL;
-    if (emptyBlockShape && IsAboutToBeFinalized(cx, emptyBlockShape))
-        emptyBlockShape = NULL;
-    if (emptyCallShape && IsAboutToBeFinalized(cx, emptyCallShape))
-        emptyCallShape = NULL;
-    if (emptyDeclEnvShape && IsAboutToBeFinalized(cx, emptyDeclEnvShape))
-        emptyDeclEnvShape = NULL;
-    if (emptyEnumeratorShape && IsAboutToBeFinalized(cx, emptyEnumeratorShape))
-        emptyEnumeratorShape = NULL;
-    if (emptyWithShape && IsAboutToBeFinalized(cx, emptyWithShape))
-        emptyWithShape = NULL;
+    CheckWeakShape(cx, emptyStrictArgumentsShape);
+    CheckWeakShape(cx, emptyNormalArgumentsShape);
+    CheckWeakShape(cx, emptyBlockShape);
+    CheckWeakShape(cx, emptyCallShape);
+    CheckWeakShape(cx, emptyDeclEnvShape);
+    CheckWeakShape(cx, emptyEnumeratorShape);
+    CheckWeakShape(cx, emptyWithShape);
 
-    if (initialRegExpShape && IsAboutToBeFinalized(cx, initialRegExpShape))
-        initialRegExpShape = NULL;
-    if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
-        initialStringShape = NULL;
+    CheckWeakShape(cx, initialRegExpShape);
+    CheckWeakShape(cx, initialStringShape);
 
     /* Remove dead base shapes */
     sweepBaseShapeTable(cx);
