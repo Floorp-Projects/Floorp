@@ -1,3 +1,7 @@
+// Shared logging for all HTTP server functions.
+Cu.import("resource://services-sync/log4moz.js");
+const SYNC_HTTP_LOGGER = "Sync.Test.Server";
+
 // Use the same method that record.js does, which mirrors the server.
 // The server returns timestamps with 1/100 sec granularity. Note that this is
 // subject to change: see Bug 650435.
@@ -189,6 +193,7 @@ function ServerCollection(wbos, acceptNew, timestamp) {
    * has a modified time.
    */
   this.timestamp = timestamp || new_timestamp();
+  this._log = Log4Moz.repository.getLogger(SYNC_HTTP_LOGGER);
 }
 ServerCollection.prototype = {
 
@@ -321,7 +326,8 @@ ServerCollection.prototype = {
     for each (let record in input) {
       let wbo = this.wbo(record.id);
       if (!wbo && this.acceptNew) {
-        _("Creating WBO " + JSON.stringify(record.id) + " on the fly.");
+        this._log.debug("Creating WBO " + JSON.stringify(record.id) +
+                        " on the fly.");
         wbo = new ServerWBO(record.id);
         this.insertWBO(wbo);
       }
@@ -339,12 +345,15 @@ ServerCollection.prototype = {
   },
 
   delete: function(options) {
+    let deleted = [];
     for (let [id, wbo] in Iterator(this._wbos)) {
       if (this._inResultSet(wbo, options)) {
-        _("Deleting " + JSON.stringify(wbo));
+        this._log.debug("Deleting " + JSON.stringify(wbo));
+        deleted.push(wbo.id);
         wbo.delete();
       }
     }
+    return deleted;
   },
 
   // This handler sets `newModified` on the response body if the collection
@@ -392,10 +401,12 @@ ServerCollection.prototype = {
           break;
 
         case "DELETE":
-          self.delete(options);
+          self._log.debug("Invoking ServerCollection.DELETE.");
+          let deleted = self.delete(options);
           let ts = new_timestamp();
           body = JSON.stringify(ts);
           response.newModified = ts;
+          response.deleted = deleted;
           break;
       }
       response.setHeader("X-Weave-Timestamp",
