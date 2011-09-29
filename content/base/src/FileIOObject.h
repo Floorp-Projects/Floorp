@@ -72,9 +72,9 @@ public:
   NS_METHOD GetReadyState(PRUint16* aReadyState);
   NS_METHOD GetError(nsIDOMFileError** aError);
 
-  NS_DECL_AND_IMPL_EVENT_HANDLER(abort);
-  NS_DECL_AND_IMPL_EVENT_HANDLER(error);
-  NS_DECL_AND_IMPL_EVENT_HANDLER(progress);
+  NS_DECL_EVENT_HANDLER(abort);
+  NS_DECL_EVENT_HANDLER(error);
+  NS_DECL_EVENT_HANDLER(progress);
 
   NS_DECL_NSITIMERCALLBACK
 
