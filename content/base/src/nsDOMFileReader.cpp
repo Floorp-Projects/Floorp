@@ -77,7 +77,8 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsFileDataProtocolHandler.h"
 #include "mozilla/Preferences.h"
-#include "xpcprivate.h" 	
+#include "xpcprivate.h"
+#include "xpcpublic.h"
 #include "xpcquickstubs.h"
 #include "jstypedarray.h"
 
