@@ -297,8 +297,8 @@ BEGIN_TEST(testDebugger_emptyObjectPropertyIterator)
 {
     JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
     JSScopeProperty *prop = NULL;
-    CHECK_EQUAL(JS_PropertyIterator(obj, &prop), NULL);
-    CHECK_EQUAL(prop, NULL);
+    CHECK(!JS_PropertyIterator(obj, &prop));
+    CHECK(!prop);
 
     return true;
 }
@@ -315,8 +315,8 @@ BEGIN_TEST(testDebugger_nonEmptyObjectPropertyIterator)
     CHECK(JS_GetPropertyDesc(cx, obj, prop, &desc));
     CHECK_EQUAL(JSVAL_IS_INT(desc.value), true);
     CHECK_EQUAL(JSVAL_TO_INT(desc.value), 15);
-    CHECK_EQUAL(JS_PropertyIterator(obj, &prop), NULL);
-    CHECK_EQUAL(prop, NULL);
+    CHECK(!JS_PropertyIterator(obj, &prop));
+    CHECK(!prop);
 
     return true;
 }
