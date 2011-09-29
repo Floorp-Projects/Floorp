@@ -292,7 +292,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     aPS->SetUnwriteableMarginInTwips(margin);
   }
 
-  PRBool   b;
+  bool     b;
   nsAutoString str;
   PRInt32  iVal;
   double   dbl;
@@ -330,7 +330,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     PRInt32 sizeUnit, sizeType;
     double width, height;
 
-    PRBool success = GETINTPREF(kPrintPaperSizeUnit, &sizeUnit)
+    bool success = GETINTPREF(kPrintPaperSizeUnit, &sizeUnit)
                   && GETINTPREF(kPrintPaperSizeType, &sizeType)
                   && GETDBLPREF(kPrintPaperWidth, width)
                   && GETDBLPREF(kPrintPaperHeight, height)
@@ -625,7 +625,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  PRBool     b;
+  bool       b;
   PRUnichar* uStr;
   PRInt32    iVal;
   PRInt16    iVal16;
@@ -827,7 +827,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
 NS_IMETHODIMP
 nsPrintOptions::DisplayJobProperties(const PRUnichar *aPrinter,
                                      nsIPrintSettings* aPrintSettings,
-                                     PRBool *aDisplayed)
+                                     bool *aDisplayed)
 {
   NS_ENSURE_ARG_POINTER(aPrinter);
   *aDisplayed = PR_FALSE;
@@ -910,8 +910,8 @@ nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
     nsCOMPtr<nsIStringEnumerator> printers;
     rv = prtEnum->GetPrinterNameList(getter_AddRefs(printers));
     if (NS_SUCCEEDED(rv)) {
-      PRBool isValid = PR_FALSE;
-      PRBool hasMore;
+      bool isValid = false;
+      bool hasMore;
       while (NS_SUCCEEDED(printers->HasMore(&hasMore)) && hasMore) {
         nsAutoString printer;
         if (NS_SUCCEEDED(printers->GetNext(printer)) && lastPrinterName.Equals(printer)) {
@@ -946,7 +946,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName,
   }
 #endif
 
-  PRBool isInitialized;
+  bool isInitialized;
   aPrintSettings->GetIsInitializedFromPrinter(&isInitialized);
   if (isInitialized)
     return NS_OK;
@@ -967,7 +967,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName,
  *  Helper function - Returns either the name or sets the length to zero
  */
 static nsresult 
-GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP,
+GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
                        nsAString& aPrinterName)
 {
   NS_ENSURE_ARG_POINTER(aPS);
@@ -1030,11 +1030,11 @@ nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings,
 
 NS_IMETHODIMP 
 nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
-                                           PRBool aUsePNP, PRUint32 aFlags)
+                                           bool aUsePNP, PRUint32 aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
-  PRBool isInitialized;
+  bool isInitialized;
   aPS->GetIsInitializedFromPrefs(&isInitialized);
 
   if (isInitialized)
@@ -1070,7 +1070,7 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
  */
 nsresult
 nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
-                                         PRBool aUsePrinterNamePrefix,
+                                         bool aUsePrinterNamePrefix,
                                          PRUint32 aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);

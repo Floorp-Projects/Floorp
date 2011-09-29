@@ -57,14 +57,14 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode methods:
-    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, PRBool* aResult);
+    NS_IMETHOD EqualsNode(nsIRDFNode* aNode, bool* aResult);
 
     // nsIRDFResource methods:
     NS_IMETHOD Init(const char* aURI);
     NS_IMETHOD GetValue(char* *aURI);
     NS_IMETHOD GetValueUTF8(nsACString& aResult);
     NS_IMETHOD GetValueConst(const char** aURI);
-    NS_IMETHOD EqualsString(const char* aURI, PRBool* aResult);
+    NS_IMETHOD EqualsString(const char* aURI, bool* aResult);
     NS_IMETHOD GetDelegate(const char* aKey, REFNSIID aIID, void** aResult);
     NS_IMETHOD ReleaseDelegate(const char* aKey);
 

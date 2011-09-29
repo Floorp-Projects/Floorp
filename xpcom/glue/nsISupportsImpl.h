@@ -226,7 +226,7 @@ public:
     mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
   }
 
-  PRBool IsPurple() const
+  bool IsPurple() const
   {
     NS_ASSERTION(mTagged != NS_CCAR_TAGGED_STABILIZED_REFCNT,
                  "should have checked for stabilization first");

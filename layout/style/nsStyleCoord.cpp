@@ -100,7 +100,7 @@ nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
   return *this;
 }
 
-PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
+bool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
 {
   if (mUnit != aOther.mUnit) {
     return PR_FALSE;
@@ -243,7 +243,7 @@ nsStyleSides::nsStyleSides()
   memset(this, 0x00, sizeof(nsStyleSides));
 }
 
-PRBool nsStyleSides::operator==(const nsStyleSides& aOther) const
+bool nsStyleSides::operator==(const nsStyleSides& aOther) const
 {
   NS_FOR_CSS_SIDES(i) {
     COMPARE_INDEXED_COORD(i);
@@ -261,7 +261,7 @@ nsStyleCorners::nsStyleCorners()
   memset(this, 0x00, sizeof(nsStyleCorners));
 }
 
-PRBool
+bool
 nsStyleCorners::operator==(const nsStyleCorners& aOther) const
 {
   NS_FOR_CSS_HALF_CORNERS(i) {

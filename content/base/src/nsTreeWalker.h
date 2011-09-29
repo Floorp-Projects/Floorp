@@ -64,7 +64,7 @@ public:
     nsTreeWalker(nsINode *aRoot,
                  PRUint32 aWhatToShow,
                  nsIDOMNodeFilter *aFilter,
-                 PRBool aExpandEntityReferences);
+                 bool aExpandEntityReferences);
     virtual ~nsTreeWalker();
 
     NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeWalker)
@@ -79,7 +79,7 @@ private:
      * @param _retval   Returned node. Null if no child is found
      * @returns         Errorcode
      */
-    nsresult FirstChildInternal(PRBool aReversed, nsIDOMNode **_retval);
+    nsresult FirstChildInternal(bool aReversed, nsIDOMNode **_retval);
 
     /*
      * Implements NextSibling and PreviousSibling which only vary in which
@@ -88,7 +88,7 @@ private:
      * @param _retval   Returned node. Null if no child is found
      * @returns         Errorcode
      */
-    nsresult NextSiblingInternal(PRBool aReversed, nsIDOMNode **_retval);
+    nsresult NextSiblingInternal(bool aReversed, nsIDOMNode **_retval);
 };
 
 #endif

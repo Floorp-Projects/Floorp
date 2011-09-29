@@ -209,7 +209,7 @@ nsBox::EndLayout(nsBoxLayoutState& aState)
   return SyncLayout(aState);
 }
 
-PRBool nsBox::gGotTheme = PR_FALSE;
+bool nsBox::gGotTheme = false;
 nsITheme* nsBox::gTheme = nsnull;
 
 nsBox::nsBox()
@@ -266,7 +266,7 @@ nsIFrame::GetClientRect(nsRect& aClientRect)
 }
 
 void
-nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOverflowAreas)
+nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveOverflowAreas)
 {
     NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetBounds Size < 0");
 
@@ -372,7 +372,7 @@ nsBox::GetPadding(nsMargin& aMargin)
     nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
       nsIntMargin margin(0, 0, 0, 0);
-      PRBool useThemePadding;
+      bool useThemePadding;
 
       useThemePadding = gTheme->GetWidgetPadding(context->DeviceContext(),
                                                  this, disp->mAppearance,
@@ -415,13 +415,13 @@ nsBox::CoordNeedsRecalc(nscoord& aFlex)
   aFlex = -1;
 }
 
-PRBool
+bool
 nsBox::DoesNeedRecalc(const nsSize& aSize)
 {
   return (aSize.width == -1 || aSize.height == -1);
 }
 
-PRBool
+bool
 nsBox::DoesNeedRecalc(nscoord aCoord)
 {
   return (aCoord == -1);
@@ -439,7 +439,7 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState)
     return pref;
 
   AddBorderAndPadding(pref);
-  PRBool widthSet, heightSet;
+  bool widthSet, heightSet;
   nsIBox::AddCSSPrefSize(this, pref, widthSet, heightSet);
 
   nsSize minSize = GetMinSize(aState);
@@ -459,7 +459,7 @@ nsBox::GetMinSize(nsBoxLayoutState& aState)
     return min;
 
   AddBorderAndPadding(min);
-  PRBool widthSet, heightSet;
+  bool widthSet, heightSet;
   nsIBox::AddCSSMinSize(aState, this, min, widthSet, heightSet);
   return min;
 }
@@ -482,7 +482,7 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState)
     return maxSize;
 
   AddBorderAndPadding(maxSize);
-  PRBool widthSet, heightSet;
+  bool widthSet, heightSet;
   nsIBox::AddCSSMaxSize(this, maxSize, widthSet, heightSet);
   return maxSize;
 }
@@ -526,7 +526,7 @@ nsBox::GetBoxAscent(nsBoxLayoutState& aState)
   return GetPrefSize(aState).height;
 }
 
-PRBool
+bool
 nsBox::IsCollapsed(nsBoxLayoutState& aState)
 {
   return GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
@@ -549,7 +549,7 @@ nsIFrame::Layout(nsBoxLayoutState& aState)
   return NS_OK;
 }
 
-PRBool
+bool
 nsBox::DoesClipChildren()
 {
   const nsStyleDisplay* display = GetStyleDisplay();
@@ -563,7 +563,7 @@ nsresult
 nsBox::SyncLayout(nsBoxLayoutState& aState)
 {
   /*
-  PRBool collapsed = PR_FALSE;
+  bool collapsed = false;
   IsCollapsed(aState, collapsed);
   if (collapsed) {
     CollapseChild(aState, this, PR_TRUE);
@@ -648,8 +648,8 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
   return NS_OK;
 }
 
-PRBool
-nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &aHeightSet)
+bool
+nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = PR_FALSE;
     aHeightSet = PR_FALSE;
@@ -721,14 +721,14 @@ nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &a
 }
 
 
-PRBool
+bool
 nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
-                      PRBool &aWidthSet, PRBool &aHeightSet)
+                      bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = PR_FALSE;
     aHeightSet = PR_FALSE;
 
-    PRBool canOverride = PR_TRUE;
+    bool canOverride = true;
 
     // See if a native theme wants to supply a minimum size.
     const nsStyleDisplay* display = aBox->GetStyleDisplay();
@@ -831,8 +831,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
     return (aWidthSet && aHeightSet);
 }
 
-PRBool
-nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &aHeightSet)
+bool
+nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = PR_FALSE;
     aHeightSet = PR_FALSE;
@@ -890,10 +890,10 @@ nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &aH
     return (aWidthSet || aHeightSet);
 }
 
-PRBool
+bool
 nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
 {
-    PRBool flexSet = PR_FALSE;
+    bool flexSet = false;
 
     // get the flexibility
     aFlex = aBox->GetStyleXUL()->mBoxFlex;
@@ -980,7 +980,7 @@ nsBox::BoundsCheck(const nsSize& aMinSize, const nsSize& aPrefSize, const nsSize
 
 #ifdef DEBUG_LAYOUT
 nsresult
-nsBox::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
+nsBox::SetDebug(nsBoxLayoutState& aState, bool aDebug)
 {
     return NS_OK;
 }
@@ -1016,7 +1016,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
 
 
 NS_IMETHODIMP
-nsBox::GetDebug(PRBool& aDebug)
+nsBox::GetDebug(bool& aDebug)
 {
   aDebug = PR_FALSE;
   return NS_OK;

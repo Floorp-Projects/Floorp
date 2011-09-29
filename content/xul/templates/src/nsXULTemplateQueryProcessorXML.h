@@ -177,7 +177,7 @@ public:
 
 private:
 
-    PRBool mGenerationStarted;
+    bool mGenerationStarted;
 
     nsRefPtrHashtable<nsISupportsHashKey, nsXMLBindingSet> mRuleToBindingsMap;
 

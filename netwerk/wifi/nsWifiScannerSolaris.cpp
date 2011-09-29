@@ -108,7 +108,7 @@ do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints)
     PRUint32 section = 0;
     PRUint32 sout_scan = 0;
     PRUint32 wlan_put = 0;
-    PRBool escape = PR_FALSE;
+    bool escape = false;
     nsWifiAccessPoint* ap;
     char sout_char;
     do {
@@ -169,7 +169,7 @@ nsWifiMonitor::DoScan()
     accessPoints.Clear();
     do_dladm(accessPoints);
 
-    PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+    bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);

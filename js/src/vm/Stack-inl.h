@@ -397,7 +397,7 @@ StackFrame::functionPrologue(JSContext *cx)
 }
 
 inline void
-StackFrame::functionEpilogue(bool objectsOnly)
+StackFrame::functionEpilogue()
 {
     JS_ASSERT(isNonEvalFunctionFrame());
 
@@ -409,12 +409,12 @@ StackFrame::functionEpilogue(bool objectsOnly)
             js_PutArgsObject(this);
     }
 
-    if (!objectsOnly && maintainNestingState())
+    if (maintainNestingState())
         types::NestingEpilogue(this);
 }
 
 inline void
-StackFrame::markFunctionEpilogueDone(bool activationOnly)
+StackFrame::markFunctionEpilogueDone()
 {
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         if (hasArgsObj() && !argsObj().maybeStackFrame()) {
@@ -441,7 +441,7 @@ StackFrame::markFunctionEpilogueDone(bool activationOnly)
      * when we redo it in the epilogue we get the right final value. The other
      * nesting epilogue changes (update active args/vars) are idempotent.
      */
-    if (!activationOnly && maintainNestingState())
+    if (maintainNestingState())
         script()->nesting()->activeFrames++;
 }
 
@@ -499,15 +499,15 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 
     /* Maintain layout invariant: &formalArgs[0] == ((Value *)fp) - nformal. */
 
-    if (args.argc() == nformal) {
+    if (args.length() == nformal) {
         if (!space().ensureSpace(cx, report, firstUnused, nvals))
             return NULL;
         return reinterpret_cast<StackFrame *>(firstUnused);
     }
 
-    if (args.argc() < nformal) {
+    if (args.length() < nformal) {
         *flags = StackFrame::Flags(*flags | StackFrame::UNDERFLOW_ARGS);
-        uintN nmissing = nformal - args.argc();
+        uintN nmissing = nformal - args.length();
         if (!space().ensureSpace(cx, report, firstUnused, nmissing + nvals))
             return NULL;
         SetValueRangeToUndefined(firstUnused, nmissing);
@@ -541,7 +541,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
         return false;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, callee, fun, script, args.argc(), flags);
+    fp->initCallFrame(cx, callee, fun, script, args.length(), flags);
 
     /*
      * N.B. regs may differ from the active registers, if the parent is about
@@ -578,7 +578,7 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
 
     /* Do not init late prologue or regs; this is done by jit code. */
     fp->initJitFrameCallerHalf(cx->fp(), flags, ncode);
-    fp->initJitFrameEarlyPrologue(fun, args.argc());
+    fp->initJitFrameEarlyPrologue(fun, args.length());
 
     *stackLimit = space().conservativeEnd_;
     return fp;

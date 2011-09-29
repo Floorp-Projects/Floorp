@@ -192,7 +192,7 @@ NS_IMETHODIMP
 nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                        const nsAString& aAlertTitle,
                                        const nsAString& aAlertText,
-                                       PRBool aAlertClickable,
+                                       bool aAlertClickable,
                                        const nsAString& aAlertCookie,
                                        nsIObserver* aAlertListener,
                                        const nsAString& aAlertName)

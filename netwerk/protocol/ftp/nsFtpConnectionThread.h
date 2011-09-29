@@ -203,13 +203,13 @@ private:
      * the nsFtpState's OnCacheEntryAvailable method will be called once the
      * cache entry is available or if an error occurs.
      */
-    PRBool CheckCache();
+    bool CheckCache();
 
     /**
      * This method returns true if the data for this URL can be read from the
      * cache.  This method assumes that mCacheEntry is non-null.
      */
-    PRBool CanReadCacheEntry();
+    bool CanReadCacheEntry();
 
     /**
      * This method causes the cache entry to be read.  Data from the cache
@@ -217,7 +217,7 @@ private:
      * if successfully reading from the cache.  This method assumes that
      * mCacheEntry is non-null and opened with read access.
      */
-    PRBool ReadCacheEntry();
+    bool ReadCacheEntry();
 
     /**
      * This method configures mDataStream with an asynchronous input stream to
@@ -240,15 +240,15 @@ private:
         // ****** state machine vars
     FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
-    PRPackedBool        mKeepRunning;       // thread event loop boolean
+    bool                mKeepRunning;       // thread event loop boolean
     PRInt32             mResponseCode;      // the last command response code
     nsCString           mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
     nsRefPtr<nsFtpControlConnection> mControlConnection;       // cacheable control connection (owns mCPipe)
-    PRPackedBool                    mReceivedControlData;  
-    PRPackedBool                    mTryingCachedControl;     // retrying the password
-    PRPackedBool                    mRETRFailed;              // Did we already try a RETR and it failed?
+    bool                            mReceivedControlData;  
+    bool                            mTryingCachedControl;     // retrying the password
+    bool                            mRETRFailed;              // Did we already try a RETR and it failed?
     PRUint64                        mFileSize;
     nsCString                       mModTime;
 
@@ -263,12 +263,12 @@ private:
     nsString            mUsername;      // username
     nsString            mPassword;      // password
     FTP_ACTION          mAction;        // the higher level action (GET/PUT)
-    PRPackedBool        mAnonymous;     // try connecting anonymous (default)
-    PRPackedBool        mRetryPass;     // retrying the password
-    PRPackedBool        mStorReplyReceived; // FALSE if waiting for STOR
+    bool                mAnonymous;     // try connecting anonymous (default)
+    bool                mRetryPass;     // retrying the password
+    bool                mStorReplyReceived; // FALSE if waiting for STOR
                                             // completion status from server
     nsresult            mInternalError; // represents internal state errors
-    PRPackedBool        mReconnectAndLoginAgain;
+    bool                mReconnectAndLoginAgain;
 
         // ****** URI vars
     PRInt32                mPort;       // the port to connect to
@@ -280,8 +280,8 @@ private:
     nsCOMPtr<nsITransport>        mDataTransport;
     nsCOMPtr<nsIAsyncInputStream> mDataStream;
     nsCOMPtr<nsIRequest>    mUploadRequest;
-    PRPackedBool            mAddressChecked;
-    PRPackedBool            mServerIsIPv6;
+    bool                    mAddressChecked;
+    bool                    mServerIsIPv6;
     
     static PRUint32         mSessionStartTime;
 
@@ -292,7 +292,7 @@ private:
     nsCString               mControlReadCarryOverBuf;
 
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
-    PRPackedBool            mDoomCache;
+    bool                    mDoomCache;
     
     nsCString mSuppliedEntityID;
 };

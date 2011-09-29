@@ -91,7 +91,7 @@ interface nsIZipEntry : nsISupports
     readonly attribute boolean          isSynthetic;
 };
 
-[scriptable, uuid(7bb925d6-833a-486c-8ef2-9bc15c670a60)]
+[scriptable, uuid(8fbf5023-3827-4fbc-a464-5db546e7f747)]
 interface nsIZipReader : nsISupports
 {
     /**
@@ -104,7 +104,7 @@ interface nsIZipReader : nsISupports
     /**
      * Opens a zip file inside a zip file for reading.
      */
-    void openInner(in nsIZipReader zipReader, in string zipEntry);
+    void openInner(in nsIZipReader zipReader, in AUTF8String zipEntry);
 
     /**
      * The file that represents the zip with which this zip reader was
@@ -121,10 +121,11 @@ interface nsIZipReader : nsISupports
     /**
      * Tests the integrity of the archive by performing a CRC check 
      * on each item expanded into memory.  If an entry is specified
-     * the integrity of only that item is tested.  If NULL is passed 
-     * in the integrity of all items in the archive are tested.  
+     * the integrity of only that item is tested.  If null (javascript)
+     * or EmptyCString() (c++) is passed in the integrity of all items 
+     * in the archive are tested.  
      */
-    void test(in string aEntryName);
+    void test(in AUTF8String aEntryName);
 
     /**
      * Extracts a zip entry into a local file specified by outFile.
@@ -133,12 +134,12 @@ interface nsIZipReader : nsISupports
      * If the entry is a directory, the directory will be extracted
      * non-recursively.
      */
-    void extract(in string zipEntry, in nsIFile outFile);
+    void extract(in AUTF8String zipEntry, in nsIFile outFile);
 
     /**
      * Returns a nsIZipEntry describing a specified zip entry.
      */
-    nsIZipEntry getEntry(in string zipEntry);
+    nsIZipEntry getEntry(in AUTF8String zipEntry);
 
     /**
      * Checks whether the zipfile contains an entry specified by entryName.
@@ -150,7 +151,8 @@ interface nsIZipReader : nsISupports
      *
      * @param aPattern
      *   A regular expression used to find matching entries in the zip file.
-     *   Set this parameter to null to get all entries; otherwise, use the
+     *   Set this parameter to null (javascript) or EmptyCString() (c++) or "*" 
+     *   to get all entries; otherwise, use the
      *   following syntax:
      *
      *   o * matches anything
@@ -187,14 +189,14 @@ interface nsIZipReader : nsISupports
      * @throws NS_ERROR_ILLEGAL_VALUE on many but not all invalid aPattern
      *                                values.
      */
-    nsIUTF8StringEnumerator findEntries(in string aPattern);
+    nsIUTF8StringEnumerator findEntries(in AUTF8String aPattern);
 
     /**
      * Returns an input stream containing the contents of the specified zip
      * entry.
      * @param zipEntry the name of the entry to open the stream from
      */
-    nsIInputStream getInputStream(in string zipEntry);
+    nsIInputStream getInputStream(in AUTF8String zipEntry);
 
     /**
      * Returns an input stream containing the contents of the specified zip
@@ -203,7 +205,7 @@ interface nsIZipReader : nsISupports
      * @param aJarSpec the Spec of the URI for the JAR (only used for directory streams)
      * @param zipEntry the name of the entry to open the stream from
      */
-    nsIInputStream getInputStreamWithSpec(in AUTF8String aJarSpec, in string zipEntry);
+    nsIInputStream getInputStreamWithSpec(in AUTF8String aJarSpec, in AUTF8String zipEntry);
 
      /**
      * Returns an object describing the entity which signed 
@@ -213,7 +215,7 @@ interface nsIZipReader : nsISupports
      * stored in the jar, verifyExternalFile (not yet implemented) must 
      * be called before getPrincipal.
      */
-    nsIPrincipal getCertificatePrincipal(in string aEntryName);   
+    nsIPrincipal getCertificatePrincipal(in AUTF8String aEntryName);   
     
     readonly attribute PRUint32 manifestEntriesCount;
 };
@@ -221,7 +223,7 @@ interface nsIZipReader : nsISupports
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-[scriptable, uuid(52c45d86-0cc3-11d4-986e-00c04fa0cf4a)]
+[scriptable, uuid(72fc56e5-3e6e-4d11-8967-26ab96071032)]
 interface nsIZipReaderCache : nsISupports
 {
     /**
@@ -251,7 +253,7 @@ interface nsIZipReaderCache : nsISupports
      *
      * See getZip
      */
-    nsIZipReader getInnerZip(in nsIFile zipFile, in string zipEntry);
+    nsIZipReader getInnerZip(in nsIFile zipFile, in AUTF8String zipEntry);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -259,19 +261,15 @@ interface nsIZipReaderCache : nsISupports
 %{C++
 
 #define NS_ZIPREADER_CID                             \
-{ /* 7526a738-9632-11d3-8cd9-0060b0fc14a3 */         \
-    0x7526a738,                                      \
-    0x9632,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+{ /* 88e2fd0b-f7f4-480c-9483-7846b00e8dad */         \
+   0x88e2fd0b, 0xf7f4, 0x480c,                       \
+  { 0x94, 0x83, 0x78, 0x46, 0xb0, 0x0e, 0x8d, 0xad } \
 }
 
 #define NS_ZIPREADERCACHE_CID                        \
-{ /* 1b117e16-0cad-11d4-986e-00c04fa0cf4a */         \
-    0x1b117e16,                                      \
-    0x0cad,                                          \
-    0x11d4,                                          \
-    {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
+{ /* 608b7f6f-4b60-40d6-87ed-d933bf53d8c1 */         \
+   0x608b7f6f, 0x4b60, 0x40d6,                       \
+  { 0x87, 0xed, 0xd9, 0x33, 0xbf, 0x53, 0xd8, 0xc1 } \
 }
 
 %}

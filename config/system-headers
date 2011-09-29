@@ -23,6 +23,7 @@ alloc.h
 alsa/asoundlib.h
 alsa/pcm.h
 alsa/mixer.h
+android/log.h
 ansi_parms.h
 a.out.h
 app/Cursor.h
@@ -40,7 +41,6 @@ asm/signal.h
 ASRegistry.h
 assert.h
 atk/atk.h
-atlbase.h
 atlcom.h
 atlconv.h
 atlctl.cpp
@@ -309,7 +309,6 @@ hlink.h
 ia64/sys/inline.h
 Icons.h
 iconv.h
-IDL.h
 ieeefp.h
 ifaddrs.h
 image.h
@@ -335,6 +334,7 @@ jar.h
 JavaControl.h
 JavaEmbedding/JavaControl.h
 JavaVM/jni.h
+jemalloc.h
 JManager.h
 JNIEnvTests.h
 jni.h
@@ -405,7 +405,6 @@ libgnomevfs/gnome-vfs-mime-handlers.h
 libgnomevfs/gnome-vfs-mime-utils.h
 libgnomevfs/gnome-vfs-ops.h
 libgnomevfs/gnome-vfs-standard-callbacks.h
-libIDL/IDL.h
 lib$routines.h
 libnotify/notify.h
 limits

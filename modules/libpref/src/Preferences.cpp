@@ -88,7 +88,7 @@ static nsresult pref_LoadPrefsInDirList(const char *listId);
 Preferences* Preferences::sPreferences = nsnull;
 nsIPrefBranch2* Preferences::sRootBranch = nsnull;
 nsIPrefBranch* Preferences::sDefaultRootBranch = nsnull;
-PRBool Preferences::sShutdown = PR_FALSE;
+bool Preferences::sShutdown = false;
 
 class ValueObserverHashKey : public PLDHashEntryHdr {
 public:
@@ -114,7 +114,7 @@ public:
     mPrefName(aOther->mPrefName), mCallback(aOther->mCallback)
   { }
 
-  PRBool KeyEquals(const ValueObserverHashKey *aOther) const
+  bool KeyEquals(const ValueObserverHashKey *aOther) const
   {
     return mCallback == aOther->mCallback && mPrefName == aOther->mPrefName;
   }
@@ -152,7 +152,7 @@ public:
     mClosures.RemoveElement(aClosure);
   }
 
-  PRBool HasNoClosures() {
+  bool HasNoClosures() {
     return mClosures.Length() == 0;
   }
 
@@ -179,7 +179,7 @@ ValueObserver::Observe(nsISupports     *aSubject,
 struct CacheData {
   void* cacheLocation;
   union {
-    PRBool defaultValueBool;
+    bool defaultValueBool;
     PRInt32 defaultValueInt;
     PRUint32 defaultValueUint;
   };
@@ -206,8 +206,8 @@ Preferences::GetInstanceForService()
 }
 
 // static
-PRBool
-Preferences::InitStaticMembers(PRBool aForService)
+bool
+Preferences::InitStaticMembers(bool aForService)
 {
   if (sShutdown || sPreferences) {
     return sPreferences != nsnull;
@@ -472,20 +472,20 @@ Preferences::ReadExtensionPrefs(nsILocalFile *aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIUTF8StringEnumerator> files;
-  rv = reader->FindEntries("defaults/preferences/*.(J|j)(S|s)$",
+  rv = reader->FindEntries(nsDependentCString("defaults/preferences/*.(J|j)(S|s)$"),
                            getter_AddRefs(files));
   NS_ENSURE_SUCCESS(rv, rv);
 
   char buffer[4096];
 
-  PRBool more;
+  bool more;
   while (NS_SUCCEEDED(rv = files->HasMore(&more)) && more) {
     nsCAutoString entry;
     rv = files->GetNext(entry);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = reader->GetInputStream(entry.get(), getter_AddRefs(stream));
+    rv = reader->GetInputStream(entry, getter_AddRefs(stream));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 avail, read;
@@ -511,7 +511,7 @@ Preferences::ReadExtensionPrefs(nsILocalFile *aFile)
 }
 
 NS_IMETHODIMP
-Preferences::PrefHasUserValue(const nsACString& aPrefName, PRBool* aHasValue)
+Preferences::PrefHasUserValue(const nsACString& aPrefName, bool* aHasValue)
 {
   *aHasValue = PREF_HasUserPref(aPrefName.BeginReading());
   return NS_OK;
@@ -634,7 +634,7 @@ Preferences::UseUserPrefFile()
   if (NS_SUCCEEDED(rv) && aFile) {
     rv = aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
     if (NS_SUCCEEDED(rv)) {
-      PRBool exists = PR_FALSE;
+      bool exists = false;
       aFile->Exists(&exists);
       if (exists) {
         rv = openPrefFile(aFile);
@@ -660,7 +660,7 @@ Preferences::MakeBackupPrefFile(nsIFile *aFile)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = newFile->Append(newFilename);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   newFile->Exists(&exists);
   if (exists) {
     rv = newFile->Remove(PR_FALSE);
@@ -681,7 +681,7 @@ Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
   mCurrentFile = aFile;
 
   nsresult rv = NS_OK;
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   mCurrentFile->Exists(&exists);
   if (exists) {
     rv = openPrefFile(mCurrentFile);
@@ -865,7 +865,7 @@ static nsresult
 pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aSpecialFilesCount)
 {
   nsresult rv, rv2;
-  PRBool hasMoreElements;
+  bool hasMoreElements;
 
   nsCOMPtr<nsISimpleEnumerator> dirIterator;
 
@@ -900,7 +900,7 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aS
     // Skip non-js files
     if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".js"),
                        nsCaseInsensitiveCStringComparator())) {
-      PRBool shouldParse = PR_TRUE;
+      bool shouldParse = true;
       // separate out special files
       for (PRUint32 i = 0; i < aSpecialFilesCount; ++i) {
         if (leafName.Equals(nsDependentCString(aSpecialFiles[i]))) {
@@ -966,7 +966,7 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
               NS_GET_IID(nsISimpleEnumerator),
               getter_AddRefs(dirList));
   if (dirList) {
-    PRBool hasMore;
+    bool hasMore;
     while (NS_SUCCEEDED(dirList->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> elem;
       dirList->GetNext(getter_AddRefs(elem));
@@ -1136,7 +1136,7 @@ static nsresult pref_InitInitialObjects()
 
 // static
 nsresult
-Preferences::GetBool(const char* aPref, PRBool* aResult)
+Preferences::GetBool(const char* aPref, bool* aResult)
 {
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -1287,7 +1287,7 @@ Preferences::SetString(const char* aPref, const nsAString &aValue)
 
 // static
 nsresult
-Preferences::SetBool(const char* aPref, PRBool aValue)
+Preferences::SetBool(const char* aPref, bool aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sRootBranch->SetBoolPref(aPref, aValue);
@@ -1319,11 +1319,11 @@ Preferences::ClearUser(const char* aPref)
 }
 
 // static
-PRBool
+bool
 Preferences::HasUserValue(const char* aPref)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), PR_FALSE);
-  PRBool hasUserValue;
+  bool hasUserValue;
   nsresult rv = sRootBranch->PrefHasUserValue(aPref, &hasUserValue);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
@@ -1455,16 +1455,16 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
 static int BoolVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
-  *((PRBool*)cache->cacheLocation) =
+  *((bool*)cache->cacheLocation) =
     Preferences::GetBool(aPref, cache->defaultValueBool);
   return 0;
 }
 
 // static
 nsresult
-Preferences::AddBoolVarCache(PRBool* aCache,
+Preferences::AddBoolVarCache(bool* aCache,
                              const char* aPref,
-                             PRBool aDefault)
+                             bool aDefault)
 {
   NS_ASSERTION(aCache, "aCache must not be NULL");
   *aCache = GetBool(aPref, aDefault);
@@ -1523,7 +1523,7 @@ Preferences::AddUintVarCache(PRUint32* aCache,
 
 // static
 nsresult
-Preferences::GetDefaultBool(const char* aPref, PRBool* aResult)
+Preferences::GetDefaultBool(const char* aPref, bool* aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return sDefaultRootBranch->GetBoolPref(aPref, aResult);

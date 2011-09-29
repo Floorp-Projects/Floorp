@@ -108,9 +108,52 @@ function testLocationData(aMessageObject) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
 
-  // Test finished
-  ConsoleObserver.destroy();
-  finish();
+  startGroupTest();
+}
+
+function startGroupTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testConsoleGroup(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Exceptions in this function currently aren't reported, because of
+      // some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+  let button = gWindow.document.getElementById("test-groups");
+  ok(button, "found #test-groups button");
+  EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
+}
+
+function testConsoleGroup(aMessageObject) {
+  let messageWindow = getWindowByWindowId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  ok(aMessageObject.level == "group" ||
+     aMessageObject.level == "groupCollapsed" ||
+     aMessageObject.level == "groupEnd",
+     "expected level received");
+
+  is(aMessageObject.functionName, "testGroups", "functionName matches");
+  ok(aMessageObject.lineNumber >= 32 && aMessageObject.lineNumber <= 34,
+     "lineNumber matches");
+  if (aMessageObject.level == "groupCollapsed") {
+    ok(aMessageObject.arguments == "a group", "groupCollapsed arguments matches");
+  }
+  else if (aMessageObject.level == "group") {
+    ok(aMessageObject.arguments == "b group", "group arguments matches");
+  }
+  else if (aMessageObject.level == "groupEnd") {
+    ok(Array.prototype.join.call(aMessageObject.arguments, " ") == "b group", "groupEnd arguments matches");
+  }
+
+  if (aMessageObject.level == "groupEnd") {
+    // Test finished
+    ConsoleObserver.destroy();
+    finish();
+  }
 }
 
 function startTraceTest() {
@@ -195,6 +238,9 @@ function consoleAPISanityTest() {
   ok(win.console.error, "console.error is here");
   ok(win.console.trace, "console.trace is here");
   ok(win.console.dir, "console.dir is here");
+  ok(win.console.group, "console.group is here");
+  ok(win.console.groupCollapsed, "console.groupCollapsed is here");
+  ok(win.console.groupEnd, "console.groupEnd is here");
 }
 
 var ConsoleObserver = {

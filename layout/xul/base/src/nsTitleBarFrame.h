@@ -62,7 +62,7 @@ public:
   void UpdateMouseThrough() { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 
 protected:
-	PRBool mTrackingMouseMove;	
+	bool mTrackingMouseMove;	
 	nsIntPoint mLastPoint;
 
 }; // class nsTitleBarFrame

@@ -91,9 +91,9 @@ public:
 
 protected:
   NS_IMETHOD NativeDragEnter(PDRAGINFO pdinfo) = 0;
-  NS_IMETHOD NativeDrop(PDRAGINFO pdinfo, HWND hwnd, PRBool* rendering) = 0;
+  NS_IMETHOD NativeDrop(PDRAGINFO pdinfo, HWND hwnd, bool* rendering) = 0;
   NS_IMETHOD NativeRenderComplete(PDRAGTRANSFER pdxfer, USHORT usResult) = 0;
-  NS_IMETHOD NativeDataToTransferable( PCSZ pszText, PCSZ pszTitle, PRBool isUrl) = 0;
+  NS_IMETHOD NativeDataToTransferable( PCSZ pszText, PCSZ pszTitle, bool isUrl) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDragSessionOS2, NS_IDRAGSESSIONOS2_IID)

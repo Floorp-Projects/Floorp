@@ -71,7 +71,7 @@
 struct ProtocolAssociation
 {
   const char *name;
-  PRBool essential;
+  bool essential;
 };
 
 struct MimeTypeAssociation
@@ -149,7 +149,7 @@ nsGNOMEShellService::Init()
 
 NS_IMPL_ISUPPORTS1(nsGNOMEShellService, nsIShellService)
 
-PRBool
+bool
 nsGNOMEShellService::GetAppPathFromLauncher()
 {
   gchar *tmp;
@@ -177,7 +177,7 @@ nsGNOMEShellService::GetAppPathFromLauncher()
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const
 {
 
@@ -198,12 +198,12 @@ nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const
   if (!commandPath)
     return PR_FALSE;
 
-  PRBool matches = mAppPath.Equals(commandPath);
+  bool matches = mAppPath.Equals(commandPath);
   g_free(commandPath);
   return matches;
 }
 
-PRBool
+bool
 nsGNOMEShellService::CheckHandlerMatchesAppName(const nsACString &handler) const
 {
   gint argc;
@@ -225,8 +225,8 @@ nsGNOMEShellService::CheckHandlerMatchesAppName(const nsACString &handler) const
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck,
-                                      PRBool* aIsDefaultBrowser)
+nsGNOMEShellService::IsDefaultBrowser(bool aStartupCheck,
+                                      bool* aIsDefaultBrowser)
 {
   *aIsDefaultBrowser = PR_FALSE;
   if (aStartupCheck)
@@ -235,7 +235,7 @@ nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck,
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
 
-  PRBool enabled;
+  bool enabled;
   nsCAutoString handler;
   nsCOMPtr<nsIGIOMimeApp> gioApp;
 
@@ -272,8 +272,8 @@ nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck,
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
-                                       PRBool aForAllUsers)
+nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
+                                       bool aForAllUsers)
 {
 #ifdef DEBUG
   if (aForAllUsers)
@@ -348,7 +348,7 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
+nsGNOMEShellService::GetShouldCheckDefaultBrowser(bool* aResult)
 {
   // If we've already checked, the browser has been started and this is a 
   // new window open, and we don't want to check again.
@@ -369,7 +369,7 @@ nsGNOMEShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
+nsGNOMEShellService::SetShouldCheckDefaultBrowser(bool aShouldCheck)
 {
   nsCOMPtr<nsIPrefBranch> prefs;
   nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -611,7 +611,7 @@ nsGNOMEShellService::OpenApplication(PRInt32 aApplication)
   if (!gconf)
     return NS_ERROR_FAILURE;
 
-  PRBool enabled;
+  bool enabled;
   nsCAutoString appCommand;
   gconf->GetAppForProtocol(scheme, &enabled, appCommand);
 
@@ -620,7 +620,7 @@ nsGNOMEShellService::OpenApplication(PRInt32 aApplication)
 
   // XXX we don't currently handle launching a terminal window.
   // If the handler requires a terminal, bail.
-  PRBool requiresTerminal;
+  bool requiresTerminal;
   gconf->HandlerRequiresTerminal(scheme, &requiresTerminal);
   if (requiresTerminal)
     return NS_ERROR_FAILURE;

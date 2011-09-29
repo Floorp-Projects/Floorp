@@ -55,7 +55,7 @@ namespace dom = mozilla::dom;
 
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(dom::Element* aElement
 #ifdef MOZ_SMIL
-                                                           , PRBool aIsSMILOverride
+                                                           , bool aIsSMILOverride
 #endif // MOZ_SMIL
                                                            )
   : mElement(aElement)
@@ -129,7 +129,7 @@ nsDOMCSSAttributeDeclaration::DocToUpdate()
 }
 
 css::Declaration*
-nsDOMCSSAttributeDeclaration::GetCSSDeclaration(PRBool aAllocate)
+nsDOMCSSAttributeDeclaration::GetCSSDeclaration(bool aAllocate)
 {
   if (!mElement)
     return nsnull;

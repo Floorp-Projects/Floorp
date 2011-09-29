@@ -80,10 +80,10 @@ class nsSelectionState
   
     nsresult SaveSelection(nsISelection *aSel);
     nsresult RestoreSelection(nsISelection *aSel);
-    PRBool   IsCollapsed();
-    PRBool   IsEqual(nsSelectionState *aSelState);
+    bool     IsCollapsed();
+    bool     IsEqual(nsSelectionState *aSelState);
     void     MakeEmpty();
-    PRBool   IsEmpty();
+    bool     IsEmpty();
   protected:    
     nsTArray<nsRangeStore> mArray;
     
@@ -130,7 +130,7 @@ class nsRangeUpdater
     nsresult DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset);
   protected:    
     nsTArray<nsRangeStore*> mArray;
-    PRBool mLock;
+    bool mLock;
 };
 
 

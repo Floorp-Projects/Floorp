@@ -144,7 +144,7 @@ class nsCocoaUtils
   static BOOL IsMomentumScrollEvent(NSEvent* aEvent);
 
   // Hides the Menu bar and the Dock. Multiple hide/show requests can be nested.
-  static void HideOSChromeOnScreen(PRBool aShouldHide, NSScreen* aScreen);
+  static void HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen);
 
   static nsIWidget* GetHiddenWindowWidget();
 

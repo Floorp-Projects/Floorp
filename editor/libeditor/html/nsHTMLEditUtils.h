@@ -38,7 +38,7 @@
 #ifndef nsHTMLEditUtils_h__
 #define nsHTMLEditUtils_h__
 
-#include "prtypes.h"  // for PRBool
+#include "prtypes.h"  // for bool
 #include "nsError.h"  // for nsresult
 class nsIEditor;
 class nsIDOMNode;
@@ -47,40 +47,40 @@ class nsHTMLEditUtils
 {
 public:
   // from nsTextEditRules:
-  static PRBool IsBig(nsIDOMNode *aNode);
-  static PRBool IsSmall(nsIDOMNode *aNode);
+  static bool IsBig(nsIDOMNode *aNode);
+  static bool IsSmall(nsIDOMNode *aNode);
 
   // from nsHTMLEditRules:
-  static PRBool IsInlineStyle(nsIDOMNode *aNode);
-  static PRBool IsFormatNode(nsIDOMNode *aNode);
-  static PRBool IsNodeThatCanOutdent(nsIDOMNode *aNode);
-  static PRBool IsHeader(nsIDOMNode *aNode);
-  static PRBool IsParagraph(nsIDOMNode *aNode);
-  static PRBool IsHR(nsIDOMNode *aNode);
-  static PRBool IsListItem(nsIDOMNode *aNode);
-  static PRBool IsTable(nsIDOMNode *aNode);
-  static PRBool IsTableRow(nsIDOMNode *aNode);
-  static PRBool IsTableElement(nsIDOMNode *aNode);
-  static PRBool IsTableElementButNotTable(nsIDOMNode *aNode);
-  static PRBool IsTableCell(nsIDOMNode *aNode);
-  static PRBool IsTableCellOrCaption(nsIDOMNode *aNode);
-  static PRBool IsList(nsIDOMNode *aNode);
-  static PRBool IsOrderedList(nsIDOMNode *aNode);
-  static PRBool IsUnorderedList(nsIDOMNode *aNode);
-  static PRBool IsBlockquote(nsIDOMNode *aNode);
-  static PRBool IsPre(nsIDOMNode *aNode);
-  static PRBool IsAddress(nsIDOMNode *aNode);
-  static PRBool IsAnchor(nsIDOMNode *aNode);
-  static PRBool IsImage(nsIDOMNode *aNode);
-  static PRBool IsLink(nsIDOMNode *aNode);
-  static PRBool IsNamedAnchor(nsIDOMNode *aNode);
-  static PRBool IsDiv(nsIDOMNode *aNode);
-  static PRBool IsMozDiv(nsIDOMNode *aNode);
-  static PRBool IsMailCite(nsIDOMNode *aNode);
-  static PRBool IsFormWidget(nsIDOMNode *aNode);
-  static PRBool SupportsAlignAttr(nsIDOMNode *aNode);
-  static PRBool CanContain(PRInt32 aParent, PRInt32 aChild);
-  static PRBool IsContainer(PRInt32 aTag);
+  static bool IsInlineStyle(nsIDOMNode *aNode);
+  static bool IsFormatNode(nsIDOMNode *aNode);
+  static bool IsNodeThatCanOutdent(nsIDOMNode *aNode);
+  static bool IsHeader(nsIDOMNode *aNode);
+  static bool IsParagraph(nsIDOMNode *aNode);
+  static bool IsHR(nsIDOMNode *aNode);
+  static bool IsListItem(nsIDOMNode *aNode);
+  static bool IsTable(nsIDOMNode *aNode);
+  static bool IsTableRow(nsIDOMNode *aNode);
+  static bool IsTableElement(nsIDOMNode *aNode);
+  static bool IsTableElementButNotTable(nsIDOMNode *aNode);
+  static bool IsTableCell(nsIDOMNode *aNode);
+  static bool IsTableCellOrCaption(nsIDOMNode *aNode);
+  static bool IsList(nsIDOMNode *aNode);
+  static bool IsOrderedList(nsIDOMNode *aNode);
+  static bool IsUnorderedList(nsIDOMNode *aNode);
+  static bool IsBlockquote(nsIDOMNode *aNode);
+  static bool IsPre(nsIDOMNode *aNode);
+  static bool IsAddress(nsIDOMNode *aNode);
+  static bool IsAnchor(nsIDOMNode *aNode);
+  static bool IsImage(nsIDOMNode *aNode);
+  static bool IsLink(nsIDOMNode *aNode);
+  static bool IsNamedAnchor(nsIDOMNode *aNode);
+  static bool IsDiv(nsIDOMNode *aNode);
+  static bool IsMozDiv(nsIDOMNode *aNode);
+  static bool IsMailCite(nsIDOMNode *aNode);
+  static bool IsFormWidget(nsIDOMNode *aNode);
+  static bool SupportsAlignAttr(nsIDOMNode *aNode);
+  static bool CanContain(PRInt32 aParent, PRInt32 aChild);
+  static bool IsContainer(PRInt32 aTag);
 };
 
 #endif /* nsHTMLEditUtils_h__ */

@@ -41,7 +41,7 @@
 #include "cairo-quartz.h"
 
 gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
-                                   PRBool aForPrinting)
+                                   bool aForPrinting)
     : mCGContext(NULL), mSize(size), mForPrinting(aForPrinting)
 {
     unsigned int width = (unsigned int) floor(size.width);
@@ -62,7 +62,7 @@ gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
 
 gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
                                    const gfxSize& size,
-                                   PRBool aForPrinting)
+                                   bool aForPrinting)
     : mCGContext(context), mSize(size), mForPrinting(aForPrinting)
 {
     unsigned int width = (unsigned int) floor(size.width);
@@ -78,7 +78,7 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
-                                   PRBool aForPrinting) :
+                                   bool aForPrinting) :
     mSize(-1.0, -1.0), mForPrinting(aForPrinting)
 {
     mCGContext = cairo_quartz_surface_get_cg_context (csurf);
@@ -91,7 +91,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
                                    const gfxSize& size,
                                    long stride,
                                    gfxImageFormat format,
-                                   PRBool aForPrinting)
+                                   bool aForPrinting)
     : mCGContext(nsnull), mSize(size), mForPrinting(aForPrinting)
 {
     unsigned int width = (unsigned int) floor(size.width);

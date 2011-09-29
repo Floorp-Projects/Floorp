@@ -118,7 +118,7 @@ AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                                     JSObject *aScopeObj,
                                     jsid aId,
                                     jsval *_result,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
   if (!JSID_IS_STRING(aId))
     return NS_OK;

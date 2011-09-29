@@ -206,7 +206,7 @@ main(int argc, char* argv[])
   int socket_fd = 0;
 
 
-  PRBool notDone = PR_TRUE;
+  bool notDone = true;
   char buf[1024];
 
   while(notDone) {

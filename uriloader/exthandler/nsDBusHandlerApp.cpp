@@ -87,7 +87,7 @@ NS_IMETHODIMP nsDBusHandlerApp::GetDetailedDescription(nsAString& aDescription)
 }
 
 NS_IMETHODIMP
-nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval)
+nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aHandlerApp);
   

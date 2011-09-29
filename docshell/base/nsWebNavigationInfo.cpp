@@ -129,7 +129,7 @@ nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
     break;
 
   case nsContentUtils::TYPE_CONTENT:
-    PRBool isImage = PR_FALSE;
+    bool isImage = false;
     mImgLoader->SupportImageWithMimeType(aType.get(), &isImage);
     if (isImage) {
       *aIsSupported = nsIWebNavigationInfo::IMAGE;

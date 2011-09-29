@@ -523,7 +523,7 @@ nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
   return rv;
 }
 
-NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(PRBool *aCanToggleFIPS)
+NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(bool *aCanToggleFIPS)
 {
   nsNSSShutDownPreventionLock locker;
   *aCanToggleFIPS = SECMOD_CanDeleteInternalModule();
@@ -556,14 +556,14 @@ NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
 }
 
 /* readonly attribute boolean isFIPSEnabled; */
-NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSEnabled(PRBool *aIsFIPSEnabled)
+NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSEnabled(bool *aIsFIPSEnabled)
 {
   nsNSSShutDownPreventionLock locker;
   *aIsFIPSEnabled = PK11_IsFIPS();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSModeActive(PRBool *aIsFIPSModeActive)
+NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSModeActive(bool *aIsFIPSModeActive)
 {
   return GetIsFIPSEnabled(aIsFIPSModeActive);
 }

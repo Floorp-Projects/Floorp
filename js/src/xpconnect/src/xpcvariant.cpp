@@ -388,8 +388,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
         if(!XPCConvert::JSArray2Native(ccx, &mData.u.array.mArrayValue, 
                                        val, len, len,
-                                       type, type.IsPointer(),
-                                       &id, nsnull))
+                                       type, &id, nsnull))
             return JS_FALSE;
 
         mData.mType = nsIDataType::VTYPE_ARRAY;
@@ -555,27 +554,27 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
             if(NS_FAILED(variant->GetAsString((char**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PSTRING | XPT_TDP_POINTER);
-            xpctvar.SetValIsAllocated();
+            xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_STRING_SIZE_IS:
             if(NS_FAILED(variant->GetAsStringWithSize(&size, 
                                                       (char**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PSTRING_SIZE_IS | XPT_TDP_POINTER);
-            xpctvar.SetValIsAllocated();
+            xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_WCHAR_STR:        
             if(NS_FAILED(variant->GetAsWString((PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING | XPT_TDP_POINTER);
-            xpctvar.SetValIsAllocated();
+            xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
             if(NS_FAILED(variant->GetAsWStringWithSize(&size, 
                                                       (PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER);
-            xpctvar.SetValIsAllocated();
+            xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_INTERFACE:        
         case nsIDataType::VTYPE_INTERFACE_IS:        
@@ -589,7 +588,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
 
             xpctvar.type = (uint8)(TD_INTERFACE_IS_TYPE | XPT_TDP_POINTER);
             if(xpctvar.val.p)
-                xpctvar.SetValIsInterface();
+                xpctvar.SetValNeedsCleanup();
             break;
         }
         case nsIDataType::VTYPE_ARRAY:
@@ -710,10 +709,15 @@ VARIANT_DONE:
                                             &iid, pErr);
     }
 
-    if(xpctvar.IsValAllocated())
-        nsMemory::Free((char*)xpctvar.val.p);
-    else if(xpctvar.IsValInterface())
-        ((nsISupports*)xpctvar.val.p)->Release();
+    // We may have done something in the above code that requires cleanup.
+    if (xpctvar.DoesValNeedCleanup())
+    {
+        if (type == nsIDataType::VTYPE_INTERFACE ||
+            type == nsIDataType::VTYPE_INTERFACE_IS)
+            ((nsISupports*)xpctvar.val.p)->Release();
+        else
+            nsMemory::Free((char*)xpctvar.val.p);
+    }
 
     return success;
 }
@@ -791,8 +795,8 @@ NS_IMETHODIMP XPCVariant::GetAsDouble(double *_retval)
     return nsVariant::ConvertToDouble(mData, _retval);
 }
 
-/* PRBool getAsBool (); */
-NS_IMETHODIMP XPCVariant::GetAsBool(PRBool *_retval)
+/* bool getAsBool (); */
+NS_IMETHODIMP XPCVariant::GetAsBool(bool *_retval)
 {
     return nsVariant::ConvertToBool(mData, _retval);
 }

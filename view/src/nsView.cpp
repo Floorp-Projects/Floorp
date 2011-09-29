@@ -370,8 +370,8 @@ void nsView::SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY)
   ResetWidgetBounds(PR_FALSE, PR_TRUE, PR_FALSE);
 }
 
-void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
-                               PRBool aInvalidateChangedSize) {
+void nsView::ResetWidgetBounds(bool aRecurse, bool aMoveOnly,
+                               bool aInvalidateChangedSize) {
   if (mWindow) {
     // If our view manager has refresh disabled, then do nothing; the view
     // manager will set our position when refresh is reenabled.  Just let it
@@ -390,7 +390,7 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
   }
 }
 
-PRBool nsIView::IsEffectivelyVisible()
+bool nsIView::IsEffectivelyVisible()
 {
   for (nsIView* v = this; v; v = v->mParent) {
     if (v->GetVisibility() == nsViewVisibility_kHide)
@@ -440,8 +440,8 @@ nsIntRect nsIView::CalcWidgetBounds(nsWindowType aType)
   return newBounds;
 }
 
-void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
-                                 PRBool aInvalidateChangedSize) {
+void nsView::DoResetWidgetBounds(bool aMoveOnly,
+                                 bool aInvalidateChangedSize) {
   // The geometry of a root view's widget is controlled externally,
   // NOT by sizing or positioning the view
   if (mViewManager->GetRootViewImpl() == this) {
@@ -467,8 +467,8 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
 
   nsIntRect newBounds = CalcWidgetBounds(type);
 
-  PRBool changedPos = curBounds.TopLeft() != newBounds.TopLeft();
-  PRBool changedSize = curBounds.Size() != newBounds.Size();
+  bool changedPos = curBounds.TopLeft() != newBounds.TopLeft();
+  bool changedSize = curBounds.Size() != newBounds.Size();
 
   // Child views are never attached to top level widgets, this is safe.
   if (changedPos) {
@@ -485,7 +485,7 @@ void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
   }
 }
 
-void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint, PRBool aResizeWidget)
+void nsView::SetDimensions(const nsRect& aRect, bool aPaint, bool aResizeWidget)
 {
   nsRect dims = aRect;
   dims.MoveBy(mPosX, mPosY);
@@ -512,7 +512,7 @@ void nsView::SetInvalidationDimensions(const nsRect* aRect)
   }
 }
 
-void nsView::NotifyEffectiveVisibilityChanged(PRBool aEffectivelyVisible)
+void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible)
 {
   if (!aEffectivelyVisible)
   {
@@ -547,7 +547,7 @@ NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
+NS_IMETHODIMP nsView::SetFloating(bool aFloatingView)
 {
 	if (aFloatingView)
 		mVFlags |= NS_VIEW_FLAG_FLOATING;
@@ -614,7 +614,7 @@ void nsView::RemoveChild(nsView *child)
   {
     nsView* prevKid = nsnull;
     nsView* kid = mFirstChild;
-    PRBool found = PR_FALSE;
+    bool found = false;
     while (nsnull != kid) {
       if (kid == child) {
         if (nsnull != prevKid) {
@@ -677,8 +677,8 @@ static PRInt32 FindNonAutoZIndex(nsView* aView)
 }
 
 nsresult nsIView::CreateWidget(nsWidgetInitData *aWidgetInitData,
-                               PRBool aEnableDragDrop,
-                               PRBool aResetVisibility)
+                               bool aEnableDragDrop,
+                               bool aResetVisibility)
 {
   return Impl()->CreateWidget(aWidgetInitData,
                               aEnableDragDrop, aResetVisibility);
@@ -686,8 +686,8 @@ nsresult nsIView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 
 nsresult nsIView::CreateWidgetForParent(nsIWidget* aParentWidget,
                                         nsWidgetInitData *aWidgetInitData,
-                                        PRBool aEnableDragDrop,
-                                        PRBool aResetVisibility)
+                                        bool aEnableDragDrop,
+                                        bool aResetVisibility)
 {
   return Impl()->CreateWidgetForParent(aParentWidget, aWidgetInitData,
                                        aEnableDragDrop, aResetVisibility);
@@ -695,8 +695,8 @@ nsresult nsIView::CreateWidgetForParent(nsIWidget* aParentWidget,
 
 nsresult nsIView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                        nsIWidget* aParentWidget,
-                                       PRBool aEnableDragDrop,
-                                       PRBool aResetVisibility)
+                                       bool aEnableDragDrop,
+                                       bool aResetVisibility)
 {
   return Impl()->CreateWidgetForPopup(aWidgetInitData, aParentWidget,
                                       aEnableDragDrop, aResetVisibility);
@@ -717,8 +717,8 @@ struct DefaultWidgetInitData : public nsWidgetInitData {
 };
 
 nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
-                              PRBool aEnableDragDrop,
-                              PRBool aResetVisibility)
+                              bool aEnableDragDrop,
+                              bool aResetVisibility)
 {
   AssertNoWindow();
   NS_ABORT_IF_FALSE(!aWidgetInitData ||
@@ -726,7 +726,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
                     "Use CreateWidgetForPopup");
 
   DefaultWidgetInitData defaultInitData;
-  PRBool initDataPassedIn = !!aWidgetInitData;
+  bool initDataPassedIn = !!aWidgetInitData;
   aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
   defaultInitData.mListenForResizes =
     (!initDataPassedIn && GetParent() &&
@@ -760,8 +760,8 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 
 nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
                                        nsWidgetInitData *aWidgetInitData,
-                                       PRBool aEnableDragDrop,
-                                       PRBool aResetVisibility)
+                                       bool aEnableDragDrop,
+                                       bool aResetVisibility)
 {
   AssertNoWindow();
   NS_ABORT_IF_FALSE(!aWidgetInitData ||
@@ -791,8 +791,8 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
 
 nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                       nsIWidget* aParentWidget,
-                                      PRBool aEnableDragDrop,
-                                      PRBool aResetVisibility)
+                                      bool aEnableDragDrop,
+                                      bool aResetVisibility)
 {
   AssertNoWindow();
   NS_ABORT_IF_FALSE(aWidgetInitData, "Widget init data required");
@@ -838,7 +838,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
 }
 
 void
-nsView::InitializeWindow(PRBool aEnableDragDrop, PRBool aResetVisibility)
+nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
 {
   NS_ABORT_IF_FALSE(mWindow, "Must have a window to initialize");
 
@@ -916,9 +916,9 @@ nsresult nsIView::DetachFromTopLevelWidget()
   return NS_OK;
 }
 
-void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
+void nsView::SetZIndex(bool aAuto, PRInt32 aZIndex, bool aTopMost)
 {
-  PRBool oldIsAuto = GetZIndexIsAuto();
+  bool oldIsAuto = GetZIndexIsAuto();
   mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
   mZIndex = aZIndex;
   SetTopMost(aTopMost);
@@ -1137,13 +1137,13 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const PRInt32 aAPD) const
   return v->GetWidget();
 }
 
-PRBool nsIView::IsRoot() const
+bool nsIView::IsRoot() const
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
   return mViewManager->GetRootViewImpl() == this;
 }
 
-PRBool nsIView::ExternalIsRoot() const
+bool nsIView::ExternalIsRoot() const
 {
   return nsIView::IsRoot();
 }

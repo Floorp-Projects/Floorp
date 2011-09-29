@@ -74,15 +74,15 @@ public:
   virtual ~JumpListBuilder();
 
 protected:
-  static PRPackedBool sBuildingList; 
+  static bool sBuildingList; 
 
 private:
   nsRefPtr<ICustomDestinationList> mJumpListMgr;
   PRUint32 mMaxItems;
-  PRBool mHasCommit;
+  bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
 
-  PRBool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
+  bool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
   nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
   nsresult RemoveIconCacheForItems(nsIMutableArray *removedItems);
   nsresult RemoveIconCacheForAllItems();

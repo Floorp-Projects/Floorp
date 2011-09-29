@@ -369,7 +369,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRBool insertOnFound = mType == INTERSECTION;
+            bool insertOnFound = mType == INTERSECTION;
 
             PRInt32 searchPos = 0;
             PRInt32 i, len = nodes1->size();
@@ -436,7 +436,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                                    getter_AddRefs(nodes2));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRBool found = PR_FALSE;
+            bool found = false;
             PRInt32 i, len = nodes1->size();
             for (i = 0; i < len; ++i) {
                 if (nodes2->contains(nodes1->get(i))) {
@@ -610,7 +610,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                     getNumberResult(Double::NaN, aResult);
             }
 
-            PRBool findMax = mType == MAX;
+            bool findMax = mType == MAX;
 
             double res = findMax ? txDouble::NEGATIVE_INFINITY :
                                    txDouble::POSITIVE_INFINITY;
@@ -649,7 +649,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRBool findMax = mType == HIGHEST;
+            bool findMax = mType == HIGHEST;
             double res = findMax ? txDouble::NEGATIVE_INFINITY :
                                    txDouble::POSITIVE_INFINITY;
             PRInt32 i, len = nodes->size();
@@ -690,7 +690,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             PRInt32 offset = (prtime.tm_params.tp_gmt_offset +
               prtime.tm_params.tp_dst_offset) / 60;
               
-            PRBool isneg = offset < 0;
+            bool isneg = offset < 0;
             if (isneg) offset = -offset;
             
             StringResult* strRes;
@@ -720,7 +720,7 @@ txEXSLTFunctionCall::getReturnType()
     return descriptTable[mType].mReturnType;
 }
 
-PRBool
+bool
 txEXSLTFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     if (mType == NODE_SET || mType == SPLIT || mType == TOKENIZE) {
@@ -758,7 +758,7 @@ TX_ConstructEXSLTFunction(nsIAtom *aName,
     return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 }
 
-extern PRBool
+extern bool
 TX_InitEXSLTFunction()
 {
     PRUint32 i;

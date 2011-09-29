@@ -128,7 +128,7 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
 
-    PRBool result = PR_FALSE;
+    bool result = false;
     if (JSString *str = getStringArgument(cx, obj, 0, argc, JS_ARGV(cx, vp))) {
         JSAutoByteString cap(cx, str);
         if (!cap)

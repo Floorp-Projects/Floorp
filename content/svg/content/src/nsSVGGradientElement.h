@@ -46,6 +46,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
+#include "SVGAnimatedTransformList.h"
 
 //--------------------- Gradients------------------------
 
@@ -71,13 +72,16 @@ public:
   NS_DECL_NSIDOMSVGURIREFERENCE
 
   // nsIContent
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+  virtual mozilla::SVGAnimatedTransformList* GetAnimatedTransformList();
+  virtual nsIAtom* GetTransformListAttrName() const {
+    return nsGkAtoms::gradientTransform;
+  }
 
 protected:
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
-
-  virtual void DidAnimateTransform();
 
   enum { GRADIENTUNITS, SPREADMETHOD };
   nsSVGEnum mEnumAttributes[2];
@@ -88,14 +92,8 @@ protected:
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
-
   // nsIDOMSVGGradientElement values
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> mGradientTransform;
-
-  // helper
-  nsresult CreateTransformList();
+  nsAutoPtr<mozilla::SVGAnimatedTransformList> mGradientTransform;
 };
 
 //---------------------Linear Gradients------------------------

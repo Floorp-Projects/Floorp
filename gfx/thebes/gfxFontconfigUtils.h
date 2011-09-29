@@ -74,12 +74,12 @@ public:
 class gfxIgnoreCaseCStringComparator
 {
   public:
-    PRBool Equals(const nsACString& a, const nsACString& b) const
+    bool Equals(const nsACString& a, const nsACString& b) const
     {
       return nsCString(a).Equals(b, nsCaseInsensitiveCStringComparator());
     }
 
-    PRBool LessThan(const nsACString& a, const nsACString& b) const
+    bool LessThan(const nsACString& a, const nsACString& b) const
     { 
       return a < b;
     }
@@ -89,7 +89,7 @@ class gfxFontNameList : public nsTArray<nsString>
 {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontNameList)
-    PRBool Exists(nsAString& aName);
+    bool Exists(nsAString& aName);
 };
 
 class gfxFontconfigUtils {
@@ -112,7 +112,7 @@ public:
 
     nsresult ResolveFontName(const nsAString& aFontName,
                              gfxPlatform::FontResolverCallback aCallback,
-                             void *aClosure, PRBool& aAborted);
+                             void *aClosure, bool& aAborted);
 
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
@@ -158,7 +158,7 @@ public:
 
     static int FcWidthForThebesStretch(PRInt16 aStretch);
 
-    static PRBool GetFullnameFromFamilyAndStyle(FcPattern *aFont,
+    static bool GetFullnameFromFamilyAndStyle(FcPattern *aFont,
                                                 nsACString *aFullname);
 
     // This doesn't consider which faces exist, and so initializes the pattern
@@ -222,7 +222,7 @@ public:
         DepFcStrEntry(const DepFcStrEntry& toCopy)
             : mKey(toCopy.mKey) { }
 
-        PRBool KeyEquals(KeyTypePointer aKey) const {
+        bool KeyEquals(KeyTypePointer aKey) const {
             return FcStrCmpIgnoreCase(aKey, mKey) == 0;
         }
 
@@ -245,11 +245,11 @@ public:
         CopiedFcStrEntry(const CopiedFcStrEntry& toCopy)
             : mKey(toCopy.mKey) { }
 
-        PRBool KeyEquals(KeyTypePointer aKey) const {
+        bool KeyEquals(KeyTypePointer aKey) const {
             return FcStrCmpIgnoreCase(aKey, ToFcChar8(mKey)) == 0;
         }
 
-        PRBool IsKeyInitialized() { return !mKey.IsVoid(); }
+        bool IsKeyInitialized() { return !mKey.IsVoid(); }
         void InitKey(const FcChar8* aKey) { mKey.Assign(ToCString(aKey)); }
 
     private:
@@ -265,7 +265,7 @@ protected:
         FontsByFcStrEntry(const FontsByFcStrEntry& toCopy)
             : DepFcStrEntry(toCopy), mFonts(toCopy.mFonts) { }
 
-        PRBool AddFont(FcPattern *aFont) {
+        bool AddFont(FcPattern *aFont) {
             return mFonts.AppendElement(aFont) != nsnull;
         }
         const nsTArray< nsCountedRef<FcPattern> >& GetFonts() {
@@ -294,9 +294,9 @@ protected:
         FontsByFullnameEntry(const FontsByFullnameEntry& toCopy)
             : DepFcStrEntry(toCopy), mFonts(toCopy.mFonts) { }
 
-        PRBool KeyEquals(KeyTypePointer aKey) const;
+        bool KeyEquals(KeyTypePointer aKey) const;
 
-        PRBool AddFont(FcPattern *aFont) {
+        bool AddFont(FcPattern *aFont) {
             return mFonts.AppendElement(aFont) != nsnull;
         }
         const nsTArray< nsCountedRef<FcPattern> >& GetFonts() {
@@ -324,16 +324,16 @@ protected:
 
     static gfxFontconfigUtils* sUtils;
 
-    PRBool IsExistingFamily(const nsCString& aFamilyName);
+    bool IsExistingFamily(const nsCString& aFamilyName);
 
     nsresult GetFontListInternal(nsTArray<nsCString>& aListOfFonts,
                                  nsIAtom *aLangGroup);
-    nsresult UpdateFontListInternal(PRBool aForce = PR_FALSE);
+    nsresult UpdateFontListInternal(bool aForce = false);
 
     void AddFullnameEntries();
 
     LangSupportEntry *GetLangSupportEntry(const FcChar8 *aLang,
-                                          PRBool aWithFonts);
+                                          bool aWithFonts);
 
     // mFontsByFamily and mFontsByFullname contain entries only for families
     // and fullnames for which there are fonts.

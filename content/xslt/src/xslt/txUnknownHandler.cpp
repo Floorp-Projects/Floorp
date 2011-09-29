@@ -76,7 +76,7 @@ txUnknownHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txUnknownHandler::characters(const nsSubstring& aData, PRBool aDOE)
+txUnknownHandler::characters(const nsSubstring& aData, bool aDOE)
 {
     return mFlushed ?
            mEs->mResultHandler->characters(aData, aDOE) :
@@ -159,7 +159,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
             aLowercaseLocalName = owner;
         }
 
-        PRBool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
+        bool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
                           aLowercaseLocalName == nsGkAtoms::html;
 
         // Use aLocalName and not aLowercaseLocalName in case the output
@@ -185,7 +185,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
         NS_ASSERTION(mEs->mResultHandler == this,
                      "We're leaking mEs->mResultHandler.");
 
-        PRBool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
+        bool htmlRoot = aNsID == kNameSpaceID_None && !aPrefix &&
                           aLocalName.Equals(NS_LITERAL_STRING("html"),
                                             txCaseInsensitiveStringComparator());
         nsresult rv = createHandlerAndFlush(htmlRoot, aLocalName, aNsID);
@@ -195,7 +195,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
     return mEs->mResultHandler->startElement(aPrefix, aLocalName, aNsID);
 }
 
-nsresult txUnknownHandler::createHandlerAndFlush(PRBool aHTMLRoot,
+nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
                                                  const nsSubstring& aName,
                                                  const PRInt32 aNsID)
 {

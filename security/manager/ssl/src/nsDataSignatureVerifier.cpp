@@ -60,7 +60,7 @@ NS_IMETHODIMP
 nsDataSignatureVerifier::VerifyData(const nsACString & aData,
                                     const nsACString & aSignature,
                                     const nsACString & aPublicKey,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
     // Allocate an arena to handle the majority of the allocations
     PRArenaPool *arena;

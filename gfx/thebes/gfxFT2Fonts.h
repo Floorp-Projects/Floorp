@@ -47,97 +47,27 @@
 #include "gfxFontUtils.h"
 #include "gfxUserFontSet.h"
 
-typedef struct FT_FaceRec_* FT_Face;
-
-class FileAndIndex {
-public:
-    FileAndIndex(nsCString aFilename, PRUint32 aIndex) :
-        filename(aFilename), index(aIndex) {}
-    FileAndIndex(FileAndIndex* fai) :
-        filename(fai->filename), index(fai->index) {}
-    nsCString filename;
-    PRUint32 index;
-};
-
-/**
- * FontFamily is a class that describes one of the fonts on the users system.  It holds
- * each FontEntry (maps more directly to a font face) which holds font type, charset info
- * and character map info.
- */
-class FontEntry;
-class FontFamily : public gfxFontFamily
-{
-public:
-    FontFamily(const nsAString& aName) :
-        gfxFontFamily(aName) { }
-
-    FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
-    virtual void FindStyleVariations();
-    void AddFontFileAndIndex(nsCString aFilename, PRUint32 aIndex);
-
-private:
-    // mFilenames are queus of font files that
-    // need to be lazily processed into font entries
-    nsTArray<FileAndIndex> mFilenames;
-};
-
-class FontEntry : public gfxFontEntry
-{
-public:
-    FontEntry(const nsAString& aFaceName) :
-        gfxFontEntry(aFaceName)
-    {
-        mFTFace = nsnull;
-        mFontFace = nsnull;
-        mFTFontIndex = 0;
-    }
-
-    ~FontEntry();
-
-    const nsString& GetName() const {
-        return Name();
-    }
-
-    static FontEntry* 
-    CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
-                    const PRUint8 *aFontData, PRUint32 aLength);
-
-    static FontEntry* 
-    CreateFontEntryFromFace(FT_Face aFace, const PRUint8 *aFontData = nsnull);
-        // aFontData is NS_Malloc'ed data that aFace depends on, to be freed
-        // after the face is destroyed; null if there is no such buffer
-
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
-
-    cairo_font_face_t *CairoFontFace();
-    nsresult ReadCMAP();
-
-    nsresult GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer);
-
-    FT_Face mFTFace;
-    cairo_font_face_t *mFontFace;
-
-    nsCString mFilename;
-    PRUint8 mFTFontIndex;
-};
-
+class FT2FontEntry;
 
 class gfxFT2Font : public gfxFT2FontBase {
 public: // new functions
     gfxFT2Font(cairo_scaled_font_t *aCairoFont,
-               FontEntry *aFontEntry,
+               FT2FontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle,
-               PRBool aNeedsBold);
+               bool aNeedsBold);
     virtual ~gfxFT2Font ();
 
     cairo_font_face_t *CairoFontFace();
 
-    FontEntry *GetFontEntry();
+    FT2FontEntry *GetFontEntry();
 
     static already_AddRefed<gfxFT2Font>
-    GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle, PRBool aNeedsBold = PR_FALSE);
+    GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
+                  bool aNeedsBold = false);
+
     static already_AddRefed<gfxFT2Font>
-    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold = PR_FALSE);
+    GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
+                  bool aNeedsBold = false);
 
     struct CachedGlyphData {
         CachedGlyphData()
@@ -167,13 +97,13 @@ public: // new functions
     }
 
 protected:
-    virtual PRBool InitTextRun(gfxContext *aContext,
+    virtual bool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
                                PRInt32 aRunScript,
-                               PRBool aPreferPlatformShaping = PR_FALSE);
+                               bool aPreferPlatformShaping = false);
 
     void FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd);
 
@@ -184,6 +114,7 @@ protected:
     CharGlyphMap mCharGlyphCache;
 };
 
+#ifndef ANDROID // not needed on Android, uses the standard gfxFontGroup directly
 class THEBES_API gfxFT2FontGroup : public gfxFontGroup {
 public: // new functions
     gfxFT2FontGroup (const nsAString& families,
@@ -198,11 +129,11 @@ protected: // from gfxFontGroup
 
 protected: // new functions
 
-    static PRBool FontCallback (const nsAString & fontName, 
+    static bool FontCallback (const nsAString & fontName, 
                                 const nsACString & genericName, 
-                                PRBool aUseFontSet,
+                                bool aUseFontSet,
                                 void *closure);
-    PRBool mEnableKerning;
+    bool mEnableKerning;
 
     void GetPrefFonts(nsIAtom *aLangGroup,
                       nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
@@ -218,6 +149,7 @@ protected: // new functions
     nsTArray<gfxTextRange> mRanges;
     nsString mString;
 };
+#endif // !ANDROID
 
 #endif /* GFX_FT2FONTS_H */
 

@@ -587,7 +587,7 @@ nsresult Do_CheckTwoStrings()
   return NS_OK;
 }
 
-nsresult Do_CheckSetArbitraryData(PRBool aMultiple)
+nsresult Do_CheckSetArbitraryData(bool aMultiple)
 {
   nsresult rv;
   nsCOMPtr<nsITransferable> transferable;

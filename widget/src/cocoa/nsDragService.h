@@ -57,11 +57,11 @@ public:
   // nsIDragService
   NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
                                nsIScriptableRegion * aRegion, PRUint32 aActionType);
-  NS_IMETHOD EndDragSession(PRBool aDoneDrag);
+  NS_IMETHOD EndDragSession(bool aDoneDrag);
 
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable * aTransferable, PRUint32 aItemIndex);
-  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval);
   NS_IMETHOD GetNumDropItems(PRUint32 * aNumItems);
 
 private:

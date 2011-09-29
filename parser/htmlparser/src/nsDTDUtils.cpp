@@ -152,7 +152,7 @@ void nsEntryStack::EnsureCapacityFor(PRInt32 aNewMax,PRInt32 aShiftOffset) {
  */
 void nsEntryStack::Push(nsCParserNode* aNode,
                         nsEntryStack* aStyleStack, 
-                        PRBool aRefCntNode) 
+                        bool aRefCntNode) 
 {
   if(aNode) {
     EnsureCapacityFor(mCount+1);
@@ -184,7 +184,7 @@ void nsEntryStack::PushTag(eHTMLTags aTag)
  */
 void nsEntryStack::PushFront(nsCParserNode* aNode,
                              nsEntryStack* aStyleStack, 
-                             PRBool aRefCntNode) 
+                             bool aRefCntNode) 
 {
   if(aNode) {
     if(mCount<mCapacity) {
@@ -424,7 +424,7 @@ nsEntryStack::PopEntry()
 }
 
 void nsEntryStack::PushEntry(nsTagEntry* aEntry, 
-                             PRBool aRefCntNode) 
+                             bool aRefCntNode) 
 {
   if (aEntry) {
     EnsureCapacityFor(mCount+1);
@@ -476,9 +476,9 @@ nsDTDContext::~nsDTDContext()
  * 
  * @update  gess7/9/98
  */
-PRBool nsDTDContext::HasOpenContainer(eHTMLTags aTag) const {
+bool nsDTDContext::HasOpenContainer(eHTMLTags aTag) const {
   PRInt32 theIndex=mStack.LastOf(aTag);
-  return PRBool(-1<theIndex);
+  return bool(-1<theIndex);
 }
 
 /**
@@ -487,7 +487,7 @@ PRBool nsDTDContext::HasOpenContainer(eHTMLTags aTag) const {
  */
 void nsDTDContext::Push(nsCParserNode* aNode,
                         nsEntryStack* aStyleStack, 
-                        PRBool aRefCntNode) {
+                        bool aRefCntNode) {
   if(aNode) {
 #ifdef  NS_DEBUG
     eHTMLTags theTag = (eHTMLTags)aNode->GetNodeType();
@@ -525,7 +525,7 @@ nsDTDContext::PopEntry()
 }
 
 void nsDTDContext::PushEntry(nsTagEntry* aEntry, 
-                             PRBool aRefCntNode)
+                             bool aRefCntNode)
 {
 #ifdef  NS_DEBUG
     int size=mStack.mCount;
@@ -1119,9 +1119,9 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
   return result;
 }
 
-PRBool 
+bool 
 nsObserverEntry::Matches(const nsAString& aString) {
-  PRBool result = aString.Equals(mTopic);
+  bool result = aString.Equals(mTopic);
   return result;
 }
 

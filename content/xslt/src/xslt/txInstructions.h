@@ -238,11 +238,11 @@ public:
 class txMessage : public txInstruction
 {
 public:
-    txMessage(PRBool aTerminate);
+    txMessage(bool aTerminate);
 
     TX_DECL_TXINSTRUCTION
 
-    PRBool mTerminate;
+    bool mTerminate;
 };
 
 class txNumber : public txInstruction
@@ -327,11 +327,11 @@ public:
 class txPushStringHandler : public txInstruction
 {
 public:
-    txPushStringHandler(PRBool aOnlyText);
+    txPushStringHandler(bool aOnlyText);
 
     TX_DECL_TXINSTRUCTION
 
-    PRBool mOnlyText;
+    bool mOnlyText;
 };
 
 class txRemoveVariable : public txInstruction
@@ -402,23 +402,23 @@ public:
 class txText : public txInstruction
 {
 public:
-    txText(const nsAString& aStr, PRBool aDOE);
+    txText(const nsAString& aStr, bool aDOE);
 
     TX_DECL_TXINSTRUCTION
 
     nsString mStr;
-    PRBool mDOE;
+    bool mDOE;
 };
 
 class txValueOf : public txInstruction
 {
 public:
-    txValueOf(nsAutoPtr<Expr> aExpr, PRBool aDOE);
+    txValueOf(nsAutoPtr<Expr> aExpr, bool aDOE);
 
     TX_DECL_TXINSTRUCTION
 
     nsAutoPtr<Expr> mExpr;
-    PRBool mDOE;
+    bool mDOE;
 };
 
 #endif //TRANSFRMX_TXINSTRUCTIONS_H

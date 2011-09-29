@@ -46,7 +46,6 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsutil.h"
-#include "jsarena.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -505,7 +504,7 @@ DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
  */
 struct Sprinter {
     JSContext       *context;       /* context executing the decompiler */
-    JSArenaPool     *pool;          /* string allocation pool */
+    LifoAlloc       *pool;          /* string allocation pool */
     char            *base;          /* base address of buffer in pool */
     size_t          size;           /* size of buffer allocated at base */
     ptrdiff_t       offset;         /* offset of next free char in buffer */

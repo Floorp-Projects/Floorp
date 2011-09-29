@@ -156,8 +156,15 @@ struct TokenPos;
 struct TokenPtr;
 class UpvarCookie;
 
+class Proxy;
+class ProxyHandler;
+class Wrapper;
+class CrossCompartmentWrapper;
+
 class TempAllocPolicy;
 class RuntimeAllocPolicy;
+
+class GlobalObject;
 
 template <class T,
           size_t MinInlineCapacity = 0,
@@ -182,6 +189,8 @@ template <typename K,
           typename V,
           size_t InlineElems>
 class InlineMap;
+
+class LifoAlloc;
 
 class PropertyCache;
 struct PropertyCacheEntry;
@@ -209,6 +218,26 @@ typedef JSNative             Native;
 typedef JSPropertyOp         PropertyOp;
 typedef JSStrictPropertyOp   StrictPropertyOp;
 typedef JSPropertyDescriptor PropertyDescriptor;
+
+namespace analyze {
+
+struct LifetimeVariable;
+class LoopAnalysis;
+class ScriptAnalysis;
+class SlotValue;
+class SSAValue;
+class SSAUseChain;
+
+} /* namespace analyze */
+
+namespace types {
+
+class TypeSet;
+struct TypeCallsite;
+struct TypeObject;
+struct TypeCompartment;
+
+} /* namespace types */
 
 } /* namespace js */
 

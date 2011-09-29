@@ -48,12 +48,12 @@ NS_INTERFACE_MAP_BEGIN(nsDOMDeviceOrientationEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP nsDOMDeviceOrientationEvent::InitDeviceOrientationEvent(const nsAString & aEventTypeArg,
-                                                                      PRBool aCanBubbleArg,
-                                                                      PRBool aCancelableArg,
+                                                                      bool aCanBubbleArg,
+                                                                      bool aCancelableArg,
                                                                       double aAlpha,
                                                                       double aBeta,
                                                                       double aGamma,
-                                                                      PRBool aAbsolute)
+                                                                      bool aAbsolute)
 {
   nsresult rv = nsDOMEvent::InitEvent(aEventTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -90,7 +90,7 @@ NS_IMETHODIMP nsDOMDeviceOrientationEvent::GetGamma(double *aGamma)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDOMDeviceOrientationEvent::GetAbsolute(PRBool *aAbsolute)
+NS_IMETHODIMP nsDOMDeviceOrientationEvent::GetAbsolute(bool *aAbsolute)
 {
   NS_ENSURE_ARG_POINTER(aAbsolute);
 

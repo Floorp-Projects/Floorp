@@ -169,7 +169,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         case nsXPTType::T_U16:     dp->val.u16 = (PRUint16) tempu32; break;
         case nsXPTType::T_U32:     dp->val.u32 = (PRUint32) tempu32; break;
         case nsXPTType::T_U64:     dp->val.u64 = (PRUint64) tempu64; break;
-        case nsXPTType::T_BOOL:    dp->val.b   = (PRBool)   tempu32; break;
+        case nsXPTType::T_BOOL:    dp->val.b   = (bool)   tempu32; break;
         case nsXPTType::T_CHAR:    dp->val.c   = (char)     tempu32; break;
         case nsXPTType::T_WCHAR:   dp->val.wc  = (wchar_t)  tempu32; break;
 

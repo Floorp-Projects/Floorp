@@ -18,6 +18,8 @@ SimpleTest.waitForExplicitFinish();
 var loadCount = 0;
 var popup = null;
 
+const kOriginalLocation = location.href;
+
 function iframeLoaded(identifier) {
   loadCount++;
   dump("iframeLoaded. loadCount=" + loadCount +
@@ -70,6 +72,7 @@ function iframeLoaded(identifier) {
   else if (loadCount == 6) {
     is(popup.getInnerIframeReferrer(), popup.location, 'popup/inner iframe referrer');
     popup.close();
+    history.replaceState('', '', kOriginalLocation);
     SimpleTest.finish();
   }
 }

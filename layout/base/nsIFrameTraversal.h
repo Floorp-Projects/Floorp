@@ -52,7 +52,7 @@ public:
   virtual void First() = 0;
   virtual void Next() = 0;
   virtual nsIFrame* CurrentItem() = 0;
-  virtual PRBool IsDone() = 0;
+  virtual bool IsDone() = 0;
 
   virtual void Last() = 0;
   virtual void Prev() = 0;
@@ -94,9 +94,9 @@ public:
                                nsPresContext* aPresContext,
                                nsIFrame *aStart,
                                PRInt32 aType,
-                               PRBool aVisual,
-                               PRBool aLockInScrollView,
-                               PRBool aFollowOOFs) = 0;
+                               bool aVisual,
+                               bool aLockInScrollView,
+                               bool aFollowOOFs) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameTraversal, NS_IFRAMETRAVERSAL_IID)

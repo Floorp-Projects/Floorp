@@ -380,7 +380,7 @@ nsFileInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aResult)
 }
 
 NS_IMETHODIMP
-nsFileInputStream::ReadLine(nsACString& aLine, PRBool* aResult)
+nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult)
 {
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -408,7 +408,7 @@ nsFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 }
 
 NS_IMETHODIMP
-nsFileInputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsFileInputStream::IsNonBlocking(bool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
@@ -435,13 +435,13 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     return nsFileStream::Seek(aWhence, aOffset);
 }
 
-PRBool
+bool
 nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
     using IPC::ReadParam;
 
     nsCString path;
-    PRBool followLinks;
+    bool followLinks;
     PRInt32 flags;
     if (!ReadParam(aMsg, aIter, &path) ||
         !ReadParam(aMsg, aIter, &followLinks) ||
@@ -471,7 +471,7 @@ nsFileInputStream::Write(IPC::Message *aMsg)
     mFile->GetNativePath(path);
     WriteParam(aMsg, path);
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
-    PRBool followLinks;
+    bool followLinks;
     localFile->GetFollowLinks(&followLinks);
     WriteParam(aMsg, followLinks);
     WriteParam(aMsg, mBehaviorFlags);
@@ -688,7 +688,7 @@ nsFileOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUin
 }
 
 NS_IMETHODIMP
-nsFileOutputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsFileOutputStream::IsNonBlocking(bool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
@@ -798,7 +798,7 @@ nsSafeFileOutputStream::Finish()
             // since we succeeded in writing to the temp file (and hence succeeded
             // in writing to the target file), there is nothing more to do.
 #ifdef DEBUG      
-            PRBool equal;
+            bool equal;
             if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
                 NS_ERROR("mTempFile not equal to mTargetFile");
 #endif

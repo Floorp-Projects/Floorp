@@ -105,7 +105,7 @@ nsAString::EndWriting()
   return data + len;
 }
 
-PRBool
+bool
 nsAString::SetLength(PRUint32 aLen)
 {
   char_type *data;
@@ -173,7 +173,7 @@ nsAString::StripChars(const char *aSet)
 }
 
 void
-nsAString::Trim(const char *aSet, PRBool aLeading, PRBool aTrailing)
+nsAString::Trim(const char *aSet, bool aLeading, bool aTrailing)
 {
   NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
 
@@ -263,7 +263,7 @@ nsAString::Compare(const self_type &other, ComparatorFunc c) const
   return result;
 }
 
-PRBool
+bool
 nsAString::Equals(const char_type *other, ComparatorFunc c) const
 {
   const char_type *cself;
@@ -276,7 +276,7 @@ nsAString::Equals(const char_type *other, ComparatorFunc c) const
   return c(cself, other, selflen) == 0;
 }
 
-PRBool
+bool
 nsAString::Equals(const self_type &other, ComparatorFunc c) const
 {
   const char_type *cself;
@@ -290,7 +290,7 @@ nsAString::Equals(const self_type &other, ComparatorFunc c) const
   return c(cself, cother, selflen) == 0;
 }
 
-PRBool
+bool
 nsAString::EqualsLiteral(const char *aASCIIString) const
 {
   const PRUnichar *begin, *end;
@@ -306,7 +306,7 @@ nsAString::EqualsLiteral(const char *aASCIIString) const
   return *aASCIIString == nsnull;
 }
 
-PRBool
+bool
 nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
 {
   const PRUnichar *begin, *end;
@@ -348,7 +348,7 @@ nsAString::Find(const self_type& aStr, PRUint32 aOffset,
   return -1;
 }
 
-static PRBool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
+static bool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
                            PRUint32 aLen)
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
@@ -362,7 +362,7 @@ static PRBool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
   return PR_TRUE;
 }
 
-static PRBool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
+static bool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
                             PRUint32 aLen)
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
@@ -377,9 +377,9 @@ static PRBool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
 }
 
 PRInt32
-nsAString::Find(const char *aStr, PRUint32 aOffset, PRBool aIgnoreCase) const
+nsAString::Find(const char *aStr, PRUint32 aOffset, bool aIgnoreCase) const
 {
-  PRBool (*match)(const PRUnichar*, const char*, PRUint32) =
+  bool (*match)(const PRUnichar*, const char*, PRUint32) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
   const char_type *begin, *end;
@@ -429,9 +429,9 @@ nsAString::RFind(const self_type& aStr, PRInt32 aOffset, ComparatorFunc c) const
 }
 
 PRInt32
-nsAString::RFind(const char *aStr, PRInt32 aOffset, PRBool aIgnoreCase) const
+nsAString::RFind(const char *aStr, PRInt32 aOffset, bool aIgnoreCase) const
 {
-  PRBool (*match)(const PRUnichar*, const char*, PRUint32) =
+  bool (*match)(const PRUnichar*, const char*, PRUint32) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
   const char_type *begin, *end;
@@ -606,7 +606,7 @@ nsACString::EndWriting()
   return data + len;
 }
 
-PRBool
+bool
 nsACString::SetLength(PRUint32 aLen)
 {
   char_type *data;
@@ -647,7 +647,7 @@ nsACString::StripChars(const char *aSet)
 }
 
 void
-nsACString::Trim(const char *aSet, PRBool aLeading, PRBool aTrailing)
+nsACString::Trim(const char *aSet, bool aLeading, bool aTrailing)
 {
   NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
 
@@ -730,7 +730,7 @@ nsACString::Compare(const self_type &other, ComparatorFunc c) const
   return result;
 }
 
-PRBool
+bool
 nsACString::Equals(const char_type *other, ComparatorFunc c) const
 {
   const char_type *cself;
@@ -743,7 +743,7 @@ nsACString::Equals(const char_type *other, ComparatorFunc c) const
   return c(cself, other, selflen) == 0;
 }
 
-PRBool
+bool
 nsACString::Equals(const self_type &other, ComparatorFunc c) const
 {
   const char_type *cself;
@@ -1147,7 +1147,7 @@ CaseInsensitiveCompare(const char *a, const char *b,
   return 0;
 }
 
-PRBool
+bool
 ParseString(const nsACString& aSource, char aDelimiter, 
             nsTArray<nsCString>& aArray)
 {

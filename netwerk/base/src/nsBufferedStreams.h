@@ -82,7 +82,7 @@ protected:
 
     nsISupports*                mStream;        // cast to appropriate subclass
 
-    PRPackedBool                mBufferDisabled;
+    bool                        mBufferDisabled;
     PRUint8                     mGetBufferCount;
 };
 

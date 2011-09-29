@@ -8,7 +8,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
-const SETTINGS_ROWS = 7;
+const SETTINGS_ROWS = 8;
 
 var observer = {
   lastData: null,
@@ -191,8 +191,17 @@ add_test(function() {
     is(Services.prefs.getCharPref("extensions.inlinesettings1.string"), "bar", "String pref should have been updated");
 
     ok(!settings[4].hasAttribute("first-row"), "Not the first row");
+    var input = settings[4].firstElementChild;
+    is(input.value, "1", "Menulist should have initial value");
+    input.focus();
+    EventUtils.synthesizeKey("b", {}, gManagerWindow);
+    is(input.value, "2", "Menulist should have updated value");
+    is(gManagerWindow._testValue, "2", "Menulist oncommand handler should've updated the test value");
+    delete gManagerWindow._testValue;
+
+    ok(!settings[5].hasAttribute("first-row"), "Not the first row");
     Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF0000");
-    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[4], "anonid", "input");
+    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
     is(input.color, "#FF0000", "Color picker should have initial value");
     input.focus();
     EventUtils.synthesizeKey("VK_RIGHT", {}, gManagerWindow);
@@ -205,9 +214,9 @@ add_test(function() {
     try {
       mockFilePickerFactory.register();
 
-      ok(!settings[5].hasAttribute("first-row"), "Not the first row");
-      var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "button");
-      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
+      ok(!settings[6].hasAttribute("first-row"), "Not the first row");
+      var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
       is(input.value, "", "Label value should be empty");
 
       var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -227,9 +236,9 @@ add_test(function() {
       is(input.value, profD.path, "Label value should not have changed");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should not have changed");
 
-      ok(!settings[6].hasAttribute("first-row"), "Not the first row");
-      button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
-      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
+      ok(!settings[7].hasAttribute("first-row"), "Not the first row");
+      button = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
       is(input.value, "", "Label value should be empty");
 
       _returnFile = profD;

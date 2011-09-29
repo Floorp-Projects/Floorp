@@ -345,7 +345,6 @@ var Browser = {
 #if MOZ_PLATFORM_MAEMO == 6
     os.addObserver(ViewableAreaObserver, "softkb-change", false);
 #endif
-   messageManager.addMessageListener("Content:IsKeyboardOpened", ViewableAreaObserver);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -602,8 +601,7 @@ var Browser = {
         this.closeTab(oldTab, { forceClose: true });
         oldTab = null;
       }
-    }
-    else {
+    } else {
       let params = aParams || {};
       let flags = params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
       browser.loadURIWithFlags(aURI, flags, params.referrerURI, params.charset, params.postData);
@@ -1294,7 +1292,7 @@ var Browser = {
       this._slideMultiplier = 3;
     } else {
       // If the tab bar is hidden, un-collapse it but scroll it offscreen.
-      document.getElementById("tabs-sidebar").style.visibility = "visible";
+      TabsPopup.show();
       this._setSidebarOffset(ltr ? ViewableAreaObserver.sidebarWidth : 0);
       this._slideMultiplier = 6;
     }
@@ -1309,9 +1307,7 @@ var Browser = {
   ungrabSidebar: function ungrabSidebar() {
     if (!this._grabbedSidebar)
       return;
-
     this._grabbedSidebar = false;
-    document.getElementById("tabs-sidebar").style.visibility = "";
 
     let finalOffset = this._sidebarOffset;
     this._setSidebarOffset(0);
@@ -1320,7 +1316,8 @@ var Browser = {
     if (finalOffset > (ViewableAreaObserver.sidebarWidth / 2) ^ rtl)
       TabsPopup.hide();
     else
-      TabsPopup.show();
+      // we already called TabsPopup.show() in grabSidebar; just need to update the width again.
+      ViewableAreaObserver.update();
   },
 
   /** Move the tablet sidebar. */
@@ -2944,7 +2941,7 @@ Tab.prototype = {
 
     try {
       let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      let postData = "postData" in aParams ? aParams.postData.value : null;
+      let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
       browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
@@ -3113,15 +3110,16 @@ Tab.prototype = {
     if (md && md.defaultZoom)
       return this.clampZoomLevel(md.defaultZoom);
 
-    let pageZoom = this.getPageZoomLevel();
+    let browserWidth = this._browser.getBoundingClientRect().width;
+    let defaultZoom = browserWidth / this._browser.contentWindowWidth;
 
-    // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
+    // If defaultZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
     let granularity = Services.prefs.getIntPref("browser.ui.zoom.pageFitGranularity");
     let threshold = 1 - 1 / granularity;
-    if (threshold < pageZoom && pageZoom < 1)
-      pageZoom = 1;
+    if (threshold < defaultZoom && defaultZoom < 1)
+      defaultZoom = 1;
 
-    return this.clampZoomLevel(pageZoom);
+    return this.clampZoomLevel(defaultZoom);
   },
 
   /**
@@ -3312,10 +3310,6 @@ var ViewableAreaObserver = {
     }
     this.update();
 #endif
-  },
-
-  receiveMessage: function receiveMessage(aMessage) {
-    return this.isKeyboardOpened;
   },
 
   update: function va_update() {

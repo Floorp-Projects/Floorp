@@ -120,7 +120,7 @@ public:
 
   void ClearListeners(const nsAString& aType);
 
-  PRBool HasListeners(const nsAString& aType);
+  bool HasListeners(const nsAString& aType);
 
   void ClearAllListeners();
 
@@ -138,7 +138,7 @@ private:
   typedef nsTArray<WeakListener> WeakListenerArray;
 
   struct ListenerCollection {
-    PRBool operator==(const ListenerCollection& aOther) const {
+    bool operator==(const ListenerCollection& aOther) const {
       return this == &aOther;
     }
 
@@ -165,7 +165,7 @@ private:
   virtual nsresult WillHandleEvent(nsEventChainPostVisitor & aVisitor) { return _to WillHandleEvent(aVisitor); } \
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor & aVisitor) { return _to PostHandleEvent(aVisitor); } \
   virtual nsresult DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent, nsPresContext *aPresContext, nsEventStatus *aEventStatus) { return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); } \
-  virtual nsEventListenerManager * GetListenerManager(PRBool aMayCreate) { return _to GetListenerManager(aMayCreate); } \
+  virtual nsEventListenerManager * GetListenerManager(bool aMayCreate) { return _to GetListenerManager(aMayCreate); } \
   virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID & aIID) { return _to AddEventListenerByIID(aListener, aIID); } \
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID & aIID) { return _to RemoveEventListenerByIID(aListener, aIID); } \
   virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv NS_OUTPARAM) { return _to GetContextForEventHandlers(aRv); } \

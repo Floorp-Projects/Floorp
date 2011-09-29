@@ -53,12 +53,6 @@ extern void*        __wrap_dlsym(void*  handle, const char*  symbol);
 extern int          __wrap_dladdr(void* addr, Dl_info *info);
 #pragma GCC visibility pop
 
-extern void*        dlopen(const char*  filename, int flag);
-extern int          dlclose(void*  handle);
-extern const char*  dlerror(void);
-extern void*        dlsym(void*  handle, const char*  symbol);
-extern int          dladdr(void* addr, Dl_info *info);
-
 enum {
   RTLD_NOW  = 0,
   RTLD_LAZY = 1,

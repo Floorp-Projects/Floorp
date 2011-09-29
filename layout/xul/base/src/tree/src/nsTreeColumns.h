@@ -76,7 +76,7 @@ protected:
   nsIFrame* GetFrame();
   nsIFrame* GetFrame(nsTreeBodyFrame* aBodyFrame);
   // Don't call this if GetWidthInTwips or GetRect fails
-  PRBool IsLastVisible(nsTreeBodyFrame* aBodyFrame);
+  bool IsLastVisible(nsTreeBodyFrame* aBodyFrame);
 
   /**
    * Returns a rect with x and width taken from the frame's rect and specified
@@ -95,11 +95,11 @@ protected:
 
   PRInt32 GetIndex() { return mIndex; }
 
-  PRBool IsPrimary() { return mIsPrimary; }
-  PRBool IsCycler() { return mIsCycler; }
-  PRBool IsEditable() { return mIsEditable; }
-  PRBool IsSelectable() { return mIsSelectable; }
-  PRBool Overflow() { return mOverflow; }
+  bool IsPrimary() { return mIsPrimary; }
+  bool IsCycler() { return mIsCycler; }
+  bool IsEditable() { return mIsEditable; }
+  bool IsSelectable() { return mIsSelectable; }
+  bool Overflow() { return mOverflow; }
 
   PRInt16 GetType() { return mType; }
 
@@ -127,11 +127,11 @@ private:
 
   PRInt32 mIndex;
 
-  PRPackedBool mIsPrimary;
-  PRPackedBool mIsCycler;
-  PRPackedBool mIsEditable;
-  PRPackedBool mIsSelectable;
-  PRPackedBool mOverflow;
+  bool mIsPrimary;
+  bool mIsCycler;
+  bool mIsEditable;
+  bool mIsSelectable;
+  bool mOverflow;
 
   PRInt16 mType;
 

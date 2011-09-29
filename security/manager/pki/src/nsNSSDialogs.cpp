@@ -106,7 +106,7 @@ nsNSSDialogs::Init()
 
 nsresult
 nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
-                          const PRUnichar *tokenName, PRBool* _canceled)
+                          const PRUnichar *tokenName, bool* _canceled)
 {
   nsresult rv;
 
@@ -143,7 +143,7 @@ nsresult
 nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
                           const PRUnichar *tokenName, 
                           PRUnichar **_password,
-                          PRBool* _canceled)
+                          bool* _canceled)
 {
   nsresult rv;
   *_canceled = PR_FALSE;
@@ -197,7 +197,7 @@ NS_IMETHODIMP
 nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, 
                                     nsIX509Cert *cert,
                                     PRUint32 *_trust,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
   nsresult rv;
 
@@ -267,7 +267,7 @@ nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
 
 
 NS_IMETHODIMP
-nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, const PRUnichar **certDetailsList, PRUint32 count, PRInt32 *selectedIndex, PRBool *canceled) 
+nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, const PRUnichar **certDetailsList, PRUint32 count, PRInt32 *selectedIndex, bool *canceled) 
 {
   nsresult rv;
   PRUint32 i;
@@ -338,7 +338,7 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
                               const PRUnichar **certDetailsList, 
                               PRUint32 count, 
                               PRInt32 *selectedIndex, 
-                              PRBool *canceled) 
+                              bool *canceled) 
 {
   nsresult rv;
   PRUint32 i;
@@ -391,7 +391,7 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
 NS_IMETHODIMP 
 nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
                                     nsAString &_password,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
   nsresult rv;
   *_retval = PR_TRUE;
@@ -425,7 +425,7 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
 NS_IMETHODIMP 
 nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
                                     nsAString &_password,
-                                    PRBool *_retval)
+                                    bool *_retval)
 {
   nsresult rv;
   *_retval = PR_TRUE;
@@ -497,7 +497,7 @@ nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeyge
 }
 
 NS_IMETHODIMP
-nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenList, PRUint32 aCount, PRUnichar **aTokenChosen, PRBool *aCanceled) {
+nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenList, PRUint32 aCount, PRUnichar **aTokenChosen, bool *aCanceled) {
   nsresult rv;
   PRUint32 i;
 
@@ -540,7 +540,7 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
 
 /* boolean ConfirmKeyEscrow (in nsIX509Cert escrowAuthority); */
 NS_IMETHODIMP 
-nsNSSDialogs::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
+nsNSSDialogs::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, bool *_retval)
                                      
 {
   *_retval = PR_FALSE;

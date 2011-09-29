@@ -116,7 +116,7 @@ inFlasher::SetThickness(PRUint16 aThickness)
 }
 
 NS_IMETHODIMP
-inFlasher::GetInvert(PRBool *aInvert)
+inFlasher::GetInvert(bool *aInvert)
 {
   NS_PRECONDITION(aInvert, "Null pointer");
   *aInvert = mInvert;
@@ -124,7 +124,7 @@ inFlasher::GetInvert(PRBool *aInvert)
 }
 
 NS_IMETHODIMP
-inFlasher::SetInvert(PRBool aInvert)
+inFlasher::SetInvert(bool aInvert)
 {
   mInvert = aInvert;
   return NS_OK;
@@ -153,7 +153,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
 
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement);
 
-  PRBool isFirstFrame = PR_TRUE;
+  bool isFirstFrame = true;
 
   while (frame) {
     nsPoint offset;
@@ -168,7 +168,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
         rcontext->InvertRect(rect);
       }
 
-      PRBool isLastFrame = frame->GetNextContinuation() == nsnull;
+      bool isLastFrame = frame->GetNextContinuation() == nsnull;
       DrawOutline(rect.x, rect.y, rect.width, rect.height, rcontext,
                   isFirstFrame, isLastFrame);
       isFirstFrame = PR_FALSE;
@@ -208,7 +208,7 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 void
 inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                        nsRenderingContext* aRenderContext,
-                       PRBool aDrawBegin, PRBool aDrawEnd)
+                       bool aDrawBegin, bool aDrawEnd)
 {
   aRenderContext->SetColor(mColor);
 
@@ -224,7 +224,7 @@ inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
 
 void
 inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength,
-                    PRBool aDir, PRBool aBounds,
+                    bool aDir, bool aBounds,
                     nsRenderingContext* aRenderContext)
 {
   nscoord thickTwips = nsPresContext::CSSPixelsToAppUnits(mThickness);

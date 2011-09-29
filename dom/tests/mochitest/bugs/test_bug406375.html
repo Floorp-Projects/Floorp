@@ -23,8 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=406375
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
+  var blockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+  SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
+
   window.showModalDialog("file_bug406375.html");
   ok(true, "This test should not hang");
+
+  SpecialPowers.setBoolPref("dom.block_multiple_popups", blockMultiplePopups);
   SimpleTest.finish();
 }
 

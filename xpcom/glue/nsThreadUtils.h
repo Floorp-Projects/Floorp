@@ -186,7 +186,7 @@ NS_ProcessPendingEvents(nsIThread *thread,
  *   A boolean value that if "true" indicates that there are pending events
  *   in the current thread's event queue.
  */
-extern NS_COM_GLUE PRBool
+extern NS_COM_GLUE bool
 NS_HasPendingEvents(nsIThread *thread = nsnull);
 
 /**
@@ -206,8 +206,8 @@ NS_HasPendingEvents(nsIThread *thread = nsnull);
  *   A boolean value that if "true" indicates that an event from the current
  *   thread's event queue was processed.
  */
-extern NS_COM_GLUE PRBool
-NS_ProcessNextEvent(nsIThread *thread = nsnull, PRBool mayWait = PR_TRUE);
+extern NS_COM_GLUE bool
+NS_ProcessNextEvent(nsIThread *thread = nsnull, bool mayWait = true);
 
 //-----------------------------------------------------------------------------
 // Helpers that work with nsCOMPtr:
@@ -452,7 +452,7 @@ public:
     mEvent = nsnull;
   }
 
-  PRBool IsPending() {
+  bool IsPending() {
     return mEvent != nsnull;
   }
   

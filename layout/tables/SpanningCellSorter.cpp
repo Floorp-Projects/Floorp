@@ -84,7 +84,7 @@ SpanningCellSorter::HashTableHashKey(PLDHashTable *table, const void *key)
     return NS_PTR_TO_INT32(key);
 }
 
-/* static */ PRBool
+/* static */ bool
 SpanningCellSorter::HashTableMatchEntry(PLDHashTable *table,
                                         const PLDHashEntryHdr *hdr,
                                         const void *key)
@@ -93,7 +93,7 @@ SpanningCellSorter::HashTableMatchEntry(PLDHashTable *table,
     return NS_PTR_TO_INT32(key) == entry->mColSpan;
 }
 
-PRBool
+bool
 SpanningCellSorter::AddCell(PRInt32 aColSpan, PRInt32 aRow, PRInt32 aCol)
 {
     NS_ASSERTION(mState == ADDING, "cannot call AddCell after GetNext");

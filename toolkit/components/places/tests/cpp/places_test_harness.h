@@ -273,7 +273,7 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
   rv = stmt->BindUTF8StringByIndex(0, spec);
   do_check_success(rv);
 
-  PRBool hasResults;
+  bool hasResults;
   rv = stmt->ExecuteStep(&hasResults);
   do_check_success(rv);
   if (!hasResults) {
@@ -315,7 +315,7 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
   rv = stmt->BindInt64ByIndex(0, placeId);
   do_check_success(rv);
 
-  PRBool hasResults;
+  bool hasResults;
   rv = stmt->ExecuteStep(&hasResults);
   do_check_success(rv);
 

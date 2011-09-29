@@ -96,7 +96,7 @@ public:
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD DidBuildModel(PRBool aTerminated) {
+  NS_IMETHOD DidBuildModel(bool aTerminated) {
     return NS_OK;
   }
 
@@ -150,7 +150,7 @@ public:
    * Returns true if there's currently script executing that we need to hold
    * parsing for.
    */
-  virtual PRBool IsScriptExecuting()
+  virtual bool IsScriptExecuting()
   {
     return PR_FALSE;
   }

@@ -62,7 +62,7 @@
 // nsProfileDirServiceProvider::nsProfileDirServiceProvider
 //*****************************************************************************
 
-nsProfileDirServiceProvider::nsProfileDirServiceProvider(PRBool aNotifyObservers) :
+nsProfileDirServiceProvider::nsProfileDirServiceProvider(bool aNotifyObservers) :
 #ifdef MOZ_PROFILELOCKING
   mProfileDirLock(nsnull),
 #endif
@@ -86,7 +86,7 @@ nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir,
   if (!aLocalProfileDir)
     aLocalProfileDir = aProfileDir;
   if (mProfileDir) {
-    PRBool isEqual;
+    bool isEqual;
     if (aProfileDir &&
         NS_SUCCEEDED(aProfileDir->Equals(mProfileDir, &isEqual)) && isEqual) {
       NS_WARNING("Setting profile dir to same as current");
@@ -178,7 +178,7 @@ NS_IMPL_ISUPPORTS1(nsProfileDirServiceProvider,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+nsProfileDirServiceProvider::GetFile(const char *prop, bool *persistant, nsIFile **_retval)
 {
   NS_ENSURE_ARG(prop);
   NS_ENSURE_ARG_POINTER(persistant);
@@ -294,7 +294,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
   // If it does not, copy the profile defaults to its location.
 
   nsresult rv;
-  PRBool exists;
+  bool exists;
   rv = profileDir->Exists(&exists);
   if (NS_FAILED(rv))
     return rv;
@@ -331,7 +331,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
       return rv;
   }
   else {
-    PRBool isDir;
+    bool isDir;
     rv = profileDir->IsDirectory(&isDir);
 
     if (NS_FAILED(rv))
@@ -359,14 +359,14 @@ nsProfileDirServiceProvider::InitNonSharedProfileDir()
   if (NS_SUCCEEDED(rv)) {
     rv = localDir->Append(mNonSharedDirName);
     if (NS_SUCCEEDED(rv)) {
-      PRBool exists;
+      bool exists;
       rv = localDir->Exists(&exists);
       if (NS_SUCCEEDED(rv)) {
         if (!exists) {
           rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
         }
         else {
-          PRBool isDir;
+          bool isDir;
           rv = localDir->IsDirectory(&isDir);
           if (NS_SUCCEEDED(rv)) {
             if (!isDir)
@@ -385,7 +385,7 @@ nsresult
 nsProfileDirServiceProvider::EnsureProfileFileExists(nsIFile *aFile, nsIFile *destDir)
 {
   nsresult rv;
-  PRBool exists;
+  bool exists;
 
   rv = aFile->Exists(&exists);
   if (NS_FAILED(rv))
@@ -442,7 +442,7 @@ nsProfileDirServiceProvider::UndefineFileLocations()
 // Global creation function
 //*****************************************************************************
 
-nsresult NS_NewProfileDirServiceProvider(PRBool aNotifyObservers,
+nsresult NS_NewProfileDirServiceProvider(bool aNotifyObservers,
                                          nsProfileDirServiceProvider** aProvider)
 {
   NS_ENSURE_ARG_POINTER(aProvider);

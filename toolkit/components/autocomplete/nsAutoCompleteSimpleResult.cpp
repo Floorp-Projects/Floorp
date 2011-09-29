@@ -197,7 +197,7 @@ nsAutoCompleteSimpleResult::SetListener(nsIAutoCompleteSimpleResultListener* aLi
 
 NS_IMETHODIMP
 nsAutoCompleteSimpleResult::RemoveValueAt(PRInt32 aRowIndex,
-                                          PRBool aRemoveFromDb)
+                                          bool aRemoveFromDb)
 {
   NS_ENSURE_TRUE(aRowIndex >= 0 && aRowIndex < PRInt32(mValues.Length()),
                  NS_ERROR_ILLEGAL_VALUE);

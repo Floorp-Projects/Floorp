@@ -68,7 +68,7 @@ public:
   // The required aDocument parameter is the context requesting the prefetch - under
   // certain circumstances (e.g. headers, or security context) associated with
   // the context the prefetch will not be performed. 
-  static PRBool   IsAllowed(nsIDocument *aDocument);
+  static bool     IsAllowed(nsIDocument *aDocument);
  
   static nsresult Initialize();
   static nsresult Shutdown();
@@ -130,7 +130,7 @@ public:
     PRUint32                  mActiveLoaderCount;
 
     nsCOMPtr<nsITimer>        mTimer;
-    PRBool                    mTimerArmed;
+    bool                      mTimerArmed;
     static void Tick(nsITimer *aTimer, void *aClosure);
     
     static const int          sMaxDeferred = 512;  // keep power of 2 for masking

@@ -66,13 +66,13 @@ class nsCacheEntry : public PRCList
 public:
 
     nsCacheEntry(nsCString *          key,
-                 PRBool               streamBased,
+                 bool                 streamBased,
                  nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
 
     static nsresult  Create( const char *          key,
-                             PRBool                streamBased,
+                             bool                  streamBased,
                              nsCacheStoragePolicy  storagePolicy,
                              nsCacheDevice *       device,
                              nsCacheEntry **       result);
@@ -152,7 +152,7 @@ public:
     
     void MarkBinding()         { mFlags |=  eBindingMask; }
     void ClearBinding()        { mFlags &= ~eBindingMask; }
-    PRBool IsBinding()         { return (mFlags & eBindingMask) != 0; }
+    bool IsBinding()         { return (mFlags & eBindingMask) != 0; }
 
     void MarkEntryDirty()      { mFlags |=  eEntryDirtyMask; }
     void MarkEntryClean()      { mFlags &= ~eEntryDirtyMask; }
@@ -166,35 +166,35 @@ public:
     //    void MarkAllowedInMemory() { mFlags |=  eAllowedInMemoryMask; }
     //    void MarkAllowedOnDisk()   { mFlags |=  eAllowedOnDiskMask; }
 
-    PRBool IsDoomed()          { return (mFlags & eDoomedMask) != 0; }
-    PRBool IsEntryDirty()      { return (mFlags & eEntryDirtyMask) != 0; }
-    PRBool IsDataDirty()       { return (mFlags & eDataDirtyMask) != 0; }
-    PRBool IsMetaDataDirty()   { return (mFlags & eMetaDataDirtyMask) != 0; }
-    PRBool IsStreamData()      { return (mFlags & eStreamDataMask) != 0; }
-    PRBool IsActive()          { return (mFlags & eActiveMask) != 0; }
-    PRBool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
-    PRBool IsValid()           { return (mFlags & eValidMask) != 0; }
-    PRBool IsInvalid()         { return (mFlags & eValidMask) == 0; }
-    PRBool IsInUse()           { return IsBinding() ||
+    bool IsDoomed()          { return (mFlags & eDoomedMask) != 0; }
+    bool IsEntryDirty()      { return (mFlags & eEntryDirtyMask) != 0; }
+    bool IsDataDirty()       { return (mFlags & eDataDirtyMask) != 0; }
+    bool IsMetaDataDirty()   { return (mFlags & eMetaDataDirtyMask) != 0; }
+    bool IsStreamData()      { return (mFlags & eStreamDataMask) != 0; }
+    bool IsActive()          { return (mFlags & eActiveMask) != 0; }
+    bool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
+    bool IsValid()           { return (mFlags & eValidMask) != 0; }
+    bool IsInvalid()         { return (mFlags & eValidMask) == 0; }
+    bool IsInUse()           { return IsBinding() ||
                                         !(PR_CLIST_IS_EMPTY(&mRequestQ) &&
                                           PR_CLIST_IS_EMPTY(&mDescriptorQ)); }
-    PRBool IsNotInUse()        { return !IsInUse(); }
+    bool IsNotInUse()        { return !IsInUse(); }
 
 
-    PRBool IsAllowedInMemory()
+    bool IsAllowedInMemory()
     {
         return (StoragePolicy() ==  nsICache::STORE_ANYWHERE) ||
             (StoragePolicy() == nsICache::STORE_IN_MEMORY);
     }
 
-    PRBool IsAllowedOnDisk()
+    bool IsAllowedOnDisk()
     {
         return (StoragePolicy() == nsICache::STORE_ANYWHERE) ||
             (StoragePolicy() == nsICache::STORE_ON_DISK) ||
             (StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE);
     }
 
-    PRBool IsAllowedOffline()
+    bool IsAllowedOffline()
     {
         return (StoragePolicy() == nsICache::STORE_OFFLINE);
     }
@@ -220,8 +220,8 @@ public:
 
     //    nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
     //    nsresult AsyncOpen(nsCacheRequest *request);
-    PRBool   RemoveRequest( nsCacheRequest * request);
-    PRBool   RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
+    bool     RemoveRequest( nsCacheRequest * request);
+    bool     RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
     
 private:
     friend class nsCacheEntryHashTable;
@@ -304,7 +304,7 @@ private:
     // PLDHashTable operation callbacks
     static PLDHashNumber  HashKey( PLDHashTable *table, const void *key);
 
-    static PRBool         MatchEntry( PLDHashTable *           table,
+    static bool           MatchEntry( PLDHashTable *           table,
                                       const PLDHashEntryHdr *  entry,
                                       const void *             key);
 
@@ -330,7 +330,7 @@ private:
     // member variables
     static PLDHashTableOps ops;
     PLDHashTable           table;
-    PRBool                 initialized;
+    bool                   initialized;
 };
 
 #endif // _nsCacheEntry_h_

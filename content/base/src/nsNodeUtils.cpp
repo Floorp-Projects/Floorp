@@ -358,7 +358,7 @@ CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
 nsresult
 nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
                                   nsIDocument *aOwnerDocument,
-                                  PRUint16 aOperation, PRBool aCloned)
+                                  PRUint16 aOperation, bool aCloned)
 {
   NS_PRECONDITION(!aCloned || (aNodesWithProperties.Count() % 2 == 0),
                   "Expected aNodesWithProperties to contain original and "
@@ -427,8 +427,8 @@ nsNodeUtils::TraverseUserData(nsINode* aNode,
 
 /* static */
 nsresult
-nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep,
-                           PRBool aCallUserDataHandlers,
+nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
+                           bool aCallUserDataHandlers,
                            nsIDOMNode **aResult)
 {
   *aResult = nsnull;
@@ -453,7 +453,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep,
 
 /* static */
 nsresult
-nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
+nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                            nsNodeInfoManager *aNewNodeInfoManager,
                            JSContext *aCx, JSObject *aNewScope,
                            nsCOMArray<nsINode> &aNodesWithProperties,
@@ -490,7 +490,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     // documents to "non-scriptable" documents.
     nsIDocument* newDoc = nodeInfoManager->GetDocument();
     NS_ENSURE_STATE(newDoc);
-    PRBool hasHadScriptHandlingObject = PR_FALSE;
+    bool hasHadScriptHandlingObject = false;
     if (!newDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
         !hasHadScriptHandlingObject) {
       nsIDocument* currentDoc = aNode->GetOwnerDoc();
@@ -535,7 +535,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   }
   else if (nodeInfoManager) {
     nsIDocument* oldDoc = aNode->GetOwnerDoc();
-    PRBool wasRegistered = PR_FALSE;
+    bool wasRegistered = false;
     if (oldDoc && aNode->IsElement()) {
       Element* element = aNode->AsElement();
       oldDoc->ClearBoxObjectFor(element);
@@ -650,7 +650,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     if (attrChildNode && attrChildNode->HasProperties()) {
       nsCOMPtr<nsINode> clonedAttrChildNode = clone->GetChildAt(0);
       if (clonedAttrChildNode) {
-        PRBool ok = aNodesWithProperties.AppendObject(attrChildNode) &&
+        bool ok = aNodesWithProperties.AppendObject(attrChildNode) &&
                     aNodesWithProperties.AppendObject(clonedAttrChildNode);
         NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
       }
@@ -659,10 +659,11 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // XXX End of workaround for broken attribute nodes.
   else if (aDeep || aNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
     // aNode's children.
-    PRUint32 i, length = aNode->GetChildCount();
-    for (i = 0; i < length; ++i) {
+    for (nsIContent* cloneChild = aNode->GetFirstChild();
+         cloneChild;
+       cloneChild = cloneChild->GetNextSibling()) {
       nsCOMPtr<nsINode> child;
-      rv = CloneAndAdopt(aNode->GetChildAt(i), aClone, PR_TRUE, nodeInfoManager,
+      rv = CloneAndAdopt(cloneChild, aClone, PR_TRUE, nodeInfoManager,
                          aCx, aNewScope, aNodesWithProperties, clone,
                          getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -691,7 +692,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
 #endif
 
   if (aNode->HasProperties()) {
-    PRBool ok = aNodesWithProperties.AppendObject(aNode);
+    bool ok = aNodesWithProperties.AppendObject(aNode);
     if (aClone) {
       ok = ok && aNodesWithProperties.AppendObject(clone);
     }

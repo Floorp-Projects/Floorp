@@ -64,7 +64,7 @@ public:
 
 protected:
   mozEnglishWordUtils::myspCapitalization captype(const nsString &word);
-  PRBool ucIsAlpha(PRUnichar aChar);
+  bool ucIsAlpha(PRUnichar aChar);
 
   nsString mLanguage;
   nsString mCharset;

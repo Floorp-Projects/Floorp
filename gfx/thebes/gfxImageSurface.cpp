@@ -194,7 +194,7 @@ gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
     return stride;
 }
 
-PRBool
+bool
 gfxImageSurface::CopyFrom(gfxImageSurface *other)
 {
     if (other->mSize != mSize)

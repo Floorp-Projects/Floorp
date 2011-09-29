@@ -53,17 +53,17 @@ public:
   nsAutoWindowStateHelper(nsIDOMWindow *aWindow);
   ~nsAutoWindowStateHelper();
 
-  PRBool DefaultEnabled()
+  bool DefaultEnabled()
   {
     return mDefaultEnabled;
   }
 
 protected:
-  PRBool DispatchCustomEvent(const char *aEventName);
+  bool DispatchCustomEvent(const char *aEventName);
 
   nsIDOMWindow *mWindow;
   nsCOMPtr<nsIDOMWindow> mCallerWindow;
-  PRBool mDefaultEnabled;
+  bool mDefaultEnabled;
 };
 
 

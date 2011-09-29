@@ -108,7 +108,7 @@ FormAssistant.prototype = {
 
     if (this._isVisibleElement(element)) {
       this._currentIndex = aIndex;
-      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL | Ci.nsIFocusManager.FLAG_BYMOUSE);
+      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
 
       // To ensure we get the current caret positionning of the focused
       // element we need to delayed a bit the event
@@ -160,16 +160,17 @@ FormAssistant.prototype = {
     if (this._isEditable(aElement))
       aElement = this._getTopLevelEditable(aElement);
 
-    // hack bug 604351
-    // if the element is the same editable element and the VKB is closed, reopen it
-    if (aElement instanceof HTMLInputElement && aElement.mozIsTextField(false) && !Util.isKeyboardOpened) {
-      aElement.blur();
-      gFocusManager.setFocus(aElement, Ci.nsIFocusManager.FLAG_NOSCROLL | Ci.nsIFocusManager.FLAG_BYMOUSE);
-    }
-
     // Checking if the element is the current focused one while the form assistant is open
     // allow the user to reposition the caret into an input element
     if (this._open && aElement == this.currentElement) {
+      //hack bug 604351
+      // if the element is the same editable element and the VKB is closed, reopen it
+      let utils = Util.getWindowUtils(content);
+      if (utils.IMEStatus == utils.IME_STATUS_DISABLED && aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) {
+        aElement.blur();
+        aElement.focus();
+      }
+
       // If the element is a <select/> element and the user has manually click
       // it we need to inform the UI of such a change to keep in sync with the
       // new selected options once the event is finished
@@ -545,6 +546,9 @@ FormAssistant.prototype = {
 
   _isAutocomplete: function formHelperIsAutocomplete(aElement) {
     if (aElement instanceof HTMLInputElement) {
+      if (aElement.getAttribute("type") == "password")
+        return false;
+
       let autocomplete = aElement.getAttribute("autocomplete");
       let allowedValues = ["off", "false", "disabled"];
       if (allowedValues.indexOf(autocomplete) == -1)

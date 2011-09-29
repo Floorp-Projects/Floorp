@@ -79,23 +79,23 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
   nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                         PRBool aNotify);
-  nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+                         bool aNotify);
+  nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
   nsIAtom *GetIDAttributeName() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    nsIAtom* aPrefix, const nsAString& aValue,
-                   PRBool aNotify);
-  PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                   bool aNotify);
+  bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                  nsAString& aResult) const;
-  PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
-  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+  bool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
+  virtual bool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue,
                              nsCaseTreatment aCaseSensitive) const;
-  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+  virtual bool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aValue,
                              nsCaseTreatment aCaseSensitive) const;
   virtual PRInt32 FindAttrValueIn(PRInt32 aNameSpaceID,
@@ -103,7 +103,7 @@ public:
                                   AttrValuesArray* aValues,
                                   nsCaseTreatment aCaseSensitive) const;
   nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
-                     PRBool aNotify);
+                     bool aNotify);
   const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   PRUint32 GetAttrCount() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
@@ -111,19 +111,19 @@ public:
   virtual nsEventStates IntrinsicState() const;
 
   virtual void BeginAddingChildren();
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(bool aHaveNotified);
 
   virtual nsIAtom *GetClassAttributeName() const;
   virtual const nsAttrValue* DoGetClasses() const;
 
-  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
-                                PRBool aIsTrustedEvent);
+  virtual void PerformAccesskey(bool aKeyCausesActivation,
+                                bool aIsTrustedEvent);
 
   // nsIDOMElement specializations:
   NS_IMETHOD GetAttribute(const nsAString& aName,
                           nsAString& aReturn);
   NS_IMETHOD RemoveAttribute(const nsAString& aName);
-  NS_IMETHOD HasAttribute(const nsAString& aName, PRBool* aReturn);
+  NS_IMETHOD HasAttribute(const nsAString& aName, bool* aReturn);
   
   // nsIClassInfo interface
   NS_DECL_NSICLASSINFO
@@ -172,11 +172,11 @@ protected:
   }
 
   // implementation helpers:  
-  PRBool QueryInterfaceInner(REFNSIID aIID, void** result);
+  bool QueryInterfaceInner(REFNSIID aIID, void** result);
 
-  PRBool HandledByInner(nsIAtom* attr) const;
+  bool HandledByInner(nsIAtom* attr) const;
 
-  void RegUnregAccessKey(PRBool aDoReg);
+  void RegUnregAccessKey(bool aDoReg);
 
   nsCOMPtr<nsIXTFElement> mXTFElement;
 

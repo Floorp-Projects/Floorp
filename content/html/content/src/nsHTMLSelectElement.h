@@ -99,7 +99,7 @@ public:
    * @param aOption the option to insert
    * @param aIndex the index to insert at
    */
-  PRBool InsertOptionAt(nsHTMLOptionElement* aOption, PRUint32 aIndex)
+  bool InsertOptionAt(nsHTMLOptionElement* aOption, PRUint32 aIndex)
   {
     return !!mElements.InsertElementAt(aIndex, aOption);
   }
@@ -134,7 +134,7 @@ public:
   /**
    * Append an option to end of array
    */
-  PRBool AppendOption(nsHTMLOptionElement* aOption)
+  bool AppendOption(nsHTMLOptionElement* aOption)
   {
     return !!mElements.AppendElement(aOption);
   }
@@ -153,7 +153,7 @@ public:
    * @return the option index
    */
   nsresult GetOptionIndex(mozilla::dom::Element* aOption,
-                          PRInt32 aStartIndex, PRBool aForward,
+                          PRInt32 aStartIndex, bool aForward,
                           PRInt32* aIndex);
 
 private:
@@ -196,7 +196,7 @@ public:
     }
   }
 
-  PRBool ContainsOption(PRInt32 aIndex, const nsAString& aValue)
+  bool ContainsOption(PRInt32 aIndex, const nsAString& aValue)
   {
     return mValues.Contains(aValue) || mIndices.Contains(aIndex);
   }
@@ -218,7 +218,7 @@ public:
    * @param aIndex  The index of the content object in the parent.
    */
   nsSafeOptionListMutation(nsIContent* aSelect, nsIContent* aParent,
-                           nsIContent* aKid, PRUint32 aIndex, PRBool aNotify);
+                           nsIContent* aKid, PRUint32 aIndex, bool aNotify);
   ~nsSafeOptionListMutation();
   void MutationFailed() { mNeedsRebuild = PR_TRUE; }
 private:
@@ -227,9 +227,9 @@ private:
   /** The select element which option list is being mutated. */
   nsRefPtr<nsHTMLSelectElement> mSelect;
   /** PR_TRUE if the current mutation is the first one in the stack. */
-  PRBool                     mTopLevelMutation;
+  bool                       mTopLevelMutation;
   /** PR_TRUE if it is known that the option list must be recreated. */
-  PRBool                     mNeedsRebuild;
+  bool                       mNeedsRebuild;
   /** Option list must be recreated if more than one mutation is detected. */
   nsMutationGuard            mGuard;
 };
@@ -276,19 +276,19 @@ public:
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
-  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+                                 bool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
 
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_SELECT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   NS_IMETHOD SaveState();
-  virtual PRBool RestoreState(nsPresState* aState);
+  virtual bool RestoreState(nsPresState* aState);
 
-  virtual void FieldSetDisabledChanged(PRBool aNotify);
+  virtual void FieldSetDisabledChanged(bool aNotify);
 
   nsEventStates IntrinsicState() const;
 
@@ -305,7 +305,7 @@ public:
   NS_IMETHOD WillAddOptions(nsIContent* aOptions,
                             nsIContent* aParent,
                             PRInt32 aContentIndex,
-                            PRBool aNotify);
+                            bool aNotify);
 
   /**
    * To be called when stuff is removed under a child of the select--but
@@ -317,7 +317,7 @@ public:
    */
   NS_IMETHOD WillRemoveOptions(nsIContent* aParent,
                                PRInt32 aContentIndex,
-                               PRBool aNotify);
+                               bool aNotify);
 
   /**
    * Checks whether an option is disabled (even if it's part of an optgroup)
@@ -326,7 +326,7 @@ public:
    * @return whether the option is disabled
    */
   NS_IMETHOD IsOptionDisabled(PRInt32 aIndex,
-                              PRBool *aIsDisabled NS_OUTPARAM);
+                              bool *aIsDisabled NS_OUTPARAM);
 
   /**
    * Sets multiple options (or just sets startIndex if select is single)
@@ -347,11 +347,11 @@ public:
    */
   NS_IMETHOD SetOptionsSelectedByIndex(PRInt32 aStartIndex,
                                        PRInt32 aEndIndex,
-                                       PRBool aIsSelected,
-                                       PRBool aClearAll,
-                                       PRBool aSetDisabled,
-                                       PRBool aNotify,
-                                       PRBool* aChangedSomething NS_OUTPARAM);
+                                       bool aIsSelected,
+                                       bool aClearAll,
+                                       bool aSetDisabled,
+                                       bool aNotify,
+                                       bool* aChangedSomething NS_OUTPARAM);
 
   /**
    * Finds the index of a given option element
@@ -363,39 +363,39 @@ public:
    */
   NS_IMETHOD GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
                             PRInt32 aStartIndex,
-                            PRBool aForward,
+                            bool aForward,
                             PRInt32* aIndex NS_OUTPARAM);
 
   /** Whether or not there are optgroups in this select */
-  NS_IMETHOD GetHasOptGroups(PRBool* aHasGroups);
+  NS_IMETHOD GetHasOptGroups(bool* aHasGroups);
 
   /**
    * Called when an attribute is about to be changed
    */
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
+                               bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
+                                 const nsAString* aValue, bool aNotify);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+                                const nsAString* aValue, bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
+                             bool aNotify);
   
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-  virtual PRBool IsDoneAddingChildren() {
+  virtual nsresult DoneAddingChildren(bool aHaveNotified);
+  virtual bool IsDoneAddingChildren() {
     return mIsDoneAddingChildren;
   }
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -427,24 +427,24 @@ protected:
    * @param aIndex the index
    * @return whether the option at the index is selected
    */
-  PRBool IsOptionSelectedByIndex(PRInt32 aIndex);
+  bool IsOptionSelectedByIndex(PRInt32 aIndex);
   /**
    * Starting with (and including) aStartIndex, find the first selected index
    * and set mSelectedIndex to it.
    * @param aStartIndex the index to start with
    */
-  void FindSelectedIndex(PRInt32 aStartIndex, PRBool aNotify);
+  void FindSelectedIndex(PRInt32 aStartIndex, bool aNotify);
   /**
    * Select some option if possible (generally the first non-disabled option).
    * @return true if something was selected, false otherwise
    */
-  PRBool SelectSomething(PRBool aNotify);
+  bool SelectSomething(bool aNotify);
   /**
    * Call SelectSomething(), but only if nothing is selected
    * @see SelectSomething()
    * @return true if something was selected, false otherwise
    */
-  PRBool CheckSelectSomething(PRBool aNotify);
+  bool CheckSelectSomething(bool aNotify);
   /**
    * Called to trigger notifications of frames and fixing selected index
    *
@@ -458,9 +458,9 @@ protected:
    */
   void OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                         PRInt32 aIndex,
-                        PRBool aSelected,
-                        PRBool aChangeOptionState,
-                        PRBool aNotify);
+                        bool aSelected,
+                        bool aChangeOptionState,
+                        bool aNotify);
   /**
    * Restore state to a particular state string (representing the options)
    * @param aNewSelected the state string to restore to
@@ -477,7 +477,7 @@ protected:
   nsresult InsertOptionsIntoList(nsIContent* aOptions,
                                  PRInt32 aListIndex,
                                  PRInt32 aDepth,
-                                 PRBool aNotify);
+                                 bool aNotify);
   /**
    * Remove option(s) from the options[] array
    * @param aOptions the option or optgroup being added
@@ -487,7 +487,7 @@ protected:
   nsresult RemoveOptionsFromList(nsIContent* aOptions,
                                  PRInt32 aListIndex,
                                  PRInt32 aDepth,
-                                 PRBool aNotify);
+                                 bool aNotify);
   /**
    * Insert option(s) into the options[] array (called by InsertOptionsIntoList)
    * @param aOptions the option or optgroup being added
@@ -562,7 +562,7 @@ protected:
   /**
    * Is this a combobox?
    */
-  PRBool IsCombobox() {
+  bool IsCombobox() {
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
       return PR_FALSE;
     }
@@ -581,15 +581,15 @@ protected:
   /**
    * Rebuilds the options array from scratch as a fallback in error cases.
    */
-  void RebuildOptionsArray(PRBool aNotify);
+  void RebuildOptionsArray(bool aNotify);
 
 #ifdef DEBUG
   void VerifyOptionsArray();
 #endif
 
-  nsresult SetSelectedIndexInternal(PRInt32 aIndex, PRBool aNotify);
+  nsresult SetSelectedIndexInternal(PRInt32 aIndex, bool aNotify);
 
-  void SetSelectionChanged(PRBool aValue, PRBool aNotify);
+  void SetSelectionChanged(bool aValue, bool aNotify);
 
   /**
    * Return whether an element should have a validity UI.
@@ -619,33 +619,33 @@ protected:
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
-  PRPackedBool    mIsDoneAddingChildren;
+  bool            mIsDoneAddingChildren;
   /** true if our disabled state has changed from the default **/
-  PRPackedBool    mDisabledChanged;
+  bool            mDisabledChanged;
   /** true if child nodes are being added or removed.
    *  Used by nsSafeOptionListMutation.
    */
-  PRPackedBool    mMutating;
+  bool            mMutating;
   /**
    * True if DoneAddingChildren will get called but shouldn't restore state.
    */
-  PRPackedBool    mInhibitStateRestoration;
+  bool            mInhibitStateRestoration;
   /**
    * True if the selection has changed since the element's creation.
    */
-  PRPackedBool    mSelectionHasChanged;
+  bool            mSelectionHasChanged;
   /**
    * True if the default selected option has been set.
    */
-  PRPackedBool    mDefaultSelectionSet;
+  bool            mDefaultSelectionSet;
   /**
    * True if :-moz-ui-invalid can be shown.
    */
-  PRPackedBool    mCanShowInvalidUI;
+  bool            mCanShowInvalidUI;
   /**
    * True if :-moz-ui-valid can be shown.
    */
-  PRPackedBool    mCanShowValidUI;
+  bool            mCanShowValidUI;
 
   /** The number of non-options as children of the select */
   PRUint32  mNonOptionChildren;

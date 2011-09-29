@@ -41,7 +41,6 @@
 
 #include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsRegion.h"
 #include "nsIPresShell.h"
 #include "gfxRect.h"
@@ -84,7 +83,7 @@ public:
   /**
    * Foreign objects are always transformed.
    */
-  virtual PRBool IsTransformed() const
+  virtual bool IsTransformed() const
   {
     return PR_TRUE;
   }
@@ -101,7 +100,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSVGForeignObjectFrameBase::IsFrameOfType(aFlags &
       ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
@@ -129,8 +128,8 @@ public:
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace);
-  NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_TRUE; }
-  NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
+  NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
+  NS_IMETHOD_(bool) HasValidCoveredRect() { return true; }
 
   gfxMatrix GetCanvasTM();
 
@@ -151,9 +150,9 @@ protected:
   void FlushDirtyRegion(PRUint32 aFlags);
 
   // If width or height is less than or equal to zero we must disable rendering
-  PRBool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
+  bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  nsAutoPtr<gfxMatrix> mCanvasTM;
 
   // Areas dirtied by changes to decendents that are in our document
   nsRegion mSameDocDirtyRegion;
@@ -161,7 +160,7 @@ protected:
   // Areas dirtied by changes to sub-documents embedded by our decendents
   nsRegion mSubDocDirtyRegion;
 
-  PRPackedBool mInReflow;
+  bool mInReflow;
 };
 
 #endif

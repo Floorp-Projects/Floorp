@@ -108,7 +108,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   return result;
 }
 
-PRBool
+bool
 nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
                                  void *aData,
                                  void *closure)
@@ -118,7 +118,7 @@ nsTreeStyleCache::DeleteDFAState(nsHashKey *aKey,
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsTreeStyleCache::ReleaseStyleContext(nsHashKey *aKey,
                                       void *aData,
                                       void *closure)

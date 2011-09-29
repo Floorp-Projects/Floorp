@@ -139,7 +139,7 @@ public:
     * return PR_TRUE if the Unichar is in that category, 
     * return PR_FALSE, otherwise
     */
-   NS_IMETHOD Is( PRUnichar aChar, nsUGDC aDetailCategory, PRBool* oResult) = 0;
+   NS_IMETHOD Is( PRUnichar aChar, nsUGDC aDetailCategory, bool* oResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUGenDetailCategory,

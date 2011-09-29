@@ -112,7 +112,7 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
   if (localName.EqualsLiteral("a") ||
       localName.EqualsLiteral("area") ||
       localName.EqualsLiteral("link")) {
-    PRBool hasAttr;
+    bool hasAttr;
     content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
     if (hasAttr) {
       linkContent = content;
@@ -141,7 +141,7 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
       content->GetLocalName(localName);
       ToLowerCase(localName);
       if (localName.EqualsLiteral("a")) {
-        PRBool hasAttr;
+        bool hasAttr;
         content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
         if (hasAttr) {
           linkContent = content;
@@ -235,7 +235,7 @@ nsContextMenuInfo::GetImageRequest(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
                              aRequest);
 }
 
-PRBool
+bool
 nsContextMenuInfo::HasBackgroundImage(nsIDOMNode * aDOMNode)
 {
   NS_ENSURE_TRUE(aDOMNode, PR_FALSE);

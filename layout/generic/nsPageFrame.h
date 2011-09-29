@@ -59,7 +59,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  virtual PRBool IsContainingBlock() const;
+  virtual bool IsContainingBlock() const;
 
   /**
    * Get the "type" of the frame
@@ -83,7 +83,7 @@ public:
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings
-  virtual PRBool HonorPrintBackgroundSettings() { return PR_FALSE; }
+  virtual bool HonorPrintBackgroundSettings() { return false; }
 
   void PaintHeaderFooter(nsRenderingContext& aRenderingContext,
                          nsPoint aPt);
@@ -155,7 +155,7 @@ protected:
   virtual nscoord GetIntrinsicWidth();
   virtual nscoord GetIntrinsicHeight();
 
-    PRBool mHaveReflowed;
+    bool mHaveReflowed;
 
     friend nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 };

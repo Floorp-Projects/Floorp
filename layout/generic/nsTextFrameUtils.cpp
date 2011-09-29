@@ -52,7 +52,7 @@
 
 #define UNICODE_ZWSP 0x200B
   
-static PRBool IsDiscardable(PRUnichar ch, PRUint32* aFlags)
+static bool IsDiscardable(PRUnichar ch, PRUint32* aFlags)
 {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun
   // and discarding it would force us to copy text in many cases of preformatted
@@ -68,7 +68,7 @@ static PRBool IsDiscardable(PRUnichar ch, PRUint32* aFlags)
   return IS_BIDI_CONTROL_CHAR(ch);
 }
 
-static PRBool IsDiscardable(PRUint8 ch, PRUint32* aFlags)
+static bool IsDiscardable(PRUint8 ch, PRUint32* aFlags)
 {
   if (ch == CH_SHY) {
     *aFlags |= nsTextFrameUtils::TEXT_HAS_SHY;
@@ -88,7 +88,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
   PRUint32 flags = 0;
   PRUnichar* outputStart = aOutput;
 
-  PRBool lastCharArabic = PR_FALSE;
+  bool lastCharArabic = false;
 
   if (aCompression == COMPRESS_NONE) {
     // Skip discardables.
@@ -115,11 +115,11 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
     }
     *aIncomingFlags &= ~INCOMING_WHITESPACE;
   } else {
-    PRBool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
+    bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUnichar ch = *aText++;
-      PRBool nowInWhitespace;
+      bool nowInWhitespace;
       if (ch == ' ' &&
           (i + 1 >= aLength ||
            !IsSpaceCombiningSequenceTail(aText, aLength - (i + 1)))) {
@@ -206,11 +206,11 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
     }
     *aIncomingFlags &= ~(INCOMING_ARABICCHAR | INCOMING_WHITESPACE);
   } else {
-    PRBool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
+    bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUint8 ch = *aText++;
-      PRBool nowInWhitespace = ch == ' ' || ch == '\t' ||
+      bool nowInWhitespace = ch == ' ' || ch == '\t' ||
         (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE);
       if (!nowInWhitespace) {
         if (IsDiscardable(ch, &flags)) {
@@ -248,7 +248,7 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
   return aOutput;
 }
 
-PRBool nsSkipCharsRunIterator::NextRun() {
+bool nsSkipCharsRunIterator::NextRun() {
   do {
     if (mRunLength) {
       mIterator.AdvanceOriginal(mRunLength);

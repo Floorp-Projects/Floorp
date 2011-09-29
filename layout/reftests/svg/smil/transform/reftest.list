@@ -10,6 +10,6 @@
 == rotate-angle-5.svg rotate-angle-ref.svg
 == scale-1.svg scale-1-ref.svg
 == skew-1.svg skew-1-ref.svg
-== translate-clipPath-1.svg lime.svg
+fails-if(Android&&layersOpenGL) == translate-clipPath-1.svg lime.svg
 fails-if(cocoaWidget) == translate-gradient-1.svg lime.svg
-== translate-pattern-1.svg lime.svg
+fails-if(Android&&layersOpenGL) == translate-pattern-1.svg lime.svg

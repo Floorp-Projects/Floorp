@@ -123,7 +123,7 @@ public:
 protected:
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
-                                    PRBool* result);
+                                    bool* result);
 private:
     nsCOMPtr<nsIURI> mBaseURI;
 };

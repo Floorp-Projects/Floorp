@@ -80,12 +80,12 @@ public:
   NS_IMETHOD RemoveElement(nsISupports *aElement) {
     return RemoveElement(aElement, 0)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
-  NS_IMETHOD_(PRBool) MoveElement(PRInt32 aFrom, PRInt32 aTo);
+  NS_IMETHOD_(bool) MoveElement(PRInt32 aFrom, PRInt32 aTo);
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
   NS_IMETHOD Clear(void);
 
   // nsISupportsArray methods:
-  NS_IMETHOD_(PRBool) Equals(const nsISupportsArray* aOther);
+  NS_IMETHOD_(bool) Equals(const nsISupportsArray* aOther);
 
   NS_IMETHOD_(nsISupports*) ElementAt(PRUint32 aIndex);
 
@@ -110,15 +110,15 @@ public:
     return NS_OK;
   }
   
-  NS_IMETHOD_(PRBool) InsertElementAt(nsISupports* aElement, PRUint32 aIndex);
+  NS_IMETHOD_(bool) InsertElementAt(nsISupports* aElement, PRUint32 aIndex);
 
-  NS_IMETHOD_(PRBool) ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex);
+  NS_IMETHOD_(bool) ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex);
 
-  NS_IMETHOD_(PRBool) RemoveElementAt(PRUint32 aIndex) {
+  NS_IMETHOD_(bool) RemoveElementAt(PRUint32 aIndex) {
     return RemoveElementsAt(aIndex,1);
   }
-  NS_IMETHOD_(PRBool) RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex = 0);
-  NS_IMETHOD_(PRBool) RemoveLastElement(const nsISupports* aElement);
+  NS_IMETHOD_(bool) RemoveElement(const nsISupports* aElement, PRUint32 aStartIndex = 0);
+  NS_IMETHOD_(bool) RemoveLastElement(const nsISupports* aElement);
 
   NS_IMETHOD DeleteLastElement(nsISupports *aElement) {
     return (RemoveLastElement(aElement) ? NS_OK : NS_ERROR_FAILURE);
@@ -128,26 +128,26 @@ public:
     return (RemoveElementAt(aIndex) ? NS_OK : NS_ERROR_FAILURE);
   }
   
-  NS_IMETHOD_(PRBool) AppendElements(nsISupportsArray* aElements) {
+  NS_IMETHOD_(bool) AppendElements(nsISupportsArray* aElements) {
     return InsertElementsAt(aElements,mCount);
   }
   
   NS_IMETHOD Compact(void);
 
-  NS_IMETHOD_(PRBool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData);
-  NS_IMETHOD_(PRBool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData);
+  NS_IMETHOD_(bool) EnumerateForwards(nsISupportsArrayEnumFunc aFunc, void* aData);
+  NS_IMETHOD_(bool) EnumerateBackwards(nsISupportsArrayEnumFunc aFunc, void* aData);
 
   NS_IMETHOD Clone(nsISupportsArray **_retval);
 
-  NS_IMETHOD_(PRBool) InsertElementsAt(nsISupportsArray *aOther, PRUint32 aIndex);
+  NS_IMETHOD_(bool) InsertElementsAt(nsISupportsArray *aOther, PRUint32 aIndex);
 
-  NS_IMETHOD_(PRBool) RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount);
+  NS_IMETHOD_(bool) RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount);
 
-  NS_IMETHOD_(PRBool) SizeTo(PRInt32 aSize);
+  NS_IMETHOD_(bool) SizeTo(PRInt32 aSize);
 protected:
   void DeleteArray(void);
 
-  NS_IMETHOD_(PRBool) GrowArrayBy(PRInt32 aGrowBy);
+  NS_IMETHOD_(bool) GrowArrayBy(PRInt32 aGrowBy);
 
   nsISupports** mArray;
   PRUint32 mArraySize;

@@ -158,7 +158,7 @@ nsCSSProps::AddRefTable(void)
 
 #undef  DEBUG_SHORTHANDS_CONTAINING
 
-PRBool
+bool
 nsCSSProps::BuildShorthandsContainingTable()
 {
   PRUint32 occurrenceCounts[eCSSProperty_COUNT_no_shorthands];
@@ -1477,7 +1477,7 @@ const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
-PRBool
+bool
 nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aResult)
 {
   PRInt32 index = 0;
@@ -1545,9 +1545,9 @@ nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
   return sNullStr;
 }
 
-PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
+bool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 {
-  PRBool rv = PR_FALSE;
+  bool rv = false;
 
   // first get the keyword corresponding to the property Value from the color table
   nsCSSKeyword keyword = ValueToKeywordEnum(aPropValue, kColorKTable);

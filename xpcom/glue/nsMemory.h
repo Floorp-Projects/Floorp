@@ -73,7 +73,7 @@ public:
     static NS_HIDDEN_(void) Free(void* ptr)
         { NS_Free(ptr); }
 
-    static NS_COM_GLUE nsresult   HeapMinimize(PRBool aImmediate);
+    static NS_COM_GLUE nsresult   HeapMinimize(bool aImmediate);
     static NS_COM_GLUE void*      Clone(const void* ptr, PRSize size);
     static NS_COM_GLUE nsIMemory* GetGlobalMemoryService();       // AddRefs
 };

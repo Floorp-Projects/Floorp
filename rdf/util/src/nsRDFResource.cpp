@@ -81,7 +81,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsRDFResource, nsIRDFResource, nsIRDFNode)
 // nsIRDFNode methods:
 
 NS_IMETHODIMP
-nsRDFResource::EqualsNode(nsIRDFNode* aNode, PRBool* aResult)
+nsRDFResource::EqualsNode(nsIRDFNode* aNode, bool* aResult)
 {
     NS_PRECONDITION(aNode != nsnull, "null ptr");
     if (! aNode)
@@ -153,7 +153,7 @@ nsRDFResource::GetValueConst(const char** aURI)
 }
 
 NS_IMETHODIMP
-nsRDFResource::EqualsString(const char* aURI, PRBool* aResult)
+nsRDFResource::EqualsString(const char* aURI, bool* aResult)
 {
     NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)

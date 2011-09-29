@@ -54,10 +54,10 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr);
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRInt32 aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
+  void SetBaseValue(PRInt32 aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
   PRInt32 GetBaseValue() const
     { return mBaseVal; }
 
@@ -70,7 +70,7 @@ public:
   // explicitly set by markup or a DOM call), PR_FALSE otherwise.
   // If this returns PR_FALSE, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
-  PRBool IsExplicitlySet() const
+  bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
   
   nsresult ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
@@ -85,8 +85,8 @@ private:
   PRInt32 mAnimVal;
   PRInt32 mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
-  PRPackedBool mIsAnimated;
-  PRPackedBool mIsBaseSet;
+  bool mIsAnimated;
+  bool mIsBaseSet;
 
 public:
   struct DOMAnimatedInteger : public nsIDOMSVGAnimatedInteger
@@ -134,7 +134,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     PRBool& aPreventCachingOfSandwich) const;
+                                     bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

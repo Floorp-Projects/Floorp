@@ -105,7 +105,7 @@ public:
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
   // nsIFormContromFrame
-  virtual void SetFocus(PRBool aOn, PRBool aRepaint);
+  virtual void SetFocus(bool aOn, bool aRepaint);
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
 };
@@ -240,7 +240,7 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void 
-nsImageControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+nsImageControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 

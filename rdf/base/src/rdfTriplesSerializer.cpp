@@ -85,7 +85,7 @@ TriplesVisitor::writeResource(nsIRDFResource *aResource)
 
 NS_IMETHODIMP
 TriplesVisitor::Visit(nsIRDFNode *aSubject, nsIRDFResource *aPredicate,
-                      nsIRDFNode *aObject, PRBool aTruthValue)
+                      nsIRDFNode *aObject, bool aTruthValue)
 {
     nsCOMPtr<nsIRDFResource> subjectRes = do_QueryInterface(aSubject);
     nsresult rv = NS_OK;

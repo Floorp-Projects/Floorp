@@ -53,7 +53,7 @@
 nsresult
 nsHttpResponseHead::SetHeader(nsHttpAtom hdr,
                               const nsACString &val,
-                              PRBool merge)
+                              bool merge)
 {
     nsresult rv = mHeaders.SetHeader(hdr, val, merge);
     if (NS_FAILED(rv)) return rv;
@@ -79,7 +79,7 @@ nsHttpResponseHead::SetContentLength(PRInt64 len)
 }
 
 void
-nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
+nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
 {
     if (mVersion == NS_HTTP_VERSION_0_9)
         return;
@@ -224,7 +224,7 @@ nsHttpResponseHead::ParseHeaderLine(const char *line)
     }
     else if (hdr == nsHttp::Content_Type) {
         LOG(("ParseContentType [type=%s]\n", val));
-        PRBool dummy;
+        bool dummy;
         net_ParseContentType(nsDependentCString(val),
                              mContentType, mContentCharset, &dummy);
     }
@@ -336,7 +336,7 @@ nsHttpResponseHead::ComputeFreshnessLifetime(PRUint32 *result)
     return NS_OK;
 }
 
-PRBool
+bool
 nsHttpResponseHead::MustValidate()
 {
     LOG(("nsHttpResponseHead::MustValidate ??\n"));
@@ -396,7 +396,7 @@ nsHttpResponseHead::MustValidate()
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsHttpResponseHead::MustValidateIfExpired()
 {
     // according to RFC2616, section 14.9.4:
@@ -408,7 +408,7 @@ nsHttpResponseHead::MustValidateIfExpired()
     return HasHeaderValue(nsHttp::Cache_Control, "must-revalidate");
 }
 
-PRBool
+bool
 nsHttpResponseHead::IsResumable()
 {
     // even though some HTTP/1.0 servers may support byte range requests, we're not
@@ -419,7 +419,7 @@ nsHttpResponseHead::IsResumable()
            HasHeaderValue(nsHttp::Accept_Ranges, "bytes");
 }
 
-PRBool
+bool
 nsHttpResponseHead::ExpiresInPast()
 {
     PRUint32 maxAgeVal, expiresVal, dateVal;

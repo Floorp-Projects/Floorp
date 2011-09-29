@@ -31,8 +31,11 @@ function continueTest() {
   ifrwindow.focus();
   var utils = ifrwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  utils.sendMouseEvent("mousedown", 1, 1, 0, 1, 0);
-  utils.sendMouseEvent("mouseup", 1, 1, 0, 1, 0);
+  var rect = ifrwindow.document.body.getBoundingClientRect();
+  var x = rect.left + (rect.width/2);
+  var y = rect.top + (rect.height/2);
+  utils.sendMouseEvent("mousedown", x, y, 0, 1, 0);
+  utils.sendMouseEvent("mouseup", x, y, 0, 1, 0);
   is(ifrwindow.document.body.textContent, 1, "Should have got a click event!");
   SimpleTest.finish();
 }

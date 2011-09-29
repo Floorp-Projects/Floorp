@@ -100,7 +100,7 @@ protected:
   // have been looked up before. The number of items in mMimeTypeArray should
   // thus always be equal to or higher than mPluginMimeTypeCount.
   nsCOMArray<nsIDOMMimeType> mMimeTypeArray;
-  PRBool mInited;
+  bool mInited;
 };
 
 class nsMimeType : public nsIDOMMimeType

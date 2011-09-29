@@ -1,0 +1,103 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing for HTML select</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+
+  <script type="application/javascript">
+    //gA11yEventDumpToConsole = true; // debugging
+    function doTest()
+    {
+      var actionsArray = [
+        {
+          ID: "lb_apple",
+          actionIndex: 0,
+          actionName: "select",
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new focusChecker("lb_apple")
+          ]
+        },
+        {
+          ID: "combobox",
+          actionIndex: 0,
+          actionName: "open",
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new focusChecker("cb_orange")
+          ]
+        },
+        {
+          ID: "cb_apple",
+          actionIndex: 0,
+          actionName: "select",
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new focusChecker("combobox")
+          ]
+        },
+        {
+          ID: "combobox",
+          actionIndex: 0,
+          actionName: "open",
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new focusChecker("cb_apple")
+          ]
+        },
+        {
+          ID: "combobox",
+          actionIndex: 0,
+          actionName: "close",
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new focusChecker("combobox")
+          ]
+        }
+      ];
+
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+     title="Rework accessible focus handling">
+    Mozilla Bug 673958
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="listbox" size="2">
+    <option id="lb_orange">orange</option>
+    <option id="lb_apple">apple</option>
+  </select>
+
+  <select id="combobox">
+    <option id="cb_orange">orange</option>
+    <option id="cb_apple">apple</option>
+  </select>
+</body>
+</html>

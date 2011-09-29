@@ -62,7 +62,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   NS_OVERRIDE NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
                                               nsIUTF8StringEnumerator* *aResult);
   NS_OVERRIDE NS_IMETHOD IsLocaleRTL(const nsACString& package,
-                                     PRBool *aResult);
+                                     bool *aResult);
   NS_OVERRIDE NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
                                            nsACString& aLocale);
   NS_OVERRIDE NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
@@ -92,10 +92,10 @@ class nsChromeRegistryChrome : public nsChromeRegistry
 
   static const PLDHashTableOps kTableOps;
   static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
-  static PRBool        MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
+  static bool          MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                                 const void *key);
   static void          ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
-  static PRBool        InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+  static bool          InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                                  const void *key);
 
   struct ProviderEntry
@@ -171,7 +171,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
     OverlayListHash() { }
     ~OverlayListHash() { }
 
-    PRBool Init() { return mTable.Init(); }
+    bool Init() { return mTable.Init(); }
     void Add(nsIURI* aBase, nsIURI* aOverlay);
     void Clear() { mTable.Clear(); }
     const nsCOMArray<nsIURI>* GetArray(nsIURI* aBase);
@@ -185,7 +185,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   OverlayListHash mOverlayHash;
   OverlayListHash mStyleHash;
 
-  PRBool mProfileLoaded;
+  bool mProfileLoaded;
   
   nsCString mSelectedLocale;
   nsCString mSelectedSkin;

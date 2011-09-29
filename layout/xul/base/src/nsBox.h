@@ -62,10 +62,10 @@ public:
 
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
 
-  virtual PRBool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
+  virtual bool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
 
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         PRBool aRemoveOverflowAreas = PR_FALSE);
+                         bool aRemoveOverflowAreas = false);
 
   NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding);
@@ -78,8 +78,8 @@ public:
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
-  NS_IMETHOD GetDebug(PRBool& aDebug);
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
+  NS_IMETHOD GetDebug(bool& aDebug);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, bool aDebug);
 
   NS_IMETHOD DumpBox(FILE* out);
   NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
@@ -92,13 +92,13 @@ public:
    * Returns PR_TRUE if this box clips its children, e.g., if this box is an sc
 rollbox.
   */
-  virtual PRBool DoesClipChildren();
-  virtual PRBool ComputesOwnOverflowArea() = 0;
+  virtual bool DoesClipChildren();
+  virtual bool ComputesOwnOverflowArea() = 0;
 
   NS_HIDDEN_(nsresult) SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  PRBool DoesNeedRecalc(const nsSize& aSize);
-  PRBool DoesNeedRecalc(nscoord aCoord);
+  bool DoesNeedRecalc(const nsSize& aSize);
+  bool DoesNeedRecalc(nscoord aCoord);
   void SizeNeedsRecalc(nsSize& aSize);
   void CoordNeedsRecalc(nscoord& aCoord);
 
@@ -131,7 +131,7 @@ protected:
   NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
-  static PRBool gGotTheme;
+  static bool gGotTheme;
   static nsITheme* gTheme;
 
   enum eMouseThrough {

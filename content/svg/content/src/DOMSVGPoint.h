@@ -87,7 +87,7 @@ public:
    */
   DOMSVGPoint(DOMSVGPointList *aList,
               PRUint32 aListIndex,
-              PRBool aIsAnimValItem)
+              bool aIsAnimValItem)
     : mList(aList)
     , mListIndex(aListIndex)
     , mIsReadonly(PR_FALSE)
@@ -151,7 +151,7 @@ public:
     return new DOMSVGPoint(this);
   }
 
-  PRBool IsInList() const {
+  bool IsInList() const {
     return !!mList;
   }
 
@@ -161,7 +161,7 @@ public:
    * internal counterpart from which it gets its values. (A better name may
    * be HasWrappee().)
    */
-  PRBool HasOwner() const {
+  bool HasOwner() const {
     return !!mList;
   }
 
@@ -176,7 +176,7 @@ public:
    */
   void InsertingIntoList(DOMSVGPointList *aList,
                          PRUint32 aListIndex,
-                         PRBool aIsAnimValItem);
+                         bool aIsAnimValItem);
 
   static PRUint32 MaxListIndex() {
     return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
@@ -199,10 +199,10 @@ public:
     return HasOwner() ? const_cast<DOMSVGPoint*>(this)->InternalItem() : mPt;
   }
 
-  PRBool IsReadonly() const {
+  bool IsReadonly() const {
     return mIsReadonly;
   }
-  void SetReadonly(PRBool aReadonly) {
+  void SetReadonly(bool aReadonly) {
     mIsReadonly = aReadonly;
   }
 
@@ -224,7 +224,7 @@ protected:
   SVGPoint& InternalItem();
 
 #ifdef DEBUG
-  PRBool IndexIsValid();
+  bool IndexIsValid();
 #endif
 
   nsRefPtr<DOMSVGPointList> mList;

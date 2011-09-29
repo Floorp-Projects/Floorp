@@ -38,7 +38,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsSVGForeignObjectElement.h"
-#include "nsSVGMatrix.h"
 
 nsSVGElement::LengthInfo nsSVGForeignObjectElement::sLengthInfo[4] =
 {
@@ -123,7 +122,7 @@ nsSVGForeignObjectElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) con
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {

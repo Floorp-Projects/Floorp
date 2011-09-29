@@ -92,7 +92,7 @@ nsSSLStatus::GetCipherName(char** _result)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetIsDomainMismatch(PRBool* _result)
+nsSSLStatus::GetIsDomainMismatch(bool* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
 
@@ -102,7 +102,7 @@ nsSSLStatus::GetIsDomainMismatch(PRBool* _result)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetIsNotValidAtThisTime(PRBool* _result)
+nsSSLStatus::GetIsNotValidAtThisTime(bool* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
 
@@ -112,7 +112,7 @@ nsSSLStatus::GetIsNotValidAtThisTime(PRBool* _result)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetIsUntrusted(PRBool* _result)
+nsSSLStatus::GetIsUntrusted(bool* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
 

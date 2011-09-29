@@ -22,12 +22,17 @@
     const kViaDisplayStyle = 0;
     const kViaVisibilityStyle = 1;
 
-    function focusMenu(aMenuBarID, aMenuID)
+    function focusMenu(aMenuBarID, aMenuID, aActiveMenuBarID)
     {
-      this.eventSeq = [
-        new invokerChecker(EVENT_MENU_START, getNode(aMenuBarID)),
-        new invokerChecker(EVENT_FOCUS, getNode(aMenuID)),
-      ];
+      this.eventSeq = [];
+
+      if (aActiveMenuBarID) {
+        this.eventSeq.push(new invokerChecker(EVENT_MENU_END,
+                                              getNode(aActiveMenuBarID)));
+      }
+
+      this.eventSeq.push(new invokerChecker(EVENT_MENU_START, getNode(aMenuBarID)));
+      this.eventSeq.push(new invokerChecker(EVENT_FOCUS, getNode(aMenuID)));
 
       this.invoke = function focusMenu_invoke()
       {
@@ -143,14 +148,15 @@
 
     var gQueue = null;
 
-    //gA11yEventDumpID = "eventdump";
-    //gA11yEventDumpToConsole = true;
+    //gA11yEventDumpID = "eventdump"; // debuging
+    //gA11yEventDumpToConsole = true; // debuging
 
     function doTests()
     {
       gQueue = new eventQueue();
 
-      gQueue.push(new focusMenu("menubar", "menu-file"));
+      gQueue.push(new focusMenu("menubar2", "menu-help"));
+      gQueue.push(new focusMenu("menubar", "menu-file", "menubar2"));
       gQueue.push(new showMenu("menupopup-file", "menu-file", kViaDisplayStyle));
       gQueue.push(new closeMenu("menupopup-file", "menu-file", kViaDisplayStyle));
       gQueue.push(new showMenu("menupopup-edit", "menu-edit", kViaVisibilityStyle));
@@ -183,6 +189,11 @@
      title="Clean up FireAccessibleFocusEvent">
     Mozilla Bug 615189
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=673958"
+     title="Rework accessible focus handling">
+    Mozilla Bug 673958
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -202,6 +213,14 @@
       <div id="menupopup-edit" role="menu" style="visibility: hidden;">
         <div id="menuitem-undo" role="menuitem" tabindex="0">Undo</div>
         <div id="menuitem-redo" role="menuitem" tabindex="0">Redo</div>
+      </div>
+    </div>
+  </div>
+  <div id="menubar2" role="menubar">
+    <div id="menu-help" role="menuitem" tabindex="0">
+      Help
+      <div id="menupopup-help" role="menu" style="display: none;">
+        <div id="menuitem-about" role="menuitem" tabindex="0">About</div>
       </div>
     </div>
   </div>

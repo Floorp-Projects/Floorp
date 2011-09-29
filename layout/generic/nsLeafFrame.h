@@ -74,7 +74,7 @@ public:
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, PRBool aShrinkWrap);
+                                 nsSize aPadding, bool aShrinkWrap);
 
   /**
    * Reflow our frame.  This will use the computed width plus borderpadding for
@@ -95,7 +95,7 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&      aStatus);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     // We don't actually contain a block, but we do always want a
     // computed width, so tell a little white lie here.

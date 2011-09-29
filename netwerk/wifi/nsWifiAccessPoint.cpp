@@ -92,7 +92,7 @@ NS_IMETHODIMP nsWifiAccessPoint::GetSignal(PRInt32 *aSignal)
 
 // Helper functions:
 
-PRBool AccessPointsEqual(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAccessPoint>& b)
+bool AccessPointsEqual(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAccessPoint>& b)
 {
   if (a.Count() != b.Count()) {
     LOG(("AccessPoint lists have different lengths\n"));
@@ -101,7 +101,7 @@ PRBool AccessPointsEqual(nsCOMArray<nsWifiAccessPoint>& a, nsCOMArray<nsWifiAcce
 
   for (PRInt32 i = 0; i < a.Count(); i++) {
     LOG(("++ Looking for %s\n", a[i]->mSsid));
-    PRBool found = PR_FALSE;
+    bool found = false;
     for (PRInt32 j = 0; j < b.Count(); j++) {
       LOG(("   %s->%s | %s->%s\n", a[i]->mSsid, b[j]->mSsid, a[i]->mMac, b[j]->mMac));
       if (!strcmp(a[i]->mSsid, b[j]->mSsid) &&

@@ -71,11 +71,11 @@ class nsHtml5Portability
     static jArray<PRUnichar,PRInt32> newCharArrayFromString(nsString* string);
     static nsIAtom* newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner);
     static void releaseString(nsString* str);
-    static PRBool localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length);
-    static PRBool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
-    static PRBool lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
-    static PRBool literalEqualsString(const char* literal, nsString* string);
-    static PRBool stringEqualsString(nsString* one, nsString* other);
+    static bool localEqualsBuffer(nsIAtom* local, PRUnichar* buf, PRInt32 offset, PRInt32 length);
+    static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
+    static bool lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
+    static bool literalEqualsString(const char* literal, nsString* string);
+    static bool stringEqualsString(nsString* one, nsString* other);
     static void initializeStatics();
     static void releaseStatics();
 };

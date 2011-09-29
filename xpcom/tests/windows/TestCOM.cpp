@@ -112,7 +112,7 @@ public:
                             const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD LockFactory(PRBool aLock) {
+  NS_IMETHOD LockFactory(bool aLock) {
     printf("nsTestComFactory: ");
     printf("%s", (aLock ? "Locking server" : "Unlocking server"));
     printf("\n");

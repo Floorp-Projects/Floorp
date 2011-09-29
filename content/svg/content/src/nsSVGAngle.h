@@ -60,7 +60,7 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr);
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
   void GetAnimValueString(nsAString& aValue);
 
@@ -94,7 +94,7 @@ private:
   PRUint8 mAnimValUnit;
   PRUint8 mBaseValUnit;
   PRUint8 mAttrEnum; // element specified tracking for attribute
-  PRPackedBool mIsAnimated;
+  bool mIsAnimated;
   
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   nsresult NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
@@ -226,7 +226,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     PRBool& aPreventCachingOfSandwich) const;
+                                     bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

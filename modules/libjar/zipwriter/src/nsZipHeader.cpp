@@ -92,7 +92,7 @@ NS_IMETHODIMP nsZipHeader::GetCRC32(PRUint32 *aCRC32)
 }
 
 /* readonly attribute boolean isDirectory; */
-NS_IMETHODIMP nsZipHeader::GetIsDirectory(PRBool *aIsDirectory)
+NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool *aIsDirectory)
 {
     NS_ASSERTION(mInited, "Not initalised");
 
@@ -151,7 +151,7 @@ NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime)
 }
 
 /* readonly attribute boolean isSynthetic; */
-NS_IMETHODIMP nsZipHeader::GetIsSynthetic(PRBool *aIsSynthetic)
+NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool *aIsSynthetic)
 {
     NS_ASSERTION(mInited, "Not initalised");
 
@@ -343,7 +343,7 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
     return NS_OK;
 }
 
-const PRUint8 * nsZipHeader::GetExtraField(PRUint16 aTag, PRBool aLocal, PRUint16 *aBlockSize)
+const PRUint8 * nsZipHeader::GetExtraField(PRUint16 aTag, bool aLocal, PRUint16 *aBlockSize)
 {
     const PRUint8 *buf = aLocal ? mLocalExtraField : mExtraField;
     PRUint32 buflen = aLocal ? mLocalFieldLength : mFieldLength;

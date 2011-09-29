@@ -75,7 +75,7 @@ public:
 	
   NS_DECL_EDITTXN
 
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge);
 
   /** return the string data associated with this transaction */
   NS_IMETHOD GetData(nsString& aResult);
@@ -83,7 +83,7 @@ public:
 protected:
 
   /** return PR_TRUE if aOtherTxn immediately follows this txn */
-  virtual PRBool IsSequentialInsert(InsertTextTxn *aOtherTxn);
+  virtual bool IsSequentialInsert(InsertTextTxn *aOtherTxn);
   
   /** the text element to operate upon */
   nsCOMPtr<nsIDOMCharacterData> mElement;

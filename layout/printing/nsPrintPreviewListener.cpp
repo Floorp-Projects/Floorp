@@ -136,7 +136,7 @@ GetActionForEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
   if (keyEvent) {
-    PRBool b;
+    bool b;
     keyEvent->GetAltKey(&b);
     if (b) return eEventAction_Suppress;
     keyEvent->GetCtrlKey(&b);
@@ -197,7 +197,7 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
             nsIContent* fromContent = parentDoc->FindContentForSubDocument(doc);
             nsCOMPtr<nsIDOMElement> from = do_QueryInterface(fromContent);
 
-            PRBool forward = (action == eEventAction_Tab);
+            bool forward = (action == eEventAction_Tab);
             nsCOMPtr<nsIDOMElement> result;
             fm->MoveFocus(win, from,
                           forward ? nsIFocusManager::MOVEFOCUS_FORWARD :

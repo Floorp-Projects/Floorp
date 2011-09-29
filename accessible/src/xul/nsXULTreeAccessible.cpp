@@ -46,13 +46,16 @@
 #include "Relation.h"
 #include "States.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsIAccessibleRelation.h"
+#include "nsIAutoCompleteInput.h"
+#include "nsIAutoCompletePopup.h"
 #include "nsIDOMXULElement.h"
+#include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsITreeSelection.h"
 #include "nsIMutableArray.h"
-#include "nsComponentManagerUtils.h"
 
 using namespace mozilla::a11y;
 
@@ -69,6 +72,14 @@ nsXULTreeAccessible::
     mTree->GetView(getter_AddRefs(mTreeView));
 
   NS_ASSERTION(mTree && mTreeView, "Can't get mTree or mTreeView!\n");
+
+  nsIContent* parentContent = mContent->GetParent();
+  if (parentContent) {
+    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+      do_QueryInterface(parentContent);
+    if (autoCompletePopupElm)
+      mFlags |= eAutoCompletePopupAccessible;
+  }
 
   mAccessibleCache.Init(kDefaultTreeCacheSize);
 }
@@ -107,15 +118,12 @@ nsXULTreeAccessible::NativeState()
   // readonly state
   state |= states::READONLY;
 
-  // remove focusable and focused states since tree items are focusable for AT
-  state &= ~(states::FOCUSABLE | states::FOCUSED);
-
   // multiselectable state.
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_TRUE(selection, state);
 
-  PRBool isSingle = PR_FALSE;
+  bool isSingle = false;
   nsresult rv = selection->GetSingle(&isSingle);
   NS_ENSURE_SUCCESS(rv, state);
 
@@ -202,27 +210,6 @@ nsXULTreeAccessible::NativeRole()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULTreeAccessible: nsIAccessible implementation
-
-nsAccessible*
-nsXULTreeAccessible::FocusedChild()
-{
-  if (gLastFocusedNode != mContent)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-    do_QueryInterface(mContent);
-  if (multiSelect) {
-    PRInt32 row = -1;
-    multiSelect->GetCurrentIndex(&row);
-    if (row >= 0)
-      return GetTreeItemAccessible(row);
-  }
-
-  return nsnull;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation (DON'T put methods here)
 
 nsAccessible*
@@ -277,6 +264,21 @@ nsXULTreeAccessible::IsSelect()
   return true;
 }
 
+nsAccessible*
+nsXULTreeAccessible::CurrentItem()
+{
+  nsCOMPtr<nsITreeSelection> selection;
+  mTreeView->GetSelection(getter_AddRefs(selection));
+  if (selection) {
+    PRInt32 currentIndex = -1;
+    selection->GetCurrentIndex(&currentIndex);
+    if (currentIndex >= 0)
+      return GetTreeItemAccessible(currentIndex);
+  }
+
+  return nsnull;
+}
+
 already_AddRefed<nsIArray>
 nsXULTreeAccessible::SelectedItems()
 {
@@ -327,7 +329,7 @@ nsXULTreeAccessible::AddItemToSelection(PRUint32 aIndex)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     selection->IsSelected(aIndex, &isSelected);
     if (!isSelected)
       selection->ToggleSelect(aIndex);
@@ -343,7 +345,7 @@ nsXULTreeAccessible::RemoveItemFromSelection(PRUint32 aIndex)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     selection->IsSelected(aIndex, &isSelected);
     if (isSelected)
       selection->ToggleSelect(aIndex);
@@ -359,7 +361,7 @@ nsXULTreeAccessible::IsItemSelected(PRUint32 aIndex)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     selection->IsSelected(aIndex, &isSelected);
     return isSelected;
   }
@@ -410,7 +412,7 @@ nsXULTreeAccessible::SelectAll()
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool single = PR_FALSE;
+    bool single = false;
     selection->GetSingle(&single);
     if (!single) {
       selection->SelectAll();
@@ -450,6 +452,72 @@ nsXULTreeAccessible::GetChildCount()
   childCount += rowCount;
 
   return childCount;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeAccessible: Widgets
+
+bool
+nsXULTreeAccessible::IsWidget() const
+{
+  return true;
+}
+
+bool
+nsXULTreeAccessible::IsActiveWidget() const
+{
+  if (IsAutoCompletePopup()) {
+    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+      do_QueryInterface(mContent->GetParent());
+
+    if (autoCompletePopupElm) {
+      bool isOpen = false;
+      autoCompletePopupElm->GetPopupOpen(&isOpen);
+      return isOpen;
+    }
+  }
+  return FocusMgr()->HasDOMFocus(mContent);
+}
+
+bool
+nsXULTreeAccessible::AreItemsOperable() const
+{
+  if (IsAutoCompletePopup()) {
+    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+      do_QueryInterface(mContent->GetParent());
+
+    if (autoCompletePopupElm) {
+      bool isOpen = false;
+      autoCompletePopupElm->GetPopupOpen(&isOpen);
+      return isOpen;
+    }
+  }
+  return true;
+}
+
+nsAccessible*
+nsXULTreeAccessible::ContainerWidget() const
+{
+  if (IsAutoCompletePopup()) {
+    // This works for XUL autocompletes. It doesn't work for HTML forms
+    // autocomplete because of potential crossprocess calls (when autocomplete
+    // lives in content process while popup lives in chrome process). If that's
+    // a problem then rethink Widgets interface.
+    nsCOMPtr<nsIDOMXULMenuListElement> menuListElm =
+      do_QueryInterface(mContent->GetParent());
+    if (menuListElm) {
+      nsCOMPtr<nsIDOMNode> inputElm;
+      menuListElm->GetInputField(getter_AddRefs(inputElm));
+      if (inputElm) {
+        nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
+        if (inputNode) {
+          nsAccessible* input = GetAccService()->GetAccessible(inputNode);
+          return input ? input->ContainerWidget() : nsnull;
+        }
+      }
+    }
+  }
+  return nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,20 +730,7 @@ NS_IMPL_RELEASE_INHERITED(nsXULTreeItemAccessibleBase, nsAccessible)
 nsAccessible*
 nsXULTreeItemAccessibleBase::FocusedChild()
 {
-  if (gLastFocusedNode != mContent)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-    do_QueryInterface(mContent);
-
-  if (multiSelect) {
-    PRInt32 row = -1;
-    multiSelect->GetCurrentIndex(&row);
-    if (row == mRow)
-      return this;
-  }
-
-  return nsnull;
+  return FocusMgr()->FocusedAccessible() == this ? this : nsnull;
 }
 
 NS_IMETHODIMP
@@ -726,7 +781,7 @@ nsXULTreeItemAccessibleBase::GetBounds(PRInt32 *aX, PRInt32 *aY,
 }
 
 NS_IMETHODIMP
-nsXULTreeItemAccessibleBase::SetSelected(PRBool aSelect)
+nsXULTreeItemAccessibleBase::SetSelected(bool aSelect)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -734,7 +789,7 @@ nsXULTreeItemAccessibleBase::SetSelected(PRBool aSelect)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected;
+    bool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected != aSelect)
       selection->ToggleSelect(mRow);
@@ -800,7 +855,7 @@ nsXULTreeItemAccessibleBase::GetActionName(PRUint8 aIndex, nsAString& aName)
   }
 
   if (aIndex == eAction_Expand && IsExpandable()) {
-    PRBool isContainerOpen;
+    bool isContainerOpen;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
     if (isContainerOpen)
       aName.AssignLiteral("collapse");
@@ -928,7 +983,7 @@ nsXULTreeItemAccessibleBase::NativeState()
 
   // expanded/collapsed state
   if (IsExpandable()) {
-    PRBool isContainerOpen;
+    bool isContainerOpen;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
     state |= isContainerOpen ? states::EXPANDED : states::COLLAPSED;
   }
@@ -937,22 +992,15 @@ nsXULTreeItemAccessibleBase::NativeState()
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected;
+    bool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected)
       state |= states::SELECTED;
   }
 
   // focused state
-  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-    do_QueryInterface(mContent);
-  if (multiSelect) {
-    PRInt32 currentIndex;
-    multiSelect->GetCurrentIndex(&currentIndex);
-    if (currentIndex == mRow) {
-      state |= states::FOCUSED;
-    }
-  }
+  if (FocusMgr()->IsFocused(this))
+    state |= states::FOCUSED;
 
   // invisible state
   PRInt32 firstVisibleRow, lastVisibleRow;
@@ -968,6 +1016,15 @@ PRInt32
 nsXULTreeItemAccessibleBase::IndexInParent() const
 {
   return mParent ? mParent->ContentChildCount() + mRow : -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeItemAccessibleBase: Widgets
+
+nsAccessible*
+nsXULTreeItemAccessibleBase::ContainerWidget() const
+{
+  return mParent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1015,13 +1072,13 @@ nsXULTreeItemAccessibleBase::GetSiblingAtOffset(PRInt32 aOffset,
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: protected implementation
 
-PRBool
+bool
 nsXULTreeItemAccessibleBase::IsExpandable()
 {
-  PRBool isContainer = PR_FALSE;
+  bool isContainer = false;
   mTreeView->IsContainer(mRow, &isContainer);
   if (isContainer) {
-    PRBool isEmpty = PR_FALSE;
+    bool isEmpty = false;
     mTreeView->IsContainerEmpty(mRow, &isEmpty);
     if (!isEmpty) {
       nsCOMPtr<nsITreeColumns> columns;
@@ -1113,7 +1170,7 @@ nsXULTreeItemAccessible::IsDefunct() const
   return nsXULTreeItemAccessibleBase::IsDefunct() || !mColumn;
 }
 
-PRBool
+bool
 nsXULTreeItemAccessible::Init()
 {
   if (!nsXULTreeItemAccessibleBase::Init())

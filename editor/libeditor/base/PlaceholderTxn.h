@@ -72,7 +72,7 @@ public:
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction();
-  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge);
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
@@ -80,7 +80,7 @@ public:
   
   NS_IMETHOD GetTxnName(nsIAtom **aName);
   
-  NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, PRBool *aResult);
+  NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, bool *aResult);
 
   NS_IMETHOD EndPlaceHolderBatch();
 
@@ -93,11 +93,11 @@ public:
 protected:
 
   /** the presentation shell, which we'll need to get the selection */
-  PRBool      mAbsorb;          // do we auto absorb any and all transaction?
+  bool        mAbsorb;          // do we auto absorb any and all transaction?
   nsWeakPtr   mForwarding;
   IMETextTxn *mIMETextTxn;      // first IME txn in this placeholder - used for IME merging
                                 // non-owning for now - can't nsCOMPtr it due to broken transaction interfaces
-  PRBool      mCommitted;       // do we stop auto absorbing any matching placeholder txns?
+  bool        mCommitted;       // do we stop auto absorbing any matching placeholder txns?
   // these next two members store the state of the selection in a safe way. 
   // selection at the start of the txn is stored, as is the selection at the end.
   // This is so that UndoTransaction() and RedoTransaction() can restore the

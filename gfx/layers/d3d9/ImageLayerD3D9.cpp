@@ -224,7 +224,7 @@ ImageContainerD3D9::GetCurrentSize()
   return gfxIntSize(0,0);
 }
 
-PRBool
+bool
 ImageContainerD3D9::SetLayerManager(LayerManager *aManager)
 {
   if (aManager->GetBackendType() == LayerManager::LAYERS_D3D9) {
@@ -610,40 +610,19 @@ ShadowImageLayerD3D9::ShadowImageLayerD3D9(LayerManagerD3D9* aManager)
 ShadowImageLayerD3D9::~ShadowImageLayerD3D9()
 {}
 
-PRBool
-ShadowImageLayerD3D9::Init(const SharedImage& aFront,
-                          const nsIntSize& aSize)
+void
+ShadowImageLayerD3D9::Swap(const SharedImage& aNewFront,
+                           SharedImage* aNewBack)
 {
-   if (aFront.type() == SharedImage::TSurfaceDescriptor) {
-    SurfaceDescriptor desc = aFront.get_SurfaceDescriptor();
-    nsRefPtr<gfxASurface> surf = 
-      ShadowLayerForwarder::OpenDescriptor(desc);
-    
+  if (aNewFront.type() == SharedImage::TSurfaceDescriptor) {
     if (!mBuffer) {
       mBuffer = new ShadowBufferD3D9(this);
     }
-    return !!mBuffer;
-  } else {
-    if (!mYCbCrImage) {
-      mYCbCrImage = new PlanarYCbCrImageD3D9();
-    }
-    return !!mYCbCrImage;
-  }
-}
-
-void
-ShadowImageLayerD3D9::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
-{
-  
-  if (aNewFront.type() == SharedImage::TSurfaceDescriptor) {
-    nsRefPtr<gfxASurface> surf = 
+    nsRefPtr<gfxASurface> surf =
       ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
-   
-    if (mBuffer) {
-      mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
-    }
-  } else {
 
+    mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
+  } else {
     const YUVImage& yuv = aNewFront.get_YUVImage();
 
     nsRefPtr<gfxSharedImageSurface> surfY =
@@ -665,17 +644,15 @@ ShadowImageLayerD3D9::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
     data.mPicX = 0;
     data.mPicY = 0;
 
+    if (!mYCbCrImage) {
+      mYCbCrImage = new PlanarYCbCrImageD3D9();
+    }
+
     mYCbCrImage->SetData(data);
 
   }
   
   *aNewBack = aNewFront;
-}
-
-void
-ShadowImageLayerD3D9::DestroyFrontBuffer()
-{
-  Destroy();
 }
 
 void

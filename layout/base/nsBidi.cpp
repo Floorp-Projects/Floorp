@@ -215,7 +215,7 @@ void nsBidi::Init()
  * which we know we don't need any more;
  * is this the best way to do this??
  */
-PRBool nsBidi::GetMemory(void **aMemory, PRSize *aSize, PRBool aMayAllocate, PRSize aSizeNeeded)
+bool nsBidi::GetMemory(void **aMemory, PRSize *aSize, bool aMayAllocate, PRSize aSizeNeeded)
 {
   /* check for existing memory */
   if(*aMemory==NULL) {
@@ -1475,7 +1475,7 @@ nsresult nsBidi::GetVisualRun(PRInt32 aRunIndex, PRInt32 *aLogicalStart, PRInt32
  * Odd-level runs have visualStart on their visual right edge and
  * they progress visually to the left.
  */
-PRBool nsBidi::GetRuns()
+bool nsBidi::GetRuns()
 {
   if(mDirection!=NSBIDI_MIXED) {
     /* simple, single-run case - this covers length==0 */
@@ -1811,7 +1811,7 @@ nsresult nsBidi::ReorderVisual(const nsBidiLevel *aLevels, PRInt32 aLength, PRIn
   return NS_OK;
 }
 
-PRBool nsBidi::PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength,
+bool nsBidi::PrepareReorder(const nsBidiLevel *aLevels, PRInt32 aLength,
                 PRInt32 *aIndexMap,
                 nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel)
 {

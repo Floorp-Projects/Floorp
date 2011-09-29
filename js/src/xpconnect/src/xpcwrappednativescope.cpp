@@ -51,7 +51,7 @@ static int DEBUG_TotalScopeCount;
 static int DEBUG_TotalLiveScopeCount;
 static int DEBUG_TotalMaxScopeCount;
 static int DEBUG_TotalScopeTraversalCount;
-static PRBool  DEBUG_DumpedStats;
+static bool    DEBUG_DumpedStats;
 #endif
 
 #ifdef DEBUG

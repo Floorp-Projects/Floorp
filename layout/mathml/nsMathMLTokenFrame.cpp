@@ -207,7 +207,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 // that do not implement the GetBoundingMetrics() interface.
 /* virtual */ nsresult
 nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
-                          PRBool               aPlaceOrigin,
+                          bool                 aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   mBoundingMetrics = nsBoundingMetrics();
@@ -314,7 +314,7 @@ nsMathMLTokenFrame::ProcessTextData()
 //   (non-slanted) for all tokens except mi. ... (The deprecated fontslant
 //   attribute also behaves this way.)"
 
-PRBool
+bool
 nsMathMLTokenFrame::SetTextStyle()
 {
   if (mContent->Tag() != nsGkAtoms::mi_)
@@ -331,7 +331,7 @@ nsMathMLTokenFrame::SetTextStyle()
     return PR_FALSE;
 
   nsAutoString fontstyle;
-  PRBool isSingleCharacter =
+  bool isSingleCharacter =
     length == 1 ||
     (length == 2 && NS_IS_HIGH_SURROGATE(data[0]));
   if (isSingleCharacter &&
@@ -399,7 +399,7 @@ nsMathMLTokenFrame::SetTextStyle()
 // We also check that we are not relying on null pointers...
 
 static void
-SetQuote(nsIFrame* aFrame, nsString& aValue, PRBool aNotify)
+SetQuote(nsIFrame* aFrame, nsString& aValue, bool aNotify)
 {
   if (!aFrame)
     return;
@@ -416,7 +416,7 @@ SetQuote(nsIFrame* aFrame, nsString& aValue, PRBool aNotify)
 }
 
 void
-nsMathMLTokenFrame::SetQuotes(PRBool aNotify)
+nsMathMLTokenFrame::SetQuotes(bool aNotify)
 {
   if (mContent->Tag() != nsGkAtoms::ms_)
     return;

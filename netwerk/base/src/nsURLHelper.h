@@ -125,9 +125,9 @@ NS_HIDDEN_(nsresult) net_ExtractURLScheme(const nsACString &inURI,
                                           nsACString *scheme = nsnull);
 
 /* check that the given scheme conforms to RFC 2396 */
-NS_HIDDEN_(PRBool) net_IsValidScheme(const char *scheme, PRUint32 schemeLen);
+NS_HIDDEN_(bool) net_IsValidScheme(const char *scheme, PRUint32 schemeLen);
 
-inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
+inline bool net_IsValidScheme(const nsAFlatCString &scheme)
 {
     return net_IsValidScheme(scheme.get(), scheme.Length());
 }
@@ -148,7 +148,7 @@ inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
  * @param result the out param to write to if filtering happens
  * @return whether result was written to
  */
-NS_HIDDEN_(PRBool) net_FilterURIString(const char *str, nsACString& result);
+NS_HIDDEN_(bool) net_FilterURIString(const char *str, nsACString& result);
 
 #if defined(XP_WIN) || defined(XP_OS2)
 /**
@@ -164,7 +164,7 @@ NS_HIDDEN_(PRBool) net_FilterURIString(const char *str, nsACString& result);
  *
  * @returns false if aURL is already normalized.  Otherwise, returns true.
  */
-NS_HIDDEN_(PRBool) net_NormalizeFileURL(const nsACString &aURL,
+NS_HIDDEN_(bool) net_NormalizeFileURL(const nsACString &aURL,
                                         nsCString &aResultBuf);
 #endif
 
@@ -208,7 +208,7 @@ NS_HIDDEN_(char *) net_RFindCharNotInSet(const char *str, const char *end, const
 NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
                                       nsACString       &aContentType,
                                       nsACString       &aContentCharset,
-                                      PRBool*          aHadCharset);
+                                      bool*          aHadCharset);
 /**
  * As above, but also returns the start and end indexes for the charset
  * parameter in aHeaderStr.  These are indices for the entire parameter, NOT
@@ -221,7 +221,7 @@ NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
 NS_HIDDEN_(void) net_ParseContentType(const nsACString &aHeaderStr,
                                       nsACString       &aContentType,
                                       nsACString       &aContentCharset,
-                                      PRBool           *aHadCharset,
+                                      bool             *aHadCharset,
                                       PRInt32          *aCharsetStart,
                                       PRInt32          *aCharsetEnd);
 
@@ -247,16 +247,16 @@ inline char *net_RFindCharNotInSet(const char *str, const char *set)
  * This function returns true if the given hostname does not include any
  * restricted characters.  Otherwise, false is returned.
  */
-NS_HIDDEN_(PRBool) net_IsValidHostName(const nsCSubstring &host);
+NS_HIDDEN_(bool) net_IsValidHostName(const nsCSubstring &host);
 
 /**
  * Checks whether the IPv4 address is valid according to RFC 3986 section 3.2.2.
  */
-NS_HIDDEN_(PRBool) net_IsValidIPv4Addr(const char *addr, PRInt32 addrLen);
+NS_HIDDEN_(bool) net_IsValidIPv4Addr(const char *addr, PRInt32 addrLen);
 
 /**
  * Checks whether the IPv6 address is valid according to RFC 3986 section 3.2.2.
  */
-NS_HIDDEN_(PRBool) net_IsValidIPv6Addr(const char *addr, PRInt32 addrLen);
+NS_HIDDEN_(bool) net_IsValidIPv6Addr(const char *addr, PRInt32 addrLen);
 
 #endif // !nsURLHelper_h__

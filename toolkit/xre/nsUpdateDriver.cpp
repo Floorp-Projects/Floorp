@@ -165,7 +165,7 @@ GetXULRunnerStubPath(const char* argv0, nsILocalFile* *aResult)
 }
 #endif /* XP_MACOSX */
 
-static PRBool
+static bool
 GetFile(nsIFile *dir, const nsCSubstring &name, nsCOMPtr<nsILocalFile> &result)
 {
   nsresult rv;
@@ -183,13 +183,13 @@ GetFile(nsIFile *dir, const nsCSubstring &name, nsCOMPtr<nsILocalFile> &result)
   return NS_SUCCEEDED(rv);
 }
 
-static PRBool
+static bool
 GetStatusFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 {
   return GetFile(dir, NS_LITERAL_CSTRING("update.status"), result);
 }
 
-static PRBool
+static bool
 IsPending(nsILocalFile *statusFile)
 {
   PRFileDesc *fd = nsnull;
@@ -208,7 +208,7 @@ IsPending(nsILocalFile *statusFile)
   return (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
 }
 
-static PRBool
+static bool
 SetStatusApplying(nsILocalFile *statusFile)
 {
   PRFileDesc *fd = nsnull;
@@ -223,13 +223,13 @@ SetStatusApplying(nsILocalFile *statusFile)
   return PR_TRUE;
 }
 
-static PRBool
+static bool
 GetVersionFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 {
   return GetFile(dir, NS_LITERAL_CSTRING("update.version"), result);
 }
 
-static PRBool
+static bool
 GetChannelChangeFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 {
   return GetFile(dir, NS_LITERAL_CSTRING("channelchange"), result);
@@ -237,7 +237,7 @@ GetChannelChangeFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 
 // Compares the current application version with the update's application
 // version.
-static PRBool
+static bool
 IsOlderVersion(nsILocalFile *versionFile, const char *&appVersion)
 {
   PRFileDesc *fd = nsnull;
@@ -268,7 +268,7 @@ IsOlderVersion(nsILocalFile *versionFile, const char *&appVersion)
   return PR_FALSE;
 }
 
-static PRBool
+static bool
 CopyFileIntoUpdateDir(nsIFile *parentDir, const char *leafName, nsIFile *updateDir)
 {
   nsDependentCString leaf(leafName);
@@ -297,7 +297,7 @@ CopyFileIntoUpdateDir(nsIFile *parentDir, const char *leafName, nsIFile *updateD
   return PR_TRUE;
 }
 
-static PRBool
+static bool
 CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
                          nsCOMPtr<nsIFile> &updater)
 {

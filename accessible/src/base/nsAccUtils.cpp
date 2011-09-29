@@ -320,7 +320,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
   }
 }
 
-PRBool
+bool
 nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
 {
   NS_ASSERTION(aContent, "aContent is null in call to HasDefinedARIAToken!");
@@ -400,7 +400,7 @@ nsAccUtils::GetMultiSelectableContainer(nsINode* aNode)
   return nsnull;
 }
 
-PRBool
+bool
 nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
 {
   return aAccessible->GetContent()->
@@ -587,7 +587,7 @@ nsAccUtils::GetAttributeCharacteristics(nsIAtom* aAtom)
     return 0;
 }
 
-PRBool
+bool
 nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
 {
   switch (aRule) {
@@ -604,10 +604,10 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
 
 #ifdef DEBUG_A11Y
 
-PRBool
+bool
 nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
 {
-  PRBool foundText = PR_FALSE;
+  bool foundText = false;
   
   nsCOMPtr<nsIAccessibleDocument> accDoc = do_QueryObject(aAccessible);
   if (accDoc) {
@@ -655,7 +655,7 @@ nsAccUtils::TextLength(nsAccessible *aAccessible)
   return text.Length();
 }
 
-PRBool
+bool
 nsAccUtils::MustPrune(nsIAccessible *aAccessible)
 { 
   PRUint32 role = nsAccUtils::Role(aAccessible);
@@ -693,7 +693,7 @@ nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
   rv = aCell->GetColumnIndex(&colIdx);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool moveToLeft = aRowOrColHeaderCells == eRowHeaderCells;
+  bool moveToLeft = aRowOrColHeaderCells == eRowHeaderCells;
 
   // Move to the left or top to find row header cells or column header cells.
   PRInt32 index = (moveToLeft ? colIdx : rowIdx) - 1;
@@ -721,7 +721,7 @@ nsAccUtils::GetHeaderCellsFor(nsIAccessibleTable *aTable,
     if (origIdx == index) {
       // Append original header cells only.
       PRUint32 role = Role(cell);
-      PRBool isHeader = moveToLeft ?
+      bool isHeader = moveToLeft ?
         role == nsIAccessibleRole::ROLE_ROWHEADER :
         role == nsIAccessibleRole::ROLE_COLUMNHEADER;
 

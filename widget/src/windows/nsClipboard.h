@@ -61,7 +61,7 @@ public:
 
   // nsIClipboard
   NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, PRBool *_retval); 
+                                    PRInt32 aWhichClipboard, bool *_retval); 
 
   // Internal Native Routines
   static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 
@@ -84,11 +84,11 @@ protected:
   NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard );
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard );
   
-  static PRBool IsInternetShortcut ( const nsAString& inFileName ) ;
-  static PRBool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
-  static PRBool FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
-  static PRBool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
-  static PRBool FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen );
+  static bool IsInternetShortcut ( const nsAString& inFileName ) ;
+  static bool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
+  static bool FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
+  static bool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
+  static bool FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen );
   static void ResolveShortcut ( nsILocalFile* inFileName, nsACString& outURL ) ;
 
   nsIWidget         * mWindow;

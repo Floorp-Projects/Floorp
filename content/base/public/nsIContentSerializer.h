@@ -60,8 +60,8 @@ class nsIContentSerializer : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, PRBool aIsCopying,
-                  PRBool aIsWholeDocument) = 0;
+                  const char* aCharSet, bool aIsCopying,
+                  bool aIsWholeDocument) = 0;
 
   NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr) = 0;

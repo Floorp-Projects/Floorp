@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=682463
+-->
+<head>
+  <title>Test for Bug 682463</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682463">Mozilla Bug 682463</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 682463 **/
+
+  function text(s) {
+    return document.createTextNode(s);
+  }
+  function div(l,r) {
+    var div = document.createElement("DIV");
+    if (l) div.appendChild(l);
+    if (r) div.appendChild(r);
+    return div;
+  }
+  function createRange(sn,so,en,eo) {
+    var r = document.createRange();
+    r.setStart(sn,so);
+    r.setEnd(en,eo);
+    return r;
+  }
+  function verifyRange(msg,r,sn,so,en,eo) {
+    ok(r.startContainer == sn && r.startOffset == so &&
+       r.endContainer == en && r.endOffset == eo, msg);
+  }
+  function showRange(r,msg) {
+    var s = "" + r.startContainer + ":  " + r.startOffset;
+    s+= '\n';
+    s += "" + r.endContainer + ":  " + r.endOffset;
+    alert(msg + ':\n' + s)
+  }
+
+  var tests = [
+  function() {
+    var t = text("foobar");
+    var r = createRange(t,2,t,t.length);
+    var t2 = t.splitText(1);
+    verifyRange("split before, no parent",r,t2,1,t2,5);
+  },
+  function() {
+    var t = text("foobar");
+    var r = createRange(t,0,t,t.length);
+    var t2 = t.splitText(3);
+    verifyRange("split middle, no parent",r,t,0,t,3);
+  },
+  function() {
+    var t = text("foobar");
+    var r = createRange(t,0,t,t.length);
+    var n = t.length;
+    var t2 = t.splitText(n);
+    verifyRange("split after, no parent",r,t,0,t,n);
+  },
+  function() {
+    var t = text("foobar");
+    var parent = div(t);
+    var r = createRange(t,0,t,t.length);
+    var t2 = t.splitText(3);
+    verifyRange("split middle, parent",r,t,0,t2,3);
+    parent.removeChild(t);
+    verifyRange("removed left, parent",r,parent,0,t2,3);
+    var t2b = t2.splitText(1);
+    verifyRange("split middle, parent, end",r,parent,0,t2b,2);
+  },
+  function() {
+    var t0 = text("x");
+    var t = text("foobar");
+    var parent = div(t0,t);
+    var r = createRange(t,0,t,t.length);
+    var t2 = t.splitText(3);
+    parent.removeChild(t);
+    verifyRange("removed left, text sibling",r,parent,1,t2,3);
+  },
+  function() {
+    var t = text("foobar");
+    var parent = div(t);
+    var r = createRange(t,2,t,t.length);
+    var t2 = t.splitText(1);
+    verifyRange("split before, parent",r,t2,1,t2,5);
+    parent.removeChild(t2);
+    verifyRange("removed right, parent",r,parent,1,parent,1);
+  },
+  function() {
+    var t = text("foobar");
+    var parent = div(t);
+    var r = createRange(t,0,t,t.length);
+    var n = t.length;
+    var t2 = t.splitText(n);
+    verifyRange("split after, parent",r,t,0,t,n);
+    r.setEnd(t2,0);
+    verifyRange("split after, parent, extend",r,t,0,t2,0);
+    t2.splitText(0);
+    verifyRange("split after, parent, extend, split end",r,t,0,t2,0);
+    t2.textContent = "baz";
+    t2.splitText(2);
+    verifyRange("split after, parent, extend, split after end",r,t,0,t2,0);
+    r.setEnd(t2,2);
+    var t2b = t2.splitText(1);
+    verifyRange("split after, parent, split end",r,t,0,t2b,1);
+  },
+  function() {
+    var t = text("foobar");
+    var parent = div(t);
+    document.body.appendChild(parent);
+    var r = createRange(t,0,t,t.length);
+    var t2 = t.splitText(3);
+    verifyRange("split middle, in document",r,t,0,t2,3);
+  },
+  function() {
+    var t = text("foobar");
+    var parent = div(t);
+    document.body.appendChild(parent);
+    var r = createRange(t,2,t,t.length);
+    var t2 = t.splitText(1);
+    verifyRange("split before, in document",r,t2,1,t2,5);
+  },
+  function() {
+    var t = text("foobar");
+    var parent = div(t);
+    document.body.appendChild(parent);
+    var r = createRange(t,0,t,t.length);
+    var n = t.length;
+    var t2 = t.splitText(n);
+    verifyRange("split after, in document",r,t,0,t,n);
+  }
+  ];
+
+  function runTests() {
+    var len = tests.length;
+    for (var i = 0; i < len; ++i) {
+      tests[i]();
+    }
+    SimpleTest.finish();
+  }
+
+addLoadEvent(runTests);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

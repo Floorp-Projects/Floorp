@@ -60,7 +60,7 @@ public:
     return mStateID;
   }
 
-  PRBool Equals(const nsHashKey *aKey) const {
+  bool Equals(const nsHashKey *aKey) const {
     nsDFAState* key = (nsDFAState*)aKey;
     return key->mStateID == mStateID;
   }
@@ -85,7 +85,7 @@ public:
     return hb+lb;
   }
 
-  PRBool Equals(const nsHashKey *aKey) const {
+  bool Equals(const nsHashKey *aKey) const {
     nsTransitionKey* key = (nsTransitionKey*)aKey;
     return key->mState == mState && key->mInputSymbol == mInputSymbol;
   }
@@ -110,9 +110,9 @@ public:
                                   nsIAtom* aPseudoElement,
                                   nsISupportsArray* aInputWord);
 
-  static PRBool DeleteDFAState(nsHashKey *aKey, void *aData, void *closure);
+  static bool DeleteDFAState(nsHashKey *aKey, void *aData, void *closure);
 
-  static PRBool ReleaseStyleContext(nsHashKey *aKey, void *aData, void *closure);
+  static bool ReleaseStyleContext(nsHashKey *aKey, void *aData, void *closure);
 
 protected:
   // A transition table for a deterministic finite automaton.  The DFA

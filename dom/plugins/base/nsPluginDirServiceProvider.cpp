@@ -220,7 +220,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPluginDirServiceProvider,
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
+nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
                                     nsIFile **_retval)
 {
   nsCOMPtr<nsILocalFile>  localFile;
@@ -322,7 +322,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
                           nsIWindowsRegKey::ACCESS_QUERY_VALUE |
                           nsIWindowsRegKey::ACCESS_SET_VALUE);
       if (NS_SUCCEEDED(rv)) {
-        PRBool currentVersionExists = PR_FALSE;
+        bool currentVersionExists = false;
         newKey->HasValue(NS_LITERAL_STRING("CurrentVersion"),
                          &currentVersionExists);
         if (!currentVersionExists) {
@@ -526,7 +526,7 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
               localFile) {
             // Some vendors use a path directly to the DLL so chop off
             // the filename
-            PRBool isDir = PR_FALSE;
+            bool isDir = false;
             if (NS_SUCCEEDED(localFile->IsDirectory(&isDir)) && !isDir) {
               nsCOMPtr<nsIFile> temp;
               localFile->GetParent(getter_AddRefs(temp));
@@ -536,8 +536,8 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
 
             // Now we check to make sure it's actually on disk and
             // To see if we already have this directory in the array
-            PRBool isFileThere = PR_FALSE;
-            PRBool isDupEntry = PR_FALSE;
+            bool isFileThere = false;
+            bool isDupEntry = false;
             if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
               PRInt32 c = aDirs.Count();
               for (PRInt32 i = 0; i < c; i++) {

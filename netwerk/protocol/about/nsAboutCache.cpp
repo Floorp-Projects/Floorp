@@ -162,7 +162,7 @@ nsAboutCache::GetURIFlags(nsIURI *aURI, PRUint32 *result)
 NS_IMETHODIMP
 nsAboutCache::VisitDevice(const char *deviceID,
                           nsICacheDeviceInfo *deviceInfo,
-                          PRBool *visitEntries)
+                          bool *visitEntries)
 {
     PRUint32 bytesWritten, value, entryCount;
     nsXPIDLCString str;
@@ -262,7 +262,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
 NS_IMETHODIMP
 nsAboutCache::VisitEntry(const char *deviceID,
                          nsICacheEntryInfo *entryInfo,
-                         PRBool *visitNext)
+                         bool *visitNext)
 {
     // We need mStream for this
     if (!mStream)
@@ -272,7 +272,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     PRUint32        bytesWritten;
     nsCAutoString   key;
     nsXPIDLCString  clientID;
-    PRBool          streamBased;
+    bool            streamBased;
     
     rv = entryInfo->GetKey(key);
     if (NS_FAILED(rv))  return rv;

@@ -104,7 +104,7 @@ gfxD2DSurface::GetTexture()
 }
 
 HDC
-gfxD2DSurface::GetDC(PRBool aRetainContents)
+gfxD2DSurface::GetDC(bool aRetainContents)
 {
     return cairo_d2d_get_dc(CairoSurface(), aRetainContents);
 }

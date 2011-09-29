@@ -164,11 +164,11 @@ private:
     virtual bool RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard);
     virtual bool RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text);
     virtual bool RecvEmptyClipboard();
-    virtual bool RecvClipboardHasText(PRBool* hasText);
+    virtual bool RecvClipboardHasText(bool* hasText);
 
     virtual bool RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray<PRUint32>* colors);
     virtual bool RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32& aIconSize, InfallibleTArray<PRUint8>* bits);
-    virtual bool RecvGetShowPasswordSetting(PRBool* showPassword);
+    virtual bool RecvGetShowPasswordSetting(bool* showPassword);
 
     virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
@@ -181,7 +181,7 @@ private:
     
     virtual bool RecvShowFilePicker(const PRInt16& mode,
                                     const PRInt16& selectedType,
-                                    const PRBool& addToRecentDocs,
+                                    const bool& addToRecentDocs,
                                     const nsString& title,
                                     const nsString& defaultFile,
                                     const nsString& defaultExtension,
@@ -192,7 +192,7 @@ private:
                                     nsresult* result);
  
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
-                                           const nsString& aText, const PRBool& aTextClickable,
+                                           const nsString& aText, const bool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName);
 
     virtual bool RecvLoadURIExternal(const IPC::URI& uri);

@@ -127,7 +127,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_DECL_NSITIMERCALLBACK
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus);
 
   virtual nsresult ProcessMETATag(nsIContent* aContent);
@@ -138,9 +138,9 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_HIDDEN_(nsresult) WillResumeImpl(void);
   NS_HIDDEN_(nsresult) DidProcessATokenImpl(void);
   NS_HIDDEN_(void) WillBuildModelImpl(void);
-  NS_HIDDEN_(void) DidBuildModelImpl(PRBool aTerminated);
+  NS_HIDDEN_(void) DidBuildModelImpl(bool aTerminated);
   NS_HIDDEN_(void) DropParserAndPerfHint(void);
-  PRBool IsScriptExecutingImpl();
+  bool IsScriptExecutingImpl();
 
   void NotifyAppend(nsIContent* aContent, PRUint32 aStartIndex);
 
@@ -150,8 +150,8 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   virtual void UpdateChildCounts() = 0;
 
-  PRBool IsTimeToNotify();
-  PRBool LinkContextIsOurDocument(const nsSubstring& aAnchor);
+  bool IsTimeToNotify();
+  bool LinkContextIsOurDocument(const nsSubstring& aAnchor);
 
   static void InitializeStatics();
 
@@ -196,13 +196,13 @@ protected:
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
                                     const nsSubstring& aHref,
-                                    PRBool aAlternate,
+                                    bool aAlternate,
                                     const nsSubstring& aTitle,
                                     const nsSubstring& aType,
                                     const nsSubstring& aMedia);
 
   void PrefetchHref(const nsAString &aHref, nsIContent *aSource,
-                    PRBool aExplicit);
+                    bool aExplicit);
 
   // aHref can either be the usual URI format or of the form "//www.hostname.com"
   // without a scheme.
@@ -229,7 +229,7 @@ protected:
   //        by the calling function.
   nsresult SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
                              nsIURI *aManifestURI,
-                             PRBool aFetchedWithHTTPGetOrEquiv,
+                             bool aFetchedWithHTTPGetOrEquiv,
                              CacheSelectionAction *aAction);
 
   // There is no offline cache manifest attribute specified.  Process
@@ -273,13 +273,13 @@ protected:
   // we still have stylesheet loads pending.  Otherwise, we'll wait until the
   // stylesheets are all done loading.
 public:
-  void StartLayout(PRBool aIgnorePendingSheets);
+  void StartLayout(bool aIgnorePendingSheets);
 
   static void NotifyDocElementCreated(nsIDocument* aDoc);
 
 protected:
   void
-  FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvationDelay);
+  FavorPerformanceHint(bool perfOverStarvation, PRUint32 starvationDelay);
 
   inline PRInt32 GetNotificationInterval()
   {
@@ -298,7 +298,7 @@ protected:
 
   // Later on we might want to make this more involved somehow
   // (e.g. stop waiting after some timeout or whatnot).
-  PRBool WaitForPendingSheets() { return mPendingSheetCount > 0; }
+  bool WaitForPendingSheets() { return mPendingSheetCount > 0; }
 
   void DoProcessLinkHeader();
 
@@ -361,7 +361,7 @@ protected:
   PRUint32 mDeflectedCount;
 
   // Is there currently a pending event?
-  PRBool mHasPendingEvent;
+  bool mHasPendingEvent;
 
   // When to return to the main event loop
   PRUint32 mCurrentParseEndTime;
@@ -383,7 +383,7 @@ protected:
     mProcessLinkHeaderEvent;
 
   // Do we notify based on time?
-  static PRBool sNotifyOnTimer;
+  static bool sNotifyOnTimer;
   // Back off timer notification after count.
   static PRInt32 sBackoffCount;
   // Notification interval in microseconds
@@ -406,7 +406,7 @@ protected:
   static PRInt32 sInitialPerfTime;
   // Should we switch between perf-mode and interactive-mode
   static PRInt32 sEnablePerfMode;
-  static PRBool sCanInterruptParser;
+  static bool sCanInterruptParser;
 };
 
 #endif // _nsContentSink_h_

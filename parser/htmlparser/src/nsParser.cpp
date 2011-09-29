@@ -216,7 +216,7 @@ public:
   NS_DECL_NSIRUNNABLE
 
   nsresult StartParsing(nsParser *aParser);
-  void StopParsing(PRBool aFromDocWrite);
+  void StopParsing(bool aFromDocWrite);
 
   enum PrefetchType { NONE, SCRIPT, STYLESHEET, IMAGE };
   struct PrefetchEntry {
@@ -231,7 +231,7 @@ public:
     return mDocument;
   }
 
-  PRBool Parsing() {
+  bool Parsing() {
     return mCurrentlyParsing;
   }
 
@@ -239,7 +239,7 @@ public:
     return mContext;
   }
 
-  typedef nsDataHashtable<nsCStringHashKey, PRBool> PreloadedType;
+  typedef nsDataHashtable<nsCStringHashKey, bool> PreloadedType;
   PreloadedType& GetPreloadedURIs() {
     return mPreloadedURIs;
   }
@@ -248,7 +248,7 @@ public:
     mTerminated = PR_TRUE;
     StopParsing(PR_FALSE);
   }
-  PRBool Terminated() {
+  bool Terminated() {
     return mTerminated;
   }
 
@@ -271,8 +271,8 @@ private:
   Mutex mLock;
   CondVar mCVar;
 
-  volatile PRBool mKeepParsing;
-  volatile PRBool mCurrentlyParsing;
+  volatile bool mKeepParsing;
+  volatile bool mCurrentlyParsing;
   nsRefPtr<nsHTMLTokenizer> mTokenizer;
   nsAutoPtr<nsScanner> mScanner;
 
@@ -286,7 +286,7 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
   CParserContext *mContext;
   PreloadedType mPreloadedURIs;
-  PRBool mTerminated;
+  bool mTerminated;
 };
 
 class nsPreloadURIs : public nsIRunnable {
@@ -350,7 +350,7 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
 
     nsCAutoString spec;
     uri->GetSpec(spec);
-    PRBool answer;
+    bool answer;
     if (alreadyPreloaded.Get(spec, &answer)) {
       // Already preloaded. Don't preload again.
       continue;
@@ -386,7 +386,7 @@ nsSpeculativeScriptThread::Run()
 
   mTokenizer->WillTokenize(PR_FALSE, &mTokenAllocator);
   while (mKeepParsing) {
-    PRBool flushTokens = PR_FALSE;
+    bool flushTokens = false;
     nsresult rv = mTokenizer->ConsumeToken(*mScanner, flushTokens);
     if (NS_FAILED(rv)) {
       break;
@@ -505,7 +505,7 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
 }
 
 void
-nsSpeculativeScriptThread::StopParsing(PRBool /*aFromDocWrite*/)
+nsSpeculativeScriptThread::StopParsing(bool /*aFromDocWrite*/)
 {
   NS_ASSERTION(NS_IsMainThread(), "Can't stop parsing from another thread");
 
@@ -715,7 +715,7 @@ void nsParser::Shutdown()
 }
 
 #ifdef DEBUG
-static PRBool gDumpContent=PR_FALSE;
+static bool gDumpContent=false;
 #endif
 
 /**
@@ -732,7 +732,7 @@ nsParser::~nsParser()
 }
 
 void
-nsParser::Initialize(PRBool aConstructor)
+nsParser::Initialize(bool aConstructor)
 {
 #ifdef NS_DEBUG
   if (!gDumpContent) {
@@ -995,13 +995,13 @@ ParsePS(const nsString& aBuffer, PRInt32 aIndex)
 #define PARSE_DTD_HAVE_INTERNAL_SUBSET  (1<<3)
 
 // return PR_TRUE on success (includes not present), PR_FALSE on failure
-static PRBool
+static bool
 ParseDocTypeDecl(const nsString &aBuffer,
                  PRInt32 *aResultFlags,
                  nsString &aPublicID,
                  nsString &aSystemID)
 {
-  PRBool haveDoctype = PR_FALSE;
+  bool haveDoctype = false;
   *aResultFlags = 0;
 
   // Skip through any comments and processing instructions
@@ -1232,7 +1232,7 @@ static const PubIDInfo kPublicIDs[] = {
 static void
 VerifyPublicIDs()
 {
-  static PRBool gVerified = PR_FALSE;
+  static bool gVerified = false;
   if (!gVerified) {
     gVerified = PR_TRUE;
     PRUint32 i;
@@ -1520,7 +1520,7 @@ nsParser::DidBuildModel(nsresult anErrorCode)
     if (mParserContext && !mParserContext->mPrevContext) {
       // Let sink know if we're about to end load because we've been terminated.
       // In that case we don't want it to run deferred scripts.
-      PRBool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
+      bool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink) {
         nsresult dtdResult =  mDTD->DidBuildModel(anErrorCode),
                 sinkResult = mSink->DidBuildModel(terminated);
@@ -1725,7 +1725,7 @@ nsParser::ContinueInterruptedParsing()
     mSpeculativeScriptThread->StopParsing(PR_FALSE);
   }
 
-  PRBool isFinalChunk = mParserContext &&
+  bool isFinalChunk = mParserContext &&
                         mParserContext->mStreamListenerState == eOnStop;
 
   mProcessingNetworkData = PR_TRUE;
@@ -1771,7 +1771,7 @@ nsParser::UnblockParser()
 /**
  * Call this to query whether the parser is enabled or not.
  */
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsParser::IsParserEnabled()
 {
   return (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) != 0;
@@ -1780,7 +1780,7 @@ nsParser::IsParserEnabled()
 /**
  * Call this to query whether the parser thinks it's done with parsing.
  */
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsParser::IsComplete()
 {
   return !(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT);
@@ -1801,13 +1801,13 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
   ContinueInterruptedParsing();
 }
 
-PRBool
+bool
 nsParser::CanInterrupt()
 {
   return (mFlags & NS_PARSER_FLAG_CAN_INTERRUPT) != 0;
 }
 
-PRBool
+bool
 nsParser::IsInsertionPointDefined()
 {
   return PR_TRUE;
@@ -1828,14 +1828,14 @@ nsParser::MarkAsNotScriptCreated()
 {
 }
 
-PRBool
+bool
 nsParser::IsScriptCreated()
 {
   return PR_FALSE;
 }
 
 void
-nsParser::SetCanInterrupt(PRBool aCanInterrupt)
+nsParser::SetCanInterrupt(bool aCanInterrupt)
 {
   if (aCanInterrupt) {
     mFlags |= NS_PARSER_FLAG_CAN_INTERRUPT;
@@ -1902,7 +1902,7 @@ NS_IMETHODIMP
 nsParser::Parse(const nsAString& aSourceBuffer,
                 void* aKey,
                 const nsACString& aMimeType,
-                PRBool aLastCall,
+                bool aLastCall,
                 nsDTDMode aMode)
 {
   nsresult result = NS_OK;
@@ -2148,8 +2148,8 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
-                      PRBool aCanInterrupt)
+nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
+                      bool aCanInterrupt)
 {
   nsresult result = NS_OK;
 
@@ -2166,7 +2166,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
 
     if (mDTD) {
       mSink->WillResume();
-      PRBool theIterationIsOk = PR_TRUE;
+      bool theIterationIsOk = true;
 
       while (result == NS_OK && theIterationIsOk) {
         if (!mUnusedInput.IsEmpty() && mParserContext->mScanner) {
@@ -2221,7 +2221,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
         }
         if ((NS_OK == result && theTokenizerResult == kEOF) ||
              result == NS_ERROR_HTMLPARSER_INTERRUPTED) {
-          PRBool theContextIsStringBased =
+          bool theContextIsStringBased =
             CParserContext::eCTString == mParserContext->mContextType;
 
           if (mParserContext->mStreamListenerState == eOnStop ||
@@ -2281,7 +2281,7 @@ nsParser::BuildModel()
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
       // XXXbenjamn CanInterrupt() and !inDocWrite appear to be covariant.
-      PRBool inDocWrite = !!mParserContext->mPrevContext;
+      bool inDocWrite = !!mParserContext->mPrevContext;
       result = mDTD->BuildModel(theTokenizer,
                                 // ignore interruptions in document.write
                                 CanInterrupt() && !inDocWrite,
@@ -2336,7 +2336,7 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 #define UTF16_LE "UTF-16LE"
 #define UTF8 "UTF-8"
 
-static inline PRBool IsSecondMarker(unsigned char aChar)
+static inline bool IsSecondMarker(unsigned char aChar)
 {
   switch (aChar) {
     case '!':
@@ -2349,7 +2349,7 @@ static inline PRBool IsSecondMarker(unsigned char aChar)
   }
 }
 
-static PRBool
+static bool
 DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
                     nsCString& oCharset, PRInt32& oCharsetSource)
 {
@@ -2391,7 +2391,7 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
        // The shortest string so far (strlen==5):
        // <?xml
        PRInt32 i;
-       PRBool versionFound = PR_FALSE, encodingFound = PR_FALSE;
+       bool versionFound = false, encodingFound = false;
        for (i=6; i < aLen && !encodingFound; ++i) {
          // end of XML declaration?
          if ((((char*)aBytes)[i] == '?') && 
@@ -2500,7 +2500,7 @@ GetNextChar(nsACString::const_iterator& aStart,
   return (++aStart != aEnd) ? *aStart : '\0';
 }
 
-PRBool
+bool
 nsParser::DetectMetaTag(const char* aBytes,
                         PRInt32 aLen,
                         nsCString& aCharset,
@@ -2546,8 +2546,8 @@ nsParser::DetectMetaTag(const char* aBytes,
       }
 
       // Found MDO ( <!-- ). Now search for MDC ( --[*s]> )
-      PRBool foundMDC = PR_FALSE;
-      PRBool foundMatch = PR_FALSE;
+      bool foundMDC = false;
+      bool foundMatch = false;
       while (!foundMDC) {
         if (GetNextChar(currPos, end) == '-' &&
             GetNextChar(currPos, end) == '-') {
@@ -2626,7 +2626,7 @@ nsParser::DetectMetaTag(const char* aBytes,
 }
 
 typedef struct {
-  PRBool mNeedCharsetCheck;
+  bool mNeedCharsetCheck;
   nsParser* mParser;
   nsIParserFilter* mParserFilter;
   nsScanner* mScanner;
@@ -2840,8 +2840,8 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
  *  the tokenization process begins. The main reason for
  *  this call is to allow the delegate to do initialization.
  */
-PRBool
-nsParser::WillTokenize(PRBool aIsFinalChunk)
+bool
+nsParser::WillTokenize(bool aIsFinalChunk)
 {
   if (!mParserContext) {
     return PR_TRUE;
@@ -2860,7 +2860,7 @@ nsParser::WillTokenize(PRBool aIsFinalChunk)
  * It iteratively consumes tokens until an error occurs or
  * you run out of data.
  */
-nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
+nsresult nsParser::Tokenize(bool aIsFinalChunk)
 {
   nsITokenizer* theTokenizer;
 
@@ -2882,11 +2882,11 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
       mFlags &= ~NS_PARSER_FLAG_FLUSH_TOKENS;
     }
 
-    PRBool flushTokens = PR_FALSE;
+    bool flushTokens = false;
 
     mParserContext->mNumConsumed = 0;
 
-    PRBool killSink = PR_FALSE;
+    bool killSink = false;
 
     WillTokenize(aIsFinalChunk);
     while (NS_SUCCEEDED(result)) {
@@ -2929,8 +2929,8 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
  *  tokenization process. It gets called once tokenziation
  *  has completed for each phase.
  */
-PRBool
-nsParser::DidTokenize(PRBool aIsFinalChunk)
+bool
+nsParser::DidTokenize(bool aIsFinalChunk)
 {
   if (!mParserContext) {
     return PR_TRUE;

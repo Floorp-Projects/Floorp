@@ -459,7 +459,7 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
   // null out param in case an error happens
   *aFind = NULL;
 
-  PRBool  regExp = PR_FALSE;
+  bool    regExp = false;
   char*   pattern = 0;
 
   // Create synthetic directory entries on demand
@@ -522,7 +522,7 @@ MOZ_WIN_MEM_TRY_BEGIN
     // move to next in current chain, or move to new slot
     mItem = mItem ? mItem->next : mArchive->mFiles[mSlot];
 
-    PRBool found = PR_FALSE;
+    bool found = false;
     if (!mItem)
       ++mSlot;                          // no more in this chain, move to next slot
     else if (!mPattern)
@@ -697,7 +697,7 @@ MOZ_WIN_MEM_TRY_BEGIN
 
         // Is the directory already in the file table?
         PRUint32 hash = HashName(item->Name(), dirlen);
-        PRBool found = PR_FALSE;
+        bool found = false;
         for (nsZipItem* zi = mFiles[hash]; zi != NULL; zi = zi->next)
         {
           if ((dirlen == zi->nameLength) &&
@@ -800,7 +800,7 @@ nsZipArchive::~nsZipArchive()
 // nsZipFind constructor and destructor
 //------------------------------------------
 
-nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool aRegExp) : 
+nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, bool aRegExp) : 
   mArchive(aZip),
   mPattern(aPattern),
   mItem(0),

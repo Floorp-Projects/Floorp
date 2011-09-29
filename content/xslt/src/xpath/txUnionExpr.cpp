@@ -100,7 +100,7 @@ UnionExpr::getType()
 
 TX_IMPL_EXPR_STUBS_LIST(UnionExpr, NODESET_RESULT, mExpressions)
 
-PRBool
+bool
 UnionExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     PRUint32 i, len = mExpressions.Length();

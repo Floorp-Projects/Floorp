@@ -107,7 +107,7 @@ txExprLexer::addToken(Token* aToken)
  * This is a helper for the first bullet of [XPath 3.7]
  *  Lexical Structure
  */
-PRBool
+bool
 txExprLexer::nextIsOperatorToken(Token* aToken)
 {
   if (!aToken || aToken->mType == Token::NULL_TOKEN) {
@@ -136,7 +136,7 @@ txExprLexer::parse(const nsASingleFragmentString& aPattern)
   Token::Type defType;
   Token* newToken = nsnull;
   Token* prevToken = &nullToken;
-  PRBool isToken;
+  bool isToken;
 
   while (mPosition < end) {
 

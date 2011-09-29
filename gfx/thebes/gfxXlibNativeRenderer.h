@@ -96,8 +96,8 @@ public:
 
     struct DrawOutput {
         nsRefPtr<gfxASurface> mSurface;
-        PRPackedBool mUniformAlpha;
-        PRPackedBool mUniformColor;
+        bool mUniformAlpha;
+        bool mUniformColor;
         gfxRGBA      mColor;
     };
 
@@ -118,10 +118,10 @@ public:
               DrawOutput* result);
 
 private:
-    PRBool DrawDirect(gfxContext *ctx, nsIntSize bounds,
+    bool DrawDirect(gfxContext *ctx, nsIntSize bounds,
                       PRUint32 flags, Screen *screen, Visual *visual);
 
-    PRBool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
+    bool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
                                nsIntPoint offset);
 
 };

@@ -21,3 +21,4 @@
 <!ENTITY homepage.default                          "&brandShortName; Start">
 <!ENTITY homepage.currentpage                      "Use Current Page">
 <!ENTITY showCharsetEncoding.title                 "Show character encoding">
+<!ENTITY actionbar.default                         "&brandShortName; Settings">

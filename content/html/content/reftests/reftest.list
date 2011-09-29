@@ -24,7 +24,7 @@ include autofocus/reftest.list
 == 649134-1.html 649134-ref.html
 skip-if(Android) == 649134-2.html 649134-2-ref.html
 
-== hidden-1a.html hidden-1-ref.html
+skip-if(Android&&layersOpenGL) == hidden-1a.html hidden-1-ref.html
 == hidden-1b.html hidden-1-ref.html
 == hidden-1c.html hidden-1-ref.html
 == hidden-1d.html hidden-1-ref.html

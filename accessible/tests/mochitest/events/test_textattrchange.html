@@ -14,6 +14,8 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
           src="../events.js"></script>
   <script type="application/javascript"
           src="../attributes.js"></script>
@@ -80,7 +82,7 @@
       // gets a time for initialization.
 
       gQueue = new eventQueue();
-      gQueue.push(new synthFocus("input", null, EVENT_FOCUS));
+      gQueue.push(new synthFocus("input"));
       gQueue.push(new spelledTextInvoker("input"));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

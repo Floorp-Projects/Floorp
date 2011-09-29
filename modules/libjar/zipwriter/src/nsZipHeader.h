@@ -105,8 +105,8 @@ public:
     PRUint16 mDate;
     PRUint16 mDisk;
     PRUint16 mIAttr;
-    PRPackedBool mInited;
-    PRPackedBool mWriteOnClose;
+    bool mInited;
+    bool mWriteOnClose;
     nsCString mName;
     nsCString mComment;
     nsAutoArrayPtr<PRUint8> mExtraField;
@@ -119,7 +119,7 @@ public:
     PRUint32 GetCDSHeaderLength();
     nsresult WriteCDSHeader(nsIOutputStream *aStream);
     nsresult ReadCDSHeader(nsIInputStream *aStream);
-    const PRUint8 * GetExtraField(PRUint16 aTag, PRBool aLocal, PRUint16 *aBlockSize);
+    const PRUint8 * GetExtraField(PRUint16 aTag, bool aLocal, PRUint16 *aBlockSize);
 };
 
 #endif

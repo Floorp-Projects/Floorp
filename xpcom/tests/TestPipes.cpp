@@ -52,8 +52,8 @@ using namespace mozilla;
 /** NS_NewPipe2 reimplemented, because it's not exported by XPCOM */
 nsresult TP_NewPipe2(nsIAsyncInputStream** input,
                      nsIAsyncOutputStream** output,
-                     PRBool nonBlockingInput,
-                     PRBool nonBlockingOutput,
+                     bool nonBlockingInput,
+                     bool nonBlockingOutput,
                      PRUint32 segmentSize,
                      PRUint32 segmentCount,
                      nsIMemory* segmentAlloc)
@@ -82,15 +82,15 @@ nsresult TP_NewPipe(nsIInputStream **pipeIn,
                     nsIOutputStream **pipeOut,
                     PRUint32 segmentSize = 0,
                     PRUint32 maxSize = 0,
-                    PRBool nonBlockingInput = PR_FALSE,
-                    PRBool nonBlockingOutput = PR_FALSE,
+                    bool nonBlockingInput = false,
+                    bool nonBlockingOutput = false,
                     nsIMemory *segmentAlloc = nsnull);
 nsresult TP_NewPipe(nsIInputStream **pipeIn,
                     nsIOutputStream **pipeOut,
                     PRUint32 segmentSize,
                     PRUint32 maxSize,
-                    PRBool nonBlockingInput,
-                    PRBool nonBlockingOutput,
+                    bool nonBlockingInput,
+                    bool nonBlockingOutput,
                     nsIMemory *segmentAlloc)
 {
     if (segmentSize == 0)
@@ -119,7 +119,7 @@ nsresult TP_NewPipe(nsIInputStream **pipeIn,
 #define ITERATIONS      33333
 char kTestPattern[] = "My hovercraft is full of eels.\n";
 
-PRBool gTrace = PR_FALSE;
+bool gTrace = false;
 
 static nsresult
 WriteAll(nsIOutputStream *os, const char *buf, PRUint32 bufLen, PRUint32 *lenWritten)

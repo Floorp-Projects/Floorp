@@ -98,7 +98,7 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // look for new namespace mappings
-    PRBool hasOwnNamespaceMap = PR_FALSE;
+    bool hasOwnNamespaceMap = false;
     PRInt32 i;
     for (i = 0; i < aAttrCount; ++i) {
         txStylesheetAttr* attr = aAttributes + i;
@@ -148,7 +148,7 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
         NS_ENSURE_TRUE(atts, NS_ERROR_OUT_OF_MEMORY);
     }
 
-    PRBool hasOwnNamespaceMap = PR_FALSE;
+    bool hasOwnNamespaceMap = false;
     PRInt32 i;
     for (i = 0; i < aAttrCount; ++i) {
         rv = XMLUtils::splitExpatName(aAttrs[i * 2],
@@ -904,7 +904,7 @@ txErrorFunctionCall::getReturnType()
     return ANY_RESULT;
 }
 
-PRBool
+bool
 txErrorFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     // It doesn't really matter what we return here, but it might
@@ -1085,7 +1085,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
                                        nsnull, aResult);
 }
 
-extern PRBool
+extern bool
 TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID)
 {
     nsRefPtr<txStylesheetCompiler> compiler =
@@ -1114,7 +1114,7 @@ txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
     return rv;
 }
 
-PRBool
+bool
 txStylesheetCompilerState::caseInsensitiveNameTests()
 {
     return PR_FALSE;

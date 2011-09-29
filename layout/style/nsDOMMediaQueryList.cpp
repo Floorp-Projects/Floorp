@@ -97,7 +97,7 @@ nsDOMMediaQueryList::GetMedia(nsAString &aMedia)
 }
 
 NS_IMETHODIMP
-nsDOMMediaQueryList::GetMatches(PRBool *aMatches)
+nsDOMMediaQueryList::GetMatches(bool *aMatches)
 {
   if (!mMatchesValid) {
     NS_ABORT_IF_FALSE(mListeners.Length() == 0,
@@ -150,7 +150,7 @@ nsDOMMediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
   mMatchesValid = PR_FALSE;
 
   if (mListeners.Length()) {
-    PRPackedBool oldMatches = mMatches;
+    bool oldMatches = mMatches;
     RecomputeMatches();
     if (mMatches != oldMatches) {
       for (PRUint32 i = 0, i_end = mListeners.Length(); i != i_end; ++i) {

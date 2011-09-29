@@ -575,7 +575,7 @@ RegisterAllocation *
 FrameState::computeAllocation(jsbytecode *target)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    RegisterAllocation *alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
+    RegisterAllocation *alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
     if (!alloc)
         return NULL;
 
@@ -744,7 +744,7 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
         }
 
         /* Force syncs for locals which are dead at the current PC. */
-        if (isLocal(fe) && !a->analysis->slotEscapes(entrySlot(fe))) {
+        if (isLocal(fe) && !fe->copied && !a->analysis->slotEscapes(entrySlot(fe))) {
             Lifetime *lifetime = a->analysis->liveness(entrySlot(fe)).live(a->PC - a->script->code);
             if (!lifetime)
                 fakeSync(fe);
@@ -801,7 +801,8 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
                 JS_ASSERT(!a->analysis->trackSlot(entrySlot(fe)));
                 syncFe(fe);
                 forgetAllRegs(fe);
-                fe->resetSynced();
+                fe->type.setMemory();
+                fe->data.setMemory();
             }
             if (fe->data.inMemory()) {
                 masm.loadPayload(addressOf(fe), nreg);
@@ -852,7 +853,7 @@ FrameState::discardForJoin(RegisterAllocation *&alloc, uint32 stackDepth)
          * This shows up for loop entries which are not reachable from the
          * loop head, and for exception, switch target and trap safe points.
          */
-        alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
+        alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
         if (!alloc)
             return false;
     }

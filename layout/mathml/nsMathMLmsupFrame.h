@@ -59,13 +59,13 @@ public:
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
+        bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   static nsresult
   PlaceSuperScript (nsPresContext*      aPresContext,
                     nsRenderingContext& aRenderingContext,
-                    PRBool               aPlaceOrigin,
+                    bool                 aPlaceOrigin,
                     nsHTMLReflowMetrics& aDesiredSize,
                     nsMathMLContainerFrame* aForFrame,
                     nscoord              aUserSupScriptShift,

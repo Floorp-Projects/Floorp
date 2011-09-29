@@ -72,8 +72,8 @@ private:
     nsCString              mPropertiesURL;
     nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
     mozilla::ReentrantMonitor    mReentrantMonitor;
-    PRPackedBool                 mAttemptedLoad;
-    PRPackedBool                 mLoaded;
+    bool                         mAttemptedLoad;
+    bool                         mLoaded;
     
 public:
     static nsresult FormatString(const PRUnichar *formatStr,
@@ -96,7 +96,7 @@ class nsExtensibleStringBundle : public nsIStringBundle
 private:
   
   nsCOMArray<nsIStringBundle> mBundles;
-  PRBool             mLoaded;
+  bool               mLoaded;
 
 public:
 

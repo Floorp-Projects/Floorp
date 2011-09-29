@@ -147,7 +147,7 @@ struct TimeStampInitialization
 };
 
 static TimeStampInitialization initOnce;
-static PRBool gInitialized = PR_FALSE;
+static bool gInitialized = false;
 
 nsresult
 TimeStamp::Startup()

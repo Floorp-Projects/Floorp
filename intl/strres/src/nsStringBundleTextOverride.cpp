@@ -165,7 +165,7 @@ nsStringBundleTextOverride::Init()
 
     customStringsFile->AppendNative(NS_LITERAL_CSTRING("custom-strings.txt"));
 
-    PRBool exists;
+    bool exists;
     rv = customStringsFile->Exists(&exists);
     if (NS_FAILED(rv) || !exists)
         return NS_ERROR_FAILURE;
@@ -200,7 +200,7 @@ nsStringBundleTextOverride::Init()
     printf("custom-strings.txt contains:\n");
     printf("----------------------------\n");
 
-    PRBool hasMore;
+    bool hasMore;
     enumerator->HasMoreElements(&hasMore);
     do {
         nsCOMPtr<nsISupports> sup;
@@ -279,9 +279,9 @@ nsPropertyEnumeratorByURL::GetNext(nsISupports **aResult)
 }
 
 NS_IMETHODIMP
-nsPropertyEnumeratorByURL::HasMoreElements(PRBool * aResult)
+nsPropertyEnumeratorByURL::HasMoreElements(bool * aResult)
 {
-    PRBool hasMore;
+    bool hasMore;
     mOuter->HasMoreElements(&hasMore);
     while (hasMore) {
 

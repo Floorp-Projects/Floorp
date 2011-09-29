@@ -99,7 +99,7 @@ private:
 
   enum Endian {kUnknown, kBigEndian, kLittleEndian};
   Endian  mEndian; 
-  PRBool  mFoundBOM;
+  bool    mFoundBOM;
 };
 
 #endif /* nsUCS2BEToUnicode_h___ */

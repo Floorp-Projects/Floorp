@@ -140,6 +140,7 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 		nsITaskbarPreviewButton.idl \
 		nsITaskbarProgress.idl \
 		nsITaskbarPreviewButton.idl \
+		nsITaskbarOverlayIconController.idl \
 		nsIJumpListBuilder.idl \
 		nsIJumpListItem.idl \
 		$(NULL)

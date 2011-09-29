@@ -330,7 +330,7 @@ class nsWritingIterator
 
 template <class CharT>
 inline
-PRBool
+bool
 operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
   {
     return lhs.get() == rhs.get();
@@ -338,7 +338,7 @@ operator==( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
 
 template <class CharT>
 inline
-PRBool
+bool
 operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>& rhs )
   {
     return lhs.get() != rhs.get();
@@ -351,7 +351,7 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
 
 template <class CharT>
 inline
-PRBool
+bool
 operator==( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
   {
     return lhs.get() == rhs.get();
@@ -359,7 +359,7 @@ operator==( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>&
 
 template <class CharT>
 inline
-PRBool
+bool
 operator!=( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
   {
     return lhs.get() != rhs.get();

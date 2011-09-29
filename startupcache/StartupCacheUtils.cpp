@@ -71,7 +71,7 @@ NewObjectInputStreamFromBuffer(char* buffer, PRUint32 len,
 NS_EXPORT nsresult
 NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
                                     nsIStorageStream** stream,
-                                    PRBool wantDebugStream)
+                                    bool wantDebugStream)
 {
   nsCOMPtr<nsIStorageStream> storageStream;
 
@@ -134,7 +134,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
 
 static const char baseName[2][5] = { "gre/", "app/" };
 
-static inline PRBool
+static inline bool
 canonicalizeBase(nsCAutoString &spec,
                  nsACString &out,
                  mozilla::Omnijar::Type aType)
@@ -182,7 +182,7 @@ canonicalizeBase(nsCAutoString &spec,
 NS_EXPORT nsresult
 PathifyURI(nsIURI *in, nsACString &out)
 {
-    PRBool equals;
+    bool equals;
     nsresult rv;
     nsCOMPtr<nsIURI> uri = in;
     nsCAutoString spec;

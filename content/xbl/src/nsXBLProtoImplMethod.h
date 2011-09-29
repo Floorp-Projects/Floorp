@@ -130,7 +130,7 @@ public:
 
   virtual void Trace(TraceCallback aCallback, void *aClosure) const;
 
-  PRBool IsCompiled() const
+  bool IsCompiled() const
   {
     return !(mUncompiledMethod & BIT_UNCOMPILED);
   }
@@ -153,7 +153,7 @@ protected:
   };
 
 #ifdef DEBUG
-  PRBool mIsCompiled;
+  bool mIsCompiled;
 #endif
 };
 

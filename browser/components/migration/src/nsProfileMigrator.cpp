@@ -106,7 +106,7 @@ nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
     if (!bpm) return NS_ERROR_FAILURE;
   }
 
-  PRBool sourceExists;
+  bool sourceExists;
   bpm->GetSourceExists(&sourceExists);
   if (!sourceExists) {
 #ifdef XP_WIN
@@ -248,7 +248,7 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
   }
 
 #else
-  PRBool exists = PR_FALSE;
+  bool exists = false;
 #define CHECK_MIGRATOR(browser) do {\
   bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX browser);\
   if (bpm)\
@@ -268,7 +268,7 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
   return NS_ERROR_FAILURE;
 }
 
-PRBool
+bool
 nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
 {
   nsresult rv;
@@ -319,7 +319,7 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
   if (NR_StartupRegistry())
     return PR_FALSE;
 
-  PRBool migrated = PR_FALSE;
+  bool migrated = false;
   HREG reg = nsnull;
   RKEY profiles = 0;
   REGENUM enumstate = 0;

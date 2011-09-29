@@ -83,7 +83,7 @@ public:
                    nsIAtom* aAttribute,
                    PRInt32  aModType);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsTableOuterFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
@@ -143,7 +143,7 @@ public:
     return rv;
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsTableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
@@ -202,7 +202,7 @@ public:
     return rv;
   }
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsTableRowFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
@@ -240,7 +240,7 @@ public:
 
   virtual PRInt32 GetRowSpan();
   virtual PRInt32 GetColSpan();
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
@@ -279,7 +279,7 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));

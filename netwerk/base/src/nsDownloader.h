@@ -67,7 +67,7 @@ protected:
     nsCOMPtr<nsIFile>             mLocation;
     nsCOMPtr<nsIOutputStream>     mSink;
     nsCOMPtr<nsISupports>         mCacheToken;
-    PRBool                        mLocationIsTemp;
+    bool                          mLocationIsTemp;
 };
 
 #endif // nsDownloader_h__

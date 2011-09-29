@@ -67,7 +67,7 @@ nsAutodial::DialDefault(const PRUnichar* hostName)
   return NS_ERROR_FAILURE;
 }
 
-PRBool
+bool
 nsAutodial::ShouldDialOnNetworkError()
 {
   if (nsMaemoNetworkManager::IsConnected())

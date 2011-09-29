@@ -84,11 +84,11 @@ public:
 #endif
   ~nsFloatCacheList();
 
-  PRBool IsEmpty() const {
+  bool IsEmpty() const {
     return nsnull == mHead;
   }
 
-  PRBool NotEmpty() const {
+  bool NotEmpty() const {
     return nsnull != mHead;
   }
 
@@ -135,7 +135,7 @@ public:
 #endif
 
   // Reimplement trivial functions
-  PRBool IsEmpty() const {
+  bool IsEmpty() const {
     return nsnull == mHead;
   }
 
@@ -147,7 +147,7 @@ public:
     return mTail;
   }
   
-  PRBool NotEmpty() const {
+  bool NotEmpty() const {
     return nsnull != mHead;
   }
 
@@ -182,7 +182,7 @@ need to rearrange the mBits bitfield;
 
 // Funtion to create a line box
 nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-                         PRInt32 aCount, PRBool aIsBlock);
+                         PRInt32 aCount, bool aIsBlock);
 
 class nsLineList;
 
@@ -224,7 +224,7 @@ class nsLineLink {
  */
 class nsLineBox : public nsLineLink {
 private:
-  nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
+  nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock);
   ~nsLineBox();
   
   // Overloaded new operator. Uses an arena (which comes from the presShell)
@@ -235,15 +235,15 @@ private:
 public:
   // Use these two functions to allocate and destroy line boxes
   friend nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-                                  PRInt32 aCount, PRBool aIsBlock);
+                                  PRInt32 aCount, bool aIsBlock);
 
   void Destroy(nsIPresShell* aPresShell);
 
   // mBlock bit
-  PRBool IsBlock() const {
+  bool IsBlock() const {
     return mFlags.mBlock;
   }
-  PRBool IsInline() const {
+  bool IsInline() const {
     return 0 == mFlags.mBlock;
   }
 
@@ -254,7 +254,7 @@ public:
   void ClearDirty() {
     mFlags.mDirty = 0;
   }
-  PRBool IsDirty() const {
+  bool IsDirty() const {
     return mFlags.mDirty;
   }
 
@@ -265,7 +265,7 @@ public:
   void ClearPreviousMarginDirty() {
     mFlags.mPreviousMarginDirty = 0;
   }
-  PRBool IsPreviousMarginDirty() const {
+  bool IsPreviousMarginDirty() const {
     return mFlags.mPreviousMarginDirty;
   }
 
@@ -276,34 +276,34 @@ public:
   void ClearHasClearance() {
     mFlags.mHasClearance = 0;
   }
-  PRBool HasClearance() const {
+  bool HasClearance() const {
     return mFlags.mHasClearance;
   }
 
   // mImpactedByFloat bit
-  void SetLineIsImpactedByFloat(PRBool aValue) {
+  void SetLineIsImpactedByFloat(bool aValue) {
     NS_ASSERTION((PR_FALSE==aValue || PR_TRUE==aValue), "somebody is playing fast and loose with bools and bits!");
     mFlags.mImpactedByFloat = aValue;
   }
-  PRBool IsImpactedByFloat() const {
+  bool IsImpactedByFloat() const {
     return mFlags.mImpactedByFloat;
   }
 
   // mLineWrapped bit
-  void SetLineWrapped(PRBool aOn) {
+  void SetLineWrapped(bool aOn) {
     NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mLineWrapped = aOn;
   }
-  PRBool IsLineWrapped() const {
+  bool IsLineWrapped() const {
     return mFlags.mLineWrapped;
   }
 
   // mInvalidateTextRuns bit
-  void SetInvalidateTextRuns(PRBool aOn) {
+  void SetInvalidateTextRuns(bool aOn) {
     NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mInvalidateTextRuns = aOn;
   }
-  PRBool GetInvalidateTextRuns() const {
+  bool GetInvalidateTextRuns() const {
     return mFlags.mInvalidateTextRuns;
   }
 
@@ -314,7 +314,7 @@ public:
   void EnableResizeReflowOptimization() {
     mFlags.mResizeReflowOptimizationDisabled = PR_FALSE;
   }
-  PRBool ResizeReflowOptimizationDisabled() const {
+  bool ResizeReflowOptimizationDisabled() const {
     return mFlags.mResizeReflowOptimizationDisabled;
   }
 
@@ -327,7 +327,7 @@ public:
     mFlags.mHasBullet = PR_FALSE;
     InvalidateCachedIsEmpty();
   }
-  PRBool HasBullet() const {
+  bool HasBullet() const {
     return mFlags.mHasBullet;
   }
 
@@ -338,7 +338,7 @@ public:
   void ClearHadFloatPushed() {
     mFlags.mHadFloatPushed = PR_FALSE;
   }
-  PRBool HadFloatPushed() const {
+  bool HadFloatPushed() const {
     return mFlags.mHadFloatPushed;
   }
 
@@ -362,7 +362,7 @@ public:
   // Break information is applied *before* the line if the line is a block,
   // or *after* the line if the line is an inline. Confusing, I know, but
   // using different names should help.
-  PRBool HasBreakBefore() const {
+  bool HasBreakBefore() const {
     return IsBlock() && NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
   }
   void SetBreakTypeBefore(PRUint8 aBreakType) {
@@ -375,7 +375,7 @@ public:
     return IsBlock() ? mFlags.mBreakType : NS_STYLE_CLEAR_NONE;
   }
 
-  PRBool HasBreakAfter() const {
+  bool HasBreakAfter() const {
     return !IsBlock() && NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
   }
   void SetBreakTypeAfter(PRUint8 aBreakType) {
@@ -383,7 +383,7 @@ public:
     NS_ASSERTION(aBreakType <= LINE_MAX_BREAK_TYPE, "bad break type");
     mFlags.mBreakType = aBreakType;
   }
-  PRBool HasFloatBreakAfter() const {
+  bool HasFloatBreakAfter() const {
     return !IsBlock() && (NS_STYLE_CLEAR_LEFT == mFlags.mBreakType ||
                           NS_STYLE_CLEAR_RIGHT == mFlags.mBreakType ||
                           NS_STYLE_CLEAR_LEFT_AND_RIGHT == mFlags.mBreakType);
@@ -395,16 +395,16 @@ public:
   // mCarriedOutBottomMargin value
   nsCollapsingMargin GetCarriedOutBottomMargin() const;
   // Returns PR_TRUE if the margin changed
-  PRBool SetCarriedOutBottomMargin(nsCollapsingMargin aValue);
+  bool SetCarriedOutBottomMargin(nsCollapsingMargin aValue);
 
   // mFloats
-  PRBool HasFloats() const {
+  bool HasFloats() const {
     return (IsInline() && mInlineData) && mInlineData->mFloats.NotEmpty();
   }
   nsFloatCache* GetFirstFloat();
   void FreeFloats(nsFloatCacheFreeList& aFreeList);
   void AppendFloats(nsFloatCacheFreeList& aFreeList);
-  PRBool RemoveFloat(nsIFrame* aFrame);
+  bool RemoveFloat(nsIFrame* aFrame);
 
   // Combined area is the area of the line that should influence the
   // overflow area of its parent block.  The combined area should be
@@ -458,7 +458,7 @@ public:
   // aLastFrameBeforeEnd is the last frame before aEnd (so if aEnd is
   // the end of the line list, it's just the last frame in the frame
   // list).
-  static PRBool RFindLineContaining(nsIFrame* aFrame,
+  static bool RFindLineContaining(nsIFrame* aFrame,
                                     const nsLineList_iterator& aBegin,
                                     nsLineList_iterator& aEnd,
                                     nsIFrame* aLastFrameBeforeEnd,
@@ -472,28 +472,28 @@ public:
 
   nsIFrame* LastChild() const;
 
-  PRBool IsLastChild(nsIFrame* aFrame) const;
+  bool IsLastChild(nsIFrame* aFrame) const;
 
   PRInt32 IndexOf(nsIFrame* aFrame) const;
 
-  PRBool Contains(nsIFrame* aFrame) const {
+  bool Contains(nsIFrame* aFrame) const {
     return IndexOf(aFrame) >= 0;
   }
 
   // whether the line box is "logically" empty (just like nsIFrame::IsEmpty)
-  PRBool IsEmpty() const;
+  bool IsEmpty() const;
 
   // Call this only while in Reflow() for the block the line belongs
   // to, only between reflowing the line (or sliding it, if we skip
   // reflowing it) and the end of reflowing the block.
-  PRBool CachedIsEmpty();
+  bool CachedIsEmpty();
 
   void InvalidateCachedIsEmpty() {
     mFlags.mEmptyCacheValid = PR_FALSE;
   }
 
   // For debugging purposes
-  PRBool IsValidCachedIsEmpty() {
+  bool IsValidCachedIsEmpty() {
     return mFlags.mEmptyCacheValid;
   }
 
@@ -702,22 +702,22 @@ class nsLineList_iterator {
 
     // Passing by value rather than by reference and reference to const
     // to keep AIX happy.
-    PRBool operator==(const iterator_self_type aOther) const
+    bool operator==(const iterator_self_type aOther) const
     {
       NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther) const
+    bool operator!=(const iterator_self_type aOther) const
     {
       NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
-    PRBool operator==(const iterator_self_type aOther)
+    bool operator==(const iterator_self_type aOther)
     {
       NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther)
+    bool operator!=(const iterator_self_type aOther)
     {
       NS_ABORT_IF_FALSE(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
@@ -837,22 +837,22 @@ class nsLineList_reverse_iterator {
 
     // Passing by value rather than by reference and reference to const
     // to keep AIX happy.
-    PRBool operator==(const iterator_self_type aOther) const
+    bool operator==(const iterator_self_type aOther) const
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther) const
+    bool operator!=(const iterator_self_type aOther) const
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
-    PRBool operator==(const iterator_self_type aOther)
+    bool operator==(const iterator_self_type aOther)
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther)
+    bool operator!=(const iterator_self_type aOther)
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
@@ -971,22 +971,22 @@ class nsLineList_const_iterator {
 
     // Passing by value rather than by reference and reference to const
     // to keep AIX happy.
-    PRBool operator==(const iterator_self_type aOther) const
+    bool operator==(const iterator_self_type aOther) const
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther) const
+    bool operator!=(const iterator_self_type aOther) const
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
-    PRBool operator==(const iterator_self_type aOther)
+    bool operator==(const iterator_self_type aOther)
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther)
+    bool operator!=(const iterator_self_type aOther)
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
@@ -1093,22 +1093,22 @@ class nsLineList_const_reverse_iterator {
 
     // Passing by value rather than by reference and reference to const
     // to keep AIX happy.
-    PRBool operator==(const iterator_self_type aOther) const
+    bool operator==(const iterator_self_type aOther) const
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther) const
+    bool operator!=(const iterator_self_type aOther) const
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
     }
-    PRBool operator==(const iterator_self_type aOther)
+    bool operator==(const iterator_self_type aOther)
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent == aOther.mCurrent;
     }
-    PRBool operator!=(const iterator_self_type aOther)
+    bool operator!=(const iterator_self_type aOther)
     {
       NS_ASSERTION(mListLink == aOther.mListLink, "comparing iterators over different lists");
       return mCurrent != aOther.mCurrent;
@@ -1263,7 +1263,7 @@ class nsLineList {
       return rv;
     }
 
-    PRBool empty() const
+    bool empty() const
     {
       return mLink._mNext == &mLink;
     }
@@ -1575,7 +1575,7 @@ public:
   virtual void DisposeLineIterator();
 
   virtual PRInt32 GetNumLines();
-  virtual PRBool GetDirection();
+  virtual bool GetDirection();
   NS_IMETHOD GetLine(PRInt32 aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      PRInt32* aNumFramesOnLine,
@@ -1585,17 +1585,17 @@ public:
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
                          nsIFrame** aFrameFound,
-                         PRBool* aXIsBeforeFirstFrame,
-                         PRBool* aXIsAfterLastFrame);
+                         bool* aXIsBeforeFirstFrame,
+                         bool* aXIsAfterLastFrame);
 
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber);
 #ifdef IBMBIDI
   NS_IMETHOD CheckLineOrder(PRInt32                  aLine,
-                            PRBool                   *aIsReordered,
+                            bool                     *aIsReordered,
                             nsIFrame                 **aFirstVisual,
                             nsIFrame                 **aLastVisual);
 #endif
-  nsresult Init(nsLineList& aLines, PRBool aRightToLeft);
+  nsresult Init(nsLineList& aLines, bool aRightToLeft);
 
 private:
   nsLineBox* PrevLine() {
@@ -1622,7 +1622,7 @@ private:
   nsLineBox** mLines;
   PRInt32 mIndex;
   PRInt32 mNumLines;
-  PRPackedBool mRightToLeft;
+  bool mRightToLeft;
 };
 
 #endif /* nsLineBox_h___ */

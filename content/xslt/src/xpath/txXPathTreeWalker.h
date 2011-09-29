@@ -50,11 +50,11 @@ class nsIDOMDocument;
 class txUint32Array : public nsTArray<PRUint32>
 {
 public:
-    PRBool AppendValue(PRUint32 aValue)
+    bool AppendValue(PRUint32 aValue)
     {
         return AppendElement(aValue) != nsnull;
     }
-    PRBool RemoveValueAt(PRUint32 aIndex)
+    bool RemoveValueAt(PRUint32 aIndex)
     {
         if (aIndex < Length()) {
             RemoveElementAt(aIndex);
@@ -73,7 +73,7 @@ public:
     txXPathTreeWalker(const txXPathTreeWalker& aOther);
     explicit txXPathTreeWalker(const txXPathNode& aNode);
 
-    PRBool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue) const;
+    bool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue) const;
     PRInt32 getNamespaceID() const;
     PRUint16 getNodeType() const;
     void appendNodeValue(nsAString& aResult) const;
@@ -82,25 +82,25 @@ public:
     void moveTo(const txXPathTreeWalker& aWalker);
 
     void moveToRoot();
-    PRBool moveToParent();
-    PRBool moveToElementById(const nsAString& aID);
-    PRBool moveToFirstAttribute();
-    PRBool moveToNextAttribute();
-    PRBool moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID);
-    PRBool moveToFirstChild();
-    PRBool moveToLastChild();
-    PRBool moveToNextSibling();
-    PRBool moveToPreviousSibling();
+    bool moveToParent();
+    bool moveToElementById(const nsAString& aID);
+    bool moveToFirstAttribute();
+    bool moveToNextAttribute();
+    bool moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID);
+    bool moveToFirstChild();
+    bool moveToLastChild();
+    bool moveToNextSibling();
+    bool moveToPreviousSibling();
 
-    PRBool isOnNode(const txXPathNode& aNode) const;
+    bool isOnNode(const txXPathNode& aNode) const;
 
     const txXPathNode& getCurrentPosition() const;
 
 private:
     txXPathNode mPosition;
 
-    PRBool moveToValidAttribute(PRUint32 aStartIndex);
-    PRBool moveToSibling(PRInt32 aDir);
+    bool moveToValidAttribute(PRUint32 aStartIndex);
+    bool moveToSibling(PRInt32 aDir);
 
     PRUint32 mCurrentIndex;
     txUint32Array mDescendants;
@@ -109,7 +109,7 @@ private:
 class txXPathNodeUtils
 {
 public:
-    static PRBool getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
+    static bool getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
                           PRInt32 aNSID, nsAString& aValue);
     static already_AddRefed<nsIAtom> getLocalName(const txXPathNode& aNode);
     static nsIAtom* getPrefix(const txXPathNode& aNode);
@@ -120,7 +120,7 @@ public:
     static void getNamespaceURI(const txXPathNode& aNode, nsAString& aURI);
     static PRUint16 getNodeType(const txXPathNode& aNode);
     static void appendNodeValue(const txXPathNode& aNode, nsAString& aResult);
-    static PRBool isWhitespace(const txXPathNode& aNode);
+    static bool isWhitespace(const txXPathNode& aNode);
     static txXPathNode* getDocument(const txXPathNode& aNode);
     static txXPathNode* getOwnerDocument(const txXPathNode& aNode);
     static PRInt32 getUniqueIdentifier(const txXPathNode& aNode);
@@ -130,15 +130,15 @@ public:
     static void getBaseURI(const txXPathNode& aNode, nsAString& aURI);
     static PRIntn comparePosition(const txXPathNode& aNode,
                                   const txXPathNode& aOtherNode);
-    static PRBool localNameEquals(const txXPathNode& aNode,
+    static bool localNameEquals(const txXPathNode& aNode,
                                   nsIAtom* aLocalName);
-    static PRBool isRoot(const txXPathNode& aNode);
-    static PRBool isElement(const txXPathNode& aNode);
-    static PRBool isAttribute(const txXPathNode& aNode);
-    static PRBool isProcessingInstruction(const txXPathNode& aNode);
-    static PRBool isComment(const txXPathNode& aNode);
-    static PRBool isText(const txXPathNode& aNode);
-    static inline PRBool isHTMLElementInHTMLDocument(const txXPathNode& aNode)
+    static bool isRoot(const txXPathNode& aNode);
+    static bool isElement(const txXPathNode& aNode);
+    static bool isAttribute(const txXPathNode& aNode);
+    static bool isProcessingInstruction(const txXPathNode& aNode);
+    static bool isComment(const txXPathNode& aNode);
+    static bool isText(const txXPathNode& aNode);
+    static inline bool isHTMLElementInHTMLDocument(const txXPathNode& aNode)
     {
       if (!aNode.isContent()) {
         return PR_FALSE;
@@ -152,9 +152,9 @@ class txXPathNativeNode
 {
 public:
     static txXPathNode* createXPathNode(nsIDOMNode* aNode,
-                                        PRBool aKeepRootAlive = PR_FALSE);
+                                        bool aKeepRootAlive = false);
     static txXPathNode* createXPathNode(nsIContent* aContent,
-                                        PRBool aKeepRootAlive = PR_FALSE);
+                                        bool aKeepRootAlive = false);
     static txXPathNode* createXPathNode(nsIDOMDocument* aDocument);
     static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult);
     static nsIContent* getContent(const txXPathNode& aNode);
@@ -176,7 +176,7 @@ txXPathTreeWalker::getCurrentPosition() const
     return mPosition;
 }
 
-inline PRBool
+inline bool
 txXPathTreeWalker::getAttr(nsIAtom* aLocalName, PRInt32 aNSID,
                            nsAString& aValue) const
 {
@@ -224,7 +224,7 @@ txXPathTreeWalker::moveTo(const txXPathTreeWalker& aWalker)
     mDescendants.Clear();
 }
 
-inline PRBool
+inline bool
 txXPathTreeWalker::isOnNode(const txXPathNode& aNode) const
 {
     return (mPosition == aNode);
@@ -247,7 +247,7 @@ txXPathNodeUtils::release(txXPathNode* aNode)
 }
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
                                   nsIAtom* aLocalName)
 {
@@ -262,14 +262,14 @@ txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
 }
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::isRoot(const txXPathNode& aNode)
 {
     return !aNode.isAttribute() && !aNode.mNode->GetNodeParent();
 }
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::isElement(const txXPathNode& aNode)
 {
     return aNode.isContent() &&
@@ -278,14 +278,14 @@ txXPathNodeUtils::isElement(const txXPathNode& aNode)
 
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::isAttribute(const txXPathNode& aNode)
 {
     return aNode.isAttribute();
 }
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::isProcessingInstruction(const txXPathNode& aNode)
 {
     return aNode.isContent() &&
@@ -293,7 +293,7 @@ txXPathNodeUtils::isProcessingInstruction(const txXPathNode& aNode)
 }
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::isComment(const txXPathNode& aNode)
 {
     return aNode.isContent() &&
@@ -301,7 +301,7 @@ txXPathNodeUtils::isComment(const txXPathNode& aNode)
 }
 
 /* static */
-inline PRBool
+inline bool
 txXPathNodeUtils::isText(const txXPathNode& aNode)
 {
     return aNode.isContent() &&

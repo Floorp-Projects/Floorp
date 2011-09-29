@@ -72,7 +72,7 @@
 // **********************************************************************
 
 #if defined (XP_UNIX)
-static PRBool sDisableSignalHandling = PR_FALSE;
+static bool sDisableSignalHandling = false;
 #endif
 
 nsProfileLock::nsProfileLock() :
@@ -142,7 +142,7 @@ static int setupPidLockCleanup;
 PRCList nsProfileLock::mPidLockList =
     PR_INIT_STATIC_CLIST(&nsProfileLock::mPidLockList);
 
-void nsProfileLock::RemovePidLockFiles(PRBool aFatalSignal)
+void nsProfileLock::RemovePidLockFiles(bool aFatalSignal)
 {
     while (!PR_CLIST_IS_EMPTY(&mPidLockList))
     {
@@ -281,8 +281,8 @@ nsresult nsProfileLock::LockWithFcntl(const nsACString& lockFilePath)
     return rv;
 }
 
-static PRBool IsSymlinkStaleLock(struct in_addr* aAddr, const char* aFileName,
-                                 PRBool aHaveFcntlLock)
+static bool IsSymlinkStaleLock(struct in_addr* aAddr, const char* aFileName,
+                                 bool aHaveFcntlLock)
 {
     // the link exists; see if it's from this machine, and if
     // so if the process is still active
@@ -332,7 +332,7 @@ static PRBool IsSymlinkStaleLock(struct in_addr* aAddr, const char* aFileName,
     return PR_TRUE;
 }
 
-nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, PRBool aHaveFcntlLock)
+nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, bool aHaveFcntlLock)
 {
     nsresult rv;
 
@@ -462,7 +462,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
 
     NS_ENSURE_STATE(!mHaveLock);
 
-    PRBool isDir;
+    bool isDir;
     rv = aProfileDir->IsDirectory(&isDir);
     if (NS_FAILED(rv))
         return rv;
@@ -654,7 +654,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
 }
 
 
-nsresult nsProfileLock::Unlock(PRBool aFatalSignal)
+nsresult nsProfileLock::Unlock(bool aFatalSignal)
 {
     nsresult rv = NS_OK;
 

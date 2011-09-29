@@ -193,7 +193,7 @@ AccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
 // decide how to coalesce events created via accessible (instead of node).
 AccStateChangeEvent::
   AccStateChangeEvent(nsAccessible* aAccessible, PRUint64 aState,
-                      PRBool aIsEnabled, EIsFromUserInput aIsFromUserInput):
+                      bool aIsEnabled, EIsFromUserInput aIsFromUserInput):
   AccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible,
            aIsFromUserInput, eAllowDupes),
   mState(aState), mIsEnabled(aIsEnabled)
@@ -201,7 +201,7 @@ AccStateChangeEvent::
 }
 
 AccStateChangeEvent::
-  AccStateChangeEvent(nsINode* aNode, PRUint64 aState, PRBool aIsEnabled):
+  AccStateChangeEvent(nsINode* aNode, PRUint64 aState, bool aIsEnabled):
   AccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode,
            eAutoDetect, eAllowDupes),
   mState(aState), mIsEnabled(aIsEnabled)
@@ -244,7 +244,7 @@ AccStateChangeEvent::CreateXPCOMObject()
 // XXX revisit this when coalescence is faster (eCoalesceFromSameSubtree)
 AccTextChangeEvent::
   AccTextChangeEvent(nsAccessible* aAccessible, PRInt32 aStart,
-                     const nsAString& aModifiedText, PRBool aIsInserted,
+                     const nsAString& aModifiedText, bool aIsInserted,
                      EIsFromUserInput aIsFromUserInput)
   : AccEvent(aIsInserted ?
              static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_INSERTED) :

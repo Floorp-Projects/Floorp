@@ -91,8 +91,8 @@ public:
     nsresult Set(const nsHttpAuthIdentity &other) { return Set(other.mDomain, other.mUser, other.mPass); }
     void Clear();
 
-    PRBool Equals(const nsHttpAuthIdentity &other) const;
-    PRBool IsEmpty() const { return !mUser; }
+    bool Equals(const nsHttpAuthIdentity &other) const;
+    bool IsEmpty() const { return !mUser; }
 
 private:
     // allocated as one contiguous blob, starting at mUser.

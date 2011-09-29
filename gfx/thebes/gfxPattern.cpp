@@ -164,7 +164,7 @@ gfxPattern::Filter() const
     return (GraphicsFilter)cairo_pattern_get_filter(mPattern);
 }
 
-PRBool
+bool
 gfxPattern::GetSolidColor(gfxRGBA& aColor)
 {
     return cairo_pattern_get_rgba(mPattern,

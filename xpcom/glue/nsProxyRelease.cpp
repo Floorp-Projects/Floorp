@@ -59,7 +59,7 @@ private:
 
 nsresult
 NS_ProxyRelease(nsIEventTarget *target, nsISupports *doomed,
-                PRBool alwaysProxy)
+                bool alwaysProxy)
 {
     nsresult rv;
 
@@ -69,7 +69,7 @@ NS_ProxyRelease(nsIEventTarget *target, nsISupports *doomed,
     }
 
     if (!alwaysProxy) {
-        PRBool onCurrentThread = PR_FALSE;
+        bool onCurrentThread = false;
         rv = target->IsOnCurrentThread(&onCurrentThread);
         if (NS_SUCCEEDED(rv) && onCurrentThread) {
             NS_RELEASE(doomed);

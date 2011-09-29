@@ -106,7 +106,7 @@ SVGDocumentWrapper::DestroyViewer()
   }
 }
 
-PRBool
+bool
 SVGDocumentWrapper::GetWidthOrHeight(Dimension aDimension,
                                      PRInt32& aResult)
 {
@@ -181,7 +181,7 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
   mIgnoreInvalidation = PR_FALSE;
 }
 
-PRBool
+bool
 SVGDocumentWrapper::IsAnimated()
 {
 #ifdef MOZ_SMIL
@@ -360,7 +360,7 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   // Check for HTTP error page
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
   if (httpChannel) {
-    PRBool requestSucceeded;
+    bool requestSucceeded;
     if (NS_FAILED(httpChannel->GetRequestSucceeded(&requestSucceeded)) ||
         !requestSucceeded) {
       return NS_ERROR_FAILURE;

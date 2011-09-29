@@ -76,28 +76,28 @@ NS_IMPL_ISUPPORTS2(inDeepTreeWalker,
 // inIDeepTreeWalker
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetShowAnonymousContent(PRBool *aShowAnonymousContent)
+inDeepTreeWalker::GetShowAnonymousContent(bool *aShowAnonymousContent)
 {
   *aShowAnonymousContent = mShowAnonymousContent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::SetShowAnonymousContent(PRBool aShowAnonymousContent)
+inDeepTreeWalker::SetShowAnonymousContent(bool aShowAnonymousContent)
 {
   mShowAnonymousContent = aShowAnonymousContent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetShowSubDocuments(PRBool *aShowSubDocuments)
+inDeepTreeWalker::GetShowSubDocuments(bool *aShowSubDocuments)
 {
   *aShowSubDocuments = mShowSubDocuments;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::SetShowSubDocuments(PRBool aShowSubDocuments)
+inDeepTreeWalker::SetShowSubDocuments(bool aShowSubDocuments)
 {
   mShowSubDocuments = aShowSubDocuments;
   return NS_OK;
@@ -140,7 +140,7 @@ inDeepTreeWalker::GetFilter(nsIDOMNodeFilter** aFilter)
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetExpandEntityReferences(PRBool* aExpandEntityReferences)
+inDeepTreeWalker::GetExpandEntityReferences(bool* aExpandEntityReferences)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

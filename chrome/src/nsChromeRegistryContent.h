@@ -65,7 +65,7 @@ class nsChromeRegistryContent : public nsChromeRegistry
   NS_OVERRIDE NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                                  const PRUnichar* aData);
   NS_OVERRIDE NS_IMETHOD IsLocaleRTL(const nsACString& package,
-                                     PRBool *aResult);
+                                     bool *aResult);
   NS_OVERRIDE NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
                                            nsACString& aLocale);
   NS_OVERRIDE NS_IMETHOD GetStyleOverlays(nsIURI *aChromeURL,

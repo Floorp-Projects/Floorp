@@ -1,0 +1,194 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test SVGMatrix behavior</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="matrixUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="1" id="svg">
+    <g id="g" transform="translate(10, 20)"/>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  var tests =
+    [ testCreateMatrix,
+      testMultiply,
+      testInverse,
+      testTranslate,
+      testScale,
+      testScaleNonUniform,
+      testRotate,
+      testRotateFromVector,
+      testFlipX,
+      testFlipY,
+      testSkewX,
+      testSkewY
+    ];
+  for (var i = 0; i < tests.length; i++) {
+    tests[i]();
+  }
+  SimpleTest.finish();
+}
+
+function testCreateMatrix()
+{
+  svg = $('svg');
+  var m = svg.createSVGMatrix();
+  
+  // Should be initialised to identity
+  cmpMatrix(m, [1, 0, 0, 1, 0, 0],
+            "createMatrix should produce identity matrix");
+
+  // Should return a new object each time;
+  ok(m != svg.createSVGMatrix(),
+     "Got identical objects when creating new matrix");
+}
+
+// SVGMatrix multiply(in SVGMatrix secondMatrix);
+function testMultiply()
+{
+  // This is the example from SVG 1.1 section 7.5
+  var m1 = createMatrix(1, 0, 0, 1, 50, 90);
+  var m2 = createMatrix(0.707, -0.707, 0.707, 0.707, 0, 0);
+  var m3 = createMatrix(1, 0, 0, 1, 130, 160);
+  var result = m1.multiply(m2).multiply(m3);
+  roughCmpMatrix(result, [0.707, -0.707, 0.707, 0.707, 255.03, 111.21],
+    "Unexpected result after multiplying matrices");
+
+  // Check orig matrices are unchanged
+  cmpMatrix(m1, [1, 0, 0, 1, 50, 90], "Matrix changed after multiplication");
+  roughCmpMatrix(m2, [0.707, -0.707, 0.707, 0.707, 0, 0],
+                 "Matrix changed after multiplication");
+  cmpMatrix(m3, [1, 0, 0, 1, 130, 160], "Matrix changed after multiplication");
+}
+
+// SVGMatrix inverse() raises(SVGException);
+function testInverse()
+{
+  // Test inversion
+  var m = createMatrix(2, 0, 0, 4, 110, -50);
+  roughCmpMatrix(m.inverse(), [0.5, 0, 0, 0.25, -55, 12.5],
+    "Unexpected result after inverting matrix");
+
+  // Test non-invertable
+  m = createMatrix(0, 0, 1, 0, 0, 0);
+  try {
+    m.inverse();
+    ok(false, "Failed to throw exception when inverting singular matrix");
+  } catch (e) {
+    is(e.code, SVGException.SVG_MATRIX_NOT_INVERTABLE,
+      "Got unexpected exception " + e + ", expected SVG_MATRIX_NOT_INVERTABLE");
+  }
+}
+
+// SVGMatrix translate(in float x, in float y);
+function testTranslate()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.translate(100, -50), [2, 0, 0, 1, 320, 50],
+    "Unexpected result after translate");
+}
+
+// SVGMatrix scale(in float scaleFactor);
+function testScale()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.scale(0.5), [1, 0, 0, 0.5, 120, 100],
+    "Unexpected result after scale");
+}
+
+// SVGMatrix scaleNonUniform(in float scaleFactorX, in float scaleFactorY);
+function testScaleNonUniform()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.scaleNonUniform(0.5, -3), [1, 0, 0, -3, 120, 100],
+    "Unexpected result after scaleNonUniform");
+}
+
+// SVGMatrix rotate(in float angle);
+function testRotate()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.rotate(45),
+                 [2*Math.cos(Math.PI/4), Math.sin(Math.PI/4),
+                  2*-Math.sin(Math.PI/4), Math.cos(Math.PI/4),
+                  120, 100],
+                 "Unexpected result after rotate");
+}
+
+// SVGMatrix rotateFromVector(in float x, in float y) raises(SVGException);
+function testRotateFromVector()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  // Make a 150 degree angle
+  var result = m.rotateFromVector(-2, 1.1547);
+  roughCmpMatrix(result,
+                 [2*Math.cos(5*Math.PI/6), Math.sin(5*Math.PI/6),
+                  2*-Math.sin(5*Math.PI/6), Math.cos(5*Math.PI/6),
+                  120, 100],
+                 "Unexpected result after rotateFromVector");
+
+  // Test bad input (1)
+  try {
+    m.rotateFromVector(1, 0);
+    ok(false, "Failed to throw exception with zero coord for rotateFromVector");
+  } catch (e) {
+    is(e.code, SVGException.SVG_INVALID_VALUE_ERR,
+      "Got unexpected exception " + e + ", expected SVG_INVALID_VALUE_ERR");
+  }
+
+  // Test bad input (2)
+  try {
+    m.rotateFromVector(0, 1);
+    ok(false, "Failed to throw exception with zero coord for rotateFromVector");
+  } catch (e) { }
+}
+
+// SVGMatrix flipX();
+function testFlipX()
+{
+  var m = createMatrix(1, 2, 3, 4, 5, 6);
+  cmpMatrix(m.flipX(), [-1, -2, 3, 4, 5, 6], "Unexpected result after flipX");
+}
+
+// SVGMatrix flipY();
+function testFlipY()
+{
+  var m = createMatrix(1, 2, 3, 4, 5, 6);
+  cmpMatrix(m.flipY(), [1, 2, -3, -4, 5, 6], "Unexpected result after flipY");
+}
+
+// SVGMatrix skewX(in float angle);
+function testSkewX()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.skewX(30), [2, 0, 2*Math.tan(Math.PI/6), 1, 120, 100],
+                 "Unexpected result after skewX");
+}
+
+// SVGMatrix skewY(in float angle);
+function testSkewY()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.skewY(30), [2, Math.tan(Math.PI/6), 0, 1, 120, 100],
+                 "Unexpected result after skewY");
+}
+
+window.addEventListener("load", main, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -128,13 +128,13 @@ public:
    static const PRUnichar kDwmLibraryName[];
 #endif
   static BOOL sFlatMenus;
-  static PRPackedBool sIsXPOrLater;
-  static PRPackedBool sIsVistaOrLater;
-  static PRBool sTitlebarInfoPopulatedAero;
-  static PRBool sTitlebarInfoPopulatedThemed;
+  static bool sIsXPOrLater;
+  static bool sIsVistaOrLater;
+  static bool sTitlebarInfoPopulatedAero;
+  static bool sTitlebarInfoPopulatedThemed;
   static SIZE sCommandButtons[4];
   static mozilla::LookAndFeel::WindowsTheme sThemeId;
-  static PRBool sIsDefaultWindowsTheme;
+  static bool sIsDefaultWindowsTheme;
 
   static void Initialize();
   static void Teardown();
@@ -151,7 +151,7 @@ public:
 
   static void UpdateNativeThemeInfo();
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
-  static PRBool IsDefaultWindowTheme();
+  static bool IsDefaultWindowTheme();
 
   static inline BOOL IsAppThemed() {
     return isAppThemed && isAppThemed();
@@ -238,7 +238,7 @@ public:
   // WM_DWMCOMPOSITIONCHANGED. This rule prevents inconsistent
   // results for two or more calls which check the state during
   // composition transition.
-  static PRBool CheckForCompositor(PRBool aUpdateCache = PR_FALSE) {
+  static bool CheckForCompositor(bool aUpdateCache = false) {
     static BOOL sCachedValue = FALSE;
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     if(aUpdateCache && dwmIsCompositionEnabledPtr) {

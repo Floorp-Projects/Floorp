@@ -130,7 +130,7 @@ public:
   }
   PRUint64 InnerWindowID() const { return mInnerWindowId; }
 
-  PRBool HasError() { return mError; }
+  bool HasError() { return mError; }
 
 protected:
   Image(imgStatusTracker* aStatusTracker);
@@ -150,9 +150,9 @@ protected:
   nsAutoPtr<imgStatusTracker> mStatusTracker;
   PRUint32                    mAnimationConsumers;
   PRUint16                    mAnimationMode;   // Enum values in imgIContainer
-  PRPackedBool                mInitialized:1;   // Have we been initalized?
-  PRPackedBool                mAnimating:1;     // Are we currently animating?
-  PRPackedBool                mError:1;         // Error handling
+  bool                        mInitialized:1;   // Have we been initalized?
+  bool                        mAnimating:1;     // Are we currently animating?
+  bool                        mError:1;         // Error handling
 
   /**
    * Extended by child classes, if they have additional

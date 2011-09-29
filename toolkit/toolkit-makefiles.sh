@@ -196,7 +196,8 @@ MAKEFILES_xpconnect="
   js/src/xpconnect/src/Makefile
   js/src/xpconnect/loader/Makefile
   js/src/xpconnect/tests/Makefile
-  js/src/xpconnect/tests/components/Makefile
+  js/src/xpconnect/tests/components/js/Makefile
+  js/src/xpconnect/tests/components/native/Makefile
   js/src/xpconnect/tests/idl/Makefile
 "
 
@@ -714,10 +715,6 @@ MAKEFILES_accessible="
   accessible/build/Makefile
 "
 
-MAKEFILES_zlib="
-  modules/zlib/standalone/Makefile
-"
-
 MAKEFILES_libmar="
   modules/libmar/Makefile
   modules/libmar/src/Makefile
@@ -775,7 +772,6 @@ add_makefiles "
   $MAKEFILES_xulapp
   $MAKEFILES_libpr0n
   $MAKEFILES_accessible
-  $MAKEFILES_zlib
   $MAKEFILES_libmar
   $MAKEFILES_extensions
   $MAKEFILES_startupcache

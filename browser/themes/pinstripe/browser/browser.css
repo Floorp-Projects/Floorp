@@ -27,6 +27,7 @@
  *   Dão Gottwald (dao@mozilla.com)
  *   Stephen Horlander (stephen@noved.org)
  *   Drew Willcoxon (adw@mozilla.com)
+ *   Paul Rouget (paul@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -836,11 +837,8 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #urlbar {
+  -moz-padding-end: 4px;
   border-radius: @toolbarbuttonCornerRadius@;
-}
-
-#urlbar-container:not([combined]) > #urlbar {
-  -moz-padding-end: 3px;
 }
 
 #identity-box {
@@ -910,8 +908,29 @@ toolbar[mode="icons"] #zoom-in-button {
   padding: 3px 0 2px;
 }
 
+.urlbar-history-dropmarker {
+  padding: 0 3px;
+  list-style-image: url("chrome://browser/skin/urlbar-history-dropmarker.png");
+  -moz-image-region: rect(0px, 11px, 14px, 0px);
+}
+
+.urlbar-history-dropmarker[open="true"],
+.urlbar-history-dropmarker:hover:active {
+  -moz-image-region: rect(0px, 22px, 14px, 11px);
+  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+}
+
 #urlbar-icons {
   -moz-box-align: center;
+}
+
+.urlbar-icon {
+  padding: 2px 3px;
+}
+
+.urlbar-icon[open="true"],
+.urlbar-icon:hover:active {
+  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
 #urlbar-search-splitter {
@@ -975,9 +994,8 @@ toolbar[mode="icons"] #zoom-in-button {
 
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
-  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
-  width: 16px;
-  height: 16px;
+  list-style-image: url("chrome://browser/skin/places/star-icons.png");
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .ac-result-type-keyword,
@@ -991,7 +1009,7 @@ toolbar[mode="icons"] #zoom-in-button {
 richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
-  -moz-image-region: rect(32px, 16px, 48px, 0px);
+  -moz-image-region: rect(0, 64px, 16px, 48px);
 }
 
 .ac-result-type-tag,
@@ -1036,81 +1054,59 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-top: 1px solid GrayText;
 }
 
-/* ----- GO BUTTON ----- */
-
-#go-button {
-  list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-#go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
-}
-
-#go-button:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-#go-button:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
 
 /* ----- COMBINED GO/RELOAD/STOP BUTTON IN LOCATION BAR ----- */
 
+#go-button,
 #urlbar > toolbarbutton {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
   margin: 0;
-  -moz-margin-start: 2px;
-  padding: 0 3px;
+  -moz-padding-start: 2px; 
+  -moz-padding-end: 1px; 
   background-origin: border-box;
-  border: none;
-  -moz-border-start: 1px solid rgba(0,0,0,.25);
-  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-              -1px -1px 1px rgba(255,255,255,.15) inset;
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
 }
 
-#urlbar:-moz-locale-dir(ltr) > toolbarbutton {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
+#urlbar > toolbarbutton:not([disabled]):hover:active {
+  background-image: -moz-radial-gradient(center, circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
-#urlbar:-moz-locale-dir(rtl) > toolbarbutton {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
+#go-button {
+  padding: 0 3px;
 }
 
-#urlbar > toolbarbutton:not([disabled]):active:hover,
-#urlbar-reload-button:not(:hover) {
-  -moz-border-start-style: none;
-  -moz-padding-start: 4px;
-  box-shadow: none;
-}
-
-#urlbar > toolbarbutton:not([disabled]):active:hover {
-  box-shadow: @toolbarbuttonPressedInnerShadow@;
-}
-
+#go-button,
 #urlbar-go-button {
-  -moz-image-region: rect(0px, 56px, 14px, 42px);
-  background-image: -moz-linear-gradient(rgb(184,221,142), rgb(154,201,111) 49%, rgb(130,187,92) 51%, rgb(114,171,79));
+  -moz-image-region: rect(0, 42px, 14px, 28px);
 }
 
+#go-button:hover:active,
+#urlbar-go-button:hover:active {
+  -moz-image-region: rect(14px, 42px, 28px, 28px);
+}
+
+#go-button:-moz-locale-dir(rtl),
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   -moz-transform: scaleX(-1);
 }
 
 #urlbar-reload-button {
-  -moz-image-region: rect(0px, 14px, 14px, 0px);
+  -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
-#urlbar-reload-button:not([disabled]):hover {
-  -moz-image-region: rect(0px, 28px, 14px, 14px);
-  background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
+#urlbar-reload-button:not([disabled]):hover:active {
+  -moz-image-region: rect(14px, 14px, 28px, 0);
+}
+
+#urlbar-reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 #urlbar-stop-button {
-  -moz-image-region: rect(0px, 42px, 14px, 28px);
-  background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
+  -moz-image-region: rect(0, 28px, 14px, 14px);
+}
+
+#urlbar-stop-button:hover:active {
+  -moz-image-region: rect(14px, 28px, 28px, 14px);
 }
 
 /* POPUP BLOCKER BUTTON */
@@ -1119,41 +1115,24 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#page-report-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
 #page-report-button:hover:active,
 #page-report-button[open="true"] {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 /* STAR BUTTON */
 #star-button {
-  padding: 1px;
-  -moz-padding-start: 4px;
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#star-button:hover {
+#star-button:hover:active,
+#star-button[starred="true"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-#star-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
-#star-button[starred="true"] {
-  -moz-image-region: rect(16px, 16px, 32px, 0);
-}
-
-#star-button:hover[starred="true"] {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
-
 #star-button:hover:active[starred="true"] {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* BOOKMARKING PANEL */
@@ -2623,4 +2602,73 @@ panel[dimmed="true"] {
 #inspector-inspect-toolbutton[checked]:hover:active,
 #inspector-tools > toolbarbutton[checked]:hover:active {
   background-color: hsla(210,8%,5%,.2);
+}
+
+/*
+ * need a "bumpy" background image for this!
+ */
+#inspector-horizontal-splitter {
+  background: none !important;
+  -moz-appearance: none;
+  cursor: n-resize;
+}
+
+/* Highlighter - Node Infobar */
+
+/* Highlighter - Node Infobar - text */
+
+#highlighter-nodeinfobar-tagname {
+  color: white;
+}
+
+#highlighter-nodeinfobar-id {
+  color: hsl(90, 79%, 52%);
+}
+
+.highlighter-nodeinfobar-class {
+  color: hsl(200, 100%, 65%);
+}
+
+/* Highlighter - Node Infobar - box & arrow */
+
+#highlighter-nodeinfobar {
+  border: 1px solid hsla(210, 19%, 63%, .5);
+  border-radius: 3px;
+  padding: 8px 16px;
+  background: -moz-linear-gradient(hsl(209, 18%, 30%), hsl(210, 24%, 16%)) no-repeat padding-box;
+}
+
+.highlighter-nodeinfobar-arrow {
+  width: 14px;
+  height: 14px;
+  -moz-margin-start: -moz-calc(50% - 7px);
+  -moz-transform: rotate(-45deg);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+}
+
+#highlighter-nodeinfobar-arrow-top {
+  margin-bottom: -8px;
+  margin-top: 8px;
+  border-right-color: hsla(210, 19%, 63%, .5);
+  border-top-color: hsla(210, 19%, 63%, .5);
+  background-image: -moz-linear-gradient(bottom left, transparent 50%, hsl(209, 18%, 30%) 50%);
+}
+
+#highlighter-nodeinfobar-arrow-bottom {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  border-left-color: hsla(210, 19%, 63%, .5);
+  border-bottom-color: hsla(210, 19%, 63%, .5);
+  background-image: -moz-linear-gradient(top right, transparent 50%, hsl(210, 24%, 16%) 50%);
+}
+
+#highlighter-nodeinfobar-container[position="top"] > #highlighter-nodeinfobar,
+#highlighter-nodeinfobar-container[position="overlap"] > #highlighter-nodeinfobar {
+  box-shadow: 0 1px 0 hsla(0, 0%, 100%, .1) inset;
+}
+
+#highlighter-nodeinfobar-container[hide-arrow] > #highlighter-nodeinfobar {
+  margin: 7px 0;
 }

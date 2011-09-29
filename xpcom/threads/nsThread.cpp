@@ -207,14 +207,14 @@ private:
   }
 
   ReentrantMonitor mMon;
-  PRBool     mInitialized;
+  bool       mInitialized;
 };
 
 //-----------------------------------------------------------------------------
 
 struct nsThreadShutdownContext {
   nsThread *joiningThread;
-  PRBool    shutdownAck;
+  bool      shutdownAck;
 };
 
 // This event is responsible for notifying nsThread::Shutdown that it is time
@@ -436,7 +436,7 @@ nsThread::Dispatch(nsIRunnable *event, PRUint32 flags)
 }
 
 NS_IMETHODIMP
-nsThread::IsOnCurrentThread(PRBool *result)
+nsThread::IsOnCurrentThread(bool *result)
 {
   *result = (PR_GetCurrentThread() == mThread);
   return NS_OK;
@@ -509,7 +509,7 @@ nsThread::Shutdown()
 }
 
 NS_IMETHODIMP
-nsThread::HasPendingEvents(PRBool *result)
+nsThread::HasPendingEvents(bool *result)
 {
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
 
@@ -579,13 +579,13 @@ void canary_alarm_handler (int signum)
   PR_END_MACRO
 
 NS_IMETHODIMP
-nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
+nsThread::ProcessNextEvent(bool mayWait, bool *result)
 {
   LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, mayWait, mRunningEvent));
 
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
 
-  PRBool notifyGlobalObserver = (sGlobalObserver != nsnull);
+  bool notifyGlobalObserver = (sGlobalObserver != nsnull);
   if (notifyGlobalObserver) 
     sGlobalObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
                                         mRunningEvent);
@@ -746,10 +746,10 @@ nsThread::PopEventQueue()
   return NS_OK;
 }
 
-PRBool
+bool
 nsThread::nsChainedEventQueue::PutEvent(nsIRunnable *event)
 {
-  PRBool val;
+  bool val;
   if (!mFilter || mFilter->AcceptEvent(event)) {
     val = mQueue.PutEvent(event);
   } else {

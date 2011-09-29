@@ -93,7 +93,7 @@ NS_IMETHODIMP nsIconChannel::GetName(nsACString &result)
   return mUrl->GetSpec(result);
 }
 
-NS_IMETHODIMP nsIconChannel::IsPending(PRBool *result)
+NS_IMETHODIMP nsIconChannel::IsPending(bool *result)
 {
   return mPump->IsPending(result);
 }
@@ -234,7 +234,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   return rv;
 }
 
-nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
+nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocking)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -250,7 +250,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   if (localFile)
     localFile->SetFollowLinks(PR_FALSE);
 
-  PRBool fileExists = PR_FALSE;
+  bool fileExists = false;
   if (fileloc)
     localFile->Exists(&fileExists);
 

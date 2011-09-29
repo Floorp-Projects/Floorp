@@ -358,7 +358,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
     // First do the vanilla memory reporters.
     nsCOMPtr<nsISimpleEnumerator> e;
     mgr->EnumerateReporters(getter_AddRefs(e));
-    PRBool more;
+    bool more;
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsIMemoryReporter> r;
       e->GetNext(getter_AddRefs(r));
@@ -537,7 +537,7 @@ ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages
 }
 
 bool
-ContentChild::RecvSetOffline(const PRBool& offline)
+ContentChild::RecvSetOffline(const bool& offline)
 {
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   NS_ASSERTION(io, "IO Service can not be null");

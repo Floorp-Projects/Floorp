@@ -213,7 +213,7 @@ void AsyncStatementSpinner::SpinUntilCompleted()
 {
   nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
   nsresult rv = NS_OK;
-  PRBool processed = PR_TRUE;
+  bool processed = true;
   while (!mCompleted && NS_SUCCEEDED(rv)) {
     rv = thread->ProcessNextEvent(true, &processed);
   }

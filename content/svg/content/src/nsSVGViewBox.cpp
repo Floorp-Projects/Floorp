@@ -52,7 +52,7 @@ using namespace mozilla;
 
 /* Implementation of nsSVGViewBoxRect methods */
 
-PRBool
+bool
 nsSVGViewBoxRect::operator==(const nsSVGViewBoxRect& aOther) const
 {
   if (&aOther == this)
@@ -127,7 +127,7 @@ nsSVGViewBox::SetAnimValue(float aX, float aY, float aWidth, float aHeight,
 
 void
 nsSVGViewBox::SetBaseValue(float aX, float aY, float aWidth, float aHeight,
-                           nsSVGElement *aSVGElement, PRBool aDoSetAttr)
+                           nsSVGElement *aSVGElement, bool aDoSetAttr)
 {
   mBaseVal = nsSVGViewBoxRect(aX, aY, aWidth, aHeight);
   mHasBaseVal = PR_TRUE;
@@ -179,7 +179,7 @@ ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
 nsresult
 nsSVGViewBox::SetBaseValueString(const nsAString& aValue,
                                  nsSVGElement *aSVGElement,
-                                 PRBool aDoSetAttr)
+                                 bool aDoSetAttr)
 {
   nsSVGViewBoxRect viewBox;
   nsresult res = ToSVGViewBoxRect(aValue, &viewBox);
@@ -283,7 +283,7 @@ nsSVGViewBox::SMILViewBox
             ::ValueFromString(const nsAString& aStr,
                               const nsISMILAnimationElement* /*aSrcElement*/,
                               nsSMILValue& aValue,
-                              PRBool& aPreventCachingOfSandwich) const
+                              bool& aPreventCachingOfSandwich) const
 {
   nsSVGViewBoxRect viewBox;
   nsresult res = ToSVGViewBoxRect(aStr, &viewBox);

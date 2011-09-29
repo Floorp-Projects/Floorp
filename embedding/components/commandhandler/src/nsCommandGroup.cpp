@@ -59,7 +59,7 @@ public:
 
 protected:
 
-  static PRBool HashEnum(nsHashKey *aKey, void *aData, void* aClosure);
+  static bool HashEnum(nsHashKey *aKey, void *aData, void* aClosure);
 
   nsresult      Initialize();
 
@@ -68,7 +68,7 @@ protected:
   nsHashtable&  mHashTable;
   PRInt32       mIndex;
   char **       mGroupNames;        // array of pointers to PRUnichar* in the hash table
-  PRBool        mInitted;
+  bool          mInitted;
   
 };
 
@@ -91,7 +91,7 @@ nsGroupsEnumerator::~nsGroupsEnumerator()
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP
-nsGroupsEnumerator::HasMoreElements(PRBool *_retval)
+nsGroupsEnumerator::HasMoreElements(bool *_retval)
 {
   nsresult  rv = NS_OK;
   
@@ -134,7 +134,7 @@ nsGroupsEnumerator::GetNext(nsISupports **_retval)
 
 /* static */
 /* return false to stop */
-PRBool
+bool
 nsGroupsEnumerator::HashEnum(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsGroupsEnumerator*   groupsEnum = reinterpret_cast<nsGroupsEnumerator *>(aClosure);
@@ -195,7 +195,7 @@ NS_IMPL_ISUPPORTS1(nsNamedGroupEnumerator, nsISimpleEnumerator)
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP
-nsNamedGroupEnumerator::HasMoreElements(PRBool *_retval)
+nsNamedGroupEnumerator::HasMoreElements(bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   
@@ -305,7 +305,7 @@ nsControllerCommandGroup::RemoveCommandFromGroup(const char * aCommand, const ch
 
 /* boolean isCommandInGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::IsCommandInGroup(const char * aCommand, const char * aGroup, PRBool *_retval)
+nsControllerCommandGroup::IsCommandInGroup(const char * aCommand, const char * aGroup, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -354,7 +354,7 @@ nsControllerCommandGroup::GetEnumeratorForGroup(const char * aGroup, nsISimpleEn
 #pragma mark -
 #endif
  
-PRBool nsControllerCommandGroup::ClearEnumerator(nsHashKey *aKey, void *aData, void* closure)
+bool nsControllerCommandGroup::ClearEnumerator(nsHashKey *aKey, void *aData, void* closure)
 {
   nsTArray<char*>* commandList = (nsTArray<char*> *)aData;
   if (commandList)

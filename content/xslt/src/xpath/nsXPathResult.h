@@ -99,30 +99,30 @@ public:
     nsresult Clone(nsIXPathResult **aResult);
     void RemoveObserver();
 private:
-    static PRBool isSnapshot(PRUint16 aResultType)
+    static bool isSnapshot(PRUint16 aResultType)
     {
         return aResultType == UNORDERED_NODE_SNAPSHOT_TYPE ||
                aResultType == ORDERED_NODE_SNAPSHOT_TYPE;
     }
-    static PRBool isIterator(PRUint16 aResultType)
+    static bool isIterator(PRUint16 aResultType)
     {
         return aResultType == UNORDERED_NODE_ITERATOR_TYPE ||
                aResultType == ORDERED_NODE_ITERATOR_TYPE;
     }
-    static PRBool isNode(PRUint16 aResultType)
+    static bool isNode(PRUint16 aResultType)
     {
         return aResultType == FIRST_ORDERED_NODE_TYPE ||
                aResultType == ANY_UNORDERED_NODE_TYPE;
     }
-    PRBool isSnapshot() const
+    bool isSnapshot() const
     {
         return isSnapshot(mResultType);
     }
-    PRBool isIterator() const
+    bool isIterator() const
     {
         return isIterator(mResultType);
     }
-    PRBool isNode() const
+    bool isNode() const
     {
         return isNode(mResultType);
     }
@@ -135,8 +135,8 @@ private:
     PRUint32 mCurrentPos;
     PRUint16 mResultType;
     nsWeakPtr mContextNode;
-    PRPackedBool mInvalidIteratorState;
-    PRBool mBooleanResult;
+    bool mInvalidIteratorState;
+    bool mBooleanResult;
     double mNumberResult;
     nsString mStringResult;
 };

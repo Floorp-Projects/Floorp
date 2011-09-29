@@ -188,7 +188,7 @@ public:
    * Returns true if our attribute is animating (in which case our animVal is
    * not simply a mirror of our baseVal).
    */
-  PRBool IsAnimating() const;
+  bool IsAnimating() const;
 
 private:
 

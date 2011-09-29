@@ -108,7 +108,7 @@ nsPrintData::~nsPrintData()
   if (mPrintDC && !mDebugFilePtr) {
     PR_PL(("****************** End Document ************************\n"));
     PR_PL(("\n"));
-    PRBool isCancelled = PR_FALSE;
+    bool isCancelled = false;
     mPrintSettings->GetIsCancelled(&isCancelled);
 
     nsresult rv = NS_OK;
@@ -147,7 +147,7 @@ void nsPrintData::OnEndPrinting()
 void
 nsPrintData::DoOnProgressChange(PRInt32      aProgess,
                                 PRInt32      aMaxProgress,
-                                PRBool       aDoStartStop,
+                                bool         aDoStartStop,
                                 PRInt32      aFlag)
 {
   if (aProgess == 0) return;

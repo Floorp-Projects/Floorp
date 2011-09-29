@@ -135,16 +135,16 @@ struct nsCSSBorderRenderer {
   nscolor mBackgroundColor;
 
   // calculated values
-  PRPackedBool mOneUnitBorder;
-  PRPackedBool mNoBorderRadius;
-  PRPackedBool mAvoidStroke;
+  bool mOneUnitBorder;
+  bool mNoBorderRadius;
+  bool mAvoidStroke;
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?
-  PRBool AreBorderSideFinalStylesSame(PRUint8 aSides);
+  bool AreBorderSideFinalStylesSame(PRUint8 aSides);
 
   // For the given style, is the given corner a solid color?
-  PRBool IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCorner);
+  bool IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCorner);
 
   // For the given solid corner, what color style should be used?
   BorderColorStyle BorderColorStyleForSolidCorner(PRUint8 aStyle, mozilla::css::Corner aCorner);

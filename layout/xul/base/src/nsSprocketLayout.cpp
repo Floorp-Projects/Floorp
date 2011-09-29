@@ -85,7 +85,7 @@ nsSprocketLayout::nsSprocketLayout()
 {
 }
 
-PRBool 
+bool 
 nsSprocketLayout::IsHorizontal(nsIBox* aBox)
 {
    return (aBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
@@ -284,8 +284,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   }
 
   // With the sizes computed, now it's time to lay out our children.
-  PRBool needsRedraw = PR_FALSE;
-  PRBool finished;
+  bool needsRedraw = false;
+  bool finished;
   nscoord passes = 0;
 
   // We flow children at their preferred locations (along with the appropriate computed flex).  
@@ -299,7 +299,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   // |childResized| lets us know if a child changed its size after we attempted to lay it out at
   // the specified size.  If this happens, we usually have to do another pass.
-  PRBool childResized = PR_FALSE;
+  bool childResized = false;
 
   // |passes| stores our number of passes.  If for any reason we end up doing more than, say, 10
   // passes, we assert to indicate that something is seriously screwed up.
@@ -449,7 +449,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
       nsMargin margin(0,0,0,0);
 
-      PRBool layout = PR_TRUE;
+      bool layout = true;
 
       // Deflate the rect of our child by its margin.
       child->GetMargin(margin);
@@ -486,7 +486,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       // in the |sizeChanged| variable.
 
       child->SetBounds(aState, childRect);
-      PRBool sizeChanged = (childRect.width != oldRect.width ||
+      bool sizeChanged = (childRect.width != oldRect.width ||
                             childRect.height != oldRect.height);
 
       if (sizeChanged) {
@@ -696,7 +696,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   aMinSize = 0;
   aMaxSize = NS_INTRINSICSIZE;
 
-  PRBool isHorizontal;
+  bool isHorizontal;
 
   if (IsHorizontal(aBox))
      isHorizontal = PR_TRUE;
@@ -773,7 +773,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
     nsSize minSize(0,0);
     nsSize maxSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
     nscoord ascent = 0;
-    PRBool collapsed = child->IsCollapsed(aState);
+    bool collapsed = child->IsCollapsed(aState);
 
     if (!collapsed) {
     // only one flexible child? Cool we will just make its preferred size
@@ -955,11 +955,11 @@ nsSprocketLayout::ComputeChildsNextPosition(nsIBox* aBox,
 void
 nsSprocketLayout::AlignChildren(nsIBox* aBox,
                                 nsBoxLayoutState& aState,
-                                PRBool* aNeedsRedraw)
+                                bool* aNeedsRedraw)
 {
   nsFrameState frameState = 0;
   GetFrameState(aBox, frameState);
-  PRBool isHorizontal = (frameState & NS_STATE_IS_HORIZONTAL) != 0;
+  bool isHorizontal = (frameState & NS_STATE_IS_HORIZONTAL) != 0;
   nsRect clientRect;
   aBox->GetClientRect(clientRect);
 
@@ -970,7 +970,7 @@ nsSprocketLayout::AlignChildren(nsIBox* aBox,
   nsIBox::Halignment halign;
   nsIBox::Valignment valign;
   nscoord maxAscent;
-  PRBool isLTR;
+  bool isLTR;
 
   if (isHorizontal) {
     valign = aBox->GetVAlign();
@@ -1060,12 +1060,12 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
                          nsRect& aChildActualRect, 
                          nsRect& aContainingRect,
                          PRInt32 aFlexes, 
-                         PRBool& aFinished)
+                         bool& aFinished)
                          
 {
       nsRect childCurrentRect(aChildLayoutRect);
 
-      PRBool isHorizontal = IsHorizontal(aBox);
+      bool isHorizontal = IsHorizontal(aBox);
       nscoord childLayoutWidth  = GET_WIDTH(aChildLayoutRect,isHorizontal);
       nscoord& childActualWidth  = GET_WIDTH(aChildActualRect,isHorizontal);
       nscoord& containingWidth   = GET_WIDTH(aContainingRect,isHorizontal);   
@@ -1074,7 +1074,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
       nscoord& childActualHeight = GET_HEIGHT(aChildActualRect,isHorizontal);
       nscoord& containingHeight  = GET_HEIGHT(aContainingRect,isHorizontal);
 
-      PRBool recompute = PR_FALSE;
+      bool recompute = false;
 
       // if we are a horizontal box see if the child will fit inside us.
       if ( childActualHeight > containingHeight) {
@@ -1259,7 +1259,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
   {
     // ----- Ok we are give a size to fit into so stretch or squeeze to fit
     // ----- Make sure we look at our min and max size
-    PRBool limit = PR_TRUE;
+    bool limit = true;
     for (int pass=1; PR_TRUE == limit; pass++) 
     {
       limit = PR_FALSE;
@@ -1345,7 +1345,7 @@ nsSize
 nsSprocketLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
    nsSize vpref (0, 0); 
-   PRBool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsHorizontal(aBox);
 
    nscoord biggestPref = 0;
 
@@ -1355,7 +1355,7 @@ nsSprocketLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
    nsIBox* child = aBox->GetChildBox();
    nsFrameState frameState = 0;
    GetFrameState(aBox, frameState);
-   PRBool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
+   bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    PRInt32 count = 0;
    
    while (child) 
@@ -1401,7 +1401,7 @@ nsSize
 nsSprocketLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
    nsSize minSize (0, 0);
-   PRBool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsHorizontal(aBox);
 
    nscoord biggestMin = 0;
 
@@ -1412,7 +1412,7 @@ nsSprocketLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
    nsIBox* child = aBox->GetChildBox();
    nsFrameState frameState = 0;
    GetFrameState(aBox, frameState);
-   PRBool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
+   bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    PRInt32 count = 0;
 
    while (child) 
@@ -1470,7 +1470,7 @@ nsSize
 nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
 
-  PRBool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsHorizontal(aBox);
 
    nscoord smallestMax = NS_INTRINSICSIZE;
    nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
@@ -1481,7 +1481,7 @@ nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
    nsIBox* child = aBox->GetChildBox();
    nsFrameState frameState = 0;
    GetFrameState(aBox, frameState);
-   PRBool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
+   bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    PRInt32 count = 0;
 
    while (child) 
@@ -1538,7 +1538,7 @@ nsSprocketLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState)
 {
    nscoord vAscent = 0;
 
-   PRBool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsHorizontal(aBox);
 
    // run through all the children and get their min, max, and preferred sizes
    // return us the size of the box
@@ -1577,7 +1577,7 @@ nsSprocketLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState)
 }
 
 void
-nsSprocketLayout::SetLargestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal)
+nsSprocketLayout::SetLargestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal)
 {
   if (aIsHorizontal)
   {
@@ -1590,7 +1590,7 @@ nsSprocketLayout::SetLargestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aI
 }
 
 void
-nsSprocketLayout::SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal)
+nsSprocketLayout::SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal)
 {
   if (aIsHorizontal)
   {
@@ -1604,7 +1604,7 @@ nsSprocketLayout::SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, PRBool a
 }
 
 void
-nsSprocketLayout::AddLargestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal)
+nsSprocketLayout::AddLargestSize(nsSize& aSize, const nsSize& aSizeToAdd, bool aIsHorizontal)
 {
   if (aIsHorizontal)
     AddCoord(aSize.width, aSizeToAdd.width);
@@ -1626,7 +1626,7 @@ nsSprocketLayout::AddCoord(nscoord& aCoord, nscoord aCoordToAdd)
   }
 }
 void
-nsSprocketLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal)
+nsSprocketLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, bool aIsHorizontal)
 {
   if (aIsHorizontal)
     AddCoord(aSize.width, aSizeToAdd.width);
@@ -1636,7 +1636,7 @@ nsSprocketLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBoo
   SetSmallestSize(aSize, aSizeToAdd, aIsHorizontal);
 }
 
-PRBool
+bool
 nsSprocketLayout::GetDefaultFlex(PRInt32& aFlex)
 {
     aFlex = 0;

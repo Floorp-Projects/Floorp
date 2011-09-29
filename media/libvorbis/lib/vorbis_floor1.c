@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: floor backend 1 implementation
- last mod: $Id: floor1.c 17555 2010-10-21 18:14:51Z tterribe $
+ last mod: $Id: floor1.c 17688 2010-11-29 23:53:30Z tterribe $
 
  ********************************************************************/
 
@@ -1035,7 +1035,7 @@ static void *floor1_inverse1(vorbis_block *vb,vorbis_look_floor *in){
           }
         }
 
-        fit_value[i]=val+predicted&0x7fff;
+        fit_value[i]=(val+predicted)&0x7fff;
         fit_value[look->loneighbor[i-2]]&=0x7fff;
         fit_value[look->hineighbor[i-2]]&=0x7fff;
 

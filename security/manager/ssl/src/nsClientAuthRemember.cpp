@@ -191,7 +191,7 @@ nsresult
 nsClientAuthRememberService::HasRememberedDecision(const nsACString & aHostName, 
                                                    CERTCertificate *aCert, 
                                                    nsACString & aCertDBKey,
-                                                   PRBool *_retval)
+                                                   bool *_retval)
 {
   if (aHostName.IsEmpty())
     return NS_ERROR_INVALID_ARG;

@@ -163,7 +163,7 @@ GetValueAt(nsIFrame*                      aTableOrRowFrame,
 }
 
 #ifdef NS_DEBUG
-static PRBool
+static bool
 IsTable(PRUint8 aDisplay)
 {
   if ((aDisplay == NS_STYLE_DISPLAY_TABLE) ||

@@ -40,6 +40,7 @@
 #define nsDOMStoragePersistentDB_h___
 
 #include "nscore.h"
+#include "nsDOMStorageBaseDB.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsTHashtable.h"
@@ -52,7 +53,7 @@ class nsSessionStorageEntry;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-class nsDOMStoragePersistentDB
+class nsDOMStoragePersistentDB : public nsDOMStorageBaseDB
 {
 public:
   nsDOMStoragePersistentDB();
@@ -77,7 +78,7 @@ public:
   GetKeyValue(DOMStorageImpl* aStorage,
               const nsAString& aKey,
               nsAString& aValue,
-              PRBool* aSecure);
+              bool* aSecure);
 
   /**
    * Set the value and secure flag for a key in storage.
@@ -86,9 +87,9 @@ public:
   SetKey(DOMStorageImpl* aStorage,
          const nsAString& aKey,
          const nsAString& aValue,
-         PRBool aSecure,
+         bool aSecure,
          PRInt32 aQuota,
-         PRBool aExcludeOfflineFromUsage,
+         bool aExcludeOfflineFromUsage,
          PRInt32* aNewUsage);
 
   /**
@@ -98,7 +99,7 @@ public:
   nsresult
   SetSecure(DOMStorageImpl* aStorage,
             const nsAString& aKey,
-            const PRBool aSecure);
+            const bool aSecure);
 
   /**
    * Removes a key from storage.
@@ -106,7 +107,7 @@ public:
   nsresult
   RemoveKey(DOMStorageImpl* aStorage,
             const nsAString& aKey,
-            PRBool aExcludeOfflineFromUsage,
+            bool aExcludeOfflineFromUsage,
             PRInt32 aKeyUsage);
 
   /**
@@ -118,7 +119,7 @@ public:
    * Removes all keys added by a given domain.
    */
   nsresult
-  RemoveOwner(const nsACString& aOwner, PRBool aIncludeSubDomains);
+  RemoveOwner(const nsACString& aOwner, bool aIncludeSubDomains);
 
   /**
    * Removes keys owned by domains that either match or don't match the
@@ -126,7 +127,7 @@ public:
    */
   nsresult
   RemoveOwners(const nsTArray<nsString>& aOwners,
-               PRBool aIncludeSubDomains, PRBool aMatch);
+               bool aIncludeSubDomains, bool aMatch);
 
   /**
    * Removes all keys from storage. Used when clearing storage.
@@ -138,13 +139,13 @@ public:
     * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
     */
   nsresult
-  GetUsage(DOMStorageImpl* aStorage, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
+  GetUsage(DOMStorageImpl* aStorage, bool aExcludeOfflineFromUsage, PRInt32 *aUsage);
 
   /**
     * Returns usage of the domain and optionaly by any subdomain.
     */
   nsresult
-  GetUsage(const nsACString& aDomain, PRBool aIncludeSubDomains, PRInt32 *aUsage);
+  GetUsage(const nsACString& aDomain, bool aIncludeSubDomains, PRInt32 *aUsage);
 
   /**
    * Clears all in-memory data from private browsing mode
@@ -210,7 +211,7 @@ protected:
   friend class nsDOMStorageDBWrapper;
   friend class nsDOMStorageMemoryDB;
   nsresult
-  GetUsageInternal(const nsACString& aQuotaDomainDBKey, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
+  GetUsageInternal(const nsACString& aQuotaDomainDBKey, bool aExcludeOfflineFromUsage, PRInt32 *aUsage);
 };
 
 #endif /* nsDOMStorageDB_h___ */

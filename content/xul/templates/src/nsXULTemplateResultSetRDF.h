@@ -62,7 +62,7 @@ private:
 
     InstantiationSet::List *mCurrent;
 
-    PRBool mCheckedNext;
+    bool mCheckedNext;
 
 public:
 

@@ -72,9 +72,9 @@ public:
   NS_IMETHOD DetachEditor();
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
+  NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, bool *aCancel, bool *aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
-  NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty);
+  NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty);
   NS_IMETHOD DocumentModified();
 
   // nsTextEditRules action id's
@@ -153,39 +153,39 @@ protected:
   // nsTextEditRules implementation methods
   nsresult WillInsertText(  PRInt32          aAction,
                             nsISelection *aSelection, 
-                            PRBool          *aCancel,
-                            PRBool          *aHandled,
+                            bool            *aCancel,
+                            bool            *aHandled,
                             const nsAString *inString,
                             nsAString       *outString,
                             PRInt32          aMaxLength);
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
-  nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel,
-                           PRBool *aHandled, PRInt32 aMaxLength);
+  nsresult WillInsertBreak(nsISelection *aSelection, bool *aCancel,
+                           bool *aHandled, PRInt32 aMaxLength);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillInsert(nsISelection *aSelection, PRBool *aCancel);
+  nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
   nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
 
   nsresult WillDeleteSelection(nsISelection *aSelection, 
                                nsIEditor::EDirection aCollapsedAction, 
-                               PRBool *aCancel,
-                               PRBool *aHandled);
+                               bool *aCancel,
+                               bool *aHandled);
   nsresult DidDeleteSelection(nsISelection *aSelection, 
                               nsIEditor::EDirection aCollapsedAction, 
                               nsresult aResult);
 
-  nsresult WillSetTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillSetTextProperty(nsISelection *aSelection, bool *aCancel, bool *aHandled);
   nsresult DidSetTextProperty(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillRemoveTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillRemoveTextProperty(nsISelection *aSelection, bool *aCancel, bool *aHandled);
   nsresult DidRemoveTextProperty(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillUndo(nsISelection *aSelection, bool *aCancel, bool *aHandled);
   nsresult DidUndo(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillRedo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillRedo(nsISelection *aSelection, bool *aCancel, bool *aHandled);
   nsresult DidRedo(nsISelection *aSelection, nsresult aResult);
 
   /** called prior to nsIEditor::OutputToString
@@ -198,8 +198,8 @@ protected:
   nsresult WillOutputText(nsISelection *aSelection,
                           const nsAString  *aInFormat,
                           nsAString *aOutText, 
-                          PRBool   *aOutCancel, 
-                          PRBool *aHandled);
+                          bool     *aOutCancel, 
+                          bool *aHandled);
 
   nsresult DidOutputText(nsISelection *aSelection, nsresult aResult);
 
@@ -221,7 +221,7 @@ protected:
                                      const nsAString          *aInString,
                                      nsAString                *aOutString,
                                      PRInt32                   aMaxLength,
-                                     PRBool                   *aTruncated);
+                                     bool                     *aTruncated);
 
   /** Remove IME composition text from password buffer */
   nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
@@ -232,37 +232,37 @@ protected:
                                      nsIDOMNode           *aSelNode, 
                                      PRInt32               aSelOffset, 
                                      nsIEditor::EDirection aAction,
-                                     PRBool               *aCancel);
+                                     bool                 *aCancel);
 
   nsresult HideLastPWInput();
 
   nsresult CollapseSelectionToTrailingBRIfNeeded(nsISelection *aSelection);
 
-  PRBool IsPasswordEditor() const
+  bool IsPasswordEditor() const
   {
     return mEditor ? mEditor->IsPasswordEditor() : PR_FALSE;
   }
-  PRBool IsSingleLineEditor() const
+  bool IsSingleLineEditor() const
   {
     return mEditor ? mEditor->IsSingleLineEditor() : PR_FALSE;
   }
-  PRBool IsPlaintextEditor() const
+  bool IsPlaintextEditor() const
   {
     return mEditor ? mEditor->IsPlaintextEditor() : PR_FALSE;
   }
-  PRBool IsReadonly() const
+  bool IsReadonly() const
   {
     return mEditor ? mEditor->IsReadonly() : PR_FALSE;
   }
-  PRBool IsDisabled() const
+  bool IsDisabled() const
   {
     return mEditor ? mEditor->IsDisabled() : PR_FALSE;
   }
-  PRBool IsMailEditor() const
+  bool IsMailEditor() const
   {
     return mEditor ? mEditor->IsMailEditor() : PR_FALSE;
   }
-  PRBool DontEchoPassword() const
+  bool DontEchoPassword() const
   {
     return mEditor ? mEditor->DontEchoPassword() : PR_FALSE;
   }
@@ -276,9 +276,9 @@ protected:
   nsCOMPtr<nsIDOMNode> mCachedSelectionNode;    // cached selected node
   PRInt32              mCachedSelectionOffset;  // cached selected offset
   PRUint32             mActionNesting;
-  PRPackedBool         mLockRulesSniffing;
-  PRPackedBool         mDidExplicitlySetInterline;
-  PRPackedBool         mDeleteBidiImmediately; // in bidirectional text, delete
+  bool                 mLockRulesSniffing;
+  bool                 mDidExplicitlySetInterline;
+  bool                 mDeleteBidiImmediately; // in bidirectional text, delete
                                                // characters not visually 
                                                // adjacent to the caret without
                                                // moving the caret first.
@@ -324,8 +324,8 @@ class nsTextRulesInfo : public nsRulesInfo
   nsIEditor::EDirection collapsedAction;
   
   // kMakeList
-  PRBool bOrdered;
-  PRBool entireList;
+  bool bOrdered;
+  bool entireList;
   const nsAString *bulletType;
 
   // kAlign
@@ -366,14 +366,14 @@ class nsAutoLockListener
 {
   public:
   
-  nsAutoLockListener(PRPackedBool *enabled) : mEnabled(enabled)
+  nsAutoLockListener(bool *enabled) : mEnabled(enabled)
                  {if (mEnabled) { mOldState=*mEnabled; *mEnabled = PR_FALSE;}}
   ~nsAutoLockListener() 
                  {if (mEnabled) *mEnabled = mOldState;}
   
   protected:
-  PRPackedBool *mEnabled;
-  PRPackedBool mOldState;
+  bool *mEnabled;
+  bool mOldState;
 };
 
 #endif //nsTextEditRules_h__

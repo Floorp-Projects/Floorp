@@ -57,11 +57,11 @@ anp_canvas_newCanvas(const ANPBitmap* bitmap)
   PRUint32 stride;
   gfxASurface::gfxImageFormat  format;
 
-  if (bitmap->format == ANPBitmapFormats::kRGBA_8888_ANPBitmapFormat) {
+  if (bitmap->format == kRGBA_8888_ANPBitmapFormat) {
     stride = bitmap->width * 4;
     format = gfxImageSurface::ImageFormatARGB32;
   }
-  else if (bitmap->format == ANPBitmapFormats::kRGB_565_ANPBitmapFormat) {
+  else if (bitmap->format == kRGB_565_ANPBitmapFormat) {
     stride = bitmap->width * 2;
     format = gfxImageSurface::ImageFormatRGB16_565;
   }

@@ -93,7 +93,7 @@ public:
 
   void FreeGlobalPrinters();
 
-  PRBool       PrintersAreAllocated() { return mPrinters != nsnull; }
+  bool         PrintersAreAllocated() { return mPrinters != nsnull; }
   LPWSTR       GetItemFromList(PRInt32 aInx) { return mPrinters?mPrinters->ElementAt(aInx):nsnull; }
   nsresult     EnumeratePrinterList();
   void         GetDefaultPrinterName(nsString& aDefaultPrinterName);
@@ -120,7 +120,7 @@ typedef struct {
   short  mPaperSize; // native enum
   double mWidth;
   double mHeight;
-  PRBool mIsInches;
+  bool mIsInches;
 } NativePaperSizes;
 
 // There are around 40 default print sizes defined by Windows
@@ -212,7 +212,7 @@ static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
 
 //----------------------------------------------------------------
 static nsresult 
-EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, PRBool& aIsFound, PRBool& aIsFile)
+EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, bool& aIsFound, bool& aIsFile)
 {
   DWORD             dwSizeNeeded = 0;
   DWORD             dwNumItems   = 0;
@@ -250,9 +250,9 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, PRBool& aIsFo
 
 //----------------------------------------------------------------
 static void 
-CheckForPrintToFileWithName(LPWSTR aPrinterName, PRBool& aIsFile)
+CheckForPrintToFileWithName(LPWSTR aPrinterName, bool& aIsFile)
 {
-  PRBool isFound = PR_FALSE;
+  bool isFound = false;
   aIsFile = PR_FALSE;
   nsresult rv = EnumerateNativePrinters(PRINTER_ENUM_LOCAL, aPrinterName, isFound, aIsFile);
   if (isFound) return;
@@ -340,7 +340,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
   
   if (dialogResult == nsIFilePicker::returnReplace) {
     // be extra safe and only delete when the file is really a file
-    PRBool isFile;
+    bool isFile;
     rv = localFile->IsFile(&isFile);
     if (NS_SUCCEEDED(rv) && isFile) {
       rv = localFile->Remove(PR_FALSE /* recursive delete */);
@@ -369,7 +369,7 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPWSTR aPrinterName, PRUnichar* aUPri
 
   if (!aPrinterName && !aUPrinterName) return rv;
 
-  PRBool toFile;
+  bool toFile;
   CheckForPrintToFileWithName(aPrinterName?aPrinterName:aUPrinterName, toFile);
   // Since the driver wasn't a "Print To File" Driver, check to see
   // if the name of the file has been set to the special "FILE:"
@@ -396,7 +396,7 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPWSTR aPrinterName, PRUnichar* aUPri
 //----------------------------------------------------------------------------------
 NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget, 
                                            nsIPrintSettings* aPrintSettings,
-                                           PRBool aIsPrintPreview)
+                                           bool aIsPrintPreview)
 {
   mPrintSettings = aPrintSettings;
 
@@ -806,7 +806,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
     }
 
   } else if (doingPaperLength && doingPaperWidth) {
-    PRBool found = PR_FALSE;
+    bool found = false;
     for (PRInt32 i=0;i<kNumPaperSizes;i++) {
       if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
         aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);

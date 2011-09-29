@@ -149,7 +149,7 @@ nsWifiMonitor::DoScan()
       (*WlanCloseHandle)(wlan_handle, NULL);
 
 
-      PRBool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+      bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
       ReplaceArray(lastAccessPoints, accessPoints);
 
       nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);

@@ -72,7 +72,7 @@ public:
 
   // PLDHashEntryHdr methods
   KeyTypeRef GetKey() const { return mKey; }
-  PRBool KeyEquals(KeyTypePointer aKey) const;
+  bool KeyEquals(KeyTypePointer aKey) const;
   static KeyTypePointer KeyToPointer(KeyTypeRef aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey);
   enum { ALLOW_MEMMOVE = PR_FALSE };
@@ -128,7 +128,7 @@ public:
   // ---------------------------------------------------------
   // Flag for tracking whether we need to compose. Initialized to PR_FALSE, but
   // gets flipped to PR_TRUE if we detect that something has changed.
-  PRPackedBool mForceCompositing;
+  bool mForceCompositing;
 
   // Cached base value, so we can detect & force-recompose when it changes
   // from one sample to the next.  (nsSMILAnimationController copies this

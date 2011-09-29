@@ -271,14 +271,14 @@ nsScriptableUnicodeConverter::SetCharset(const char * aCharset)
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::GetIsInternal(PRBool *aIsInternal)
+nsScriptableUnicodeConverter::GetIsInternal(bool *aIsInternal)
 {
   *aIsInternal = mIsInternal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::SetIsInternal(const PRBool aIsInternal)
+nsScriptableUnicodeConverter::SetIsInternal(const bool aIsInternal)
 {
   mIsInternal = aIsInternal;
   return NS_OK;

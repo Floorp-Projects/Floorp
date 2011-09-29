@@ -9,6 +9,9 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
+var gBlockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
+
 var headerHTML = "<html><head>" +
                  "<script src='/tests/SimpleTest/EventUtils.js'></scr" + "ipt>" + 
                  "<script src='NavigationUtils.js'></scr" + "ipt>" +
@@ -71,6 +74,7 @@ xpcWaitForFinishedFrames(function() {
   window3.close();
 
   xpcCleanupWindows();
+  SpecialPowers.setBoolPref("dom.block_multiple_popups", gBlockMultiplePopups);
   SimpleTest.finish();
 }, 4);
 

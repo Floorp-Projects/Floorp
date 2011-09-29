@@ -62,9 +62,9 @@
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp
   
 static char *DecodeQ(const char *, PRUint32);
-static PRBool Is7bitNonAsciiString(const char *, PRUint32);
+static bool Is7bitNonAsciiString(const char *, PRUint32);
 static void CopyRawHeader(const char *, PRUint32, const char *, nsACString &);
-static nsresult DecodeRFC2047Str(const char *, const char *, PRBool, nsACString&);
+static nsresult DecodeRFC2047Str(const char *, const char *, bool, nsACString&);
 
 // XXX The chance of UTF-7 being used in the message header is really
 // low, but in theory it's possible. 
@@ -80,7 +80,7 @@ NS_IMETHODIMP
 nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal, 
                                     const char *aParamName,
                                     const nsACString& aFallbackCharset, 
-                                    PRBool aTryLocaleCharset, 
+                                    bool aTryLocaleCharset, 
                                     char **aLang, nsAString& aResult)
 {
     aResult.Truncate();
@@ -223,7 +223,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     const char *tokenEnd = 0;
     const char *valueStart = str;
     const char *valueEnd = 0;
-    PRBool seenEquals = PR_FALSE;
+    bool seenEquals = false;
 
     NS_ASSERTION(!nsCRT::IsAsciiSpace(*str), "should be after whitespace.");
 
@@ -240,7 +240,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     }
     while (nsCRT::IsAsciiSpace(*str)) ++str;
 
-    PRBool needUnquote = PR_FALSE;
+    bool needUnquote = false;
     
     if (*str != '"')
     {
@@ -297,7 +297,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
              *(tokenStart + paramLen) == '*')
     {
       const char *cp = tokenStart + paramLen + 1; // 1st char pass '*'
-      PRBool needUnescape = *(tokenEnd - 1) == '*';
+      bool needUnescape = *(tokenEnd - 1) == '*';
       // the 1st line of a multi-line parameter or a single line  that needs 
       // unescaping. ( title*0*=  or  title*= )
       // only allowed for token form, not for quoted-string
@@ -410,8 +410,8 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
 NS_IMETHODIMP
 nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal, 
                                            const char* aDefaultCharset, 
-                                           PRBool aOverrideCharset, 
-                                           PRBool aEatContinuations,
+                                           bool aOverrideCharset, 
+                                           bool aEatContinuations,
                                            nsACString& aResult)
 {
   aResult.Truncate();
@@ -451,7 +451,7 @@ NS_IMETHODIMP
 nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
                                        const char* aCharset,
                                        const char* aDefaultCharset,
-                                       PRBool aOverrideCharset, 
+                                       bool aOverrideCharset, 
                                        nsACString& aResult)
 {
   aResult.Truncate();
@@ -557,7 +557,7 @@ char *DecodeQ(const char *in, PRUint32 length)
 // or has  ESC which may be an  indication that  it's in one of many ISO 
 // 2022 7bit  encodings (e.g. ISO-2022-JP(-2)/CN : see RFC 1468, 1922, 1554).
 // static
-PRBool Is7bitNonAsciiString(const char *input, PRUint32 len)
+bool Is7bitNonAsciiString(const char *input, PRUint32 len)
 {
   PRInt32 c;
 
@@ -633,7 +633,7 @@ void CopyRawHeader(const char *aInput, PRUint32 aLen,
 
   // skip ASCIIness/UTF8ness test if aInput is supected to be a 7bit non-ascii
   // string and aDefaultCharset is a 7bit non-ascii charset.
-  PRBool skipCheck = (c == 0x1B || c == '~') && 
+  bool skipCheck = (c == 0x1B || c == '~') && 
                      IS_7BIT_NON_ASCII_CHARSET(aDefaultCharset);
 
   // If not UTF-8, treat as default charset
@@ -665,7 +665,7 @@ static const char especials[] = "()<>@,;:\\\"/[]?.=";
 // is also used to convert raw octets (without RFC 2047 encoding) to UTF-8.
 //static
 nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset, 
-                          PRBool aOverrideCharset, nsACString &aResult)
+                          bool aOverrideCharset, nsACString &aResult)
 {
   const char *p, *q, *r;
   char *decodedText;

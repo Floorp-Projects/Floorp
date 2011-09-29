@@ -94,7 +94,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
         case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
         case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
-        case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*)  ap);       break;
+        case nsXPTType::T_BOOL   : dp->val.b   = *((bool*)  ap);       break;
         case nsXPTType::T_CHAR   : dp->val.c   = *((char*)    ap);       break;
         case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;
         default:

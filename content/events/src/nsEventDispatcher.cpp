@@ -103,7 +103,7 @@ public:
     }
   }
 
-  PRBool IsValid()
+  bool IsValid()
   {
     NS_WARN_IF_FALSE(!!(mTarget), "Event target is not valid!");
     return !!(mTarget);
@@ -119,7 +119,7 @@ public:
     mNewTarget = aNewTarget;
   }
 
-  void SetForceContentDispatch(PRBool aForce)
+  void SetForceContentDispatch(bool aForce)
   {
     if (aForce) {
       mFlags |= NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH;
@@ -128,12 +128,12 @@ public:
     }
   }
 
-  PRBool ForceContentDispatch()
+  bool ForceContentDispatch()
   {
     return !!(mFlags & NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH);
   }
 
-  void SetWantsWillHandleEvent(PRBool aWants)
+  void SetWantsWillHandleEvent(bool aWants)
   {
     if (aWants) {
       mFlags |= NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT;
@@ -142,12 +142,12 @@ public:
     }
   }
 
-  PRBool WantsWillHandleEvent()
+  bool WantsWillHandleEvent()
   {
     return !!(mFlags & NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT);
   }
 
-  void SetMayHaveListenerManager(PRBool aMayHave)
+  void SetMayHaveListenerManager(bool aMayHave)
   {
     if (aMayHave) {
       mFlags |= NS_TARGET_CHAIN_MAY_HAVE_MANAGER;
@@ -156,7 +156,7 @@ public:
     }
   }
 
-  PRBool MayHaveListenerManager()
+  bool MayHaveListenerManager()
   {
     return !!(mFlags & NS_TARGET_CHAIN_MAY_HAVE_MANAGER);
   }
@@ -175,7 +175,7 @@ public:
   nsresult HandleEventTargetChain(nsEventChainPostVisitor& aVisitor,
                                   PRUint32 aFlags,
                                   nsDispatchingCallback* aCallback,
-                                  PRBool aMayHaveNewListenerManagers,
+                                  bool aMayHaveNewListenerManagers,
                                   nsCxPusher* aPusher);
 
   /**
@@ -189,7 +189,7 @@ public:
    * manager, this method calls nsEventListenerManager::HandleEvent().
    */
   nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
-                       PRBool aMayHaveNewListenerManagers,
+                       bool aMayHaveNewListenerManagers,
                        nsCxPusher* aPusher)
   {
     if (WantsWillHandleEvent()) {
@@ -293,7 +293,7 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 nsresult
 nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
                                                nsDispatchingCallback* aCallback,
-                                               PRBool aMayHaveNewListenerManagers,
+                                               bool aMayHaveNewListenerManagers,
                                                nsCxPusher* aPusher)
 {
   PRUint32 createdELMs = nsEventListenerManager::sCreatedCount;
@@ -489,7 +489,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
 
-  PRBool retargeted = PR_FALSE;
+  bool retargeted = false;
 
   if (aEvent->flags & NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(target);
@@ -562,7 +562,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 #endif
 
   nsresult rv = NS_OK;
-  PRBool externalDOMEvent = !!(aDOMEvent);
+  bool externalDOMEvent = !!(aDOMEvent);
 
   // If we have a PresContext, make sure it doesn't die before
   // event dispatching is finished.
@@ -605,7 +605,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->originalTarget);
-  PRBool isInAnon = (content && content->IsInAnonymousSubtree());
+  bool isInAnon = (content && content->IsInAnonymousSubtree());
 
   NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
 
@@ -716,7 +716,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
       nsEvent* innerEvent = privEvt->GetInternalNSEvent();
       NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
-      PRBool dontResetTrusted = PR_FALSE;
+      bool dontResetTrusted = false;
       if (innerEvent->flags & NS_EVENT_DISPATCHED) {
         innerEvent->target = nsnull;
         innerEvent->originalTarget = nsnull;

@@ -79,16 +79,16 @@ public:
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              PRBool aCompileEventHandlers);
+                              bool aCompileEventHandlers);
 
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
 
-  virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
+  virtual nsresult DoneAddingChildren(bool aHaveNotified);
 
   virtual nsXPCClassInfo* GetClassInfo();
 private:
-  void SendTitleChangeEvent(PRBool aBound);
+  void SendTitleChangeEvent(bool aBound);
 };
 
 
@@ -178,7 +178,7 @@ nsresult
 nsHTMLTitleElement::BindToTree(nsIDocument *aDocument,
                                nsIContent *aParent,
                                nsIContent *aBindingParent,
-                               PRBool aCompileEventHandlers)
+                               bool aCompileEventHandlers)
 {
   // Let this fall through.
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
@@ -192,7 +192,7 @@ nsHTMLTitleElement::BindToTree(nsIDocument *aDocument,
 }
 
 void
-nsHTMLTitleElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsHTMLTitleElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   SendTitleChangeEvent(PR_FALSE);
 
@@ -201,7 +201,7 @@ nsHTMLTitleElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsresult
-nsHTMLTitleElement::DoneAddingChildren(PRBool aHaveNotified)
+nsHTMLTitleElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (!aHaveNotified) {
     SendTitleChangeEvent(PR_FALSE);
@@ -210,7 +210,7 @@ nsHTMLTitleElement::DoneAddingChildren(PRBool aHaveNotified)
 }
 
 void
-nsHTMLTitleElement::SendTitleChangeEvent(PRBool aBound)
+nsHTMLTitleElement::SendTitleChangeEvent(bool aBound)
 {
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {

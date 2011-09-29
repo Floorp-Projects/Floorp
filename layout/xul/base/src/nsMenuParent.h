@@ -64,35 +64,35 @@ public:
   // new menu aMenuItem is opened. In this case, if aSelectFirstItem is true,
   // select the first item in it. For menupopups, the menu is not opened and
   // the aSelectFirstItem argument is not used.
-  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, PRBool aSelectFirstItem) = 0;
+  NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem) = 0;
 
   // returns true if the menupopup is open. For menubars, returns false.
-  virtual PRBool IsOpen() = 0;
+  virtual bool IsOpen() = 0;
   // returns true if the menubar is currently active. For menupopups, returns false.
-  virtual PRBool IsActive() = 0;
+  virtual bool IsActive() = 0;
   // returns true if this is a menubar. If false, it is a popup
-  virtual PRBool IsMenuBar() = 0;
+  virtual bool IsMenuBar() = 0;
   // returns true if this is a menu, which has a tag of menupopup or popup.
   // Otherwise, this returns false
-  virtual PRBool IsMenu() = 0;
+  virtual bool IsMenu() = 0;
   // returns true if this is a context menu
-  virtual PRBool IsContextMenu() = 0;
+  virtual bool IsContextMenu() = 0;
 
   // indicate that the menubar should become active or inactive
-  NS_IMETHOD SetActive(PRBool aActiveFlag) = 0;
+  NS_IMETHOD SetActive(bool aActiveFlag) = 0;
 
   // notify that the menu has been closed and any active state should be
   // cleared. This should return true if the menu should be deselected
   // by the caller.
-  virtual PRBool MenuClosed() = 0;
+  virtual bool MenuClosed() = 0;
 
   // Lock this menu and its parents until they're closed or unlocked.
   // A menu being "locked" means that all events inside it that would change the
   // selected menu item should be ignored.
   // This is used when closing the popup is delayed because of a blink or fade
   // animation.
-  virtual void LockMenuUntilClosed(PRBool aLock) = 0;
-  virtual PRBool IsMenuLocked() = 0;
+  virtual void LockMenuUntilClosed(bool aLock) = 0;
+  virtual bool IsMenuLocked() = 0;
 };
 
 #endif

@@ -104,7 +104,7 @@ class nsCyrillicDetector
     virtual void   DataEnd();
   protected:
     virtual void Report(const char* aCharset) = 0;
-    PRBool  mDone;
+    bool    mDone;
 
   private:
     PRUint8  mItems;
@@ -126,7 +126,7 @@ class nsCyrXPCOMDetector :
                       const char **aCharsets);
     virtual ~nsCyrXPCOMDetector();
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
-    NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool *oDontFeedMe);
+    NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, bool *oDontFeedMe);
     NS_IMETHOD Done();
   protected:
     virtual void Report(const char* aCharset);

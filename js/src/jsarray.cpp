@@ -133,7 +133,6 @@
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
@@ -1438,13 +1437,12 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
-    if (!obj->isArray()) {
-        ReportIncompatibleMethod(cx, vp, &ArrayClass);
-        return false;
-    }
+    if (!obj->isArray())
+        return HandleNonGenericMethodClassMismatch(cx, args, &ArrayClass);
 
     ArraySharpDetector detector(cx);
     if (!detector.init(obj))
@@ -1516,7 +1514,7 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    JS_SET_RVAL(cx, vp, StringValue(str));
+    args.rval().setString(str);
     return true;
 }
 #endif
@@ -2890,15 +2888,15 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
             return false;
         const Value &v = p[i];
         if (v.isObject()) {
-            aobj = &v.toObject();
-            if (aobj->isArray() || (aobj->isWrapper() && aobj->unwrap()->isArray())) {
+            JSObject &obj = v.toObject();
+            if (ObjectClassIs(obj, ESClass_Array, cx)) {
                 jsuint alength;
-                if (!js_GetLengthProperty(cx, aobj, &alength))
+                if (!js_GetLengthProperty(cx, &obj, &alength))
                     return false;
                 for (uint32 slot = 0; slot < alength; slot++) {
                     JSBool hole;
                     Value tmp;
-                    if (!JS_CHECK_OPERATION_LIMIT(cx) || !GetElement(cx, aobj, slot, &hole, &tmp))
+                    if (!JS_CHECK_OPERATION_LIMIT(cx) || !GetElement(cx, &obj, slot, &hole, &tmp))
                         return false;
 
                     /*
@@ -3338,11 +3336,11 @@ array_every(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_isArray(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
-    vp->setBoolean(argc > 0 &&
-                   vp[2].isObject() &&
-                   ((obj = &vp[2].toObject())->isArray() ||
-                    (obj->isWrapper() && obj->unwrap()->isArray())));
+    CallArgs args = CallArgsFromVp(argc, vp);
+    bool isArray = args.length() > 0 &&
+                   args[0].isObject() &&
+                   ObjectClassIs(args[0].toObject(), ESClass_Array, cx);
+    args.rval().setBoolean(isArray);
     return true;
 }
 

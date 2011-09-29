@@ -107,7 +107,7 @@ protected:
   float            mMinSize;
   float            mMaxSize;
 
-  PRBool UseMathMLChar();
+  bool UseMathMLChar();
 
   // overload the base method so that we can setup our nsMathMLChar
   virtual void ProcessTextData();
@@ -119,7 +119,7 @@ protected:
   ProcessOperatorData();
 
   // helper to double check thar our char should be rendered as a selected char
-  PRBool
+  bool
   IsFrameInSelection(nsIFrame* aFrame);
 };
 

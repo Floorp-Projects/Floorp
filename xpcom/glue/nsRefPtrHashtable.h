@@ -65,7 +65,7 @@ public:
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
    *   If the key doesn't exist, pData will be set to nsnull.
    */
-  PRBool Get(KeyType aKey, UserDataType* pData) const;
+  bool Get(KeyType aKey, UserDataType* pData) const;
 
   /**
    * Gets a weak reference to the hashtable entry.
@@ -73,7 +73,7 @@ public:
    *               to PR_FALSE otherwise.
    * @return The entry, or nsnull if not found. Do not release this pointer!
    */
-  RefPtr* GetWeak(KeyType aKey, PRBool* aFound = nsnull) const;
+  RefPtr* GetWeak(KeyType aKey, bool* aFound = nsnull) const;
 };
 
 /**
@@ -96,7 +96,7 @@ public:
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
    *   If the key doesn't exist, pData will be set to nsnull.
    */
-  PRBool Get(KeyType aKey, UserDataType* pData) const;
+  bool Get(KeyType aKey, UserDataType* pData) const;
 
   // GetWeak does not make sense on a multi-threaded hashtable, where another
   // thread may remove the entry (and hence release it) as soon as GetWeak
@@ -109,7 +109,7 @@ public:
 //
 
 template<class KeyClass, class RefPtr>
-PRBool
+bool
 nsRefPtrHashtable<KeyClass,RefPtr>::Get
   (KeyType aKey, UserDataType* pRefPtr) const
 {
@@ -138,7 +138,7 @@ nsRefPtrHashtable<KeyClass,RefPtr>::Get
 template<class KeyClass, class RefPtr>
 RefPtr*
 nsRefPtrHashtable<KeyClass,RefPtr>::GetWeak
-  (KeyType aKey, PRBool* aFound) const
+  (KeyType aKey, bool* aFound) const
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
@@ -161,7 +161,7 @@ nsRefPtrHashtable<KeyClass,RefPtr>::GetWeak
 //
 
 template<class KeyClass, class RefPtr>
-PRBool
+bool
 nsRefPtrHashtableMT<KeyClass,RefPtr>::Get
   (KeyType aKey, UserDataType* pRefPtr) const
 {

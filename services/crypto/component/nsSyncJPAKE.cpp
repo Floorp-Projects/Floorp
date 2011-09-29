@@ -50,7 +50,7 @@
 #include <base64.h>
 #include <nsString.h>
 
-static PRBool
+static bool
 hex_from_2char(const unsigned char *c2, unsigned char *byteval)
 {
   int i;
@@ -73,7 +73,7 @@ hex_from_2char(const unsigned char *c2, unsigned char *byteval)
   return PR_TRUE;
 }
 
-static PRBool
+static bool
 fromHex(const char * str, unsigned char * p, size_t sLen)
 {
   size_t i;
@@ -101,7 +101,7 @@ fromHexString(const nsACString & str, unsigned char * p, size_t pMaxLen)
   return NS_OK;
 }
 
-static PRBool
+static bool
 toHexString(const unsigned char * str, unsigned len, nsACString & out)
 {
   static const char digits[] = "0123456789ABCDEF";
@@ -246,7 +246,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
   /* PIN cannot be equal to zero when converted to a bignum. NSS 3.12.9 J-PAKE
      assumes that the caller has already done this check. Future versions of 
      NSS J-PAKE will do this check internally. See Bug 609068 Comment 4 */
-  PRBool foundNonZero = PR_FALSE;
+  bool foundNonZero = false;
   for (size_t i = 0; i < aPIN.Length(); ++i) {
     if (aPIN[i] != 0) {
       foundNonZero = PR_TRUE;
@@ -281,7 +281,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
   rp.A.pR    = rABuf;  rp.A  .ulRLen  = sizeof gxABuf;
 
   // Bug 629090: NSS 3.12.9 J-PAKE fails to check that gx^4 != 1, so check here.
-  PRBool gx4Good = PR_FALSE;
+  bool gx4Good = false;
   for (unsigned i = 0; i < rp.gx4.ulGXLen; ++i) {
     if (rp.gx4.pGX[i] > 1 || (rp.gx4.pGX[i] != 0 && i < rp.gx4.ulGXLen - 1)) {
       gx4Good = PR_TRUE;

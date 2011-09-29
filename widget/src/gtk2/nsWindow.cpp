@@ -115,9 +115,9 @@
 
 using namespace mozilla;
 
-static PRBool sAccessibilityChecked = PR_FALSE;
+static bool sAccessibilityChecked = false;
 /* static */
-PRBool nsWindow::sAccessibilityEnabled = PR_FALSE;
+bool nsWindow::sAccessibilityEnabled = false;
 static const char sSysPrefService [] = "@mozilla.org/system-preference-service;1";
 static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
 static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility";
@@ -179,10 +179,10 @@ using mozilla::layers::LayerManagerOGL;
 #define MAX_RECTS_IN_REGION 100
 
 /* utility functions */
-static PRBool     check_for_rollup(GdkWindow *aWindow,
+static bool       check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,
-                                   PRBool aIsWheel, PRBool aAlwaysRollup);
-static PRBool     is_mouse_in_window(GdkWindow* aWindow,
+                                   bool aIsWheel, bool aAlwaysRollup);
+static bool       is_mouse_in_window(GdkWindow* aWindow,
                                      gdouble aMouseX, gdouble aMouseY);
 static nsWindow  *get_window_for_gtk_widget(GtkWidget *widget);
 static nsWindow  *get_window_for_gdk_window(GdkWindow *window);
@@ -193,7 +193,7 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint x, gint y,
                                         gint *retx, gint *rety);
 
-static inline PRBool is_context_menu_key(const nsKeyEvent& inKeyEvent);
+static inline bool is_context_menu_key(const nsKeyEvent& inKeyEvent);
 static void   key_event_to_context_menu_event(nsMouseEvent &aEvent,
                                               GdkEventKey *aGdkEvent);
 
@@ -291,7 +291,7 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
 
 static GdkModifierType gdk_keyboard_get_modifiers();
 #ifdef MOZ_X11
-static PRBool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
+static bool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
                                             PRUint32* aCapsLockMask,
                                             PRUint32* aNumLockMask,
                                             PRUint32* aScrollLockMask);
@@ -311,7 +311,7 @@ UpdateLastInputEventTime()
 
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::sLastDragMotionWindow = NULL;
-PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
+bool nsWindow::sIsDraggingOutOf = false;
 
 // This is the time of the last button press event.  The drag service
 // uses it as the time to start drags.
@@ -324,15 +324,15 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 // The window from which the focus manager asks us to dispatch key events.
 static nsWindow         *gFocusWindow          = NULL;
-static PRBool            gBlockActivateEvent   = PR_FALSE;
-static PRBool            gGlobalsInitialized   = PR_FALSE;
-static PRBool            gRaiseWindows         = PR_TRUE;
+static bool              gBlockActivateEvent   = false;
+static bool              gGlobalsInitialized   = false;
+static bool              gRaiseWindows         = true;
 static nsWindow         *gPluginFocusWindow    = NULL;
 
 static nsIRollupListener*          gRollupListener;
 static nsIMenuRollup*              gMenuRollup;
 static nsWeakPtr                   gRollupWindow;
-static PRBool                      gConsumeRollupEvent;
+static bool                        gConsumeRollupEvent;
 
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
@@ -350,7 +350,7 @@ typedef struct _GdkDisplay GdkDisplay;
 static GdkCursor *gCursorCache[eCursorCount];
 
 // imported in nsWidgetFactory.cpp
-PRBool gDisableNativeTheme = PR_FALSE;
+bool gDisableNativeTheme = false;
 
 static GtkWidget *gInvisibleContainer = NULL;
 
@@ -383,7 +383,7 @@ protected:
         pixman_region32_fini(&region);
     }
     // Whether this needs to be released:
-    PRBool HaveResource() const { return data != nsnull; }
+    bool HaveResource() const { return data != nsnull; }
 
     pixman_region32& get() { return *this; }
 };
@@ -493,7 +493,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget,
                              nsISupportsWeakReference)
 
 void
-nsWindow::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
+nsWindow::CommonCreate(nsIWidget *aParent, bool aListenForResizes)
 {
     mParent = aParent;
     mListenForResizes = aListenForResizes;
@@ -636,7 +636,7 @@ nsWindow::OnDestroy(void)
     DispatchEvent(&event, status);
 }
 
-PRBool
+bool
 nsWindow::AreBoundsSane(void)
 {
     if (mBounds.width > 0 && mBounds.height > 0)
@@ -1012,7 +1012,7 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
     }
 
     nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
-    PRBool parentHasMappedToplevel =
+    bool parentHasMappedToplevel =
         newParent && newParent->mHasMappedToplevel;
     if (mHasMappedToplevel != parentHasMappedToplevel) {
         SetHasMappedToplevel(parentHasMappedToplevel);
@@ -1020,7 +1020,7 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
 }
 
 NS_IMETHODIMP
-nsWindow::SetModal(PRBool aModal)
+nsWindow::SetModal(bool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
     if (mIsDestroyed)
@@ -1033,14 +1033,14 @@ nsWindow::SetModal(PRBool aModal)
 
 // nsIWidget method, which means IsShown.
 NS_IMETHODIMP
-nsWindow::IsVisible(PRBool& aState)
+nsWindow::IsVisible(bool& aState)
 {
     aState = mIsShown;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
+nsWindow::ConstrainPosition(bool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
     if (mIsTopLevel && mShell) {
         PRInt32 screenWidth = gdk_screen_width();
@@ -1069,7 +1069,7 @@ nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 }
 
 NS_IMETHODIMP
-nsWindow::Show(PRBool aState)
+nsWindow::Show(bool aState)
 {
     if (aState == mIsShown)
         return NS_OK;
@@ -1125,7 +1125,7 @@ nsWindow::Show(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
     // For top-level windows, aWidth and aHeight should possibly be
     // interpreted as frame bounds, but NativeResize treats these as window
@@ -1200,7 +1200,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
 NS_IMETHODIMP
 nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                       PRBool aRepaint)
+                       bool aRepaint)
 {
     mBounds.x = aX;
     mBounds.y = aY;
@@ -1263,7 +1263,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 }
 
 NS_IMETHODIMP
-nsWindow::Enable(PRBool aState)
+nsWindow::Enable(bool aState)
 {
     mEnabled = aState;
 
@@ -1271,7 +1271,7 @@ nsWindow::Enable(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::IsEnabled(PRBool *aState)
+nsWindow::IsEnabled(bool *aState)
 {
     *aState = mEnabled;
 
@@ -1321,7 +1321,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                       nsIWidget                  *aWidget,
-                      PRBool                      aActivate)
+                      bool                        aActivate)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1465,7 +1465,7 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
 }
 
 NS_IMETHODIMP
-nsWindow::SetFocus(PRBool aRaise)
+nsWindow::SetFocus(bool aRaise)
 {
     // Make sure that our owning widget has focus.  If it doesn't try to
     // grab it.  Note that we don't set our focus flag in this case.
@@ -1680,7 +1680,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
-                     PRBool           aIsSynchronous)
+                     bool             aIsSynchronous)
 {
     if (!mGdkWindow)
         return NS_OK;
@@ -1836,13 +1836,13 @@ nsWindow::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP
-nsWindow::EnableDragDrop(PRBool aEnable)
+nsWindow::EnableDragDrop(bool aEnable)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::CaptureMouse(PRBool aCapture)
+nsWindow::CaptureMouse(bool aCapture)
 {
     LOG(("CaptureMouse %p\n", (void *)this));
 
@@ -1868,8 +1868,8 @@ nsWindow::CaptureMouse(PRBool aCapture)
 NS_IMETHODIMP
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
                               nsIMenuRollup     *aMenuRollup,
-                              PRBool             aDoCapture,
-                              PRBool             aConsumeRollupEvent)
+                              bool               aDoCapture,
+                              bool               aConsumeRollupEvent)
 {
     if (!mGdkWindow)
         return NS_OK;
@@ -1930,7 +1930,7 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     return NS_OK;
 }
 
-PRBool
+bool
 nsWindow::HasPendingInputEvent()
 {
     // This sucks, but gtk/gdk has no way to answer the question we want while
@@ -1938,7 +1938,7 @@ nsWindow::HasPendingInputEvent()
     // without blocking or removing.  To prevent event reordering, peek
     // anything except expose events.  Reordering expose and others should be
     // ok, hopefully.
-    PRBool haveEvent;
+    bool haveEvent;
 #ifdef MOZ_X11
     XEvent ev;
     Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
@@ -2128,7 +2128,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     event.region.And(event.region,
                      nsIntRect(0, 0, mBounds.width, mBounds.height));
 
-    PRBool translucent = eTransparencyTransparent == GetTransparencyMode();
+    bool translucent = eTransparencyTransparent == GetTransparencyMode();
     if (!translucent) {
         GList *children =
             gdk_window_peek_children(mGdkWindow);
@@ -2482,7 +2482,7 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 }
 
 // XXX Is this the right test for embedding cases?
-static PRBool
+static bool
 is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
 {
     gint x = gint(aEvent->x_root);
@@ -2598,7 +2598,7 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     // see if we can compress this event
     // XXXldb Why skip every other motion event when we have multiple,
     // but not more than that?
-    PRPackedBool synthEvent = PR_FALSE;
+    bool synthEvent = false;
 #ifdef MOZ_X11
     XEvent xevent;
 
@@ -2807,7 +2807,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     }
 
     // check to see if we should rollup
-    PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
+    bool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
                                        aEvent->y_root, PR_FALSE, PR_FALSE);
     if (gConsumeRollupEvent && rolledUp)
         return;
@@ -2963,7 +2963,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         // Rollup popups when a window is focused out unless a drag is occurring.
         // This check is because drags grab the keyboard and cause a focus out on
         // versions of GTK before 2.18.
-        PRBool shouldRollup = !dragSession;
+        bool shouldRollup = !dragSession;
         if (!shouldRollup) {
             // we also roll up when a drag is from a different application
             nsCOMPtr<nsIDOMNode> sourceNode;
@@ -2997,7 +2997,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     LOGFOCUS(("Done with container focus out [%p]\n", (void *)this));
 }
 
-PRBool
+bool
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
     nsEventStatus status;
@@ -3006,7 +3006,7 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
     return TRUE;
 }
 
-PRBool
+bool
 nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
 {
   nsEventStatus status;
@@ -3050,7 +3050,7 @@ GetKeyLevel(GdkEventKey *aEvent)
     return level;
 }
 
-static PRBool
+static bool
 IsBasicLatinLetterOrNumeral(PRUint32 aChar)
 {
     return (aChar >= 'a' && aChar <= 'z') ||
@@ -3058,15 +3058,15 @@ IsBasicLatinLetterOrNumeral(PRUint32 aChar)
            (aChar >= '0' && aChar <= '9');
 }
 
-static PRBool
+static bool
 IsCtrlAltTab(GdkEventKey *aEvent)
 {
     return aEvent->keyval == GDK_Tab &&
         aEvent->state & GDK_CONTROL_MASK && aEvent->state & GDK_MOD1_MASK;
 }
 
-PRBool
-nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, PRBool *aCancelled)
+bool
+nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
 {
     NS_PRECONDITION(aCancelled, "aCancelled must not be null");
 
@@ -3092,7 +3092,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     // if we are in the middle of composing text, XIM gets to see it
     // before mozilla does.
-    PRBool IMEWasEnabled = PR_FALSE;
+    bool IMEWasEnabled = false;
     if (mIMModule) {
         IMEWasEnabled = mIMModule->IsEnabled();
         if (mIMModule->OnKeyEvent(this, aEvent)) {
@@ -3115,7 +3115,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // release event, so, on such platform, the DOM events will be:
     // KEYDOWN -> KEYPRESS -> KEYUP -> KEYDOWN -> KEYPRESS -> KEYUP...
 
-    PRBool isKeyDownCancelled = PR_FALSE;
+    bool isKeyDownCancelled = false;
     if (DispatchKeyDownEvent(aEvent, &isKeyDownCancelled) &&
         NS_UNLIKELY(mIsDestroyed)) {
         return TRUE;
@@ -3206,7 +3206,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
             // unshifted charcode of current keyboard layout.
             altCharCodes.mUnshiftedCharCode =
                 GetCharCodeFor(aEvent, baseState, aEvent->group);
-            PRBool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
+            bool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
             // shifted charcode of current keyboard layout.
             altCharCodes.mShiftedCharCode =
                 GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
@@ -3331,7 +3331,7 @@ void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
-    PRBool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
+    bool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
                                         aEvent->y_root, PR_TRUE, PR_FALSE);
     if (gConsumeRollupEvent && rolledUp)
         return;
@@ -3434,7 +3434,7 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         // events are asynchronous.  The windows in the hierarchy now may not
         // be the same windows as when the toplevel was mapped, so they may
         // not get VisibilityNotify events.)
-        PRBool mapped =
+        bool mapped =
             !(aEvent->new_window_state &
               (GDK_WINDOW_STATE_ICONIFIED|GDK_WINDOW_STATE_WITHDRAWN));
         if (mHasMappedToplevel != mapped) {
@@ -3897,7 +3897,7 @@ nsWindow::Create(nsIWidget        *aParent,
                aAppShell, aToolkit, aInitData);
 
     // Do we need to listen for resizes?
-    PRBool listenForResizes = PR_FALSE;;
+    bool listenForResizes = false;;
     if (aNativeParent || (aInitData && aInitData->mListenForResizes))
         listenForResizes = PR_TRUE;
 
@@ -4009,7 +4009,7 @@ nsWindow::Create(nsIWidget        *aParent,
                   gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
                 }
                 else {
-                  PRBool decorate = mBorderStyle & eBorderStyle_title;
+                  bool decorate = mBorderStyle & eBorderStyle_title;
                   gtk_window_set_decorated(GTK_WINDOW(mShell), decorate);
                   if (decorate) {
                     gtk_window_set_deletable(GTK_WINDOW(mShell), mBorderStyle & eBorderStyle_close);
@@ -4417,7 +4417,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 }
 
 void
-nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
+nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
 {
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          aWidth, aHeight));
@@ -4448,7 +4448,7 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 void
 nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
                        PRInt32 aWidth, PRInt32 aHeight,
-                       PRBool  aRepaint)
+                       bool    aRepaint)
 {
     mNeedsResize = PR_FALSE;
     mNeedsMove = PR_FALSE;
@@ -4478,7 +4478,7 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
 }
 
 void
-nsWindow::NativeShow (PRBool  aAction)
+nsWindow::NativeShow (bool    aAction)
 {
     if (aAction) {
         // GTK wants us to set the window mask before we show the window
@@ -4527,12 +4527,12 @@ nsWindow::NativeShow (PRBool  aAction)
 }
 
 void
-nsWindow::SetHasMappedToplevel(PRBool aState)
+nsWindow::SetHasMappedToplevel(bool aState)
 {
     // Even when aState == mHasMappedToplevel (as when this method is called
     // from Show()), child windows need to have their state checked, so don't
     // return early.
-    PRBool oldState = mHasMappedToplevel;
+    bool oldState = mHasMappedToplevel;
     mHasMappedToplevel = aState;
 
     // mHasMappedToplevel is not updated for children of windows that are
@@ -4608,7 +4608,7 @@ nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
         topWindow->SetTransparencyMode(aMode);
         return;
     }
-    PRBool isTransparent = aMode == eTransparencyTransparent;
+    bool isTransparent = aMode == eTransparencyTransparent;
 
     if (mIsTransparent == isTransparent)
         return;
@@ -4725,7 +4725,7 @@ GetIntRects(pixman_region32& aRegion, nsTArray<nsIntRect>* aRects)
 
 void
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
-                              PRBool aIntersectWithExisting)
+                              bool aIntersectWithExisting)
 {
     const nsTArray<nsIntRect>* newRects = &aRects;
 
@@ -4831,7 +4831,7 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
     mTransparencyBitmapHeight = aNewHeight;
 }
 
-static PRBool
+static bool
 ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
         const nsIntRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
@@ -4841,11 +4841,11 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
         PRUint8* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
-            PRBool newBit = *alphas > 0;
+            bool newBit = *alphas > 0;
             alphas++;
 
             gchar maskByte = maskBytes[x >> 3];
-            PRBool maskBit = (maskByte & (1 << (x & 7))) != 0;
+            bool maskBit = (maskByte & (1 << (x & 7))) != 0;
 
             if (maskBit != newBit) {
                 return PR_TRUE;
@@ -4867,7 +4867,7 @@ void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
         PRUint8* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
-            PRBool newBit = *alphas > 0;
+            bool newBit = *alphas > 0;
             alphas++;
 
             gchar mask = 1 << (x & 7);
@@ -5063,7 +5063,7 @@ nsWindow::GetContainerWindow()
 }
 
 void
-nsWindow::SetUrgencyHint(GtkWidget *top_window, PRBool state)
+nsWindow::SetUrgencyHint(GtkWidget *top_window, bool state)
 {
     if (!top_window)
         return;
@@ -5269,7 +5269,7 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
 }
 
 NS_IMETHODIMP
-nsWindow::MakeFullScreen(PRBool aFullScreen)
+nsWindow::MakeFullScreen(bool aFullScreen)
 {
     LOG(("nsWindow::MakeFullScreen [%p] aFullScreen %d\n",
          (void *)this, aFullScreen));
@@ -5292,7 +5292,7 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 }
 
 NS_IMETHODIMP
-nsWindow::HideWindowChrome(PRBool aShouldHide)
+nsWindow::HideWindowChrome(bool aShouldHide)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
@@ -5311,7 +5311,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // Sawfish, metacity, and presumably other window managers get
     // confused if we change the window decorations while the window
     // is visible.
-    PRBool wasVisible = PR_FALSE;
+    bool wasVisible = false;
     GdkWindow *shellWindow = gtk_widget_get_window(mShell);
     if (gdk_window_is_visible(shellWindow)) {
         gdk_window_hide(shellWindow);
@@ -5344,18 +5344,18 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     return NS_OK;
 }
 
-static PRBool
+static bool
 check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
-                 PRBool aIsWheel, PRBool aAlwaysRollup)
+                 bool aIsWheel, bool aAlwaysRollup)
 {
-    PRBool retVal = PR_FALSE;
+    bool retVal = false;
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
 
     if (rollupWidget && gRollupListener) {
         GdkWindow *currentPopup =
             (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
         if (aAlwaysRollup || !is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
-            PRBool rollup = PR_TRUE;
+            bool rollup = true;
             if (aIsWheel) {
                 gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
                 retVal = PR_TRUE;
@@ -5406,7 +5406,7 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
 }
 
 /* static */
-PRBool
+bool
 nsWindow::DragInProgress(void)
 {
     // sLastDragMotionWindow means the drag arrow is over mozilla
@@ -5415,7 +5415,7 @@ nsWindow::DragInProgress(void)
     return (sLastDragMotionWindow || sIsDraggingOutOf);
 }
 
-static PRBool
+static bool
 is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
 {
     gint x = 0;
@@ -6310,9 +6310,9 @@ static nsresult
 initialize_prefs(void)
 {
     gRaiseWindows =
-        Preferences::GetBool("mozilla.widget.raise-on-setfocus", PR_TRUE);
+        Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
     gDisableNativeTheme =
-        Preferences::GetBool("mozilla.widget.disable-native-theme", PR_FALSE);
+        Preferences::GetBool("mozilla.widget.disable-native-theme", false);
 
     return NS_OK;
 }
@@ -6372,7 +6372,7 @@ get_inner_gdk_window (GdkWindow *aWindow,
     return aWindow;
 }
 
-static inline PRBool
+static inline bool
 is_context_menu_key(const nsKeyEvent& aKeyEvent)
 {
     return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
@@ -6424,7 +6424,7 @@ gdk_keyboard_get_modifiers()
 #ifdef MOZ_X11
 // Get the modifier masks for GDK_Caps_Lock, GDK_Num_Lock and GDK_Scroll_Lock.
 // Return PR_TRUE on success, PR_FALSE on error.
-static PRBool
+static bool
 gdk_keyboard_get_modmap_masks(Display*  aDisplay,
                               PRUint32* aCapsLockMask,
                               PRUint32* aNumLockMask,
@@ -6597,7 +6597,7 @@ nsWindow::CancelIMEComposition()
 }
 
 NS_IMETHODIMP
-nsWindow::OnIMEFocusChange(PRBool aFocus)
+nsWindow::OnIMEFocusChange(bool aFocus)
 {
     if (mIMModule) {
       mIMModule->OnFocusChangeInGecko(aFocus);
@@ -6607,7 +6607,7 @@ nsWindow::OnIMEFocusChange(PRBool aFocus)
 }
 
 NS_IMETHODIMP
-nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
+nsWindow::GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState)
 {
     NS_ENSURE_ARG_POINTER(aLEDState);
 
@@ -6615,7 +6615,7 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
 
     GdkModifierType modifiers = gdk_keyboard_get_modifiers();
     PRUint32 capsLockMask, numLockMask, scrollLockMask;
-    PRBool foundMasks = gdk_keyboard_get_modmap_masks(
+    bool foundMasks = gdk_keyboard_get_modmap_masks(
                           GDK_WINDOW_XDISPLAY(mGdkWindow),
                           &capsLockMask, &numLockMask, &scrollLockMask);
     if (!foundMasks)
@@ -6718,7 +6718,7 @@ nsWindow::GetThebesSurface(cairo_t *cr)
     Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
 
 #  ifdef MOZ_HAVE_SHMIMAGE
-    PRBool usingShm = PR_FALSE;
+    bool usingShm = false;
     if (nsShmImage::UseShm()) {
         // EnsureShmImage() is a dangerous interface, but we guarantee
         // that the thebes surface and the shmimage have the same
@@ -6762,7 +6762,7 @@ nsWindow::GetThebesSurface(cairo_t *cr)
 }
 
 // Code shared begin BeginMoveDrag and BeginResizeDrag
-PRBool
+bool
 nsWindow::GetDragInfo(nsMouseEvent* aMouseEvent,
                       GdkWindow** aWindow, gint* aButton,
                       gint* aRootX, gint* aRootY)

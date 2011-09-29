@@ -170,10 +170,10 @@ private:
   nsRefPtr<StartupCacheListener> mListener;
   nsCOMPtr<nsITimer> mTimer;
 
-  PRBool mStartupWriteInitiated;
+  bool mStartupWriteInitiated;
 
   static StartupCache *gStartupCache;
-  static PRBool gShutdownInitiated;
+  static bool gShutdownInitiated;
   PRThread *mWriteThread;
 #ifdef DEBUG
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
@@ -197,7 +197,7 @@ class StartupCacheDebugOutputStream
   NS_FORWARD_SAFE_NSIBINARYOUTPUTSTREAM(mBinaryStream)
   NS_FORWARD_SAFE_NSIOUTPUTSTREAM(mBinaryStream)
   
-  PRBool CheckReferences(nsISupports* aObject);
+  bool CheckReferences(nsISupports* aObject);
   
   nsCOMPtr<nsIObjectOutputStream> mBinaryStream;
   nsTHashtable<nsISupportsHashKey> *mObjectMap;

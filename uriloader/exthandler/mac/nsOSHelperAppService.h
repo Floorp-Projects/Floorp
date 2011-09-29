@@ -62,9 +62,9 @@ public:
   
   // method overrides --> used to hook the mime service into internet config....
   NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType, const nsACString& aFileExt, nsIMIMEInfo ** aMIMEInfo);
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool * aFound);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, bool * aFound);
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                          PRBool *found,
+                                          bool *found,
                                           nsIHandlerInfo **_retval);
 
   // GetFileTokenForPath must be implemented by each platform. 
@@ -74,7 +74,7 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
 
   nsresult OSProtocolHandlerExists(const char * aScheme,
-                                   PRBool * aHandlerExists);
+                                   bool * aHandlerExists);
 
 protected:
   virtual void FixFilePermissions(nsILocalFile* aFile);

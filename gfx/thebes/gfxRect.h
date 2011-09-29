@@ -105,7 +105,7 @@ struct THEBES_API gfxRect :
      *   |round(coord) - coord| <= |aEpsilon|
      * for x,y,width,height.
      */
-    PRBool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
+    bool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
     // Round the rectangle edges to integer coordinates, such that the rounded
     // rectangle has the same set of pixel centers as the original rectangle.

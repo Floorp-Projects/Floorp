@@ -219,8 +219,8 @@ nsDOMScriptObjectFactory::GetIDForScriptType(const nsAString &aLanguageName,
 }
 
 NS_IMETHODIMP
-nsDOMScriptObjectFactory::NewScriptGlobalObject(PRBool aIsChrome,
-                                                PRBool aIsModalContentWindow,
+nsDOMScriptObjectFactory::NewScriptGlobalObject(bool aIsChrome,
+                                                bool aIsModalContentWindow,
                                                 nsIScriptGlobalObject **aGlobal)
 {
   return NS_NewScriptGlobalObject(aIsChrome, aIsModalContentWindow, aGlobal);
@@ -333,7 +333,7 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
 					       const nsIID *aProtoChainInterface,
 					       const nsIID **aInterfaces,
 					       PRUint32 aScriptableFlags,
-					       PRBool aHasClassInterface,
+					       bool aHasClassInterface,
 					       const nsCID *aConstructorCID)
 {
   nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();

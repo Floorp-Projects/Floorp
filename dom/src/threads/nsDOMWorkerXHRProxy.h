@@ -92,7 +92,7 @@ public:
 
   nsresult Open(const nsACString& aMethod,
                 const nsACString& aUrl,
-                PRBool aAsync,
+                bool aAsync,
                 const nsAString& aUser,
                 const nsAString& aPassword);
 
@@ -108,7 +108,7 @@ protected:
   struct ProgressInfo {
     ProgressInfo() : computable(PR_FALSE), loaded(0), total(0) { }
 
-    PRBool computable;
+    bool computable;
     PRUint64 loaded;
     PRUint64 total;
   };
@@ -118,13 +118,13 @@ protected:
 
   nsresult Destroy();
 
-  void AddRemoveXHRListeners(PRBool aAdd);
+  void AddRemoveXHRListeners(bool aAdd);
   void FlipOwnership();
 
   nsresult UploadEventListenerAdded();
 
   nsresult HandleWorkerEvent(nsDOMWorkerXHREvent* aEvent,
-                             PRBool aUploadEvent);
+                             bool aUploadEvent);
 
   nsresult HandleEventRunnable(nsIRunnable* aRunnable);
 
@@ -141,20 +141,20 @@ protected:
   nsresult SetRequestHeader(const nsACString& aHeader,
                             const nsACString& aValue);
   nsresult OverrideMimeType(const nsACString& aMimetype);
-  nsresult GetMultipart(PRBool* aMultipart);
-  nsresult SetMultipart(PRBool aMultipart);
-  nsresult GetWithCredentials(PRBool* aWithCredentials);
-  nsresult SetWithCredentials(PRBool aWithCredentials);
+  nsresult GetMultipart(bool* aMultipart);
+  nsresult SetMultipart(bool aMultipart);
+  nsresult GetWithCredentials(bool* aWithCredentials);
+  nsresult SetWithCredentials(bool aWithCredentials);
 
   nsresult RunSyncEventLoop();
 
-  PRBool IsUploadEvent(nsIDOMEvent* aEvent);
+  bool IsUploadEvent(nsIDOMEvent* aEvent);
 
   nsresult DispatchPrematureAbortEvents(PRUint32 aType,
                                         nsIDOMEventTarget* aTarget,
                                         ProgressInfo* aProgressInfo);
 
-  nsresult MaybeDispatchPrematureAbortEvents(PRBool aFromOpenRequest);
+  nsresult MaybeDispatchPrematureAbortEvents(bool aFromOpenRequest);
 
   // May be weak or strong, check mOwnedByXHR.
   nsDOMWorkerXHR* mWorkerXHR;
@@ -186,12 +186,12 @@ protected:
   nsAutoPtr<ProgressInfo> mUploadProgressInfo;
 
   // Whether or not this object is owned by the real XHR object.
-  PRPackedBool mOwnedByXHR;
+  bool mOwnedByXHR;
 
-  PRPackedBool mWantUploadListeners;
-  PRPackedBool mCanceled;
+  bool mWantUploadListeners;
+  bool mCanceled;
 
-  PRPackedBool mSyncRequest;
+  bool mSyncRequest;
 
 };
 

@@ -114,7 +114,7 @@ class nsXPCOMDetector :
     nsXPCOMDetector(PRUint32 aLanguageFilter);
     virtual ~nsXPCOMDetector();
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
-    NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool *oDontFeedMe);
+    NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, bool *oDontFeedMe);
     NS_IMETHOD Done();
   protected:
     virtual void Report(const char* aCharset);

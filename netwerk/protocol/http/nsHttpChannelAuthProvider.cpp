@@ -108,7 +108,7 @@ nsHttpChannelAuthProvider::Init(nsIHttpAuthenticableChannel *channel)
 
 NS_IMETHODIMP
 nsHttpChannelAuthProvider::ProcessAuthentication(PRUint32 httpStatus,
-                                                 PRBool   SSLConnectFailed)
+                                                 bool     SSLConnectFailed)
 {
     LOG(("nsHttpChannelAuthProvider::ProcessAuthentication "
          "[this=%p channel=%p code=%u SSLConnectFailed=%d]\n",
@@ -312,7 +312,7 @@ SetIdent(nsHttpAuthIdentity &ident,
 
 // helper function for getting an auth prompt from an interface requestor
 static void
-GetAuthPrompt(nsIInterfaceRequestor *ifreq, PRBool proxyAuth,
+GetAuthPrompt(nsIInterfaceRequestor *ifreq, bool proxyAuth,
               nsIAuthPrompt2 **result)
 {
     if (!ifreq)
@@ -336,7 +336,7 @@ GetAuthPrompt(nsIInterfaceRequestor *ifreq, PRBool proxyAuth,
 // generate credentials for the given challenge, and update the auth cache.
 nsresult
 nsHttpChannelAuthProvider::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
-                                               PRBool                proxyAuth,
+                                               bool                  proxyAuth,
                                                const char           *scheme,
                                                const char           *host,
                                                PRInt32               port,
@@ -388,12 +388,12 @@ nsHttpChannelAuthProvider::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
 
     // find out if this authenticator allows reuse of credentials and/or
     // challenge.
-    PRBool saveCreds =
+    bool saveCreds =
         0 != (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
-    PRBool saveChallenge =
+    bool saveChallenge =
         0 != (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
 
-    PRBool saveIdentity =
+    bool saveIdentity =
         0 == (generateFlags & nsIHttpAuthenticator::USING_INTERNAL_IDENTITY);
 
     // this getter never fails
@@ -414,7 +414,7 @@ nsHttpChannelAuthProvider::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
 }
 
 nsresult
-nsHttpChannelAuthProvider::PrepareForAuthentication(PRBool proxyAuth)
+nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth)
 {
     LOG(("nsHttpChannelAuthProvider::PrepareForAuthentication "
          "[this=%p channel=%p]\n", this, mAuthChannel));
@@ -464,7 +464,7 @@ nsHttpChannelAuthProvider::PrepareForAuthentication(PRBool proxyAuth)
 
 nsresult
 nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
-                                          PRBool          proxyAuth,
+                                          bool            proxyAuth,
                                           nsAFlatCString &creds)
 {
     nsCOMPtr<nsIHttpAuthenticator> auth;
@@ -487,7 +487,7 @@ nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
     }
 
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
-    PRBool gotCreds = PR_FALSE;
+    bool gotCreds = false;
 
     // figure out which challenge we can handle and which authenticator to use.
     for (const char *eol = challenges - 1; eol; ) {
@@ -561,7 +561,7 @@ nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
 }
 
 nsresult
-nsHttpChannelAuthProvider::GetAuthorizationMembers(PRBool               proxyAuth,
+nsHttpChannelAuthProvider::GetAuthorizationMembers(bool                 proxyAuth,
                                                    nsCSubstring&        scheme,
                                                    const char*&         host,
                                                    PRInt32&             port,
@@ -601,7 +601,7 @@ nsHttpChannelAuthProvider::GetAuthorizationMembers(PRBool               proxyAut
 nsresult
 nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
                                                       const char *authType,
-                                                      PRBool      proxyAuth,
+                                                      bool        proxyAuth,
                                                       nsIHttpAuthenticator *auth,
                                                       nsAFlatCString     &creds)
 {
@@ -637,7 +637,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     PRInt32 port;
     nsHttpAuthIdentity *ident;
     nsCAutoString path, scheme;
-    PRBool identFromURI = PR_FALSE;
+    bool identFromURI = false;
     nsISupports **continuationState;
 
     rv = GetAuthorizationMembers(proxyAuth, scheme, host, port,
@@ -670,7 +670,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
         sessionStateGrip = entry->mMetaData;
 
     // for digest auth, maybe our cached nonce value simply timed out...
-    PRBool identityInvalid;
+    bool identityInvalid;
     nsISupports *sessionState = sessionStateGrip;
     rv = auth->ChallengeReceived(mAuthChannel,
                                  challenge,
@@ -845,7 +845,7 @@ nsHttpChannelAuthProvider::ParseRealm(const char *challenge,
     //
     const char *p = PL_strcasestr(challenge, "realm=");
     if (p) {
-        PRBool has_quote = PR_FALSE;
+        bool has_quote = false;
         p += 6;
         if (*p == '"') {
             has_quote = PR_TRUE;
@@ -890,7 +890,7 @@ nsHTTPAuthInformation::SetToHttpAuthIdentity(PRUint32 authFlags,
 
 nsresult
 nsHttpChannelAuthProvider::PromptForIdentity(PRUint32            level,
-                                             PRBool              proxyAuth,
+                                             bool                proxyAuth,
                                              const char         *realm,
                                              const char         *authType,
                                              PRUint32            authFlags,
@@ -961,7 +961,7 @@ nsHttpChannelAuthProvider::PromptForIdentity(PRUint32            level,
     }
     else {
         // Fall back to synchronous prompt
-        PRBool retval = PR_FALSE;
+        bool retval = false;
         rv = authPrompt->PromptAuth(channel, level, holder, &retval);
         if (NS_FAILED(rv))
             return rv;
@@ -1045,7 +1045,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthAvailable(nsISupports *aContext,
 }
 
 NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports *aContext,
-                                                         PRBool      userCancel)
+                                                         bool        userCancel)
 {
     LOG(("nsHttpChannelAuthProvider::OnAuthCancelled [this=%p channel=%p]",
         this, mAuthChannel));
@@ -1107,9 +1107,9 @@ nsHttpChannelAuthProvider::ContinueOnAuthAvailable(const nsCSubstring& creds)
     return NS_OK;
 }
 
-PRBool
+bool
 nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
-                                       PRBool          doYesNoPrompt)
+                                       bool            doYesNoPrompt)
 {
     // skip prompting the user if
     //   1) we've already prompted the user
@@ -1182,12 +1182,12 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
     // do not prompt again
     mSuppressDefensiveAuth = PR_TRUE;
 
-    PRBool confirmed;
+    bool confirmed;
     if (doYesNoPrompt) {
         PRInt32 choice;
         // The actual value is irrelevant but we shouldn't be handing out
         // malformed JSBools to XPConnect.
-        PRBool checkState = PR_FALSE;
+        bool checkState = false;
         rv = prompt->ConfirmEx(nsnull, msg,
                                nsIPrompt::BUTTON_POS_1_DEFAULT +
                                nsIPrompt::STD_YES_NO_BUTTONS,
@@ -1246,7 +1246,7 @@ nsHttpChannelAuthProvider::SetAuthorizationHeader(nsHttpAuthCache    *authCache,
             if (nsCRT::strcmp(ident.User(), entry->User()) == 0)
                 ident.Clear();
         }
-        PRBool identFromURI;
+        bool identFromURI;
         if (ident.IsEmpty()) {
             ident.Set(entry->Identity());
             identFromURI = PR_FALSE;
@@ -1266,7 +1266,7 @@ nsHttpChannelAuthProvider::SetAuthorizationHeader(nsHttpAuthCache    *authCache,
             nsCAutoString unused;
             rv = GetAuthenticator(challenge, unused, getter_AddRefs(auth));
             if (NS_SUCCEEDED(rv)) {
-                PRBool proxyAuth = (header == nsHttp::Proxy_Authorization);
+                bool proxyAuth = (header == nsHttp::Proxy_Authorization);
                 rv = GenCredsAndSetEntry(auth, proxyAuth, scheme, host, port,
                                          path, entry->Realm(), challenge, ident,
                                          entry->mMetaData, getter_Copies(temp));

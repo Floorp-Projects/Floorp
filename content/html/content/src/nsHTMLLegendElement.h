@@ -74,31 +74,31 @@ public:
   }
   NS_IMETHOD Focus();
 
-  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
-                                PRBool aIsTrustedEvent);
+  virtual void PerformAccesskey(bool aKeyCausesActivation,
+                                bool aIsTrustedEvent);
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
+                   const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+                           bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
+                             bool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 

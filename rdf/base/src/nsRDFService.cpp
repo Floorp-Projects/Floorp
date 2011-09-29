@@ -158,7 +158,7 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
         return nsCRT::HashCode(static_cast<const char *>(key));
     }
 
-    static PRBool
+    static bool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -196,7 +196,7 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
         return nsCRT::HashCode(static_cast<const PRUnichar *>(key));
     }
 
-    static PRBool
+    static bool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -234,7 +234,7 @@ struct IntHashEntry : public PLDHashEntryHdr {
         return PLDHashNumber(*static_cast<const PRInt32 *>(key));
     }
 
-    static PRBool
+    static bool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -280,7 +280,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
         return PLDHashNumber(l32 ^ h32);
     }
 
-    static PRBool
+    static bool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -340,7 +340,7 @@ public:
 NS_IMPL_ISUPPORTS2(BlobImpl, nsIRDFNode, nsIRDFBlob)
 
 NS_IMETHODIMP
-BlobImpl::EqualsNode(nsIRDFNode *aNode, PRBool *aEquals)
+BlobImpl::EqualsNode(nsIRDFNode *aNode, bool *aEquals)
 {
     nsCOMPtr<nsIRDFBlob> blob = do_QueryInterface(aNode);
     if (blob) {
@@ -397,7 +397,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
         return h;
     }
 
-    static PRBool
+    static bool
     MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                const void *key)
     {
@@ -515,7 +515,7 @@ LiteralImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-LiteralImpl::EqualsNode(nsIRDFNode* aNode, PRBool* aResult)
+LiteralImpl::EqualsNode(nsIRDFNode* aNode, bool* aResult)
 {
     nsresult rv;
     nsIRDFLiteral* literal;
@@ -573,7 +573,7 @@ public:
     NS_IMETHOD GetValue(PRTime *value);
 
 private:
-    nsresult EqualsDate(nsIRDFDate* date, PRBool* result);
+    nsresult EqualsDate(nsIRDFDate* date, bool* result);
     PRTime mValue;
 };
 
@@ -617,7 +617,7 @@ DateImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-DateImpl::EqualsNode(nsIRDFNode* node, PRBool* result)
+DateImpl::EqualsNode(nsIRDFNode* node, bool* result)
 {
     nsresult rv;
     nsIRDFDate* date;
@@ -645,7 +645,7 @@ DateImpl::GetValue(PRTime *value)
 
 
 nsresult
-DateImpl::EqualsDate(nsIRDFDate* date, PRBool* result)
+DateImpl::EqualsDate(nsIRDFDate* date, bool* result)
 {
     NS_ASSERTION(date && result, "null ptr");
     if (!date || !result)
@@ -679,7 +679,7 @@ public:
     NS_IMETHOD GetValue(PRInt32 *value);
 
 private:
-    nsresult EqualsInt(nsIRDFInt* value, PRBool* result);
+    nsresult EqualsInt(nsIRDFInt* value, bool* result);
     PRInt32 mValue;
 };
 
@@ -723,7 +723,7 @@ IntImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
-IntImpl::EqualsNode(nsIRDFNode* node, PRBool* result)
+IntImpl::EqualsNode(nsIRDFNode* node, bool* result)
 {
     nsresult rv;
     nsIRDFInt* intValue;
@@ -751,7 +751,7 @@ IntImpl::GetValue(PRInt32 *value)
 
 
 nsresult
-IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
+IntImpl::EqualsInt(nsIRDFInt* intValue, bool* result)
 {
     NS_ASSERTION(intValue && result, "null ptr");
     if (!intValue || !result)
@@ -907,12 +907,12 @@ kLegalSchemeChars[] = {
     0x00, 0x00, 0x00, 0x00
 };
 
-static inline PRBool
+static inline bool
 IsLegalSchemeCharacter(const char aChar)
 {
     PRUint8 mask = kLegalSchemeChars[aChar >> 3];
     PRUint8 bit = PR_BIT(aChar & 0x7);
-    return PRBool((mask & bit) != 0);
+    return bool((mask & bit) != 0);
 }
 
 
@@ -1181,7 +1181,7 @@ RDFServiceImpl::GetBlobLiteral(const PRUint8 *aBytes, PRInt32 aLength,
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, PRBool* _result)
+RDFServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, bool* _result)
 {
     NS_PRECONDITION(aResource != nsnull, "null ptr");
     if (! aResource)
@@ -1209,7 +1209,7 @@ RDFServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, PRBool* _result)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool aReplace)
+RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, bool aReplace)
 {
     NS_PRECONDITION(aResource != nsnull, "null ptr");
     if (! aResource)
@@ -1296,7 +1296,7 @@ RDFServiceImpl::UnregisterResource(nsIRDFResource* aResource)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool aReplace)
+RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
     if (! aDataSource)
@@ -1395,7 +1395,7 @@ RDFServiceImpl::GetDataSourceBlocking(const char* aURI, nsIRDFDataSource** aData
 }
 
 nsresult
-RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource** aDataSource)
+RDFServiceImpl::GetDataSource(const char* aURI, bool aBlock, nsIRDFDataSource** aDataSource)
 {
     NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)

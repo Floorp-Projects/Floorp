@@ -131,7 +131,7 @@ nsXULTabAccessible::NativeState()
   state &= ~states::SELECTED;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mContent));
   if (tab) {
-    PRBool selected = PR_FALSE;
+    bool selected = false;
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
       state |= states::SELECTED;
   }

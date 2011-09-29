@@ -372,6 +372,9 @@ IsConstructing(const Value *vp)
     return vp[1].isMagic();
 }
 
+inline bool
+IsConstructing(CallReceiver call);
+
 static JS_ALWAYS_INLINE bool
 IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
 {

@@ -86,7 +86,7 @@ public:
     void KeepChar() {
         KeepChars(1);
     }
-    void DoChars(PRUint32 aChars, PRBool aSkipped) {
+    void DoChars(PRUint32 aChars, bool aSkipped) {
         if (aSkipped != mRunSkipped && aChars > 0) {
             FlushRun();
         }
@@ -95,10 +95,10 @@ public:
         mRunCharCount += aChars;
     }
 
-    PRBool IsOK() { return !mInErrorState; }
+    bool IsOK() { return !mInErrorState; }
 
     PRUint32 GetCharCount() { return mCharCount + mRunCharCount; }
-    PRBool GetAllCharsKept() { return mBuffer.Length() == 0; }
+    bool GetAllCharsKept() { return mBuffer.Length() == 0; }
 
     friend class gfxSkipChars;
 
@@ -114,8 +114,8 @@ private:
     Buffer       mBuffer;
     PRUint32     mCharCount;
     PRUint32     mRunCharCount;
-    PRPackedBool mRunSkipped; // == mBuffer.Length()&1
-    PRPackedBool mInErrorState;
+    bool mRunSkipped; // == mBuffer.Length()&1
+    bool mInErrorState;
 };
 
 /**
@@ -254,7 +254,7 @@ public:
     /**
      * Return true if this iterator is properly initialized and usable.
      */  
-    PRBool IsInitialized() { return mSkipChars != nsnull; }
+    bool IsInitialized() { return mSkipChars != nsnull; }
 
     /**
      * Set the iterator to aOriginalStringOffset in the original string.
@@ -290,7 +290,7 @@ public:
      * at this character. When the current position is at the end of the original
      * string, we return PR_TRUE and *aRunLength is set to zero.
      */
-    PRBool IsOriginalCharSkipped(PRInt32* aRunLength = nsnull) const;
+    bool IsOriginalCharSkipped(PRInt32* aRunLength = nsnull) const;
     
     void AdvanceOriginal(PRInt32 aDelta) {
         SetOffsets(mOriginalStringOffset + aDelta, PR_TRUE);
@@ -321,7 +321,7 @@ public:
     }
 
 private:
-    void SetOffsets(PRUint32 aOffset, PRBool aInOriginalString);
+    void SetOffsets(PRUint32 aOffset, bool aInOriginalString);
   
     const gfxSkipChars* mSkipChars;
     PRInt32 mOriginalStringOffset;

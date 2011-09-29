@@ -18,12 +18,16 @@ function test() {
     finish();
   }
 
+  let closeTabItemManually = function (tabItem) {
+    EventUtils.synthesizeMouseAtCenter(tabItem.container, {button: 1}, cw);
+  }
+
   let prepareTest = function (testName) {
     let originalBounds = groupItem.getChild(0).getBounds();
 
     let tabItem = groupItem.getChild(1);
     let bounds = tabItem.getBounds();
-    tabItem.close();
+    closeTabItemManually(tabItem);
 
     ok(originalBounds.equals(groupItem.getChild(0).getBounds()), testName + ': tabs did not change their size');
     ok(bounds.equals(groupItem.getChild(1).getBounds()), testName + ': third tab is now on second tab\'s previous position');
@@ -180,7 +184,7 @@ function test() {
       let bounds = tabItem.getBounds();
 
       while (groupItem.getChildren().length > 2)
-        groupItem.getChild(1).close();
+        closeTabItemManually(groupItem.getChild(1));
 
       ok(originalBounds.equals(groupItem.getChild(0).getBounds()), 'testExpandedMode: tabs did not change their size');
 

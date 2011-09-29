@@ -71,7 +71,7 @@ public:
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:

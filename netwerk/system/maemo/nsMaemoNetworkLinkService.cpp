@@ -58,14 +58,14 @@ nsMaemoNetworkLinkService::~nsMaemoNetworkLinkService()
 }
 
 NS_IMETHODIMP
-nsMaemoNetworkLinkService::GetIsLinkUp(PRBool *aIsUp)
+nsMaemoNetworkLinkService::GetIsLinkUp(bool *aIsUp)
 {
   *aIsUp = nsMaemoNetworkManager::IsConnected();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMaemoNetworkLinkService::GetLinkStatusKnown(PRBool *aIsKnown)
+nsMaemoNetworkLinkService::GetLinkStatusKnown(bool *aIsKnown)
 {
   *aIsKnown = nsMaemoNetworkManager::GetLinkStatusKnown();
   return NS_OK;

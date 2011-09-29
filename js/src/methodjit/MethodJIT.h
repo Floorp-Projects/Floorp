@@ -225,7 +225,7 @@ namespace mjit {
 
 /*
  * For a C++ or scripted call made from JIT code, indicates properties of the
- * register and stack state after the call finishes, which RejoinInterpreter
+ * register and stack state after the call finishes, which js_InternalInterpret
  * must use to construct a coherent state for rejoining into the interpreter.
  */
 enum RejoinState {

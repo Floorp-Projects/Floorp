@@ -148,7 +148,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   nsresult rv;
   nsCOMPtr<nsIMutableArray> iargv;
 
-  PRBool handledScriptError = PR_FALSE;
+  bool handledScriptError = false;
   if (mEventName == nsGkAtoms::onerror) {
     nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
     NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
@@ -243,7 +243,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // If the handler returned false and its sense is not reversed,
       // or the handler returned true and its sense is reversed from
       // the usual (false means cancel), then prevent default.
-      PRBool brv;
+      bool brv;
       if (NS_SUCCEEDED(vrv->GetAsBool(&brv)) &&
           brv == (mEventName == nsGkAtoms::onerror ||
                   mEventName == nsGkAtoms::onmouseover)) {

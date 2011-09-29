@@ -56,7 +56,7 @@ public:
 
   // nsIClipboard
   NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, PRBool *_retval);
+                                    PRInt32 aWhichClipboard, bool *_retval);
 
 protected:
   NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
@@ -69,8 +69,8 @@ protected:
   };
 
   PRUint32 GetFormatID(const char *aMimeStr);
-  PRBool   GetClipboardData(const char *aFlavour);
-  PRBool   GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor);
+  bool     GetClipboardData(const char *aFlavour);
+  bool     GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor);
   void     SetClipboardData(const char *aFlavour);
   nsresult DoClipboardAction(ClipboardAction aAction);
 };

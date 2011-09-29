@@ -68,7 +68,7 @@ nsMenuBoxObject::~nsMenuBoxObject()
 NS_IMPL_ISUPPORTS_INHERITED1(nsMenuBoxObject, nsBoxObject, nsIMenuBoxObject)
 
 /* void openMenu (in boolean openFlag); */
-NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
+NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
@@ -109,7 +109,7 @@ NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 }
 
 /* boolean handleKeyPress (in nsIDOMKeyEvent keyEvent); */
-NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool* aHandledFlag)
+NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* aHandledFlag)
 {
   *aHandledFlag = PR_FALSE;
   NS_ENSURE_ARG(aKeyEvent);
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
   if (!domNSEvent)
     return NS_OK;
 
-  PRBool eventHandled = PR_FALSE;
+  bool eventHandled = false;
   domNSEvent->GetPreventDefault(&eventHandled);
   if (eventHandled)
     return NS_OK;
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
 }
 
 NS_IMETHODIMP
-nsMenuBoxObject::GetOpenedWithKey(PRBool* aOpenedWithKey)
+nsMenuBoxObject::GetOpenedWithKey(bool* aOpenedWithKey)
 {
   *aOpenedWithKey = PR_FALSE;
 

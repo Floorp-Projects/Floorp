@@ -66,9 +66,9 @@ using namespace mozilla;
 static nsresult GetDOMWindow(nsIXULWindow* inWindow,
                              nsCOMPtr< nsIDOMWindow>& outDOMWindow);
 
-static PRBool notifyOpenWindow(nsISupports *aElement, void* aData);
-static PRBool notifyCloseWindow(nsISupports *aElement, void* aData);
-static PRBool notifyWindowTitleChange(nsISupports *aElement, void* aData);
+static bool notifyOpenWindow(nsISupports *aElement, void* aData);
+static bool notifyCloseWindow(nsISupports *aElement, void* aData);
+static bool notifyWindowTitleChange(nsISupports *aElement, void* aData);
 
 // for notifyWindowTitleChange
 struct WindowTitleData {
@@ -256,7 +256,7 @@ nsWindowMediator::GetXULWindowEnumerator(const PRUnichar* inType, nsISimpleEnume
 
 NS_IMETHODIMP
 nsWindowMediator::GetZOrderDOMWindowEnumerator(
-            const PRUnichar *aWindowType, PRBool aFrontToBack,
+            const PRUnichar *aWindowType, bool aFrontToBack,
             nsISimpleEnumerator **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -275,7 +275,7 @@ nsWindowMediator::GetZOrderDOMWindowEnumerator(
 
 NS_IMETHODIMP
 nsWindowMediator::GetZOrderXULWindowEnumerator(
-            const PRUnichar *aWindowType, PRBool aFrontToBack,
+            const PRUnichar *aWindowType, bool aFrontToBack,
             nsISimpleEnumerator **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -338,7 +338,7 @@ nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
 {
   PRInt32       lastTimeStamp = -1;
   nsAutoString  typeString(inType);
-  PRBool        allWindows = !inType || typeString.IsEmpty();
+  bool          allWindows = !inType || typeString.IsEmpty();
 
   // Find the most window with the highest time stamp that matches
   // the requested type
@@ -402,7 +402,7 @@ nsWindowMediator::CalculateZPosition(
                 nsIWidget      *inBelow,
                 PRUint32       *outPosition,
                 nsIWidget     **outBelow,
-                PRBool         *outAltered)
+                bool           *outAltered)
 {
   NS_ENSURE_ARG_POINTER(outBelow);
   NS_ENSURE_STATE(mReady);
@@ -419,7 +419,7 @@ nsWindowMediator::CalculateZPosition(
 
   nsWindowInfo *info = mTopmostWindow;
   nsIXULWindow *belowWindow = nsnull;
-  PRBool        found = PR_FALSE;
+  bool          found = false;
   nsresult      result = NS_OK;
 
   *outPosition = inPosition;
@@ -614,7 +614,7 @@ nsWindowMediator::SetZLevel(nsIXULWindow *aWindow, PRUint32 aZLevel)
     return NS_ERROR_FAILURE;
 
   if (info->mZLevel != aZLevel) {
-    PRBool lowered = info->mZLevel > aZLevel;
+    bool lowered = info->mZLevel > aZLevel;
     info->mZLevel = aZLevel;
     if (lowered)
       SortZOrderFrontToBack();
@@ -643,7 +643,7 @@ nsWindowMediator::SortZOrderFrontToBack()
                *search, // searches for correct placement for scan window
                *prev,   // previous search element
                *lowest; // bottom-most window in list
-  PRBool       finished;
+  bool         finished;
 
   if (!mTopmostWindow) // early during program execution there's no z list yet
     return;            // there's also only one window, so this is not dangerous
@@ -701,7 +701,7 @@ nsWindowMediator::SortZOrderBackToFront()
   nsWindowInfo *scan,   // scans list looking for problems
                *search, // searches for correct placement for scan window
                *lowest; // bottom-most window in list
-  PRBool       finished;
+  bool         finished;
 
   if (!mTopmostWindow) // early during program execution there's no z list yet
     return;            // there's also only one window, so this is not dangerous
@@ -802,7 +802,7 @@ nsWindowMediator::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-PRBool
+bool
 notifyOpenWindow(nsISupports *aElement, void* aData)
 {
   nsIWindowMediatorListener* listener =
@@ -813,7 +813,7 @@ notifyOpenWindow(nsISupports *aElement, void* aData)
   return PR_TRUE;
 }
 
-PRBool
+bool
 notifyCloseWindow(nsISupports *aElement, void* aData)
 {
   nsIWindowMediatorListener* listener =
@@ -824,7 +824,7 @@ notifyCloseWindow(nsISupports *aElement, void* aData)
   return PR_TRUE;
 }
 
-PRBool 
+bool 
 notifyWindowTitleChange(nsISupports *aElement, void* aData)
 {
   nsIWindowMediatorListener* listener =

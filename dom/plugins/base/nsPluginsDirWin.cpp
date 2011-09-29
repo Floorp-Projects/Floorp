@@ -171,10 +171,10 @@ static void FreeStringArray(PRUint32 variants, char ** array)
   PR_Free(array);
 }
 
-static PRBool CanLoadPlugin(const PRUnichar* aBinaryPath)
+static bool CanLoadPlugin(const PRUnichar* aBinaryPath)
 {
 #if defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64)
-  PRBool canLoad = PR_FALSE;
+  bool canLoad = false;
 
   HANDLE file = CreateFileW(aBinaryPath, GENERIC_READ,
                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -215,7 +215,7 @@ static PRBool CanLoadPlugin(const PRUnichar* aBinaryPath)
 /* nsPluginsDir implementation */
 
 // The file name must be in the form "np*.dll"
-PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
+bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCAutoString path;
   if (NS_FAILED(file->GetNativePath(path)))
@@ -273,7 +273,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
   if (!plugin)
     return NS_ERROR_NULL_POINTER;
 
-  PRBool protectCurrentDirectory = PR_TRUE;
+  bool protectCurrentDirectory = true;
 
   nsAutoString pluginFolderPath;
   plugin->GetPath(pluginFolderPath);

@@ -64,7 +64,7 @@ public:
                                  nsTArray<PRInt32> *aNamespaceIDs,
                                  nsTArray<nsCString> *aContractIDs,
                                  nsCOMArray<nsISupports> *aState,
-                                 PRBool aIsCaseSensitive)
+                                 bool aIsCaseSensitive)
         : mEvaluator(aEvaluator),
           mResolver(aResolver),
           mNamespaceIDs(aNamespaceIDs),
@@ -86,7 +86,7 @@ public:
     nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  FunctionCall** aFunction);
-    PRBool caseInsensitiveNameTests();
+    bool caseInsensitiveNameTests();
     void SetErrorOffset(PRUint32 aOffset);
 
 private:
@@ -96,7 +96,7 @@ private:
     nsTArray<nsCString> *mContractIDs;
     nsCOMArray<nsISupports> *mState;
     nsresult mLastError;
-    PRBool mIsCaseSensitive;
+    bool mIsCaseSensitive;
 };
 
 DOMCI_DATA(XPathEvaluator, nsXPathEvaluator)
@@ -314,7 +314,7 @@ nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
     return rv;
 }
 
-PRBool nsXPathEvaluatorParseContext::caseInsensitiveNameTests()
+bool nsXPathEvaluatorParseContext::caseInsensitiveNameTests()
 {
     return !mIsCaseSensitive;
 }

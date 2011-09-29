@@ -140,7 +140,7 @@ typedef
 NS_STDCALL_FUNCPROTO(nsresult,
                      nsContainerTestFn,
                      nsIRDFContainerUtils, IsAlt,
-                     (nsIRDFDataSource*, nsIRDFResource*, PRBool*));
+                     (nsIRDFDataSource*, nsIRDFResource*, bool*));
 
 typedef
 NS_STDCALL_FUNCPROTO(nsresult,
@@ -162,7 +162,7 @@ public:
     // nsIContentSink
     NS_IMETHOD WillParse(void);
     NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-    NS_IMETHOD DidBuildModel(PRBool aTerminated);
+    NS_IMETHOD DidBuildModel(bool aTerminated);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
     NS_IMETHOD SetParser(nsIParser* aParser);  
@@ -210,7 +210,7 @@ protected:
     nsresult OpenMember(const PRUnichar* aName, const PRUnichar** aAttributes);
     nsresult OpenValue(const PRUnichar* aName, const PRUnichar** aAttributes);
     
-    nsresult GetIdAboutAttribute(const PRUnichar** aAttributes, nsIRDFResource** aResource, PRBool* aIsAnonymous = nsnull);
+    nsresult GetIdAboutAttribute(const PRUnichar** aAttributes, nsIRDFResource** aResource, bool* aIsAnonymous = nsnull);
     nsresult GetResourceAttribute(const PRUnichar** aAttributes, nsIRDFResource** aResource);
     nsresult AddProperties(const PRUnichar** aAttributes, nsIRDFResource* aSubject, PRInt32* aCount = nsnull);
     void SetParseMode(const PRUnichar **aAttributes);
@@ -575,7 +575,7 @@ NS_IMETHODIMP
 RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
                                 const PRUnichar* aSourceText,
                                 nsIScriptError *aError,
-                                PRBool *_retval)
+                                bool *_retval)
 {
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
@@ -606,7 +606,7 @@ RDFContentSinkImpl::WillBuildModel(nsDTDMode)
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::DidBuildModel(PRBool aTerminated)
+RDFContentSinkImpl::DidBuildModel(bool aTerminated)
 {
     if (mDataSource) {
         nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
@@ -682,7 +682,7 @@ RDFContentSinkImpl::GetDataSource(nsIRDFDataSource*& aDataSource)
 ////////////////////////////////////////////////////////////////////////
 // Text buffering
 
-static PRBool
+static bool
 rdf_IsDataInBuffer(PRUnichar* buffer, PRInt32 length)
 {
     for (PRInt32 i = 0; i < length; ++i) {
@@ -822,7 +822,7 @@ RDFContentSinkImpl::AddText(const PRUnichar* aText, PRInt32 aLength)
     return NS_OK;
 }
 
-PRBool
+bool
 rdf_RequiresAbsoluteURI(const nsString& uri)
 {
     // cheap shot at figuring out if this requires an absolute url translation
@@ -833,7 +833,7 @@ rdf_RequiresAbsoluteURI(const nsString& uri)
 nsresult
 RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
                                         nsIRDFResource** aResource,
-                                        PRBool* aIsAnonymous)
+                                        bool* aIsAnonymous)
 {
     // This corresponds to the dirty work of production [6.5]
     nsresult rv = NS_OK;
@@ -1123,7 +1123,7 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
     // Now figure out what kind of state transition we need to
     // make. We'll either be going into a mode where we parse a
     // description or a container.
-    PRBool isaTypedNode = PR_TRUE;
+    bool isaTypedNode = true;
 
     if (nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {
         isaTypedNode = PR_FALSE;
@@ -1196,7 +1196,7 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
     nsCOMPtr<nsIRDFResource> target;
     GetResourceAttribute(aAttributes, getter_AddRefs(target));
 
-    PRBool isAnonymous = PR_FALSE;
+    bool isAnonymous = false;
 
     if (! target) {
         // See if an 'ID' attribute has been specified, in which case
@@ -1400,7 +1400,7 @@ RDFContentSinkImpl::InitContainer(nsIRDFResource* aContainerType, nsIRDFResource
         if (*info->mType != aContainerType)
             continue;
 
-        PRBool isContainer;
+        bool isContainer;
         rv = (gRDFContainerUtils->*(info->mTestFn))(mDataSource, aContainer, &isContainer);
         if (isContainer) {
             rv = ReinitContainer(aContainerType, aContainer);

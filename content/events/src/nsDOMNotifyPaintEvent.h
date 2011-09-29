@@ -61,8 +61,8 @@ public:
   // Forward to base class
   NS_FORWARD_TO_NSDOMEVENT
 
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
+  virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
+  virtual bool Deserialize(const IPC::Message* aMsg, void** aIter);
 private:
   nsRegion GetRegion();
 

@@ -12,7 +12,7 @@ static nsIIOService *gIOService = nsnull;
 
 //-----------------------------------------------------------------------------
 
-static PRBool
+static bool
 load_sync_1(nsISupports *element, void *data)
 {
     nsCOMPtr<nsIInputStream> stream;
@@ -109,7 +109,7 @@ MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
     return NS_OK;
 }
 
-static PRBool
+static bool
 load_async_1(nsISupports *element, void *data)
 {
     nsCOMPtr<nsIURI> uri( do_QueryInterface(element) );
@@ -189,7 +189,7 @@ main(int argc, char **argv)
         return -1;
 
     nsresult rv;
-    PRBool sync;
+    bool sync;
 
     if (argc < 3) {
         print_usage();

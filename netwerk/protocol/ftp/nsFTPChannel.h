@@ -89,7 +89,7 @@ public:
     }
 
     // Were we asked to resume a download?
-    PRBool ResumeRequested() { return mResumeRequested; }
+    bool ResumeRequested() { return mResumeRequested; }
 
     // Download from this byte offset
     PRUint64 StartPos() { return mStartPos; }
@@ -122,9 +122,9 @@ public:
 
 protected:
     virtual ~nsFtpChannel() {}
-    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result,
+    virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
                                        nsIChannel** channel);
-    virtual PRBool GetStatusArg(nsresult status, nsString &statusArg);
+    virtual bool GetStatusArg(nsresult status, nsString &statusArg);
     virtual void OnCallbacksChanged();
 
 private:
@@ -133,7 +133,7 @@ private:
     nsCOMPtr<nsIInputStream>  mUploadStream;
     PRUint64                  mStartPos;
     nsCString                 mEntityID;
-    PRPackedBool              mResumeRequested;
+    bool                      mResumeRequested;
     PRTime                    mLastModifiedTime;
 };
 

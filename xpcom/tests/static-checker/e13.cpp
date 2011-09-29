@@ -1,4 +1,4 @@
-typedef int PRBool;
+typedef int bool;
 typedef int PRUint32;
 typedef int PRInt32;
 

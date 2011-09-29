@@ -66,8 +66,8 @@ public:
                                
   NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
                                 nsIDOMRange* aRange,
-                                PRBool *outNodeBefore,
-                                PRBool *outNodeAfter);
+                                bool *outNodeBefore,
+                                bool *outNodeAfter);
 };
 
 // -------------------------------------------------------------------------------
@@ -140,16 +140,22 @@ public:
  *
  *****************************************************************************/
   static nsresult CompareNodeToRange(nsINode* aNode, nsIDOMRange* aRange,
-                                     PRBool *outNodeBefore,
-                                     PRBool *outNodeAfter);
+                                     bool *outNodeBefore,
+                                     bool *outNodeAfter);
   static nsresult CompareNodeToRange(nsINode* aNode, nsIRange* aRange,
-                                     PRBool *outNodeBefore,
-                                     PRBool *outNodeAfter);
+                                     bool *outNodeBefore,
+                                     bool *outNodeAfter);
 
 protected:
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   nsINode* aEndN, PRInt32 aEndOffset,
-                  nsINode* aRoot);
+                  nsINode* aRoot
+#ifdef DEBUG
+                  // CharacterDataChanged use this to disable an assertion since
+                  // the new text node of a splitText hasn't been inserted yet.
+                  , bool aNotInsertedYet = false
+#endif
+                  );
 };
 
 // Make a new nsIDOMRange object

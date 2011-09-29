@@ -80,7 +80,7 @@ class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
 		protected:
 
 			void ClearWeakReferences();
-			PRBool HasWeakReferences() const {return mProxy != 0;}
+			bool HasWeakReferences() const {return mProxy != 0;}
   };
 
 #undef  IMETHOD_VISIBILITY

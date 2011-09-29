@@ -67,8 +67,8 @@ nsEventQueue::~nsEventQueue()
     FreePage(mHead);
 }
 
-PRBool
-nsEventQueue::GetEvent(PRBool mayWait, nsIRunnable **result)
+bool
+nsEventQueue::GetEvent(bool mayWait, nsIRunnable **result)
 {
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -100,12 +100,12 @@ nsEventQueue::GetEvent(PRBool mayWait, nsIRunnable **result)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsEventQueue::PutEvent(nsIRunnable *runnable)
 {
   // Avoid calling AddRef+Release while holding our monitor.
   nsRefPtr<nsIRunnable> event(runnable);
-  PRBool rv = PR_TRUE;
+  bool rv = true;
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 

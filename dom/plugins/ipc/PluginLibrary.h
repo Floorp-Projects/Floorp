@@ -104,7 +104,7 @@ public:
   virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize) = 0;
   virtual bool UseAsyncPainting() = 0;
 #if defined(XP_MACOSX)
-  virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing) = 0;
+  virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing) = 0;
 #endif
 
   /**

@@ -68,8 +68,8 @@ using namespace mozilla::dom;
 using namespace mozilla::net;
 
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
-PRBool sDisablePrefetchHTTPSPref;
-static PRBool sInitialized = PR_FALSE;
+bool sDisablePrefetchHTTPSPref;
+static bool sInitialized = false;
 static nsIDNSService *sDNSService = nsnull;
 static nsHTMLDNSPrefetch::nsDeferrals *sPrefetches = nsnull;
 static nsHTMLDNSPrefetch::nsListener *sDNSListener = nsnull;
@@ -101,7 +101,7 @@ nsHTMLDNSPrefetch::Initialize()
   
   // Default is false, so we need an explicit call to prime the cache.
   sDisablePrefetchHTTPSPref = 
-    Preferences::GetBool("network.dns.disablePrefetchFromHTTPS", PR_TRUE);
+    Preferences::GetBool("network.dns.disablePrefetchFromHTTPS", true);
   
   NS_IF_RELEASE(sDNSService);
   nsresult rv;
@@ -130,7 +130,7 @@ nsHTMLDNSPrefetch::Shutdown()
   return NS_OK;
 }
 
-PRBool
+bool
 nsHTMLDNSPrefetch::IsAllowed (nsIDocument *aDocument)
 {
   // There is no need to do prefetch on non UI scenarios such as XMLHttpRequest.

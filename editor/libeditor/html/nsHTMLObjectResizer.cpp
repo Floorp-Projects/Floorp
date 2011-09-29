@@ -537,8 +537,8 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   mActivatedHandle->SetAttribute(NS_LITERAL_STRING("_moz_activated"), NS_LITERAL_STRING("true"));
 
   // do we want to preserve ratio or not?
-  PRBool preserveRatio = nsHTMLEditUtils::IsImage(mResizedObject) &&
-    Preferences::GetBool("editor.resizing.preserve_ratio", PR_TRUE);
+  bool preserveRatio = nsHTMLEditUtils::IsImage(mResizedObject) &&
+    Preferences::GetBool("editor.resizing.preserve_ratio", true);
 
   // the way we change the position/size of the shadow depends on
   // the handle
@@ -604,7 +604,7 @@ NS_IMETHODIMP
 nsHTMLEditor::MouseDown(PRInt32 aClientX, PRInt32 aClientY,
                         nsIDOMElement *aTarget, nsIDOMEvent* aEvent)
 {
-  PRBool anonElement = PR_FALSE;
+  bool anonElement = false;
   if (aTarget && NS_SUCCEEDED(aTarget->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)))
     // we caught a click on an anonymous element
     if (anonElement) {
@@ -656,7 +656,7 @@ nsHTMLEditor::MouseUp(PRInt32 aClientX, PRInt32 aClientY,
 void
 nsHTMLEditor::SetResizeIncrements(PRInt32 aX, PRInt32 aY,
                                   PRInt32 aW, PRInt32 aH,
-                                  PRBool aPreserveRatio)
+                                  bool aPreserveRatio)
 {
   mXIncrementFactor = aX;
   mYIncrementFactor = aY;
@@ -748,7 +748,7 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
   res =  mResizingInfo->AppendChild(textInfo, getter_AddRefs(junk));
   NS_ENSURE_SUCCESS(res, res);
 
-  PRBool hasClass = PR_FALSE;
+  bool hasClass = false;
   if (NS_SUCCEEDED(mResizingInfo->HasAttribute(NS_LITERAL_STRING("class"), &hasClass )) && hasClass)
     res = mResizingInfo->RemoveAttribute(NS_LITERAL_STRING("class"));
 
@@ -940,15 +940,15 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
   PRInt32 top    = GetNewResizingY(aX, aY);
   PRInt32 width  = GetNewResizingWidth(aX, aY);
   PRInt32 height = GetNewResizingHeight(aX, aY);
-  PRBool setWidth  = !mResizedObjectIsAbsolutelyPositioned || (width != mResizedObjectWidth);
-  PRBool setHeight = !mResizedObjectIsAbsolutelyPositioned || (height != mResizedObjectHeight);
+  bool setWidth  = !mResizedObjectIsAbsolutelyPositioned || (width != mResizedObjectWidth);
+  bool setHeight = !mResizedObjectIsAbsolutelyPositioned || (height != mResizedObjectHeight);
   
   PRInt32 x, y;
   x = left - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderLeft+mResizedObjectMarginLeft : 0);
   y = top - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderTop+mResizedObjectMarginTop : 0);
 
   // we need to know if we're in a CSS-enabled editor or not
-  PRBool useCSS;
+  bool useCSS;
   GetIsCSSEnabled(&useCSS);
 
   // we want one transaction only from a user's point of view
@@ -957,7 +957,7 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
   NS_NAMED_LITERAL_STRING(widthStr,  "width");
   NS_NAMED_LITERAL_STRING(heightStr, "height");
   
-  PRBool hasAttr = PR_FALSE;
+  bool hasAttr = false;
   if (mResizedObjectIsAbsolutelyPositioned) {
     if (setHeight)
       mHTMLCSSUtils->SetCSSPropertyPixels(mResizedObject,
@@ -1057,14 +1057,14 @@ nsHTMLEditor::GetResizedObject(nsIDOMElement * *aResizedObject)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetObjectResizingEnabled(PRBool *aIsObjectResizingEnabled)
+nsHTMLEditor::GetObjectResizingEnabled(bool *aIsObjectResizingEnabled)
 {
   *aIsObjectResizingEnabled = mIsObjectResizingEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetObjectResizingEnabled(PRBool aObjectResizingEnabled)
+nsHTMLEditor::SetObjectResizingEnabled(bool aObjectResizingEnabled)
 {
   mIsObjectResizingEnabled = aObjectResizingEnabled;
   return NS_OK;

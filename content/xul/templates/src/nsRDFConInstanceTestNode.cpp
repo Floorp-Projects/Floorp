@@ -108,7 +108,7 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
 
 nsresult
 nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
-                                               PRBool* aCantHandleYet) const
+                                               bool* aCantHandleYet) const
 {
     nsresult rv;
 
@@ -150,7 +150,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
 
         nsCOMPtr<nsIRDFContainer> rdfcontainer;
 
-        PRBool isRDFContainer;
+        bool isRDFContainer;
         rv = rdfc->IsContainer(ds, valueres, &isRDFContainer);
         if (NS_FAILED(rv)) return rv;
 
@@ -207,7 +207,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                     if (NS_FAILED(rv)) return rv;
 
                     while (1) {
-                        PRBool hasmore;
+                        bool hasmore;
                         rv = arcsout->HasMoreElements(&hasmore);
                         if (NS_FAILED(rv)) return rv;
 
@@ -260,7 +260,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
     return NS_OK;
 }
 
-PRBool
+bool
 nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
                                        nsIRDFResource* aProperty,
                                        nsIRDFNode* aTarget,
@@ -268,7 +268,7 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
 {
     nsresult rv;
 
-    PRBool canpropagate = PR_FALSE;
+    bool canpropagate = false;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc
         = do_GetService("@mozilla.org/rdf/container-utils;1");

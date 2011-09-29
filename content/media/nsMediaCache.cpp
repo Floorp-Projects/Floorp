@@ -268,7 +268,7 @@ protected:
                             nsMediaCacheStream* aForStream,
                             PRInt32 aForStreamBlock,
                             PRInt32 aMaxSearchBlockIndex);
-  PRBool BlockIsReusable(PRInt32 aBlockIndex);
+  bool BlockIsReusable(PRInt32 aBlockIndex);
   // Given a list of blocks sorted with the most reusable blocks at the
   // end, find the last block whose stream is not pinned (if any)
   // and whose cache entry index is less than aBlockIndexLimit
@@ -317,7 +317,7 @@ protected:
   // (returns null if the stream does not own the block)
   BlockOwner* GetBlockOwner(PRInt32 aBlockIndex, nsMediaCacheStream* aStream);
   // Returns true iff the block is free
-  PRBool IsBlockFree(PRInt32 aBlockIndex)
+  bool IsBlockFree(PRInt32 aBlockIndex)
   { return mIndex[aBlockIndex].mOwners.IsEmpty(); }
   // Add the block to the free list and mark its streams as not having
   // the block in cache
@@ -361,9 +361,9 @@ protected:
   // The list of free blocks; they are not ordered.
   BlockList       mFreeBlocks;
   // True if an event to run Update() has been queued but not processed
-  PRPackedBool    mUpdateQueued;
+  bool            mUpdateQueued;
 #ifdef DEBUG
-  PRPackedBool    mInUpdate;
+  bool            mInUpdate;
 #endif
 };
 
@@ -773,7 +773,7 @@ nsMediaCache::FindBlockForIncomingData(TimeStamp aNow,
   return blockIndex;
 }
 
-PRBool
+bool
 nsMediaCache::BlockIsReusable(PRInt32 aBlockIndex)
 {
   Block* block = &mIndex[aBlockIndex];
@@ -1246,7 +1246,7 @@ nsMediaCache::Update()
 
       // Figure out if we should be reading data now or not. It's amazing
       // how complex this is, but each decision is simple enough.
-      PRBool enableReading;
+      bool enableReading;
       if (stream->mStreamLength >= 0 && dataOffset >= stream->mStreamLength) {
         // We want data at the end of the stream, where there's nothing to
         // read. We don't want to try to read if we're suspended, because that
@@ -1741,7 +1741,7 @@ nsMediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
     return;
   }
 
-  PRBool equal;
+  bool equal;
   nsresult rv = mPrincipal->Equals(aPrincipal, &equal);
   if (NS_SUCCEEDED(rv) && equal)
     return;
@@ -1862,7 +1862,7 @@ nsMediaCacheStream::~nsMediaCacheStream()
 }
 
 void
-nsMediaCacheStream::SetSeekable(PRBool aIsSeekable)
+nsMediaCacheStream::SetSeekable(bool aIsSeekable)
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   NS_ASSERTION(mIsSeekable || aIsSeekable ||
@@ -1873,7 +1873,7 @@ nsMediaCacheStream::SetSeekable(PRBool aIsSeekable)
   gMediaCache->QueueUpdate();
 }
 
-PRBool
+bool
 nsMediaCacheStream::IsSeekable()
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
@@ -1948,7 +1948,7 @@ nsMediaCacheStream::GetCachedDataEnd(PRInt64 aOffset)
   return GetCachedDataEndInternal(aOffset);
 }
 
-PRBool
+bool
 nsMediaCacheStream::IsDataCachedToEndOfStream(PRInt64 aOffset)
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
@@ -2006,7 +2006,7 @@ nsMediaCacheStream::GetNextCachedDataInternal(PRInt64 aOffset)
     return aOffset;
 
   // Count the number of uncached blocks
-  PRBool hasPartialBlock = (mChannelOffset % BLOCK_SIZE) != 0;
+  bool hasPartialBlock = (mChannelOffset % BLOCK_SIZE) != 0;
   PRUint32 blockIndex = startBlockIndex + 1;
   while (PR_TRUE) {
     if ((hasPartialBlock && blockIndex == channelBlockIndex) ||

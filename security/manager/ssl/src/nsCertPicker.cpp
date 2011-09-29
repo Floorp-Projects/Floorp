@@ -66,14 +66,14 @@ nsCertPicker::~nsCertPicker()
 NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, 
                                         const PRUnichar *selectedNickname, 
                                         PRInt32 certUsage, 
-                                        PRBool allowInvalid, 
-                                        PRBool allowDuplicateNicknames, 
-                                        PRBool *canceled, 
+                                        bool allowInvalid, 
+                                        bool allowDuplicateNicknames, 
+                                        bool *canceled, 
                                         nsIX509Cert **_retval)
 {
   nsNSSShutDownPreventionLock locker;
   PRInt32 selectedIndex = -1;
-  PRBool selectionFound = PR_FALSE;
+  bool selectionFound = false;
   PRUnichar **certNicknameList = nsnull;
   PRUnichar **certDetailsList = nsnull;
   CERTCertListNode* node = nsnull;

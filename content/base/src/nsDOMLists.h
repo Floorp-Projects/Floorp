@@ -59,7 +59,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMSTRINGLIST
 
-  PRBool Add(const nsAString& aName)
+  bool Add(const nsAString& aName)
   {
     return mNames.AppendElement(aName) != nsnull;
   }
@@ -77,7 +77,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMNAMELIST
 
-  PRBool Add(const nsAString& aNamespaceURI, const nsAString& aName);
+  bool Add(const nsAString& aNamespaceURI, const nsAString& aName);
 
 private:
   nsTArray<nsString> mNamespaceURIs;

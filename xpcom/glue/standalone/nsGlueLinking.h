@@ -48,7 +48,7 @@ XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func NS_OUTPARAM);
 NS_HIDDEN_(void)
 XPCOMGlueUnload();
 
-typedef void (*DependentLibsCallback)(const char *aDependentLib, PRBool do_preload);
+typedef void (*DependentLibsCallback)(const char *aDependentLib, bool do_preload);
 
 NS_HIDDEN_(void)
 XPCOMGlueLoadDependentLibs(const char *xpcomDir, DependentLibsCallback cb);

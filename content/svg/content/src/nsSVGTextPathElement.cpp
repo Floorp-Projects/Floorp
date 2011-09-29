@@ -140,7 +140,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetSpacing(nsIDOMSVGAnimatedEnumeration * *a
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -158,7 +158,7 @@ nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
 //----------------------------------------------------------------------
 // nsSVGElement overrides
 
-PRBool
+bool
 nsSVGTextPathElement::IsEventName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);

@@ -105,7 +105,7 @@ XrayWrapperConstructor(JSContext *cx, uintN argc, jsval *vp)
   return JS_WrapValue(cx, vp);
 }
 // static
-PRBool
+bool
 AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject)
 {
   JSObject *xpcnativewrapper =

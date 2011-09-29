@@ -21,7 +21,7 @@ function test()
   }
   function clickTest(doc, win) {
     var clicks = doc.defaultView.clicks;
-    EventUtils.synthesizeMouse(doc.body, 100, 600, {}, win);
+    EventUtils.synthesizeMouseAtCenter(doc.body, {}, win);
     is(doc.defaultView.clicks, clicks+1, "adding 1 more click on BODY");
   }
   function test1() {

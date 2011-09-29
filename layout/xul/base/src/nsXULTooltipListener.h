@@ -75,7 +75,7 @@ protected:
   ~nsXULTooltipListener();
 
   // pref callback for when the "show tooltips" pref changes
-  static PRBool sShowTooltips;
+  static bool sShowTooltips;
   static PRUint32 sTooltipListenerCount;
 
   void KillTooltipTimer();
@@ -119,12 +119,12 @@ protected:
   // flag specifying if the tooltip has already been displayed by a MouseMove
   // event. The flag is reset on MouseOut so that the tooltip will display
   // the next time the mouse enters the node (bug #395668).
-  PRBool mTooltipShownOnce;
+  bool mTooltipShownOnce;
 
 #ifdef MOZ_XUL
   // special members for handling trees
-  PRBool mIsSourceTree;
-  PRBool mNeedTitletip;
+  bool mIsSourceTree;
+  bool mNeedTitletip;
   PRInt32 mLastTreeRow;
   nsCOMPtr<nsITreeColumn> mLastTreeCol;
 #endif

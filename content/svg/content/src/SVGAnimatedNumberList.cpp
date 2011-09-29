@@ -164,7 +164,7 @@ SVGAnimatedNumberList::
   SMILAnimatedNumberList::ValueFromString(const nsAString& aStr,
                                const nsISMILAnimationElement* /*aSrcElement*/,
                                nsSMILValue& aValue,
-                               PRBool& aPreventCachingOfSandwich) const
+                               bool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SVGNumberListSMILType::sSingleton);
   SVGNumberListAndInfo *nlai = static_cast<SVGNumberListAndInfo*>(val.mU.mPtr);

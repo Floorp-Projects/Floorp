@@ -386,7 +386,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   return NS_ERROR_FAILURE;
 }
 
-PRBool
+bool
 confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
 {
   nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
@@ -424,7 +424,7 @@ confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
     gtk_window_group_add_window(parent_window->group, GTK_WINDOW(dialog));
   }
 
-  PRBool result = (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
+  bool result = (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
 
   gtk_widget_destroy(dialog);
 
@@ -560,7 +560,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
       nsCOMPtr<nsILocalFile> file;
       GetFile(getter_AddRefs(file));
       if (file) {
-        PRBool exists = PR_FALSE;
+        bool exists = false;
         file->Exists(&exists);
         if (exists)
           *aReturn = nsIFilePicker::returnReplace;

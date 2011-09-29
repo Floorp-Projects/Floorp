@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
         }
         printf("\n");
 
-        PRBool isAce;
+        bool isAce;
         rv = converter->IsACE(NS_LITERAL_CSTRING("www.xn--ihqwcrb4cv8a8dqg056pqjye.com"), &isAce);
         NS_ASSERTION(NS_SUCCEEDED(rv), "error IsACE");
         NS_ASSERTION(isAce, "IsACE incorrect result");

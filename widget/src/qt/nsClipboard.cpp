@@ -425,7 +425,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
 
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, PRBool *_retval)
+                                    PRInt32 aWhichClipboard, bool *_retval)
 {
     *_retval = PR_FALSE;
     if (aWhichClipboard != kGlobalClipboard)
@@ -567,7 +567,7 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(PRBool *_retval)
+nsClipboard::SupportsSelectionClipboard(bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 

@@ -401,7 +401,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
     PRUnichar *unicodeTokenChosen;
     PK11SlotListElement *slotElement, *tmpSlot;
     PRUint32 numSlots = 0, i = 0;
-    PRBool canceled;
+    bool canceled;
     nsresult rv = NS_OK;
 
     *aSlot = nsnull;
@@ -565,7 +565,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
         if (strcmp(keyparamsString, "null") == 0)
             goto loser;
         str = keyparamsString;
-        PRBool found_match = PR_FALSE;
+        bool found_match = false;
         do {
             end = strchr(str, ',');
             if (end != nsnull)

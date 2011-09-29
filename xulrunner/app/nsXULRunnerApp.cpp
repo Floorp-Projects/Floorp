@@ -69,7 +69,7 @@
  * @param fmt
  *        printf-style format string followed by arguments.
  */
-static void Output(PRBool isError, const char *fmt, ... )
+static void Output(bool isError, const char *fmt, ... )
 {
   va_list ap;
   va_start(ap, fmt);
@@ -106,7 +106,7 @@ static void Output(PRBool isError, const char *fmt, ... )
 /**
  * Return true if |arg| matches the given argument name.
  */
-static PRBool IsArg(const char* arg, const char* s)
+static bool IsArg(const char* arg, const char* s)
 {
   if (*arg == '-')
   {

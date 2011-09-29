@@ -124,7 +124,7 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 #ifdef DEBUG_LAYOUT
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, bool aDebug);
 #endif
 
   // The following methods are all overridden so that the menupopup
@@ -158,18 +158,18 @@ public:
 
   virtual nsIAtom* GetType() const { return nsGkAtoms::menuFrame; }
 
-  NS_IMETHOD SelectMenu(PRBool aActivateFlag);
+  NS_IMETHOD SelectMenu(bool aActivateFlag);
 
   virtual nsIScrollableFrame* GetScrollTargetFrame();
 
   /**
    * NOTE: OpenMenu will open the menu asynchronously.
    */
-  void OpenMenu(PRBool aSelectFirstItem);
+  void OpenMenu(bool aSelectFirstItem);
   // CloseMenu closes the menu asynchronously
-  void CloseMenu(PRBool aDeselectMenu);
+  void CloseMenu(bool aDeselectMenu);
 
-  PRBool IsChecked() { return mChecked; }
+  bool IsChecked() { return mChecked; }
 
   NS_IMETHOD GetActiveChild(nsIDOMElement** aResult);
   NS_IMETHOD SetActiveChild(nsIDOMElement* aChild);
@@ -189,12 +189,12 @@ public:
 
   // nsMenuFrame methods 
 
-  PRBool IsOnMenuBar() { return mMenuParent && mMenuParent->IsMenuBar(); }
-  PRBool IsOnActiveMenuBar() { return IsOnMenuBar() && mMenuParent->IsActive(); }
-  virtual PRBool IsOpen();
-  virtual PRBool IsMenu();
+  bool IsOnMenuBar() { return mMenuParent && mMenuParent->IsMenuBar(); }
+  bool IsOnActiveMenuBar() { return IsOnMenuBar() && mMenuParent->IsActive(); }
+  virtual bool IsOpen();
+  virtual bool IsMenu();
   nsMenuListType GetParentMenuListType();
-  PRBool IsDisabled();
+  bool IsDisabled();
   void ToggleMenuState();
 
   // indiciate that the menu's popup has just been opened, so that the menu
@@ -205,12 +205,12 @@ public:
   // can update its open state. The menu should be unhighlighted if
   // aDeselectedMenu is true. This method modifies the open attribute on
   // the menu, so the frames could be gone after this call.
-  void PopupClosed(PRBool aDeselectMenu);
+  void PopupClosed(bool aDeselectMenu);
 
   // returns true if this is a menu on another menu popup. A menu is a submenu
   // if it has a parent popup or menupopup.
-  PRBool IsOnMenu() { return mMenuParent && mMenuParent->IsMenu(); }
-  void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; }
+  bool IsOnMenu() { return mMenuParent && mMenuParent->IsMenu(); }
+  void SetIsMenu(bool aIsMenu) { mIsMenu = aIsMenu; }
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -219,7 +219,7 @@ public:
   }
 #endif
 
-  static PRBool IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways);
+  static bool IsSizedToPopup(nsIContent* aContent, bool aRequireAlways);
 
 protected:
   friend class nsMenuTimerMediator;
@@ -243,7 +243,7 @@ protected:
   void UpdateMenuSpecialState(nsPresContext* aPresContext);
 
   // Examines the key node and builds the accelerator.
-  void BuildAcceleratorText(PRBool aNotify);
+  void BuildAcceleratorText(bool aNotify);
 
   // Called to execute our command handler. This method can destroy the frame.
   void Execute(nsGUIEvent *aEvent);
@@ -254,23 +254,23 @@ protected:
                               PRInt32 aModType);
   virtual ~nsMenuFrame() { };
 
-  PRBool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
+  bool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
 
-  PRBool ShouldBlink();
-  void StartBlinking(nsGUIEvent *aEvent, PRBool aFlipChecked);
+  bool ShouldBlink();
+  void StartBlinking(nsGUIEvent *aEvent, bool aFlipChecked);
   void StopBlinking();
-  void CreateMenuCommandEvent(nsGUIEvent *aEvent, PRBool aFlipChecked);
+  void CreateMenuCommandEvent(nsGUIEvent *aEvent, bool aFlipChecked);
   void PassMenuCommandEventToPopupManager();
 
 protected:
 #ifdef DEBUG_LAYOUT
-  nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
+  nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug);
 #endif
   NS_HIDDEN_(nsresult) Notify(nsITimer* aTimer);
 
-  PRPackedBool mIsMenu; // Whether or not we can even have children or not.
-  PRPackedBool mChecked;              // are we checked?
-  PRPackedBool mIgnoreAccelTextChange; // temporarily set while determining the accelerator key
+  bool mIsMenu; // Whether or not we can even have children or not.
+  bool mChecked;              // are we checked?
+  bool mIgnoreAccelTextChange; // temporarily set while determining the accelerator key
   nsMenuType mType;
 
   nsMenuParent* mMenuParent; // Our parent menu.

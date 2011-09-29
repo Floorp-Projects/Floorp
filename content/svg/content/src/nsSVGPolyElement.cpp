@@ -84,7 +84,7 @@ nsSVGPolyElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAnimatedPoints)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGPolyElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -98,7 +98,7 @@ nsSVGPolyElement::IsAttributeMapped(const nsIAtom* name) const
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
 
-PRBool
+bool
 nsSVGPolyElement::AttributeDefinesGeometry(const nsIAtom *aName)
 {
   if (aName == nsGkAtoms::points)

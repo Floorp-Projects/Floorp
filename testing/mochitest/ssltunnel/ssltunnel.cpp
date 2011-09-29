@@ -642,7 +642,7 @@ void HandleConnection(void* data)
       {ci->client_sock, PR_POLL_READ, 0},
       {other_sock, PR_POLL_READ, 0}
     };
-    PRBool socketErrorState[2] = {PR_FALSE, PR_FALSE};
+    bool socketErrorState[2] = {false, false};
 
     while (!((client_error||client_done) && buffers[0].empty() && buffers[1].empty()))
     {

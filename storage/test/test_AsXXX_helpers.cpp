@@ -62,7 +62,7 @@ test_NULLFallback()
   nsCOMPtr<mozIStorageValueArray> valueArray = do_QueryInterface(stmt);
   do_check_true(valueArray);
 
-  PRBool hasMore;
+  bool hasMore;
   do_check_true(NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore);
 
   do_check_eq(stmt->AsInt32(0), 0);

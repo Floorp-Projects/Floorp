@@ -117,7 +117,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @update	gess5/11/98
      * @return  count of attributes (may be 0)
      */
-    virtual PRInt32 GetAttributeCount(PRBool askToken=PR_FALSE) const =0;
+    virtual PRInt32 GetAttributeCount(bool askToken=false) const =0;
 
     /**
      * Retrieve the key (of key/value pair) at given index
@@ -160,8 +160,8 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * on each node stored in the context.
      * @update	gess 11May2000
      */
-    virtual PRBool  GetGenericState(void) const =0;
-    virtual void    SetGenericState(PRBool aState) =0;
+    virtual bool    GetGenericState(void) const =0;
+    virtual void    SetGenericState(bool aState) =0;
 
     /** Retrieve a string containing the tag and its attributes in "source" form
      * @update	rickg 06June2000

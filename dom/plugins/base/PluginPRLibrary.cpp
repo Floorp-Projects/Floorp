@@ -293,7 +293,7 @@ PluginPRLibrary::GetImage(NPP instance, ImageContainer* aContainer, Image** aIma
 
 #if defined(XP_MACOSX)
 nsresult
-PluginPRLibrary::IsRemoteDrawingCoreAnimation(NPP instance, PRBool *aDrawing)
+PluginPRLibrary::IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing)
 {
   nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
   NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);

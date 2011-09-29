@@ -56,7 +56,7 @@ public:
 
 private:
   PRTime mNotBefore, mNotAfter;
-  PRBool mTimesInitialized;
+  bool mTimesInitialized;
 };
 
 #endif

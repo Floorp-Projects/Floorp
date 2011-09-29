@@ -315,7 +315,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
 NS_INTERFACE_MAP_END
 
-nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
+nsFrameLoader::nsFrameLoader(nsIContent *aOwner, bool aNetworkCreated)
   : mOwnerContent(aOwner)
   , mDepthTooGreat(PR_FALSE)
   , mIsTopLevelContent(PR_FALSE)
@@ -336,7 +336,7 @@ nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
 }
 
 nsFrameLoader*
-nsFrameLoader::Create(nsIContent* aOwner, PRBool aNetworkCreated)
+nsFrameLoader::Create(nsIContent* aOwner, bool aNetworkCreated)
 {
   NS_ENSURE_TRUE(aOwner, nsnull);
   nsIDocument* doc = aOwner->GetOwnerDoc();
@@ -486,7 +486,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
   loadInfo->SetReferrer(referrer);
 
   // Kick off the load...
-  PRBool tmpState = mNeedsAsyncDestroy;
+  bool tmpState = mNeedsAsyncDestroy;
   mNeedsAsyncDestroy = PR_TRUE;
   rv = mDocShell->LoadURI(mURIToLoad, loadInfo,
                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
@@ -606,7 +606,7 @@ FirePageHideEvent(nsIDocShellTreeItem* aItem,
 static void
 FirePageShowEvent(nsIDocShellTreeItem* aItem,
                   nsIDOMEventTarget* aChromeEventHandler,
-                  PRBool aFireIfShowing)
+                  bool aFireIfShowing)
 {
   PRInt32 childCount = 0;
   aItem->GetChildCount(&childCount);
@@ -660,7 +660,7 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
  *
  * @return whether aItem is top-level content
  */
-static PRBool
+static bool
 AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
                        nsIDocShellTreeOwner* aOwner, PRInt32 aParentType,
                        nsIDocShellTreeNode* aParentNode)
@@ -669,7 +669,7 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
   NS_PRECONDITION(aOwningContent, "Must have owning content");
   
   nsAutoString value;
-  PRBool isContent = PR_FALSE;
+  bool isContent = false;
 
   if (aOwningContent->IsXUL()) {
       aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
@@ -700,14 +700,14 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
     aParentNode->AddChild(aItem);
   }
 
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   if (aParentType == nsIDocShellTreeItem::typeChrome && isContent) {
     retval = PR_TRUE;
 
-    PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
+    bool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
     if (aOwner) {
-      PRBool is_targetable = is_primary ||
+      bool is_targetable = is_primary ||
         value.LowerCaseEqualsLiteral("content-targetable");
       aOwner->ContentShellAdded(aItem, is_primary, is_targetable, value);
     }
@@ -716,7 +716,7 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
   return retval;
 }
 
-static PRBool
+static bool
 AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, PRInt32 aType)
 {
   PRInt32 childCount = 0;
@@ -754,7 +754,7 @@ class NS_STACK_CLASS AutoResetInShow {
 };
 
 
-PRBool
+bool
 nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
                     PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
                     nsSubDocumentFrame* frame)
@@ -847,7 +847,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
         // Re-initialize the presentation for contenteditable documents
         nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
         if (editorDocshell) {
-          PRBool editable = PR_FALSE,
+          bool editable = false,
                  hasEditingSession = PR_FALSE;
           editorDocshell->GetEditable(&editable);
           editorDocshell->GetHasEditingSession(&hasEditingSession);
@@ -971,7 +971,7 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   }
 
   // Make sure there are no same-origin issues
-  PRBool equal;
+  bool equal;
   nsresult rv =
     ourContent->NodePrincipal()->Equals(otherContent->NodePrincipal(), &equal);
   if (NS_FAILED(rv) || !equal) {
@@ -1272,7 +1272,7 @@ nsFrameLoader::Destroy()
   }
 
   nsCOMPtr<nsIDocument> doc;
-  PRBool dynamicSubframeRemoval = PR_FALSE;
+  bool dynamicSubframeRemoval = false;
   if (mOwnerContent) {
     doc = mOwnerContent->GetOwnerDoc();
 
@@ -1330,7 +1330,7 @@ nsFrameLoader::Destroy()
 }
 
 NS_IMETHODIMP
-nsFrameLoader::GetDepthTooGreat(PRBool* aDepthTooGreat)
+nsFrameLoader::GetDepthTooGreat(bool* aDepthTooGreat)
 {
   *aDepthTooGreat = mDepthTooGreat;
   return NS_OK;
@@ -1353,7 +1353,7 @@ nsFrameLoader::ShouldUseRemoteProcess()
   // Default is not-remote.
 
   if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
-      Preferences::GetBool("dom.ipc.tabs.disabled", PR_FALSE)) {
+      Preferences::GetBool("dom.ipc.tabs.disabled", false)) {
     return false;
   }
 
@@ -1585,7 +1585,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
       parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
       if (parentURI) {
         // Bug 98158/193011: We need to ignore data after the #
-        PRBool equal;
+        bool equal;
         rv = aURI->EqualsExceptRef(parentURI, &equal);
         NS_ENSURE_SUCCESS(rv, rv);
         
@@ -1844,7 +1844,7 @@ nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
                                           PRInt32 aButton,
                                           PRInt32 aClickCount,
                                           PRInt32 aModifiers,
-                                          PRBool aIgnoreRootScrollFrame)
+                                          bool aIgnoreRootScrollFrame)
 {
   if (mRemoteBrowser) {
     mRemoteBrowser->SendMouseEvent(aType, aX, aY, aButton,
@@ -1857,7 +1857,7 @@ nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
 
 NS_IMETHODIMP
 nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
-                                  PRBool aCapture)
+                                  bool aCapture)
 {
   if (mRemoteBrowser) {
     return mRemoteBrowser->SendActivateFrameEvent(nsString(aType), aCapture) ?
@@ -1871,7 +1871,7 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
                                         PRInt32 aKeyCode,
                                         PRInt32 aCharCode,
                                         PRInt32 aModifiers,
-                                        PRBool aPreventDefault)
+                                        bool aPreventDefault)
 {
   if (mRemoteBrowser) {
     mRemoteBrowser->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers,
@@ -1882,14 +1882,14 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsFrameLoader::GetDelayRemoteDialogs(PRBool* aRetVal)
+nsFrameLoader::GetDelayRemoteDialogs(bool* aRetVal)
 {
   *aRetVal = mDelayRemoteDialogs;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrameLoader::SetDelayRemoteDialogs(PRBool aDelay)
+nsFrameLoader::SetDelayRemoteDialogs(bool aDelay)
 {
   if (mRemoteBrowser && mDelayRemoteDialogs && !aDelay) {
     nsRefPtr<nsIRunnable> ev =

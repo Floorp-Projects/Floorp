@@ -218,7 +218,7 @@ LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
     const PRUnichar *name = aName->GetUTF16String();
     nsCAutoString methodName;
     PRUnichar letter;
-    PRBool upperNext = PR_FALSE;
+    bool upperNext = false;
     while ((letter = *name)) {
         if (letter == '-') {
             upperNext = PR_TRUE;
@@ -334,7 +334,7 @@ public:
     }
     ~txParamArrayHolder();
 
-    PRBool Init(PRUint8 aCount);
+    bool Init(PRUint8 aCount);
     operator nsXPTCVariant*() const
     {
       return mArray;
@@ -350,16 +350,21 @@ txParamArrayHolder::~txParamArrayHolder()
     PRUint8 i;
     for (i = 0; i < mCount; ++i) {
         nsXPTCVariant &variant = mArray[i];
-        if (variant.IsValInterface()) {
-            static_cast<nsISupports*>(variant.val.p)->Release();
-        }
-        else if (variant.IsValDOMString()) {
-            delete (nsAString*)variant.val.p;
+        if (variant.DoesValNeedCleanup()) {
+            if (variant.type.TagPart() == nsXPTType::T_DOMSTRING)
+                delete (nsAString*)variant.val.p;
+            else {
+                NS_ABORT_IF_FALSE(variant.type.TagPart() == nsXPTType::T_INTERFACE ||
+                                  variant.type.TagPart() == nsXPTType::T_INTERFACE_IS,
+                                  "We only support cleanup of strings and interfaces "
+                                  "here, and this looks like neither!");
+                static_cast<nsISupports*>(variant.val.p)->Release();
+            }
         }
     }
 }
 
-PRBool
+bool
 txParamArrayHolder::Init(PRUint8 aCount)
 {
     mCount = aCount;
@@ -419,7 +424,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
 
         nsXPTCVariant &invokeParam = invokeParams[0];
         invokeParam.type = paramInfo.GetType();
-        invokeParam.SetValIsInterface();
+        invokeParam.SetValNeedsCleanup();
         NS_ADDREF((txIFunctionEvaluationContext*&)invokeParam.val.p = context);
 
         // Skip first argument, since it's the context.
@@ -467,7 +472,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                 rv = adaptor->Init();
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                invokeParam.SetValIsInterface();
+                invokeParam.SetValNeedsCleanup();
                 nodeSet.swap((txINodeSet*&)invokeParam.val.p);
                 break;
             }
@@ -497,7 +502,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                 rv = expr->evaluateToString(aContext, *value);
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                invokeParam.SetValIsDOMString();
+                invokeParam.SetValNeedsCleanup();
                 invokeParam.val.p = value;
                 break;
             }
@@ -513,7 +518,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
                   return NS_ERROR_OUT_OF_MEMORY;
               }
 
-              invokeParam.SetValIsInterface();
+              invokeParam.SetValNeedsCleanup();
               adaptor.swap((txIXPathObject*&)invokeParam.val.p);
               break;
             }
@@ -540,15 +545,14 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
             return NS_ERROR_FAILURE;
         }
 
-        returnParam.SetValIsDOMString();
+        returnParam.SetValNeedsCleanup();
         returnParam.val.p = value;
     }
     else {
-        returnParam.SetPtrIsData();
+        returnParam.SetIndirect();
         if (returnType == eNODESET || returnType == eOBJECT) {
-            returnParam.SetValIsInterface();
+            returnParam.SetValNeedsCleanup();
         }
-        returnParam.ptr = &returnParam.val;
     }
 
     rv = NS_InvokeByIndex(mHelper, mMethodIndex, paramCount, invokeParams);
@@ -614,7 +618,7 @@ txXPCOMExtensionFunctionCall::getReturnType()
     return ANY_RESULT;
 }
 
-PRBool
+bool
 txXPCOMExtensionFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 {
     // It doesn't really matter what we return here, but it might

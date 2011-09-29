@@ -81,7 +81,7 @@ nsCRLManager::~nsCRLManager()
 }
 
 NS_IMETHODIMP 
-nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, PRBool doSilentDownload, const PRUnichar* crlKey)
+nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, bool doSilentDownload, const PRUnichar* crlKey)
 {
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
@@ -94,7 +94,7 @@ nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint
   CERTSignedCrl *crl;
   nsCAutoString url;
   nsCOMPtr<nsICRLInfo> crlData;
-  PRBool importSuccessful;
+  bool importSuccessful;
   PRInt32 errorCode;
   nsString errorMessage;
   
@@ -262,7 +262,7 @@ done:
       dayCnt = atof(dayCntStr);
       nsMemory::Free(dayCntStr);
 
-      PRBool toBeRescheduled = PR_FALSE;
+      bool toBeRescheduled = false;
       if(NS_SUCCEEDED(ComputeNextAutoUpdateTime(crlData, timingTypePref, dayCnt, &updateTime))){
         updateTimeStr.AssignWithConversion(updateTime);
         nsMemory::Free(updateTime);
@@ -311,7 +311,7 @@ done:
 }
 
 NS_IMETHODIMP 
-nsCRLManager::UpdateCRLFromURL( const PRUnichar *url, const PRUnichar* key, PRBool *res)
+nsCRLManager::UpdateCRLFromURL( const PRUnichar *url, const PRUnichar* key, bool *res)
 {
   nsresult rv;
   nsAutoString downloadUrl(url);

@@ -195,10 +195,10 @@ class StartRequestEvent : public ChannelEvent
  public:
   StartRequestEvent(HttpChannelChild* child,
                     const nsHttpResponseHead& responseHead,
-                    const PRBool& useResponseHead,
+                    const bool& useResponseHead,
                     const RequestHeaderTuples& requestHeaders,
-                    const PRBool& isFromCache,
-                    const PRBool& cacheEntryAvailable,
+                    const bool& isFromCache,
+                    const bool& cacheEntryAvailable,
                     const PRUint32& cacheExpirationTime,
                     const nsCString& cachedCharset,
                     const nsCString& securityInfoSerialization,
@@ -228,9 +228,9 @@ class StartRequestEvent : public ChannelEvent
   HttpChannelChild* mChild;
   nsHttpResponseHead mResponseHead;
   RequestHeaderTuples mRequestHeaders;
-  PRPackedBool mUseResponseHead;
-  PRPackedBool mIsFromCache;
-  PRPackedBool mCacheEntryAvailable;
+  bool mUseResponseHead;
+  bool mIsFromCache;
+  bool mCacheEntryAvailable;
   PRUint32 mCacheExpirationTime;
   nsCString mCachedCharset;
   nsCString mSecurityInfoSerialization;
@@ -240,10 +240,10 @@ class StartRequestEvent : public ChannelEvent
 
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
-                                     const PRBool& useResponseHead,
+                                     const bool& useResponseHead,
                                      const RequestHeaderTuples& requestHeaders,
-                                     const PRBool& isFromCache,
-                                     const PRBool& cacheEntryAvailable,
+                                     const bool& isFromCache,
+                                     const bool& cacheEntryAvailable,
                                      const PRUint32& cacheExpirationTime,
                                      const nsCString& cachedCharset,
                                      const nsCString& securityInfoSerialization,
@@ -267,10 +267,10 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
 
 void 
 HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
-                                 const PRBool& useResponseHead,
+                                 const bool& useResponseHead,
                                  const RequestHeaderTuples& requestHeaders,
-                                 const PRBool& isFromCache,
-                                 const PRBool& cacheEntryAvailable,
+                                 const bool& isFromCache,
+                                 const bool& cacheEntryAvailable,
                                  const PRUint32& cacheExpirationTime,
                                  const nsCString& cachedCharset,
                                  const nsCString& securityInfoSerialization,
@@ -757,7 +757,7 @@ HttpChannelChild::Redirect1Begin(const PRUint32& newChannelId,
   mResponseHead = new nsHttpResponseHead(responseHead);
   SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
-  PRBool preserveMethod = (mResponseHead->Status() == 307);
+  bool preserveMethod = (mResponseHead->Status() == 307);
   rv = SetupReplacementChannel(uri, newChannel, preserveMethod);
   if (NS_FAILED(rv)) {
     // Veto redirect.  nsHttpChannel decides to cancel or continue.
@@ -1089,7 +1089,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 NS_IMETHODIMP
 HttpChannelChild::SetRequestHeader(const nsACString& aHeader, 
                                    const nsACString& aValue, 
-                                   PRBool aMerge)
+                                   bool aMerge)
 {
   nsresult rv = HttpBaseChannel::SetRequestHeader(aHeader, aValue, aMerge);
   if (NS_FAILED(rv))
@@ -1183,7 +1183,7 @@ HttpChannelChild::SetCacheTokenCachedCharset(const nsACString &aCharset)
 }
 
 NS_IMETHODIMP
-HttpChannelChild::IsFromCache(PRBool *value)
+HttpChannelChild::IsFromCache(bool *value)
 {
   if (!mIsPending)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1258,34 +1258,34 @@ HttpChannelChild::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::GetLoadedFromApplicationCache(PRBool *aLoadedFromApplicationCache)
+HttpChannelChild::GetLoadedFromApplicationCache(bool *aLoadedFromApplicationCache)
 {
   *aLoadedFromApplicationCache = mLoadedFromApplicationCache;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetInheritApplicationCache(PRBool *aInherit)
+HttpChannelChild::GetInheritApplicationCache(bool *aInherit)
 {
   *aInherit = mInheritApplicationCache;
   return NS_OK;
 }
 NS_IMETHODIMP
-HttpChannelChild::SetInheritApplicationCache(PRBool aInherit)
+HttpChannelChild::SetInheritApplicationCache(bool aInherit)
 {
   mInheritApplicationCache = aInherit;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetChooseApplicationCache(PRBool *aChoose)
+HttpChannelChild::GetChooseApplicationCache(bool *aChoose)
 {
   *aChoose = mChooseApplicationCache;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::SetChooseApplicationCache(PRBool aChoose)
+HttpChannelChild::SetChooseApplicationCache(bool aChoose)
 {
   mChooseApplicationCache = aChoose;
   return NS_OK;

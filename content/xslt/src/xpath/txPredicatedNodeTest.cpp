@@ -49,7 +49,7 @@ txPredicatedNodeTest::txPredicatedNodeTest(txNodeTest* aNodeTest,
                  "predicate must not be context-nodeset-sensitive");
 }
 
-PRBool
+bool
 txPredicatedNodeTest::matches(const txXPathNode& aNode,
                               txIMatchContext* aContext)
 {
@@ -71,7 +71,7 @@ txPredicatedNodeTest::getDefaultPriority()
     return 0.5;
 }
 
-PRBool
+bool
 txPredicatedNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
     return mNodeTest->isSensitiveTo(aContext) ||

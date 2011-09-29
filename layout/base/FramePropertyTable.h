@@ -123,7 +123,7 @@ public:
    * 'property value is null'.
    */
   void* Get(const nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
-            PRBool* aFoundResult = nsnull);
+            bool* aFoundResult = nsnull);
   /**
    * Remove a property value for a frame. This requires one hashtable
    * lookup (using the frame as the key) and a linear search through
@@ -136,7 +136,7 @@ public:
    * 'property value is null'.
    */
   void* Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
-               PRBool* aFoundResult = nsnull);
+               bool* aFoundResult = nsnull);
   /**
    * Remove and destroy a property value for a frame. This requires one
    * hashtable lookup (using the frame as the key) and a linear search
@@ -164,7 +164,7 @@ protected:
     PropertyValue(const FramePropertyDescriptor* aProperty, void* aValue)
       : mProperty(aProperty), mValue(aValue) {}
 
-    PRBool IsArray() { return !mProperty && mValue; }
+    bool IsArray() { return !mProperty && mValue; }
     nsTArray<PropertyValue>* ToArray()
     {
       NS_ASSERTION(IsArray(), "Must be array");
@@ -189,13 +189,13 @@ protected:
    */
   class PropertyComparator {
   public:
-    PRBool Equals(const PropertyValue& a, const PropertyValue& b) const {
+    bool Equals(const PropertyValue& a, const PropertyValue& b) const {
       return a.mProperty == b.mProperty;
     }
-    PRBool Equals(const FramePropertyDescriptor* a, const PropertyValue& b) const {
+    bool Equals(const FramePropertyDescriptor* a, const PropertyValue& b) const {
       return a == b.mProperty;
     }
-    PRBool Equals(const PropertyValue& a, const FramePropertyDescriptor* b) const {
+    bool Equals(const PropertyValue& a, const FramePropertyDescriptor* b) const {
       return a.mProperty == b;
     }
   };
@@ -237,12 +237,12 @@ public:
     mTable->Set(mFrame, aProperty, aValue);
   }
   void* Get(const FramePropertyDescriptor* aProperty,
-            PRBool* aFoundResult = nsnull) const
+            bool* aFoundResult = nsnull) const
   {
     return mTable->Get(mFrame, aProperty, aFoundResult);
   }
   void* Remove(const FramePropertyDescriptor* aProperty,
-               PRBool* aFoundResult = nsnull) const
+               bool* aFoundResult = nsnull) const
   {
     return mTable->Remove(mFrame, aProperty, aFoundResult);
   }

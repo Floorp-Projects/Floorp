@@ -63,7 +63,7 @@ public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap,
                  already_AddRefed<nsINodeInfo> aNodeInfo,
                  const nsAString& aValue,
-                 PRBool aNsAware);
+                 bool aNsAware);
   virtual ~nsDOMAttribute();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -82,15 +82,15 @@ public:
   nsresult SetOwnerDocument(nsIDocument* aDocument);
 
   // nsINode interface
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(PRUint32 aFlags) const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+                                 bool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, bool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
@@ -109,7 +109,7 @@ protected:
     return GetContentInternal();
   }
 
-  static PRBool sInitialized;
+  static bool sInitialized;
 
 private:
   already_AddRefed<nsIAtom> GetNameAtom(nsIContent* aContent);

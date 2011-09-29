@@ -132,7 +132,7 @@ GetLoggingSink()
   // This returns a content sink that is useful for following what calls the DTD
   // makes to the content sink.
 
-  static PRBool checkForPath = PR_TRUE;
+  static bool checkForPath = true;
   static nsLoggingSink *theSink = nsnull;
   static const char* gLogPath = nsnull; 
 
@@ -221,8 +221,8 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 
 NS_IMETHODIMP
 CNavDTD::BuildModel(nsITokenizer* aTokenizer,
-                    PRBool aCanInterrupt,
-                    PRBool aCountLines,
+                    bool aCanInterrupt,
+                    bool aCountLines,
                     const nsCString*)
 {
   NS_PRECONDITION(mBodyContext != nsnull,
@@ -443,10 +443,10 @@ CNavDTD::GetMode() const
  * @param aTokenizer A tokenizer that we can get the tags attributes off of.
  * @return PR_TRUE if aToken does indeed force the body to open.
  */
-static PRBool
+static bool
 DoesRequireBody(CToken* aToken, nsITokenizer* aTokenizer)
 {
-  PRBool result = PR_FALSE;
+  bool result = false;
 
   if (aToken) {
     eHTMLTags theTag = (eHTMLTags)aToken->GetTypeID();
@@ -481,7 +481,7 @@ DoesRequireBody(CToken* aToken, nsITokenizer* aTokenizer)
   return result;
 }
 
-static PRBool
+static bool
 ValueIsHidden(const nsAString& aValue)
 {
   // Having to deal with whitespace here sucks, but we have to match
@@ -494,7 +494,7 @@ ValueIsHidden(const nsAString& aValue)
 // Check whether aToken corresponds to a <input type="hidden"> tag.  The token
 // must be a start tag token for an <input>.  This must be called at a point
 // when all the attributes for the input are still in the tokenizer.
-static PRBool
+static bool
 IsHiddenInput(CToken* aToken, nsITokenizer* aTokenizer)
 {
   NS_PRECONDITION(eHTMLTokenTypes(aToken->GetTokenType()) == eToken_start,
@@ -532,7 +532,7 @@ IsHiddenInput(CToken* aToken, nsITokenizer* aTokenizer)
 /**
  * Returns whether or not there is a tag of type aType open on aContext.
  */
-static PRBool
+static bool
 HasOpenTagOfType(PRInt32 aType, const nsDTDContext& aContext)
 {
   PRInt32 count = aContext.GetCount();
@@ -634,8 +634,8 @@ CNavDTD::HandleToken(CToken* aToken)
           // If the child belongs in the head, then handle it (which may open
           // the head); otherwise, push it onto the misplaced stack.
 
-          PRBool isExclusive = PR_FALSE;
-          PRBool theChildBelongsInHead =
+          bool isExclusive = false;
+          bool theChildBelongsInHead =
             gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag, isExclusive);
           if (theChildBelongsInHead &&
               !isExclusive &&
@@ -803,7 +803,7 @@ CNavDTD::LastOf(eHTMLTags aTagSet[], PRInt32 aCount) const
   return kNotFound;
 }
 
-static PRBool
+static bool
 CanBeContained(eHTMLTags aChildTag, nsDTDContext& aContext)
 {
   /* #    Interesting test cases:       Result:
@@ -812,7 +812,7 @@ CanBeContained(eHTMLTags aChildTag, nsDTDContext& aContext)
    * 3.   <TABLE><TR><TD><TABLE>...     allow nested <TABLE>
    * 4.   <FRAMESET> ... <FRAMESET>
    */
-  PRBool  result = PR_TRUE;
+  bool    result = true;
   PRInt32 theCount = aContext.GetCount();
 
   if (0 < theCount) {
@@ -875,12 +875,12 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
   NS_PRECONDITION(nsnull != aToken, kNullToken);
 
   nsresult  result = NS_OK;
-  PRBool  theChildIsContainer = nsHTMLElement::IsContainer(aChildTag);
+  bool    theChildIsContainer = nsHTMLElement::IsContainer(aChildTag);
 
   // Client of parser is spefically trying to parse a fragment that
   // may lack required context.  Suspend containment rules if so.
   if (mParserCommand != eViewFragment) {
-    PRBool  theChildAgrees = PR_TRUE;
+    bool    theChildAgrees = true;
     PRInt32 theIndex = mBodyContext->GetCount();
     PRInt32 theParentContains = 0;
 
@@ -897,7 +897,7 @@ CNavDTD::HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
         eHTMLTag_tr, eHTMLTag_tfoot
       };
 
-      PRBool isHiddenInputInsideTableElement = PR_FALSE;
+      bool isHiddenInputInsideTableElement = false;
       if (aChildTag == eHTMLTag_input &&
           FindTagInSet(theParentTag, sTableElements,
                        NS_ARRAY_LENGTH(sTableElements))) {
@@ -1114,7 +1114,7 @@ CNavDTD::HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
   // if it's potentially a child of another section. If it is, the cache it for
   // later.
   PRInt32 theTagCount = mBodyContext->GetCount();
-  PRBool pushToken = PR_FALSE;
+  bool pushToken = false;
 
   if (gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch) &&
       !nsHTMLElement::IsWhitespaceTag(aChildTag)) {
@@ -1246,7 +1246,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
   return result;
 }
 
-PRBool
+bool
 CNavDTD::IsAlternateTag(eHTMLTags aTag)
 {
   switch (aTag) {
@@ -1285,8 +1285,8 @@ CNavDTD::HandleStartToken(CToken* aToken)
   if (NS_OK == result) {
     result = WillHandleStartTag(aToken, theChildTag, *theNode);
     if (NS_OK == result) {
-      PRBool isTokenHandled = PR_FALSE;
-      PRBool theHeadIsParent = PR_FALSE;
+      bool isTokenHandled = false;
+      bool theHeadIsParent = false;
 
       if (nsHTMLElement::IsSectionTag(theChildTag)) {
         switch (theChildTag) {
@@ -1318,7 +1318,7 @@ CNavDTD::HandleStartToken(CToken* aToken)
         }
       }
 
-      PRBool isExclusive = PR_FALSE;
+      bool isExclusive = false;
       theHeadIsParent = nsHTMLElement::IsChildOfHead(theChildTag, isExclusive);
 
       switch (theChildTag) {
@@ -1355,7 +1355,7 @@ CNavDTD::HandleStartToken(CToken* aToken)
       }
 
       if (!isTokenHandled) {
-        PRBool prefersBody =
+        bool prefersBody =
           gHTMLElements[theChildTag].HasSpecialProperty(kPreferBody);
 
         // If this tag prefers to be in the head (when neither the head nor the
@@ -1403,9 +1403,9 @@ CNavDTD::HandleStartToken(CToken* aToken)
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-static PRBool
+static bool
 HasCloseablePeerAboveRoot(const TagList& aRootTagList, nsDTDContext& aContext,
-                          eHTMLTags aTag, PRBool anEndTag)
+                          eHTMLTags aTag, bool anEndTag)
 {
   PRInt32  theRootIndex = LastOf(aContext, aRootTagList);
   const TagList* theCloseTags = anEndTag
@@ -1752,7 +1752,7 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
       PRInt32   attrCount;
       PRInt32   theTopIndex = anIndex + 1;
       PRInt32   theTagCount = mBodyContext->GetCount();
-      PRBool    formWasOnStack = mSink->IsFormOnStack();
+      bool      formWasOnStack = mSink->IsFormOnStack();
 
       if (formWasOnStack) {
         // Do this to synchronize dtd stack and the sink stack.
@@ -2065,10 +2065,10 @@ CNavDTD::CollectAttributes(nsIParserNode *aNode, eHTMLTags aTag, PRInt32 aCount)
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 CNavDTD::CanContain(PRInt32 aParent, PRInt32 aChild) const
 {
-  PRBool result = gHTMLElements[aParent].CanContain((eHTMLTags)aChild, mDTDMode);
+  bool result = gHTMLElements[aParent].CanContain((eHTMLTags)aChild, mDTDMode);
 
   if (eHTMLTag_nobr == aChild &&
       IsInlineElement(aParent, aParent) &&
@@ -2088,7 +2088,7 @@ CNavDTD::CanContain(PRInt32 aParent, PRInt32 aChild) const
  *  @param   aParentID -- tag id of parent (or eHTMLTag_unknown)
  *  @return  PR_TRUE if this tag is a block tag
  */
-PRBool
+bool
 CNavDTD::IsBlockElement(PRInt32 aTagID, PRInt32 aParentID) const
 {
   eHTMLTags theTag = (eHTMLTags)aTagID;
@@ -2110,7 +2110,7 @@ CNavDTD::IsBlockElement(PRInt32 aTagID, PRInt32 aParentID) const
  *  @param   aParentID -- tag id of parent (or eHTMLTag_unknown)
  *  @return  PR_TRUE if this tag is an inline tag
  */
-PRBool
+bool
 CNavDTD::IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const
 {
   eHTMLTags theTag = (eHTMLTags)aTagID;
@@ -2133,11 +2133,11 @@ CNavDTD::IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if propagation should occur
  */
-PRBool
+bool
 CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
                       PRInt32 aParentContains)
 {
-  PRBool result = PR_FALSE;
+  bool result = false;
   if (aParentContains == -1) {
     aParentContains = CanContain(aParent, aChild);
   }
@@ -2182,7 +2182,7 @@ CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
  *  @param   aParentContains
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool
+bool
 CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
 {
   eHTMLTags theAncestor = gHTMLElements[aChild].mExcludingAncestor;
@@ -2244,18 +2244,18 @@ CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
  *  @param   aTag -- tag to test as a container
  *  @return  PR_TRUE if given tag can contain other tags
  */
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 CNavDTD::IsContainer(PRInt32 aTag) const
 {
   return nsHTMLElement::IsContainer((eHTMLTags)aTag);
 }
 
 
-PRBool
+bool
 CNavDTD::ForwardPropagate(nsString& aSequence, eHTMLTags aParent,
                           eHTMLTags aChild)
 {
-  PRBool result = PR_FALSE;
+  bool result = false;
 
   switch(aParent) {
     case eHTMLTag_table:
@@ -2278,7 +2278,7 @@ CNavDTD::ForwardPropagate(nsString& aSequence, eHTMLTags aParent,
   return result;
 }
 
-PRBool
+bool
 CNavDTD::BackwardPropagate(nsString& aSequence, eHTMLTags aParent,
                            eHTMLTags aChild) const
 {
@@ -2301,7 +2301,7 @@ CNavDTD::BackwardPropagate(nsString& aSequence, eHTMLTags aParent,
   return aParent == theParent;
 }
 
-PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const
+bool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const
 {
   switch (aContainer) {
     case eHTMLTag_form:
@@ -2313,7 +2313,7 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const
   }
 }
 
-PRBool
+bool
 CNavDTD::HasOpenContainer(const eHTMLTags aTagSet[], PRInt32 aCount) const
 {
   int theIndex;
@@ -2346,7 +2346,7 @@ CNavDTD::GetTopNode() const
  * @return  0 (for now)
  */
 nsresult
-CNavDTD::OpenTransientStyles(eHTMLTags aChildTag, PRBool aCloseInvalid)
+CNavDTD::OpenTransientStyles(eHTMLTags aChildTag, bool aCloseInvalid)
 {
   nsresult result = NS_OK;
 
@@ -2379,7 +2379,7 @@ CNavDTD::OpenTransientStyles(eHTMLTags aChildTag, PRBool aCloseInvalid)
           PRInt32 sindex = 0;
 
           nsTagEntry *theEntry = theStack->mEntries;
-          PRBool isHeadingOpen = HasOpenTagOfType(kHeading, *mBodyContext);
+          bool isHeadingOpen = HasOpenTagOfType(kHeading, *mBodyContext);
           for (sindex = 0; sindex < theStack->mCount; ++sindex) {
             nsCParserNode* theNode = (nsCParserNode*)theEntry->mNode;
             if (1 == theNode->mUseCount) {
@@ -2515,11 +2515,11 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
 
   nsresult   result = NS_OK;
-  PRBool     done   = PR_TRUE;
-  PRBool     rs_tag = nsHTMLElement::IsResidualStyleTag(aTag);
+  bool       done   = true;
+  bool       rs_tag = nsHTMLElement::IsResidualStyleTag(aTag);
   // We need to open transient styles to encompass the <li> so that the bullets
   // inherit the proper colors.
-  PRBool     li_tag = aTag == eHTMLTag_li;
+  bool       li_tag = aTag == eHTMLTag_li;
 
   if (rs_tag || li_tag) {
     /*
@@ -2624,7 +2624,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
 
 nsresult
 CNavDTD::CloseResidualStyleTags(const eHTMLTags aTag,
-                                PRBool aClosedByStartTag)
+                                bool aClosedByStartTag)
 {
   const PRInt32 count = mBodyContext->GetCount();
   PRInt32 pos = count;
@@ -2644,10 +2644,10 @@ CNavDTD::CloseResidualStyleTags(const eHTMLTags aTag,
  * @return  TRUE if ok, FALSE if error
  */
 nsresult
-CNavDTD::CloseContainer(const eHTMLTags aTag, PRBool aMalformed)
+CNavDTD::CloseContainer(const eHTMLTags aTag, bool aMalformed)
 {
   nsresult   result = NS_OK;
-  PRBool     done   = PR_TRUE;
+  bool       done   = true;
 
   switch (aTag) {
     case eHTMLTag_head:
@@ -2735,7 +2735,7 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, PRBool aMalformed)
  */
 nsresult
 CNavDTD::CloseContainersTo(PRInt32 anIndex, eHTMLTags aTarget,
-                           PRBool aClosedByStartTag)
+                           bool aClosedByStartTag)
 {
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result = NS_OK;
@@ -2748,9 +2748,9 @@ CNavDTD::CloseContainersTo(PRInt32 anIndex, eHTMLTags aTarget,
       nsCParserNode* theNode = mBodyContext->Pop(theChildStyleStack);
       result = CloseContainer(theTag, PR_FALSE);
 
-      PRBool theTagIsStyle = nsHTMLElement::IsResidualStyleTag(theTag);
+      bool theTagIsStyle = nsHTMLElement::IsResidualStyleTag(theTag);
       // If the current tag cannot leak out then we shouldn't leak out of the target - Fix 40713
-      PRBool theStyleDoesntLeakOut = gHTMLElements[theTag].HasSpecialProperty(kNoStyleLeaksOut);
+      bool theStyleDoesntLeakOut = gHTMLElements[theTag].HasSpecialProperty(kNoStyleLeaksOut);
       if (!theStyleDoesntLeakOut) {
         theStyleDoesntLeakOut = gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut);
       }
@@ -2766,7 +2766,7 @@ CNavDTD::CloseContainersTo(PRInt32 anIndex, eHTMLTags aTarget,
           return NS_OK;
         }
 
-        PRBool theTargetTagIsStyle = nsHTMLElement::IsResidualStyleTag(aTarget);
+        bool theTargetTagIsStyle = nsHTMLElement::IsResidualStyleTag(aTarget);
         if (aClosedByStartTag) {
           // Handle closure due to new start tag.
           // The cases we're handing here:
@@ -2882,7 +2882,7 @@ CNavDTD::CloseContainersTo(PRInt32 anIndex, eHTMLTags aTarget,
  * @return  TRUE if ok, FALSE if error
  */
 nsresult
-CNavDTD::CloseContainersTo(eHTMLTags aTag, PRBool aClosedByStartTag)
+CNavDTD::CloseContainersTo(eHTMLTags aTag, bool aClosedByStartTag)
 {
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
 
@@ -2895,7 +2895,7 @@ CNavDTD::CloseContainersTo(eHTMLTags aTag, PRBool aClosedByStartTag)
 
   eHTMLTags theTopTag = mBodyContext->Last();
 
-  PRBool theTagIsSynonymous = (nsHTMLElement::IsResidualStyleTag(aTag) &&
+  bool theTagIsSynonymous = (nsHTMLElement::IsResidualStyleTag(aTag) &&
                                nsHTMLElement::IsResidualStyleTag(theTopTag)) ||
                               (gHTMLElements[aTag].IsMemberOf(kHeading) &&
                                gHTMLElements[theTopTag].IsMemberOf(kHeading));
@@ -3013,7 +3013,7 @@ CNavDTD::CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild)
 {
   mScratch.Truncate();
 
-  PRBool    result = ForwardPropagate(mScratch, aParent, aChild);
+  bool      result = ForwardPropagate(mScratch, aParent, aChild);
 
   if (!result) {
     if (eHTMLTag_unknown == aParent) {

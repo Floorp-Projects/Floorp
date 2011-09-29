@@ -47,6 +47,6 @@ var BookmarkPopup = {
     this.hide();
 
     let browser = getBrowser();
-    BookmarkHelper.createShortcut(browser.contentTitle, browser.currentURI.spec, browser.mIconURL);
+    Util.createShortcut(browser.contentTitle, browser.currentURI.spec, browser.mIconURL, "bookmark");
   }
 };

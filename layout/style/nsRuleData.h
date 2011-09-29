@@ -56,8 +56,8 @@ typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 struct nsRuleData
 {
   const PRUint32 mSIDs;
-  PRPackedBool mCanStoreInRuleTree;
-  PRPackedBool mIsImportantRule;
+  bool mCanStoreInRuleTree;
+  bool mIsImportantRule;
   PRUint8 mLevel; // an nsStyleSet::sheetType
   nsPresContext* const mPresContext;
   nsStyleContext* const mStyleContext;

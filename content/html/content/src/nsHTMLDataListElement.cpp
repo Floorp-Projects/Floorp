@@ -67,7 +67,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // This function is used to generate the nsContentList (option elements).
-  static PRBool MatchOptions(nsIContent* aContent, PRInt32 aNamespaceID,
+  static bool MatchOptions(nsIContent* aContent, PRInt32 aNamespaceID,
                              nsIAtom* aAtom, void* aData);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLDataListElement,
@@ -120,7 +120,7 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLDataListElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLDataListElement)
 
-PRBool
+bool
 nsHTMLDataListElement::MatchOptions(nsIContent* aContent, PRInt32 aNamespaceID,
                                     nsIAtom* aAtom, void* aData)
 {

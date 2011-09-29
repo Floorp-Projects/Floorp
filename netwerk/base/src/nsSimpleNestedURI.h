@@ -76,7 +76,7 @@ public:
     // nsSimpleURI overrides
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
-                                    PRBool* result);
+                                    bool* result);
     virtual nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode);
 
     // nsISerializable overrides

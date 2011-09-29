@@ -61,8 +61,8 @@ private:
     ~nsWindowsSystemProxySettings() {};
 
     nsCOMPtr<nsIWindowsRegKey> mKey;
-    PRBool MatchOverride(const nsACString& aHost);
-    PRBool PatternMatch(const nsACString& aHost, const nsACString& aOverride);
+    bool MatchOverride(const nsACString& aHost);
+    bool PatternMatch(const nsACString& aHost, const nsACString& aOverride);
 };
 
 NS_IMPL_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
@@ -116,7 +116,7 @@ static void SetProxyResultDirect(nsACString& aResult)
     aResult.AssignASCII("DIRECT");
 }
 
-PRBool
+bool
 nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
 {
     nsresult rv;
@@ -165,7 +165,7 @@ nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
                                            const nsACString& aOverride)
 {
@@ -174,7 +174,7 @@ nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
     PRInt32 overrideLength = override.Length();
     PRInt32 tokenStart = 0;
     PRInt32 offset = 0;
-    PRBool star = PR_FALSE;
+    bool star = false;
 
     while (tokenStart < overrideLength) {
         PRInt32 tokenEnd = override.FindChar('*', tokenStart);

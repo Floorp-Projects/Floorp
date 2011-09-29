@@ -195,7 +195,7 @@ struct nsTreeRange
     return NS_OK;
   }
 
-  PRBool Contains(PRInt32 aIndex) {
+  bool Contains(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax)
       return PR_TRUE;
 
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::GetSingle(PRBool* aSingle)
+NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle)
 {
   if (!mTree)
     return NS_ERROR_NULL_POINTER;
@@ -350,7 +350,7 @@ NS_IMETHODIMP nsTreeSelection::GetSingle(PRBool* aSingle)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
+NS_IMETHODIMP nsTreeSelection::IsSelected(PRInt32 aIndex, bool* aResult)
 {
   if (mFirstRange)
     *aResult = mFirstRange->Contains(aIndex);
@@ -361,7 +361,7 @@ NS_IMETHODIMP nsTreeSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
 
 NS_IMETHODIMP nsTreeSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
 {
-  PRBool suppressSelect = mSuppressed;
+  bool suppressSelect = mSuppressed;
 
   if (aMsec != -1)
     mSuppressed = PR_TRUE;
@@ -394,7 +394,7 @@ NS_IMETHODIMP nsTreeSelection::Select(PRInt32 aIndex)
     return rv;
 
   if (mFirstRange) {
-    PRBool alreadySelected = mFirstRange->Contains(aIndex);
+    bool alreadySelected = mFirstRange->Contains(aIndex);
 
     if (alreadySelected) {
       PRInt32 count = mFirstRange->Count();
@@ -443,7 +443,7 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
     Select(aIndex);
   else {
     if (!mFirstRange->Contains(aIndex)) {
-      PRBool single;
+      bool single;
       rv = GetSingle(&single);
       if (NS_SUCCEEDED(rv) && !single)
         rv = mFirstRange->Add(aIndex);
@@ -461,9 +461,9 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
   return rv;
 }
 
-NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
+NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, bool aAugment)
 {
-  PRBool single;
+  bool single;
   nsresult rv = GetSingle(&single);
   if (NS_FAILED(rv))
     return rv;
@@ -571,7 +571,7 @@ NS_IMETHODIMP nsTreeSelection::SelectAll()
 
   PRInt32 rowCount;
   view->GetRowCount(&rowCount);
-  PRBool single;
+  bool single;
   nsresult rv = GetSingle(&single);
   if (NS_FAILED(rv))
     return rv;
@@ -634,13 +634,13 @@ NS_IMETHODIMP nsTreeSelection::GetCount(PRInt32 *count)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)
+NS_IMETHODIMP nsTreeSelection::GetSelectEventsSuppressed(bool *aSelectEventsSuppressed)
 {
   *aSelectEventsSuppressed = mSuppressed;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::SetSelectEventsSuppressed(PRBool aSelectEventsSuppressed)
+NS_IMETHODIMP nsTreeSelection::SetSelectEventsSuppressed(bool aSelectEventsSuppressed)
 {
   mSuppressed = aSelectEventsSuppressed;
   if (!mSuppressed)
@@ -672,7 +672,7 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   if (aIndex != -1)
     mTree->InvalidateRow(aIndex);
 
-  // Fire DOMMenuItemActive event for tree
+  // Fire DOMMenuItemActive or DOMMenuItemInactive event for tree.
   nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
   NS_ASSERTION(boxObject, "no box object!");
   if (!boxObject)
@@ -683,12 +683,13 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   nsCOMPtr<nsINode> treeDOMNode(do_QueryInterface(treeElt));
   NS_ENSURE_STATE(treeDOMNode);
 
-  nsRefPtr<nsPLDOMEvent> event =
-    new nsPLDOMEvent(treeDOMNode, NS_LITERAL_STRING("DOMMenuItemActive"),
-                     PR_TRUE, PR_FALSE);
-  if (!event)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_NAMED_LITERAL_STRING(DOMMenuItemActive, "DOMMenuItemActive");
+  NS_NAMED_LITERAL_STRING(DOMMenuItemInactive, "DOMMenuItemInactive");
 
+  nsRefPtr<nsPLDOMEvent> event =
+    new nsPLDOMEvent(treeDOMNode,
+                     (aIndex != -1 ? DOMMenuItemActive : DOMMenuItemInactive),
+                     PR_TRUE, PR_FALSE);
   return event->PostDOMEvent();
 }
 
@@ -771,7 +772,7 @@ nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
   // no selection, so nothing to do.
   if (!mFirstRange) return NS_OK;
 
-  PRBool selChanged = PR_FALSE;
+  bool selChanged = false;
   nsTreeRange* oldFirstRange = mFirstRange;
   nsTreeRange* curr = mFirstRange;
   mFirstRange = nsnull;

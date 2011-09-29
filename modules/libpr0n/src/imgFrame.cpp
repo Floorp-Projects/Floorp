@@ -46,7 +46,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 
-static PRBool gDisableOptimize = PR_FALSE;
+static bool gDisableOptimize = false;
 
 #include "cairo.h"
 
@@ -67,7 +67,7 @@ static PRUint32 gTotalDDBSize = 0;
 #endif
 
 // Returns true if an image of aWidth x aHeight is allowed and legal.
-static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
+static bool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
 {
   // reject over-wide or over-tall images
   const PRInt32 k64KLimit = 0x0000FFFF;
@@ -104,7 +104,7 @@ static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight)
 
 // Returns whether we should, at this time, use image surfaces instead of
 // optimized platform-specific surfaces.
-static PRBool ShouldUseImageSurfaces()
+static bool ShouldUseImageSurfaces()
 {
 #if defined(USE_WIN_SURFACE)
   static const DWORD kGDIObjectsHighWaterMark = 7000;
@@ -147,7 +147,7 @@ imgFrame::imgFrame() :
 #endif
   , mLocked(PR_FALSE)
 {
-  static PRBool hasCheckedOptimize = PR_FALSE;
+  static bool hasCheckedOptimize = false;
   if (!hasCheckedOptimize) {
     if (PR_GetEnv("MOZ_DISABLE_IMAGE_OPTIMIZE")) {
       gDisableOptimize = PR_TRUE;
@@ -371,9 +371,9 @@ DoSingleColorFastPath(gfxContext*    aContext,
 }
 
 imgFrame::SurfaceWithFormat
-imgFrame::SurfaceForDrawing(PRBool             aDoPadding,
-                            PRBool             aDoPartialDecode,
-                            PRBool             aDoTile,
+imgFrame::SurfaceForDrawing(bool               aDoPadding,
+                            bool               aDoPartialDecode,
+                            bool               aDoTile,
                             const nsIntMargin& aPadding,
                             gfxMatrix&         aUserSpaceToImageSpace,
                             gfxRect&           aFill,
@@ -439,8 +439,8 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
   NS_ASSERTION(!aSubimage.IsEmpty(), "zero source size --- fix caller");
   NS_ASSERTION(!mPalettedImageData, "Directly drawing a paletted image!");
 
-  PRBool doPadding = aPadding != nsIntMargin(0,0,0,0);
-  PRBool doPartialDecode = !ImageComplete();
+  bool doPadding = aPadding != nsIntMargin(0,0,0,0);
+  bool doPartialDecode = !ImageComplete();
 
   if (mSinglePixel && !doPadding && !doPartialDecode) {
     DoSingleColorFastPath(aContext, mSinglePixelColor, aFill);
@@ -457,7 +457,7 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
   NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
                "We must be allowed to sample *some* source pixels!");
 
-  PRBool doTile = !imageRect.Contains(sourceRect);
+  bool doTile = !imageRect.Contains(sourceRect);
   SurfaceWithFormat surfaceResult =
     SurfaceForDrawing(doPadding, doPartialDecode, doTile, aPadding,
                       userSpaceToImageSpace, fill, subimage, sourceRect,
@@ -568,7 +568,7 @@ gfxASurface::gfxImageFormat imgFrame::GetFormat() const
   return mFormat;
 }
 
-PRBool imgFrame::GetNeedsBackground() const
+bool imgFrame::GetNeedsBackground() const
 {
   // We need a background painted if we have alpha or we're incomplete.
   return (mFormat == gfxASurface::ImageFormatARGB32 || !ImageComplete());
@@ -604,12 +604,12 @@ void imgFrame::GetImageData(PRUint8 **aData, PRUint32 *length) const
   *length = GetImageDataLength();
 }
 
-PRBool imgFrame::GetIsPaletted() const
+bool imgFrame::GetIsPaletted() const
 {
   return mPalettedImageData != nsnull;
 }
 
-PRBool imgFrame::GetHasAlpha() const
+bool imgFrame::GetHasAlpha() const
 {
   return mFormat == gfxASurface::ImageFormatARGB32;
 }
@@ -749,7 +749,7 @@ void imgFrame::SetBlendMethod(PRInt32 aBlendMethod)
   mBlendMethod = (PRInt8)aBlendMethod;
 }
 
-PRBool imgFrame::ImageComplete() const
+bool imgFrame::ImageComplete() const
 {
   return mDecoded.IsEqualInterior(nsIntRect(mOffset, mSize));
 }
@@ -768,12 +768,12 @@ void imgFrame::SetHasNoAlpha()
   }
 }
 
-PRBool imgFrame::GetCompositingFailed() const
+bool imgFrame::GetCompositingFailed() const
 {
   return mCompositingFailed;
 }
 
-void imgFrame::SetCompositingFailed(PRBool val)
+void imgFrame::SetCompositingFailed(bool val)
 {
   mCompositingFailed = val;
 }

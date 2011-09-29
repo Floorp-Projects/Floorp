@@ -100,7 +100,7 @@ public:
   void      FreeGlobalPrinters();
   nsresult  InitializeGlobalPrinters();
 
-  PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
+  bool      PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
   PRUint32  GetNumPrinters()
     { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
   nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
@@ -121,83 +121,83 @@ public:
   ~nsPrinterFeatures() {}
 
   /* Does this printer allow to set/change the paper size ? */
-  void SetCanChangePaperSize( PRBool aCanSetPaperSize );
+  void SetCanChangePaperSize( bool aCanSetPaperSize );
   /* Does this Mozilla print module allow set/change the paper size ? */
-  void SetSupportsPaperSizeChange( PRBool aSupportsPaperSizeChange );
+  void SetSupportsPaperSizeChange( bool aSupportsPaperSizeChange );
   /* Set number of paper size records and the records itself */
   void SetNumPaperSizeRecords( PRInt32 aCount );
-  void SetPaperRecord( PRInt32 aIndex, const char *aName, PRInt32 aWidthMM, PRInt32 aHeightMM, PRBool aIsInch );
+  void SetPaperRecord( PRInt32 aIndex, const char *aName, PRInt32 aWidthMM, PRInt32 aHeightMM, bool aIsInch );
 
   /* Does this printer allow to set/change the content orientation ? */
-  void SetCanChangeOrientation( PRBool aCanSetOrientation );
+  void SetCanChangeOrientation( bool aCanSetOrientation );
   /* Does this Mozilla print module allow set/change the content orientation ? */
-  void SetSupportsOrientationChange( PRBool aSupportsOrientationChange );
+  void SetSupportsOrientationChange( bool aSupportsOrientationChange );
   /* Set number of orientation records and the records itself */
   void SetNumOrientationRecords( PRInt32 aCount );
   void SetOrientationRecord( PRInt32 aIndex, const char *aName );
 
   /* Does this printer allow to set/change the plex mode ? */
-  void SetCanChangePlex( PRBool aCanSetPlex );
+  void SetCanChangePlex( bool aCanSetPlex );
   /* Does this Mozilla print module allow set/change the plex mode ? */
-  void SetSupportsPlexChange( PRBool aSupportsPlexChange );
+  void SetSupportsPlexChange( bool aSupportsPlexChange );
   /* Set number of plex records and the records itself */
   void SetNumPlexRecords( PRInt32 aCount );
   void SetPlexRecord( PRInt32 aIndex, const char *aName );
 
   /* Does this printer allow to set/change the resolution name ? */
-  void SetCanChangeResolutionName( PRBool aCanSetResolutionName );
+  void SetCanChangeResolutionName( bool aCanSetResolutionName );
   /* Does this Mozilla print module allow set/change the resolution name ? */
-  void SetSupportsResolutionNameChange( PRBool aSupportsResolutionChange );
+  void SetSupportsResolutionNameChange( bool aSupportsResolutionChange );
   /* Set number of resolution records and the records itself */
   void SetNumResolutionNameRecords( PRInt32 aCount );
   void SetResolutionNameRecord( PRInt32 aIndex, const char *aName );
 
   /* Does this printer allow to set/change the colorspace ? */
-  void SetCanChangeColorspace( PRBool aCanSetColorspace );
+  void SetCanChangeColorspace( bool aCanSetColorspace );
   /* Does this Mozilla print module allow set/change the colorspace ? */
-  void SetSupportsColorspaceChange( PRBool aSupportsColorspace );
+  void SetSupportsColorspaceChange( bool aSupportsColorspace );
   /* Set number of colorspace records and the records itself */
   void SetNumColorspaceRecords( PRInt32 aCount );
   void SetColorspaceRecord( PRInt32 aIndex, const char *aName );
 
   /* Does this device allow to set/change the usage of the internal grayscale mode ? */
-  void SetCanChangePrintInColor( PRBool aCanSetPrintInColor );
+  void SetCanChangePrintInColor( bool aCanSetPrintInColor );
   /* Does this printer allow to set/change the usage of the internal grayscale mode ? */
-  void SetSupportsPrintInColorChange( PRBool aSupportPrintInColorChange );
+  void SetSupportsPrintInColorChange( bool aSupportPrintInColorChange );
 
   /* Does this device allow to set/change the usage of font download to the printer? */
-  void SetCanChangeDownloadFonts( PRBool aCanSetDownloadFonts );
+  void SetCanChangeDownloadFonts( bool aCanSetDownloadFonts );
   /* Does this printer allow to set/change the usage of font download to the printer? */
-  void SetSupportsDownloadFontsChange( PRBool aSupportDownloadFontsChange );
+  void SetSupportsDownloadFontsChange( bool aSupportDownloadFontsChange );
 
   /* Does this device allow to set/change the job title ? */
-  void SetCanChangeJobTitle( PRBool aCanSetJobTitle );
+  void SetCanChangeJobTitle( bool aCanSetJobTitle );
   /* Does this printer allow to set/change the job title ? */
-  void SetSupportsJobTitleChange( PRBool aSupportJobTitleChange );
+  void SetSupportsJobTitleChange( bool aSupportJobTitleChange );
     
   /* Does this device allow to set/change the spooler command ? */
-  void SetCanChangeSpoolerCommand( PRBool aCanSetSpoolerCommand );
+  void SetCanChangeSpoolerCommand( bool aCanSetSpoolerCommand );
   /* Does this printer allow to set/change the spooler command ? */
-  void SetSupportsSpoolerCommandChange( PRBool aSupportSpoolerCommandChange );
+  void SetSupportsSpoolerCommandChange( bool aSupportSpoolerCommandChange );
   
   /* Does this device allow to set/change number of copies for an document ? */
-  void SetCanChangeNumCopies( PRBool aCanSetNumCopies );
+  void SetCanChangeNumCopies( bool aCanSetNumCopies );
 
   /* Does this device allow multiple devicecontext instances to be used in
    * parallel (e.g. print while the device is already in use by print-preview
    * or printing while another print job is in progress) ? */
-  void SetMultipleConcurrentDeviceContextsSupported( PRBool aCanUseMultipleInstances );
+  void SetMultipleConcurrentDeviceContextsSupported( bool aCanUseMultipleInstances );
   
 private:
   /* private helper methods */
-  void SetBoolValue( const char *tagname, PRBool value );
+  void SetBoolValue( const char *tagname, bool value );
   void SetIntValue(  const char *tagname, PRInt32 value );
   void SetCharValue(  const char *tagname, const char *value );
 
   nsXPIDLCString          mPrinterName;
 };
 
-void nsPrinterFeatures::SetBoolValue( const char *tagname, PRBool value )
+void nsPrinterFeatures::SetBoolValue( const char *tagname, bool value )
 {
   nsPrintfCString prefName(256, PRINTERFEATURES_PREF ".%s.%s",
                            mPrinterName.get(), tagname);
@@ -226,12 +226,12 @@ nsPrinterFeatures::nsPrinterFeatures( const char *printername )
   SetBoolValue("has_special_printerfeatures", PR_TRUE);
 }
 
-void nsPrinterFeatures::SetCanChangePaperSize( PRBool aCanSetPaperSize )
+void nsPrinterFeatures::SetCanChangePaperSize( bool aCanSetPaperSize )
 {
   SetBoolValue("can_change_paper_size", aCanSetPaperSize);
 }
 
-void nsPrinterFeatures::SetSupportsPaperSizeChange( PRBool aSupportsPaperSizeChange )
+void nsPrinterFeatures::SetSupportsPaperSizeChange( bool aSupportsPaperSizeChange )
 {
   SetBoolValue("supports_paper_size_change", aSupportsPaperSizeChange);
 }
@@ -242,7 +242,7 @@ void nsPrinterFeatures::SetNumPaperSizeRecords( PRInt32 aCount )
   SetIntValue("paper.count", aCount);          
 }
 
-void nsPrinterFeatures::SetPaperRecord(PRInt32 aIndex, const char *aPaperName, PRInt32 aWidthMM, PRInt32 aHeightMM, PRBool aIsInch)
+void nsPrinterFeatures::SetPaperRecord(PRInt32 aIndex, const char *aPaperName, PRInt32 aWidthMM, PRInt32 aHeightMM, bool aIsInch)
 {
   SetCharValue(nsPrintfCString(256, "paper.%d.name",      aIndex).get(), aPaperName);
   SetIntValue( nsPrintfCString(256, "paper.%d.width_mm",  aIndex).get(), aWidthMM);
@@ -250,12 +250,12 @@ void nsPrinterFeatures::SetPaperRecord(PRInt32 aIndex, const char *aPaperName, P
   SetBoolValue(nsPrintfCString(256, "paper.%d.is_inch",   aIndex).get(), aIsInch);
 }
 
-void nsPrinterFeatures::SetCanChangeOrientation( PRBool aCanSetOrientation )
+void nsPrinterFeatures::SetCanChangeOrientation( bool aCanSetOrientation )
 {
   SetBoolValue("can_change_orientation", aCanSetOrientation);
 }
 
-void nsPrinterFeatures::SetSupportsOrientationChange( PRBool aSupportsOrientationChange )
+void nsPrinterFeatures::SetSupportsOrientationChange( bool aSupportsOrientationChange )
 {
   SetBoolValue("supports_orientation_change", aSupportsOrientationChange);
 }
@@ -270,12 +270,12 @@ void nsPrinterFeatures::SetOrientationRecord( PRInt32 aIndex, const char *aOrien
   SetCharValue(nsPrintfCString(256, "orientation.%d.name", aIndex).get(), aOrientationName);
 }
 
-void nsPrinterFeatures::SetCanChangePlex( PRBool aCanSetPlex )
+void nsPrinterFeatures::SetCanChangePlex( bool aCanSetPlex )
 {
   SetBoolValue("can_change_plex", aCanSetPlex);
 }
 
-void nsPrinterFeatures::SetSupportsPlexChange( PRBool aSupportsPlexChange )
+void nsPrinterFeatures::SetSupportsPlexChange( bool aSupportsPlexChange )
 {
   SetBoolValue("supports_plex_change", aSupportsPlexChange);
 }
@@ -290,12 +290,12 @@ void nsPrinterFeatures::SetPlexRecord( PRInt32 aIndex, const char *aPlexName )
   SetCharValue(nsPrintfCString(256, "plex.%d.name", aIndex).get(), aPlexName);
 }
 
-void nsPrinterFeatures::SetCanChangeResolutionName( PRBool aCanSetResolutionName )
+void nsPrinterFeatures::SetCanChangeResolutionName( bool aCanSetResolutionName )
 {
   SetBoolValue("can_change_resolution", aCanSetResolutionName);
 }
 
-void nsPrinterFeatures::SetSupportsResolutionNameChange( PRBool aSupportsResolutionNameChange )
+void nsPrinterFeatures::SetSupportsResolutionNameChange( bool aSupportsResolutionNameChange )
 {
   SetBoolValue("supports_resolution_change", aSupportsResolutionNameChange);
 }
@@ -310,12 +310,12 @@ void nsPrinterFeatures::SetResolutionNameRecord( PRInt32 aIndex, const char *aRe
   SetCharValue(nsPrintfCString(256, "resolution.%d.name", aIndex).get(), aResolutionName);
 }
 
-void nsPrinterFeatures::SetCanChangeColorspace( PRBool aCanSetColorspace )
+void nsPrinterFeatures::SetCanChangeColorspace( bool aCanSetColorspace )
 {
   SetBoolValue("can_change_colorspace", aCanSetColorspace);
 }
 
-void nsPrinterFeatures::SetSupportsColorspaceChange( PRBool aSupportsColorspaceChange )
+void nsPrinterFeatures::SetSupportsColorspaceChange( bool aSupportsColorspaceChange )
 {
   SetBoolValue("supports_colorspace_change", aSupportsColorspaceChange);
 }
@@ -330,52 +330,52 @@ void nsPrinterFeatures::SetColorspaceRecord( PRInt32 aIndex, const char *aColors
   SetCharValue(nsPrintfCString(256, "colorspace.%d.name", aIndex).get(), aColorspace);
 }
 
-void nsPrinterFeatures::SetCanChangeDownloadFonts( PRBool aCanSetDownloadFonts )
+void nsPrinterFeatures::SetCanChangeDownloadFonts( bool aCanSetDownloadFonts )
 {
   SetBoolValue("can_change_downloadfonts", aCanSetDownloadFonts);
 }
 
-void nsPrinterFeatures::SetSupportsDownloadFontsChange( PRBool aSupportDownloadFontsChange )
+void nsPrinterFeatures::SetSupportsDownloadFontsChange( bool aSupportDownloadFontsChange )
 {
   SetBoolValue("supports_downloadfonts_change", aSupportDownloadFontsChange);
 }
 
-void nsPrinterFeatures::SetCanChangePrintInColor( PRBool aCanSetPrintInColor )
+void nsPrinterFeatures::SetCanChangePrintInColor( bool aCanSetPrintInColor )
 {
   SetBoolValue("can_change_printincolor", aCanSetPrintInColor);
 }
 
-void nsPrinterFeatures::SetSupportsPrintInColorChange( PRBool aSupportPrintInColorChange )
+void nsPrinterFeatures::SetSupportsPrintInColorChange( bool aSupportPrintInColorChange )
 {
   SetBoolValue("supports_printincolor_change", aSupportPrintInColorChange);
 }
 
-void nsPrinterFeatures::SetCanChangeSpoolerCommand( PRBool aCanSetSpoolerCommand )
+void nsPrinterFeatures::SetCanChangeSpoolerCommand( bool aCanSetSpoolerCommand )
 {
   SetBoolValue("can_change_spoolercommand", aCanSetSpoolerCommand);
 }
 
-void nsPrinterFeatures::SetSupportsSpoolerCommandChange( PRBool aSupportSpoolerCommandChange )
+void nsPrinterFeatures::SetSupportsSpoolerCommandChange( bool aSupportSpoolerCommandChange )
 {
   SetBoolValue("supports_spoolercommand_change", aSupportSpoolerCommandChange);
 }
 
-void nsPrinterFeatures::SetCanChangeJobTitle( PRBool aCanSetJobTitle )
+void nsPrinterFeatures::SetCanChangeJobTitle( bool aCanSetJobTitle )
 {
   SetBoolValue("can_change_jobtitle", aCanSetJobTitle);
 }
 
-void nsPrinterFeatures::SetSupportsJobTitleChange( PRBool aSupportsJobTitle )
+void nsPrinterFeatures::SetSupportsJobTitleChange( bool aSupportsJobTitle )
 {
   SetBoolValue("supports_jobtitle_change", aSupportsJobTitle);
 }
 
-void nsPrinterFeatures::SetCanChangeNumCopies( PRBool aCanSetNumCopies )
+void nsPrinterFeatures::SetCanChangeNumCopies( bool aCanSetNumCopies )
 {
   SetBoolValue("can_change_num_copies", aCanSetNumCopies);
 }
 
-void nsPrinterFeatures::SetMultipleConcurrentDeviceContextsSupported( PRBool aCanUseMultipleInstances )
+void nsPrinterFeatures::SetMultipleConcurrentDeviceContextsSupported( bool aCanUseMultipleInstances )
 {
   SetBoolValue("can_use_multiple_devicecontexts_concurrently", aCanUseMultipleInstances);
 }
@@ -521,7 +521,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
                                            nsIPrintSettings* aPS,
-                                           PRBool aIsPrintPreview)
+                                           bool aIsPrintPreview)
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p)\n", aPS));
 
@@ -533,7 +533,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
   mIsPPreview = aIsPrintPreview;
 
   // This is only set by embedders
-  PRBool toFile;
+  bool toFile;
   aPS->GetPrintToFile(&toFile);
 
   mToPrinter = !toFile && !aIsPrintPreview;
@@ -809,9 +809,9 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
       path = PR_GetEnv("HOME");
   
     if (path)
-      filename = nsPrintfCString(PATH_MAX, "%s/mozilla.ps", path);
+      filename = nsPrintfCString(PATH_MAX, "%s/mozilla.pdf", path);
     else
-      filename.AssignLiteral("mozilla.ps");
+      filename.AssignLiteral("mozilla.pdf");
   }  
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
   aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
@@ -922,7 +922,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
     }
 
-    PRBool hasSpoolerCmd = (nsPSPrinterList::kTypePS ==
+    bool hasSpoolerCmd = (nsPSPrinterList::kTypePS ==
         nsPSPrinterList::GetPrinterType(fullPrinterName));
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
     printerFeatures.SetSupportsSpoolerCommandChange(hasSpoolerCmd);
@@ -1014,7 +1014,7 @@ GlobalPrinters::GetDefaultPrinterName(PRUnichar **aDefaultPrinterName)
 {
   *aDefaultPrinterName = nsnull;
   
-  PRBool allocate = !GlobalPrinters::GetInstance()->PrintersAreAllocated();
+  bool allocate = !GlobalPrinters::GetInstance()->PrintersAreAllocated();
   
   if (allocate) {
     nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();

@@ -61,11 +61,11 @@ class nsHtml5PendingNotification {
                                    mChildCount);
     }
 
-    inline PRBool Contains(nsIContent* aNode) {
+    inline bool Contains(nsIContent* aNode) {
       return !!(mParent == aNode);
     }
     
-    inline PRBool HaveNotifiedIndex(PRUint32 index) {
+    inline bool HaveNotifiedIndex(PRUint32 index) {
       return index < mChildCount;
     }
 

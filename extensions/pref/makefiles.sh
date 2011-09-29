@@ -41,5 +41,11 @@ add_makefiles "
   extensions/pref/autoconfig/Makefile
   extensions/pref/autoconfig/public/Makefile
   extensions/pref/autoconfig/src/Makefile
-  extensions/pref/autoconfig/resources/Makefile
 "
+
+if [ "$MOZ_ENABLE_GTK2" ]; then
+  add_makefiles "
+    extensions/pref/system-pref/src/Makefile
+    extensions/pref/system-pref/src/gconf/Makefile
+  "
+fi

@@ -81,10 +81,10 @@ struct AccessibleWrapper {
     return object;
   }
  
-  PRBool isIgnored () {
+  bool isIgnored () {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-    return (PRBool)[object accessibilityIsIgnored];
+    return (bool)[object accessibilityIsIgnored];
 
     NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
   }

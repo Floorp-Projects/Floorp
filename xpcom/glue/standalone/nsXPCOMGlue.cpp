@@ -55,7 +55,7 @@
 #endif
 
 static XPCOMFunctions xpcomFunctions;
-static PRBool do_preload = PR_FALSE;
+static bool do_preload = false;
 
 extern "C"
 void XPCOMGlueEnablePreload()
@@ -201,7 +201,7 @@ NS_GetMemoryManager(nsIMemory* *result)
 }
 
 XPCOM_API(nsresult)
-NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, bool followLinks, nsILocalFile* *result)
 {
     if (!xpcomFunctions.newLocalFile)
         return NS_ERROR_NOT_INITIALIZED;
@@ -209,7 +209,7 @@ NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result
 }
 
 XPCOM_API(nsresult)
-NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result)
+NS_NewNativeLocalFile(const nsACString &path, bool followLinks, nsILocalFile* *result)
 {
     if (!xpcomFunctions.newNativeLocalFile)
         return NS_ERROR_NOT_INITIALIZED;
@@ -261,7 +261,7 @@ NS_StringContainerFinish(nsStringContainer &aStr)
 }
 
 XPCOM_API(PRUint32)
-NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
+NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, bool *aTerm)
 {
     if (!xpcomFunctions.stringGetData) {
         *aBuf = nsnull;
@@ -315,13 +315,13 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 }
 
 XPCOM_API(void)
-NS_StringSetIsVoid(nsAString &aStr, const PRBool aIsVoid)
+NS_StringSetIsVoid(nsAString &aStr, const bool aIsVoid)
 {
     if (xpcomFunctions.stringSetIsVoid)
         xpcomFunctions.stringSetIsVoid(aStr, aIsVoid);
 }
 
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_StringGetIsVoid(const nsAString &aStr)
 {
     if (!xpcomFunctions.stringGetIsVoid)
@@ -356,7 +356,7 @@ NS_CStringContainerFinish(nsCStringContainer &aStr)
 }
 
 XPCOM_API(PRUint32)
-NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
+NS_CStringGetData(const nsACString &aStr, const char **aBuf, bool *aTerm)
 {
     if (!xpcomFunctions.cstringGetData) {
         *aBuf = nsnull;
@@ -409,13 +409,13 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 }
 
 XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString &aStr, const PRBool aIsVoid)
+NS_CStringSetIsVoid(nsACString &aStr, const bool aIsVoid)
 {
     if (xpcomFunctions.cstringSetIsVoid)
         xpcomFunctions.cstringSetIsVoid(aStr, aIsVoid);
 }
 
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_CStringGetIsVoid(const nsACString &aStr)
 {
     if (!xpcomFunctions.cstringGetIsVoid)
@@ -556,7 +556,7 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                                             paramCount, params);
 }
 
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_CycleCollectorSuspect(nsISupports* obj)
 {
     if (!xpcomFunctions.cycleSuspectFunc)
@@ -565,7 +565,7 @@ NS_CycleCollectorSuspect(nsISupports* obj)
     return xpcomFunctions.cycleSuspectFunc(obj);
 }
 
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_CycleCollectorForget(nsISupports* obj)
 {
     if (!xpcomFunctions.cycleForgetFunc)
@@ -583,7 +583,7 @@ NS_CycleCollectorSuspect2(nsISupports* obj)
     return xpcomFunctions.cycleSuspect2Func(obj);
 }
 
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_CycleCollectorForget2(nsPurpleBufferEntry* e)
 {
     if (!xpcomFunctions.cycleForget2Func)

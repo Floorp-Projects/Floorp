@@ -87,11 +87,11 @@ NS_INTERFACE_MAP_BEGIN(nsDOMMouseScrollEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 NS_IMETHODIMP
-nsDOMMouseScrollEvent::InitMouseScrollEvent(const nsAString & aType, PRBool aCanBubble, PRBool aCancelable,
+nsDOMMouseScrollEvent::InitMouseScrollEvent(const nsAString & aType, bool aCanBubble, bool aCancelable,
                                 nsIDOMWindow *aView, PRInt32 aDetail, PRInt32 aScreenX, 
                                 PRInt32 aScreenY, PRInt32 aClientX, PRInt32 aClientY, 
-                                PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey, 
-                                PRBool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget,
+                                bool aCtrlKey, bool aAltKey, bool aShiftKey, 
+                                bool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget,
                                 PRInt32 aAxis)
 {
   nsresult rv = nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView, aDetail,

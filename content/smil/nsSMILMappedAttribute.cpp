@@ -63,7 +63,7 @@ nsresult
 nsSMILMappedAttribute::ValueFromString(const nsAString& aStr,
                                        const nsISMILAnimationElement* aSrcElement,
                                        nsSMILValue& aValue,
-                                       PRBool& aPreventCachingOfSandwich) const
+                                       bool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
@@ -77,7 +77,7 @@ nsSMILMappedAttribute::GetBaseValue() const
 {
   nsAutoString baseStringValue;
   nsRefPtr<nsIAtom> attrName = GetAttrNameAtom();
-  PRBool success = mElement->GetAttr(kNameSpaceID_None, attrName,
+  bool success = mElement->GetAttr(kNameSpaceID_None, attrName,
                                      baseStringValue);
   nsSMILValue baseValue;
   if (success) {

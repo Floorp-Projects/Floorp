@@ -133,7 +133,7 @@ nsresult nsCERTValInParamWrapper::Construct(missing_cert_download_config mcdc,
     | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO
     ;
 
-  PRBool wantsCrlFirst = (firstNetworkRevocationMethod != nsnull)
+  bool wantsCrlFirst = (firstNetworkRevocationMethod != nsnull)
                           && (strcmp("crl", firstNetworkRevocationMethod) == 0);
     
   rev->leafTests.preferred_methods[0] =

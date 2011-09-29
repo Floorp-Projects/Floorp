@@ -190,8 +190,8 @@ nsPluginTag::nsPluginTag(const char* aName,
                          const char* const* aExtensions,
                          PRInt32 aVariants,
                          PRInt64 aLastModifiedTime,
-                         PRBool aCanUnload,
-                         PRBool aArgsAreUTF8)
+                         bool aCanUnload,
+                         bool aArgsAreUTF8)
 : mPluginHost(nsnull),
 mName(aName),
 mDescription(aDescription),
@@ -336,14 +336,14 @@ nsPluginTag::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetDisabled(PRBool* aDisabled)
+nsPluginTag::GetDisabled(bool* aDisabled)
 {
   *aDisabled = !HasFlag(NS_PLUGIN_FLAG_ENABLED);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPluginTag::SetDisabled(PRBool aDisabled)
+nsPluginTag::SetDisabled(bool aDisabled)
 {
   if (HasFlag(NS_PLUGIN_FLAG_ENABLED) == !aDisabled)
     return NS_OK;
@@ -358,14 +358,14 @@ nsPluginTag::SetDisabled(PRBool aDisabled)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetBlocklisted(PRBool* aBlocklisted)
+nsPluginTag::GetBlocklisted(bool* aBlocklisted)
 {
   *aBlocklisted = HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPluginTag::SetBlocklisted(PRBool aBlocklisted)
+nsPluginTag::SetBlocklisted(bool aBlocklisted)
 {
   if (HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED) == aBlocklisted)
     return NS_OK;
@@ -380,7 +380,7 @@ nsPluginTag::SetBlocklisted(PRBool aBlocklisted)
 }
 
 void
-nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
+nsPluginTag::RegisterWithCategoryManager(bool aOverrideInternalTypes,
                                          nsPluginTag::nsRegisterType aType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
@@ -453,7 +453,7 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
 
 void nsPluginTag::Mark(PRUint32 mask)
 {
-  PRBool wasEnabled = IsEnabled();
+  bool wasEnabled = IsEnabled();
   mFlags |= mask;
   // Update entries in the category manager if necessary.
   if (mPluginHost && wasEnabled != IsEnabled()) {
@@ -466,7 +466,7 @@ void nsPluginTag::Mark(PRUint32 mask)
 
 void nsPluginTag::UnMark(PRUint32 mask)
 {
-  PRBool wasEnabled = IsEnabled();
+  bool wasEnabled = IsEnabled();
   mFlags &= ~mask;
   // Update entries in the category manager if necessary.
   if (mPluginHost && wasEnabled != IsEnabled()) {
@@ -477,7 +477,7 @@ void nsPluginTag::UnMark(PRUint32 mask)
   }
 }
 
-PRBool nsPluginTag::HasFlag(PRUint32 flag)
+bool nsPluginTag::HasFlag(PRUint32 flag)
 {
   return (mFlags & flag) != 0;
 }
@@ -487,12 +487,12 @@ PRUint32 nsPluginTag::Flags()
   return mFlags;
 }
 
-PRBool nsPluginTag::IsEnabled()
+bool nsPluginTag::IsEnabled()
 {
   return HasFlag(NS_PLUGIN_FLAG_ENABLED) && !HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED);
 }
 
-PRBool nsPluginTag::Equals(nsPluginTag *aPluginTag)
+bool nsPluginTag::Equals(nsPluginTag *aPluginTag)
 {
   NS_ENSURE_TRUE(aPluginTag, PR_FALSE);
   

@@ -133,20 +133,20 @@ public:
      */
     nsresult
     CheckContainer(nsIRDFResource* aTargetResource,
-                   PRBool* aIsContainer);
+                   bool* aIsContainer);
 
     /*
      * Check if a resource does not have any children
      */
     nsresult
     CheckEmpty(nsIRDFResource* aTargetResource,
-               PRBool* aIsEmpty);
+               bool* aIsEmpty);
 
     /**
      * Check if a resource is a separator
      */
     nsresult
-    CheckIsSeparator(nsIRDFResource* aResource, PRBool* aIsSeparator);
+    CheckIsSeparator(nsIRDFResource* aResource, bool* aIsSeparator);
 
     /*
      * Compute the containment properties which are additional arcs which
@@ -320,12 +320,12 @@ protected:
     nsIXULTemplateBuilder* mBuilder;
 
     // true if the query processor has been initialized
-    PRBool mQueryProcessorRDFInited;
+    bool mQueryProcessorRDFInited;
 
     // true if results have been generated. Once set, bindings can no longer
     // be added. If they were, the binding value arrays for results that have
     // already been generated would be the wrong size
-    PRBool mGenerationStarted;
+    bool mGenerationStarted;
 
     // nesting level for RDF batch notifications
     PRInt32 mUpdateBatchNest;

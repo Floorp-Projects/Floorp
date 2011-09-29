@@ -65,7 +65,7 @@ public:
   NS_DECL_NSIDOMCLOSEEVENT
 
 private:
-  PRBool mWasClean;
+  bool mWasClean;
   PRUint16 mReasonCode;
   nsString mReason;
 };

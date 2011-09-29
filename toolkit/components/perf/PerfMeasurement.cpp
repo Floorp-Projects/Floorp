@@ -110,7 +110,7 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              PRUint32 argc,
              jsval* argv,
              jsval* vp,
-             PRBool* _retval)
+             bool* _retval)
 {
   JSObject* scope = JS_GetScopeChain(cx);
   if (!scope)

@@ -61,8 +61,8 @@ class nsReadConfig : public nsIReadConfig,
   
         nsresult readConfigFile();
         nsresult openAndEvaluateJSFile(const char *aFileName, PRInt32 obscureValue, 
-                                        PRBool isEncoded, PRBool isBinDir);
-        PRBool mRead;
+                                        bool isEncoded, bool isBinDir);
+        bool mRead;
 private:
         nsCOMPtr<nsIAutoConfig> mAutoConfig;
 };

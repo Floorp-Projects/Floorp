@@ -70,7 +70,7 @@ nsXULTemplateResultRDF::~nsXULTemplateResultRDF()
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultRDF::GetIsContainer(PRBool* aIsContainer)
+nsXULTemplateResultRDF::GetIsContainer(bool* aIsContainer)
 {
     *aIsContainer = PR_FALSE;
 
@@ -84,7 +84,7 @@ nsXULTemplateResultRDF::GetIsContainer(PRBool* aIsContainer)
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultRDF::GetIsEmpty(PRBool* aIsEmpty)
+nsXULTemplateResultRDF::GetIsEmpty(bool* aIsEmpty)
 {
     *aIsEmpty = PR_TRUE;
 
@@ -98,7 +98,7 @@ nsXULTemplateResultRDF::GetIsEmpty(PRBool* aIsEmpty)
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultRDF::GetMayProcessChildren(PRBool* aMayProcessChildren)
+nsXULTemplateResultRDF::GetMayProcessChildren(bool* aMayProcessChildren)
 {
     // RDF always allows recursion
     *aMayProcessChildren = PR_TRUE;
@@ -136,7 +136,7 @@ nsXULTemplateResultRDF::GetType(nsAString& aType)
 
     nsXULTemplateQueryProcessorRDF* processor = GetProcessor();
     if (processor) {
-        PRBool found;
+        bool found;
         rv = processor->CheckIsSeparator(mNode, &found);
         if (NS_SUCCEEDED(rv) && found)
             aType.AssignLiteral("separator");
@@ -209,7 +209,7 @@ nsXULTemplateResultRDF::GetAssignment(nsIAtom* aVar, nsIRDFNode** aValue)
 }
 
 
-PRBool
+bool
 nsXULTemplateResultRDF::SyncAssignments(nsIRDFResource* aSubject,
                                         nsIRDFResource* aPredicate,
                                         nsIRDFNode* aTarget)
@@ -225,7 +225,7 @@ nsXULTemplateResultRDF::SyncAssignments(nsIRDFResource* aSubject,
     return PR_FALSE;
 }
 
-PRBool
+bool
 nsXULTemplateResultRDF::HasMemoryElement(const MemoryElement& aMemoryElement)
 {
     MemoryElementSet::ConstIterator last = mInst.mSupport.Last();

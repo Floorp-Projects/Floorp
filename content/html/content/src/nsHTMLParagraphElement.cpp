@@ -67,11 +67,11 @@ public:
   // nsIDOMHTMLParagraphElement
   NS_DECL_NSIDOMHTMLPARAGRAPHELEMENT
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -113,7 +113,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLParagraphElement)
 NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align)
 
 
-PRBool
+bool
 nsHTMLParagraphElement::ParseAttribute(PRInt32 aNamespaceID,
                                        nsIAtom* aAttribute,
                                        const nsAString& aValue,
@@ -134,7 +134,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLParagraphElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {

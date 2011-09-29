@@ -228,7 +228,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       groupID: (this.parent ? this.parent.id : 0),
       title: this.tab.label
     };
-    if (this.parent.getActiveTab() == this)
+    if (this.parent && this.parent.getActiveTab() == this)
       data.active = true;
 
     return data;

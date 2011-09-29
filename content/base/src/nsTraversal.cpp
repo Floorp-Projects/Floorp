@@ -50,7 +50,7 @@
 nsTraversal::nsTraversal(nsINode *aRoot,
                          PRUint32 aWhatToShow,
                          nsIDOMNodeFilter *aFilter,
-                         PRBool aExpandEntityReferences) :
+                         bool aExpandEntityReferences) :
     mRoot(aRoot),
     mWhatToShow(aWhatToShow),
     mFilter(aFilter),

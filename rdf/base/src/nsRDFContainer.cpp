@@ -162,7 +162,7 @@ RDFContainerImpl::Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    PRBool isContainer;
+    bool isContainer;
     rv = gRDFContainerUtils->IsContainer(aDataSource, aContainer, &isContainer);
     if (NS_FAILED(rv)) return rv;
 
@@ -261,7 +261,7 @@ RDFContainerImpl::AppendElement(nsIRDFNode *aElement)
 
 
 NS_IMETHODIMP
-RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
+RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, bool aRenumber)
 {
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
@@ -301,7 +301,7 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
 
 
 NS_IMETHODIMP
-RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool aRenumber)
+RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, bool aRenumber)
 {
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
@@ -343,7 +343,7 @@ RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, PRBool a
 }
 
 NS_IMETHODIMP
-RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode** _retval)
+RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, bool aRenumber, nsIRDFNode** _retval)
 {
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
@@ -540,7 +540,7 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         propagatable->SetPropagateChanges(PR_FALSE);
     }
 
-    PRBool  err = PR_FALSE;
+    bool    err = false;
     while (!err && ((aIncrement < 0) ? (i <= count) : (i >= aStartIndex)))
     {
         nsCOMPtr<nsIRDFResource> oldOrdinal;
@@ -574,7 +574,7 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         }
 
         while (1) {
-            PRBool hasMore;
+            bool hasMore;
             rv = targets->HasMoreElements(&hasMore);
             if (NS_FAILED(rv))
             {

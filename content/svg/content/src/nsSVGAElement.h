@@ -83,27 +83,27 @@ public:
   // nsIContent
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
-  virtual PRBool IsLink(nsIURI** aURI) const;
+                              bool aCompileEventHandlers);
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true);
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false);
+  virtual bool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
   virtual void RequestLinkStateUpdate();
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
   virtual nsEventStates IntrinsicState() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
+                   const nsAString& aValue, bool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+                           bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify);
+                             bool aNotify);
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:

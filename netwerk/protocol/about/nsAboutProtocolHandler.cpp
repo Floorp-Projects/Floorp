@@ -109,7 +109,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     // Unfortunately, people create random about: URIs that don't correspond to
     // about: modules...  Since those URIs will never open a channel, might as
     // well consider them unsafe for better perf, and just in case.
-    PRBool isSafe = PR_FALSE;
+    bool isSafe = false;
     
     nsCOMPtr<nsIAboutModule> aboutMod;
     rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
@@ -195,7 +195,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;
@@ -261,7 +261,7 @@ nsSafeAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsSafeAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsSafeAboutProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;
@@ -283,7 +283,7 @@ nsNestedAboutURI::Read(nsIObjectInputStream* aStream)
     nsresult rv = nsSimpleNestedURI::Read(aStream);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool haveBase;
+    bool haveBase;
     rv = aStream->ReadBoolean(&haveBase);
     if (NS_FAILED(rv)) return rv;
 
@@ -326,7 +326,7 @@ nsNestedAboutURI::Write(nsIObjectOutputStream* aStream)
 }
 
 // nsIIPCSerializable
-PRBool
+bool
 nsNestedAboutURI::Read(const IPC::Message *aMsg, void **aIter)
 {
     if (!nsSimpleNestedURI::Read(aMsg, aIter))

@@ -80,11 +80,11 @@ private:
   nsCOMPtr<nsIAppShell> mAppShell;
 
   PRInt32      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
-  PRPackedBool mRunning;        // Have we started the main event loop?
-  PRPackedBool mShuttingDown;   // Quit method reentrancy check
-  PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
-  PRPackedBool mRestart;        // Quit(eRestart)
-  PRPackedBool mInterrupted;    // Was startup interrupted by an interactive prompt?
+  bool mRunning;        // Have we started the main event loop?
+  bool mShuttingDown;   // Quit method reentrancy check
+  bool mAttemptingQuit; // Quit(eAttemptQuit) still trying
+  bool mRestart;        // Quit(eRestart)
+  bool mInterrupted;    // Was startup interrupted by an interactive prompt?
 };
 
 #endif // nsAppStartup_h__

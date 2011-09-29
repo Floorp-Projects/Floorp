@@ -162,7 +162,7 @@ GetNextSiblingD3D10(LayerD3D10* aLayer)
                 : nsnull;
 }
 
-static PRBool
+static bool
 HasOpaqueAncestorLayer(Layer* aLayer)
 {
   for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
@@ -179,7 +179,7 @@ ContainerLayerD3D10::RenderLayer()
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
   float opacity = GetEffectiveOpacity();
-  PRBool useIntermediate = UseIntermediateSurface();
+  bool useIntermediate = UseIntermediateSurface();
 
   nsRefPtr<ID3D10RenderTargetView> previousRTView;
   nsRefPtr<ID3D10Texture2D> renderTexture;
@@ -216,7 +216,7 @@ ContainerLayerD3D10::RenderLayer()
       // covered by something opaque. Otherwise copying up the background is
       // not safe.
       if (mSupportsComponentAlphaChildren) {
-        PRBool is2d = transform3D.Is2D(&transform);
+        bool is2d = transform3D.Is2D(&transform);
         NS_ASSERTION(is2d, "Transform should be 2d when mSupportsComponentAlphaChildren.");
 
         // Copy background up from below. This applies any 2D transform that is

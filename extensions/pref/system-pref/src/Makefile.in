@@ -50,10 +50,7 @@ SHORT_LIBNAME = syspref
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-
-ifdef MOZ_ENABLE_GTK2
 DIRS		= gconf
-endif
 
 CPPSRCS =   \
   nsSystemPref.cpp	   \
@@ -65,8 +62,6 @@ EXPORTS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_ENABLE_GTK2
 INCLUDES	+= \
 		-I$(srcdir)/gconf \
 		$(NULL)
-endif

@@ -114,13 +114,13 @@ nsXBLContentSink::Init(nsIDocument* aDoc,
 }
 
 void
-nsXBLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
+nsXBLContentSink::MaybeStartLayout(bool aIgnorePendingSheets)
 {
   return;
 }
 
 nsresult
-nsXBLContentSink::FlushText(PRBool aReleaseTextNode)
+nsXBLContentSink::FlushText(bool aReleaseTextNode)
 {
   if (mTextLength != 0) {
     const nsASingleFragmentString& text = Substring(mText, mText+mTextLength);
@@ -175,7 +175,7 @@ nsXBLContentSink::FlushText(PRBool aReleaseTextNode)
           content->Tag() != nsGkAtoms::label &&
           content->Tag() != nsGkAtoms::description))) {
 
-      PRBool isWS = PR_TRUE;
+      bool isWS = true;
       if (mTextLength > 0) {
         const PRUnichar* cp = mText;
         const PRUnichar* end = mText + mTextLength;
@@ -203,7 +203,7 @@ NS_IMETHODIMP
 nsXBLContentSink::ReportError(const PRUnichar* aErrorText, 
                               const PRUnichar* aSourceText,
                               nsIScriptError *aError,
-                              PRBool *_retval)
+                              bool *_retval)
 {
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
 
@@ -402,7 +402,7 @@ nsXBLContentSink::HandleCDataSection(const PRUnichar *aData,
     if (!(_cond)) { ReportUnexpectedElement(aTagName, aLineNumber); return PR_TRUE; } \
   PR_END_MACRO
 
-PRBool 
+bool 
 nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts, 
                                   PRUint32 aAttsCount, 
                                   PRInt32 aNameSpaceID, 
@@ -418,7 +418,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     return PR_TRUE;
   }
 
-  PRBool ret = PR_TRUE;
+  bool ret = true;
   if (aTagName == nsGkAtoms::bindings) {
     ENSURE_XBL_STATE(mState == eXBL_InDocument);
       
@@ -432,8 +432,8 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
 
     nsIURI *uri = mDocument->GetDocumentURI();
       
-    PRBool isChrome = PR_FALSE;
-    PRBool isRes = PR_FALSE;
+    bool isChrome = false;
+    bool isRes = false;
 
     uri->SchemeIs("chrome", &isChrome);
     uri->SchemeIs("resource", &isRes);
@@ -594,7 +594,7 @@ nsXBLContentSink::ConstructBinding(PRUint32 aLineNumber)
   return rv;
 }
 
-static PRBool
+static bool
 FindValue(const PRUnichar **aAtts, nsIAtom *aAtom, const PRUnichar **aResult)
 {
   nsCOMPtr<nsIAtom> prefix, localName;
@@ -757,7 +757,7 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
       // but only on a per-principal-and-JS-stackframe basis!  So for now
       // this is basically equivalent to testing that we have the system
       // principal, since there is no JS stackframe in sight here...
-      PRBool hasUniversalXPConnect;
+      bool hasUniversalXPConnect;
       nsresult rv = mDocument->NodePrincipal()->
         IsCapabilityEnabled("UniversalXPConnect", nsnull,
                             &hasUniversalXPConnect);
@@ -879,7 +879,7 @@ nsXBLContentSink::ConstructParameter(const PRUnichar **aAtts)
 nsresult
 nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                nsIContent** aResult, PRBool* aAppendContent,
+                                nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
 {
 #ifdef MOZ_XUL

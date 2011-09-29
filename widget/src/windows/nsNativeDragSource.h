@@ -77,7 +77,7 @@ public:
   // to execute the drop, otherwise NOERROR.
   STDMETHODIMP QueryContinueDrag(BOOL fESC, DWORD grfKeyState);
 
-  PRPackedBool UserCancelled() { return mUserCancelled; }
+  bool UserCancelled() { return mUserCancelled; }
 
 protected:
   // Reference count
@@ -90,7 +90,7 @@ protected:
   HCURSOR m_hCursor;
 
   // true if the user cancelled the drag by pressing escape
-  PRPackedBool mUserCancelled;
+  bool mUserCancelled;
 };
 
 #endif // _nsNativeDragSource_h_

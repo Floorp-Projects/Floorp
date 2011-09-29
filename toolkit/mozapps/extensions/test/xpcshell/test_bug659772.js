@@ -114,6 +114,34 @@ function run_test_1() {
       Services.prefs.setIntPref("extensions.databaseSchema", 1);
       db.close();
 
+      let jsonfile = gProfD.clone();
+      jsonfile.append("extensions");
+      jsonfile.append("staged");
+      jsonfile.append("addon3@tests.mozilla.org.json");
+      do_check_true(jsonfile.exists());
+
+      // Remove an unnecessary property from the cached manifest
+      let fis = AM_Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(AM_Ci.nsIFileInputStream);
+      let json = AM_Cc["@mozilla.org/dom/json;1"].
+                 createInstance(AM_Ci.nsIJSON);
+      fis.init(jsonfile, -1, 0, 0);
+      let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
+      fis.close();
+      delete addonObj.optionsType;
+
+      let stream = AM_Cc["@mozilla.org/network/file-output-stream;1"].
+                   createInstance(AM_Ci.nsIFileOutputStream);
+      let converter = AM_Cc["@mozilla.org/intl/converter-output-stream;1"].
+                      createInstance(AM_Ci.nsIConverterOutputStream);
+      stream.init(jsonfile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                            FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
+                            0);
+      converter.init(stream, "UTF-8", 0, 0x0000);
+      converter.writeString(JSON.stringify(addonObj));
+      converter.close();
+      stream.close();
+
       startupManager(false);
 
       AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -220,6 +248,34 @@ function run_test_2() {
       db.schemaVersion = 1;
       Services.prefs.setIntPref("extensions.databaseSchema", 1);
       db.close();
+
+      let jsonfile = gProfD.clone();
+      jsonfile.append("extensions");
+      jsonfile.append("staged");
+      jsonfile.append("addon3@tests.mozilla.org.json");
+      do_check_true(jsonfile.exists());
+
+      // Remove an unnecessary property from the cached manifest
+      let fis = AM_Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(AM_Ci.nsIFileInputStream);
+      let json = AM_Cc["@mozilla.org/dom/json;1"].
+                 createInstance(AM_Ci.nsIJSON);
+      fis.init(jsonfile, -1, 0, 0);
+      let addonObj = json.decodeFromStream(fis, jsonfile.fileSize);
+      fis.close();
+      delete addonObj.optionsType;
+
+      let stream = AM_Cc["@mozilla.org/network/file-output-stream;1"].
+                   createInstance(AM_Ci.nsIFileOutputStream);
+      let converter = AM_Cc["@mozilla.org/intl/converter-output-stream;1"].
+                      createInstance(AM_Ci.nsIConverterOutputStream);
+      stream.init(jsonfile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                            FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
+                            0);
+      converter.init(stream, "UTF-8", 0, 0x0000);
+      converter.writeString(JSON.stringify(addonObj));
+      converter.close();
+      stream.close();
 
       gAppInfo.version = "2";
       startupManager(true);

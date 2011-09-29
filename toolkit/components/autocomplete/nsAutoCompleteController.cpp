@@ -232,7 +232,7 @@ nsAutoCompleteController::HandleText()
     return NS_OK;
   }
 
-  PRBool disabled;
+  bool disabled;
   input->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
@@ -264,7 +264,7 @@ nsAutoCompleteController::HandleText()
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleEnter(PRBool aIsPopupSelection, PRBool *_retval)
+nsAutoCompleteController::HandleEnter(bool aIsPopupSelection, bool *_retval)
 {
   *_retval = PR_FALSE;
   if (!mInput)
@@ -291,7 +291,7 @@ nsAutoCompleteController::HandleEnter(PRBool aIsPopupSelection, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleEscape(PRBool *_retval)
+nsAutoCompleteController::HandleEscape(bool *_retval)
 {
   *_retval = PR_FALSE;
   if (!mInput)
@@ -321,7 +321,7 @@ nsAutoCompleteController::HandleStartComposition()
     return NS_OK;
 
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
-  PRBool disabled;
+  bool disabled;
   input->GetDisableAutoComplete(&disabled);
   if (disabled)
     return NS_OK;
@@ -329,12 +329,12 @@ nsAutoCompleteController::HandleStartComposition()
   // Stop all searches in case they are async.
   StopSearch();
 
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   input->GetPopupOpen(&isOpen);
   if (isOpen) {
     ClosePopup();
 
-    PRBool stillOpen = PR_FALSE;
+    bool stillOpen = false;
     input->GetPopupOpen(&stillOpen);
     mPopupClosedByCompositionStart = !stillOpen;
   }
@@ -347,7 +347,7 @@ nsAutoCompleteController::HandleEndComposition()
   NS_ENSURE_TRUE(mIsIMEComposing, NS_OK);
 
   mIsIMEComposing = PR_FALSE;
-  PRBool forceOpenPopup = mPopupClosedByCompositionStart;
+  bool forceOpenPopup = mPopupClosedByCompositionStart;
   mPopupClosedByCompositionStart = PR_FALSE;
 
   if (!mInput)
@@ -360,7 +360,7 @@ nsAutoCompleteController::HandleEndComposition()
     // Show the popup with a filtered result set
     HandleText();
   } else if (forceOpenPopup) {
-    PRBool cancel;
+    bool cancel;
     HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
   }
   // On here, |value| and |mSearchString| are same. Therefore, next HandleText should be
@@ -373,12 +373,12 @@ nsAutoCompleteController::HandleEndComposition()
 NS_IMETHODIMP
 nsAutoCompleteController::HandleTab()
 {
-  PRBool cancel;
+  bool cancel;
   return HandleEnter(PR_FALSE, &cancel);
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
+nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, bool *_retval)
 {
   // By default, don't cancel the event
   *_retval = PR_FALSE;
@@ -398,7 +398,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
   input->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
 
-  PRBool disabled;
+  bool disabled;
   input->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
@@ -411,18 +411,18 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
     // the cursor to home/end on some systems
     *_retval = PR_TRUE;
 
-    PRBool isOpen = PR_FALSE;
+    bool isOpen = false;
     input->GetPopupOpen(&isOpen);
     if (isOpen) {
-      PRBool reverse = aKey == nsIDOMKeyEvent::DOM_VK_UP ||
+      bool reverse = aKey == nsIDOMKeyEvent::DOM_VK_UP ||
                       aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ? PR_TRUE : PR_FALSE;
-      PRBool page = aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ||
+      bool page = aKey == nsIDOMKeyEvent::DOM_VK_PAGE_UP ||
                     aKey == nsIDOMKeyEvent::DOM_VK_PAGE_DOWN ? PR_TRUE : PR_FALSE;
 
       // Fill in the value of the textbox with whatever is selected in the popup
       // if the completeSelectedIndex attribute is set.  We check this before
       // calling SelectBy of an earlier attempt to avoid crashing.
-      PRBool completeSelection;
+      bool completeSelection;
       input->GetCompleteSelectedIndex(&completeSelection);
 
       // Instruct the result view to scroll by the given amount and direction
@@ -496,12 +496,12 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
             )
   {
     // The user hit a text-navigation key.
-    PRBool isOpen = PR_FALSE;
+    bool isOpen = false;
     input->GetPopupOpen(&isOpen);
     if (isOpen) {
       PRInt32 selectedIndex;
       popup->GetSelectedIndex(&selectedIndex);
-      PRBool shouldComplete;
+      bool shouldComplete;
       input->GetCompleteDefaultIndex(&shouldComplete);
       if (selectedIndex >= 0) {
         // The pop-up is open and has a selection, take its value
@@ -542,14 +542,14 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleDelete(PRBool *_retval)
+nsAutoCompleteController::HandleDelete(bool *_retval)
 {
   *_retval = PR_FALSE;
   if (!mInput)
     return NS_OK;
 
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   input->GetPopupOpen(&isOpen);
   if (!isOpen || mRowCount <= 0) {
     // Nothing left to delete, proceed as normal
@@ -594,7 +594,7 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
     popup->SetSelectedIndex(index);
 
     // Complete to the new current value.
-    PRBool shouldComplete = PR_FALSE;
+    bool shouldComplete = false;
     mInput->GetCompleteDefaultIndex(&shouldComplete);
     if (shouldComplete) {
       nsAutoString value;
@@ -805,21 +805,21 @@ nsAutoCompleteController::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsContainer(PRInt32 index, PRBool *_retval)
+nsAutoCompleteController::IsContainer(PRInt32 index, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsContainerOpen(PRInt32 index, PRBool *_retval)
+nsAutoCompleteController::IsContainerOpen(PRInt32 index, bool *_retval)
 {
   NS_NOTREACHED("no container cells");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsContainerEmpty(PRInt32 index, PRBool *_retval)
+nsAutoCompleteController::IsContainerEmpty(PRInt32 index, bool *_retval)
 {
   NS_NOTREACHED("no container cells");
   return NS_OK;
@@ -840,7 +840,7 @@ nsAutoCompleteController::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, PRBool *_retval)
+nsAutoCompleteController::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -904,28 +904,28 @@ nsAutoCompleteController::CycleCell(PRInt32 row, nsITreeColumn* col)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+nsAutoCompleteController::IsEditable(PRInt32 row, nsITreeColumn* col, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+nsAutoCompleteController::IsSelectable(PRInt32 row, nsITreeColumn* col, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsSeparator(PRInt32 index, PRBool *_retval)
+nsAutoCompleteController::IsSeparator(PRInt32 index, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsSorted(PRBool *_retval)
+nsAutoCompleteController::IsSorted(bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -933,7 +933,7 @@ nsAutoCompleteController::IsSorted(PRBool *_retval)
 
 NS_IMETHODIMP
 nsAutoCompleteController::CanDrop(PRInt32 index, PRInt32 orientation,
-                                  nsIDOMDataTransfer* dataTransfer, PRBool *_retval)
+                                  nsIDOMDataTransfer* dataTransfer, bool *_retval)
 {
   return NS_OK;
 }
@@ -986,7 +986,7 @@ nsAutoCompleteController::ClosePopup()
     return NS_OK;
   }
 
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   mInput->GetPopupOpen(&isOpen);
   if (!isOpen)
     return NS_OK;
@@ -1118,23 +1118,23 @@ nsAutoCompleteController::ClearSearchTimer()
 }
 
 nsresult
-nsAutoCompleteController::EnterMatch(PRBool aIsPopupSelection)
+nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
 {
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   nsCOMPtr<nsIAutoCompletePopup> popup;
   input->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
 
-  PRBool forceComplete;
+  bool forceComplete;
   input->GetForceComplete(&forceComplete);
 
   // Ask the popup if it wants to enter a special value into the textbox
   nsAutoString value;
   popup->GetOverrideValue(value);
   if (value.IsEmpty()) {
-    PRBool shouldComplete;
+    bool shouldComplete;
     mInput->GetCompleteDefaultIndex(&shouldComplete);
-    PRBool completeSelection;
+    bool completeSelection;
     input->GetCompleteSelectedIndex(&completeSelection);
 
     // If completeselectedindex is false or a row was selected from the popup,
@@ -1192,7 +1192,7 @@ nsAutoCompleteController::EnterMatch(PRBool aIsPopupSelection)
   obsSvc->NotifyObservers(input, "autocomplete-did-enter-text", nsnull);
   ClosePopup();
 
-  PRBool cancel;
+  bool cancel;
   input->OnTextEntered(&cancel);
 
   return NS_OK;
@@ -1210,7 +1210,7 @@ nsAutoCompleteController::RevertTextValue()
   nsAutoString oldValue(mSearchString);
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
-  PRBool cancel = PR_FALSE;
+  bool cancel = false;
   input->OnTextReverted(&cancel);
 
   if (!cancel) {
@@ -1379,7 +1379,7 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
       selectionEnd != (PRInt32)mSearchString.Length())
     return NS_OK;
 
-  PRBool shouldComplete;
+  bool shouldComplete;
   mInput->GetCompleteDefaultIndex(&shouldComplete);
   if (!shouldComplete)
     return NS_OK;
@@ -1395,7 +1395,7 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 
 nsresult
 nsAutoCompleteController::GetDefaultCompleteValue(PRInt32 aSearchIndex,
-                                                  PRBool aPreserveCasing,
+                                                  bool aPreserveCasing,
                                                   nsAString &_retval)
 {
   PRInt32 defaultIndex = -1;
@@ -1505,20 +1505,20 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
 }
 
 nsresult
-nsAutoCompleteController::GetResultLabelAt(PRInt32 aIndex, PRBool aValueOnly, nsAString & _retval)
+nsAutoCompleteController::GetResultLabelAt(PRInt32 aIndex, bool aValueOnly, nsAString & _retval)
 {
   return GetResultValueLabelAt(aIndex, aValueOnly, PR_FALSE, _retval);
 }
 
 nsresult
-nsAutoCompleteController::GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly, nsAString & _retval)
+nsAutoCompleteController::GetResultValueAt(PRInt32 aIndex, bool aValueOnly, nsAString & _retval)
 {
   return GetResultValueLabelAt(aIndex, aValueOnly, PR_TRUE, _retval);
 }
 
 nsresult
-nsAutoCompleteController::GetResultValueLabelAt(PRInt32 aIndex, PRBool aValueOnly,
-                                               PRBool aGetValue, nsAString & _retval)
+nsAutoCompleteController::GetResultValueLabelAt(PRInt32 aIndex, bool aValueOnly,
+                                               bool aGetValue, nsAString & _retval)
 {
   NS_ENSURE_TRUE(aIndex >= 0 && (PRUint32) aIndex < mRowCount, NS_ERROR_ILLEGAL_VALUE);
 

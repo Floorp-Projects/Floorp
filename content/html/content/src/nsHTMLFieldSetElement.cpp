@@ -119,7 +119,7 @@ nsHTMLFieldSetElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
 nsresult
 nsHTMLFieldSetElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                    const nsAString* aValue, PRBool aNotify)
+                                    const nsAString* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled &&
       nsINode::GetFirstChild()) {
@@ -155,7 +155,7 @@ nsHTMLFieldSetElement::GetType(nsAString& aType)
 }
 
 /* static */
-PRBool
+bool
 nsHTMLFieldSetElement::MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
                                            nsIAtom* aAtom, void* aData)
 {
@@ -192,7 +192,7 @@ nsHTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 
 nsresult
 nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
-                                     PRBool aNotify)
+                                     bool aNotify)
 {
   bool firstLegendHasChanged = false;
 
@@ -221,7 +221,7 @@ nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
 }
 
 nsresult
-nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   bool firstLegendHasChanged = false;
 
@@ -250,7 +250,7 @@ nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 }
 
 void
-nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(PRBool aNotify)
+nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
 {
   /**
    * NOTE: this could be optimized if only call when the fieldset is currently

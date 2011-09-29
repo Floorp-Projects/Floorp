@@ -66,7 +66,7 @@ nsDNSPrefetch::Shutdown()
     return NS_OK;
 }
 
-nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI, PRBool storeTiming)
+nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI, bool storeTiming)
     : mStoreTiming(storeTiming)
 {
     aURI->GetAsciiHost(mHostname);

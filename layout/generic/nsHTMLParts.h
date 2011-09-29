@@ -223,7 +223,7 @@ NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableCellFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsBorderCollapse);
+NS_NewTableCellFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsBorderCollapse);
 
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,

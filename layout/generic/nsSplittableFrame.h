@@ -81,8 +81,8 @@ public:
 
 #ifdef DEBUG
   // Can aFrame2 be reached from aFrame1 by following prev/next continuations?
-  static PRBool IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2);
-  static PRBool IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2);
+  static bool IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2);
+  static bool IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2);
 #endif
   
   // Get the previous/next continuation, only if it is fluid (an "in-flow").

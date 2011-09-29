@@ -200,7 +200,7 @@ nsCommandManager::RemoveCommandObserver(nsIObserver *aCommandObserver, const cha
 NS_IMETHODIMP
 nsCommandManager::IsCommandSupported(const char *aCommandName,
                                      nsIDOMWindow *aTargetWindow,
-                                     PRBool *outCommandSupported)
+                                     bool *outCommandSupported)
 {
   NS_ENSURE_ARG_POINTER(outCommandSupported);
 
@@ -215,11 +215,11 @@ nsCommandManager::IsCommandSupported(const char *aCommandName,
 NS_IMETHODIMP
 nsCommandManager::IsCommandEnabled(const char *aCommandName,
                                    nsIDOMWindow *aTargetWindow,
-                                   PRBool *outCommandEnabled)
+                                   bool *outCommandEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCommandEnabled);
   
-  PRBool  commandEnabled = PR_FALSE;
+  bool    commandEnabled = false;
   
   nsCOMPtr<nsIController> controller;
   GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
@@ -275,7 +275,7 @@ nsCommandManager::DoCommand(const char *aCommandName,
 }
 
 nsresult
-nsCommandManager::IsCallerChrome(PRBool *is_caller_chrome)
+nsCommandManager::IsCallerChrome(bool *is_caller_chrome)
 {
   *is_caller_chrome = PR_FALSE;
   nsresult rv = NS_OK;
@@ -300,7 +300,7 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
 
   // check if we're in content or chrome
   // if we're not chrome we must have a target window or we bail
-  PRBool isChrome = PR_FALSE;
+  bool isChrome = false;
   rv = IsCallerChrome(&isChrome);
   if (NS_FAILED(rv))
     return rv;

@@ -115,7 +115,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
   //FIXME Deinst  -- get dictionary name from prefs;
   nsresult res;
   nsCOMPtr<nsIFile> theFile;
-  PRBool dictExists;
+  bool dictExists;
 
   res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(theFile));
   if(NS_FAILED(res)) return res;
@@ -143,7 +143,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
 
   PRUnichar c;
   PRUint32 nRead;
-  PRBool done = PR_FALSE;
+  bool done = false;
   do{  // read each line of text into the string array.
     if( (NS_OK != convStream->Read(&c, 1, &nRead)) || (nRead != 1)) break;
     while(!done && ((c == '\n') || (c == '\r'))){
@@ -228,7 +228,7 @@ NS_IMETHODIMP mozPersonalDictionary::GetWordList(nsIStringEnumerator **aWords)
 }
 
 /* boolean Check (in wstring word, in wstring language); */
-NS_IMETHODIMP mozPersonalDictionary::Check(const PRUnichar *aWord, const PRUnichar *aLanguage, PRBool *aResult)
+NS_IMETHODIMP mozPersonalDictionary::Check(const PRUnichar *aWord, const PRUnichar *aLanguage, bool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aWord);
   NS_ENSURE_ARG_POINTER(aResult);

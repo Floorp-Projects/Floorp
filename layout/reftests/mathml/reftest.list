@@ -21,7 +21,7 @@ fails-if(winWidget) == mfenced-10.html mfenced-10-ref.html
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
-== quotes-1.xhtml quotes-1-ref.xhtml
+fails-if(Android&&layersOpenGL) == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml 
 == table-width-1.xhtml table-width-1-ref.xhtml
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
@@ -79,3 +79,4 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
+== positive-namedspace.html positive-namedspace-ref.html

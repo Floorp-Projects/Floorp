@@ -49,7 +49,7 @@
 static PRLogModuleInfo* sIdleLog = nsnull;
 #endif
 
-typedef PRBool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
+typedef bool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
                                                  int* error_base);
 
 typedef XScreenSaverInfo* (*_XScreenSaverAllocInfo_fn)(void);
@@ -57,7 +57,7 @@ typedef XScreenSaverInfo* (*_XScreenSaverAllocInfo_fn)(void);
 typedef void (*_XScreenSaverQueryInfo_fn)(Display* dpy, Drawable drw,
                                           XScreenSaverInfo *info);
 
-static PRBool sInitialized = PR_FALSE;
+static bool sInitialized = false;
 static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nsnull;
 static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;

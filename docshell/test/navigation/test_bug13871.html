@@ -27,9 +27,13 @@ window.onload = function () {
     window3.close();
 
     xpcCleanupWindows();
+    SpecialPowers.setBoolPref("dom.block_multiple_popups", gBlockMultiplePopups);
     SimpleTest.finish();
   }, 4);
 }
+
+var gBlockMultiplePopups = SpecialPowers.getBoolPref("dom.block_multiple_popups");
+SpecialPowers.setBoolPref("dom.block_multiple_popups", false);
 
 var window0 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window0", "width=10,height=10");
 var window1 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window1", "width=10,height=10");

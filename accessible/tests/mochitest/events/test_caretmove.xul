@@ -22,7 +22,7 @@
      */
 
     //gA11yEventDumpID = "eventdump"; // debug stuff
-    gA11yEventDumpToConsole = true;
+    //gA11yEventDumpToConsole = true;
 
     var gQueue = null;
 
@@ -31,10 +31,10 @@
       gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
 
       var id = "textbox";
-      gQueue.push(new synthFocus(id, new caretMoveChecker(5)));
-      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5)));
-      gQueue.push(new synthHomeKey(id, new caretMoveChecker(0)));
-      gQueue.push(new synthRightKey(id, new caretMoveChecker(1)));
+      gQueue.push(new synthFocus(id, new caretMoveChecker(5, id)));
+      gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, id)));
+      gQueue.push(new synthHomeKey(id, new caretMoveChecker(0, id)));
+      gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

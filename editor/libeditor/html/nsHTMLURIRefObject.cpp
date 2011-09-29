@@ -275,7 +275,7 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 NS_IMETHODIMP
 nsHTMLURIRefObject::RewriteAllURIs(const nsAString & aOldPat,
                             const nsAString & aNewPat,
-                            PRBool aMakeRel)
+                            bool aMakeRel)
 {
 #ifdef DEBUG_akkana
   printf("Can't rewrite URIs yet\n");

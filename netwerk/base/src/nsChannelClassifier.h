@@ -61,7 +61,7 @@ private:
 
     ~nsChannelClassifier() {}
     void MarkEntryClassified(nsresult status);
-    PRBool HasBeenClassified(nsIChannel *aChannel);
+    bool HasBeenClassified(nsIChannel *aChannel);
 };
 
 #endif

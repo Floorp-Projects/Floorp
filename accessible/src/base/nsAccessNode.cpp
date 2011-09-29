@@ -75,9 +75,8 @@
  */
 
 nsIStringBundle *nsAccessNode::gStringBundle = 0;
-nsINode *nsAccessNode::gLastFocusedNode = nsnull;
 
-PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
+bool nsAccessNode::gIsFormFillEnabled = false;
 
 nsApplicationAccessible *nsAccessNode::gApplicationAccessible = nsnull;
 
@@ -136,7 +135,7 @@ nsAccessNode::IsDefunct() const
   return !mContent;
 }
 
-PRBool
+bool
 nsAccessNode::Init()
 {
   return PR_TRUE;
@@ -206,7 +205,7 @@ void nsAccessNode::InitXPAccessibility()
 }
 
 // nsAccessNode protected static
-void nsAccessNode::NotifyA11yInitOrShutdown(PRBool aIsInit)
+void nsAccessNode::NotifyA11yInitOrShutdown(bool aIsInit)
 {
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
@@ -227,7 +226,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   // at exit of program
 
   NS_IF_RELEASE(gStringBundle);
-  NS_IF_RELEASE(gLastFocusedNode);
 
   // Release gApplicationAccessible after everything else is shutdown
   // so we don't accidently create it again while tearing down root accessibles

@@ -46,7 +46,6 @@
 #include "gfxFont.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
-#include "nsSVGMatrix.h"
 #include "nsTextFragment.h"
 
 class nsSVGTextFrame;
@@ -91,11 +90,11 @@ public:
    * @param aForceGlobalTransform controls whether to use the
    * global transform even when NS_STATE_NONDISPLAY_CHILD
    */
-  float GetAdvance(PRBool aForceGlobalTransform);
+  float GetAdvance(bool aForceGlobalTransform);
 
-  void SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransform);
+  void SetGlyphPosition(gfxPoint *aPosition, bool aForceGlobalTransform);
   nsSVGTextPathFrame* FindTextPathParent();
-  PRBool IsStartOfChunk(); // == is new absolutely positioned chunk.
+  bool IsStartOfChunk(); // == is new absolutely positioned chunk.
 
   void GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY);
   void SetStartIndex(PRUint32 aStartIndex);
@@ -119,28 +118,28 @@ public:
   void GetEffectiveRotate(PRInt32 strLength,
                           nsTArray<float> &aRotate);
   PRUint16 GetTextAnchor();
-  PRBool IsAbsolutelyPositioned();
-  PRBool IsTextEmpty() const {
+  bool IsAbsolutelyPositioned();
+  bool IsTextEmpty() const {
     return mContent->GetText()->GetLength() == 0;
   }
-  void SetTrimLeadingWhitespace(PRBool aTrimLeadingWhitespace) {
+  void SetTrimLeadingWhitespace(bool aTrimLeadingWhitespace) {
     mTrimLeadingWhitespace = aTrimLeadingWhitespace;
   }
-  void SetTrimTrailingWhitespace(PRBool aTrimTrailingWhitespace) {
+  void SetTrimTrailingWhitespace(bool aTrimTrailingWhitespace) {
     mTrimTrailingWhitespace = aTrimTrailingWhitespace;
   }
-  PRBool EndsWithWhitespace() const;
-  PRBool IsAllWhitespace() const;
+  bool EndsWithWhitespace() const;
+  bool IsAllWhitespace() const;
 
   // nsIFrame interface:
   NS_IMETHOD  CharacterDataChanged(CharacterDataChangeInfo* aInfo);
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  virtual void SetSelected(PRBool        aSelected,
+  virtual void SetSelected(bool          aSelected,
                            SelectionType aType);
-  NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
+  NS_IMETHOD  GetSelected(bool *aSelected) const;
+  NS_IMETHOD  IsSelectable(bool* aIsSelectable, PRUint8* aSelectStyle) const;
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -153,7 +152,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
@@ -181,8 +180,8 @@ public:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
-  NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
-  NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
+  NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
+  NS_IMETHOD_(bool) HasValidCoveredRect() { return true; }
 
   // nsSVGGeometryFrame methods
   gfxMatrix GetCanvasTM();
@@ -195,7 +194,7 @@ public:
   virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point);
   NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame();
   NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame();
-  NS_IMETHOD_(void) SetWhitespaceCompression(PRBool aCompressWhitespace) {
+  NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace) {
     mCompressWhitespace = aCompressWhitespace;
   }
 
@@ -217,12 +216,12 @@ protected:
    * the global transform; otherwise we won't use the global transform
    * if we're a NONDISPLAY_CHILD
    */
-  PRBool EnsureTextRun(float *aDrawScale, float *aMetricsScale,
-                       PRBool aForceGlobalTransform);
+  bool EnsureTextRun(float *aDrawScale, float *aMetricsScale,
+                       bool aForceGlobalTransform);
   void ClearTextRun();
 
-  PRBool GetCharacterData(nsAString & aCharacterData);
-  PRBool GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPositions,
+  bool GetCharacterData(nsAString & aCharacterData);
+  bool GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPositions,
                                float aMetricsScale);
   PRUint32 GetTextRunFlags(PRUint32 strLength);
 
@@ -234,7 +233,7 @@ protected:
                       gfxContext *aContext);
 
   void NotifyGlyphMetricsChange();
-  PRBool GetGlobalTransform(gfxMatrix *aMatrix);
+  bool GetGlobalTransform(gfxMatrix *aMatrix);
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
@@ -247,17 +246,17 @@ protected:
 
   // Used to support GetBBoxContribution by making GetConvasTM use this as the
   // parent transform instead of the real CanvasTM.
-  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCanvasTM;
+  nsAutoPtr<gfxMatrix> mOverrideCanvasTM;
 
   // Owning pointer, must call gfxTextRunWordCache::RemoveTextRun before deleting
   gfxTextRun *mTextRun;
   gfxPoint mPosition;
   // The start index into the position and rotation data
   PRUint32 mStartIndex;
-  PRPackedBool mCompressWhitespace;
-  PRPackedBool mTrimLeadingWhitespace;
-  PRPackedBool mTrimTrailingWhitespace;
-  PRPackedBool mPropagateTransform;
+  bool mCompressWhitespace;
+  bool mTrimLeadingWhitespace;
+  bool mTrimTrailingWhitespace;
+  bool mPropagateTransform;
 };
 
 #endif

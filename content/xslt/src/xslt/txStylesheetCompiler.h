@@ -47,7 +47,7 @@
 #include "txStylesheet.h"
 #include "nsTArray.h"
 
-extern PRBool
+extern bool
 TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID);
 
 class txHandlerTable;
@@ -66,8 +66,8 @@ public:
     txElementContext(const nsAString& aBaseURI);
     txElementContext(const txElementContext& aOther);
 
-    PRBool mPreserveWhitespace;
-    PRBool mForwardsCompatibleParsing;
+    bool mPreserveWhitespace;
+    bool mForwardsCompatibleParsing;
     nsString mBaseURI;
     nsRefPtr<txNamespaceMap> mMappings;
     nsTArray<PRInt32> mInstructionNamespaces;
@@ -106,7 +106,7 @@ public:
                   txListIterator* aInsertPosition);
 
     // Embedded stylesheets state
-    PRBool handleEmbeddedSheet()
+    bool handleEmbeddedSheet()
     {
         return mEmbedStatus == eInEmbed;
     }
@@ -144,12 +144,12 @@ public:
     nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  FunctionCall** aFunction);
-    PRBool caseInsensitiveNameTests();
+    bool caseInsensitiveNameTests();
 
     /**
      * Should the stylesheet be parsed in forwards compatible parsing mode.
      */
-    PRBool fcp()
+    bool fcp()
     {
         return mElementContext->mForwardsCompatibleParsing;
     }
@@ -164,8 +164,8 @@ public:
     nsAutoPtr<txElementContext> mElementContext;
     txPushNewContext* mSorter;
     nsAutoPtr<txList> mChooseGotoList;
-    PRPackedBool mDOE;
-    PRPackedBool mSearchingForFallback;
+    bool mDOE;
+    bool mSearchingForFallback;
 
 protected:
     nsRefPtr<txACompileObserver> mObserver;
@@ -181,8 +181,8 @@ protected:
         eHasEmbed
     } mEmbedStatus;
     nsString mStylesheetURI;
-    PRPackedBool mIsTopCompiler;
-    PRPackedBool mDoneWithThisStylesheet;
+    bool mIsTopCompiler;
+    bool mDoneWithThisStylesheet;
     txStack mObjectStack;
     txStack mOtherStack;
 
@@ -205,7 +205,7 @@ class txStylesheetCompiler : private txStylesheetCompilerState,
 {
 public:
     friend class txStylesheetCompilerState;
-    friend PRBool TX_XSLTFunctionAvailable(nsIAtom* aName,
+    friend bool TX_XSLTFunctionAvailable(nsIAtom* aName,
                                            PRInt32 aNameSpaceID);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
                          txACompileObserver* aObserver);

@@ -204,7 +204,7 @@ nsSize
 nsLeafBoxFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder,
-                                nsSize aPadding, PRBool aShrinkWrap)
+                                nsSize aPadding, bool aShrinkWrap)
 {
   // Important: NOT calling our direct superclass here!
   return nsFrame::ComputeAutoSize(aRenderingContext, aCBSize, aAvailableWidth,

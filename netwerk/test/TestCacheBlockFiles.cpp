@@ -39,7 +39,7 @@ typedef struct Allocation {
 } Allocation;
 
 nsresult
-StressTest(nsILocalFile *  localFile, PRInt32  testNumber, PRBool readWrite)
+StressTest(nsILocalFile *  localFile, PRInt32  testNumber, bool readWrite)
 {
     nsresult  rv = NS_OK;
 

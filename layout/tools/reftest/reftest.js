@@ -256,11 +256,23 @@ function OnRefTestLoad()
 
 function InitAndStartRefTests()
 {
-    /* set the gLoadTimeout */
+    /* These prefs are optional, so we don't need to spit an error to the log */
     try {
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                   getService(Components.interfaces.nsIPrefBranch2);
+    } catch(e) {
+      gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
+    }
+    
+    /* set the gLoadTimeout */
+    try {
       gLoadTimeout = prefs.getIntPref("reftest.timeout");
+    } catch(e) { 
+      gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+    }
+    
+    /* Get the logfile for android tests */
+    try {
       logFile = prefs.getCharPref("reftest.logFile");
       if (logFile) {
         try {
@@ -273,13 +285,19 @@ function InitAndStartRefTests()
           gDumpLog = dump;
         }
       }
+    } catch(e) {}
+    
+    try {
       gRemote = prefs.getBoolPref("reftest.remote");
-      gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
-    }
-    catch(e) {
-      gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+    } catch(e) { 
+      gRemote = false;
     }
 
+    try {
+      gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
+    } catch(e) {
+      gIgnoreWindowSize = false;
+    }
 
     /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
     try {

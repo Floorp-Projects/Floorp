@@ -110,8 +110,8 @@ public:
   ~nsGSettingsCollection();
 
 private:
-  PRBool KeyExists(const nsACString& aKey);
-  PRBool SetValue(const nsACString& aKey,
+  bool KeyExists(const nsACString& aKey);
+  bool SetValue(const nsACString& aKey,
                   GVariant *aValue);
 
   GSettings *mSettings;
@@ -124,7 +124,7 @@ nsGSettingsCollection::~nsGSettingsCollection()
   g_object_unref(mSettings);
 }
 
-PRBool
+bool
 nsGSettingsCollection::KeyExists(const nsACString& aKey)
 {
   if (!mKeys)
@@ -138,7 +138,7 @@ nsGSettingsCollection::KeyExists(const nsACString& aKey)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsGSettingsCollection::SetValue(const nsACString& aKey,
                                 GVariant *aValue)
 {
@@ -165,20 +165,20 @@ nsGSettingsCollection::SetString(const nsACString& aKey,
   if (!value)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool res = SetValue(aKey, value);
+  bool res = SetValue(aKey, value);
 
   return res ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsGSettingsCollection::SetBoolean(const nsACString& aKey,
-                                  PRBool aValue)
+                                  bool aValue)
 {
   GVariant *value = g_variant_new_boolean(aValue);
   if (!value)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool res = SetValue(aKey, value);
+  bool res = SetValue(aKey, value);
 
   return res ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -191,7 +191,7 @@ nsGSettingsCollection::SetInt(const nsACString& aKey,
   if (!value)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool res = SetValue(aKey, value);
+  bool res = SetValue(aKey, value);
 
   return res ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -220,7 +220,7 @@ nsGSettingsCollection::GetString(const nsACString& aKey,
 
 NS_IMETHODIMP
 nsGSettingsCollection::GetBoolean(const nsACString& aKey,
-                                  PRBool* aResult)
+                                  bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 

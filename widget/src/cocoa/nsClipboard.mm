@@ -236,7 +236,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
                                                                     outputType,
                                                                     1, NULL);
       CGImageDestinationAddImageFromSource(dest, source, 0, NULL);
-      PRBool successfullyConverted = CGImageDestinationFinalize(dest);
+      bool successfullyConverted = CGImageDestinationFinalize(dest);
 
       if (successfullyConverted) {
         // Put the converted data in a form Gecko can understand
@@ -324,7 +324,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
 // returns true if we have *any* of the passed in flavors available for pasting
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
-                                    PRInt32 aWhichClipboard, PRBool* outResult)
+                                    PRInt32 aWhichClipboard, bool* outResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -480,7 +480,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
                                                                        1,
                                                                        NULL);
       CGImageDestinationAddImage(destRef, imageRef, NULL);
-      PRBool successfullyConverted = CGImageDestinationFinalize(destRef);
+      bool successfullyConverted = CGImageDestinationFinalize(destRef);
 
       CGImageRelease(imageRef);
       if (destRef)
@@ -546,7 +546,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-PRBool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType)
+bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType)
 {
   if (aMIMEType.EqualsLiteral(kUnicodeMime) ||
       aMIMEType.EqualsLiteral(kHTMLMime)) {

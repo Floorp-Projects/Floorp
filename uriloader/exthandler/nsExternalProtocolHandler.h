@@ -62,7 +62,7 @@ public:
 
 protected:
   // helper function
-  PRBool HaveExternalProtocolHandler(nsIURI * aURI);
+  bool HaveExternalProtocolHandler(nsIURI * aURI);
 	nsCString	m_schemeName;
   nsCOMPtr<nsIExternalProtocolService> m_extProtService;
 };

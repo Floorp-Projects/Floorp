@@ -208,7 +208,7 @@
                 onclosetab="BrowserUI.closeTab(this)"
                 onclosereloadtab="this._container.removeTab(this)"/>
           <hbox id="tabs-controls">
-            <toolbarbutton id="newtab-button" class="button-control" command="cmd_newTab" observes="bcast_urlbarState"/>
+            <toolbarbutton id="newtab-button" class="button-control" command="cmd_newTab" label="&newtab.label;" observes="bcast_urlbarState" crop="end"/>
           </hbox>
         </vbox>
       </vbox>
@@ -221,7 +221,7 @@
             <box id="toolbar-container" class="panel-dark toolbar-height">
               <box id="toolbar-moveable-container" observes="bcast_uidiscovery">
                 <toolbar id="toolbar-main" class="panel-dark viewable-width" observes="bcast_urlbarState">
-                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs"/>
+                  <toolbarbutton id="tool-tabs" class="button-actionbar" command="cmd_showTabs" anchorPosX="0.3"/>
                   <toolbarbutton id="tool-back2" class="tool-back button-actionbar" command="cmd_back"/>
                   <toolbarbutton id="tool-forward2" class="tool-forward button-actionbar" command="cmd_forward"/>
 #ifdef MOZ_PLATFORM_MAEMO
@@ -366,7 +366,6 @@
           onclick="PageActions.clearPagePermissions(event);"/>
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
         <pageaction id="pageaction-charset" title="&pageactions.charEncoding;" onclick="CharsetMenu.show();"/>
-        <pageaction id="pageaction-webapps-install" title="&pageactions.webapps.install;" onclick="WebappsUI.show();"/>
       </hbox>
     </arrowbox>
 
@@ -462,12 +461,8 @@
                             oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
                   </setting>
-                  <setting id="prefs-uilanguage" title="&language.title;" type="menulist">
-                    <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
-                      <menupopup>
-                        <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
-                      </menupopup>
-                    </menulist>
+                  <setting id="prefs-uilanguage" title="&language.title;" type="control">
+                    <button id="prefs-uilanguage-button" label="&language.title;" onclick="PreferencesView.showLocalePicker();"/>
                   </setting>
                   <setting id="prefs-homepage" title="&homepage.title;" type="menulist">
                     <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
@@ -480,9 +475,8 @@
                   </setting>
 #ifdef MOZ_SERVICES_SYNC
                   <settings id="prefs-sync" label="&sync.title;">
-                    <setting id="sync-autosync" pref="browser.sync.enabled" type="bool" title="&sync.synchronize;" oninputchanged="WeaveGlue.toggleSyncEnabled();"/>
-                    <setting id="sync-connect" title="&sync.notconnected;" type="control" collapsed="true">
-                      <button label="&sync.connect;" oncommand="WeaveGlue.open();" />
+                    <setting id="sync-connect" title="&sync.notconnected;" type="control">
+                      <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
                     </setting>
                     <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
                       <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="false" checked="false" oncommand="WeaveGlue.showDetails();" />
@@ -773,7 +767,7 @@
   <svg:svg height="0">
     <svg:mask id="back-button-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.5" cy="0.5" r="0.7"/>
+      <svg:circle cx="-0.85" cy="0.5" r="0.96"/>
     </svg:mask>
   </svg:svg>
 

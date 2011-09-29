@@ -77,11 +77,6 @@ ifndef MOZ_NATIVE_JPEG
 tier_platform_dirs	+= jpeg
 endif
 
-# Installer needs standalone libjar, hence standalone zlib
-ifdef MOZ_INSTALLER
-tier_platform_dirs	+= modules/zlib/standalone
-endif
-
 ifdef MOZ_UPDATER
 ifndef MOZ_NATIVE_BZ2
 tier_platform_dirs += modules/libbz2

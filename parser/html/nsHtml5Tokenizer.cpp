@@ -292,7 +292,7 @@ nsHtml5Tokenizer::strBufToElementNameString()
 }
 
 PRInt32 
-nsHtml5Tokenizer::emitCurrentTagToken(PRBool selfClosing, PRInt32 pos)
+nsHtml5Tokenizer::emitCurrentTagToken(bool selfClosing, PRInt32 pos)
 {
   cstart = pos + 1;
 
@@ -352,7 +352,7 @@ nsHtml5Tokenizer::start()
   tokenHandler->startTokenization(this);
 }
 
-PRBool 
+bool 
 nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
 {
   PRInt32 state = stateSave;
@@ -398,7 +398,7 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
 }
 
 PRInt32 
-nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, PRBool reconsume, PRInt32 returnState, PRInt32 endPos)
+nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos)
 {
   stateloop: for (; ; ) {
     switch(state) {
@@ -3685,7 +3685,7 @@ nsHtml5Tokenizer::emitDoctypeToken(PRInt32 pos)
   systemIdentifier = nsnull;
 }
 
-PRBool 
+bool 
 nsHtml5Tokenizer::internalEncodingDeclaration(nsString* internalCharset)
 {
   if (encodingDeclarationHandler) {
@@ -3751,7 +3751,7 @@ nsHtml5Tokenizer::requestSuspension()
   shouldSuspend = PR_TRUE;
 }
 
-PRBool 
+bool 
 nsHtml5Tokenizer::isInDataState()
 {
   return (stateSave == NS_HTML5TOKENIZER_DATA);

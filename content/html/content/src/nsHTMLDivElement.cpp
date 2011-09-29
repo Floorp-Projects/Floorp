@@ -67,11 +67,11 @@ public:
   NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsHTMLDivElement,
                                               nsGenericHTMLElement)
 
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+  virtual bool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -110,7 +110,7 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLDivElement)
 NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align)
 
 
-PRBool
+bool
 nsHTMLDivElement::ParseAttribute(PRInt32 aNamespaceID,
                                  nsIAtom* aAttribute,
                                  const nsAString& aValue,
@@ -157,7 +157,7 @@ MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* 
   nsGenericHTMLElement::MapBGColorInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsGkAtoms::div)) {
