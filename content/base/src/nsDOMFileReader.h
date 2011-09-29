@@ -145,8 +145,8 @@ protected:
   nsString mResult;
   PRUint16 mReadyState;
 
-  PRBool mProgressEventWasDelayed;
-  PRBool mTimerIsActive;
+  bool mProgressEventWasDelayed;
+  bool mTimerIsActive;
   nsCOMPtr<nsIDOMFileError> mError;
 
   nsCOMPtr<nsITimer> mProgressNotifier;

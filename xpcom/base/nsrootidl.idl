@@ -57,7 +57,7 @@ class nsACString;
 #if 0
 %}
 
-typedef boolean             PRBool   ;
+typedef boolean             bool   ;
 typedef octet               PRUint8  ;
 typedef unsigned short      PRUint16 ;
 typedef unsigned short      PRUnichar;

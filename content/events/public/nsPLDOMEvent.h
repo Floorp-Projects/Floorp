@@ -59,7 +59,7 @@
 class nsPLDOMEvent : public nsRunnable {
 public:
   nsPLDOMEvent(nsINode *aEventNode, const nsAString& aEventType,
-               PRBool aBubbles, PRBool aDispatchChromeOnly)
+               bool aBubbles, bool aDispatchChromeOnly)
     : mEventNode(aEventNode), mEventType(aEventType),
       mBubbles(aBubbles),
       mDispatchChromeOnly(aDispatchChromeOnly)
@@ -78,14 +78,14 @@ public:
   nsCOMPtr<nsINode>     mEventNode;
   nsCOMPtr<nsIDOMEvent> mEvent;
   nsString              mEventType;
-  PRPackedBool          mBubbles;
-  PRPackedBool          mDispatchChromeOnly;
+  bool                  mBubbles;
+  bool                  mDispatchChromeOnly;
 };
 
 class nsLoadBlockingPLDOMEvent : public nsPLDOMEvent {
 public:
   nsLoadBlockingPLDOMEvent(nsINode *aEventNode, const nsAString& aEventType,
-                           PRBool aBubbles, PRBool aDispatchChromeOnly)
+                           bool aBubbles, bool aDispatchChromeOnly)
     : nsPLDOMEvent(aEventNode, aEventType, aBubbles, aDispatchChromeOnly),
       mBlockedDoc(aEventNode->GetOwnerDoc())
   {

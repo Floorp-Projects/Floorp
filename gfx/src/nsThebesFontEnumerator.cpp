@@ -105,7 +105,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
 NS_IMETHODIMP
 nsThebesFontEnumerator::HaveFontFor(const char *aLangGroup,
-                                    PRBool *aResult)
+                                    bool *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 
@@ -124,7 +124,7 @@ nsThebesFontEnumerator::GetDefaultFont(const char *aLangGroup,
 }
 
 NS_IMETHODIMP
-nsThebesFontEnumerator::UpdateFontList(PRBool *_retval)
+nsThebesFontEnumerator::UpdateFontList(bool *_retval)
 {
     gfxPlatform::GetPlatform()->UpdateFontList();
     *_retval = PR_FALSE; // always return false for now

@@ -654,7 +654,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
 
 static bool
 doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
-         uint32_t argCount, PRBool ctorCall, NPVariant *result)
+         uint32_t argCount, bool ctorCall, NPVariant *result)
 {
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
@@ -1035,7 +1035,7 @@ JSObjWrapperHash(PLDHashTable *table, const void *key)
   return (PLDHashNumber)((PRWord)e->mJSObj ^ (PRWord)e->mNpp) >> 2;
 }
 
-static PRBool
+static bool
 JSObjWrapperHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                            const void *key)
 {
@@ -1332,7 +1332,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
   PluginDestructionGuard pdg(npp);
 
-  PRBool hasProperty, hasMethod;
+  bool hasProperty, hasMethod;
 
   NPVariant npv;
   VOID_TO_NPVARIANT(npv);
@@ -1398,7 +1398,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 static JSBool
 CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                     jsval *rval, PRBool ctorCall)
+                     jsval *rval, bool ctorCall)
 {
   while (obj && JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
@@ -1646,7 +1646,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
-  PRBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
+  bool hasProperty = npobj->_class->hasProperty(npobj, identifier);
   if (!ReportExceptionIfPending(cx))
     return JS_FALSE;
 
@@ -1663,7 +1663,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return JS_TRUE;
   }
 
-  PRBool hasMethod = npobj->_class->hasMethod(npobj, identifier);
+  bool hasMethod = npobj->_class->hasMethod(npobj, identifier);
   if (!ReportExceptionIfPending(cx))
     return JS_FALSE;
 

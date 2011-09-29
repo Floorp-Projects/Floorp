@@ -311,7 +311,7 @@ nsHTMLCSSUtils::~nsHTMLCSSUtils()
 
 // Answers true if we have some CSS equivalence for the HTML style defined
 // by aProperty and/or aAttribute for the node aNode
-PRBool
+bool
 nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
                                       nsIAtom * aProperty,
                                       const nsAString * aAttribute)
@@ -450,7 +450,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
 // the inline styles carried by aElement
 nsresult
 nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue,
-                               PRBool aSuppressTransaction)
+                               bool aSuppressTransaction)
 {
   nsRefPtr<ChangeCSSInlineStyleTxn> txn;
   nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue,
@@ -470,7 +470,7 @@ nsresult
 nsHTMLCSSUtils::SetCSSPropertyPixels(nsIDOMElement *aElement,
                                      nsIAtom *aProperty,
                                      PRInt32 aIntValue,
-                                     PRBool aSuppressTransaction)
+                                     bool aSuppressTransaction)
 {
   nsAutoString s;
   s.AppendInt(aIntValue);
@@ -483,7 +483,7 @@ nsHTMLCSSUtils::SetCSSPropertyPixels(nsIDOMElement *aElement,
 // property accepts only one value
 nsresult
 nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue,
-                                  PRBool aSuppressTransaction)
+                                  bool aSuppressTransaction)
 {
   nsRefPtr<ChangeCSSInlineStyleTxn> txn;
   nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue,
@@ -504,7 +504,7 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement,
                                      nsIAtom * aAttribute,
                                      const nsAString& aValue,
                                      ChangeCSSInlineStyleTxn ** aTxn,
-                                     PRBool aRemoveProperty)
+                                     bool aRemoveProperty)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
 
@@ -638,17 +638,17 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
 
 // Answers true is the property can be removed by setting a "none" CSS value
 // on a node
-PRBool
+bool
 nsHTMLCSSUtils::IsCSSInvertable(nsIAtom *aProperty, const nsAString *aAttribute)
 {
-  return PRBool(nsEditProperty::b == aProperty);
+  return bool(nsEditProperty::b == aProperty);
 }
 
 // Get the default browser background color if we need it for GetCSSBackgroundColorState
 void
 nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
 {
-  if (Preferences::GetBool("editor.use_custom_colors", PR_FALSE)) {
+  if (Preferences::GetBool("editor.use_custom_colors", false)) {
     nsresult rv = Preferences::GetString("editor.background_color", &aColor);
     // XXX Why don't you validate the pref value?
     if (NS_FAILED(rv)) {
@@ -658,7 +658,7 @@ nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
     return;
   }
 
-  if (Preferences::GetBool("browser.display.use_system_colors", PR_FALSE)) {
+  if (Preferences::GetBool("browser.display.use_system_colors", false)) {
     return;
   }
 
@@ -696,7 +696,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
   PRInt8 sign = 1;
   PRInt32 i = 0, j = aString.Length();
   PRUnichar c;
-  PRBool floatingPointFound = PR_FALSE;
+  bool floatingPointFound = false;
   c = *iter;
   if (PRUnichar('-') == c) { sign = -1; iter++; i++; }
   else if (PRUnichar('+') == c) { iter++; i++; }
@@ -802,7 +802,7 @@ nsHTMLCSSUtils::BuildCSSDeclarations(nsTArray<nsIAtom*> & aPropertyArray,
                                      nsTArray<nsString> & aValueArray,
                                      const CSSEquivTable * aEquivTable,
                                      const nsAString * aValue,
-                                     PRBool aGetOrRemoveRequest)
+                                     bool aGetOrRemoveRequest)
 {
   // clear arrays
   aPropertyArray.Clear();
@@ -847,7 +847,7 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
                                                      const nsAString * aValue,
                                                      nsTArray<nsIAtom*> & cssPropertyArray,
                                                      nsTArray<nsString> & cssValueArray,
-                                                     PRBool aGetOrRemoveRequest)
+                                                     bool aGetOrRemoveRequest)
 {
   nsCOMPtr<nsIDOMNode> node = aNode;
   if (mHTMLEditor->IsTextNode(aNode)) {
@@ -938,7 +938,7 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                             const nsAString *aAttribute,
                                             const nsAString *aValue,
                                             PRInt32 * aCount,
-                                            PRBool aSuppressTransaction)
+                                            bool aSuppressTransaction)
 {
   nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
   nsresult res = NS_OK;
@@ -972,7 +972,7 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                                nsIAtom *aHTMLProperty,
                                                const nsAString *aAttribute,
                                                const nsAString *aValue,
-                                               PRBool aSuppressTransaction)
+                                               bool aSuppressTransaction)
 {
   nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
   nsresult res = NS_OK;
@@ -1003,10 +1003,10 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
 
 // aReturn is true if the element aElement carries an ID or a class.
 nsresult
-nsHTMLCSSUtils::HasClassOrID(nsIDOMElement * aElement, PRBool & aReturn)
+nsHTMLCSSUtils::HasClassOrID(nsIDOMElement * aElement, bool & aReturn)
 {
   nsAutoString classVal, idVal;
-  PRBool isClassSet, isIdSet;
+  bool isClassSet, isIdSet;
   aReturn = PR_FALSE;
 
   nsresult res = mHTMLEditor->GetAttributeValue(aElement,  NS_LITERAL_STRING("class"), classVal, &isClassSet);
@@ -1076,7 +1076,7 @@ nsresult
 nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                     nsIAtom *aHTMLProperty,
                                                     const nsAString * aHTMLAttribute,
-                                                    PRBool & aIsSet,
+                                                    bool & aIsSet,
                                                     nsAString & valueString,
                                                     PRUint8 aStyleType)
 {
@@ -1133,13 +1133,13 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     else if (nsEditProperty::u == aHTMLProperty) {
       nsAutoString val;
       val.AssignLiteral("underline");
-      aIsSet = PRBool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, PR_FALSE));
+      aIsSet = bool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, false));
     }
 
     else if (nsEditProperty::strike == aHTMLProperty) {
       nsAutoString val;
       val.AssignLiteral("line-through");
-      aIsSet = PRBool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, PR_FALSE));
+      aIsSet = bool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, false));
     }
 
     else if (aHTMLAttribute &&
@@ -1235,13 +1235,13 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
 }
 
 nsresult
-nsHTMLCSSUtils::SetCSSEnabled(PRBool aIsCSSPrefChecked)
+nsHTMLCSSUtils::SetCSSEnabled(bool aIsCSSPrefChecked)
 {
   mIsCSSPrefChecked = aIsCSSPrefChecked;
   return NS_OK;
 }
 
-PRBool
+bool
 nsHTMLCSSUtils::IsCSSPrefChecked()
 {
   return mIsCSSPrefChecked ;
@@ -1250,7 +1250,7 @@ nsHTMLCSSUtils::IsCSSPrefChecked()
 // ElementsSameStyle compares two elements and checks if they have the same
 // specified CSS declarations in the STYLE attribute 
 // The answer is always negative if at least one of them carries an ID or a class
-PRBool
+bool
 nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode)
 {
   nsresult res;
@@ -1260,7 +1260,7 @@ nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNod
   NS_ASSERTION((firstElement && secondElement), "Non element nodes passed to ElementsSameStyle.");
 
   nsAutoString firstID, secondID;
-  PRBool isFirstIDSet, isSecondIDSet;
+  bool isFirstIDSet, isSecondIDSet;
   res = mHTMLEditor->GetAttributeValue(firstElement,  NS_LITERAL_STRING("id"), firstID,  &isFirstIDSet);
   res = mHTMLEditor->GetAttributeValue(secondElement, NS_LITERAL_STRING("id"), secondID, &isSecondIDSet);
   if (isFirstIDSet || isSecondIDSet) {
@@ -1270,7 +1270,7 @@ nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNod
   }
 
   nsAutoString firstClass, secondClass;
-  PRBool isFirstClassSet, isSecondClassSet;
+  bool isFirstClassSet, isSecondClassSet;
   res = mHTMLEditor->GetAttributeValue(firstElement,  NS_LITERAL_STRING("class"), firstClass,  &isFirstClassSet);
   res = mHTMLEditor->GetAttributeValue(secondElement, NS_LITERAL_STRING("class"), secondClass, &isSecondClassSet);
   if (isFirstClassSet && isSecondClassSet) {

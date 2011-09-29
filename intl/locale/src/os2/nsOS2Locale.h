@@ -57,7 +57,7 @@ public:
   NS_IMETHOD GetXPLocale(const char* os2Locale, nsAString& locale);
 
 protected:
-  inline PRBool ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator);
+  inline bool ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator);
 
 };
 

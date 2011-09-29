@@ -114,7 +114,7 @@ nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
 }
 
 NS_IMETHODIMP
-nsParserService::IsContainer(PRInt32 aId, PRBool& aIsContainer) const
+nsParserService::IsContainer(PRInt32 aId, bool& aIsContainer) const
 {
   aIsContainer = nsHTMLElement::IsContainer((eHTMLTags)aId);
 
@@ -122,7 +122,7 @@ nsParserService::IsContainer(PRInt32 aId, PRBool& aIsContainer) const
 }
 
 NS_IMETHODIMP
-nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
+nsParserService::IsBlock(PRInt32 aId, bool& aIsBlock) const
 {
   if((aId>eHTMLTag_unknown) && (aId<eHTMLTag_userdefined)) {
     aIsBlock=((gHTMLElements[aId].IsMemberOf(kBlock))       ||
@@ -194,7 +194,7 @@ nsParserService::GetTopicObservers(const nsAString& aTopic,
 
 nsresult
 nsParserService::CheckQName(const nsAString& aQName,
-                            PRBool aNamespaceAware,
+                            bool aNamespaceAware,
                             const PRUnichar** aColon)
 {
   const char* colon;
@@ -221,7 +221,7 @@ nsParserService::CheckQName(const nsAString& aQName,
 class nsMatchesTopic : public nsDequeFunctor{
   const nsAString& mString;
 public:
-  PRBool matched;
+  bool matched;
   nsObserverEntry* entry;
   nsMatchesTopic(const nsAString& aString):mString(aString),matched(PR_FALSE){}
   virtual void* operator()(void* anObject){

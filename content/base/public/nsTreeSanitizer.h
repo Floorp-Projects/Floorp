@@ -53,7 +53,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @param aAllowStyles Whether to allow <style> and style=""
      * @param aAllowComments Whether to allow comment nodes
      */
-    nsTreeSanitizer(PRBool aAllowStyles, PRBool aAllowComments);
+    nsTreeSanitizer(bool aAllowStyles, bool aAllowComments);
 
     static void InitializeStatics();
     static void ReleaseStatics();
@@ -72,12 +72,12 @@ class NS_STACK_CLASS nsTreeSanitizer {
     /**
      * Whether <style> and style="" are allowed.
      */
-    PRBool mAllowStyles;
+    bool mAllowStyles;
 
     /**
      * Whether comment nodes are allowed.
      */
-    PRBool mAllowComments;
+    bool mAllowComments;
 
     /**
      * Queries if an element must be replaced with its children.
@@ -86,7 +86,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @return true if the element must be replaced with its children and
      *         false if the element is to be kept
      */
-    PRBool MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal);
+    bool MustFlatten(PRInt32 aNamespace, nsIAtom* aLocal);
 
     /**
      * Queries if an element including its children must be removed.
@@ -96,7 +96,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @return true if the element and its children must be removed and
      *         false if the element is to be kept
      */
-    PRBool MustPrune(PRInt32 aNamespace,
+    bool MustPrune(PRInt32 aNamespace,
                      nsIAtom* aLocal,
                      mozilla::dom::Element* aElement);
 
@@ -107,7 +107,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @param aLocalName the name to search on the list
      * @return true if aLocalName is on the aURLs list and false otherwise
      */
-    PRBool IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName);
+    bool IsURL(nsIAtom*** aURLs, nsIAtom* aLocalName);
 
     /**
      * Removes dangerous attributes from the element. If the style attribute
@@ -126,9 +126,9 @@ class NS_STACK_CLASS nsTreeSanitizer {
     void SanitizeAttributes(mozilla::dom::Element* aElement,
                             nsTHashtable<nsISupportsHashKey>* aAllowed,
                             nsIAtom*** aURLs,
-                            PRBool aAllowXLink,
-                            PRBool aAllowStyle,
-                            PRBool aAllowDangerousSrc);
+                            bool aAllowXLink,
+                            bool aAllowStyle,
+                            bool aAllowDangerousSrc);
 
     /**
      * Remove the named URL attribute from the element if the URL fails a
@@ -139,7 +139,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @param aLocalName the local name of the URL attribute
      * @return true if the attribute was removed and false otherwise
      */
-    PRBool SanitizeURL(mozilla::dom::Element* aElement,
+    bool SanitizeURL(mozilla::dom::Element* aElement,
                        PRInt32 aNamespace,
                        nsIAtom* aLocalName);
 
@@ -152,7 +152,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @param aRuleText the serialized mutated rule if the method returns true
      * @return true if the rule was modified and false otherwise
      */
-    PRBool SanitizeStyleRule(mozilla::css::StyleRule* aRule,
+    bool SanitizeStyleRule(mozilla::css::StyleRule* aRule,
                              nsAutoString &aRuleText);
 
     /**
@@ -167,7 +167,7 @@ class NS_STACK_CLASS nsTreeSanitizer {
      * @return true if the 'binding' property was encountered and false
      *              otherwise
      */
-    PRBool SanitizeStyleSheet(const nsAString& aOriginal,
+    bool SanitizeStyleSheet(const nsAString& aOriginal,
                               nsAString& aSanitized,
                               nsIDocument* aDocument,
                               nsIURI* aBaseURI);

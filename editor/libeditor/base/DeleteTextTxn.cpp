@@ -41,7 +41,7 @@
 #include "nsSelectionState.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static bool gNoisy = false;
 #endif
 
 DeleteTextTxn::DeleteTextTxn()
@@ -113,7 +113,7 @@ NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
     mRangeUpdater->SelAdjDeleteText(mElement, mOffset, mNumCharsToDelete);
 
   // only set selection to deletion point if editor gives permission
-  PRBool bAdjustSelection;
+  bool bAdjustSelection;
   mEditor->ShouldTxnSetSelection(&bAdjustSelection);
   if (bAdjustSelection)
   {

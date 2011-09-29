@@ -69,7 +69,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
 
   if (aTransferable == mTransferable && anOwner == mClipboardOwner)
     return NS_OK;
-  PRBool selectClipPresent;
+  bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
   if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
     return NS_ERROR_FAILURE;
@@ -106,7 +106,7 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 
 {
   NS_ASSERTION ( aTransferable, "clipboard given a null transferable" );
   
-  PRBool selectClipPresent;
+  bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
   if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
     return NS_ERROR_FAILURE;
@@ -119,7 +119,7 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 {
-  PRBool selectClipPresent;
+  bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
   if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
     return NS_ERROR_FAILURE;
@@ -141,14 +141,14 @@ NS_IMETHODIMP
 nsBaseClipboard::HasDataMatchingFlavors(const char** aFlavorList,
                                         PRUint32 aLength,
                                         PRInt32 aWhichClipboard,
-                                        PRBool* outResult) 
+                                        bool* outResult) 
 {
   *outResult = PR_TRUE;  // say we always do.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseClipboard::SupportsSelectionClipboard(PRBool* _retval)
+nsBaseClipboard::SupportsSelectionClipboard(bool* _retval)
 {
   *_retval = PR_FALSE;   // we don't support the selection clipboard by default.
   return NS_OK;

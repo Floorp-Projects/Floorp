@@ -146,7 +146,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 void
-nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
+nsHTMLOptionElement::SetSelectedInternal(bool aValue, bool aNotify)
 {
   mSelectedChanged = PR_TRUE;
   mIsSelected = aValue;
@@ -159,7 +159,7 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 }
 
 NS_IMETHODIMP 
-nsHTMLOptionElement::GetSelected(PRBool* aValue)
+nsHTMLOptionElement::GetSelected(bool* aValue)
 {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = Selected();
@@ -167,7 +167,7 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::SetSelected(PRBool aValue)
+nsHTMLOptionElement::SetSelected(bool aValue)
 {
   // Note: The select content obj maintains all the PresState
   // so defer to it to get the answer
@@ -263,7 +263,7 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 
 nsresult
 nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   const nsAString* aValue, PRBool aNotify)
+                                   const nsAString* aValue, bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName,
                                                     aValue, aNotify);
@@ -286,8 +286,8 @@ nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   // true it doesn't matter what value mIsSelected has.
   NS_ASSERTION(!mSelectedChanged, "Shouldn't be here");
   
-  PRBool newSelected = (aValue != nsnull);
-  PRBool inSetDefaultSelected = mIsInSetDefaultSelected;
+  bool newSelected = (aValue != nsnull);
+  bool inSetDefaultSelected = mIsInSetDefaultSelected;
   mIsInSetDefaultSelected = PR_TRUE;
   
   PRInt32 index;

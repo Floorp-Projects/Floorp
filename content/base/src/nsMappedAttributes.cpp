@@ -81,7 +81,7 @@ nsMappedAttributes::~nsMappedAttributes()
 
 
 nsMappedAttributes*
-nsMappedAttributes::Clone(PRBool aWillAddAttr)
+nsMappedAttributes::Clone(bool aWillAddAttr)
 {
   PRUint32 extra = aWillAddAttr ? 1 : 0;
 
@@ -151,7 +151,7 @@ nsMappedAttributes::GetAttr(nsIAtom* aAttrName) const
   return nsnull;
 }
 
-PRBool
+bool
 nsMappedAttributes::Equals(const nsMappedAttributes* aOther) const
 {
   if (this == aOther) {

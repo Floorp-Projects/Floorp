@@ -275,7 +275,7 @@ nsWindowsShellService::ShortcutMaintenance()
     return NS_OK;
 
   // Avoid if this isn't Win7+
-  PRBool isSupported = PR_FALSE;
+  bool isSupported = false;
   taskbarInfo->GetAvailable(&isSupported);
   if (!isSupported)
     return NS_OK;
@@ -331,8 +331,8 @@ nsWindowsShellService::ShortcutMaintenance()
   return LaunchHelper(appHelperPath);
 }
 
-PRBool
-nsWindowsShellService::IsDefaultBrowserVista(PRBool* aIsDefaultBrowser)
+bool
+nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
 {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   IApplicationAssociationRegistration* pAAR;
@@ -358,8 +358,8 @@ nsWindowsShellService::IsDefaultBrowserVista(PRBool* aIsDefaultBrowser)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
-                                        PRBool* aIsDefaultBrowser)
+nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
+                                        bool* aIsDefaultBrowser)
 {
   // If this is the first browser window, maintain internal state that we've
   // checked this session (so that subsequent window opens don't show the 
@@ -422,7 +422,7 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
+nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 {
   nsAutoString appHelperPath;
   if (NS_FAILED(GetHelperPath(appHelperPath)))
@@ -438,7 +438,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
+nsWindowsShellService::GetShouldCheckDefaultBrowser(bool* aResult)
 {
   // If we've already checked, the browser has been started and this is a 
   // new window open, and we don't want to check again.
@@ -458,7 +458,7 @@ nsWindowsShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
+nsWindowsShellService::SetShouldCheckDefaultBrowser(bool aShouldCheck)
 {
   nsCOMPtr<nsIPrefBranch> prefs;
   nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -609,7 +609,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
 
   // if the file was written successfully, set it as the system wallpaper
   if (NS_SUCCEEDED(rv)) {
-     PRBool result = PR_FALSE;
+     bool result = false;
      DWORD  dwDisp = 0;
      HKEY   key;
      // Try to create/open a subkey under HKCU.
@@ -771,7 +771,7 @@ nsWindowsShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 
   ::SetSysColors(sizeof(aParameters) / sizeof(int), aParameters, colors);
 
-  PRBool result = PR_FALSE;
+  bool result = false;
   DWORD  dwDisp = 0;
   HKEY   key;
   // Try to create/open a subkey under HKCU.
@@ -816,7 +816,7 @@ nsWindowsShellService::GetUnreadMailCount(PRUint32* aCount)
   return NS_OK;
 }
 
-PRBool
+bool
 nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
 {
   NS_NAMED_LITERAL_STRING(unread,
@@ -911,7 +911,7 @@ nsWindowsShellService::GetDefaultFeedReader(nsILocalFile** _retval)
   rv = defaultReader->InitWithPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool exists;
+  bool exists;
   rv = defaultReader->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists)

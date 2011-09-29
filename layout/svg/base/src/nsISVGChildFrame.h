@@ -126,10 +126,10 @@ public:
   virtual gfxRect GetBBoxContribution(const gfxMatrix &aToBBoxUserspace) = 0;
 
   // Are we a container frame?
-  NS_IMETHOD_(PRBool) IsDisplayContainer()=0;
+  NS_IMETHOD_(bool) IsDisplayContainer()=0;
 
   // Does this frame have an current covered region in mRect (aka GetRect())?
-  NS_IMETHOD_(PRBool) HasValidCoveredRect()=0;
+  NS_IMETHOD_(bool) HasValidCoveredRect()=0;
 };
 
 #endif // __NS_ISVGCHILDFRAME_H__

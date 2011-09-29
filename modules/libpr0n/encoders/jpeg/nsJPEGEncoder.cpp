@@ -311,7 +311,7 @@ NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClos
 }
 
 /* boolean isNonBlocking (); */
-NS_IMETHODIMP nsJPEGEncoder::IsNonBlocking(PRBool *_retval)
+NS_IMETHODIMP nsJPEGEncoder::IsNonBlocking(bool *_retval)
 {
   *_retval = PR_TRUE;
   return NS_OK;

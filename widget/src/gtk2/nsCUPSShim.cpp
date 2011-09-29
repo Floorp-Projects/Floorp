@@ -56,7 +56,7 @@ static const char gSymName[][sizeof("cupsPrintFile")] = {
 static const int gSymNameCt = NS_ARRAY_LENGTH(gSymName);
 
 
-PRBool
+bool
 nsCUPSShim::Init()
 {
     mCupsLib = PR_LoadLibrary("libcups.so.2");

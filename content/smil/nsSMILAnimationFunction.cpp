@@ -105,11 +105,11 @@ nsSMILAnimationFunction::SetAnimationElement(
   mAnimationElement = aAnimationElement;
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
                                  nsAttrValue& aResult, nsresult* aParseResult)
 {
-  PRBool foundMatch = PR_TRUE;
+  bool foundMatch = true;
   nsresult parseResult = NS_OK;
 
   // The attributes 'by', 'from', 'to', and 'values' may be parsed differently
@@ -145,10 +145,10 @@ nsSMILAnimationFunction::SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
   return foundMatch;
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
 {
-  PRBool foundMatch = PR_TRUE;
+  bool foundMatch = true;
 
   if (aAttribute == nsGkAtoms::by ||
       aAttribute == nsGkAtoms::from ||
@@ -219,7 +219,7 @@ nsSMILAnimationFunction::Activate(nsSMILTime aBeginTime)
 }
 
 void
-nsSMILAnimationFunction::Inactivate(PRBool aIsFrozen)
+nsSMILAnimationFunction::Inactivate(bool aIsFrozen)
 {
   mIsActive = PR_FALSE;
   mIsFrozen = aIsFrozen;
@@ -259,7 +259,7 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   // This can happen when we skipped getting the base value because there's an
   // animation function in the sandwich that should replace it but that function
   // failed unexpectedly.
-  PRBool isAdditive = IsAdditive();
+  bool isAdditive = IsAdditive();
   if (isAdditive && aResult.IsNull())
     return;
 
@@ -352,7 +352,7 @@ nsSMILAnimationFunction::CompareTo(const nsSMILAnimationFunction* aOther) const
           ? -1 : 1;
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::WillReplace() const
 {
   /*
@@ -365,13 +365,13 @@ nsSMILAnimationFunction::WillReplace() const
                           (IsToAnimation() && mIsFrozen && !mHasChanged));
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::HasChanged() const
 {
   return mHasChanged || mValueNeedsReparsingEverySample;
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::UpdateCachedTarget(const nsSMILTargetIdentifier& aNewTarget)
 {
   if (!mLastTarget.Equals(aNewTarget)) {
@@ -706,7 +706,7 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double aProgress,
   return spline.GetSplineValue(aProgress);
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::HasAttr(nsIAtom* aAttName) const
 {
   return mAnimationElement->HasAnimAttr(aAttName);
@@ -718,7 +718,7 @@ nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName) const
   return mAnimationElement->GetAnimAttr(aAttName);
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName, nsAString& aResult) const
 {
   return mAnimationElement->GetAnimAttr(aAttName, aResult);
@@ -740,15 +740,15 @@ nsSMILAnimationFunction::GetAttr(nsIAtom* aAttName, nsAString& aResult) const
  *
  * Returns PR_FALSE if a parse error occurred, otherwise returns PR_TRUE.
  */
-PRBool
+bool
 nsSMILAnimationFunction::ParseAttr(nsIAtom* aAttName,
                                    const nsISMILAttr& aSMILAttr,
                                    nsSMILValue& aResult,
-                                   PRBool& aPreventCachingOfSandwich) const
+                                   bool& aPreventCachingOfSandwich) const
 {
   nsAutoString attValue;
   if (GetAttr(aAttName, attValue)) {
-    PRBool preventCachingOfSandwich;
+    bool preventCachingOfSandwich;
     nsresult rv = aSMILAttr.ValueFromString(attValue, mAnimationElement,
                                             aResult, preventCachingOfSandwich);
     if (NS_FAILED(rv))
@@ -789,7 +789,7 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   if (HasAttr(nsGkAtoms::values)) {
     nsAutoString attValue;
     GetAttr(nsGkAtoms::values, attValue);
-    PRBool preventCachingOfSandwich;
+    bool preventCachingOfSandwich;
     nsresult rv = nsSMILParserUtils::ParseValues(attValue, mAnimationElement,
                                                  aSMILAttr, result,
                                                  preventCachingOfSandwich);
@@ -801,8 +801,8 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
     }
   // Else try to/from/by
   } else {
-    PRBool preventCachingOfSandwich = PR_FALSE;
-    PRBool parseOk = PR_TRUE;
+    bool preventCachingOfSandwich = false;
+    bool parseOk = true;
     nsSMILValue to, from, by;
     parseOk &= ParseAttr(nsGkAtoms::to,   aSMILAttr, to,
                          preventCachingOfSandwich);
@@ -885,7 +885,7 @@ nsSMILAnimationFunction::CheckKeyTimes(PRUint32 aNumValues)
 
   // no. keyTimes == no. values
   // For to-animation the number of values is considered to be 2.
-  PRBool matchingNumOfValues =
+  bool matchingNumOfValues =
     numKeyTimes == (IsToAnimation() ? 2 : aNumValues);
   if (!matchingNumOfValues) {
     SetKeyTimesErrorFlag(PR_TRUE);
@@ -946,7 +946,7 @@ nsSMILAnimationFunction::CheckKeySplines(PRUint32 aNumValues)
   SetKeySplinesErrorFlag(PR_FALSE);
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::IsValueFixedForSimpleDuration() const
 {
   return mSimpleDuration.IsIndefinite() ||
@@ -956,7 +956,7 @@ nsSMILAnimationFunction::IsValueFixedForSimpleDuration() const
 //----------------------------------------------------------------------
 // Property getters
 
-PRBool
+bool
 nsSMILAnimationFunction::GetAccumulate() const
 {
   const nsAttrValue* value = GetAttr(nsGkAtoms::accumulate);
@@ -966,7 +966,7 @@ nsSMILAnimationFunction::GetAccumulate() const
   return value->GetEnumValue();
 }
 
-PRBool
+bool
 nsSMILAnimationFunction::GetAdditive() const
 {
   const nsAttrValue* value = GetAttr(nsGkAtoms::additive);
@@ -994,7 +994,7 @@ nsSMILAnimationFunction::SetAccumulate(const nsAString& aAccumulate,
                                        nsAttrValue& aResult)
 {
   mHasChanged = PR_TRUE;
-  PRBool parseResult =
+  bool parseResult =
     aResult.ParseEnumValue(aAccumulate, sAccumulateTable, PR_TRUE);
   SetAccumulateErrorFlag(!parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
@@ -1012,7 +1012,7 @@ nsSMILAnimationFunction::SetAdditive(const nsAString& aAdditive,
                                      nsAttrValue& aResult)
 {
   mHasChanged = PR_TRUE;
-  PRBool parseResult
+  bool parseResult
     = aResult.ParseEnumValue(aAdditive, sAdditiveTable, PR_TRUE);
   SetAdditiveErrorFlag(!parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
@@ -1030,7 +1030,7 @@ nsSMILAnimationFunction::SetCalcMode(const nsAString& aCalcMode,
                                      nsAttrValue& aResult)
 {
   mHasChanged = PR_TRUE;
-  PRBool parseResult
+  bool parseResult
     = aResult.ParseEnumValue(aCalcMode, sCalcModeTable, PR_TRUE);
   SetCalcModeErrorFlag(!parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;

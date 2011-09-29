@@ -213,17 +213,17 @@ class nsTSubstring_CharT
           return mLength;
         }
 
-      PRBool IsEmpty() const
+      bool IsEmpty() const
         {
           return mLength == 0;
         }
 
-      PRBool IsVoid() const
+      bool IsVoid() const
         {
           return (mFlags & F_VOIDED) != 0;
         }
 
-      PRBool IsTerminated() const
+      bool IsTerminated() const
         {
           return (mFlags & F_TERMINATED) != 0;
         }
@@ -260,24 +260,24 @@ class nsTSubstring_CharT
          * equality
          */
 
-      PRBool NS_FASTCALL Equals( const self_type& ) const;
-      PRBool NS_FASTCALL Equals( const self_type&, const comparator_type& ) const;
+      bool NS_FASTCALL Equals( const self_type& ) const;
+      bool NS_FASTCALL Equals( const self_type&, const comparator_type& ) const;
 
-      PRBool NS_FASTCALL Equals( const char_type* data ) const;
-      PRBool NS_FASTCALL Equals( const char_type* data, const comparator_type& comp ) const;
+      bool NS_FASTCALL Equals( const char_type* data ) const;
+      bool NS_FASTCALL Equals( const char_type* data, const comparator_type& comp ) const;
 
         /**
          * An efficient comparison with ASCII that can be used even
          * for wide strings. Call this version when you know the
          * length of 'data'.
          */
-      PRBool NS_FASTCALL EqualsASCII( const char* data, size_type len ) const;
+      bool NS_FASTCALL EqualsASCII( const char* data, size_type len ) const;
         /**
          * An efficient comparison with ASCII that can be used even
          * for wide strings. Call this version when 'data' is
          * null-terminated.
          */
-      PRBool NS_FASTCALL EqualsASCII( const char* data ) const;
+      bool NS_FASTCALL EqualsASCII( const char* data ) const;
 
     // EqualsLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
@@ -285,18 +285,18 @@ class nsTSubstring_CharT
     // The template trick to acquire the array length at compile time without
     // using a macro is due to Corey Kosak, with much thanks.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
-      inline PRBool EqualsLiteral( const char* str ) const
+      inline bool EqualsLiteral( const char* str ) const
         {
           return EqualsASCII(str);
         }
 #else
       template<int N>
-      inline PRBool EqualsLiteral( const char (&str)[N] ) const
+      inline bool EqualsLiteral( const char (&str)[N] ) const
         {
           return EqualsASCII(str, N-1);
         }
       template<int N>
-      inline PRBool EqualsLiteral( char (&str)[N] ) const
+      inline bool EqualsLiteral( char (&str)[N] ) const
         {
           const char* s = str;
           return EqualsASCII(s, N-1);
@@ -308,26 +308,26 @@ class nsTSubstring_CharT
     // *not* lowercased for you. If you compare to an ASCII or literal
     // string that contains an uppercase character, it is guaranteed to
     // return false. We will throw assertions too.
-      PRBool NS_FASTCALL LowerCaseEqualsASCII( const char* data, size_type len ) const;
-      PRBool NS_FASTCALL LowerCaseEqualsASCII( const char* data ) const;
+      bool NS_FASTCALL LowerCaseEqualsASCII( const char* data, size_type len ) const;
+      bool NS_FASTCALL LowerCaseEqualsASCII( const char* data ) const;
 
     // LowerCaseEqualsLiteral must ONLY be applied to an actual
     // literal string.  Do not attempt to use it with a regular char*
     // pointer, or with a char array variable. Use
     // LowerCaseEqualsASCII for them.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
-      inline PRBool LowerCaseEqualsLiteral( const char* str ) const
+      inline bool LowerCaseEqualsLiteral( const char* str ) const
         {
           return LowerCaseEqualsASCII(str);
         }
 #else
       template<int N>
-      inline PRBool LowerCaseEqualsLiteral( const char (&str)[N] ) const
+      inline bool LowerCaseEqualsLiteral( const char (&str)[N] ) const
         {
           return LowerCaseEqualsASCII(str, N-1);
         }
       template<int N>
-      inline PRBool LowerCaseEqualsLiteral( char (&str)[N] ) const
+      inline bool LowerCaseEqualsLiteral( char (&str)[N] ) const
         {
           const char* s = str;
           return LowerCaseEqualsASCII(s, N-1);
@@ -470,7 +470,7 @@ class nsTSubstring_CharT
          *          PR_FALSE on out-of-memory, or if requesting a size bigger
          *                   than a string can hold (2^31 chars).
          */
-      PRBool NS_FASTCALL SetCapacity( size_type newCapacity );
+      bool NS_FASTCALL SetCapacity( size_type newCapacity );
 
       void NS_FASTCALL SetLength( size_type newLength );
 
@@ -526,7 +526,7 @@ class nsTSubstring_CharT
          * string will be truncated.  @see nsTSubstring::IsVoid
          */
 
-      void NS_FASTCALL SetIsVoid( PRBool );
+      void NS_FASTCALL SetIsVoid( bool );
 
         /**
          *  This method is used to remove all occurrences of aChar from this
@@ -649,7 +649,7 @@ class nsTSubstring_CharT
          *
          * XXX we should expose a way for subclasses to free old_data.
          */
-      PRBool NS_FASTCALL MutatePrep( size_type capacity, char_type** old_data, PRUint32* old_flags );
+      bool NS_FASTCALL MutatePrep( size_type capacity, char_type** old_data, PRUint32* old_flags );
 
         /**
          * this function prepares a section of mData to be modified.  if
@@ -671,7 +671,7 @@ class nsTSubstring_CharT
          * this function returns false if is unable to allocate sufficient
          * memory.
          */
-      PRBool ReplacePrep(index_type cutStart, size_type cutLength,
+      bool ReplacePrep(index_type cutStart, size_type cutLength,
                          size_type newLength)
       {
         cutLength = NS_MIN(cutLength, mLength - cutStart);
@@ -685,7 +685,7 @@ class nsTSubstring_CharT
         return ReplacePrepInternal(cutStart, cutLength, newLength, newTotalLen);
       }
 
-      PRBool NS_FASTCALL ReplacePrepInternal(index_type cutStart,
+      bool NS_FASTCALL ReplacePrepInternal(index_type cutStart,
                                              size_type cutLength,
                                              size_type newFragLength,
                                              size_type newTotalLength);
@@ -703,12 +703,12 @@ class nsTSubstring_CharT
          * this helper function can be called prior to directly manipulating
          * the contents of mData.  see, for example, BeginWriting.
          */
-      PRBool NS_FASTCALL EnsureMutable( size_type newLen = size_type(-1) );
+      bool NS_FASTCALL EnsureMutable( size_type newLen = size_type(-1) );
 
         /**
          * returns true if this string overlaps with the given string fragment.
          */
-      PRBool IsDependentOn( const char_type *start, const char_type *end ) const
+      bool IsDependentOn( const char_type *start, const char_type *end ) const
         {
           /**
            * if it _isn't_ the case that one fragment starts after the other ends,
@@ -792,37 +792,37 @@ int NS_FASTCALL Compare( const nsTSubstring_CharT::base_string_type& lhs, const 
 
 
 inline
-PRBool operator!=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+bool operator!=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return !lhs.Equals(rhs);
   }
 
 inline
-PRBool operator< ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+bool operator< ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return Compare(lhs, rhs)< 0;
   }
 
 inline
-PRBool operator<=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+bool operator<=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return Compare(lhs, rhs)<=0;
   }
 
 inline
-PRBool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+bool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return lhs.Equals(rhs);
   }
 
 inline
-PRBool operator>=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+bool operator>=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return Compare(lhs, rhs)>=0;
   }
 
 inline
-PRBool operator> ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+bool operator> ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
   {
     return Compare(lhs, rhs)> 0;
   }

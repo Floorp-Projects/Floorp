@@ -125,7 +125,7 @@ nsPluginStreamToFile::WriteSegments(nsReadSegmentFun reader, void * closure,
 }
 
 NS_IMETHODIMP
-nsPluginStreamToFile::IsNonBlocking(PRBool *aNonBlocking)
+nsPluginStreamToFile::IsNonBlocking(bool *aNonBlocking)
 {
   *aNonBlocking = PR_FALSE;
   return NS_OK;
@@ -302,7 +302,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   NPP npp;
   mInst->GetNPP(&npp);
 
-  PRBool seekable;
+  bool seekable;
   char* contentType;
   PRUint16 streamType = NP_NORMAL;
   NPError error;
@@ -418,7 +418,7 @@ nsNPAPIPluginStreamListener::StopDataPump()
 
 // Return true if a javascript: load that was started while the plugin
 // was being initialized is still in progress.
-PRBool
+bool
 nsNPAPIPluginStreamListener::PluginInitJSLoadInProgress()
 {
   if (!mInst)

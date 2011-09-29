@@ -404,64 +404,64 @@ public:
 
   NS_IMETHOD              Destroy();
 
-  NS_IMETHOD              Show(PRBool aState);
-  NS_IMETHOD              IsVisible(PRBool& outState);
+  NS_IMETHOD              Show(bool aState);
+  NS_IMETHOD              IsVisible(bool& outState);
 
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
   virtual float           GetDPI();
 
-  NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
+  NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
                                             PRInt32 *aX, PRInt32 *aY);
   NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
-  NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, bool aRepaint);
+  NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, bool aRepaint);
 
-  NS_IMETHOD              Enable(PRBool aState);
-  NS_IMETHOD              IsEnabled(PRBool *aState);
-  NS_IMETHOD              SetFocus(PRBool aRaise);
+  NS_IMETHOD              Enable(bool aState);
+  NS_IMETHOD              IsEnabled(bool *aState);
+  NS_IMETHOD              SetFocus(bool aRaise);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
 
-  NS_IMETHOD              Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD              Invalidate(const nsIntRect &aRect, bool aIsSynchronous);
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   virtual nsIntPoint      WidgetToScreenOffset();
-  virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
+  virtual bool            ShowsResizeIndicator(nsIntRect* aResizerRect);
 
-  static  PRBool          ConvertStatus(nsEventStatus aStatus)
+  static  bool            ConvertStatus(nsEventStatus aStatus)
                           { return aStatus == nsEventStatus_eConsumeNoDefault; }
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
   NS_IMETHOD              Update();
-  virtual PRBool          GetShouldAccelerate();
+  virtual bool            GetShouldAccelerate();
 
   NS_IMETHOD        SetCursor(nsCursor aCursor);
   NS_IMETHOD        SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
   
   NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup, 
-                                        PRBool aDoCapture, PRBool aConsumeRollupEvent);
+                                        bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD        SetTitle(const nsAString& title);
 
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
-  virtual PRBool HasPendingInputEvent();
+  virtual bool HasPendingInputEvent();
 
   NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
   NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
   NS_IMETHOD        ResetInputState();
-  NS_IMETHOD        SetIMEOpenState(PRBool aState);
-  NS_IMETHOD        GetIMEOpenState(PRBool* aState);
+  NS_IMETHOD        SetIMEOpenState(bool aState);
+  NS_IMETHOD        GetIMEOpenState(bool* aState);
   NS_IMETHOD        SetInputMode(const IMEContext& aContext);
   NS_IMETHOD        GetInputMode(IMEContext& aContext);
   NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
-                                       PRBool* aLEDState);
-  NS_IMETHOD        OnIMEFocusChange(PRBool aFocus);
+                                       bool* aLEDState);
+  NS_IMETHOD        OnIMEFocusChange(bool aFocus);
 
   // nsIPluginWidget
-  NS_IMETHOD        GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, PRBool& outWidgetVisible);
+  NS_IMETHOD        GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint& outOrigin, bool& outWidgetVisible);
   NS_IMETHOD        StartDrawPlugin();
   NS_IMETHOD        EndDrawPlugin();
   NS_IMETHOD        SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner);
@@ -487,7 +487,7 @@ public:
   
   // Mac specific methods
   
-  virtual PRBool    DispatchWindowEvent(nsGUIEvent& event);
+  virtual bool      DispatchWindowEvent(nsGUIEvent& event);
   
 #ifdef ACCESSIBILITY
   already_AddRefed<nsAccessible> GetDocumentAccessible();
@@ -506,13 +506,13 @@ public:
 
   void              ResetParent();
 
-  static PRBool DoHasPendingInputEvent();
+  static bool DoHasPendingInputEvent();
   static PRUint32 GetCurrentInputEventCount();
   static void UpdateCurrentInputEventCount();
 
   NSView<mozView>* GetEditorView();
 
-  PRBool IsPluginView() { return (mWindowType == eWindowType_plugin); }
+  bool IsPluginView() { return (mWindowType == eWindowType_plugin); }
 
   void PaintQD();
 
@@ -527,9 +527,9 @@ public:
 
 protected:
 
-  PRBool            ReportDestroyEvent();
-  PRBool            ReportMoveEvent();
-  PRBool            ReportSizeEvent();
+  bool              ReportDestroyEvent();
+  bool              ReportMoveEvent();
+  bool              ReportSizeEvent();
 
   // override to create different kinds of child views. Autoreleases, so
   // caller must retain.
@@ -562,10 +562,10 @@ protected:
   nsRefPtr<gfxASurface> mTempThebesSurface;
   nsRefPtr<mozilla::gl::TextureImage> mResizerImage;
 
-  PRPackedBool          mVisible;
-  PRPackedBool          mDrawing;
-  PRPackedBool          mPluginDrawing;
-  PRPackedBool          mIsDispatchPaint; // Is a paint event being dispatched
+  bool                  mVisible;
+  bool                  mDrawing;
+  bool                  mPluginDrawing;
+  bool                  mIsDispatchPaint; // Is a paint event being dispatched
 
   NP_CGContext          mPluginCGContext;
 #ifndef NP_NO_QUICKDRAW

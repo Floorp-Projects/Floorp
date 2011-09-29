@@ -60,7 +60,7 @@ nsAccessibleWrap::~nsAccessibleWrap()
   }
 }
 
-PRBool
+bool
 nsAccessibleWrap::Init () 
 {
   if (!nsAccessible::Init())
@@ -211,7 +211,7 @@ nsAccessibleWrap::InvalidateChildren()
 }
 
 PRInt32
-nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
+nsAccessibleWrap::GetUnignoredChildCount(bool aDeepCount)
 {
   // if we're flat, we have no children.
   if (nsAccUtils::MustPrune(this))
@@ -248,7 +248,7 @@ nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
 
 // if we for some reason have no native accessible, we should be skipped over (and traversed)
 // when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
-PRBool 
+bool 
 nsAccessibleWrap::IsIgnored() 
 {
   return (mNativeWrapper == nsnull) || mNativeWrapper->isIgnored();
@@ -302,7 +302,7 @@ nsAccessibleWrap::GetUnignoredParent()
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibleWrap protected
 
-PRBool
+bool
 nsAccessibleWrap::AncestorIsFlat()
 {
   // We don't create a native object if we're child of a "flat" accessible;

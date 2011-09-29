@@ -111,7 +111,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
 
             // The 'table-layout: fixed' algorithm considers only cells
             // in the first row.
-            PRBool originates;
+            bool originates;
             PRInt32 colSpan;
             nsTableCellFrame *cellFrame =
                 cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
@@ -149,7 +149,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
 
 /* virtual */ nscoord
 FixedTableLayoutStrategy::GetPrefWidth(nsRenderingContext* aRenderingContext,
-                                       PRBool aComputingSize)
+                                       bool aComputingSize)
 {
     // It's theoretically possible to do something much better here that
     // depends only on the columns and the first row (where we look at
@@ -258,7 +258,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
 
             // The 'table-layout: fixed' algorithm considers only cells
             // in the first row.
-            PRBool originates;
+            bool originates;
             PRInt32 colSpan;
             nsTableCellFrame *cellFrame =
                 cellMap->GetCellInfoAt(0, col, &originates, &colSpan);

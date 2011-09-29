@@ -203,7 +203,7 @@ public:
   virtual NS_HIDDEN_(void) PopStackMemory();
   virtual NS_HIDDEN_(void*) AllocateStackMemory(size_t aSize);
 
-  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(PRBool aForceReflow);
+  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow);
 
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
   virtual nsISelection* GetCurrentSelection(SelectionType aType);
@@ -228,7 +228,7 @@ public:
                                             nsFrameState aBitToAdd);
   virtual NS_HIDDEN_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame);
   virtual NS_HIDDEN_(void) CancelAllPendingReflows();
-  virtual NS_HIDDEN_(PRBool) IsSafeToFlush() const;
+  virtual NS_HIDDEN_(bool) IsSafeToFlush() const;
   virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType);
 
   /**
@@ -244,14 +244,14 @@ public:
 
   virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame);
   virtual NS_HIDDEN_(already_AddRefed<nsRenderingContext>) GetReferenceRenderingContext();
-  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
+  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, bool aScroll);
   virtual NS_HIDDEN_(nsresult) ScrollToAnchor();
 
   virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
                                                      PRIntn      aVPercent,
                                                      PRIntn      aHPercent,
                                                      PRUint32    aFlags);
-  virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,
+  virtual bool ScrollFrameRectIntoView(nsIFrame*     aFrame,
                                          const nsRect& aRect,
                                          PRIntn        aVPercent,
                                          PRIntn        aHPercent,
@@ -260,12 +260,12 @@ public:
                                              const nsRect &aRect,
                                              nscoord aMinTwips) const;
 
-  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(PRBool aIgnore);
+  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(bool aIgnore);
   virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame);
 
   virtual NS_HIDDEN_(nsresult) GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString) const;
 
-  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
+  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, bool aLeavingPage);
 
   virtual NS_HIDDEN_(void) UnsuppressPainting();
 
@@ -285,7 +285,7 @@ public:
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
   virtual void Thaw();
-  virtual void FireOrClearDelayedEvents(PRBool aFireEvents);
+  virtual void FireOrClearDelayedEvents(bool aFireEvents);
 
   virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
 
@@ -306,7 +306,7 @@ public:
 
   virtual LayerManager* GetLayerManager();
 
-  virtual void SetIgnoreViewportScrolling(PRBool aIgnore);
+  virtual void SetIgnoreViewportScrolling(bool aIgnore);
 
   virtual void SetDisplayPort(const nsRect& aDisplayPort);
 
@@ -318,11 +318,11 @@ public:
                    nsIWidget* aWidget,
                    const nsRegion& aDirtyRegion,
                    const nsIntRegion& aIntDirtyRegion,
-                   PRBool aPaintDefaultBackground,
-                   PRBool aWillSendDidPaint);
+                   bool aPaintDefaultBackground,
+                   bool aWillSendDidPaint);
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
-                         PRBool          aDontRetargetEvents,
+                         bool            aDontRetargetEvents,
                          nsEventStatus*  aEventStatus);
   virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                                         nsEvent* aEvent,
@@ -331,21 +331,21 @@ public:
                                                         nsIDOMEvent* aEvent,
                                                         nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD_(PRBool) ShouldIgnoreInvalidation();
-  NS_IMETHOD_(void) WillPaint(PRBool aWillSendDidPaint);
+  NS_IMETHOD_(bool) ShouldIgnoreInvalidation();
+  NS_IMETHOD_(void) WillPaint(bool aWillSendDidPaint);
   NS_IMETHOD_(void) DidPaint();
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
-                                           PRBool aFlushOnHoverChange);
+                                           bool aFlushOnHoverChange);
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
 
   // caret handling
   virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const;
   virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition();
-  NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
-  NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
-  NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
-  NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
-  NS_IMETHOD GetCaretVisible(PRBool *_retval);
+  NS_IMETHOD SetCaretEnabled(bool aInEnable);
+  NS_IMETHOD SetCaretReadOnly(bool aReadOnly);
+  NS_IMETHOD GetCaretEnabled(bool *aOutEnabled);
+  NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility);
+  NS_IMETHOD GetCaretVisible(bool *_retval);
   virtual void SetCaret(nsCaret *aNewCaret);
   virtual void RestoreCaret();
 
@@ -354,21 +354,21 @@ public:
 
   // nsISelectionController
 
-  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD CharacterMove(bool aForward, bool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
   NS_IMETHOD CharacterExtendForBackspace();
-  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD WordExtendForDelete(PRBool aForward);
-  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD ScrollPage(PRBool aForward);
-  NS_IMETHOD ScrollLine(PRBool aForward);
-  NS_IMETHOD ScrollHorizontal(PRBool aLeft);
-  NS_IMETHOD CompleteScroll(PRBool aForward);
-  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD WordMove(bool aForward, bool aExtend);
+  NS_IMETHOD WordExtendForDelete(bool aForward);
+  NS_IMETHOD LineMove(bool aForward, bool aExtend);
+  NS_IMETHOD IntraLineMove(bool aForward, bool aExtend);
+  NS_IMETHOD PageMove(bool aForward, bool aExtend);
+  NS_IMETHOD ScrollPage(bool aForward);
+  NS_IMETHOD ScrollLine(bool aForward);
+  NS_IMETHOD ScrollHorizontal(bool aLeft);
+  NS_IMETHOD CompleteScroll(bool aForward);
+  NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
   NS_IMETHOD SelectAll();
-  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
@@ -403,8 +403,8 @@ public:
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,
                                       PRUint32 aColor);
-  virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn);
-  virtual PRBool IsPaintingFrameCounts();
+  virtual NS_HIDDEN_(void) SetPaintFrameCount(bool aOn);
+  virtual bool IsPaintingFrameCounts();
 #endif
 
 #ifdef DEBUG
@@ -419,7 +419,7 @@ public:
   static PRLogModuleInfo* gLog;
 #endif
 
-  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(PRBool aDisable);
+  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(bool aDisable);
 
   virtual void UpdateCanvasBackground();
 
@@ -437,11 +437,11 @@ public:
 
   virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot);
 
-  virtual NS_HIDDEN_(nsresult) SetIsActive(PRBool aIsActive);
+  virtual NS_HIDDEN_(nsresult) SetIsActive(bool aIsActive);
 
-  virtual PRBool GetIsViewportOverridden() { return mViewportOverridden; }
+  virtual bool GetIsViewportOverridden() { return mViewportOverridden; }
 
-  virtual PRBool IsLayoutFlushObserver()
+  virtual bool IsLayoutFlushObserver()
   {
     return GetPresContext()->RefreshDriver()->
       IsLayoutFlushObserver(this);
@@ -450,7 +450,7 @@ public:
 protected:
   virtual ~PresShell();
 
-  void HandlePostedReflowCallbacks(PRBool aInterruptible);
+  void HandlePostedReflowCallbacks(bool aInterruptible);
   void CancelPostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
@@ -463,10 +463,10 @@ protected:
   friend class nsAutoCauseReflowNotifier;
 
   void     WillDoReflow();
-  void     DidDoReflow(PRBool aInterruptible);
+  void     DidDoReflow(bool aInterruptible);
   // ProcessReflowCommands returns whether we processed all our dirty roots
   // without interruptions.
-  PRBool   ProcessReflowCommands(PRBool aInterruptible);
+  bool     ProcessReflowCommands(bool aInterruptible);
   // MaybeScheduleReflow checks if posting a reflow is needed, then checks if
   // the last reflow was interrupted. In the interrupted case ScheduleReflow is
   // called off a timer, otherwise it is called directly.
@@ -480,7 +480,7 @@ protected:
   nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight);
 
   // DoReflow returns whether the reflow finished without interruption
-  PRBool DoReflow(nsIFrame* aFrame, PRBool aInterruptible);
+  bool DoReflow(nsIFrame* aFrame, bool aInterruptible);
 #ifdef DEBUG
   void DoVerifyReflow();
   void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
@@ -527,11 +527,11 @@ protected:
 
   friend class nsPresShellEventCB;
 
-  PRBool mCaretEnabled;
+  bool mCaretEnabled;
 #ifdef NS_DEBUG
   nsStyleSet* CloneStyleSet(nsStyleSet* aSet);
-  PRBool VerifyIncrementalReflow();
-  PRBool mInVerifyReflow;
+  bool VerifyIncrementalReflow();
+  bool mInVerifyReflow;
   void ShowEventTargetDebug();
 #endif
 
@@ -558,7 +558,7 @@ protected:
   // display list needed to paint the range to a surface
   RangePaintInfo* CreateRangePaintInfo(nsIDOMRange* aRange,
                                        nsRect& aSurfaceRect,
-                                       PRBool aForPrimarySelection);
+                                       bool aForPrimarySelection);
 
   /*
    * Paint the items to a new surface and return it.
@@ -625,14 +625,14 @@ protected:
   // reflow roots that need to be reflowed, as both a queue and a hashtable
   nsTArray<nsIFrame*> mDirtyRoots;
 
-  PRPackedBool mDocumentLoading;
+  bool mDocumentLoading;
 
-  PRPackedBool mIgnoreFrameDestruction;
-  PRPackedBool mHaveShutDown;
+  bool mIgnoreFrameDestruction;
+  bool mHaveShutDown;
 
-  PRPackedBool mViewportOverridden;
+  bool mViewportOverridden;
 
-  PRPackedBool mLastRootReflowHadUnconstrainedHeight;
+  bool mLastRootReflowHadUnconstrainedHeight;
 
   // This is used to protect ourselves from triggering reflow while in the
   // middle of frame construction and the like... it really shouldn't be
@@ -750,17 +750,17 @@ protected:
     }
   };
 
-  PRPackedBool                         mNoDelayedMouseEvents;
-  PRPackedBool                         mNoDelayedKeyEvents;
+  bool                                 mNoDelayedMouseEvents;
+  bool                                 mNoDelayedKeyEvents;
   nsTArray<nsAutoPtr<nsDelayedEvent> > mDelayedEvents;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
 
-  PRPackedBool      mIsDocumentGone;      // We've been disconnected from the document.
+  bool              mIsDocumentGone;      // We've been disconnected from the document.
                                           // We will refuse to paint the document until either
                                           // (a) our timer fires or (b) all frames are constructed.
-  PRPackedBool      mShouldUnsuppressPainting;  // Indicates that it is safe to unlock painting once all pending
+  bool              mShouldUnsuppressPainting;  // Indicates that it is safe to unlock painting once all pending
                                                 // reflows have been processed.
   nsCOMPtr<nsITimer> mPaintSuppressionTimer; // This timer controls painting suppression.  Until it fires
                                              // or all frames are constructed, we won't paint anything but
@@ -778,17 +778,17 @@ protected:
   // moving/sizing loop is running, see bug 491700 for details.
   nsCOMPtr<nsITimer> mReflowContinueTimer;
   static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
-  PRBool ScheduleReflowOffTimer();
+  bool ScheduleReflowOffTimer();
   
 #ifdef MOZ_REFLOW_PERF
   ReflowCountMgr * mReflowCountMgr;
 #endif
 
-  static PRBool sDisableNonTestMouseEvents;
+  static bool sDisableNonTestMouseEvents;
 
 private:
 
-  PRBool InZombieDocument(nsIContent *aContent);
+  bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShell();
   nsresult RetargetEventToParent(nsGUIEvent* aEvent,
                                  nsEventStatus*  aEventStatus);
@@ -825,10 +825,10 @@ private:
    * Returns true if the context menu event should fire and false if it should
    * not.
    */
-  PRBool AdjustContextMenuKeyEvent(nsMouseEvent* aEvent);
+  bool AdjustContextMenuKeyEvent(nsMouseEvent* aEvent);
 
   // 
-  PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
+  bool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
 
   // Get the selected item and coordinates in device pixels relative to root
   // document's root view for element, first ensuring the element is onscreen
@@ -842,10 +842,10 @@ private:
   static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
   nsCOMPtr<nsITimer> mAsyncResizeEventTimer;
-  PRPackedBool mAsyncResizeTimerIsActive;
-  PRPackedBool mInResize;
+  bool mAsyncResizeTimerIsActive;
+  bool mInResize;
 
-  virtual void SynthesizeMouseMove(PRBool aFromScroll);
+  virtual void SynthesizeMouseMove(bool aFromScroll);
 
   // Check if aEvent is a mouse event and record the mouse location for later
   // synth mouse moves.
@@ -861,7 +861,7 @@ private:
   nsPoint mMouseLocation;
   class nsSynthMouseMoveEvent : public nsRunnable {
   public:
-    nsSynthMouseMoveEvent(PresShell* aPresShell, PRBool aFromScroll)
+    nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
       : mPresShell(aPresShell), mFromScroll(aFromScroll) {
       NS_ASSERTION(mPresShell, "null parameter");
     }
@@ -873,10 +873,10 @@ private:
     }
   private:
     PresShell* mPresShell;
-    PRBool mFromScroll;
+    bool mFromScroll;
   };
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
-  void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
+  void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
   PresShell* GetRootPresShell();
 

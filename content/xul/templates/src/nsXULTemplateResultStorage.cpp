@@ -56,21 +56,21 @@ nsXULTemplateResultStorage::nsXULTemplateResultStorage(nsXULTemplateResultSetSto
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultStorage::GetIsContainer(PRBool* aIsContainer)
+nsXULTemplateResultStorage::GetIsContainer(bool* aIsContainer)
 {
     *aIsContainer = PR_FALSE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultStorage::GetIsEmpty(PRBool* aIsEmpty)
+nsXULTemplateResultStorage::GetIsEmpty(bool* aIsEmpty)
 {
     *aIsEmpty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTemplateResultStorage::GetMayProcessChildren(PRBool* aMayProcessChildren)
+nsXULTemplateResultStorage::GetMayProcessChildren(bool* aMayProcessChildren)
 {
     *aMayProcessChildren = PR_FALSE;
     return NS_OK;

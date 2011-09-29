@@ -63,17 +63,18 @@ PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder()
+nsBMPDecoder::nsBMPDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+ : Decoder(aImage, aObserver)
 {
-    mColors = nsnull;
-    mRow = nsnull;
-    mImageData = nsnull;
-    mCurPos = mPos = mNumColors = mRowBytes = 0;
-    mOldLine = mCurLine = 1; // Otherwise decoder will never start
-    mState = eRLEStateInitial;
-    mStateData = 0;
-    mLOH = WIN_HEADER_LENGTH;
-    mUseAlphaData = mHaveAlphaData = PR_FALSE;
+  mColors = nsnull;
+  mRow = nsnull;
+  mImageData = nsnull;
+  mCurPos = mPos = mNumColors = mRowBytes = 0;
+  mOldLine = mCurLine = 1; // Otherwise decoder will never start
+  mState = eRLEStateInitial;
+  mStateData = 0;
+  mLOH = WIN_HEADER_LENGTH;
+  mUseAlphaData = mHaveAlphaData = PR_FALSE;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
@@ -86,7 +87,7 @@ nsBMPDecoder::~nsBMPDecoder()
 
 // Sets whether or not the BMP will use alpha data
 void 
-nsBMPDecoder::SetUseAlphaData(PRBool useAlphaData) 
+nsBMPDecoder::SetUseAlphaData(bool useAlphaData) 
 {
   mUseAlphaData = useAlphaData;
 }
@@ -144,7 +145,7 @@ nsBMPDecoder::GetCompressedImageSize() const
 
 // Obtains whether or not a BMP file had alpha data in its 4th byte
 // for 32BPP bitmaps.  Only use after the bitmap has been processed.
-PRBool 
+bool 
 nsBMPDecoder::HasAlphaData() const 
 {
   return mHaveAlphaData;
@@ -180,7 +181,7 @@ static void calcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8& aLength)
 {
     // find the rightmost 1
     PRUint8 pos;
-    PRBool started = PR_FALSE;
+    bool started = false;
     aBegin = aLength = 0;
     for (pos = 0; pos <= 31; pos++) {
         if (!started && (aMask & (1 << pos))) {

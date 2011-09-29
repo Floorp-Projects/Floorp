@@ -98,7 +98,7 @@ public:
         if (mBuf) memcpy(mBuf, (char *)aBuf, aCount);
         mCount = aCount;
         mSink = aSink;
-        PRBool isNonBlocking;
+        bool isNonBlocking;
         mSink->IsNonBlocking(&isNonBlocking);
         NS_ASSERTION(isNonBlocking == PR_FALSE, "mSink is nonblocking");
         mTee = aTee;
@@ -277,7 +277,7 @@ nsInputStreamTee::ReadSegments(nsWriteSegmentFun writer,
 }
 
 NS_IMETHODIMP
-nsInputStreamTee::IsNonBlocking(PRBool *result)
+nsInputStreamTee::IsNonBlocking(bool *result)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
     return mSource->IsNonBlocking(result);
@@ -302,7 +302,7 @@ nsInputStreamTee::SetSink(nsIOutputStream *sink)
 {
 #ifdef DEBUG
     if (sink) {
-        PRBool nonBlocking;
+        bool nonBlocking;
         nsresult rv = sink->IsNonBlocking(&nonBlocking);
         if (NS_FAILED(rv) || nonBlocking)
             NS_ERROR("sink should be a blocking stream");

@@ -47,7 +47,7 @@
 #include "jsfriendapi.h"
 
 /***************************************************************************/
-PRBool
+bool
 xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
 {
     if(aKey->mPtr != mPtr)
@@ -55,7 +55,7 @@ xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
     if(aKey->mPrincipal == mPrincipal)
         return PR_TRUE;
 
-    PRBool equals;
+    bool equals;
     if(NS_FAILED(mPrincipal->EqualsIgnoringDomain(aKey->mPrincipal, &equals)))
     {
         NS_ERROR("we failed, guessing!");
@@ -401,7 +401,7 @@ XPCNativeInterface::FindMember(jsid name) const
 inline JSBool
 XPCNativeInterface::HasAncestor(const nsIID* iid) const
 {
-    PRBool found = PR_FALSE;
+    bool found = false;
     mInfo->HasAncestor(iid, &found);
     return found;
 }

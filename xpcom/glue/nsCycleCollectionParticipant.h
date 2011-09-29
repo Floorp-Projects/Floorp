@@ -91,7 +91,7 @@ public:
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
                                              size_t objsz,
                                              const char *objname) = 0;
-    NS_IMETHOD_(void) DescribeGCedNode(PRBool ismarked,
+    NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
                                        size_t objsz,
                                        const char *objname) = 0;
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) = 0;
@@ -121,8 +121,8 @@ public:
         WANT_ALL_TRACES = (1<<1)
     };
     PRUint32 Flags() const { return mFlags; }
-    PRBool WantDebugInfo() const { return (mFlags & WANT_DEBUG_INFO) != 0; }
-    PRBool WantAllTraces() const { return (mFlags & WANT_ALL_TRACES) != 0; }
+    bool WantDebugInfo() const { return (mFlags & WANT_DEBUG_INFO) != 0; }
+    bool WantAllTraces() const { return (mFlags & WANT_ALL_TRACES) != 0; }
 protected:
     nsCycleCollectionTraversalCallback() : mFlags(0) {}
 
@@ -172,7 +172,7 @@ public:
 
     NS_IMETHOD_(void) UnmarkPurple(nsISupports *p);
 
-    PRBool CheckForRightISupports(nsISupports *s);
+    bool CheckForRightISupports(nsISupports *s);
 };
 
 #undef IMETHOD_VISIBILITY

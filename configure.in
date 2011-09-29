@@ -116,7 +116,6 @@ NSS_VERSION=3
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=1.2.0
-LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.006
 PYTHON_VERSION=2.5
 CAIRO_VERSION=1.10
@@ -279,6 +278,9 @@ case "$target" in
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
+i?86-*android*)
+    android_tool_prefix="i686-android-linux"
+    ;;
 arm-android-eabi)
     android_tool_prefix="arm-eabi"
     ;;
@@ -370,20 +372,29 @@ case "$target" in
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
+    case "${target_cpu}" in
+    arm*)
+      ANDROID_CPU_ARCH=armeabi-v7a
+      ;;
+    i?86)
+      ANDROID_CPU_ARCH=x86
+      ;;
+    esac
+
     if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
-       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/libstdc++.a" ; then
+       if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/libstdc++.a" ; then
           AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
        fi
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
+       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstdc++"
-    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+    elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/armeabi-v7a/"
+       STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
        STLPORT_LIBS="-lstlport_static"
-    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a/libstlport_static.a" ; then
+    elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
        STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
-       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/armeabi-v7a"
+       STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstlport_static"
     elif test "$target" != "arm-android-eabi"; then
        dnl fail if we're not building with NDKr4
@@ -2315,13 +2326,6 @@ ia64*-hpux*)
     case "$host_os" in
     cygwin*|msvc*|mks*)
         AC_MSG_ERROR([Using a Cygwin build environment is unsupported. Configure cannot check for presence of necessary headers. Please upgrade to MozillaBuild; see https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
-        ;;
-    *)
-        AC_CHECK_HEADERS(oleacc.idl)
-        AC_LANG_SAVE
-        AC_LANG_CPLUSPLUS
-        MOZ_CHECK_HEADERS(atlbase.h)
-        AC_LANG_RESTORE
         ;;
     esac
 
@@ -4364,7 +4368,7 @@ MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
-NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg device"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
@@ -4395,8 +4399,11 @@ esac
 
 case "${target}" in
     *-android*|*-linuxandroid*)
+        if test "$CPU_ARCH" = "arm" ; then
+          USE_ARM_KUSER=1
+        fi
+
         NSS_DISABLE_DBM=1
-        USE_ARM_KUSER=1
         MOZ_INSTALLER=
         NECKO_WIFI=
         MOZ_THEME_FASTSTRIPE=1
@@ -5252,19 +5259,6 @@ MOZ_ARG_DISABLE_BOOL(accessibility,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
-fi
-
-if test -n "$ACCESSIBILITY" -a "$COMPILE_ENVIRONMENT" = "1"; then
-case "$target" in
-*-mingw*)
-    if test "$ac_cv_header_atlbase_h" = "no"; then
-        AC_MSG_ERROR([System header atlbase.h is not available. See http://developer.mozilla.org/en/docs/atlbase.h for details on fixing this problem.])
-    fi
-    if test "$ac_cv_header_oleacc_idl" = "no"; then
-        AC_MSG_ERROR([System header oleacc.idl is not available. See http://developer.mozilla.org/en/docs/oleacc.idl for details on fixing this problem.])
-    fi
-    ;;
-esac
 fi
 
 dnl ========================================================
@@ -7851,207 +7845,8 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
-dnl Check for GLib and libIDL.
+dnl Check for GLib.
 dnl ========================================================
-SKIP_IDL_CHECK="no"
-
-if test -z "$COMPILE_ENVIRONMENT"; then
-    SKIP_IDL_CHECK="yes"
-fi
-
-dnl = Allow users to disable libIDL checking for standalone modules
-MOZ_ARG_WITHOUT_BOOL(libIDL,
-[  --without-libIDL        Skip check for libIDL (standalone modules only)],
-	SKIP_IDL_CHECK="yes")
-
-if test -z "$CROSS_COMPILE"; then
-    if test -z "$HOST_LIBIDL_CONFIG"; then
-        HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
-    fi
-    if test -z "$HOST_LIBIDL_PREFIX"; then
-        HOST_LIBIDL_PREFIX="$LIBIDL_PREFIX"
-    fi
-fi
-
-if test "$SKIP_IDL_CHECK" = "no"
-then
-    _LIBIDL_FOUND=
-    case "$host" in
-    *-mingw*)
-        if test -n "$GLIB_PREFIX"; then
-            _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd -W`
-            if test "$?" = "0"; then
-                if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
-                    AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
-                fi
-            else
-                 AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
-            fi
-        else
-            _GLIB_PREFIX_DIR=$MOZ_TOOLS_DIR
-        fi
-        if test ! -f "${_GLIB_PREFIX_DIR}/include/glib.h"; then
-            AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/include/glib.h .])
-        fi
-        GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
-        if test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"; then
-            GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"
-        elif test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"; then
-            GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
-        else
-            AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/lib/glib-1.2.lib or $_GLIB_PREFIX_DIR/lib/glib-1.2_s.lib])
-        fi
-
-        if test -n "$HOST_LIBIDL_PREFIX"; then
-            _LIBIDL_PREFIX_DIR=`cd $HOST_LIBIDL_PREFIX && pwd -W`
-            if test "$?" = "0"; then
-                if test `echo ${PATH}: | grep -ic "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
-                    AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
-                fi
-            else
-                AC_MSG_ERROR([LIBIDL_PREFIX is set but "${LIBIDL_PREFIX}" is not a directory.])
-            fi
-        else
-            _LIBIDL_PREFIX_DIR=$MOZ_TOOLS_DIR
-        fi
-        if test ! -f "${_LIBIDL_PREFIX_DIR}/include/libIDL/IDL.h"; then
-            AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/include/libIDL/IDL.h .])
-        fi
-        HOST_LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include ${GLIB_CFLAGS}"
-        if test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"; then
-            HOST_LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"
-            STATIC_LIBIDL=1
-        elif test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"; then
-            HOST_LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"
-        else
-            AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/lib/libidl-0.6.lib or $_LIBIDL_PREFIX_DIR/lib/libidl-0.6_s.lib])
-        fi
-        HOST_LIBIDL_LIBS="${HOST_LIBIDL_LIBS} ${GLIB_LIBS}"
-        _LIBIDL_FOUND=1
-        ;;
-    esac
-
-    if test -z "$_LIBIDL_FOUND"; then
-        if test "$MACOS_SDK_DIR"; then
-            dnl xpidl, and therefore libIDL, is only needed on the build host.
-            dnl Don't build it against the SDK, as that causes problems.
-            _MACSAVE_CFLAGS="$CFLAGS"
-            _MACSAVE_LIBS="$LIBS"
-            _MACSAVE_LDFLAGS="$LDFLAGS"
-            _MACSAVE_NEXT_ROOT="$NEXT_ROOT"
-          changequote(,)
-          CFLAGS=`echo $CFLAGS|sed -E -e "s%((-I|-isystem )${MACOS_SDK_DIR}/usr/(include|lib/gcc)[^ ]*)|-F${MACOS_SDK_DIR}(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot ${MACOS_SDK_DIR}%%g"`
-          LIBS=`echo $LIBS|sed -e "s?-L${MACOS_SDK_DIR}/usr/lib[^ ]*??g"`
-          LDFLAGS=`echo $LDFLAGS|sed -e "s?-Wl,-syslibroot,${MACOS_SDK_DIR}??g"`
-          changequote([,])
-          unset NEXT_ROOT
-        fi
-
-        PKG_CHECK_MODULES(HOST_LIBIDL, libIDL-2.0 >= 0.8.0 glib-2.0 gobject-2.0, _LIBIDL_FOUND=1,_LIBIDL_FOUND=)
-    fi
-
-    dnl if no gtk/libIDL1 or gtk2/libIDL2 combination was found, fall back
-    dnl to either libIDL1 or libIDL2.
-    if test -z "$_LIBIDL_FOUND"; then
-        AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
-        if test -z "$_LIBIDL_FOUND"; then
-            PKG_CHECK_MODULES(HOST_LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
-        fi
-    fi
-    dnl
-    dnl If we don't have a libIDL config program & not cross-compiling,
-    dnl     look for orbit-config instead.
-    dnl
-    if test -z "$_LIBIDL_FOUND" -a -z "$CROSS_COMPILE"; then
-        MOZ_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
-        if test -n "$ORBIT_CONFIG"; then
-            AC_MSG_CHECKING([for ORBit libIDL usability])
-        	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
-    	    _ORBIT_LIBS=`${ORBIT_CONFIG} client --libs`
-            _ORBIT_INC_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-I/); } }' -- ${_ORBIT_CFLAGS}`
-            _ORBIT_LIB_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-L/); } }' -- ${_ORBIT_LIBS}`
-            HOST_LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
-            HOST_LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
-            HOST_LIBIDL_CONFIG=
-            _SAVE_CFLAGS="$CFLAGS"
-            _SAVE_LIBS="$LIBS"
-            CFLAGS="$HOST_LIBIDL_CFLAGS $CFLAGS"
-            LIBS="$HOST_LIBIDL_LIBS $LIBS"
-            AC_TRY_RUN([
-#include <stdlib.h>
-#include <libIDL/IDL.h>
-int main() {
-  char *s;
-  s=strdup(IDL_get_libver_string());
-  if(s==NULL) {
-    exit(1);
-  }
-  exit(0);
-}
-            ], [_LIBIDL_FOUND=1
-                result="yes"],
-               [HOST_LIBIDL_CFLAGS=
-                HOST_LIBIDL_LIBS=
-                result="no"],
-               [_LIBIDL_FOUND=1
-                result="maybe"] )
-            AC_MSG_RESULT($result)
-            CFLAGS="$_SAVE_CFLAGS"
-            LIBS="$_SAVE_LIBS"
-        fi
-    fi
-    if test -z "$_LIBIDL_FOUND"; then
-        AC_MSG_ERROR([libIDL not found.
-        libIDL $LIBIDL_VERSION or higher is required.])
-    fi
-    if test "$MACOS_SDK_DIR"; then
-      CFLAGS="$_MACSAVE_CFLAGS"
-      LIBS="$_MACSAVE_LIBS"
-      LDFLAGS="$_MACSAVE_LDFLAGS"
-      if test -n "$_MACSAVE_NEXT_ROOT" ; then
-        export NEXT_ROOT="$_MACSAVE_NEXT_ROOT"
-      fi
-    fi
-fi
-
-if test -n "$CROSS_COMPILE"; then
-    case "$target" in
-    *-mingw*)
-        if test -n "$GLIB_PREFIX"; then
-            GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
-            if test -f "${GLIB_PREFIX}/lib/glib-1.2_s.lib"; then
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2_s.lib"
-            elif test -f "${GLIB_PREFIX}/lib/glib-1.2.lib"; then
-                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
-            else
-                AC_MSG_ERROR([Cannot find $GLIB_PREFIX/lib/glib-1.2.lib or $GLIB_PREFIX/lib/glib-1.2_s.lib])
-            fi
-        fi
-
-        if test -n "$LIBIDL_PREFIX"; then
-            LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include ${GLIB_CFLAGS}"
-            if test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"; then
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"
-                STATIC_LIBIDL=1
-            elif test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"; then
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"
-            else
-                AC_MSG_ERROR([Cannot find $LIBIDL_PREFIX/lib/libIDL-0.6.lib or $LIBIDL_PREFIX/lib/libIDL-0.6_s.lib])
-            fi
-        fi
-        LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
-        ;;
-    *)
-        if test -n "LIBIDL_CONFIG" -a "LIBIDL_CONFIG" != "no"; then
-            LIBIDL_CFLAGS=`${LIBIDL_CONFIG} --cflags`
-            LIBIDL_LIBS=`${LIBIDL_CONFIG} --libs`
-        fi
-        ;;
-    esac
-else
-    LIBIDL_CFLAGS="$HOST_LIBIDL_CFLAGS"
-    LIBIDL_LIBS="$HOST_LIBIDL_LIBS"
-fi
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" -o -z "${GLIB_LIBS}" ; then
@@ -8070,15 +7865,9 @@ if test -z "${GLIB_GMODULE_LIBS}" \
     GLIB_GMODULE_LIBS=`$GLIB_CONFIG gmodule --libs`
 fi
 
-AC_SUBST(LIBIDL_CFLAGS)
-AC_SUBST(LIBIDL_LIBS)
-AC_SUBST(STATIC_LIBIDL)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_GMODULE_LIBS)
-AC_SUBST(HOST_LIBIDL_CONFIG)
-AC_SUBST(HOST_LIBIDL_CFLAGS)
-AC_SUBST(HOST_LIBIDL_LIBS)
 
 dnl ========================================================
 dnl Check for cairo

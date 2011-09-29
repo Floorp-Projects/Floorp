@@ -130,7 +130,7 @@ nsHTMLButtonControlFrame::GetType() const
 }
 
 void 
-nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+nsHTMLButtonControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
@@ -361,7 +361,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   aDesiredSize.ascent += yoff;
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsHTMLButtonControlFrame::IsContainingBlock() const
 {
   return PR_TRUE;

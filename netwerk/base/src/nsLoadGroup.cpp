@@ -87,7 +87,7 @@ public:
     nsCOMPtr<nsIRequest> mKey;
 };
 
-static PRBool
+static bool
 RequestHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                       const void *key)
 {
@@ -107,7 +107,7 @@ RequestHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     e->~RequestMapEntry();
 }
 
-static PRBool
+static bool
 RequestHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                      const void *key)
 {
@@ -235,7 +235,7 @@ nsLoadGroup::GetName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::IsPending(PRBool *aResult)
+nsLoadGroup::IsPending(bool *aResult)
 {
     *aResult = (mForegroundCount > 0) ? PR_TRUE : PR_FALSE;
     return NS_OK;
@@ -263,7 +263,7 @@ AppendRequestsToArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
     nsIRequest *request = e->mKey;
     NS_ASSERTION(request, "What? Null key in pldhash entry?");
 
-    PRBool ok = array->AppendElement(request) != nsnull;
+    bool ok = array->AppendElement(request) != nsnull;
 
     if (!ok) {
         return PL_DHASH_STOP;
@@ -759,7 +759,7 @@ AppendRequestsToISupportsArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
     RequestMapEntry *e = static_cast<RequestMapEntry *>(hdr);
     nsISupportsArray *array = static_cast<nsISupportsArray *>(arg);
 
-    PRBool ok = array->AppendElement(e->mKey);
+    bool ok = array->AppendElement(e->mKey);
 
     if (!ok) {
         return PL_DHASH_STOP;
@@ -882,7 +882,7 @@ nsLoadGroup::TelemetryReportChannel(nsITimedChannel *aTimedChannel,
                                     bool aDefaultRequest)
 {
     nsresult rv;
-    PRBool timingEnabled;
+    bool timingEnabled;
     rv = aTimedChannel->GetTimingEnabled(&timingEnabled);
     if (NS_FAILED(rv) || !timingEnabled)
         return;

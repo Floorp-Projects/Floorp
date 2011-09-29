@@ -785,7 +785,7 @@ customMethodCalls = {
         },
     'nsIDOMNSElement_MozMatchesSelector': {
         'thisType': 'nsGenericElement',
-        'code': '    PRBool result = self->MozMatchesSelector(arg0, &rv);',
+        'code': '    bool result = self->MozMatchesSelector(arg0, &rv);',
         },
     'nsIDOMNodeSelector_QuerySelector': {
         'thisType': 'nsINode',
@@ -817,12 +817,6 @@ customMethodCalls = {
         'thisType': 'nsINode',
         'canFail': False
         },
-    'nsIDOMNode_IsSameNode': {
-        'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    PRBool result = self == arg0;',
-        'canFail': False
-        },
     'nsIDOMNode_LookupPrefix': {
         'thisType': 'nsINode',
         'canFail': False
@@ -838,7 +832,7 @@ customMethodCalls = {
     'nsIDOMNode_IsEqualNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRBool result = self->IsEqualTo(arg0);',
+        'code': '    bool result = self->IsEqualTo(arg0);',
         'canFail': False
         },
     'nsIDOMNode_GetUserData': {
@@ -848,7 +842,7 @@ customMethodCalls = {
     'nsIDOMNode_Contains': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    PRBool result = self->Contains(arg0);',
+        'code': '    bool result = self->Contains(arg0);',
         'canFail': False
         },
     'nsIDOMNSHTMLElement_': {

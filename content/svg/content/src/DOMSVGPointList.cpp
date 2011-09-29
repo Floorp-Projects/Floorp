@@ -88,7 +88,7 @@ NS_INTERFACE_MAP_END
 /* static */ already_AddRefed<DOMSVGPointList>
 DOMSVGPointList::GetDOMWrapper(void *aList,
                                nsSVGElement *aElement,
-                               PRBool aIsAnimValList)
+                               bool aIsAnimValList)
 {
   DOMSVGPointList *wrapper =
     sSVGPointListTearoffTable.GetTearoff(aList);
@@ -174,7 +174,7 @@ DOMSVGPointList::InternalListWillChangeTo(const SVGPointList& aNewValue)
   }
 }
 
-PRBool
+bool
 DOMSVGPointList::AttrIsAnimating() const
 {
   return const_cast<DOMSVGPointList*>(this)->InternalAList().IsAnimating();

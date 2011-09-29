@@ -121,7 +121,7 @@ public:
                                     const InfallibleTArray<OverrideMapping>& overrides,
                                     const nsCString& locale);
 
-    virtual bool RecvSetOffline(const PRBool& offline);
+    virtual bool RecvSetOffline(const bool& offline);
 
     virtual bool RecvNotifyVisited(const IPC::URI& aURI);
     // auto remove when alertfinished is received.

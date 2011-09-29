@@ -80,24 +80,24 @@ class nsCaret : public nsISelectionListener
      *  @param inMakeVisible PR_TRUE it is shown, PR_FALSE it is hidden
      *  @return false if and only if inMakeVisible is null, otherwise true 
      */
-    virtual nsresult    GetCaretVisible(PRBool *outMakeVisible);
+    virtual nsresult    GetCaretVisible(bool *outMakeVisible);
 
     /** SetCaretVisible will set the visibility of the caret
      *  @param inMakeVisible PR_TRUE to show the caret, PR_FALSE to hide it
      */
-    void    SetCaretVisible(PRBool intMakeVisible);
+    void    SetCaretVisible(bool intMakeVisible);
 
     /** SetCaretReadOnly set the appearance of the caret
      *  @param inMakeReadonly PR_TRUE to show the caret in a 'read only' state,
      *	    PR_FALSE to show the caret in normal, editing state
      */
-    void    SetCaretReadOnly(PRBool inMakeReadonly);
+    void    SetCaretReadOnly(bool inMakeReadonly);
 
     /** GetCaretReadOnly get the appearance of the caret
      *	@return PR_TRUE if the caret is in 'read only' state, otherwise,
      *	    returns PR_FALSE
      */
-    PRBool GetCaretReadOnly()
+    bool GetCaretReadOnly()
     {
       return mReadOnly;
     }
@@ -119,7 +119,7 @@ class nsCaret : public nsISelectionListener
      */
     void    EraseCaret();
 
-    void    SetVisibilityDuringSelection(PRBool aVisibility);
+    void    SetVisibilityDuringSelection(bool aVisibility);
 
     /** DrawAtPosition
      *
@@ -181,7 +181,7 @@ class nsCaret : public nsISelectionListener
      *                          those with user-modify: read-only
      */
 
-    void SetIgnoreUserModify(PRBool aIgnoreUserModify);
+    void SetIgnoreUserModify(bool aIgnoreUserModify);
 
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
@@ -209,11 +209,11 @@ protected:
     // invalidate it.
     void          InvalidateTextOverflowBlock();
     
-    PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode,
+    bool          DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          PRInt32 aOffset,
                                          nsFrameSelection::HINT aFrameHint,
                                          PRUint8 aBidiLevel,
-                                         PRBool aInvalidate);
+                                         bool aInvalidate);
 
     struct Metrics {
       nscoord mBidiIndicatorSize; // width and height of bidi indicator
@@ -230,11 +230,11 @@ protected:
     // is true, we don't take into account whether the caret is currently
     // drawn or not. This can be used to determine if the caret is drawn when
     // it shouldn't be.
-    PRBool        MustDrawCaret(PRBool aIgnoreDrawnState);
+    bool          MustDrawCaret(bool aIgnoreDrawnState);
 
-    void          DrawCaret(PRBool aInvalidate);
+    void          DrawCaret(bool aInvalidate);
     void          DrawCaretAfterBriefDelay();
-    PRBool        UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
+    bool          UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
     static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
                                   nsIFrame *aFrame);
     nsRect        GetHookRect()
@@ -257,7 +257,7 @@ protected:
     //    hide it.
     // 2. A menu popup is open, but there is no caret present in any popup.
     // 3. The caret selection is empty.
-    PRBool IsMenuPopupHidingCaret();
+    bool IsMenuPopupHidingCaret();
 
 protected:
 
@@ -272,19 +272,19 @@ protected:
     nscoord               mCaretWidthCSSPx;   // caret width in CSS pixels
     float                 mCaretAspectRatio;  // caret width/height aspect ratio
     
-    PRPackedBool          mVisible;           // is the caret blinking
+    bool                  mVisible;           // is the caret blinking
 
-    PRPackedBool          mDrawn;             // Denotes when the caret is physically drawn on the screen.
-    PRPackedBool          mPendingDraw;       // True when the last on-state draw was suppressed.
+    bool                  mDrawn;             // Denotes when the caret is physically drawn on the screen.
+    bool                  mPendingDraw;       // True when the last on-state draw was suppressed.
 
-    PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
-    PRPackedBool          mShowDuringSelection; // show when text is selected
+    bool                  mReadOnly;          // it the caret in readonly state (draws differently)      
+    bool                  mShowDuringSelection; // show when text is selected
 
-    PRPackedBool          mIgnoreUserModify;
+    bool                  mIgnoreUserModify;
 
 #ifdef IBMBIDI
-    PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
-    PRPackedBool          mBidiUI;            // is bidi UI turned on
+    bool                  mKeyboardRTL;       // is the keyboard language right-to-left
+    bool                  mBidiUI;            // is bidi UI turned on
     nsRect                mHookRect;          // directional hook on the caret
     PRUint8               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
 #endif
@@ -326,7 +326,7 @@ public:
 
 protected:
 
-    PRBool                  mWasVisible;
+    bool                    mWasVisible;
     nsCOMPtr<nsCaret>  mCaret;
 };
 

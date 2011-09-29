@@ -71,8 +71,8 @@ protected:
   nsString        mSearchString;
   nsString        mReplaceString;
   
-  PRPackedBool    mFindBackwards;
-  PRPackedBool    mWrapFind;
-  PRPackedBool    mEntireWord;
-  PRPackedBool    mMatchCase;
+  bool            mFindBackwards;
+  bool            mWrapFind;
+  bool            mEntireWord;
+  bool            mMatchCase;
 };

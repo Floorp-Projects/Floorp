@@ -216,7 +216,7 @@ nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
   return NS_OK;
 }
 
-PRBool
+bool
 nsXMLContentSink::CanStillPrettyPrint()
 {
   return mPrettyPrintXML &&
@@ -245,7 +245,7 @@ nsXMLContentSink::MaybePrettyPrint()
   nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool isPrettyPrinting;
+  bool isPrettyPrinting;
   rv = printer->PrettyPrint(mDocument, &isPrettyPrinting);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -296,7 +296,7 @@ CheckXSLTParamPI(nsIDOMProcessingInstruction* aPi,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::DidBuildModel(PRBool aTerminated)
+nsXMLContentSink::DidBuildModel(bool aTerminated)
 {
   DidBuildModelImpl(aTerminated);
 
@@ -306,9 +306,9 @@ nsXMLContentSink::DidBuildModel(PRBool aTerminated)
     mIsDocumentObserver = PR_FALSE;
 
     // Check for xslt-param and xslt-param-namespace PIs
-    PRUint32 i;
-    nsIContent* child;
-    for (i = 0; (child = mDocument->GetChildAt(i)); ++i) {
+    for (nsIContent* child = mDocument->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
       if (child->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(child);
         CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
@@ -332,7 +332,7 @@ nsXMLContentSink::DidBuildModel(PRBool aTerminated)
     // Check if we want to prettyprint
     MaybePrettyPrint();
 
-    PRBool startLayout = PR_TRUE;
+    bool startLayout = true;
     
     if (mPrettyPrinting) {
       NS_ASSERTION(!mPendingSheetCount, "Shouldn't have pending sheets here!");
@@ -448,7 +448,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
 NS_IMETHODIMP
 nsXMLContentSink::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
-                                   PRBool aWasAlternate,
+                                   bool aWasAlternate,
                                    nsresult aStatus)
 {
   if (!mPrettyPrinting) {
@@ -487,7 +487,7 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
 nsresult
 nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                nsIContent** aResult, PRBool* aAppendContent,
+                                nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
 {
   NS_ASSERTION(aNodeInfo, "can't create element without nodeinfo");
@@ -636,8 +636,8 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aContent));
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      PRBool willNotify;
-      PRBool isAlternate;
+      bool willNotify;
+      bool isAlternate;
       rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
                                   &willNotify,
                                   &isAlternate);
@@ -655,7 +655,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
         // XXX seems overkill to generate this string array
         nsAutoTArray<nsString, 4> linkTypes;
         nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
-        PRBool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
+        bool hasPrefetch = linkTypes.Contains(NS_LITERAL_STRING("prefetch"));
         if (hasPrefetch || linkTypes.Contains(NS_LITERAL_STRING("next"))) {
           nsAutoString hrefVal;
           aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
@@ -731,7 +731,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 nsresult
 nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
                                    const nsSubstring& aHref,
-                                   PRBool aAlternate,
+                                   bool aAlternate,
                                    const nsSubstring& aTitle,
                                    const nsSubstring& aType,
                                    const nsSubstring& aMedia)
@@ -817,14 +817,14 @@ nsXMLContentSink::GetTarget()
   return mDocument;
 }
 
-PRBool
+bool
 nsXMLContentSink::IsScriptExecuting()
 {
   return IsScriptExecutingImpl();
 }
 
 nsresult
-nsXMLContentSink::FlushText(PRBool aReleaseTextNode)
+nsXMLContentSink::FlushText(bool aReleaseTextNode)
 {
   nsresult rv = NS_OK;
 
@@ -835,7 +835,7 @@ nsXMLContentSink::FlushText(PRBool aReleaseTextNode)
         mLastTextNode = nsnull;
         FlushText(aReleaseTextNode);
       } else {
-        PRBool notify = HaveNotifiedForCurrentContent();
+        bool notify = HaveNotifiedForCurrentContent();
         // We could probably always increase mInNotification here since
         // if AppendText doesn't notify it shouldn't trigger evil code.
         // But just in case it does, we don't want to mask any notifications.
@@ -918,7 +918,7 @@ nsXMLContentSink::PopContent()
   mContentStack.RemoveElementAt(count - 1);
 }
 
-PRBool
+bool
 nsXMLContentSink::HaveNotifiedForCurrentContent() const
 {
   PRUint32 stackLength = mContentStack.Length();
@@ -931,7 +931,7 @@ nsXMLContentSink::HaveNotifiedForCurrentContent() const
 }
 
 void
-nsXMLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
+nsXMLContentSink::MaybeStartLayout(bool aIgnorePendingSheets)
 {
   // XXXbz if aIgnorePendingSheets is true, what should we do when
   // mXSLTProcessor or CanStillPrettyPrint()?
@@ -943,7 +943,7 @@ nsXMLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
 
 ////////////////////////////////////////////////////////////////////////
 
-PRBool
+bool
 nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
                                 nsIAtom* aTagName,
                                 nsIContent *aContent)
@@ -1003,7 +1003,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
                                      PRUint32 aAttsCount,
                                      PRInt32 aIndex,
                                      PRUint32 aLineNumber,
-                                     PRBool aInterruptable)
+                                     bool aInterruptable)
 {
   NS_PRECONDITION(aIndex >= -1, "Bogus aIndex");
   NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
@@ -1011,7 +1011,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   aAttsCount /= 2;
 
   nsresult result = NS_OK;
-  PRBool appendContent = PR_TRUE;
+  bool appendContent = true;
   nsCOMPtr<nsIContent> content;
 
   // XXX Hopefully the parser will flag this before we get
@@ -1118,7 +1118,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 
 nsresult
 nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
-                                   PRBool aInterruptable)
+                                   bool aInterruptable)
 {
   nsresult result = NS_OK;
 
@@ -1289,7 +1289,7 @@ nsXMLContentSink::HandleCharacterData(const PRUnichar *aData,
 
 nsresult
 nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, PRUint32 aLength,
-                                      PRBool aInterruptable)
+                                      bool aInterruptable)
 {
   nsresult rv = NS_OK;
   if (aData && mState != eXMLContentSinkState_InProlog &&
@@ -1329,8 +1329,8 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     // This is an xml-stylesheet processing instruction... but it might not be
     // a CSS one if the type is set to something else.
     ssle->SetEnableUpdates(PR_TRUE);
-    PRBool willNotify;
-    PRBool isAlternate;
+    bool willNotify;
+    bool isAlternate;
     rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
                                 &willNotify,
                                 &isAlternate);
@@ -1359,7 +1359,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
   }
 
   nsAutoString href, title, media;
-  PRBool isAlternate = PR_FALSE;
+  bool isAlternate = false;
 
   // If there was no href, we can't do anything with this PI
   if (!ParsePIData(data, href, title, media, isAlternate)) {
@@ -1371,10 +1371,10 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 /* static */
-PRBool
+bool
 nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
                               nsString &aTitle, nsString &aMedia,
-                              PRBool &aIsAlternate)
+                              bool &aIsAlternate)
 {
   // If there was no href, we can't do anything with this PI
   if (!nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::href, aHref)) {
@@ -1407,7 +1407,7 @@ NS_IMETHODIMP
 nsXMLContentSink::ReportError(const PRUnichar* aErrorText, 
                               const PRUnichar* aSourceText,
                               nsIScriptError *aError,
-                              PRBool *_retval)
+                              bool *_retval)
 {
   NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
   nsresult rv = NS_OK;
@@ -1606,7 +1606,7 @@ nsresult
 nsXMLContentSink::FlushTags()
 {
   mDeferredFlushTags = PR_FALSE;
-  PRBool oldBeganUpdate = mBeganUpdate;
+  bool oldBeganUpdate = mBeganUpdate;
   PRUint32 oldUpdates = mUpdatesInNotification;
 
   mUpdatesInNotification = 0;
@@ -1625,7 +1625,7 @@ nsXMLContentSink::FlushTags()
 
     PRInt32 stackPos;
     PRInt32 stackLen = mContentStack.Length();
-    PRBool flushed = PR_FALSE;
+    bool flushed = false;
     PRUint32 childCount;
     nsIContent* content;
 
@@ -1676,7 +1676,7 @@ nsXMLContentSink::UpdateChildCounts()
   mNotifyLevel = stackLen - 1;
 }
 
-PRBool
+bool
 nsXMLContentSink::IsMonolithicContainer(nsINodeInfo* aNodeInfo)
 {
   return ((aNodeInfo->NamespaceID() == kNameSpaceID_XHTML &&

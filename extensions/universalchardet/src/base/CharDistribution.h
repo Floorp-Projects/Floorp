@@ -76,7 +76,7 @@ public:
   float GetConfidence(void);
 
   //Reset analyser, clear any state 
-  void      Reset(PRBool aIsPreferredLanguage) 
+  void      Reset(bool aIsPreferredLanguage) 
   {
     mDone = PR_FALSE;
     mTotalChars = 0;
@@ -90,7 +90,7 @@ public:
 
   //It is not necessary to receive all data to draw conclusion. For charset detection,
   // certain amount of data is enough
-  PRBool GotEnoughData() {return mTotalChars > ENOUGH_DATA_THRESHOLD;}
+  bool GotEnoughData() {return mTotalChars > ENOUGH_DATA_THRESHOLD;}
 
 protected:
   //we do not handle character base on its original encoding string, but 
@@ -99,7 +99,7 @@ protected:
   virtual PRInt32 GetOrder(const char* str) {return -1;}
   
   //If this flag is set to PR_TRUE, detection is done and conclusion has been made
-  PRBool   mDone;
+  bool     mDone;
 
   //The number of characters whose frequency order is less than 512
   PRUint32 mFreqChars;

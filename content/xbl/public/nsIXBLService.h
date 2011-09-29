@@ -68,11 +68,11 @@ public:
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
   NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL,
-                          nsIPrincipal* aOriginPrincipal, PRBool aAugmentFlag,
-                          nsXBLBinding** aBinding, PRBool* aResolveStyle) = 0;
+                          nsIPrincipal* aOriginPrincipal, bool aAugmentFlag,
+                          nsXBLBinding** aBinding, bool* aResolveStyle) = 0;
 
   // Indicates whether or not a binding is fully loaded.
-  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, PRBool* aIsReady) = 0;
+  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, bool* aIsReady) = 0;
 
   // Retrieves our base class (e.g., tells us what type of frame and content node to build)
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
@@ -84,7 +84,7 @@ public:
                                      nsIDocument* aBoundDocument,
                                      nsIURI* aBindingURI,
                                      nsIPrincipal* aOriginPrincipal,
-                                     PRBool aForceSyncLoad,
+                                     bool aForceSyncLoad,
                                      nsXBLDocumentInfo** aResult) = 0;
 
   // Hooks up the global key event handlers to the document root.

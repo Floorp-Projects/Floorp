@@ -100,7 +100,7 @@ private:
   ~nsDOMNavigationTiming();
 
   void Clear();
-  PRBool ReportRedirects();
+  bool ReportRedirects();
 
   nsCOMPtr<nsIURI> mUnloadedURI;
   nsCOMPtr<nsIURI> mLoadedURI;

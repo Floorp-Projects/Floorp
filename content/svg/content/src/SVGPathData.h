@@ -117,7 +117,7 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  PRBool IsEmpty() const {
+  bool IsEmpty() const {
     return mData.IsEmpty();
   }
 
@@ -142,7 +142,7 @@ public:
   }
 
   // Used by nsSMILCompositor to check if the cached base val is out of date
-  PRBool operator==(const SVGPathData& rhs) const {
+  bool operator==(const SVGPathData& rhs) const {
     // We use memcmp so that we don't need to worry that the data encoded in
     // the first float may have the same bit pattern as a NaN.
     return mData.Length() == rhs.mData.Length() &&
@@ -150,7 +150,7 @@ public:
                   mData.Length() * sizeof(float)) == 0;
   }
 
-  PRBool SetCapacity(PRUint32 aSize) {
+  bool SetCapacity(PRUint32 aSize) {
     return mData.SetCapacity(aSize);
   }
 
@@ -168,12 +168,12 @@ public:
   /**
    * Returns PR_TRUE, except on OOM, in which case returns PR_FALSE.
    */
-  PRBool GetSegmentLengths(nsTArray<double> *aLengths) const;
+  bool GetSegmentLengths(nsTArray<double> *aLengths) const;
 
   /**
    * Returns PR_TRUE, except on OOM, in which case returns PR_FALSE.
    */
-  PRBool GetDistancesFromOriginToEndsOfVisibleSegments(nsTArray<double> *aArray) const;
+  bool GetDistancesFromOriginToEndsOfVisibleSegments(nsTArray<double> *aArray) const;
 
   already_AddRefed<gfxFlattenedPath>
   ToFlattenedPath(const gfxMatrix& aMatrix) const;
@@ -207,7 +207,7 @@ protected:
    * This may fail (return PR_FALSE) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  PRBool SetLength(PRUint32 aLength) {
+  bool SetLength(PRUint32 aLength) {
     return mData.SetLength(aLength);
   }
 
@@ -223,7 +223,7 @@ protected:
   // * InsertItem(PRUint32 aDataIndex, PRUint32 aType, const float *aArgs);
   // * ReplaceItem(PRUint32 aDataIndex, PRUint32 aType, const float *aArgs);
   // * RemoveItem(PRUint32 aDataIndex);
-  // * PRBool AppendItem(PRUint32 aType, const float *aArgs);
+  // * bool AppendItem(PRUint32 aType, const float *aArgs);
 
   nsresult AppendSeg(PRUint32 aType, ...); // variable number of float args
 
@@ -263,7 +263,7 @@ public:
     return SVGPathData::CopyFrom(rhs);
   }
 
-  PRBool IsIdentity() const {
+  bool IsIdentity() const {
     if (!mElement) {
       NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
       return PR_TRUE;

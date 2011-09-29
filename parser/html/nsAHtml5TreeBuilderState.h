@@ -64,11 +64,11 @@ class nsAHtml5TreeBuilderState {
 
     virtual PRInt32 getOriginalMode() = 0;
 
-    virtual PRBool isFramesetOk() = 0;
+    virtual bool isFramesetOk() = 0;
 
-    virtual PRBool isNeedToDropLF() = 0;
+    virtual bool isNeedToDropLF() = 0;
 
-    virtual PRBool isQuirks() = 0;
+    virtual bool isQuirks() = 0;
     
     virtual ~nsAHtml5TreeBuilderState() {
     }

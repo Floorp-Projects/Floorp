@@ -53,7 +53,7 @@ public:
     nsresult DialDefault(const PRUnichar* hostName);
 
     // Should we try to dial on network error?
-    PRBool ShouldDialOnNetworkError();
+    bool ShouldDialOnNetworkError();
 };
 
 #endif /* NSAUTODIALQT */

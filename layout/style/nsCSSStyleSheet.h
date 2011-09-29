@@ -108,10 +108,10 @@ private:
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
   nsRefPtr<nsCSSStyleSheet> mFirstChild;
-  PRBool                 mComplete;
+  bool                   mComplete;
 
 #ifdef DEBUG
-  PRBool                 mPrincipalSet;
+  bool                   mPrincipalSet;
 #endif
 };
 
@@ -146,10 +146,10 @@ public:
   virtual nsIURI* GetBaseURI() const;
   virtual void GetTitle(nsString& aTitle) const;
   virtual void GetType(nsString& aType) const;
-  virtual PRBool HasRules() const;
-  virtual PRBool IsApplicable() const;
-  virtual void SetEnabled(PRBool aEnabled);
-  virtual PRBool IsComplete() const;
+  virtual bool HasRules() const;
+  virtual bool IsApplicable() const;
+  virtual void SetEnabled(bool aEnabled);
+  virtual bool IsComplete() const;
   virtual void SetComplete();
   virtual nsIStyleSheet* GetParentSheet() const;  // may be null
   virtual nsIDocument* GetOwningDocument() const;  // may be null
@@ -209,7 +209,7 @@ public:
                                           nsIDocument* aCloneDocument,
                                           nsIDOMNode* aCloneOwningNode) const;
 
-  PRBool IsModified() const { return mDirty; }
+  bool IsModified() const { return mDirty; }
 
   void SetModifiedByChildRule() {
     NS_ASSERTION(mDirty,
@@ -231,7 +231,7 @@ public:
   virtual nsIURI* GetOriginalURI() const;
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus);
 
   enum EnsureUniqueInnerResult {
@@ -247,9 +247,9 @@ public:
 
   // Append all of this sheet's child sheets to aArray.  Return PR_TRUE
   // on success and PR_FALSE on allocation failure.
-  PRBool AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray);
+  bool AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray);
 
-  PRBool UseForPresentation(nsPresContext* aPresContext,
+  bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
 
   // nsIDOMStyleSheet interface
@@ -260,7 +260,7 @@ public:
 
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
-  static PRBool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
+  static bool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
 
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
@@ -299,8 +299,8 @@ protected:
   CSSRuleListImpl*      mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsIDOMNode*           mOwningNode; // weak ref
-  PRPackedBool          mDisabled;
-  PRPackedBool          mDirty; // has been modified 
+  bool                  mDisabled;
+  bool                  mDirty; // has been modified 
 
   nsCSSStyleSheetInner* mInner;
 

@@ -65,13 +65,13 @@ class mozSanitizingHTMLSerializer : public nsIContentSerializer,
 public:
   mozSanitizingHTMLSerializer();
   virtual ~mozSanitizingHTMLSerializer();
-  static PRBool ReleaseProperties(nsHashKey* key, void* data, void* closure);
+  static bool ReleaseProperties(nsHashKey* key, void* data, void* closure);
 
   NS_DECL_ISUPPORTS
 
   // nsIContentSerializer
   NS_IMETHOD Init(PRUint32 flags, PRUint32 dummy, const char* aCharSet, 
-                  PRBool aIsCopying, PRBool aIsWholeDocument);
+                  bool aIsCopying, bool aIsWholeDocument);
 
   NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr);
@@ -117,9 +117,9 @@ public:
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenHead();
-  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
+  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
+  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
@@ -133,12 +133,12 @@ public:
 protected:
   nsresult ParsePrefs(const nsAString& aPref);
   nsresult ParseTagPref(const nsCAutoString& tagpref);
-  PRBool IsAllowedTag(nsHTMLTag aTag);
-  PRBool IsAllowedAttribute(nsHTMLTag aTag, const nsAString& anAttributeName);
+  bool IsAllowedTag(nsHTMLTag aTag);
+  bool IsAllowedAttribute(nsHTMLTag aTag, const nsAString& anAttributeName);
   nsresult SanitizeAttrValue(nsHTMLTag aTag, const nsAString& attr_name,
                              nsString& value /*inout*/);
   nsresult SanitizeTextNode(nsString& value /*inout*/);
-  PRBool IsContainer(PRInt32 aId);
+  bool IsContainer(PRInt32 aId);
   static PRInt32 GetIdForContent(nsIContent* aContent);
   nsresult GetParserService(nsIParserService** aParserService);
   nsresult DoOpenContainer(PRInt32 aTag);

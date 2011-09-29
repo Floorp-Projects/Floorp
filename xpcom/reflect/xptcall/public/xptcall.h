@@ -52,6 +52,7 @@
 #include "nsISupports.h"
 #include "xpt_struct.h"
 #include "xptinfo.h"
+#include "jsapi.h"
 
 struct nsXPTCMiniVariant
 {
@@ -69,10 +70,15 @@ struct nsXPTCMiniVariant
         PRUint64  u64;
         float     f;
         double    d;
-        PRBool    b;
+        bool      b;
         char      c;
         PRUnichar wc;
         void*     p;
+
+        // Types below here are unknown to the assembly implementations, and
+        // therefore _must_ be passed with indirect semantics. We put them in
+        // the union here for type safety, so that we can avoid void* tricks.
+        jsval j;
     } val;
 };
 
@@ -88,35 +94,44 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
 
     enum
     {
-        // these are bitflags!
-        PTR_IS_DATA    = 0x1,  // ptr points to 'real' data in val
-        VAL_IS_ALLOCD  = 0x2,  // val.p holds alloc'd ptr that must be freed
-        VAL_IS_IFACE   = 0x4,  // val.p holds interface ptr that must be released
-        VAL_IS_ARRAY   = 0x8,  // val.p holds a pointer to an array needing cleanup
-        VAL_IS_DOMSTR  = 0x10, // val.p holds a pointer to domstring needing cleanup
-        VAL_IS_UTF8STR = 0x20, // val.p holds a pointer to utf8string needing cleanup
-        VAL_IS_CSTR    = 0x40, // val.p holds a pointer to cstring needing cleanup
-        VAL_IS_JSROOT  = 0x80  // val.p holds a pointer to a jsval that must be unrooted
+        //
+        // Bitflag definitions
+        //
+
+        // Indicates that ptr (above, and distinct from val.p) is the value that
+        // should be passed on the stack.
+        //
+        // In theory, ptr could point anywhere. But in practice it always points
+        // to &val. So this flag is used to pass 'val' by reference, letting us
+        // avoid the extra allocation we would incur if we were to use val.p.
+        //
+        // Various parts of XPConnect assume that ptr==&val, so we enforce it
+        // explicitly with SetIndirect() and IsIndirect().
+        //
+        // Since ptr always points to &val, the semantics of this flag are kind of
+        // dumb, since the ptr field is unnecessary. But changing them would
+        // require changing dozens of assembly files, so they're likely to stay
+        // the way they are.
+        PTR_IS_DATA    = 0x1,
+
+        // Indicates that the value we hold requires some sort of cleanup (memory
+        // deallocation, interface release, jsval unrooting, etc). The precise
+        // cleanup that is performed depends on the 'type' field above.
+        // If the value is an array, this flag specifies whether the elements
+        // within the array require cleanup (we always clean up the array itself,
+        // so this flag would be redundant for that purpose).
+        VAL_NEEDS_CLEANUP = 0x2
     };
 
     void ClearFlags()         {flags = 0;}
-    void SetPtrIsData()       {flags |= PTR_IS_DATA;}
-    void SetValIsAllocated()  {flags |= VAL_IS_ALLOCD;}
-    void SetValIsInterface()  {flags |= VAL_IS_IFACE;}
-    void SetValIsArray()      {flags |= VAL_IS_ARRAY;}
-    void SetValIsDOMString()  {flags |= VAL_IS_DOMSTR;}
-    void SetValIsUTF8String() {flags |= VAL_IS_UTF8STR;}
-    void SetValIsCString()    {flags |= VAL_IS_CSTR;}
-    void SetValIsJSRoot()     {flags |= VAL_IS_JSROOT;}
+    void SetIndirect()        {ptr = &val; flags |= PTR_IS_DATA;}
+    void SetValNeedsCleanup() {flags |= VAL_NEEDS_CLEANUP;}
 
-    PRBool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
-    PRBool IsValAllocated()  const  {return 0 != (flags & VAL_IS_ALLOCD);}
-    PRBool IsValInterface()  const  {return 0 != (flags & VAL_IS_IFACE);}
-    PRBool IsValArray()      const  {return 0 != (flags & VAL_IS_ARRAY);}
-    PRBool IsValDOMString()  const  {return 0 != (flags & VAL_IS_DOMSTR);}
-    PRBool IsValUTF8String() const  {return 0 != (flags & VAL_IS_UTF8STR);}
-    PRBool IsValCString()    const  {return 0 != (flags & VAL_IS_CSTR);}    
-    PRBool IsValJSRoot()     const  {return 0 != (flags & VAL_IS_JSROOT);}
+    bool IsIndirect()         const  {return 0 != (flags & PTR_IS_DATA);}
+    bool DoesValNeedCleanup() const  {return 0 != (flags & VAL_NEEDS_CLEANUP);}
+
+    // Internal use only. Use IsIndirect() instead.
+    bool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
 
     void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {

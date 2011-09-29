@@ -63,10 +63,10 @@ private:
     nsresult FileURIFixup(const nsACString &aStringURI, nsIURI** aURI);
     nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aOut);
     nsresult KeywordURIFixup(const nsACString &aStringURI, nsIURI** aURI);
-    PRBool PossiblyByteExpandedFileName(const nsAString& aIn);
-    PRBool PossiblyHostPortUrl(const nsACString& aUrl);
-    PRBool MakeAlternateURI(nsIURI *aURI);
-    PRBool IsLikelyFTP(const nsCString& aHostSpec);
+    bool PossiblyByteExpandedFileName(const nsAString& aIn);
+    bool PossiblyHostPortUrl(const nsACString& aUrl);
+    bool MakeAlternateURI(nsIURI *aURI);
+    bool IsLikelyFTP(const nsCString& aHostSpec);
     const char * GetFileSystemCharset();
     const char * GetCharsetForUrlBar();
 

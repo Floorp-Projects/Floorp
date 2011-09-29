@@ -92,7 +92,7 @@ nsFramesetDrag::nsFramesetDrag()
   UnSet();
 }
 
-void nsFramesetDrag::Reset(PRBool               aVertical, 
+void nsFramesetDrag::Reset(bool                 aVertical, 
                            PRInt32              aIndex, 
                            PRInt32              aChange, 
                            nsHTMLFramesetFrame* aSource) 
@@ -139,14 +139,14 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  PRBool GetVisibility() { return mVisibility || mVisibilityOverride; }
-  void SetVisibility(PRBool aVisibility);
+  bool GetVisibility() { return mVisibility || mVisibilityOverride; }
+  void SetVisibility(bool aVisibility);
   void SetColor(nscolor aColor);
 
   void PaintBorder(nsRenderingContext& aRenderingContext, nsPoint aPt);
 
 protected:
-  nsHTMLFramesetBorderFrame(nsStyleContext* aContext, PRInt32 aWidth, PRBool aVertical, PRBool aVisible);
+  nsHTMLFramesetBorderFrame(nsStyleContext* aContext, PRInt32 aWidth, bool aVertical, bool aVisible);
   virtual ~nsHTMLFramesetBorderFrame();
   virtual nscoord GetIntrinsicWidth();
   virtual nscoord GetIntrinsicHeight();
@@ -157,10 +157,10 @@ protected:
   PRInt32 mNextNeighbor;
   nscolor mColor;
   PRInt32 mWidth;
-  PRPackedBool mVertical;
-  PRPackedBool mVisibility;
-  PRPackedBool mVisibilityOverride;
-  PRPackedBool mCanResize;
+  bool mVertical;
+  bool mVisibility;
+  bool mVisibilityOverride;
+  bool mCanResize;
   friend class nsHTMLFramesetFrame;
 };
 /*******************************************************************************
@@ -197,7 +197,7 @@ protected:
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-PRBool  nsHTMLFramesetFrame::gDragInProgress = PR_FALSE;
+bool    nsHTMLFramesetFrame::gDragInProgress = false;
 #define kFrameResizePref "layout.frames.force_resizability"
 #define DEFAULT_BORDER_WIDTH_PX 6
 
@@ -656,9 +656,9 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext*       aPresContext,
 }
 
 PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
-                                            PRBool aTakeForcingIntoAccount)
+                                            bool aTakeForcingIntoAccount)
 {
-  PRBool forcing = mForceFrameResizability && aTakeForcingIntoAccount;
+  bool forcing = mForceFrameResizability && aTakeForcingIntoAccount;
   
   if (!forcing) {
     nsFrameborder frameborder = GetFrameBorder();
@@ -969,7 +969,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   nscoord height = (aDesiredSize.height <= aReflowState.availableHeight)
     ? aDesiredSize.height : aReflowState.availableHeight;
 
-  PRBool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  bool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   if (firstTime) {
     Preferences::RegisterCallback(FrameResizePrefCallback,
                                   kFrameResizePref, this);
@@ -1007,9 +1007,9 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes);
   CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
 
-  nsAutoArrayPtr<PRBool>  verBordersVis; // vertical borders visibility
+  nsAutoArrayPtr<bool>  verBordersVis; // vertical borders visibility
   nsAutoArrayPtr<nscolor> verBorderColors;
-  nsAutoArrayPtr<PRBool>  horBordersVis; // horizontal borders visibility
+  nsAutoArrayPtr<bool>  horBordersVis; // horizontal borders visibility
   nsAutoArrayPtr<nscolor> horBorderColors;
   nscolor                 borderColor = GetBorderColor();
   nsFrameborder           frameborder = GetFrameBorder();
@@ -1017,10 +1017,10 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   if (firstTime) {
     // Check for overflow in memory allocations using mNumCols and mNumRows
     // which have a maxium value of NS_MAX_FRAMESET_SPEC_COUNT.
-    PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(PRBool));
+    PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(bool));
     PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscolor));
 
-    verBordersVis = new PRBool[mNumCols];
+    verBordersVis = new bool[mNumCols];
     NS_ENSURE_TRUE(verBordersVis, NS_ERROR_OUT_OF_MEMORY);
     verBorderColors = new nscolor[mNumCols];
     NS_ENSURE_TRUE(verBorderColors, NS_ERROR_OUT_OF_MEMORY);
@@ -1029,7 +1029,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       verBorderColors[verX] = NO_COLOR;
     }
 
-    horBordersVis = new PRBool[mNumRows];
+    horBordersVis = new bool[mNumRows];
     NS_ENSURE_TRUE(horBordersVis, NS_ERROR_OUT_OF_MEMORY);
     horBorderColors = new nscolor[mNumRows];
     NS_ENSURE_TRUE(horBorderColors, NS_ERROR_OUT_OF_MEMORY);
@@ -1275,14 +1275,14 @@ nsHTMLFramesetFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-PRBool
+bool
 nsHTMLFramesetFrame::IsLeaf() const
 {
   // We handle constructing our kids manually
   return PR_TRUE;
 }
 
-PRBool 
+bool 
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {
   nsHTMLFramesetFrame* childFrame = do_QueryFrame(aChild);
@@ -1293,9 +1293,9 @@ nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild)
 }
 
 
-PRBool 
-nsHTMLFramesetFrame::CanResize(PRBool aVertical, 
-                               PRBool aLeft) 
+bool 
+nsHTMLFramesetFrame::CanResize(bool aVertical, 
+                               bool aLeft) 
 {
   nsIFrame* child;
   PRInt32 childX;
@@ -1321,7 +1321,7 @@ nsHTMLFramesetFrame::CanResize(PRBool aVertical,
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame) 
 {
   nsIContent* content = aChildFrame->GetContent();
@@ -1329,11 +1329,11 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
   return content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::noresize);
 }
 
-PRBool 
-nsHTMLFramesetFrame::CanChildResize(PRBool  aVertical, 
-                                    PRBool  aLeft, 
+bool 
+nsHTMLFramesetFrame::CanChildResize(bool    aVertical, 
+                                    bool    aLeft, 
                                     PRInt32 aChildX, 
-                                    PRBool  aFrameset) 
+                                    bool    aFrameset) 
 {
   nsIFrame* child = mFrames.FrameAt(aChildX);
   if (aFrameset) {
@@ -1361,13 +1361,10 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   if (NS_UNLIKELY(!childTypes)) {
     return;
   }
-  PRUint32 childIndex, childTypeIndex = 0;
+  PRInt32 childTypeIndex = 0;
 
-  // number of any type of children
-  PRUint32 numChildren = mContent->GetChildCount();
-  for (childIndex = 0; childIndex < numChildren; childIndex++) {
-    nsIContent *child = mContent->GetChildAt(childIndex);
-
+  for (nsIContent *child = mContent->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
     if (child->IsHTML()) {
       nsINodeInfo *ni = child->NodeInfo();
 
@@ -1579,8 +1576,8 @@ NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
  ******************************************************************************/
 nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      PRInt32 aWidth,
-                                                     PRBool  aVertical,
-                                                     PRBool  aVisibility)
+                                                     bool    aVertical,
+                                                     bool    aVisibility)
   : nsLeafFrame(aContext), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
 {
    mVisibilityOverride = PR_FALSE;
@@ -1609,7 +1606,7 @@ nscoord nsHTMLFramesetBorderFrame::GetIntrinsicHeight()
   return 0;
 }
 
-void nsHTMLFramesetBorderFrame::SetVisibility(PRBool aVisibility)
+void nsHTMLFramesetBorderFrame::SetVisibility(bool aVisibility)
 { 
   mVisibility = aVisibility; 
 }

@@ -97,7 +97,7 @@ public:
   ULONG  GetMsg()    { return mMsg; };
   MPARAM GetWParam() { return mWParam; };
   MPARAM GetLParam() { return mLParam; };
-  PRBool InUse()     { return (mWnd!=NULL); };
+  bool InUse()     { return (mWnd!=NULL); };
   
   NS_DECL_NSIRUNNABLE
 
@@ -198,7 +198,7 @@ public:
 
 /*****************************************************************************/
 
-static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowOS2 * aWin,
+static bool ProcessFlashMessageDelayed(nsPluginNativeWindowOS2 * aWin,
                                          nsNPAPIPluginInstance * aInst,
                                          HWND hWnd, ULONG msg,
                                          MPARAM mp1, MPARAM mp2)
@@ -260,7 +260,7 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
     }
   }
 
-  PRBool enablePopups = PR_FALSE;
+  bool enablePopups = false;
 
   // Activate/deactivate mouse capture on the plugin widget
   // here, before we pass the Windows event to the plugin

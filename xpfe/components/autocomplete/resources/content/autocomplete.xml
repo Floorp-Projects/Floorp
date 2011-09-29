@@ -721,10 +721,6 @@
            and close the popup -->
       <method name="searchFailed">
         <body><![CDATA[
-          // if it's the last session to return, time to clean up...
-          if (this.mSessionReturns == 0)
-            this.postSearchCleanup();
-
           // if all searches are done and they all failed...
           if (this.mSessionReturns == 0 && this.getResultCount() == 0) {
             if (this.minResultsForPopup == 0) {
@@ -734,6 +730,10 @@
               this.closeResultPopup(); 
             }
           }
+
+          // if it's the last session to return, time to clean up...
+          if (this.mSessionReturns == 0)
+            this.postSearchCleanup();
         ]]></body>
       </method>
 

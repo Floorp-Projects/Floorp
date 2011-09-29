@@ -59,7 +59,7 @@ txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_0(txErrorExpr, ANY_RESULT)
 
-PRBool
+bool
 txErrorExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     // It doesn't really matter what we return here, but it might

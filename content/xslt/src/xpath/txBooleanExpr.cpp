@@ -57,7 +57,7 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nsnull;
 
-    PRBool lval;
+    bool lval;
     nsresult rv = leftExpr->evaluateToBool(aContext, lval);
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -73,7 +73,7 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         return NS_OK;
     }
 
-    PRBool rval;
+    bool rval;
     rv = rightExpr->evaluateToBool(aContext, rval);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -85,7 +85,7 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_2(BooleanExpr, BOOLEAN_RESULT, leftExpr, rightExpr)
 
-PRBool
+bool
 BooleanExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return leftExpr->isSensitiveTo(aContext) ||

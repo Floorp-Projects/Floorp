@@ -63,7 +63,7 @@ protected:
 
 private:
   nsXBLEventHandler();
-  virtual PRBool EventMatched(nsIDOMEvent* aEvent)
+  virtual bool EventMatched(nsIDOMEvent* aEvent)
   {
     return PR_TRUE;
   }
@@ -76,7 +76,7 @@ public:
   virtual ~nsXBLMouseEventHandler();
 
 private:
-  PRBool EventMatched(nsIDOMEvent* aEvent);
+  bool EventMatched(nsIDOMEvent* aEvent);
 };
 
 class nsXBLKeyEventHandler : public nsIDOMEventListener
@@ -94,7 +94,7 @@ public:
     mProtoHandlers.AppendElement(aProtoHandler);
   }
 
-  PRBool Matches(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType) const
+  bool Matches(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType) const
   {
     return (mEventType == aEventType && mPhase == aPhase && mType == aType);
   }
@@ -114,20 +114,20 @@ public:
     return mType;
   }
 
-  void SetIsBoundToChrome(PRBool aIsBoundToChrome)
+  void SetIsBoundToChrome(bool aIsBoundToChrome)
   {
     mIsBoundToChrome = aIsBoundToChrome;
   }
 private:
   nsXBLKeyEventHandler();
-  PRBool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, PRUint32 aCharCode,
-                                PRBool aIgnoreShiftKey);
+  bool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, PRUint32 aCharCode,
+                                bool aIgnoreShiftKey);
 
   nsTArray<nsXBLPrototypeHandler*> mProtoHandlers;
   nsCOMPtr<nsIAtom> mEventType;
   PRUint8 mPhase;
   PRUint8 mType;
-  PRPackedBool mIsBoundToChrome;
+  bool mIsBoundToChrome;
 };
 
 nsresult

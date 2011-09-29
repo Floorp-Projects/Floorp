@@ -149,7 +149,7 @@ public:
   NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
   NS_IMETHOD PrevBlock();
   NS_IMETHOD NextBlock();
-  NS_IMETHOD IsDone(PRBool *aIsDone);
+  NS_IMETHOD IsDone(bool *aIsDone);
   NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength);
   NS_IMETHOD ScrollSelectionIntoView();
   NS_IMETHOD DeleteSelection();
@@ -203,7 +203,7 @@ private:
 
   nsresult GetDocumentContentRootNode(nsIDOMNode **aNode);
   nsresult CreateDocumentContentRange(nsIDOMRange **aRange);
-  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange);
+  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, bool aToStart, nsIDOMRange **aRange);
   nsresult CreateDocumentContentIterator(nsIContentIterator **aIterator);
 
   nsresult AdjustContentIterator();
@@ -218,22 +218,22 @@ private:
   nsresult GetFirstTextNodeInPrevBlock(nsIContent **aContent);
   nsresult GetFirstTextNodeInNextBlock(nsIContent **aContent);
 
-  static PRBool IsBlockNode(nsIContent *aContent);
-  static PRBool IsTextNode(nsIContent *aContent);
-  static PRBool IsTextNode(nsIDOMNode *aNode);
+  static bool IsBlockNode(nsIContent *aContent);
+  static bool IsTextNode(nsIContent *aContent);
+  static bool IsTextNode(nsIDOMNode *aNode);
 
-  static PRBool DidSkip(nsIContentIterator* aFilteredIter);
+  static bool DidSkip(nsIContentIterator* aFilteredIter);
   static void   ClearDidSkip(nsIContentIterator* aFilteredIter);
 
-  static PRBool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
+  static bool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
 
-  nsresult SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, PRBool aDoUpdate);
+  nsresult SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, bool aDoUpdate);
   nsresult GetSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
   nsresult GetCollapsedSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
   nsresult GetUncollapsedSelection(TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength);
 
-  PRBool SelectionIsCollapsed();
-  PRBool SelectionIsValid();
+  bool SelectionIsCollapsed();
+  bool SelectionIsValid();
 
   static nsresult CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
                              nsIContentIterator *aIterator,
@@ -244,7 +244,7 @@ private:
 
   static nsresult NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable,
                                      nsIDOMNode *aNode,
-                                     PRBool *aHasEntry,
+                                     bool *aHasEntry,
                                      PRInt32 *aEntryIndex);
 
   nsresult RemoveInvalidOffsetEntries();

@@ -180,7 +180,7 @@ nsPlaceholderFrame::GetType() const
   return nsGkAtoms::placeholderFrame; 
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsPlaceholderFrame::CanContinueTextRun() const
 {
   if (!mOutOfFlowFrame) {

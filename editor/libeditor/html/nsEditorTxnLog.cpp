@@ -86,7 +86,7 @@ NS_IMPL_RELEASE(nsEditorTxnLog)
 NS_IMPL_QUERY_INTERFACE1(nsEditorTxnLog, nsITransactionListener)
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)
+nsEditorTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, bool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -120,7 +120,7 @@ nsEditorTxnLog::DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransactio
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)
+nsEditorTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, bool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -172,7 +172,7 @@ nsEditorTxnLog::DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)
+nsEditorTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, bool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -224,7 +224,7 @@ nsEditorTxnLog::DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt)
+nsEditorTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr, bool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -258,7 +258,7 @@ nsEditorTxnLog::DidBeginBatch(nsITransactionManager *aTxMgr, nsresult aResult)
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillEndBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt)
+nsEditorTxnLog::WillEndBatch(nsITransactionManager *aTxMgr, bool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -292,7 +292,7 @@ nsEditorTxnLog::DidEndBatch(nsITransactionManager *aTxMgr, nsresult aResult)
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, PRBool *aInterrupt)
+nsEditorTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, bool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -310,7 +310,7 @@ nsEditorTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTra
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, PRBool aDidMerge, nsresult aMergeResult)
+nsEditorTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, bool aDidMerge, nsresult aMergeResult)
 {
   LOCK_LOG(this);
 

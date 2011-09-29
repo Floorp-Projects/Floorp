@@ -119,7 +119,7 @@ nsSMILAnimationController::Pause(PRUint32 aType)
 void
 nsSMILAnimationController::Resume(PRUint32 aType)
 {
-  PRBool wasPaused = (mPauseState != 0);
+  bool wasPaused = (mPauseState != 0);
   // Update mCurrentSampleTime so that calls to GetParentTime--used for
   // calculating parent offsets--are accurate
   mCurrentSampleTime = mozilla::TimeStamp::Now();
@@ -387,7 +387,7 @@ nsSMILAnimationController::DoSample()
 }
 
 void
-nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
+nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
 {
   if (!mDocument) {
     NS_ERROR("Shouldn't be sampling after document has disconnected");
@@ -483,7 +483,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 void
 nsSMILAnimationController::RewindElements()
 {
-  PRBool rewindNeeded = PR_FALSE;
+  bool rewindNeeded = false;
   mChildContainerTable.EnumerateEntries(RewindNeeded, &rewindNeeded);
   if (!rewindNeeded)
     return;
@@ -498,7 +498,7 @@ nsSMILAnimationController::RewindNeeded(TimeContainerPtrKey* aKey,
 {
   NS_ABORT_IF_FALSE(aData,
       "Null data pointer during time container enumeration");
-  PRBool* rewindNeeded = static_cast<PRBool*>(aData);
+  bool* rewindNeeded = static_cast<bool*>(aData);
 
   nsSMILTimeContainer* container = aKey->GetKey();
   if (container->NeedsRewind()) {
@@ -623,7 +623,7 @@ nsSMILAnimationController::GetNextMilestone(TimeContainerPtrKey* aKey,
     return PL_DHASH_NEXT;
 
   nsSMILMilestone thisMilestone;
-  PRBool didGetMilestone =
+  bool didGetMilestone =
     container->GetNextMilestoneInParentTime(thisMilestone);
   if (didGetMilestone && thisMilestone < *nextMilestone) {
     *nextMilestone = thisMilestone;
@@ -761,7 +761,7 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
 // Helper function that, given a nsISMILAnimationElement, looks up its target
 // element & target attribute and populates a nsSMILTargetIdentifier
 // for this target.
-/*static*/ PRBool
+/*static*/ bool
 nsSMILAnimationController::GetTargetIdentifierForAnimation(
     nsISMILAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult)
 {
@@ -787,7 +787,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // Check if an 'auto' attributeType refers to a CSS property or XML attribute.
   // Note that SMIL requires we search for CSS properties first. So if they
   // overlap, 'auto' = 'CSS'. (SMILANIM 3.1)
-  PRBool isCSS = PR_FALSE;
+  bool isCSS = false;
   if (attributeType == eSMILTargetAttrType_auto) {
     if (attributeNamespaceID == kNameSpaceID_None) {
       nsCSSProperty prop =

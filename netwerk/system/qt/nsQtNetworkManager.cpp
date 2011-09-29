@@ -82,10 +82,10 @@ nsQtNetworkManager::~nsQtNetworkManager()
     networkSession->deleteLater();
 }
 
-PRBool
+bool
 nsQtNetworkManager::isOnline()
 {
-    static PRBool sForceOnlineUSB = getenv("MOZ_MEEGO_NET_ONLINE") != 0;
+    static bool sForceOnlineUSB = getenv("MOZ_MEEGO_NET_ONLINE") != 0;
     return sForceOnlineUSB || mOnline;
 }
 
@@ -108,7 +108,7 @@ nsQtNetworkManager::onlineStateChanged(bool online)
   but call the slot directly.
 */
 
-PRBool
+bool
 nsQtNetworkManager::openConnection(const QString& host)
 {
     // we are already online -> return true.

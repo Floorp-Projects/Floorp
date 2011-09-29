@@ -117,13 +117,13 @@ struct nsCSSToken {
   PRInt32         mInteger2;
   nsCSSTokenType  mType;
   PRUnichar       mSymbol;
-  PRPackedBool    mIntegerValid; // for number, dimension, urange
-  PRPackedBool    mHasSign; // for number, percentage, and dimension
+  bool            mIntegerValid; // for number, dimension, urange
+  bool            mHasSign; // for number, percentage, and dimension
 
   nsCSSToken();
 
-  PRBool IsSymbol(PRUnichar aSymbol) {
-    return PRBool((eCSSToken_Symbol == mType) && (mSymbol == aSymbol));
+  bool IsSymbol(PRUnichar aSymbol) {
+    return bool((eCSSToken_Symbol == mType) && (mSymbol == aSymbol));
   }
 
   void AppendToString(nsString& aBuffer);
@@ -148,16 +148,16 @@ class nsCSSScanner {
             nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader);
   void Close();
 
-  static PRBool InitGlobals();
+  static bool InitGlobals();
   static void ReleaseGlobals();
 
   // Set whether or not we are processing SVG
-  void SetSVGMode(PRBool aSVGMode) {
+  void SetSVGMode(bool aSVGMode) {
     NS_ASSERTION(aSVGMode == PR_TRUE || aSVGMode == PR_FALSE,
-                 "bad PRBool value");
+                 "bad bool value");
     mSVGMode = aSVGMode;
   }
-  PRBool IsSVGMode() const {
+  bool IsSVGMode() const {
     return mSVGMode;
   }
 
@@ -189,10 +189,10 @@ class nsCSSScanner {
 
   // Get the next token. Return PR_FALSE on EOF. aTokenResult
   // is filled in with the data for the token.
-  PRBool Next(nsCSSToken& aTokenResult);
+  bool Next(nsCSSToken& aTokenResult);
 
   // Get the next token that may be a string or unquoted URL
-  PRBool NextURL(nsCSSToken& aTokenResult);
+  bool NextURL(nsCSSToken& aTokenResult);
 
   // It's really ugly that we have to expose this, but it's the easiest
   // way to do :nth-child() parsing sanely.  (In particular, in
@@ -208,23 +208,23 @@ class nsCSSScanner {
   void SetLowLevelError(nsresult aErrorCode);
   
 protected:
-  PRBool EnsureData();
+  bool EnsureData();
   PRInt32 Read();
   PRInt32 Peek();
-  PRBool LookAhead(PRUnichar aChar);
-  PRBool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
+  bool LookAhead(PRUnichar aChar);
+  bool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
   void EatWhiteSpace();
 
-  PRBool ParseAndAppendEscape(nsString& aOutput, PRBool aInString);
-  PRBool ParseIdent(PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseAtKeyword(PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseNumber(PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseRef(PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseString(PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseURange(PRInt32 aChar, nsCSSToken& aResult);
-  PRBool SkipCComment();
+  bool ParseAndAppendEscape(nsString& aOutput, bool aInString);
+  bool ParseIdent(PRInt32 aChar, nsCSSToken& aResult);
+  bool ParseAtKeyword(PRInt32 aChar, nsCSSToken& aResult);
+  bool ParseNumber(PRInt32 aChar, nsCSSToken& aResult);
+  bool ParseRef(PRInt32 aChar, nsCSSToken& aResult);
+  bool ParseString(PRInt32 aChar, nsCSSToken& aResult);
+  bool ParseURange(PRInt32 aChar, nsCSSToken& aResult);
+  bool SkipCComment();
 
-  PRBool GatherIdent(PRInt32 aChar, nsString& aIdent);
+  bool GatherIdent(PRInt32 aChar, nsString& aIdent);
 
   // Only used when input is a stream
   nsCOMPtr<nsIUnicharInputStream> mInputStream;
@@ -241,7 +241,7 @@ protected:
 
   PRUint32 mLineNumber;
   // True if we are in SVG mode; false in "normal" CSS
-  PRPackedBool mSVGMode;
+  bool mSVGMode;
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
   nsCOMPtr<nsIURI> mURI;  // Cached so we know to not refetch mFileName
@@ -249,7 +249,7 @@ protected:
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
   PRUint64 mInnerWindowID;
-  PRBool mWindowIDCached;
+  bool mWindowIDCached;
   nsCSSStyleSheet* mSheet;
   mozilla::css::Loader* mLoader;
 #endif

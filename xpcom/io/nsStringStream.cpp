@@ -115,7 +115,7 @@ private:
     const char*    mData;
     PRUint32       mOffset;
     PRUint32       mLength;
-    PRPackedBool   mOwned;
+    bool           mOwned;
 };
 
 // This class needs to support threadsafe refcounting since people often
@@ -293,7 +293,7 @@ nsStringInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
     
 NS_IMETHODIMP
-nsStringInputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsStringInputStream::IsNonBlocking(bool *aNonBlocking)
 {
     *aNonBlocking = PR_TRUE;
     return NS_OK;
@@ -359,7 +359,7 @@ nsStringInputStream::SetEOF()
 // nsIIPCSerializable implementation
 /////////
 
-PRBool
+bool
 nsStringInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
     using IPC::ReadParam;

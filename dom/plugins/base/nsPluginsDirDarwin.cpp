@@ -104,7 +104,7 @@ static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
   return rv;
 }
 
-PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
+bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCString fileName;
   file->GetNativeLeafName(fileName);
@@ -388,13 +388,13 @@ static char* GetNextPluginStringFromHandle(Handle h, short *index)
   return ret;
 }
 
-static PRBool IsCompatibleArch(nsIFile *file)
+static bool IsCompatibleArch(nsIFile *file)
 {
   CFURLRef pluginURL = NULL;
   if (NS_FAILED(toCFURLRef(file, pluginURL)))
     return PR_FALSE;
   
-  PRBool isPluginFile = PR_FALSE;
+  bool isPluginFile = false;
 
   CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
   if (pluginBundle) {

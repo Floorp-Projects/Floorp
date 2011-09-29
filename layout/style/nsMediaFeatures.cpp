@@ -194,6 +194,15 @@ GetDeviceOrientation(nsPresContext* aPresContext, const nsMediaFeature*,
     return NS_OK;
 }
 
+static nsresult
+GetIsResourceDocument(nsPresContext* aPresContext, const nsMediaFeature*,
+                      nsCSSValue& aResult)
+{
+  nsIDocument* doc = aPresContext->Document();
+  aResult.SetIntValue(doc && doc->IsResourceDoc() ? 1 : 0, eCSSUnit_Integer);
+  return NS_OK;
+}
+
 // Helper for two features below
 static nsresult
 MakeArray(const nsSize& aSize, nsCSSValue& aResult)
@@ -312,7 +321,7 @@ GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
     NS_ABORT_IF_FALSE(aFeature->mValueType == nsMediaFeature::eBoolInteger,
                       "unexpected type");
     nsIAtom *metricAtom = *aFeature->mData.mMetric;
-    PRBool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
+    bool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
     aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
     return NS_OK;
 }
@@ -459,6 +468,13 @@ nsMediaFeatures::features[] = {
         nsMediaFeature::eEnumerated,
         { kOrientationKeywords },
         GetDeviceOrientation
+    },
+    {
+        &nsGkAtoms::_moz_is_resource_document,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { nsnull },
+        GetIsResourceDocument
     },
     {
         &nsGkAtoms::_moz_scrollbar_start_backward,

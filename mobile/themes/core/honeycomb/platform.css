@@ -142,33 +142,30 @@ dialog > .prompt-header > .button-checkbox {
 .button-text,
 .toolbarbutton-text {
   font-weight: normal;
-  font-size: @font_snormal@ !important;
+  font-size: @font_xtiny@ !important;
 }
 
 button {
   -moz-appearance: none;
   min-width: @touch_button_minwidth@ !important;
-  min-height: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_tiny@ !important; /* button size */
   color: @color_text_button@;
+  background-image: none;
+  background-color: @color_background_button@; 
   margin: @margin_normal@;
   padding: @padding_xnormal@;
-  background-image: url("chrome://browser/skin/images/button-bg.png");
-  background-size: auto 100%;
-  border: @border_width_tiny@ solid @color_button_border@;
+  border-width: 0px;
+  border-radius: 0px;
 }
 
 button[disabled="true"] {
-  color: @color_text_disabled@ !important;
-  border: @border_width_tiny@ solid @color_button_border@ !important;
-}
-
-button:focus > .button-box {
-  border: @border_width_tiny@ solid transparent;
+  color: @color_text_button_disabled@ !important;
+  background-color: @color_background_button_disabled@; 
 }
 
 button:not([disabled]):hover:active,
 button:not([disabled])[checked="true"] {
-  background-image: url("chrome://browser/skin/images/toggle-off.png");
+  background-color: @color_background_highlight@;
 }
 
 /* Override GTK2 system setting */
@@ -240,7 +237,6 @@ toolbarbutton {
   min-height: @touch_button_small@ !important; /* primary button size */
   -moz-appearance: none !important;
   padding: @padding_xsmall@;
-  -moz-margin-end: @margin_xxxnormal@;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
@@ -410,20 +406,20 @@ richlistitem[selector="last-child"] {
 
 richlistitem label.title,
 richlistitem description.title {
-  font-size: @font_normal@ !important;
+  font-size: @font_snormal@ !important;
 }
 
 richlistitem label.normal,
 richlistitem description.normal {
   color: @color_subtext_default@;
-  font-size: @font_small@ !important;
+  font-size: @font_xtiny@  !important;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
 richlistitem label.normal-black,
 richlistitem description.normal-black {
-  font-size: @font_small@  !important;
+  font-size: @font_xtiny@  !important;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -431,7 +427,7 @@ richlistitem description.normal-black {
 richlistitem label.normal-bold,
 richlistitem description.normal-bold {
   font-weight: bold;
-  font-size: @font_small@  !important;
+  font-size: @font_xtiny@  !important;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -442,6 +438,7 @@ richlistitem[selected="true"] {
 }
 
 richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]),
+richlistitem:hover:active:not([selected="true"]):not([class="section-header"]),
 richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) label.normal,
 richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) description.normal {
   background-color: @color_background_highlight@;
@@ -450,9 +447,15 @@ richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) descr
 
 richlistitem.section-header,
 richlistitem[selected="true"].section-header {
+  font-size: @font_xtiny@;
   font-weight: bold;
-  color: @color_text_header@;
-  background-color: @color_background_header@;
+  color: @color_text_panel_subheader@;
+  background-color: @color_background_button@;
+  margin: 0;
+  padding: @padding_xxnormal@ @padding_large@;
+  border-top: @border_width_tiny@ solid @color_background_settings@;
+  border-bottom: @border_width_large@ solid;
+  -moz-border-bottom-colors: @color_background_button@ @color_background_settings@; 
 }
 
 richlistitem .show-on-select {
@@ -473,6 +476,24 @@ richlistitem[selected="true"] .hide-on-select {
 
 richlistitem[typeName="message"] {
   border-bottom: 0;
+}
+
+richlistitem setting {
+  -moz-padding-start: 0;
+  -moz-padding-end: 0;
+}
+
+richlistitem setting:first-child {
+  border-top: @border_width_tiny@ solid @color_background_button@;
+}
+
+richlistitem[isDisabled="true"] .title,
+richlistitem[isDisabled="true"] .normal {
+  color: @color_text_disabled@;
+}
+
+richlistitem[isDisabled="true"] image {
+  opacity: 0.25;
 }
 
 /* colorpicker ------------------------------------------------------------- */
@@ -499,7 +520,7 @@ colorpicker > vbox {
 .menulist-label {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-weight: normal;
-  font-size: @font_snormal@  !important;
+  font-size: @font_xtiny@;
   background-color: transparent !important;
 }
 
@@ -507,22 +528,22 @@ menulist {
   -moz-appearance: none !important;
   -moz-user-focus: ignore;
   min-width: @touch_button_minwidth@ !important;
-  min-height: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_tiny@ !important; /* button size */
   color: @color_text_button@ !important;
+  background-color: @color_background_button@;
   margin: @margin_normal@;
-  padding: @padding_small@ @padding_xnormal@;
-  background-image: url("chrome://browser/skin/images/button-bg.png");
-  background-size: auto 100%;
-  border: @border_width_tiny@ solid @color_button_border@;
+  padding: @padding_xnormal@;
+  border-width: 0;
+  border-radius: 0;
 }
 
 menulist[disabled="true"] {
-  color: @color_text_disabled@ !important;
-  border: @border_width_tiny@ solid @color_button_border@ !important;
+  color: @color_text_button_disabled@ !important;
+  background-color: @color_background_button_disabled@; 
 }
 
 menulist:not([disabled="true"]):hover:active {
-  background-image: url("chrome://browser/skin/images/toggle-off.png");
+  background-color: @color_background_highlight@;
 }
 
 menulist > dropmarker {
@@ -581,8 +602,7 @@ dialog,
   background: @color_background_default@;
 }
 
-dialog,
-.arrowbox-dark .panel-arrowcontent {
+dialog {
   border: @border_width_small@ solid @color_dialog_border@;
   box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_shadow_light@;
 }
@@ -711,6 +731,11 @@ dialog {
 
 .prompt-button {
   min-width: 33%;
+  min-height: @touch_button_small@;
+}
+
+.prompt-button .button-text {
+  font-size: @font_snormal@ !important;
 }
 
 .panel-row-button:first-child {
@@ -724,6 +749,26 @@ dialog {
 @media (@orientation@: portrait) {
   .panel-row-button {
     -moz-box-orient: vertical;
+  }
+}
+
+@media (@orientation@: portrait) and (min-width: @tablet_panel_minwidth@) {
+  #panel-controls > .panel-row-button {
+    min-width: @tablet_panel_controls@ !important;
+  }
+  
+  #panel-items {
+    max-width: @tablet_panel_item_width@ !important;
+  }
+}
+
+@media (@orientation@: landscape) and (min-width: @tablet_panel_minwidth@) {
+  #panel-controls > .panel-row-button {
+    min-width: @tablet_panel_controls_wide@ !important;
+  }
+  
+  #panel-items {
+    max-width: @tablet_panel_item_width_wide@ !important;
   }
 }
 
@@ -758,12 +803,51 @@ dialog {
   pointer-events: none;
 }
 
+#panel-container {
+  background-color: @color_background_settings@ !important;
+}
+
 #panel-container-inner {
   -moz-box-orient: vertical;
+  background-color: transparent !important;
+}
+
+#panel-container-inner > vbox {
+  border: @border_width_large@ solid @color_background_active@; 
+  box-shadow: 0 0 @shadow_width_tiny@ @shadow_width_medium@ @color_background_button_overlay@;  
 }
 
 #panel-controls {
   -moz-box-orient: horizontal;
+  background-color: transparent !important;
+  padding: @padding_xxxnormal@ 0 !important;
+}
+
+#panel-controls .toolbarbutton-text {
+  font-size: @font_snormal@ !important;
+}
+
+#panel-controls .toolbarbutton-icon[label]:not([label=""]),
+#panel-controls .toolbarbutton-icon[type="menu"] {
+  -moz-margin-start: @margin_xxxnormal@;
+  -moz-margin-end: @margin_xnormal@;
+}
+
+#panel-controls > .panel-row-button {
+  border-top: @border_width_tiny@ solid @color_background_settings@ !important;
+  border-bottom: @border_width_large@ solid !important;
+  -moz-border-bottom-colors: @color_background_button@ @color_background_settings@ !important;
+  -moz-border-start: 0 solid; 
+  -moz-border-end: 0 solid; 
+}
+
+#panel-controls > .panel-row-button[checked="true"] {
+  background-color: @color_background_highlight@;
+  color: @color_text_default@;
+}
+
+.panel-list {
+  background: transparent;
 }
 
 @media (min-width: @tablet_panel_minwidth@) {
@@ -773,7 +857,6 @@ dialog {
   }
 
   #panel-items {
-    max-width: @tablet_panel_minwidth@;
     min-width: 0px !important;
   }
   
@@ -784,9 +867,9 @@ dialog {
   }
   
   #panel-controls > .panel-row-button {
+    margin: 0;
     -moz-box-orient: horizontal;
     -moz-box-flex: 0;
-    min-width: @tablet_panel_controls@ !important;
   }
 
   #panel-controls .toolbarbutton-text {
@@ -796,7 +879,11 @@ dialog {
   
   #panel-container {
     -moz-box-pack: center;
-    padding: @padding_xlarge@ 0px;
+    padding: @padding_xxxlarge@ 0 @padding_xlarge@ 0;
+  }
+
+  #panel-container-inner > vbox {
+    padding: @padding_xlarge@ @padding_xxlarge@;
   }
 }
 

@@ -72,8 +72,8 @@ public:
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      const nsHTMLReflowMetrics& aMetrics,
-                     PRBool aTopMarginRoot, PRBool aBottomMarginRoot,
-                     PRBool aBlockNeedsFloatManager);
+                     bool aTopMarginRoot, bool aBottomMarginRoot,
+                     bool aBlockNeedsFloatManager);
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -102,14 +102,14 @@ public:
    * aLineLayout is null when we are reflowing pushed floats (because
    * they are not associated with a line box).
    */
-  PRBool AddFloat(nsLineLayout*       aLineLayout,
+  bool AddFloat(nsLineLayout*       aLineLayout,
                   nsIFrame*           aFloat,
                   nscoord             aAvailableWidth);
 private:
-  PRBool CanPlaceFloat(nscoord aFloatWidth,
+  bool CanPlaceFloat(nscoord aFloatWidth,
                        const nsFlowAreaRect& aFloatAvailableSpace);
 public:
-  PRBool FlowAndPlaceFloat(nsIFrame* aFloat);
+  bool FlowAndPlaceFloat(nsIFrame* aFloat);
 private:
   void PushFloatPastBreak(nsIFrame* aFloat);
 public:
@@ -123,7 +123,7 @@ public:
                       nsIFrame *aReplacedBlock = nsnull,
                       PRUint32 aFlags = 0);
 
-  PRBool IsAdjacentWithTop() const {
+  bool IsAdjacentWithTop() const {
     return mY ==
       ((mFlags & BRS_ISFIRSTINFLOW) ? mReflowState.mComputedBorderPadding.top : 0);
   }
@@ -165,7 +165,7 @@ public:
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
                               const nsFlowAreaRect& aFloatAvailableSpace,
-                              PRBool aBlockAvoidsFloats,
+                              bool aBlockAvoidsFloats,
                               nsRect& aResult);
 
 protected:
@@ -182,7 +182,7 @@ public:
     }
   }
 
-  nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
+  nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock);
 
   void FreeLineBox(nsLineBox* aLine);
 
@@ -306,7 +306,7 @@ public:
  
   PRUint8 mFloatBreakType;
 
-  void SetFlag(PRUint32 aFlag, PRBool aValue)
+  void SetFlag(PRUint32 aFlag, bool aValue)
   {
     NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
     NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
@@ -318,7 +318,7 @@ public:
     }
   }
 
-  PRBool GetFlag(PRUint32 aFlag) const
+  bool GetFlag(PRUint32 aFlag) const
   {
     NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
     return !!(mFlags & aFlag);

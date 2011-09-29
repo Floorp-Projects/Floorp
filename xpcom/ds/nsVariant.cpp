@@ -314,7 +314,7 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
             elementSize = sizeof(double);
             break;
         case nsIDataType::VTYPE_BOOL:
-            elementSize = sizeof(PRBool);
+            elementSize = sizeof(bool);
             break;
         case nsIDataType::VTYPE_CHAR:
             elementSize = sizeof(char);
@@ -652,7 +652,7 @@ NUMERIC_CONVERSION_METHOD_END
 // XXX Is this really what we want to do?
 
 /* static */ nsresult
-nsVariant::ConvertToBool(const nsDiscriminatedUnion& data, PRBool *_retval)
+nsVariant::ConvertToBool(const nsDiscriminatedUnion& data, bool *_retval)
 {
     TRIVIAL_DATA_CONVERTER(VTYPE_BOOL, data, mBoolValue, _retval)
 
@@ -703,7 +703,7 @@ nsVariant::ConvertToUint64(const nsDiscriminatedUnion& data, PRUint64 *_retval)
 
 /***************************************************************************/
 
-static PRBool String2ID(const nsDiscriminatedUnion& data, nsID* pid)
+static bool String2ID(const nsDiscriminatedUnion& data, nsID* pid)
 {
     nsAutoString tempString;
     nsAString* pString;
@@ -734,7 +734,7 @@ static PRBool String2ID(const nsDiscriminatedUnion& data, nsID* pid)
     char* pChars = ToNewCString(*pString);
     if(!pChars)
         return PR_FALSE;
-    PRBool result = pid->Parse(pChars);
+    bool result = pid->Parse(pChars);
     nsMemory::Free(pChars);
     return result;
 }
@@ -1454,7 +1454,7 @@ nsVariant::SetFromDouble(nsDiscriminatedUnion* data, double aValue)
     DATA_SETTER(data, VTYPE_DOUBLE, mDoubleValue, aValue)
 }
 /* static */ nsresult
-nsVariant::SetFromBool(nsDiscriminatedUnion* data, PRBool aValue)
+nsVariant::SetFromBool(nsDiscriminatedUnion* data, bool aValue)
 {
     DATA_SETTER(data, VTYPE_BOOL, mBoolValue, aValue)
 }
@@ -1732,7 +1732,7 @@ nsVariant::nsVariant()
             {nsIDataType::VTYPE_ASTRING           , TD_ASTRING          }
         };
         static const int length = sizeof(array)/sizeof(array[0]);
-        static PRBool inited = PR_FALSE;
+        static bool inited = false;
         if(!inited)
         {
             for(int i = 0; i < length; i++)
@@ -1818,8 +1818,8 @@ NS_IMETHODIMP nsVariant::GetAsDouble(double *_retval)
     return nsVariant::ConvertToDouble(mData, _retval);
 }
 
-/* PRBool getAsBool (); */
-NS_IMETHODIMP nsVariant::GetAsBool(PRBool *_retval)
+/* bool getAsBool (); */
+NS_IMETHODIMP nsVariant::GetAsBool(bool *_retval)
 {
     return nsVariant::ConvertToBool(mData, _retval);
 }
@@ -1919,13 +1919,13 @@ NS_IMETHODIMP nsVariant::GetAsWStringWithSize(PRUint32 *size, PRUnichar **str)
 
 /***************************************************************************/
 
-/* attribute PRBool writable; */
-NS_IMETHODIMP nsVariant::GetWritable(PRBool *aWritable)
+/* attribute bool writable; */
+NS_IMETHODIMP nsVariant::GetWritable(bool *aWritable)
 {
     *aWritable = mWritable;
     return NS_OK;
 }
-NS_IMETHODIMP nsVariant::SetWritable(PRBool aWritable)
+NS_IMETHODIMP nsVariant::SetWritable(bool aWritable)
 {
     if(!mWritable && aWritable)
         return NS_ERROR_FAILURE;
@@ -2008,8 +2008,8 @@ NS_IMETHODIMP nsVariant::SetAsDouble(double aValue)
     return nsVariant::SetFromDouble(&mData, aValue);
 }
 
-/* void setAsBool (in PRBool aValue); */
-NS_IMETHODIMP nsVariant::SetAsBool(PRBool aValue)
+/* void setAsBool (in bool aValue); */
+NS_IMETHODIMP nsVariant::SetAsBool(bool aValue)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
     return nsVariant::SetFromBool(&mData, aValue);

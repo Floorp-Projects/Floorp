@@ -74,7 +74,7 @@ nsAsyncStreamCopier::~nsAsyncStreamCopier()
     LOG(("Destroying nsAsyncStreamCopier @%x\n", this));
 }
 
-PRBool
+bool
 nsAsyncStreamCopier::IsComplete(nsresult *status)
 {
     MutexAutoLock lock(mLock);
@@ -138,7 +138,7 @@ nsAsyncStreamCopier::GetName(nsACString &name)
 }
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::IsPending(PRBool *result)
+nsAsyncStreamCopier::IsPending(bool *result)
 {
     *result = !IsComplete();
     return NS_OK;
@@ -220,11 +220,11 @@ NS_IMETHODIMP
 nsAsyncStreamCopier::Init(nsIInputStream *source,
                           nsIOutputStream *sink,
                           nsIEventTarget *target,
-                          PRBool sourceBuffered,
-                          PRBool sinkBuffered,
+                          bool sourceBuffered,
+                          bool sinkBuffered,
                           PRUint32 chunkSize,
-                          PRBool closeSource,
-                          PRBool closeSink)
+                          bool closeSource,
+                          bool closeSink)
 {
     NS_ASSERTION(sourceBuffered || sinkBuffered, "at least one stream must be buffered");
 

@@ -57,7 +57,7 @@ public:
 
     // Used by internal setters: to set header from network use SetHeaderFromNet
     nsresult SetHeader(nsHttpAtom header, const nsACString &value,
-                       PRBool merge = PR_FALSE);
+                       bool merge = false);
 
     // Merges supported headers. For other duplicate values, determines if error
     // needs to be thrown or 1st value kept.
@@ -73,7 +73,7 @@ public:
     }
 
     // Determine if the given header value exists.
-    PRBool HasHeaderValue(nsHttpAtom header, const char *value) {
+    bool HasHeaderValue(nsHttpAtom header, const char *value) {
         return FindHeaderValue(header, value) != nsnull;
     }
 
@@ -85,7 +85,7 @@ public:
                              nsHttpAtom *header=nsnull,
                              char **value=nsnull);
 
-    void Flatten(nsACString &, PRBool pruneProxyHeaders=PR_FALSE);
+    void Flatten(nsACString &, bool pruneProxyHeaders=false);
 
     PRUint32 Count() { return mHeaders.Length(); }
 
@@ -101,7 +101,7 @@ public:
         nsCString  value;
 
         struct MatchHeader {
-          PRBool Equals(const nsEntry &entry, const nsHttpAtom &header) const {
+          bool Equals(const nsEntry &entry, const nsHttpAtom &header) const {
             return entry.header == header;
           }
         };
@@ -112,12 +112,12 @@ private:
     void MergeHeader(nsHttpAtom header, nsEntry *entry, const nsACString &value);
 
     // Header cannot be merged: only one value possible
-    PRBool  IsSingletonHeader(nsHttpAtom header);
+    bool    IsSingletonHeader(nsHttpAtom header);
 
     // Subset of singleton headers: should never see multiple, different
     // instances of these, else something fishy may be going on (like CLRF
     // injection)
-    PRBool  IsSuspectDuplicateHeader(nsHttpAtom header);
+    bool    IsSuspectDuplicateHeader(nsHttpAtom header);
 
     nsTArray<nsEntry> mHeaders;
 
@@ -138,7 +138,7 @@ nsHttpHeaderArray::LookupEntry(nsHttpAtom header, nsEntry **entry)
     return index;
 }
 
-inline PRBool
+inline bool
 nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header)
 {
     return header == nsHttp::Content_Type        ||
@@ -180,10 +180,10 @@ nsHttpHeaderArray::MergeHeader(nsHttpAtom header,
     entry->value.Append(value);
 }
 
-inline PRBool
+inline bool
 nsHttpHeaderArray::IsSuspectDuplicateHeader(nsHttpAtom header)
 {
-    PRBool retval =  header == nsHttp::Content_Length         ||
+    bool retval =  header == nsHttp::Content_Length         ||
                      header == nsHttp::Content_Disposition    ||
                      header == nsHttp::Location;
 

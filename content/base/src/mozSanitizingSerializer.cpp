@@ -104,7 +104,7 @@ mozSanitizingHTMLSerializer::~mozSanitizingHTMLSerializer()
 }
 
 //<copy from="xpcom/ds/nsProperties.cpp">
-PRBool
+bool
 mozSanitizingHTMLSerializer::ReleaseProperties(nsHashKey* key, void* data,
                                                void* closure)
 {
@@ -123,8 +123,8 @@ NS_IMPL_ISUPPORTS4(mozSanitizingHTMLSerializer,
 
 NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::Init(PRUint32 aFlags, PRUint32 dummy,
-                                  const char* aCharSet, PRBool aIsCopying,
-                                  PRBool aIsWholeDocument)
+                                  const char* aCharSet, bool aIsCopying,
+                                  bool aIsWholeDocument)
 {
   NS_ENSURE_TRUE(nsContentUtils::GetParserService(), NS_ERROR_UNEXPECTED);
 
@@ -176,7 +176,7 @@ mozSanitizingHTMLSerializer::Write(const nsAString& aString)
 
 
 NS_IMETHODIMP
-mozSanitizingHTMLSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
+mozSanitizingHTMLSerializer::IsEnabled(PRInt32 aTag, bool* aReturn)
 {
   *aReturn = PR_FALSE;
   return NS_OK;
@@ -186,10 +186,10 @@ mozSanitizingHTMLSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
 /**
  * Returns true, if the id represents a container
  */
-PRBool
+bool
 mozSanitizingHTMLSerializer::IsContainer(PRInt32 aId)
 {
-  PRBool isContainer = PR_FALSE;
+  bool isContainer = false;
 
   nsIParserService* parserService = nsContentUtils::GetParserService();
   if (parserService) {
@@ -250,7 +250,7 @@ mozSanitizingHTMLSerializer::AppendElementStart(Element* aElement,
 
   PRInt32 id = GetIdForContent(mElement);
 
-  PRBool isContainer = IsContainer(id);
+  bool isContainer = IsContainer(id);
 
   nsresult rv;
   if (isContainer) {
@@ -278,7 +278,7 @@ mozSanitizingHTMLSerializer::AppendElementEnd(Element* aElement,
 
   PRInt32 id = GetIdForContent(mElement);
 
-  PRBool isContainer = IsContainer(id);
+  bool isContainer = IsContainer(id);
 
   nsresult rv = NS_OK;
   if (isContainer) {
@@ -528,7 +528,7 @@ mozSanitizingHTMLSerializer::SanitizeAttrValue(nsHTMLTag aTag,
 
 /**
  */
-PRBool
+bool
 mozSanitizingHTMLSerializer::IsAllowedTag(nsHTMLTag aTag)
 {
 
@@ -544,7 +544,7 @@ mozSanitizingHTMLSerializer::IsAllowedTag(nsHTMLTag aTag)
 
 /**
  */
-PRBool
+bool
 mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
                                              const nsAString& anAttributeName)
 {
@@ -559,7 +559,7 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
   nsIProperties* attr_bag = (nsIProperties*)mAllowedTags.Get(&tag_key);
   NS_ENSURE_TRUE(attr_bag, PR_FALSE);
 
-  PRBool allowed;
+  bool allowed;
   nsAutoString attr(anAttributeName);
   ToLowerCase(attr);
   rv = attr_bag->Has(NS_LossyConvertUTF16toASCII(attr).get(),

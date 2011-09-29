@@ -56,13 +56,13 @@ class nsILayoutDebugger : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILAYOUT_DEBUGGER_IID)
 
-  NS_IMETHOD SetShowFrameBorders(PRBool aEnable) = 0;
+  NS_IMETHOD SetShowFrameBorders(bool aEnable) = 0;
 
-  NS_IMETHOD GetShowFrameBorders(PRBool* aResult) = 0;
+  NS_IMETHOD GetShowFrameBorders(bool* aResult) = 0;
 
-  NS_IMETHOD SetShowEventTargetFrameBorder(PRBool aEnable) = 0;
+  NS_IMETHOD SetShowEventTargetFrameBorder(bool aEnable) = 0;
 
-  NS_IMETHOD GetShowEventTargetFrameBorder(PRBool* aResult) = 0;
+  NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult) = 0;
 
   NS_IMETHOD GetContentSize(nsIDocument* aDocument,
                             PRInt32* aSizeInBytesResult) = 0;

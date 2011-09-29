@@ -41,7 +41,7 @@
 extern void NS_ShutdownLocalFileUnicode();
 
 extern "C" NS_EXPORT nsresult
-NS_NewUnicodeLocalFile(const PRUnichar *, PRBool, nsILocalFile **);
+NS_NewUnicodeLocalFile(const PRUnichar *, bool, nsILocalFile **);
 
 #endif // _NS_LOCALFILEUNICODE_H_
 

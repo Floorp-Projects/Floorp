@@ -164,10 +164,10 @@ public:
       mFrame.mInEditorInitialization = PR_FALSE;
     }
   }
-  PRBool EnteredMoreThanOnce() const { return !mFirstEntry; }
+  bool EnteredMoreThanOnce() const { return !mFirstEntry; }
 private:
   nsTextControlFrame &mFrame;
-  PRBool mFirstEntry;
+  bool mFirstEntry;
 };
 #endif
 
@@ -432,7 +432,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // textareas are eagerly initialized
-  PRBool initEagerly = !IsSingleLineTextControl();
+  bool initEagerly = !IsSingleLineTextControl();
   if (!initEagerly) {
     // Also, input elements which have a cached selection should get eager
     // editor initialization.
@@ -496,7 +496,7 @@ nsSize
 nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                     nsSize aCBSize, nscoord aAvailableWidth,
                                     nsSize aMargin, nsSize aBorder,
-                                    nsSize aPadding, PRBool aShrinkWrap)
+                                    nsSize aPadding, bool aShrinkWrap)
 {
   nsSize autoSize;
   nsresult rv = CalcIntrinsicSize(aRenderingContext, autoSize);
@@ -557,7 +557,7 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState)
   NS_ENSURE_SUCCESS(rv, pref);
   AddBorderAndPadding(pref);
 
-  PRBool widthSet, heightSet;
+  bool widthSet, heightSet;
   nsIBox::AddCSSPrefSize(this, pref, widthSet, heightSet);
 
   nsSize minSize = GetMinSize(aState);
@@ -619,14 +619,14 @@ nsTextControlFrame::GetBoxAscent(nsBoxLayoutState& aState)
   return ascent;
 }
 
-PRBool
+bool
 nsTextControlFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState)
 {
   // We're never collapsed in the box sense.
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsTextControlFrame::IsLeaf() const
 {
   return PR_TRUE;
@@ -650,7 +650,7 @@ nsTextControlFrame::ScrollOnFocusEvent::Run()
 }
 
 //IMPLEMENTING NS_IFORMCONTROLFRAME
-void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
@@ -704,7 +704,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 
   // Scroll the current selection into view
   nsISelection *caretSelection = caret->GetCaretDOMSelection();
-  const PRBool isFocusedRightNow = ourSel == caretSelection;
+  const bool isFocusedRightNow = ourSel == caretSelection;
   if (!isFocusedRightNow) {
     // Don't scroll the current selection if we've been focused using the mouse.
     PRUint32 lastFocusMethod = 0;
@@ -737,7 +737,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     getter_AddRefs(docSel));
   if (!docSel) return;
 
-  PRBool isCollapsed = PR_FALSE;
+  bool isCollapsed = false;
   docSel->GetIsCollapsed(&isCollapsed);
   if (!isCollapsed)
     docSel->RemoveAllRanges();
@@ -888,7 +888,7 @@ nsTextControlFrame::GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement)
 }
 
 nsresult
-nsTextControlFrame::SelectAllOrCollapseToEndOfText(PRBool aSelect)
+nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
 {
   nsCOMPtr<nsIDOMElement> rootElement;
   nsresult rv = GetRootNodeAndInitializeEditor(getter_AddRefs(rootElement));
@@ -1233,7 +1233,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
   nsISelectionController* selCon = txtCtrl->GetSelectionController();
-  const PRBool needEditor = nsGkAtoms::maxlength == aAttribute ||
+  const bool needEditor = nsGkAtoms::maxlength == aAttribute ||
                             nsGkAtoms::readonly == aAttribute ||
                             nsGkAtoms::disabled == aAttribute ||
                             nsGkAtoms::spellcheck == aAttribute;
@@ -1249,7 +1249,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (nsGkAtoms::maxlength == aAttribute) 
   {
     PRInt32 maxLength;
-    PRBool maxDefined = GetMaxLength(&maxLength);
+    bool maxDefined = GetMaxLength(&maxLength);
     
     nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
     if (textEditor)
@@ -1358,7 +1358,7 @@ nsTextControlFrame::GetPhonetic(nsAString& aPhonetic)
 ///END NSIFRAME OVERLOADS
 /////BEGIN PROTECTED METHODS
 
-PRBool
+bool
 nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
@@ -1377,7 +1377,7 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 
 // this is where we propagate a content changed event
 void
-nsTextControlFrame::FireOnInput(PRBool aTrusted)
+nsTextControlFrame::FireOnInput(bool aTrusted)
 {
   if (!mNotifyOnInput)
     return; // if notification is turned off, do nothing
@@ -1451,14 +1451,14 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
   return rv;
 }
 
-PRBool
+bool
 nsTextControlFrame::IsScrollable() const
 {
   return !IsSingleLineTextControl();
 }
 
 void
-nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
+nsTextControlFrame::SetValueChanged(bool aValueChanged)
 {
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
@@ -1481,8 +1481,8 @@ nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
 
 
 nsresult
-nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
-                                       PRBool aBeforeEditorInit,
+nsTextControlFrame::UpdateValueDisplay(bool aNotify,
+                                       bool aBeforeEditorInit,
                                        const nsAString *aValue)
 {
   if (!IsSingleLineTextControl()) // textareas don't use this

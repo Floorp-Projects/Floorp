@@ -131,7 +131,7 @@ nsIFrame* nsSplittableFrame::GetLastContinuation() const
 }
 
 #ifdef DEBUG
-PRBool nsSplittableFrame::IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
+bool nsSplittableFrame::IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
   PRInt32 iterations = 0;
   while (aFrame1 && iterations < 10) {
@@ -144,7 +144,7 @@ PRBool nsSplittableFrame::IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame*
   return PR_FALSE;
 }
 
-PRBool nsSplittableFrame::IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
+bool nsSplittableFrame::IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
   PRInt32 iterations = 0;
   while (aFrame1 && iterations < 10) {

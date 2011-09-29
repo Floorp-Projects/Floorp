@@ -53,7 +53,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP
 nsDOMPopupBlockedEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
-                            PRBool aCanBubbleArg, PRBool aCancelableArg,
+                            bool aCanBubbleArg, bool aCancelableArg,
                             nsIDOMWindow *aRequestingWindow,
                             nsIURI *aPopupWindowURI,
                             const nsAString & aPopupWindowName,

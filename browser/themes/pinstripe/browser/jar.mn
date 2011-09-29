@@ -14,7 +14,6 @@ browser.jar:
   skin/classic/browser/fullscreen-video.css
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
-  skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
   skin/classic/browser/hud-style-check-box-checked.png
   skin/classic/browser/hud-style-check-box-empty.png
@@ -45,6 +44,7 @@ browser.jar:
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png
+  skin/classic/browser/urlbar-history-dropmarker.png
   skin/classic/browser/urlbar-arrow.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
@@ -76,7 +76,6 @@ browser.jar:
   skin/classic/browser/places/plus.png                      (places/plus.png)
   skin/classic/browser/places/plus-active.png               (places/plus-active.png)
   skin/classic/browser/places/starPage.png                  (places/starPage.png)
-  skin/classic/browser/places/pageStarred.png               (places/pageStarred.png)
   skin/classic/browser/places/searching_16.png              (places/searching_16.png)
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)

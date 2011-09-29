@@ -6,13 +6,14 @@ let gCurrentTab = null;
 function test() {
   waitForExplicitFinish();
 
-  gCurrentTab = Browser.addTab(testURL_01, true);
   messageManager.addMessageListener("pageshow", function() {
     if (gCurrentTab.browser.currentURI.spec == testURL_01) {
       messageManager.removeMessageListener("pageshow", arguments.callee);
       pageLoaded();
     }
   });
+
+  gCurrentTab = Browser.addTab(testURL_01, true);
 }
 
 function pageLoaded() {

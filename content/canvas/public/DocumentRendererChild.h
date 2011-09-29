@@ -56,7 +56,7 @@ public:
     bool RenderDocument(nsIDOMWindow *window,
                         const nsRect& documentRect, const gfxMatrix& transform,
                         const nsString& bgcolor,
-                        PRUint32 renderFlags, PRBool flushLayout, 
+                        PRUint32 renderFlags, bool flushLayout, 
                         const nsIntSize& renderSize, nsCString& data);
 
 private:

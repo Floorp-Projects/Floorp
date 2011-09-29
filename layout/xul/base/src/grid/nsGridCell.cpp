@@ -149,7 +149,7 @@ nsGridCell::GetMaxSize(nsBoxLayoutState& aState)
 }
 
 
-PRBool
+bool
 nsGridCell::IsCollapsed(nsBoxLayoutState& aState)
 {
   return ((mBoxInColumn && mBoxInColumn->IsCollapsed(aState)) ||

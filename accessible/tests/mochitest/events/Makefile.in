@@ -63,11 +63,20 @@ _TEST_FILES =\
 		test_docload.xul \
 		test_dragndrop.html \
 		test_flush.html \
-		test_focus.html \
-		test_focus.xul \
+		test_focus_aria_activedescendant.html \
+		test_focus_autocomplete.xul \
+		test_focus_browserui.xul \
+		test_focus_contextmenu.xul \
+		test_focus_controls.html \
+		test_focus_dialog.html \
+		test_focus_doc.html \
+		test_focus_general.html \
+		test_focus_general.xul \
+		test_focus_listcontrols.xul \
+		test_focus_menu.xul \
 		test_focus_name.html \
+		test_focus_selects.html \
 		test_focus_tree.xul \
-		test_focusdoc.html \
 		test_menu.xul \
 		test_mutation.html \
 		test_mutation.xhtml \

@@ -456,7 +456,7 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   return i;
 }
 
-PRBool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
+bool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
 {
   if (!mTimers.RemoveElement(aTimer))
     return PR_FALSE;

@@ -54,7 +54,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 // the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;
 
-PRBool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorReporter)
+bool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorReporter)
 {
     NS_PRECONDITION(!mEvaluated, "AutoScriptEvaluate::Evaluate should only be called once");
 
@@ -166,7 +166,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
         ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(info)
         {
-            PRBool canScript, isBuiltin;
+            bool canScript, isBuiltin;
             if(NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
                NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                nsXPConnect::IsISupportsDescendant(info))
@@ -296,7 +296,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
         ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(!info)
             return nsnull;
-        PRBool canScript, isBuiltin;
+        bool canScript, isBuiltin;
         if(NS_FAILED(info->IsScriptable(&canScript)) || !canScript ||
            NS_FAILED(info->IsBuiltinClass(&isBuiltin)) || isBuiltin)
             return nsnull;
@@ -389,7 +389,10 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
     jsval val;
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
-           XPCConvert::JSData2Native(ccx, aResult, val, type, JS_FALSE, 
+           // Note that this always takes the T_INTERFACE path through
+           // JSData2Native, so the value passed for useAllocator
+           // doesn't really matter. We pass true for consistency.
+           XPCConvert::JSData2Native(ccx, aResult, val, type, JS_TRUE,
                                      &NS_GET_IID(nsIVariant), pErr);
 }
 
@@ -772,7 +775,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         if(NS_FAILED(rv))
             return rv;
 
-        PRBool isSystem;
+        bool isSystem;
         rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
         if((NS_FAILED(rv) || !isSystem) &&
            !IS_WRAPPER_CLASS(selfObj->getClass()))
@@ -932,7 +935,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     if(arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
         return JS_FALSE;
 
-    if(arg_param.IsOut())
+    if(arg_param.IsIndirect())
         *result = *(JSUint32*)nativeParams[argnum].val.p;
     else
         *result = nativeParams[argnum].val.u32;
@@ -973,7 +976,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
         if(arg_type.IsPointer() &&
            arg_type.TagPart() == nsXPTType::T_IID)
         {
-            if(arg_param.IsOut())
+            if(arg_param.IsIndirect())
             {
                 nsID** p = (nsID**) nativeParams[argnum].val.p;
                 if(!p || !*p)
@@ -1048,7 +1051,7 @@ nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
                                        const char * anInterfaceName,
-                                       PRBool aForceReport)
+                                       bool aForceReport)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -1089,7 +1092,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
         if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
         {
             // Figure out whether or not we should report this exception.
-            PRBool reportable = xpc_IsReportableErrorCode(e_result);
+            bool reportable = xpc_IsReportableErrorCode(e_result);
             if(reportable)
             {
                 // Always want to report forced exceptions and XPConnect's own
@@ -1107,7 +1110,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 // stack. If so then we always want to report it.
                 if(!reportable)
                 {
-                    PRBool onlyNativeStackFrames = PR_TRUE;
+                    bool onlyNativeStackFrames = true;
                     JSStackFrame * fp = nsnull;
                     while((fp = JS_FrameIterator(cx, &fp)))
                     {
@@ -1364,7 +1367,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         // If the interface is marked as a [function] then we will assume that
         // our JSObject is a function and not an object with a named method.
 
-        PRBool isFunction;
+        bool isFunction;
         if(NS_FAILED(mInfo->IsFunction(&isFunction)))
             goto pre_call_clean_up;
 
@@ -1406,7 +1409,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
                         if(translator)
                         {
-                            PRBool hideFirstParamFromJS = PR_FALSE;
+                            bool hideFirstParamFromJS = false;
                             nsIID* newWrapperIID = nsnull;
                             nsCOMPtr<nsISupports> newThis;
 
@@ -1480,10 +1483,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         const nsXPTType& type = param.GetType();
         nsXPTType datum_type;
         JSUint32 array_count;
-        PRBool isArray = type.IsArray();
+        bool isArray = type.IsArray();
         jsval val = JSVAL_NULL;
         AUTO_MARK_JSVAL(ccx, &val);
-        PRBool isSizedString = isArray ?
+        bool isSizedString = isArray ?
                 JS_FALSE :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                 type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
@@ -1509,7 +1512,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         {
             nsXPTCMiniVariant* pv;
 
-            if(param.IsOut())
+            if(param.IsIndirect())
                 pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];
@@ -1685,7 +1688,7 @@ pre_call_clean_up:
 
     if(!success)
     {
-        PRBool forceReport;
+        bool forceReport;
         if(NS_FAILED(mInfo->IsFunction(&forceReport)))
             forceReport = PR_FALSE;
 
@@ -1708,6 +1711,7 @@ pre_call_clean_up:
     for(i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& param = info->params[i];
+        NS_ABORT_IF_FALSE(!param.IsShared(), "[shared] implies [noscript]!");
         if(!param.IsOut() && !param.IsDipper())
             continue;
 
@@ -1720,7 +1724,6 @@ pre_call_clean_up:
 
         jsval val;
         uint8 type_tag = type.TagPart();
-        JSBool useAllocator = JS_FALSE;
         nsXPTCMiniVariant* pv;
 
         if(param.IsDipper())
@@ -1745,11 +1748,9 @@ pre_call_clean_up:
                                                   &param_iid)))
                 break;
         }
-        else if(type.IsPointer() && !param.IsShared() && !param.IsDipper())
-            useAllocator = JS_TRUE;
 
         if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                      useAllocator, &param_iid, nsnull))
+                                      !param.IsDipper(), &param_iid, nsnull))
             break;
     }
 
@@ -1769,10 +1770,9 @@ pre_call_clean_up:
             jsval val;
             nsXPTCMiniVariant* pv;
             nsXPTType datum_type;
-            JSBool useAllocator = JS_FALSE;
             JSUint32 array_count;
-            PRBool isArray = type.IsArray();
-            PRBool isSizedString = isArray ?
+            bool isArray = type.IsArray();
+            bool isSizedString = isArray ?
                     JS_FALSE :
                     type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                     type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
@@ -1804,8 +1804,6 @@ pre_call_clean_up:
                                              &param_iid))
                    break;
             }
-            else if(type.IsPointer() && !param.IsShared())
-                useAllocator = JS_TRUE;
 
             if(isArray || isSizedString)
             {
@@ -1820,8 +1818,7 @@ pre_call_clean_up:
                 if(array_count &&
                    !XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
                                                array_count, array_count,
-                                               datum_type,
-                                               useAllocator, &param_iid,
+                                               datum_type, &param_iid,
                                                nsnull))
                     break;
             }
@@ -1830,14 +1827,13 @@ pre_call_clean_up:
                 if(!XPCConvert::JSStringWithSize2Native(ccx,
                                                    (void*)&pv->val, val,
                                                    array_count, array_count,
-                                                   datum_type, useAllocator,
-                                                   nsnull))
+                                                   datum_type, nsnull))
                     break;
             }
             else
             {
                 if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                              useAllocator, &param_iid,
+                                              JS_TRUE, &param_iid,
                                               nsnull))
                     break;
             }

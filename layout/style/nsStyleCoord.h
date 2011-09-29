@@ -92,7 +92,7 @@ public:
     // Every calc() expression evaluates to a length plus a percentage.
     nscoord mLength;
     float mPercent;
-    PRPackedBool mHasPercent; // whether there was any % syntax, even if 0
+    bool mHasPercent; // whether there was any % syntax, even if 0
 
     bool operator==(const Calc& aOther) const {
       return mLength == aOther.mLength &&
@@ -111,27 +111,27 @@ public:
   inline nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit);
 
   nsStyleCoord&  operator=(const nsStyleCoord& aCopy);
-  PRBool         operator==(const nsStyleCoord& aOther) const;
-  PRBool         operator!=(const nsStyleCoord& aOther) const;
+  bool           operator==(const nsStyleCoord& aOther) const;
+  bool           operator!=(const nsStyleCoord& aOther) const;
 
   nsStyleUnit GetUnit() const {
     NS_ASSERTION(mUnit != eStyleUnit_Null, "reading uninitialized value");
     return mUnit;
   }
 
-  PRBool IsAngleValue() const {
+  bool IsAngleValue() const {
     return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Radian;
   }
 
-  PRBool IsCalcUnit() const {
+  bool IsCalcUnit() const {
     return eStyleUnit_Calc == mUnit;
   }
 
-  PRBool IsPointerValue() const {
+  bool IsPointerValue() const {
     return IsCalcUnit();
   }
 
-  PRBool IsCoordPercentCalcUnit() const {
+  bool IsCoordPercentCalcUnit() const {
     return mUnit == eStyleUnit_Coord ||
            mUnit == eStyleUnit_Percent ||
            IsCalcUnit();
@@ -139,16 +139,16 @@ public:
 
   // Does this calc() expression have any percentages inside it?  Can be
   // called only when IsCalcUnit() is true.
-  PRBool CalcHasPercent() const {
+  bool CalcHasPercent() const {
     return GetCalcValue()->mHasPercent;
   }
 
-  PRBool HasPercent() const {
+  bool HasPercent() const {
     return mUnit == eStyleUnit_Percent ||
            (IsCalcUnit() && CalcHasPercent());
   }
 
-  PRBool ConvertsToLength() const {
+  bool ConvertsToLength() const {
     return mUnit == eStyleUnit_Coord ||
            (IsCalcUnit() && !CalcHasPercent());
   }
@@ -188,8 +188,8 @@ public:
   nsStyleSides();
 
 //  nsStyleSides&  operator=(const nsStyleSides& aCopy);  // use compiler's version
-  PRBool         operator==(const nsStyleSides& aOther) const;
-  PRBool         operator!=(const nsStyleSides& aOther) const;
+  bool           operator==(const nsStyleSides& aOther) const;
+  bool           operator!=(const nsStyleSides& aOther) const;
 
   inline nsStyleUnit GetUnit(mozilla::css::Side aSide) const;
   inline nsStyleUnit GetLeftUnit() const;
@@ -227,8 +227,8 @@ public:
 
   // use compiler's version
   //nsStyleCorners&  operator=(const nsStyleCorners& aCopy);
-  PRBool         operator==(const nsStyleCorners& aOther) const;
-  PRBool         operator!=(const nsStyleCorners& aOther) const;
+  bool           operator==(const nsStyleCorners& aOther) const;
+  bool           operator!=(const nsStyleCorners& aOther) const;
 
   // aCorner is always one of NS_CORNER_* defined in nsStyleConsts.h
   inline nsStyleUnit GetUnit(PRUint8 aHalfCorner) const;
@@ -277,7 +277,7 @@ inline nsStyleCoord::nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit)
   memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
 }
 
-inline PRBool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
+inline bool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
 {
   return !((*this) == aOther);
 }
@@ -348,7 +348,7 @@ inline void nsStyleCoord::GetUnionValue(nsStyleUnion& aValue) const
 // -------------------------
 // nsStyleSides inlines
 //
-inline PRBool nsStyleSides::operator!=(const nsStyleSides& aOther) const
+inline bool nsStyleSides::operator!=(const nsStyleSides& aOther) const
 {
   return !((*this) == aOther);
 }
@@ -432,7 +432,7 @@ inline void nsStyleSides::SetBottom(const nsStyleCoord& aCoord)
 // -------------------------
 // nsStyleCorners inlines
 //
-inline PRBool nsStyleCorners::operator!=(const nsStyleCorners& aOther) const
+inline bool nsStyleCorners::operator!=(const nsStyleCorners& aOther) const
 {
   return !((*this) == aOther);
 }

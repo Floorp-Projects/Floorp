@@ -254,7 +254,7 @@ private:
 class nsZipFind
 {
 public:
-  nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool regExp);
+  nsZipFind(nsZipArchive* aZip, char* aPattern, bool regExp);
   ~nsZipFind();
 
   nsresult      FindNext(const char** aResult, PRUint16* aNameLen);
@@ -264,7 +264,7 @@ private:
   char*         mPattern;
   nsZipItem*    mItem;
   PRUint16      mSlot;
-  PRPackedBool  mRegExp;
+  bool          mRegExp;
 
   //-- prevent copies and assignments
   nsZipFind& operator=(const nsZipFind& rhs);

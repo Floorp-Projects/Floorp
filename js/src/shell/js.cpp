@@ -50,7 +50,6 @@
 #include <locale.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jswrapper.h"
@@ -1952,16 +1951,13 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
 static JSBool
 Notes(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSScript *script;
-
-    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    LifoAllocScope las(&cx->tempLifoAlloc());
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        script = ValueToScript(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSScript *script = ValueToScript(cx, argv[i]);
         if (!script)
             continue;
 
@@ -1969,7 +1965,6 @@ Notes(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSString *str = JS_NewStringCopyZ(cx, sprinter.base);
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
     if (!str)
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
@@ -2110,9 +2105,9 @@ DisassembleToString(JSContext *cx, uintN argc, jsval *vp)
     if (!p.parse(cx))
         return false;
 
-    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    LifoAllocScope las(&cx->tempLifoAlloc());
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
     Sprinter *sp = &sprinter;
 
     bool ok = true;
@@ -2136,7 +2131,6 @@ DisassembleToString(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSString *str = ok ? JS_NewStringCopyZ(cx, sprinter.base) : NULL;
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
     if (!str)
         return false;
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
@@ -2150,9 +2144,9 @@ Disassemble(JSContext *cx, uintN argc, jsval *vp)
     if (!p.parse(cx))
         return false;
 
-    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    LifoAllocScope las(&cx->tempLifoAlloc());
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
     Sprinter *sp = &sprinter;
 
     bool ok = true;
@@ -2177,7 +2171,6 @@ Disassemble(JSContext *cx, uintN argc, jsval *vp)
 
     if (ok)
         fprintf(stdout, "%s\n", sprinter.base);
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
 }
@@ -2213,13 +2206,12 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     if (!script)
         return false;
 
-    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    LifoAllocScope las(&cx->tempLifoAlloc());
     Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);
     bool ok = DisassembleScript(cx, script, NULL, p.lines, p.recursive, &sprinter);
     if (ok)
         fprintf(stdout, "%s\n", sprinter.base);
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
     if (!ok)
         return false;
     
@@ -2263,18 +2255,17 @@ DisassWithSrc(JSContext *cx, uintN argc, jsval *vp)
         pc = script->code;
         end = pc + script->length;
 
-        void *mark = JS_ARENA_MARK(&cx->tempPool);
+        LifoAllocScope las(&cx->tempLifoAlloc());
         Sprinter sprinter;
         Sprinter *sp = &sprinter;
-        INIT_SPRINTER(cx, sp, &cx->tempPool, 0);
+        INIT_SPRINTER(cx, sp, &cx->tempLifoAlloc(), 0);
 
         /* burn the leading lines */
         line2 = JS_PCToLineNumber(cx, script, pc);
         for (line1 = 0; line1 < line2 - 1; line1++) {
             char *tmp = fgets(linebuf, LINE_BUF_LEN, file);
             if (!tmp) {
-                JS_ReportError(cx, "failed to read %s fully",
-                               script->filename);
+                JS_ReportError(cx, "failed to read %s fully", script->filename);
                 ok = JS_FALSE;
                 goto bail;
             }
@@ -2315,7 +2306,6 @@ DisassWithSrc(JSContext *cx, uintN argc, jsval *vp)
         }
 
       bail:
-        JS_ARENA_RELEASE(&cx->tempPool, mark);
         fclose(file);
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -3018,7 +3008,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
         JSAutoEnterCompartment ac;
         uintN flags;
         JSObject *unwrapped = sobj->unwrap(&flags);
-        if (flags & JSWrapper::CROSS_COMPARTMENT) {
+        if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
             if (!ac.enter(cx, sobj))
                 return false;
@@ -3162,7 +3152,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         propFlags = shape->getFlags();
    } else if (referent->isProxy()) {
         PropertyDescriptor desc;
-        if (!JSProxy::getOwnPropertyDescriptor(cx, referent, id, false, &desc))
+        if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, false, &desc))
             return false;
         if (!desc.obj)
             return true;
@@ -4006,8 +3996,8 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
-                                       &JSWrapper::singleton);
+    JSObject *wrapped = Wrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
+                                     &Wrapper::singleton);
     if (!wrapped)
         return false;
 
@@ -4630,58 +4620,6 @@ static JSPropertySpec its_props[] = {
     {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
                         its_getter,     its_setter},
     {NULL,0,0,NULL,NULL}
-};
-
-static JSBool
-its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSString *name;
-    JSObject *method;
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "So", &name, &method))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(method);
-
-    if (JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes) {
-            JSString *valstr = JS_ValueToString(cx, *vp);
-            if (valstr) {
-                JSAutoByteString valBytes(cx, valstr);
-                if (!!valBytes) {
-                    JS_ReportError(cx, "can't bind method %s to non-callable object %s",
-                                   nameBytes.ptr(), valBytes.ptr());
-                }
-            }
-        }
-        return JS_FALSE;
-    }
-
-    if (method->getFunctionPrivate()->isInterpreted() &&
-        method->getFunctionPrivate()->script()->compileAndGo) {
-        /* Can't reparent compileAndGo scripts. */
-        JSAutoByteString nameBytes(cx, name);
-        if (!!nameBytes)
-            JS_ReportError(cx, "can't bind method %s to compileAndGo script", nameBytes.ptr());
-        return JS_FALSE;
-    }
-
-    jsid id;
-    if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
-        return JS_FALSE;
-
-    if (!JS_DefinePropertyById(cx, thisobj, id, *vp, NULL, NULL, JSPROP_ENUMERATE))
-        return JS_FALSE;
-
-    return JS_SetParent(cx, method, thisobj);
-}
-
-static JSFunctionSpec its_methods[] = {
-    {"bindMethod",      its_bindMethod, 2,0},
-    {NULL,NULL,0,0}
 };
 
 #ifdef JSD_LOWLEVEL_SOURCE
@@ -5335,8 +5273,6 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
         if (!it)
             return NULL;
         if (!JS_DefineProperties(cx, it, its_props))
-            return NULL;
-        if (!JS_DefineFunctions(cx, it, its_methods))
             return NULL;
 
         if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,

@@ -49,7 +49,7 @@ nsMediaFragmentURIParser::nsMediaFragmentURIParser(const nsCString& aSpec)
   }
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring& aString, double& aStart, double& aEnd)
+bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring& aString, double& aStart, double& aEnd)
 {
   nsDependentSubstring original(aString);
   if (aString.Length() > 4 &&
@@ -97,7 +97,7 @@ PRBool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring& aString, double&
   return PR_TRUE;
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTTime(nsDependentSubstring& aString, double& aTime)
+bool nsMediaFragmentURIParser::ParseNPTTime(nsDependentSubstring& aString, double& aTime)
 {
   if (aString.Length() == 0) {
     return PR_FALSE;
@@ -110,7 +110,7 @@ PRBool nsMediaFragmentURIParser::ParseNPTTime(nsDependentSubstring& aString, dou
 }
 
 // Return PR_TRUE if the given character is a numeric character
-static PRBool IsDigit(nsDependentSubstring::char_type aChar)
+static bool IsDigit(nsDependentSubstring::char_type aChar)
 {
   return (aChar >= '0' && aChar <= '9');
 }
@@ -125,7 +125,7 @@ static PRUint32 FirstNonDigit(nsDependentSubstring& aString, PRUint32 aStart)
   return aStart;
 }
  
-PRBool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString, double& aSec)
+bool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString, double& aSec)
 {
   nsDependentSubstring original(aString);
   if (aString.Length() == 0) {
@@ -155,7 +155,7 @@ PRBool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString, doub
   return PR_TRUE;
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTMMSS(nsDependentSubstring& aString, double& aTime)
+bool nsMediaFragmentURIParser::ParseNPTMMSS(nsDependentSubstring& aString, double& aTime)
 {
   nsDependentSubstring original(aString);
   PRUint32 mm = 0;
@@ -185,7 +185,7 @@ PRBool nsMediaFragmentURIParser::ParseNPTMMSS(nsDependentSubstring& aString, dou
   return PR_TRUE;
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTFraction(nsDependentSubstring& aString, double& aFraction)
+bool nsMediaFragmentURIParser::ParseNPTFraction(nsDependentSubstring& aString, double& aFraction)
 {
   double fraction = 0.0;
 
@@ -207,7 +207,7 @@ PRBool nsMediaFragmentURIParser::ParseNPTFraction(nsDependentSubstring& aString,
   return PR_TRUE;
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTHHMMSS(nsDependentSubstring& aString, double& aTime)
+bool nsMediaFragmentURIParser::ParseNPTHHMMSS(nsDependentSubstring& aString, double& aTime)
 {
   nsDependentSubstring original(aString);
   PRUint32 hh = 0;
@@ -231,7 +231,7 @@ PRBool nsMediaFragmentURIParser::ParseNPTHHMMSS(nsDependentSubstring& aString, d
   return PR_TRUE;
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString, PRUint32& aHour)
+bool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString, PRUint32& aHour)
 {
   if (aString.Length() == 0) {
     return PR_FALSE;
@@ -254,12 +254,12 @@ PRBool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString, PRUin
   return PR_TRUE;
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTMM(nsDependentSubstring& aString, PRUint32& aMinute)
+bool nsMediaFragmentURIParser::ParseNPTMM(nsDependentSubstring& aString, PRUint32& aMinute)
 {
   return ParseNPTSS(aString, aMinute);
 }
 
-PRBool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString, PRUint32& aSecond)
+bool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString, PRUint32& aSecond)
 {
   if (aString.Length() < 2) {
     return PR_FALSE;

@@ -66,7 +66,7 @@ nsresult nsSVGPathDataParser::MatchCoordPair(float* aX, float* aY)
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenCoordPairStarter()
+bool nsSVGPathDataParser::IsTokenCoordPairStarter()
 {
   return IsTokenCoordStarter();
 }
@@ -80,14 +80,14 @@ nsresult nsSVGPathDataParser::MatchCoord(float* aX)
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenCoordStarter()
+bool nsSVGPathDataParser::IsTokenCoordStarter()
 {
   return IsTokenNumberStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchFlag(PRBool* f)
+nsresult nsSVGPathDataParser::MatchFlag(bool* f)
 {
   switch (mTokenVal) {
     case '0':
@@ -147,7 +147,7 @@ nsresult nsSVGPathDataParser::MatchSubPaths()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenSubPathsStarter()
+bool nsSVGPathDataParser::IsTokenSubPathsStarter()
 {
   return IsTokenSubPathStarter();
 }
@@ -168,7 +168,7 @@ nsresult nsSVGPathDataParser::MatchSubPath()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenSubPathStarter()
+bool nsSVGPathDataParser::IsTokenSubPathStarter()
 {
   return (tolower(mTokenVal) == 'm');
 }
@@ -199,7 +199,7 @@ nsresult nsSVGPathDataParser::MatchSubPathElements()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenSubPathElementsStarter()
+bool nsSVGPathDataParser::IsTokenSubPathElementsStarter()
 {
   return IsTokenSubPathElementStarter();
 }
@@ -243,7 +243,7 @@ nsresult nsSVGPathDataParser::MatchSubPathElement()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenSubPathElementStarter()
+bool nsSVGPathDataParser::IsTokenSubPathElementStarter()
 {
   switch (tolower(mTokenVal)) {
     case 'z': case 'l': case 'h': case 'v': case 'c':
@@ -261,7 +261,7 @@ PRBool nsSVGPathDataParser::IsTokenSubPathElementStarter()
 
 nsresult nsSVGPathDataParser::MatchMoveto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'M':
@@ -289,7 +289,7 @@ nsresult nsSVGPathDataParser::MatchMoveto()
 //  MovetoSegCreationFunc *creationFunc;
 
 
-nsresult nsSVGPathDataParser::MatchMovetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchMovetoArgSeq(bool absCoords)
 {
   
   float x, y;
@@ -334,7 +334,7 @@ nsresult nsSVGPathDataParser::MatchClosePath()
   
 nsresult nsSVGPathDataParser::MatchLineto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'L':
@@ -358,7 +358,7 @@ nsresult nsSVGPathDataParser::MatchLineto()
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::MatchLinetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchLinetoArgSeq(bool absCoords)
 {
   while(1) {
     float x, y;
@@ -382,7 +382,7 @@ nsresult nsSVGPathDataParser::MatchLinetoArgSeq(PRBool absCoords)
   return NS_OK;  
 }
 
-PRBool nsSVGPathDataParser::IsTokenLinetoArgSeqStarter()
+bool nsSVGPathDataParser::IsTokenLinetoArgSeqStarter()
 {
   return IsTokenCoordPairStarter();
 }
@@ -391,7 +391,7 @@ PRBool nsSVGPathDataParser::IsTokenLinetoArgSeqStarter()
 
 nsresult nsSVGPathDataParser::MatchHorizontalLineto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'H':
@@ -415,7 +415,7 @@ nsresult nsSVGPathDataParser::MatchHorizontalLineto()
   return NS_OK;
 }
   
-nsresult nsSVGPathDataParser::MatchHorizontalLinetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchHorizontalLinetoArgSeq(bool absCoords)
 {
   while(1) {
     float x;
@@ -443,7 +443,7 @@ nsresult nsSVGPathDataParser::MatchHorizontalLinetoArgSeq(PRBool absCoords)
 
 nsresult nsSVGPathDataParser::MatchVerticalLineto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'V':
@@ -467,7 +467,7 @@ nsresult nsSVGPathDataParser::MatchVerticalLineto()
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::MatchVerticalLinetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchVerticalLinetoArgSeq(bool absCoords)
 {
   while(1) {
     float y;
@@ -495,7 +495,7 @@ nsresult nsSVGPathDataParser::MatchVerticalLinetoArgSeq(PRBool absCoords)
 
 nsresult nsSVGPathDataParser::MatchCurveto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'C':
@@ -520,7 +520,7 @@ nsresult nsSVGPathDataParser::MatchCurveto()
 }
 
 
-nsresult nsSVGPathDataParser::MatchCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchCurvetoArgSeq(bool absCoords)
 {
   while(1) {
     float x, y, x1, y1, x2, y2;
@@ -565,7 +565,7 @@ nsSVGPathDataParser::MatchCurvetoArg(float* x, float* y, float* x1,
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenCurvetoArgStarter()
+bool nsSVGPathDataParser::IsTokenCurvetoArgStarter()
 {
   return IsTokenCoordPairStarter();
 }
@@ -574,7 +574,7 @@ PRBool nsSVGPathDataParser::IsTokenCurvetoArgStarter()
 
 nsresult nsSVGPathDataParser::MatchSmoothCurveto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'S':
@@ -598,7 +598,7 @@ nsresult nsSVGPathDataParser::MatchSmoothCurveto()
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::MatchSmoothCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchSmoothCurvetoArgSeq(bool absCoords)
 {
   while(1) {
     float x, y, x2, y2;
@@ -635,7 +635,7 @@ nsresult nsSVGPathDataParser::MatchSmoothCurvetoArg(float* x, float* y, float* x
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::IsTokenSmoothCurvetoArgStarter()
+bool nsSVGPathDataParser::IsTokenSmoothCurvetoArgStarter()
 {
   return IsTokenCoordPairStarter();
 }
@@ -644,7 +644,7 @@ PRBool nsSVGPathDataParser::IsTokenSmoothCurvetoArgStarter()
 
 nsresult nsSVGPathDataParser::MatchQuadBezierCurveto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'Q':
@@ -668,7 +668,7 @@ nsresult nsSVGPathDataParser::MatchQuadBezierCurveto()
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArgSeq(bool absCoords)
 {
   while(1) {
     float x, y, x1, y1;
@@ -705,7 +705,7 @@ nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArg(float* x, float* y, floa
   return NS_OK;  
 }
 
-PRBool nsSVGPathDataParser::IsTokenQuadBezierCurvetoArgStarter()
+bool nsSVGPathDataParser::IsTokenQuadBezierCurvetoArgStarter()
 {
   return IsTokenCoordPairStarter();
 }
@@ -714,7 +714,7 @@ PRBool nsSVGPathDataParser::IsTokenQuadBezierCurvetoArgStarter()
 
 nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurveto()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'T':
@@ -738,7 +738,7 @@ nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurveto()
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurvetoArgSeq(bool absCoords)
 {
   while(1) {
     float x, y;
@@ -766,7 +766,7 @@ nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurvetoArgSeq(PRBool absCoord
 
 nsresult nsSVGPathDataParser::MatchEllipticalArc()
 {
-  PRBool absCoords;
+  bool absCoords;
   
   switch (mTokenVal) {
     case 'A':
@@ -791,11 +791,11 @@ nsresult nsSVGPathDataParser::MatchEllipticalArc()
 }
 
 
-nsresult nsSVGPathDataParser::MatchEllipticalArcArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchEllipticalArcArgSeq(bool absCoords)
 {
   while(1) {
     float x, y, r1, r2, angle;
-    PRBool largeArcFlag, sweepFlag;
+    bool largeArcFlag, sweepFlag;
     
     ENSURE_MATCHED(MatchEllipticalArcArg(&x, &y, &r1, &r2, &angle, &largeArcFlag, &sweepFlag));
 
@@ -820,7 +820,7 @@ nsresult nsSVGPathDataParser::MatchEllipticalArcArgSeq(PRBool absCoords)
 
 nsresult nsSVGPathDataParser::MatchEllipticalArcArg(float* x, float* y,
                                                     float* r1, float* r2, float* angle,
-                                                    PRBool* largeArcFlag, PRBool* sweepFlag)
+                                                    bool* largeArcFlag, bool* sweepFlag)
 {
   ENSURE_MATCHED(MatchNonNegativeNumber(r1));
 
@@ -858,7 +858,7 @@ nsresult nsSVGPathDataParser::MatchEllipticalArcArg(float* x, float* y,
   
 }
 
-PRBool nsSVGPathDataParser::IsTokenEllipticalArcArgStarter()
+bool nsSVGPathDataParser::IsTokenEllipticalArcArgStarter()
 {
   return IsTokenNonNegativeNumberStarter();
 }
@@ -884,8 +884,8 @@ nsSVGArcConverter::nsSVGArcConverter(const gfxPoint &from,
                                      const gfxPoint &to,
                                      const gfxPoint &radii,
                                      double angle,
-                                     PRBool largeArcFlag,
-                                     PRBool sweepFlag)
+                                     bool largeArcFlag,
+                                     bool sweepFlag)
 {
   const double radPerDeg = M_PI/180.0;
 
@@ -946,7 +946,7 @@ nsSVGArcConverter::nsSVGArcConverter(const gfxPoint &from,
   mSegIndex = 0;
 }
 
-PRBool
+bool
 nsSVGArcConverter::GetNextSegment(gfxPoint *cp1, gfxPoint *cp2, gfxPoint *to)
 {
   if (mSegIndex == mNumSegs) {
@@ -990,7 +990,7 @@ nsSVGPathDataParserToInternal::Parse(const nsAString &aValue)
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreMoveTo(PRBool absCoords, float x, float y)
+nsSVGPathDataParserToInternal::StoreMoveTo(bool absCoords, float x, float y)
 {
   // Because our IDL compiler doesn't know any better, each seg type constant
   // in nsIDOMSVGPathSeg is in a separate enum. This results in "warning:
@@ -1021,7 +1021,7 @@ nsSVGPathDataParserToInternal::StoreClosePath()
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreLineTo(PRBool absCoords, float x, float y)
+nsSVGPathDataParserToInternal::StoreLineTo(bool absCoords, float x, float y)
 {
   PRUint32 type = absCoords ?
     PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS) :
@@ -1031,7 +1031,7 @@ nsSVGPathDataParserToInternal::StoreLineTo(PRBool absCoords, float x, float y)
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreHLineTo(PRBool absCoords, float x)
+nsSVGPathDataParserToInternal::StoreHLineTo(bool absCoords, float x)
 {
   PRUint32 type = absCoords ?
     PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS) :
@@ -1041,7 +1041,7 @@ nsSVGPathDataParserToInternal::StoreHLineTo(PRBool absCoords, float x)
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreVLineTo(PRBool absCoords, float y)
+nsSVGPathDataParserToInternal::StoreVLineTo(bool absCoords, float y)
 {
   PRUint32 type = absCoords ?
     PRUint32(nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS) :
@@ -1051,7 +1051,7 @@ nsSVGPathDataParserToInternal::StoreVLineTo(PRBool absCoords, float y)
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreCurveTo(PRBool absCoords,
+nsSVGPathDataParserToInternal::StoreCurveTo(bool absCoords,
                                             float x, float y,
                                             float x1, float y1,
                                             float x2, float y2)
@@ -1064,7 +1064,7 @@ nsSVGPathDataParserToInternal::StoreCurveTo(PRBool absCoords,
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreSmoothCurveTo(PRBool absCoords,
+nsSVGPathDataParserToInternal::StoreSmoothCurveTo(bool absCoords,
                                                   float x, float y,
                                                   float x2, float y2)
 {
@@ -1076,7 +1076,7 @@ nsSVGPathDataParserToInternal::StoreSmoothCurveTo(PRBool absCoords,
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreQuadCurveTo(PRBool absCoords,
+nsSVGPathDataParserToInternal::StoreQuadCurveTo(bool absCoords,
                                                 float x, float y,
                                                 float x1, float y1)
 {
@@ -1088,7 +1088,7 @@ nsSVGPathDataParserToInternal::StoreQuadCurveTo(PRBool absCoords,
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreSmoothQuadCurveTo(PRBool absCoords,
+nsSVGPathDataParserToInternal::StoreSmoothQuadCurveTo(bool absCoords,
                                                       float x, float y)
 {
   PRUint32 type = absCoords ?
@@ -1099,12 +1099,12 @@ nsSVGPathDataParserToInternal::StoreSmoothQuadCurveTo(PRBool absCoords,
 }
 
 nsresult
-nsSVGPathDataParserToInternal::StoreEllipticalArc(PRBool absCoords,
+nsSVGPathDataParserToInternal::StoreEllipticalArc(bool absCoords,
                                                   float x, float y,
                                                   float r1, float r2,
                                                   float angle,
-                                                  PRBool largeArcFlag,
-                                                  PRBool sweepFlag)
+                                                  bool largeArcFlag,
+                                                  bool sweepFlag)
 {
   PRUint32 type = absCoords ?
     PRUint32(nsIDOMSVGPathSeg::PATHSEG_ARC_ABS) :

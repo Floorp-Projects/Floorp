@@ -72,7 +72,7 @@ nsRegion
 nsDOMNotifyPaintEvent::GetRegion()
 {
   nsRegion r;
-  PRBool isTrusted = nsContentUtils::IsCallerTrustedForRead();
+  bool isTrusted = nsContentUtils::IsCallerTrustedForRead();
   for (PRUint32 i = 0; i < mInvalidateRequests.Length(); ++i) {
     if (!isTrusted &&
         (mInvalidateRequests[i].mFlags & nsIFrame::INVALIDATE_CROSS_DOC))
@@ -129,7 +129,7 @@ nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
   if (!requests)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool isTrusted = nsContentUtils::IsCallerTrustedForRead();
+  bool isTrusted = nsContentUtils::IsCallerTrustedForRead();
   for (PRUint32 i = 0; i < mInvalidateRequests.Length(); ++i) {
     if (!isTrusted &&
         (mInvalidateRequests[i].mFlags & nsIFrame::INVALIDATE_CROSS_DOC))
@@ -148,7 +148,7 @@ nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
 
 void
 nsDOMNotifyPaintEvent::Serialize(IPC::Message* aMsg,
-                                 PRBool aSerializeInterfaceType)
+                                 bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("notifypaintevent"));
@@ -167,7 +167,7 @@ nsDOMNotifyPaintEvent::Serialize(IPC::Message* aMsg,
   }
 }
 
-PRBool
+bool
 nsDOMNotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), PR_FALSE);

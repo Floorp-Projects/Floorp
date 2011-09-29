@@ -47,7 +47,7 @@
 class nsMutationEvent : public nsEvent
 {
 public:
-  nsMutationEvent(PRBool isTrusted, PRUint32 msg)
+  nsMutationEvent(bool isTrusted, PRUint32 msg)
     : nsEvent(isTrusted, msg, NS_MUTATION_EVENT),
       mAttrChange(0)
   {

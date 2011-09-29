@@ -55,5 +55,5 @@ public:
 
   CSPService();
   virtual ~CSPService();
-  static PRBool sCSPEnabled;
+  static bool sCSPEnabled;
 };

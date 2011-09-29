@@ -420,7 +420,7 @@ public:
     {
         return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
     }
-    PRBool caseInsensitiveNameTests()
+    bool caseInsensitiveNameTests()
     {
         return PR_FALSE;
     }
@@ -435,7 +435,7 @@ public:
         aResult = nsnull;
         return NS_ERROR_INVALID_ARG;
     }
-    PRBool isStripSpaceAllowed(const txXPathNode& aNode)
+    bool isStripSpaceAllowed(const txXPathNode& aNode)
     {
         return PR_FALSE;
     }
@@ -1348,7 +1348,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
         // Boolean
         case nsIDataType::VTYPE_BOOL:
         {
-            PRBool value;
+            bool value;
             nsresult rv = aValue->GetAsBool(&value);
             NS_ENSURE_SUCCESS(rv, rv);
 

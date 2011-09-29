@@ -288,10 +288,18 @@ LoginManager.prototype = {
             // Only process things which might have HTML forms.
             if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
                 return;
-
-            this._pwmgr.log("onStateChange accepted: req = " +
-                            (aRequest ?  aRequest.name : "(null)") +
-                            ", flags = 0x" + aStateFlags.toString(16));
+            if (this._pwmgr._debug) {
+                let requestName = "(null)";
+                if (aRequest) {
+                    try {
+                        requestName = aRequest.name;
+                    } catch (ex if ex.result == Components.results.NS_ERROR_NOT_IMPLEMENTED) {
+                        // do nothing - leave requestName = "(null)"
+                    }
+                }
+                this._pwmgr.log("onStateChange accepted: req = " + requestName +
+                                ", flags = 0x" + aStateFlags.toString(16));
+            }
 
             // Fastback doesn't fire DOMContentLoaded, so process forms now.
             if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {

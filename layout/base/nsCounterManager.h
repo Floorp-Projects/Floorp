@@ -112,11 +112,11 @@ struct nsCounterUseNode : public nsCounterNode {
     nsRefPtr<nsCSSValue::Array> mCounterStyle;
 
     // false for counter(), true for counters()
-    PRBool mAllCounters;
+    bool mAllCounters;
 
     // args go directly to member variables here and of nsGenConNode
     nsCounterUseNode(nsCSSValue::Array* aCounterStyle,
-                     PRUint32 aContentIndex, PRBool aAllCounters)
+                     PRUint32 aContentIndex, bool aAllCounters)
         : nsCounterNode(aContentIndex, USE)
         , mCounterStyle(aCounterStyle)
         , mAllCounters(aAllCounters)
@@ -124,7 +124,7 @@ struct nsCounterUseNode : public nsCounterNode {
         NS_ASSERTION(aContentIndex <= PR_INT32_MAX, "out of range");
     }
     
-    virtual PRBool InitTextFrame(nsGenConList* aList,
+    virtual bool InitTextFrame(nsGenConList* aList,
             nsIFrame* aPseudoFrame, nsIFrame* aTextFrame);
 
     // assign the correct |mValueAfter| value to a node that has been inserted
@@ -225,11 +225,11 @@ public:
     // all nodes and update text in text content nodes.
     void RecalcAll();
 
-    PRBool IsDirty() { return mDirty; }
+    bool IsDirty() { return mDirty; }
     void SetDirty() { mDirty = PR_TRUE; }
 
 private:
-    PRBool mDirty;
+    bool mDirty;
 };
 
 /**
@@ -240,7 +240,7 @@ class nsCounterManager {
 public:
     nsCounterManager();
     // Returns true if dirty
-    PRBool AddCounterResetsAndIncrements(nsIFrame *aFrame);
+    bool AddCounterResetsAndIncrements(nsIFrame *aFrame);
 
     // Gets the appropriate counter list, creating it if necessary.
     // Returns null only on out-of-memory.
@@ -251,7 +251,7 @@ public:
 
     // Destroy nodes for the frame in any lists, and return whether any
     // nodes were destroyed.
-    PRBool DestroyNodesFor(nsIFrame *aFrame);
+    bool DestroyNodesFor(nsIFrame *aFrame);
 
     // Clear all data.
     void Clear() { mNames.Clear(); }
@@ -262,7 +262,7 @@ public:
 
 private:
     // for |AddCounterResetsAndIncrements| only
-    PRBool AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
+    bool AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
                                const nsStyleCounterData *aCounterData,
                                nsCounterNode::Type aType);
 

@@ -74,8 +74,8 @@ public:
 
   // nsGenericElement
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+                                 bool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, bool aNotify);
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -173,7 +173,7 @@ nsHTMLOptGroupElement::GetSelect()
 nsresult
 nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
                                      PRUint32 aIndex,
-                                     PRBool aNotify)
+                                     bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(GetSelect(), this, aKid, aIndex, aNotify);
   nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
@@ -184,7 +184,7 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
 }
 
 nsresult
-nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsSafeOptionListMutation safeMutation(GetSelect(), this, nsnull, aIndex,
                                         aNotify);

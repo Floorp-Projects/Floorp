@@ -77,7 +77,7 @@ likeCompare(nsAString::const_iterator aPatternItr,
   const PRUnichar MATCH_ALL('%');
   const PRUnichar MATCH_ONE('_');
 
-  PRBool lastWasEscape = PR_FALSE;
+  bool lastWasEscape = false;
   while (aPatternItr != aPatternEnd) {
     /**
      * What we do in here is take a look at each character from the input
@@ -394,7 +394,7 @@ caseFunction(sqlite3_context *aCtx,
   NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
 
   nsAutoString data(static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[0])));
-  PRBool toUpper = ::sqlite3_user_data(aCtx) ? PR_TRUE : PR_FALSE;
+  bool toUpper = ::sqlite3_user_data(aCtx) ? true : false;
 
   if (toUpper)
     ::ToUpperCase(data);

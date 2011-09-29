@@ -420,7 +420,7 @@ nsHTMLEditorLog::InsertAsQuotation(const nsAString& aQuotedText,
 
 NS_IMETHODIMP
 nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
-                                            PRBool aAddCites,
+                                            bool aAddCites,
                                             nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -442,7 +442,7 @@ nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 NS_IMETHODIMP
 nsHTMLEditorLog::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                         const nsAString& aCitation,
-                                        PRBool aInsertHTML,
+                                        bool aInsertHTML,
                                         nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -499,7 +499,7 @@ nsHTMLEditorLog::SetBodyAttribute(const nsAString& aAttr, const nsAString& aValu
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog:: InsertTableCell(PRInt32 aNumber, PRBool aAfter)
+nsHTMLEditorLog:: InsertTableCell(PRInt32 aNumber, bool aAfter)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -518,7 +518,7 @@ nsHTMLEditorLog:: InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 
 
 NS_IMETHODIMP
-nsHTMLEditorLog:: InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
+nsHTMLEditorLog:: InsertTableColumn(PRInt32 aNumber, bool aAfter)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -537,7 +537,7 @@ nsHTMLEditorLog:: InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 
 
 NS_IMETHODIMP
-nsHTMLEditorLog:: InsertTableRow(PRInt32 aNumber, PRBool aAfter)
+nsHTMLEditorLog:: InsertTableRow(PRInt32 aNumber, bool aAfter)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -633,7 +633,7 @@ nsHTMLEditorLog:: DeleteTableRow(PRInt32 aNumber)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog:: JoinTableCells(PRBool aMergeNonContiguousContents)
+nsHTMLEditorLog:: JoinTableCells(bool aMergeNonContiguousContents)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -700,7 +700,7 @@ nsHTMLEditorLog::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMEle
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::MakeOrChangeList(const nsAString& aListType, PRBool entireList, const nsAString& aBulletType)
+nsHTMLEditorLog::MakeOrChangeList(const nsAString& aListType, bool entireList, const nsAString& aBulletType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -758,7 +758,7 @@ nsHTMLEditorLog::Align(const nsAString& aAlign)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)
+nsHTMLEditorLog::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSelection)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 

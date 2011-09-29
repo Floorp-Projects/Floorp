@@ -50,7 +50,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
                                      uScanClassID aScanClass,
                                      uShiftInTable * aShiftInTable, 
                                      uMappingTable  * aMappingTable,
-                                     PRBool aErrorSignal)
+                                     bool aErrorSignal)
 {
   const char * src = aSrc;
   PRInt32 srcLen = *aSrcLength;
@@ -62,7 +62,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
   nsresult res = NS_OK;
 
   while ((srcLen > 0) && (dest < destEnd)) {
-    PRBool charFound;
+    bool charFound;
     if (aScanClass == uMultibytesCharset) {
       NS_ASSERTION(aShiftInTable, "shift table missing");
       charFound = uScanShift(aShiftInTable, NULL, (PRUint8 *)src,
@@ -113,7 +113,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
                                      const uRange * aRangeArray, 
                                      uScanClassID * aScanClassArray,
                                      uMappingTable ** aMappingTable,
-                                     PRBool aErrorSignal)
+                                     bool aErrorSignal)
 {
   PRUint8 * src = (PRUint8 *)aSrc;
   PRInt32 srcLen = *aSrcLength;
@@ -127,9 +127,9 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
 
   while ((srcLen > 0) && (dest < destEnd)) 
   {
-    PRBool done= PR_FALSE;
-    PRBool passRangeCheck = PR_FALSE;
-    PRBool passScan = PR_FALSE;
+    bool done= false;
+    bool passRangeCheck = false;
+    bool passScan = false;
     for (i=0; (!done) && (i<aTableCount); i++)  
     {
       if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) 
@@ -220,7 +220,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
                                      PRInt32 * aDestLength, 
                                      const PRUnichar * aFastTable, 
                                      PRInt32 aTableSize,
-                                     PRBool aErrorSignal)
+                                     bool aErrorSignal)
 {
   PRUint8 * src = (PRUint8 *)aSrc;
   PRUint8 * srcEnd = src;

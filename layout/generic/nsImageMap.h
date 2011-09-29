@@ -57,7 +57,7 @@ class nsImageMap : public nsStubMutationObserver,
 public:
   nsImageMap();
 
-  nsresult Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIContent* aMap);
+  nsresult Init(nsIFrame* aImageFrame, nsIContent* aMap);
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
@@ -65,7 +65,7 @@ public:
    * found area. If the coordinates are not in the map then PR_FALSE
    * is returned.
    */
-  PRBool IsInside(nscoord aX, nscoord aY,
+  bool IsInside(nscoord aX, nscoord aY,
                   nsIContent** aContent) const;
 
   void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
@@ -97,18 +97,17 @@ protected:
   void FreeAreas();
 
   nsresult UpdateAreas();
-  nsresult SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
-                          PRBool& aFoundAnchor);
+  nsresult SearchForAreas(nsIContent* aParent, bool& aFoundArea,
+                          bool& aFoundAnchor);
 
   nsresult AddArea(nsIContent* aArea);
  
   void MaybeUpdateAreas(nsIContent *aContent);
 
-  nsIPresShell* mPresShell; // WEAK - owns the frame that owns us
   nsIFrame* mImageFrame;  // the frame that owns us
   nsCOMPtr<nsIContent> mMap;
   nsAutoTArray<Area*, 8> mAreas; // almost always has some entries
-  PRBool mContainsBlockContents;
+  bool mContainsBlockContents;
 };
 
 #endif /* nsImageMap_h */

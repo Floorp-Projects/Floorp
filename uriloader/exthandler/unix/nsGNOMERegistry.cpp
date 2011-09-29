@@ -57,7 +57,7 @@
 #include <libintl.h>
 #endif
 
-/* static */ PRBool
+/* static */ bool
 nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
 {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
@@ -70,7 +70,7 @@ nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
     else
       return PR_TRUE;
   } else if (gconf) {
-    PRBool isEnabled;
+    bool isEnabled;
     nsCAutoString handler;
     if (NS_FAILED(gconf->GetAppForProtocol(nsDependentCString(aProtocolScheme), &isEnabled, handler)))
       return PR_FALSE;
@@ -120,7 +120,7 @@ nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
 
     app->GetName(name);
   } else {
-    PRBool isEnabled;
+    bool isEnabled;
     if (NS_FAILED(gconf->GetAppForProtocol(aScheme, &isEnabled, name)))
       return;
 

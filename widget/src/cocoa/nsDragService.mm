@@ -76,7 +76,7 @@ extern void EnsureLogInitialized();
 extern NSPasteboard* globalDragPboard;
 extern NSView* gLastDragView;
 extern NSEvent* gLastDragMouseDownEvent;
-extern PRBool gUserCancelledDrag;
+extern bool gUserCancelledDrag;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
@@ -470,7 +470,7 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
 }
 
 NS_IMETHODIMP
-nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
+nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -572,7 +572,7 @@ nsDragService::GetNumDropItems(PRUint32* aNumItems)
 }
 
 NS_IMETHODIMP
-nsDragService::EndDragSession(PRBool aDoneDrag)
+nsDragService::EndDragSession(bool aDoneDrag)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

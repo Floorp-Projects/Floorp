@@ -98,7 +98,7 @@ NS_IMETHODIMP nsCommandParams::GetValueType(const char * name, PRInt16 *_retval)
 }
 
 /* boolean getBooleanValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetBooleanValue(const char * name, PRBool *_retval)
+NS_IMETHODIMP nsCommandParams::GetBooleanValue(const char * name, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -195,7 +195,7 @@ NS_IMETHODIMP nsCommandParams::GetISupportsValue(const char * name, nsISupports 
 #endif
 
 /* void setBooleanValue (in AString name, in boolean value); */
-NS_IMETHODIMP nsCommandParams::SetBooleanValue(const char * name, PRBool value)
+NS_IMETHODIMP nsCommandParams::SetBooleanValue(const char * name, bool value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eBooleanType, foundEntry);
@@ -359,7 +359,7 @@ nsCommandParams::HashKey(PLDHashTable *table, const void *key)
   return nsCRT::HashCode((const char *)key);
 }
 
-PRBool
+bool
 nsCommandParams::HashMatchEntry(PLDHashTable *table,
                                 const PLDHashEntryHdr *entry, const void *key)
 {
@@ -394,7 +394,7 @@ nsCommandParams::HashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP
-nsCommandParams::HasMoreElements(PRBool *_retval)
+nsCommandParams::HasMoreElements(bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 

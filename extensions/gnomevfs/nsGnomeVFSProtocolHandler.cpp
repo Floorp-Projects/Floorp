@@ -265,7 +265,7 @@ ProxiedAuthCallback(gconstpointer in,
 
   // Prompt the user...
   nsresult rv;
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   PRUnichar *user = nsnull, *pass = nsnull;
 
   rv = prompt->PromptUsernameAndPassword(nsnull, message.get(),
@@ -392,7 +392,7 @@ class nsGnomeVFSInputStream : public nsIInputStream
     GList                   *mDirListPtr;
     nsCString                mDirBuf;
     PRUint32                 mDirBufCursor;
-    PRPackedBool             mDirOpen;
+    bool                     mDirOpen;
 };
 
 GnomeVFSResult
@@ -756,7 +756,7 @@ nsGnomeVFSInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsGnomeVFSInputStream::IsNonBlocking(PRBool *aResult)
+nsGnomeVFSInputStream::IsNonBlocking(bool *aResult)
 {
   *aResult = PR_FALSE;
   return NS_OK;
@@ -776,7 +776,7 @@ class nsGnomeVFSProtocolHandler : public nsIProtocolHandler
 
   private:
     void   InitSupportedProtocolsPref(nsIPrefBranch *prefs);
-    PRBool IsSupportedProtocol(const nsCString &spec);
+    bool IsSupportedProtocol(const nsCString &spec);
 
     nsCString mSupportedProtocols;
 };
@@ -825,7 +825,7 @@ nsGnomeVFSProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
   LOG(("gnomevfs: supported protocols \"%s\"\n", mSupportedProtocols.get()));
 }
 
-PRBool
+bool
 nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
 {
   const char *specString = aSpec.get();
@@ -955,7 +955,7 @@ nsGnomeVFSProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult)
 NS_IMETHODIMP
 nsGnomeVFSProtocolHandler::AllowPort(PRInt32 aPort,
                                      const char *aScheme,
-                                     PRBool *aResult)
+                                     bool *aResult)
 {
   // Don't override anything.
   *aResult = PR_FALSE; 

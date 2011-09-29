@@ -110,7 +110,7 @@ txNumberExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 TX_IMPL_EXPR_STUBS_2(txNumberExpr, NUMBER_RESULT, mLeftExpr, mRightExpr)
 
-PRBool
+bool
 txNumberExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return mLeftExpr->isSensitiveTo(aContext) ||

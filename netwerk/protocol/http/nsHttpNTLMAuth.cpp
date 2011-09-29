@@ -61,7 +61,7 @@ static const char kForceGeneric[] = "network.auth.force-generic-ntlm";
 // but since that file lives in a separate library we cannot directly share it.
 // bug 236865 addresses this problem.
 
-static PRBool
+static bool
 MatchesBaseURI(const nsCSubstring &matchScheme,
                const nsCSubstring &matchHost,
                PRInt32             matchPort,
@@ -117,7 +117,7 @@ MatchesBaseURI(const nsCSubstring &matchScheme,
     return PR_FALSE;
 }
 
-static PRBool
+static bool
 TestPref(nsIURI *uri, const char *pref)
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -172,13 +172,13 @@ TestPref(nsIURI *uri, const char *pref)
 }
 
 // Check to see if we should use our generic (internal) NTLM auth module.
-static PRBool
+static bool
 ForceGenericNTLM()
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return PR_FALSE;
-    PRBool flag = PR_FALSE;
+    bool flag = false;
 
     if (NS_FAILED(prefs->GetBoolPref(kForceGeneric, &flag)))
         flag = PR_FALSE;
@@ -188,16 +188,16 @@ ForceGenericNTLM()
 }
 
 // Check to see if we should use default credentials for this host or proxy.
-static PRBool
+static bool
 CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
-                         PRBool isProxyAuth)
+                         bool isProxyAuth)
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return PR_FALSE;
 
     if (isProxyAuth) {
-        PRBool val;
+        bool val;
         if (NS_FAILED(prefs->GetBoolPref(kAllowProxies, &val)))
             val = PR_FALSE;
         LOG(("Default credentials allowed for proxy: %d\n", val));
@@ -206,7 +206,7 @@ CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
 
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-    PRBool isTrustedHost = (uri && TestPref(uri, kTrustedURIs));
+    bool isTrustedHost = (uri && TestPref(uri, kTrustedURIs));
     LOG(("Default credentials allowed for host: %d\n", isTrustedHost));
     return isTrustedHost;
 }
@@ -227,10 +227,10 @@ NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator)
 NS_IMETHODIMP
 nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                                   const char     *challenge,
-                                  PRBool          isProxyAuth,
+                                  bool            isProxyAuth,
                                   nsISupports   **sessionState,
                                   nsISupports   **continuationState,
-                                  PRBool         *identityInvalid)
+                                  bool           *identityInvalid)
 {
     LOG(("nsHttpNTLMAuth::ChallengeReceived [ss=%p cs=%p]\n",
          *sessionState, *continuationState));
@@ -249,7 +249,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
         // through UseGenericNTLM. (We use native auth by default if the
         // system provides it.) If *sessionState is non-null, we failed to
         // instantiate a native NTLM module the last time, so skip trying again.
-        PRBool forceGeneric = ForceGenericNTLM();
+        bool forceGeneric = ForceGenericNTLM();
         if (!forceGeneric && !*sessionState) {
             // Check for approved default credentials hosts and proxies. If 
             // *continuationState is non-null, the last authentication attempt
@@ -319,7 +319,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
 NS_IMETHODIMP
 nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                     const char      *challenge,
-                                    PRBool           isProxyAuth,
+                                    bool             isProxyAuth,
                                     const PRUnichar *domain,
                                     const PRUnichar *user,
                                     const PRUnichar *pass,

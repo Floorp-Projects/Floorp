@@ -50,7 +50,7 @@ nsExternalURLHandlerService::~nsExternalURLHandlerService()
 
 NS_IMETHODIMP
 nsExternalURLHandlerService::GetURLHandlerInfoFromOS(nsIURI *aURL,
-                                                     PRBool *found,
+                                                     bool *found,
                                                      nsIHandlerInfo **info)
 {
   nsCString uriSpec;

@@ -1,32 +1,4 @@
-The source from this directory was copied from the libsydneyaudio svn
-source using the update.sh script. The only changes made were those
-applied by update.sh and the addition/upate of Makefile.in files for
-the Mozilla build system.
-
-http://svn.annodex.net/libsydneyaudio/trunk
-
-The svn revision number used was r3895.
-
-pause-resume.patch is applied to implement and fix issues
-with pausing and resuming audio streams.
-
-include-CoreServices.patch is applied to include CoreServices headers
-on Mac OS X. Fixes a build failure on Mac OS X 10.6. b=492072
-
-sydney_os2_base.patch: Bug 448918 - add OS/2 support (this patch should
-                       be removed when OS/2 support is added upstream)
-
-sydney_os2_moz.patch:  Bug 448918 - add Mozilla-specific code to
-                       sydney_audio_os2.c
-
-bug495794_closeAudio.patch fixes a crash when destroying the sa_stream_t after
-a failed attempt to open the stream.
-
-bug495558_alsa_endian.patch adds support for big endian ALSA platforms.
-
-sydney_aix.patch: Bug 499266 - add support for AIX 5.x
-
-bug562488_oss_destroy_crash.patch: Fix crash in OSS backend when destroying stream.
-
-bug564734-win32-drain.patch: Ensure we can drain audio stream when there's less
-than one block's worth of data left to be written. Also ensure that data is played.
+This source was originally based on libsydneyaudio from
+http://git.xiph.org/?p=libsydneyaudio.git commit 716c3c17.  As this project
+appears to be dead, substantial local changes have been made to this version.
+Refer to the version control logs for details.

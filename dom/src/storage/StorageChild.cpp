@@ -239,7 +239,7 @@ StorageChild::CanUseChromePersist()
 
 nsresult
 StorageChild::GetDBValue(const nsAString& aKey, nsAString& aValue,
-                         PRBool* aSecure)
+                         bool* aSecure)
 {
   nsresult rv;
   nsString value;
@@ -251,7 +251,7 @@ StorageChild::GetDBValue(const nsAString& aKey, nsAString& aValue,
 nsresult
 StorageChild::SetDBValue(const nsAString& aKey,
                          const nsAString& aValue,
-                         PRBool aSecure)
+                         bool aSecure)
 {
   nsresult rv;
   SendSetDBValue(nsString(aKey), nsString(aValue), aSecure, &rv);
@@ -259,7 +259,7 @@ StorageChild::SetDBValue(const nsAString& aKey,
 }
 
 nsresult
-StorageChild::SetSecure(const nsAString& aKey, PRBool aSecure)
+StorageChild::SetSecure(const nsAString& aKey, bool aSecure)
 {
   nsresult rv;
   SendSetSecure(nsString(aKey), aSecure, &rv);

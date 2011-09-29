@@ -235,7 +235,7 @@ NS_IMETHODIMP nsCallWifiListeners::Run()
 
 nsresult
 nsWifiMonitor::CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
-                                 PRBool aAccessPointsChanged)
+                                 bool aAccessPointsChanged)
 {
     nsAutoPtr<nsCOMArray<nsIWifiListener> > currentListeners(
                            new nsCOMArray<nsIWifiListener>(mListeners.Length()));

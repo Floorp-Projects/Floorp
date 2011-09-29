@@ -60,7 +60,7 @@ const nsPaperSizePS_ nsPaperSizePS::mList[] =
 
 const unsigned int nsPaperSizePS::mCount = NS_ARRAY_LENGTH(mList);
 
-PRBool
+bool
 nsPaperSizePS::Find(const char *aName)
 {
     for (int i = mCount; i--; ) {

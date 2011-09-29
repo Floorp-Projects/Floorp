@@ -219,6 +219,7 @@ _TEST_FILES1 = \
 		file_XHR_fail1.txt^headers^ \
 		file_XHR_binary1.bin \
 		file_XHR_binary1.bin^headers^ \
+		file_XHR_binary2.bin \
 		test_bug428847.html \
 		file_bug428847-1.xhtml \
 		file_bug428847-2.xhtml \
@@ -266,6 +267,7 @@ _TEST_FILES1 = \
 		test_bug587931.html \
 		test_bug592829.html \
 		test_bug518104.html \
+		test_bug682463.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
 		test_CrossSiteXHR_origin.html \
@@ -498,6 +500,8 @@ _TEST_FILES2 = \
 		accesscontrol.resource^headers^ \
 		invalid_accesscontrol.resource \
 		invalid_accesscontrol.resource^headers^ \
+		test_xhr_progressevents.html \
+		progressserver.sjs \
 		somedatas.resource \
 		somedatas.resource^headers^ \
 		delayedServerEvents.sjs \

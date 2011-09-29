@@ -180,7 +180,7 @@ class nsPrintDialogWidgetGTK {
 
     nsCOMPtr<nsIStringBundle> printBundle;
 
-    PRPackedBool useNativeSelection;
+    bool useNativeSelection;
 
     GtkWidget* ConstructHeaderFooterDropdown(const PRUnichar *currentString);
     const char* OptionWidgetToString(GtkWidget *dropdown);
@@ -266,7 +266,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
 
   // GTK+2.18 and above allow us to add a "Selection" option to the main settings screen,
   // rather than adding an option on a custom tab like we must do on older versions.
-  PRBool canSelectText;
+  bool canSelectText;
   aSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &canSelectText);
   if (gtk_major_version > 2 ||
       (gtk_major_version == 2 && gtk_minor_version >= 18)) {
@@ -445,7 +445,7 @@ nsPrintDialogWidgetGTK::ImportSettings(nsIPrintSettings *aNSSettings)
   GtkPrintSettings* settings = aNSSettingsGTK->GetGtkPrintSettings();
   GtkPageSetup* setup = aNSSettingsGTK->GetGtkPageSetup();
 
-  PRBool geckoBool;
+  bool geckoBool;
   aNSSettings->GetShrinkToFit(&geckoBool);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(shrink_to_fit_toggle), geckoBool);
 
@@ -492,7 +492,7 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
       aNSSettingsGTK->SetGtkPrintSettings(settings);
       aNSSettingsGTK->SetGtkPageSetup(setup);
       aNSSettingsGTK->SetGtkPrinter(printer);
-      PRBool printSelectionOnly;
+      bool printSelectionOnly;
       if (useNativeSelection) {
         _GtkPrintPages pageSetting = (_GtkPrintPages)gtk_print_settings_get_print_pages(settings);
         printSelectionOnly = (pageSetting == _GTK_PRINT_PAGES_SELECTION);
@@ -521,7 +521,7 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentSt
     gtk_combo_box_append_text(GTK_COMBO_BOX(dropdown), GetUTF8FromBundle(hf_options[i]).get());
   }
 
-  PRPackedBool shouldBeCustom = PR_TRUE;
+  bool shouldBeCustom = true;
   NS_ConvertUTF16toUTF8 currentStringUTF8(currentString);
 
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(header_footer_tags); i++) {

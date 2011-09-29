@@ -91,7 +91,7 @@ GetContentChild()
  * Constructor/Destructor
  */
 
-nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
+nsPrefBranch::nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch)
 {
   mPrefRoot = aPrefRoot;
   mPrefRootLength = mPrefRoot.Length();
@@ -157,14 +157,14 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
+NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, bool *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_GetBoolPref(pref, _retval, mIsDefault);
 }
 
-NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRBool aValue)
+NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, bool aValue)
 {
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     if (NS_FAILED(rv)) return rv;
 
     const char *pref = getPrefName(aPrefName);
-    PRBool  bNeedDefault = PR_FALSE;
+    bool    bNeedDefault = false;
 
     if (mIsDefault) {
       bNeedDefault = PR_TRUE;
@@ -442,7 +442,7 @@ NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
   return PREF_ClearUserPref(pref);
 }
 
-NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_retval)
+NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_ARG(aPrefName);
@@ -463,7 +463,7 @@ NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
   return PREF_LockPref(pref, PR_TRUE);
 }
 
-NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
+NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, bool *_retval)
 {
   if (GetContentChild()) {
     NS_ERROR("cannot check lock pref from content process");
@@ -566,7 +566,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
  *  nsIPrefBranch2 methods
  */
 
-NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
+NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, bool aHoldWeak)
 {
   PrefCallback *pCallback;
   const char *pref;
@@ -596,7 +596,7 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
     return NS_OK;
   }
 
-  PRBool putSucceeded = mObservers.Put(pCallback, pCallback);
+  bool putSucceeded = mObservers.Put(pCallback, pCallback);
 
   if (!putSucceeded) {
     delete pCallback;

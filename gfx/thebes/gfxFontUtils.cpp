@@ -513,7 +513,7 @@ PRUint32
 gfxFontUtils::FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
                                     PRUint32 *aTableOffset,
                                     PRUint32 *aUVSTableOffset,
-                                    PRBool *aSymbolEncoding)
+                                    bool *aSymbolEncoding)
 {
     enum {
         OffsetVersion = 0,
@@ -601,10 +601,10 @@ nsresult
 gfxFontUtils::ReadCMAP(const PRUint8 *aBuf, PRUint32 aBufLength,
                        gfxSparseBitSet& aCharacterMap,
                        PRUint32& aUVSOffset,
-                       PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
+                       bool& aUnicodeFont, bool& aSymbolFont)
 {
     PRUint32 offset;
-    PRBool   symbol;
+    bool     symbol;
     PRUint32 format = FindPreferredSubtable(aBuf, aBufLength,
                                             &offset, &aUVSOffset, &symbol);
 
@@ -828,7 +828,7 @@ gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
                              PRUint32 aCh)
 {
     PRUint32 offset;
-    PRBool   symbol;
+    bool     symbol;
     PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset,
                                             nsnull, &symbol);
 
@@ -940,7 +940,7 @@ struct NameRecordData {
 
 #pragma pack()
 
-static PRBool
+static bool
 IsValidSFNTVersion(PRUint32 version)
 {
     // normally 0x00010000, CFF-style OT fonts == 'OTTO' and Apple TT fonts = 'true'
@@ -963,7 +963,7 @@ CopySwapUTF16(const PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
     }
 }
 
-static PRBool
+static bool
 ValidateKernTable(const PRUint8 *aKernTable, PRUint32 aKernLength)
 {
     // -- kern table can cause crashes if invalid, so do some basic sanity-checking
@@ -1001,7 +1001,7 @@ ValidateKernTable(const PRUint8 *aKernTable, PRUint32 aKernLength)
     return PR_FALSE;
 }
 
-static PRBool
+static bool
 ValidateLocaTable(const PRUint8* aLocaTable, PRUint32 aLocaLen,
                   PRUint32 aGlyfLen, PRInt16 aLocaFormat, PRUint16 aNumGlyphs)
 {
@@ -1067,7 +1067,7 @@ gfxFontUtils::DetermineFontDataType(const PRUint8 *aFontData, PRUint32 aFontData
     return GFX_USERFONT_UNKNOWN;
 }
 
-PRBool
+bool
 gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData, 
                                   PRUint32 aFontDataLength)
 {
@@ -1089,9 +1089,9 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
     }
     
     // iterate through the table headers to find the head, name and OS/2 tables
-    PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
-    PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE, foundKern = PR_FALSE;
-    PRBool foundLoca = PR_FALSE, foundMaxp = PR_FALSE;
+    bool foundHead = false, foundOS2 = false, foundName = false;
+    bool foundGlyphs = false, foundCFF = false, foundKern = false;
+    bool foundLoca = false, foundMaxp = false;
     PRUint32 headOffset = 0, headLen, nameOffset = 0, nameLen, kernOffset = 0,
         kernLen = 0, glyfLen = 0, locaOffset = 0, locaLen = 0,
         maxpOffset = 0, maxpLen;
@@ -1375,7 +1375,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData,
         reinterpret_cast<TableDirEntry*>(newFontData + sizeof(SFNTHeader));
 
     PRUint32 numTables = sfntHeader->numTables;
-    PRBool foundName = PR_FALSE;
+    bool foundName = false;
     
     for (i = 0; i < numTables; i++, dirEntry++) {
         if (dirEntry->tag == TRUETYPE_TAG('n','a','m','e')) {
@@ -1453,7 +1453,7 @@ gfxFontUtils::GetFullNameFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
     NS_ENSURE_TRUE(aLength >=
                    sizeof(SFNTHeader) + numTables * sizeof(TableDirEntry),
                    NS_ERROR_UNEXPECTED);
-    PRBool foundName = PR_FALSE;
+    bool foundName = false;
     for (PRUint32 i = 0; i < numTables; i++, dirEntry++) {
         if (dirEntry->tag == TRUETYPE_TAG('n','a','m','e')) {
             foundName = PR_TRUE;
@@ -1693,7 +1693,7 @@ gfxFontUtils::GetCharsetForFontName(PRUint16 aPlatform, PRUint16 aScript, PRUint
 
 // convert a raw name from the name table to an nsString, if possible;
 // return value indicates whether conversion succeeded
-PRBool
+bool
 gfxFontUtils::DecodeFontName(const PRUint8 *aNameData, PRInt32 aByteLen, 
                              PRUint32 aPlatformCode, PRUint32 aScriptCode,
                              PRUint32 aLangCode, nsAString& aName)
@@ -1835,7 +1835,7 @@ gfxFontUtils::ReadNames(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID,
             continue;
             
         PRUint32 k, numNames;
-        PRBool foundName = PR_FALSE;
+        bool foundName = false;
         
         numNames = aNames.Length();
         for (k = 0; k < numNames; k++) {
@@ -1986,7 +1986,7 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
         return NS_ERROR_FAILURE;
 
     // iterate through the table headers to find the head, name and OS/2 tables
-    PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE, foundGlyphs = PR_FALSE;
+    bool foundHead = false, foundOS2 = false, foundName = false, foundGlyphs = false;
     PRUint32 headOffset, headLen, nameOffset, nameLen, os2Offset, os2Len;
     PRUint32 i, numTables;
 
@@ -2225,8 +2225,8 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
 }
 
 /* static */
-PRBool
-gfxFontUtils::IsCffFont(const PRUint8* aFontData, PRBool& hasVertical)
+bool
+gfxFontUtils::IsCffFont(const PRUint8* aFontData, bool& hasVertical)
 {
     // this is only called after aFontData has passed basic validation,
     // so we know there is enough data present to allow us to read the version!

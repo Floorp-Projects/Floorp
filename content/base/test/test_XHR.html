@@ -14,41 +14,6 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-// test receiving as JSON
-function testJSON(aJsonStr, invalid) {
-  var errorThrown = false;
-  var anotherErrorThrown = false;
-  var xhr = new XMLHttpRequest();
-  
-  var didthrow = false;
-  try { xhr.responseType = 'moz-json'; } catch (e) { didthrow = true; }
-  ok(didthrow, 
-     "should have thrown when setting responseType to moz-json before open");
-
-  xhr.open("POST", 'responseIdentical.sjs', false);
-  xhr.responseType = 'moz-json';
-  xhr.send(aJsonStr);
-
-  if (!invalid) {
-    is(JSON.stringify(xhr.response), aJsonStr);
-    is(xhr.response, xhr.response, "returning the same object on each access");
-  }
-  else {
-    var didThrow = false;
-    try { xhr.response } catch(ex) { didThrow = true; }
-    ok(didThrow, "accessing response should throw");
-
-    didThrow = false;
-    try { xhr.response } catch(ex) { didThrow = true; }
-    ok(didThrow, "accessing response should throw");
-  } 
-}
-
-var jsonStr = '{"title":"aBook","author":"john"}';
-testJSON(jsonStr, false);
-var invalidJson = '{ "abc": }'
-testJSON(invalidJson, true);
-
 var path = "/tests/content/base/test/";
 
 var passFiles = [['file_XHR_pass1.xml', 'GET'],
@@ -109,18 +74,25 @@ function checkResponseXMLAccessThrows(xhr) {
   try { xhr.responseXML } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when accessing responseXML");
 }
-function checkSetResponseTypeThrows(xhr) {
+function checkResponseAccessThrows(xhr) {
   var didthrow = false;
-  try { xhr.responseType = 'document'; } catch (e) { didthrow = true; }
-  ok(didthrow, "should have thrown when accessing responseType");
+  try { xhr.response } catch (e) { didthrow = true; }
+  ok(didthrow, "should have thrown when accessing response");
+}
+function checkSetResponseTypeThrows(xhr, type) {
+  var didthrow = false;
+  try { xhr.responseType = type; } catch (e) { didthrow = true; }
+  ok(didthrow, "should have thrown when setting responseType");
 }
 
 xhr = new XMLHttpRequest();
-checkSetResponseTypeThrows(xhr);
+checkSetResponseTypeThrows(xhr, "document");
 xhr.open("GET", 'file_XHR_pass1.xml', false); 
+checkSetResponseTypeThrows(xhr, "moz-chunked-text");
+checkSetResponseTypeThrows(xhr, "moz-chunked-arraybuffer");
 xhr.responseType = 'document';
 xhr.send(null);
-checkSetResponseTypeThrows(xhr);
+checkSetResponseTypeThrows(xhr, "document");
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 is((new XMLSerializer()).serializeToString(xhr.response.documentElement),
@@ -178,21 +150,35 @@ checkResponseXMLAccessThrows(xhr);
 ab = xhr.response;
 ok(ab != null, "should have a non-null arraybuffer");
 arraybuffer_equals_to(ab, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb");
+is(xhr.response, xhr.response, "returns the same ArrayBuffer");
 
-// test array buffer GetResult returns the same object
-xhr = new XMLHttpRequest();
-xhr.open("GET", 'file_XHR_binary1.bin', false); 
-xhr.responseType = 'arraybuffer';
-xhr.send(null)
+// test response (responseType='moz-json')
+var xhr = new XMLHttpRequest();
+xhr.open("POST", 'responseIdentical.sjs', false);
+xhr.responseType = 'moz-json';
+jsonObjStr = JSON.stringify({title: "aBook", author: "john"});
+xhr.send(jsonObjStr);
 is(xhr.status, 200, "wrong status");
 checkResponseTextAccessThrows(xhr);
 checkResponseXMLAccessThrows(xhr);
-is(xhr.response, xhr.response, "returns the same ArrayBuffer");
+is(JSON.stringify(xhr.response), jsonObjStr, "correct result");
+is(xhr.response, xhr.response, "returning the same object on each access");
+
+// with invalid json
+var xhr = new XMLHttpRequest();
+xhr.open("POST", 'responseIdentical.sjs', false);
+xhr.responseType = 'moz-json';
+xhr.send("{");
+is(xhr.status, 200, "wrong status");
+checkResponseTextAccessThrows(xhr);
+checkResponseXMLAccessThrows(xhr);
+checkResponseAccessThrows(xhr);
+checkResponseAccessThrows(xhr); // Check twice to ensure that we still throw
 
 // test response (responseType='blob')
 var onloadCount = 0;
 function checkOnloadCount() {
-  if (++onloadCount >= 2) SimpleTest.finish();
+  if (++onloadCount >= 3) SimpleTest.finish();
 };
 
 // with a simple text file
@@ -217,7 +203,8 @@ fr.onload = function() {
 fr.readAsBinaryString(b);
 
 // with a binary file
-xhr = new XMLHttpRequest();
+(function(){
+var xhr = new XMLHttpRequest();
 xhr.onreadystatechange = function() {
   switch (xhr.readyState) {
   case 2:
@@ -242,6 +229,37 @@ xhr.onreadystatechange = function() {
 };
 xhr.open("GET", 'file_XHR_binary1.bin', true);
 xhr.send(null);
+})();
+
+(function(){
+// with a larger binary file
+var xhr = new XMLHttpRequest();
+xhr.onreadystatechange = function() {
+  if (xhr.readyState == 4) {
+    b = xhr.response;
+    ok(b != null, "should have a non-null blob");
+    is(b.size, 65536, "wrong blob size");
+
+    var fr = new FileReader();
+    fr.onload = function() {
+      var u8 = new Uint8Array(fr.result);
+      for (var i = 0; i < 65536; i++) {
+        if (u8[i] !== (i & 255)) {
+          break;
+        }
+      }
+      is(i, 65536, "wrong value at offset " + i);
+      checkOnloadCount();
+    };
+    xhr = null; // kill the XHR object
+    SpecialPowers.gc();
+    fr.readAsArrayBuffer(b);
+  }
+};
+xhr.open("GET", 'file_XHR_binary2.bin', true);
+xhr.responseType = 'blob';
+xhr.send(null);
+})();
 
 var client = new XMLHttpRequest();
 client.onreadystatechange = function() {

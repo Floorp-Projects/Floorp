@@ -56,7 +56,7 @@ txXSLTProcessor::init()
     if (!txHandlerTable::init())
         return MB_FALSE;
 
-    extern PRBool TX_InitEXSLTFunction();
+    extern bool TX_InitEXSLTFunction();
     if (!TX_InitEXSLTFunction())
         return MB_FALSE;
 

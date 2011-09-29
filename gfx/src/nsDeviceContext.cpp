@@ -322,7 +322,7 @@ nsDeviceContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
     return NS_OK;
 }
 
-PRBool
+bool
 nsDeviceContext::IsPrinterSurface()
 {
     return(mPrintingSurface != NULL);
@@ -724,7 +724,7 @@ nsDeviceContext::CalcPrintingSize()
     if (!mPrintingSurface)
         return;
 
-    PRBool inPoints = PR_TRUE;
+    bool inPoints = true;
 
     gfxSize size(0, 0);
     switch (mPrintingSurface->GetType()) {
@@ -806,7 +806,7 @@ nsDeviceContext::CalcPrintingSize()
     }
 }
 
-PRBool nsDeviceContext::CheckDPIChange() {
+bool nsDeviceContext::CheckDPIChange() {
     PRInt32 oldDevPixels = mAppUnitsPerDevNotScaledPixel;
     PRInt32 oldInches = mAppUnitsPerPhysicalInch;
 
@@ -816,7 +816,7 @@ PRBool nsDeviceContext::CheckDPIChange() {
         oldInches != mAppUnitsPerPhysicalInch;
 }
 
-PRBool
+bool
 nsDeviceContext::SetPixelScale(float aScale)
 {
     if (aScale <= 0) {

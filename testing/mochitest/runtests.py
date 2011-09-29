@@ -235,9 +235,18 @@ class MochitestOptions(optparse.OptionParser):
     self.add_option("--repeat",
                     action = "store", type = "int",
                     dest = "repeat", metavar = "REPEAT",
-                    help = "repeats the test or set of tests the given number of times, ie: repeat=1 will run the test twice.")
-                   
+                    help = "repeats the test or set of tests the given number of times, ie: repeat=1 will run the test twice.")                   
     defaults["repeat"] = 0
+
+    self.add_option("--run-only-tests",
+                    action = "store", type="string", dest = "runOnlyTests",
+                    help = "JSON list of tests that we only want to run, cannot be specified with --exclude-tests.")
+    defaults["runOnlyTests"] = None
+
+    self.add_option("--exclude-tests",
+                    action = "store", type="string", dest = "excludeTests",
+                    help = "JSON list of tests that we want to not run, cannot be specified with --run-only-tests.")
+    defaults["excludeTests"] = None
 
     # -h, --help are automatically handled by OptionParser
 
@@ -301,6 +310,17 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
       if not os.path.exists(mochitest.vmwareHelperPath):
         self.error("%s not found, cannot automate VMware recording." %
                    mochitest.vmwareHelperPath)
+
+    if options.runOnlyTests != None and options.excludeTests != None:
+      self.error("We can only support --run-only-tests OR --exclude-tests, not both.")
+      
+    if (options.runOnlyTests):
+      if (not os.path.exists(os.path.join(os.path.dirname(__file__), options.runOnlyTests))):
+        self.error("unable to find --run-only-tests file '%s'" % (options.runOnlyTests));
+        
+    if (options.excludeTests):
+      if (not os.path.exists(os.path.join(os.path.dirname(__file__), options.excludeTests))):
+        self.error("unable to find --exclude-tests file '%s'" % (options.excludeTests));
 
     return options
 
@@ -581,6 +601,10 @@ class Mochitest(object):
         self.urlOpts.append("repeat=%d" % options.repeat)
       if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
         self.urlOpts.append("testname=%s" % ("/").join([self.TEST_PATH, options.testPath]))
+      if options.runOnlyTests:
+        self.urlOpts.append("runOnlyTests=%s" % options.runOnlyTests)
+      elif options.excludeTests:
+        self.urlOpts.append("excludeTests=%s" % options.excludeTests)
 
   def cleanup(self, manifest, options):
     """ remove temporary files and profile """

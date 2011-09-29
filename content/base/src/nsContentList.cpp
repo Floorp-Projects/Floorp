@@ -133,7 +133,7 @@ nsBaseContentList::GetNodeAt(PRUint32 aIndex)
 
 
 PRInt32
-nsBaseContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
+nsBaseContentList::IndexOf(nsIContent *aContent, bool aDoFlush)
 {
   return mElements.IndexOf(aContent);
 }
@@ -213,7 +213,7 @@ ContentListHashtableHashKey(PLDHashTable *table, const void *key)
   return list->GetHash();
 }
 
-static PRBool
+static bool
 ContentListHashtableMatchEntry(PLDHashTable *table,
                                const PLDHashEntryHdr *entry,
                                const void *key)
@@ -249,7 +249,7 @@ NS_GetContentList(nsINode* aRootNode,
 
   // Initialize the hashtable if needed.
   if (!gContentListHashTable.ops) {
-    PRBool success = PL_DHashTableInit(&gContentListHashTable,
+    bool success = PL_DHashTableInit(&gContentListHashTable,
                                        &hash_table_ops, nsnull,
                                        sizeof(ContentListHashEntry),
                                        16);
@@ -314,7 +314,7 @@ FuncStringContentListHashtableHashKey(PLDHashTable *table, const void *key)
   return funcStringKey->GetHash();
 }
 
-static PRBool
+static bool
 FuncStringContentListHashtableMatchEntry(PLDHashTable *table,
                                const PLDHashEntryHdr *entry,
                                const void *key)
@@ -351,7 +351,7 @@ NS_GetFuncStringContentList(nsINode* aRootNode,
 
   // Initialize the hashtable if needed.
   if (!gFuncStringContentListHashTable.ops) {
-    PRBool success = PL_DHashTableInit(&gFuncStringContentListHashTable,
+    bool success = PL_DHashTableInit(&gFuncStringContentListHashTable,
                                        &hash_table_ops, nsnull,
                                        sizeof(FuncStringContentListHashEntry),
                                        16);
@@ -410,7 +410,7 @@ nsContentList::nsContentList(nsINode* aRootNode,
                              PRInt32 aMatchNameSpaceId,
                              nsIAtom* aHTMLMatchAtom,
                              nsIAtom* aXMLMatchAtom,
-                             PRBool aDeep)
+                             bool aDeep)
   : nsBaseContentList(),
     mRootNode(aRootNode),
     mMatchNameSpaceId(aMatchNameSpaceId),
@@ -446,10 +446,10 @@ nsContentList::nsContentList(nsINode* aRootNode,
                              nsContentListMatchFunc aFunc,
                              nsContentListDestroyFunc aDestroyFunc,
                              void* aData,
-                             PRBool aDeep,
+                             bool aDeep,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
-                             PRBool aFuncMayDependOnAttr)
+                             bool aFuncMayDependOnAttr)
   : nsBaseContentList(),
     mRootNode(aRootNode),
     mMatchNameSpaceId(aMatchNameSpaceId),
@@ -507,7 +507,7 @@ NS_IMPL_ADDREF_INHERITED(nsContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsContentList, nsBaseContentList)
 
 PRUint32
-nsContentList::Length(PRBool aDoFlush)
+nsContentList::Length(bool aDoFlush)
 {
   BringSelfUpToDate(aDoFlush);
     
@@ -515,7 +515,7 @@ nsContentList::Length(PRBool aDoFlush)
 }
 
 nsIContent *
-nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
+nsContentList::Item(PRUint32 aIndex, bool aDoFlush)
 {
   if (mRootNode && aDoFlush && mFlushesNeeded) {
     // XXX sXBL/XBL2 issue
@@ -537,7 +537,7 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
 }
 
 nsIContent *
-nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
+nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
 {
   BringSelfUpToDate(aDoFlush);
     
@@ -563,7 +563,7 @@ nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
 }
 
 PRInt32
-nsContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
+nsContentList::IndexOf(nsIContent *aContent, bool aDoFlush)
 {
   BringSelfUpToDate(aDoFlush);
     
@@ -701,7 +701,7 @@ nsContentList::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
 
   if (count > 0) {
     PRInt32 ourCount = mElements.Count();
-    PRBool appendToList = PR_FALSE;
+    bool appendToList = false;
     if (ourCount == 0) {
       appendToList = PR_TRUE;
     } else {
@@ -804,7 +804,7 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
   ASSERT_IN_SYNC;
 }
 
-PRBool
+bool
 nsContentList::Match(Element *aElement)
 {
   if (mFunc) {
@@ -816,9 +816,9 @@ nsContentList::Match(Element *aElement)
 
   nsINodeInfo *ni = aElement->NodeInfo();
  
-  PRBool unknown = mMatchNameSpaceId == kNameSpaceID_Unknown;
-  PRBool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard;
-  PRBool toReturn = mMatchAll;
+  bool unknown = mMatchNameSpaceId == kNameSpaceID_Unknown;
+  bool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard;
+  bool toReturn = mMatchAll;
   if (!unknown && !wildcard)
     toReturn &= ni->NamespaceEquals(mMatchNameSpaceId);
 
@@ -826,7 +826,7 @@ nsContentList::Match(Element *aElement)
     return toReturn;
 
   nsIDocument* doc = aElement->GetOwnerDoc();
-  PRBool matchHTML = aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&
+  bool matchHTML = aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&
     doc && doc->IsHTML();
  
   if (unknown) {
@@ -843,7 +843,7 @@ nsContentList::Match(Element *aElement)
                      ni->Equals(mXMLMatchAtom, mMatchNameSpaceId);
 }
 
-PRBool 
+bool 
 nsContentList::MatchSelf(nsIContent *aContent)
 {
   NS_PRECONDITION(aContent, "Can't match null stuff, you know");
@@ -952,7 +952,7 @@ nsContentList::RemoveFromHashtable()
 }
 
 void
-nsContentList::BringSelfUpToDate(PRBool aDoFlush)
+nsContentList::BringSelfUpToDate(bool aDoFlush)
 {
   if (mRootNode && aDoFlush && mFlushesNeeded) {
     // XXX sXBL/XBL2 issue

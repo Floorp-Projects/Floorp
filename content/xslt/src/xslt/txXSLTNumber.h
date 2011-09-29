@@ -83,7 +83,7 @@ private:
                                    txPattern* aCountPattern,
                                    txIMatchContext* aContext);
     
-    static PRBool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
+    static bool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
 
     static MBool isAlphaNumeric(PRUnichar ch);
 };

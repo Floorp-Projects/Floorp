@@ -75,7 +75,7 @@ txLiteralExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
     NS_NOTREACHED("setting bad subexpression index");
 }
 
-PRBool
+bool
 txLiteralExpr::isSensitiveTo(ContextSensitivity aContext)
 {
     return PR_FALSE;

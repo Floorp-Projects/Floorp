@@ -75,21 +75,21 @@ nsEventListenerInfo::GetType(nsAString& aType)
 }
 
 NS_IMETHODIMP
-nsEventListenerInfo::GetCapturing(PRBool* aCapturing)
+nsEventListenerInfo::GetCapturing(bool* aCapturing)
 {
   *aCapturing = mCapturing;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEventListenerInfo::GetAllowsUntrusted(PRBool* aAllowsUntrusted)
+nsEventListenerInfo::GetAllowsUntrusted(bool* aAllowsUntrusted)
 {
   *aAllowsUntrusted = mAllowsUntrusted;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEventListenerInfo::GetInSystemEventGroup(PRBool* aInSystemEventGroup)
+nsEventListenerInfo::GetInSystemEventGroup(bool* aInSystemEventGroup)
 {
   *aInSystemEventGroup = mInSystemEventGroup;
   return NS_OK;
@@ -98,7 +98,7 @@ nsEventListenerInfo::GetInSystemEventGroup(PRBool* aInSystemEventGroup)
 NS_IMPL_ISUPPORTS1(nsEventListenerService, nsIEventListenerService)
 
 // Caller must root *aJSVal!
-PRBool
+bool
 nsEventListenerInfo::GetJSVal(jsval* aJSVal)
 {
   *aJSVal = JSVAL_NULL;
@@ -164,7 +164,7 @@ nsEventListenerInfo::GetDebugObject(nsISupports** aRetVal)
     do_GetService("@mozilla.org/js/jsd/debugger-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, NS_OK);
   
-  PRBool isOn = PR_FALSE;
+  bool isOn = false;
   jsd->GetIsOn(&isOn);
   NS_ENSURE_TRUE(isOn, NS_OK);
 
@@ -258,7 +258,7 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
 NS_IMETHODIMP
 nsEventListenerService::HasListenersFor(nsIDOMEventTarget* aEventTarget,
                                         const nsAString& aType,
-                                        PRBool* aRetVal)
+                                        bool* aRetVal)
 {
   nsEventListenerManager* elm = aEventTarget->GetListenerManager(PR_FALSE);
   *aRetVal = elm && elm->HasListenersFor(aType);
@@ -269,7 +269,7 @@ NS_IMETHODIMP
 nsEventListenerService::AddSystemEventListener(nsIDOMEventTarget *aTarget,
                                                const nsAString& aType,
                                                nsIDOMEventListener* aListener,
-                                               PRBool aUseCapture)
+                                               bool aUseCapture)
 {
   NS_PRECONDITION(aTarget, "Missing target");
   NS_PRECONDITION(aListener, "Missing listener");
@@ -289,7 +289,7 @@ NS_IMETHODIMP
 nsEventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
                                                   const nsAString& aType,
                                                   nsIDOMEventListener* aListener,
-                                                  PRBool aUseCapture)
+                                                  bool aUseCapture)
 {
   NS_PRECONDITION(aTarget, "Missing target");
   NS_PRECONDITION(aListener, "Missing listener");

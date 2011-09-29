@@ -54,7 +54,7 @@ class nsAccTreeWalker
 {
 public:
   nsAccTreeWalker(nsIWeakReference *aShell, nsIContent *aNode, 
-                  PRBool aWalkAnonymousContent, bool aWalkCache = false);
+                  bool aWalkAnonymousContent, bool aWalkCache = false);
   virtual ~nsAccTreeWalker();
 
   /**
@@ -86,7 +86,7 @@ private:
    * @note State stack is used to navigate up/down the DOM subtree during
    *        accessible children search.
    */
-  PRBool PushState(nsIContent *aNode);
+  bool PushState(nsIContent *aNode);
 
   /**
    * Pop state from stack.

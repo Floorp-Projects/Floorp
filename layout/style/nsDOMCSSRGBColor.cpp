@@ -48,7 +48,7 @@ nsDOMCSSRGBColor::nsDOMCSSRGBColor(nsIDOMCSSPrimitiveValue* aRed,
                                    nsIDOMCSSPrimitiveValue* aGreen,
                                    nsIDOMCSSPrimitiveValue* aBlue,
                                    nsIDOMCSSPrimitiveValue* aAlpha,
-                                   PRBool aHasAlpha)
+                                   bool aHasAlpha)
   : mRed(aRed), mGreen(aGreen), mBlue(aBlue), mAlpha(aAlpha)
   , mHasAlpha(aHasAlpha)
 {

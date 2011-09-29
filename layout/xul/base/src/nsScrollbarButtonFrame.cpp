@@ -96,7 +96,7 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 
-PRBool
+bool
 nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext, 
                                           nsGUIEvent*     aEvent,
                                           nsEventStatus*  aEventStatus)
@@ -150,9 +150,9 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
     return PR_FALSE;
 
   // Whether or not to repeat the click action.
-  PRBool repeat = PR_TRUE;
+  bool repeat = true;
   // Use smooth scrolling by default.
-  PRBool smoothScroll = PR_TRUE;
+  bool smoothScroll = true;
   switch (pressedButtonAction) {
     case 0:
       mIncrement = direction * nsSliderFrame::GetIncrement(content);
@@ -214,7 +214,7 @@ nsScrollbarButtonFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aE
 }
 
 void
-nsScrollbarButtonFrame::DoButtonAction(PRBool aSmoothScroll) 
+nsScrollbarButtonFrame::DoButtonAction(bool aSmoothScroll) 
 {
   // get the scrollbar control
   nsIFrame* scrollbar;

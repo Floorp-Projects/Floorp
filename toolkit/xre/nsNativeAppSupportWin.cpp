@@ -305,8 +305,8 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // Overrides of base implementation.
-    NS_IMETHOD Start( PRBool *aResult );
-    NS_IMETHOD Stop( PRBool *aResult );
+    NS_IMETHOD Start( bool *aResult );
+    NS_IMETHOD Stop( bool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD Enable();
     // The "old" Start method (renamed).
@@ -330,7 +330,7 @@ private:
     static void ParseDDEArg( const WCHAR* args, int index, nsString& aString);
     static HDDEDATA CreateDDEData( DWORD value );
     static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
-    static PRBool   InitTopicStrings();
+    static bool     InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static void ActivateLastWindow();
     static nsresult OpenWindow( const char *urlstr, const char *args );
@@ -352,7 +352,7 @@ private:
     };
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
-    static PRBool mCanHandleRequests;
+    static bool mCanHandleRequests;
     static PRUnichar mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
@@ -472,7 +472,7 @@ int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
-PRBool nsNativeAppSupportWin::mCanHandleRequests   = PR_FALSE;
+bool nsNativeAppSupportWin::mCanHandleRequests   = false;
 
 PRUnichar nsNativeAppSupportWin::mMutexName[ 128 ] = { 0 };
 
@@ -641,7 +641,7 @@ private:
  *        be protected by use of a mutex semaphore.
  */
 NS_IMETHODIMP
-nsNativeAppSupportWin::Start( PRBool *aResult ) {
+nsNativeAppSupportWin::Start( bool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
     NS_ENSURE_STATE( gAppData );
@@ -687,7 +687,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     return rv;
 }
 
-PRBool
+bool
 nsNativeAppSupportWin::InitTopicStrings() {
     for ( int i = 0; i < topicCount; i++ ) {
         if ( !( mTopics[ i ] = DdeCreateStringHandleA( mInstance, const_cast<char *>(topicNames[ i ]), CP_WINANSI ) ) ) {
@@ -745,7 +745,7 @@ nsNativeAppSupportWin::StartDDE() {
 
 // If no DDE conversations are pending, terminate DDE.
 NS_IMETHODIMP
-nsNativeAppSupportWin::Stop( PRBool *aResult ) {
+nsNativeAppSupportWin::Stop( bool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance, NS_ERROR_NOT_INITIALIZED );
 

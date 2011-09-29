@@ -48,7 +48,7 @@
 using namespace mozilla::dom;
 
 // Helper function
-static PRBool
+static bool
 GetCSSComputedValue(nsIContent* aElem,
                     nsCSSProperty aPropID,
                     nsAString& aResult)
@@ -136,7 +136,7 @@ nsSMILCSSProperty::GetBaseValue() const
 
   // (2) Get Computed Style
   nsAutoString computedStyleVal;
-  PRBool didGetComputedVal = GetCSSComputedValue(mElement, mPropID,
+  bool didGetComputedVal = GetCSSComputedValue(mElement, mPropID,
                                                  computedStyleVal);
 
   // (3) Put cached override style back (if it's non-empty)
@@ -162,7 +162,7 @@ nsresult
 nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   PRBool& aPreventCachingOfSandwich) const
+                                   bool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
@@ -213,7 +213,7 @@ nsSMILCSSProperty::ClearAnimValue()
 
 // Based on http://www.w3.org/TR/SVG/propidx.html
 // static
-PRBool
+bool
 nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
 {
   // NOTE: Right now, Gecko doesn't recognize the following properties from

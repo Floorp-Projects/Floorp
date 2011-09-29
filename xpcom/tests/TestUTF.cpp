@@ -45,7 +45,7 @@
 
 namespace TestUTF {
 
-PRBool
+bool
 test_valid()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
@@ -75,7 +75,7 @@ test_valid()
   return PR_TRUE;
 }
 
-PRBool
+bool
 test_invalid16()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid16Strings); ++i) {
@@ -97,7 +97,7 @@ test_invalid16()
   return PR_TRUE;
 }
 
-PRBool
+bool
 test_invalid8()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
@@ -119,7 +119,7 @@ test_invalid8()
   return PR_TRUE;
 }
 
-PRBool
+bool
 test_malformed8()
 {
 // Don't run this test in debug builds as that intentionally asserts.
@@ -143,12 +143,12 @@ test_malformed8()
   return PR_TRUE;
 }
 
-PRBool
+bool
 test_hashas16()
 {
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
-    PRBool err;
+    bool err;
     if (nsCRT::HashCode(ValidStrings[i].m16) !=
         nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) ||
         err)
@@ -157,7 +157,7 @@ test_hashas16()
 
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Invalid8Strings); ++i) {
     nsDependentCString str8(Invalid8Strings[i].m8);
-    PRBool err;
+    bool err;
     if (nsCRT::HashCode(Invalid8Strings[i].m16) !=
         nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) ||
         err)
@@ -168,7 +168,7 @@ test_hashas16()
 #ifndef DEBUG
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
-    PRBool err;
+    bool err;
     if (nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) != 0 ||
         !err)
       return PR_FALSE;
@@ -178,7 +178,7 @@ test_hashas16()
   return PR_TRUE;
 }
 
-typedef PRBool (*TestFunc)();
+typedef bool (*TestFunc)();
 
 static const struct Test
   {

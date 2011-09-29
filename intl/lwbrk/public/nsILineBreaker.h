@@ -72,7 +72,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)
 
-static inline PRBool
+static inline bool
 NS_IsSpace(PRUnichar u)
 {
   return u == 0x0020 ||                  // SPACE
@@ -86,7 +86,7 @@ NS_IsSpace(PRUnichar u)
          u == 0x3000;                    // IDEOGRAPHIC SPACE
 }
 
-static inline PRBool
+static inline bool
 NS_NeedsPlatformNativeHandling(PRUnichar aChar)
 {
   return (0x0e01 <= aChar && aChar <= 0x0fff); // Thai, Lao, Tibetan

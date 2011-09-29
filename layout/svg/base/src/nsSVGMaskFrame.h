@@ -52,7 +52,6 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 protected:
   nsSVGMaskFrame(nsStyleContext* aContext) :
     nsSVGMaskFrameBase(aContext),
-    mMaskParentMatrix(nsnull),
     mInUse(PR_FALSE) {}
 
 public:
@@ -109,9 +108,9 @@ private:
   };
 
   nsIFrame *mMaskParent;
-  nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
+  nsAutoPtr<gfxMatrix> mMaskParentMatrix;
   // recursion prevention flag
-  PRPackedBool mInUse;
+  bool mInUse;
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();

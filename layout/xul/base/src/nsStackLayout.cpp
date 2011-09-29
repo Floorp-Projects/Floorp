@@ -207,7 +207,7 @@ nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsMargin& aOf
   PRUint8 offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
   if (content) {
-    PRBool ltr = aChild->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+    bool ltr = aChild->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
     nsAutoString value;
     PRInt32 error;
 
@@ -288,7 +288,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   nsRect clientRect;
   aBox->GetClientRect(clientRect);
 
-  PRBool grow;
+  bool grow;
 
   do {
     nsIBox* child = aBox->GetChildBox();
@@ -308,7 +308,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         childRect.height = 0;
 
       nsRect oldRect(child->GetRect());
-      PRBool sizeChanged = !oldRect.IsEqualEdges(childRect);
+      bool sizeChanged = !oldRect.IsEqualEdges(childRect);
 
       // only lay out dirty children or children whose sizes have changed
       if (sizeChanged || NS_SUBTREE_DIRTY(child)) {

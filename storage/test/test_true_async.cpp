@@ -325,7 +325,7 @@ test_AsyncCancellation()
 
   // -- verify that neither statement constructed their tables
   nsresult rv;
-  PRBool exists;
+  bool exists;
   rv = db->TableExists(NS_LITERAL_CSTRING("asyncTable"), &exists);
   do_check_true(rv == NS_OK);
   do_check_false(exists);

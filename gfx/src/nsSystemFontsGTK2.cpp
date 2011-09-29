@@ -61,7 +61,7 @@ static gboolean
 
 static void InitPangoLib()
 {
-    static PRBool initialized = PR_FALSE;
+    static bool initialized = false;
     if (initialized)
         return;
     initialized = PR_TRUE;

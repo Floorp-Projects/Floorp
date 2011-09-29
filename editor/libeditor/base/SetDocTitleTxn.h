@@ -66,7 +66,7 @@ public:
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction();
-  NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
+  NS_IMETHOD GetIsTransient(bool *aIsTransient);
 
 protected:
 
@@ -80,7 +80,7 @@ protected:
   nsString    mUndoValue;
 
   /** Set true if we dont' really change the title during Do() */
-  PRPackedBool mIsTransient;
+  bool mIsTransient;
 };
 
 #endif

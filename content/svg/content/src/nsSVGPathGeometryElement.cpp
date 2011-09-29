@@ -41,7 +41,7 @@ nsSVGPathGeometryElement::nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo>
 {
 }
 
-PRBool
+bool
 nsSVGPathGeometryElement::AttributeDefinesGeometry(const nsIAtom *aName)
 {
   // Check for nsSVGLength2 attribute
@@ -55,7 +55,7 @@ nsSVGPathGeometryElement::AttributeDefinesGeometry(const nsIAtom *aName)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsSVGPathGeometryElement::IsMarkable()
 {
   return PR_FALSE;

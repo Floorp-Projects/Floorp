@@ -160,20 +160,20 @@ nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 //------------------------------------------------------------
-PRBool
+bool
 nsGfxCheckboxControlFrame::IsChecked()
 {
   nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   elem->GetChecked(&retval);
   return retval;
 }
 
-PRBool
+bool
 nsGfxCheckboxControlFrame::IsIndeterminate()
 {
   nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   elem->GetIndeterminate(&retval);
   return retval;
 }

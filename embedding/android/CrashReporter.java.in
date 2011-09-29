@@ -120,7 +120,7 @@ public class CrashReporter extends Activity
     String passedMinidumpPath = getIntent().getStringExtra("minidumpPath");
     File passedMinidumpFile = new File(passedMinidumpPath);
     File pendingDir =
-      new File("/data/data/@ANDROID_PACKAGE_NAME@/mozilla/Crash Reports/pending");
+      new File("/data/data/@ANDROID_PACKAGE_NAME@/files/mozilla/Crash Reports/pending");
     pendingDir.mkdirs();
     mPendingMinidumpFile = new File(pendingDir, passedMinidumpFile.getName());
     moveFile(passedMinidumpFile, mPendingMinidumpFile);
@@ -295,7 +295,7 @@ public class CrashReporter extends Activity
 
       if (conn.getResponseCode() == conn.HTTP_OK) {
         File submittedDir = new File(
-          "/data/data/@ANDROID_PACKAGE_NAME@/mozilla/Crash Reports/submitted");
+          "/data/data/@ANDROID_PACKAGE_NAME@/files/mozilla/Crash Reports/submitted");
         submittedDir.mkdirs();
         minidumpFile.delete();
         extrasFile.delete();

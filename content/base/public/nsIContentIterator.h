@@ -89,7 +89,7 @@ public:
    *  and it is the end of the list following a call to next
    *  @return if the iterator is done.
    */
-  virtual PRBool IsDone() = 0;
+  virtual bool IsDone() = 0;
 
   /** PositionAt will position the iterator to the supplied node
    */

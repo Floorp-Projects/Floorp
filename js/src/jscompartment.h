@@ -408,7 +408,8 @@ struct JS_FRIEND_API(JSCompartment) {
      * Cleared on every GC, unless the GC happens during analysis (indicated
      * by activeAnalysis, which is implied by activeInference).
      */
-    JSArenaPool                  pool;
+    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
+    js::LifoAlloc                typeLifoAlloc;
     bool                         activeAnalysis;
     bool                         activeInference;
 

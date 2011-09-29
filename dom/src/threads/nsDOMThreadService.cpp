@@ -264,7 +264,7 @@ public:
 
       event->SetTarget(static_cast<nsDOMWorkerMessageHandler*>(mWorker));
 
-      PRBool stopPropagation = PR_FALSE;
+      bool stopPropagation = false;
       rv = mWorker->DispatchEvent(static_cast<nsDOMWorkerEvent*>(event),
                                   &stopPropagation);
       if (NS_SUCCEEDED(rv) && stopPropagation) {
@@ -371,7 +371,7 @@ public:
 
   void PutRunnable(nsIRunnable* aRunnable,
                    PRIntervalTime aTimeoutInterval,
-                   PRBool aClearQueue) {
+                   bool aClearQueue) {
     NS_ASSERTION(aRunnable, "Null pointer!");
 
     gDOMThreadService->mReentrantMonitor.AssertCurrentThreadIn();
@@ -436,7 +436,7 @@ public:
     // possible if the compilation takes too long.
     JS_TriggerOperationCallback(cx);
 
-    PRBool killWorkerWhenDone;
+    bool killWorkerWhenDone;
     {
       nsLazyAutoRequest ar;
       JSAutoEnterCompartment ac;
@@ -493,7 +493,7 @@ protected:
     }
   }
 
-  void RunQueue(JSContext* aCx, PRBool* aCloseRunnableSet) {
+  void RunQueue(JSContext* aCx, bool* aCloseRunnableSet) {
     while (1) {
       nsCOMPtr<nsIRunnable> runnable;
       {
@@ -544,7 +544,7 @@ protected:
   nsDeque mRunnables;
   nsCOMPtr<nsIRunnable> mCloseRunnable;
   PRIntervalTime mCloseTimeoutInterval;
-  PRBool mKillWorkerWhenDone;
+  bool mKillWorkerWhenDone;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWorkerRunnable, nsIRunnable)
@@ -559,14 +559,14 @@ DOMWorkerOperationCallback(JSContext* aCx)
   nsDOMWorker* worker = (nsDOMWorker*)JS_GetContextPrivate(aCx);
   NS_ASSERTION(worker, "This must never be null!");
 
-  PRBool canceled = worker->IsCanceled();
+  bool canceled = worker->IsCanceled();
   if (!canceled && worker->IsSuspended()) {
     JSAutoSuspendRequest suspended(aCx);
 
     // Since we're going to block this thread we should open up a new thread
     // in the thread pool for other workers. Must check the return value to
     // make sure we don't decrement when we failed.
-    PRBool extraThreadAllowed =
+    bool extraThreadAllowed =
       NS_SUCCEEDED(gDOMThreadService->ChangeThreadPoolMaxThreads(1));
 
     // Flush JIT caches now before suspending to avoid holding memory that we
@@ -679,7 +679,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
     nsRefPtr<nsDOMWorkerScope> scope = worker->GetInnerScope();
     NS_ASSERTION(scope, "Null scope!");
 
-    PRBool hasListeners = scope->HasListeners(NS_LITERAL_STRING("error"));
+    bool hasListeners = scope->HasListeners(NS_LITERAL_STRING("error"));
     if (hasListeners) {
       nsRefPtr<nsDOMWorkerErrorEvent> event(new nsDOMWorkerErrorEvent());
       if (event) {
@@ -693,7 +693,7 @@ DOMWorkerErrorReporter(JSContext* aCx,
                        "Bad recursion count logic!");
           worker->mErrorHandlerRecursionCount++;
 
-          PRBool preventDefaultCalled = PR_FALSE;
+          bool preventDefaultCalled = false;
           scope->DispatchEvent(static_cast<nsDOMWorkerEvent*>(event),
                                &preventDefaultCalled);
 
@@ -784,7 +784,7 @@ nsDOMThreadService::Init()
   rv = mThreadPool->SetIdleThreadLimit(THREADPOOL_IDLE_THREADS);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool success = mWorkersInProgress.Init();
+  bool success = mWorkersInProgress.Init();
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
   success = mPools.Init();
@@ -925,7 +925,7 @@ nsresult
 nsDOMThreadService::Dispatch(nsDOMWorker* aWorker,
                              nsIRunnable* aRunnable,
                              PRIntervalTime aTimeoutInterval,
-                             PRBool aClearQueue)
+                             bool aClearQueue)
 {
   NS_ASSERTION(aWorker, "Null pointer!");
   NS_ASSERTION(aRunnable, "Null pointer!");
@@ -961,7 +961,7 @@ nsDOMThreadService::Dispatch(nsDOMWorker* aWorker,
 
     workerRunnable->PutRunnable(aRunnable, aTimeoutInterval, PR_FALSE);
 
-    PRBool success = mWorkersInProgress.Put(aWorker, workerRunnable);
+    bool success = mWorkersInProgress.Put(aWorker, workerRunnable);
     NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
   }
 
@@ -1025,7 +1025,7 @@ nsDOMThreadService::WorkerComplete(nsDOMWorkerRunnable* aRunnable)
   mWorkersInProgress.Remove(aRunnable->mWorker);
 }
 
-PRBool
+bool
 nsDOMThreadService::QueueSuspendedWorker(nsDOMWorkerRunnable* aRunnable)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -1081,7 +1081,7 @@ nsDOMThreadService::CreateJSContext()
 
 already_AddRefed<nsDOMWorkerPool>
 nsDOMThreadService::GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
-                                     PRBool aRemove)
+                                     bool aRemove)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -1254,7 +1254,7 @@ nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
 
 void
 nsDOMThreadService::NoteThreadsafeContractId(const nsACString& aContractId,
-                                             PRBool aIsThreadsafe)
+                                             bool aIsThreadsafe)
 {
   NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
 
@@ -1262,7 +1262,7 @@ nsDOMThreadService::NoteThreadsafeContractId(const nsACString& aContractId,
 
 #ifdef DEBUG
   {
-    PRBool isThreadsafe;
+    bool isThreadsafe;
     if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
       NS_ASSERTION(aIsThreadsafe == isThreadsafe, "Inconsistent threadsafety!");
     }
@@ -1281,7 +1281,7 @@ nsDOMThreadService::GetContractIdThreadsafeStatus(const nsACString& aContractId)
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  PRBool isThreadsafe;
+  bool isThreadsafe;
   if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
     return isThreadsafe ? Threadsafe : NotThreadsafe;
   }
@@ -1331,7 +1331,7 @@ nsDOMThreadService::Dispatch(nsIRunnable* aEvent,
  * See nsIEventTarget
  */
 NS_IMETHODIMP
-nsDOMThreadService::IsOnCurrentThread(PRBool* _retval)
+nsDOMThreadService::IsOnCurrentThread(bool* _retval)
 {
   NS_NOTREACHED("No one should call this!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1516,7 +1516,7 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-    PRBool success = mPools.Put(aGlobalObject, pool);
+    bool success = mPools.Put(aGlobalObject, pool);
     NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
   }
 

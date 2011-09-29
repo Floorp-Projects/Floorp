@@ -72,7 +72,7 @@ class nsIDOMWorkerPrivateEvent : public nsIDOMEvent
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMWORKERPRIVATEEVENT_IID)
-  virtual PRBool PreventDefaultCalled() = 0;
+  virtual bool PreventDefaultCalled() = 0;
 };
 
 #define NS_FORWARD_NSIDOMEVENT_SPECIAL                                        \
@@ -84,9 +84,9 @@ public:
     { return mEvent->GetCurrentTarget(aCurrentTarget); }                      \
   NS_IMETHOD GetEventPhase(PRUint16* aEventPhase)                             \
     { return mEvent->GetEventPhase(aEventPhase); }                            \
-  NS_IMETHOD GetBubbles(PRBool* aBubbles)                                     \
+  NS_IMETHOD GetBubbles(bool* aBubbles)                                     \
     { return mEvent->GetBubbles(aBubbles); }                                  \
-  NS_IMETHOD GetCancelable(PRBool* aCancelable)                               \
+  NS_IMETHOD GetCancelable(bool* aCancelable)                               \
     { return mEvent->GetCancelable(aCancelable); }                            \
   NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp)                           \
     { return mEvent->GetTimeStamp(aTimeStamp); }                              \
@@ -94,7 +94,7 @@ public:
     { return mEvent->StopPropagation(); }
 
 #define NS_FORWARD_NSIDOMPROGRESSEVENT_SPECIAL                                \
-  NS_IMETHOD GetLengthComputable(PRBool* aLengthComputable)                   \
+  NS_IMETHOD GetLengthComputable(bool* aLengthComputable)                   \
     { return mProgressEvent->GetLengthComputable(aLengthComputable); }        \
   NS_IMETHOD GetLoaded(PRUint64* aLoaded)                                     \
     { return mProgressEvent->GetLoaded(aLoaded); }                            \
@@ -136,40 +136,40 @@ public:
   NS_IMETHOD PreventDefault();
 
   NS_IMETHOD InitEvent(const nsAString& aEventType,
-                       PRBool aCanBubble,
-                       PRBool aCancelable);
+                       bool aCanBubble,
+                       bool aCancelable);
 
   NS_IMETHOD InitProgressEvent(const nsAString& aTypeArg,
-                               PRBool aCanBubbleArg,
-                               PRBool aCancelableArg,
-                               PRBool aLengthComputableArg,
+                               bool aCanBubbleArg,
+                               bool aCancelableArg,
+                               bool aLengthComputableArg,
                                PRUint64 aLoadedArg,
                                PRUint64 aTotalArg); 
 
   NS_IMETHOD InitMessageEvent(const nsAString& aTypeArg,
-                              PRBool aCanBubbleArg,
-                              PRBool aCancelableArg,
+                              bool aCanBubbleArg,
+                              bool aCancelableArg,
                               const nsAString& aDataArg,
                               const nsAString& aOriginArg,
                               nsISupports* aSourceArg);
 
   NS_IMETHOD InitErrorEvent(const nsAString& aTypeArg,
-                            PRBool aCanBubbleArg,
-                            PRBool aCancelableArg,
+                            bool aCanBubbleArg,
+                            bool aCancelableArg,
                             const nsAString& aMessageArg,
                             const nsAString& aFilenameArg,
                             PRUint32 aLinenoArg);
 
-  NS_IMETHOD GetDefaultPrevented(PRBool* aRetVal);
+  NS_IMETHOD GetDefaultPrevented(bool* aRetVal);
 
-  virtual PRBool PreventDefaultCalled();
+  virtual bool PreventDefaultCalled();
 
 private:
   nsCOMPtr<nsIDOMEvent> mEvent;
   nsCOMPtr<nsIDOMProgressEvent> mProgressEvent;
   nsCOMPtr<nsIWorkerMessageEvent> mMessageEvent;
   nsCOMPtr<nsIWorkerErrorEvent> mErrorEvent;
-  PRBool mPreventDefaultCalled;
+  bool mPreventDefaultCalled;
 };
 
 class nsDOMWorkerEvent : public nsIDOMEvent,
@@ -188,8 +188,8 @@ public:
     mTarget = aTarget;
   }
 
-  PRBool PreventDefaultCalled() {
-    return PRBool(mPreventDefaultCalled);
+  bool PreventDefaultCalled() {
+    return bool(mPreventDefaultCalled);
   }
 
 protected:
@@ -199,9 +199,9 @@ protected:
   nsCOMPtr<nsIDOMEventTarget> mTarget;
   PRUint16 mEventPhase;
   DOMTimeStamp mTimeStamp;
-  PRPackedBool mBubbles;
-  PRPackedBool mCancelable;
-  PRPackedBool mPreventDefaultCalled;
+  bool mBubbles;
+  bool mCancelable;
+  bool mPreventDefaultCalled;
 };
 
 class nsDOMWorkerMessageEvent : public nsDOMWorkerEvent,
@@ -245,7 +245,7 @@ public:
 protected:
   PRUint64 mLoaded;
   PRUint64 mTotal;
-  PRBool mLengthComputable;
+  bool mLengthComputable;
 };
 
 class nsDOMWorkerXHRState
@@ -315,8 +315,8 @@ protected:
   nsRefPtr<nsDOMWorkerXHRState> mState;
   PRUint32 mXHREventType;
   PRInt32 mChannelID;
-  PRPackedBool mUploadEvent;
-  PRPackedBool mProgressEvent;
+  bool mUploadEvent;
+  bool mProgressEvent;
 };
 
 class nsDOMWorkerErrorEvent : public nsDOMWorkerEvent,

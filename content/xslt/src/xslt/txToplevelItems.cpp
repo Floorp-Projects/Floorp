@@ -79,7 +79,7 @@ TX_IMPL_GETTYPE(txVariableItem, txToplevelItem::variable)
 
 txVariableItem::txVariableItem(const txExpandedName& aName,
                                nsAutoPtr<Expr> aValue,
-                               PRBool aIsParam)
+                               bool aIsParam)
     : mName(aName), mValue(aValue), mIsParam(aIsParam)
 {
 }

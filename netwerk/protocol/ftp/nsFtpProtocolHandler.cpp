@@ -265,7 +265,7 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
 }
 
 NS_IMETHODIMP 
-nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     *_retval = (port == 21 || port == 22);
     return NS_OK;
@@ -278,7 +278,7 @@ nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure)
 {
     LOG(("FTP:timeout reached for %p\n", aClosure));
 
-    PRBool found = gFtpHandler->mRootConnectionList.RemoveElement(aClosure);
+    bool found = gFtpHandler->mRootConnectionList.RemoveElement(aClosure);
     if (!found) {
         NS_ERROR("timerStruct not found");
         return;
@@ -303,7 +303,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
    
     timerStruct* ts = nsnull;
     PRUint32 i;
-    PRBool found = PR_FALSE;
+    bool found = false;
     
     for (i=0;i<mRootConnectionList.Length();++i) {
         ts = mRootConnectionList[i];

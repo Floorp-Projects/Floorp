@@ -60,7 +60,7 @@ public:
 
   void* operator new(size_t size, PRUint32 aAttrCount = 1) CPP_THROW_NEW;
 
-  nsMappedAttributes* Clone(PRBool aWillAddAttr);
+  nsMappedAttributes* Clone(bool aWillAddAttr);
 
   NS_DECL_ISUPPORTS
 
@@ -72,7 +72,7 @@ public:
     return mAttrCount;
   }
 
-  PRBool Equals(const nsMappedAttributes* aAttributes) const;
+  bool Equals(const nsMappedAttributes* aAttributes) const;
   PRUint32 HashValue() const;
 
   void DropStyleSheetReference()

@@ -52,7 +52,6 @@ var PageActions = {
 #endif
     this.register("pageaction-share", this.updateShare, this);
     this.register("pageaction-search", BrowserSearch.updatePageSearchEngines, BrowserSearch);
-    this.register("pageaction-webapps-install", WebappsUI.updateWebappsInstall, WebappsUI);
 
     CharsetMenu.init();
   },
@@ -90,7 +89,7 @@ var PageActions = {
   },
 
   // Permissions we track in Page Actions
-  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification"],
+  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification", "openWebappsManage"],
 
   _forEachPermissions: function _forEachPermissions(aHost, aCallback) {
     let pm = Services.perms;
@@ -262,6 +261,8 @@ var PageActions = {
     let container = document.getElementById("pageactions-container");
     let visibleNodes = container.querySelectorAll("pageaction:not([hidden=true])");
     let visibleCount = visibleNodes.length;
+    if (visibleCount == 0)
+      return;
 
     for (let i = 0; i < visibleCount; i++)
       visibleNodes[i].classList.remove("odd-last-child");

@@ -81,13 +81,14 @@ static PRLogModuleInfo *gPNGDecoderAccountingLog =
 const PRUint8 
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-nsPNGDecoder::nsPNGDecoder() :
-  mPNG(nsnull), mInfo(nsnull),
-  mCMSLine(nsnull), interlacebuf(nsnull),
-  mInProfile(nsnull), mTransform(nsnull),
-  mHeaderBuf(nsnull), mHeaderBytesRead(0),
-  mChannels(0), mFrameIsHidden(PR_FALSE),
-  mCMSMode(0), mDisablePremultipliedAlpha(PR_FALSE)
+nsPNGDecoder::nsPNGDecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+ : Decoder(aImage, aObserver),
+   mPNG(nsnull), mInfo(nsnull),
+   mCMSLine(nsnull), interlacebuf(nsnull),
+   mInProfile(nsnull), mTransform(nsnull),
+   mHeaderBuf(nsnull), mHeaderBytesRead(0),
+   mChannels(0), mFrameIsHidden(PR_FALSE),
+   mCMSMode(0), mDisablePremultipliedAlpha(PR_FALSE)
 {
 }
 
@@ -409,7 +410,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
     if (profile) {
       PRUint32 profileSpace = qcms_profile_get_color_space(profile);
 
-      PRBool mismatch = PR_FALSE;
+      bool mismatch = false;
       if (color_type & PNG_COLOR_MASK_COLOR) {
         if (profileSpace != icSigRgbData)
           mismatch = PR_TRUE;
@@ -723,7 +724,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
 
     PRUint32 bpr = width * sizeof(PRUint32);
     PRUint32 *cptr32 = (PRUint32*)(decoder->mImageData + (row_num*bpr));
-    PRBool rowHasNoAlpha = PR_TRUE;
+    bool rowHasNoAlpha = true;
 
     if (decoder->mTransform) {
       if (decoder->mCMSLine) {

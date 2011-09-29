@@ -382,7 +382,7 @@ ResolveWorkerClasses(JSContext* aCx, JSObject* aObj, jsid aId, uintN aFlags,
       nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
       NS_ASSERTION(ssm, "This should never be null!");
 
-      PRBool enabled;
+      bool enabled;
       if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &enabled))) {
         NS_WARNING("IsCapabilityEnabled failed!");
         isChrome = PR_FALSE;
@@ -821,7 +821,7 @@ RuntimeService::Init()
   mIdleThreadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   NS_ENSURE_STATE(mIdleThreadTimer);
 
-  PRBool ok = mDomainMap.Init();
+  bool ok = mDomainMap.Init();
   NS_ENSURE_STATE(ok);
 
   ok = mWindowMap.Init();

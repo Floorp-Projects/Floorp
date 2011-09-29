@@ -66,7 +66,7 @@ public:
 protected:
     nsXRemoteService();
 
-    static PRBool HandleNewProperty(Window aWindowId,Display* aDisplay,
+    static bool HandleNewProperty(Window aWindowId,Display* aDisplay,
                                     Time aEventTime, Atom aChangedAtom,
                                     nsIWeakReference* aDomWindow);
     

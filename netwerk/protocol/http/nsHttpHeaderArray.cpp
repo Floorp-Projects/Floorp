@@ -48,7 +48,7 @@
 nsresult
 nsHttpHeaderArray::SetHeader(nsHttpAtom header,
                              const nsACString &value,
-                             PRBool merge)
+                             bool merge)
 {
     nsEntry *entry = nsnull;
     PRInt32 index;
@@ -208,7 +208,7 @@ nsHttpHeaderArray::ParseHeaderLine(const char *line,
 }
 
 void
-nsHttpHeaderArray::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
+nsHttpHeaderArray::Flatten(nsACString &buf, bool pruneProxyHeaders)
 {
     PRUint32 i, count = mHeaders.Length();
     for (i = 0; i < count; ++i) {

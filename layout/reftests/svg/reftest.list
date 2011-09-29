@@ -1,5 +1,5 @@
 # svg-as-an-image tests
-include as-image/reftest.list
+skip-if(Android&&layersOpenGL) include as-image/reftest.list
 
 # <image> tests
 include image/reftest.list
@@ -61,7 +61,7 @@ fails-if(Android) == dynamic-conditions-01.svg pass.svg # bug 652050
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
 == dynamic-conditions-13.svg about:blank
-== dynamic-clipPath-01.svg pass.svg
+fails-if(Android&&layersOpenGL) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 == dynamic-feImage-01.svg pass.svg
@@ -98,7 +98,7 @@ fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynam
 == dynamic-use-02.svg pass.svg
 == dynamic-use-03.svg pass.svg
 == dynamic-use-04.svg pass.svg
-== dynamic-use-05.svg pass.svg
+fails-if(Android&&layersOpenGL) == dynamic-use-05.svg pass.svg
 random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
 == linked-pattern-01.svg pass.svg
@@ -130,6 +130,8 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == foreignObject-overflow-01.svg pass.svg
 == foreignObject-start-hidden-01.svg pass.svg # followup from Bug 596765
 == foreignObject-start-hidden-02.svg pass.svg
+== foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
+== foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == getElementById-a-element-01.svg pass.svg
 == gradient-live-01a.svg gradient-live-01-ref.svg
 == gradient-live-01b.svg gradient-live-01-ref.svg
@@ -161,11 +163,11 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
-== outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
+fails-if(Android&&layersOpenGL) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 
 == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == path-03.svg pass.svg
-== path-04.svg pass.svg
+fails-if(Android&&layersOpenGL) == path-04.svg pass.svg
 == path-05.svg pass.svg
 == pathLength-01.svg pass.svg
 == pathLength-02.svg pass.svg
@@ -173,6 +175,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == pattern-live-01a.svg pattern-live-01-ref.svg
 == pattern-live-01b.svg pattern-live-01-ref.svg
 == pattern-live-01c.svg pattern-live-01-ref.svg
+== pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
 == polygon-marker-01.svg pass.svg
 == polygon-points-negative-01.svg pass.svg
 == polyline-points-invalid-01.svg pass.svg

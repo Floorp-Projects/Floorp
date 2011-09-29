@@ -48,7 +48,7 @@ void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
 void
 nsTemplateMatch::Destroy(nsFixedSizeAllocator& aPool,
                          nsTemplateMatch*& aMatch,
-                         PRBool aRemoveResult) {
+                         bool aRemoveResult) {
     if (aRemoveResult && aMatch->mResult)
         aMatch->mResult->HasBeenRemoved();
     aMatch->~nsTemplateMatch();

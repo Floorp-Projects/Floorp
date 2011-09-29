@@ -67,9 +67,9 @@ public:
      * pattern prior to rendering it.
      *  @return whether drawing was successful
      */
-    virtual PRBool Draw(gfxContext* aContext,
+    virtual bool Draw(gfxContext* aContext,
                         const gfxRect& aFillRect,
-                        PRBool aRepeat,
+                        bool aRepeat,
                         const gfxPattern::GraphicsFilter& aFilter,
                         const gfxMatrix& aTransform = gfxMatrix()) = 0;
     virtual gfxIntSize Size() { return mSize; }
@@ -88,9 +88,9 @@ public:
                        const gfxMatrix aTransform = gfxMatrix());
     virtual ~gfxSurfaceDrawable() {}
 
-    virtual PRBool Draw(gfxContext* aContext,
+    virtual bool Draw(gfxContext* aContext,
                         const gfxRect& aFillRect,
-                        PRBool aRepeat,
+                        bool aRepeat,
                         const gfxPattern::GraphicsFilter& aFilter,
                         const gfxMatrix& aTransform = gfxMatrix());
 
@@ -115,7 +115,7 @@ public:
      * pattern prior to rendering it.
      *  @return whether drawing was successful
      */
-    virtual PRBool operator()(gfxContext* aContext,
+    virtual bool operator()(gfxContext* aContext,
                               const gfxRect& aFillRect,
                               const gfxPattern::GraphicsFilter& aFilter,
                               const gfxMatrix& aTransform = gfxMatrix()) = 0;
@@ -131,9 +131,9 @@ public:
     gfxCallbackDrawable(gfxDrawingCallback* aCallback, const gfxIntSize aSize);
     virtual ~gfxCallbackDrawable() {}
 
-    virtual PRBool Draw(gfxContext* aContext,
+    virtual bool Draw(gfxContext* aContext,
                         const gfxRect& aFillRect,
-                        PRBool aRepeat,
+                        bool aRepeat,
                         const gfxPattern::GraphicsFilter& aFilter,
                         const gfxMatrix& aTransform = gfxMatrix());
 
@@ -154,9 +154,9 @@ public:
                        const gfxIntSize aSize);
     virtual ~gfxPatternDrawable() {}
 
-    virtual PRBool Draw(gfxContext* aContext,
+    virtual bool Draw(gfxContext* aContext,
                         const gfxRect& aFillRect,
-                        PRBool aRepeat,
+                        bool aRepeat,
                         const gfxPattern::GraphicsFilter& aFilter,
                         const gfxMatrix& aTransform = gfxMatrix());
 

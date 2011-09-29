@@ -68,7 +68,7 @@ nsJSPrincipalsSubsume(JSPrincipals *jsprin, JSPrincipals *other)
     nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
     nsJSPrincipals *nsother  = static_cast<nsJSPrincipals *>(other);
 
-    PRBool result;
+    bool result;
     nsresult rv = nsjsprin->nsIPrincipalPtr->Subsumes(nsother->nsIPrincipalPtr,
                                                       &result);
     return NS_SUCCEEDED(rv) && result;

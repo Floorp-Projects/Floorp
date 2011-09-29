@@ -122,9 +122,9 @@ typedef struct gif_struct {
     int loop_count;             /* Netscape specific extension block to control
                                    the number of animation loops a GIF renders. */
 
-    PRPackedBool progressive_display;    /* If TRUE, do Haeberli interlace hack */
-    PRPackedBool interlaced;             /* TRUE, if scanlines arrive interlaced order */
-    PRPackedBool is_transparent;         /* TRUE, if tpixel is valid */
+    bool progressive_display;    /* If TRUE, do Haeberli interlace hack */
+    bool interlaced;             /* TRUE, if scanlines arrive interlaced order */
+    bool is_transparent;         /* TRUE, if tpixel is valid */
 
     PRUint16  prefix[MAX_BITS];          /* LZW decoding tables */
     PRUint8   hold[MAX_HOLD_SIZE];       /* Accumulation buffer */

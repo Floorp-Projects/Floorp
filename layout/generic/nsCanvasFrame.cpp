@@ -103,7 +103,7 @@ nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY)
 }
 
 NS_IMETHODIMP
-nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
+nsCanvasFrame::SetHasFocus(bool aHasFocus)
 {
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
@@ -340,7 +340,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   aPresContext->EventStateManager()->
     GetFocusedContent(getter_AddRefs(focusContent));
 
-  PRBool hasFocus = PR_FALSE;
+  bool hasFocus = false;
   nsCOMPtr<nsISupports> container;
   aPresContext->GetContainer(getter_AddRefs(container));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
@@ -464,7 +464,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
   } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
     nsRect oldKidRect = kidFrame->GetRect();
-    PRBool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
+    bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
 
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                      nsSize(aReflowState.availableWidth,
@@ -552,8 +552,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       kidDesiredSize.mOverflowAreas + kidPt);
 
     if (mAbsoluteContainer.HasAbsoluteFrames()) {
-      PRBool widthChanged = aDesiredSize.width != mRect.width;
-      PRBool heightChanged = aDesiredSize.height != mRect.height;
+      bool widthChanged = aDesiredSize.width != mRect.width;
+      bool heightChanged = aDesiredSize.height != mRect.height;
       mAbsoluteContainer.Reflow(this, aPresContext, aReflowState, aStatus,
                                 aDesiredSize.width, aDesiredSize.height,
                                 PR_TRUE, widthChanged, heightChanged,
@@ -620,19 +620,16 @@ nsCanvasFrame::GetType() const
 }
 
 NS_IMETHODIMP 
-nsCanvasFrame::GetContentForEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIContent** aContent)
+nsCanvasFrame::GetContentForEvent(nsEvent* aEvent,
+                                  nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
-  nsresult rv = nsFrame::GetContentForEvent(aPresContext,
-                                            aEvent,
+  nsresult rv = nsFrame::GetContentForEvent(aEvent,
                                             aContent);
   if (NS_FAILED(rv) || !*aContent) {
     nsIFrame* kid = mFrames.FirstChild();
     if (kid) {
-      rv = kid->GetContentForEvent(aPresContext,
-                                   aEvent,
+      rv = kid->GetContentForEvent(aEvent,
                                    aContent);
     }
   }

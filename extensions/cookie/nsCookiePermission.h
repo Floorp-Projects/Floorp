@@ -74,7 +74,7 @@ private:
 
   PRInt64      mCookiesLifetimeSec;            // lifetime limit specified in seconds
   PRUint8      mCookiesLifetimePolicy;         // pref for how long cookies are stored
-  PRPackedBool mCookiesAlwaysAcceptSession;    // don't prompt for session cookies
+  bool mCookiesAlwaysAcceptSession;    // don't prompt for session cookies
 };
 
 // {EF565D0A-AB9A-4A13-9160-0644CDFD859A}

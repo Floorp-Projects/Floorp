@@ -171,7 +171,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface;
-    PRBool needsClear = PR_TRUE;
+    bool needsClear = true;
     gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(contentType);
 #ifdef MOZ_X11
     // XXX we really need a different interface here, something that passes
@@ -252,7 +252,7 @@ nsresult
 gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
                                 FontResolverCallback aCallback,
                                 void *aClosure,
-                                PRBool& aAborted)
+                                bool& aAborted)
 {
     return sFontconfigUtils->ResolveFontName(aFontName, aCallback,
                                              aClosure, aAborted);
@@ -288,7 +288,7 @@ gfxPlatformGtk::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            aFontData, aLength);
 }
 
-PRBool
+bool
 gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 {
     // check for strange format flags
@@ -404,7 +404,7 @@ nsresult
 gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
                                 FontResolverCallback aCallback,
                                 void *aClosure,
-                                PRBool& aAborted)
+                                bool& aAborted)
 {
 
     nsAutoString name(aFontName);
@@ -718,7 +718,7 @@ gfxPlatformGtk::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
     return nsnull;
 }
 
-PRBool
+bool
 gfxPlatformGtk::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList)
 {
     return gPrefFonts->Get(aKey, aFontEntryList);

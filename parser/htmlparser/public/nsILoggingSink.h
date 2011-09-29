@@ -47,7 +47,7 @@
 
 class nsILoggingSink : public nsIHTMLContentSink {
 public:
-  NS_IMETHOD SetOutputStream(PRFileDesc *aStream,PRBool autoDelete=PR_FALSE) =0;
+  NS_IMETHOD SetOutputStream(PRFileDesc *aStream,bool autoDelete=false) =0;
 };
 
 extern "C" nsresult NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult);

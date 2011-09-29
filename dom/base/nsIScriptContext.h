@@ -119,7 +119,7 @@ public:
                                   PRUint32 aLineNo,
                                   PRUint32 aVersion,
                                   nsAString *aRetValue,
-                                  PRBool* aIsUndefined) = 0;
+                                  bool* aIsUndefined) = 0;
 
   // Note JS bigotry remains here - 'void *aRetValue' is assumed to be a
   // jsval.  This must move to JSObject before it can be made agnostic.
@@ -130,7 +130,7 @@ public:
                                            PRUint32 aLineNo,
                                            PRUint32 aVersion,
                                            void* aRetValue,
-                                           PRBool* aIsUndefined) = 0;
+                                           bool* aIsUndefined) = 0;
 
   /**
    * Compile a script.
@@ -175,7 +175,7 @@ public:
   virtual nsresult ExecuteScript(void* aScriptObject,
                                  void* aScopeObject,
                                  nsAString* aRetValue,
-                                 PRBool* aIsUndefined) = 0;
+                                 bool* aIsUndefined) = 0;
 
   /**
    * Compile the event handler named by atom aName, with function body aBody
@@ -270,7 +270,7 @@ public:
                                    const char* aURL,
                                    PRUint32 aLineNo,
                                    PRUint32 aVersion,
-                                   PRBool aShared,
+                                   bool aShared,
                                    void **aFunctionObject) = 0;
 
   /**
@@ -305,7 +305,7 @@ public:
    */
   virtual nsresult CreateNativeGlobalForInner(
                                       nsIScriptGlobalObject *aNewInner,
-                                      PRBool aIsChrome,
+                                      bool aIsChrome,
                                       nsIPrincipal *aPrincipal,
                                       void **aNativeGlobal,
                                       nsISupports **aHolder) = 0;
@@ -350,7 +350,7 @@ public:
    * @return PR_TRUE if initialized, PR_FALSE if not
    *
    */
-  virtual PRBool IsContextInitialized() = 0;
+  virtual bool IsContextInitialized() = 0;
 
   /**
    * Called as the global object discards its reference to the context.
@@ -377,7 +377,7 @@ public:
    *    calls to the termination function.
    * @return NS_OK if the method is successful
    */
-  virtual void ScriptEvaluated(PRBool aTerminated) = 0;
+  virtual void ScriptEvaluated(bool aTerminated) = 0;
 
   virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                              void *aScriptObject) = 0;
@@ -403,8 +403,8 @@ public:
   /**
    * Called to disable/enable script execution in this context.
    */
-  virtual PRBool GetScriptsEnabled() = 0;
-  virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
+  virtual bool GetScriptsEnabled() = 0;
+  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) = 0;
 
   // SetProperty is suspect and jst believes should not be needed.  Currenly
   // used only for "arguments".
@@ -413,19 +413,19 @@ public:
    * Called to set/get information if the script context is
    * currently processing a script tag
    */
-  virtual PRBool GetProcessingScriptTag() = 0;
-  virtual void SetProcessingScriptTag(PRBool aResult) = 0;
+  virtual bool GetProcessingScriptTag() = 0;
+  virtual void SetProcessingScriptTag(bool aResult) = 0;
 
   /**
    * Called to find out if this script context might be executing script.
    */
-  virtual PRBool GetExecutingScript() = 0;
+  virtual bool GetExecutingScript() = 0;
 
   /**
    * Tell the context whether or not to GC when destroyed.  An optimization
    * used when the window is a [i]frame, so GC will happen anyway.
    */
-  virtual void SetGCOnDestruction(PRBool aGCOnDestruction) = 0;
+  virtual void SetGCOnDestruction(bool aGCOnDestruction) = 0;
 
   /**
    * Initialize DOM classes on aGlobalObj, always call
@@ -447,7 +447,7 @@ public:
    * windows, and needs to stay with inner windows that we're keeping
    * around.
    */
-  virtual void ClearScope(void* aGlobalObj, PRBool aClearFromProtoChain) = 0;
+  virtual void ClearScope(void* aGlobalObj, bool aClearFromProtoChain) = 0;
 
   /**
    * Tell the context we're about to be reinitialize it.

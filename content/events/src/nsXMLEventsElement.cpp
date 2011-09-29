@@ -49,7 +49,7 @@ public:
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
+                           bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
@@ -72,7 +72,7 @@ nsXMLEventsElement::GetIDAttributeName() const
 
 nsresult
 nsXMLEventsElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                            const nsAString& aValue, PRBool aNotify)
+                            const nsAString& aValue, bool aNotify)
 {
   if (mNodeInfo->Equals(nsGkAtoms::listener) && 
       mNodeInfo->GetDocument() && aNameSpaceID == kNameSpaceID_None && 

@@ -90,7 +90,7 @@ public:
   virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
                                const char *aProfile, const char *aCommand,
                                const char* aDesktopStartupID,
-                               char **aResponse, PRBool *aSucceeded) = 0;
+                               char **aResponse, bool *aSucceeded) = 0;
 
   /**
    * Send a complete command line to a running instance.
@@ -107,7 +107,7 @@ public:
                                    const char *aProfile,
                                    PRInt32 argc, char **argv,
                                    const char* aDesktopStartupID,
-                                   char **aResponse, PRBool *aSucceeded) = 0;
+                                   char **aResponse, bool *aSucceeded) = 0;
 };
 
 #endif // nsRemoteClient_h__

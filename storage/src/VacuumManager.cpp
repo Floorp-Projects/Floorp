@@ -200,7 +200,7 @@ Vacuumer::execute()
   // Get the connection and check its validity.
   nsresult rv = mParticipant->GetDatabaseConnection(getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, false);
-  PRBool ready;
+  bool ready;
   if (!mDBConn || NS_FAILED(mDBConn->GetConnectionReady(&ready)) || !ready) {
     NS_WARNING(NS_LITERAL_CSTRING("Unable to get a connection to vacuum database").get());
     return false;
@@ -224,7 +224,7 @@ Vacuumer::execute()
       "PRAGMA page_size"
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, false);
-    PRBool hasResult;
+    bool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, false);
     NS_ENSURE_TRUE(hasResult, false);
@@ -243,7 +243,7 @@ Vacuumer::execute()
           "PRAGMA journal_mode"
         ), getter_AddRefs(stmt));
         NS_ENSURE_SUCCESS(rv, false);
-        PRBool hasResult;
+        bool hasResult;
         rv = stmt->ExecuteStep(&hasResult);
         NS_ENSURE_SUCCESS(rv, false);
         NS_ENSURE_TRUE(hasResult, false);
@@ -283,7 +283,7 @@ Vacuumer::execute()
   // Notify that we are about to start vacuuming.  The participant can opt-out
   // if it cannot handle a vacuum at this time, and then we'll move to the next
   // one.
-  PRBool vacuumGranted = PR_FALSE;
+  bool vacuumGranted = false;
   rv = mParticipant->OnBeginVacuum(&vacuumGranted);
   NS_ENSURE_SUCCESS(rv, false);
   if (!vacuumGranted) {

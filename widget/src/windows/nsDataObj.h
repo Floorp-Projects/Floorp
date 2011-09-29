@@ -220,7 +220,7 @@ class nsDataObj : public IDataObject,
 
 	protected:
     // help determine the kind of drag
-    PRBool IsFlavourPresent(const char *inFlavour);
+    bool IsFlavourPresent(const char *inFlavour);
 
     virtual HRESULT AddSetFormat(FORMATETC&  FE);
     virtual HRESULT AddGetFormat(FORMATETC&  FE);
@@ -234,10 +234,10 @@ class nsDataObj : public IDataObject,
     virtual HRESULT DropFile( FORMATETC& aFE, STGMEDIUM& aSTG );
     virtual HRESULT DropTempFile( FORMATETC& aFE, STGMEDIUM& aSTG );
 
-    virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
+    virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG, bool aIsUnicode ) ;
     virtual HRESULT ExtractUniformResourceLocatorA ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT ExtractUniformResourceLocatorW ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
-    virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
+    virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, bool aIsUnicode ) ;
     virtual HRESULT GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG );
 
@@ -335,8 +335,8 @@ class nsDataObj : public IDataObject,
     nsTArray <LPDATAENTRY> mDataEntryList;
     nsCOMPtr<nsITimer> mTimer;
 
-    PRBool LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BOOL aAddorUpdate);
-    PRBool CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMATETC aFormat, BOOL aSetData);
+    bool LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BOOL aAddorUpdate);
+    bool CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMATETC aFormat, BOOL aSetData);
     static void RemoveTempFile(nsITimer* aTimer, void* aClosure);
 };
 

@@ -97,7 +97,7 @@ class nsMenuActivateEvent : public nsRunnable
 public:
   nsMenuActivateEvent(nsIContent *aMenu,
                       nsPresContext* aPresContext,
-                      PRBool aIsActivate)
+                      bool aIsActivate)
     : mMenu(aMenu), mPresContext(aPresContext), mIsActivate(aIsActivate)
   {
   }
@@ -139,7 +139,7 @@ public:
 private:
   nsCOMPtr<nsIContent> mMenu;
   nsRefPtr<nsPresContext> mPresContext;
-  PRBool mIsActivate;
+  bool mIsActivate;
 };
 
 class nsMenuAttributeChangedEvent : public nsRunnable
@@ -255,9 +255,9 @@ public:
   {
   }
 
-  virtual PRBool ReflowFinished()
+  virtual bool ReflowFinished()
   {
-    PRBool shouldFlush = PR_FALSE;
+    bool shouldFlush = false;
     if (mWeakFrame.IsAlive()) {
       if (mWeakFrame.GetFrame()->GetType() == nsGkAtoms::menuFrame) {
         nsMenuFrame* menu = static_cast<nsMenuFrame*>(mWeakFrame.GetFrame());
@@ -401,7 +401,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   if (*aEventStatus == nsEventStatus_eIgnore)
     *aEventStatus = nsEventStatus_eConsumeDoDefault;
 
-  PRBool onmenu = IsOnMenu();
+  bool onmenu = IsOnMenu();
 
   if (aEvent->message == NS_KEY_PRESS && !IsDisabled()) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
@@ -481,7 +481,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
     // Deactivate the menu.
     if (mMenuParent) {
-      PRBool onmenubar = mMenuParent->IsMenuBar();
+      bool onmenubar = mMenuParent->IsMenuBar();
       if (!(onmenubar && mMenuParent->IsActive())) {
         if (IsMenu() && !onmenubar && IsOpen()) {
           // Submenus don't get closed up immediately.
@@ -556,7 +556,7 @@ nsMenuFrame::PopupOpened()
 }
 
 void
-nsMenuFrame::PopupClosed(PRBool aDeselectMenu)
+nsMenuFrame::PopupClosed(bool aDeselectMenu)
 {
   nsWeakFrame weakFrame(this);
   nsContentUtils::AddScriptRunner(
@@ -584,7 +584,7 @@ nsMenuFrame::PopupClosed(PRBool aDeselectMenu)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::SelectMenu(PRBool aActivateFlag)
+nsMenuFrame::SelectMenu(bool aActivateFlag)
 {
   if (mContent) {
     // When a menu opens a submenu, the mouse will often be moved onto a
@@ -653,7 +653,7 @@ nsMenuFrame::AttributeChanged(PRInt32 aNameSpaceID,
 }
 
 void
-nsMenuFrame::OpenMenu(PRBool aSelectFirstItem)
+nsMenuFrame::OpenMenu(bool aSelectFirstItem)
 {
   if (!mContent)
     return;
@@ -669,7 +669,7 @@ nsMenuFrame::OpenMenu(PRBool aSelectFirstItem)
 }
 
 void
-nsMenuFrame::CloseMenu(PRBool aDeselectMenu)
+nsMenuFrame::CloseMenu(bool aDeselectMenu)
 {
   gEatMouseMove = PR_TRUE;
 
@@ -679,10 +679,10 @@ nsMenuFrame::CloseMenu(PRBool aDeselectMenu)
     pm->HidePopup(mPopupFrame->GetContent(), PR_FALSE, aDeselectMenu, PR_TRUE);
 }
 
-PRBool
-nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
+bool
+nsMenuFrame::IsSizedToPopup(nsIContent* aContent, bool aRequireAlways)
 {
-  PRBool sizeToPopup;
+  bool sizeToPopup;
   if (aContent->Tag() == nsGkAtoms::select)
     sizeToPopup = PR_TRUE;
   else {
@@ -714,7 +714,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
   nsresult rv = nsBoxFrame::DoLayout(aState);
 
   if (mPopupFrame) {
-    PRBool sizeToPopup = IsSizedToPopup(mContent, PR_FALSE);
+    bool sizeToPopup = IsSizedToPopup(mContent, false);
     mPopupFrame->LayoutPopup(aState, this, sizeToPopup);
   }
 
@@ -723,11 +723,11 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
 #ifdef DEBUG_LAYOUT
 NS_IMETHODIMP
-nsMenuFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
+nsMenuFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
 {
   // see if our state matches the given debug state
-  PRBool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
-  PRBool debugChanged = (!aDebug && debugSet) || (aDebug && !debugSet);
+  bool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
+  bool debugChanged = (!aDebug && debugSet) || (aDebug && !debugSet);
 
   // if it doesn't then tell each child below us the new debug state
   if (debugChanged)
@@ -741,7 +741,7 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 }
 
 nsresult
-nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
+nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug)
 {
       if (!aList)
           return NS_OK;
@@ -794,13 +794,13 @@ nsMenuFrame::Enter(nsGUIEvent *aEvent)
   return nsnull;
 }
 
-PRBool
+bool
 nsMenuFrame::IsOpen()
 {
   return mPopupFrame && mPopupFrame->IsOpen();
 }
 
-PRBool
+bool
 nsMenuFrame::IsMenu()
 {
   return mIsMenu;
@@ -815,7 +815,7 @@ nsMenuFrame::GetParentMenuListType()
     if (parentMenu) {
       nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
       if (menulist) {
-        PRBool isEditable = PR_FALSE;
+        bool isEditable = false;
         menulist->GetEditable(&isEditable);
         return isEditable ? eEditableMenuList : eReadonlyMenuList;
       }
@@ -873,7 +873,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-PRBool 
+bool 
 nsMenuFrame::IsDisabled()
 {
   return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
@@ -910,7 +910,7 @@ nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 void
 nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext)
 {
-  PRBool newChecked =
+  bool newChecked =
     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
                           nsGkAtoms::_true, eCaseMatters); 
   if (newChecked == mChecked) {
@@ -973,7 +973,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext)
 }
 
 void 
-nsMenuFrame::BuildAcceleratorText(PRBool aNotify)
+nsMenuFrame::BuildAcceleratorText(bool aNotify)
 {
   nsAutoString accelText;
 
@@ -1139,7 +1139,7 @@ void
 nsMenuFrame::Execute(nsGUIEvent *aEvent)
 {
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
-  PRBool needToFlipChecked = PR_FALSE;
+  bool needToFlipChecked = false;
   if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
     needToFlipChecked = !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
                                                nsGkAtoms::_false, eCaseMatters);
@@ -1152,7 +1152,7 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   StartBlinking(aEvent, needToFlipChecked);
 }
 
-PRBool
+bool
 nsMenuFrame::ShouldBlink()
 {
   PRInt32 shouldBlink =
@@ -1168,7 +1168,7 @@ nsMenuFrame::ShouldBlink()
 }
 
 void
-nsMenuFrame::StartBlinking(nsGUIEvent *aEvent, PRBool aFlipChecked)
+nsMenuFrame::StartBlinking(nsGUIEvent *aEvent, bool aFlipChecked)
 {
   StopBlinking();
   CreateMenuCommandEvent(aEvent, aFlipChecked);
@@ -1207,15 +1207,15 @@ nsMenuFrame::StopBlinking()
 }
 
 void
-nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, PRBool aFlipChecked)
+nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, bool aFlipChecked)
 {
   // Create a trusted event if the triggering event was trusted, or if
   // we're called from chrome code (since at least one of our caller
   // passes in a null event).
-  PRBool isTrusted = aEvent ? NS_IS_TRUSTED_EVENT(aEvent) :
+  bool isTrusted = aEvent ? NS_IS_TRUSTED_EVENT(aEvent) :
                               nsContentUtils::IsCallerChrome();
 
-  PRBool shift = PR_FALSE, control = PR_FALSE, alt = PR_FALSE, meta = PR_FALSE;
+  bool shift = false, control = false, alt = false, meta = false;
   if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
                  aEvent->eventStructType == NS_KEY_EVENT)) {
     shift = static_cast<nsInputEvent *>(aEvent)->isShift;
@@ -1227,7 +1227,7 @@ nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, PRBool aFlipChecked)
   // Because the command event is firing asynchronously, a flag is needed to
   // indicate whether user input is being handled. This ensures that a popup
   // window won't get blocked.
-  PRBool userinput = nsEventStateManager::IsHandlingUserInput();
+  bool userinput = nsEventStateManager::IsHandlingUserInput();
 
   mDelayedMenuCommandEvent =
     new nsXULMenuCommandEvent(mContent, isTrusted, shift, control, alt, meta,
@@ -1318,11 +1318,11 @@ nsMenuFrame::AppendFrames(ChildListID     aListID,
   return nsBoxFrame::AppendFrames(aListID, aFrameList); 
 }
 
-PRBool
+bool
 nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (!IsCollapsed(aState)) {
-    PRBool widthSet, heightSet;
+    bool widthSet, heightSet;
     nsSize tmpSize(-1, 0);
     nsIBox::AddCSSPrefSize(this, tmpSize, widthSet, heightSet);
     if (!widthSet && GetFlex(aState) == 0) {

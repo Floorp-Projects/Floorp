@@ -42,7 +42,6 @@ relativesrcdir  = browser/base/content/test
 
 DIRS += \
 		tabview \
-		inspector \
 		$(NULL)
 
 include $(DEPTH)/config/autoconf.mk

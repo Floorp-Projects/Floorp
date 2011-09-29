@@ -54,25 +54,26 @@ class AudioChild : public PAudioChild
 
     AudioChild();
     virtual ~AudioChild();
-    virtual bool RecvSampleOffsetUpdate(const PRInt64&, const PRInt64&);
+    virtual bool RecvPositionInFramesUpdate(const PRInt64&, const PRInt64&);
     virtual bool RecvDrainDone();
-    virtual PRInt32 WaitForMinWriteSample();
-    virtual bool RecvMinWriteSampleDone(const PRInt32& sampleCount);
+    virtual PRInt32 WaitForMinWriteSize();
+    virtual bool RecvMinWriteSizeDone(const PRInt32& frameCount);
     virtual void WaitForDrain();
     virtual void ActorDestroy(ActorDestroyReason);
 
-    PRInt64 GetLastKnownSampleOffset();
-    PRInt64 GetLastKnownSampleOffsetTime();
+    PRInt64 GetLastKnownPosition();
+    PRInt64 GetLastKnownPositionTimestamp();
 
-    PRBool IsIPCOpen() { return mIPCOpen; };
+    bool IsIPCOpen() { return mIPCOpen; };
  private:
     nsAutoRefCnt mRefCnt;
     NS_DECL_OWNINGTHREAD
-    PRInt64 mLastSampleOffset, mLastSampleOffsetTime;
-    PRInt32 mMinWriteSample;
+    PRInt64 mLastPosition;
+    PRInt64 mLastPositionTimestamp;
+    PRInt32 mMinWriteSize;
     mozilla::ReentrantMonitor mAudioReentrantMonitor;
-    PRPackedBool mIPCOpen;
-    PRPackedBool mDrained;
+    bool mIPCOpen;
+    bool mDrained;
 };
 
 } // namespace dom

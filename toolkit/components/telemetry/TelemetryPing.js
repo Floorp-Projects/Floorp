@@ -40,7 +40,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -222,54 +221,6 @@ TelemetryPing.prototype = {
   },
 
   /**
-   * Descriptive metadata
-   * 
-   * @param  reason
-   *         The reason for the telemetry ping, this will be included in the
-   *         returned metadata,
-   * @return The metadata as a JS object
-   */
-  getMetadata: function getMetadata(reason) {
-    let ai = Services.appinfo;
-    let ret = {
-      reason: reason,
-      OS: ai.OS,
-      appID: ai.ID,
-      appVersion: ai.version,
-      appName: ai.name,
-      appBuildID: ai.appBuildID,
-      platformBuildID: ai.platformBuildID,
-    };
-
-    // sysinfo fields are not always available, get what we can.
-    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-    let fields = ["cpucount", "memsize", "arch", "version", "device", "manufacturer", "hardware"];
-    for each (let field in fields) {
-      let value;
-      try {
-        value = sysInfo.getProperty(field);
-      } catch (e) {
-        continue
-      }
-      if (field == "memsize") {
-        // Send RAM size in megabytes. Rounding because sysinfo doesn't
-        // always provide RAM in multiples of 1024.
-        value = Math.round(value / 1024 / 1024)
-      }
-      ret[field] = value
-    }
-
-    let theme = LightweightThemeManager.currentTheme;
-    if (theme)
-      ret.persona = theme.id;
-
-    if (this._addons)
-      ret.addons = this._addons;
-
-    return ret;
-  },
-
-  /**
    * Pull values from about:memory into corresponding histograms
    */
   gatherMemory: function gatherMemory() {
@@ -335,11 +286,10 @@ TelemetryPing.prototype = {
     this.gatherMemory();
     let payload = {
       ver: PAYLOAD_VERSION,
-      info: this.getMetadata(reason),
+      info: getMetadata(reason),
       simpleMeasurements: getSimpleMeasurements(),
       histograms: getHistograms()
     };
-
     let isTestPing = (reason == "test-ping");
     // Generate a unique id once per session so the server can cope with duplicate submissions.
     // Use a deterministic url for testing.
@@ -441,9 +391,6 @@ TelemetryPing.prototype = {
     var server = this._server;
 
     switch (aTopic) {
-    case "Add-ons":
-      this._addons = aData;
-      break;
     case "profile-after-change":
       this.setup();
       break;

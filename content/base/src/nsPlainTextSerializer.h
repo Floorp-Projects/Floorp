@@ -74,8 +74,8 @@ public:
 
   // nsIContentSerializer
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, PRBool aIsCopying,
-                  PRBool aIsWholeDocument);
+                  const char* aCharSet, bool aIsCopying,
+                  bool aIsWholeDocument);
 
   NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr);
@@ -117,9 +117,9 @@ public:
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenHead();
-  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
+  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
+  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
@@ -134,17 +134,17 @@ public:
 protected:
   nsresult GetAttributeValue(const nsIParserNode* node, nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const PRUnichar* aStringToAdd, PRInt32 aLength);
-  void EndLine(PRBool softlinebreak, PRBool aBreakBySpace = PR_FALSE);
+  void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(PRInt32 noOfRows);
   void FlushLine();
-  void OutputQuotesAndIndent(PRBool stripTrailingSpaces=PR_FALSE);
+  void OutputQuotesAndIndent(bool stripTrailingSpaces=false);
   void Output(nsString& aString);
   void Write(const nsAString& aString);
-  PRBool IsBlockLevel(PRInt32 aId);
-  PRBool IsContainer(PRInt32 aId);
-  PRBool IsInPre();
-  PRBool IsInOL();
-  PRBool IsCurrentNodeConverted(const nsIParserNode* aNode);
+  bool IsBlockLevel(PRInt32 aId);
+  bool IsContainer(PRInt32 aId);
+  bool IsInPre();
+  bool IsInOL();
+  bool IsCurrentNodeConverted(const nsIParserNode* aNode);
   static PRInt32 GetIdForContent(nsIContent* aContent);
   nsresult DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);
@@ -153,28 +153,28 @@ protected:
                      const nsAString& aText);
 
   // Inlined functions
-  inline PRBool MayWrap()
+  inline bool MayWrap()
   {
     return mWrapColumn &&
       ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
        (mFlags & nsIDocumentEncoder::OutputWrap));
   }
 
-  inline PRBool DoOutput()
+  inline bool DoOutput()
   {
     return mHeadLevel == 0;
   }
 
   // Stack handling functions
-  PRBool GetLastBool(const nsTArray<PRPackedBool>& aStack);
-  void SetLastBool(nsTArray<PRPackedBool>& aStack, PRBool aValue);
-  void PushBool(nsTArray<PRPackedBool>& aStack, PRBool aValue);
-  PRBool PopBool(nsTArray<PRPackedBool>& aStack);
+  bool GetLastBool(const nsTArray<bool>& aStack);
+  void SetLastBool(nsTArray<bool>& aStack, bool aValue);
+  void PushBool(nsTArray<bool>& aStack, bool aValue);
+  bool PopBool(nsTArray<bool>& aStack);
   
 protected:
   nsString         mCurrentLine;
   PRUint32         mHeadLevel;
-  PRPackedBool     mAtFirstColumn;
+  bool             mAtFirstColumn;
 
   // Handling of quoted text (for mail):
   // Quotes need to be wrapped differently from non-quoted text,
@@ -184,15 +184,15 @@ protected:
   // quotes in a <pre> (if editor.quotesPreformatted is set),
   // or not wrapped in any special tag (if mail.compose.wrap_to_window_width)
   // or in a <span> (if neither of the above are set).
-  PRPackedBool     mQuotesPreformatted; // expect quotes wrapped in <pre>
-  PRPackedBool     mDontWrapAnyQuotes;  // no special quote markers
+  bool             mQuotesPreformatted; // expect quotes wrapped in <pre>
+  bool             mDontWrapAnyQuotes;  // no special quote markers
 
-  PRPackedBool     mStructs;            // Output structs (pref)
+  bool             mStructs;            // Output structs (pref)
 
   // If we've just written out a cite blockquote, we need to remember it
   // so we don't duplicate spaces before a <pre wrap> (which mail uses to quote
   // old messages).
-  PRPackedBool     mHasWrittenCiteBlockquote;
+  bool             mHasWrittenCiteBlockquote;
 
   PRInt32          mIndent;
   // mInIndentString keeps a header that has to be written in the indent.
@@ -219,14 +219,14 @@ protected:
                                 // the current. 0 if we are starting a new
                                 // line and -1 if we are in a line.
 
-  PRPackedBool     mInWhitespace;
-  PRPackedBool     mPreFormatted;
-  PRPackedBool     mStartedOutput; // we've produced at least a character
+  bool             mInWhitespace;
+  bool             mPreFormatted;
+  bool             mStartedOutput; // we've produced at least a character
 
   // While handling a new tag, this variable should remind if any line break
   // is due because of a closing tag. Setting it to "TRUE" while closing the tags.
   // Hence opening tags are guaranteed to start with appropriate line breaks.
-  PRPackedBool     mLineBreakDue; 
+  bool             mLineBreakDue; 
 
   nsString         mURL;
   PRInt32          mHeaderStrategy;    /* Header strategy (pref)
@@ -243,11 +243,11 @@ protected:
   nsRefPtr<mozilla::dom::Element> mElement;
 
   // For handling table rows
-  nsAutoTArray<PRPackedBool, 8> mHasWrittenCellsForRow;
+  nsAutoTArray<bool, 8> mHasWrittenCellsForRow;
   
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
-  nsAutoTArray<PRPackedBool, 8> mCurrentNodeIsConverted;
-  nsAutoTArray<PRPackedBool, 8> mIsInCiteBlockquote;
+  nsAutoTArray<bool, 8> mCurrentNodeIsConverted;
+  nsAutoTArray<bool, 8> mIsInCiteBlockquote;
 
   // The output data
   nsAString*            mOutputString;

@@ -1,4 +1,4 @@
-typedef int PRBool;
+typedef int bool;
 typedef int PRUint32;
 typedef int PRInt32;
 
@@ -7,9 +7,9 @@ typedef short PRUnichar;
 
 #define NS_OUTPARAM __attribute__((user("NS_outparam")))
 
-PRBool baz(int *p NS_OUTPARAM);
+bool baz(int *p NS_OUTPARAM);
 
-PRBool bar(int *p NS_OUTPARAM) {
+bool bar(int *p NS_OUTPARAM) {
   return baz(p);
 }
 

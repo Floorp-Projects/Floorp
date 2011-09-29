@@ -81,11 +81,11 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap);
+                             bool aShrinkWrap);
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
-  virtual PRBool IsLeaf() const;
+  virtual bool IsLeaf() const;
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -98,7 +98,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
@@ -111,7 +111,7 @@ public:
 
   // Returns PR_TRUE if we should display the poster. Note that once we show
   // a video frame, the poster will never be displayed again.
-  PRBool ShouldDisplayPoster();
+  bool ShouldDisplayPoster();
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -125,17 +125,17 @@ protected:
 
   // Returns PR_TRUE if we're rendering for a video element. We still create
   // nsVideoFrame to render controls for an audio element.
-  PRBool HasVideoElement();
+  bool HasVideoElement();
 
   // Returns PR_TRUE if there is video data to render. Can return false
   // when we're the frame for an audio element, or we've created a video
   // element for a media which is audio-only.
-  PRBool HasVideoData();
+  bool HasVideoData();
 
   // Sets the mPosterImage's src attribute to be the video's poster attribute,
   // if we're the frame for a video element. Only call on frames for video
   // elements, not for frames for audio elements.
-  nsresult UpdatePosterSource(PRBool aNotify);
+  nsresult UpdatePosterSource(bool aNotify);
 
   virtual ~nsVideoFrame();
 

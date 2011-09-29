@@ -74,14 +74,14 @@ private:
     PRUint32 mCurrent;
 
     // Is the buffer full? (Has mCurrent wrapped around at least once?)
-    PRBool mFull;
+    bool mFull;
 
     // Listeners to notify whenever a new message is logged.
     nsSupportsHashtable mListeners;
 
     // Current listener being notified of a logged error - to prevent
     // stack overflows.
-    PRBool mListening;
+    bool mListening;
 
     // To serialize interesting methods.
     mozilla::Mutex mLock;

@@ -59,7 +59,7 @@ public:
   PRUint32 HashCode(void) const {
     return mKey;
   }
-  PRBool Equals(const nsHashKey *aKey) const {
+  bool Equals(const nsHashKey *aKey) const {
     return mKey == ((const nsProviderKey *) aKey)->mKey;
   }
   nsHashKey *Clone() const {

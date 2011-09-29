@@ -138,11 +138,11 @@ public:
    * NS_ERROR_NOT_AVAILABLE. Note that this DOES NOT disable
    * currently loading or executing scripts.
    */
-  PRBool GetEnabled()
+  bool GetEnabled()
   {
     return mEnabled;
   }
-  void SetEnabled(PRBool aEnabled)
+  void SetEnabled(bool aEnabled)
   {
     if (!mEnabled && aEnabled) {
       ProcessPendingRequestsAsync();
@@ -199,7 +199,7 @@ public:
    * Check whether it's OK to execute a script loaded via aChannel in
    * aDocument.
    */
-  static PRBool ShouldExecuteScript(nsIDocument* aDocument,
+  static bool ShouldExecuteScript(nsIDocument* aDocument,
                                     nsIChannel* aChannel);
 
   /**
@@ -223,7 +223,7 @@ public:
    * WARNING: This function will synchronously execute content scripts, so be
    * prepared that the world might change around you.
    */
-  void ParsingComplete(PRBool aTerminated);
+  void ParsingComplete(bool aTerminated);
 
   /**
    * Returns the number of pending scripts, deferred or not.
@@ -272,17 +272,17 @@ private:
    * function will add an execute blocker and ask the ancestor to remove it
    * once it becomes ready.
    */
-  PRBool ReadyToExecuteScripts();
+  bool ReadyToExecuteScripts();
 
   /**
    * Return whether just this loader is ready to execute scripts.
    */
-  PRBool SelfReadyToExecuteScripts()
+  bool SelfReadyToExecuteScripts()
   {
     return mEnabled && !mBlockerCount;
   }
 
-  PRBool AddPendingChildLoader(nsScriptLoader* aChild) {
+  bool AddPendingChildLoader(nsScriptLoader* aChild) {
     return mPendingChildLoaders.AppendElement(aChild) != nsnull;
   }
   
@@ -315,14 +315,14 @@ private:
   };
 
   struct PreloadRequestComparator {
-    PRBool Equals(const PreloadInfo &aPi, nsScriptLoadRequest * const &aRequest)
+    bool Equals(const PreloadInfo &aPi, nsScriptLoadRequest * const &aRequest)
         const
     {
       return aRequest == aPi.mRequest;
     }
   };
   struct PreloadURIComparator {
-    PRBool Equals(const PreloadInfo &aPi, nsIURI * const &aURI) const;
+    bool Equals(const PreloadInfo &aPi, nsIURI * const &aURI) const;
   };
   nsTArray<PreloadInfo> mPreloads;
 
@@ -331,9 +331,9 @@ private:
   // XXXbz do we want to cycle-collect these or something?  Not sure.
   nsTArray< nsRefPtr<nsScriptLoader> > mPendingChildLoaders;
   PRUint32 mBlockerCount;
-  PRPackedBool mEnabled;
-  PRPackedBool mDeferEnabled;
-  PRPackedBool mDocumentParsingDone;
+  bool mEnabled;
+  bool mDeferEnabled;
+  bool mDocumentParsingDone;
 };
 
 class nsAutoScriptLoaderDisabler
@@ -355,7 +355,7 @@ public:
     }
   }
   
-  PRBool mWasEnabled;
+  bool mWasEnabled;
   nsRefPtr<nsScriptLoader> mLoader;
 };
 

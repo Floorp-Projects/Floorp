@@ -111,7 +111,7 @@ void nsNativeAppSupportQt::RefreshStates()
 #endif
 
 NS_IMETHODIMP
-nsNativeAppSupportQt::Start(PRBool* aRetVal)
+nsNativeAppSupportQt::Start(bool* aRetVal)
 {
   NS_ASSERTION(gAppData, "gAppData must not be null.");
 
@@ -161,7 +161,7 @@ nsNativeAppSupportQt::Start(PRBool* aRetVal)
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportQt::Stop(PRBool* aResult)
+nsNativeAppSupportQt::Stop(bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
   *aResult = PR_TRUE;

@@ -149,7 +149,7 @@ nsContentDLF::~nsContentDLF()
 NS_IMPL_ISUPPORTS1(nsContentDLF,
                    nsIDocumentLoaderFactory)
 
-PRBool
+bool
 MayUseXULXBL(nsIChannel* aChannel)
 {
   nsIScriptSecurityManager *securityManager =
@@ -201,7 +201,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     // type of the data.  If it's known, use it; otherwise use
     // text/plain.
     viewSourceChannel->GetOriginalContentType(type);
-    PRBool knownType = PR_FALSE;
+    bool knownType = false;
     PRInt32 typeIndex;
     for (typeIndex = 0; gHTMLTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gHTMLTypes[typeIndex]) &&
@@ -527,9 +527,9 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
   return rv;
 }
 
-PRBool nsContentDLF::IsImageContentType(const char* aContentType) {
+bool nsContentDLF::IsImageContentType(const char* aContentType) {
   nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-  PRBool isDecoderAvailable = PR_FALSE;
+  bool isDecoderAvailable = false;
   loader->SupportImageWithMimeType(aContentType, &isDecoderAvailable);
   return isDecoderAvailable;
 }

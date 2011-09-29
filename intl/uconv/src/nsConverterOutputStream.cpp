@@ -85,7 +85,7 @@ nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
 
 NS_IMETHODIMP
 nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
-                               PRBool* aSuccess)
+                               bool* aSuccess)
 {
     if (!mOutStream) {
         NS_ASSERTION(!mConverter, "Closed streams shouldn't have converters");
@@ -123,7 +123,7 @@ nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
 }
 
 NS_IMETHODIMP
-nsConverterOutputStream::WriteString(const nsAString& aString, PRBool* aSuccess)
+nsConverterOutputStream::WriteString(const nsAString& aString, bool* aSuccess)
 {
     PRInt32 inLen = aString.Length();
     nsAString::const_iterator i;

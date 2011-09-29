@@ -99,7 +99,8 @@ nsICODecoder::GetNumColors()
 }
 
 
-nsICODecoder::nsICODecoder()
+nsICODecoder::nsICODecoder(RasterImage *aImage, imgIDecoderObserver* aObserver)
+ : Decoder(aImage, aObserver)
 {
   mPos = mImageOffset = mCurrIcon = mNumIcons = mBPP = mRowBytes = 0;
   mIsPNG = PR_FALSE;
@@ -133,7 +134,7 @@ nsICODecoder::FinishInternal()
 // reserved	 4 bytes unused (=0)
 // DataOffset	 4 bytes File offset to Raster Data
 // Returns PR_TRUE if successful
-PRBool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh) 
+bool nsICODecoder::FillBitmapFileHeaderBuffer(PRInt8 *bfh) 
 {
   memset(bfh, 0, 14);
   bfh[0] = 'B';
@@ -317,8 +318,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     mIsPNG = !memcmp(mSignature, nsPNGDecoder::pngSignatureBytes, 
                      PNGSIGNATURESIZE);
     if (mIsPNG) {
-      mContainedDecoder = new nsPNGDecoder();
-      mContainedDecoder->InitSharedDecoder(mImage, mObserver);
+      mContainedDecoder = new nsPNGDecoder(mImage, mObserver);
+      mContainedDecoder->InitSharedDecoder();
       mContainedDecoder->Write(mSignature, PNGSIGNATURESIZE);
       mDataError = mContainedDecoder->HasDataError();
       if (mContainedDecoder->HasDataError()) {
@@ -386,11 +387,11 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     // Init the bitmap decoder which will do most of the work for us
     // It will do everything except the AND mask which isn't present in bitmaps
     // bmpDecoder is for local scope ease, it will be freed by mContainedDecoder
-    nsBMPDecoder *bmpDecoder = new nsBMPDecoder(); 
+    nsBMPDecoder *bmpDecoder = new nsBMPDecoder(mImage, mObserver); 
     mContainedDecoder = bmpDecoder;
     bmpDecoder->SetUseAlphaData(PR_TRUE);
     mContainedDecoder->SetSizeDecode(IsSizeDecode());
-    mContainedDecoder->InitSharedDecoder(mImage, mObserver);
+    mContainedDecoder->InitSharedDecoder();
 
     // The ICO format when containing a BMP does not include the 14 byte
     // bitmap file header. To use the code of the BMP decoder we need to 

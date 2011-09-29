@@ -86,11 +86,11 @@ public:
 static nsresult TokenizeQueryString(const nsACString& aQuery,
                                     nsTArray<QueryKeyValuePair>* aTokens);
 static nsresult ParseQueryBooleanString(const nsCString& aString,
-                                        PRBool* aValue);
+                                        bool* aValue);
 
 // query getters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQueryGetter, nsINavHistoryQuery,
-                             GetOnlyBookmarked, (PRBool*));
+                             GetOnlyBookmarked, (bool*));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QueryGetter, nsINavHistoryQuery,
                              GetBeginTimeReference, (PRUint32*));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QueryGetter, nsINavHistoryQuery,
@@ -110,7 +110,7 @@ static void AppendInt64KeyValueIfNonzero(nsACString& aString,
 
 // query setters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQuerySetter, nsINavHistoryQuery,
-                             SetOnlyBookmarked, (PRBool));
+                             SetOnlyBookmarked, (bool));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QuerySetter, nsINavHistoryQuery,
                              SetBeginTimeReference, (PRUint32));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QuerySetter, nsINavHistoryQuery,
@@ -125,7 +125,7 @@ static void SetQueryKeyInt64(const nsCString& aValue, nsINavHistoryQuery* aQuery
 // options setters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolOptionsSetter,
                              nsINavHistoryQueryOptions,
-                             SetExpandQueries, (PRBool));
+                             SetExpandQueries, (bool));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32OptionsSetter,
                              nsINavHistoryQueryOptions,
                              SetMaxResults, (PRUint32));
@@ -384,7 +384,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       queryString += NS_LITERAL_CSTRING(QUERYKEY_SEPARATOR);
     }
 
-    PRBool hasIt;
+    bool hasIt;
 
     // begin time
     query->GetHasBeginTime(&hasIt);
@@ -455,7 +455,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       nsresult rv = query->GetDomain(domain);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCString escapedDomain;
-      PRBool success = NS_Escape(domain, escapedDomain, url_XAlphas);
+      bool success = NS_Escape(domain, escapedDomain, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
       AppendAmpersandIfNonempty(queryString);
@@ -476,7 +476,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       nsresult rv = uri->GetSpec(uriSpec);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCAutoString escaped;
-      PRBool success = NS_Escape(uriSpec, escaped, url_XAlphas);
+      bool success = NS_Escape(uriSpec, escaped, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
       AppendAmpersandIfNonempty(queryString);
@@ -488,7 +488,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     query->GetHasAnnotation(&hasIt);
     if (hasIt) {
       AppendAmpersandIfNonempty(queryString);
-      PRBool annotationIsNot;
+      bool annotationIsNot;
       query->GetAnnotationIsNot(&annotationIsNot);
       if (annotationIsNot)
         queryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
@@ -497,7 +497,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       nsCAutoString annot;
       query->GetAnnotation(annot);
       nsCAutoString escaped;
-      PRBool success = NS_Escape(annot, escaped, url_XAlphas);
+      bool success = NS_Escape(annot, escaped, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
       queryString.Append(escaped);
     }
@@ -941,7 +941,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 //    Converts a 0/1 or true/false string into a bool
 
 nsresult
-ParseQueryBooleanString(const nsCString& aString, PRBool* aValue)
+ParseQueryBooleanString(const nsCString& aString, bool* aValue)
 {
   if (aString.EqualsLiteral("1") || aString.EqualsLiteral("true")) {
     *aValue = PR_TRUE;
@@ -1004,7 +1004,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetBeginTimeReference(PRUint32 aReference)
 }
 
 /* readonly attribute boolean hasBeginTime; */
-NS_IMETHODIMP nsNavHistoryQuery::GetHasBeginTime(PRBool* _retval)
+NS_IMETHODIMP nsNavHistoryQuery::GetHasBeginTime(bool* _retval)
 {
   *_retval = ! (mBeginTimeReference == TIME_RELATIVE_EPOCH && mBeginTime == 0);
   return NS_OK;
@@ -1044,7 +1044,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetEndTimeReference(PRUint32 aReference)
 }
 
 /* readonly attribute boolean hasEndTime; */
-NS_IMETHODIMP nsNavHistoryQuery::GetHasEndTime(PRBool* _retval)
+NS_IMETHODIMP nsNavHistoryQuery::GetHasEndTime(bool* _retval)
 {
   *_retval = ! (mEndTimeReference == TIME_RELATIVE_EPOCH && mEndTime == 0);
   return NS_OK;
@@ -1068,7 +1068,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetSearchTerms(const nsAString& aSearchTerms)
   mSearchTerms = aSearchTerms;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::GetHasSearchTerms(PRBool* _retval)
+NS_IMETHODIMP nsNavHistoryQuery::GetHasSearchTerms(bool* _retval)
 {
   *_retval = (! mSearchTerms.IsEmpty());
   return NS_OK;
@@ -1101,24 +1101,24 @@ NS_IMETHODIMP nsNavHistoryQuery::SetMaxVisits(PRInt32 aVisits)
 }
 
 /* attribute boolean onlyBookmarked; */
-NS_IMETHODIMP nsNavHistoryQuery::GetOnlyBookmarked(PRBool *aOnlyBookmarked)
+NS_IMETHODIMP nsNavHistoryQuery::GetOnlyBookmarked(bool *aOnlyBookmarked)
 {
   *aOnlyBookmarked = mOnlyBookmarked;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::SetOnlyBookmarked(PRBool aOnlyBookmarked)
+NS_IMETHODIMP nsNavHistoryQuery::SetOnlyBookmarked(bool aOnlyBookmarked)
 {
   mOnlyBookmarked = aOnlyBookmarked;
   return NS_OK;
 }
 
 /* attribute boolean domainIsHost; */
-NS_IMETHODIMP nsNavHistoryQuery::GetDomainIsHost(PRBool *aDomainIsHost)
+NS_IMETHODIMP nsNavHistoryQuery::GetDomainIsHost(bool *aDomainIsHost)
 {
   *aDomainIsHost = mDomainIsHost;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::SetDomainIsHost(PRBool aDomainIsHost)
+NS_IMETHODIMP nsNavHistoryQuery::SetDomainIsHost(bool aDomainIsHost)
 {
   mDomainIsHost = aDomainIsHost;
   return NS_OK;
@@ -1135,7 +1135,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetDomain(const nsACString& aDomain)
   mDomain = aDomain;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(PRBool* _retval)
+NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(bool* _retval)
 {
   // note that empty but not void is still a valid query (local files)
   *_retval = (! mDomain.IsVoid());
@@ -1143,12 +1143,12 @@ NS_IMETHODIMP nsNavHistoryQuery::GetHasDomain(PRBool* _retval)
 }
 
 /* attribute boolean uriIsPrefix; */
-NS_IMETHODIMP nsNavHistoryQuery::GetUriIsPrefix(PRBool* aIsPrefix)
+NS_IMETHODIMP nsNavHistoryQuery::GetUriIsPrefix(bool* aIsPrefix)
 {
   *aIsPrefix = mUriIsPrefix;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::SetUriIsPrefix(PRBool aIsPrefix)
+NS_IMETHODIMP nsNavHistoryQuery::SetUriIsPrefix(bool aIsPrefix)
 {
   mUriIsPrefix = aIsPrefix;
   return NS_OK;
@@ -1165,19 +1165,19 @@ NS_IMETHODIMP nsNavHistoryQuery::SetUri(nsIURI* aUri)
   mUri = aUri;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::GetHasUri(PRBool* aHasUri)
+NS_IMETHODIMP nsNavHistoryQuery::GetHasUri(bool* aHasUri)
 {
   *aHasUri = (mUri != nsnull);
   return NS_OK;
 }
 
 /* attribute boolean annotationIsNot; */
-NS_IMETHODIMP nsNavHistoryQuery::GetAnnotationIsNot(PRBool* aIsNot)
+NS_IMETHODIMP nsNavHistoryQuery::GetAnnotationIsNot(bool* aIsNot)
 {
   *aIsNot = mAnnotationIsNot;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::SetAnnotationIsNot(PRBool aIsNot)
+NS_IMETHODIMP nsNavHistoryQuery::SetAnnotationIsNot(bool aIsNot)
 {
   mAnnotationIsNot = aIsNot;
   return NS_OK;
@@ -1194,7 +1194,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetAnnotation(const nsACString& aAnnotation)
   mAnnotation = aAnnotation;
   return NS_OK;
 }
-NS_IMETHODIMP nsNavHistoryQuery::GetHasAnnotation(PRBool* aHasIt)
+NS_IMETHODIMP nsNavHistoryQuery::GetHasAnnotation(bool* aHasIt)
 {
   *aHasIt = ! mAnnotation.IsEmpty();
   return NS_OK;
@@ -1323,14 +1323,14 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTags(nsIVariant *aTags)
 }
 
 /* attribute boolean tagsAreNot; */
-NS_IMETHODIMP nsNavHistoryQuery::GetTagsAreNot(PRBool *aTagsAreNot)
+NS_IMETHODIMP nsNavHistoryQuery::GetTagsAreNot(bool *aTagsAreNot)
 {
   NS_ENSURE_ARG_POINTER(aTagsAreNot);
   *aTagsAreNot = mTagsAreNot;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::SetTagsAreNot(PRBool aTagsAreNot)
+NS_IMETHODIMP nsNavHistoryQuery::SetTagsAreNot(bool aTagsAreNot)
 {
   mTagsAreNot = aTagsAreNot;
   return NS_OK;
@@ -1473,13 +1473,13 @@ nsNavHistoryQueryOptions::SetResultType(PRUint16 aType)
 
 // excludeItems
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetExcludeItems(PRBool* aExclude)
+nsNavHistoryQueryOptions::GetExcludeItems(bool* aExclude)
 {
   *aExclude = mExcludeItems;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetExcludeItems(PRBool aExclude)
+nsNavHistoryQueryOptions::SetExcludeItems(bool aExclude)
 {
   mExcludeItems = aExclude;
   return NS_OK;
@@ -1487,13 +1487,13 @@ nsNavHistoryQueryOptions::SetExcludeItems(PRBool aExclude)
 
 // excludeQueries
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetExcludeQueries(PRBool* aExclude)
+nsNavHistoryQueryOptions::GetExcludeQueries(bool* aExclude)
 {
   *aExclude = mExcludeQueries;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetExcludeQueries(PRBool aExclude)
+nsNavHistoryQueryOptions::SetExcludeQueries(bool aExclude)
 {
   mExcludeQueries = aExclude;
   return NS_OK;
@@ -1501,13 +1501,13 @@ nsNavHistoryQueryOptions::SetExcludeQueries(PRBool aExclude)
 
 // excludeReadOnlyFolders
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetExcludeReadOnlyFolders(PRBool* aExclude)
+nsNavHistoryQueryOptions::GetExcludeReadOnlyFolders(bool* aExclude)
 {
   *aExclude = mExcludeReadOnlyFolders;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetExcludeReadOnlyFolders(PRBool aExclude)
+nsNavHistoryQueryOptions::SetExcludeReadOnlyFolders(bool aExclude)
 {
   mExcludeReadOnlyFolders = aExclude;
   return NS_OK;
@@ -1528,13 +1528,13 @@ nsNavHistoryQueryOptions::SetExcludeItemIfParentHasAnnotation(const nsACString& 
 
 // expandQueries
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetExpandQueries(PRBool* aExpand)
+nsNavHistoryQueryOptions::GetExpandQueries(bool* aExpand)
 {
   *aExpand = mExpandQueries;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetExpandQueries(PRBool aExpand)
+nsNavHistoryQueryOptions::SetExpandQueries(bool aExpand)
 {
   mExpandQueries = aExpand;
   return NS_OK;
@@ -1542,13 +1542,13 @@ nsNavHistoryQueryOptions::SetExpandQueries(PRBool aExpand)
 
 // includeHidden
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetIncludeHidden(PRBool* aIncludeHidden)
+nsNavHistoryQueryOptions::GetIncludeHidden(bool* aIncludeHidden)
 {
   *aIncludeHidden = mIncludeHidden;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetIncludeHidden(PRBool aIncludeHidden)
+nsNavHistoryQueryOptions::SetIncludeHidden(bool aIncludeHidden)
 {
   mIncludeHidden = aIncludeHidden;
   return NS_OK;
@@ -1603,13 +1603,13 @@ nsNavHistoryQueryOptions::SetQueryType(PRUint16 aQueryType)
 
 // asyncEnabled
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetAsyncEnabled(PRBool* _asyncEnabled)
+nsNavHistoryQueryOptions::GetAsyncEnabled(bool* _asyncEnabled)
 {
   *_asyncEnabled = mAsyncEnabled;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetAsyncEnabled(PRBool aAsyncEnabled)
+nsNavHistoryQueryOptions::SetAsyncEnabled(bool aAsyncEnabled)
 {
   mAsyncEnabled = aAsyncEnabled;
   return NS_OK;
@@ -1656,7 +1656,7 @@ AppendBoolKeyValueIfTrue(nsACString& aString, const nsCString& aName,
                          nsINavHistoryQuery* aQuery,
                          BoolQueryGetter getter)
 {
-  PRBool value;
+  bool value;
   DebugOnly<nsresult> rv = (aQuery->*getter)(&value);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failure getting boolean value");
   if (value) {
@@ -1717,7 +1717,7 @@ void // static
 SetQueryKeyBool(const nsCString& aValue, nsINavHistoryQuery* aQuery,
                 BoolQuerySetter setter)
 {
-  PRBool value;
+  bool value;
   nsresult rv = ParseQueryBooleanString(aValue, &value);
   if (NS_SUCCEEDED(rv)) {
     rv = (aQuery->*setter)(value);
@@ -1732,7 +1732,7 @@ void // static
 SetOptionsKeyBool(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions,
                  BoolOptionsSetter setter)
 {
-  PRBool value;
+  bool value;
   nsresult rv = ParseQueryBooleanString(aValue, &value);
   if (NS_SUCCEEDED(rv)) {
     rv = (aOptions->*setter)(value);

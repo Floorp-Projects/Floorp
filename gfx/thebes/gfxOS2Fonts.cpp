@@ -476,7 +476,7 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
     return mScaledFont;
 }
 
-PRBool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
+bool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::SetupCairoFont(%#x)\n",
@@ -584,7 +584,7 @@ gfxFontGroup *gfxOS2FontGroup::Copy(const gfxFontStyle *aStyle)
  * string. This forces Pango to honour our direction even if there are neutral
  * characters in the string.
  */
-static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString)
+static PRInt32 AppendDirectionalIndicatorUTF8(bool aIsRTL, nsACString& aString)
 {
     static const PRUnichar overrides[2][2] = { { 0x202d, 0 }, { 0x202e, 0 }}; // LRO, RLO
     AppendUTF16toUTF8(overrides[aIsRTL], aString);
@@ -636,7 +636,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
 
     const char *chars = reinterpret_cast<const char *>(aString);
-    PRBool isRTL = textRun->IsRightToLeft();
+    bool isRTL = textRun->IsRightToLeft();
     if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
         // We don't need to send an override character here, the characters must be all
         // LTR
@@ -716,7 +716,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
     // lock it before the loop for efficiency
     FT_Face face0 = cairo_ft_scaled_font_lock_face(font0->CairoScaledFont());
     while (p < aUTF8 + aUTF8Length) {
-        PRBool glyphFound = PR_FALSE;
+        bool glyphFound = false;
         // convert UTF-8 character and step to the next one in line
         PRUint8 chLen;
         PRUint32 ch = getUTF8CharAndNext(p, &chLen);
@@ -872,9 +872,9 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
 }
 
 // append aFontName to aClosure string array, if not already present
-PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
+bool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
                                      const nsACString& aGenericName,
-                                     PRBool aUseFontSet,
+                                     bool aUseFontSet,
                                      void *aClosure)
 {
     nsTArray<nsString> *sa = static_cast<nsTArray<nsString>*>(aClosure);

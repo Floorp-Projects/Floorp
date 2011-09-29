@@ -142,7 +142,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
         case nsXPTType::T_U16    : *((uint32*) l_d) = l_s->val.u16;         break;
         case nsXPTType::T_U32    : *((uint32*) l_d) = l_s->val.u32;         break;
         case nsXPTType::T_FLOAT  : *((float*)  l_d) = l_s->val.f;           break;
-        case nsXPTType::T_BOOL   : *((PRBool*) l_d) = l_s->val.b;           break;
+        case nsXPTType::T_BOOL   : *((bool*) l_d) = l_s->val.b;           break;
         case nsXPTType::T_CHAR   : *((uint32*)   l_d) = l_s->val.c;           break;
         case nsXPTType::T_WCHAR  : *((int32*)l_d) = l_s->val.wc;          break;
         default:

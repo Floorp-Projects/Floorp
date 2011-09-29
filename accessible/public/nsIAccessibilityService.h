@@ -83,7 +83,7 @@ public:
    *                        should be returned from the cache or can be created
    */
   virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                  PRBool aCanCreate) = 0;
+                                                  bool aCanCreate) = 0;
 
   /**
    * Creates accessible for the given DOM node or frame.

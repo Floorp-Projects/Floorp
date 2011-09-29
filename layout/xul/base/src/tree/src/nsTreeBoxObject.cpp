@@ -193,7 +193,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
   return NS_OK;
 }
 
-static PRBool
+static bool
 CanTrustView(nsISupports* aValue)
 {
   // Untrusted content is only allowed to specify known-good views
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBoxObject::GetFocused(PRBool* aFocused)
+NS_IMETHODIMP nsTreeBoxObject::GetFocused(bool* aFocused)
 {
   *aFocused = PR_FALSE;
   nsTreeBodyFrame* body = GetTreeBody();
@@ -229,7 +229,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetFocused(PRBool* aFocused)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBoxObject::SetFocused(PRBool aFocused)
+NS_IMETHODIMP nsTreeBoxObject::SetFocused(bool aFocused)
 {
   nsTreeBodyFrame* body = GetTreeBody();
   if (body)
@@ -471,7 +471,7 @@ nsTreeBoxObject::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
 }
 
 NS_IMETHODIMP
-nsTreeBoxObject::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *aIsCropped)
+nsTreeBoxObject::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, bool *aIsCropped)
 {  
   *aIsCropped = PR_FALSE;
   nsTreeBodyFrame* body = GetTreeBody();

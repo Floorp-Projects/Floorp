@@ -79,7 +79,7 @@ public:
 
 private:
     nsresult CreateJarInput(nsIZipReaderCache *);
-    nsresult EnsureJarInput(PRBool blocking);
+    nsresult EnsureJarInput(bool blocking);
 
 #if defined(PR_LOGGING)
     nsCString                       mSpec;
@@ -103,8 +103,8 @@ private:
     PRInt32                         mContentLength;
     PRUint32                        mLoadFlags;
     nsresult                        mStatus;
-    PRPackedBool                    mIsPending;
-    PRPackedBool                    mIsUnsafe;
+    bool                            mIsPending;
+    bool                            mIsUnsafe;
 
     nsJARInputThunk                *mJarInput;
     nsCOMPtr<nsIStreamListener>     mDownloader;

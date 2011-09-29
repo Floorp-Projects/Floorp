@@ -70,7 +70,7 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  PRBool IsEmpty() const {
+  bool IsEmpty() const {
     return mItems.IsEmpty();
   }
 
@@ -82,14 +82,14 @@ public:
     return mItems[aIndex];
   }
 
-  PRBool operator==(const SVGPointList& rhs) const {
+  bool operator==(const SVGPointList& rhs) const {
     // memcmp can be faster than |mItems == rhs.mItems|
     return mItems.Length() == rhs.mItems.Length() &&
            memcmp(mItems.Elements(), rhs.mItems.Elements(),
                   mItems.Length() * sizeof(SVGPoint)) == 0;
   }
 
-  PRBool SetCapacity(PRUint32 aSize) {
+  bool SetCapacity(PRUint32 aSize) {
     return mItems.SetCapacity(aSize);
   }
 
@@ -120,7 +120,7 @@ protected:
    * This may fail (return PR_FALSE) on OOM if the internal capacity is being
    * increased, in which case the list will be left unmodified.
    */
-  PRBool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(PRUint32 aNumberOfItems) {
     return mItems.SetLength(aNumberOfItems);
   }
 
@@ -136,7 +136,7 @@ private:
     mItems.Clear();
   }
 
-  PRBool InsertItem(PRUint32 aIndex, const SVGPoint &aPoint) {
+  bool InsertItem(PRUint32 aIndex, const SVGPoint &aPoint) {
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
@@ -155,7 +155,7 @@ private:
     mItems.RemoveElementAt(aIndex);
   }
 
-  PRBool AppendItem(SVGPoint aPoint) {
+  bool AppendItem(SVGPoint aPoint) {
     return !!mItems.AppendElement(aPoint);
   }
 
@@ -216,7 +216,7 @@ public:
   SVGPoint& operator[](PRUint32 aIndex) {
     return SVGPointList::operator[](aIndex);
   }
-  PRBool SetLength(PRUint32 aNumberOfItems) {
+  bool SetLength(PRUint32 aNumberOfItems) {
     return SVGPointList::SetLength(aNumberOfItems);
   }
 

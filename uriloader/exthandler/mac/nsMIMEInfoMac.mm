@@ -53,7 +53,7 @@ NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescriptio
   if (mDefaultApplication) {
     nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mDefaultApplication);
     if (macFile) {
-      PRBool isPackage;
+      bool isPackage;
       (void)macFile->IsPackage(&isPackage);
       if (isPackage)
         return macFile->GetBundleDisplayName(aDefaultDescription);

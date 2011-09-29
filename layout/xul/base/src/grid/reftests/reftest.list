@@ -9,7 +9,7 @@
 == not-full-grid-pack-align.xul not-full-basic-ref.xhtml
 == not-full-row-group-align.xul not-full-row-group-align-ref.xhtml # does anyone want/need this behavior?
 == not-full-row-group-pack.xul not-full-row-group-pack-ref.xhtml
-== not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml
+fails-if(Android&&layersOpenGL) == not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml
 == not-full-row-leaf-align.xul not-full-basic-ref.xhtml
 == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
 == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml

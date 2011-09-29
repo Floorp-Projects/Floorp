@@ -93,7 +93,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   nsWeakFrame weakFrame(this);
-  PRBool doDefault = PR_TRUE;
+  bool doDefault = true;
 
   switch (aEvent->message) {
     case NS_MOUSE_BUTTON_DOWN: {
@@ -345,7 +345,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     }
 
     // don't allow resizing windows in content shells
-    PRBool isChromeShell = PR_FALSE;
+    bool isChromeShell = false;
     nsCOMPtr<nsISupports> cont = aPresShell->GetPresContext()->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
     if (dsti) {

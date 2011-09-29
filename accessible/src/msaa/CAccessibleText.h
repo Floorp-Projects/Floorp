@@ -151,12 +151,12 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) = 0;
 
 protected:
-  virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,
+  virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
                                    PRUint32 *aStartOffset,
                                    PRUint32 *aEndOffset) = 0;
 
 private:
-  HRESULT GetModifiedText(PRBool aGetInsertedText, IA2TextSegment *aNewText);
+  HRESULT GetModifiedText(bool aGetInsertedText, IA2TextSegment *aNewText);
   nsAccessibleTextBoundary GetGeckoTextBoundary(enum IA2TextBoundaryType coordinateType);
 };
 

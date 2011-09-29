@@ -100,6 +100,9 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 using namespace mozilla;
 extern PRTime gXRE_mainTimestamp;
+// The following tracks our overhead between reaching XRE_main and loading any XUL
+extern PRTime gCreateTopLevelWindowTimestamp;// Timestamp of the first call to
+                                             // nsAppShellService::CreateTopLevelWindow
 extern PRTime gFirstPaintTimestamp;
 // mfinklesessionstore-browser-state-restored might be a better choice than the one below
 static PRTime gRestoredTimestamp = 0;       // Timestamp of sessionstore-windows-restored
@@ -240,7 +243,7 @@ nsAppStartup::Quit(PRUint32 aMode)
   // Exit() method via nsAppExitEvent to allow one last pass
   // through any events in the queue. This guarantees a tidy cleanup.
   nsresult rv = NS_OK;
-  PRBool postedExitEvent = PR_FALSE;
+  bool postedExitEvent = false;
 
   if (mShuttingDown)
     return NS_OK;
@@ -261,7 +264,7 @@ nsAppStartup::Quit(PRUint32 aMode)
       if (!appShell)
         return NS_OK;
 
-      PRBool usefulHiddenWindow;
+      bool usefulHiddenWindow;
       appShell->GetApplicationProvidedHiddenWindow(&usefulHiddenWindow);
       nsCOMPtr<nsIXULWindow> hiddenWindow;
       appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
@@ -282,7 +285,7 @@ nsAppStartup::Quit(PRUint32 aMode)
     if (mediator) {
       mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
       if (windowEnumerator) {
-        PRBool more;
+        bool more;
         while (windowEnumerator->HasMoreElements(&more), more) {
           nsCOMPtr<nsISupports> window;
           windowEnumerator->GetNext(getter_AddRefs(window));
@@ -336,7 +339,7 @@ nsAppStartup::Quit(PRUint32 aMode)
            closed. */
         mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
         if (windowEnumerator) {
-          PRBool more;
+          bool more;
           while (windowEnumerator->HasMoreElements(&more), more) {
             /* we can't quit immediately. we'll try again as the last window
                finally closes. */
@@ -345,7 +348,7 @@ nsAppStartup::Quit(PRUint32 aMode)
             windowEnumerator->GetNext(getter_AddRefs(window));
             nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(window);
             if (domWindow) {
-              PRBool closed = PR_FALSE;
+              bool closed = false;
               domWindow->GetClosed(&closed);
               if (!closed) {
                 rv = NS_ERROR_FAILURE;
@@ -409,7 +412,7 @@ nsAppStartup::CloseAllWindows()
   if (!windowEnumerator)
     return;
 
-  PRBool more;
+  bool more;
   while (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
     nsCOMPtr<nsISupports> isupports;
     if (NS_FAILED(windowEnumerator->GetNext(getter_AddRefs(isupports))))
@@ -447,21 +450,21 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
 //
 
 NS_IMETHODIMP
-nsAppStartup::GetShuttingDown(PRBool *aResult)
+nsAppStartup::GetShuttingDown(bool *aResult)
 {
   *aResult = mShuttingDown;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAppStartup::SetInterrupted(PRBool aInterrupted)
+nsAppStartup::SetInterrupted(bool aInterrupted)
 {
   mInterrupted = aInterrupted;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAppStartup::GetInterrupted(PRBool *aInterrupted)
+nsAppStartup::GetInterrupted(bool *aInterrupted)
 {
   *aInterrupted = mInterrupted;
   return NS_OK;
@@ -476,7 +479,7 @@ nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                  PRUint32 aChromeFlags,
                                  nsIWebBrowserChrome **_retval)
 {
-  PRBool cancel;
+  bool cancel;
   return CreateChromeWindow2(aParent, aChromeFlags, 0, 0, &cancel, _retval);
 }
 
@@ -490,7 +493,7 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
                                   PRUint32 aChromeFlags,
                                   PRUint32 aContextFlags,
                                   nsIURI *aURI,
-                                  PRBool *aCancel,
+                                  bool *aCancel,
                                   nsIWebBrowserChrome **_retval)
 {
   NS_ENSURE_ARG_POINTER(aCancel);
@@ -713,7 +716,8 @@ enum {
   INVALID_PROCESS_CREATION = 0,
   INVALID_MAIN,
   INVALID_FIRST_PAINT,
-  INVALID_SESSION_RESTORED
+  INVALID_SESSION_RESTORED,
+  INVALID_CREATE_TOP_LEVEL_WINDOW
 };
 
 NS_IMETHODIMP
@@ -762,6 +766,11 @@ nsAppStartup::GetStartupInfo()
     MaybeDefineProperty(cx, obj, "main", gXRE_mainTimestamp);
   else
     Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_MAIN);
+
+  if (gCreateTopLevelWindowTimestamp >= gProcessCreationTimestamp)
+    MaybeDefineProperty(cx, obj, "createTopLevelWindow", gCreateTopLevelWindowTimestamp);
+  else
+    Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, INVALID_CREATE_TOP_LEVEL_WINDOW);
 
   if (gFirstPaintTimestamp >= gXRE_mainTimestamp)
     MaybeDefineProperty(cx, obj, "firstPaint", gFirstPaintTimestamp);

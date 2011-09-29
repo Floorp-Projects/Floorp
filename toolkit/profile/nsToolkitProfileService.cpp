@@ -153,9 +153,9 @@ private:
     nsCOMPtr<nsILocalFile>      mAppData;
     nsCOMPtr<nsILocalFile>      mTempData;
     nsCOMPtr<nsILocalFile>      mListFile;
-    PRBool mDirty;
-    PRBool mStartWithLast;
-    PRBool mStartOffline;
+    bool mDirty;
+    bool mStartWithLast;
+    bool mStartOffline;
 
     static nsToolkitProfileService *gService;
 
@@ -227,7 +227,7 @@ nsToolkitProfile::SetName(const nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsToolkitProfile::Remove(PRBool removeFiles)
+nsToolkitProfile::Remove(bool removeFiles)
 {
     NS_ASSERTION(nsToolkitProfileService::gService,
                  "Whoa, my service is gone.");
@@ -236,7 +236,7 @@ nsToolkitProfile::Remove(PRBool removeFiles)
         return NS_ERROR_FILE_IS_LOCKED;
 
     if (removeFiles) {
-        PRBool equals;
+        bool equals;
         nsresult rv = mRootDir->Equals(mLocalDir, &equals);
         if (NS_FAILED(rv))
             return rv;
@@ -394,7 +394,7 @@ nsToolkitProfileService::Init()
     rv = mListFile->AppendNative(NS_LITERAL_CSTRING("profiles.ini"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool exists;
+    bool exists;
     rv = mListFile->IsFile(&exists);
     if (NS_FAILED(rv) || !exists) {
         return NS_OK;
@@ -428,7 +428,7 @@ nsToolkitProfileService::Init()
         rv = parser.GetString(profileID.get(), "IsRelative", buffer);
         if (NS_FAILED(rv)) break;
 
-        PRBool isRelative = buffer.EqualsLiteral("1");
+        bool isRelative = buffer.EqualsLiteral("1");
 
         nsCAutoString filePath;
 
@@ -481,7 +481,7 @@ nsToolkitProfileService::Init()
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::SetStartWithLastProfile(PRBool aValue)
+nsToolkitProfileService::SetStartWithLastProfile(bool aValue)
 {
     if (mStartWithLast != aValue) {
         mStartWithLast = aValue;
@@ -491,21 +491,21 @@ nsToolkitProfileService::SetStartWithLastProfile(PRBool aValue)
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::GetStartWithLastProfile(PRBool *aResult)
+nsToolkitProfileService::GetStartWithLastProfile(bool *aResult)
 {
     *aResult = mStartWithLast;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::GetStartOffline(PRBool *aResult)
+nsToolkitProfileService::GetStartOffline(bool *aResult)
 {
     *aResult = mStartOffline;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::SetStartOffline(PRBool aValue)
+nsToolkitProfileService::SetStartOffline(bool aValue)
 {
     mStartOffline = aValue;
     return NS_OK;
@@ -526,7 +526,7 @@ NS_IMPL_ISUPPORTS1(nsToolkitProfileService::ProfileEnumerator,
                    nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsToolkitProfileService::ProfileEnumerator::HasMoreElements(PRBool* aResult)
+nsToolkitProfileService::ProfileEnumerator::HasMoreElements(bool* aResult)
 {
     *aResult = mCurrent ? PR_TRUE : PR_FALSE;
     return NS_OK;
@@ -643,7 +643,7 @@ nsToolkitProfileService::CreateProfile(nsILocalFile* aRootDir,
     nsCAutoString dirName;
     if (!rootDir) {
         nsCOMPtr<nsIFile> file;
-        PRBool dummy;
+        bool dummy;
         rv = gDirServiceProvider->GetFile(NS_APP_USER_PROFILES_ROOT_DIR, &dummy,
                                           getter_AddRefs(file));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -669,7 +669,7 @@ nsToolkitProfileService::CreateProfile(nsILocalFile* aRootDir,
         }
         else {
             nsCOMPtr<nsIFile> file;
-            PRBool dummy;
+            bool dummy;
             rv = gDirServiceProvider->GetFile(NS_APP_USER_PROFILES_LOCAL_ROOT_DIR,
                                               &dummy, getter_AddRefs(file));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -686,7 +686,7 @@ nsToolkitProfileService::CreateProfile(nsILocalFile* aRootDir,
         }
     }
 
-    PRBool exists;
+    bool exists;
     rv = rootDir->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -708,7 +708,7 @@ nsToolkitProfileService::CreateProfile(nsILocalFile* aRootDir,
         rv = rootDir->GetLeafName(profileDirName);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        PRBool dummy;
+        bool dummy;
         rv = gDirServiceProvider->GetFile(NS_APP_PROFILE_DEFAULTS_50_DIR, &dummy,
                                           getter_AddRefs(profileDefaultsDir));
 
@@ -794,7 +794,7 @@ nsToolkitProfileService::Flush()
 
     while (cur) {
         // if the profile dir is relative to appdir...
-        PRBool isRelative;
+        bool isRelative;
         rv = mAppData->Contains(cur->mRootDir, PR_TRUE, &isRelative);
         if (NS_SUCCEEDED(rv) && isRelative) {
             // we use a relative descriptor
@@ -860,7 +860,7 @@ nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
 }
 
 NS_IMETHODIMP
-nsToolkitProfileFactory::LockFactory(PRBool aVal)
+nsToolkitProfileFactory::LockFactory(bool aVal)
 {
     return NS_OK;
 }

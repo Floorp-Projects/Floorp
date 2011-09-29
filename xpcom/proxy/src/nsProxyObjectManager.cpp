@@ -75,7 +75,7 @@ public:
             NS_PTR_TO_INT32(mTargetKey) ^ mProxyType;
     }
 
-    PRBool Equals(const nsHashKey *aKey) const {
+    bool Equals(const nsHashKey *aKey) const {
         const nsProxyEventKey* other = (const nsProxyEventKey*)aKey;
         return mRootObjectKey == other->mRootObjectKey
             && mTargetKey == other->mTargetKey
@@ -126,7 +126,7 @@ nsProxyObjectManager::~nsProxyObjectManager()
     nsProxyObjectManager::gInstance = nsnull;
 }
 
-PRBool
+bool
 nsProxyObjectManager::IsManagerShutdown()
 {
     return gInstance == nsnull;
@@ -213,7 +213,7 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
     
     if (!(proxyType & NS_PROXY_ASYNC) && !(proxyType & NS_PROXY_ALWAYS))
     {
-        PRBool result;
+        bool result;
         aTarget->IsOnCurrentThread(&result);
      
         if (result)

@@ -62,7 +62,7 @@ public:
   // nsIContentSink
   NS_IMETHOD WillParse();
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(PRBool aTerminated);
+  NS_IMETHOD DidBuildModel(bool aTerminated);
   NS_IMETHOD WillInterrupt();
   NS_IMETHOD WillResume();
   NS_IMETHOD SetParser(nsIParser* aParser);
@@ -78,11 +78,11 @@ public:
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenHead();
-  NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) 
+  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn) 
   /* Take the largest possible feature set. */
   { NS_ENSURE_ARG_POINTER(aReturn); *aReturn = PR_TRUE; return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
+  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
@@ -91,7 +91,7 @@ public:
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
 
   // nsILoggingSink
-  NS_IMETHOD SetOutputStream(PRFileDesc *aStream,PRBool autoDelete=PR_FALSE);
+  NS_IMETHOD SetOutputStream(PRFileDesc *aStream,bool autoDelete=false);
 
   nsresult OpenNode(const char* aKind, const nsIParserNode& aNode);
   nsresult CloseNode(const char* aKind);
@@ -99,13 +99,13 @@ public:
   nsresult WriteAttributes(const nsIParserNode& aNode);
   nsresult QuoteText(const nsAString& aValue, nsString& aResult);
   nsresult GetNewCString(const nsAString& aValue, char** aResult);
-  PRBool WillWriteAttributes(const nsIParserNode& aNode);
+  bool WillWriteAttributes(const nsIParserNode& aNode);
 
 protected:
   PRFileDesc          *mOutput;
   int                  mLevel;
   nsIHTMLContentSink  *mSink;
-  PRBool               mAutoDeleteOutput;
+  bool                 mAutoDeleteOutput;
   nsIParser*           mParser;
 };
 

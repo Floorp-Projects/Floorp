@@ -65,7 +65,7 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
 
 private:
-  PRBool  mLengthComputable;
+  bool    mLengthComputable;
   PRUint64 mLoaded;
   PRUint64 mTotal;
 };

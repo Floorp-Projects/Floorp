@@ -51,7 +51,7 @@ NS_IMPL_ADDREF_INHERITED(nsDOMProgressEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMProgressEvent, nsDOMEvent)
 
 NS_IMETHODIMP
-nsDOMProgressEvent::GetLengthComputable(PRBool* aLengthComputable)
+nsDOMProgressEvent::GetLengthComputable(bool* aLengthComputable)
 {
   *aLengthComputable = mLengthComputable;
   return NS_OK;
@@ -73,9 +73,9 @@ nsDOMProgressEvent::GetTotal(PRUint64* aTotal)
 
 NS_IMETHODIMP
 nsDOMProgressEvent::InitProgressEvent(const nsAString& aType,
-                                      PRBool aCanBubble,
-                                      PRBool aCancelable,
-                                      PRBool aLengthComputable,
+                                      bool aCanBubble,
+                                      bool aCancelable,
+                                      bool aLengthComputable,
                                       PRUint64 aLoaded,
                                       PRUint64 aTotal)
 {

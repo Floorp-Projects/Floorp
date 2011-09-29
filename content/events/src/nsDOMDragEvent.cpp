@@ -79,12 +79,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 NS_IMETHODIMP
 nsDOMDragEvent::InitDragEvent(const nsAString & aType,
-                              PRBool aCanBubble, PRBool aCancelable,
+                              bool aCanBubble, bool aCancelable,
                               nsIDOMWindow* aView, PRInt32 aDetail,
                               PRInt32 aScreenX, PRInt32 aScreenY,
                               PRInt32 aClientX, PRInt32 aClientY, 
-                              PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey,
-                              PRBool aMetaKey, PRUint16 aButton,
+                              bool aCtrlKey, bool aAltKey, bool aShiftKey,
+                              bool aMetaKey, PRUint16 aButton,
                               nsIDOMEventTarget *aRelatedTarget,
                               nsIDOMDataTransfer* aDataTransfer)
 {

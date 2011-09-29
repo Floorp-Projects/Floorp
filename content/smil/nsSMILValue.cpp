@@ -76,7 +76,7 @@ nsSMILValue::operator=(const nsSMILValue& aVal)
   return *this;
 }
 
-PRBool
+bool
 nsSMILValue::operator==(const nsSMILValue& aVal) const
 {
   if (&aVal == this)

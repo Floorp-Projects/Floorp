@@ -492,15 +492,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   options - an object with additional parameters, see below
   //
   // Possible options:
-  //   forceStacked - true to force content bounds for stacked mode
+  //   stacked - true to get content bounds for stacked mode
   getContentBounds: function GroupItem_getContentBounds(options) {
-    var box = this.getBounds();
-    var titleHeight = this.$titlebar.height();
+    let box = this.getBounds();
+    let titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
 
     let appTabTrayContainer = iQ(this.$appTabTray[0].parentNode);
-    var appTabTrayWidth = appTabTrayContainer.width();
+    let appTabTrayWidth = appTabTrayContainer.width();
     if (appTabTrayWidth)
       appTabTrayWidth += parseInt(appTabTrayContainer.css(UI.rtl ? "left" : "right"));
 
@@ -513,9 +513,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // themeable --OR-- compute this from actual bounds. Bug 586546
     box.inset(6, 6);
 
-    // make some room for the expand button if we're stacked
-    let isStacked = (options && options.forceStacked) || this.isStacked();
-    if (isStacked)
+    // make some room for the expand button in stacked mode
+    if (options && options.stacked)
       box.height -= this.$expander.height() + 9; // the button height plus padding
 
     return box;
@@ -1087,7 +1086,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   tabItem - The tabItem that is closed.
   _onChildClose: function GroupItem__onChildClose(tabItem) {
     let count = this._children.length;
-    let dontArrange = this.expanded || !this.shouldStack(count);
+    let dontArrange = tabItem.closedManually &&
+                      (this.expanded || !this.shouldStack(count));
     let dontClose = !tabItem.closedManually && gBrowser._numPinnedTabs > 0;
     this.remove(tabItem, {dontArrange: dontArrange, dontClose: dontClose});
 
@@ -1212,6 +1212,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       .attr("src", iconUrl)
       .data("xulTab", xulTab)
       .appendTo(this.$appTabTray)
+      .mousedown(function onAppTabMousedown(event) {
+        // stop mousedown propagation to disable group dragging on app tabs
+        event.stopPropagation();
+      })
       .click(function(event) {
         if (!Utils.isLeftClick(event))
           return;
@@ -1296,8 +1300,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (count <= 1)
       return false;
 
-    var bb = this.getContentBounds();
-    var options = {
+    let bb = this.getContentBounds();
+    let options = {
       return: 'widthAndColumns',
       count: count || this._children.length,
       hideTitle: false
@@ -1403,7 +1407,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       GroupItems.pushArrange(this, options);
       return false;
     }
-    
+
     let shouldStack = this.shouldStack(childrenToArrange.length + (options.addTab ? 1 : 0));
     let shouldStackArrange = (shouldStack && !this.expanded);
     let box;
@@ -1411,12 +1415,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // if we should stack and we're not expanded
     if (shouldStackArrange) {
       this.showExpandControl();
-      box = this.getContentBounds({forceStacked: true});
+      box = this.getContentBounds({stacked: true});
       this._stackArrange(childrenToArrange, box, options);
       return false;
     } else {
       this.hideExpandControl();
-      box = this.getContentBounds({forceStacked: false});
+      box = this.getContentBounds();
       // a dropIndex is returned
       return this._gridArrange(childrenToArrange, box, options);
     }
@@ -2605,7 +2609,7 @@ let GroupItems = {
     if (groupItemId) {
       groupItem = GroupItems.groupItem(groupItemId);
       groupItem.add(tab._tabViewTabItem);
-      UI.setReorderTabItemsOnShow(groupItem);
+      groupItem.reorderTabsBasedOnTabItemOrder()
     } else {
       let pageBounds = Items.getPageBounds();
       pageBounds.inset(20, 20);

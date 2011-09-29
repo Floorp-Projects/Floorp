@@ -82,7 +82,7 @@ public:
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                             PRBool aShrinkWrap);
+                             bool aShrinkWrap);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -132,9 +132,9 @@ public:
   // region actually changed. If it changed, invalidates the old and new
   // covered regions, taking filters into account, like
   // InvalidateCoveredRegion.
-  PRBool UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame);
+  bool UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame);
 
-  PRBool IsRedrawSuspended();
+  bool IsRedrawSuspended();
 
   // nsISVGSVGFrame interface:
   NS_IMETHOD SuspendRedraw();
@@ -158,12 +158,12 @@ protected:
    * embedded in an HTML 'object', 'embed' or 'applet' element. Set
    * aEmbeddingFrame to obtain the nsIFrame for the embedding HTML element.
    */
-  PRBool IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame = nsnull);
+  bool IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame = nsnull);
 
   /* Returns true if our content is the document element and our document is
    * being used as an image.
    */
-  PRBool IsRootOfImage();
+  bool IsRootOfImage();
 
   // A hash-set containing our nsSVGForeignObjectFrame descendants. Note we use
   // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
@@ -171,15 +171,15 @@ protected:
   nsTHashtable<nsVoidPtrHashKey> mForeignObjectHash;
 
   PRUint32 mRedrawSuspendCount;
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  nsAutoPtr<gfxMatrix> mCanvasTM;
 
   float mFullZoom;
 
-  PRPackedBool mViewportInitialized;
+  bool mViewportInitialized;
 #ifdef XP_MACOSX
-  PRPackedBool mEnableBitmapFallback;
+  bool mEnableBitmapFallback;
 #endif
-  PRPackedBool mIsRootContent;
+  bool mIsRootContent;
 };
 
 #endif

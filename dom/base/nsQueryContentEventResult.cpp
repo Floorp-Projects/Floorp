@@ -61,7 +61,7 @@ nsQueryContentEventResult::~nsQueryContentEventResult()
 NS_IMETHODIMP
 nsQueryContentEventResult::GetOffset(PRUint32 *aOffset)
 {
-  PRBool notFound;
+  bool notFound;
   nsresult rv = GetNotFound(&notFound);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(!notFound, NS_ERROR_NOT_AVAILABLE);
@@ -69,7 +69,7 @@ nsQueryContentEventResult::GetOffset(PRUint32 *aOffset)
   return NS_OK;
 }
 
-static PRBool IsRectEnabled(PRUint32 aEventID)
+static bool IsRectEnabled(PRUint32 aEventID)
 {
   return aEventID == NS_QUERY_CARET_RECT ||
          aEventID == NS_QUERY_TEXT_RECT ||
@@ -78,7 +78,7 @@ static PRBool IsRectEnabled(PRUint32 aEventID)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetReversed(PRBool *aReversed)
+nsQueryContentEventResult::GetReversed(bool *aReversed)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mEventID == NS_QUERY_SELECTED_TEXT,
@@ -139,7 +139,7 @@ nsQueryContentEventResult::GetText(nsAString &aText)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetSucceeded(PRBool *aSucceeded)
+nsQueryContentEventResult::GetSucceeded(bool *aSucceeded)
 {
   NS_ENSURE_TRUE(mEventID != 0, NS_ERROR_NOT_INITIALIZED);
   *aSucceeded = mSucceeded;
@@ -147,7 +147,7 @@ nsQueryContentEventResult::GetSucceeded(PRBool *aSucceeded)
 }
 
 NS_IMETHODIMP
-nsQueryContentEventResult::GetNotFound(PRBool *aNotFound)
+nsQueryContentEventResult::GetNotFound(bool *aNotFound)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mEventID == NS_QUERY_SELECTED_TEXT ||

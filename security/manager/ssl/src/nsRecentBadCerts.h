@@ -75,9 +75,9 @@ public:
 
   nsString mHostWithPort;
   SECItem mDERCert;
-  PRBool isDomainMismatch;
-  PRBool isNotValidAtThisTime;
-  PRBool isUntrusted;
+  bool isDomainMismatch;
+  bool isNotValidAtThisTime;
+  bool isUntrusted;
 
 private:
   RecentBadCert(const RecentBadCert &other)

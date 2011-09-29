@@ -101,7 +101,6 @@ CPPSRCS		= \
 		jsalloc.cpp \
 		jsanalyze.cpp \
 		jsapi.cpp \
-		jsarena.cpp \
 		jsarray.cpp \
 		jsatom.cpp \
 		jsbool.cpp \
@@ -161,6 +160,7 @@ CPPSRCS		= \
 		Stack.cpp \
 		String.cpp \
 		ParseMaps.cpp \
+		LifoAlloc.cpp \
 		Unicode.cpp \
 		$(NULL)
 
@@ -174,7 +174,6 @@ INSTALLED_HEADERS = \
 		js.msg \
 		jsalloc.h \
 		jsapi.h \
-		jsarena.h \
 		jsatom.h \
 		jsbit.h \
 		jsclass.h \
@@ -241,9 +240,10 @@ INSTALLED_HEADERS = \
 VPATH		+= \
 		$(srcdir)/vm \
 		$(srcdir)/frontend \
+		$(srcdir)/ds \
 		$(NULL)
 
-EXPORTS_NAMESPACES = vm
+EXPORTS_NAMESPACES = vm ds
 
 EXPORTS_vm = \
 		ArgumentsObject.h \
@@ -254,6 +254,9 @@ EXPORTS_vm = \
 		StringObject.h \
 		Unicode.h  \
 		$(NULL)
+
+EXPORTS_ds = \
+		LifoAlloc.h
 
 ###############################################
 # BEGIN include sources for low-level code shared with Gecko

@@ -124,14 +124,14 @@ nsSVGAnimationElement::GetAnimAttr(nsIAtom* aName) const
   return mAttrsAndChildren.GetAttr(aName, kNameSpaceID_None);
 }
 
-PRBool
+bool
 nsSVGAnimationElement::GetAnimAttr(nsIAtom* aAttName,
                                    nsAString& aResult) const
 {
   return GetAttr(kNameSpaceID_None, aAttName, aResult);
 }
 
-PRBool
+bool
 nsSVGAnimationElement::HasAnimAttr(nsIAtom* aAttName) const
 {
   return HasAttr(kNameSpaceID_None, aAttName);
@@ -152,7 +152,7 @@ nsSVGAnimationElement::GetTargetElementContent()
   return parent && parent->IsElement() ? parent->AsElement() : nsnull;
 }
 
-PRBool
+bool
 nsSVGAnimationElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
                                               nsIAtom **aLocalName) const
 {
@@ -262,7 +262,7 @@ nsresult
 nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
                                   nsIContent* aParent,
                                   nsIContent* aBindingParent,
-                                  PRBool aCompileEventHandlers)
+                                  bool aCompileEventHandlers)
 {
   NS_ABORT_IF_FALSE(!mHrefTarget.get(),
                     "Shouldn't have href-target yet "
@@ -308,7 +308,7 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsSVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsIDocument *doc = GetOwnerDoc();
   if (doc) {
@@ -326,7 +326,7 @@ nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsSVGAnimationElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
-PRBool
+bool
 nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
                                       nsIAtom* aAttribute,
                                       const nsAString& aValue,
@@ -344,7 +344,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     nsresult rv = NS_ERROR_FAILURE;
 
     // First let the animation function try to parse it...
-    PRBool foundMatch =
+    bool foundMatch =
       AnimationFunction().SetAttr(aAttribute, aValue, aResult, &rv);
 
     // ... and if that didn't recognize the attribute, let the timed element
@@ -370,7 +370,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
 
 nsresult
 nsSVGAnimationElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                    const nsAString* aValue, PRBool aNotify)
+                                    const nsAString* aValue, bool aNotify)
 {
   nsresult rv =
     nsSVGAnimationElementBase::AfterSetAttr(aNamespaceID, aName, aValue,
@@ -392,7 +392,7 @@ nsSVGAnimationElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
 nsresult
 nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
-                                 nsIAtom* aAttribute, PRBool aNotify)
+                                 nsIAtom* aAttribute, bool aNotify)
 {
   nsresult rv = nsSVGAnimationElementBase::UnsetAttr(aNamespaceID, aAttribute,
                                                      aNotify);
@@ -408,7 +408,7 @@ nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
   return NS_OK;
 }
 
-PRBool
+bool
 nsSVGAnimationElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eSVG | eANIMATION));
@@ -487,7 +487,7 @@ nsSVGAnimationElement::EndElementAt(float offset)
   return NS_OK;
 }
 
-PRBool
+bool
 nsSVGAnimationElement::IsEventName(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SMIL);

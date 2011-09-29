@@ -100,7 +100,7 @@ public:
    * or not and forward that information to the plugin to make it possible to
    * throttle down plugin instance in non active case.
    */
-  virtual void SetIsDocumentActive(PRBool aIsActive) = 0;
+  virtual void SetIsDocumentActive(bool aIsActive) = 0;
 };
 
 #endif /* nsIObjectFrame_h___ */

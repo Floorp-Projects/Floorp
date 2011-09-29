@@ -111,7 +111,7 @@ protected:
                                     txIParseContext* aContext,
                                     Expr** aResult);
                   
-    static PRBool isLocationStepToken(Token* aToken);
+    static bool isLocationStepToken(Token* aToken);
                   
     static short precedence(Token* aToken);
 
@@ -122,7 +122,7 @@ protected:
     static nsresult resolveQName(const nsAString& aQName, nsIAtom** aPrefix,
                                  txIParseContext* aContext,
                                  nsIAtom** aLocalName, PRInt32& aNamespace,
-                                 PRBool aIsNameTest = MB_FALSE);
+                                 bool aIsNameTest = MB_FALSE);
 
     /**
      * Using the given lexer, parses the tokens if they represent a

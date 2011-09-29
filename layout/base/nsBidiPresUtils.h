@@ -83,13 +83,13 @@ struct nsFrameContinuationState : public nsVoidPtrHashKey
    * TRUE if this frame is the first visual frame of its continuation chain on
    * this line and the chain has some frames on the previous lines.
    */
-  PRPackedBool mHasContOnPrevLines;
+  bool mHasContOnPrevLines;
 
   /**
    * TRUE if this frame is the first visual frame of its continuation chain on
    * this line and the chain has some frames left for next lines.
    */
-  PRPackedBool mHasContOnNextLines;
+  bool mHasContOnNextLines;
 };
 
 /*
@@ -202,7 +202,7 @@ public:
                                     PRUnichar*      aText,
                                     PRInt32&        aTextLength,
                                     nsCharType      aCharType,
-                                    PRBool          aIsOddLevel);
+                                    bool            aIsOddLevel);
 
   /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
@@ -257,7 +257,7 @@ public:
    * @param[out] aLeftMost : leftmost frame on this line
    * @param[out] aRightMost : rightmost frame on this line
    */
-  static PRBool CheckLineOrder(nsIFrame*  aFirstFrameOnLine,
+  static bool CheckLineOrder(nsIFrame*  aFirstFrameOnLine,
                                PRInt32    aNumFramesOnLine,
                                nsIFrame** aLeftmost,
                                nsIFrame** aRightmost);
@@ -343,7 +343,7 @@ public:
   static void CopyLogicalToVisual(const nsAString& aSource,
                                   nsAString& aDest,
                                   nsBidiLevel aBaseDirection,
-                                  PRBool aOverride);
+                                  bool aOverride);
 
 private:
   static nsresult
@@ -387,7 +387,7 @@ private:
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
    */
   static void RepositionFrame(nsIFrame*              aFrame,
-                              PRBool                 aIsOddLevel,
+                              bool                   aIsOddLevel,
                               nscoord&               aLeft,
                               nsContinuationStates*  aContinuationStates);
 
@@ -419,8 +419,8 @@ private:
    */
    static void IsLeftOrRightMost(nsIFrame*              aFrame,
                                  nsContinuationStates*  aContinuationStates,
-                                 PRBool&                aIsLeftMost /* out */,
-                                 PRBool&                aIsRightMost /* out */);
+                                 bool&                aIsLeftMost /* out */,
+                                 bool&                aIsRightMost /* out */);
 
   /**
    *  Adjust frame positions following their visual order
@@ -488,7 +488,7 @@ private:
   static void StripBidiControlCharacters(PRUnichar* aText,
                                          PRInt32&   aTextLength);
 
-  static PRBool WriteLogicalToVisual(const PRUnichar* aSrc,
+  static bool WriteLogicalToVisual(const PRUnichar* aSrc,
                                      PRUint32 aSrcLength,
                                      PRUnichar* aDest,
                                      nsBidiLevel aBaseDirection,

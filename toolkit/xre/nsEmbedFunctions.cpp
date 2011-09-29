@@ -257,13 +257,13 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 // FIXME/bug 539522: this out-of-place function is stuck here because
 // IPDL wants access to this crashreporter interface, and
 // crashreporter is built in such a way to make that awkward
-PRBool
+bool
 XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsILocalFile** aDump)
 {
   return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
 }
 
-PRBool
+bool
 XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX)

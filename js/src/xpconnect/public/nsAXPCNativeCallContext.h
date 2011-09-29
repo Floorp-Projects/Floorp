@@ -69,8 +69,8 @@ public:
      * (using RetValPtr and the JSAPI). If set then xpconnect will not attempt
      * to overwrite it with the converted retval from the C++ callee.
      */
-    NS_IMETHOD GetReturnValueWasSet(PRBool *aResult) = 0;
-    NS_IMETHOD SetReturnValueWasSet(PRBool aValue) = 0;
+    NS_IMETHOD GetReturnValueWasSet(bool *aResult) = 0;
+    NS_IMETHOD SetReturnValueWasSet(bool aValue) = 0;
 
     // Methods added since mozilla 0.6....
 

@@ -52,7 +52,7 @@
 
 // ----------------------------------------------------------------------
 
-PRBool
+bool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 {
   if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
@@ -196,7 +196,7 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   return r - offset;
 }
 
-PRBool
+bool
 nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& aPt)
 {
   nsIFrame* firstFrame =
@@ -269,12 +269,12 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
    * + Merge opacity and masking if both used together.
    */
 
-  PRBool isOK = PR_TRUE;
+  bool isOK = true;
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
   nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
 
-  PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
+  bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
 
   if (!isOK) {
     // Some resource is missing. We shouldn't paint anything.
@@ -292,7 +292,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   gfxMatrix matrix = GetInitialMatrix(aEffectsFrame);
 
-  PRBool complexEffects = PR_FALSE;
+  bool complexEffects = false;
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
@@ -421,7 +421,7 @@ public:
    , mPaintServerSize(aPaintServerSize)
    , mRenderSize(aRenderSize)
   {}
-  virtual PRBool operator()(gfxContext* aContext,
+  virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
                             const gfxPattern::GraphicsFilter& aFilter,
                             const gfxMatrix& aTransform);
@@ -432,7 +432,7 @@ private:
   gfxIntSize mRenderSize;
 };
 
-PRBool
+bool
 PaintFrameCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
                                const gfxPattern::GraphicsFilter& aFilter,

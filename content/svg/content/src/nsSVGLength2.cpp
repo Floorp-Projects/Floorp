@@ -108,7 +108,7 @@ static nsSVGAttrTearoffTable<nsSVGLength2, nsIDOMSVGLength>
 
 /* Helper functions */
 
-static PRBool
+static bool
 IsValidUnitType(PRUint16 unit)
 {
   if (unit > nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN &&
@@ -405,7 +405,7 @@ nsSVGLength2::DOMAnimVal::~DOMAnimVal()
 nsresult
 nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
                                  nsSVGElement *aSVGElement,
-                                 PRBool aDoSetAttr)
+                                 bool aDoSetAttr)
 {
   float value;
   PRUint16 unitType;
@@ -500,7 +500,7 @@ nsresult
 nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
                                  const nsISMILAnimationElement* /*aSrcElement*/,
                                  nsSMILValue& aValue,
-                                 PRBool& aPreventCachingOfSandwich) const
+                                 bool& aPreventCachingOfSandwich) const
 {
   float value;
   PRUint16 unitType;

@@ -178,8 +178,8 @@ interface mozIStorageValueArray : nsISupports {
     return blob;
   }
 
-  inline PRBool IsNull(PRUint32 idx) {
-    PRBool b = PR_FALSE;
+  inline bool IsNull(PRUint32 idx) {
+    bool b = PR_FALSE;
 #ifdef DEBUG
     nsresult rv =
 #endif

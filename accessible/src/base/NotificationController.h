@@ -344,7 +344,7 @@ private:
     ~nsCOMPtrHashKey() { }
 
     KeyType GetKey() const { return mKey; }
-    PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
+    bool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
 
     static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
     static PLDHashNumber HashKey(KeyTypePointer aKey)

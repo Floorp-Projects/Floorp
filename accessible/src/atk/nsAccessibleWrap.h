@@ -104,10 +104,10 @@ public:
     AtkObject * GetAtkObject(void);
     static AtkObject * GetAtkObject(nsIAccessible * acc);
 
-    PRBool IsValidObject();
+    bool IsValidObject();
     
     // get/set the MaiHyperlink object for this nsAccessibleWrap
-    MaiHyperlink* GetMaiHyperlink(PRBool aCreate = PR_TRUE);
+    MaiHyperlink* GetMaiHyperlink(bool aCreate = true);
     void SetMaiHyperlink(MaiHyperlink* aMaiHyperlink);
 
     static const char * ReturnString(nsAString &aString) {
@@ -122,7 +122,7 @@ protected:
     nsresult FireAtkStateChangeEvent(AccEvent* aEvent, AtkObject *aObject);
     nsresult FireAtkTextChangedEvent(AccEvent* aEvent, AtkObject *aObject);
     nsresult FireAtkShowHideEvent(AccEvent* aEvent, AtkObject *aObject,
-                                  PRBool aIsAdded);
+                                  bool aIsAdded);
 
     AtkObject *mAtkObject;
 

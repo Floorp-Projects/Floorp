@@ -196,20 +196,20 @@ PRThread* gCycleCollectorThread = nsnull;
 #endif
 
 // If PR_TRUE, always log cycle collector graphs.
-const PRBool gAlwaysLogCCGraphs = PR_FALSE;
+const bool gAlwaysLogCCGraphs = false;
 
 // Various parameters of this collector can be tuned using environment
 // variables.
 
 struct nsCycleCollectorParams
 {
-    PRBool mDoNothing;
-    PRBool mLogGraphs;
+    bool mDoNothing;
+    bool mLogGraphs;
 #ifdef DEBUG_CC
-    PRBool mReportStats;
-    PRBool mHookMalloc;
-    PRBool mFaultIsFatal;
-    PRBool mLogPointers;
+    bool mReportStats;
+    bool mHookMalloc;
+    bool mFaultIsFatal;
+    bool mLogPointers;
     PRUint32 mShutdownCollections;
 #endif
     
@@ -301,7 +301,7 @@ struct nsCycleCollectorStats
 #endif
 
 #ifdef DEBUG_CC
-static PRBool nsCycleCollector_shouldSuppress(nsISupports *s);
+static bool nsCycleCollector_shouldSuppress(nsISupports *s);
 static void InitMemHook(void);
 #endif
 
@@ -407,9 +407,9 @@ public:
             }
             return mPointer->ptrInfo;
         }
-        PRBool operator==(const Iterator& aOther) const
+        bool operator==(const Iterator& aOther) const
             { return mPointer == aOther.mPointer; }
-        PRBool operator!=(const Iterator& aOther) const
+        bool operator!=(const Iterator& aOther) const
             { return mPointer != aOther.mPointer; }
 
     private:
@@ -670,12 +670,12 @@ public:
         {
         }
 
-        PRBool IsDone() const
+        bool IsDone() const
         {
             return mNext == mLast;
         }
 
-        PRBool AtBlockEnd() const
+        bool AtBlockEnd() const
         {
             return mNext == mBlockEnd;
         }
@@ -855,7 +855,7 @@ public:
 #ifdef DEBUG_CC
     void NoteAll(GCGraphBuilder &builder);
 
-    PRBool Exists(void *p) const
+    bool Exists(void *p) const
     {
         return mNormalObjects.GetEntry(p) || mCompatObjects.GetEntry(p);
     }
@@ -916,7 +916,7 @@ public:
         --mCount;
     }
 
-    PRBool PutCompatObject(nsISupports *p)
+    bool PutCompatObject(nsISupports *p)
     {
         ++mCount;
         return !!mCompatObjects.PutEntry(p);
@@ -951,7 +951,7 @@ struct CallbackClosure
     GCGraphBuilder &mBuilder;
 };
 
-static PRBool
+static bool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root);
 
 static PLDHashOperator
@@ -1048,9 +1048,9 @@ struct nsCycleCollectionXPCOMRuntime :
 
 struct nsCycleCollector
 {
-    PRBool mCollectionInProgress;
-    PRBool mScanInProgress;
-    PRBool mFollowupCollection;
+    bool mCollectionInProgress;
+    bool mScanInProgress;
+    bool mFollowupCollection;
     PRUint32 mCollectedObjects;
     TimeStamp mCollectionStart;
 
@@ -1080,29 +1080,29 @@ struct nsCycleCollector
     void ScanRoots();
 
     // returns whether anything was collected
-    PRBool CollectWhite(nsICycleCollectorListener *aListener);
+    bool CollectWhite(nsICycleCollectorListener *aListener);
 
     nsCycleCollector();
     ~nsCycleCollector();
 
     // The first pair of Suspect and Forget functions are only used by
     // old XPCOM binary components.
-    PRBool Suspect(nsISupports *n);
-    PRBool Forget(nsISupports *n);
+    bool Suspect(nsISupports *n);
+    bool Forget(nsISupports *n);
     nsPurpleBufferEntry* Suspect2(nsISupports *n);
-    PRBool Forget2(nsPurpleBufferEntry *e);
+    bool Forget2(nsPurpleBufferEntry *e);
 
     PRUint32 Collect(PRUint32 aTryCollections,
                      nsICycleCollectorListener *aListener);
 
     // Prepare for and cleanup after one or more collection(s).
-    PRBool PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes);
-    void GCIfNeeded(PRBool aForceGC);
+    bool PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes);
+    void GCIfNeeded(bool aForceGC);
     void CleanupAfterCollection();
 
     // Start and finish an individual collection.
-    PRBool BeginCollection(nsICycleCollectorListener *aListener);
-    PRBool FinishCollection(nsICycleCollectorListener *aListener);
+    bool BeginCollection(nsICycleCollectorListener *aListener);
+    bool FinishCollection(nsICycleCollectorListener *aListener);
 
     PRUint32 SuspectedCount();
     void Shutdown();
@@ -1123,7 +1123,7 @@ struct nsCycleCollector
     void Freed(void *n);
 
     void ExplainLiveExpectedGarbage();
-    PRBool CreateReversedEdges();
+    bool CreateReversedEdges();
     void DestroyReversedEdges();
     void ShouldBeFreed(nsISupports *n);
     void WasFreed(nsISupports *n);
@@ -1136,7 +1136,7 @@ struct nsCycleCollector
  * GraphWalker is templatized over a Visitor class that must provide
  * the following two methods:
  *
- * PRBool ShouldVisitNode(PtrInfo const *pi);
+ * bool ShouldVisitNode(PtrInfo const *pi);
  * void VisitNode(PtrInfo *pi);
  */
 template <class Visitor>
@@ -1385,7 +1385,7 @@ public:
 
         return NS_OK;
     }
-    NS_IMETHOD NoteGCedObject(PRUint64 aAddress, PRBool aMarked,
+    NS_IMETHOD NoteGCedObject(PRUint64 aAddress, bool aMarked,
                               const char *aObjectDescription)
     {
         fprintf(mStream, "%p [gc%s] %s\n", (void*)aAddress,
@@ -1457,7 +1457,7 @@ struct PtrToNodeEntry : public PLDHashEntryHdr
     PtrInfo *mNode;
 };
 
-static PRBool
+static bool
 PtrToNodeMatchEntry(PLDHashTable *table,
                     const PLDHashEntryHdr *entry,
                     const void *key)
@@ -1529,7 +1529,7 @@ private:
 
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
                                              const char *objName);
-    NS_IMETHOD_(void) DescribeGCedNode(PRBool isMarked, size_t objSz,
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
                                        const char *objName);
     NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *child,
                                nsCycleCollectionParticipant* participant);
@@ -1680,7 +1680,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, size_t objSz,
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeGCedNode(PRBool isMarked, size_t objSz,
+GCGraphBuilder::DescribeGCedNode(bool isMarked, size_t objSz,
                                  const char *objName)
 {
     PRUint32 refCount = isMarked ? PR_UINT32_MAX : 0;
@@ -1807,7 +1807,7 @@ GCGraphBuilder::NoteNextEdgeName(const char* name)
     }
 }
 
-static PRBool
+static bool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
 {
     root = canonicalize(root);
@@ -1891,7 +1891,7 @@ struct ScanBlackVisitor
     {
     }
 
-    PRBool ShouldVisitNode(PtrInfo const *pi)
+    bool ShouldVisitNode(PtrInfo const *pi)
     { 
         return pi->mColor != black;
     }
@@ -1916,7 +1916,7 @@ struct scanVisitor
     {
     }
 
-    PRBool ShouldVisitNode(PtrInfo const *pi)
+    bool ShouldVisitNode(PtrInfo const *pi)
     { 
         return pi->mColor == grey;
     }
@@ -1971,7 +1971,7 @@ nsCycleCollector::ScanRoots()
 // Bacon & Rajan's |CollectWhite| routine, somewhat modified.
 ////////////////////////////////////////////////////////////////////////
 
-PRBool
+bool
 nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
 {
     // Explanation of "somewhat modified": we have no way to collect the
@@ -2064,7 +2064,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
 // free. This stuff is disabled unless you set an environment variable.
 ////////////////////////////////////////////////////////////////////////
 
-static PRBool hookedMalloc = PR_FALSE;
+static bool hookedMalloc = false;
 
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
 #include <malloc.h>
@@ -2331,14 +2331,14 @@ class Suppressor :
 {
 protected:
     static char *sSuppressionList;
-    static PRBool sInitialized;
-    PRBool mSuppressThisNode;
+    static bool sInitialized;
+    bool mSuppressThisNode;
 public:
     Suppressor()
     {
     }
 
-    PRBool shouldSuppress(nsISupports *s)
+    bool shouldSuppress(nsISupports *s)
     {
         if (!sInitialized) {
             sSuppressionList = PR_GetEnv("XPCOM_CC_SUPPRESS");
@@ -2365,7 +2365,7 @@ public:
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nsnull);
     }
 
-    NS_IMETHOD_(void) DescribeGCedNode(PRBool isMarked, size_t objSz,
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, size_t objSz,
                                        const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nsnull);
@@ -2382,9 +2382,9 @@ public:
 };
 
 char *Suppressor::sSuppressionList = nsnull;
-PRBool Suppressor::sInitialized = PR_FALSE;
+bool Suppressor::sInitialized = false;
 
-static PRBool
+static bool
 nsCycleCollector_shouldSuppress(nsISupports *s)
 {
     Suppressor supp;
@@ -2393,7 +2393,7 @@ nsCycleCollector_shouldSuppress(nsISupports *s)
 #endif
 
 #ifdef DEBUG
-static PRBool
+static bool
 nsCycleCollector_isScanSafe(nsISupports *s)
 {
     if (!s)
@@ -2406,7 +2406,7 @@ nsCycleCollector_isScanSafe(nsISupports *s)
 }
 #endif
 
-PRBool
+bool
 nsCycleCollector::Suspect(nsISupports *n)
 {
     AbortIfOffMainThreadIfCheckFast();
@@ -2446,7 +2446,7 @@ nsCycleCollector::Suspect(nsISupports *n)
 }
 
 
-PRBool
+bool
 nsCycleCollector::Forget(nsISupports *n)
 {
     AbortIfOffMainThreadIfCheckFast();
@@ -2521,7 +2521,7 @@ nsCycleCollector::Suspect2(nsISupports *n)
 }
 
 
-PRBool
+bool
 nsCycleCollector::Forget2(nsPurpleBufferEntry *e)
 {
     AbortIfOffMainThreadIfCheckFast();
@@ -2589,7 +2589,7 @@ nsCycleCollector::Freed(void *n)
 // and also when UnmarkGray has run out of stack.  We also force GCs on shut 
 // down to collect cycles involving both DOM and JS.
 void
-nsCycleCollector::GCIfNeeded(PRBool aForceGC)
+nsCycleCollector::GCIfNeeded(bool aForceGC)
 {
     NS_ASSERTION(NS_IsMainThread(),
                  "nsCycleCollector::GCIfNeeded() must be called on the main thread.");
@@ -2618,7 +2618,7 @@ nsCycleCollector::GCIfNeeded(PRBool aForceGC)
 #endif
 }
 
-PRBool
+bool
 nsCycleCollector::PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes)
 {
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
@@ -2706,7 +2706,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
     return mCollectedObjects;
 }
 
-PRBool
+bool
 nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
 {
     if (mParams.mDoNothing)
@@ -2842,14 +2842,14 @@ nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
     return PR_TRUE;
 }
 
-PRBool
+bool
 nsCycleCollector::FinishCollection(nsICycleCollectorListener *aListener)
 {
 #ifdef COLLECT_TIME_DEBUG
     PRTime now = PR_Now();
 #endif
 
-    PRBool collected = CollectWhite(aListener);
+    bool collected = CollectWhite(aListener);
 
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: CollectWhite() took %lldms\n",
@@ -2943,7 +2943,7 @@ AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
 struct SetSCCVisitor
 {
     SetSCCVisitor(PRUint32 aIndex) : mIndex(aIndex) {}
-    PRBool ShouldVisitNode(PtrInfo const *pi) { return pi->mSCCIndex == 0; }
+    bool ShouldVisitNode(PtrInfo const *pi) { return pi->mSCCIndex == 0; }
     void VisitNode(PtrInfo *pi) { pi->mSCCIndex = mIndex; }
 private:
     PRUint32 mIndex;
@@ -2951,7 +2951,7 @@ private:
 
 struct SetNonRootGreyVisitor
 {
-    PRBool ShouldVisitNode(PtrInfo const *pi) { return pi->mColor == white; }
+    bool ShouldVisitNode(PtrInfo const *pi) { return pi->mColor == white; }
     void VisitNode(PtrInfo *pi) { pi->mColor = grey; }
 };
 
@@ -3023,8 +3023,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             }
         }
 
-        PRBool describeExtraRefcounts = PR_FALSE;
-        PRBool findCycleRoots = PR_FALSE;
+        bool describeExtraRefcounts = false;
+        bool findCycleRoots = false;
         {
             NodePool::Enumerator queue(mGraph.mNodes);
             PRUint32 i = 0;
@@ -3259,7 +3259,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     }    
 }
 
-PRBool
+bool
 nsCycleCollector::CreateReversedEdges()
 {
     // Count the edges in the graph.
@@ -3369,7 +3369,7 @@ void
 nsCycleCollector_registerRuntime(PRUint32 langID, 
                                  nsCycleCollectionLanguageRuntime *rt)
 {
-    static PRBool regMemReport = PR_TRUE;
+    static bool regMemReport = true;
     if (sCollector)
         sCollector->RegisterRuntime(langID, rt);
     if (regMemReport) {
@@ -3394,7 +3394,7 @@ nsCycleCollector_forgetRuntime(PRUint32 langID)
 }
 
 
-PRBool
+bool
 NS_CycleCollectorSuspect(nsISupports *n)
 {
     if (sCollector)
@@ -3402,7 +3402,7 @@ NS_CycleCollectorSuspect(nsISupports *n)
     return PR_FALSE;
 }
 
-PRBool
+bool
 NS_CycleCollectorForget(nsISupports *n)
 {
     return sCollector ? sCollector->Forget(n) : PR_TRUE;
@@ -3416,7 +3416,7 @@ NS_CycleCollectorSuspect2(nsISupports *n)
     return nsnull;
 }
 
-PRBool
+bool
 NS_CycleCollectorForget2(nsPurpleBufferEntry *e)
 {
     return sCollector ? sCollector->Forget2(e) : PR_TRUE;
@@ -3455,9 +3455,9 @@ class nsCycleCollectorRunner : public nsRunnable
     Mutex mLock;
     CondVar mRequest;
     CondVar mReply;
-    PRBool mRunning;
-    PRBool mShutdown;
-    PRBool mCollected;
+    bool mRunning;
+    bool mShutdown;
+    bool mCollected;
 
 public:
     NS_IMETHOD Run()

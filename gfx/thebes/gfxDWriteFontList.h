@@ -129,7 +129,7 @@ public:
                               IDWriteFont *aFont,
                               PRUint16 aWeight,
                               PRInt16 aStretch,
-                              PRBool aItalic)
+                              bool aItalic)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
         mForceGDIClassic(false)
     {
@@ -154,7 +154,7 @@ public:
                               IDWriteFontFile *aFontFile,
                               PRUint16 aWeight,
                               PRInt16 aStretch,
-                              PRBool aItalic)
+                              bool aItalic)
       : gfxFontEntry(aFaceName), mFont(nsnull), mFontFile(aFontFile),
         mForceGDIClassic(false)
     {
@@ -167,14 +167,14 @@ public:
 
     virtual ~gfxDWriteFontEntry();
 
-    virtual PRBool IsSymbolFont();
+    virtual bool IsSymbolFont();
 
     virtual nsresult GetFontTable(PRUint32 aTableTag,
                                   FallibleTArray<PRUint8>& aBuffer);
 
     nsresult ReadCMAP();
 
-    PRBool IsCJKFont();
+    bool IsCJKFont();
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
     bool GetForceGDIClassic() { return mForceGDIClassic; }
@@ -184,13 +184,13 @@ protected:
     friend class gfxDWriteFontList;
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                        PRBool aNeedsBold);
+                                        bool aNeedsBold);
     
     nsresult CreateFontFace(
         IDWriteFontFace **aFontFace,
         DWRITE_FONT_SIMULATIONS aSimulations = DWRITE_FONT_SIMULATIONS_NONE);
 
-    static PRBool InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont);
+    static bool InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont);
 
     /**
      * A fontentry only needs to have either of these. If it has both only
@@ -217,7 +217,7 @@ public:
     virtual nsresult InitFontList();
 
     virtual gfxFontEntry* GetDefaultFont(const gfxFontStyle* aStyle,
-                                         PRBool& aNeedsBold);
+                                         bool& aNeedsBold);
 
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                           const nsAString& aFontName);
@@ -226,14 +226,14 @@ public:
                                            const PRUint8 *aFontData,
                                            PRUint32 aLength);
     
-    virtual PRBool ResolveFontName(const nsAString& aFontName,
+    virtual bool ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName);
 
-    PRBool GetStandardFamilyName(const nsAString& aFontName,
+    bool GetStandardFamilyName(const nsAString& aFontName,
                                  nsAString& aFamilyName);
 
     IDWriteGdiInterop *GetGDIInterop() { return mGDIInterop; }
-    PRBool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
+    bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
 
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily);
 
@@ -262,13 +262,13 @@ private:
      */
     FontTable mFontSubstitutes;
 
-    PRBool mInitialized;
+    bool mInitialized;
     virtual nsresult DelayedInitFontList();
 
     gfxFloat mForceGDIClassicMaxFontSize;
 
     // whether to use GDI font table access routines
-    PRBool mGDIFontTableAccess;
+    bool mGDIFontTableAccess;
     nsRefPtr<IDWriteGdiInterop> mGDIInterop;
 };
 

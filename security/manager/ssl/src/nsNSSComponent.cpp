@@ -137,7 +137,7 @@ PRLogModuleInfo* gPIPNSSLog = nsnull;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 int nsNSSComponent::mInstanceCount = 0;
-PRBool nsNSSComponent::globalConstFlagUsePKIXVerification = PR_FALSE;
+bool nsNSSComponent::globalConstFlagUsePKIXVerification = false;
 
 // XXX tmp callback for slot password
 extern char * PR_CALLBACK 
@@ -279,11 +279,11 @@ nsTokenEventRunnable::Run()
   return nssComponent->DispatchEvent(mType, mTokenName);
 }
 
-PRBool nsPSMInitPanic::isPanic = PR_FALSE;
+bool nsPSMInitPanic::isPanic = false;
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
-PRBool EnsureNSSInitialized(EnsureNSSOperator op)
+bool EnsureNSSInitialized(EnsureNSSOperator op)
 {
   if (nsPSMInitPanic::GetPanic())
     return PR_FALSE;
@@ -303,7 +303,7 @@ PRBool EnsureNSSInitialized(EnsureNSSOperator op)
     return PR_FALSE;
   }
 
-  static PRBool loading = PR_FALSE;
+  static bool loading = false;
   static PRInt32 haveLoaded = 0;
 
   switch (op)
@@ -350,7 +350,7 @@ PRBool EnsureNSSInitialized(EnsureNSSOperator op)
     if (!nssComponent)
       return PR_FALSE;
 
-    PRBool isInitialized;
+    bool isInitialized;
     nsresult rv = nssComponent->IsNSSInitialized(&isInitialized);
     return NS_SUCCEEDED(rv) && isInitialized;
     }
@@ -500,7 +500,7 @@ nsNSSComponent::DispatchEvent(const nsAString &eventType,
     return rv;
   }
 
-  PRBool hasMoreWindows;
+  bool hasMoreWindows;
 
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreWindows))
          && hasMoreWindows) {
@@ -557,7 +557,7 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
       return NS_OK; // nope, it doesn't have a crypto property
     }
 
-    PRBool boolrv;
+    bool boolrv;
     crypto->GetEnableSmartCardEvents(&boolrv);
     if (!boolrv) {
       return NS_OK; // nope, it's not enabled.
@@ -604,7 +604,7 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
     return rv;
   }
 
-  PRBool boolrv;
+  bool boolrv;
   rv = target->DispatchEvent(smartCardEvent, &boolrv);
   return rv;
 }
@@ -908,7 +908,7 @@ nsNSSComponent::InstallLoadableRoots()
                             PR_FALSE); // do not recurse
 
     if (RootsModule) {
-      PRBool found = (RootsModule->loaded);
+      bool found = (RootsModule->loaded);
 
       SECMOD_DestroyModule(RootsModule);
       RootsModule = nsnull;
@@ -1136,7 +1136,7 @@ void nsNSSComponent::setValidationOptions(nsIPrefBranch * pref)
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
 
-  PRBool crlDownloading;
+  bool crlDownloading;
   rv = pref->GetBoolPref("security.CRL_download.enabled", &crlDownloading);
   if (NS_FAILED(rv))
     crlDownloading = CRL_DOWNLOAD_DEFAULT;
@@ -1148,17 +1148,17 @@ void nsNSSComponent::setValidationOptions(nsIPrefBranch * pref)
   if (NS_FAILED(rv))
     ocspEnabled = OCSP_ENABLED_DEFAULT;
 
-  PRBool ocspRequired;
+  bool ocspRequired;
   rv = pref->GetBoolPref("security.OCSP.require", &ocspRequired);
   if (NS_FAILED(rv))
     ocspRequired = OCSP_REQUIRED_DEFAULT;
 
-  PRBool anyFreshRequired;
+  bool anyFreshRequired;
   rv = pref->GetBoolPref("security.fresh_revocation_info.require", &anyFreshRequired);
   if (NS_FAILED(rv))
     anyFreshRequired = FRESH_REVOCATION_REQUIRED_DEFAULT;
   
-  PRBool aiaDownloadEnabled;
+  bool aiaDownloadEnabled;
   rv = pref->GetBoolPref("security.missing_cert_download.enabled", &aiaDownloadEnabled);
   if (NS_FAILED(rv))
     aiaDownloadEnabled = MISSING_CERT_DOWNLOAD_DEFAULT;
@@ -1293,7 +1293,7 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
 
   for(PRUint32 i=0;i<noOfCrls;i++) {
     //First check if update pref is enabled for this crl
-    PRBool autoUpdateEnabled = PR_FALSE;
+    bool autoUpdateEnabled = false;
     rv = pref->GetBoolPref(*(allCrlsToBeUpdated+i), &autoUpdateEnabled);
     if (NS_FAILED(rv) || !autoUpdateEnabled) {
       continue;
@@ -1503,7 +1503,7 @@ nsNSSComponent::TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath)
   NS_NAMED_LITERAL_CSTRING(cstr_certificate7, "Certificates7");
   NS_NAMED_LITERAL_CSTRING(cstr_certificate8, "Certificates8");
 
-  PRBool bExists;
+  bool bExists;
   nsresult rv;
 
   nsCOMPtr<nsIFile> macho_key3db;
@@ -1595,7 +1595,7 @@ nsNSSComponent::TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath)
 #endif
 
 nsresult
-nsNSSComponent::InitializeNSS(PRBool showWarningBox)
+nsNSSComponent::InitializeNSS(bool showWarningBox)
 {
   // Can be called both during init and profile change.
   // Needs mutex protection.
@@ -1716,7 +1716,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
     if (NS_FAILED(rv))
       globalConstFlagUsePKIXVerification = USE_NSS_LIBPKIX_DEFAULT;
 
-    PRBool supress_warning_preference = PR_FALSE;
+    bool supress_warning_preference = false;
     rv = mPrefBranch->GetBoolPref("security.suppress_nss_rw_impossible_warning", &supress_warning_preference);
 
     if (NS_FAILED(rv)) {
@@ -1790,7 +1790,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
 
       SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_FALSE);
       SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, PR_FALSE);
-      PRBool enabled;
+      bool enabled;
       mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
       mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
@@ -1997,7 +1997,7 @@ nsNSSComponent::Init()
     unrestricted_hosts=nsnull;
   }
 
-  PRBool enabled = PR_FALSE;
+  bool enabled = false;
   mPrefBranch->GetBoolPref("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
   nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(enabled);
 
@@ -2128,7 +2128,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   }
 
   //-- Verify signature
-  PRBool rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
+  bool rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
                                                &digest, HASH_AlgSHA1, PR_FALSE);
   if (!rv) {
     *aErrorCode = PR_GetError();
@@ -2255,7 +2255,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       DoProfileChangeNetRestore();
     }
   
-    PRBool needsInit = PR_TRUE;
+    bool needsInit = true;
 
     {
       MutexAutoLock lock(mutex);
@@ -2308,8 +2308,8 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
     nsNSSShutDownPreventionLock locker;
-    PRBool clearSessionCache = PR_FALSE;
-    PRBool enabled;
+    bool clearSessionCache = false;
+    bool enabled;
     NS_ConvertUTF16toUTF8  prefName(someData);
 
     if (prefName.Equals("security.enable_ssl3")) {
@@ -2563,7 +2563,7 @@ nsNSSComponent::DoProfileChangeNetTeardown()
 void
 nsNSSComponent::DoProfileChangeTeardown(nsISupports* aSubject)
 {
-  PRBool callVeto = PR_FALSE;
+  bool callVeto = false;
 
   if (!mShutdownObjectList->ifPossibleDisallowUI()) {
     callVeto = PR_TRUE;
@@ -2587,7 +2587,7 @@ nsNSSComponent::DoProfileBeforeChange(nsISupports* aSubject)
 {
   NS_ASSERTION(mIsNetworkDown, "nsNSSComponent relies on profile manager to wait for synchronous shutdown of all network activity");
 
-  PRBool needsCleanup = PR_TRUE;
+  bool needsCleanup = true;
 
   {
     MutexAutoLock lock(mutex);
@@ -2631,7 +2631,7 @@ nsNSSComponent::GetClientAuthRememberService(nsClientAuthRememberService **cars)
 }
 
 NS_IMETHODIMP
-nsNSSComponent::IsNSSInitialized(PRBool *initialized)
+nsNSSComponent::IsNSSInitialized(bool *initialized)
 {
   MutexAutoLock lock(mutex);
   *initialized = mNSSInitialized;
@@ -2811,7 +2811,7 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, PRUint32 len)
 }
 
 NS_IMETHODIMP
-nsCryptoHash::Finish(PRBool ascii, nsACString & _retval)
+nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 {
   nsNSSShutDownPreventionLock locker;
   
@@ -3004,8 +3004,8 @@ NS_IMETHODIMP nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, PRUint32 a
   return rv;
 }
 
-/* ACString finish (in PRBool aASCII); */
-NS_IMETHODIMP nsCryptoHMAC::Finish(PRBool aASCII, nsACString & _retval)
+/* ACString finish (in bool aASCII); */
+NS_IMETHODIMP nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 {
   nsNSSShutDownPreventionLock locker;
 
@@ -3105,7 +3105,7 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
   
   if (PK11_NeedUserInit(slot)) {
     nsITokenPasswordDialogs *dialogs;
-    PRBool canceled;
+    bool canceled;
     NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(slot));
 
     rv = getNSSDialogs((void**)&dialogs,
@@ -3346,7 +3346,7 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
 }
 
 void 
-PSMContentDownloader::setSilentDownload(PRBool flag)
+PSMContentDownloader::setSilentDownload(bool flag)
 {
   mDoSilentDownload = flag;
 }
@@ -3412,7 +3412,7 @@ PSMContentListener::init()
 }
 
 NS_IMETHODIMP
-PSMContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
+PSMContentListener::OnStartURIOpen(nsIURI *aURI, bool *aAbortOpen)
 {
   //if we don't want to handle the URI, return PR_TRUE in
   //*aAbortOpen
@@ -3422,7 +3422,7 @@ PSMContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 NS_IMETHODIMP
 PSMContentListener::IsPreferred(const char * aContentType,
                                  char ** aDesiredContentType,
-                                 PRBool * aCanHandleContent)
+                                 bool * aCanHandleContent)
 {
   return CanHandleContent(aContentType, PR_TRUE,
                           aDesiredContentType, aCanHandleContent);
@@ -3430,9 +3430,9 @@ PSMContentListener::IsPreferred(const char * aContentType,
 
 NS_IMETHODIMP
 PSMContentListener::CanHandleContent(const char * aContentType,
-                                      PRBool aIsContentPreferred,
+                                      bool aIsContentPreferred,
                                       char ** aDesiredContentType,
-                                      PRBool * aCanHandleContent)
+                                      bool * aCanHandleContent)
 {
   PRUint32 type;
   type = getPSMContentType(aContentType);
@@ -3446,10 +3446,10 @@ PSMContentListener::CanHandleContent(const char * aContentType,
 
 NS_IMETHODIMP
 PSMContentListener::DoContent(const char * aContentType,
-                               PRBool aIsContentPreferred,
+                               bool aIsContentPreferred,
                                nsIRequest * aRequest,
                                nsIStreamListener ** aContentHandler,
-                               PRBool * aAbortProcess)
+                               bool * aAbortProcess)
 {
   PSMContentDownloader *downLoader;
   PRUint32 type;

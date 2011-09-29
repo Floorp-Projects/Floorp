@@ -1684,6 +1684,87 @@ PropDesc::checkSetter(JSContext *cx)
     return true;
 }
 
+namespace detail {
+
+template<typename T> class PrimitiveBehavior { };
+
+template<>
+class PrimitiveBehavior<JSString *> {
+  public:
+    static inline bool isType(const Value &v) { return v.isString(); }
+    static inline JSString *extract(const Value &v) { return v.toString(); }
+    static inline Class *getClass() { return &StringClass; }
+};
+
+template<>
+class PrimitiveBehavior<bool> {
+  public:
+    static inline bool isType(const Value &v) { return v.isBoolean(); }
+    static inline bool extract(const Value &v) { return v.toBoolean(); }
+    static inline Class *getClass() { return &BooleanClass; }
+};
+
+template<>
+class PrimitiveBehavior<double> {
+  public:
+    static inline bool isType(const Value &v) { return v.isNumber(); }
+    static inline double extract(const Value &v) { return v.toNumber(); }
+    static inline Class *getClass() { return &NumberClass; }
+};
+
+} /* namespace detail */
+
+inline JSObject *
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Class *clasp, bool *ok)
+{
+    const Value &thisv = args.thisv();
+    if (thisv.isObject()) {
+        JSObject &obj = thisv.toObject();
+        if (obj.getClass() == clasp) {
+            *ok = true;  /* quell gcc overwarning */
+            return &obj;
+        }
+    }
+
+    *ok = HandleNonGenericMethodClassMismatch(cx, args, clasp);
+    return NULL;
+}
+
+template <typename T>
+inline bool
+BoxedPrimitiveMethodGuard(JSContext *cx, CallArgs args, T *v, bool *ok)
+{
+    typedef detail::PrimitiveBehavior<T> Behavior;
+
+    const Value &thisv = args.thisv();
+    if (Behavior::isType(thisv)) {
+        *v = Behavior::extract(thisv);
+        return true;
+    }
+
+    if (!NonGenericMethodGuard(cx, args, Behavior::getClass(), ok))
+        return false;
+
+    *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
+    return true;
+}
+
+inline bool
+ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
+{
+    if (JS_UNLIKELY(obj.isProxy()))
+        return Proxy::objectClassIs(&obj, classValue, cx);
+
+    switch (classValue) {
+      case ESClass_Array: return obj.isArray();
+      case ESClass_Number: return obj.isNumber();
+      case ESClass_String: return obj.isString();
+      case ESClass_Boolean: return obj.isBoolean();
+    }
+    JS_NOT_REACHED("bad classValue");
+    return false;
+}
+
 } /* namespace js */
 
 inline JSObject *

@@ -152,7 +152,7 @@ public:
                                  nsIURI** aClone);
   virtual nsresult EqualsInternal(nsIURI* aOther,
                                   RefHandlingEnum aRefHandlingMode,
-                                  PRBool* aResult);
+                                  bool* aResult);
 
   // Override StartClone to hand back a nsFileDataURI
   virtual nsSimpleURI* StartClone(RefHandlingEnum /* unused */)
@@ -254,7 +254,7 @@ nsFileDataURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
 /* virtual */ nsresult
 nsFileDataURI::EqualsInternal(nsIURI* aOther,
                               nsSimpleURI::RefHandlingEnum aRefHandlingMode,
-                              PRBool* aResult)
+                              bool* aResult)
 {
   if (!aOther) {
     *aResult = PR_FALSE;
@@ -449,7 +449,7 @@ nsFileDataProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
 NS_IMETHODIMP 
 nsFileDataProtocolHandler::AllowPort(PRInt32 port, const char *scheme,
-                                     PRBool *_retval)
+                                     bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;

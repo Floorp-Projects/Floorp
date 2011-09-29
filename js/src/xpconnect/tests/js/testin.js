@@ -100,8 +100,6 @@
   ]);
   TestString([
   ]);
-  TestPRBool( [
-  ]);
   TestPRInt32( [
   ]);
   TestPRInt16( [
@@ -169,8 +167,6 @@
   function TestWchar() {
   }
   function TestString() {
-  }
-  function TestPRBool() {
   }
   function TestPRInt32() {
   }

@@ -79,7 +79,7 @@ public:
 
   nsresult mResultCode;
 
-  PRBool mHttpRequestSucceeded;
+  bool mHttpRequestSucceeded;
   PRUint16 mHttpResponseCode;
   nsCString mHttpResponseContentType;
 
@@ -88,9 +88,9 @@ public:
   
   mozilla::Mutex mLock;
   mozilla::CondVar mCondition;
-  volatile PRBool mWaitFlag;
+  volatile bool mWaitFlag;
   
-  PRBool mResponsibleForDoneSignal;
+  bool mResponsibleForDoneSignal;
   void send_done_signal();
 
   // no nsCOMPtr. When I use it, I get assertions about
@@ -99,7 +99,7 @@ public:
   // it on the network thread ourselves.
   nsILoadGroup *mLoadGroup;
   PRThread *mLoadGroupOwnerThread;
-  void FreeLoadGroup(PRBool aCancelLoad);
+  void FreeLoadGroup(bool aCancelLoad);
 };
 
 class nsNSSHttpServerSession
@@ -149,7 +149,7 @@ public:
   nsCString mURL;
   nsCString mRequestMethod;
   
-  PRBool mHasPostData;
+  bool mHasPostData;
   nsCString mPostData;
   nsCString mPostContentType;
   
@@ -161,7 +161,7 @@ protected:
   nsNSSHttpRequestSession();
   ~nsNSSHttpRequestSession();
 
-  SECStatus internal_send_receive_attempt(PRBool &retryable_error,
+  SECStatus internal_send_receive_attempt(bool &retryable_error,
                                           PRPollDesc **pPollDesc,
                                           PRUint16 *http_response_code,
                                           const char **http_response_content_type,

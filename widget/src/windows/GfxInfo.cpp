@@ -88,29 +88,29 @@ GfxInfo::GfxInfo()
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
 nsresult
-GfxInfo::GetD2DEnabled(PRBool *aEnabled)
+GfxInfo::GetD2DEnabled(bool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
   return NS_OK;
 }
 
 nsresult
-GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
+GfxInfo::GetDWriteEnabled(bool *aEnabled)
 {
   *aEnabled = gfxWindowsPlatform::GetPlatform()->DWriteEnabled();
   return NS_OK;
 }
 
 nsresult
-GfxInfo::GetAzureEnabled(PRBool *aEnabled)
+GfxInfo::GetAzureEnabled(bool *aEnabled)
 {
   *aEnabled = PR_FALSE;
 
-  PRBool d2dEnabled = 
+  bool d2dEnabled = 
     gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
 
   if (d2dEnabled) {
-    PRBool azure = PR_FALSE;
+    bool azure = false;
     nsresult rv = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
 
     if (NS_SUCCEEDED(rv) && azure) {
@@ -493,7 +493,7 @@ GfxInfo::Init()
     // we've had big crashers (bugs 590373 and 595364) apparently correlated
     // with bad Intel driver installations where the DriverVersion reported
     // by the registry was not the version of the DLL.
-    PRBool is64bitApp = sizeof(void*) == 8;
+    bool is64bitApp = sizeof(void*) == 8;
     const PRUnichar *dllFileName = is64bitApp
                                  ? L"igd10umd64.dll"
                                  : L"igd10umd32.dll";
@@ -646,7 +646,7 @@ GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
 
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
-GfxInfo::GetIsGPU2Active(PRBool* aIsGPU2Active)
+GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 {
   *aIsGPU2Active = mIsGPU2Active;
   return NS_OK;

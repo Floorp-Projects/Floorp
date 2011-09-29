@@ -67,8 +67,8 @@ public:
   // is 1, and something other than 1 (maybe or maybe not a valid
   // result) otherwise.
   // This must only be called on nodes which have a non-null parent.
-  PRInt32 GetNthIndex(Element* aChild, PRBool aIsOfType, PRBool aIsFromEnd,
-                      PRBool aCheckEdgeOnly);
+  PRInt32 GetNthIndex(Element* aChild, bool aIsOfType, bool aIsFromEnd,
+                      bool aCheckEdgeOnly);
 
   void Reset();
 
@@ -78,15 +78,15 @@ private:
    * list for nth-index purposes, taking aIsOfType into account.
    */
   inline bool SiblingMatchesElement(nsIContent* aSibling, Element* aElement,
-                                    PRBool aIsOfType);
+                                    bool aIsOfType);
 
   /**
    * Returns true if aResult has been set to the correct value for aChild and
    * no more work needs to be done.  Returns false otherwise.
    */
   inline bool IndexDetermined(nsIContent* aSibling, Element* aChild,
-                              PRBool aIsOfType, PRBool aIsFromEnd,
-                              PRBool aCheckEdgeOnly, PRInt32& aResult);
+                              bool aIsOfType, bool aIsFromEnd,
+                              bool aCheckEdgeOnly, PRInt32& aResult);
 
   struct CacheEntry {
     CacheEntry() {

@@ -52,7 +52,7 @@ class DBusClient {
 public:
   virtual void RegisterWithConnection(DBusConnection* connection) = 0;
   virtual void UnregisterWithConnection(DBusConnection* connection) = 0;
-  virtual PRBool HandleMessage(DBusMessage* msg) = 0;
+  virtual bool HandleMessage(DBusMessage* msg) = 0;
 };
 
 #define NS_DBUS_IID \
@@ -91,7 +91,7 @@ public:
   DBusPendingCall* SendWithReply(DBusClient* client, DBusMessage* message);
 
   // these should be private but we need to call them from static functions
-  PRBool HandleMessage(DBusMessage* message);
+  bool HandleMessage(DBusMessage* message);
   void DoTimerCallback(nsITimer* aTimer);
 
 private:

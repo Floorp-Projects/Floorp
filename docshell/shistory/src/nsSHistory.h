@@ -90,9 +90,9 @@ protected:
   friend class nsSHistoryObserver;
 
    // Could become part of nsIWebNavigation
-   NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult);
+   NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, bool aModifyIndex, nsISHEntry** aResult);
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
-   nsresult CompareFrames(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell, long aLoadType, PRBool * aIsFrameFound);
+   nsresult CompareFrames(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell, long aLoadType, bool * aIsFrameFound);
    nsresult InitiateLoad(nsISHEntry * aFrameEntry, nsIDocShell * aFrameDS, long aLoadType);
 
    NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 histCmd);
@@ -118,7 +118,7 @@ protected:
   // aIndex is the index of the transaction which may be removed.
   // If aKeepNext is PR_TRUE, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
-  PRBool RemoveDuplicate(PRInt32 aIndex, PRBool aKeepNext);
+  bool RemoveDuplicate(PRInt32 aIndex, bool aKeepNext);
 
   nsCOMPtr<nsISHTransaction> mListRoot;
   PRInt32 mIndex;

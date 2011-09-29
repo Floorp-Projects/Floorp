@@ -83,8 +83,8 @@ nsDOMCommandEvent::GetCommand(nsAString& aCommand)
 
 NS_IMETHODIMP
 nsDOMCommandEvent::InitCommandEvent(const nsAString& aTypeArg,
-                                    PRBool aCanBubbleArg,
-                                    PRBool aCancelableArg,
+                                    bool aCanBubbleArg,
+                                    bool aCancelableArg,
                                     const nsAString& aCommand)
 {
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);

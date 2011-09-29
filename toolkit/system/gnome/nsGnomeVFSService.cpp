@@ -86,7 +86,7 @@ nsGnomeVFSMimeApp::GetCommand(nsACString& aCommand)
 }
 
 NS_IMETHODIMP
-nsGnomeVFSMimeApp::GetCanOpenMultipleFiles(PRBool* aCanOpen)
+nsGnomeVFSMimeApp::GetCanOpenMultipleFiles(bool* aCanOpen)
 {
   *aCanOpen = mApp->can_open_multiple_files;
   return NS_OK;
@@ -135,7 +135,7 @@ public:
 NS_IMPL_ISUPPORTS1(UTF8StringEnumerator, nsIUTF8StringEnumerator)
 
 NS_IMETHODIMP
-UTF8StringEnumerator::HasMore(PRBool *aResult)
+UTF8StringEnumerator::HasMore(bool *aResult)
 {
   *aResult = mIndex < mStrings.Length();
   return NS_OK;
@@ -171,7 +171,7 @@ nsGnomeVFSMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes)
 }
 
 NS_IMETHODIMP
-nsGnomeVFSMimeApp::GetRequiresTerminal(PRBool* aRequires)
+nsGnomeVFSMimeApp::GetRequiresTerminal(bool* aRequires)
 {
   *aRequires = mApp->requires_terminal;
   return NS_OK;

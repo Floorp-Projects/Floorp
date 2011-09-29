@@ -119,7 +119,7 @@ public:
     nsRefPtr<gfxContext> mContext;
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
-    PRPackedBool mDidSelfCopy;
+    bool mDidSelfCopy;
   };
 
   enum {
@@ -201,7 +201,7 @@ protected:
   GetContextForQuadrantUpdate(const nsIntRect& aBounds);
 
 private:
-  PRBool BufferSizeOkFor(const nsIntSize& aSize)
+  bool BufferSizeOkFor(const nsIntSize& aSize)
   {
     return (aSize == mBufferRect.Size() ||
             (SizedToVisibleBounds != mBufferSizePolicy &&

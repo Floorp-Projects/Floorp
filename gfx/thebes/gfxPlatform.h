@@ -221,12 +221,12 @@ public:
      * If the callback function returns PR_FALSE, the aAborted value is set to
      * PR_TRUE, otherwise, PR_FALSE.
      */
-    typedef PRBool (*FontResolverCallback) (const nsAString& aName,
+    typedef bool (*FontResolverCallback) (const nsAString& aName,
                                             void *aClosure);
     virtual nsresult ResolveFontName(const nsAString& aFontName,
                                      FontResolverCallback aCallback,
                                      void *aClosure,
-                                     PRBool& aAborted) = 0;
+                                     bool& aAborted) = 0;
 
     /**
      * Resolving a font name to family name. The result MUST be in the result of GetFontList().
@@ -267,24 +267,24 @@ public:
     /**
      * Whether to allow downloadable fonts via @font-face rules
      */
-    PRBool DownloadableFontsEnabled();
+    bool DownloadableFontsEnabled();
 
     /**
      * Whether to sanitize downloaded fonts using the OTS library
      */
-    PRBool SanitizeDownloadedFonts();
+    bool SanitizeDownloadedFonts();
 
     /**
      * Whether to use the harfbuzz shaper (depending on script complexity).
      *
      * This allows harfbuzz to be enabled selectively via the preferences.
      */
-    PRBool UseHarfBuzzForScript(PRInt32 aScriptCode);
+    bool UseHarfBuzzForScript(PRInt32 aScriptCode);
 
     // check whether format is supported on a platform or not (if unclear, returns true)
-    virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags) { return PR_FALSE; }
+    virtual bool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags) { return false; }
 
-    void GetPrefFonts(nsIAtom *aLanguage, nsString& array, PRBool aAppendUnicode = PR_TRUE);
+    void GetPrefFonts(nsIAtom *aLanguage, nsString& array, bool aAppendUnicode = true);
 
     // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
     void GetLangPrefs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);
@@ -294,9 +294,9 @@ public:
      * group, multiple pref fonts are possible.  If error occurs, returns PR_FALSE,
      * PR_TRUE otherwise.  Callback returns PR_FALSE to abort process.
      */
-    typedef PRBool (*PrefFontCallback) (eFontPrefLang aLang, const nsAString& aName,
+    typedef bool (*PrefFontCallback) (eFontPrefLang aLang, const nsAString& aName,
                                         void *aClosure);
-    static PRBool ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen,
+    static bool ForEachPrefFont(eFontPrefLang aLangArray[], PRUint32 aLangArrayLen,
                                   PrefFontCallback aCallback,
                                   void *aClosure);
 
@@ -313,7 +313,7 @@ public:
     static eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
 
     // returns true if a pref lang is CJK
-    static PRBool IsLangCJK(eFontPrefLang aLang);
+    static bool IsLangCJK(eFontPrefLang aLang);
     
     // helper method to add a pref lang to an array, if not already in array
     static void AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang);
@@ -390,8 +390,8 @@ protected:
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
                                                
-    PRBool  mAllowDownloadableFonts;
-    PRBool  mDownloadableFontsSanitize;
+    PRInt8  mAllowDownloadableFonts;
+    PRInt8  mDownloadableFontsSanitize;
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;

@@ -50,6 +50,10 @@
       testValue("aria_main_link", href);
       testValue("aria_navigation_link", href);
 
+      // HTML controls
+      testValue("combobox1", "item1");
+      testValue("combobox2", "item2");
+
       SimpleTest.finish();
     }
 
@@ -84,5 +88,13 @@
   <!-- strange edge case: please don't do this in the wild -->
   <a id="aria_link_link" role="link" href="foo">link</a>
 
+  <select id="combobox1">
+    <option id="cb1_item1">item1</option>
+    <option id="cb1_item2">item2</option>
+  </select>
+  <select id="combobox2">
+    <option id="cb2_item1">item1</option>
+    <option id="cb2_item2" selected="true">item2</option>
+  </select>
 </body>
 </html>

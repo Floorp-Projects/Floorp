@@ -82,7 +82,7 @@ public:
 private:
   nsCOMPtr<nsIStreamListener> mStreamConverter;
   nsWeakPtr mWeakPtrPluginStreamListenerPeer;
-  PRBool mRemoveMagicNumber;
+  bool mRemoveMagicNumber;
 };
 
 NS_IMPL_ISUPPORTS3(nsPluginByteRangeStreamListener,
@@ -160,7 +160,7 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   }
   
   if (responseCode != 200) {
-    PRBool bWantsAllNetworkStreams = PR_FALSE;
+    bool bWantsAllNetworkStreams = false;
     rv = pslp->GetPluginInstance()->GetValueFromPlugin(NPPVpluginWantsAllNetworkStreams,
                                                        &bWantsAllNetworkStreams);
     // If the call returned an error code make sure we still use our default value.
@@ -195,7 +195,7 @@ nsPluginByteRangeStreamListener::OnStopRequest(nsIRequest *request, nsISupports 
   
   nsPluginStreamListenerPeer *pslp =
     static_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
-  PRBool found = pslp->mRequests.RemoveObject(request);
+  bool found = pslp->mRequests.RemoveObject(request);
   if (!found) {
     NS_ERROR("OnStopRequest received for untracked byte-range request!");
   }
@@ -287,7 +287,7 @@ public:
     return mKey;
   }
   
-  PRBool Equals(const nsHashKey *aKey) const {
+  bool Equals(const nsHashKey *aKey) const {
     return mKey == ((const nsPRUintKey*)aKey)->mKey;
   }
   nsHashKey *Clone() const {
@@ -447,7 +447,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
 {
   nsresult rv = NS_OK;
   
-  PRBool useExistingCacheFile = PR_FALSE;
+  bool useExistingCacheFile = false;
   nsRefPtr<nsPluginHost> pluginHost = dont_AddRef(nsPluginHost::GetInst());
 
   // Look for an existing cache file for the URI.
@@ -555,7 +555,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     }
     
     if (responseCode > 206) { // not normal
-      PRBool bWantsAllNetworkStreams = PR_FALSE;
+      bool bWantsAllNetworkStreams = false;
       rv = mPluginInstance->GetValueFromPlugin(NPPVpluginWantsAllNetworkStreams,
                                                &bWantsAllNetworkStreams);
       // If the call returned an error code make sure we still use our default value.
@@ -699,7 +699,7 @@ nsPluginStreamListenerPeer::GetContentType(char** result)
 
 
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::IsSeekable(PRBool* result)
+nsPluginStreamListenerPeer::IsSeekable(bool* result)
 {
   *result = mSeekable;
   return NS_OK;
@@ -887,7 +887,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   return NS_OK;
 }
 
-PRBool
+bool
 nsPluginStreamListenerPeer::UseExistingPluginCacheFile(nsPluginStreamListenerPeer* psi)
 {
   NS_ENSURE_TRUE(psi, PR_FALSE);
@@ -1016,7 +1016,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
 
   nsCOMPtr<nsIMultiPartChannel> mp = do_QueryInterface(request);
   if (!mp) {
-    PRBool found = mRequests.RemoveObject(request);
+    bool found = mRequests.RemoveObject(request);
     if (!found) {
       NS_ERROR("Received OnStopRequest for untracked request.");
     }
@@ -1157,7 +1157,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 
   mPStreamListener->SetStreamListenerPeer(this);
 
-  PRBool useLocalCache = PR_FALSE;
+  bool useLocalCache = false;
   
   // get httpChannel to retrieve some info we need for nsIPluginStreamInfo setup
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);

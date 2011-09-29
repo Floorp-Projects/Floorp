@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=191864
+-->
+<head>
+  <title>Test for Bug 191864</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=191864">Mozilla Bug 191864</a>
+<p id="display">
+<span id="col1" style="float:left; height:800px; width:180px;"></span>
+<span id="col2" style="float:left; height:800px; width:180px;"></span>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+var tests = [
+ [ {}, [0,4], "012345678" ],
+ [ {}, [0,0], "012345678" ],
+ [ {}, [0,9], "012345678" ],
+ [ {startOffset:4}, [0,4], "012345678" ],
+ [ {startOffset:5}, [0,4], "012345678" ],
+ [ {startOffset:5,endOffset:6}, [0,4], "012345678" ],
+ [ {endOffset:5}, [0,4], "012345678" ],
+ [ {endOffset:4}, [0,4], "012345678" ],
+ [ {endOffset:3}, [0,4], "012345678" ],
+ [ {startOffset:1,endOffset:3}, [0,4], "012345678" ],
+ [ {startOffset:7,endOffset:7}, [0,4], "012345678" ],
+ [ {startOffset:4,endOffset:4}, [0,4], "012345678" ],
+ [ {endNode:1}, [0,4], "012345678", "" ],
+ [ {endNode:1}, [0,4], "01234567", "8" ],
+ [ {endNode:1}, [1,4], "0", "12345678" ],
+ [ {endNode:2}, [1,4], "0", "12345", "678" ],
+]
+
+function runtest(r,p,t) {
+  // create content
+  document.original_nodes = [];
+  for (let i = 2; i < t.length; ++i) {
+    c = document.createTextNode(t[i]);
+    p.appendChild(c);
+    document.original_nodes.push(c);
+  }
+
+  // setup the range
+  let sel = t[0]
+  let startNode = p.firstChild;
+  let startOffset = sel.startOffset === undefined ? 0 : sel.startOffset;
+  let endNode = sel.endNode === undefined ? startNode : p.childNodes[sel.endNode];
+  let endOffset = sel.endOffset === undefined ? endNode.length : sel.endOffset;
+  r.setStart(startNode, startOffset);
+  r.setEnd(endNode, endOffset);
+
+  // splitText
+  let split = t[1]
+  p.childNodes[split[0]].splitText(split[1])
+}
+function test_split(r,p,t) {
+    runtest(r,p,t);
+}
+function test_split_merge(r,p,t) {
+    runtest(r,p,t);
+    p.normalize();
+}
+</script>
+
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 191864 **/
+
+var results = [
+/* test_split */
+ [ {},                                        [ [0, "0123"], "45678" ]],
+ [ {},                                        [ [0, ""], "012345678" ]],
+ [ {endNode:0, endOffset:9},                  [ [0, "012345678"], "" ]],
+ [ {startOffset:4},                           [ [0, "0123"], "45678" ]],
+ [ {startNode:1, startOffset:1},              [ [0, "0123"], "45678" ]],
+ [ {startNode:1, startOffset:1, endOffset:2}, [ [0, "0123"], "45678" ]],
+ [ {endOffset:1},                             [ [0, "0123"], "45678" ]],
+ [ {endNode:0},                               [ [0, "0123"], "45678" ]],
+ [ {endNode:0, endOffset:3},                  [ [0, "0123"], "45678" ]],
+ [ {startOffset:1, endNode:0, endOffset:3},   [ [0, "0123"], "45678" ]],
+ [ {startNode:1, startOffset:3, endOffset:3}, [ [0, "0123"], "45678" ]],
+ [ {startOffset:4, endNode:0},                [ [0, "0123"], "45678" ]],
+ [ {endNode:2, endOffset:0},                  [ [0, "0123"], "45678", [1, ""] ]],
+ [ {endNode:2},                               [ [0, "0123"], "4567", [1, "8"] ]],
+ [ {endNode:2},                               [ [0, "0"], [1, "1234"], "5678" ]],
+ [ {endNode:3},                               [ [0, "0"], [1, "1234"], "5", [2, "678"] ]],
+/* test_split_merge */
+ [ {},                                        [ [0, "012345678" ] ]],
+ [ {startParent:true},                        [ "012345678" ]],     /* splitText() creates an empty first child which is removed by normalize() */
+ [ {},                                        [ [0, "012345678" ] ]],
+ [ {startOffset:4},                           [ [0, "012345678" ] ]],
+ [ {startOffset:5},                           [ [0, "012345678" ] ]],
+ [ {startOffset:5,endOffset:6},               [ [0, "012345678" ] ]],
+ [ {endOffset:5},                             [ [0, "012345678" ] ]],
+ [ {endOffset:4},                             [ [0, "012345678" ] ]],
+ [ {endOffset:3},                             [ [0, "012345678" ] ]],
+ [ {startOffset:1,endOffset:3},               [ [0, "012345678" ] ]],
+ [ {startOffset:7,endOffset:7},               [ [0, "012345678" ] ]],
+ [ {startOffset:4,endOffset:4},               [ [0, "012345678" ] ]],
+ [ {endParent:true},                          [ [0, "012345678" ] ]],
+ [ {},                                        [ [0, "012345678" ] ]],
+ [ {},                                        [ [0, "012345678" ] ]],
+ [ {},                                        [ [0, "012345678" ] ]],
+]
+
+function verifyResults(r,p,i) {
+  let nodes = results[i][1];
+  is(p.childNodes.length, nodes.length, "same number of DOM nodes" + " (test " + i + ")");
+  for (let j = 0; j < nodes.length; ++j) {
+    let a = nodes[j];
+    let b = p.childNodes[j];
+    if (a instanceof Array) {
+      is(b, document.original_nodes[a[0]], "same node" + " (test " + i + " child " + j + ")");
+      is(b.textContent, a[1], "contents2" + " (test " + i + " child " + j + ")");
+    } else {
+      is(b.nodeType, Node.TEXT_NODE, "text node" + " (test " + i + " child " + j + ")");
+      is(b.textContent, a, "contents1" + " (test " + i + " child " + j + ")");
+    }
+  }
+  let sel = results[i][0];
+  if (sel.todo) {
+    alert(r.startContainer + '\n' + r.startOffset + '\n' + r.endContainer + '\n' + r.endOffset + '\n')
+    return;
+  }
+  let startNode = sel.startNode === undefined ? p.firstChild : p.childNodes[sel.startNode];
+  let startOffset = sel.startOffset === undefined ? 0 : sel.startOffset;
+  if (sel.startParent) { startNode = p; startOffset = 0; }
+  let endNode = sel.endNode === undefined ? p.childNodes[p.childNodes.length>1 ? 1 : 0] : p.childNodes[sel.endNode];
+  let endOffset = sel.endOffset === undefined ? endNode.length : sel.endOffset;
+  if (sel.endParent) { endNode = p; endOffset = 1; }
+  is(r.startContainer, startNode, "range start node" + " (test " + i + ")");
+  is(r.startOffset, startOffset, "range start offset" + " (test " + i + ")");
+  is(r.endContainer, endNode, "range end node" + " (test " + i + ")");
+  is(r.endOffset, endOffset, "range end offset" + " (test " + i + ")");
+}
+
+function runTest() {
+  let col1 = document.getElementById('col1');
+  let col2 = document.getElementById('col2');
+  for (let i=0; i < tests.length; ++i) {
+    let t = tests[i];
+    let p = document.createElement('p')
+    col1.appendChild(p);
+    let r = document.createRange();
+    test_split(r,p,t);
+    verifyResults(r,p,i);
+  }
+  for (let i=0; i < tests.length; ++i) {
+    let t = tests[i];
+    let p = document.createElement('p')
+    col2.appendChild(p);
+    let r = document.createRange();
+    test_split_merge(r,p,t);
+    verifyResults(r,p,i+tests.length);
+  }
+  SimpleTest.finish();
+}
+
+window.onload = function() { setTimeout(runTest, 0); };
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

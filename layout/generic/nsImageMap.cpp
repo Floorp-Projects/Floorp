@@ -73,16 +73,16 @@ public:
 
   virtual void ParseCoords(const nsAString& aSpec);
 
-  virtual PRBool IsInside(nscoord x, nscoord y) const = 0;
+  virtual bool IsInside(nscoord x, nscoord y) const = 0;
   virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC) = 0;
   virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) = 0;
 
-  void HasFocus(PRBool aHasFocus);
+  void HasFocus(bool aHasFocus);
 
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
   PRInt32 mNumCoords;
-  PRPackedBool mHasFocus;
+  bool mHasFocus;
 };
 
 Area::Area(nsIContent* aArea)
@@ -103,7 +103,7 @@ Area::~Area()
 
 #include <stdlib.h>
 
-inline PRBool
+inline bool
 is_space(char c)
 {
   return (c == ' ' ||
@@ -176,7 +176,7 @@ void Area::ParseCoords(const nsAString& aSpec)
     cnt = 0;
     while (*n_str != '\0')
     {
-      PRBool has_comma;
+      bool has_comma;
 
       /*
        * Skip to a separator
@@ -297,7 +297,7 @@ void Area::ParseCoords(const nsAString& aSpec)
   }
 }
 
-void Area::HasFocus(PRBool aHasFocus)
+void Area::HasFocus(bool aHasFocus)
 {
   mHasFocus = aHasFocus;
 }
@@ -308,7 +308,7 @@ class DefaultArea : public Area {
 public:
   DefaultArea(nsIContent* aArea);
 
-  virtual PRBool IsInside(nscoord x, nscoord y) const;
+  virtual bool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
@@ -318,7 +318,7 @@ DefaultArea::DefaultArea(nsIContent* aArea)
 {
 }
 
-PRBool DefaultArea::IsInside(nscoord x, nscoord y) const
+bool DefaultArea::IsInside(nscoord x, nscoord y) const
 {
   return PR_TRUE;
 }
@@ -354,7 +354,7 @@ public:
   RectArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec);
-  virtual PRBool IsInside(nscoord x, nscoord y) const;
+  virtual bool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
@@ -368,7 +368,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
 {
   Area::ParseCoords(aSpec);
 
-  PRBool saneRect = PR_TRUE;
+  bool saneRect = true;
   PRInt32 flag = nsIScriptError::warningFlag;
   if (mNumCoords >= 4) {
     if (mCoords[0] > mCoords[2]) {
@@ -401,7 +401,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
   }
 }
 
-PRBool RectArea::IsInside(nscoord x, nscoord y) const
+bool RectArea::IsInside(nscoord x, nscoord y) const
 {
   if (mNumCoords >= 4) {       // Note: > is for nav compatibility
     nscoord x1 = mCoords[0];
@@ -456,7 +456,7 @@ public:
   PolyArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec);
-  virtual PRBool IsInside(nscoord x, nscoord y) const;
+  virtual bool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
@@ -485,7 +485,7 @@ void PolyArea::ParseCoords(const nsAString& aSpec)
   }
 }
 
-PRBool PolyArea::IsInside(nscoord x, nscoord y) const
+bool PolyArea::IsInside(nscoord x, nscoord y) const
 {
   if (mNumCoords >= 6) {
     PRInt32 intersects = 0;
@@ -596,7 +596,7 @@ public:
   CircleArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec);
-  virtual PRBool IsInside(nscoord x, nscoord y) const;
+  virtual bool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
@@ -610,7 +610,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
 {
   Area::ParseCoords(aSpec);
 
-  PRBool wrongNumberOfCoords = PR_FALSE;
+  bool wrongNumberOfCoords = false;
   PRInt32 flag = nsIScriptError::warningFlag;
   if (mNumCoords >= 3) {
     if (mCoords[2] < 0) {
@@ -636,7 +636,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
   }
 }
 
-PRBool CircleArea::IsInside(nscoord x, nscoord y) const
+bool CircleArea::IsInside(nscoord x, nscoord y) const
 {
   // Note: > is for nav compatibility
   if (mNumCoords >= 3) {
@@ -692,7 +692,6 @@ void CircleArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 
 nsImageMap::nsImageMap() :
-  mPresShell(nsnull),
   mImageFrame(nsnull),
   mContainsBlockContents(PR_FALSE)
 {
@@ -749,13 +748,12 @@ nsImageMap::FreeAreas()
 }
 
 nsresult
-nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIContent* aMap)
+nsImageMap::Init(nsIFrame* aImageFrame, nsIContent* aMap)
 {
   NS_PRECONDITION(aMap, "null ptr");
   if (!aMap) {
     return NS_ERROR_NULL_POINTER;
   }
-  mPresShell = aPresShell;
   mImageFrame = aImageFrame;
 
   mMap = aMap;
@@ -767,8 +765,8 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIContent* aM
 
 
 nsresult
-nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
-                           PRBool& aFoundAnchor)
+nsImageMap::SearchForAreas(nsIContent* aParent, bool& aFoundArea,
+                           bool& aFoundAnchor)
 {
   nsresult rv = NS_OK;
   PRUint32 i, n = aParent->GetChildCount();
@@ -816,8 +814,8 @@ nsImageMap::UpdateAreas()
   // Get rid of old area data
   FreeAreas();
 
-  PRBool foundArea = PR_FALSE;
-  PRBool foundAnchor = PR_FALSE;
+  bool foundArea = false;
+  bool foundAnchor = false;
   mContainsBlockContents = PR_FALSE;
 
   return SearchForAreas(mMap, foundArea, foundAnchor);
@@ -880,7 +878,7 @@ nsImageMap::AddArea(nsIContent* aArea)
   return NS_OK;
 }
 
-PRBool
+bool
 nsImageMap::IsInside(nscoord aX, nscoord aY,
                      nsIContent** aContent) const
 {
@@ -970,7 +968,7 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  PRBool focus = eventType.EqualsLiteral("focus");
+  bool focus = eventType.EqualsLiteral("focus");
   NS_ABORT_IF_FALSE(focus == !eventType.EqualsLiteral("blur"),
                     "Unexpected event type");
 

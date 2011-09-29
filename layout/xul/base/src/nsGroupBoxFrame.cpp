@@ -62,7 +62,7 @@ public:
   }
 #endif
 
-  virtual PRBool HonorPrintBackgroundSettings() { return PR_FALSE; }
+  virtual bool HonorPrintBackgroundSettings() { return false; }
 
   void PaintBorderBackground(nsRenderingContext& aRenderingContext,
       nsPoint aPt, const nsRect& aDirtyRect);
@@ -70,10 +70,10 @@ public:
   // make sure we our kids get our orient and align instead of us.
   // our child box has no content node so it will search for a parent with one.
   // that will be us.
-  virtual void GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; }
-  virtual PRBool GetInitialHAlignment(Halignment& aHalign)  { aHalign = hAlign_Left; return PR_TRUE; } 
-  virtual PRBool GetInitialVAlignment(Valignment& aValign)  { aValign = vAlign_Top; return PR_TRUE; } 
-  virtual PRBool GetInitialAutoStretch(PRBool& aStretch)    { aStretch = PR_TRUE; return PR_TRUE; } 
+  virtual void GetInitialOrientation(bool& aHorizontal) { aHorizontal = false; }
+  virtual bool GetInitialHAlignment(Halignment& aHalign)  { aHalign = hAlign_Left; return true; } 
+  virtual bool GetInitialVAlignment(Valignment& aValign)  { aValign = vAlign_Top; return true; } 
+  virtual bool GetInitialAutoStretch(bool& aStretch)    { aStretch = true; return true; } 
 
   nsIBox* GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect);
 };
@@ -93,7 +93,7 @@ public:
 #endif
   
   // we are always flexible
-  virtual PRBool GetDefaultFlex(PRInt32& aFlex) { aFlex = 1; return PR_TRUE; }
+  virtual bool GetDefaultFlex(PRInt32& aFlex) { aFlex = 1; return true; }
 
 };
 */

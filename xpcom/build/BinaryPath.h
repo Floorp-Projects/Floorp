@@ -118,7 +118,7 @@ private:
     if (!pathdup)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    PRBool found = PR_FALSE;
+    bool found = false;
     char *token = strtok(pathdup, ":");
     while (token) {
       char tmpPath[MAXPATHLEN];

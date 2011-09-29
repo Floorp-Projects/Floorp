@@ -81,7 +81,7 @@ nsNSSCertificateFakeTransport::GetCertType(PRUint32 *aCertType)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetIsSelfSigned(PRBool *aIsSelfSigned)
+nsNSSCertificateFakeTransport::GetIsSelfSigned(bool *aIsSelfSigned)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -132,7 +132,7 @@ nsNSSCertificateFakeTransport::GetEmailAddresses(PRUint32 *aLength, PRUnichar***
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::ContainsEmailAddress(const nsAString &aEmailAddress, PRBool *result)
+nsNSSCertificateFakeTransport::ContainsEmailAddress(const nsAString &aEmailAddress, bool *result)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -284,7 +284,7 @@ nsNSSCertificateFakeTransport::VerifyForUsage(PRUint32 usage, PRUint32 *verifica
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetUsagesArray(PRBool localOnly,
+nsNSSCertificateFakeTransport::GetUsagesArray(bool localOnly,
                                  PRUint32 *_verified,
                                  PRUint32 *_count,
                                  PRUnichar ***_usages)
@@ -301,7 +301,7 @@ nsNSSCertificateFakeTransport::RequestUsagesArrayAsync(nsICertVerificationListen
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetUsagesString(PRBool localOnly,
+nsNSSCertificateFakeTransport::GetUsagesString(bool localOnly,
                                   PRUint32   *_verified,
                                   nsAString &_usages)
 {
@@ -318,7 +318,7 @@ nsNSSCertificateFakeTransport::GetASN1Structure(nsIASN1Object * *aASN1Structure)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::Equals(nsIX509Cert *other, PRBool *result)
+nsNSSCertificateFakeTransport::Equals(nsIX509Cert *other, bool *result)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -878,7 +878,7 @@ static nsresult
 GetOrInit(nsIFile* aDir, const nsACString& filename,
           nsACString& aContents, InitDataFunc aInitFunc)
 {
-  PRBool exists;
+  bool exists;
 
   nsCOMPtr<nsIFile> dataFile;
   nsresult rv = aDir->Clone(getter_AddRefs(dataFile));
@@ -938,7 +938,7 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   rv = dataDirectory->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool exists;
+  bool exists;
   rv = dataDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1077,7 +1077,7 @@ static void ReplaceChar(nsCString& str, const nsACString& character,
   }
 }
 
-static PRBool DoFindInReadable(const nsACString& str, const nsACString& value)
+static bool DoFindInReadable(const nsACString& str, const nsACString& value)
 {
   nsACString::const_iterator start, end;
   str.BeginReading(start);
@@ -1281,7 +1281,7 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
  * Combined code to get/set the crash reporter submission pref on
  * different platforms.
  */
-static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
+static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
 {
   nsresult rv;
 #if defined(XP_WIN32)
@@ -1393,7 +1393,7 @@ static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
   reporterINI->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
   reporterINI->AppendNative(NS_LITERAL_CSTRING("crashreporter.ini"));
 
-  PRBool exists;
+  bool exists;
   rv = reporterINI->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists) {
@@ -1451,12 +1451,12 @@ static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
 #endif
 }
 
-nsresult GetSubmitReports(PRBool* aSubmitReports)
+nsresult GetSubmitReports(bool* aSubmitReports)
 {
     return PrefSubmitReports(aSubmitReports, false);
 }
 
-nsresult SetSubmitReports(PRBool aSubmitReports)
+nsresult SetSubmitReports(bool aSubmitReports)
 {
     return PrefSubmitReports(&aSubmitReports, true);
 }

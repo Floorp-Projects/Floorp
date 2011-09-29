@@ -70,6 +70,7 @@ ConservativeGCStats::dump(FILE *fp)
     fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(counter[CGCT_LOWBITSET]));
     fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(counter[CGCT_NOTCHUNK]));
     fprintf(fp, "     not within arena range: %lu\n", ULSTAT(counter[CGCT_NOTARENA]));
+    fprintf(fp, "     in another compartment: %lu\n", ULSTAT(counter[CGCT_OTHERCOMPARTMENT]));
     fprintf(fp, "       points to free arena: %lu\n", ULSTAT(counter[CGCT_FREEARENA]));
     fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(counter[CGCT_NOTLIVE]));
     fprintf(fp, "            valid GC things: %lu\n", ULSTAT(counter[CGCT_VALID]));

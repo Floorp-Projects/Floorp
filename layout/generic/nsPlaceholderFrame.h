@@ -160,10 +160,10 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual PRBool IsEmpty() { return PR_TRUE; }
-  virtual PRBool IsSelfEmpty() { return PR_TRUE; }
+  virtual bool IsEmpty() { return true; }
+  virtual bool IsSelfEmpty() { return true; }
 
-  virtual PRBool CanContinueTextRun() const;
+  virtual bool CanContinueTextRun() const;
 
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<nsAccessible> CreateAccessible()

@@ -52,7 +52,7 @@ void NS_NotifyPluginCall(PRIntervalTime);
 
 #ifdef CALL_SAFETY_ON
 
-extern PRBool gSkipPluginSafeCalls;
+extern bool gSkipPluginSafeCalls;
 
 #define NS_INIT_PLUGIN_SAFE_CALLS                               \
 PR_BEGIN_MACRO                                                  \

@@ -65,11 +65,11 @@ NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 // answers true if aValue is in the string list of white-space separated values aValueList
 // a case-sensitive search is performed if aCaseSensitive is true
-PRBool
-ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAString &aValue, PRBool aCaseSensitive)
+bool
+ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAString &aValue, bool aCaseSensitive)
 {
   nsAutoString  valueList(aValueList);
-  PRBool result = PR_FALSE;
+  bool result = false;
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
@@ -152,7 +152,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Init(nsIEditor      *aEditor,
                                             nsIDOMElement  *aElement,
                                             nsIAtom        *aProperty,
                                             const nsAString& aValue,
-                                            PRBool aRemoveProperty)
+                                            bool aRemoveProperty)
 {
   NS_ASSERTION(aEditor && aElement, "bad arg");
   if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }
@@ -197,7 +197,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
 
   // does this property accept more than 1 value ?
   // we need to know that because of bug 62682
-  PRBool multiple = AcceptsMoreThanOneValue(mProperty);
+  bool multiple = AcceptsMoreThanOneValue(mProperty);
   
   if (mRemoveProperty) {
     nsAutoString returnString;
@@ -260,7 +260,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   return cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
 }
 
-nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
+nsresult ChangeCSSInlineStyleTxn::SetStyle(bool aAttributeWasSet,
                                            nsAString & aValue)
 {
   NS_ASSERTION(mEditor && mElement, "bad state");
@@ -323,7 +323,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 }
 
 // answers true if the CSS property accepts more than one value
-PRBool
+bool
 ChangeCSSInlineStyleTxn::AcceptsMoreThanOneValue(nsIAtom *aCSSProperty)
 {
   return aCSSProperty == nsGkAtoms::text_decoration;

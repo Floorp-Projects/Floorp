@@ -62,7 +62,7 @@ public:
                   nsIDOMElement  * aElement,
                   nsIAtom        * aProperty,
                   const nsAString & aValue,
-                  PRBool aRemoveProperty);
+                  bool aRemoveProperty);
 
   /** returns true if the list of white-space separated values contains aValue
     *
@@ -71,7 +71,7 @@ public:
     * @param aValue          [IN] the value to look for in the list
     * @param aCaseSensitive  [IN] a boolean being true if a case-sensitive search is needed
     */
-  static PRBool ValueIncludes(const nsAString & aValueList, const nsAString & aValue, PRBool aCaseSensitive);
+  static bool ValueIncludes(const nsAString & aValueList, const nsAString & aValue, bool aCaseSensitive);
 
   /** adds the value aNewValue to the list of white-space separated values aValues
     *
@@ -88,7 +88,7 @@ private:
     * @return                true if the property accepts more than one value
     * @param aCSSProperty    [IN] the CSS property
     */
-  PRBool AcceptsMoreThanOneValue(nsIAtom * aCSSProperty);
+  bool AcceptsMoreThanOneValue(nsIAtom * aCSSProperty);
 
   /** remove a value from a list of white-space separated values
     * @param aValues         [IN] a list of white-space separated values
@@ -101,7 +101,7 @@ private:
     * is empty, remove the property from element's styles. If the boolean
     * is false, just remove the style attribute.
     */
-  nsresult SetStyle(PRBool aAttributeWasSet, nsAString & aValue);
+  nsresult SetStyle(bool aAttributeWasSet, nsAString & aValue);
 
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeCSSInlineStyleTxn, EditTxn)
@@ -130,12 +130,12 @@ protected:
   /** the value to set the property to for redo */
   nsString mRedoValue;
   /** true if the style attribute was present and not empty before DoTransaction */
-  PRBool   mUndoAttributeWasSet;
+  bool     mUndoAttributeWasSet;
   /** true if the style attribute is present and not empty after DoTransaction */
-  PRBool   mRedoAttributeWasSet;
+  bool     mRedoAttributeWasSet;
 
   /** PR_TRUE if the operation is to remove mProperty from mElement */
-  PRBool   mRemoveProperty;
+  bool     mRemoveProperty;
 };
 
 #endif

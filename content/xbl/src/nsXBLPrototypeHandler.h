@@ -91,13 +91,13 @@ public:
   ~nsXBLPrototypeHandler();
 
   // if aCharCode is not zero, it is used instead of the charCode of aKeyEvent.
-  PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
+  bool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
                          PRUint32 aCharCode = 0,
-                         PRBool aIgnoreShiftKey = PR_FALSE);
-  inline PRBool KeyEventMatched(nsIAtom* aEventType,
+                         bool aIgnoreShiftKey = false);
+  inline bool KeyEventMatched(nsIAtom* aEventType,
                                 nsIDOMKeyEvent* aEvent,
                                 PRUint32 aCharCode = 0,
-                                PRBool aIgnoreShiftKey = PR_FALSE)
+                                bool aIgnoreShiftKey = false)
   {
     if (aEventType != mEventName)
       return PR_FALSE;
@@ -105,8 +105,8 @@ public:
     return KeyEventMatched(aEvent, aCharCode, aIgnoreShiftKey);
   }
 
-  PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
-  inline PRBool MouseEventMatched(nsIAtom* aEventType,
+  bool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
+  inline bool MouseEventMatched(nsIAtom* aEventType,
                                   nsIDOMMouseEvent* aEvent)
   {
     if (aEventType != mEventName)
@@ -145,14 +145,14 @@ public:
     return mHandler;
   }
 
-  PRBool HasAllowUntrustedAttr()
+  bool HasAllowUntrustedAttr()
   {
     return (mType & NS_HANDLER_HAS_ALLOW_UNTRUSTED_ATTR) != 0;
   }
 
   // This returns a valid value only if HasAllowUntrustedEventsAttr returns
   // PR_TRUE.
-  PRBool AllowUntrustedEvents()
+  bool AllowUntrustedEvents()
   {
     return (mType & NS_HANDLER_ALLOW_UNTRUSTED) != 0;
   }
@@ -175,8 +175,8 @@ protected:
 
   void ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aElement, const char *aMessageName);
   void GetEventType(nsAString& type);
-  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent,
-                            PRBool aIgnoreShiftKey = PR_FALSE);
+  bool ModifiersMatchMask(nsIDOMUIEvent* aEvent,
+                            bool aIgnoreShiftKey = false);
   nsresult DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEvent* aEvent);
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
   nsresult EnsureEventHandler(nsIScriptGlobalObject* aGlobal,

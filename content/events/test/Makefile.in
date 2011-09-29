@@ -111,6 +111,7 @@ _TEST_FILES = \
 		test_bug667919-2.html \
 		test_bug667612.html \
 		empty.js \
+		test_bug689564.html \
 		$(NULL)
 
 #bug 585630
@@ -135,6 +136,8 @@ _CHROME_FILES = \
 		test_bug415498.xul \
 		bug415498-doc1.html \
 		bug415498-doc2.html \
+		test_bug591249.xul \
+		bug591249_iframe.xul \
 		bug602962.xul \
 		test_bug602962.xul \
 		test_bug617528.xul \

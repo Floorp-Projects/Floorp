@@ -267,7 +267,7 @@ nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint3
 }
 
 NS_IMETHODIMP
-nsJARInputStream::IsNonBlocking(PRBool *aNonBlocking)
+nsJARInputStream::IsNonBlocking(bool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;

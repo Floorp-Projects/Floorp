@@ -575,7 +575,7 @@ nsXFormsSelectComboboxAccessible::NativeState()
 {
   PRUint64 state = nsXFormsSelectableAccessible::NativeState();
 
-  PRBool isOpen = PR_FALSE;
+  bool isOpen = false;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsDropmarkerOpen(DOMNode, &isOpen);
   NS_ENSURE_SUCCESS(rv, state);
@@ -588,7 +588,7 @@ nsXFormsSelectComboboxAccessible::NativeState()
   return state | states::HASPOPUP | states::FOCUSABLE;
 }
 
-PRBool
+bool
 nsXFormsSelectComboboxAccessible::GetAllowsAnonChildAccessibles()
 {
   return PR_TRUE;

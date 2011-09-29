@@ -130,7 +130,7 @@ class nsPropertyTable
                                    void               *aPropertyValue,
                                    NSPropertyDtorFunc  aDtor,
                                    void               *aDtorData,
-                                   PRBool              aTransfer = PR_FALSE,
+                                   bool                aTransfer = false,
                                    void              **aOldValue = nsnull)
   {
     return SetPropertyInternal(aObject, aPropertyName, aPropertyValue,
@@ -207,14 +207,14 @@ class nsPropertyTable
   NS_HIDDEN_(PropertyList*) GetPropertyListFor(nsIAtom *aPropertyName) const;
   NS_HIDDEN_(void*) GetPropertyInternal(nsPropertyOwner aObject,
                                         nsIAtom    *aPropertyName,
-                                        PRBool      aRemove,
+                                        bool        aRemove,
                                         nsresult   *aStatus);
   NS_HIDDEN_(nsresult) SetPropertyInternal(nsPropertyOwner     aObject,
                                            nsIAtom            *aPropertyName,
                                            void               *aPropertyValue,
                                            NSPropertyDtorFunc  aDtor,
                                            void               *aDtorData,
-                                           PRBool              aTransfer,
+                                           bool                aTransfer,
                                            void              **aOldValue);
 
   PropertyList *mPropertyList;

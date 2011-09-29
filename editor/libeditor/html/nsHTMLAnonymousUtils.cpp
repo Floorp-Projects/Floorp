@@ -139,7 +139,7 @@ nsElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
 // the empty string, it becomes the value of the attribute "_moz_anonclass"
 nsresult
 nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aParentNode,
-                                     const nsAString & aAnonClass, PRBool aIsCreatedHidden,
+                                     const nsAString & aAnonClass, bool aIsCreatedHidden,
                                      nsIDOMElement ** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aParentNode);
@@ -215,7 +215,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 void
 nsHTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                          nsIDOMEventListener* aListener,
-                                         PRBool aUseCapture,
+                                         bool aUseCapture,
                                          nsIDOMElement* aElement,
                                          nsIContent * aParentContent,
                                          nsIPresShell* aShell)
@@ -416,7 +416,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
   NS_ENSURE_ARG_POINTER(aElement);
 
   // Is the element positioned ? let's check the cheap way first...
-  PRBool isPositioned = PR_FALSE;
+  bool isPositioned = false;
   nsresult res = aElement->HasAttribute(NS_LITERAL_STRING("_moz_abspos"), &isPositioned);
   NS_ENSURE_SUCCESS(res, res);
   if (!isPositioned) {

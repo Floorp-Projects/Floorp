@@ -246,7 +246,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
 XPCOM_API(PRUint32)
 NS_StringGetData
   (const nsAString &aStr, const PRUnichar **aData,
-   PRBool *aTerminated = nsnull);
+   bool *aTerminated = nsnull);
 
 /**
  * NS_StringGetMutableData
@@ -437,7 +437,7 @@ NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
  * string will be lost.
  */
 XPCOM_API(void)
-NS_StringSetIsVoid(nsAString& aStr, const PRBool aIsVoid);
+NS_StringSetIsVoid(nsAString& aStr, const bool aIsVoid);
 
 /**
  * NS_StringGetIsVoid
@@ -445,7 +445,7 @@ NS_StringSetIsVoid(nsAString& aStr, const PRBool aIsVoid);
  * This function provides a way to test if a string is a "void string", as
  * marked by NS_StringSetIsVoid.
  */
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_StringGetIsVoid(const nsAString& aStr);
 
 /* ------------------------------------------------------------------------- */
@@ -551,7 +551,7 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
 XPCOM_API(PRUint32)
 NS_CStringGetData
   (const nsACString &aStr, const char **aData,
-   PRBool *aTerminated = nsnull);
+   bool *aTerminated = nsnull);
 
 /**
  * NS_CStringGetMutableData
@@ -742,7 +742,7 @@ NS_CStringCutData(nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
  * string will be lost.
  */
 XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString& aStr, const PRBool aIsVoid);
+NS_CStringSetIsVoid(nsACString& aStr, const bool aIsVoid);
 
 /**
  * NS_CStringGetIsVoid
@@ -750,7 +750,7 @@ NS_CStringSetIsVoid(nsACString& aStr, const PRBool aIsVoid);
  * This function provides a way to test if a string is a "void string", as
  * marked by NS_CStringSetIsVoid.
  */
-XPCOM_API(PRBool)
+XPCOM_API(bool)
 NS_CStringGetIsVoid(const nsACString& aStr);
 
 /* ------------------------------------------------------------------------- */

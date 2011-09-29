@@ -55,7 +55,7 @@ struct ObserverRef
   ObserverRef(nsIObserver* aObserver) : isWeakRef(PR_FALSE), ref(aObserver) { }
   ObserverRef(nsIWeakReference* aWeak) : isWeakRef(PR_TRUE), ref(aWeak) { }
 
-  PRBool isWeakRef;
+  bool isWeakRef;
   nsCOMPtr<nsISupports> ref;
 
   nsIObserver* asObserver() {
@@ -68,7 +68,7 @@ struct ObserverRef
     return static_cast<nsIWeakReference*>((nsISupports*) ref);
   }
 
-  PRBool operator==(nsISupports* b) const { return ref == b; }
+  bool operator==(nsISupports* b) const { return ref == b; }
 };
 
 class nsObserverList : public nsCharPtrHashKey
@@ -79,7 +79,7 @@ public:
 
   ~nsObserverList() { MOZ_COUNT_DTOR(nsObserverList); }
 
-  nsresult AddObserver(nsIObserver* anObserver, PRBool ownsWeak);
+  nsresult AddObserver(nsIObserver* anObserver, bool ownsWeak);
   nsresult RemoveObserver(nsIObserver* anObserver);
 
   void NotifyObservers(nsISupports *aSubject,

@@ -97,7 +97,7 @@ class VirtualKey
   KeyShiftState mShiftStates[16];
   PRUint16 mIsDeadKey;
 
-  void SetDeadKey(PRUint8 aShiftState, PRBool aIsDeadKey)
+  void SetDeadKey(PRUint8 aShiftState, bool aIsDeadKey)
   {
     if (aIsDeadKey) {
       mIsDeadKey |= 1 << aShiftState;
@@ -107,7 +107,7 @@ class VirtualKey
   }
 
 public:
-  PRBool IsDeadKey(PRUint8 aShiftState) const
+  bool IsDeadKey(PRUint8 aShiftState) const
   {
     return (mIsDeadKey & (1 << aShiftState)) != 0;
   }
@@ -157,9 +157,9 @@ class KeyboardLayout
   static inline PRInt32 GetKeyIndex(PRUint8 aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
                                    void* aData);
-  static PRBool AddDeadKeyEntry(PRUnichar aBaseChar, PRUnichar aCompositeChar,
+  static bool AddDeadKeyEntry(PRUnichar aBaseChar, PRUnichar aCompositeChar,
                                 DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries);
-  PRBool EnsureDeadKeyActive(PRBool aIsActive, PRUint8 aDeadKey,
+  bool EnsureDeadKeyActive(bool aIsActive, PRUint8 aDeadKey,
                              const PBYTE aDeadKeyKbdState);
   PRUint32 GetDeadKeyCombinations(PRUint8 aDeadKey,
                                   const PBYTE aDeadKeyKbdState,
@@ -175,10 +175,10 @@ public:
   KeyboardLayout();
   ~KeyboardLayout();
 
-  static PRBool IsPrintableCharKey(PRUint8 aVirtualKey);
-  static PRBool IsNumpadKey(PRUint8 aVirtualKey);
+  static bool IsPrintableCharKey(PRUint8 aVirtualKey);
+  static bool IsNumpadKey(PRUint8 aVirtualKey);
 
-  PRBool IsDeadKey() const
+  bool IsDeadKey() const
   {
     return (mLastVirtualKeyIndex >= 0) ?
       mVirtualKeys[mLastVirtualKeyIndex].IsDeadKey(mLastShiftState) : PR_FALSE;

@@ -110,7 +110,7 @@ public:
     XPCShellDirProvider() { }
     ~XPCShellDirProvider() { }
 
-    PRBool SetGREDir(const char *dir);
+    bool SetGREDir(const char *dir);
     void ClearGREDir() { mGREDir = nsnull; }
 
 private:
@@ -407,14 +407,9 @@ GC(JSContext *cx,
    uintN argc,
    jsval *vp)
 {
-    JSRuntime *rt;
-    uint32 preBytes, postBytes;
-
-    rt = JS_GetRuntime(cx);
-    preBytes = JS_GetGCParameter(rt, JSGC_BYTES);
     JS_GC(cx);
-    postBytes = JS_GetGCParameter(rt, JSGC_BYTES);
 #ifdef JS_GCMETER
+    JSRuntime *rt = JS_GetRuntime(cx);
     js_DumpGCStats(rt, stdout);
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -801,7 +796,7 @@ FullTrustSecMan::CheckFunctionAccess(JSContext * cx,
 NS_IMETHODIMP
 FullTrustSecMan::CanExecuteScripts(JSContext * cx,
                                    nsIPrincipal *principal,
-                                   PRBool *_retval)
+                                   bool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -852,7 +847,7 @@ FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
 
 NS_IMETHODIMP
 FullTrustSecMan::IsCapabilityEnabled(const char *capability,
-                                     PRBool *_retval)
+                                     bool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -894,7 +889,7 @@ FullTrustSecMan::GetObjectPrincipal(JSContext * cx,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::SubjectPrincipalIsSystem(PRBool *_retval)
+FullTrustSecMan::SubjectPrincipalIsSystem(bool *_retval)
 {
     *_retval = PR_TRUE;
     return NS_OK;
@@ -910,7 +905,7 @@ FullTrustSecMan::CheckSameOrigin(JSContext * aJSContext,
 NS_IMETHODIMP
 FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI,
                                     nsIURI *aTargetURI,
-                                    PRBool reportError)
+                                    bool reportError)
 {
     return NS_OK;
 }
@@ -933,7 +928,7 @@ FullTrustSecMan::GetChannelPrincipal(nsIChannel *aChannel,
 
 NS_IMETHODIMP
 FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal,
-                                   PRBool *_retval)
+                                   bool *_retval)
 {
     *_retval = aPrincipal == mSystemPrincipal;
     return NS_OK;
@@ -981,7 +976,7 @@ XPCShellDirProvider::Release()
 
 NS_IMPL_QUERY_INTERFACE1(XPCShellDirProvider, nsIDirectoryServiceProvider)
 
-PRBool
+bool
 XPCShellDirProvider::SetGREDir(const char *dir)
 {
     nsresult rv = XRE_GetFileFromPath(dir, getter_AddRefs(mGREDir));
@@ -990,7 +985,7 @@ XPCShellDirProvider::SetGREDir(const char *dir)
 
 NS_IMETHODIMP
 XPCShellDirProvider::GetFile(const char *prop,
-                             PRBool *persistent,
+                             bool *persistent,
                              nsIFile* *result)
 {
     if (mGREDir && !strcmp(prop, NS_GRE_DIR)) {

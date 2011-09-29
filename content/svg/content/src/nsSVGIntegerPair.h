@@ -66,11 +66,11 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
-                              PRBool aDoSetAttr);
+                              bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
-  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
+  void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement, bool aDoSetAttr);
   PRInt32 GetBaseValue(PairIndex aIndex) const
     { return mBaseVal[aIndex == eFirst ? 0 : 1]; }
   void SetAnimValue(const PRInt32 aValue[2], nsSVGElement *aSVGElement);
@@ -82,7 +82,7 @@ public:
   // explicitly set by markup or a DOM call), PR_FALSE otherwise.
   // If this returns PR_FALSE, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
-  PRBool IsExplicitlySet() const
+  bool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
 
   nsresult ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
@@ -98,8 +98,8 @@ private:
   PRInt32 mAnimVal[2];
   PRInt32 mBaseVal[2];
   PRUint8 mAttrEnum; // element specified tracking for attribute
-  PRPackedBool mIsAnimated;
-  PRPackedBool mIsBaseSet;
+  bool mIsAnimated;
+  bool mIsBaseSet;
 
 public:
   struct DOMAnimatedInteger : public nsIDOMSVGAnimatedInteger
@@ -151,7 +151,7 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const nsISMILAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     PRBool& aPreventCachingOfSandwich) const;
+                                     bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;
     virtual void ClearAnimValue();
     virtual nsresult SetAnimValue(const nsSMILValue& aValue);

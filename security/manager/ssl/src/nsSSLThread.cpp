@@ -237,8 +237,8 @@ PRInt16 nsSSLThread::requestPoll(nsNSSSocketInfo *si, PRInt16 in_flags, PRInt16 
     return in_flags;
   }
 
-  PRBool want_sleep_and_wakeup_on_any_socket_activity = PR_FALSE;
-  PRBool handshake_timeout = PR_FALSE;
+  bool want_sleep_and_wakeup_on_any_socket_activity = false;
+  bool handshake_timeout = false;
   
   {
     MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
@@ -392,7 +392,7 @@ PRStatus nsSSLThread::requestClose(nsNSSSocketInfo *si)
   if (!ssl_thread_singleton || !si)
     return PR_FAILURE;
 
-  PRBool close_later = PR_FALSE;
+  bool close_later = false;
   nsCOMPtr<nsIRequest> requestToCancel;
 
   {
@@ -502,8 +502,8 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
     return -1;
   }
 
-  PRBool this_socket_is_busy = PR_FALSE;
-  PRBool some_other_socket_is_busy = PR_FALSE;
+  bool this_socket_is_busy = false;
+  bool some_other_socket_is_busy = false;
   nsSSLSocketThreadData::ssl_state my_ssl_state = nsSSLSocketThreadData::ssl_invalid;
   PRFileDesc *blockingFD = nsnull;
 
@@ -729,8 +729,8 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
     return -1;
   }
 
-  PRBool this_socket_is_busy = PR_FALSE;
-  PRBool some_other_socket_is_busy = PR_FALSE;
+  bool this_socket_is_busy = false;
+  bool some_other_socket_is_busy = false;
   nsSSLSocketThreadData::ssl_state my_ssl_state = nsSSLSocketThreadData::ssl_invalid;
   PRFileDesc *blockingFD = nsnull;
   
@@ -961,7 +961,7 @@ void nsSSLThread::Run(void)
       if (exitRequested(threadLock))
         break;
 
-      PRBool pending_work = PR_FALSE;
+      bool pending_work = false;
 
       do
       {
@@ -1094,7 +1094,7 @@ void nsSSLThread::Run(void)
     }
 
     // avoid setting event repeatedly
-    PRBool needToSetPollableEvent = PR_FALSE;
+    bool needToSetPollableEvent = false;
 
     {
       MutexAutoLock threadLock(ssl_thread_singleton->mMutex);
@@ -1139,7 +1139,7 @@ void nsSSLThread::Run(void)
   }
 }
 
-PRBool nsSSLThread::stoppedOrStopping()
+bool nsSSLThread::stoppedOrStopping()
 {
   if (!ssl_thread_singleton)
     return PR_FALSE;

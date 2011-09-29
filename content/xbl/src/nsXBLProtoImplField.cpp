@@ -97,7 +97,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
                                   JSObject* aBoundNode,
                                   nsIPrincipal* aPrincipal,
                                   nsIURI* aBindingDocURI,
-                                  PRBool* aDidInstall) const
+                                  bool* aDidInstall) const
 {
   NS_TIME_FUNCTION_MIN(5);
   NS_PRECONDITION(aBoundNode,
@@ -122,7 +122,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
                "Shouldn't get here when an exception is pending!");
   
   // compile the literal string
-  PRBool undefined;
+  bool undefined;
   nsCOMPtr<nsIScriptContext> context = aContext;
 
   JSAutoRequest ar(cx);

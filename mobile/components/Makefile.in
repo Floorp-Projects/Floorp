@@ -49,7 +49,6 @@ XPIDL_MODULE = MobileComponents
 XPIDLSRCS = \
         SessionStore.idl \
         LoginManagerPrompter.idl \
-        WebappsSupport.idl \
         $(NULL)
 
 EXTRA_PP_COMPONENTS = \
@@ -76,7 +75,7 @@ EXTRA_COMPONENTS = \
         LoginManager.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
-        WebappsSupport.js \
+        CapturePicker.js \
         $(NULL)
 
 ifdef MOZ_SAFE_BROWSING

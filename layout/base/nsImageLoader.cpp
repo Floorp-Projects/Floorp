@@ -175,7 +175,7 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
-                                           PRBool aLastPart)
+                                           bool aLastPart)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;

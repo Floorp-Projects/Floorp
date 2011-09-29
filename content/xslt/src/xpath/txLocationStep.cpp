@@ -120,7 +120,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 walker.moveToParent();
                 fromDescendants(walker.getCurrentPosition(), aContext, nodes);
             }
-            PRBool cont = PR_TRUE;
+            bool cont = true;
             while (!walker.moveToNextSibling()) {
                 if (!walker.moveToParent()) {
                     cont = PR_FALSE;
@@ -170,7 +170,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         {
             nodes->setReverse();
 
-            PRBool cont = PR_TRUE;
+            bool cont = true;
             while (!walker.moveToPreviousSibling()) {
                 if (!walker.moveToParent()) {
                     cont = PR_FALSE;
@@ -298,7 +298,7 @@ LocationStep::setSubExprAt(PRUint32 aPos, Expr* aExpr)
     PredicateList::setSubExprAt(aPos, aExpr);
 }
 
-PRBool
+bool
 LocationStep::isSensitiveTo(ContextSensitivity aContext)
 {
     return (aContext & NODE_CONTEXT) ||

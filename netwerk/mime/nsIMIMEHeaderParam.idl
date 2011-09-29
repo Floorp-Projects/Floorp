@@ -145,7 +145,7 @@ interface nsIMIMEHeaderParam : nsISupports {
    * invoked  is  <code>MIME_DecodeMimeHeader</code> in 
    * mailnews/mime/src/mimehdrs.cpp defined as
    * char * Mime_DecodeMimeHeader(char *header_val, const char *charset, 
-   *                              PRBool override, PRBool eatcontinuation)
+   *                              bool override, bool eatcontinuation)
    *
    * @param aHeaderVal       a header value to decode
    * @param aDefaultCharset  MIME charset to use in place of MIME charset

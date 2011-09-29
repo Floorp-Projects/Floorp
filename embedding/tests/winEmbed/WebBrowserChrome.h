@@ -64,13 +64,13 @@ public:
     static void SetFocus(nsIWebBrowserChrome *chrome);
     static void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText);
     static void UpdateCurrentURI(nsIWebBrowserChrome *aChrome);
-    static void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy);
+    static void UpdateBusyState(nsIWebBrowserChrome *aChrome, bool aBusy);
     static void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax);
     static void GetResourceStringById(PRInt32 aID, char ** aReturn);
     static void ShowContextMenu(nsIWebBrowserChrome *aChrome, PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
     static void ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText);
     static void HideTooltip(nsIWebBrowserChrome *aChrome);
-    static void ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow);
+    static void ShowWindow(nsIWebBrowserChrome *aChrome, bool aShow);
     static void SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight);
 };
 
@@ -114,8 +114,8 @@ protected:
 
     HWND         mNativeWindow;
     PRUint32     mChromeFlags;
-    PRBool       mContinueModalLoop;
-    PRBool       mSizeSet;
+    bool         mContinueModalLoop;
+    bool         mSizeSet;
 
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIWebBrowserChrome> mDependentParent; // opener (for dependent windows only)

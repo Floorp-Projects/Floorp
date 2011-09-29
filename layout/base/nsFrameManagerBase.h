@@ -68,7 +68,7 @@ class nsILayoutHistoryState;
 class nsFrameManagerBase
 {
 public:
-  PRBool IsDestroyingFrames() { return mIsDestroyingFrames; }
+  bool IsDestroyingFrames() { return mIsDestroyingFrames; }
 
   /*
    * Gets and sets the root frame (typically the viewport). The lifetime of the
@@ -92,7 +92,7 @@ protected:
   nsIFrame*                       mRootFrame;
   PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
-  PRPackedBool                    mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
+  bool                            mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
 };
 
 #endif

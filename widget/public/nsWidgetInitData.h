@@ -141,12 +141,12 @@ struct nsWidgetInitData {
   nsPopupType   mPopupHint;
   nsPopupLevel  mPopupLevel;
   // when painting exclude area occupied by child windows and sibling windows
-  PRPackedBool  clipChildren, clipSiblings, mDropShadow;
-  PRPackedBool  mListenForResizes;
-  PRPackedBool  mUnicode;
-  PRPackedBool  mRTL;
-  PRPackedBool  mNoAutoHide; // true for noautohide panels
-  PRPackedBool  mIsDragPopup;  // true for drag feedback panels
+  bool          clipChildren, clipSiblings, mDropShadow;
+  bool          mListenForResizes;
+  bool          mUnicode;
+  bool          mRTL;
+  bool          mNoAutoHide; // true for noautohide panels
+  bool          mIsDragPopup;  // true for drag feedback panels
 };
 
 #endif // nsWidgetInitData_h__

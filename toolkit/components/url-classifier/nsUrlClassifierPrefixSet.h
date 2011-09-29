@@ -62,15 +62,15 @@ public:
   // anything currently in the Prefix Set
   NS_IMETHOD AddPrefixes(const PRUint32* aArray, PRUint32 aLength);
   // Does the PrefixSet contain this prefix? not thread-safe
-  NS_IMETHOD Contains(PRUint32 aPrefix, PRBool* aFound);
+  NS_IMETHOD Contains(PRUint32 aPrefix, bool* aFound);
   // Do a lookup in the PrefixSet
   // if aReady is set, we will block until there are any entries
   // if not set, we will return in aReady whether we were ready or not
-  NS_IMETHOD Probe(PRUint32 aPrefix, PRUint32 aKey, PRBool* aReady, PRBool* aFound);
+  NS_IMETHOD Probe(PRUint32 aPrefix, PRUint32 aKey, bool* aReady, bool* aFound);
   // Return the estimated size of the set on disk and in memory,
   // in bytes
   NS_IMETHOD EstimateSize(PRUint32* aSize);
-  NS_IMETHOD IsEmpty(PRBool * aEmpty);
+  NS_IMETHOD IsEmpty(bool * aEmpty);
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
   // Return a key that is used to randomize the collisions in the prefixes
@@ -93,7 +93,7 @@ protected:
 
   // boolean indicating whether |setPrefixes| has been
   // called with a non-empty array.
-  PRBool mHasPrefixes;
+  bool mHasPrefixes;
   // key used to randomize hash collisions
   PRUint32 mRandomKey;
   // the prefix for each index.

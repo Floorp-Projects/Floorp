@@ -59,7 +59,7 @@ public:
     static nsresult Create(nsISupports* outer,
                            const nsIID& aIID, void **aResult);
 
-    NS_HIDDEN_(nsresult) FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
+    NS_HIDDEN_(nsresult) FlushMemory(const PRUnichar* aReason, bool aImmediate);
     NS_HIDDEN_(nsresult) RunFlushers(const PRUnichar* aReason);
 
 protected:

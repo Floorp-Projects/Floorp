@@ -103,7 +103,7 @@ gfxCoreTextShaper::~gfxCoreTextShaper()
     }
 }
 
-PRBool
+bool
 gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
@@ -114,15 +114,15 @@ gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
     // aRunStart and aRunLength define the section of the textRun and of aString
     // that is to be drawn with this particular font
 
-    PRBool disableLigatures = (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
+    bool disableLigatures = (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
 
     // Create a CFAttributedString with text and style info, so we can use CoreText to lay it out.
 
-    PRBool isRTL = aTextRun->IsRightToLeft();
+    bool isRTL = aTextRun->IsRightToLeft();
 
     // we need to bidi-wrap the text if the run is RTL,
     // or if it is an LTR run but may contain (overridden) RTL chars
-    PRBool bidiWrap = isRTL;
+    bool bidiWrap = isRTL;
     if (!bidiWrap && (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0) {
         PRUint32 i;
         for (i = aRunStart; i < aRunStart + aRunLength; ++i) {
@@ -203,7 +203,7 @@ gfxCoreTextShaper::InitTextRun(gfxContext *aContext,
     // Iterate through the glyph runs.
     // Note that this includes the bidi wrapper, so we have to be careful
     // not to include the extra glyphs from there
-    PRBool success = PR_TRUE;
+    bool success = true;
     for (PRUint32 runIndex = 0; runIndex < numRuns; runIndex++) {
         CTRunRef aCTRun = (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
         if (SetGlyphsFromRun(aTextRun, aCTRun, startOffset,
@@ -235,7 +235,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
     // within the textRun that are "real" data we need to handle.
     // aCTRun is a glyph run from the CoreText layout process.
 
-    PRBool isLTR = !aTextRun->IsRightToLeft();
+    bool isLTR = !aTextRun->IsRightToLeft();
     PRInt32 direction = isLTR ? 1 : -1;
 
     PRInt32 numGlyphs = ::CTRunGetGlyphCount(aCTRun);
@@ -362,7 +362,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
 
     while (glyphStart < numGlyphs) { // keep finding groups until all glyphs are accounted for
 
-        PRBool inOrder = PR_TRUE;
+        bool inOrder = true;
         PRInt32 charEnd = glyphToChar[glyphStart] - stringRange.location;
         NS_ASSERTION(charEnd >= 0 && charEnd < stringRange.length,
                      "glyph-to-char mapping points outside string range");
@@ -402,7 +402,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxTextRun *aTextRun,
             // check whether all glyphs in the range are associated with the characters
             // in our clump; if not, we have a discontinuous range, and should extend it
             // unless we've reached the end of the text
-            PRBool allGlyphsAreWithinCluster = PR_TRUE;
+            bool allGlyphsAreWithinCluster = true;
             PRInt32 prevGlyphCharIndex = charStart;
             for (PRInt32 i = glyphStart; i < glyphEnd; ++i) {
                 PRInt32 glyphCharIndex = glyphToChar[i] - stringRange.location;

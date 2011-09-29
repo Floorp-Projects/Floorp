@@ -103,7 +103,7 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
-nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists)
 {
   // CFStringCreateWithBytes() can fail even if we're not out of memory --
   // for example if the 'bytes' parameter is something very wierd (like "ÿÿ~"
@@ -253,7 +253,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const nsACString& aT
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
-                                        PRBool * aFound)
+                                        bool * aFound)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
@@ -274,10 +274,10 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   NSAutoreleasePool *localPool = [[NSAutoreleasePool alloc] init];
 
   OSStatus err;
-  PRBool haveAppForType = PR_FALSE;
-  PRBool haveAppForExt = PR_FALSE;
-  PRBool typeAppIsDefault = PR_FALSE;
-  PRBool extAppIsDefault = PR_FALSE;
+  bool haveAppForType = false;
+  bool haveAppForExt = false;
+  bool typeAppIsDefault = false;
+  bool extAppIsDefault = false;
   FSRef typeAppFSRef;
   FSRef extAppFSRef;
 
@@ -451,7 +451,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
 NS_IMETHODIMP
 nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
-                                                   PRBool *found,
+                                                   bool *found,
                                                    nsIHandlerInfo **_retval)
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");

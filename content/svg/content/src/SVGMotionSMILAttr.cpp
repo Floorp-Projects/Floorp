@@ -54,7 +54,7 @@ nsresult
 SVGMotionSMILAttr::ValueFromString(const nsAString& aStr,
                                    const nsISMILAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   PRBool& aPreventCachingOfSandwich) const
+                                   bool& aPreventCachingOfSandwich) const
 {
   NS_NOTREACHED("Shouldn't using nsISMILAttr::ValueFromString for parsing "
                 "animateMotion's SMIL values.");

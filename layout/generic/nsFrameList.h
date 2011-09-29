@@ -175,7 +175,7 @@ public:
    * required to be on the list.
    * @return PR_TRUE if aFrame was removed
    */
-  PRBool RemoveFrameIfPresent(nsIFrame* aFrame);
+  bool RemoveFrameIfPresent(nsIFrame* aFrame);
 
   /**
    * Take the frames after aAfterFrame out of the frame list.  If
@@ -202,7 +202,7 @@ public:
    * then destroy it. The frame must be non-null.
    * @return PR_TRUE if the frame was found
    */
-  PRBool DestroyFrameIfPresent(nsIFrame* aFrame);
+  bool DestroyFrameIfPresent(nsIFrame* aFrame);
 
   /**
    * Insert aFrame right after aPrevSibling, or prepend it to this
@@ -253,15 +253,15 @@ public:
   nsIFrame* FrameAt(PRInt32 aIndex) const;
   PRInt32 IndexOf(nsIFrame* aFrame) const;
 
-  PRBool IsEmpty() const {
+  bool IsEmpty() const {
     return nsnull == mFirstChild;
   }
 
-  PRBool NotEmpty() const {
+  bool NotEmpty() const {
     return nsnull != mFirstChild;
   }
 
-  PRBool ContainsFrame(const nsIFrame* aFrame) const;
+  bool ContainsFrame(const nsIFrame* aFrame) const;
 
   PRInt32 GetLength() const;
 
@@ -374,7 +374,7 @@ public:
       mEnd(aOther.mEnd)
     {}
 
-    PRBool AtEnd() const {
+    bool AtEnd() const {
       // Can't just check mEnd, because some table code goes and destroys the
       // tail of the frame list (including mEnd!) while iterating over the
       // frame list.
@@ -465,7 +465,7 @@ public:
       Enumerator::Next();
     }
 
-    PRBool AtEnd() const { return Enumerator::AtEnd(); }
+    bool AtEnd() const { return Enumerator::AtEnd(); }
 
     nsIFrame* PrevFrame() const { return mPrev; }
     nsIFrame* NextFrame() const { return mFrame; }

@@ -95,7 +95,7 @@ public:
                            PRInt32 *aPositionInGroup);
   NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
                        PRInt32 *aWidth, PRInt32 *aHeight);
-  NS_IMETHOD SetSelected(PRBool aIsSelected);
+  NS_IMETHOD SetSelected(bool aIsSelected);
   NS_IMETHOD TakeSelection();
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString &aName);
@@ -107,7 +107,7 @@ public:
 
   // nsAccessNode
   virtual bool IsDefunct() const;
-  virtual PRBool Init();
+  virtual bool Init();
   virtual void Shutdown();
   virtual bool IsPrimaryForNode() const;
 

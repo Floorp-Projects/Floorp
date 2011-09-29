@@ -92,7 +92,7 @@ static nsCharType cc2ucd[5] = {
     ((c) + (PRUint16)ARABIC_TO_PERSIAN_DIGIT_INCREMENT) : \
      (c)))
 
-PRUnichar HandleNumberInChar(PRUnichar aChar, PRBool aPrevCharArabic, PRUint32 aNumFlag)
+PRUnichar HandleNumberInChar(PRUnichar aChar, bool aPrevCharArabic, PRUint32 aNumFlag)
 {
   // IBMBIDI_NUMERAL_NOMINAL *
   // IBMBIDI_NUMERAL_REGULAR
@@ -148,7 +148,7 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
 }
 
 #define LRM_CHAR 0x200e
-PRBool IsBidiControl(PRUint32 aChar)
+bool IsBidiControl(PRUint32 aChar)
 {
   // This method is used when stripping Bidi control characters for
   // display, so it will return TRUE for LRM and RLM as
@@ -156,7 +156,7 @@ PRBool IsBidiControl(PRUint32 aChar)
   return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffe)==LRM_CHAR);
 }
 
-PRBool HasRTLChars(const nsAString& aString)
+bool HasRTLChars(const nsAString& aString)
 {
 // This is used to determine whether to enable bidi if a string has 
 // right-to-left characters. To simplify things, anything that could be a

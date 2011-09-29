@@ -60,11 +60,11 @@ class nsIDocumentViewerPrint : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_PRINT_IID)
 
-  virtual void SetIsPrinting(PRBool aIsPrinting) = 0;
-  virtual PRBool GetIsPrinting() = 0;
+  virtual void SetIsPrinting(bool aIsPrinting) = 0;
+  virtual bool GetIsPrinting() = 0;
 
-  virtual void SetIsPrintPreview(PRBool aIsPrintPreview) = 0;
-  virtual PRBool GetIsPrintPreview() = 0;
+  virtual void SetIsPrintPreview(bool aIsPrintPreview) = 0;
+  virtual bool GetIsPrintPreview() = 0;
 
   // The style set returned by CreateStyleSet is in the middle of an
   // update batch so that the caller can add sheets to it if needed.
@@ -80,7 +80,7 @@ public:
   /**
    * Returns PR_TRUE is InitializeForPrintPreview() has been called.
    */
-  virtual PRBool IsInitializedForPrintPreview() = 0;
+  virtual bool IsInitializedForPrintPreview() = 0;
 
   /**
    * Marks this viewer to be used for print preview.
@@ -100,15 +100,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCUMENTVIEWERPRINT \
-  virtual void     SetIsPrinting(PRBool aIsPrinting); \
-  virtual PRBool   GetIsPrinting(); \
-  virtual void     SetIsPrintPreview(PRBool aIsPrintPreview); \
-  virtual PRBool   GetIsPrintPreview(); \
+  virtual void     SetIsPrinting(bool aIsPrinting); \
+  virtual bool     GetIsPrinting(); \
+  virtual void     SetIsPrintPreview(bool aIsPrintPreview); \
+  virtual bool     GetIsPrintPreview(); \
   virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsStyleSet** aStyleSet); \
   virtual void     IncrementDestroyRefCount(); \
   virtual void     ReturnToGalleyPresentation(); \
   virtual void     OnDonePrinting(); \
-  virtual PRBool   IsInitializedForPrintPreview(); \
+  virtual bool     IsInitializedForPrintPreview(); \
   virtual void     InitializeForPrintPreview(); \
   virtual void     SetPrintPreviewPresentation(nsIViewManager* aViewManager, \
                                                nsPresContext* aPresContext, \

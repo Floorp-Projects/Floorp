@@ -820,7 +820,7 @@ HashSetInsertTry(JSCompartment *compartment, U **&values, unsigned &count, T key
         return &values[insertpos];
     }
 
-    U **newValues = ArenaArray<U*>(compartment->pool, newCapacity);
+    U **newValues = compartment->typeLifoAlloc.newArray<U*>(newCapacity);
     if (!newValues)
         return NULL;
     PodZero(newValues, newCapacity);
@@ -861,7 +861,7 @@ HashSetInsert(JSCompartment *compartment, U **&values, unsigned &count, T key)
         if (KEY::getKey(oldData) == key)
             return (U **) &values;
 
-        values = ArenaArray<U*>(compartment->pool, SET_ARRAY_SIZE);
+        values = compartment->typeLifoAlloc.newArray<U*>(SET_ARRAY_SIZE);
         if (!values) {
             values = (U **) oldData;
             return NULL;
@@ -1097,7 +1097,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
       thisTypes(NULL), returnTypes(NULL)
 {
     /* Caller must check for failure. */
-    argumentTypes = ArenaArray<TypeSet*>(cx->compartment->pool, argumentCount);
+    argumentTypes = cx->typeLifoAlloc().newArray<TypeSet*>(argumentCount);
 }
 
 /////////////////////////////////////////////////////////////////////

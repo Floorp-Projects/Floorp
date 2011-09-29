@@ -293,7 +293,7 @@ CallJSNative(JSContext *cx, Native native, const CallArgs &args)
     JSBool alreadyThrowing = cx->isExceptionPending();
 #endif
     assertSameCompartment(cx, args);
-    JSBool ok = native(cx, args.argc(), args.base());
+    bool ok = native(cx, args.length(), args.base());
     if (ok) {
         assertSameCompartment(cx, args.rval());
         JS_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
@@ -406,6 +406,12 @@ inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
     return compartment->jaegerCompartment();
 }
 #endif
+
+inline js::LifoAlloc &
+JSContext::typeLifoAlloc()
+{
+    return compartment->typeLifoAlloc;
+}
 
 inline bool
 JSContext::ensureGeneratorStackSpace()

@@ -78,7 +78,7 @@ nsHyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 }
 
 nsresult
-nsHyperTextAccessibleWrap::GetModifiedText(PRBool aGetInsertedText,
+nsHyperTextAccessibleWrap::GetModifiedText(bool aGetInsertedText,
                                            nsAString& aText,
                                            PRUint32 *aStartOffset,
                                            PRUint32 *aEndOffset)
@@ -90,7 +90,7 @@ nsHyperTextAccessibleWrap::GetModifiedText(PRBool aGetInsertedText,
   if (!gTextEvent)
     return NS_OK;
 
-  PRBool isInserted = gTextEvent->IsTextInserted();
+  bool isInserted = gTextEvent->IsTextInserted();
   if (aGetInsertedText != isInserted)
     return NS_OK;
 

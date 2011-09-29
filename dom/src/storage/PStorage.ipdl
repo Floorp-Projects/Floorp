@@ -47,7 +47,7 @@ namespace dom {
 struct ItemData
 {
   nsString value;
-  PRBool secure;
+  bool secure;
 };
 
 // A cross-process GetValue result -- either null, or containing the parameters
@@ -88,10 +88,10 @@ parent:
       returns (PRInt32 oldCount, nsresult rv);
 
   sync GetDBValue(nsString key)
-      returns (nsString value, PRBool secure, nsresult rv);
-  sync SetDBValue(nsString key, nsString value, PRBool secure)
+      returns (nsString value, bool secure, nsresult rv);
+  sync SetDBValue(nsString key, nsString value, bool secure)
       returns (nsresult rv);
-  sync SetSecure(nsString key, PRBool secure)
+  sync SetSecure(nsString key, bool secure)
       returns (nsresult rv);
 };
 

@@ -408,13 +408,13 @@ bool MozQWidget::event ( QEvent * event )
     {
         // Do not send this event to other handlers, this is needed
         // to be able to receive the gesture events
-        PRBool handled = PR_FALSE;
+        bool handled = false;
         mReceiver->OnTouchEvent(static_cast<QTouchEvent *>(event),handled);
         return handled;
     }
     case (QEvent::Gesture):
     {
-        PRBool handled = PR_FALSE;
+        bool handled = false;
         mReceiver->OnGestureEvent(static_cast<QGestureEvent*>(event),handled);
         return handled;
     }

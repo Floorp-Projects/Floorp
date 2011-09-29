@@ -154,7 +154,7 @@ nsISMILAttr*
 SVGAnimatedLengthList::ToSMILAttr(nsSVGElement *aSVGElement,
                                   PRUint8 aAttrEnum,
                                   PRUint8 aAxis,
-                                  PRBool aCanZeroPadList)
+                                  bool aCanZeroPadList)
 {
   return new SMILAnimatedLengthList(this, aSVGElement, aAttrEnum, aAxis, aCanZeroPadList);
 }
@@ -164,7 +164,7 @@ SVGAnimatedLengthList::
   SMILAnimatedLengthList::ValueFromString(const nsAString& aStr,
                                const nsISMILAnimationElement* /*aSrcElement*/,
                                nsSMILValue& aValue,
-                               PRBool& aPreventCachingOfSandwich) const
+                               bool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SVGLengthListSMILType::sSingleton);
   SVGLengthListAndInfo *llai = static_cast<SVGLengthListAndInfo*>(val.mU.mPtr);

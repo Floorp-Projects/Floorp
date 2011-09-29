@@ -77,7 +77,7 @@ public:
    * element that would cause a stylesheet to be loaded. Subsequent
    * modifications to the element will not be ignored.
    */
-  NS_IMETHOD InitStyleLinkElement(PRBool aDontLoadStyle) = 0;
+  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) = 0;
 
   /**
    * Tells this element to update the stylesheet.
@@ -94,8 +94,8 @@ public:
    *              meaningful if aWillNotify is true.
    */
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                              PRBool *aWillNotify,
-                              PRBool *aIsAlternate) = 0;
+                              bool *aWillNotify,
+                              bool *aIsAlternate) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the
@@ -103,7 +103,7 @@ public:
    *
    * @param aEnableUpdates update on changes or not.
    */
-  NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates) = 0;
+  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) = 0;
 
   /**
    * Gets the charset that the element claims the style sheet is in
