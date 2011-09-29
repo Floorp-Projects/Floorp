@@ -82,9 +82,9 @@ JS_GetObjectFunction(JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-JS_GetFrameScopeChainRaw(JSStackFrame *fp)
+JS_GetGlobalForFrame(JSStackFrame *fp)
 {
-    return &Valueify(fp)->scopeChain();
+    return Valueify(fp)->scopeChain().getGlobal();
 }
 
 JS_FRIEND_API(JSBool)
