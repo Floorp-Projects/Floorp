@@ -846,7 +846,7 @@ TestPilotExperiment.prototype = {
       req.setRequestHeader("Content-type", "application/json");
       req.setRequestHeader("Content-length", dataString.length);
       req.setRequestHeader("Connection", "close");
-      req.onreadystatechange = function(aEvt) {
+      req.addEventListener("readystatechange", function(aEvt) {
         if (req.readyState == 4) {
           if (req.status == 200 || req.status == 201 || req.status == 202) {
             let location = req.getResponseHeader("Location");
@@ -887,7 +887,7 @@ TestPilotExperiment.prototype = {
             callback(false);
           }
         }
-      };
+      }, false);
       req.send(dataString);
     });
   },
@@ -919,7 +919,7 @@ TestPilotExperiment.prototype = {
       req.setRequestHeader("Content-type", "application/json");
       req.setRequestHeader("Content-length", dataString.length);
       req.setRequestHeader("Connection", "close");
-      req.onreadystatechange = function(aEvt) {
+      req.addEventListener("readystatechange", function(aEvt) {
         if (req.readyState == 4) {
           if (req.status == 200 || req.status == 201 || req.status == 202) {
 	    logger.info("Quit reason posted successfully " + req.responseText);
@@ -933,7 +933,7 @@ TestPilotExperiment.prototype = {
             }
 	  }
 	}
-      };
+      }, false);
       logger.trace("Sending quit reason.");
       req.send(dataString);
     } else {
@@ -1069,7 +1069,7 @@ TestPilotBuiltinSurvey.prototype = {
       req.setRequestHeader("Content-type", "application/json");
       req.setRequestHeader("Content-length", params.length);
       req.setRequestHeader("Connection", "close");
-      req.onreadystatechange = function(aEvt) {
+      req.addEventListener("readystatechange", function(aEvt) {
         if (req.readyState == 4) {
           if (req.status == 200 || req.status == 201 ||
              req.status == 202) {
@@ -1099,7 +1099,7 @@ TestPilotBuiltinSurvey.prototype = {
 	    callback(false);
 	  }
         }
-      };
+      }, false);
       req.send(params);
     });
   }
