@@ -588,17 +588,6 @@ protected:
         return target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
     }
     
-    // bug 684882 comment 37. On Mac OS (confirmed on 10.7.1), Intel driver, rendering to a face of a cube map
-    // copies random video memory into it.
-    // In particular, since glGenerateMipmap does that, it must be avoided.
-    bool WorkAroundCubeMapBug684882() const {
-        #ifdef XP_MACOSX
-            return gl->Vendor() == gl::GLContext::VendorIntel;
-        #else
-            return false;
-        #endif
-    }
-    
     /** like glBufferData but if the call may change the buffer size, checks any GL error generated
      * by this glBufferData call and returns it */
     GLenum CheckedBufferData(GLenum target,
