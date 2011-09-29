@@ -61,14 +61,14 @@ struct Object {
   nsExpirationState* GetExpirationState() { return &mExpiration; }
 
   PRIntervalTime mLastUsed;
-  PRPackedBool   mExpired;
+  bool           mExpired;
 };
 
-static PRBool error;
+static bool error;
 static PRUint32 periodMS = 100;
 static PRUint32 ops = 1000;
 static PRUint32 iterations = 2;
-static PRBool logging = 0;
+static bool logging = 0;
 static PRUint32 sleepPeriodMS = 50;
 static PRUint32 slackMS = 20; // allow this much error
 
@@ -171,7 +171,7 @@ protected:
   }
 };
 
-template <PRUint32 K> static PRBool test_random() {
+template <PRUint32 K> static bool test_random() {
   srand(K);
   error = PR_FALSE;
  
@@ -196,11 +196,11 @@ template <PRUint32 K> static PRBool test_random() {
   return !error;
 }
 
-static PRBool test_random3() { return test_random<3>(); }
-static PRBool test_random4() { return test_random<4>(); }
-static PRBool test_random8() { return test_random<8>(); }
+static bool test_random3() { return test_random<3>(); }
+static bool test_random4() { return test_random<4>(); }
+static bool test_random8() { return test_random<8>(); }
 
-typedef PRBool (*TestFunc)();
+typedef bool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
 static const struct Test {

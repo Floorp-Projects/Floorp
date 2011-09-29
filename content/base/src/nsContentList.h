@@ -66,7 +66,7 @@
 // arbitrary matching algorithm.  aContent is the content that may
 // match the list, while aNamespaceID, aAtom, and aData are whatever
 // was passed to the list's constructor.
-typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
+typedef bool (*nsContentListMatchFunc)(nsIContent* aContent,
                                          PRInt32 aNamespaceID,
                                          nsIAtom* aAtom,
                                          void* aData);
@@ -123,7 +123,7 @@ public:
   }
 
 
-  virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
+  virtual PRInt32 IndexOf(nsIContent *aContent, bool aDoFlush);
 
 protected:
   nsCOMArray<nsIContent> mElements;
@@ -248,7 +248,7 @@ public:
                 PRInt32 aMatchNameSpaceId,
                 nsIAtom* aHTMLMatchAtom,
                 nsIAtom* aXMLMatchAtom,
-                PRBool aDeep = PR_TRUE);
+                bool aDeep = true);
 
   /**
    * @param aRootNode The node under which to limit our search.
@@ -270,17 +270,17 @@ public:
                 nsContentListMatchFunc aFunc,
                 nsContentListDestroyFunc aDestroyFunc,
                 void* aData,
-                PRBool aDeep = PR_TRUE,
+                bool aDeep = true,
                 nsIAtom* aMatchAtom = nsnull,
                 PRInt32 aMatchNameSpaceId = kNameSpaceID_None,
-                PRBool aFuncMayDependOnAttr = PR_TRUE);
+                bool aFuncMayDependOnAttr = true);
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   // nsBaseContentList overrides
-  virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
+  virtual PRInt32 IndexOf(nsIContent *aContent, bool aDoFlush);
   virtual nsIContent* GetNodeAt(PRUint32 aIndex);
   virtual PRInt32 IndexOf(nsIContent* aContent);
   virtual nsINode* GetParentObject()
@@ -294,9 +294,9 @@ public:
                                     nsWrapperCache** aCache);
 
   // nsContentList public methods
-  NS_HIDDEN_(PRUint32) Length(PRBool aDoFlush);
-  NS_HIDDEN_(nsIContent*) Item(PRUint32 aIndex, PRBool aDoFlush);
-  NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, PRBool aDoFlush);
+  NS_HIDDEN_(PRUint32) Length(bool aDoFlush);
+  NS_HIDDEN_(nsIContent*) Item(PRUint32 aIndex, bool aDoFlush);
+  NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, bool aDoFlush);
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -321,7 +321,7 @@ public:
     return static_cast<nsContentList*>(list);
   }
 
-  PRBool MatchesKey(const nsContentListKey& aKey) const
+  bool MatchesKey(const nsContentListKey& aKey) const
   {
     // The root node is most commonly the same: the document.  And the
     // most common namespace id is kNameSpaceID_Unknown.  So check the
@@ -341,7 +341,7 @@ protected:
    * @param  aElement the element to attempt to match
    * @return whether we match
    */
-  PRBool Match(mozilla::dom::Element *aElement);
+  bool Match(mozilla::dom::Element *aElement);
   /**
    * See if anything in the subtree rooted at aContent, including
    * aContent itself, matches our criterion.
@@ -349,7 +349,7 @@ protected:
    * @param  aContent the root of the subtree to match against
    * @return whether we match something in the tree rooted at aContent
    */
-  PRBool MatchSelf(nsIContent *aContent);
+  bool MatchSelf(nsIContent *aContent);
 
   /**
    * Populate our list.  Stop once we have at least aNeededLength
@@ -369,7 +369,7 @@ protected:
    *                 criterion.
    *         PR_FALSE otherwise.
    */
-  PRBool MayContainRelevantNodes(nsINode* aContainer)
+  bool MayContainRelevantNodes(nsINode* aContainer)
   {
     return mDeep || aContainer == mRootNode;
   }
@@ -383,7 +383,7 @@ protected:
    * If state is not LIST_UP_TO_DATE, fully populate ourselves with
    * all the nodes we can find.
    */
-  inline void BringSelfUpToDate(PRBool aDoFlush);
+  inline void BringSelfUpToDate(bool aDoFlush);
 
   /**
    * Sets the state to LIST_DIRTY and clears mElements array.
@@ -430,7 +430,7 @@ protected:
 
   // The booleans have to use PRUint8 to pack with mState, because MSVC won't
   // pack different typedefs together.  Once we no longer have to worry about
-  // flushes in XML documents, we can go back to using PRPackedBool for the
+  // flushes in XML documents, we can go back to using bool for the
   // booleans.
   
   /**
@@ -510,12 +510,12 @@ public:
 
   virtual ~nsCacheableFuncStringContentList();
 
-  PRBool Equals(const nsFuncStringCacheKey* aKey) {
+  bool Equals(const nsFuncStringCacheKey* aKey) {
     return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
       mString == aKey->mString;
   }
 
-  PRBool AllocatedData() const { return !!mData; }
+  bool AllocatedData() const { return !!mData; }
 protected:
   virtual void RemoveFromCaches() {
     RemoveFromFuncStringHashtable();

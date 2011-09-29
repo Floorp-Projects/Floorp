@@ -74,7 +74,7 @@ public:
 
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
-                             void *aClosure, PRBool& aAborted);
+                             void *aClosure, bool& aAborted);
 
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
@@ -102,7 +102,7 @@ public:
      * Check whether format is supported on a platform or not (if unclear,
      * returns true).
      */
-    virtual PRBool IsFontFormatSupported(nsIURI *aFontURI,
+    virtual bool IsFontFormatSupported(nsIURI *aFontURI,
                                          PRUint32 aFormatFlags);
 #endif
 
@@ -110,7 +110,7 @@ public:
     FontFamily *FindFontFamily(const nsAString& aName);
     FontEntry *FindFontEntry(const nsAString& aFamilyName, const gfxFontStyle& aFontStyle);
     already_AddRefed<gfxFont> FindFontForChar(PRUint32 aCh, gfxFont *aFont);
-    PRBool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList);
+    bool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList);
     void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
 #endif
 
@@ -124,7 +124,7 @@ public:
 
     static PRInt32 GetDPI();
 
-    static PRBool UseClientSideRendering() {
+    static bool UseClientSideRendering() {
 #if defined(MOZ_X11) && defined(MOZ_PLATFORM_MAEMO)
         // XRender is not accelerated on the Maemo at the moment, and 
         // X server pixman is out of our control; it's likely to be 

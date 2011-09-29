@@ -422,7 +422,7 @@ nsEventSource::OnStartRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool requestSucceeded;
+  bool requestSucceeded;
   rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -776,10 +776,10 @@ nsEventSource::GetInterface(const nsIID & aIID,
 }
 
 // static
-PRBool
+bool
 nsEventSource::PrefEnabled()
 {
-  return Preferences::GetBool("dom.server-events.enabled", PR_FALSE);
+  return Preferences::GetBool("dom.server-events.enabled", false);
 }
 
 nsresult
@@ -1163,17 +1163,17 @@ nsEventSource::FailConnection()
   }
 }
 
-PRBool
+bool
 nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
 {
   if (mReadyState == nsIEventSource::CLOSED) {
     return PR_FALSE;
   }
 
-  PRBool isSameOrigin = PR_FALSE;
-  PRBool isValidURI = PR_FALSE;
-  PRBool isValidContentLoadPolicy = PR_FALSE;
-  PRBool isValidProtocol = PR_FALSE;
+  bool isSameOrigin = false;
+  bool isValidURI = false;
+  bool isValidContentLoadPolicy = false;
+  bool isValidProtocol = false;
 
   nsCOMPtr<nsIURI> srcToTest = aSrc ? aSrc : mSrc.get();
   NS_ENSURE_TRUE(srcToTest, PR_FALSE);
@@ -1457,7 +1457,7 @@ nsEventSource::SetFieldAndClear()
       if (mLastFieldName.EqualsLiteral("retry")) {
         PRUint32 newValue=0;
         PRUint32 i = 0;  // we must ensure that there are only digits
-        PRBool assign = PR_TRUE;
+        bool assign = true;
         for (i = 0; i < mLastFieldValue.Length(); ++i) {
           if (mLastFieldValue.CharAt(i) < (PRUnichar)'0' ||
               mLastFieldValue.CharAt(i) > (PRUnichar)'9') {

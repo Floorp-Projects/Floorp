@@ -193,7 +193,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
                     PR_TRUE,
                     getter_AddRefs(localFile));
 
-    PRBool exists;
+    bool exists;
     localFile->Exists(&exists);
     NS_ASSERTION(exists, "plugin file ain't there");
 

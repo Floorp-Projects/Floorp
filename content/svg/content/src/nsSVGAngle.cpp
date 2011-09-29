@@ -159,7 +159,7 @@ static nsIAtom** const unitMap[] =
 
 /* Helper functions */
 
-static PRBool
+static bool
 IsValidUnitType(PRUint16 unit)
 {
   if (unit > nsIDOMSVGAngle::SVG_ANGLETYPE_UNKNOWN &&
@@ -337,7 +337,7 @@ nsSVGAngle::ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
 nsresult
 nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
                                nsSVGElement *aSVGElement,
-                               PRBool aDoSetAttr)
+                               bool aDoSetAttr)
 {
   float value = 0;
   PRUint16 unitType = 0;
@@ -444,7 +444,7 @@ nsresult
 nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
                                         const nsISMILAnimationElement* /*aSrcElement*/,
                                         nsSMILValue& aValue,
-                                        PRBool& aPreventCachingOfSandwich) const
+                                        bool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(&SVGOrientSMILType::sSingleton);
   if (aStr.EqualsLiteral("auto")) {

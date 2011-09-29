@@ -70,7 +70,7 @@ nsHyphenator::~nsHyphenator()
   }
 }
 
-PRBool
+bool
 nsHyphenator::IsValid()
 {
   return (mDict != nsnull) && (mCategories != nsnull);
@@ -78,14 +78,14 @@ nsHyphenator::IsValid()
 
 nsresult
 nsHyphenator::Hyphenate(const nsAString& aString,
-                        nsTArray<PRPackedBool>& aHyphens)
+                        nsTArray<bool>& aHyphens)
 {
   if (!aHyphens.SetLength(aString.Length())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   memset(aHyphens.Elements(), PR_FALSE, aHyphens.Length());
 
-  PRBool inWord = PR_FALSE;
+  bool inWord = false;
   PRUint32 wordStart = 0, wordLimit = 0;
   PRUint32 chLen;
   for (PRUint32 i = 0; i < aString.Length(); i += chLen) {

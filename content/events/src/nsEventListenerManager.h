@@ -68,7 +68,7 @@ typedef struct {
   PRUint32                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
   PRUint16                      mFlags;
-  PRPackedBool                  mHandlerIsString;
+  bool                          mHandlerIsString;
 
   nsIJSEventListener* GetJSListener() const {
     return (mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) ?
@@ -93,11 +93,11 @@ public:
 
   void AddEventListener(const nsAString& aType,
                         nsIDOMEventListener* aListener,
-                        PRBool aUseCapture,
-                        PRBool aWantsUntrusted);
+                        bool aUseCapture,
+                        bool aWantsUntrusted);
   void RemoveEventListener(const nsAString& aType,
                            nsIDOMEventListener* aListener,
-                           PRBool aUseCapture);
+                           bool aUseCapture);
 
   /**
   * Sets events listeners of all types. 
@@ -121,8 +121,8 @@ public:
   nsresult AddScriptEventListener(nsIAtom *aName,
                                   const nsAString& aFunc,
                                   PRUint32 aLanguage,
-                                  PRBool aDeferCompilation,
-                                  PRBool aPermitUntrustedEvents);
+                                  bool aDeferCompilation,
+                                  bool aPermitUntrustedEvents);
   /**
    * Remove the current "inline" event listener for aName.
    */
@@ -177,13 +177,13 @@ public:
   /**
    * Allows us to quickly determine if we have mutation listeners registered.
    */
-  PRBool HasMutationListeners();
+  bool HasMutationListeners();
 
   /**
    * Allows us to quickly determine whether we have unload or beforeunload
    * listeners registered.
    */
-  PRBool HasUnloadListeners();
+  bool HasUnloadListeners();
 
   /**
    * Returns the mutation bits depending on which mutation listeners are
@@ -197,12 +197,12 @@ public:
   /**
    * Returns PR_TRUE if there is at least one event listener for aEventName.
    */
-  PRBool HasListenersFor(const nsAString& aEventName);
+  bool HasListenersFor(const nsAString& aEventName);
 
   /**
    * Returns PR_TRUE if there is at least one event listener.
    */
-  PRBool HasListeners();
+  bool HasListeners();
 
   /**
    * Sets aList to the list of nsIEventListenerInfo objects representing the
@@ -218,21 +218,21 @@ public:
    * Returns PR_TRUE if there may be a paint event listener registered,
    * PR_FALSE if there definitely isn't.
    */
-  PRBool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
+  bool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
 
   /**
    * Returns PR_TRUE if there may be a MozAudioAvailable event listener registered,
    * PR_FALSE if there definitely isn't.
    */
-  PRBool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
+  bool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
 
   /**
    * Returns PR_TRUE if there may be a touch event listener registered,
    * PR_FALSE if there definitely isn't.
    */
-  PRBool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
+  bool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
-  PRBool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
+  bool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
 
   PRInt64 SizeOf() const;
 protected:
@@ -249,7 +249,7 @@ protected:
    * will look for it on mTarget.
    */
   nsresult CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
-                                       PRBool aNeedsCxPush,
+                                       bool aNeedsCxPush,
                                        const nsAString* aBody);
 
   /**
@@ -267,7 +267,7 @@ protected:
                               void *aScopeGlobal,
                               nsIAtom* aName,
                               JSObject *aHandler,
-                              PRBool aPermitUntrustedEvents,
+                              bool aPermitUntrustedEvents,
                               nsListenerStruct **aListenerStruct);
 
 public:

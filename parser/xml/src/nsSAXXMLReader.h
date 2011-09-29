@@ -78,7 +78,7 @@ public:
   }
 
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(PRBool aTerminated);
+  NS_IMETHOD DidBuildModel(bool aTerminated);
   NS_IMETHOD SetParser(nsIParser* aParser);
   
   NS_IMETHOD WillInterrupt()
@@ -113,8 +113,8 @@ private:
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIRequestObserver> mParserObserver;
-  PRBool mIsAsyncParse;
-  static PRBool TryChannelCharset(nsIChannel *aChannel,
+  bool mIsAsyncParse;
+  static bool TryChannelCharset(nsIChannel *aChannel,
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
   nsresult EnsureBaseURI();

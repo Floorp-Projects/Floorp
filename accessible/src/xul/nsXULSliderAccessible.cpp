@@ -188,7 +188,7 @@ nsXULSliderAccessible::SetCurrentValue(double aValue)
   return SetSliderAttr(nsGkAtoms::curpos, aValue);
 }
 
-PRBool
+bool
 nsXULSliderAccessible::GetAllowsAnonChildAccessibles()
 {
   // Do not allow anonymous xul:slider be accessible.

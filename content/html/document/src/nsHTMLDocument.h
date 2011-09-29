@@ -95,7 +95,7 @@ public:
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener **aDocListener,
-                                     PRBool aReset = PR_TRUE,
+                                     bool aReset = true,
                                      nsIContentSink* aSink = nsnull);
   virtual void StopDocumentLoad();
 
@@ -105,13 +105,13 @@ public:
 
   virtual void SetCompatibilityMode(nsCompatibility aMode);
 
-  virtual PRBool IsWriting()
+  virtual bool IsWriting()
   {
     return mWriteLevel != PRUint32(0);
   }
 
-  virtual PRBool GetIsFrameset() { return mIsFrameset; }
-  virtual void SetIsFrameset(PRBool aFrameset) { mIsFrameset = aFrameset; }
+  virtual bool GetIsFrameset() { return mIsFrameset; }
+  virtual void SetIsFrameset(bool aFrameset) { mIsFrameset = aFrameset; }
 
   virtual NS_HIDDEN_(nsContentList*) GetForms();
  
@@ -155,8 +155,8 @@ public:
   virtual void RemovedForm();
   virtual PRInt32 GetNumFormsSynchronous();
   virtual void TearingDownEditor(nsIEditor *aEditor);
-  virtual void SetIsXHTML(PRBool aXHTML) { mIsRegularHTML = !aXHTML; }
-  virtual void SetDocWriteDisabled(PRBool aDisabled)
+  virtual void SetIsXHTML(bool aXHTML) { mIsRegularHTML = !aXHTML; }
+  virtual void SetDocWriteDisabled(bool aDisabled)
   {
     mDisableDocWrite = aDisabled;
   }
@@ -212,11 +212,11 @@ protected:
 
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
 
-  static PRBool MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
+  static bool MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
                            nsIAtom* aAtom, void* aData);
-  static PRBool MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
+  static bool MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
                              nsIAtom* aAtom, void* aData);
-  static PRBool MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
+  static bool MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
                                    nsIAtom* aAtom, void* aData);
   static void* UseExistingNameString(nsINode* aRootNode, const nsString* aName);
 
@@ -225,7 +225,7 @@ protected:
   void GetDomainURI(nsIURI **uri);
 
   nsresult WriteCommon(JSContext *cx, const nsAString& aText,
-                       PRBool aNewlineTerminate);
+                       bool aNewlineTerminate);
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
@@ -233,7 +233,7 @@ protected:
   /**
    * Like IsEditingOn(), but will flush as needed first.
    */
-  PRBool IsEditingOnAfterFlush();
+  bool IsEditingOnAfterFlush();
 
   void *GenerateParserKey(void);
 
@@ -256,23 +256,23 @@ protected:
 
   static PRUint32 gWyciwygSessionCnt;
 
-  static PRBool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  static bool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                PRInt32& aCharsetSource,
                                nsACString& aCharset);
-  static PRBool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  static bool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                      nsIDocumentCharsetInfo*  aDocInfo,
                                      PRInt32& aCharsetSource,
                                      nsACString& aCharset);
-  static PRBool TryCacheCharset(nsICachingChannel* aCachingChannel,
+  static bool TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset);
   // aParentDocument could be null.
-  PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+  bool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
                           nsIDocument* aParentDocument,
                           PRInt32& charsetSource, nsACString& aCharset);
-  static PRBool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
+  static bool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
                                       nsACString& aCharset);
-  static PRBool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  static bool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
 
@@ -308,13 +308,13 @@ protected:
   // Load flags of the document's channel
   PRUint32 mLoadFlags;
 
-  PRPackedBool mIsFrameset;
+  bool mIsFrameset;
 
-  PRPackedBool mTooDeepWriteRecursion;
+  bool mTooDeepWriteRecursion;
 
-  PRPackedBool mDisableDocWrite;
+  bool mDisableDocWrite;
 
-  PRPackedBool mWarnedWidthHeight;
+  bool mWarnedWidthHeight;
 
   nsCOMPtr<nsIWyciwygChannel> mWyciwygChannel;
 
@@ -330,12 +330,12 @@ protected:
   PRUint32 mContentEditableCount;
   EditingState mEditingState;
 
-  nsresult   DoClipboardSecurityCheck(PRBool aPaste);
+  nsresult   DoClipboardSecurityCheck(bool aPaste);
   static jsid        sCutCopyInternal_id;
   static jsid        sPasteInternal_id;
 
   // When false, the .cookies property is completely disabled
-  PRBool mDisableCookieAccess;
+  bool mDisableCookieAccess;
 };
 
 #define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \

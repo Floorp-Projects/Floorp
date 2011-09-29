@@ -102,14 +102,14 @@ public:
     }
     mAccumulatedBytes += aBytes;
   }
-  double GetRateAtLastStop(PRPackedBool* aReliable) {
+  double GetRateAtLastStop(bool* aReliable) {
     double seconds = mAccumulatedTime.ToSeconds();
     *aReliable = seconds >= 1.0;
     if (seconds <= 0.0)
       return 0.0;
     return static_cast<double>(mAccumulatedBytes)/seconds;
   }
-  double GetRate(TimeStamp aNow, PRPackedBool* aReliable) {
+  double GetRate(TimeStamp aNow, bool* aReliable) {
     TimeDuration time = mAccumulatedTime;
     if (mIsStarted) {
       time += aNow - mLastStartTime;
@@ -124,7 +124,7 @@ private:
   PRInt64      mAccumulatedBytes;
   TimeDuration mAccumulatedTime;
   TimeStamp    mLastStartTime;
-  PRPackedBool mIsStarted;
+  bool mIsStarted;
 };
 
 // Represents a section of contiguous media, with a start and end offset.
@@ -139,7 +139,7 @@ public:
     NS_ASSERTION(mStart < mEnd, "Range should end after start!");
   }
 
-  PRBool IsNull() const {
+  bool IsNull() const {
     return mStart == 0 && mEnd == 0;
   }
 
@@ -179,7 +179,7 @@ public:
   // since we don't expect to resume again any time soon. Otherwise we
   // may resume again soon so resources should be held for a little
   // while.
-  virtual void Suspend(PRBool aCloseImmediately) = 0;
+  virtual void Suspend(bool aCloseImmediately) = 0;
   // Resume any downloads that have been suspended.
   virtual void Resume() = 0;
   // Get the current principal for the channel
@@ -245,7 +245,7 @@ public:
   // Get the estimated download rate in bytes per second (assuming no
   // pausing of the channel is requested by Gecko).
   // *aIsReliable is set to true if we think the estimate is useful.
-  virtual double GetDownloadRate(PRPackedBool* aIsReliable) = 0;
+  virtual double GetDownloadRate(bool* aIsReliable) = 0;
   // Get the length of the stream in bytes. Returns -1 if not known.
   // This can change over time; after a seek operation, a misbehaving
   // server may give us a resource of a different length to what it had
@@ -261,15 +261,15 @@ public:
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) = 0;
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
-  virtual PRBool IsDataCachedToEndOfStream(PRInt64 aOffset) = 0;
+  virtual bool IsDataCachedToEndOfStream(PRInt64 aOffset) = 0;
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
   // data, otherwise we may not be able to make progress.
   // nsMediaDecoder::NotifySuspendedStatusChanged is called when this
   // changes.
-  virtual PRBool IsSuspendedByCache() = 0;
+  virtual bool IsSuspendedByCache() = 0;
   // Returns true if this stream has been suspended.
-  virtual PRBool IsSuspended() = 0;
+  virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
   // any data which overlaps uncached data, or if aCount bytes otherwise can't
   // be read, this function will return failure. This function be called from
@@ -329,7 +329,7 @@ protected:
 
   // PR_TRUE if MoveLoadsToBackground() has been called, i.e. the load event
   // has been fired, and all channel loads will be in the background.
-  PRPackedBool mLoadInBackground;
+  bool mLoadInBackground;
 };
 
 /**
@@ -366,7 +366,7 @@ public:
   // and no more data from the old load will be notified via
   // nsMediaCacheStream::NotifyDataReceived/Ended.
   // This can fail.
-  nsresult CacheClientSeek(PRInt64 aOffset, PRBool aResume);
+  nsresult CacheClientSeek(PRInt64 aOffset, bool aResume);
   // Suspend the current load since data is currently not wanted
   nsresult CacheClientSuspend();
   // Resume the current load since data is wanted again
@@ -375,11 +375,11 @@ public:
   // Main thread
   virtual nsresult Open(nsIStreamListener** aStreamListener);
   virtual nsresult Close();
-  virtual void     Suspend(PRBool aCloseImmediately);
+  virtual void     Suspend(bool aCloseImmediately);
   virtual void     Resume();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Return PR_TRUE if the stream has been closed.
-  PRBool IsClosed() const { return mCacheStream.IsClosed(); }
+  bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
 
@@ -393,13 +393,13 @@ public:
   // Any thread
   virtual void    Pin();
   virtual void    Unpin();
-  virtual double  GetDownloadRate(PRPackedBool* aIsReliable);
+  virtual double  GetDownloadRate(bool* aIsReliable);
   virtual PRInt64 GetLength();
   virtual PRInt64 GetNextCachedData(PRInt64 aOffset);
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
-  virtual PRBool  IsDataCachedToEndOfStream(PRInt64 aOffset);
-  virtual PRBool  IsSuspendedByCache();
-  virtual PRBool  IsSuspended();
+  virtual bool    IsDataCachedToEndOfStream(PRInt64 aOffset);
+  virtual bool    IsSuspendedByCache();
+  virtual bool    IsSuspended();
 
   class Listener : public nsIStreamListener,
                    public nsIInterfaceRequestor,
@@ -467,10 +467,10 @@ protected:
   PRUint32           mSuspendCount;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
-  PRPackedBool       mReopenOnError;
+  bool               mReopenOnError;
   // When this flag is set, we should not report the next close of the
   // channel.
-  PRPackedBool       mIgnoreClose;
+  bool               mIgnoreClose;
 
   // Any thread access
   nsMediaCacheStream mCacheStream;
@@ -483,7 +483,7 @@ protected:
   // PR_TRUE if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the
   // isPending state at the time of the suspend request.
-  PRPackedBool mIgnoreResume;
+  bool mIgnoreResume;
 };
 
 #endif

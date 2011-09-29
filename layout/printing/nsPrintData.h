@@ -87,7 +87,7 @@ public:
   void OnStartPrinting();
   void DoOnProgressChange(PRInt32      aProgess,
                           PRInt32      aMaxProgress,
-                          PRBool       aDoStartStop,
+                          bool         aDoStartStop,
                           PRInt32      aFlag);
 
 
@@ -104,13 +104,13 @@ public:
   nsCOMPtr<nsIDOMWindow> mCurrentFocusWin; // cache a pointer to the currently focused window
 
   nsTArray<nsPrintObject*>    mPrintDocList;
-  PRPackedBool                mIsIFrameSelected;
-  PRPackedBool                mIsParentAFrameSet;
-  PRPackedBool                mOnStartSent;
-  PRPackedBool                mIsAborted;           // tells us the document is being aborted
-  PRPackedBool                mPreparingForPrint;   // see comments above
-  PRPackedBool                mDocWasToBeDestroyed; // see comments above
-  PRBool                      mShrinkToFit;
+  bool                        mIsIFrameSelected;
+  bool                        mIsParentAFrameSet;
+  bool                        mOnStartSent;
+  bool                        mIsAborted;           // tells us the document is being aborted
+  bool                        mPreparingForPrint;   // see comments above
+  bool                        mDocWasToBeDestroyed; // see comments above
+  bool                        mShrinkToFit;
   PRInt16                     mPrintFrameType;
   PRInt32                     mNumPrintablePages;
   PRInt32                     mNumPagesPrinted;

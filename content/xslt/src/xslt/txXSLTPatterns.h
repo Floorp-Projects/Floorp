@@ -177,7 +177,7 @@ private:
 class txLocPathPattern : public txPattern
 {
 public:
-    nsresult addStep(txPattern* aPattern, PRBool isChild);
+    nsresult addStep(txPattern* aPattern, bool isChild);
 
     TX_DECL_PATTERN;
 
@@ -185,7 +185,7 @@ private:
     class Step {
     public:
         nsAutoPtr<txPattern> pattern;
-        PRBool isChild;
+        bool isChild;
     };
 
     nsTArray<Step> mSteps;
@@ -205,14 +205,14 @@ public:
 
 #ifdef TX_TO_STRING
 public:
-    void setSerialize(PRBool aSerialize)
+    void setSerialize(bool aSerialize)
     {
         mSerialize = aSerialize;
     }
 
 private:
     // Don't serialize txRootPattern if it's used in a txLocPathPattern
-    PRBool mSerialize;
+    bool mSerialize;
 #endif
 };
 
@@ -254,7 +254,7 @@ class txStepPattern : public txPattern,
                       public PredicateList
 {
 public:
-    txStepPattern(txNodeTest* aNodeTest, PRBool isAttr)
+    txStepPattern(txNodeTest* aNodeTest, bool isAttr)
         : mNodeTest(aNodeTest), mIsAttr(isAttr)
     {
     }
@@ -274,7 +274,7 @@ public:
 
 private:
     nsAutoPtr<txNodeTest> mNodeTest;
-    PRBool mIsAttr;
+    bool mIsAttr;
 };
 
 #endif // TX_XSLT_PATTERNS_H

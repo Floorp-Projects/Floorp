@@ -92,7 +92,7 @@ NSSErrorsService::Init()
 #endif
 
 NS_IMETHODIMP
-NSSErrorsService::IsNSSErrorCode(PRInt32 aNSPRCode, PRBool *_retval)
+NSSErrorsService::IsNSSErrorCode(PRInt32 aNSPRCode, bool *_retval)
 {
   if (!_retval)
     return NS_ERROR_FAILURE;

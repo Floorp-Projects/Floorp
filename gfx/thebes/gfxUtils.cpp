@@ -52,7 +52,7 @@ using namespace mozilla::layers;
 
 static PRUint8 sUnpremultiplyTable[256*256];
 static PRUint8 sPremultiplyTable[256*256];
-static PRBool sTablesInitialized = PR_FALSE;
+static bool sTablesInitialized = false;
 
 static const PRUint8 PremultiplyValue(PRUint8 a, PRUint8 v) {
     return sPremultiplyTable[a*256+v];
@@ -209,7 +209,7 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     }
 }
 
-static PRBool
+static bool
 IsSafeImageTransformComponent(gfxFloat aValue)
 {
   return aValue >= -32768 && aValue <= 32767;
@@ -344,13 +344,13 @@ struct NS_STACK_CLASS AutoCairoPixmanBugWorkaround
         }
     }
 
-    PRBool PushedGroup() { return mPushedGroup; }
-    PRBool Succeeded() { return mSucceeded; }
+    bool PushedGroup() { return mPushedGroup; }
+    bool Succeeded() { return mSucceeded; }
 
 private:
     gfxContext* mContext;
-    PRPackedBool mSucceeded;
-    PRPackedBool mPushedGroup;
+    bool mSucceeded;
+    bool mPushedGroup;
 };
 
 static gfxMatrix
@@ -377,7 +377,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxImageSurface::gfxImageFormat aFormat,
                            const gfxPattern::GraphicsFilter& aFilter)
 {
-    PRBool doTile = !aImageRect.Contains(aSourceRect);
+    bool doTile = !aImageRect.Contains(aSourceRect);
 
     nsRefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
     gfxASurface::gfxSurfaceType surfaceType = currentTarget->GetType();
@@ -442,7 +442,7 @@ gfxUtils::ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat)
 
 static void
 PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
-                       PRBool aSnap)
+                       bool aSnap)
 {
   aContext->NewPath();
   nsIntRegionRectIterator iter(aRegion);
@@ -454,7 +454,7 @@ PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
 
 static void
 ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
-                     PRBool aSnap)
+                     bool aSnap)
 {
   PathFromRegionInternal(aContext, aRegion, aSnap);
   aContext->Clip();
@@ -514,7 +514,7 @@ gfxUtils::PathFromRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion
 }
 
 
-PRBool
+bool
 gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 {
   *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
@@ -535,7 +535,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
 
   // 'prescale' is true if the scaling is to be done as part of the
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
-  PRBool prescale = aSuggestedSize.width > 0 && aSuggestedSize.height > 0 &&
+  bool prescale = aSuggestedSize.width > 0 && aSuggestedSize.height > 0 &&
                     aSuggestedSize != aData.mPicSize;
 
   if (aSuggestedFormat == gfxASurface::ImageFormatRGB16_565) {

@@ -160,7 +160,7 @@ nsTypeAheadFind::PrefsReset()
   prefBranch->GetBoolPref("accessibility.typeaheadfind.startlinksonly",
                           &mStartLinksOnlyPref);
 
-  PRBool isSoundEnabled = PR_TRUE;
+  bool isSoundEnabled = true;
   prefBranch->GetBoolPref("accessibility.typeaheadfind.enablesound",
                            &isSoundEnabled);
   nsXPIDLCString soundStr;
@@ -176,14 +176,14 @@ nsTypeAheadFind::PrefsReset()
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::SetCaseSensitive(PRBool isCaseSensitive)
+nsTypeAheadFind::SetCaseSensitive(bool isCaseSensitive)
 {
   mFind->SetCaseSensitive(isCaseSensitive);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::GetCaseSensitive(PRBool* isCaseSensitive)
+nsTypeAheadFind::GetCaseSensitive(bool* isCaseSensitive)
 {
   mFind->GetCaseSensitive(isCaseSensitive);
   return NS_OK;
@@ -297,8 +297,8 @@ nsTypeAheadFind::PlayNotFoundSound()
 }
 
 nsresult
-nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
-                           PRBool aIsFirstVisiblePreferred, PRBool aFindPrev,
+nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
+                           bool aIsFirstVisiblePreferred, bool aFindPrev,
                            PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
@@ -368,7 +368,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
 
   // Iterate up to current shell, if there's more than 1 that we're
   // dealing with
-  PRBool hasMoreDocShells;
+  bool hasMoreDocShells;
 
   while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) && hasMoreDocShells) {
     docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
@@ -393,7 +393,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
   PRInt16 rangeCompareResult = 0;
   mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, mSearchRange, &rangeCompareResult);
   // No need to wrap find in doc if starting at beginning
-  PRBool hasWrapped = (rangeCompareResult < 0);
+  bool hasWrapped = (rangeCompareResult < 0);
 
   if (mTypeAheadBuffer.IsEmpty())
     return NS_ERROR_FAILURE;
@@ -409,7 +409,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
         break;  // Nothing found in this doc, go to outer loop (try next doc)
 
       // ------- Test resulting found range for success conditions ------
-      PRBool isInsideLink = PR_FALSE, isStartingLink = PR_FALSE;
+      bool isInsideLink = false, isStartingLink = false;
 
       if (aIsLinksOnly) {
         // Don't check if inside link when searching all text
@@ -417,7 +417,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
                               &isStartingLink);
       }
 
-      PRBool usesIndependentSelection;
+      bool usesIndependentSelection;
       if (!IsRangeVisible(presShell, presContext, returnRange,
                           aIsFirstVisiblePreferred, PR_FALSE,
                           getter_AddRefs(mStartPointRange), 
@@ -463,7 +463,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
         /* If a search result is found inside an editable element, we'll focus
          * the element only if focus is in our content window, i.e.
          * |if (focusedWindow.top == ourWindow.top)| */
-        PRBool shouldFocusEditableElement = false;
+        bool shouldFocusEditableElement = false;
         if (fm) {
           nsCOMPtr<nsIDOMWindow> focusedWindow;
           nsresult rv = fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
@@ -572,7 +572,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
     // ======= end-inner-while (go through a single document) ==========
 
     // ---------- Nothing found yet, try next document  -------------
-    PRBool hasTriedFirstDoc = PR_FALSE;
+    bool hasTriedFirstDoc = false;
     do {
       // ==== Second inner loop - get another while  ====
       if (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells))
@@ -594,7 +594,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
       hasTriedFirstDoc = PR_TRUE;      
     } while (docShellEnumerator);  // ==== end second inner while  ===
 
-    PRBool continueLoop = PR_FALSE;
+    bool continueLoop = false;
     if (currentDocShell != startingDocShell)
       continueLoop = PR_TRUE;  // Try next document
     else if (!hasWrapped || aIsFirstVisiblePreferred) {
@@ -671,8 +671,8 @@ nsTypeAheadFind::GetCurrentWindow(nsIDOMWindow** aCurrentWindow)
 nsresult
 nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                                      nsISelectionController *aSelectionController,
-                                     PRBool aIsFirstVisiblePreferred,
-                                     PRBool aFindPrev,
+                                     bool aIsFirstVisiblePreferred,
+                                     bool aFindPrev,
                                      nsIPresShell **aPresShell,
                                      nsPresContext **aPresContext)
 {
@@ -776,8 +776,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 void
 nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
                                        nsIPresShell *aPresShell,
-                                       PRBool *aIsInsideLink,
-                                       PRBool *aIsStartingLink)
+                                       bool *aIsInsideLink,
+                                       bool *aIsStartingLink)
 {
   *aIsInsideLink = PR_FALSE;
   *aIsStartingLink = PR_TRUE;
@@ -876,7 +876,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
 
 /* Find another match in the page. */
 NS_IMETHODIMP
-nsTypeAheadFind::FindAgain(PRBool aFindBackwards, PRBool aLinksOnly,
+nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
                            PRUint16* aResult)
 
 {
@@ -891,7 +891,7 @@ nsTypeAheadFind::FindAgain(PRBool aFindBackwards, PRBool aLinksOnly,
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
+nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
                       PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
@@ -931,7 +931,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
     return NS_OK;
   }
 
-  PRBool atEnd = PR_FALSE;    
+  bool atEnd = false;    
   if (mTypeAheadBuffer.Length()) {
     const nsAString& oldStr = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length());
     const nsAString& newStr = Substring(aSearchString, 0, mTypeAheadBuffer.Length());
@@ -969,14 +969,14 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
 
   mTypeAheadBuffer = aSearchString;
 
-  PRBool isFirstVisiblePreferred = PR_FALSE;
+  bool isFirstVisiblePreferred = false;
 
   // --------- Initialize find if 1st char ----------
   if (bufferLength == 0) {
     // If you can see the selection (not collapsed or thru caret browsing),
     // or if already focused on a page element, start there.
     // Otherwise we're going to start at the first visible element
-    PRBool isSelectionCollapsed = PR_TRUE;
+    bool isSelectionCollapsed = true;
     if (selection)
       selection->GetIsCollapsed(&isSelectionCollapsed);
 
@@ -1070,13 +1070,13 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
 }
 
 
-PRBool
+bool
 nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 nsPresContext *aPresContext,
-                                nsIDOMRange *aRange, PRBool aMustBeInViewPort,
-                                PRBool aGetTopVisibleLeaf,
+                                nsIDOMRange *aRange, bool aMustBeInViewPort,
+                                bool aGetTopVisibleLeaf,
                                 nsIDOMRange **aFirstVisibleRange,
-                                PRBool *aUsesIndependentSelection)
+                                bool *aUsesIndependentSelection)
 {
   NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange, 
                "params are invalid");

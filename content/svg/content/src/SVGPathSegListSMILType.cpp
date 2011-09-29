@@ -84,7 +84,7 @@ SVGPathSegListSMILType::Assign(nsSMILValue& aDest,
   return dest->CopyFrom(*src);
 }
 
-PRBool
+bool
 SVGPathSegListSMILType::IsEqual(const nsSMILValue& aLeft,
                                 const nsSMILValue& aRight) const
 {
@@ -95,7 +95,7 @@ SVGPathSegListSMILType::IsEqual(const nsSMILValue& aLeft,
          *static_cast<const SVGPathDataAndOwner*>(aRight.mU.mPtr);
 }
 
-static PRBool
+static bool
 ArcFlagsDiffer(SVGPathDataAndOwner::const_iterator aPathData1,
                SVGPathDataAndOwner::const_iterator aPathData2)
 {
@@ -218,7 +218,7 @@ AddWeightedPathSegs(double aCoeff1,
   // FIRST: Directly copy the arguments that don't make sense to add.
   aResultSeg[0] = aSeg2[0];  // encoded segment type
 
-  PRBool isArcType = SVGPathSegUtils::IsArcType(segType);
+  bool isArcType = SVGPathSegUtils::IsArcType(segType);
   if (isArcType) {
     // Copy boolean arc flags.
     NS_ABORT_IF_FALSE(!aSeg1 || !ArcFlagsDiffer(aSeg1, aSeg2),
@@ -295,7 +295,7 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
   // because in that case, we will have already set iter1 to nsnull above, to
   // record that our first operand is an identity value.)
   if (aResult.IsIdentity()) {
-    DebugOnly<PRBool> success = aResult.SetLength(aList2.Length());
+    DebugOnly<bool> success = aResult.SetLength(aList2.Length());
     NS_ABORT_IF_FALSE(success, "infallible nsTArray::SetLength should succeed");
     aResult.SetElement(aList2.Element()); // propagate target element info!
   }
@@ -514,7 +514,7 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
   if (check == eRequiresConversion) {
     // Can't convert |start| in-place, since it's const. Instead, we copy it
     // into |result|, converting the types as we go, and use that as our start.
-    DebugOnly<PRBool> success = result.SetLength(end.Length());
+    DebugOnly<bool> success = result.SetLength(end.Length());
     NS_ABORT_IF_FALSE(success, "infallible nsTArray::SetLength should succeed");
     result.SetElement(end.Element()); // propagate target element info!
 

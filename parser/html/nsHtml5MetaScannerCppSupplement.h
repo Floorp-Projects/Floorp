@@ -55,7 +55,7 @@ nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decode
   }
 }
 
-PRBool
+bool
 nsHtml5MetaScanner::tryCharset(nsString* charset)
 {
   // This code needs to stay in sync with

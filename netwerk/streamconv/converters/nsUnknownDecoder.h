@@ -88,34 +88,34 @@ protected:
   // sniffing for local files if needed using this.  Just a security
   // precation thingy... who knows when we suddenly need to flip this
   // pref?
-  PRBool AllowSniffing(nsIRequest* aRequest);
+  bool AllowSniffing(nsIRequest* aRequest);
   
   // Various sniffer functions.  Returning PR_TRUE means that a type
   // was determined; PR_FALSE means no luck.
-  PRBool TryContentSniffers(nsIRequest* aRequest);
-  PRBool SniffForHTML(nsIRequest* aRequest);
-  PRBool SniffForXML(nsIRequest* aRequest);
+  bool TryContentSniffers(nsIRequest* aRequest);
+  bool SniffForHTML(nsIRequest* aRequest);
+  bool SniffForXML(nsIRequest* aRequest);
 
   // SniffURI guesses at the content type based on the URI (typically
   // using the extentsion)
-  PRBool SniffURI(nsIRequest* aRequest);
+  bool SniffURI(nsIRequest* aRequest);
 
   // LastDitchSniff guesses at text/plain vs. application/octet-stream
   // by just looking at whether the data contains null bytes, and
   // maybe at the fraction of chars with high bit set.  Use this only
   // as a last-ditch attempt to decide a content type!
-  PRBool LastDitchSniff(nsIRequest* aRequest);
+  bool LastDitchSniff(nsIRequest* aRequest);
 
   /**
    * An entry struct for our array of sniffers.  Each entry has either
    * a type associated with it (set these with the SNIFFER_ENTRY macro)
    * or a function to be executed (set these with the
    * SNIFFER_ENTRY_WITH_FUNC macro).  The function should take a single
-   * nsIRequest* and returns PRBool -- PR_TRUE if it sets mContentType,
+   * nsIRequest* and returns bool -- true if it sets mContentType,
    * PR_FALSE otherwise
    */
   struct nsSnifferEntry {
-    typedef PRBool (nsUnknownDecoder::*TypeSniffFunc)(nsIRequest* aRequest);
+    typedef bool (nsUnknownDecoder::*TypeSniffFunc)(nsIRequest* aRequest);
     
     const char* mBytes;
     PRUint32 mByteLen;
@@ -136,7 +136,7 @@ protected:
   
   char *mBuffer;
   PRUint32 mBufferLen;
-  PRBool mRequireHTMLsuffix;
+  bool mRequireHTMLsuffix;
 
   nsCString mContentType;
 

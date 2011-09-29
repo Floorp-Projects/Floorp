@@ -200,7 +200,7 @@ interface nsIXMLHttpRequest : nsISupports
 %{C++
   // note this is NOT virtual so this won't muck with the vtable!
   inline nsresult Open(const nsACString& method, const nsACString& url,
-                       PRBool async, const nsAString& user,
+                       bool async, const nsAString& user,
                        const nsAString& password) {
     return Open(method, url, async, user, password, 3);
   }

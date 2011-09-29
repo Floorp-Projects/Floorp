@@ -125,7 +125,7 @@ public:
    * Determine whether or not the explicit child list has been altered
    * by XBL insertion points.
    */
-  PRBool HasContentListFor(nsIContent* aContent);
+  bool HasContentListFor(nsIContent* aContent);
 
   /**
    * Return the nodelist of "anonymous" kids for this node.  This might
@@ -181,12 +181,12 @@ public:
    * aMultipleInsertionPoints will be set to true.
    */
   nsIContent* GetSingleInsertionPoint(nsIContent* aParent, PRUint32* aIndex,
-                                      PRBool* aMultipleInsertionPoints);
+                                      bool* aMultipleInsertionPoints);
 
   nsIContent* GetNestedInsertionPoint(nsIContent* aParent,
                                       const nsIContent* aChild);
   nsIContent* GetNestedSingleInsertionPoint(nsIContent* aParent,
-                                            PRBool* aMultipleInsertionPoints);
+                                            bool* aMultipleInsertionPoints);
 
   nsresult AddLayeredBinding(nsIContent* aContent, nsIURI* aURL,
                              nsIPrincipal* aOriginPrincipal);
@@ -214,7 +214,7 @@ public:
   // Style rule methods
   nsresult WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                      RuleProcessorData* aData,
-                     PRBool* aCutOffInheritance);
+                     bool* aCutOffInheritance);
 
   void WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                     RuleProcessorData* aData);
@@ -224,7 +224,7 @@ public:
    * processor's rules have changed (e.g., because of media queries).
    */
   nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
-                                 PRBool* aRulesChanged);
+                                 bool* aRulesChanged);
 
   void AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray);
 
@@ -246,16 +246,16 @@ protected:
   nsresult SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
 
   nsINodeList* GetXBLChildNodesInternal(nsIContent* aContent,
-                                        PRBool* aIsAnonymousContentList);
+                                        bool* aIsAnonymousContentList);
   nsINodeList* GetAnonymousNodesInternal(nsIContent* aContent,
-                                         PRBool* aIsAnonymousContentList);
+                                         bool* aIsAnonymousContentList);
 
   // Called by ContentAppended and ContentInserted to handle a single child
   // insertion.  aChild must not be null.  aContainer may be null.
   // aIndexInContainer is the index of the child in the parent.  aAppend is
   // true if this child is being appended, not inserted.
   void HandleChildInsertion(nsIContent* aContainer, nsIContent* aChild,
-                            PRUint32 aIndexInContainer, PRBool aAppend);
+                            PRUint32 aIndexInContainer, bool aAppend);
 
   // For the given container under which a child is being added, given
   // insertion parent and given index of the child being inserted, find the
@@ -328,8 +328,8 @@ protected:
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;
-  PRPackedBool mProcessingAttachedStack;
-  PRPackedBool mDestroyed;
+  bool mProcessingAttachedStack;
+  bool mDestroyed;
   PRUint32 mAttachedStackSizeOnOutermost;
 
   // Our posted event to process the attached queue, if any

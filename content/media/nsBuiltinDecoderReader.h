@@ -66,7 +66,7 @@ public:
   // extracted inside a frame of size aFrame, and scaled up to and displayed
   // at a size of aDisplay. You should validate the frame, picture, and
   // display regions before using them to display video frames.
-  static PRBool ValidateVideoRegion(const nsIntSize& aFrame,
+  static bool ValidateVideoRegion(const nsIntSize& aFrame,
                                     const nsIntRect& aPicture,
                                     const nsIntSize& aDisplay);
 
@@ -84,10 +84,10 @@ public:
   mozilla::layers::StereoMode mStereoMode;
 
   // PR_TRUE if we have an active audio bitstream.
-  PRPackedBool mHasAudio;
+  bool mHasAudio;
 
   // PR_TRUE if we have an active video bitstream.
-  PRPackedBool mHasVideo;
+  bool mHasVideo;
 };
 
 #ifdef MOZ_TREMOR
@@ -184,7 +184,7 @@ public:
                            PRInt64 aTime,
                            PRInt64 aEndTime,
                            const YCbCrBuffer &aBuffer,
-                           PRBool aKeyframe,
+                           bool aKeyframe,
                            PRInt64 aTimecode,
                            nsIntRect aPicture);
 
@@ -227,8 +227,8 @@ public:
 
   // When PR_TRUE, denotes that this frame is identical to the frame that
   // came before; it's a duplicate. mBuffer will be empty.
-  PRPackedBool mDuplicate;
-  PRPackedBool mKeyframe;
+  bool mDuplicate;
+  bool mKeyframe;
 
 public:
   VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aEndTime, PRInt64 aTimecode)
@@ -246,7 +246,7 @@ public:
   VideoData(PRInt64 aOffset,
             PRInt64 aTime,
             PRInt64 aEndTime,
-            PRBool aKeyframe,
+            bool aKeyframe,
             PRInt64 aTimecode,
             nsIntSize aDisplay)
     : mDisplay(aDisplay),
@@ -341,7 +341,7 @@ template <class T> class MediaQueue : private nsDeque {
     mEndOfStream = PR_FALSE;
   }
 
-  PRBool AtEndOfStream() {
+  bool AtEndOfStream() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return GetSize() == 0 && mEndOfStream;
   }
@@ -349,7 +349,7 @@ template <class T> class MediaQueue : private nsDeque {
   // Returns PR_TRUE if the media queue has had it last item added to it.
   // This happens when the media stream has been completely decoded. Note this
   // does not mean that the corresponding stream has finished playback.
-  PRBool IsFinished() {
+  bool IsFinished() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mEndOfStream;
   }
@@ -381,7 +381,7 @@ private:
 
   // PR_TRUE when we've decoded the last frame of data in the
   // bitstream for which we're queueing frame data.
-  PRBool mEndOfStream;
+  bool mEndOfStream;
 };
 
 // Encapsulates the decoding and reading of media data. Reading can only be
@@ -407,16 +407,16 @@ public:
   // in mAudioQueue. Returns PR_TRUE when there's more audio to decode,
   // PR_FALSE if the audio is finished, end of file has been reached,
   // or an un-recoverable read error has occured.
-  virtual PRBool DecodeAudioData() = 0;
+  virtual bool DecodeAudioData() = 0;
 
   // Reads and decodes one video frame. Packets with a timestamp less
   // than aTimeThreshold will be decoded (unless they're not keyframes
   // and aKeyframeSkip is PR_TRUE), but will not be added to the queue.
-  virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold) = 0;
 
-  virtual PRBool HasAudio() = 0;
-  virtual PRBool HasVideo() = 0;
+  virtual bool HasAudio() = 0;
+  virtual bool HasVideo() = 0;
 
   // Read header data for all bitstreams in the file. Fills mInfo with
   // the data required to present the media. Returns NS_OK on success,
@@ -508,7 +508,7 @@ protected:
 
   // Reader decode function. Matches DecodeVideoFrame() and
   // DecodeAudioData().
-  typedef PRBool (nsBuiltinDecoderReader::*DecodeFn)();
+  typedef bool (nsBuiltinDecoderReader::*DecodeFn)();
 
   // Calls aDecodeFn on *this until aQueue has an item, whereupon
   // we return the first item.
@@ -516,10 +516,10 @@ protected:
   Data* DecodeToFirstData(DecodeFn aDecodeFn,
                           MediaQueue<Data>& aQueue);
 
-  // Wrapper so that DecodeVideoFrame(PRBool&,PRInt64) can be called from
+  // Wrapper so that DecodeVideoFrame(bool&,PRInt64) can be called from
   // DecodeToFirstData().
-  PRBool DecodeVideoFrame() {
-    PRBool f = PR_FALSE;
+  bool DecodeVideoFrame() {
+    bool f = false;
     return DecodeVideoFrame(f, 0);
   }
 

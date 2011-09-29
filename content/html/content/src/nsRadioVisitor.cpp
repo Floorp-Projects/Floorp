@@ -45,7 +45,7 @@
 
 NS_IMPL_ISUPPORTS1(nsRadioVisitor, nsIRadioVisitor)
 
-PRBool
+bool
 nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
 {
   nsRefPtr<nsHTMLInputElement> radio =
@@ -56,7 +56,7 @@ nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
 {
   if (aRadio == mExcludeElement) {
@@ -71,7 +71,7 @@ nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio)
 {
   if (aRadio == mExcludeElement) {

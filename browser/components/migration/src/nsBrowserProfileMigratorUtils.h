@@ -84,13 +84,13 @@ void SetProxyPref(const nsAString& aHostPort, const char* aPref,
 struct MigrationData { 
   PRUnichar* fileName; 
   PRUint32 sourceFlag;
-  PRBool replaceOnly;
+  bool replaceOnly;
 };
 
 class nsILocalFile;
 void GetMigrateDataFromArray(MigrationData* aDataArray, 
                              PRInt32 aDataArrayLength,
-                             PRBool aReplace,
+                             bool aReplace,
                              nsIFile* aSourceProfile, 
                              PRUint16* aResult);
 
@@ -115,8 +115,8 @@ nsresult AnnotatePersonalToolbarFolder(nsIFile* aSourceBookmarksFile,
 // aImportSourceNameKey is a key into migration.properties with the pretty name
 // of the application.
 nsresult ImportBookmarksHTML(nsIFile* aBookmarksFile, 
-                             PRBool aImportIntoRoot,
-                             PRBool aOverwriteDefaults,
+                             bool aImportIntoRoot,
+                             bool aOverwriteDefaults,
                              const PRUnichar* aImportSourceNameKey);
 
 nsresult InitializeBookmarks(nsIFile* aTargetProfile);

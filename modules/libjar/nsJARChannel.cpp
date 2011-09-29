@@ -207,7 +207,7 @@ nsJARInputThunk::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
 
 NS_IMETHODIMP
-nsJARInputThunk::IsNonBlocking(PRBool *nonBlocking)
+nsJARInputThunk::IsNonBlocking(bool *nonBlocking)
 {
     *nonBlocking = PR_FALSE;
     return NS_OK;
@@ -273,7 +273,7 @@ nsJARChannel::Init(nsIURI *uri)
     rv = mJarURI->GetJARFile(getter_AddRefs(innerURI));
     if (NS_FAILED(rv))
         return rv;
-    PRBool isJS;
+    bool isJS;
     rv = innerURI->SchemeIs("javascript", &isJS);
     if (NS_FAILED(rv))
         return rv;
@@ -336,7 +336,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache)
 }
 
 nsresult
-nsJARChannel::EnsureJarInput(PRBool blocking)
+nsJARChannel::EnsureJarInput(bool blocking)
 {
     LOG(("nsJARChannel::EnsureJarInput [this=%x %s]\n", this, mSpec.get()));
 
@@ -411,7 +411,7 @@ nsJARChannel::GetName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsJARChannel::IsPending(PRBool *result)
+nsJARChannel::IsPending(bool *result)
 {
     *result = mIsPending;
     return NS_OK;
@@ -785,7 +785,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 // nsIJARChannel
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
-nsJARChannel::GetIsUnsafe(PRBool *isUnsafe)
+nsJARChannel::GetIsUnsafe(bool *isUnsafe)
 {
     *isUnsafe = mIsUnsafe;
     return NS_OK;
@@ -854,7 +854,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
         } else {
             nsCOMPtr<nsIJARChannel> innerJARChannel(do_QueryInterface(channel));
             if (innerJARChannel) {
-                PRBool unsafe;
+                bool unsafe;
                 innerJARChannel->GetIsUnsafe(&unsafe);
                 mIsUnsafe = unsafe;
             }
@@ -865,7 +865,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
     }
 
     if (NS_SUCCEEDED(status) && mIsUnsafe &&
-        !Preferences::GetBool("network.jar.open-unsafe-types", PR_FALSE)) {
+        !Preferences::GetBool("network.jar.open-unsafe-types", false)) {
         status = NS_ERROR_UNSAFE_CONTENT_TYPE;
     }
 

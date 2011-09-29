@@ -57,7 +57,7 @@
 typedef struct convToken {
     nsString token;     // the actual string (i.e. "http://")
     nsString modText;   // replacement text or href prepend text.
-    PRBool   prepend;   // flag indicating how the modText should be used.
+    bool     prepend;   // flag indicating how the modText should be used.
 } convToken;
     
 /**
@@ -135,7 +135,7 @@ protected:
     nsTArray<nsAutoPtr<convToken> > mTokens;   // list of tokens to search for
     convToken                       *mToken;   // current token (if any)
     nsString                        mPageTitle; // Page title
-    PRBool                          mPreFormatHTML; // Whether to use <pre> tags
+    bool                            mPreFormatHTML; // Whether to use <pre> tags
 };
 
 #endif // ____nstxttohtmlconv___h___

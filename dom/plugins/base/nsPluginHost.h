@@ -128,17 +128,17 @@ public:
                   nsIPluginStreamListener* streamListener,
                   const char* altHost,
                   const char* referrer,
-                  PRBool forceJSEnabled);
+                  bool forceJSEnabled);
   nsresult PostURL(nsISupports* pluginInst,
                    const char* url,
                    PRUint32 postDataLen,
                    const char* postData,
-                   PRBool isFile,
+                   bool isFile,
                    const char* target,
                    nsIPluginStreamListener* streamListener,
                    const char* altHost,
                    const char* referrer,
-                   PRBool forceJSEnabled,
+                   bool forceJSEnabled,
                    PRUint32 postHeadersLength,
                    const char* postHeaders);
 
@@ -151,7 +151,7 @@ public:
   nsresult DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow);
   nsresult InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner);
 
-  void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible);
+  void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, bool isVisible);
   void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame);
 
   nsresult GetPluginName(nsNPAPIPluginInstance *aPluginInstance, const char** aPluginName);
@@ -174,7 +174,7 @@ public:
                     nsIPluginStreamListener* streamListener = NULL,
                     const char* altHost = NULL,
                     const char* referrer = NULL,
-                    PRBool forceJSEnabled = PR_FALSE,
+                    bool forceJSEnabled = false,
                     PRUint32 getHeadersLength = 0, 
                     const char* getHeaders = NULL);
 
@@ -194,7 +194,7 @@ public:
 
   // checks whether aTag is a "java" plugin tag (a tag for a plugin
   // that does Java)
-  static PRBool IsJavaMIMEType(const char *aType);
+  static bool IsJavaMIMEType(const char *aType);
 
   static nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
@@ -248,27 +248,27 @@ private:
   // Return an nsPluginTag for this type, if any.  If aCheckEnabled is
   // true, only enabled plugins will be returned.
   nsPluginTag*
-  FindPluginForType(const char* aMimeType, PRBool aCheckEnabled);
+  FindPluginForType(const char* aMimeType, bool aCheckEnabled);
 
   nsPluginTag*
   FindPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
 
   nsresult
-  FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged);
+  FindPlugins(bool aCreatePluginList, bool * aPluginsChanged);
 
   nsresult
   ScanPluginsDirectory(nsIFile *pluginsDir,
-                       PRBool aCreatePluginList,
-                       PRBool *aPluginsChanged);
+                       bool aCreatePluginList,
+                       bool *aPluginsChanged);
 
   nsresult
   ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
-                           PRBool aCreatePluginList,
-                           PRBool *aPluginsChanged);
+                           bool aCreatePluginList,
+                           bool *aPluginsChanged);
 
   nsresult EnsurePluginLoaded(nsPluginTag* plugin);
 
-  PRBool IsRunningPlugin(nsPluginTag * plugin);
+  bool IsRunningPlugin(nsPluginTag * plugin);
 
   // Stores all plugins info into the registry
   nsresult WritePluginInfo();
@@ -282,14 +282,14 @@ private:
                                nsPluginTag **result);
 
   // Checks to see if a tag object is in our list of live tags.
-  PRBool IsLiveTag(nsIPluginTag* tag);
+  bool IsLiveTag(nsIPluginTag* tag);
 
   // Checks our list of live tags for an equivalent tag.
   nsPluginTag* HaveSamePlugin(nsPluginTag * aPluginTag);
 
   // checks if given plugin is a duplicate of what we already have
   // in the plugin list but found in some different place
-  PRBool IsDuplicatePlugin(nsPluginTag * aPluginTag);
+  bool IsDuplicatePlugin(nsPluginTag * aPluginTag);
 
   nsresult EnsurePrivateDirServiceProvider();
 
@@ -298,15 +298,15 @@ private:
   nsRefPtr<nsPluginTag> mPlugins;
   nsRefPtr<nsPluginTag> mCachedPlugins;
   nsRefPtr<nsInvalidPluginTag> mInvalidPlugins;
-  PRPackedBool mPluginsLoaded;
-  PRPackedBool mDontShowBadPluginMessage;
-  PRPackedBool mIsDestroyed;
+  bool mPluginsLoaded;
+  bool mDontShowBadPluginMessage;
+  bool mIsDestroyed;
 
   // set by pref plugin.override_internal_types
-  PRPackedBool mOverrideInternalTypes;
+  bool mOverrideInternalTypes;
 
   // set by pref plugin.disable
-  PRPackedBool mPluginsDisabled;
+  bool mPluginsDisabled;
 
   // Any instances in this array will have valid plugin objects via GetPlugin().
   // When removing an instance it might not die - be sure to null out it's plugin.
@@ -361,7 +361,7 @@ public:
 
   ~PluginDestructionGuard();
 
-  static PRBool DelayDestroy(nsNPAPIPluginInstance *aInstance);
+  static bool DelayDestroy(nsNPAPIPluginInstance *aInstance);
 
 protected:
   void Init()
@@ -375,7 +375,7 @@ protected:
   }
 
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
-  PRBool mDelayedDestroy;
+  bool mDelayedDestroy;
 
   static PRCList sListHead;
 };

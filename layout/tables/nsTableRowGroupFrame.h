@@ -149,7 +149,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual PRBool IsContainingBlock() const;
+  virtual bool IsContainingBlock() const;
 
   nsTableRowFrame* GetFirstRow();
 
@@ -236,7 +236,7 @@ public:
   /** @see nsILineIterator.h GetDirection
     * @return true if the table is rtl
     */
-  virtual PRBool GetDirection();
+  virtual bool GetDirection();
   
   /** Return structural information about a line. 
     * @param aLineNumber       - the index of the row relative to the row group
@@ -279,8 +279,8 @@ public:
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
                          nsIFrame** aFrameFound,
-                         PRBool* aXIsBeforeFirstFrame,
-                         PRBool* aXIsAfterLastFrame);
+                         bool* aXIsBeforeFirstFrame,
+                         bool* aXIsAfterLastFrame);
 
 #ifdef IBMBIDI
    /** Check whether visual and logical order of cell frames within a line are
@@ -292,7 +292,7 @@ public:
      */
 
   NS_IMETHOD CheckLineOrder(PRInt32                  aLine,
-                            PRBool                   *aIsReordered,
+                            bool                     *aIsReordered,
                             nsIFrame                 **aFirstVisual,
                             nsIFrame                 **aLastVisual);
 #endif
@@ -324,7 +324,7 @@ public:
       : mFrames(MIN_ROWS_NEEDING_CURSOR), mCursorIndex(0), mOverflowAbove(0),
         mOverflowBelow(0) {}
 
-    PRBool AppendFrame(nsIFrame* aFrame);
+    bool AppendFrame(nsIFrame* aFrame);
     
     void FinishBuildingCursor() {
       mFrames.Compact();
@@ -362,7 +362,7 @@ protected:
   nsTableRowGroupFrame(nsStyleContext* aContext);
 
   void InitChildReflowState(nsPresContext&     aPresContext, 
-                            PRBool             aBorderCollapse,
+                            bool               aBorderCollapse,
                             nsHTMLReflowState& aReflowState);
   
   /** implement abstract method on nsHTMLContainerFrame */
@@ -396,7 +396,7 @@ protected:
                           nsHTMLReflowMetrics&   aDesiredSize,
                           nsRowGroupReflowState& aReflowState,
                           nsReflowStatus&        aStatus,
-                          PRBool*                aPageBreakBeforeEnd = nsnull);
+                          bool*                aPageBreakBeforeEnd = nsnull);
 
   nsresult SplitRowGroup(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
@@ -409,7 +409,7 @@ protected:
                           nsTableFrame&            aTableFrame,
                           nsTableRowFrame&         aFirstRow, 
                           nsTableRowFrame&         aLastRow,  
-                          PRBool                   aFirstRowIsTopOfPage,
+                          bool                     aFirstRowIsTopOfPage,
                           nscoord                  aSpanningRowBottom,
                           nsTableRowFrame*&        aContRowFrame,
                           nsTableRowFrame*&        aFirstTruncatedRow,
@@ -419,7 +419,7 @@ protected:
                                 nsIFrame&      aRowFrame,
                                 nsIFrame**     aContRowFrame);
 
-  PRBool IsSimpleRowFrame(nsTableFrame* aTableFrame, 
+  bool IsSimpleRowFrame(nsTableFrame* aTableFrame, 
                           nsIFrame*     aFrame);
 
   void GetNextRowSibling(nsIFrame** aRowFrame);
@@ -434,21 +434,21 @@ private:
   BCPixelSize mLeftContBorderWidth;
 
 public:
-  PRBool IsRepeatable() const;
-  void   SetRepeatable(PRBool aRepeatable);
-  PRBool HasStyleHeight() const;
-  void   SetHasStyleHeight(PRBool aValue);
-  PRBool HasInternalBreakBefore() const;
-  PRBool HasInternalBreakAfter() const;
+  bool IsRepeatable() const;
+  void   SetRepeatable(bool aRepeatable);
+  bool HasStyleHeight() const;
+  void   SetHasStyleHeight(bool aValue);
+  bool HasInternalBreakBefore() const;
+  bool HasInternalBreakAfter() const;
 };
 
 
-inline PRBool nsTableRowGroupFrame::IsRepeatable() const
+inline bool nsTableRowGroupFrame::IsRepeatable() const
 {
   return (mState & NS_ROWGROUP_REPEATABLE) == NS_ROWGROUP_REPEATABLE;
 }
 
-inline void nsTableRowGroupFrame::SetRepeatable(PRBool aRepeatable)
+inline void nsTableRowGroupFrame::SetRepeatable(bool aRepeatable)
 {
   if (aRepeatable) {
     mState |= NS_ROWGROUP_REPEATABLE;
@@ -457,12 +457,12 @@ inline void nsTableRowGroupFrame::SetRepeatable(PRBool aRepeatable)
   }
 }
 
-inline PRBool nsTableRowGroupFrame::HasStyleHeight() const
+inline bool nsTableRowGroupFrame::HasStyleHeight() const
 {
   return (mState & NS_ROWGROUP_HAS_STYLE_HEIGHT) == NS_ROWGROUP_HAS_STYLE_HEIGHT;
 }
 
-inline void nsTableRowGroupFrame::SetHasStyleHeight(PRBool aValue)
+inline void nsTableRowGroupFrame::SetHasStyleHeight(bool aValue)
 {
   if (aValue) {
     mState |= NS_ROWGROUP_HAS_STYLE_HEIGHT;

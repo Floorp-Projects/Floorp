@@ -121,7 +121,7 @@ nsProcess::Init(nsIFile* executable)
         return NS_ERROR_ALREADY_INITIALIZED;
 
     NS_ENSURE_ARG_POINTER(executable);
-    PRBool isFile;
+    bool isFile;
 
     //First make sure the file exists
     nsresult rv = executable->IsFile(&isFile);
@@ -348,7 +348,7 @@ void nsProcess::ProcessComplete()
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
+nsProcess::Run(bool blocking, const char **args, PRUint32 count)
 {
     return CopyArgsAndRunProcess(blocking, args, count, nsnull, PR_FALSE);
 }
@@ -356,15 +356,15 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count)
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
 nsProcess::RunAsync(const char **args, PRUint32 count,
-                    nsIObserver* observer, PRBool holdWeak)
+                    nsIObserver* observer, bool holdWeak)
 {
     return CopyArgsAndRunProcess(PR_FALSE, args, count, observer, holdWeak);
 }
 
 nsresult
-nsProcess::CopyArgsAndRunProcess(PRBool blocking, const char** args,
+nsProcess::CopyArgsAndRunProcess(bool blocking, const char** args,
                                  PRUint32 count, nsIObserver* observer,
-                                 PRBool holdWeak)
+                                 bool holdWeak)
 {
     // Add one to the count for the program name and one for NULL termination.
     char **my_argv = NULL;
@@ -390,7 +390,7 @@ nsProcess::CopyArgsAndRunProcess(PRBool blocking, const char** args,
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Runw(PRBool blocking, const PRUnichar **args, PRUint32 count)
+nsProcess::Runw(bool blocking, const PRUnichar **args, PRUint32 count)
 {
     return CopyArgsAndRunProcessw(blocking, args, count, nsnull, PR_FALSE);
 }
@@ -398,15 +398,15 @@ nsProcess::Runw(PRBool blocking, const PRUnichar **args, PRUint32 count)
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
 nsProcess::RunwAsync(const PRUnichar **args, PRUint32 count,
-                    nsIObserver* observer, PRBool holdWeak)
+                    nsIObserver* observer, bool holdWeak)
 {
     return CopyArgsAndRunProcessw(PR_FALSE, args, count, observer, holdWeak);
 }
 
 nsresult
-nsProcess::CopyArgsAndRunProcessw(PRBool blocking, const PRUnichar** args,
+nsProcess::CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
                                   PRUint32 count, nsIObserver* observer,
-                                  PRBool holdWeak)
+                                  bool holdWeak)
 {
     // Add one to the count for the program name and one for NULL termination.
     char **my_argv = NULL;
@@ -433,8 +433,8 @@ nsProcess::CopyArgsAndRunProcessw(PRBool blocking, const PRUnichar** args,
 }
 
 nsresult  
-nsProcess::RunProcess(PRBool blocking, char **my_argv, nsIObserver* observer,
-                      PRBool holdWeak, PRBool argsUTF8)
+nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
+                      bool holdWeak, bool argsUTF8)
 {
     NS_ENSURE_TRUE(mExecutable, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_FALSE(mThread, NS_ERROR_ALREADY_INITIALIZED);
@@ -567,7 +567,7 @@ nsProcess::RunProcess(PRBool blocking, char **my_argv, nsIObserver* observer,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsProcess::GetIsRunning(PRBool *aIsRunning)
+NS_IMETHODIMP nsProcess::GetIsRunning(bool *aIsRunning)
 {
     if (mThread)
         *aIsRunning = PR_TRUE;

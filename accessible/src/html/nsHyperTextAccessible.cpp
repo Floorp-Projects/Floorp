@@ -287,7 +287,7 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
   PRInt32 startOffset = aStartOffset;
   PRInt32 endOffset = aEndOffset;
   // XXX this prevents text interface usage on <input type="password">
-  PRBool isPassword = (Role() == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
+  bool isPassword = (Role() == nsIAccessibleRole::ROLE_PASSWORD_TEXT);
 
   // Clear out parameters and set up loop
   if (aText) {
@@ -552,7 +552,7 @@ nsAccessible*
 nsHyperTextAccessible::DOMPointToHypertextOffset(nsINode *aNode,
                                                  PRInt32 aNodeOffset,
                                                  PRInt32 *aHyperTextOffset,
-                                                 PRBool aIsEndOffset)
+                                                 bool aIsEndOffset)
 {
   if (!aHyperTextOffset)
     return nsnull;
@@ -721,7 +721,7 @@ nsHyperTextAccessible::HypertextOffsetsToDOMRange(PRInt32 aStartHTOffset,
     nsCOMPtr<nsIEditor> editor;
     GetAssociatedEditor(getter_AddRefs(editor));
     if (editor) {
-      PRBool isEmpty = PR_FALSE;
+      bool isEmpty = false;
       editor->GetDocumentIsEmpty(&isEmpty);
       if (isEmpty) {
         nsCOMPtr<nsIDOMElement> editorRootElm;
@@ -779,12 +779,12 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
                                          nsAccessible *aFromAccessible,
                                          nsSelectionAmount aAmount,
                                          nsDirection aDirection,
-                                         PRBool aNeedsStart)
+                                         bool aNeedsStart)
 {
-  const PRBool kIsJumpLinesOk = PR_TRUE;          // okay to jump lines
-  const PRBool kIsScrollViewAStop = PR_FALSE;     // do not stop at scroll views
-  const PRBool kIsKeyboardSelect = PR_TRUE;       // is keyboard selection
-  const PRBool kIsVisualBidi = PR_FALSE;          // use visual order for bidi text
+  const bool kIsJumpLinesOk = true;          // okay to jump lines
+  const bool kIsScrollViewAStop = false;     // do not stop at scroll views
+  const bool kIsKeyboardSelect = true;       // is keyboard selection
+  const bool kIsVisualBidi = false;          // use visual order for bidi text
 
   EWordMovementType wordMovementType = aNeedsStart ? eStartWord : eEndWord;
   if (aAmount == eSelectLine) {
@@ -928,7 +928,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   }
 
   nsSelectionAmount amount;
-  PRBool needsStart = PR_FALSE;
+  bool needsStart = false;
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
       amount = eSelectCluster;
@@ -1108,7 +1108,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetTextAfterOffset(PRInt32 aOffset, nsAcces
 //                                      out long rangeStartOffset,
 //                                      out long rangeEndOffset);
 NS_IMETHODIMP
-nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
+nsHyperTextAccessible::GetTextAttributes(bool aIncludeDefAttrs,
                                          PRInt32 aOffset,
                                          PRInt32 *aStartOffset,
                                          PRInt32 *aEndOffset,
@@ -1805,7 +1805,7 @@ nsHyperTextAccessible::GetSelections(PRInt16 aType,
     // Remove collapsed ranges
     PRInt32 numRanges = aRanges->Count();
     for (PRInt32 count = 0; count < numRanges; count ++) {
-      PRBool isCollapsed;
+      bool isCollapsed;
       (*aRanges)[count]->GetCollapsed(&isCollapsed);
       if (isCollapsed) {
         aRanges->RemoveObjectAt(count);
@@ -1904,7 +1904,7 @@ nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Caret is a collapsed selection
-  PRBool isOnlyCaret = (aStartOffset == aEndOffset);
+  bool isOnlyCaret = (aStartOffset == aEndOffset);
 
   PRInt32 rangeCount;
   domSel->GetRangeCount(&rangeCount);
@@ -2028,7 +2028,7 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
 
   nsPresContext *presContext = frame->PresContext();
 
-  PRBool initialScrolled = PR_FALSE;
+  bool initialScrolled = false;
   nsIFrame *parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent())) {
     nsIScrollableFrame *scrollableFrame = do_QueryFrame(parentFrame);
@@ -2083,7 +2083,7 @@ nsHyperTextAccessible::InvalidateChildren()
   nsAccessibleWrap::InvalidateChildren();
 }
 
-PRBool
+bool
 nsHyperTextAccessible::RemoveChild(nsAccessible* aAccessible)
 {
   PRInt32 childIndex = aAccessible->IndexInParent();
@@ -2179,7 +2179,7 @@ nsHyperTextAccessible::GetCharAt(PRInt32 aOffset, EGetTextType aShift,
 
 PRInt32
 nsHyperTextAccessible::GetChildOffset(PRUint32 aChildIndex,
-                                      PRBool aInvalidateAfter)
+                                      bool aInvalidateAfter)
 {
   if (aChildIndex == 0) {
     if (aInvalidateAfter)
@@ -2307,8 +2307,8 @@ nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,
 // nsHyperTextAccessible
 nsresult
 nsHyperTextAccessible::DOMRangeBoundToHypertextOffset(nsIDOMRange *aRange,
-                                                      PRBool aIsStartBound,
-                                                      PRBool aIsStartHTOffset,
+                                                      bool aIsStartBound,
+                                                      bool aIsStartHTOffset,
                                                       PRInt32 *aHTOffset)
 {
   nsCOMPtr<nsIDOMNode> DOMNode;

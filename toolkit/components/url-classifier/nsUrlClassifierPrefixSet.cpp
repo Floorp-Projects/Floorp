@@ -196,7 +196,7 @@ PRUint32 nsUrlClassifierPrefixSet::BinSearch(PRUint32 start,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, PRBool * aFound)
+nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool * aFound)
 {
   *aFound = PR_FALSE;
 
@@ -246,7 +246,7 @@ NS_IMETHODIMP
 nsUrlClassifierPrefixSet::EstimateSize(PRUint32 * aSize)
 {
   MutexAutoLock lock(mPrefixSetLock);
-  *aSize = sizeof(PRBool);
+  *aSize = sizeof(bool);
   if (mHasPrefixes) {
     *aSize += sizeof(PRUint16) * mDeltas.Length();
     *aSize += sizeof(PRUint32) * mIndexPrefixes.Length();
@@ -256,7 +256,7 @@ nsUrlClassifierPrefixSet::EstimateSize(PRUint32 * aSize)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierPrefixSet::IsEmpty(PRBool * aEmpty)
+nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 {
   MutexAutoLock lock(mPrefixSetLock);
   *aEmpty = !mHasPrefixes;
@@ -273,7 +273,7 @@ nsUrlClassifierPrefixSet::GetKey(PRUint32 * aKey)
 
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Probe(PRUint32 aPrefix, PRUint32 aKey,
-                                PRBool* aReady, PRBool* aFound)
+                                bool* aReady, bool* aFound)
 {
   MutexAutoLock lock(mPrefixSetLock);
 

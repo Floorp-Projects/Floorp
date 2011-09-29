@@ -100,7 +100,7 @@ nsSafariProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup,
 {
   nsresult rv = NS_OK;
 
-  PRBool replace = PR_FALSE;
+  bool replace = false;
 
   if (aStartup) {
     replace = PR_TRUE;
@@ -124,7 +124,7 @@ nsSafariProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup,
 
 NS_IMETHODIMP
 nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
-                                        PRBool aReplace,
+                                        bool aReplace,
                                         PRUint16* aResult)
 {
   *aResult = 0;
@@ -167,7 +167,7 @@ nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
 
   // Don't offer to import the Safari user style sheet if the active profile
   // already has a content style sheet (userContent.css)
-  PRBool hasContentStylesheet = PR_FALSE;
+  bool hasContentStylesheet = false;
   if (NS_SUCCEEDED(ProfileHasContentStyleSheet(&hasContentStylesheet)) &&
       !hasContentStylesheet) {
     nsCOMPtr<nsILocalFile> safariUserStylesheetFile;
@@ -183,7 +183,7 @@ nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
 }
 
 NS_IMETHODIMP
-nsSafariProfileMigrator::GetSourceExists(PRBool* aResult)
+nsSafariProfileMigrator::GetSourceExists(bool* aResult)
 {
   PRUint16 data;
   GetMigrateData(nsnull, PR_FALSE, &data);
@@ -194,7 +194,7 @@ nsSafariProfileMigrator::GetSourceExists(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsSafariProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
+nsSafariProfileMigrator::GetSourceHasMultipleProfiles(bool* aResult)
 {
   // Safari only has one profile per-user.
   *aResult = PR_FALSE;
@@ -213,7 +213,7 @@ nsSafariProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 
 CFPropertyListRef CopyPListFromFile(nsILocalFile* aPListFile)
 {
-  PRBool exists;
+  bool exists;
   aPListFile->Exists(&exists);
   if (!exists)
     return nsnull;
@@ -285,7 +285,7 @@ FreeNullTerminatedString(char* aString)
   aString = nsnull;
 }
 
-PRBool
+bool
 GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
                          nsAString& aResult)
 {
@@ -302,7 +302,7 @@ GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
   return PR_FALSE;
 }
 
-PRBool
+bool
 GetDictionaryCStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
                           nsACString& aResult, CFStringEncoding aEncoding)
 {
@@ -320,7 +320,7 @@ GetDictionaryCStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
   return PR_FALSE;
 }
 
-PRBool
+bool
 GetArrayStringValue(CFArrayRef aArray, PRInt32 aIndex, nsAString& aResult)
 {
   CFStringRef value = (CFStringRef)::CFArrayGetValueAtIndex(aArray, aIndex);
@@ -492,7 +492,7 @@ nsSafariProfileMigrator::SetDownloadFolder(void* aTransform, nsIPrefBranch* aBra
   fileLocator->Get(NS_OSX_USER_DESKTOP_DIR, NS_GET_IID(nsILocalFile),
                    getter_AddRefs(desktopFolder));
 
-  PRBool equals;
+  bool equals;
   downloadFolder->Equals(desktopFolder, &equals);
   aBranch->SetIntPref("browser.download.folderList", equals ? 0 : 2);
   aBranch->SetComplexValue("browser.download.dir",
@@ -582,7 +582,7 @@ nsSafariProfileMigrator::CleanResource(nsIRDFDataSource* aDataSource,
     return;
 
   do {
-    PRBool hasMore;
+    bool hasMore;
     arcLabels->HasMoreElements(&hasMore);
 
     if (!hasMore)
@@ -663,7 +663,7 @@ nsSafariProfileMigrator::SetFontSize(void* aTransform, nsIPrefBranch* aBranch)
 }
 
 nsresult
-nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
+nsSafariProfileMigrator::CopyPreferences(bool aReplace)
 {
   nsCOMPtr<nsIPrefBranch> branch(do_GetService(NS_PREFSERVICE_CONTRACTID));
 
@@ -762,7 +762,7 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 }
 
 nsresult
-nsSafariProfileMigrator::CopyCookies(PRBool aReplace)
+nsSafariProfileMigrator::CopyCookies(bool aReplace)
 {
   nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsILocalFile> safariCookiesFile;
@@ -838,7 +838,7 @@ nsSafariProfileMigrator::RunBatched(nsISupports* aUserData)
 }
 
 nsresult
-nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
+nsSafariProfileMigrator::CopyHistory(bool aReplace)
 {
   nsresult rv;
   nsCOMPtr<nsINavHistoryService> history =
@@ -860,7 +860,7 @@ nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
 }
  
 nsresult
-nsSafariProfileMigrator::CopyHistoryBatched(PRBool aReplace)
+nsSafariProfileMigrator::CopyHistoryBatched(bool aReplace)
 {
   nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsILocalFile> safariHistoryFile;
@@ -916,7 +916,7 @@ nsSafariProfileMigrator::CopyHistoryBatched(PRBool aReplace)
 }
 
 nsresult
-nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
+nsSafariProfileMigrator::CopyBookmarks(bool aReplace)
 {
   nsresult rv;
   nsCOMPtr<nsINavBookmarksService> bookmarks =
@@ -938,7 +938,7 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
 }
 
 nsresult
-nsSafariProfileMigrator::CopyBookmarksBatched(PRBool aReplace)
+nsSafariProfileMigrator::CopyBookmarksBatched(bool aReplace)
 {
   // If "aReplace" is true, merge into the root level of bookmarks. Otherwise, create
   // a folder called "Imported Safari Favorites" and place all the Bookmarks there.
@@ -1028,7 +1028,7 @@ nsresult
 nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
                                               PRInt64 aParentFolder,
                                               nsINavBookmarksService * aBookmarksService,
-                                              PRBool aIsAtRootLevel)
+                                              bool aIsAtRootLevel)
 {
   nsresult rv = NS_OK;
 
@@ -1110,10 +1110,10 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
 // if we add support for "~/Library/Safari/Form Values",
 // keep in sync with CopyFormData()
 // see bug #344284
-PRBool
+bool
 nsSafariProfileMigrator::HasFormDataToImport()
 {
-  PRBool hasFormData = PR_FALSE;
+  bool hasFormData = false;
 
   // Safari stores this data in an array under the "RecentSearchStrings" key
   // in its Preferences file.
@@ -1131,7 +1131,7 @@ nsSafariProfileMigrator::HasFormDataToImport()
 // keep in sync with HasFormDataToImport()
 // see bug #344284
 nsresult
-nsSafariProfileMigrator::CopyFormData(PRBool aReplace)
+nsSafariProfileMigrator::CopyFormData(bool aReplace)
 {
   nsresult rv = NS_ERROR_FAILURE;
   CFDictionaryRef safariPrefs = CopySafariPrefs();
@@ -1169,7 +1169,7 @@ nsSafariProfileMigrator::CopyFormData(PRBool aReplace)
 // Returns whether or not the active profile has a content style sheet
 // (That is chrome/userContent.css)
 nsresult
-nsSafariProfileMigrator::ProfileHasContentStyleSheet(PRBool *outExists)
+nsSafariProfileMigrator::ProfileHasContentStyleSheet(bool *outExists)
 {
   NS_ENSURE_ARG(outExists);
 
@@ -1219,7 +1219,7 @@ nsSafariProfileMigrator::GetSafariUserStyleSheet(nsILocalFile** aResult)
         nsCOMPtr<nsILocalFile> file;
         rv = NS_NewLocalFile(path, PR_FALSE, getter_AddRefs(file));
         if (NS_SUCCEEDED(rv)) {
-          PRBool exists = PR_FALSE;
+          bool exists = false;
           file->Exists(&exists);
           if (exists) {
             NS_ADDREF(*aResult = file);
@@ -1237,7 +1237,7 @@ nsSafariProfileMigrator::GetSafariUserStyleSheet(nsILocalFile** aResult)
 }
 
 nsresult
-nsSafariProfileMigrator::CopyOtherData(PRBool aReplace)
+nsSafariProfileMigrator::CopyOtherData(bool aReplace)
 {
   // Get the Safari user style sheet and copy it into the active profile's
   // chrome folder
@@ -1261,7 +1261,7 @@ nsSafariProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
   // Let's first check if there's a home page key in the com.apple.safari file...
   CFDictionaryRef safariPrefs = CopySafariPrefs();
   if (safariPrefs) {
-    PRBool foundPref = GetDictionaryCStringValue(safariPrefs,
+    bool foundPref = GetDictionaryCStringValue(safariPrefs,
                                                  CFSTR(SAFARI_HOME_PAGE_PREF),
                                                  aResult, kCFStringEncodingUTF8);
     ::CFRelease(safariPrefs);

@@ -162,7 +162,7 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aReques
 }
 
 nsMargin
-nsGridRowLayout::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
+nsGridRowLayout::GetTotalMargin(nsIBox* aBox, bool aIsHorizontal)
 {
   // get our parents margin
   nsMargin margin(0,0,0,0);

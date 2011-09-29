@@ -262,7 +262,7 @@ ARENA_POISON_init()
 #ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> cr =
     do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  PRBool enabled;
+  bool enabled;
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
     cr->AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
                             nsPrintfCString(17, "%.16llx", PRUint64(rgnbase)));
@@ -294,7 +294,7 @@ protected:
   FreeList(KeyTypePointer aKey) : mEntrySize(0), mKey(aKey) {}
   // Default copy constructor and destructor are ok.
 
-  PRBool KeyEquals(KeyTypePointer const aKey) const
+  bool KeyEquals(KeyTypePointer const aKey) const
   { return mKey == aKey; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey)

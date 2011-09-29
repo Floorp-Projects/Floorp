@@ -161,7 +161,7 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFrameElement);
   NS_ENSURE_TRUE(target, true);
 
-  PRBool dummy;
+  bool dummy;
   target->DispatchEvent(event, &dummy);
   return true;
 }
@@ -283,7 +283,7 @@ TabParent::DeallocPContentPermissionRequest(PContentPermissionRequestParent* act
 void
 TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
                           PRInt32 aButton, PRInt32 aClickCount,
-                          PRInt32 aModifiers, PRBool aIgnoreRootScrollFrame)
+                          PRInt32 aModifiers, bool aIgnoreRootScrollFrame)
 {
   unused << PBrowserParent::SendMouseEvent(nsString(aType), aX, aY,
                                            aButton, aClickCount,
@@ -295,7 +295,7 @@ TabParent::SendKeyEvent(const nsAString& aType,
                         PRInt32 aKeyCode,
                         PRInt32 aCharCode,
                         PRInt32 aModifiers,
-                        PRBool aPreventDefault)
+                        bool aPreventDefault)
 {
   unused << PBrowserParent::SendKeyEvent(nsString(aType), aKeyCode, aCharCode,
                                          aModifiers, aPreventDefault);
@@ -342,7 +342,7 @@ TabParent::RecvSetCursor(const PRUint32& aCursor)
 }
 
 bool
-TabParent::RecvNotifyIMEFocus(const PRBool& aFocus,
+TabParent::RecvNotifyIMEFocus(const bool& aFocus,
                               nsIMEUpdatePreference* aPreference,
                               PRUint32* aSeqno)
 {
@@ -522,7 +522,7 @@ TabParent::SendSelectionEvent(nsSelectionEvent& event)
 }
 
 bool
-TabParent::RecvEndIMEComposition(const PRBool& aCancel,
+TabParent::RecvEndIMEComposition(const bool& aCancel,
                                  nsString* aComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -587,7 +587,7 @@ TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const
 }
 
 bool
-TabParent::RecvGetIMEOpenState(PRBool* aValue)
+TabParent::RecvGetIMEOpenState(bool* aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget)
@@ -596,7 +596,7 @@ TabParent::RecvGetIMEOpenState(PRBool* aValue)
 }
 
 bool
-TabParent::RecvSetIMEOpenState(const PRBool& aValue)
+TabParent::RecvSetIMEOpenState(const bool& aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget && AllowContentIME())
@@ -638,7 +638,7 @@ TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
 
 bool
 TabParent::ReceiveMessage(const nsString& aMessage,
-                          PRBool aSync,
+                          bool aSync,
                           const nsString& aJSON,
                           InfallibleTArray<nsString>* aJSONRetVal)
 {
@@ -807,17 +807,17 @@ TabParent::DeallocPOfflineCacheUpdate(mozilla::docshell::POfflineCacheUpdatePare
   return true;
 }
 
-PRBool
+bool
 TabParent::ShouldDelayDialogs()
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE(frameLoader, PR_TRUE);
-  PRBool delay = PR_FALSE;
+  bool delay = false;
   frameLoader->GetDelayRemoteDialogs(&delay);
   return delay;
 }
 
-PRBool
+bool
 TabParent::AllowContentIME()
 {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();

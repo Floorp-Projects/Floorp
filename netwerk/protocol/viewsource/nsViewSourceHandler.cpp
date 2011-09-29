@@ -143,7 +143,7 @@ nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsViewSourceHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsViewSourceHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;

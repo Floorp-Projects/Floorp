@@ -59,7 +59,7 @@ public:
   nsSampleWordBreaker() ;
   virtual ~nsSampleWordBreaker() ;
 
-  PRBool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
+  bool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                         const PRUnichar* aText2 , PRUint32 aTextLen2);
   nsWordRange FindWord(const PRUnichar* aText1 , PRUint32 aTextLen1,
                        PRUint32 aOffset);

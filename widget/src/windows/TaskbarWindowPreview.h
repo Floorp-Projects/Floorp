@@ -72,7 +72,7 @@ public:
 
   virtual LRESULT WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 private:
-  virtual nsresult ShowActive(PRBool active);
+  virtual nsresult ShowActive(bool active);
   virtual HWND &PreviewWindow();
 
   virtual nsresult UpdateTaskbarProperties();
@@ -83,9 +83,9 @@ private:
   nsresult UpdateButtons();
 
   // Is custom drawing enabled?
-  PRBool                  mCustomDrawing;
+  bool                    mCustomDrawing;
   // Have we made any buttons?
-  PRBool                  mHaveButtons;
+  bool                    mHaveButtons;
   // Windows button format
   THUMBBUTTON             mThumbButtons[nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS];
   // Pointers to our button class (cached instances)
@@ -105,7 +105,7 @@ private:
   nsString                mIconDescription;
 
   // WindowHook procedure for hooking mWnd for taskbar progress and icon stuff
-  static PRBool TaskbarWindowHook(void *aContext,
+  static bool TaskbarWindowHook(void *aContext,
                                   HWND hWnd, UINT nMsg,
                                   WPARAM wParam, LPARAM lParam,
                                   LRESULT *aResult);

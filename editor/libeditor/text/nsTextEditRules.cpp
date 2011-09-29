@@ -157,7 +157,7 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
   }
 
   mDeleteBidiImmediately =
-    Preferences::GetBool("bidi.edit.delete_immediately", PR_FALSE);
+    Preferences::GetBool("bidi.edit.delete_immediately", false);
 
   return res;
 }
@@ -241,8 +241,8 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 NS_IMETHODIMP 
 nsTextEditRules::WillDoAction(nsISelection *aSelection, 
                               nsRulesInfo *aInfo, 
-                              PRBool *aCancel, 
-                              PRBool *aHandled)
+                              bool *aCancel, 
+                              bool *aHandled)
 {
   // null selection is legal
   if (!aInfo || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -331,7 +331,7 @@ nsTextEditRules::DidDoAction(nsISelection *aSelection,
 
 
 NS_IMETHODIMP
-nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
+nsTextEditRules::DocumentIsEmpty(bool *aDocumentIsEmpty)
 {
   NS_ENSURE_TRUE(aDocumentIsEmpty, NS_ERROR_NULL_POINTER);
   
@@ -345,7 +345,7 @@ nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
 
 
 nsresult
-nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
 {
   NS_ENSURE_TRUE(aSelection && aCancel, NS_ERROR_NULL_POINTER);
   
@@ -372,8 +372,8 @@ nsTextEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
 
 nsresult
 nsTextEditRules::WillInsertBreak(nsISelection *aSelection,
-                                 PRBool *aCancel,
-                                 PRBool *aHandled,
+                                 bool *aCancel,
+                                 bool *aHandled,
                                  PRInt32 aMaxLength)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -388,7 +388,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection,
     // NOTE, this function copies inString into outString for us.
     NS_NAMED_LITERAL_STRING(inString, "\n");
     nsAutoString outString;
-    PRBool didTruncate;
+    bool didTruncate;
     nsresult res = TruncateInsertionIfNeeded(aSelection, &inString, &outString,
                                              aMaxLength, &didTruncate);
     NS_ENSURE_SUCCESS(res, res);
@@ -400,7 +400,7 @@ nsTextEditRules::WillInsertBreak(nsISelection *aSelection,
     *aCancel = PR_FALSE;
 
     // if the selection isn't collapsed, delete it.
-    PRBool bCollapsed;
+    bool bCollapsed;
     res = aSelection->GetIsCollapsed(&bCollapsed);
     NS_ENSURE_SUCCESS(res, res);
     if (!bCollapsed)
@@ -580,8 +580,8 @@ nsTextEditRules::HandleNewLines(nsString &aString,
 nsresult
 nsTextEditRules::WillInsertText(PRInt32          aAction,
                                 nsISelection *aSelection, 
-                                PRBool          *aCancel,
-                                PRBool          *aHandled,
+                                bool            *aCancel,
+                                bool            *aHandled,
                                 const nsAString *inString,
                                 nsAString *outString,
                                 PRInt32          aMaxLength)
@@ -606,7 +606,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
   // handle docs with a max length
   // NOTE, this function copies inString into outString for us.
-  PRBool truncated = PR_FALSE;
+  bool truncated = false;
   nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString,
                                            aMaxLength, &truncated);
   NS_ENSURE_SUCCESS(res, res);
@@ -629,7 +629,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   }
 
   // if the selection isn't collapsed, delete it.
-  PRBool bCollapsed;
+  bool bCollapsed;
   res = aSelection->GetIsCollapsed(&bCollapsed);
   NS_ENSURE_SUCCESS(res, res);
   if (!bCollapsed)
@@ -739,7 +739,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     {
       // Make the caret attach to the inserted text, unless this text ends with a LF, 
       // in which case make the caret attach to the next line.
-      PRBool endsWithLF =
+      bool endsWithLF =
         !outString->IsEmpty() && outString->Last() == nsCRT::LF;
       nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
       selPrivate->SetInterlinePosition(endsWithLF);
@@ -761,7 +761,7 @@ nsTextEditRules::DidInsertText(nsISelection *aSelection,
 
 
 nsresult
-nsTextEditRules::WillSetTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillSetTextProperty(nsISelection *aSelection, bool *aCancel, bool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) 
     { return NS_ERROR_NULL_POINTER; }
@@ -780,7 +780,7 @@ nsTextEditRules::DidSetTextProperty(nsISelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillRemoveTextProperty(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillRemoveTextProperty(nsISelection *aSelection, bool *aCancel, bool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) 
     { return NS_ERROR_NULL_POINTER; }
@@ -801,8 +801,8 @@ nsTextEditRules::DidRemoveTextProperty(nsISelection *aSelection, nsresult aResul
 nsresult
 nsTextEditRules::WillDeleteSelection(nsISelection *aSelection, 
                                      nsIEditor::EDirection aCollapsedAction, 
-                                     PRBool *aCancel,
-                                     PRBool *aHandled)
+                                     bool *aCancel,
+                                     bool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -861,7 +861,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
     
-    PRBool bCollapsed;
+    bool bCollapsed;
     res = aSelection->GetIsCollapsed(&bCollapsed);
     NS_ENSURE_SUCCESS(res, res);
   
@@ -922,7 +922,7 @@ nsTextEditRules::DidDeleteSelection(nsISelection *aSelection,
 }
 
 nsresult
-nsTextEditRules::WillUndo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillUndo(nsISelection *aSelection, bool *aCancel, bool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -960,7 +960,7 @@ nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillRedo(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
+nsTextEditRules::WillRedo(nsISelection *aSelection, bool *aCancel, bool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -1010,8 +1010,8 @@ nsresult
 nsTextEditRules::WillOutputText(nsISelection *aSelection, 
                                 const nsAString  *aOutputFormat,
                                 nsAString *aOutString,                                
-                                PRBool   *aCancel,
-                                PRBool   *aHandled)
+                                bool     *aCancel,
+                                bool     *aHandled)
 {
   // null selection ok
   if (!aOutString || !aOutputFormat || !aCancel || !aHandled) 
@@ -1060,7 +1060,7 @@ nsTextEditRules::RemoveRedundantTrailingBR()
   if (!body)
     return NS_ERROR_NULL_POINTER;
 
-  PRBool hasChildren;
+  bool hasChildren;
   nsresult res = body->HasChildNodes(&hasChildren);
   NS_ENSURE_SUCCESS(res, res);
 
@@ -1153,7 +1153,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   // now we've got the body tag.
   // iterate the body tag, looking for editable content
   // if no editable content is found, insert the bogus node
-  PRBool needsBogusContent=PR_TRUE;
+  bool needsBogusContent=true;
   nsCOMPtr<nsIDOMNode> bodyChild;
   nsresult res = body->GetFirstChild(getter_AddRefs(bodyChild));        
   while ((NS_SUCCEEDED(res)) && bodyChild)
@@ -1202,7 +1202,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
                                            const nsAString  *aInString,
                                            nsAString  *aOutString,
                                            PRInt32          aMaxLength,
-                                           PRBool *aTruncated)
+                                           bool *aTruncated)
 {
   if (!aSelection || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
   

@@ -134,7 +134,7 @@ public:
 
   nsIContent* operator*() const { return get(); }
 
-  PRBool operator==(const ChildIterator& aOther) const {
+  bool operator==(const ChildIterator& aOther) const {
     if (XBLInvolved()) {
       return mContent == aOther.mContent && mIndex == aOther.mIndex;
     }
@@ -142,7 +142,7 @@ public:
     return mContent == aOther.mContent && mChild == aOther.mChild;
   }
 
-  PRBool operator!=(const ChildIterator& aOther) const {
+  bool operator!=(const ChildIterator& aOther) const {
     return !aOther.operator==(*this);
   }
 
@@ -172,7 +172,7 @@ public:
     }
   }
 
-  PRBool XBLInvolved() const { return mNodes != nsnull; }
+  bool XBLInvolved() const { return mNodes != nsnull; }
 
   /**
    * Create a pair of ChildIterators for a content node. aFirst will

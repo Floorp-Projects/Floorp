@@ -95,7 +95,7 @@ nsJARURI::Init(const char *charsetHint)
 // beginning) and gives us a full JAR spec.
 nsresult
 nsJARURI::FormatSpec(const nsACString &entrySpec, nsACString &result,
-                     PRBool aIncludeScheme)
+                     bool aIncludeScheme)
 {
     // The entrySpec MUST start with "x:///"
     NS_ASSERTION(StringBeginsWith(entrySpec, NS_BOGUS_ENTRY_SCHEME),
@@ -256,7 +256,7 @@ nsJARURI::GetSpecIgnoringRef(nsACString &aSpec)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetHasRef(PRBool *result)
+nsJARURI::GetHasRef(bool *result)
 {
     return mJAREntry->GetHasRef(result);
 }
@@ -470,13 +470,13 @@ nsJARURI::GetOriginCharset(nsACString &aOriginCharset)
 }
 
 NS_IMETHODIMP
-nsJARURI::Equals(nsIURI *other, PRBool *result)
+nsJARURI::Equals(nsIURI *other, bool *result)
 {
     return EqualsInternal(other, eHonorRef, result);
 }
 
 NS_IMETHODIMP
-nsJARURI::EqualsExceptRef(nsIURI *other, PRBool *result)
+nsJARURI::EqualsExceptRef(nsIURI *other, bool *result)
 {
     return EqualsInternal(other, eIgnoreRef, result);
 }
@@ -485,7 +485,7 @@ nsJARURI::EqualsExceptRef(nsIURI *other, PRBool *result)
 /* virtual */ nsresult
 nsJARURI::EqualsInternal(nsIURI *other,
                          nsJARURI::RefHandlingEnum refHandlingMode,
-                         PRBool *result)
+                         bool *result)
 {
     *result = PR_FALSE;
 
@@ -497,7 +497,7 @@ nsJARURI::EqualsInternal(nsIURI *other,
     if (!otherJAR)
         return NS_OK;   // not equal
 
-    PRBool equal;
+    bool equal;
     nsresult rv = mJARFile->Equals(otherJAR->mJARFile, &equal);
     if (NS_FAILED(rv) || !equal) {
         return rv;   // not equal
@@ -509,7 +509,7 @@ nsJARURI::EqualsInternal(nsIURI *other,
 }
 
 NS_IMETHODIMP
-nsJARURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
+nsJARURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
 {
     NS_ENSURE_ARG_POINTER(o_Equals);
     if (!i_Scheme) return NS_ERROR_INVALID_ARG;
@@ -674,7 +674,7 @@ nsJARURI::GetCommonBaseSpec(nsIURI* uriToCompare, nsACString& commonSpec)
     nsresult rv = otherJARURI->GetJARFile(getter_AddRefs(otherJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    PRBool equal;
+    bool equal;
     rv = mJARFile->Equals(otherJARFile, &equal);
     if (NS_FAILED(rv)) return rv;
 
@@ -732,7 +732,7 @@ nsJARURI::GetRelativeSpec(nsIURI* uriToCompare, nsACString& relativeSpec)
     nsresult rv = otherJARURI->GetJARFile(getter_AddRefs(otherJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    PRBool equal;
+    bool equal;
     rv = mJARFile->Equals(otherJARFile, &equal);
     if (NS_FAILED(rv)) return rv;
 

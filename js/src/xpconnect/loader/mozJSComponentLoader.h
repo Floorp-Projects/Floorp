@@ -168,5 +168,5 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsClassHashtable<nsStringHashKey, ModuleEntry> mImports;
     nsDataHashtable<nsStringHashKey, ModuleEntry*> mInProgressImports;
 
-    PRBool mInitialized;
+    bool mInitialized;
 };

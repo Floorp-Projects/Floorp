@@ -64,10 +64,10 @@ public:
   nsresult Init();
 
   // nsISpellChecker
-  NS_IMETHOD SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofDoc);
+  NS_IMETHOD SetDocument(nsITextServicesDocument *aDoc, bool aFromStartofDoc);
   NS_IMETHOD NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSuggestions);
-  NS_IMETHOD CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsTArray<nsString> *aSuggestions);
-  NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, PRBool aAllOccurrences);
+  NS_IMETHOD CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray<nsString> *aSuggestions);
+  NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, bool aAllOccurrences);
   NS_IMETHOD IgnoreAll(const nsAString &aWord);
 
   NS_IMETHOD AddWordToPersonalDictionary(const nsAString &aWord);
@@ -85,7 +85,7 @@ protected:
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
 
   nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
-  PRBool mFromStart;
+  bool mFromStart;
 
   nsresult SetupDoc(PRInt32 *outBlockOffset);
 

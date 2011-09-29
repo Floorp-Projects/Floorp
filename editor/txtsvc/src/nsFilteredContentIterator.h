@@ -70,11 +70,11 @@ public:
   virtual void Next();
   virtual void Prev();
   virtual nsINode *GetCurrentNode();
-  virtual PRBool IsDone();
+  virtual bool IsDone();
   virtual nsresult PositionAt(nsINode* aCurNode);
 
   /* Helpers */
-  PRPackedBool DidSkip()      { return mDidSkip; }
+  bool DidSkip()      { return mDidSkip; }
   void         ClearDidSkip() {  mDidSkip = PR_FALSE; }
 
 protected:
@@ -83,8 +83,8 @@ protected:
   // enum to give us the direction
   typedef enum {eDirNotSet, eForward, eBackward} eDirectionType;
   nsresult AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode, eDirectionType aDir);
-  void CheckAdvNode(nsIDOMNode* aNode, PRPackedBool& aDidSkip, eDirectionType aDir);
-  nsresult SwitchDirections(PRPackedBool aChangeToForward);
+  void CheckAdvNode(nsIDOMNode* aNode, bool& aDidSkip, eDirectionType aDir);
+  nsresult SwitchDirections(bool aChangeToForward);
 
   nsCOMPtr<nsIContentIterator> mCurrentIterator;
   nsCOMPtr<nsIContentIterator> mIterator;
@@ -98,8 +98,8 @@ protected:
 
   nsCOMPtr<nsITextServicesFilter> mFilter;
   nsCOMPtr<nsIDOMNSRange>         mRange;
-  PRPackedBool                    mDidSkip;
-  PRPackedBool                    mIsOutOfRange;
+  bool                            mDidSkip;
+  bool                            mIsOutOfRange;
   eDirectionType                  mDirection;
 };
 

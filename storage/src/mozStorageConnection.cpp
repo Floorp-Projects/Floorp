@@ -295,7 +295,7 @@ public:
     // This event is first dispatched to the background thread to ensure that
     // all pending asynchronous events are completed, and then back to the
     // calling thread to actually close and notify.
-    PRBool onCallingThread = PR_FALSE;
+    bool onCallingThread = false;
     (void)mCallingThread->IsOnCurrentThread(&onCallingThread);
     if (!onCallingThread) {
       (void)mCallingThread->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -638,7 +638,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
 nsresult
 Connection::databaseElementExists(enum DatabaseElementType aElementType,
                                   const nsACString &aElementName,
-                                  PRBool *_exists)
+                                  bool *_exists)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
@@ -697,7 +697,7 @@ Connection::progressHandler()
 {
   sharedDBMutex.assertCurrentThreadOwns();
   if (mProgressHandler) {
-    PRBool result;
+    bool result;
     nsresult rv = mProgressHandler->OnProgress(this, &result);
     if (NS_FAILED(rv)) return 0; // Don't break request
     return result ? 1 : 0;
@@ -709,7 +709,7 @@ nsresult
 Connection::setClosedState()
 {
   // Ensure that we are on the correct thread to close the database.
-  PRBool onOpenedThread;
+  bool onOpenedThread;
   nsresult rv = threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!onOpenedThread) {
@@ -742,7 +742,7 @@ Connection::internalClose()
   }
 
   { // Ensure that we are being called on the thread we were opened with.
-    PRBool onOpenedThread = PR_FALSE;
+    bool onOpenedThread = false;
     (void)threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
     NS_ASSERTION(onOpenedThread,
                  "Not called on the thread the database was opened on!");
@@ -861,7 +861,7 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
 }
 
 NS_IMETHODIMP
-Connection::Clone(PRBool aReadOnly,
+Connection::Clone(bool aReadOnly,
                   mozIStorageConnection **_connection)
 {
   if (!mDBConn)
@@ -890,7 +890,7 @@ Connection::Clone(PRBool aReadOnly,
 }
 
 NS_IMETHODIMP
-Connection::GetConnectionReady(PRBool *_ready)
+Connection::GetConnectionReady(bool *_ready)
 {
   *_ready = (mDBConn != nsnull);
   return NS_OK;
@@ -949,7 +949,7 @@ Connection::GetSchemaVersion(PRInt32 *_version)
   NS_ENSURE_TRUE(stmt, NS_ERROR_OUT_OF_MEMORY);
 
   *_version = 0;
-  PRBool hasResult;
+  bool hasResult;
   if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult)
     *_version = stmt->AsInt32(0);
 
@@ -1044,20 +1044,20 @@ Connection::ExecuteAsync(mozIStorageBaseStatement **aStatements,
 
 NS_IMETHODIMP
 Connection::TableExists(const nsACString &aTableName,
-                        PRBool *_exists)
+                        bool *_exists)
 {
     return databaseElementExists(TABLE, aTableName, _exists);
 }
 
 NS_IMETHODIMP
 Connection::IndexExists(const nsACString &aIndexName,
-                        PRBool* _exists)
+                        bool* _exists)
 {
     return databaseElementExists(INDEX, aIndexName, _exists);
 }
 
 NS_IMETHODIMP
-Connection::GetTransactionInProgress(PRBool *_inProgress)
+Connection::GetTransactionInProgress(bool *_inProgress)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 

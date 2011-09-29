@@ -901,7 +901,7 @@ static const nsAttrValue::EnumTable kLayoutTable[] = {
 };
 
 
-PRBool
+bool
 nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsIAtom* aAttribute,
                                    const nsAString& aValue,
@@ -1128,7 +1128,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHTMLTableElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
@@ -1258,7 +1258,7 @@ nsHTMLTableElement::BuildInheritedAttributes()
 nsresult
 nsHTMLTableElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers)
+                              bool aCompileEventHandlers)
 {
   ReleaseInheritedAttributes();
   return nsGenericHTMLElement::BindToTree(aDocument, aParent,
@@ -1267,7 +1267,7 @@ nsHTMLTableElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsHTMLTableElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsHTMLTableElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   ReleaseInheritedAttributes();
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -1276,7 +1276,7 @@ nsHTMLTableElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 nsresult
 nsHTMLTableElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue,
-                                  PRBool aNotify)
+                                  bool aNotify)
 {
   if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {
     ReleaseInheritedAttributes();
@@ -1288,7 +1288,7 @@ nsHTMLTableElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 nsresult
 nsHTMLTableElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue,
-                                 PRBool aNotify)
+                                 bool aNotify)
 {
   if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {
     BuildInheritedAttributes();

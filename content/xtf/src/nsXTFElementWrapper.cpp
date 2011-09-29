@@ -98,7 +98,7 @@ nsXTFElementWrapper::Init()
   mXTFElement->OnCreated(static_cast<nsIXTFElementWrapper*>(weakWrapper));
   weakWrapper->Release();
 
-  PRBool innerHandlesAttribs = PR_FALSE;
+  bool innerHandlesAttribs = false;
   GetXTFElement()->GetIsAttributeHandler(&innerHandlesAttribs);
   if (innerHandlesAttribs)
     mAttributeHandler = do_QueryInterface(GetXTFElement());
@@ -167,7 +167,7 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsXTFElementWrapper::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers)
+                                bool aCompileEventHandlers)
 {
   // XXXbz making up random order for the notifications... Perhaps
   // this api should more closely match BindToTree/UnbindFromTree?
@@ -216,18 +216,18 @@ nsXTFElementWrapper::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 }
 
 void
-nsXTFElementWrapper::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsXTFElementWrapper::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // XXXbz making up random order for the notifications... Perhaps
   // this api should more closely match BindToTree/UnbindFromTree?
 
-  PRBool inDoc = IsInDoc();
+  bool inDoc = IsInDoc();
   if (inDoc &&
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT)) {
     GetXTFElement()->WillChangeDocument(nsnull);
   }
 
-  PRBool parentChanged = aNullParent && GetParent();
+  bool parentChanged = aNullParent && GetParent();
 
   if (parentChanged &&
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT)) {
@@ -252,7 +252,7 @@ nsXTFElementWrapper::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
 nsresult
 nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify)
+                                   bool aNotify)
 {
   nsresult rv;
 
@@ -271,7 +271,7 @@ nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsXTFElementWrapper::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+nsXTFElementWrapper::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsresult rv;
   if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD)
@@ -292,7 +292,7 @@ nsXTFElementWrapper::GetIDAttributeName() const
 nsresult
 nsXTFElementWrapper::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
-                             PRBool aNotify)
+                             bool aNotify)
 {
   nsresult rv;
 
@@ -323,7 +323,7 @@ nsXTFElementWrapper::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-PRBool
+bool
 nsXTFElementWrapper::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                              nsAString& aResult) const
 {
@@ -337,11 +337,11 @@ nsXTFElementWrapper::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 }
 
-PRBool
+bool
 nsXTFElementWrapper::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
   if (aNameSpaceID==kNameSpaceID_None && HandledByInner(aName)) {
-    PRBool rval = PR_FALSE;
+    bool rval = false;
     mAttributeHandler->HasAttribute(aName, &rval);
     return rval;
   }
@@ -350,7 +350,7 @@ nsXTFElementWrapper::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
   }
 }
 
-PRBool
+bool
 nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
                                  nsIAtom* aName,
                                  const nsAString& aValue,
@@ -373,7 +373,7 @@ nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
                                               aCaseSensitive);
 }
 
-PRBool
+bool
 nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
                                  nsIAtom* aName,
                                  nsIAtom* aValue,
@@ -438,7 +438,7 @@ nsXTFElementWrapper::FindAttrValueIn(PRInt32 aNameSpaceID,
 
 nsresult
 nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
-                               PRBool aNotify)
+                               bool aNotify)
 {
   nsresult rv;
 
@@ -519,7 +519,7 @@ nsXTFElementWrapper::BeginAddingChildren()
 }
 
 nsresult
-nsXTFElementWrapper::DoneAddingChildren(PRBool aHaveNotified)
+nsXTFElementWrapper::DoneAddingChildren(bool aHaveNotified)
 {
   if (mNotificationMask & nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN)
     GetXTFElement()->DoneAddingChildren();
@@ -558,8 +558,8 @@ nsXTFElementWrapper::IntrinsicState() const
 }
 
 void
-nsXTFElementWrapper::PerformAccesskey(PRBool aKeyCausesActivation,
-                                      PRBool aIsTrustedEvent)
+nsXTFElementWrapper::PerformAccesskey(bool aKeyCausesActivation,
+                                      bool aIsTrustedEvent)
 {
   if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -654,7 +654,7 @@ nsXTFElementWrapper::RemoveAttribute(const nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsXTFElementWrapper::HasAttribute(const nsAString& aName, PRBool* aReturn)
+nsXTFElementWrapper::HasAttribute(const nsAString& aName, bool* aReturn)
 {
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
   if (name) {
@@ -852,7 +852,7 @@ nsXTFElementWrapper::SetNotificationMask(PRUint32 aNotificationMask)
 
 //----------------------------------------------------------------------
 // implementation helpers:
-PRBool
+bool
 nsXTFElementWrapper::QueryInterfaceInner(REFNSIID aIID, void** result)
 {
   // We must ensure that the inner element has a distinct xpconnect
@@ -863,10 +863,10 @@ nsXTFElementWrapper::QueryInterfaceInner(REFNSIID aIID, void** result)
   return (*result!=nsnull);
 }
 
-PRBool
+bool
 nsXTFElementWrapper::HandledByInner(nsIAtom *attr) const
 {
-  PRBool retval = PR_FALSE;
+  bool retval = false;
   if (mAttributeHandler)
     mAttributeHandler->HandlesAttribute(attr, &retval);
   return retval;
@@ -892,7 +892,7 @@ nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (!aVisitor.mDOMEvent)
     return NS_ERROR_FAILURE;
   
-  PRBool defaultHandled = PR_FALSE;
+  bool defaultHandled = false;
   nsIXTFElement* xtfElement = GetXTFElement();
   if (xtfElement)
     rv = xtfElement->HandleDefault(aVisitor.mDOMEvent, &defaultHandled);
@@ -959,7 +959,7 @@ nsXTFElementWrapper::SetClassAttributeName(nsIAtom* aName)
 }
 
 void
-nsXTFElementWrapper::RegUnregAccessKey(PRBool aDoReg)
+nsXTFElementWrapper::RegUnregAccessKey(bool aDoReg)
 {
   nsIDocument* doc = GetCurrentDoc();
   if (!doc)

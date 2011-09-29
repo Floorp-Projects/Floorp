@@ -277,7 +277,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (mCMSMode != eCMSMode_Off &&
         (mInProfile = GetICCProfile(mInfo)) != nsnull) {
       PRUint32 profileSpace = qcms_profile_get_color_space(mInProfile);
-      PRBool mismatch = PR_FALSE;
+      bool mismatch = false;
 
 #ifdef DEBUG_tor
       fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
@@ -451,7 +451,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     {
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::Write -- JPEG_DECOMPRESS_SEQUENTIAL case");
       
-      PRBool suspend;
+      bool suspend;
       OutputScanlines(&suspend);
       
       if (suspend) {
@@ -500,7 +500,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         if (mInfo.output_scanline == 0xffffff)
           mInfo.output_scanline = 0;
 
-        PRBool suspend;
+        bool suspend;
         OutputScanlines(&suspend);
 
         if (suspend) {
@@ -574,7 +574,7 @@ nsJPEGDecoder::NotifyDone()
 }
 
 void
-nsJPEGDecoder::OutputScanlines(PRBool* suspend)
+nsJPEGDecoder::OutputScanlines(bool* suspend)
 {
   *suspend = PR_FALSE;
 

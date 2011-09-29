@@ -129,7 +129,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
   nsresult res = mouseEvent->GetButton(&buttonNumber);
   NS_ENSURE_SUCCESS(res, res);
 
-  PRBool isContextClick = buttonNumber == 2;
+  bool isContextClick = buttonNumber == 2;
 
   PRInt32 clickCount;
   res = mouseEvent->GetDetail(&clickCount);
@@ -159,10 +159,10 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
     NS_ENSURE_SUCCESS(res, res);
 
     // Detect if mouse point is within current selection for context click
-    PRBool nodeIsInSelection = PR_FALSE;
+    bool nodeIsInSelection = false;
     if (isContextClick)
     {
-      PRBool isCollapsed;
+      bool isCollapsed;
       selection->GetIsCollapsed(&isCollapsed);
       if (!isCollapsed)
       {

@@ -360,7 +360,7 @@ ImageContainerOGL::GetCurrentSize()
   return gfxIntSize(0,0);
 }
 
-PRBool
+bool
 ImageContainerOGL::SetLayerManager(LayerManager *aManager)
 {
   if (!aManager) {
@@ -827,7 +827,7 @@ ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
 ShadowImageLayerOGL::~ShadowImageLayerOGL()
 {}
 
-PRBool
+bool
 ShadowImageLayerOGL::Init(const SharedImage& aFront)
 {
   if (aFront.type() == SharedImage::TSurfaceDescriptor) {

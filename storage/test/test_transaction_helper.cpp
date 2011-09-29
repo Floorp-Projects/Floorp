@@ -91,7 +91,7 @@ test_Commit()
     (void)transaction.Commit();
   }
 
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
   do_check_true(exists);
 }
@@ -111,7 +111,7 @@ test_Rollback()
     (void)transaction.Rollback();
   }
 
-  PRBool exists = PR_TRUE;
+  bool exists = true;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
   do_check_false(exists);
 }
@@ -130,7 +130,7 @@ test_AutoCommit()
     ));
   }
 
-  PRBool exists = PR_FALSE;
+  bool exists = false;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
   do_check_true(exists);
 }
@@ -150,7 +150,7 @@ test_AutoRollback()
     ));
   }
 
-  PRBool exists = PR_TRUE;
+  bool exists = true;
   (void)db->TableExists(NS_LITERAL_CSTRING("test"), &exists);
   do_check_false(exists);
 }
@@ -169,7 +169,7 @@ test_SetDefaultAction()
     ));
     transaction.SetDefaultAction(PR_FALSE);
   }
-  PRBool exists = PR_TRUE;
+  bool exists = true;
   (void)db->TableExists(NS_LITERAL_CSTRING("test1"), &exists);
   do_check_false(exists);
 

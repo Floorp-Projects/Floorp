@@ -101,14 +101,14 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
     SetResolvedState(PARTIALLY_RESOLVED);
 }
 
-PRBool 
+bool 
 xptiInterfaceEntry::Resolve()
 {
     MutexAutoLock lock(xptiInterfaceInfoManager::GetResolveLock());
     return ResolveLocked();
 }
 
-PRBool 
+bool 
 xptiInterfaceEntry::ResolveLocked()
 {
     int resolvedState = GetResolveState();
@@ -173,7 +173,7 @@ xptiInterfaceEntry::GetIID(nsIID **iid)
 }
 
 nsresult
-xptiInterfaceEntry::IsScriptable(PRBool* result)
+xptiInterfaceEntry::IsScriptable(bool* result)
 {
     // It is not necessary to Resolve because this info is read from manifest.
     *result = GetScriptableFlag();
@@ -181,7 +181,7 @@ xptiInterfaceEntry::IsScriptable(PRBool* result)
 }
 
 nsresult
-xptiInterfaceEntry::IsFunction(PRBool* result)
+xptiInterfaceEntry::IsFunction(bool* result)
 {
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
@@ -565,9 +565,9 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
     return NS_OK;
 }
 
-/* PRBool isIID (in nsIIDPtr IID); */
+/* bool isIID (in nsIIDPtr IID); */
 nsresult 
-xptiInterfaceEntry::IsIID(const nsIID * IID, PRBool *_retval)
+xptiInterfaceEntry::IsIID(const nsIID * IID, bool *_retval)
 {
     // It is not necessary to Resolve because this info is read from manifest.
     *_retval = mIID.Equals(*IID);
@@ -592,9 +592,9 @@ xptiInterfaceEntry::GetIIDShared(const nsIID * *iid)
     return NS_OK;
 }
 
-/* PRBool hasAncestor (in nsIIDPtr iid); */
+/* bool hasAncestor (in nsIIDPtr iid); */
 nsresult 
-xptiInterfaceEntry::HasAncestor(const nsIID * iid, PRBool *_retval)
+xptiInterfaceEntry::HasAncestor(const nsIID * iid, bool *_retval)
 {
     *_retval = PR_FALSE;
 
@@ -649,7 +649,7 @@ xptiInterfaceEntry::LockedInvalidateInterfaceInfo()
     }
 }
 
-PRBool
+bool
 xptiInterfaceInfo::BuildParent()
 {
     mozilla::ReentrantMonitorAutoEnter monitor(xptiInterfaceInfoManager::GetSingleton()->

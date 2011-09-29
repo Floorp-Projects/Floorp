@@ -338,13 +338,13 @@ nsSVGSVGElement::GetScreenPixelToMillimeterY(float *aScreenPixelToMillimeterY)
 
 /* attribute boolean useCurrentView; */
 NS_IMETHODIMP
-nsSVGSVGElement::GetUseCurrentView(PRBool *aUseCurrentView)
+nsSVGSVGElement::GetUseCurrentView(bool *aUseCurrentView)
 {
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetUseCurrentView");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
-nsSVGSVGElement::SetUseCurrentView(PRBool aUseCurrentView)
+nsSVGSVGElement::SetUseCurrentView(bool aUseCurrentView)
 {
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetUseCurrentView");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -485,7 +485,7 @@ nsSVGSVGElement::UnpauseAnimations()
 
 /* boolean animationsPaused (); */
 NS_IMETHODIMP
-nsSVGSVGElement::AnimationsPaused(PRBool *_retval)
+nsSVGSVGElement::AnimationsPaused(bool *_retval)
 {
 #ifdef MOZ_SMIL
   if (NS_SMILEnabled()) {
@@ -581,7 +581,7 @@ nsSVGSVGElement::GetEnclosureList(nsIDOMSVGRect *rect,
 NS_IMETHODIMP
 nsSVGSVGElement::CheckIntersection(nsIDOMSVGElement *element,
                                    nsIDOMSVGRect *rect,
-                                   PRBool *_retval)
+                                   bool *_retval)
 {
   // null check when implementing - this method can be used by scripts!
   // if (!element || !rect)
@@ -595,7 +595,7 @@ nsSVGSVGElement::CheckIntersection(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::CheckEnclosure(nsIDOMSVGElement *element,
                                 nsIDOMSVGRect *rect,
-                                PRBool *_retval)
+                                bool *_retval)
 {
   // null check when implementing - this method can be used by scripts!
   // if (!element || !rect)
@@ -850,7 +850,7 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (presShell && IsRoot()) {
-      PRBool scaling = (mPreviousScale != mCurrentScale);
+      bool scaling = (mPreviousScale != mCurrentScale);
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, scaling ? NS_SVG_ZOOM : NS_SVG_SCROLL, 0);
       event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_SVG_EVENT;
@@ -890,7 +890,7 @@ nsSVGSVGElement::GetTimedDocumentRoot()
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
@@ -934,7 +934,7 @@ nsSVGSVGElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 //----------------------------------------------------------------------
 // nsSVGElement overrides
 
-PRBool
+bool
 nsSVGSVGElement::IsEventName(nsIAtom* aName)
 {
   /* The events in EventNameType_SVGSVG are for events that are only
@@ -1040,7 +1040,7 @@ nsresult
 nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
                             nsIContent* aParent,
                             nsIContent* aBindingParent,
-                            PRBool aCompileEventHandlers)
+                            bool aCompileEventHandlers)
 {
   nsSMILAnimationController* smilController = nsnull;
 
@@ -1081,7 +1081,7 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
 }
 
 void
-nsSVGSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+nsSVGSVGElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (mTimedDocumentRoot) {
     mTimedDocumentRoot->SetParent(nsnull);
@@ -1095,7 +1095,7 @@ nsSVGSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 // implementation helpers
 
 #ifdef MOZ_SMIL
-PRBool
+bool
 nsSVGSVGElement::WillBeOutermostSVG(nsIContent* aParent,
                                     nsIContent* aBindingParent) const
 {
@@ -1130,7 +1130,7 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
   }
 }
 
-PRBool
+bool
 nsSVGSVGElement::HasPreserveAspectRatio()
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio) ||
@@ -1201,7 +1201,7 @@ nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 }
 
 void
-nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   nsSVGSVGElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
 
@@ -1223,7 +1223,7 @@ nsSVGSVGElement::GetEnumInfo()
 }
 
 void
-nsSVGSVGElement::DidChangeViewBox(PRBool aDoSetAttr)
+nsSVGSVGElement::DidChangeViewBox(bool aDoSetAttr)
 {
   nsSVGSVGElementBase::DidChangeViewBox(aDoSetAttr);
 
@@ -1245,7 +1245,7 @@ nsSVGSVGElement::GetViewBox()
 }
 
 void
-nsSVGSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
+nsSVGSVGElement::DidChangePreserveAspectRatio(bool aDoSetAttr)
 {
   nsSVGSVGElementBase::DidChangePreserveAspectRatio(aDoSetAttr);
 
@@ -1266,7 +1266,7 @@ nsSVGSVGElement::GetPreserveAspectRatio()
   return &mPreserveAspectRatio;
 }
 
-PRBool
+bool
 nsSVGSVGElement::ShouldSynthesizeViewBox() const
 {
   NS_ABORT_IF_FALSE(!HasValidViewbox(),

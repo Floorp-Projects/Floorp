@@ -149,7 +149,7 @@ nsNotifyAddrListener::~nsNotifyAddrListener()
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetIsLinkUp(PRBool *aIsUp)
+nsNotifyAddrListener::GetIsLinkUp(bool *aIsUp)
 {
     if (!mCheckAttempted && !mStatusKnown) {
         mCheckAttempted = PR_TRUE;
@@ -161,7 +161,7 @@ nsNotifyAddrListener::GetIsLinkUp(PRBool *aIsUp)
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetLinkStatusKnown(PRBool *aIsUp)
+nsNotifyAddrListener::GetLinkStatusKnown(bool *aIsUp)
 {
     *aIsUp = mStatusKnown;
     return NS_OK;
@@ -185,7 +185,7 @@ nsNotifyAddrListener::Run()
 
     HANDLE handles[2] = { ev, mShutdownEvent };
     OVERLAPPED overlapped = { 0 };
-    PRBool shuttingDown = PR_FALSE;
+    bool shuttingDown = false;
 
     InitIPHelperLibrary();
 
@@ -356,7 +356,7 @@ nsNotifyAddrListener::CheckIPAddrTable(void)
 
         ret = sGetIpAddrTable(table, &size, FALSE);
         if (ret == ERROR_SUCCESS) {
-            PRBool linkUp = PR_FALSE;
+            bool linkUp = false;
 
             for (DWORD i = 0; !linkUp && i < table->dwNumEntries; i++) {
                 if (GetOperationalStatus(table->table[i].dwIndex) >=
@@ -400,7 +400,7 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
 
         ret = sGetAdaptersInfo(adapters, &adaptersLen);
         if (ret == ERROR_SUCCESS) {
-            PRBool linkUp = PR_FALSE;
+            bool linkUp = false;
             PIP_ADAPTER_INFO ptr;
 
             for (ptr = adapters; ptr && !linkUp; ptr = ptr->Next) {
@@ -444,7 +444,7 @@ nsNotifyAddrListener::CheckIsGateway(PIP_ADAPTER_ADDRESSES aAdapter)
         return FALSE;
 
     PSOCKADDR_IN in_addr = (PSOCKADDR_IN)aAddress;
-    PRBool isGateway = (aAddress->sa_family == AF_INET &&
+    bool isGateway = (aAddress->sa_family == AF_INET &&
         in_addr->sin_addr.S_un.S_un_b.s_b1 == 192 &&
         in_addr->sin_addr.S_un.S_un_b.s_b2 == 168 &&
         in_addr->sin_addr.S_un.S_un_b.s_b3 == 0 &&

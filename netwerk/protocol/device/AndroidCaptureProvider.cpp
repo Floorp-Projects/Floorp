@@ -143,7 +143,7 @@ AndroidCameraInputStream::Available(PRUint32 *aAvailable)
   return NS_OK;
 }
 
-NS_IMETHODIMP AndroidCameraInputStream::IsNonBlocking(PRBool *aNonBlock) {
+NS_IMETHODIMP AndroidCameraInputStream::IsNonBlocking(bool *aNonBlock) {
   *aNonBlock = PR_TRUE;
   return NS_OK;
 }

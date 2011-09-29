@@ -549,7 +549,7 @@ public:
 
     static XPCNativeScriptableSharedMap* newMap(int size);
 
-    JSBool GetNewOrUsed(JSUint32 flags, char* name, PRBool isGlobal,
+    JSBool GetNewOrUsed(JSUint32 flags, char* name, bool isGlobal,
                         PRUint32 interfacesBitmap, XPCNativeScriptableInfo* si);
 
     inline uint32 Count() {return mTable->entryCount;}
@@ -689,7 +689,7 @@ public:
 
     // "Internal" function to add an empty link without doing unnecessary
     // work.
-    PRBool AddLink(JSObject* wrappedObject, Link* oldLink);
+    bool AddLink(JSObject* wrappedObject, Link* oldLink);
 
     inline void Remove(JSObject* wrapper)
     {

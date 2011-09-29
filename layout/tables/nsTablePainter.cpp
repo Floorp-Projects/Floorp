@@ -193,7 +193,7 @@ TableBackgroundPainter::TableBackgroundData::SetFull(nsIFrame* aFrame)
   SetData();
 }
 
-inline PRBool
+inline bool
 TableBackgroundPainter::TableBackgroundData::ShouldSetBCBorder()
 {
   /* we only need accurate border data when positioning background images*/
@@ -357,7 +357,7 @@ TableBackgroundPainter::TranslateContext(nscoord aDX,
 nsresult
 TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
                                    const nsMargin& aDeflate,
-                                   PRBool          aPaintTableBackground)
+                                   bool            aPaintTableBackground)
 {
   NS_PRECONDITION(aTableFrame, "null table frame");
 
@@ -415,7 +415,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
       }
 
       // Boolean that indicates whether mCols took ownership of cgData
-      PRBool cgDataOwnershipTaken = PR_FALSE;
+      bool cgDataOwnershipTaken = false;
       
       /*Loop over columns in this colgroup*/
       for (nsTableColFrame* col = cgFrame->GetFirstColumn(); col;
@@ -464,7 +464,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
 
 nsresult
 TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
-                                      PRBool                aPassThrough)
+                                      bool                  aPassThrough)
 {
   NS_PRECONDITION(aFrame, "null frame");
 
@@ -556,7 +556,7 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
 
 nsresult
 TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
-                                 PRBool           aPassThrough)
+                                 bool             aPassThrough)
 {
   NS_PRECONDITION(aFrame, "null frame");
 
@@ -611,7 +611,7 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
 
 nsresult
 TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
-                                  PRBool aPassSelf)
+                                  bool aPassSelf)
 {
   NS_PRECONDITION(aCell, "null frame");
 

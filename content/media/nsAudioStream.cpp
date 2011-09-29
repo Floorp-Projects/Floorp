@@ -98,7 +98,7 @@ class nsNativeAudioStream : public nsAudioStream
   void Resume();
   PRInt64 GetPosition();
   PRInt64 GetPositionInFrames();
-  PRBool IsPaused();
+  bool IsPaused();
   PRInt32 GetMinWriteSize();
 
  private:
@@ -111,10 +111,10 @@ class nsNativeAudioStream : public nsAudioStream
   SampleFormat mFormat;
 
   // PR_TRUE if this audio stream is paused.
-  PRPackedBool mPaused;
+  bool mPaused;
 
   // PR_TRUE if this stream has encountered an error.
-  PRPackedBool mInError;
+  bool mInError;
 
 };
 
@@ -136,7 +136,7 @@ class nsRemotedAudioStream : public nsAudioStream
   void Resume();
   PRInt64 GetPosition();
   PRInt64 GetPositionInFrames();
-  PRBool IsPaused();
+  bool IsPaused();
   PRInt32 GetMinWriteSize();
 
 private:
@@ -149,7 +149,7 @@ private:
   PRInt32 mBytesPerFrame;
 
   // PR_TRUE if this audio stream is paused.
-  PRPackedBool mPaused;
+  bool mPaused;
 
   friend class AudioInitEvent;
 };
@@ -269,7 +269,7 @@ class AudioDrainEvent : public nsRunnable
 class AudioPauseEvent : public nsRunnable
 {
  public:
-  AudioPauseEvent(AudioChild* aChild, PRBool pause)
+  AudioPauseEvent(AudioChild* aChild, bool pause)
   {
     mAudioChild = aChild;
     mPause = pause;
@@ -289,7 +289,7 @@ class AudioPauseEvent : public nsRunnable
   }
 
   nsRefPtr<AudioChild> mAudioChild;
-  PRBool mPause;
+  bool mPause;
 };
 
 
@@ -593,7 +593,7 @@ PRInt64 nsNativeAudioStream::GetPositionInFrames()
   return -1;
 }
 
-PRBool nsNativeAudioStream::IsPaused()
+bool nsNativeAudioStream::IsPaused()
 {
   return mPaused;
 }
@@ -757,7 +757,7 @@ nsRemotedAudioStream::GetPositionInFrames()
   return result;
 }
 
-PRBool
+bool
 nsRemotedAudioStream::IsPaused()
 {
   return mPaused;

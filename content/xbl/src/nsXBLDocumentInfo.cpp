@@ -77,7 +77,7 @@ public:
   virtual nsIScriptContext *GetContext();
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(JSObject* aObject);
-  virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
+  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 
   // nsIScriptObjectPrincipal methods
   virtual nsIPrincipal* GetPrincipal();
@@ -389,7 +389,7 @@ nsXBLDocGlobalObject::OnFinalize(JSObject* aObject)
 }
 
 void
-nsXBLDocGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
+nsXBLDocGlobalObject::SetScriptsEnabled(bool aEnabled, bool aFireTimeouts)
 {
     // We don't care...
 }
@@ -418,9 +418,9 @@ nsXBLDocGlobalObject::GetPrincipal()
   return document->NodePrincipal();
 }
 
-static PRBool IsChromeURI(nsIURI* aURI)
+static bool IsChromeURI(nsIURI* aURI)
 {
-  PRBool isChrome = PR_FALSE;
+  bool isChrome = false;
   if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)))
       return isChrome;
   return PR_FALSE;
@@ -428,7 +428,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
 
 /* Implementation file */
 
-static PRBool
+static bool
 TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -438,7 +438,7 @@ TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
   return kHashEnumerateNext;
 }
 
-static PRBool
+static bool
 UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
@@ -452,7 +452,7 @@ struct ProtoTracer
   void *mClosure;
 };
 
-static PRBool
+static bool
 TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
@@ -506,7 +506,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
     nsCOMPtr<nsIXULChromeRegistry> reg =
       mozilla::services::GetXULChromeRegistryService();
     if (reg) {
-      PRBool allow = PR_TRUE;
+      bool allow = true;
       reg->AllowScriptsForPackage(uri, &allow);
       mScriptAccess = allow;
     }
@@ -544,7 +544,7 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef)
   return static_cast<nsXBLPrototypeBinding*>(mBindingTable->Get(&key));
 }
 
-static PRBool
+static bool
 DeletePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLPrototypeBinding* binding = static_cast<nsXBLPrototypeBinding*>(aData);
@@ -575,7 +575,7 @@ nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
   mFirstBinding = aBinding;
 }
 
-PRBool FlushScopedSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
+bool FlushScopedSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLPrototypeBinding* proto = (nsXBLPrototypeBinding*)aData;
   proto->FlushSkinSheets();
