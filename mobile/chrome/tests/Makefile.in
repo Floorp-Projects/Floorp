@@ -99,6 +99,7 @@ _BROWSER_FILES = \
   browser_upgrade.rdf\
   browser_localerepository.js \
   browser_localerepository_pref.js \
+  browser_localerepository_buildid.js \
   locales_list.sjs \
   mock_autocomplete.json\
   $(NULL)
