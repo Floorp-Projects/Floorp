@@ -304,8 +304,11 @@ ServerCollection.prototype = {
       if (options.limit) {
         data = data.slice(0, options.limit);
       }
-      // Our implementation of application/newlines
+      // Our implementation of application/newlines.
       result = data.join("\n") + "\n";
+
+      // Use options as a backchannel to report count.
+      options.recordCount = data.length;
     } else {
       let data = [id for ([id, wbo] in Iterator(this._wbos))
                      if (this._inResultSet(wbo, options))];
@@ -313,6 +316,7 @@ ServerCollection.prototype = {
         data = data.slice(0, options.limit);
       }
       result = JSON.stringify(data);
+      options.recordCount = data.length;
     }
     return result;
   },
@@ -393,6 +397,14 @@ ServerCollection.prototype = {
       switch(request.method) {
         case "GET":
           body = self.get(options);
+          // "If supported by the db, this header will return the number of
+          // records total in the request body of any multiple-record GET
+          // request."
+          let records = options.recordCount;
+          self._log.info("Records: " + records);
+          if (records != null) {
+            response.setHeader("X-Weave-Records", "" + records);
+          }
           break;
 
         case "POST":
