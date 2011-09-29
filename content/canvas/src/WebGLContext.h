@@ -1154,7 +1154,6 @@ public:
         mWrapT = aWrapT;
         SetDontKnowIfNeedFakeBlack();
     }
-    
     WebGLenum MinFilter() const { return mMinFilter; }
 
     bool DoesMinFilterRequireMipmap() const {
