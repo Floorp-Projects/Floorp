@@ -138,6 +138,7 @@ ServerWBO.prototype = {
         case "PUT":
           self.put(readBytesFromInputStream(request.bodyInputStream));
           body = JSON.stringify(self.modified);
+          response.setHeader("Content-Type", "application/json");
           response.newModified = self.modified;
           break;
 
@@ -145,6 +146,7 @@ ServerWBO.prototype = {
           self.delete();
           let ts = new_timestamp();
           body = JSON.stringify(ts);
+          response.setHeader("Content-Type", "application/json");
           response.newModified = ts;
           break;
       }
@@ -157,21 +159,117 @@ ServerWBO.prototype = {
 };
 
 
-/*
- * Represent a collection on the server.  The 'wbo' attribute is a
+/**
+ * Represent a collection on the server. The '_wbos' attribute is a
  * mapping of id -> ServerWBO objects.
- * 
+ *
  * Note that if you want these records to be accessible individually,
- * you need to register their handlers with the server separately!
- * 
- * Passing `true` for acceptNew will allow POSTs of new WBOs to this
- * collection. New WBOs will be created and wired in on the fly.
+ * you need to register their handlers with the server separately, or use a
+ * containing HTTP server that will do so on your behalf.
+ *
+ * @param wbos
+ *        An object mapping WBO IDs to ServerWBOs.
+ * @param acceptNew
+ *        If true, POSTs to this collection URI will result in new WBOs being
+ *        created and wired in on the fly.
+ * @param timestamp
+ *        An optional timestamp value to initialize the modified time of the
+ *        collection. This should be in the format returned by new_timestamp().
+ *
+ * @return the new ServerCollection instance.
+ *
  */
-function ServerCollection(wbos, acceptNew) {
-  this.wbos = wbos || {};
+function ServerCollection(wbos, acceptNew, timestamp) {
+  this._wbos = wbos || {};
   this.acceptNew = acceptNew || false;
+
+  /*
+   * Track modified timestamp.
+   * We can't just use the timestamps of contained WBOs: an empty collection
+   * has a modified time.
+   */
+  this.timestamp = timestamp || new_timestamp();
 }
 ServerCollection.prototype = {
+
+  /**
+   * Convenience accessor for our WBO keys.
+   * Excludes deleted items, of course.
+   *
+   * @param filter
+   *        A predicate function (applied to the ID and WBO) which dictates
+   *        whether to include the WBO's ID in the output.
+   *
+   * @return an array of IDs.
+   */
+  keys: function keys(filter) {
+    return [id for ([id, wbo] in Iterator(this._wbos))
+               if (wbo.payload &&
+                   (!filter || filter(id, wbo)))];
+  },
+
+  /**
+   * Convenience method to get an array of WBOs.
+   * Optionally provide a filter function.
+   *
+   * @param filter
+   *        A predicate function, applied to the WBO, which dictates whether to
+   *        include the WBO in the output.
+   *
+   * @return an array of ServerWBOs.
+   */
+  wbos: function wbos(filter) {
+    let os = [wbo for ([id, wbo] in Iterator(this._wbos))
+              if (wbo.payload)];
+    if (filter) {
+      return os.filter(filter);
+    }
+    return os;
+  },
+
+  /**
+   * Convenience method to get an array of parsed ciphertexts.
+   *
+   * @return an array of the payloads of each stored WBO.
+   */
+  payloads: function () {
+    return this.wbos().map(function (wbo) {
+      return JSON.parse(JSON.parse(wbo.payload).ciphertext);
+    });
+  },
+
+  // Just for syntactic elegance.
+  wbo: function wbo(id) {
+    return this._wbos[id];
+  },
+
+  payload: function payload(id) {
+    return this.wbo(id).payload;
+  },
+
+  /**
+   * Insert the provided WBO under its ID.
+   *
+   * @return the provided WBO.
+   */
+  insertWBO: function insertWBO(wbo) {
+    return this._wbos[wbo.id] = wbo;
+  },
+
+  /**
+   * Insert the provided payload as part of a new ServerWBO with the provided
+   * ID.
+   *
+   * @param id
+   *        The GUID for the WBO.
+   * @param payload
+   *        The payload, as provided to the ServerWBO constructor.
+   *
+   * @return the inserted WBO.
+   */
+  insert: function insert(id, payload) {
+    return this.insertWBO(new ServerWBO(id, payload));
+  },
 
   _inResultSet: function(wbo, options) {
     return wbo.payload
@@ -182,7 +280,7 @@ ServerCollection.prototype = {
   count: function(options) {
     options = options || {};
     let c = 0;
-    for (let [id, wbo] in Iterator(this.wbos)) {
+    for (let [id, wbo] in Iterator(this._wbos)) {
       if (wbo.modified && this._inResultSet(wbo, options)) {
         c++;
       }
@@ -193,7 +291,7 @@ ServerCollection.prototype = {
   get: function(options) {
     let result;
     if (options.full) {
-      let data = [wbo.get() for ([id, wbo] in Iterator(this.wbos))
+      let data = [wbo.get() for ([id, wbo] in Iterator(this._wbos))
                             // Drop deleted.
                             if (wbo.modified &&
                                 this._inResultSet(wbo, options))];
@@ -203,7 +301,7 @@ ServerCollection.prototype = {
       // Our implementation of application/newlines
       result = data.join("\n") + "\n";
     } else {
-      let data = [id for ([id, wbo] in Iterator(this.wbos))
+      let data = [id for ([id, wbo] in Iterator(this._wbos))
                      if (this._inResultSet(wbo, options))];
       if (options.limit) {
         data = data.slice(0, options.limit);
@@ -221,11 +319,11 @@ ServerCollection.prototype = {
     // This will count records where we have an existing ServerWBO
     // registered with us as successful and all other records as failed.
     for each (let record in input) {
-      let wbo = this.wbos[record.id];
+      let wbo = this.wbo(record.id);
       if (!wbo && this.acceptNew) {
         _("Creating WBO " + JSON.stringify(record.id) + " on the fly.");
         wbo = new ServerWBO(record.id);
-        this.wbos[record.id] = wbo;
+        this.insertWBO(wbo);
       }
       if (wbo) {
         wbo.payload = record.payload;
@@ -241,7 +339,7 @@ ServerCollection.prototype = {
   },
 
   delete: function(options) {
-    for (let [id, wbo] in Iterator(this.wbos)) {
+    for (let [id, wbo] in Iterator(this._wbos)) {
       if (this._inResultSet(wbo, options)) {
         _("Deleting " + JSON.stringify(wbo));
         wbo.delete();
@@ -305,6 +403,14 @@ ServerCollection.prototype = {
                          false);
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
+
+      // Update the collection timestamp to the appropriate modified time.
+      // This is either a value set by the handler, or the current time.
+      if (request.method != "GET") {
+        this.timestamp = (response.newModified >= 0) ?
+                         response.newModified :
+                         new_timestamp();
+      }
     };
   }
 

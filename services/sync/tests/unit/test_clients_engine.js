@@ -93,7 +93,7 @@ add_test(function test_bad_hmac() {
 
     _("Now try the scenario where our keys are wrong *and* there's a bad record.");
     // Clean up and start fresh.
-    clientsColl.wbos = {};
+    clientsColl._wbos = {};
     Service.lastHMACEvent = 0;
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
@@ -164,7 +164,7 @@ add_test(function test_sync() {
                              {engines: {clients: {version: Clients.version,
                                                   syncID: Clients.syncID}}});
   let coll = new ServerCollection();
-  let clientwbo = coll.wbos[Clients.localID] = new ServerWBO(Clients.localID);
+  let clientwbo = coll.insert(Clients.localID);
   let server = httpd_setup({
       "/1.1/foo/storage/meta/global": global.handler(),
       "/1.1/foo/storage/clients": coll.handler()
@@ -402,13 +402,13 @@ add_test(function test_command_sync() {
                              {engines: {clients: {version: Clients.version,
                                                   syncID: Clients.syncID}}});
   let coll = new ServerCollection();
-  let clientwbo = coll.wbos[Clients.localID] = new ServerWBO(Clients.localID);
+  let clientwbo = coll.insert(Clients.localID);
   let server = httpd_setup({
       "/1.1/foo/storage/meta/global": global.handler(),
       "/1.1/foo/storage/clients": coll.handler()
   });
   let remoteId = Utils.makeGUID();
-  let remotewbo = coll.wbos[remoteId] = new ServerWBO(remoteId);
+  let remotewbo = coll.insert(remoteId);
   server.registerPathHandler(
     "/1.1/foo/storage/clients/" + Clients.localID, clientwbo.handler());
   server.registerPathHandler(
