@@ -150,7 +150,7 @@ PrepareAndDispatch(
             ((DU *)dp)->lo = (PRUint32) argsStack[argIndex];
           break;
         case nsXPTType::T_BOOL:
-          dp->val.b   =   (PRBool) theParam;
+          dp->val.b   =   (bool) theParam;
           break;
         case nsXPTType::T_CHAR:
           dp->val.c   =     (char) theParam;

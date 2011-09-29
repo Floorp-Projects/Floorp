@@ -210,7 +210,7 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, holder))
             return false;
-        PRBool retval = true;
+        bool retval = true;
         nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv) || !retval) {
             if (retval)
@@ -236,7 +236,7 @@ holder_set(JSContext *cx, JSObject *wrapper, jsid id, JSBool strict, jsval *vp)
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, holder))
             return false;
-        PRBool retval = true;
+        bool retval = true;
         nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv) || !retval) {
             if (retval)
@@ -516,7 +516,7 @@ IsPrivilegedScript()
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (ssm) {
-        PRBool privileged;
+        bool privileged;
         if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) && privileged)
             return true;
     }
@@ -617,7 +617,7 @@ XrayWrapper<Base>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id,
             return true;
         }
 
-        PRBool retval = true;
+        bool retval = true;
         JSObject *pobj = NULL;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                          flags, &pobj, &retval);
@@ -983,7 +983,7 @@ XrayWrapper<Base>::call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value 
                            vp + 2, vp);
         if (!ccx.IsValid())
             return false;
-        PRBool ok = PR_TRUE;
+        bool ok = true;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(wn, cx, wrapper,
                                                                    argc, vp + 2, vp, &ok);
         if (NS_FAILED(rv)) {
@@ -1009,7 +1009,7 @@ XrayWrapper<Base>::construct(JSContext *cx, JSObject *wrapper, uintN argc,
         XPCCallContext ccx(JS_CALLER, cx, wrapper, nsnull, JSID_VOID, argc, argv, rval);
         if (!ccx.IsValid())
             return false;
-        PRBool ok = PR_TRUE;
+        bool ok = true;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(wn, cx, wrapper,
                                                                         argc, argv, rval, &ok);
         if (NS_FAILED(rv)) {

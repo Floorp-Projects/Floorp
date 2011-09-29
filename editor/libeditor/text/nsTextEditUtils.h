@@ -38,7 +38,7 @@
 #ifndef nsTextEditUtils_h__
 #define nsTextEditUtils_h__
 
-#include "prtypes.h"  // for PRBool
+#include "prtypes.h"  // for bool
 #include "nsError.h"  // for nsresult
 #include "nsString.h" // for nsAString
 class nsIDOMNode;
@@ -49,10 +49,10 @@ class nsTextEditUtils
 {
 public:
   // from nsTextEditRules:
-  static PRBool IsBody(nsIDOMNode *aNode);
-  static PRBool IsBreak(nsIDOMNode *aNode);
-  static PRBool IsMozBR(nsIDOMNode *aNode);
-  static PRBool HasMozAttr(nsIDOMNode *aNode);
+  static bool IsBody(nsIDOMNode *aNode);
+  static bool IsBreak(nsIDOMNode *aNode);
+  static bool IsMozBR(nsIDOMNode *aNode);
+  static bool HasMozAttr(nsIDOMNode *aNode);
 };
 
 /***************************************************************************

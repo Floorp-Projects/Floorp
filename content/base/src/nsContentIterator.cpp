@@ -52,7 +52,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // ContentHasChildren: returns true if the node has children
 //
-static inline PRBool
+static inline bool
 NodeHasChildren(nsINode *aNode)
 {
   return aNode->GetChildCount() > 0;
@@ -80,8 +80,8 @@ NodeToParentOffset(nsINode *aNode, PRInt32 *aOffset)
 // NodeIsInTraversalRange: returns true if content is visited during
 // the traversal of the range in the specified mode.
 //
-static PRBool
-NodeIsInTraversalRange(nsINode *aNode, PRBool aIsPreMode,
+static bool
+NodeIsInTraversalRange(nsINode *aNode, bool aIsPreMode,
                        nsINode *aStartNode, PRInt32 aStartOffset,
                        nsINode *aEndNode, PRInt32 aEndOffset)
 {
@@ -121,7 +121,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsContentIterator)
 
-  explicit nsContentIterator(PRBool aPre);
+  explicit nsContentIterator(bool aPre);
   virtual ~nsContentIterator();
 
   // nsIContentIterator interface methods ------------------------------
@@ -141,7 +141,7 @@ public:
 
   virtual nsINode *GetCurrentNode();
 
-  virtual PRBool IsDone();
+  virtual bool IsDone();
 
   virtual nsresult PositionAt(nsINode* aCurNode);
 
@@ -195,8 +195,8 @@ protected:
   // as we go".  Either way, we call IndexOf() once for each change of level in the hierarchy.
   // Since a trivial index is much simpler, we use it for the subtree iterator.
   
-  PRBool mIsDone;
-  PRBool mPre;
+  bool mIsDone;
+  bool mPre;
   
 private:
 
@@ -260,7 +260,7 @@ NS_IMPL_CYCLE_COLLECTION_4(nsContentIterator,
  * constructor/destructor
  ******************************************************/
 
-nsContentIterator::nsContentIterator(PRBool aPre) :
+nsContentIterator::nsContentIterator(bool aPre) :
   // don't need to explicitly initialize |nsCOMPtr|s, they will automatically be NULL
   mCachedIndex(0), mIsDone(PR_FALSE), mPre(aPre)
 {
@@ -333,7 +333,7 @@ nsContentIterator::Init(nsIRange* aRange)
   nsINode* endNode = aRange->GetEndParent();
   NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
 
-  PRBool startIsData = startNode->IsNodeOfType(nsINode::eDATA_NODE);
+  bool startIsData = startNode->IsNodeOfType(nsINode::eDATA_NODE);
 
   // short circuit when start node == end node
   if (startNode == endNode)
@@ -436,7 +436,7 @@ nsContentIterator::Init(nsIRange* aRange)
 
   // Find last node in range.
 
-  PRBool endIsData = endNode->IsNodeOfType(nsINode::eDATA_NODE);
+  bool endIsData = endNode->IsNodeOfType(nsINode::eDATA_NODE);
 
   if (endIsData || !NodeHasChildren(endNode) || endIndx == 0)
   {
@@ -980,7 +980,7 @@ nsContentIterator::Prev()
 }
 
 
-PRBool
+bool
 nsContentIterator::IsDone()
 {
   return mIsDone;
@@ -1365,7 +1365,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // is indeed contained.  Else we have a range that
   // does not fully contain any node.
   
-  PRBool nodeBefore, nodeAfter;
+  bool nodeBefore, nodeAfter;
   if (NS_FAILED(nsRange::CompareNodeToRange(firstCandidate, aRange,
                                             &nodeBefore, &nodeAfter)))
     return NS_ERROR_FAILURE;
@@ -1562,7 +1562,7 @@ nsContentSubtreeIterator::GetTopAncestorInRange(nsINode *aNode,
   
   
   // sanity check: aNode is itself in the range
-  PRBool nodeBefore, nodeAfter;
+  bool nodeBefore, nodeAfter;
   if (NS_FAILED(nsRange::CompareNodeToRange(aNode, mRange, &nodeBefore,
                                             &nodeAfter)))
     return NS_ERROR_FAILURE;

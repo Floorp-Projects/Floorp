@@ -89,7 +89,7 @@ ThirdPartyUtil::GetBaseDomain(nsIURI* aHostURI,
   // means we can safely perform foreign tests on such URIs where "not foreign"
   // means "the involved URIs are all file://".
   if (aBaseDomain.IsEmpty()) {
-    PRBool isFileURI = PR_FALSE;
+    bool isFileURI = false;
     aHostURI->SchemeIs("file", &isFileURI);
     NS_ENSURE_TRUE(isFileURI, NS_ERROR_INVALID_ARG);
   }
@@ -103,7 +103,7 @@ ThirdPartyUtil::GetBaseDomain(nsIURI* aHostURI,
 nsresult
 ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
                                      nsIURI* aSecondURI,
-                                     PRBool* aResult)
+                                     bool* aResult)
 {
   NS_ASSERTION(aSecondURI, "null URI!");
 
@@ -138,7 +138,7 @@ ThirdPartyUtil::GetURIFromWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP
 ThirdPartyUtil::IsThirdPartyURI(nsIURI* aFirstURI,
                                 nsIURI* aSecondURI,
-                                PRBool* aResult)
+                                bool* aResult)
 {
   NS_ENSURE_ARG(aFirstURI);
   NS_ENSURE_ARG(aSecondURI);
@@ -157,12 +157,12 @@ ThirdPartyUtil::IsThirdPartyURI(nsIURI* aFirstURI,
 NS_IMETHODIMP
 ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
                                    nsIURI* aURI,
-                                   PRBool* aResult)
+                                   bool* aResult)
 {
   NS_ENSURE_ARG(aWindow);
   NS_ASSERTION(aResult, "null outparam pointer");
 
-  PRBool result;
+  bool result;
 
   // Get the URI of the window, and its base domain.
   nsCOMPtr<nsIURI> currentURI = GetURIFromWindow(aWindow);
@@ -223,13 +223,13 @@ ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
 NS_IMETHODIMP 
 ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
                                     nsIURI* aURI,
-                                    PRBool* aResult)
+                                    bool* aResult)
 {
   NS_ENSURE_ARG(aChannel);
   NS_ASSERTION(aResult, "null outparam pointer");
 
   nsresult rv;
-  PRBool doForce = false;
+  bool doForce = false;
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
     do_QueryInterface(aChannel);
   if (httpChannelInternal) {
@@ -258,7 +258,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
 
   if (aURI) {
     // Determine whether aURI is foreign with respect to channelURI.
-    PRBool result;
+    bool result;
     rv = IsThirdPartyInternal(channelDomain, aURI, &result);
     if (NS_FAILED(rv))
      return rv;

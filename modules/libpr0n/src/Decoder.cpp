@@ -190,7 +190,7 @@ Decoder::FlushInvalidations()
 
   // Fire OnDataAvailable
   if (mObserver) {
-    PRBool isCurrentFrame = mImage->GetCurrentFrameIndex() == (mFrameCount - 1);
+    bool isCurrentFrame = mImage->GetCurrentFrameIndex() == (mFrameCount - 1);
     mObserver->OnDataAvailable(nsnull, isCurrentFrame, &mInvalidRect);
   }
 

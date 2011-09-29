@@ -627,7 +627,7 @@ nsDOMFileReader::DispatchProgressEvent(const nsAString& aType)
   if (!progress)
     return;
 
-  PRBool known;
+  bool known;
   PRUint64 size;
   if (mReadTotal != kUnknownSize) {
     known = PR_TRUE;
@@ -768,7 +768,7 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
     mCharset.Truncate();
     detector->Init(this);
 
-    PRBool done;
+    bool done;
 
     rv = detector->DoIt(aFileData, aDataLen, &done);
     NS_ENSURE_SUCCESS(rv, rv);

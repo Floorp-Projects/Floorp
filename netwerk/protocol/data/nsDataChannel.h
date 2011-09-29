@@ -52,7 +52,7 @@ public:
     }
 
 protected:
-    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result,
+    virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
                                        nsIChannel** channel);
 };
 

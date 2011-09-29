@@ -39,7 +39,7 @@
 #include "nsRegion.h"
 
 class TestLargestRegion {
-  static PRBool TestSingleRect(nsRect r) {
+  static bool TestSingleRect(nsRect r) {
     nsRegion region(r);
     if (!region.GetLargestRectangle().IsEqualInterior(r)) {
       fail("largest rect of singleton %d %d %d %d", r.x, r.y, r.width, r.height);
@@ -48,7 +48,7 @@ class TestLargestRegion {
     return PR_TRUE;
   }
   // Construct a rectangle, remove part of it, then check the remainder
-  static PRBool TestNonRectangular() {
+  static bool TestNonRectangular() {
     nsRegion r(nsRect(0, 0, 30, 30));
 
     const int nTests = 19;
@@ -84,7 +84,7 @@ class TestLargestRegion {
       { nsRect(0, 10, 20, 20), 300 }
     };
 
-    PRBool success = PR_TRUE;
+    bool success = true;
     for (PRInt32 i = 0; i < nTests; i++) {
       nsRegion r2;
       r2.Sub(r, tests[i].rect);
@@ -101,7 +101,7 @@ class TestLargestRegion {
 
     return success;
   }
-  static PRBool TwoRectTest() {
+  static bool TwoRectTest() {
     nsRegion r(nsRect(0, 0, 100, 100));
     const int nTests = 4;
     struct {
@@ -113,7 +113,7 @@ class TestLargestRegion {
       { nsRect(25, 0, 75, 40), nsRect(0, 60, 75, 40),  2000 },
       { nsRect(0, 0, 75, 40),  nsRect(25, 60, 75, 40), 2000 },
     };
-    PRBool success = PR_TRUE;
+    bool success = true;
     for (PRInt32 i = 0; i < nTests; i++) {
       nsRegion r2;
 
@@ -131,7 +131,7 @@ class TestLargestRegion {
     }
     return success;
   }
-  static PRBool TestContainsSpecifiedRect() {
+  static bool TestContainsSpecifiedRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
     if (!r.GetLargestRectangle(nsRect(0, 300, 10, 10)).IsEqualInterior(nsRect(0, 300, 50, 50))) {
@@ -140,7 +140,7 @@ class TestLargestRegion {
     }
     return PR_TRUE;
   }
-  static PRBool TestContainsSpecifiedOverflowingRect() {
+  static bool TestContainsSpecifiedOverflowingRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
     if (!r.GetLargestRectangle(nsRect(0, 290, 10, 20)).IsEqualInterior(nsRect(0, 300, 50, 50))) {
@@ -150,7 +150,7 @@ class TestLargestRegion {
     return PR_TRUE;
   }
 public:
-  static PRBool Test() {
+  static bool Test() {
     if (!TestSingleRect(nsRect(0, 52, 720, 480)) ||
         !TestSingleRect(nsRect(-20, 40, 50, 20)) ||
         !TestSingleRect(nsRect(-20, 40, 10, 8)) ||

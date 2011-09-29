@@ -42,7 +42,7 @@
 
 #include "nsStringGlue.h"
 
-inline PRBool DOMStringIsNull(const nsAString& aString)
+inline bool DOMStringIsNull(const nsAString& aString)
 {
   return aString.IsVoid();
 }

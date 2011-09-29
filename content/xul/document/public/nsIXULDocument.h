@@ -108,12 +108,12 @@ public:
    * @param aResumeWalk whether this should also call ResumeWalk().
    * Sometimes the caller of OnPrototypeLoadDone resumes the walk itself
    */
-  NS_IMETHOD OnPrototypeLoadDone(PRBool aResumeWalk) = 0;
+  NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) = 0;
 
   /**
    * Callback notifying when a document could not be parsed properly.
    */
-  virtual PRBool OnDocumentParserError() = 0;
+  virtual bool OnDocumentParserError() = 0;
 
   /**
    * Reset the document direction so that it is recomputed.

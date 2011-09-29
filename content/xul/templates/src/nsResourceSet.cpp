@@ -109,7 +109,7 @@ nsResourceSet::Add(nsIRDFResource* aResource)
 void
 nsResourceSet::Remove(nsIRDFResource* aProperty)
 {
-    PRBool found = PR_FALSE;
+    bool found = false;
 
     nsIRDFResource** res = mResources;
     nsIRDFResource** limit = mResources + mCount;
@@ -128,7 +128,7 @@ nsResourceSet::Remove(nsIRDFResource* aProperty)
         --mCount;
 }
 
-PRBool
+bool
 nsResourceSet::Contains(nsIRDFResource* aResource) const
 {
     for (PRInt32 i = mCount - 1; i >= 0; --i) {

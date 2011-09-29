@@ -812,7 +812,7 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
     XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
     if(si && si->GetFlags().WantEquality())
     {
-        PRBool res;
+        bool res;
         nsresult rv = si->GetCallback()->Equality(wrapper, cx, obj, v, &res);
         if(NS_FAILED(rv))
             return Throw(rv, cx);
@@ -970,7 +970,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
     XPCWrappedNative* wrapper =                                              \
         XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);       \
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                            \
-    PRBool retval = JS_TRUE;                                                 \
+    bool retval = JS_TRUE;                                                 \
     nsresult rv = wrapper->GetScriptableCallback()->
 
 #define PRE_HELPER_STUB                                                      \
@@ -987,7 +987,7 @@ XPC_WN_MaybeResolvingStrictPropertyStub(JSContext *cx, JSObject *obj, jsid id, J
         THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                        \
         si = wrapper->GetScriptableCallback();                               \
     }                                                                        \
-    PRBool retval = JS_TRUE;                                                 \
+    bool retval = JS_TRUE;                                                 \
     nsresult rv = si->
 
 #define POST_HELPER_STUB                                                     \
@@ -1088,7 +1088,7 @@ static JSBool
 XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
     SLIM_LOG_WILL_MORPH(cx, obj);
-    PRBool retval2;
+    bool retval2;
     PRE_HELPER_STUB_NO_SLIM
     HasInstance(wrapper, cx, obj, *valp, &retval2, &retval);
     *bp = retval2;
@@ -1129,7 +1129,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                          JSObject **objp)
 {
     nsresult rv = NS_OK;
-    PRBool retval = JS_TRUE;
+    bool retval = JS_TRUE;
     JSObject* obj2FromScriptable = nsnull;
     if(IS_SLIM_WRAPPER(obj))
     {
@@ -1293,7 +1293,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     if(!si)
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-    PRBool retval = JS_TRUE;
+    bool retval = JS_TRUE;
     nsresult rv;
 
     if(si->GetFlags().WantNewEnumerate())

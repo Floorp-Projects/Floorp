@@ -92,7 +92,7 @@ void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
   // we forget that it is a sequence by erasing n->seq.
   // That way, n->seq and n->child will be either both set or both null.
 
-  PRBool isContainer;
+  bool isContainer;
   n->seq->GetIsValidContainer(&isContainer);
   if (!isContainer) {
     n->seq = nsnull;
@@ -155,7 +155,7 @@ nsNSSASN1Tree::LoadASN1Structure(nsIASN1Object *asn1Object)
   // me know if I should forced the tree to redraw itself
   // by calling RowCountChanged on it.
   //
-  PRBool redraw = (mASN1Object && mTree);
+  bool redraw = (mASN1Object && mTree);
   PRInt32 rowsToDelete = 0;
 
   if (redraw) {
@@ -236,7 +236,7 @@ nsNSSASN1Tree::GetColumnProperties(nsITreeColumn* col,
 
 /* boolean isContainer (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::IsContainer(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsContainer(PRInt32 index, bool *_retval)
 {
   myNode *n = FindNodeFromIndex(index);
   if (!n)
@@ -248,7 +248,7 @@ nsNSSASN1Tree::IsContainer(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerOpen (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::IsContainerOpen(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsContainerOpen(PRInt32 index, bool *_retval)
 {
   myNode *n = FindNodeFromIndex(index);
   if (!n || !n->seq)
@@ -260,7 +260,7 @@ nsNSSASN1Tree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerEmpty (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsContainerEmpty(PRInt32 index, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -268,7 +268,7 @@ nsNSSASN1Tree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 
 /* boolean isSeparator (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::IsSeparator(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsSeparator(PRInt32 index, bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK; 
@@ -358,7 +358,7 @@ nsNSSASN1Tree::ToggleOpenState(PRInt32 index)
   if (!n->seq)
     return NS_ERROR_FAILURE;
 
-  PRBool IsExpanded;
+  bool IsExpanded;
   n->seq->GetIsExpanded(&IsExpanded);
   PRInt32 rowCountChange;
   if (IsExpanded) {
@@ -397,7 +397,7 @@ nsNSSASN1Tree::CycleCell(PRInt32 row, nsITreeColumn* col)
 /* boolean isEditable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
 nsNSSASN1Tree::IsEditable(PRInt32 row, nsITreeColumn* col, 
-                          PRBool *_retval)
+                          bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -406,7 +406,7 @@ nsNSSASN1Tree::IsEditable(PRInt32 row, nsITreeColumn* col,
 /* boolean isSelectable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
 nsNSSASN1Tree::IsSelectable(PRInt32 row, nsITreeColumn* col, 
-                            PRBool *_retval)
+                            bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -454,7 +454,7 @@ nsNSSASN1Tree::PerformActionOnCell(const PRUnichar *action, PRInt32 row,
 // CanDrop
 //
 NS_IMETHODIMP nsNSSASN1Tree::CanDrop(PRInt32 index, PRInt32 orientation,
-                                     nsIDOMDataTransfer* aDataTransfer, PRBool *_retval)
+                                     nsIDOMDataTransfer* aDataTransfer, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -477,7 +477,7 @@ NS_IMETHODIMP nsNSSASN1Tree::Drop(PRInt32 row, PRInt32 orient, nsIDOMDataTransfe
 //
 // ...
 //
-NS_IMETHODIMP nsNSSASN1Tree::IsSorted(PRBool *_retval)
+NS_IMETHODIMP nsNSSASN1Tree::IsSorted(bool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -501,7 +501,7 @@ nsNSSASN1Tree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 /* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
 NS_IMETHODIMP 
 nsNSSASN1Tree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
-                              PRBool *_retval)
+                              bool *_retval)
 {
   myNode *n = FindNodeFromIndex(rowIndex);
   if (!n)
@@ -532,7 +532,7 @@ PRInt32 nsNSSASN1Tree::CountVisibleNodes(myNode *n)
     ++count;
 
     if (walk->seq) {
-      PRBool IsExpanded;
+      bool IsExpanded;
       walk->seq->GetIsExpanded(&IsExpanded);
       if (IsExpanded) {
         count += CountVisibleNodes(walk->child);
@@ -591,7 +591,7 @@ nsNSSASN1Tree::FindNodeFromIndex(myNode *n, PRInt32 wantedIndex,
     }
 
     if (walk->seq) {
-      PRBool IsExpanded;
+      bool IsExpanded;
       walk->seq->GetIsExpanded(&IsExpanded);
       if (IsExpanded) {
         ++index_counter; // set to walk->child

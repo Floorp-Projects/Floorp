@@ -165,7 +165,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
     fillRule = GetStyleSVG()->mFillRule;
   }
 
-  PRBool isHit = PR_FALSE;
+  bool isHit = false;
 
   nsRefPtr<gfxContext> context =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());

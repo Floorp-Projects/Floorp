@@ -190,7 +190,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @return  count of attributes (may be 0)
      */
-    virtual PRInt32 GetAttributeCount(PRBool askToken=PR_FALSE) const;
+    virtual PRInt32 GetAttributeCount(bool askToken=false) const;
 
     /**
      * Retrieve the key (of key/value pair) at given index
@@ -253,8 +253,8 @@ class nsCParserNode :  public nsIParserNode {
      * on each node stored in the context.
      * @update	gess 11May2000
      */
-    virtual PRBool  GetGenericState(void) const {return mGenericState;}
-    virtual void    SetGenericState(PRBool aState) {mGenericState=aState;}
+    virtual bool    GetGenericState(void) const {return mGenericState;}
+    virtual void    SetGenericState(bool aState) {mGenericState=aState;}
 
     /** Release all the objects you're holding
      * @update	harishd 08/02/00
@@ -262,7 +262,7 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual nsresult ReleaseAll();
 
-    PRPackedBool mGenericState;  
+    bool mGenericState;  
     PRInt32      mUseCount;
     CToken*      mToken;
    
@@ -313,7 +313,7 @@ public:
                           nsTokenAllocator* aTokenAllocator,
                           nsNodeAllocator* aNodeAllocator = 0);
     virtual void     AddAttribute(CToken* aToken);
-    virtual PRInt32  GetAttributeCount(PRBool askToken = PR_FALSE) const;
+    virtual PRInt32  GetAttributeCount(bool askToken = false) const;
     virtual const    nsAString& GetKeyAt(PRUint32 anIndex) const;
     virtual const    nsAString& GetValueAt(PRUint32 anIndex) const;
     virtual CToken*  PopAttributeToken();

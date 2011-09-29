@@ -834,8 +834,8 @@ static const CellRenderSettings checkboxSettings = {
 };
 
 void
-nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbox,
-                                        const HIRect& inBoxRect, PRBool inSelected,
+nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
+                                        const HIRect& inBoxRect, bool inSelected,
                                         nsEventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -978,7 +978,7 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
   CGAffineTransform savedCTM = CGContextGetCTM(aCGContext);
   CGContextTranslateCTM(aCGContext, aRect.origin.x, aRect.origin.y);
 
-  PRBool drawDirect;
+  bool drawDirect;
   HIRect drawRect = aRect;
   drawRect.origin = CGPointZero;
 
@@ -1047,7 +1047,7 @@ RenderButton(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
 
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
-                               const HIRect& inBoxRect, PRBool inIsDefault,
+                               const HIRect& inBoxRect, bool inIsDefault,
                                ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                                nsEventStates inState, nsIFrame* aFrame)
 {
@@ -1108,7 +1108,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     drawFrame.size.height += 1;
     // Remove the left border in LTR mode and the right border in RTL mode.
     drawFrame.size.width += 1;
-    PRBool isLast = IsLastTreeHeaderCell(aFrame);
+    bool isLast = IsLastTreeHeaderCell(aFrame);
     if (isLast)
       drawFrame.size.width += 1; // Also remove the other border.
     if (!IsFrameRTL(aFrame) || isLast)
@@ -1216,7 +1216,7 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
 
 void
 nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
-                              const HIRect& inBoxRect, PRBool inDisabled,
+                              const HIRect& inBoxRect, bool inDisabled,
                               nsEventStates inState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1349,7 +1349,7 @@ static const CellRenderSettings progressSettings[2][2] = {
 
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 PRBool inIsIndeterminate, PRBool inIsHorizontal,
+                                 bool inIsIndeterminate, bool inIsHorizontal,
                                  double inValue, double inMaxValue,
                                  nsIFrame* aFrame)
 {
@@ -1393,8 +1393,8 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
 
 void
 nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
-                              nsEventStates inState, PRBool inIsVertical,
-                              PRBool inIsReverse, PRInt32 inCurrentValue,
+                              nsEventStates inState, bool inIsVertical,
+                              bool inIsReverse, PRInt32 inCurrentValue,
                               PRInt32 inMinValue, PRInt32 inMaxValue,
                               nsIFrame* aFrame)
 {
@@ -1575,7 +1575,7 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, nsEventStates aBut
 
 void
 nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
-                                         const CGSize& aSize, PRBool aShouldGetButtonStates)
+                                         const CGSize& aSize, bool aShouldGetButtonStates)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1584,9 +1584,9 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos, 100);
   PRInt32 thumbSize = CheckIntAttr(aFrame, nsWidgetAtoms::pageincrement, 10);
 
-  PRBool isHorizontal = aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient, 
+  bool isHorizontal = aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient, 
                                                           nsWidgetAtoms::horizontal, eCaseMatters);
-  PRBool isSmall = aFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL;
+  bool isSmall = aFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL;
 
   aTdi.version = 0;
   aTdi.kind = isSmall ? kThemeSmallScrollBar : kThemeMediumScrollBar;
@@ -1679,7 +1679,7 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   return scrollbarFrame;
 }
 
-static PRBool
+static bool
 ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* aWindow)
 {
   if (![aWindow isKindOfClass:[ToolbarWindow class]] ||
@@ -1866,7 +1866,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
             static_cast<ThemeMenuType>(kThemeMenuTypePopUp)
       };
 
-      PRBool isLeftOfParent = PR_FALSE;
+      bool isLeftOfParent = false;
       if (IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent) {
         mdi.menuType = kThemeMenuTypeHierarchical;
       }
@@ -1920,7 +1920,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO: {
-      PRBool isCheckbox = (aWidgetType == NS_THEME_CHECKBOX);
+      bool isCheckbox = (aWidgetType == NS_THEME_CHECKBOX);
       DrawCheckboxOrRadio(cgContext, isCheckbox, macRect, GetCheckedOrSelected(aFrame, !isCheckbox),
                           eventState, aFrame);
     }
@@ -2110,7 +2110,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       if (!maxpos)
         maxpos = 100;
 
-      PRBool reverse = aFrame->GetContent()->
+      bool reverse = aFrame->GetContent()->
         AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::dir,
                     NS_LITERAL_STRING("reverse"), eCaseMatters);
       DrawScale(cgContext, macRect, eventState,
@@ -2326,11 +2326,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
         // There's only an endcap to worry about when both arrows are on the bottom
         NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
         if (!buttonPlacement || [buttonPlacement isEqualToString:@"DoubleMax"]) {
-          PRBool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
+          bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
 
           nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
           if (!scrollbarFrame) return NS_ERROR_FAILURE;
-          PRBool isSmall = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+          bool isSmall = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
 
           // There isn't a metric for this, so just hardcode a best guess at the value.
           // This value is even less exact due to the fact that the endcap is partially concave.
@@ -2359,7 +2359,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
 // no reason to make a distinction between padding and border values, just specify
 // whatever values you want in GetWidgetBorder and only use this to return PR_TRUE
 // if you want to override CSS padding values.
-PRBool
+bool
 nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext, 
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType,
@@ -2380,7 +2380,7 @@ nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext,
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType, nsRect* aOverflowRect)
 {
@@ -2422,7 +2422,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
                                          nsIFrame* aFrame,
                                          PRUint8 aWidgetType,
                                          nsIntSize* aResult,
-                                         PRBool* aIsOverridable)
+                                         bool* aIsOverridable)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -2543,8 +2543,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       if (!scrollbarFrame)
         return NS_ERROR_FAILURE;
 
-      PRBool isSmall = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
-      PRBool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
+      bool isSmall = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+      bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
       PRInt32& minSize = isHorizontal ? aResult->width : aResult->height;
       minSize = isSmall ? kSmallScrollbarThumbMinSize : kRegularScrollbarThumbMinSize;
       break;
@@ -2619,7 +2619,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
-                                     nsIAtom* aAttribute, PRBool* aShouldRepaint)
+                                     nsIAtom* aAttribute, bool* aShouldRepaint)
 {
   // Some widget types just never change state.
   switch (aWidgetType) {
@@ -2677,7 +2677,7 @@ nsNativeThemeCocoa::ThemeChanged()
   return NS_OK;
 }
 
-PRBool 
+bool 
 nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
@@ -2782,7 +2782,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
 {
   // flesh this out at some point
@@ -2797,7 +2797,7 @@ nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (aWidgetType == NS_THEME_DROPDOWN ||
@@ -2810,7 +2810,7 @@ nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFra
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
 {
   return PR_FALSE;

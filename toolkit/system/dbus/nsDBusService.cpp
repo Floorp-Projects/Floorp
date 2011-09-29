@@ -103,7 +103,7 @@ nsDBusService::SendWithReply(DBusClient* client, DBusMessage* message) {
   return reply;
 }
 
-PRBool nsDBusService::HandleMessage(DBusMessage* message) {
+bool nsDBusService::HandleMessage(DBusMessage* message) {
   if (dbus_message_is_signal(message, DBUS_INTERFACE_LOCAL,
                             "Disconnected")) {
     HandleDBusDisconnect();

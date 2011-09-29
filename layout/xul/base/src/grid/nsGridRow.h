@@ -59,20 +59,20 @@ public:
    nsGridRow();
    ~nsGridRow();
    
-   void Init(nsIBox* aBox, PRBool aIsBogus);
+   void Init(nsIBox* aBox, bool aIsBogus);
 
 // accessors
    nsIBox* GetBox()   { return mBox;          }
-   PRBool IsPrefSet() { return (mPref != -1); }
-   PRBool IsMinSet()  { return (mMin  != -1); }
-   PRBool IsMaxSet()  { return (mMax  != -1); } 
-   PRBool IsFlexSet() { return (mFlex != -1); }
-   PRBool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
-   PRBool IsCollapsed(nsBoxLayoutState& aState);
+   bool IsPrefSet() { return (mPref != -1); }
+   bool IsMinSet()  { return (mMin  != -1); }
+   bool IsMaxSet()  { return (mMax  != -1); } 
+   bool IsFlexSet() { return (mFlex != -1); }
+   bool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
+   bool IsCollapsed(nsBoxLayoutState& aState);
 
 public:
 
-   PRBool  mIsBogus;
+   bool    mIsBogus;
    nsIBox* mBox;
    nscoord mFlex;
    nscoord mPref;

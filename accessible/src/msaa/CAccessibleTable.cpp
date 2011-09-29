@@ -525,7 +525,7 @@ __try {
   if (!tableAcc)
     return E_FAIL;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsresult rv = tableAcc->IsColumnSelected(aColumn, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -548,7 +548,7 @@ __try {
   if (!tableAcc)
     return E_FAIL;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsresult rv = tableAcc->IsRowSelected(aRow, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -571,7 +571,7 @@ __try {
   if (!tableAcc)
     return E_FAIL;
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   nsresult rv = tableAcc->IsCellSelected(aRow, aColumn, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
@@ -681,7 +681,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  PRBool isSelected = PR_FALSE;
+  bool isSelected = false;
   rv = tableAcc->IsCellSelected(rowIdx, columnIdx, &isSelected);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);

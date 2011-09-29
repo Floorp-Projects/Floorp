@@ -54,7 +54,7 @@ public: // new functions
     gfxFT2Font(cairo_scaled_font_t *aCairoFont,
                FT2FontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle,
-               PRBool aNeedsBold);
+               bool aNeedsBold);
     virtual ~gfxFT2Font ();
 
     cairo_font_face_t *CairoFontFace();
@@ -63,11 +63,11 @@ public: // new functions
 
     static already_AddRefed<gfxFT2Font>
     GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
-                  PRBool aNeedsBold = PR_FALSE);
+                  bool aNeedsBold = false);
 
     static already_AddRefed<gfxFT2Font>
     GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
-                  PRBool aNeedsBold = PR_FALSE);
+                  bool aNeedsBold = false);
 
     struct CachedGlyphData {
         CachedGlyphData()
@@ -97,13 +97,13 @@ public: // new functions
     }
 
 protected:
-    virtual PRBool InitTextRun(gfxContext *aContext,
+    virtual bool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
                                PRInt32 aRunScript,
-                               PRBool aPreferPlatformShaping = PR_FALSE);
+                               bool aPreferPlatformShaping = false);
 
     void FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd);
 
@@ -129,11 +129,11 @@ protected: // from gfxFontGroup
 
 protected: // new functions
 
-    static PRBool FontCallback (const nsAString & fontName, 
+    static bool FontCallback (const nsAString & fontName, 
                                 const nsACString & genericName, 
-                                PRBool aUseFontSet,
+                                bool aUseFontSet,
                                 void *closure);
-    PRBool mEnableKerning;
+    bool mEnableKerning;
 
     void GetPrefFonts(nsIAtom *aLangGroup,
                       nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);

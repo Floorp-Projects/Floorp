@@ -180,7 +180,7 @@ gfx3DMatrix::From2D(const gfxMatrix &aMatrix)
   return matrix;
 }
 
-PRBool
+bool
 gfx3DMatrix::IsIdentity() const
 {
   return _11 == 1.0f && _12 == 0.0f && _13 == 0.0f && _14 == 0.0f &&
@@ -482,7 +482,7 @@ gfx3DMatrix::Inverse3x3() const
     return temp;
 }
 
-PRBool
+bool
 gfx3DMatrix::IsSingular() const
 {
   return Determinant() == 0.0;
@@ -667,7 +667,7 @@ gfx3DMatrix::TransformBounds(const gfxRect& rect) const
   return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-PRBool
+bool
 gfx3DMatrix::Is2D() const
 {
   if (_13 != 0.0f || _14 != 0.0f ||
@@ -679,7 +679,7 @@ gfx3DMatrix::Is2D() const
   return PR_TRUE;
 }
 
-PRBool
+bool
 gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
 {
   if (!Is2D()) {
@@ -696,7 +696,7 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
   return PR_TRUE;
 }
 
-PRBool
+bool
 gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
 {
   if (_14 != 0.0f || _24 != 0.0f ||

@@ -66,7 +66,7 @@ class nsIFile;
  * to create a directory with the same name). This parameter is ignored if
  * 'sync' is true.
  */
-NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, PRBool moveToTrash, PRBool sync, 
+NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, bool moveToTrash, bool sync, 
                                PRUint32 delay = 0);
 
 /**

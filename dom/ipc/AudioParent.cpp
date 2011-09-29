@@ -70,7 +70,7 @@ class AudioWriteEvent : public nsRunnable
 class AudioPauseEvent : public nsRunnable
 {
  public:
-  AudioPauseEvent(nsAudioStream* owner, PRBool aPause)
+  AudioPauseEvent(nsAudioStream* owner, bool aPause)
   {
     mOwner = owner;
     mPause = aPause;
@@ -87,7 +87,7 @@ class AudioPauseEvent : public nsRunnable
 
  private:
     nsRefPtr<nsAudioStream> mOwner;
-    PRBool mPause;
+    bool mPause;
 };
 
 class AudioStreamShutdownEvent : public nsRunnable

@@ -122,16 +122,16 @@ inline char NS_ToLower(char aChar)
   return (char)nsLowerUpperUtils::kUpper2Lower[(unsigned char)aChar];
 }
   
-NS_COM_GLUE PRBool NS_IsUpper(char aChar);
-NS_COM_GLUE PRBool NS_IsLower(char aChar);
+NS_COM_GLUE bool NS_IsUpper(char aChar);
+NS_COM_GLUE bool NS_IsLower(char aChar);
 
-NS_COM_GLUE PRBool NS_IsAscii(PRUnichar aChar);
-NS_COM_GLUE PRBool NS_IsAscii(const PRUnichar* aString);
-NS_COM_GLUE PRBool NS_IsAsciiAlpha(PRUnichar aChar);
-NS_COM_GLUE PRBool NS_IsAsciiDigit(PRUnichar aChar);
-NS_COM_GLUE PRBool NS_IsAsciiWhitespace(PRUnichar aChar);
-NS_COM_GLUE PRBool NS_IsAscii(const char* aString);
-NS_COM_GLUE PRBool NS_IsAscii(const char* aString, PRUint32 aLength);
+NS_COM_GLUE bool NS_IsAscii(PRUnichar aChar);
+NS_COM_GLUE bool NS_IsAscii(const PRUnichar* aString);
+NS_COM_GLUE bool NS_IsAsciiAlpha(PRUnichar aChar);
+NS_COM_GLUE bool NS_IsAsciiDigit(PRUnichar aChar);
+NS_COM_GLUE bool NS_IsAsciiWhitespace(PRUnichar aChar);
+NS_COM_GLUE bool NS_IsAscii(const char* aString);
+NS_COM_GLUE bool NS_IsAscii(const char* aString, PRUint32 aLength);
 
 #define FF '\f'
 #define TAB '\t'

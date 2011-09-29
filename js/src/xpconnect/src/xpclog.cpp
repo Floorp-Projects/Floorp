@@ -56,7 +56,7 @@ static int      g_InitState = 0;
 static int      g_Indent = 0;
 static PRLogModuleInfo* g_LogMod = nsnull;
 
-static PRBool Init()
+static bool Init()
 {
     g_LogMod = PR_NewLogModule("xpclog");
     g_Spaces = new char[SPACE_COUNT+1];
@@ -99,7 +99,7 @@ XPC_Log_print(const char *fmt, ...)
         PR_LogPrint("%s",line);
 }
 
-PRBool
+bool
 XPC_Log_Check(int i)
 {
     return CAN_RUN && PR_LOG_TEST(g_LogMod,1);

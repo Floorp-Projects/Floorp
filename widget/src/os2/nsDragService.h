@@ -63,12 +63,12 @@ public:
                                 nsIScriptableRegion* aRegion,
                                 PRUint32 aActionType);
   NS_IMETHOD StartDragSession();
-  NS_IMETHOD EndDragSession(PRBool aDoneDrag);
+  NS_IMETHOD EndDragSession(bool aDoneDrag);
 
     // nsIDragSession
   NS_IMETHOD GetNumDropItems(PRUint32* aNumDropItems);
   NS_IMETHOD GetData(nsITransferable* aTransferable, PRUint32 aItemIndex);
-  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor, PRBool* _retval);
+  NS_IMETHOD IsDataFlavorSupported(const char* aDataFlavor, bool* _retval);
 
     // nsIDragSessionOS2
   NS_IMETHOD DragOverMsg(PDRAGINFO pdinfo, MRESULT& mr, PRUint32* dragFlags);
@@ -83,10 +83,10 @@ public:
 protected:
     // nsIDragSessionOS2
   NS_IMETHOD NativeDragEnter(PDRAGINFO pdinfo);
-  NS_IMETHOD NativeDrop(PDRAGINFO pdinfo, HWND hwnd, PRBool* rendering);
+  NS_IMETHOD NativeDrop(PDRAGINFO pdinfo, HWND hwnd, bool* rendering);
   NS_IMETHOD NativeRenderComplete(PDRAGTRANSFER pdxfer, USHORT usResult);
   NS_IMETHOD NativeDataToTransferable( PCSZ pszText, PCSZ pszTitle,
-                                       PRBool isUrl);
+                                       bool isUrl);
 
   nsresult SaveAsContents(PCSZ szDest, nsIURL* aURL);
   nsresult SaveAsURL(PCSZ szDest, nsIURI* aURI);

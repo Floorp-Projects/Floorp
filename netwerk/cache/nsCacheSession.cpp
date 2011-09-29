@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS1(nsCacheSession, nsICacheSession)
 
 nsCacheSession::nsCacheSession(const char *         clientID,
                                nsCacheStoragePolicy storagePolicy,
-                               PRBool               streamBased)
+                               bool                 streamBased)
     : mClientID(clientID),
       mInfo(0)
 {
@@ -67,7 +67,7 @@ nsCacheSession::~nsCacheSession()
 }
 
 
-NS_IMETHODIMP nsCacheSession::GetDoomEntriesIfExpired(PRBool *result)
+NS_IMETHODIMP nsCacheSession::GetDoomEntriesIfExpired(bool *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     *result = WillDoomEntriesIfExpired();
@@ -75,7 +75,7 @@ NS_IMETHODIMP nsCacheSession::GetDoomEntriesIfExpired(PRBool *result)
 }
 
 
-NS_IMETHODIMP nsCacheSession::SetDoomEntriesIfExpired(PRBool doomEntriesIfExpired)
+NS_IMETHODIMP nsCacheSession::SetDoomEntriesIfExpired(bool doomEntriesIfExpired)
 {
     if (doomEntriesIfExpired)  MarkDoomEntriesIfExpired();
     else                       ClearDoomEntriesIfExpired();
@@ -86,7 +86,7 @@ NS_IMETHODIMP nsCacheSession::SetDoomEntriesIfExpired(PRBool doomEntriesIfExpire
 NS_IMETHODIMP
 nsCacheSession::OpenCacheEntry(const nsACString &         key, 
                                nsCacheAccessMode          accessRequested,
-                               PRBool                     blockingMode,
+                               bool                       blockingMode,
                                nsICacheEntryDescriptor ** result)
 {
     nsresult rv;
@@ -122,7 +122,7 @@ NS_IMETHODIMP nsCacheSession::EvictEntries()
 }
 
 
-NS_IMETHODIMP nsCacheSession::IsStorageEnabled(PRBool *result)
+NS_IMETHODIMP nsCacheSession::IsStorageEnabled(bool *result)
 {
 
     return nsCacheService::IsStorageEnabledForPolicy(StoragePolicy(), result);

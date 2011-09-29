@@ -113,7 +113,7 @@ child:
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
                    OverrideMapping[] overrides, nsCString locale);
 
-    async SetOffline(PRBool offline);
+    async SetOffline(bool offline);
 
     async NotifyVisited(URI uri);
 
@@ -156,7 +156,7 @@ parent:
     async SetURITitle(URI uri, nsString title);
     
     // filepicker remoting
-    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, PRBool addToRecentDocs,
+    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, bool addToRecentDocs,
                         nsString title, nsString defaultFile, nsString defaultExtension,
                         nsString[] filters, nsString[] filterNames)
         returns (nsString[] files, PRInt16 retValue, nsresult result);
@@ -174,7 +174,7 @@ parent:
     ShowAlertNotification(nsString imageUrl, 
                           nsString title, 
                           nsString text, 
-                          PRBool textClickable,
+                          bool textClickable,
                           nsString cookie,
                           nsString name);
 
@@ -204,7 +204,7 @@ parent:
         returns (nsString text);
     EmptyClipboard();
     sync ClipboardHasText()
-        returns (PRBool hasText);
+        returns (bool hasText);
 
     sync GetSystemColors(PRUint32 colorsCount)
         returns (PRUint32[] colors);
@@ -213,7 +213,7 @@ parent:
         returns (PRUint8[] bits);
 
     sync GetShowPasswordSetting()
-        returns (PRBool showPassword);
+        returns (bool showPassword);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);

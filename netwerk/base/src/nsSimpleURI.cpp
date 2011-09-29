@@ -91,7 +91,7 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
-    PRBool isMutable; // (because ReadBoolean doesn't support PRPackedBool*)
+    bool isMutable; // (because ReadBoolean doesn't support bool*)
     rv = aStream->ReadBoolean(&isMutable);
     if (NS_FAILED(rv)) return rv;
     if (isMutable != PR_TRUE && isMutable != PR_FALSE) {
@@ -106,7 +106,7 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
     rv = aStream->ReadCString(mPath);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool isRefValid;
+    bool isRefValid;
     rv = aStream->ReadBoolean(&isRefValid);
     if (NS_FAILED(rv)) return rv;
     if (isRefValid != PR_TRUE && isRefValid != PR_FALSE) {
@@ -153,7 +153,7 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIIPCSerializable methods:
 
-PRBool
+bool
 nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)
 {
     bool isMutable, isRefValid;
@@ -210,7 +210,7 @@ nsSimpleURI::GetSpecIgnoringRef(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetHasRef(PRBool *result)
+nsSimpleURI::GetHasRef(bool *result)
 {
     *result = mIsRefValid;
     return NS_OK;
@@ -438,13 +438,13 @@ nsSimpleURI::SetRef(const nsACString &aRef)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::Equals(nsIURI* other, PRBool *result)
+nsSimpleURI::Equals(nsIURI* other, bool *result)
 {
     return EqualsInternal(other, eHonorRef, result);
 }
 
 NS_IMETHODIMP
-nsSimpleURI::EqualsExceptRef(nsIURI* other, PRBool *result)
+nsSimpleURI::EqualsExceptRef(nsIURI* other, bool *result)
 {
     return EqualsInternal(other, eIgnoreRef, result);
 }
@@ -452,7 +452,7 @@ nsSimpleURI::EqualsExceptRef(nsIURI* other, PRBool *result)
 /* virtual */ nsresult
 nsSimpleURI::EqualsInternal(nsIURI* other,
                             nsSimpleURI::RefHandlingEnum refHandlingMode,
-                            PRBool* result)
+                            bool* result)
 {
     NS_ENSURE_ARG_POINTER(other);
     NS_PRECONDITION(result, "null pointer");
@@ -484,7 +484,7 @@ nsSimpleURI::EqualsInternal(nsSimpleURI* otherUri, RefHandlingEnum refHandlingMo
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
+nsSimpleURI::SchemeIs(const char *i_Scheme, bool *o_Equals)
 {
     NS_ENSURE_ARG_POINTER(o_Equals);
     if (!i_Scheme) return NS_ERROR_NULL_POINTER;
@@ -642,14 +642,14 @@ nsSimpleURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 // nsSimpleURI::nsISimpleURI
 //----------------------------------------------------------------------------
 NS_IMETHODIMP
-nsSimpleURI::GetMutable(PRBool *value)
+nsSimpleURI::GetMutable(bool *value)
 {
     *value = mMutable;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetMutable(PRBool value)
+nsSimpleURI::SetMutable(bool value)
 {
     NS_ENSURE_ARG(mMutable || !value);
 

@@ -48,7 +48,7 @@ static const char kAsciiData[] = "Hello World";
 static const PRUnichar kUnicodeData[] =
   {'H','e','l','l','o',' ','W','o','r','l','d','\0'};
 
-static PRBool test_basic_1()
+static bool test_basic_1()
   {
     nsCStringContainer s;
     NS_CStringContainerInit(s);
@@ -107,7 +107,7 @@ static PRBool test_basic_1()
     return PR_TRUE;
   }
 
-static PRBool test_basic_2()
+static bool test_basic_2()
   {
     nsStringContainer s;
     NS_StringContainerInit(s);
@@ -167,7 +167,7 @@ static PRBool test_basic_2()
     return PR_TRUE;
   }
 
-static PRBool test_convert()
+static bool test_convert()
   {
     nsStringContainer s;
     NS_StringContainerInit(s);
@@ -194,7 +194,7 @@ static PRBool test_convert()
     return PR_TRUE;
   }
 
-static PRBool test_append()
+static bool test_append()
   {
     nsCStringContainer s;
     NS_CStringContainerInit(s);
@@ -233,7 +233,7 @@ static void ReplaceSubstring( nsACString& str,
       }
   }
 
-static PRBool test_replace_driver(const char *strVal,
+static bool test_replace_driver(const char *strVal,
                                   const char *matchVal,
                                   const char *newVal,
                                   const char *finalVal)
@@ -263,9 +263,9 @@ static PRBool test_replace_driver(const char *strVal,
     return PR_TRUE;
   }
 
-static PRBool test_replace()
+static bool test_replace()
   {
-    PRBool rv;
+    bool rv;
 
     rv = test_replace_driver("hello world, hello again!",
                              "hello",
@@ -332,7 +332,7 @@ CompressWhitespace(nsACString &str)
       NS_CStringCutData(str, i, len - i);
   }
 
-static PRBool test_compress_ws()
+static bool test_compress_ws()
   {
     nsCStringContainer s;
     NS_CStringContainerInit(s);
@@ -340,14 +340,14 @@ static PRBool test_compress_ws()
     CompressWhitespace(s);
     const char *d;
     NS_CStringGetData(s, &d);
-    PRBool rv = !strcmp(d, "hello world");
+    bool rv = !strcmp(d, "hello world");
     if (!rv)
       printf("=> \"%s\"\n", d);
     NS_CStringContainerFinish(s);
     return rv;
   }
 
-static PRBool test_depend()
+static bool test_depend()
   {
     static const char kData[] = "hello world";
 
@@ -360,12 +360,12 @@ static PRBool test_depend()
     const char *sd;
     NS_CStringGetData(s, &sd);
 
-    PRBool rv = (sd == kData);
+    bool rv = (sd == kData);
     NS_CStringContainerFinish(s);
     return rv;
   }
 
-static PRBool test_depend_sub()
+static bool test_depend_sub()
   {
     static const char kData[] = "hello world";
 
@@ -376,16 +376,16 @@ static PRBool test_depend_sub()
                                  NS_CSTRING_CONTAINER_INIT_SUBSTRING),
         PR_FALSE);
 
-    PRBool terminated;
+    bool terminated;
     const char *sd;
     PRUint32 len = NS_CStringGetData(s, &sd, &terminated);
 
-    PRBool rv = (sd == kData && len == sizeof(kData)-1 && !terminated);
+    bool rv = (sd == kData && len == sizeof(kData)-1 && !terminated);
     NS_CStringContainerFinish(s);
     return rv;
   }
 
-static PRBool test_adopt()
+static bool test_adopt()
   {
     static const char kData[] = "hello world";
 
@@ -402,12 +402,12 @@ static PRBool test_adopt()
     const char *sd;
     NS_CStringGetData(s, &sd);
 
-    PRBool rv = (sd == data);
+    bool rv = (sd == data);
     NS_CStringContainerFinish(s);
     return rv;
   }
 
-static PRBool test_adopt_sub()
+static bool test_adopt_sub()
   {
     static const char kData[] = "hello world";
 
@@ -422,16 +422,16 @@ static PRBool test_adopt_sub()
                                  NS_CSTRING_CONTAINER_INIT_SUBSTRING),
         PR_FALSE); // leaks data on failure *shrug*
 
-    PRBool terminated;
+    bool terminated;
     const char *sd;
     PRUint32 len = NS_CStringGetData(s, &sd, &terminated);
 
-    PRBool rv = (sd == data && len == sizeof(kData)-1 && !terminated);
+    bool rv = (sd == data && len == sizeof(kData)-1 && !terminated);
     NS_CStringContainerFinish(s);
     return rv;
   }
 
-static PRBool test_mutation()
+static bool test_mutation()
   {
     nsCStringContainer s;
     NS_CStringContainerInit(s);
@@ -464,7 +464,7 @@ static PRBool test_mutation()
     return PR_TRUE;
   }
 
-static PRBool test_ascii()
+static bool test_ascii()
 {
   nsCString testCString;
   testCString.AppendASCII(kAsciiData);
@@ -487,7 +487,7 @@ static PRBool test_ascii()
   return PR_TRUE;
 }
 
-static PRBool test_chars()
+static bool test_chars()
 {
   nsCString testCString(kAsciiData);
   if (testCString.First() != 'H')
@@ -510,7 +510,7 @@ static PRBool test_chars()
   return PR_TRUE;
 }
 
-static PRBool test_stripchars()
+static bool test_stripchars()
 {
   nsCString test(kAsciiData);
   test.StripChars("ld");
@@ -525,7 +525,7 @@ static PRBool test_stripchars()
   return PR_TRUE;
 }
 
-static PRBool test_trim()
+static bool test_trim()
 {
   static const char kWS[] = "\n\t\r ";
   static const char kTestString[] = " \n\tTesting...\n\r";
@@ -550,7 +550,7 @@ static PRBool test_trim()
   return PR_TRUE;
 }
 
-static PRBool test_find()
+static bool test_find()
 {
   nsString uni(kUnicodeData);
 
@@ -564,11 +564,11 @@ static PRBool test_find()
   if (found != 0)
     return PR_FALSE;
 
-  found = uni.Find(khello, PR_FALSE);
+  found = uni.Find(khello, false);
   if (found != -1)
     return PR_FALSE;
  
-  found = uni.Find(khello, PR_TRUE);
+  found = uni.Find(khello, true);
   if (found != 0)
     return PR_FALSE;
 
@@ -587,16 +587,16 @@ static PRBool test_find()
   return PR_TRUE;
 }
 
-static PRBool test_compressws()
+static bool test_compressws()
 {
   nsString check(NS_LITERAL_STRING(" \tTesting  \n\t1\n 2 3\n "));
   CompressWhitespace(check);
   return check.Equals(NS_LITERAL_STRING("Testing 1 2 3"));
 }
 
-static PRBool test_comparisons()
+static bool test_comparisons()
 {
-  PRBool result;
+  bool result;
 
   // nsString
 
@@ -945,7 +945,7 @@ static PRBool test_comparisons()
   return PR_TRUE;
 }
 
-static PRBool test_parse_string_helper(const char* str, char separator, int len,
+static bool test_parse_string_helper(const char* str, char separator, int len,
                                        const char* s1, const char* s2)
 {
   nsCString data(str);
@@ -962,22 +962,22 @@ static PRBool test_parse_string_helper(const char* str, char separator, int len,
   return PR_TRUE;
 }
 
-static PRBool test_parse_string_helper0(const char* str, char separator)
+static bool test_parse_string_helper0(const char* str, char separator)
 {
   return test_parse_string_helper(str, separator, 0, nsnull, nsnull);
 }
 
-static PRBool test_parse_string_helper1(const char* str, char separator, const char* s1)
+static bool test_parse_string_helper1(const char* str, char separator, const char* s1)
 {
   return test_parse_string_helper(str, separator, 1, s1, nsnull);
 }
 
-static PRBool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
+static bool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
 {
   return test_parse_string_helper(str, separator, 2, s1, s2);
 }
 
-static PRBool test_parse_string()
+static bool test_parse_string()
 {
   return test_parse_string_helper1("foo, bar", '_', "foo, bar") &&
          test_parse_string_helper2("foo, bar", ',', "foo", " bar") &&
@@ -991,7 +991,7 @@ static PRBool test_parse_string()
 
 //----
 
-typedef PRBool (*TestFunc)();
+typedef bool (*TestFunc)();
 
 static const struct Test
   {

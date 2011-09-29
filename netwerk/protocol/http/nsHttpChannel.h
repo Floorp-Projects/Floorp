@@ -106,15 +106,15 @@ public:
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
     // others.
-    NS_IMETHOD GetIsSSL(PRBool *aIsSSL);
-    NS_IMETHOD GetProxyMethodIsConnect(PRBool *aProxyMethodIsConnect);
+    NS_IMETHOD GetIsSSL(bool *aIsSSL);
+    NS_IMETHOD GetProxyMethodIsConnect(bool *aProxyMethodIsConnect);
     NS_IMETHOD GetServerResponseHeader(nsACString & aServerResponseHeader);
     NS_IMETHOD GetProxyChallenges(nsACString & aChallenges);
     NS_IMETHOD GetWWWChallenges(nsACString & aChallenges);
     NS_IMETHOD SetProxyCredentials(const nsACString & aCredentials);
     NS_IMETHOD SetWWWCredentials(const nsACString & aCredentials);
     NS_IMETHOD OnAuthAvailable();
-    NS_IMETHOD OnAuthCancelled(PRBool userCancel);
+    NS_IMETHOD OnAuthCancelled(bool userCancel);
     // Functions we implement from nsIHttpAuthenticableChannel but are
     // declared in HttpBaseChannel must be implemented in this class. We
     // just call the HttpBaseChannel:: impls.
@@ -149,7 +149,7 @@ public: /* internal necko use only */
 
     void InternalSetUploadStream(nsIInputStream *uploadStream) 
       { mUploadStream = uploadStream; }
-    void SetUploadStreamHasHeaders(PRBool hasHeaders) 
+    void SetUploadStreamHasHeaders(bool hasHeaders) 
       { mUploadStreamHasHeaders = hasHeaders; }
 
     nsresult SetReferrerInternal(nsIURI *referrer) {
@@ -164,8 +164,8 @@ public: /* internal necko use only */
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
-    PRBool   RequestIsConditional();
-    nsresult Connect(PRBool firstTime = PR_TRUE);
+    bool     RequestIsConditional();
+    nsresult Connect(bool firstTime = true);
     nsresult SetupTransaction();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
@@ -176,11 +176,11 @@ private:
     nsresult AsyncProcessRedirection(PRUint32 httpStatus);
     nsresult ContinueProcessRedirection(nsresult);
     nsresult ContinueProcessRedirectionAfterFallback(nsresult);
-    PRBool   ShouldSSLProxyResponseContinue(PRUint32 httpStatus);
+    bool     ShouldSSLProxyResponseContinue(PRUint32 httpStatus);
     nsresult ProcessFailedSSLConnect(PRUint32 httpStatus);
-    nsresult ProcessFallback(PRBool *waitingForRedirectCallback);
+    nsresult ProcessFallback(bool *waitingForRedirectCallback);
     nsresult ContinueProcessFallback(nsresult);
-    PRBool   ResponseWouldVary();
+    bool     ResponseWouldVary();
     void     HandleAsyncAbort();
 
     nsresult ContinueOnStartRequest1(nsresult);
@@ -194,7 +194,7 @@ private:
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, PRBool preserveMethod);
+    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod);
 
     // proxy specific methods
     nsresult ProxyFailover();
@@ -209,19 +209,19 @@ private:
     nsresult OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
                                           nsCacheAccessMode aAccess,
                                           nsresult aResult,
-                                          PRBool aSync);
-    nsresult OpenNormalCacheEntry(PRBool aSync);
+                                          bool aSync);
+    nsresult OpenNormalCacheEntry(bool aSync);
     nsresult OnNormalCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
                                          nsCacheAccessMode aAccess,
                                          nsresult aResult,
-                                         PRBool aSync);
+                                         bool aSync);
     nsresult OpenOfflineCacheEntryForWriting();
     nsresult GenerateCacheKey(PRUint32 postID, nsACString &key);
     nsresult UpdateExpirationTime();
     nsresult CheckCache();
-    nsresult ShouldUpdateOfflineCacheEntry(PRBool *shouldCacheForOfflineUse);
+    nsresult ShouldUpdateOfflineCacheEntry(bool *shouldCacheForOfflineUse);
     nsresult ReadFromCache();
-    void     CloseCacheEntry(PRBool doomOnFailure);
+    void     CloseCacheEntry(bool doomOnFailure);
     void     CloseOfflineCacheEntry();
     nsresult InitCacheEntry();
     nsresult InitOfflineCacheEntry();
@@ -241,10 +241,10 @@ private:
     // byte range request specific methods
     nsresult SetupByteRangeRequest(PRUint32 partialLen);
     nsresult ProcessPartialContent();
-    nsresult OnDoneReadingPartialCacheEntry(PRBool *streamDone);
+    nsresult OnDoneReadingPartialCacheEntry(bool *streamDone);
 
     nsresult DoAuthRetry(nsAHttpConnection *);
-    PRBool   MustValidateBasedOnQueryUrl();
+    bool     MustValidateBasedOnQueryUrl();
 
     void     HandleAsyncRedirectChannelToHttps();
     nsresult AsyncRedirectChannelToHttps();
@@ -271,7 +271,7 @@ private:
 
     // Ref RFC2616 13.10: "invalidation... MUST only be performed if
     // the host part is the same as in the Request-URI"
-    inline PRBool HostPartIsTheSame(nsIURI *uri) {
+    inline bool HostPartIsTheSame(nsIURI *uri) {
         nsCAutoString tmpHost1, tmpHost2;
         return (NS_SUCCEEDED(mURI->GetAsciiHost(tmpHost1)) &&
                 NS_SUCCEEDED(uri->GetAsciiHost(tmpHost2)) &&
@@ -296,9 +296,9 @@ private:
     PRUint32                          mRequestTime;
 
     typedef nsresult (nsHttpChannel:: *nsOnCacheEntryAvailableCallback)(
-        nsICacheEntryDescriptor *, nsCacheAccessMode, nsresult, PRBool);
+        nsICacheEntryDescriptor *, nsCacheAccessMode, nsresult, bool);
     nsOnCacheEntryAvailableCallback   mOnCacheEntryAvailableCallback;
-    PRBool                            mAsyncCacheOpen;
+    bool                              mAsyncCacheOpen;
 
     nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
     nsCacheAccessMode                 mOfflineCacheAccess;

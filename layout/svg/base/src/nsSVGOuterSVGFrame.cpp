@@ -307,7 +307,7 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
 nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                PRBool aShrinkWrap)
+                                bool aShrinkWrap)
 {
   nsSVGSVGElement* content = static_cast<nsSVGSVGElement*>(mContent);
 
@@ -425,7 +425,7 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
-  PRBool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  bool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
   nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
@@ -510,7 +510,7 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 // helper
-static inline PRBool
+static inline bool
 DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
 {
   const nsStylePosition *pos = aEmbeddingFrame->GetStylePosition();
@@ -676,7 +676,7 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
   Invalidate(rect);
 }
 
-PRBool
+bool
 nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
 {
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
@@ -694,7 +694,7 @@ nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
   return PR_TRUE;
 }
 
-PRBool
+bool
 nsSVGOuterSVGFrame::IsRedrawSuspended()
 {
   return (mRedrawSuspendCount>0) || !mViewportInitialized;
@@ -830,7 +830,7 @@ nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
   return mForeignObjectHash.RemoveEntry(aFrame);
 }
 
-PRBool
+bool
 nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
 {
   if (!mContent->GetParent()) {
@@ -859,7 +859,7 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
   return PR_FALSE;
 }
 
-PRBool
+bool
 nsSVGOuterSVGFrame::IsRootOfImage()
 {
   if (!mContent->GetParent()) {

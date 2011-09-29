@@ -84,7 +84,7 @@ TaskbarTabPreview::~TaskbarTabPreview() {
 }
 
 nsresult
-TaskbarTabPreview::ShowActive(PRBool active) {
+TaskbarTabPreview::ShowActive(bool active) {
   NS_ASSERTION(mVisible && CanMakeTaskbarCalls(), "ShowActive called on invisible window or before taskbar calls can be made for this window");
   return FAILED(mTaskbar->SetTabActive(active ? mProxyWindow : NULL, mWnd, 0))
        ? NS_ERROR_FAILURE
@@ -181,7 +181,7 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       if (LOWORD(wParam) == WA_ACTIVE) {
         // Activate the tab the user selected then restore the main window,
         // keeping normal/max window state intact.
-        PRBool activateWindow;
+        bool activateWindow;
         nsresult rv = mController->OnActivate(&activateWindow);
         if (NS_SUCCEEDED(rv) && activateWindow) {
           nsWindow* win = nsWindow::GetNSWindowPtr(mWnd);
@@ -200,7 +200,7 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       // Send activation events to the top level window and select the proper
       // tab through the controller.
       if (wParam == SC_RESTORE || wParam == SC_MAXIMIZE) {
-        PRBool activateWindow;
+        bool activateWindow;
         nsresult rv = mController->OnActivate(&activateWindow);
         if (NS_SUCCEEDED(rv) && activateWindow) {
           // Note, restoring an iconic, maximized window here will only
@@ -310,7 +310,7 @@ TaskbarTabPreview::DetachFromNSWindow() {
 }
 
 /* static */
-PRBool
+bool
 TaskbarTabPreview::MainWindowHook(void *aContext,
                                   HWND hWnd, UINT nMsg,
                                   WPARAM wParam, LPARAM lParam,
@@ -366,7 +366,7 @@ TaskbarTabPreview::UpdateNext() {
   NS_ASSERTION(CanMakeTaskbarCalls() && mVisible, "UpdateNext called on invisible tab preview");
   HWND hNext = NULL;
   if (mNext) {
-    PRBool visible;
+    bool visible;
     nsresult rv = mNext->GetVisible(&visible);
 
     NS_ENSURE_SUCCESS(rv, rv);

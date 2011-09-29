@@ -54,7 +54,7 @@ public:
         MOZ_COUNT_DTOR(gfxGDIShaper);
     }
 
-    virtual PRBool InitTextRun(gfxContext *aContext,
+    virtual bool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,

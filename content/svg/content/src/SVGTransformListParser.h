@@ -74,12 +74,12 @@ private:
 
   nsresult MatchTransformList();
 
-  nsresult GetTransformToken(nsIAtom** aKeyatom, PRBool aAdvancePos);
+  nsresult GetTransformToken(nsIAtom** aKeyatom, bool aAdvancePos);
   nsresult MatchTransforms();
 
   nsresult MatchTransform();
 
-  PRBool IsTokenTransformStarter();
+  bool IsTokenTransformStarter();
 
   nsresult MatchTranslate();
 

@@ -137,7 +137,7 @@ NS_IMETHODIMP nsEditorParserObserver::End()
   return res;
 }
 
-NS_IMETHODIMP nsEditorParserObserver::GetBadTagFound(PRBool *aFound)
+NS_IMETHODIMP nsEditorParserObserver::GetBadTagFound(bool *aFound)
 {
   NS_ENSURE_ARG_POINTER(aFound);
   *aFound = mBadTagFound;

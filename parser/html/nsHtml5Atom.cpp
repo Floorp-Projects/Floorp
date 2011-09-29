@@ -98,20 +98,20 @@ nsHtml5Atom::ToUTF8String(nsACString& aReturn)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHtml5Atom::IsStaticAtom()
 {
   return PR_FALSE;
 }
 
 NS_IMETHODIMP
-nsHtml5Atom::ScriptableEquals(const nsAString& aString, PRBool* aResult)
+nsHtml5Atom::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
   NS_NOTREACHED("Should not call ScriptableEquals.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsHtml5Atom::EqualsUTF8(const nsACString& aString)
 {
   NS_NOTREACHED("Should not attempt to compare with an UTF-8 string.");

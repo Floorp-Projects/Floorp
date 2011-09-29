@@ -93,7 +93,7 @@ nsTableOuterFrame::GetBaseline() const
 nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                      nsSize aCBSize, nscoord aAvailableWidth,
                                      nsSize aMargin, nsSize aBorder,
-                                     nsSize aPadding, PRBool aShrinkWrap)
+                                     nsSize aPadding, bool aShrinkWrap)
 {
   nsSize result = nsBlockFrame::ComputeAutoSize(aRenderingContext, aCBSize,
                     aAvailableWidth, aMargin, aBorder, aPadding, aShrinkWrap);
@@ -199,7 +199,7 @@ nsTableOuterFrame::CreateAccessible()
 }
 #endif
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsTableOuterFrame::IsContainingBlock() const
 {
   return PR_FALSE;
@@ -380,7 +380,7 @@ nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilde
 }
 
 void
-nsTableOuterFrame::SetSelected(PRBool        aSelected,
+nsTableOuterFrame::SetSelected(bool          aSelected,
                                SelectionType aType)
 {
   nsFrame::SetSelected(aSelected, aType);
@@ -566,7 +566,7 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
 nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                    nsSize aCBSize, nscoord aAvailableWidth,
                                    nsSize aMargin, nsSize aBorder,
-                                   nsSize aPadding, PRBool aShrinkWrap)
+                                   nsSize aPadding, bool aShrinkWrap)
 {
   if (!aShrinkWrap)
     return nsHTMLContainerFrame::ComputeAutoSize(aRenderingContext, aCBSize,
@@ -974,11 +974,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
 
   nsRect origInnerRect = InnerTableFrame()->GetRect();
   nsRect origInnerVisualOverflow = InnerTableFrame()->GetVisualOverflowRect();
-  PRBool innerFirstReflow =
+  bool innerFirstReflow =
     (InnerTableFrame()->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   nsRect origCaptionRect;
   nsRect origCaptionVisualOverflow;
-  PRBool captionFirstReflow;
+  bool captionFirstReflow;
   if (mCaptionFrames.NotEmpty()) {
     origCaptionRect = mCaptionFrames.FirstChild()->GetRect();
     origCaptionVisualOverflow =
@@ -1153,7 +1153,7 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                                  PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                                  PRInt32& aRowSpan, PRInt32& aColSpan,
                                  PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
-                                 PRBool& aIsSelected)
+                                 bool& aIsSelected)
 {
   return InnerTableFrame()->GetCellDataAt(aRowIndex, aColIndex, aCell,
                                           aStartRowIndex, aStartColIndex, 

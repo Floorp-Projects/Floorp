@@ -345,13 +345,13 @@ nsPrintSettingsGTK::SetEndPageRange(PRInt32 aEndPageRange)
 
 /* attribute boolean printReversed; */
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrintReversed(PRBool *aPrintReversed)
+nsPrintSettingsGTK::GetPrintReversed(bool *aPrintReversed)
 {
   *aPrintReversed = gtk_print_settings_get_reverse(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrintReversed(PRBool aPrintReversed)
+nsPrintSettingsGTK::SetPrintReversed(bool aPrintReversed)
 {
   gtk_print_settings_set_reverse(mPrintSettings, aPrintReversed);
   return NS_OK;
@@ -359,13 +359,13 @@ nsPrintSettingsGTK::SetPrintReversed(PRBool aPrintReversed)
 
 /* attribute boolean printInColor; */
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrintInColor(PRBool *aPrintInColor)
+nsPrintSettingsGTK::GetPrintInColor(bool *aPrintInColor)
 {
   *aPrintInColor = gtk_print_settings_get_use_color(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrintInColor(PRBool aPrintInColor)
+nsPrintSettingsGTK::SetPrintInColor(bool aPrintInColor)
 {
   gtk_print_settings_set_use_color(mPrintSettings, aPrintInColor);
   return NS_OK;

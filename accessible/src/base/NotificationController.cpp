@@ -573,7 +573,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
     nsCOMPtr<nsIEditor> editor;
     textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
     if (editor) {
-      PRBool isEmpty = PR_FALSE;
+      bool isEmpty = false;
       editor->GetDocumentIsEmpty(&isEmpty);
       if (isEmpty)
         return;

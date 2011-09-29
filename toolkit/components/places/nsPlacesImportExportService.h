@@ -44,12 +44,12 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService,
     nsCOMPtr<nsILivemarkService> mLivemarkService;
 
     nsCOMPtr<nsIChannel> mImportChannel;
-    PRBool mIsImportDefaults;
+    bool mIsImportDefaults;
 
-    nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, PRBool aAllowRootChanges,
-                                       PRInt64 aFolder, PRBool aIsImportDefaults);
-    nsresult ImportHTMLFromURIInternal(nsIURI* aURI, PRBool aAllowRootChanges,
-                                       PRInt64 aFolder, PRBool aIsImportDefaults);
+    nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, bool aAllowRootChanges,
+                                       PRInt64 aFolder, bool aIsImportDefaults);
+    nsresult ImportHTMLFromURIInternal(nsIURI* aURI, bool aAllowRootChanges,
+                                       PRInt64 aFolder, bool aIsImportDefaults);
     nsresult WriteContainer(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteContainerHeader(nsINavHistoryResultNode* aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteTitle(nsINavHistoryResultNode* aItem, nsIOutputStream* aOutput);

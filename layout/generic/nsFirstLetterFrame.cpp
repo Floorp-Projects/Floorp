@@ -121,7 +121,7 @@ nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
 
 NS_IMETHODIMP
 nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
-                                                  PRBool inHint,
+                                                  bool inHint,
                                                   PRInt32* outFrameContentOffset,
                                                   nsIFrame **outChildFrame)
 {
@@ -170,7 +170,7 @@ nsFirstLetterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
-                                PRBool aShrinkWrap)
+                                bool aShrinkWrap)
 {
   if (GetPrevInFlow()) {
     // We're wrapping the text *after* the first letter, so behave like an
@@ -234,7 +234,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   else {
     // Pretend we are a span and reflow the child frame
     nsLineLayout* ll = aReflowState.mLineLayout;
-    PRBool        pushedFrame;
+    bool          pushedFrame;
 
     ll->SetInFirstLetter(
       mStyleContext->GetPseudo() == nsCSSPseudoElements::firstLetter);
@@ -305,7 +305,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
-/* virtual */ PRBool
+/* virtual */ bool
 nsFirstLetterFrame::CanContinueTextRun() const
 {
   // We can continue a text run through a first-letter frame.
@@ -316,7 +316,7 @@ nsresult
 nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresContext,
                                                         nsIFrame* aChild,
                                                         nsIFrame** aContinuation,
-                                                        PRBool aIsFluid)
+                                                        bool aIsFluid)
 {
   NS_ASSERTION(GetStyleDisplay()->IsFloating(),
                "can only call this on floating first letter frames");

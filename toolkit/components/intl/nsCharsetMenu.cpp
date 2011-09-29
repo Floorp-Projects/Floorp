@@ -170,14 +170,14 @@ private:
 
   static nsIRDFDataSource * mInner;
 
-  PRPackedBool mInitialized;
-  PRPackedBool mBrowserMenuInitialized;
-  PRPackedBool mMailviewMenuInitialized;
-  PRPackedBool mComposerMenuInitialized;
-  PRPackedBool mMaileditMenuInitialized;
-  PRPackedBool mSecondaryTiersInitialized;
-  PRPackedBool mAutoDetectInitialized;
-  PRPackedBool mOthersInitialized;
+  bool mInitialized;
+  bool mBrowserMenuInitialized;
+  bool mMailviewMenuInitialized;
+  bool mComposerMenuInitialized;
+  bool mMaileditMenuInitialized;
+  bool mSecondaryTiersInitialized;
+  bool mAutoDetectInitialized;
+  bool mOthersInitialized;
 
   nsTArray<nsMenuEntry*> mBrowserMenu;
   PRInt32                mBrowserCacheStart;
@@ -201,7 +201,7 @@ private:
   nsTArray<nsCString>                   mDecoderList;
 
   nsresult Done();
-  nsresult SetCharsetCheckmark(nsString * aCharset, PRBool aValue);
+  nsresult SetCharsetCheckmark(nsString * aCharset, bool aValue);
 
   nsresult FreeResources();
 
@@ -364,7 +364,7 @@ nsCharsetMenu::SetArrayFromEnumerator(nsIUTF8StringEnumerator* aEnumerator,
 {
   nsresult rv;
   
-  PRBool hasMore;
+  bool hasMore;
   rv = aEnumerator->HasMore(&hasMore);
   
   nsCAutoString value;
@@ -383,12 +383,12 @@ nsCharsetMenu::SetArrayFromEnumerator(nsIUTF8StringEnumerator* aEnumerator,
 class nsIgnoreCaseCStringComparator
 {
   public:
-    PRBool Equals(const nsACString& a, const nsACString& b) const
+    bool Equals(const nsACString& a, const nsACString& b) const
     {
       return nsCString(a).Equals(b, nsCaseInsensitiveCStringComparator());
     }
 
-    PRBool LessThan(const nsACString& a, const nsACString& b) const
+    bool LessThan(const nsACString& a, const nsACString& b) const
     { 
       return a < b;
     }
@@ -829,7 +829,7 @@ nsresult nsCharsetMenu::Done()
 }
 
 nsresult nsCharsetMenu::SetCharsetCheckmark(nsString * aCharset, 
-                                            PRBool aValue)
+                                            bool aValue)
 {
   nsresult res = NS_OK;
   nsCOMPtr<nsIRDFContainer> container;
@@ -1859,7 +1859,7 @@ NS_IMETHODIMP nsCharsetMenu::GetURI(char ** uri)
 
 NS_IMETHODIMP nsCharsetMenu::GetSource(nsIRDFResource* property,
                                        nsIRDFNode* target,
-                                       PRBool tv,
+                                       bool tv,
                                        nsIRDFResource** source)
 {
   return mInner->GetSource(property, target, tv, source);
@@ -1867,7 +1867,7 @@ NS_IMETHODIMP nsCharsetMenu::GetSource(nsIRDFResource* property,
 
 NS_IMETHODIMP nsCharsetMenu::GetSources(nsIRDFResource* property,
                                         nsIRDFNode* target,
-                                        PRBool tv,
+                                        bool tv,
                                         nsISimpleEnumerator** sources)
 {
   return mInner->GetSources(property, target, tv, sources);
@@ -1875,7 +1875,7 @@ NS_IMETHODIMP nsCharsetMenu::GetSources(nsIRDFResource* property,
 
 NS_IMETHODIMP nsCharsetMenu::GetTarget(nsIRDFResource* source,
                                        nsIRDFResource* property,
-                                       PRBool tv,
+                                       bool tv,
                                        nsIRDFNode** target)
 {
   return mInner->GetTarget(source, property, tv, target);
@@ -1883,7 +1883,7 @@ NS_IMETHODIMP nsCharsetMenu::GetTarget(nsIRDFResource* source,
 
 NS_IMETHODIMP nsCharsetMenu::GetTargets(nsIRDFResource* source,
                                         nsIRDFResource* property,
-                                        PRBool tv,
+                                        bool tv,
                                         nsISimpleEnumerator** targets)
 {
   return mInner->GetTargets(source, property, tv, targets);
@@ -1892,7 +1892,7 @@ NS_IMETHODIMP nsCharsetMenu::GetTargets(nsIRDFResource* source,
 NS_IMETHODIMP nsCharsetMenu::Assert(nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget,
-                                    PRBool aTruthValue)
+                                    bool aTruthValue)
 {
   // TODO: filter out asserts we don't care about
   return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
@@ -1928,8 +1928,8 @@ NS_IMETHODIMP nsCharsetMenu::Move(nsIRDFResource* aOldSource,
 
 NS_IMETHODIMP nsCharsetMenu::HasAssertion(nsIRDFResource* source, 
                                           nsIRDFResource* property, 
-                                          nsIRDFNode* target, PRBool tv, 
-                                          PRBool* hasAssertion)
+                                          nsIRDFNode* target, bool tv, 
+                                          bool* hasAssertion)
 {
   return mInner->HasAssertion(source, property, target, tv, hasAssertion);
 }
@@ -1945,13 +1945,13 @@ NS_IMETHODIMP nsCharsetMenu::RemoveObserver(nsIRDFObserver* n)
 }
 
 NS_IMETHODIMP 
-nsCharsetMenu::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+nsCharsetMenu::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool *result)
 {
   return mInner->HasArcIn(aNode, aArc, result);
 }
 
 NS_IMETHODIMP 
-nsCharsetMenu::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result)
+nsCharsetMenu::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, bool *result)
 {
   return mInner->HasArcOut(source, aArc, result);
 }
@@ -1985,7 +1985,7 @@ NS_IMETHODIMP nsCharsetMenu::IsCommandEnabled(
                              nsISupportsArray/*<nsIRDFResource>*/* aSources,
                              nsIRDFResource*   aCommand,
                              nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-                             PRBool* aResult)
+                             bool* aResult)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -156,7 +156,7 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
 // copied from nsPosixLocale::ParseLocaleString:
 // returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC.Extra
 // or possibly ll_CC_Extra (depending on the separator, which happens on OS/2
-PRBool
+bool
 nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator)
 {
   const char *src = locale_string;

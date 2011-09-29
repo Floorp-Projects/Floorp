@@ -44,7 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 
 SIMPLECSRCS	+= \
-		bloatblame.c \
 		leakstats.c \
 		tmstats.c \
 		$(NULL)
@@ -55,6 +54,7 @@ CPP_PROG_LINK	= 1
 
 SIMPLECPPSRCS	= \
 		leaksoup.cpp \
+		bloatblame.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= \

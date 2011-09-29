@@ -70,7 +70,7 @@ public:
     void OnPrefChange(PRUint32 aPrefAtom, void *aData);
 
 private:
-    PRBool mInitialized;
+    bool mInitialized;
     GConfProxy *mGConf;
 
     //listeners

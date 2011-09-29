@@ -866,7 +866,7 @@ IDBTransaction::OnDispatchedEvent(nsIThreadInternal* aThread)
 
 NS_IMETHODIMP
 IDBTransaction::OnProcessNextEvent(nsIThreadInternal* aThread,
-                                   PRBool aMayWait,
+                                   bool aMayWait,
                                    PRUint32 aRecursionDepth)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -957,7 +957,7 @@ CommitHelper::Run()
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    PRBool dummy;
+    bool dummy;
     if (NS_FAILED(mTransaction->DispatchEvent(event, &dummy))) {
       NS_WARNING("Dispatch failed!");
     }

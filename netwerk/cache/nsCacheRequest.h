@@ -65,7 +65,7 @@ private:
     nsCacheRequest( nsCString *           key, 
                     nsICacheListener *    listener,
                     nsCacheAccessMode     accessRequested,
-                    PRBool                blockingMode,
+                    bool                  blockingMode,
                     nsCacheSession *      session)
         : mKey(key),
           mInfo(0),
@@ -119,15 +119,15 @@ private:
     }
 
     void MarkStreamBased()      { mInfo |=  eStreamBasedMask; }
-    PRBool IsStreamBased()      { return (mInfo & eStreamBasedMask) != 0; }
+    bool IsStreamBased()      { return (mInfo & eStreamBasedMask) != 0; }
 
 
     void   MarkDoomEntriesIfExpired()   { mInfo |=  eDoomEntriesIfExpiredMask; }
-    PRBool WillDoomEntriesIfExpired()   { return (0 != (mInfo & eDoomEntriesIfExpiredMask)); }
+    bool WillDoomEntriesIfExpired()   { return (0 != (mInfo & eDoomEntriesIfExpiredMask)); }
     
     void   MarkBlockingMode()           { mInfo |= eBlockingModeMask; }
-    PRBool IsBlocking()                 { return (0 != (mInfo & eBlockingModeMask)); }
-    PRBool IsNonBlocking()              { return !(mInfo & eBlockingModeMask); }
+    bool IsBlocking()                 { return (0 != (mInfo & eBlockingModeMask)); }
+    bool IsNonBlocking()              { return !(mInfo & eBlockingModeMask); }
 
     void SetStoragePolicy(nsCacheStoragePolicy policy)
     {
@@ -143,7 +143,7 @@ private:
 
     void   MarkWaitingForValidation() { mInfo |=  eWaitingForValidationMask; }
     void   DoneWaitingForValidation() { mInfo &= ~eWaitingForValidationMask; }
-    PRBool WaitingForValidation()
+    bool WaitingForValidation()
     {
         return (mInfo & eWaitingForValidationMask) != 0;
     }

@@ -104,7 +104,7 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
 // share common code.
 static nsresult
 SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
-                    PRBool doPutOnClipboard, PRInt16 aClipboardID,
+                    bool doPutOnClipboard, PRInt16 aClipboardID,
                     PRUint32 aFlags, nsITransferable ** aTransferable)
 {
   // Clear the output parameter for the transferable, if provided.
@@ -114,13 +114,13 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
 
   nsresult rv = NS_OK;
   
-  PRBool bIsPlainTextContext = PR_FALSE;
+  bool bIsPlainTextContext = false;
 
   rv = nsCopySupport::IsPlainTextContext(aSel, aDoc, &bIsPlainTextContext);
   if (NS_FAILED(rv)) 
     return rv;
 
-  PRBool bIsHTMLCopy = !bIsPlainTextContext;
+  bool bIsHTMLCopy = !bIsPlainTextContext;
   nsAutoString mimeType;
 
   nsCOMPtr<nsIDocumentEncoder> docEncoder;
@@ -266,7 +266,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
       }
 
       if (doPutOnClipboard && clipboard) {
-        PRBool actuallyPutOnClipboard = PR_TRUE;
+        bool actuallyPutOnClipboard = true;
         nsCopySupport::DoHooks(aDoc, trans, &actuallyPutOnClipboard);
 
         // put the transferable on the clipboard
@@ -327,7 +327,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
 }
 
 nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
-                                PRBool *aDoPutOnClipboard)
+                                bool *aDoPutOnClipboard)
 {
   NS_ENSURE_ARG(aDoc);
 
@@ -346,7 +346,7 @@ nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
 
   nsCOMPtr<nsIClipboardDragDropHooks> override;
   nsCOMPtr<nsISupports> isupp;
-  PRBool hasMoreHooks = PR_FALSE;
+  bool hasMoreHooks = false;
   nsresult rv = NS_OK;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
          && hasMoreHooks)
@@ -369,7 +369,7 @@ nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
   return rv;
 }
 
-nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, PRBool *aIsPlainTextContext)
+nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, bool *aIsPlainTextContext)
 {
   nsresult rv;
 
@@ -540,7 +540,7 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check whether the system supports the selection clipboard or not.
-  PRBool selectionSupported;
+  bool selectionSupported;
   rv = clipboard->SupportsSelectionClipboard(&selectionSupported);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -658,7 +658,7 @@ nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, nsISelection** aSelec
   return nsnull;
 }
 
-PRBool
+bool
 nsCopySupport::CanCopy(nsIDocument* aDocument)
 {
   if (!aDocument)
@@ -668,12 +668,12 @@ nsCopySupport::CanCopy(nsIDocument* aDocument)
   GetSelectionForCopy(aDocument, getter_AddRefs(sel));
   NS_ENSURE_TRUE(sel, PR_FALSE);
 
-  PRBool isCollapsed;
+  bool isCollapsed;
   sel->GetIsCollapsed(&isCollapsed);
   return !isCollapsed;
 }
 
-PRBool
+bool
 nsCopySupport::FireClipboardEvent(PRInt32 aType, nsIPresShell* aPresShell, nsISelection* aSelection)
 {
   NS_ASSERTION(aType == NS_CUT || aType == NS_COPY || aType == NS_PASTE,
@@ -701,7 +701,7 @@ nsCopySupport::FireClipboardEvent(PRInt32 aType, nsIPresShell* aPresShell, nsISe
   if (sel) {
     // Only cut or copy when there is an uncollapsed selection
     if (aType == NS_CUT || aType == NS_COPY) {
-      PRBool isCollapsed;
+      bool isCollapsed;
       sel->GetIsCollapsed(&isCollapsed);
       if (isCollapsed)
         return PR_FALSE;

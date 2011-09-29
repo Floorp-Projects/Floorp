@@ -76,7 +76,7 @@ AccIterator::Next()
       continue;
     }
 
-    PRBool isComplying = mFilterFunc(child);
+    bool isComplying = mFilterFunc(child);
     if (isComplying)
       return child;
 

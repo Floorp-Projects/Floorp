@@ -101,10 +101,10 @@ public:
     mOpen = PR_FALSE;
   }
 
-  PRBool Empty() const {
+  bool Empty() const {
     return mCset.empty() && mPaints.empty() && mMutants.empty();
   }
-  PRBool Finished() const { return !mOpen && Empty(); }
+  bool Finished() const { return !mOpen && Empty(); }
 
   EditVector mCset;
   EditVector mPaints;
@@ -112,7 +112,7 @@ public:
   ShadowableLayerSet mMutants;
 
 private:
-  PRBool mOpen;
+  bool mOpen;
 
   // disabled
   Transaction(const Transaction&);
@@ -271,7 +271,7 @@ ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
                                aNeedYFlip));
 }
 
-PRBool
+bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
@@ -383,7 +383,7 @@ OptimalShmemType()
 #endif
 }
 
-PRBool
+bool
 ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
                                         gfxASurface::gfxContentType aContent,
                                         gfxSharedImageSurface** aFrontBuffer,
@@ -399,7 +399,7 @@ ShadowLayerForwarder::DestroySharedSurface(gfxSharedImageSurface* aSurface)
   mShadowManager->DeallocShmem(aSurface->GetShmem());
 }
 
-PRBool
+bool
 ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
                                   gfxASurface::gfxContentType aContent,
                                   gfxSharedImageSurface** aBuffer)
@@ -419,13 +419,13 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
   return PR_TRUE;
 }
 
-PRBool
+bool
 ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
                                         gfxASurface::gfxContentType aContent,
                                         SurfaceDescriptor* aFrontBuffer,
                                         SurfaceDescriptor* aBackBuffer)
 {
-  PRBool tryPlatformSurface = PR_TRUE;
+  bool tryPlatformSurface = true;
 #ifdef DEBUG
   tryPlatformSurface = !PR_GetEnv("MOZ_LAYERS_FORCE_SHMEM_SURFACES");
 #endif
@@ -446,12 +446,12 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
   return PR_TRUE;
 }
 
-PRBool
+bool
 ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
                                   gfxASurface::gfxContentType aContent,
                                   SurfaceDescriptor* aBuffer)
 {
-  PRBool tryPlatformSurface = PR_TRUE;
+  bool tryPlatformSurface = true;
 #ifdef DEBUG
   tryPlatformSurface = !PR_GetEnv("MOZ_LAYERS_FORCE_SHMEM_SURFACES");
 #endif
@@ -548,7 +548,7 @@ ShadowLayerManager::DestroySharedSurface(SurfaceDescriptor* aSurface,
 
 #if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
-PRBool
+bool
 ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
                                                 gfxASurface::gfxContentType,
                                                 SurfaceDescriptor*,
@@ -557,7 +557,7 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
   return PR_FALSE;
 }
 
-PRBool
+bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
                                           gfxASurface::gfxContentType,
                                           SurfaceDescriptor*)
@@ -571,7 +571,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
   return nsnull;
 }
 
-PRBool
+bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
   return PR_FALSE;
@@ -582,7 +582,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 {
 }
 
-PRBool
+bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
   return PR_FALSE;
@@ -595,7 +595,7 @@ ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
 
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
-PRBool
+bool
 IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface)
 {
   return SurfaceDescriptor::T__None != aSurface.type();

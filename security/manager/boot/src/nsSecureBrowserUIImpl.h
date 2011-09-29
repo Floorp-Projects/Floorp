@@ -92,7 +92,7 @@ public:
   NS_DECL_NSISSLSTATUSPROVIDER
 
   NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow* window,
-                    nsIURI *actionURL, PRBool* cancelSubmit);
+                    nsIURI *actionURL, bool* cancelSubmit);
   NS_IMETHOD NotifyInvalidSubmit(nsIDOMHTMLFormElement* formNode,
                                  nsIArray* invalidElements) { return NS_OK; };
   
@@ -114,13 +114,13 @@ protected:
   };
 
   lockIconState mNotifiedSecurityState;
-  PRBool mNotifiedToplevelIsEV;
+  bool mNotifiedToplevelIsEV;
 
   void ResetStateTracking();
   PRUint32 mNewToplevelSecurityState;
-  PRPackedBool mNewToplevelIsEV;
-  PRPackedBool mNewToplevelSecurityStateKnown;
-  PRPackedBool mIsViewSource;
+  bool mNewToplevelIsEV;
+  bool mNewToplevelSecurityStateKnown;
+  bool mIsViewSource;
 
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
@@ -134,16 +134,16 @@ protected:
 #endif
 
   static already_AddRefed<nsISupports> ExtractSecurityInfo(nsIRequest* aRequest);
-  static nsresult MapInternalToExternalState(PRUint32* aState, lockIconState lock, PRBool ev);
-  nsresult UpdateSecurityState(nsIRequest* aRequest, PRBool withNewLocation,
-                               PRBool withUpdateStatus, PRBool withUpdateTooltip);
-  PRBool UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState);
-  nsresult TellTheWorld(PRBool showWarning, 
+  static nsresult MapInternalToExternalState(PRUint32* aState, lockIconState lock, bool ev);
+  nsresult UpdateSecurityState(nsIRequest* aRequest, bool withNewLocation,
+                               bool withUpdateStatus, bool withUpdateTooltip);
+  bool UpdateMyFlags(bool &showWarning, lockIconState &warnSecurityState);
+  nsresult TellTheWorld(bool showWarning, 
                         lockIconState warnSecurityState, 
                         nsIRequest* aRequest);
 
   nsresult EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info,
-                                          PRBool withNewLocation);
+                                          bool withNewLocation);
   void UpdateSubrequestMembers(nsISupports *securityInfo);
 
   void ObtainEventSink(nsIChannel *channel, 
@@ -154,16 +154,16 @@ protected:
 
   void GetBundleString(const PRUnichar* name, nsAString &outString);
   
-  nsresult CheckPost(nsIURI *formURI, nsIURI *actionURL, PRBool *okayToPost);
-  nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
-  nsresult IsURLJavaScript(nsIURI* aURL, PRBool *value);
+  nsresult CheckPost(nsIURI *formURI, nsIURI *actionURL, bool *okayToPost);
+  nsresult IsURLHTTPS(nsIURI* aURL, bool *value);
+  nsresult IsURLJavaScript(nsIURI* aURL, bool *value);
 
-  PRBool ConfirmEnteringSecure();
-  PRBool ConfirmEnteringWeak();
-  PRBool ConfirmLeavingSecure();
-  PRBool ConfirmMixedMode();
-  PRBool ConfirmPostToInsecure();
-  PRBool ConfirmPostToInsecureFromSecure();
+  bool ConfirmEnteringSecure();
+  bool ConfirmEnteringWeak();
+  bool ConfirmLeavingSecure();
+  bool ConfirmMixedMode();
+  bool ConfirmPostToInsecure();
+  bool ConfirmPostToInsecureFromSecure();
 
   // Support functions
   static nsresult GetNSSDialogs(nsISecurityWarningDialogs **);

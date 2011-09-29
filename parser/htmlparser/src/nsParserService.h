@@ -67,8 +67,8 @@ public:
                                         PRInt32* aUnicode) const;
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                         nsCString& aEntity) const;
-  NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const;
-  NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const;
+  NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const;
+  NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const;
 
    // Observer mechanism
   NS_IMETHOD RegisterObserver(nsIElementObserver* aObserver,
@@ -81,13 +81,13 @@ public:
                                nsIObserverEntry** aEntry);
 
   nsresult CheckQName(const nsAString& aQName,
-                      PRBool aNamespaceAware, const PRUnichar** aColon);
+                      bool aNamespaceAware, const PRUnichar** aColon);
 
-  PRBool IsXMLLetter(PRUnichar aChar)
+  bool IsXMLLetter(PRUnichar aChar)
   {
     return !!MOZ_XMLIsLetter(reinterpret_cast<const char*>(&aChar));
   }
-  PRBool IsXMLNCNameChar(PRUnichar aChar)
+  bool IsXMLNCNameChar(PRUnichar aChar)
   {
     return !!MOZ_XMLIsNCNameChar(reinterpret_cast<const char*>(&aChar));
   }
@@ -107,7 +107,7 @@ protected:
                        nsObserverEntry** aEntry);
 
   nsDeque  mEntries;  //each topic holds a list of observers per tag.
-  PRBool   mHaveNotifiedCategoryObservers;
+  bool     mHaveNotifiedCategoryObservers;
 };
 
 #endif

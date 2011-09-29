@@ -207,8 +207,8 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     // would muck up the XUL display
     // - bbaetz
 
-    PRBool isScheme = PR_FALSE;
-    PRBool isSchemeFile = PR_FALSE;
+    bool isScheme = false;
+    bool isSchemeFile = false;
     if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
 
         // strip out the password here, so it doesn't show in the page title
@@ -610,7 +610,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     nsCOMPtr<nsIXULChromeRegistry> reg =
       mozilla::services::GetXULChromeRegistryService();
     if (reg) {
-      PRBool isRTL = PR_FALSE;
+      bool isRTL = false;
       reg->IsLocaleRTL(NS_LITERAL_CSTRING("global"), &isRTL);
       if (isRTL) {
         direction.AssignLiteral("rtl");

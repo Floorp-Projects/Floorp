@@ -88,9 +88,9 @@ protected:
 
   PRUint32 mCanvasFramebuffer;
 
-  PRPackedBool mDataIsPremultiplied;
-  PRPackedBool mNeedsYFlip;
-  PRPackedBool mHasAlpha;
+  bool mDataIsPremultiplied;
+  bool mNeedsYFlip;
+  bool mHasAlpha;
 };
 
 // NB: eventually we'll have separate shadow canvas2d and shadow
@@ -126,7 +126,7 @@ public:
 private:
   virtual void Init(bool needYFlip);
 
-  PRPackedBool mNeedsYFlip;
+  bool mNeedsYFlip;
   nsRefPtr<ShadowBufferD3D9> mBuffer;
 };
 

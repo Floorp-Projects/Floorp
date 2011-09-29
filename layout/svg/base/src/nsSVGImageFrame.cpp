@@ -119,7 +119,7 @@ private:
   gfxMatrix GetRasterImageTransform(PRInt32 aNativeWidth,
                                     PRInt32 aNativeHeight);
   gfxMatrix GetVectorImageTransform();
-  PRBool    TransformContextForPainting(gfxContext* aGfxContext);
+  bool      TransformContextForPainting(gfxContext* aGfxContext);
 
   nsCOMPtr<imgIDecoderObserver> mListener;
 
@@ -239,7 +239,7 @@ nsSVGImageFrame::GetVectorImageTransform()
   return gfxMatrix().Translate(gfxPoint(x, y)) * GetCanvasTM();
 }
 
-PRBool
+bool
 nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext)
 {
   gfxMatrix imageTransform;

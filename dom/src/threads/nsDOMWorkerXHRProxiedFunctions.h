@@ -140,7 +140,7 @@ namespace nsDOMWorkerProxiedXHRFunctions
   {
   public:
     Open(const nsACString& aMethod, const nsACString& aUrl,
-         PRBool aAsync, const nsAString& aUser,
+         bool aAsync, const nsAString& aUser,
          const nsAString& aPassword)
     : mMethod(aMethod), mUrl(aUrl), mAsync(aAsync), mUser(aUser),
       mPassword(aPassword) { }
@@ -152,7 +152,7 @@ namespace nsDOMWorkerProxiedXHRFunctions
   private:
     nsCString mMethod;
     nsCString mUrl;
-    PRBool mAsync;
+    bool mAsync;
     nsString mUser;
     nsString mPassword;
   };
@@ -170,13 +170,13 @@ namespace nsDOMWorkerProxiedXHRFunctions
 
   MAKE_PROXIED_FUNCTION1(OverrideMimeType, const nsACString&);
 
-  MAKE_PROXIED_FUNCTION1(SetMultipart, PRBool);
+  MAKE_PROXIED_FUNCTION1(SetMultipart, bool);
 
-  MAKE_PROXIED_FUNCTION1(GetMultipart, PRBool*);
+  MAKE_PROXIED_FUNCTION1(GetMultipart, bool*);
 
-  MAKE_PROXIED_FUNCTION1(GetWithCredentials, PRBool*);
+  MAKE_PROXIED_FUNCTION1(GetWithCredentials, bool*);
 
-  MAKE_PROXIED_FUNCTION1(SetWithCredentials, PRBool);
+  MAKE_PROXIED_FUNCTION1(SetWithCredentials, bool);
 }
 
 #endif /* __NSDOMWORKERXHRPROXIEDFUNCTIONS_H__ */

@@ -88,7 +88,7 @@ nsHashPropertyBag::Init()
 }
 
 NS_IMETHODIMP
-nsHashPropertyBag::HasKey(const nsAString& name, PRBool *aResult)
+nsHashPropertyBag::HasKey(const nsAString& name, bool *aResult)
 {
     *aResult = mPropertyHash.Get(name, nsnull);
 
@@ -107,7 +107,7 @@ nsHashPropertyBag::Get(const nsAString& name, nsIVariant* *_retval)
 NS_IMETHODIMP
 nsHashPropertyBag::GetProperty(const nsAString& name, nsIVariant* *_retval)
 {
-    PRBool isFound = mPropertyHash.Get(name, _retval);
+    bool isFound = mPropertyHash.Get(name, _retval);
     if (!isFound)
         return NS_ERROR_FAILURE;
 
@@ -119,7 +119,7 @@ nsHashPropertyBag::SetProperty(const nsAString& name, nsIVariant *value)
 {
     NS_ENSURE_ARG_POINTER(value);
 
-    PRBool success = mPropertyHash.Put(name, value);
+    bool success = mPropertyHash.Put(name, value);
     if (!success)
         return NS_ERROR_FAILURE;
 
@@ -132,7 +132,7 @@ nsHashPropertyBag::DeleteProperty(const nsAString& name)
     // is it too much to ask for ns*Hashtable to return
     // a boolean indicating whether RemoveEntry succeeded
     // or not?!?!
-    PRBool isFound = mPropertyHash.Get(name, nsnull);
+    bool isFound = mPropertyHash.Get(name, nsnull);
     if (!isFound)
         return NS_ERROR_FAILURE;
 
@@ -229,7 +229,7 @@ IMPL_GETSETPROPERTY_AS(Uint32, PRUint32)
 IMPL_GETSETPROPERTY_AS(Int64, PRInt64)
 IMPL_GETSETPROPERTY_AS(Uint64, PRUint64)
 IMPL_GETSETPROPERTY_AS(Double, double)
-IMPL_GETSETPROPERTY_AS(Bool, PRBool)
+IMPL_GETSETPROPERTY_AS(Bool, bool)
 
 
 NS_IMETHODIMP

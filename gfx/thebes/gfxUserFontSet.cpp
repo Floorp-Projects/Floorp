@@ -92,7 +92,7 @@ gfxProxyFontEntry::~gfxProxyFontEntry()
 }
 
 gfxFont*
-gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold)
+gfxProxyFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
 {
     // cannot create an actual font for a proxy entry
     return nsnull;
@@ -123,7 +123,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
-    PRBool found;
+    bool found;
 
     if (aWeight == 0)
         aWeight = FONT_WEIGHT_NORMAL;
@@ -169,7 +169,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
-    PRBool found;
+    bool found;
 
     gfxMixedFontFamily *family = mFontFamilies.GetWeak(key, &found);
     if (!family) {
@@ -183,9 +183,9 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 gfxFontEntry*
 gfxUserFontSet::FindFontEntry(const nsAString& aName, 
                               const gfxFontStyle& aFontStyle, 
-                              PRBool& aFoundFamily,
-                              PRBool& aNeedsBold,
-                              PRBool& aWaitForUserFont)
+                              bool& aFoundFamily,
+                              bool& aNeedsBold,
+                              bool& aWaitForUserFont)
 {
     aWaitForUserFont = PR_FALSE;
     gfxMixedFontFamily *family = GetFamily(aName);
@@ -443,7 +443,7 @@ CopyWOFFMetadata(const PRUint8* aFontData, PRUint32 aLength,
 // This is called when a font download finishes.
 // Ownership of aFontData passes in here, and the font set must
 // ensure that it is eventually deleted via NS_Free().
-PRBool 
+bool 
 gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
                                const PRUint8 *aFontData, PRUint32 aLength,
                                nsresult aDownloadStatus)
@@ -643,7 +643,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
             if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI,
                     currSrc.mFormatFlags)) {
                 nsresult rv = StartLoad(aProxyEntry, &currSrc);
-                PRBool loadOK = NS_SUCCEEDED(rv);
+                bool loadOK = NS_SUCCEEDED(rv);
                 if (loadOK) {
 #ifdef PR_LOGGING
                     if (LOG_ENABLED()) {

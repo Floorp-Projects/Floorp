@@ -123,7 +123,7 @@ nsXULTreeAccessible::NativeState()
   mTreeView->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_TRUE(selection, state);
 
-  PRBool isSingle = PR_FALSE;
+  bool isSingle = false;
   nsresult rv = selection->GetSingle(&isSingle);
   NS_ENSURE_SUCCESS(rv, state);
 
@@ -329,7 +329,7 @@ nsXULTreeAccessible::AddItemToSelection(PRUint32 aIndex)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     selection->IsSelected(aIndex, &isSelected);
     if (!isSelected)
       selection->ToggleSelect(aIndex);
@@ -345,7 +345,7 @@ nsXULTreeAccessible::RemoveItemFromSelection(PRUint32 aIndex)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     selection->IsSelected(aIndex, &isSelected);
     if (isSelected)
       selection->ToggleSelect(aIndex);
@@ -361,7 +361,7 @@ nsXULTreeAccessible::IsItemSelected(PRUint32 aIndex)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected = PR_FALSE;
+    bool isSelected = false;
     selection->IsSelected(aIndex, &isSelected);
     return isSelected;
   }
@@ -412,7 +412,7 @@ nsXULTreeAccessible::SelectAll()
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool single = PR_FALSE;
+    bool single = false;
     selection->GetSingle(&single);
     if (!single) {
       selection->SelectAll();
@@ -471,7 +471,7 @@ nsXULTreeAccessible::IsActiveWidget() const
       do_QueryInterface(mContent->GetParent());
 
     if (autoCompletePopupElm) {
-      PRBool isOpen = PR_FALSE;
+      bool isOpen = false;
       autoCompletePopupElm->GetPopupOpen(&isOpen);
       return isOpen;
     }
@@ -487,7 +487,7 @@ nsXULTreeAccessible::AreItemsOperable() const
       do_QueryInterface(mContent->GetParent());
 
     if (autoCompletePopupElm) {
-      PRBool isOpen = PR_FALSE;
+      bool isOpen = false;
       autoCompletePopupElm->GetPopupOpen(&isOpen);
       return isOpen;
     }
@@ -781,7 +781,7 @@ nsXULTreeItemAccessibleBase::GetBounds(PRInt32 *aX, PRInt32 *aY,
 }
 
 NS_IMETHODIMP
-nsXULTreeItemAccessibleBase::SetSelected(PRBool aSelect)
+nsXULTreeItemAccessibleBase::SetSelected(bool aSelect)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -789,7 +789,7 @@ nsXULTreeItemAccessibleBase::SetSelected(PRBool aSelect)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected;
+    bool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected != aSelect)
       selection->ToggleSelect(mRow);
@@ -855,7 +855,7 @@ nsXULTreeItemAccessibleBase::GetActionName(PRUint8 aIndex, nsAString& aName)
   }
 
   if (aIndex == eAction_Expand && IsExpandable()) {
-    PRBool isContainerOpen;
+    bool isContainerOpen;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
     if (isContainerOpen)
       aName.AssignLiteral("collapse");
@@ -983,7 +983,7 @@ nsXULTreeItemAccessibleBase::NativeState()
 
   // expanded/collapsed state
   if (IsExpandable()) {
-    PRBool isContainerOpen;
+    bool isContainerOpen;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
     state |= isContainerOpen ? states::EXPANDED : states::COLLAPSED;
   }
@@ -992,7 +992,7 @@ nsXULTreeItemAccessibleBase::NativeState()
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected;
+    bool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected)
       state |= states::SELECTED;
@@ -1072,13 +1072,13 @@ nsXULTreeItemAccessibleBase::GetSiblingAtOffset(PRInt32 aOffset,
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: protected implementation
 
-PRBool
+bool
 nsXULTreeItemAccessibleBase::IsExpandable()
 {
-  PRBool isContainer = PR_FALSE;
+  bool isContainer = false;
   mTreeView->IsContainer(mRow, &isContainer);
   if (isContainer) {
-    PRBool isEmpty = PR_FALSE;
+    bool isEmpty = false;
     mTreeView->IsContainerEmpty(mRow, &isEmpty);
     if (!isEmpty) {
       nsCOMPtr<nsITreeColumns> columns;
@@ -1170,7 +1170,7 @@ nsXULTreeItemAccessible::IsDefunct() const
   return nsXULTreeItemAccessibleBase::IsDefunct() || !mColumn;
 }
 
-PRBool
+bool
 nsXULTreeItemAccessible::Init()
 {
   if (!nsXULTreeItemAccessibleBase::Init())

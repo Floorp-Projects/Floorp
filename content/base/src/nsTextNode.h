@@ -73,10 +73,10 @@ public:
   NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsTextNode, nsGenericDOMDataNode)
 
   // nsINode
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual bool IsNodeOfType(PRUint32 aFlags) const;
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
-                                              PRBool aCloneText) const;
+                                              bool aCloneText) const;
 
   nsresult BindToAttribute(nsIAttribute* aAttr);
   nsresult UnbindFromAttribute();
@@ -84,10 +84,10 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   nsresult AppendTextForNormalize(const PRUnichar* aBuffer, PRUint32 aLength,
-                                  PRBool aNotify, nsIContent* aNextSibling);
+                                  bool aNotify, nsIContent* aNextSibling);
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent, bool aDumpAll) const;
 #endif
 };

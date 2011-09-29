@@ -168,7 +168,7 @@ public:
    * Ask any PlanarYCbCr images created by this container to delay
    * YUV -> RGB conversion until draw time. See PlanarYCbCrImage::SetDelayedConversion.
    */
-  virtual void SetDelayedConversion(PRBool aDelayed) {}
+  virtual void SetDelayedConversion(bool aDelayed) {}
 
   /**
    * Get the current Image.
@@ -222,7 +222,7 @@ public:
    * either of the same type as the container's current layer manager,
    * or null.  TRUE is returned on success. Main thread only.
    */
-  virtual PRBool SetLayerManager(LayerManager *aManager) = 0;
+  virtual bool SetLayerManager(LayerManager *aManager) = 0;
 
   /**
    * Sets a size that the image is expected to be rendered at.
@@ -316,7 +316,7 @@ protected:
   TimeStamp mPaintTime;
 
   // Denotes whether the previous image was painted.
-  PRPackedBool mPreviousImagePainted;
+  bool mPreviousImagePainted;
 };
 
 /**
@@ -434,7 +434,7 @@ public:
    * the original data available through GetData. This is optional,
    * and not all PlanarYCbCrImages will support it.
    */
-  virtual void SetDelayedConversion(PRBool aDelayed) { }
+  virtual void SetDelayedConversion(bool aDelayed) { }
 
   /**
    * Grab the original YUV data. This is optional.

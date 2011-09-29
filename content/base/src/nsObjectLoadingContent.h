@@ -134,7 +134,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     nsEventStates ObjectState() const;
 
-    void SetIsNetworkCreated(PRBool aNetworkCreated)
+    void SetIsNetworkCreated(bool aNetworkCreated)
     {
       mNetworkCreated = aNetworkCreated;
     }
@@ -154,9 +154,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *      of how a plugin will be found.
      */
     nsresult LoadObject(const nsAString& aURI,
-                        PRBool aNotify,
+                        bool aNotify,
                         const nsCString& aTypeHint = EmptyCString(),
-                        PRBool aForceLoad = PR_FALSE);
+                        bool aForceLoad = false);
     /**
      * Loads the object from the given URI.
      *
@@ -185,9 +185,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *                   is the same as the currently-loaded object.
      */
     nsresult LoadObject(nsIURI* aURI,
-                        PRBool aNotify,
+                        bool aNotify,
                         const nsCString& aTypeHint = EmptyCString(),
-                        PRBool aForceLoad = PR_FALSE);
+                        bool aForceLoad = false);
 
     enum Capabilities {
       eSupportImages    = PR_BIT(0), // Images are supported (imgILoader)
@@ -212,7 +212,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     /**
      * Fall back to rendering the alternative content.
      */
-    void Fallback(PRBool aNotify);
+    void Fallback(bool aNotify);
 
     /**
      * Subclasses must call this function when they are removed from the
@@ -230,17 +230,17 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     /**
      * Check whether the given request represents a successful load.
      */
-    static PRBool IsSuccessfulRequest(nsIRequest* aRequest);
+    static bool IsSuccessfulRequest(nsIRequest* aRequest);
 
     /**
      * Check whether the URI can be handled internally.
      */
-    static PRBool CanHandleURI(nsIURI* aURI);
+    static bool CanHandleURI(nsIURI* aURI);
 
     /**
      * Checks whether the given type is a supported document type.
      */
-    PRBool IsSupportedDocument(const nsCString& aType);
+    bool IsSupportedDocument(const nsCString& aType);
 
     /**
      * Unload the currently loaded content. This removes all state related to
@@ -260,7 +260,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * @param aNotify if false, only need to update the state of our element.
      */
     void NotifyStateChanged(ObjectType aOldType, nsEventStates aOldState,
-                            PRBool aSync, PRBool aNotify);
+                            bool aSync, bool aNotify);
 
     /**
      * Fires the "Plugin not found" event. This function doesn't do any checks
@@ -399,15 +399,15 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Whether we are about to call instantiate on our frame. If we aren't,
      * SetFrame needs to asynchronously call Instantiate.
      */
-    PRPackedBool                mInstantiating : 1;
+    bool                        mInstantiating : 1;
     // Blocking status from content policy
-    PRPackedBool                mUserDisabled  : 1;
-    PRPackedBool                mSuppressed    : 1;
+    bool                        mUserDisabled  : 1;
+    bool                        mSuppressed    : 1;
 
     // True when the object is created for an element which the parser has
     // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
     // it may lose the flag.
-    PRPackedBool                mNetworkCreated : 1;
+    bool                        mNetworkCreated : 1;
 
     // A specific state that caused us to fallback
     PluginSupportState          mFallbackReason;

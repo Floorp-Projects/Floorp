@@ -406,7 +406,7 @@ nsSVGUseElement::DestroyAnonymousContent()
 //----------------------------------------------------------------------
 // implementation helpers
 
-PRBool nsSVGUseElement::HasValidDimensions()
+bool nsSVGUseElement::HasValidDimensions()
 {
   nsSVGSVGElement *ctx = GetCtx();
 
@@ -498,7 +498,7 @@ nsSVGUseElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
 }
 
 void
-nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
 {
   nsSVGUseElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
 
@@ -557,7 +557,7 @@ nsSVGUseElement::GetStringInfo()
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP_(bool)
 nsSVGUseElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
