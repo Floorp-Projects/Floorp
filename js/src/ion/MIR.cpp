@@ -586,14 +586,12 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
         return;
     }
 
-    if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))
-        specialization_ = MIRType_Double;
-    else
-        specialization_ = MIRType_Int32;
+    JS_ASSERT(b.rval == MIRType_Int32 || b.rval == MIRType_Double);
+    specialization_ = b.rval;
 
     setIdempotent();
     setCommutative();
-    setResultType(specialization_);
+    setResultType(b.rval);
 }
 
 void
