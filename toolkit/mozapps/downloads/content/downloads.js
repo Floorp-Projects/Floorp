@@ -1159,7 +1159,6 @@ function buildDownloadList(aForceBuild)
   gBuilder = setTimeout(function() {
     // Start building the list and select the first item
     stepListBuilder(1);
-    gDownloadsView.selectedIndex = 0;
 
     // We just tried to add a single item, so we probably need to enable
     updateClearListButton();
