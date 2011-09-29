@@ -909,7 +909,8 @@ ShowNativePrintDialog(HWND              aHWnd,
   prntdlg.hDevMode    = hGlobalDevMode;
   prntdlg.hDevNames   = hDevNames;
   prntdlg.hDC         = NULL;
-  prntdlg.Flags       = PD_ALLPAGES | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE;
+  prntdlg.Flags       = PD_ALLPAGES | PD_RETURNIC | 
+                        PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
 
   // if there is a current selection then enable the "Selection" radio button
   PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
@@ -1240,7 +1241,7 @@ ShowNativePrintDialogEx(HWND              aHWnd,
   prntdlg.hwndOwner   = aHWnd;
   prntdlg.hDevMode    = hGlobalDevMode;
   prntdlg.Flags       = PD_ALLPAGES | PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE |
-                        PD_NOCURRENTPAGE;
+                        PD_NOCURRENTPAGE | PD_COLLATE;
   prntdlg.nStartPage  = START_PAGE_GENERAL;
 
   // if there is a current selection then enable the "Selection" radio button
