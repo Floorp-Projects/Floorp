@@ -1635,7 +1635,8 @@ static PRStatus pt_ConnectContinue(
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
     }
-    if ((out_flags & (PR_POLL_WRITE | PR_POLL_EXCEPT | PR_POLL_ERR)) == 0)
+    if ((out_flags & (PR_POLL_WRITE | PR_POLL_EXCEPT | PR_POLL_ERR
+        | PR_POLL_HUP)) == 0)
     {
         PR_ASSERT(out_flags == 0);
         PR_SetError(PR_IN_PROGRESS_ERROR, 0);
