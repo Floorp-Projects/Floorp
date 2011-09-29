@@ -50,7 +50,7 @@ class Decoder
 {
 public:
 
-  Decoder(RasterImage* aImage, imgIDecoderObserver* aObserver);
+  Decoder(RasterImage& aImage, imgIDecoderObserver* aObserver);
   virtual ~Decoder();
 
   /**
@@ -201,7 +201,7 @@ protected:
    * Member variables.
    *
    */
-  nsRefPtr<RasterImage> mImage;
+  RasterImage &mImage;
   nsCOMPtr<imgIDecoderObserver> mObserver;
 
   PRUint32 mDecodeFlags;
