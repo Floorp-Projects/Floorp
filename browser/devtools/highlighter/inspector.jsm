@@ -303,6 +303,7 @@ Highlighter.prototype = {
   {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("resize", this, true);
+    this._contentRect = null;
     this._highlightRect = null;
     this._highlighting = false;
     this.veilTopBox = null;
@@ -439,7 +440,7 @@ Highlighter.prototype = {
    */
   highlightRectangle: function Highlighter_highlightRectangle(aRect)
   {
-    let oldRect = this._highlightRect;
+    let oldRect = this._contentRect;
 
     if (oldRect && aRect.top == oldRect.top && aRect.left == oldRect.left &&
         aRect.width == oldRect.width && aRect.height == oldRect.height) {
@@ -472,7 +473,8 @@ Highlighter.prototype = {
       this.unhighlight();
     }
 
-    this._highlightRect = aRect; // save orig (non-scaled) rect
+    this._contentRect = aRect; // save orig (non-scaled) rect
+    this._highlightRect = aRectScaled; // and save the scaled rect.
 
     return this._highlighting;
   },
@@ -600,18 +602,18 @@ Highlighter.prototype = {
   get highlitNode()
   {
     // Not highlighting? Bail.
-    if (!this._highlighting || !this._highlightRect) {
+    if (!this._highlighting || !this._contentRect) {
       return null;
     }
 
     let a = {
-      x: this._highlightRect.left,
-      y: this._highlightRect.top
+      x: this._contentRect.left,
+      y: this._contentRect.top
     };
 
     let b = {
-      x: a.x + this._highlightRect.width,
-      y: a.y + this._highlightRect.height
+      x: a.x + this._contentRect.width,
+      y: a.y + this._contentRect.height
     };
 
     // Get midpoint of diagonal line.
