@@ -132,7 +132,7 @@ function downloadFile(url, cb, lastModified) {
     console.info("Using binary mode to download jar file.");
     req.overrideMimeType('text/plain; charset=x-user-defined');
   }
-  req.onreadystatechange = function(aEvt) {
+  req.addEventListener("readystatechange", function(aEvt) {
     if (req.readyState == 4) {
       if (req.status == 200) {
         // check security channel:
@@ -154,7 +154,7 @@ function downloadFile(url, cb, lastModified) {
 	cb(null);
       }
     }
-  };
+  }, false);
   req.send();
 }
 
