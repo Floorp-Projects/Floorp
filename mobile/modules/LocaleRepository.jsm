@@ -91,7 +91,7 @@ var LocaleRepository = {
     let buildID = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).QueryInterface(Ci.nsIXULRuntime).appBuildID;
     if (aFilters) {
       if (aFilters.buildID)
-        buildid = aFilters.buildID;
+        buildID = aFilters.buildID;
     }
     buildID = buildID.substring(0,4) + "-" + buildID.substring(4).replace(/\d{2}(?=\d)/g, "$&-");
     url = url.replace(/%BUILDID_EXPANDED%/g, buildID);

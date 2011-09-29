@@ -80,10 +80,13 @@ function handleRequest(request, response) {
      locales.push( getLocale({IDNUMBER: i}) );
     }
     break;
+   case "buildid":
+    locales.push( getLocale({IDNUMBER: 1, NAME: query[1]}) );
+    break;
    default :
     locales.push( getLocale({IDNUMBER: 1}) );
     /* These locales should fail in the LocaleRepository */
-    locales.push( getLocale({IDNUMBER: 1}) );                         // no duplicate ids
+    locales.push( getLocale({IDNUMBER: 1}) ); // no duplicate ids
     locales.push( getLocale({IDNUMBER: 2, INSTALL: "INVALID_URL"}) );
     locales.push( getLocale({IDNUMBER: 3}, {APPID: "INVALID_ID"}) );
     locales.push( getLocale({IDNUMBER: 3}, {MAXVERSION: "0"}) );
