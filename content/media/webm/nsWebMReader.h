@@ -179,8 +179,8 @@ private:
                            PRInt64 aGranulepos);
 
   // Decode a nestegg packet of audio data. Push the audio data on the
-  // audio queue. Returns PR_TRUE when there's more audio to decode,
-  // PR_FALSE if the audio is finished, end of file has been reached,
+  // audio queue. Returns true when there's more audio to decode,
+  // false if the audio is finished, end of file has been reached,
   // or an un-recoverable read error has occured. The reader's monitor
   // must be held during this call. This function will free the packet
   // so the caller must not use the packet after calling.
